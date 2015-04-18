@@ -1,0 +1,9 @@
+{% extends 'flask_user/public_base.html' %}
+
+{% block content %}
+
+<h1>Registered Users</h1>
+
+{{ userlist|safe }}
+
+{% endblock %}

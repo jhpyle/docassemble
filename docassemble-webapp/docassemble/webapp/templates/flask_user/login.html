@@ -1,0 +1,109 @@
+{% extends 'flask_user/public_base.html' %}
+
+{% block content %}
+{% from "base_templates/form_macros.html" import render_field, render_checkbox_field, render_submit_field, myrender_hidden_field %}
+<h1>{%trans%}Sign in{%endtrans%}</h1>
+
+<form action="" method="POST" class="form" role="form">
+    {{ form.hidden_tag() }}
+
+    {# Username or Email field #}
+    {% set field = form.username if user_manager.enable_username else form.email %}
+    <div class="form-group {% if field.errors %}has-error{% endif %}">
+        {# Label on left, "New here? Register." on right #}
+        <div class="row">
+            <div class="col-xs-6">
+                <label for="{{ field.id }}" class="control-label">{{ field.label.text }}</label>
+            </div>
+            <div class="col-xs-6 text-right">
+                {% if user_manager.enable_register and not user_manager.require_invitation %}
+                    <a href="{{ url_for('user.register') }}" tabindex='190'>
+                        {%trans%}New here? Register.{%endtrans%}</a>
+                {% endif %}
+            </div>
+        </div>
+        {{ field(class_='form-control', type='email', tabindex=110) }}
+        {% if field.errors %}
+            {% for e in field.errors %}
+                <p class="help-block">{{ e }}</p>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    {# Password field #}
+    {% set field = form.password %}
+    <div class="form-group {% if field.errors %}has-error{% endif %}">
+        {# Label on left, "Forgot your Password?" on right #}
+        <div class="row">
+            <div class="col-xs-6">
+                <label for="{{ field.id }}" class="control-label">{{ field.label.text }}</label>
+            </div>
+            <div class="col-xs-6 text-right">
+                {% if user_manager.enable_forgot_password %}
+                    <a href="{{ url_for('user.forgot_password') }}" tabindex='195'>
+                        {%trans%}Forgot your Password?{%endtrans%}</a>
+                {% endif %}
+            </div>
+        </div>
+        {{ field(class_='form-control', tabindex=120) }}
+        {% if field.errors %}
+            {% for e in field.errors %}
+                <p class="help-block">{{ e }}</p>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    {# Remember me #}
+    {% if user_manager.enable_remember_me %}
+    {{ render_checkbox_field(login_form.remember_me, tabindex=130) }}
+    {% endif %}
+
+    {# Submit button #}
+    <div class="form-actions">
+      {{ render_submit_field(form.submit, tabindex=180) }}
+    </div>
+</form>
+{% if config['USE_GOOGLE_LOGIN'] or config['USE_FACEBOOK_LOGIN'] %}
+<p style="padding:15px;"><strong>or</strong></p>
+{% endif %}
+{% if config['USE_GOOGLE_LOGIN'] %}
+<div class="g-signin2" data-width="250" data-longtitle="true" data-onsuccess="onSignIn"></div>
+{% endif %}
+{% if config['USE_FACEBOOK_LOGIN'] %}
+<a class="nohover" href="{{ url_for('oauth_authorize', provider='facebook') }}"><div class="daiconbox"><table style="height:100%"><td><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/facebook-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">Sign in with Facebook</td></tr></table></div></a>
+{% endif %}
+{% if config['USE_GOOGLE_LOGIN'] %}
+<script src="https://apis.google.com/js/platform.js"></script>
+<script>
+function onSignIn(googleUser) {
+  var profile = googleUser.getBasicProfile();
+  console.log('ID: ' + profile.getId());
+  console.log('Name: ' + profile.getName());
+  console.log('Image URL: ' + profile.getImageUrl());
+  console.log('Email: ' + profile.getEmail());
+  if (profile.getId()){
+    $.ajax({
+      type: 'POST',
+      url: '{{ url_for('oauth_authorize', provider='google') }}',
+      contentType: 'application/octet-stream; charset=utf-8',
+      success: function(result) {
+	console.log(result);
+	window.location = '{{ url_for('oauth_callback', provider='google', _external=True) }}';
+      },
+      dataType: "json",
+      data: {
+	"id": profile.getId(),
+	"name": profile.getName(),
+	"image": profile.getImageUrl(),
+	"email": profile.getEmail()
+      }
+    });
+  }
+  else if (authResult['error']) {
+    console.log('There was an error: ' + authResult['error']);
+  }
+}
+</script>
+{% endif %}
+
+{% endblock %}

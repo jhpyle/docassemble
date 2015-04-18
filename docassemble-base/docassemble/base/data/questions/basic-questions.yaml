@@ -1,0 +1,205 @@
+---
+metadata:
+  description: >-
+    These are basic questions common to a lot of different scenarios
+  authors:
+    - name: Jonathan Pyle
+      organization: Philadelphia Legal Assistance
+  revision_date: 2015-03-21
+comment: >-
+  A "metadata" section contains information about who wrote the
+  YAML file and how it is intended to be used.
+---
+modules:
+  - docassemble.base.legal
+comment: >-
+  A "modules" section imports functions from Python modules
+---
+objects:
+  - case: Case
+  - user: Individual
+  - spouse: Individual
+  - pleading: LegalFiling
+  - jurisdiction: Jurisdiction
+  - court: Court
+comment: >-
+  An "objects" section defines variables that are Python objects.  The object types
+  here are defined in the docassemble.legal module.
+---
+mandatory: True
+code: |
+  court.jurisdiction = jurisdiction
+  case.court = court
+  pleading.case = case
+---
+question: Are you the defendant?
+yesno: user_is_defendant
+---
+question: How would you describe yourself?
+field: user.marital_status
+choices:
+  - Married
+  - Single
+  - Divorced
+  - Separated
+---
+field: user_understands_no_attorney_client_relationship
+question: >-
+  Your use of this system does not mean that you have a lawyer.  Do
+  you understand this?
+choices:
+  - "I understand": understands
+  - "I do not understand": does not understand
+  - "I'm not sure": unsure
+---
+generic object: Individual
+question: >-
+  What is ${ x.possessive('date of birth') }?
+fields:
+  - Date of birth: x.birthdate
+    datatype: date
+---
+generic object: Individual
+question: >-
+  What is ${ x.possessive('gender') }?
+field: x.gender
+choices:
+  - Male: male
+  - Female: female
+  - Other: other
+---
+generic object: Individual
+question: |
+  What is ${ x.object_possessive('name') }?
+fields:
+  - First Name: x.name.first
+  - Middle Name: x.name.middle
+    required: False
+  - Last Name: x.name.last
+---
+generic list object: Individual
+question: |
+  What is the name of the ${ ordinal(i) } ${ x.object_name() }?
+fields:
+  - First Name: x[i].name.first
+  - Middle Name: x[i].name.middle
+    required: False
+  - Last Name: x[i].name.last
+---
+generic list object: Individual
+question: |
+  What is ${ x.possessive(ordinal(i) + " child") }'s name?
+fields:
+  - First Name: x.child[i].name.first
+  - Middle Name: x.child[i].name.middle
+    required: False
+  - Last Name: x.child[i].name.last
+    default: ${ x.name.last }
+comment: |
+  Example 1: What is your second child's name?
+  Example 2: What is John Doe's first child's name?
+---
+generic object: Individual
+question: >-
+  ${ x.do_question('have', capitalize=True) } any children?
+yesno: x.has_children
+comment: |
+  Example 1: Do you have any children?
+  Example 2: Does Jane Doe have any children?
+---
+generic object: Individual
+question: So far, you have told me about ${ x.possessive(x.child.number_as_word()) } ${ x.child.as_noun() }, ${ x.child }.  ${ x.do_question('have', capitalize=True) } any other children?
+yesno: x.has_other_children
+comment: |
+  Example 1: So far, you have told me about John Doe's two children, 
+  Sally Doe and Harold Doe.  Does John Doe have any other children?
+
+  Example 2: So far, you have told me about your one child, Kathleen 
+  Smith.  Do you have any other children?
+---
+generic object: PartyList
+question: |
+  You have told me that there ${ x.does_verb("is") } ${ x.number_as_word() } ${ x.as_noun() }, ${ x }.  Is there another ${ x.as_singular_noun() }?
+yesno: x.there_is_another
+---
+question: Are you a plaintiff in this case?
+subquestion: |
+  A "plaintiff" is a person who starts a case by filing a lawsuit against a person called a "defendant."  Plaintiffs and defendants are the "parties" in a case.
+yesno: user_is_plaintiff
+---
+generic object: Individual
+question: How much ${ x.do_question("make") } from employment?
+fields:
+  - Income: x.income.employment.value
+    datatype: currency
+  - "": x.income.employment.period
+    code: |
+      period_list()
+---
+generic object: Individual
+question: How much ${ x.do_question("make") } from self-employment?
+fields:
+  - Income: x.income.selfemployment.value
+    datatype: currency
+  - "": x.income.selfemployment.period
+    code: |
+      period_list()
+---
+generic object: Individual
+question: How much ${ x.do_question("make") } from SSI?
+fields:
+  - Income: x.income.ssi.value
+    datatype: currency
+  - "": x.income.ssi.period
+    code: |
+      period_list()
+---
+generic object: Individual
+question: How much ${ x.do_question("make") } from cash assistance (Temporary Assistance to Needy Families or TANF)?
+fields:
+  - Income: x.income.tanf.value
+    datatype: currency
+  - "": x.income.tanf.period
+    code: |
+      period_list()
+---
+generic object: Individual
+question: How much ${ x.do_question("have") } in ${ x.pronoun_possessive("checking account") }?
+fields:
+  - Amount: x.asset.checking.value
+    datatype: currency
+---
+generic object: Individual
+question: How much ${ x.do_question("have") } in ${ x.pronoun_possessive("savings account") }?
+fields:
+  - Amount: x.asset.savings.value
+    datatype: currency
+---
+generic object: Individual
+question: How much ${ x.do_question("have") } in stocks and bonds?
+fields:
+  - Amount: x.asset.stocksbonds.value
+    datatype: currency
+---
+generic object: Individual
+question: What kinds of income ${ x.do_question("have") }?
+fields:
+  - Employment: x.income.employment.exists
+    datatype: yesno
+  - Self-employment: x.income.selfemployment.exists
+    datatype: yesno
+  - SSI: x.income.ssi.exists
+    datatype: yesno
+  - Cash assistance: x.income.tanf.exists
+    datatype: yesno
+---
+generic object: Individual
+question: What kinds of assets ${ x.do_question("own") }?
+fields:
+  - Checking Account: x.asset.checking.exists
+    datatype: yesno
+  - Savings Account: x.asset.savings.exists
+    datatype: yesno
+  - Stocks and Bonds: x.asset.stocksbonds.exists
+    datatype: yesno
+...

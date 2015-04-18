@@ -1,0 +1,263 @@
+---
+metadata:
+  description: >-
+    This is demo of the docassemble system.
+  authors:
+    - name: Jonathan Pyle
+      organization: Philadelphia Legal Assistance
+  revision_date: 2015-04-05
+comment: >-
+  A "metadata" block contains information about the YAML file, such as
+  the name of the author.
+---
+interview help:
+  heading: About this interview
+  content: >-
+    Answer each question.  At the end, you may be given a document
+    that you can save.
+---
+include:
+  - basic-questions.yaml
+comment: >-
+  This loads some question definitions that are common to many legal
+  interviews.
+---
+imports:
+  - datetime
+  - dateutil.relativedelta
+  - dateutil.parser
+  - us
+comment: Loads some Python modules that we will need
+---
+objects:
+  - village_idiot: Individual
+---
+comment: >-
+  This is an example of a multiple-choice question that runs Python code.
+  Questions that run Python code need to include a list of the variables
+  that the code "sets," because docassemble is not able to determine these
+  variables automatically, as it usually can.
+question: What form do you want to prepare?
+sets:
+  - pleading.title
+choices:
+  - "Custody Complaint":
+      code: |
+        law_category = "custody"
+        pleading.type = "complaint"
+        pleading.title = "Complaint for Custody"
+  - "Support Complaint":
+      code: |
+        law_category = "support"
+        pleading.type = "complaint"
+        pleading.title = "Complaint for Support"
+---
+comment: >-
+  The following seven lines of code ask all the necessary questions to
+  gather the names of the plaintiffs in the case, when the user may
+  not be a plaintiff.
+mandatory: True
+code: |
+  if user_is_plaintiff and user not in case.plaintiff:
+    case.plaintiff.add(user)
+  if case.plaintiff.number() == 0:
+    newplaintiff = case.plaintiff.addObject(Individual)
+  while case.plaintiff.there_is_another:
+    newplaintiff = case.plaintiff.addObject(Individual)
+    del case.plaintiff.there_is_another
+---
+mandatory: True
+code: |
+  if user not in case.defendant and not user_is_plaintiff and user_is_defendant:
+    case.defendant.add(user)
+  if case.defendant.number() == 0:
+    newdefendant = case.defendant.addObject(Individual)
+  while case.defendant.there_is_another:
+    newdefendant = case.defendant.addObject(Individual)
+    del case.defendant.there_is_another
+---
+comment: >-
+  Gathers the names of the children of all of the parties.
+mandatory: True
+code: |
+  for indiv in case.parties():
+    if indiv.has_children:
+      if indiv.child.number() == 0:
+        newchild = indiv.child.addObject(Individual)
+      while indiv.has_other_children:
+        newchild = indiv.child.addObject(Individual)
+        del indiv.has_other_children
+---
+code: |
+  if user_has_injury and injury_in_jurisdiction and statute_of_limitations_ok:
+    user_has_standing = True
+  else:
+    user_has_standing = False
+---
+progress: 50
+question: Were you injured?
+yesno: user_has_injury
+---
+question: >-
+  I understand that you live in ${ user.address.city }.
+  Were you injured in ${ jurisdiction.state }?
+yesno: injury_in_jurisdiction
+---
+question: When did your injury take place?
+fields:
+  - Date of Injury: injury_date
+    datatype: date
+---
+question: Would you like to enter your address yet again?
+yesno: retry_address
+---
+mandatory: true
+code: |
+  assets_to_ask_about = ['checking', 'savings', 'stocksbonds']
+  income_to_ask_about = ['employment', 'selfemployment', 'ssi', 'tanf']
+  for asset_item in assets_to_ask_about:
+    user.asset.new(asset_item, period=12)
+  for income_item in income_to_ask_about:
+    user.income.new(income_item, period=12)
+---
+mandatory: true
+code: |
+  if user.address.address and retry_address:
+    retry_address = False
+    force_ask('user.address.address')
+---
+comment : >-
+  This is a little bit of code for directing the interview.  It tells
+  the system that we need to get to the endpoint "user_done."
+mandatory: True
+code: |
+  need(explanation, user_done)
+---
+code: |
+  jurisdiction.state = "Pennsylvania"
+  jurisdiction.county = "Philadelphia"
+---
+code: |
+  if jurisdiction.state == "Pennsylvania":
+    statute_of_limitations_years = 5
+  else:
+    statute_of_limitations_years = 2
+---
+code: |
+  if jurisdiction.state == "Pennsylvania":
+    if law_category == "custody" or law_category == "support":
+      court.name = "Court of Common Pleas of " + jurisdiction.county + " County"
+---
+comment: >-
+  This uses some Python functions to determine whether the date of the
+  injury is within the statute of limitations period.
+code: |
+  cutoff = datetime.datetime.now() - dateutil.relativedelta.relativedelta(years=statute_of_limitations_years)
+  if dateutil.parser.parse(injury_date) > cutoff:
+    statute_of_limitations_ok = True
+  else:
+    statute_of_limitations_ok = False
+---
+progress: 100
+question: |
+  % if user_has_standing:
+    You have a valid claim.
+  % else:
+    Sorry, you do not have a valid claim.
+  % endif
+sets: user_done
+buttons:
+  - Exit: exit
+  - Restart: restart
+attachment:
+  - name: Advice Letter for ${ user }
+    filename: advice_letter_${ space_to_underscore(user) }
+    metadata:
+      FooterCenter: "[HYPHEN] [PAGENUM] [HYPHEN]"
+    content: |
+      [CENTER] Advice Letter [BR] for a really
+      important client
+      
+      Dear ${ user.salutation() + ' ' + user.name.last }:
+
+      [TAB] Your marital status is ${ user.marital_status.lower() }.
+      % if user.marital_status == 'Single':
+      Perhaps you should marry ${ village_idiot }.
+      % endif
+      
+      [TAB] Your annual income is ${ currency(user.income.total()) } and the value
+      of all you own is ${ currency(user.asset.total()) }.
+      % if user_has_standing:
+      You have a valid claim.
+      % else:
+      Sorry, you do not have a valid claim.
+      % endif
+
+      [PAGEBREAK]
+      
+      [TAB] If you have any questions, you can call us at 215-981-3843.
+  - name: ${ pleading.title }
+    filename: ${ space_to_underscore(pleading.title) }
+    metadata:
+      FirstFooterCenter: "[HYPHEN] [PAGENUM] [HYPHEN]"
+      FooterCenter: "[HYPHEN] [PAGENUM] [HYPHEN]"
+    content: |
+      ${ pleading.caption() }
+
+      This is a pleading.
+      % if user.picture_verified:
+      Look how cute I am:
+
+      ${ user.picture.show() }
+      % endif
+
+      Please grant me the relief I request!
+help: |
+  This is the end of the interview, ${ user }.  You can exit or restart.
+
+  I hope you enjoyed this interview.
+---
+generic object: Individual
+question: >-
+  Where ${ x.do_question('live') }?
+fields:
+  - Type of home: x.address.type
+    choices:
+      - Apartment
+      - Leased house
+      - Owned house
+      - Mobile home
+  - Address: x.address.address
+  - Unit: x.address.unit
+    required: false
+  - City: x.address.city
+  - State: x.address.state
+    code: |
+      us.states.mapping('abbr', 'name')
+  - Zip: x.address.zip
+    required: false
+comment: >-
+  This question demonstrates fields that have the style of dropdown
+  lists.  The values of a dropdown list can be generated with code
+  that runs at the time the question is asked, or they can be
+  hard-coded into the question itself.
+---
+question: Please upload a picture.
+fields:
+  - A test file: user.picture
+    datatype: file
+---
+question: |
+  Is this your picture?
+subquestion: |  
+  ${ user.picture.show() }
+yesno: user.picture_verified
+---
+question: |
+  Why do you think you deserve to win this case?
+fields:
+  - "Reason you should win": explanation
+    datatype: area
+    hint: |
+      I should win because . . .
+...

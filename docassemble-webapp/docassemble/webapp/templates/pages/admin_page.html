@@ -1,0 +1,28 @@
+{% extends "base_templates/page_base.html" %}  {# base_templates/page_base.html extends base_templates/base.html #}
+
+{% block main %}
+<h1>Admin page</h1>
+
+<p>This page is accessible to authenticated users with the 'admin' role.</p>
+
+<p>The code:</p>
+<pre>
+# The Home page is accessible to anyone
+@app.route('/')
+def home_page():
+    return render_template('pages/home_page.html')
+
+# The Member page is accessible to authenticated users (users that have logged in)
+@app.route('/member')
+@login_required             # Limits access to authenticated users
+def member_page():
+    return render_template('pages/member_page.html')
+
+# The Admin page is accessible to users with the 'admin' role
+@app.route('/admin')
+@roles_required('admin')    # Limits access to users with the 'admin' role
+def admin_page():
+    return render_template('pages/admin_page.html')
+</pre>
+
+{% endblock %}

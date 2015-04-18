@@ -1,0 +1,7 @@
+Dear User,
+
+{% block message %}
+{% endblock %}
+
+Sincerely,
+{{ app_name }}
