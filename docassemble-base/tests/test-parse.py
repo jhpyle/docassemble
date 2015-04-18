@@ -1,12 +1,12 @@
 import os
 import sys
 
-from docassemble.interview_cache import get_interview
-from docassemble.parse import InterviewStatus
+from docassemble.base.interview_cache import get_interview
+from docassemble.base.parse import InterviewStatus
 
 package_path = os.path.join(os.path.expanduser("~"), 'docassemble')
 
-questionFile = os.path.join(package_path, 'docassemble', 'demo', 'data', 'questions', 'questions.yaml')
+questionFile = os.path.join(package_path, 'docassemble-demo', 'docassemble', 'demo', 'data', 'questions', 'questions.yaml')
 
 interview = get_interview(questionFile)
 

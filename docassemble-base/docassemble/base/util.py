@@ -109,7 +109,6 @@ def word(theword):
 def set_language(lang):
     global language
     language = lang
-    update_locale()
     return
 
 def get_language():
@@ -118,7 +117,6 @@ def get_language():
 def set_locale(loc):
     global this_locale
     this_locale = loc
-    update_locale()
     return
 
 def get_locale():
@@ -128,8 +126,6 @@ def update_locale():
     #logmessage("Using " + str(language) + '_' + str(this_locale) + "\n")
     locale.setlocale(locale.LC_ALL, str(language) + '_' + str(this_locale))
     return
-
-update_locale()
 
 def comma_and_list(*pargs, **kargs):
     if 'oxford' in kargs and kargs['oxford'] == False:

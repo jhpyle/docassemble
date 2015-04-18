@@ -18,6 +18,8 @@ The docassemble module depends on:
 * [pandoc](http://johnmacfarlane.net/pandoc/), which depends on [LaTeX](http://www.latex-project.org/) if you want to convert to PDF
 * [httplib2](https://pypi.python.org/pypi/httplib2)
 * [us](https://pypi.python.org/pypi/us)
+* [SmartyPants](https://pypi.python.org/pypi/mdx_smartypants)
+* [PyRTF-ng](https://github.com/nekstrom/pyrtf-ng)
 
 The sample web application depends on:
 * [Flask](http://flask.pocoo.org/)
@@ -31,11 +33,10 @@ The sample web application depends on:
 * [simplekv](https://github.com/mbr/simplekv)
 * [Flask-KVSession](https://pypi.python.org/pypi/Flask-KVSession)
 * [Flask-User](https://pythonhosted.org/Flask-User)
-* [SmartyPants](https://pypi.python.org/pypi/mdx_smartypants)
 * [Pillow](https://pypi.python.org/pypi/Pillow/)
-* [PyRTF-ng](https://github.com/nekstrom/pyrtf-ng)
 * [PyPDF](https://pypi.python.org/pypi/pyPdf/1.13)
 * [pdftoppm](http://www.foolabs.com/xpdf/download.html)
+* A web server
 * A mail server
 
 To run the demo question file you will need:
@@ -43,11 +44,17 @@ To run the demo question file you will need:
 
 ## Installation
 
+These installation instructions assume a Debian GNU/Linux machine, but docassemble has been developed to be os-independent.  If you can install the dependencies, you should be able to get docassemble to run.
+
+Install some utilities needed during installation:
+
+    apt-get install git python-pip wget unzip
+
 Clone the repository (e.g., in your home directory):
 
     git clone https://github.com/jhpyle/docassemble
 
-This creates a directory called `docassemble`.  To install the package, do the following as root:
+This creates a directory called `docassemble`.  To install the docassemble packages, do the following as root:
 
     cd docassemble
     sudo compile.sh
@@ -59,43 +66,50 @@ The compile.sh script installs the four Python packages contained in the git rep
 3. docassemble-webapp
 4. docassemble-demo
 
-The "docassemble" package is empty because it is a "namespace" package.  (This facilitates the creation of add-on packages.)  The core functionality is in the docassemble-base package.  These two packages are the only packages required to use the docassemble module.
+The "docassemble" package is empty because it is a "namespace" package.  (This facilitates the creation of add-on packages.)  The core functionality is in the docassemble-base package.  These two packages are the only packages required to use the docassemble module.  If you do not want to install all the packages, you can skip running compile.sh and simply run `python setup.py install` in each of the packages you wish to install.
 
-The "docassemble-webapp" package contains the optional web application.  The "docassemble-demo" package contains a demonstration interview.
+The "docassemble-webapp" package contains the standard docassemble web application.  The "docassemble-demo" package contains a demonstration interview.
 
 On Debian, the following should install all the dependencies for docassemble except for the [Nodebox English Linguistics library](https://www.nodebox.net/code/index.php/Linguistics).
 
-    sudo apt-get install python-html2text python-markdown python-yaml python-mako \
-    python-dateutil python-setuptools python-httplib2 python-dev pandoc python-imaging
+    sudo apt-get install python-html2text python-markdown python-yaml \
+      python-mako python-dateutil python-setuptools python-httplib2 \
+	  python-dev pandoc python-imaging locales texlive
+
+docassemble uses locale settings to format numbers, get currency symbols, and other things.  Make sure that an appropriate locale, such as en_US.UTF8, is set up on your system:
+
+    dpkg-reconfigure locales
 
 To install the [Nodebox English Linguistics library](https://www.nodebox.net/code/index.php/Linguistics), do something like the following:
 
-    wget https://www.nodebox.net/code/data/media/linguistics.zip
     cd /usr/local/lib/python2.7/dist-packages
+    wget https://www.nodebox.net/code/data/media/linguistics.zip
     sudo unzip linguistics.zip
     rm linguistics.zip
 
-To install the [us](https://pypi.python.org/pypi/us) module, do:
+To install the [us](https://pypi.python.org/pypi/us) and [SmartyPants](https://pypi.python.org/pypi/mdx_smartypants) modules, do:
 
-    sudo pip install us
+    sudo pip install us 3to2 guess-language-spirit mdx_smartypants
 
-The following will install the Debian dependencies needed for the web server:
-
-    sudo apt-get install apache2 postgresql python-psycopg2 libapache2-mod-wsgi \
-      python-flask python-flask-login python-flask-sqlalchemy python-pip \
-      python-flaskext.wtf python-passlib python-flask-babel python-bcrypt \
-      python-speaklater poppler-utils python-pil
-
-To install the additional dependencies for the web server ([rauth](https://github.com/litl/rauth), [simplekv](https://github.com/mbr/simplekv), [Flask-KVSession](https://pypi.python.org/pypi/Flask-KVSession), [Flask-User](https://pythonhosted.org/Flask-User)), and [SmartyPants](https://pypi.python.org/pypi/mdx_smartypants), do:
-
-    sudo pip install rauth simplekv Flask-KVSession flask-user \
-      mdx_smartypants pypdf
+(The mdx_smartypants module depends on 3to2 and guess-language-spirit, and may have trouble installing if those modules are not already installed.)
 
 To install [PyRTF-ng](https://github.com/nekstrom/pyrtf-ng), do:
 
     git clone https://github.com/nekstrom/pyrtf-ng
     cd pyrtf-ng
     sudo python setup.py install
+
+The following will install the Debian dependencies needed for the web server:
+
+    sudo apt-get install apache2 postgresql python-psycopg2 \
+      libapache2-mod-wsgi python-flask python-flask-login \
+	  python-flask-sqlalchemy python-flaskext.wtf python-passlib \
+	  python-flask-babel python-bcrypt python-speaklater poppler-utils \
+	  python-pil
+
+To install the additional dependencies for the web server ([rauth](https://github.com/litl/rauth), [simplekv](https://github.com/mbr/simplekv), [Flask-KVSession](https://pypi.python.org/pypi/Flask-KVSession), and [Flask-User](https://pythonhosted.org/Flask-User)), do:
+
+    sudo pip install rauth simplekv Flask-KVSession flask-user pypdf
 
 ## Setting up the web server
 
