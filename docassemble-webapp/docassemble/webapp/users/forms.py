@@ -3,8 +3,9 @@
 # Authors: Ling Thio <ling.thio@gmail.com>
 
 from flask_user.forms import RegisterForm
-from flask_wtf import Form
-from wtforms import StringField, SubmitField, validators
+from flask.ext.wtf import Form
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired
 from docassemble.base.util import word
 
 # Define the User registration form
@@ -23,18 +24,18 @@ class MyRegisterForm(RegisterForm):
 # Define the User profile form
 class UserProfileForm(Form):
     first_name = StringField('First name', validators=[
-        validators.DataRequired('First name is required')])
+        DataRequired('First name is required')])
     last_name = StringField('Last name', validators=[
-        validators.DataRequired('Last name is required')])
+        DataRequired('Last name is required')])
     country = StringField(word('Country Code'), validators=[
-        validators.DataRequired(word('Country Code is required'))])
+        DataRequired(word('Country Code is required'))])
     subdivisionfirst = StringField(word('First Subdivision'), validators=[
-        validators.DataRequired(word('First Subdivision is required'))])
+        DataRequired(word('First Subdivision is required'))])
     subdivisionsecond = StringField(word('Second Subdivision'), validators=[
-        validators.DataRequired(word('Second Subdivision is required'))])
+        DataRequired(word('Second Subdivision is required'))])
     subdivisionthird = StringField(word('Third Subdivision'), validators=[
-        validators.DataRequired(word('Third Subdivision is required'))])
+        DataRequired(word('Third Subdivision is required'))])
     organization = StringField(word('Organization'), validators=[
-        validators.DataRequired(word('Organization is required'))])
+        DataRequired(word('Organization is required'))])
     submit = SubmitField('Save')
 
