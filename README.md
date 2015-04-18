@@ -53,7 +53,7 @@ The following dependencies can be installed from Debian packages:
     sudo apt-get install python-html2text python-markdown python-yaml \
       python-mako python-dateutil python-setuptools python-httplib2 \
       python-dev python-imaging python-pip wget unzip git locales \
-      language-pack-en pandoc texlive
+      language-pack-en pandoc texlive texlive-latex-extra
 
 docassemble uses locale settings to format numbers, get currency symbols, and other things.  Do `echo $LANG` to see what locale you are using.  If it is not something like `en_US.UTF8`, you will want to set up an appropriate locale for your region:
 

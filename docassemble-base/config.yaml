@@ -22,3 +22,4 @@ uploads: /usr/share/docassemble/files
 mail:
   default_sender: '"Administrator" <no-reply@example.com>'
 admin_address: '"Administrator" <admin@example.com>'
+use_progress_bar: false
