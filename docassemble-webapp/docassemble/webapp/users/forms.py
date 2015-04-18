@@ -4,8 +4,9 @@
 
 from flask_user.forms import RegisterForm
 from flask.ext.wtf import Form
-from wtforms import StringField, SubmitField
+from wtforms import StringField, SubmitField, ValidationError
 from wtforms.validators import DataRequired
+
 from docassemble.base.util import word
 
 # Define the User registration form
@@ -21,6 +22,10 @@ class MyRegisterForm(RegisterForm):
     social_id = StringField('Social ID')
     nickname = StringField('Nickname', [fix_nickname])
 
+def length_two(form, field):
+    if len(field.data) != 2:
+        raise ValidationError(word('Must be a two-letter code'))
+    
 # Define the User profile form
 class UserProfileForm(Form):
     first_name = StringField('First name', validators=[
@@ -28,9 +33,9 @@ class UserProfileForm(Form):
     last_name = StringField('Last name', validators=[
         DataRequired('Last name is required')])
     country = StringField(word('Country Code'), validators=[
-        DataRequired(word('Country Code is required'))])
+        DataRequired(word('Country Code is required')), length_two])
     subdivisionfirst = StringField(word('First Subdivision'), validators=[
-        DataRequired(word('First Subdivision is required'))])
+        DataRequired(word('First Subdivision is required')), length_two])
     subdivisionsecond = StringField(word('Second Subdivision'), validators=[
         DataRequired(word('Second Subdivision is required'))])
     subdivisionthird = StringField(word('Third Subdivision'), validators=[

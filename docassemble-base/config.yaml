@@ -19,6 +19,7 @@ secretkey: 28asflwjeifwlfjsd2fejfiefw3g4o87
 appname: docassemble
 brandname: demo
 uploads: /usr/share/docassemble/files
+user_packages: /var/lib/docassemble/dist-packages
 mail:
   default_sender: '"Administrator" <no-reply@example.com>'
 admin_address: '"Administrator" <admin@example.com>'

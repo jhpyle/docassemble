@@ -29,6 +29,7 @@ The sample web application depends on:
 * [jQuery Validation](http://jqueryvalidation.org/) (hotlinked)
 * [PostgreSQL](http://www.postgresql.org/)
 * [psycopg2](http://initd.org/psycopg/)
+* [WTForms](https://wtforms.readthedocs.org/en/latest/)
 * [rauth](https://github.com/litl/rauth)
 * [simplekv](https://github.com/mbr/simplekv)
 * [Flask-KVSession](https://pypi.python.org/pypi/Flask-KVSession)
@@ -87,9 +88,9 @@ The following will install the Debian dependencies needed for the web server:
       python-flask-babel python-bcrypt python-speaklater poppler-utils \
       python-pil
 
-To install the additional dependencies for the web server ([rauth](https://github.com/litl/rauth), [simplekv](https://github.com/mbr/simplekv), [Flask-KVSession](https://pypi.python.org/pypi/Flask-KVSession), [Flask-User](https://pythonhosted.org/Flask-User)), and [PyPDF](https://pypi.python.org/pypi/pyPdf/1.13), do:
+To install the additional dependencies for the web server ([WTForms](https://wtforms.readthedocs.org/en/latest/), [rauth](https://github.com/litl/rauth), [simplekv](https://github.com/mbr/simplekv), [Flask-KVSession](https://pypi.python.org/pypi/Flask-KVSession), [Flask-User](https://pythonhosted.org/Flask-User)), and [PyPDF](https://pypi.python.org/pypi/pyPdf/1.13), do:
 
-    sudo pip install rauth simplekv Flask-KVSession flask-user pypdf
+    sudo pip install wtforms rauth simplekv Flask-KVSession flask-user pypdf
 
 ### Installing docassemble
 
@@ -129,21 +130,21 @@ If it fails with an exception, there was a problem with the installation.  The o
 
 ## Setting up the web server
 
-The following instructions assume a Debian system where your username is jdoe and you have cloned docassemble from /home/jdoe.  You will have to make some changes to adapt this to your platform.
+The following instructions assume a Debian system on which you have cloned `docassemble` into your home directory.  You will have to make some changes to adapt this to your platform.
 
 Turn on wsgi:
 
     sudo a2enmod wsgi
 
-Create the python-eggs directory (necessary for using pandoc templates):
+Create the root directory for user-contributed Python packages (see [site.USER_BASE](https://pythonhosted.org/setuptools/easy_install.html#custom-installation-locations)), and make sure it is writeable:
 
-    sudo mkdir /var/www/.python-eggs
-    sudo chown www-data.www-data /var/www/.python-eggs
+    sudo mkdir -p /var/www/.local
+    sudo chown www-data.www-data /var/www/.local
 
-Create the directory to hold the Flask WSGI file for the web server:
+Create the directory for the Flask WSGI file needed by the web server:
 
-    sudo mkdir -p /var/lib/docassemble
-    sudo mv docassemble/docassemble-webapp/flask.wsgi /var/lib/docassemble/
+    sudo mkdir -p /var/lib/docassemble/
+    sudo cp docassemble/docassemble-webapp/flask.wsgi /var/lib/docassemble/
 
 Create the uploads directory:
 
@@ -153,7 +154,7 @@ Create the uploads directory:
 Set up and edit the configuration file:
 
     sudo mkdir /etc/docassemble
-    sudo mv docassemble/docassemble-base/config.yaml /etc/docassemble/
+    sudo cp docassemble/docassemble-base/config.yaml /etc/docassemble/
     sudo vi /etc/docassemble/config.yaml
 
 Set /etc/apache2/sites-available/000-default.conf to something like:
@@ -176,8 +177,8 @@ Set /etc/apache2/sites-available/000-default.conf to something like:
         SSLProxyEngine on
         DocumentRoot /var/www/html
         WSGIDaemonProcess docassemble.webserver user=www-data group=www-data threads=5
-        WSGIScriptAlias /demo /var/lib/docassemble/flask.wsgi
-        <Directory /var/lib/docassemble>
+        WSGIScriptAlias /demo /var/lib/docassemble/webapp/flask.wsgi
+        <Directory /var/lib/docassemble/webapp>
           WSGIProcessGroup docassemble.webserver
           WSGIApplicationGroup %{GLOBAL}
           AllowOverride none

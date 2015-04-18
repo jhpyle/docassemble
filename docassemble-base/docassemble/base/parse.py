@@ -138,18 +138,22 @@ def standard_question_filename(the_file):
     return(None)
 
 def package_template_filename(the_file):
-    try:
-        return(pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.demo'), str(the_file)))
-    except:
-        #logmessage("Error retrieving data file\n")
-        return(None)
+    parts = the_file.split(":")
+    if len(parts) == 2:
+        try:
+            return(pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1]))
+        except:
+            return(None)
+    return(None)
 
 def package_question_filename(the_file):
-    try:
-        return(pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.demo'), str(the_file)))
-    except:
-        #logmessage("Error retrieving question file\n")
-        return(None)
+    parts = the_file.split(":")
+    if len(parts) == 2:
+        try:
+            return(pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1]))
+        except:
+            return(None)
+    return(None)
 
 def absolute_filename(the_file):
     if os.path.isfile(the_file) and os.access(the_file, os.R_OK):
@@ -167,6 +171,8 @@ def set_pandoc_path(path):
 #  - \def\startallcaps#1\end{\uppercase{#1}\end}
 
 class InterviewStatus(object):
+    def __init__(self):
+        self.attachments = None
     pass
 
 class Pandoc(object):

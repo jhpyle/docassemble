@@ -43,7 +43,7 @@ word_collection = {
         "You need to enter a number.": "You need to enter a number.",
         "You need to select one.": "You need to select one.",
         "Country Code": 'Country Code (e.g., "us")',
-        "First Subdivision": "State",
+        "First Subdivision": "State Abbreviation (e.g., 'NY')",
         "Second Subdivision": "County",
         "Third Subdivision": "Municipality",
         "Organization": "Organization",
@@ -229,6 +229,9 @@ def verb_present(the_verb, **kwargs):
 
 def noun_plural(the_noun):
     return(en.noun.plural(the_noun))
+
+def indefinite_article(the_noun):
+    return(en.noun.article(the_noun))
 
 def do_you(a, **kwargs):
     #logmessage("do_you kwargs are " + unicode(kwargs) + "\n")

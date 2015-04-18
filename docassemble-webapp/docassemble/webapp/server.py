@@ -1,10 +1,15 @@
 import os
 import sys
+import datetime
+import time
+import pip
 import docassemble.base.parse
 import docassemble.base.interview_cache
 from docassemble.base.standardformatter import as_html
 import docassemble.webapp.database
 import mimetypes
+import tempfile
+import zipfile
 from docassemble.base.error import DAError
 from docassemble.base.util import pickleable_objects
 from docassemble.base.util import word
@@ -31,8 +36,9 @@ from flask import current_app
 from flask import get_flashed_messages
 from flask import flash
 from flask.ext.login import LoginManager, UserMixin, login_user, logout_user, current_user
-from flask.ext.user import login_required, UserManager, SQLAlchemyAdapter
+from flask.ext.user import login_required, roles_required, UserManager, SQLAlchemyAdapter
 from flask.ext.user.forms import LoginForm
+from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm
 from flask_mail import Mail, Message
 import flask.ext.user.signals
 import httplib2
@@ -48,11 +54,12 @@ from PIL import Image
 import pyPdf
 from subprocess import call
 
-yaml_filename = os.path.join('docassemble', 'demo', 'data', 'questions', 'questions.yaml')
+#yaml_filename = os.path.join('docassemble', 'demo', 'data', 'questions', 'questions.yaml')
+yaml_filename = 'docassemble.hello-world:data/questions/questions.yaml'
 
 if not daconfig['mail']:
     daconfig['mail'] = dict()
-
+os.environ['PYTHON_EGG_CACHE'] = tempfile.mkdtemp()
 DEBUG = daconfig.get('debug', False)
 app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
 app.config['BRAND_NAME'] = daconfig.get('brandname', daconfig.get('appname', 'docassemble'))
@@ -98,6 +105,8 @@ docassemble.base.util.update_locale()
 app.logger.info("default sender is " + app.config['MAIL_DEFAULT_SENDER'] + "\n")
 exit_page = daconfig.get('exitpage', '/')
 USE_PROGRESS_BAR = daconfig.get('use_progress_bar', True)
+#USER_PACKAGES = daconfig.get('user_packages', '/var/lib/docassemble/dist-packages')
+#sys.path.append(USER_PACKAGES)
 if USE_PROGRESS_BAR:
     initial_dict = daconfig.get('initial_dict', dict(progress=0))
 else:
@@ -131,7 +140,7 @@ def flask_logger(message):
     app.logger.info(message)
     return
 
-docassemble.base.logger.set_logmessage(flask_logger)
+#docassemble.base.logger.set_logmessage(flask_logger)
 
 logmessage("foo bar\n")
 
@@ -820,6 +829,174 @@ def serve_uploaded_pagescreen(number, page):
     else:
         abort(401)
 
+@app.route('/updatepackage', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def update_package():
+    form = UpdatePackageForm(request.form, current_user)
+    if request.method == 'POST' and form.validate():
+        temp_directory = tempfile.mkdtemp()
+        call(['pip', 'install', '--src=' + temp_directory, '--log-file=/tmp/pip.log', '--upgrade', "--install-option=--user", '-e', 'git+' + form.giturl.data + '.git#egg=' + form.packagename.data])
+        flash('pip install --log-file=/tmp/pip.log --upgrade --install-option="--user" -e git+' + form.giturl.data + '.git#egg=' + form.packagename.data, 'success')
+    return render_template('pages/update_package.html', form=form), 200
+
+@app.route('/createpackage', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def create_package():
+    form = CreatePackageForm(request.form, current_user)
+    if request.method == 'POST' and form.validate():
+        pkgname = form.name.data
+        initpy = """\
+try:
+    __import__('pkg_resources').declare_namespace(__name__)
+except ImportError:
+    __path__ = __import__('pkgutil').extend_path(__path__, __name__)
+
+"""
+        licensetext = """\
+The MIT License (MIT)
+
+"""
+        licensetext += 'Copyright (c) ' + str(datetime.datetime.now().year) + ' ' + str(current_user.first_name) + " " + str(current_user.last_name) + """
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+        readme = '# docassemble.' + str(pkgname) + "\n\nA docassemble extension.\n\n## Author\n" + str(current_user.first_name) + " " + str(current_user.last_name) + ", " + str(current_user.email) + "\n"
+        setuppy = """\
+#!/usr/bin/env python
+
+import os
+from setuptools import setup, find_packages
+
+"""
+        setuppy += "setup(name='docassemble." + str(pkgname) + "',\n" + """\
+      version='0.1',
+      description=('A docassemble extension.'),
+      author='""" + str(current_user.first_name) + " " + str(current_user.last_name) + """',
+      author_email='""" + str(current_user.email) + """',
+      license='MIT',
+      url='http://docassemble.org',
+      packages=find_packages(),
+      namespace_packages = ['docassemble'],
+      zip_safe = False,
+      package_data={'docassemble.""" + str(pkgname) + """': ['data/templates/*', 'data/questions/*']},
+     )
+
+"""
+        questionfiletext = """\
+---
+metadata:
+  description: |
+    Insert description of question file here.
+  authors:
+    - name: """ + str(current_user.first_name) + " " + str(current_user.last_name) + """
+      organization: """ + str(current_user.organization) + """
+  revision_date: """ + time.strftime("%Y-%m-%d") + """
+---
+include:
+  - basic-questions.yaml
+---
+mandatory: true
+question: |
+  % if user.doing_well:
+    Good to hear it!
+  % else:
+    Sorry to hear that!
+  % endif
+sets: user_done
+buttons:
+  - Exit: exit
+  - Restart: restart
+---
+question: Are you doing well today?
+yesno: user.doing_well
+...
+"""
+        templatereadme = """\
+# Template directory
+
+If you wanted to use non-standard document templates with pandoc,
+you would put template files in this directory.
+"""
+        objectfile = """\
+# This is a Python module in which you can write your own Python code,
+# if you want to.
+#
+# Include this module in a docassemble interview by writing:
+# ---
+# modules:
+#   - docassemble.""" + pkgname + """.objects
+# ---
+#
+# Then you can do things like:
+# ---
+# objects:
+#   - favorite_fruit: Fruit
+# ---
+# question: |
+#   When I eat ${ indefinite_article(favorite_fruit.name) }, 
+#   I think, "${ favorite_fruit.eat() }"  Do you agree?
+# yesno: agrees_favorite_fruit_is_good
+# ---
+# question: What is the best fruit?
+# fields:
+#   - Fruit Name: favorite_fruit.name
+# ---
+
+class Fruit(DAObject):
+    def eat():
+        return("Yum, that " + self.name + " was good!")
+"""
+        directory = tempfile.mkdtemp()
+        packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
+        questionsdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'questions')
+        templatesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'templates')
+        os.makedirs(questionsdir)
+        os.makedirs(templatesdir)
+        with open(os.path.join(packagedir, 'README.md'), 'a') as the_file:
+            the_file.write(readme)
+        with open(os.path.join(packagedir, 'LICENSE'), 'a') as the_file:
+            the_file.write(licensetext)
+        with open(os.path.join(packagedir, 'setup.py'), 'a') as the_file:
+            the_file.write(setuppy)
+        with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'a') as the_file:
+            the_file.write(initpy)
+        with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'a') as the_file:
+            the_file.write('')
+        with open(os.path.join(packagedir, 'docassemble', pkgname, 'objects.py'), 'a') as the_file:
+            the_file.write(objectfile)
+        with open(os.path.join(templatesdir, 'README.md'), 'a') as the_file:
+            the_file.write(templatereadme)
+        with open(os.path.join(questionsdir, 'questions.yaml'), 'a') as the_file:
+            the_file.write(questionfiletext)
+        archive = tempfile.NamedTemporaryFile()
+        zf = zipfile.ZipFile(archive.name, mode='w')
+        trimlength = len(directory) + 1
+        for root, dirs, files in os.walk(packagedir):
+            for file in files:
+                thefilename = os.path.join(root, file)
+                zf.write(thefilename, thefilename[trimlength:])
+        zf.close()
+        return(send_file(archive.name, mimetype='application/zip', as_attachment=True, attachment_filename='docassemble-' + str(pkgname) + '.zip'))
+    return render_template('pages/create_package.html', form=form), 200
+    
 def make_image_files(path):
     args = [PDFTOPPM_COMMAND, '-r', str(PNG_RESOLUTION), '-png', path, path + 'page']
     result = call(args)

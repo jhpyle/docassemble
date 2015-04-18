@@ -30,7 +30,7 @@ def user_profile_page():
     form = UserProfileForm(request.form, current_user)
 
     # Process valid POST
-    if request.method=='POST' and form.validate():
+    if request.method == 'POST' and form.validate():
 
         # Copy form fields to user_profile fields
         form.populate_obj(current_user)
