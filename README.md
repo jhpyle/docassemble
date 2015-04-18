@@ -50,7 +50,18 @@ Clone the repository (e.g., in your home directory):
 This creates a directory called `docassemble`.  To install the package, do the following as root:
 
     cd docassemble
-    sudo python setup.py install
+    sudo compile.sh
+
+The compile.sh script installs the four Python packages contained in the git repository:
+
+1. docassemble
+2. docassemble-base
+3. docassemble-webapp
+4. docassemble-demo
+
+The "docassemble" package is empty because it is a "namespace" package.  (This facilitates the creation of add-on packages.)  The core functionality is in the docassemble-base package.  These two packages are the only packages required to use the docassemble module.
+
+The "docassemble-webapp" package contains the optional web application.  The "docassemble-demo" package contains a demonstration interview.
 
 On Debian, the following should install all the dependencies for docassemble except for the [Nodebox English Linguistics library](https://www.nodebox.net/code/index.php/Linguistics).
 
@@ -85,13 +96,6 @@ To install [PyRTF-ng](https://github.com/nekstrom/pyrtf-ng), do:
     git clone https://github.com/nekstrom/pyrtf-ng
     cd pyrtf-ng
     sudo python setup.py install
-
-## Testing
-
-Test the assembly of an interview specified in YAML
-
-    cd docassemble
-    python -m unittest tests.test-parse
 
 ## Setting up the web server
 
