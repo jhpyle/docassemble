@@ -1,1 +1,1 @@
-docassemble-base/README.md
+docassemble/README.md
