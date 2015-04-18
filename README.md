@@ -135,8 +135,8 @@ Set /etc/apache2/sites-available/000-default.conf to something like:
 		SSLProxyEngine on
 		DocumentRoot /var/www/html
 		WSGIDaemonProcess docassemble.webserver user=www-data group=www-data threads=5
-		WSGIScriptAlias /demo /home/jdoe/docassemble/flask.wsgi
-		<Directory /home/jdoe/docassemble>
+		WSGIScriptAlias /demo /home/jdoe/docassemble/docassemble-webapp/flask.wsgi
+		<Directory /home/jdoe/docassemble/docassemble-webapp>
 		  WSGIProcessGroup docassemble.webserver
 		  WSGIApplicationGroup %{GLOBAL}
 		  AllowOverride none
@@ -200,7 +200,7 @@ then, within psql, run the following SQL statements to create the necessary data
 Set up and edit the configuration file:
 
     sudo mkdir /etc/docassemble
-    sudo mv /home/jdoe/docassemble/config.yaml /etc/docassemble/
+    sudo mv /home/jdoe/docassemble/docassemble-base/config.yaml /etc/docassemble/
     sudo vi /etc/docassemble/config.yaml
 
 In order for the "Sign in with Google" and "Sign in with Facebook" buttons to work, you will need to register your site on [Google Developers Console](https://console.developers.google.com/) and on [Facebook Developers](https://developers.facebook.com/) and obtain IDs and secrets, which you supply to docassemble by editing /etc/docassemble/config.yaml.
