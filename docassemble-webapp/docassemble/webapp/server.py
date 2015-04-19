@@ -933,6 +933,7 @@ def create_package():
                 db.session.add(package_auth)
                 db.session.add(package_entry)
                 db.session.commit()
+                sys.stderr.write("Ok, did the commit\n")
             initpy = """\
 try:
     __import__('pkg_resources').declare_namespace(__name__)
