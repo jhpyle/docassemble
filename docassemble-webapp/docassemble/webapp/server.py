@@ -905,7 +905,7 @@ def update_package():
                             db.session.commit()
                         else:
                             package_entry = Package.query.filter_by(name=packagename).first()
-                            if not package_entry.giturl:
+                            if package entry is not None and not package_entry.giturl:
                                 package_entry.giturl = giturl
                                 db.session.commit()
                         flash(word("Install successful"), 'success')
@@ -925,7 +925,7 @@ def create_package():
         if not user_can_edit_package(pkgname='docassemble-' + pkgname):
             flash(word('Sorry, that package name is already in use by someone else'), 'error')
         else:
-            if Package.query.filter_by(name=pkgname) is None:
+            if Package.query.filter_by(name='docassemble-' + pkgname) is None:
                 package_auth = PackageAuth(user_id=current_user.id)
                 package_entry = Package(name='docassemble-' + pkgname, package_auth=package_auth)
                 db.session.add(package_auth)
