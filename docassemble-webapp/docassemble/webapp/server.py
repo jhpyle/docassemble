@@ -875,7 +875,7 @@ def update_package():
                         with open(pip_log.name) as x: logfilecontents = x.read()
                         flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + '</pre>', 'error')
                     else:
-                        if Package.query.filter_by(name=pkgname) is None:
+                        if Package.query.filter_by(name=pkgname).first() is None:
                             package_auth = PackageAuth(user_id=current_user.id)
                             package_entry = Package(name=packagename, package_auth=package_auth)
                             db.session.add(package_auth)
@@ -897,7 +897,7 @@ def update_package():
                         with open(pip_log.name) as x: logfilecontents = x.read()
                         flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + "</pre>", 'error')
                     else:
-                        if Package.query.filter_by(name=packagename) is None and Package.query.filter_by(giturl=giturl) is None:
+                        if Package.query.filter_by(name=packagename).first() is None and Package.query.filter_by(giturl=giturl).first() is None:
                             package_auth = PackageAuth(user_id=current_user.id)
                             package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth)
                             db.session.add(package_auth)
@@ -925,7 +925,7 @@ def create_package():
         if not user_can_edit_package(pkgname='docassemble-' + pkgname):
             flash(word('Sorry, that package name is already in use by someone else'), 'error')
         else:
-            if Package.query.filter_by(name='docassemble-' + pkgname) is None:
+            if Package.query.filter_by(name='docassemble-' + pkgname).first() is None:
                 package_auth = PackageAuth(user_id=current_user.id)
                 package_entry = Package(name='docassemble-' + pkgname, package_auth=package_auth)
                 db.session.add(package_auth)
