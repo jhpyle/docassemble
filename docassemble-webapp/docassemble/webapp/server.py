@@ -925,7 +925,9 @@ def create_package():
         if not user_can_edit_package(pkgname='docassemble-' + pkgname):
             flash(word('Sorry, that package name is already in use by someone else'), 'error')
         else:
-            if Package.query.filter_by(name='docassemble-' + pkgname).first() is None:
+            foobar = Package.query.filter_by(name='docassemble-' + pkgname).first()
+            sys.stderr.write("this is it: " + str(foobar) + "\n")
+            if foobar is None:
                 package_auth = PackageAuth(user_id=current_user.id)
                 package_entry = Package(name='docassemble-' + pkgname, package_auth=package_auth)
                 db.session.add(package_auth)
