@@ -49,6 +49,7 @@ from simplekv.db.sql import SQLAlchemyStore
 from sqlalchemy import create_engine, MetaData
 from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.users.models import UserAuth, User
+from docassemble.webapp.packages.models import Package, PackageAuth
 from docassemble.webapp.config import daconfig
 from PIL import Image
 import pyPdf
@@ -762,7 +763,10 @@ def make_navbar(page_title, steps):
     if current_user.is_anonymous():
         navbar += '            <li><a href="' + url_for('user.login', next=url_for('index')) + '">' + word('Sign in') + '</a></li>'
     else:
-        navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">' + current_user.email + '<b class="caret"></b></a><ul class="dropdown-menu"><li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li><li><a href="' + url_for('user.logout') + '">' + word('Sign out') + '</a></li></ul></li>'
+        navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">' + current_user.email + '<b class="caret"></b></a><ul class="dropdown-menu">'
+        if current_user.has_roles(['admin', 'developer']):
+            navbar +='<li><a href="' + url_for('package_page') + '">' + word('Package Management') + '</a></li>'
+        navbar += '<li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li><li><a href="' + url_for('user.logout') + '">' + word('Sign out') + '</a></li></ul></li>'
     navbar += """\
           </ul>
         </div><!--/.nav-collapse -->
@@ -829,6 +833,26 @@ def serve_uploaded_pagescreen(number, page):
     else:
         abort(401)
 
+def user_can_edit_package(pkgname=None, giturl=None):
+    cur = conn.cursor()
+    sys.stderr.write("Got to user_can_edit_package\n")
+    if pkgname is not None:
+        sys.stderr.write("Testing for:" + pkgname + ":\n")
+        cur.execute("select a.id, b.user_id, b.authtype from package as a left outer join package_auth as b on (a.id=b.package_id) where a.name=%s", [pkgname])
+        if cur.rowcount <= 0:
+            return(True)
+        for d in cur:
+            if d[1] == current_user.id:
+                return(True)
+    if giturl is not None:
+        cur.execute("select a.id, b.user_id, b.authtype from package as a left outer join package_auth as b on (a.id=b.package_id) where a.giturl=%s", [giturl])
+        if cur.rowcount <= 0:
+            return(True)
+        for d in cur:
+            if d[1] == current_user.id:
+                return(True)
+    return(False)
+                
 @app.route('/updatepackage', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin', 'developer'])
@@ -841,27 +865,52 @@ def update_package():
             try:
                 the_file = request.files['zipfile']
                 filename = secure_filename(the_file.filename)
-                zippath = os.path.join(temp_directory, filename)
-                the_file.save(zippath)
-                commands = ['install', zippath, '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user"]
-                returnval = pip.main(commands)
-                if returnval > 0:
-                    with open(pip_log.name) as x: logfilecontents = x.read()
-                    flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + '</pre>', 'error')
+                pkgname = re.sub(r'\.zip$', r'', filename)
+                if user_can_edit_package(pkgname=pkgname):
+                    zippath = os.path.join(temp_directory, filename)
+                    the_file.save(zippath)
+                    commands = ['install', zippath, '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user"]
+                    returnval = pip.main(commands)
+                    if returnval > 0:
+                        with open(pip_log.name) as x: logfilecontents = x.read()
+                        flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + '</pre>', 'error')
+                    else:
+                        if Package.query.filter_by(name=pkgname) is None:
+                            package_auth = PackageAuth(user_id=current_user.id)
+                            package_entry = Package(name=packagename, package_auth=package_auth)
+                            db.session.add(package_auth)
+                            db.session.add(package_entry)
+                            db.session.commit()
+                        flash(word("Install successful"), 'success')
                 else:
-                    flash(word("Install successful"), 'success')
+                    flash(word("You do not have permission to install this package"))
             except Exception as errMess:
                 flash("Error processing upload: " + str(errMess), "error")
         else:
             if form.giturl.data:
-                packagename = re.sub(r'.*/', '', form.giturl.data)
-                commands = ['install', '--egg', '--src=' + temp_directory, '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user", 'git+' + form.giturl.data + '.git#egg=' + packagename]
-                returnval = pip.main(commands)
-                if returnval > 0:
-                    with open(pip_log.name) as x: logfilecontents = x.read()
-                    flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + "</pre>", 'error')
+                giturl = form.giturl.data.strip()
+                packagename = re.sub(r'.*/', '', giturl)
+                if user_can_edit_package(giturl=giturl) and user_can_edit_package(pkgname=packagename):
+                    commands = ['install', '--egg', '--src=' + temp_directory, '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user", 'git+' + giturl + '.git#egg=' + packagename]
+                    returnval = pip.main(commands)
+                    if returnval > 0:
+                        with open(pip_log.name) as x: logfilecontents = x.read()
+                        flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + "</pre>", 'error')
+                    else:
+                        if Package.query.filter_by(name=packagename) is None and Package.query.filter_by(giturl=giturl) is None:
+                            package_auth = PackageAuth(user_id=current_user.id)
+                            package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth)
+                            db.session.add(package_auth)
+                            db.session.add(package_entry)
+                            db.session.commit()
+                        else:
+                            package_entry = Package.query.filter_by(name=packagename).first()
+                            if not package_entry.giturl:
+                                package_entry.giturl = giturl
+                                db.session.commit()
+                        flash(word("Install successful"), 'success')
                 else:
-                    flash(word("Install successful"), 'success')
+                    flash(word("You do not have permission to install this package"))                   
             else:
                 flash(word('You need to either supply a Git URL or upload a file.'), 'error')
     return render_template('pages/update_package.html', form=form), 200
@@ -872,19 +921,28 @@ def update_package():
 def create_package():
     form = CreatePackageForm(request.form, current_user)
     if request.method == 'POST' and form.validate():
-        pkgname = form.name.data
-        initpy = """\
+        pkgname = re.sub(r'^docassemble-', r'', form.name.data)
+        if not user_can_edit_package(pkgname='docassemble-' + pkgname):
+            flash(word('Sorry, that package name is already in use by someone else'), 'error')
+        else:
+            if Package.query.filter_by(name=pkgname) is None:
+                package_auth = PackageAuth(user_id=current_user.id)
+                package_entry = Package(name='docassemble-' + pkgname, package_auth=package_auth)
+                db.session.add(package_auth)
+                db.session.add(package_entry)
+                db.session.commit()
+            initpy = """\
 try:
     __import__('pkg_resources').declare_namespace(__name__)
 except ImportError:
     __path__ = __import__('pkgutil').extend_path(__path__, __name__)
 
 """
-        licensetext = """\
+            licensetext = """\
 The MIT License (MIT)
 
 """
-        licensetext += 'Copyright (c) ' + str(datetime.datetime.now().year) + ' ' + str(current_user.first_name) + " " + str(current_user.last_name) + """
+            licensetext += 'Copyright (c) ' + str(datetime.datetime.now().year) + ' ' + str(current_user.first_name) + " " + str(current_user.last_name) + """
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -904,15 +962,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-        readme = '# docassemble.' + str(pkgname) + "\n\nA docassemble extension.\n\n## Author\n" + str(current_user.first_name) + " " + str(current_user.last_name) + ", " + str(current_user.email) + "\n"
-        setuppy = """\
+            readme = '# docassemble.' + str(pkgname) + "\n\nA docassemble extension.\n\n## Author\n" + str(current_user.first_name) + " " + str(current_user.last_name) + ", " + str(current_user.email) + "\n"
+            setuppy = """\
 #!/usr/bin/env python
 
 import os
 from setuptools import setup, find_packages
 
 """
-        setuppy += "setup(name='docassemble." + str(pkgname) + "',\n" + """\
+            setuppy += "setup(name='docassemble." + str(pkgname) + "',\n" + """\
       version='0.1',
       description=('A docassemble extension.'),
       author='""" + str(current_user.first_name) + " " + str(current_user.last_name) + """',
@@ -926,7 +984,7 @@ from setuptools import setup, find_packages
      )
 
 """
-        questionfiletext = """\
+            questionfiletext = """\
 ---
 metadata:
   description: |
@@ -955,13 +1013,13 @@ question: Are you doing well today?
 yesno: user.doing_well
 ...
 """
-        templatereadme = """\
+            templatereadme = """\
 # Template directory
 
 If you wanted to use non-standard document templates with pandoc,
 you would put template files in this directory.
 """
-        objectfile = """\
+            objectfile = """\
 # This is a Python module in which you can write your own Python code,
 # if you want to.
 #
@@ -990,39 +1048,45 @@ class Fruit(DAObject):
     def eat():
         return("Yum, that " + self.name + " was good!")
 """
-        directory = tempfile.mkdtemp()
-        packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
-        questionsdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'questions')
-        templatesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'templates')
-        os.makedirs(questionsdir)
-        os.makedirs(templatesdir)
-        with open(os.path.join(packagedir, 'README.md'), 'a') as the_file:
-            the_file.write(readme)
-        with open(os.path.join(packagedir, 'LICENSE'), 'a') as the_file:
-            the_file.write(licensetext)
-        with open(os.path.join(packagedir, 'setup.py'), 'a') as the_file:
-            the_file.write(setuppy)
-        with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'a') as the_file:
-            the_file.write(initpy)
-        with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'a') as the_file:
-            the_file.write('')
-        with open(os.path.join(packagedir, 'docassemble', pkgname, 'objects.py'), 'a') as the_file:
-            the_file.write(objectfile)
-        with open(os.path.join(templatesdir, 'README.md'), 'a') as the_file:
-            the_file.write(templatereadme)
-        with open(os.path.join(questionsdir, 'questions.yml'), 'a') as the_file:
-            the_file.write(questionfiletext)
-        archive = tempfile.NamedTemporaryFile()
-        zf = zipfile.ZipFile(archive.name, mode='w')
-        trimlength = len(directory) + 1
-        for root, dirs, files in os.walk(packagedir):
-            for file in files:
-                thefilename = os.path.join(root, file)
-                zf.write(thefilename, thefilename[trimlength:])
-        zf.close()
-        return(send_file(archive.name, mimetype='application/zip', as_attachment=True, attachment_filename='docassemble-' + str(pkgname) + '.zip'))
+            directory = tempfile.mkdtemp()
+            packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
+            questionsdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'questions')
+            templatesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'templates')
+            os.makedirs(questionsdir)
+            os.makedirs(templatesdir)
+            with open(os.path.join(packagedir, 'README.md'), 'a') as the_file:
+                the_file.write(readme)
+            with open(os.path.join(packagedir, 'LICENSE'), 'a') as the_file:
+                the_file.write(licensetext)
+            with open(os.path.join(packagedir, 'setup.py'), 'a') as the_file:
+                the_file.write(setuppy)
+            with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'a') as the_file:
+                the_file.write(initpy)
+            with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'a') as the_file:
+                the_file.write('')
+            with open(os.path.join(packagedir, 'docassemble', pkgname, 'objects.py'), 'a') as the_file:
+                the_file.write(objectfile)
+            with open(os.path.join(templatesdir, 'README.md'), 'a') as the_file:
+                the_file.write(templatereadme)
+            with open(os.path.join(questionsdir, 'questions.yml'), 'a') as the_file:
+                the_file.write(questionfiletext)
+            archive = tempfile.NamedTemporaryFile()
+            zf = zipfile.ZipFile(archive.name, mode='w')
+            trimlength = len(directory) + 1
+            for root, dirs, files in os.walk(packagedir):
+                for file in files:
+                    thefilename = os.path.join(root, file)
+                    zf.write(thefilename, thefilename[trimlength:])
+            zf.close()
+            return(send_file(archive.name, mimetype='application/zip', as_attachment=True, attachment_filename='docassemble-' + str(pkgname) + '.zip'))
     return render_template('pages/create_package.html', form=form), 200
-    
+
+@app.route('/packages', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def package_page():
+    return render_template('pages/packages.html'), 200
+
 def make_image_files(path):
     args = [PDFTOPPM_COMMAND, '-r', str(PNG_RESOLUTION), '-png', path, path + 'page']
     result = call(args)
