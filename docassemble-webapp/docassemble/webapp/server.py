@@ -905,7 +905,7 @@ def update_package():
                             db.session.commit()
                         else:
                             package_entry = Package.query.filter_by(name=packagename).first()
-                            if package entry is not None and not package_entry.giturl:
+                            if package_entry is not None and not package_entry.giturl:
                                 package_entry.giturl = giturl
                                 db.session.commit()
                         flash(word("Install successful"), 'success')
