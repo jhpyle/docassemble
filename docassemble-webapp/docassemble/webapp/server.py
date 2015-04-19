@@ -883,7 +883,7 @@ def update_package():
                             db.session.commit()
                         flash(word("Install successful"), 'success')
                 else:
-                    flash(word("You do not have permission to install this package"))
+                    flash(word("You do not have permission to install this package"), 'error')
             except Exception as errMess:
                 flash("Error processing upload: " + str(errMess), "error")
         else:
@@ -910,7 +910,7 @@ def update_package():
                                 db.session.commit()
                         flash(word("Install successful"), 'success')
                 else:
-                    flash(word("You do not have permission to install this package"))                   
+                    flash(word("You do not have permission to install this package"), 'error')
             else:
                 flash(word('You need to either supply a Git URL or upload a file.'), 'error')
     return render_template('pages/update_package.html', form=form), 200
@@ -925,15 +925,15 @@ def create_package():
         if not user_can_edit_package(pkgname='docassemble-' + pkgname):
             flash(word('Sorry, that package name is already in use by someone else'), 'error')
         else:
-            foobar = Package.query.filter_by(name='docassemble-' + pkgname).first()
-            sys.stderr.write("this is it: " + str(foobar) + "\n")
-            if foobar is None:
+            #foobar = Package.query.filter_by(name='docassemble-' + pkgname).first()
+            #sys.stderr.write("this is it: " + str(foobar) + "\n")
+            if Package.query.filter_by(name='docassemble-' + pkgname).first() is None:
                 package_auth = PackageAuth(user_id=current_user.id)
                 package_entry = Package(name='docassemble-' + pkgname, package_auth=package_auth)
                 db.session.add(package_auth)
                 db.session.add(package_entry)
                 db.session.commit()
-                sys.stderr.write("Ok, did the commit\n")
+                #sys.stderr.write("Ok, did the commit\n")
             initpy = """\
 try:
     __import__('pkg_resources').declare_namespace(__name__)
