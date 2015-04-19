@@ -17,7 +17,7 @@ interview help:
     that you can save.
 ---
 include:
-  - basic-questions.yaml
+  - basic-questions.yml
 comment: >-
   This loads some question definitions that are common to many legal
   interviews.

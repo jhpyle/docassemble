@@ -1,3 +1,3 @@
 import yaml
 
-daconfig = yaml.load(open('/etc/docassemble/config.yaml', 'r').read())
+daconfig = yaml.load(open('/etc/docassemble/config.yml', 'r').read())

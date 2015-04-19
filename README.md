@@ -154,8 +154,10 @@ Create the uploads directory:
 Set up and edit the configuration file:
 
     sudo mkdir /etc/docassemble
-    sudo cp docassemble/docassemble-base/config.yaml /etc/docassemble/
-    sudo vi /etc/docassemble/config.yaml
+    sudo cp docassemble/docassemble-base/config.yml /etc/docassemble/
+    sudo vi /etc/docassemble/config.yml
+
+If you need to change the location 
 
 Set /etc/apache2/sites-available/000-default.conf to something like:
 
@@ -240,9 +242,9 @@ Then, within psql, run the following SQL statements to create the necessary data
     grant all on "uploads_indexno_seq" to "www-data";
     \q
 
-In order for the "Sign in with Google" and "Sign in with Facebook" buttons to work, you will need to register your site on [Google Developers Console](https://console.developers.google.com/) and on [Facebook Developers](https://developers.facebook.com/) and obtain IDs and secrets, which you supply to docassemble by editing /etc/docassemble/config.yaml.
+In order for the "Sign in with Google" and "Sign in with Facebook" buttons to work, you will need to register your site on [Google Developers Console](https://console.developers.google.com/) and on [Facebook Developers](https://developers.facebook.com/) and obtain IDs and secrets, which you supply to docassemble by editing /etc/docassemble/config.yml.
 
-The /etc/docassemble/config.yaml file also contains configuration for connecting to the Postgresql database and the mail server.
+The /etc/docassemble/config.yml file also contains configuration for connecting to the Postgresql database and the mail server.
 
 Restart Apache:
 

@@ -6,7 +6,7 @@ from docassemble.base.parse import InterviewStatus
 
 package_path = os.path.join(os.path.expanduser("~"), 'docassemble')
 
-questionFile = os.path.join(package_path, 'docassemble-demo', 'docassemble', 'demo', 'data', 'questions', 'questions.yaml')
+questionFile = os.path.join(package_path, 'docassemble-demo', 'docassemble', 'demo', 'data', 'questions', 'questions.yml')
 
 interview = get_interview(questionFile)
 

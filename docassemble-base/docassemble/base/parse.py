@@ -197,7 +197,7 @@ class Pandoc(object):
             self.input_content = docassemble.base.filter.pdf_filter(self.input_content)
             print "After: " + str(self.input_content)
             if len(self.initial_yaml) == 0:
-                standard_file = standard_template_filename('Legal-Template.yaml')
+                standard_file = standard_template_filename('Legal-Template.yml')
                 if standard_file is not None:
                     self.initial_yaml.append(standard_file)
             yaml_to_use.extend(self.initial_yaml)

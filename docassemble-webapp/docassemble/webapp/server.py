@@ -54,8 +54,8 @@ from PIL import Image
 import pyPdf
 from subprocess import call
 
-#yaml_filename = os.path.join('docassemble', 'demo', 'data', 'questions', 'questions.yaml')
-yaml_filename = 'docassemble.hello-world:data/questions/questions.yaml'
+yaml_filename = 'docassemble.demo:data/questions/questions.yml'
+#yaml_filename = 'docassemble.hello-world:data/questions/questions.yaml'
 
 if not daconfig['mail']:
     daconfig['mail'] = dict()
@@ -937,7 +937,7 @@ metadata:
   revision_date: """ + time.strftime("%Y-%m-%d") + """
 ---
 include:
-  - basic-questions.yaml
+  - basic-questions.yml
 ---
 mandatory: true
 question: |
@@ -1010,7 +1010,7 @@ class Fruit(DAObject):
             the_file.write(objectfile)
         with open(os.path.join(templatesdir, 'README.md'), 'a') as the_file:
             the_file.write(templatereadme)
-        with open(os.path.join(questionsdir, 'questions.yaml'), 'a') as the_file:
+        with open(os.path.join(questionsdir, 'questions.yml'), 'a') as the_file:
             the_file.write(questionfiletext)
         archive = tempfile.NamedTemporaryFile()
         zf = zipfile.ZipFile(archive.name, mode='w')
