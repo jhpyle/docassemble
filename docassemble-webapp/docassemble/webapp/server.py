@@ -834,10 +834,36 @@ def serve_uploaded_pagescreen(number, page):
 @roles_required(['admin', 'developer'])
 def update_package():
     form = UpdatePackageForm(request.form, current_user)
-    if request.method == 'POST' and form.validate():
+    if request.method == 'POST' and form.validate_on_submit():
         temp_directory = tempfile.mkdtemp()
-        call(['pip', 'install', '--src=' + temp_directory, '--log-file=/tmp/pip.log', '--upgrade', "--install-option=--user", '-e', 'git+' + form.giturl.data + '.git#egg=' + form.packagename.data])
-        flash('pip install --log-file=/tmp/pip.log --upgrade --install-option="--user" -e git+' + form.giturl.data + '.git#egg=' + form.packagename.data, 'success')
+        pip_log = tempfile.NamedTemporaryFile()
+        if 'zipfile' in request.files and request.files['zipfile'].filename:
+            try:
+                the_file = request.files['zipfile']
+                filename = secure_filename(the_file.filename)
+                zippath = os.path.join(temp_directory, filename)
+                the_file.save(zippath)
+                commands = ['install', zippath, '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user"]
+                returnval = pip.main(commands)
+                if returnval > 0:
+                    with open(pip_log.name) as x: logfilecontents = x.read()
+                    flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + '</pre>', 'error')
+                else:
+                    flash(word("Install successful"), 'success')
+            except Exception as errMess:
+                flash("Error processing upload: " + str(errMess), "error")
+        else:
+            if form.giturl.data:
+                packagename = re.sub(r'.*/', '', form.giturl.data)
+                commands = ['install', '--egg', '--src=' + temp_directory, '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user", 'git+' + form.giturl.data + '.git#egg=' + packagename]
+                returnval = pip.main(commands)
+                if returnval > 0:
+                    with open(pip_log.name) as x: logfilecontents = x.read()
+                    flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + "</pre>", 'error')
+                else:
+                    flash(word("Install successful"), 'success')
+            else:
+                flash(word('You need to either supply a Git URL or upload a file.'), 'error')
     return render_template('pages/update_package.html', form=form), 200
 
 @app.route('/createpackage', methods=['GET', 'POST'])

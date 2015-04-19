@@ -1,7 +1,9 @@
 from flask.ext.wtf import Form
+from flask.ext.wtf.file import FileField
 from docassemble.base.util import word
 from wtforms import validators, ValidationError, StringField, SubmitField
 import re
+import sys
 
 def validate_name(form, field):
     if re.search('[^A-Za-z0-9\-]', field.data):
@@ -13,8 +15,8 @@ class CreatePackageForm(Form):
     submit = SubmitField(word('Get template'))
 
 class UpdatePackageForm(Form):
-    packagename = StringField(word('Package name'), validators=[
-        validators.Required(word('Package name is required'))])
-    giturl = StringField(word('Git URL'), validators=[
-        validators.Required(word('Git URL is required'))])
+    #packagename = StringField(word('Package name'), validators=[
+    #    validators.Required(word('Package name is required'))])
+    giturl = StringField(word('Git URL'))
+    zipfile = FileField(word('Zip File'))
     submit = SubmitField(word('Update'))

@@ -1,3 +1,13 @@
+{% macro render_file_field(field, label=None, label_visible=true, right_url=None, right_label=None, right_message=None) -%}
+<div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
+  {% if not label %}{% set label=field.label.text %}{% endif %}
+  <label for="{{ field.id }}" class="control-label">{{ label|safe }}</label>
+  <div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">{{ word("Select file") }}</span><span class="fileinput-exists">{{ word("Change") }}</span><input type="file" name="{{ field.id }}" id="{{ field.id }}"></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">{{ word("Remove") }}</a></div>
+  {% for e in field.errors %}
+  <p class="help-block">{{ e }}</p>
+  {% endfor %}
+</div>
+{%- endmacro %}
 {% macro render_field(field, label=None, label_visible=true, right_url=None, right_label=None, right_message=None) -%}
 <div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
   {% if field.type != 'HiddenField' and label_visible %}
