@@ -1,11 +1,6 @@
-# Copyright 2014 SolidBuilds.com. All rights reserved
-#
-# Authors: Ling Thio <ling.thio@gmail.com>
-
 from flask_user import UserMixin
 from docassemble.webapp.app_and_db import db
 
-# Define the User data model. Make sure to add the flask_user.UserMixin !!
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
@@ -24,31 +19,74 @@ class User(UserMixin, db.Model):
     user_auth = db.relationship('UserAuth', uselist=False, primaryjoin="UserAuth.user_id==User.id")
     roles = db.relationship('Role', secondary='user_roles', backref=db.backref('user', lazy='dynamic'))
 
-
-# Define the UserAuth data model.
 class UserAuth(db.Model, UserMixin):
     __tablename__ = 'user_auth'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
-    #username = db.Column(db.String(50), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False, server_default='')
     reset_password_token = db.Column(db.String(100), nullable=False, server_default='')
     active = db.Column(db.Boolean(), nullable=False, server_default='0')
     user = db.relationship('User', uselist=False, primaryjoin="User.id==UserAuth.user_id")
 
-
-# Define the Role data model
 class Role(db.Model):
     __tablename__ = 'role'
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(50), unique=True)
     description = db.Column(db.String(255))
 
-
-# Define the UserRoles association model
 class UserRoles(db.Model):
     __tablename__ = 'user_roles'
     id = db.Column(db.Integer(), primary_key=True)
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
     role_id = db.Column(db.Integer(), db.ForeignKey('role.id', ondelete='CASCADE'))
+
+class UserDict(db.Model):
+    __tablename__ = "userdict"
+    indexno = db.Column(db.Integer(), primary_key=True)
+    filename = db.Column(db.Text())
+    key = db.Column(db.String(250))
+    dictionary = db.Column(db.Text())
+    user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
+
+class Attachments(db.Model):
+    __tablename__ = "attachments"
+    id = db.Column(db.Integer(), primary_key=True)
+    key = db.Column(db.String(250))
+    dictionary = db.Column(db.Text())
+    question = db.Column(db.Integer())
+    filename = db.Column(db.Text())
+
+class Uploads(db.Model):
+    __tablename__ = "uploads"
+    indexno = db.Column(db.Integer(), primary_key=True)
+    key = db.Column(db.String(250))
+    filename = db.Column(db.Text())
+
+class KVStore(db.Model):
+    __tablename__ = "kvstore"
+    key = db.Column(db.String(250), primary_key=True)
+    value = db.Column(db.LargeBinary(), nullable=False)
+
+class Ticket(db.Model):
+    __tablename__ = 'ticket'
+    id = db.Column(db.Integer(), primary_key=True)
+    filename = db.Column(db.String(255))
+    request_type = db.Column(db.String(50), nullable=False)
+    description = db.Column(db.Text())
+    opened_by = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
+    open_time = db.Column(db.DateTime(), default=db.func.now())
+    close_time = db.Column(db.DateTime())
+    closed_by = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
+    close_type = db.Column(db.String(50))
+    close_description = db.Column(db.Text())
+    status = db.Column(db.String(50))
+
+class TicketNote(db.Model):
+    __tablename__ = "ticketnote"
+    id = db.Column(db.Integer(), primary_key=True)
+    user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
+    note_type = db.Column(db.String(50), nullable=False)
+    ticket_id = db.Column(db.Integer(), db.ForeignKey('ticket.id', ondelete='CASCADE'))
+    create_time = db.Column(db.DateTime(), default=db.func.now())
+    description = db.Column(db.Text())
 

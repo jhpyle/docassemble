@@ -206,6 +206,7 @@ Then, within psql, run the following SQL statements to create the necessary data
 
     create role "www-data" login;
     create database docassemble;
+	grant all on database docassemble to "www-data"
     \c docassemble
     drop table if exists "uploads";
     drop table if exists "kvstore";
