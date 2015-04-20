@@ -883,7 +883,7 @@ def update_package():
                             db.session.commit()
                         flash(word("Install successful"), 'success')
                 else:
-                    flash(word("You do not have permission to install this package"), 'error')
+                    flash(word("You do not have permission to install this package."), 'error')
             except Exception as errMess:
                 flash("Error processing upload: " + str(errMess), "error")
         else:
@@ -910,7 +910,7 @@ def update_package():
                                 db.session.commit()
                         flash(word("Install successful"), 'success')
                 else:
-                    flash(word("You do not have permission to install this package"), 'error')
+                    flash(word("You do not have permission to install this package."), 'error')
             else:
                 flash(word('You need to either supply a Git URL or upload a file.'), 'error')
     return render_template('pages/update_package.html', form=form), 200
