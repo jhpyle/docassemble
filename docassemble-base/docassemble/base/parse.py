@@ -12,7 +12,7 @@ import datetime
 import operator
 import pkg_resources
 import docassemble.base.filter
-from docassemble.base.error import DAError
+from docassemble.base.error import DAError, MandatoryQuestion
 from docassemble.base.util import pickleable_objects, word
 from docassemble.base.logger import logmessage
 from mako.template import Template
@@ -173,6 +173,19 @@ def set_pandoc_path(path):
 class InterviewStatus(object):
     def __init__(self):
         self.attachments = None
+    def populate(self, question_result, interview_help):
+        self.question = question_result['question']
+        self.questionText = question_result['question_text']
+        self.subquestionText = question_result['subquestion_text']
+        self.helpText = question_result['help_text']
+        #self.missingVariable = question_result['missing_variable']
+        self.attachments = question_result['attachments']
+        self.selectcompute = question_result['selectcompute']
+        self.defaults = question_result['defaults']
+        self.hints = question_result['hints']
+        #self.genericVariables = {'x': question_result['variable_x'], 'i': question_result['variable_i']}
+        if len(interview_help) > 0:
+            self.helpText.extend(interview_help)
     pass
 
 class Pandoc(object):
@@ -332,12 +345,17 @@ class Question:
         self.fields = []
         self.attachments = []
         self.name = None
+        self.need = None
         self.helptext = None
         self.subcontent = None
         self.progress = None
         self.fields_used = set()
         self.names_used  = set()
         self.role = set()
+        if 'mandatory' in data and data['mandatory']:
+            self.is_mandatory = True
+        else:
+            self.is_mandatory = False
         if 'command' in data and data['command'] in ['exit', 'continue', 'restart']:
             self.question_type = data['command']
             self.content = TextObject("")
@@ -420,7 +438,7 @@ class Question:
             elif type(data['if']) == list:
                 self.condition = data['if']
             else:
-                raise DAError("Unknown data type in if statement")                
+                raise DAError("Unknown data type in if statement")
         else:
             self.condition = []
         if 'require' in data:
@@ -496,12 +514,20 @@ class Question:
                     field_data['type'] = data['type']
             self.fields.append(Field(field_data))
             self.question_type = 'multiple_choice'
+        if 'need' in data:
+            if type(data['need']) == str:
+                need_list = [data['need']]
+            elif type(data['need']) == list:
+                need_list = data['need']
+            else:
+                raise DAError("Unknown data type in need code: " + str(data))
+            try:
+                self.need = list(map((lambda x: compile(x, '', 'exec')), need_list))
+            except:
+                logmessage("Compile error in need code:\n" + str(data['need']) + "\n" + str(sys.exc_info()[0]) + "\n")
+                raise
         if 'code' in data:
             self.question_type = 'code'
-            if 'mandatory' in data and data['mandatory']:
-                self.is_mandatory = True
-            else:
-                self.is_mandatory = False
             if type(data['code']) == str:
                 try:
                     self.compute = compile(data['code'], '', 'exec')
@@ -569,6 +595,40 @@ class Question:
                 if field_name not in self.interview.generic_questions[self.generic_object]:
                     self.interview.generic_questions[self.generic_object][field_name] = list()
                 self.interview.generic_questions[self.generic_object][field_name].append(register_target)
+
+    def ask(self, user_dict, the_x, the_i):
+        if the_x != 'None':
+            exec("x = " + the_x, user_dict)
+            logmessage("x is " + the_x + "\n")
+        if the_i != 'None':
+            exec("i = " + the_i, user_dict)
+            logmessage("i is " + the_i + "\n")
+        if self.helptext is not None:
+            help_text_list = [{'heading': None, 'content': self.helptext.text(user_dict, the_x=the_x, the_i=the_i)}]
+        else:
+            help_text_list = list()
+        if self.subcontent is not None:
+            subquestion = self.subcontent.text(user_dict, the_x=the_x, the_i=the_i)
+        else:
+            subquestion = None
+        if self.need is not None:
+            for need_entry in self.need:
+                exec(need_entry, user_dict)
+        selectcompute = dict()
+        defaults = dict()
+        hints = dict()
+        for field in self.fields:
+            if hasattr(field, 'datatype') and field.datatype == 'selectcompute':
+                selectcompute[field.saveas] = process_selections(eval(field.selections['compute'], user_dict))
+            if hasattr(field, 'saveas'):
+                try:
+                    defaults[field.saveas] = eval(field.saveas, user_dict)
+                except:
+                    if hasattr(field, 'default'):
+                        defaults[field.saveas] = field.default.text(user_dict, the_x=the_x, the_i=the_i)
+                if hasattr(field, 'hint'):
+                    hints[field.saveas] = field.hint.text(user_dict, the_x=the_x, the_i=the_i)
+        return({'type': 'question', 'question_text': self.content.text(user_dict, the_x=the_x, the_i=the_i), 'subquestion_text': subquestion, 'help_text': help_text_list, 'attachments': self.processed_attachments(user_dict, the_x=the_x, the_i=the_i), 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints})
 
     def processed_attachments(self, user_dict, **kwargs):
         return(list(map((lambda x: make_attachment(x, user_dict, **kwargs)), self.attachments)))
@@ -682,19 +742,25 @@ class Interview:
     def assemble(self, user_dict, *args):
         if len(args):
             interview_status = args[0]
+        else:
+            interview_status = InterviewStatus()
         if 'answered' not in user_dict:
             user_dict['answered'] = set()
         if 'answers' not in user_dict:
             user_dict['answers'] = dict()
+        if 'x_stack' not in user_dict:
+            user_dict['x_stack'] = list()
+        if 'i_stack' not in user_dict:
+            user_dict['i_stack'] = list()
         for question in self.questions_list:
             if question.question_type == 'imports':
-                logmessage("Found imports\n")
+                #logmessage("Found imports\n")
                 for module_name in question.module_list:
-                    logmessage("Imported a module " + module_name + "\n")
+                    #logmessage("Imported a module " + module_name + "\n")
                     exec('import ' + module_name, user_dict)
             if question.question_type == 'modules':
                 for module_name in question.module_list:
-                    logmessage("Imported from module " + module_name + "\n")
+                    #logmessage("Imported from module " + module_name + "\n")
                     exec('from ' + module_name + ' import *', user_dict)
         while True:
             try:
@@ -720,10 +786,15 @@ class Interview:
                         if question.name:
                             user_dict['answered'].add(question.name)
                     if question.question_type == 'code' and question.is_mandatory:
-                        logmessage("Running some code:\n\n" + question.sourcecode + "\n")
+                        #logmessage("Running some code:\n\n" + question.sourcecode + "\n")
                         exec(question.compute, user_dict)
                         if question.name:
                             user_dict['answered'].add(question.name)
+                    if hasattr(question, 'content') and question.name and question.is_mandatory:
+                        sys.stderr.write("Asking mandatory question\n")
+                        interview_status.populate(question.ask(user_dict, 'None', 'None'), self.helptext)
+                        sys.stderr.write("Asked mandatory question\n")
+                        raise MandatoryQuestion()
             except NameError as errMess:
                 missingVariable = str(errMess).split("'")[1]
                 #logmessage(str(errMess) + "\n")
@@ -731,27 +802,18 @@ class Interview:
                 if question_result['type'] == 'continue':
                     continue
                 else:
-                    logmessage("Need to ask:\n  " + question_result['question_text'] + "\nto get " + str(question_result['missing_variable']) + "\n")
-                    interview_status.question = question_result['question']
-                    interview_status.questionText = question_result['question_text']
-                    interview_status.subquestionText = question_result['subquestion_text']
-                    interview_status.helpText = question_result['help_text']
-                    if len(self.helptext) > 0:
-                        interview_status.helpText.extend(self.helptext)
-                    interview_status.missingVariable = question_result['missing_variable']
-                    interview_status.attachments = question_result['attachments']
-                    interview_status.selectcompute = question_result['selectcompute']
-                    interview_status.defaults = question_result['defaults']
-                    interview_status.hints = question_result['hints']
-                    interview_status.genericVariables = {'x': question_result['variable_x'], 'i': question_result['variable_i']}
+                    logmessage("Need to ask:\n  " + question_result['question_text'] + "\n")
+                    interview_status.populate(question_result, self.helptext)
                     break
             except AttributeError as errMess:
                 logmessage(str(errMess.args) + "\n")
-                logmessage('Got error ' + str(errMess) + "\n")
+                raise DAError('Got error ' + str(errMess))
+                #break
+            except MandatoryQuestion:
                 break
             else:
-                logmessage('All was defined' + "\n")
-                break
+                raise DAError('All was defined')
+                #break
         return(pickleable_objects(user_dict))
     def askfor(self, missingVariable, user_dict, **kwargs):
         variable_stack = kwargs.get('variable_stack', set())
@@ -861,37 +923,9 @@ class Interview:
                                 logmessage("Try another method of setting the variable" + "\n")
                                 continue
                         else:
-                            logmessage("Question type is " + question.question_type + "\n")
-                            logmessage("Ask:\n  " + question.content.original_text + "\n")
-                            if the_x != 'None':
-                                exec("x = " + the_x, user_dict)
-                                logmessage("x is " + the_x + "\n")
-                            if the_i != 'None':
-                                exec("i = " + the_i, user_dict)
-                                logmessage("i is " + the_i + "\n")
-                            if question.helptext is not None:
-                                help_text_list = [{'heading': None, 'content': question.helptext.text(user_dict, the_x=the_x, the_i=the_i)}]
-                            else:
-                                help_text_list = list()
-                            if question.subcontent is not None:
-                                subquestion = question.subcontent.text(user_dict, the_x=the_x, the_i=the_i)
-                            else:
-                                subquestion = None
-                            selectcompute = dict()
-                            defaults = dict()
-                            hints = dict()
-                            for field in question.fields:
-                                if hasattr(field, 'datatype') and field.datatype == 'selectcompute':
-                                    selectcompute[field.saveas] = process_selections(eval(field.selections['compute'], user_dict))
-                                if hasattr(field, 'saveas'):
-                                    try:
-                                        defaults[field.saveas] = eval(field.saveas, user_dict)
-                                    except:
-                                        if hasattr(field, 'default'):
-                                            defaults[field.saveas] = field.default.text(user_dict, the_x=the_x, the_i=the_i)
-                                    if hasattr(field, 'hint'):
-                                        hints[field.saveas] = field.hint.text(user_dict, the_x=the_x, the_i=the_i)
-                            return({'type': 'question', 'question_text': question.content.text(user_dict, the_x=the_x, the_i=the_i), 'subquestion_text': subquestion, 'help_text': help_text_list, 'attachments': question.processed_attachments(user_dict, the_x=the_x, the_i=the_i), 'question': question, 'missing_variable': missingVariable, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints})
+                            #logmessage("Question type is " + question.question_type + "\n")
+                            #logmessage("Ask:\n  " + question.content.original_text + "\n")
+                            return question.ask(user_dict, the_x, the_i)
                     raise DAError("Failed to set " + missingVariable)
                 except NameError as errMess:
                     newMissingVariable = str(errMess).split("'")[1]

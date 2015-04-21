@@ -24,7 +24,7 @@ class Case(DAObject):
     def parties(self):
         output_list = list()
         for partyname in ['plaintiff', 'defendant', 'petitioner', 'respondent']:
-            if hasattr(self, partyname):
+            if hasattr(self, partyname) and getattr(self, partyname).gathered:
                 for indiv in getattr(self, partyname):
                     if indiv not in output_list:
                         output_list.append(indiv)
@@ -41,6 +41,8 @@ class LegalFiling(Document):
         self.title = None
         return super(Document, self).init()
     def caption(self):
+        self.case.firstParty.gathered
+        self.case.secondParty.gathered
         output = ""
         output += "[BOLDCENTER] " + (word("In the") + " " + self.case.court.name).upper() + "\n\n"
         output += "[BEGIN_CAPTION]"
@@ -81,6 +83,14 @@ class IndividualName(Name):
         return(self.full())
 
 class Address(DAObject):
+    def __str__(self):
+        return(self.block())
+    def block(self):
+        output = '| ' + self.address + "\n"
+        if hasattr(self, 'unit') and self.unit:
+            output += '| ' + self.unit + "\n"
+        output += '| ' + self.city + ", " + self.state + " " + self.zip
+        return(output)
     pass
 
 class Person(DAObject):
@@ -97,6 +107,8 @@ class Person(DAObject):
             self.__dict__[attrname] = value
     def __str__(self):
         return self.name.full()
+    def address_block(self):
+        return('| ' + self.name.full() + "\n" + self.address.block())
     def age(self):
         if (hasattr(self, 'age_in_years')):
             return self.age_in_years
@@ -175,6 +187,7 @@ class Individual(Person):
 class DAList(DAObject):
     def init(self):
         self.elements = list()
+        self.gathering = False
         return super(DAList, self).init()
     def add(self, element):
         self.elements.append(element)
@@ -187,6 +200,8 @@ class DAList(DAObject):
     def last(self):
         return self.elements[-1]
     def does_verb(self, the_verb, **kwargs):
+        if not self.gathering:
+            self.gathered
         if len(self.elements) > 1:
             tense = 'plural'
         else:
@@ -196,12 +211,16 @@ class DAList(DAObject):
         else:
             return verb_present(the_verb, person=tense)
     def did_verb(self, the_verb, **kwargs):
+        if not self.gathering:
+            self.gathered
         if len(self.elements) > 1:
             tense = 'plural'
         else:
             tense = 3
         return verb_past(the_verb, person=tense)
     def as_singular_noun(self, *pargs):
+        if not self.gathering:
+            self.gathered
         if len(pargs) > 0:
             the_noun = pargs[0]
         else:
@@ -209,6 +228,8 @@ class DAList(DAObject):
         the_noun = re.sub(r'.*\.', '', the_noun)
         return the_noun        
     def as_noun(self, *pargs):
+        if not self.gathering:
+            self.gathered
         if len(pargs) > 0:
             the_noun = pargs[0]
         else:
@@ -219,13 +240,21 @@ class DAList(DAObject):
         else:
             return the_noun
     def number(self):
+        if not self.gathering:
+            self.gathered
         return len(self.elements)
     def number_as_word(self):
+        if not self.gathering:
+            self.gathered
         return nice_number(self.number())
+    def comma_and_list(self):
+        if not self.gathering:
+            self.gathered
+        return comma_and_list(self.elements)        
     def __getitem__(self, index):
         return self.elements[index]
     def __str__(self):
-        return comma_and_list(self.elements)
+        return self.comma_and_list()
 
 class PartyList(DAList):
     pass
@@ -261,6 +290,8 @@ class PeriodicFinancialList(DAObject):
         for arg in kwargs:
             setattr(getattr(self, item), arg, kwargs[arg])
     def total(self):
+        if not self.gathering:
+            self.gathered
         result = 0
         for item in self.elements:
             if getattr(self, item).exists:

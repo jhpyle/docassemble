@@ -2,11 +2,16 @@ from docassemble.base.util import word, currency_symbol
 from docassemble.base.filter import markdown_to_html
 from docassemble.base.parse import Question
 import urllib
+def question_name_tag(question):
+    if question.name:
+        return('<input type="hidden" name="questionname" value="' + question.name + '"></input>')
+    return('')
 def as_html(status, validation_rules, debug):
     output = ""
     output += '<section id="question" class="tab-pane active col-md-6">'
     if status.question.question_type == "yesno":
         output += '<form id="daform" method="POST"><fieldset>'
+        output += question_name_tag(status.question)
         output += '<div class="page-header"><h3>' + markdown_to_html(status.questionText, trim=True) + '</h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
@@ -14,6 +19,7 @@ def as_html(status, validation_rules, debug):
         output += '</fieldset></form>'
     elif status.question.question_type == "noyes":
         output += '<form id="daform" method="POST"><fieldset>'
+        output += question_name_tag(status.question)
         output += '<div class="page-header"><h3>' + markdown_to_html(status.questionText, trim=True) + '</h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
@@ -48,6 +54,7 @@ def as_html(status, validation_rules, debug):
             else:
                 fieldlist.append('<div class="form-group"><label for="' + field.saveas + '" class="control-label col-sm-4">' + field.label + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>')
         output += '<form id="daform" class="form-horizontal" method="POST"' + enctype_string + '><fieldset>'
+        output += question_name_tag(status.question)
         output += '<div class="page-header"><h3>' + markdown_to_html(status.questionText, trim=True) + '</h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
@@ -63,6 +70,7 @@ def as_html(status, validation_rules, debug):
         output += '</fieldset></form>'
     elif status.question.question_type == "multiple_choice":
         output += '<form id="daform" method="POST"><fieldset>'
+        output += question_name_tag(status.question)
         output += '<div class="page-header"><h3>' + markdown_to_html(status.questionText, trim=True) + '</h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
@@ -109,6 +117,7 @@ def as_html(status, validation_rules, debug):
         output += '</fieldset></form>'
     else:
         output += '<form id="daform" class="form-horizontal" method="POST"><fieldset>'
+        output += question_name_tag(status.question)
         output += '<div class="page-header"><h3>' + markdown_to_html(status.questionText, trim=True) + '</h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'

@@ -32,6 +32,15 @@ comment: Loads some Python modules that we will need
 objects:
   - village_idiot: Individual
 ---
+comment : >-
+  This is a little bit of code for directing the interview.  It
+  indicates to the system that we need to get to the endpoint "user_done."
+  "Mandatory" sections are evaluated in the order they appear in the
+  question file.
+mandatory: True
+code: |
+  need(user_done)
+---
 comment: >-
   This is an example of a multiple-choice question that runs Python code.
   Questions that run Python code need to include a list of the variables
@@ -56,8 +65,8 @@ comment: >-
   The following seven lines of code ask all the necessary questions to
   gather the names of the plaintiffs in the case, when the user may
   not be a plaintiff.
-mandatory: True
 code: |
+  case.plaintiff.gathering = True
   if user_is_plaintiff and user not in case.plaintiff:
     case.plaintiff.add(user)
   if case.plaintiff.number() == 0:
@@ -65,9 +74,11 @@ code: |
   while case.plaintiff.there_is_another:
     newplaintiff = case.plaintiff.addObject(Individual)
     del case.plaintiff.there_is_another
+  case.plaintiff.gathering = False
+  case.plaintiff.gathered = True
 ---
-mandatory: True
 code: |
+  case.defendant.gathering = True
   if user not in case.defendant and not user_is_plaintiff and user_is_defendant:
     case.defendant.add(user)
   if case.defendant.number() == 0:
@@ -75,18 +86,25 @@ code: |
   while case.defendant.there_is_another:
     newdefendant = case.defendant.addObject(Individual)
     del case.defendant.there_is_another
+  case.defendant.gathering = False
+  case.defendant.gathered = True
 ---
 comment: >-
   Gathers the names of the children of all of the parties.
-mandatory: True
 code: |
-  for indiv in case.parties():
+  people = [user]
+  people.extend(case.parties())
+  for indiv in people:
+    indiv.child.gathering = True
     if indiv.has_children:
       if indiv.child.number() == 0:
         newchild = indiv.child.addObject(Individual)
       while indiv.has_other_children:
         newchild = indiv.child.addObject(Individual)
         del indiv.has_other_children
+    indiv.child.gathering = False
+    indiv.child.gathered = True
+  case.asked_about_children = True
 ---
 code: |
   if user_has_injury and injury_in_jurisdiction and statute_of_limitations_ok:
@@ -111,27 +129,36 @@ fields:
 question: Would you like to enter your address yet again?
 yesno: retry_address
 ---
-mandatory: true
 code: |
+  user.asset.gathering = True
+  user.income.gathering = True
   assets_to_ask_about = ['checking', 'savings', 'stocksbonds']
   income_to_ask_about = ['employment', 'selfemployment', 'ssi', 'tanf']
   for asset_item in assets_to_ask_about:
     user.asset.new(asset_item, period=12)
   for income_item in income_to_ask_about:
     user.income.new(income_item, period=12)
+  user.asset.gathering = False
+  user.income.gathering = False
+  user.asset.gathered = True
+  user.income.gathered = True
 ---
+comment : |
+  The "mandatory" tag tells the system that we need to ask this
+  question, even though it may not be necessary.
 mandatory: true
+question: |
+  Why do you think you deserve to win this case?
+fields:
+  - "Reason you should win": explanation
+    datatype: area
+    hint: |
+      I should win because . . .
+---
 code: |
   if user.address.address and retry_address:
     retry_address = False
     force_ask('user.address.address')
----
-comment : >-
-  This is a little bit of code for directing the interview.  It tells
-  the system that we need to get to the endpoint "user_done."
-mandatory: True
-code: |
-  need(explanation, user_done)
 ---
 code: |
   jurisdiction.state = "Pennsylvania"
@@ -169,6 +196,7 @@ sets: user_done
 buttons:
   - Exit: exit
   - Restart: restart
+need: case.asked_about_children
 attachment:
   - name: Advice Letter for ${ user }
     filename: advice_letter_${ space_to_underscore(user) }
@@ -177,6 +205,8 @@ attachment:
     content: |
       [CENTER] Advice Letter [BR] for a really
       important client
+
+      ${ user.address_block() }
       
       Dear ${ user.salutation() + ' ' + user.name.last }:
 
@@ -185,8 +215,8 @@ attachment:
       Perhaps you should marry ${ village_idiot }.
       % endif
       
-      [TAB] Your annual income is ${ currency(user.income.total()) } and the value
-      of all you own is ${ currency(user.asset.total()) }.
+      [TAB] Your annual income is ${ currency(user.income.total()) }
+      and the value of all you own is ${ currency(user.asset.total()) }.
       % if user_has_standing:
       You have a valid claim.
       % else:
@@ -211,6 +241,8 @@ attachment:
       ${ user.picture.show() }
       % endif
 
+      I have ${ user.child.number_as_word() } ${ user.child.as_noun() }.
+      
       Please grant me the relief I request!
 help: |
   This is the end of the interview, ${ user }.  You can exit or restart.
@@ -240,7 +272,9 @@ comment: >-
   This question demonstrates fields that have the style of dropdown
   lists.  The values of a dropdown list can be generated with code
   that runs at the time the question is asked, or they can be
-  hard-coded into the question itself.
+  hard-coded into the question itself.  The code here gets a list of
+  U.S. states from a helpful Python module called "us."  Note that we
+  imported this module earlier.
 ---
 question: Please upload a picture.
 fields:
@@ -252,12 +286,4 @@ question: |
 subquestion: |  
   ${ user.picture.show() }
 yesno: user.picture_verified
----
-question: |
-  Why do you think you deserve to win this case?
-fields:
-  - "Reason you should win": explanation
-    datatype: area
-    hint: |
-      I should win because . . .
 ...

@@ -108,7 +108,11 @@ comment: |
   Example 2: Does Jane Doe have any children?
 ---
 generic object: Individual
-question: So far, you have told me about ${ x.possessive(x.child.number_as_word()) } ${ x.child.as_noun() }, ${ x.child }.  ${ x.do_question('have', capitalize=True) } any other children?
+question: |
+  So far, you have told me about
+  ${ x.possessive(x.child.number_as_word()) }
+  ${ x.child.as_noun() }, ${ x.child }.
+  ${ x.do_question('have', capitalize=True) } any other children?
 yesno: x.has_other_children
 comment: |
   Example 1: So far, you have told me about John Doe's two children, 
@@ -119,7 +123,9 @@ comment: |
 ---
 generic object: PartyList
 question: |
-  You have told me that there ${ x.does_verb("is") } ${ x.number_as_word() } ${ x.as_noun() }, ${ x }.  Is there another ${ x.as_singular_noun() }?
+  You have told me that there ${ x.does_verb("is", ) }
+  ${ x.number_as_word() } ${ x.as_noun() }, ${ x }.  Is there another
+  ${ x.as_singular_noun() }?
 yesno: x.there_is_another
 ---
 question: Are you a plaintiff in this case?

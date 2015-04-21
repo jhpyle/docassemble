@@ -566,7 +566,7 @@ def index():
             if checkbox_field not in post_data:
                 post_data.add(checkbox_field, 'False')
     for key in post_data:
-        if key == 'checkboxes' or key == 'back_one' or key == 'files':
+        if key == 'checkboxes' or key == 'back_one' or key == 'files' or key == 'questionname':
             continue
         logmessage("Got a key: " + key + "\n")
         data = post_data[key]
@@ -590,6 +590,8 @@ def index():
             steps += 1
         except Exception as errMess:
             flash_content += "<p>Error: " + str(errMess) + "</p>"
+    if changed and 'questionname' in post_data:
+        user_dict['answered'].add(post_data['questionname'])
     interview.assemble(user_dict, interview_status)
     if len(interview_status.attachments) > 0:
         logmessage("Updating attachment info\n")
@@ -921,15 +923,15 @@ def update_package():
 def create_package():
     form = CreatePackageForm(request.form, current_user)
     if request.method == 'POST' and form.validate():
-        pkgname = re.sub(r'^docassemble-', r'', form.name.data)
-        if not user_can_edit_package(pkgname='docassemble-' + pkgname):
+        pkgname = re.sub(r'^docassemble_', r'', form.name.data)
+        if not user_can_edit_package(pkgname='docassemble_' + pkgname):
             flash(word('Sorry, that package name is already in use by someone else'), 'error')
         else:
-            #foobar = Package.query.filter_by(name='docassemble-' + pkgname).first()
+            #foobar = Package.query.filter_by(name='docassemble_' + pkgname).first()
             #sys.stderr.write("this is it: " + str(foobar) + "\n")
-            if Package.query.filter_by(name='docassemble-' + pkgname).first() is None:
+            if Package.query.filter_by(name='docassemble_' + pkgname).first() is None:
                 package_auth = PackageAuth(user_id=current_user.id)
-                package_entry = Package(name='docassemble-' + pkgname, package_auth=package_auth)
+                package_entry = Package(name='docassemble_' + pkgname, package_auth=package_auth)
                 db.session.add(package_auth)
                 db.session.add(package_entry)
                 db.session.commit()
@@ -1052,7 +1054,7 @@ class Fruit(DAObject):
         return("Yum, that " + self.name + " was good!")
 """
             directory = tempfile.mkdtemp()
-            packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
+            packagedir = os.path.join(directory, 'docassemble_' + str(pkgname))
             questionsdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'questions')
             templatesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'templates')
             os.makedirs(questionsdir)
@@ -1081,7 +1083,7 @@ class Fruit(DAObject):
                     thefilename = os.path.join(root, file)
                     zf.write(thefilename, thefilename[trimlength:])
             zf.close()
-            return(send_file(archive.name, mimetype='application/zip', as_attachment=True, attachment_filename='docassemble-' + str(pkgname) + '.zip'))
+            return(send_file(archive.name, mimetype='application/zip', as_attachment=True, attachment_filename='docassemble_' + str(pkgname) + '.zip'))
     return render_template('pages/create_package.html', form=form), 200
 
 @app.route('/packages', methods=['GET', 'POST'])

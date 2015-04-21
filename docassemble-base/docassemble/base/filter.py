@@ -114,6 +114,7 @@ def pdf_filter(text):
     return(text)
 
 def html_filter(text):
+    text = re.sub(r'^[|] (.*)$', r'\1<br>', text, flags=re.MULTILINE)
     text = re.sub(r'\[IMAGE ([0-9]+), *([0-9A-Za-z.]+)\]', image_url_string, text)
     text = re.sub(r'\[IMAGE ([0-9]+)\]', image_url_string, text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', r'<table style="width: 100%"><tr><td style="width: 50%; border-style: solid; border-right-width: 1px; padding-right: 1em; border-left-width: 0px; border-top-width: 0px; border-bottom-width: 0px">\1</td><td style="padding-left: 1em; width: 50%;">\2</td></tr></table>', text)

@@ -6,8 +6,8 @@ import re
 import sys
 
 def validate_name(form, field):
-    if re.search('[^A-Za-z0-9\-]', field.data):
-        raise ValidationError(word('Valid characters are: A-Z, a-z, 0-9, hyphen'))
+    if re.search('[^A-Za-z0-9\_]', field.data):
+        raise ValidationError(word('Valid characters are: A-Z, a-z, 0-9, underscore'))
 
 class CreatePackageForm(Form):
     name = StringField(word('Package name'), validators=[
