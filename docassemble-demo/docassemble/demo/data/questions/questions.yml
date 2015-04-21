@@ -95,15 +95,7 @@ code: |
   people = [user]
   people.extend(case.parties())
   for indiv in people:
-    indiv.child.gathering = True
-    if indiv.has_children:
-      if indiv.child.number() == 0:
-        newchild = indiv.child.addObject(Individual)
-      while indiv.has_other_children:
-        newchild = indiv.child.addObject(Individual)
-        del indiv.has_other_children
-    indiv.child.gathering = False
-    indiv.child.gathered = True
+    indiv.child.gathered
   case.asked_about_children = True
 ---
 code: |

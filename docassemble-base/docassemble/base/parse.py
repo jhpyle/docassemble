@@ -834,7 +834,7 @@ class Interview:
         if m:
             newMissingVariable = re.sub('\[[^\]+]\]', '[i]', missingVariable)
             totry.insert(0, {'real': missingVariable, 'vari': newMissingVariable})
-        #logmessage("Length of totry is" + str(len(totry)) + "\n")
+        logmessage("Length of totry is" + str(len(totry)) + "\n")
         for mv in totry:
             realMissingVariable = mv['real']
             missingVariable = mv['vari']
@@ -912,8 +912,15 @@ class Interview:
                                 continue
                         if question.question_type == "code":
                             logmessage("Running some code:\n\n" + question.sourcecode + "\n")
+                            if is_generic:
+                                if the_x != 'None':
+                                    exec("x = " + the_x, user_dict)
+                                    logmessage("Set x\n")
+                                if the_i != 'None':
+                                    exec("i = " + the_i, user_dict)
+                                    logmessage("Set i\n")
                             exec(question.compute, user_dict)
-                            #logmessage("the missing variable is " + str(missingVariable) + "\n")
+                            logmessage("the missing variable is " + str(missingVariable) + "\n")
                             if missingVariable in variable_stack:
                                 variable_stack.remove(missingVariable)
                             try:
@@ -923,7 +930,7 @@ class Interview:
                                 logmessage("Try another method of setting the variable" + "\n")
                                 continue
                         else:
-                            #logmessage("Question type is " + question.question_type + "\n")
+                            logmessage("Question type is " + question.question_type + "\n")
                             #logmessage("Ask:\n  " + question.content.original_text + "\n")
                             return question.ask(user_dict, the_x, the_i)
                     raise DAError("Failed to set " + missingVariable)

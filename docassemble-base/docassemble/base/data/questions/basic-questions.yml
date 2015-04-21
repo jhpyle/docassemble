@@ -100,6 +100,18 @@ comment: |
   Example 2: What is John Doe's first child's name?
 ---
 generic object: Individual
+code: |
+  x.child.gathering = True
+  if x.has_children:
+    if x.child.number() == 0:
+      newchild = x.child.addObject(Individual)
+    while x.has_other_children:
+      newchild = x.child.addObject(Individual)
+      del x.has_other_children
+  x.child.gathering = False
+  x.child.gathered = True
+---
+generic object: Individual
 question: >-
   ${ x.do_question('have', capitalize=True) } any children?
 yesno: x.has_children
