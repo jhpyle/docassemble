@@ -2,7 +2,7 @@ from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.packages.models import Package, PackageAuth
-from docassemble.webapp.users.models import User, Ticket, TicketNote, UserDict, Attachments, Uploads, KVStore
+from docassemble.webapp.users.models import User, UserAuth, Role, UserRoles, UserDict, Attachments, Uploads, KVStore, Ticket, TicketNote
 import docassemble.webapp.database
 import psycopg2
 

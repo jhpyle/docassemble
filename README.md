@@ -202,46 +202,20 @@ Set up the database.  First, do:
     cd ~
     psql
 
-Then, within psql, run the following SQL statements to create the necessary data tables and to give read and write access to the web application:
+Then, within psql, run the following SQL statements to create the database and to give read and write access to the web application:
 
     create role "www-data" login;
     create database docassemble;
-	grant all on database docassemble to "www-data"
-    \c docassemble
-    drop table if exists "uploads";
-    drop table if exists "kvstore";
-    drop table if exists "userdict";
-    drop table if exists "attachments";
-    drop table if exists "user_auth";
-    drop table if exists "user_roles";
-    drop table if exists "role";
-    drop table if exists "user";
-    create table "user" (id serial primary key, social_id varchar(64) not null unique, nickname varchar(64) not null, email varchar(255) unique, confirmed_at timestamp, active boolean not null default 'f', first_name varchar(50) not null default '', last_name varchar(50) not null default '', country varchar(2), subdivisionfirst varchar(2), subdivisionsecond varchar(50), subdivisionthird varchar(50), organization varchar(64));
-    grant all on "user" to "www-data";
-    grant all on "user_id_seq" to "www-data";
-    create table "user_auth" (id serial primary key, user_id integer references "user" (id), password varchar(255) not null default '', reset_password_token varchar(100) not null default '', active boolean not null default 'f');
-    grant all on "user_auth" to "www-data";
-    grant all on "user_auth_id_seq" to "www-data";
-    create table "role" (id serial primary key, name varchar(50) unique, description varchar(255));
-    grant all on "role" to "www-data";
-    grant all on "role_id_seq" to "www-data";
-    insert into "role" (name) values ('admin');
-    insert into "role" (name) values ('user');
-    insert into "role" (name) values ('developer');
-    create table "user_roles" (id serial primary key, user_id integer references "user" (id), role_id integer references "role" (id));
-    grant all on "user_roles" to "www-data";
-    grant all on "user_roles_id_seq" to "www-data";
-    create table "kvstore" (key varchar(250) not null primary key, value bytea not null);
-    grant all on "kvstore" to "www-data";
-    create table "userdict" (indexno serial, filename text, key varchar(250), dictionary text, user_id integer references "user" (id));
-    grant all on "userdict" to "www-data";
-    grant all on "userdict_indexno_seq" to "www-data";
-    create table "attachments" (key varchar(250), dictionary text, question integer, filename text);
-    grant all on "attachments" to "www-data";
-    create table "uploads" (indexno serial, key varchar(250), filename text);
-    grant all on "uploads" to "www-data";
-    grant all on "uploads_indexno_seq" to "www-data";
     \q
+
+While still running as the `postgres` user, create the database tables by running:
+
+    python docassemble/docassemble-webapp/docassemble/webapp/create_tables.py
+
+Lastly, run `psql docassemble` and give permissions to the "www-data" user:
+
+    grant all on all tables in schema public to "www-data";
+    grant all on all sequences in schema public to "www-data";
 
 In order for the "Sign in with Google" and "Sign in with Facebook" buttons to work, you will need to register your site on [Google Developers Console](https://console.developers.google.com/) and on [Facebook Developers](https://developers.facebook.com/) and obtain IDs and secrets, which you supply to docassemble by editing /etc/docassemble/config.yml.
 
