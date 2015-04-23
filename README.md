@@ -1,6 +1,6 @@
 # Document assembly module
 
-A python module for assembling documents from templates while
+A Python module for assembling documents from templates while
 automatically querying a user for necessary information.
 
 ## Web site
@@ -27,7 +27,7 @@ The sample web application depends on:
 * [Jasny Bootstrap](http://jasny.github.io/bootstrap/) (hotlinked)
 * [jQuery](http://jquery.com/) (hotlinked)
 * [jQuery Validation](http://jqueryvalidation.org/) (hotlinked)
-* [PostgreSQL](http://www.postgresql.org/)
+* [PostgreSQL](http://www.postgresql.org/) (other databases compatible with [SQLAlchemy](http://www.sqlalchemy.org/) would probably work as well)
 * [psycopg2](http://initd.org/psycopg/)
 * [WTForms](https://wtforms.readthedocs.org/en/latest/)
 * [rauth](https://github.com/litl/rauth)
