@@ -233,7 +233,9 @@ attachment:
       ${ user.picture.show() }
       % endif
 
+      % if user.child.number() > 0:
       I have ${ user.child.number_as_word() } ${ user.child.as_noun() }.
+      % endif
       
       Please grant me the relief I request!
 help: |

@@ -235,7 +235,7 @@ class DAList(DAObject):
         else:
             the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
-        if len(self.elements) > 1:
+        if len(self.elements) > 1 or len(self.elements) == 0:
             return noun_plural(the_noun)
         else:
             return the_noun
