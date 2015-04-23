@@ -79,9 +79,13 @@ def as_html(status, validation_rules, debug):
         validation_rules['errorLabelContainer'] = "#errorcontainer"
         if status.question.question_variety == "radio":
             if hasattr(status.question.fields[0], 'saveas'):
-                for choice in status.question.fields[0].choices:
-                    for key in choice:
-                        output += '<div class="radio"><label><input name="' + status.question.fields[0].saveas + '" type="radio" value="' + choice[key] + '"> ' + key + '</label></div>'
+                if hasattr(status.question.fields[0], 'has_code') and status.question.fields[0].has_code:
+                    for pair in status.selectcompute[status.question.fields[0].saveas]:
+                        output += '<div class="radio"><label><input name="' + status.question.fields[0].saveas + '" type="radio" value="' + pair[0] + '"> ' + pair[1] + '</label></div>'
+                else:
+                    for choice in status.question.fields[0].choices:
+                        for key in choice:
+                            output += '<div class="radio"><label><input name="' + status.question.fields[0].saveas + '" type="radio" value="' + choice[key] + '"> ' + key + '</label></div>'
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
                 validation_rules['messages'][status.question.fields[0].saveas] = {'required': word("You need to select one.")}
             else:
@@ -96,14 +100,19 @@ def as_html(status, validation_rules, debug):
         else:
             output += '<div class="btn-toolbar">'
             if hasattr(status.question.fields[0], 'saveas'):
-                for choice in status.question.fields[0].choices:
-                    for key in choice:
-                        output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + choice[key] + '"> ' + key + '</button> '
+                btn_class = ' btn-primary'
+                if hasattr(status.question.fields[0], 'has_code') and status.question.fields[0].has_code:
+                    for pair in status.selectcompute[status.question.fields[0].saveas]:
+                        output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + pair[0] + '"> ' + pair[1] + '</button> '
+                else:
+                    for choice in status.question.fields[0].choices:
+                        for key in choice:
+                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + choice[key] + '"> ' + key + '</button> '
             else:
                 indexno = 0
                 for choice in status.question.fields[0].choices:
                     for key in choice:
-                        btn_class = ''
+                        btn_class = ' btn-primary'
                         if isinstance(choice[key], Question) and choice[key].question_type in ["exit", "continue", "restart"]:
                             if choice[key].question_type == "continue":
                                 btn_class = ' btn-primary'

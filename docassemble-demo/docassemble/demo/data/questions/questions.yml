@@ -39,7 +39,7 @@ comment : >-
   question file.
 mandatory: True
 code: |
-  need(user_done)
+  need(user_understands_no_attorney_client_relationship, user_done)
 ---
 comment: >-
   This is an example of a multiple-choice question that runs Python code.
@@ -49,7 +49,7 @@ comment: >-
 question: What form do you want to prepare?
 sets:
   - pleading.title
-choices:
+buttons:
   - "Custody Complaint":
       code: |
         law_category = "custody"

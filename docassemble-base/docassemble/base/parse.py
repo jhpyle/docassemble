@@ -16,6 +16,7 @@ from docassemble.base.error import DAError, MandatoryQuestion
 from docassemble.base.util import pickleable_objects, word
 from docassemble.base.logger import logmessage
 from mako.template import Template
+from types import CodeType
 
 match_mako = re.compile(r'<%|\${|% if|% for|% while')
 
@@ -326,6 +327,8 @@ class Field:
         if 'choices' in data:
             self.fieldtype = 'multiple_choice'
             self.choices = data['choices']
+        if 'has_code' in data:
+            self.has_code = True
         if 'required' in data:
             self.required = data['required']
         else:
@@ -502,16 +505,22 @@ class Question:
             else:
                 uses_field = False
             if 'choices' in data:
-                field_data = {'choices': self.parse_fields(data['choices'], register_target, uses_field)}
+                has_code, choices = self.parse_fields(data['choices'], register_target, uses_field)
+                field_data = {'choices': choices}
+                if has_code:
+                    field_data['has_code'] = True
                 self.question_variety = 'radio'
             elif 'buttons' in data:
-                field_data = {'choices': self.parse_fields(data['buttons'], register_target, uses_field)}
+                has_code, choices = self.parse_fields(data['buttons'], register_target, uses_field)
+                field_data = {'choices': choices}
+                if has_code:
+                    field_data['has_code'] = True
                 self.question_variety = 'buttons'
             if uses_field:
                 self.fields_used.add(data['field'])
                 field_data['saveas'] = data['field']
-                if 'type' in data:
-                    field_data['type'] = data['type']
+                if 'datatype' in data and 'type' not in field_data:
+                    field_data['type'] = data['datatype']
             self.fields.append(Field(field_data))
             self.question_type = 'multiple_choice'
         if 'need' in data:
@@ -618,6 +627,16 @@ class Question:
         defaults = dict()
         hints = dict()
         for field in self.fields:
+            if hasattr(field, 'has_code') and field.has_code:
+                selections = list()
+                for choice in field.choices:
+                    for key in choice:
+                        value = choice[key]
+                        if key == 'compute' and type(value) is CodeType:
+                            selections.extend(process_selections(eval(value, user_dict)))
+                        else:
+                            selections.append([value, key])
+                selectcompute[field.saveas] = selections
             if hasattr(field, 'datatype') and field.datatype == 'selectcompute':
                 selectcompute[field.saveas] = process_selections(eval(field.selections['compute'], user_dict))
             if hasattr(field, 'saveas'):
@@ -634,6 +653,7 @@ class Question:
         return(list(map((lambda x: make_attachment(x, user_dict, **kwargs)), self.attachments)))
     def parse_fields(self, the_list, register_target, uses_field):
         result_list = list()
+        has_code = False
         if type(the_list) is not list:
             raise DAError("Unknown data type for the_list in parse_fields")
         for the_dict in the_list:
@@ -644,7 +664,11 @@ class Question:
             for key in the_dict:
                 value = the_dict[key]
                 if uses_field:
-                    result_list.append({key: value})
+                    if key == 'code':
+                        has_code = True
+                        result_list.append({'compute': compile(value, '', 'eval')})
+                    else:
+                        result_list.append({key: value})
                 elif type(value) == dict:
                     result_list.append({key: Question(value, self.interview, register_target=register_target, path=self.from_path)})
                 elif type(value) == str:
@@ -656,7 +680,7 @@ class Question:
                     result_list.append({key: value})
                 else:
                     raise DAError("Unknown data type in parse_fields:" + str(type(value)))
-        return result_list
+        return(has_code, result_list)
     def follow_multiple_choice(self, user_dict):
         #if self.name:
             #logmessage("question is " + self.name + "\n")

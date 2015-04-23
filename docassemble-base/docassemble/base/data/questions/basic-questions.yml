@@ -35,8 +35,8 @@ code: |
 question: Are you the defendant?
 yesno: user_is_defendant
 ---
-question: How would you describe yourself?
 field: user.marital_status
+question: How would you describe yourself?
 choices:
   - Married
   - Single
@@ -47,10 +47,9 @@ field: user_understands_no_attorney_client_relationship
 question: >-
   Your use of this system does not mean that you have a lawyer.  Do
   you understand this?
-choices:
-  - "I understand": understands
-  - "I do not understand": does not understand
-  - "I'm not sure": unsure
+buttons:
+  - code: |
+      [{'understands':"I understand"}, {'does not understand':"I do not understand"}, {'unsure':"I'm not sure"}]
 ---
 generic object: Individual
 question: >-
