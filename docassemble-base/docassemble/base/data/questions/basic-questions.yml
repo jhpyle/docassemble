@@ -32,6 +32,27 @@ code: |
   case.court = court
   pleading.case = case
 ---
+image sets:
+  freepik:
+    attribution: |
+      Icon made by [Freepik](http://www.flaticon.com/authors/freepik)
+    images:
+      bills: money146.svg
+      children: children2.svg
+      finishline: checkered12.svg
+      gavel: court.svg
+      gaveljudge: magistrate.svg
+      home: home168.svg
+      piggybank: savings1.svg
+      scalesofjustice: judge1.svg
+      stocks: increasing10.svg
+      wallet: commerce.svg
+      document: contract11.svg
+      calendar: calendar146.svg
+      picture: picture64.svg
+      parentchild: man32.svg
+      coins: coins36.svg
+---
 question: Are you the defendant?
 yesno: user_is_defendant
 ---
@@ -115,6 +136,7 @@ generic object: Individual
 question: >-
   ${ x.do_question('have', capitalize=True) } any children?
 yesno: x.has_children
+decoration: children
 comment: |
   Example 1: Do you have any children?
   Example 2: Does Jane Doe have any children?
@@ -126,6 +148,7 @@ question: |
   ${ x.child.as_noun() }, ${ x.child }.
   ${ x.do_question('have', capitalize=True) } any other children?
 yesno: x.has_other_children
+decoration: children
 comment: |
   Example 1: So far, you have told me about John Doe's two children, 
   Sally Doe and Harold Doe.  Does John Doe have any other children?
@@ -143,10 +166,12 @@ yesno: x.there_is_another
 question: Are you a plaintiff in this case?
 subquestion: |
   A "plaintiff" is a person who starts a case by filing a lawsuit against a person called a "defendant."  Plaintiffs and defendants are the "parties" in a case.
+decoration: scalesofjustice
 yesno: user_is_plaintiff
 ---
 generic object: Individual
 question: How much ${ x.do_question("make") } from employment?
+decoration: bills
 fields:
   - Income: x.income.employment.value
     datatype: currency
@@ -156,6 +181,7 @@ fields:
 ---
 generic object: Individual
 question: How much ${ x.do_question("make") } from self-employment?
+decoration: bills
 fields:
   - Income: x.income.selfemployment.value
     datatype: currency
@@ -165,6 +191,7 @@ fields:
 ---
 generic object: Individual
 question: How much ${ x.do_question("make") } from SSI?
+decoration: bills
 fields:
   - Income: x.income.ssi.value
     datatype: currency
@@ -174,6 +201,7 @@ fields:
 ---
 generic object: Individual
 question: How much ${ x.do_question("make") } from cash assistance (Temporary Assistance to Needy Families or TANF)?
+decoration: bills
 fields:
   - Income: x.income.tanf.value
     datatype: currency
@@ -183,24 +211,28 @@ fields:
 ---
 generic object: Individual
 question: How much ${ x.do_question("have") } in ${ x.pronoun_possessive("checking account") }?
+decoration: piggybank
 fields:
   - Amount: x.asset.checking.value
     datatype: currency
 ---
 generic object: Individual
 question: How much ${ x.do_question("have") } in ${ x.pronoun_possessive("savings account") }?
+decoration: piggybank
 fields:
   - Amount: x.asset.savings.value
     datatype: currency
 ---
 generic object: Individual
 question: How much ${ x.do_question("have") } in stocks and bonds?
+decoration: stocks
 fields:
   - Amount: x.asset.stocksbonds.value
     datatype: currency
 ---
 generic object: Individual
 question: What kinds of income ${ x.do_question("have") }?
+decoration: bills
 fields:
   - Employment: x.income.employment.exists
     datatype: yesno
@@ -213,6 +245,7 @@ fields:
 ---
 generic object: Individual
 question: What kinds of assets ${ x.do_question("own") }?
+decoration: piggybank
 fields:
   - Checking Account: x.asset.checking.exists
     datatype: yesno

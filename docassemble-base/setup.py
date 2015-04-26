@@ -14,5 +14,5 @@ setup(name='docassemble.base',
       install_requires = ['docassemble'],
       packages=find_packages(),
       zip_safe = False,
-      package_data={'docassemble.base': ['data/templates/*', 'data/questions/*']},
+      package_data={'docassemble.base': ['data/templates/*', 'data/questions/*', 'data/static/*']},
      )

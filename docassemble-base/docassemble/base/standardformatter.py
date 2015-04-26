@@ -1,29 +1,79 @@
 from docassemble.base.util import word, currency_symbol
+import docassemble.base.filter
 from docassemble.base.filter import markdown_to_html
 from docassemble.base.parse import Question
 import urllib
+import sys
+import os
+import mimetypes
 def question_name_tag(question):
     if question.name:
-        return('<input type="hidden" name="questionname" value="' + question.name + '"></input>')
+        return('<input type="hidden" name="questionname" value="' + question.name + '">')
     return('')
+
+def icon_html(status, name, width_value=1.0, width_units='em'):
+    the_image = status.question.interview.images.get(name, None)
+    if the_image is None:
+        return('')
+    url = docassemble.base.filter.url_finder(str(the_image.package) + ':' + str(the_image.filename))
+    sizing = 'width:' + str(width_value) + str(width_units) + ';'
+    filename = docassemble.base.filter.file_finder(str(the_image.package) + ':' + str(the_image.filename))
+    if 'extension' in filename and filename['extension'] == 'svg':
+        if filename['width'] and filename['height']:
+            sizing += 'height:' + str(width_value * (filename['height']/filename['width'])) + str(width_units) + ';'
+    else:
+        sizing += 'height:auto;'    
+    return('<img src="' + url + '" style="image-orientation:from-image;' + sizing + '"> ')
+
 def as_html(status, validation_rules, debug):
+    decorations = list()
+    attributions = set()
+    if status.decorations is not None:
+        sys.stderr.write("yoo1\n")
+        for decoration in status.decorations:
+            sys.stderr.write("yoo2\n")
+            if 'image' in decoration:
+                sys.stderr.write("yoo3\n")
+                the_image = status.question.interview.images.get(decoration['image'], None)
+                if the_image is not None:
+                    sys.stderr.write("yoo4\n")
+                    url = docassemble.base.filter.url_finder(str(the_image.package) + ':' + str(the_image.filename))
+                    width_value = 2.0
+                    width_units = 'em'
+                    sizing = 'width:' + str(width_value) + str(width_units) + ';'
+                    filename = docassemble.base.filter.file_finder(str(the_image.package) + ':' + str(the_image.filename))
+                    if 'extension' in filename and filename['extension'] == 'svg':
+                        if filename['width'] and filename['height']:
+                            sizing += 'height:' + str(width_value * (filename['height']/filename['width'])) + str(width_units) + ';'
+                    else:
+                        sizing += 'height:auto;'    
+                    if url is not None:
+                        sys.stderr.write("yoo5\n")
+                        if the_image.attribution is not None:
+                            sys.stderr.write("yoo6\n")
+                            attributions.add(the_image.attribution)
+                        decorations.append('<img style="image-orientation:from-image;float:right;' + sizing + '" src="' + url + '">')
+    if len(decorations):
+        decoration_text = decorations[0];
+    else:
+        decoration_text = ''
     output = ""
     output += '<section id="question" class="tab-pane active col-md-6">'
     if status.question.question_type == "yesno":
         output += '<form id="daform" method="POST"><fieldset>'
-        output += question_name_tag(status.question)
-        output += '<div class="page-header"><h3>' + markdown_to_html(status.questionText, trim=True) + '</h3></div>'
+        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
         output += '<div class="btn-toolbar"><button class="btn btn-primary btn-lg " name="' + status.question.fields[0].saveas + '" type="submit" value="True">Yes</button> <button class="btn btn-lg btn-info" name="' + status.question.fields[0].saveas + '" type="submit" value="False">No</button></div>'
+        output += question_name_tag(status.question)
         output += '</fieldset></form>'
     elif status.question.question_type == "noyes":
         output += '<form id="daform" method="POST"><fieldset>'
-        output += question_name_tag(status.question)
-        output += '<div class="page-header"><h3>' + markdown_to_html(status.questionText, trim=True) + '</h3></div>'
+        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
         output += '<div class="btn-toolbar"><button class="btn btn-primary btn-lg" name="' + status.question.fields[0].saveas + '" type="submit" value="False">Yes</button> <button class="btn btn-lg btn-info" name="' + status.question.fields[0].saveas + '" type="submit" value="True">No</button></div>'
+        output += question_name_tag(status.question)
         output += '</fieldset></form>'
     elif status.question.question_type == "fields":
         enctype_string = ""
@@ -54,8 +104,7 @@ def as_html(status, validation_rules, debug):
             else:
                 fieldlist.append('<div class="form-group"><label for="' + field.saveas + '" class="control-label col-sm-4">' + field.label + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>')
         output += '<form id="daform" class="form-horizontal" method="POST"' + enctype_string + '><fieldset>'
-        output += question_name_tag(status.question)
-        output += '<div class="page-header"><h3>' + markdown_to_html(status.questionText, trim=True) + '</h3></div>'
+        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
         if (len(fieldlist)):
@@ -67,11 +116,11 @@ def as_html(status, validation_rules, debug):
         if len(files):
             output += '<input type="hidden" name="files" value="' + ",".join(files) + '"></input>'
         output += '<div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">Continue</button></div>'
+        output += question_name_tag(status.question)
         output += '</fieldset></form>'
     elif status.question.question_type == "multiple_choice":
         output += '<form id="daform" method="POST"><fieldset>'
-        output += question_name_tag(status.question)
-        output += '<div class="page-header"><h3>' + markdown_to_html(status.questionText, trim=True) + '</h3></div>'
+        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
         output += '<div id="errorcontainer" style="display:none"></div>'
@@ -84,15 +133,27 @@ def as_html(status, validation_rules, debug):
                         output += '<div class="radio"><label><input name="' + status.question.fields[0].saveas + '" type="radio" value="' + pair[0] + '"> ' + pair[1] + '</label></div>'
                 else:
                     for choice in status.question.fields[0].choices:
+                        if 'image' in choice:
+                            the_icon = icon_html(status, choice['image'])
+                        else:
+                            the_icon = ''
                         for key in choice:
+                            if key == 'image':
+                                continue
                             output += '<div class="radio"><label><input name="' + status.question.fields[0].saveas + '" type="radio" value="' + choice[key] + '"> ' + key + '</label></div>'
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
                 validation_rules['messages'][status.question.fields[0].saveas] = {'required': word("You need to select one.")}
             else:
                 indexno = 0
                 for choice in status.question.fields[0].choices:
+                    if 'image' in choice:
+                        the_icon = icon_html(status, choice['image'])
+                    else:
+                        the_icon = ''
                     for key in choice:
-                        output += '<div class="radio"><label><input name="multiple_choice" type="radio" value="' + str(indexno) + '"> ' + key + '</label></div>'
+                        if key == 'image':
+                            continue
+                        output += '<div class="radio"><label><input name="multiple_choice" type="radio" value="' + str(indexno) + '"> ' + the_icon + key + '</label></div>'
                     indexno += 1
                     validation_rules['rules']['multiple_choice'] = {'required': True}
                     validation_rules['messages']['multiple_choice'] = {'required': word("You need to select one.")}
@@ -106,13 +167,27 @@ def as_html(status, validation_rules, debug):
                         output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + pair[0] + '"> ' + pair[1] + '</button> '
                 else:
                     for choice in status.question.fields[0].choices:
+                        if 'image' in choice:
+                            the_icon = icon_html(status, choice['image'])
+                            btn_class = ' btn-default'
+                        else:
+                            the_icon = ''
                         for key in choice:
-                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + choice[key] + '"> ' + key + '</button> '
+                            if key == 'image':
+                                continue
+                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + choice[key] + '"> ' + the_icon + key + '</button> '
             else:
                 indexno = 0
                 for choice in status.question.fields[0].choices:
+                    btn_class = ' btn-primary'
+                    if 'image' in choice:
+                        the_icon = '<div>' + icon_html(status, choice['image'], width_value=4.0) + '</div>'
+                        btn_class = ' btn-default btn-da-custom'
+                    else:
+                        the_icon = ''
                     for key in choice:
-                        btn_class = ' btn-primary'
+                        if key == 'image':
+                            continue
                         if isinstance(choice[key], Question) and choice[key].question_type in ["exit", "continue", "restart"]:
                             if choice[key].question_type == "continue":
                                 btn_class = ' btn-primary'
@@ -120,17 +195,18 @@ def as_html(status, validation_rules, debug):
                                 btn_class = ' btn-warning'
                             elif choice[key].question_type == "exit":
                                 btn_class = ' btn-danger'
-                        output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="multiple_choice" value="' + str(indexno) + '"> ' + key + '</button> '
+                        output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="multiple_choice" value="' + str(indexno) + '"> ' + the_icon + key + '</button> '
                     indexno += 1
             output += '</div>'
+        output += question_name_tag(status.question)
         output += '</fieldset></form>'
     else:
         output += '<form id="daform" class="form-horizontal" method="POST"><fieldset>'
-        output += question_name_tag(status.question)
-        output += '<div class="page-header"><h3>' + markdown_to_html(status.questionText, trim=True) + '</h3></div>'
+        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
         output += '<div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">Continue</button></div>'
+        output += question_name_tag(status.question)
         output += '</fieldset></form>'
     if len(status.attachments) > 0:
         output += '<br>'
@@ -188,6 +264,10 @@ def as_html(status, validation_rules, debug):
                 output += '</div>'
             output += '</div></div>'
             attachment_index += 1
+    if len(attributions):
+        output += '<br><br><br><br><br><br><br>'
+    for attribution in sorted(attributions):
+        output += '<div><small>' + markdown_to_html(attribution) + '</small></div>'
     output += '</section>'
     output += '<section id="help" class="tab-pane">'
     for help_section in status.helpText:

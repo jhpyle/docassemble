@@ -14,5 +14,5 @@ setup(name='docassemble.demo',
       namespace_packages = ['docassemble'],
       install_requires = ['docassemble'],
       zip_safe = False,
-      package_data={'docassemble.demo': ['data/templates/*', 'data/questions/*']},
+      package_data={'docassemble.demo': ['data/templates/*', 'data/questions/*', 'data/static/*']},
      )

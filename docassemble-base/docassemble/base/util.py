@@ -1,11 +1,15 @@
 import types
 import en
 import re
+import os
 import mimetypes
+import pkg_resources
 #from docassemble.logger import logmessage
 #import sys
 import locale
 locale.setlocale(locale.LC_ALL, '')
+
+__all__ = ['ordinal', 'comma_list', 'words', 'word', 'set_language', 'get_language', 'set_locale', 'get_locale', 'update_locale', 'comma_and_list', 'need', 'possessify', 'possessify_long', 'nice_number', 'pickleable_objects', 'in_the', 'a_in_the_b', 'of_the', 'the', 'your', 'his', 'her', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'do_you', 'does_a_b', 'capitalize', 'underscore_to_space', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'static_image']
 
 language = 'en'
 this_locale = 'US.utf8'
@@ -268,4 +272,66 @@ def period_list():
 def currency(value):
     return(locale.currency(value, symbol=True, grouping=True))
 
+def static_filename_path(filereference):
+    return(package_data_filename(static_filename(filereference)))
 
+def static_filename(filereference):
+    if re.search(r',', filereference):
+        return(None)
+    parts = filereference.split(':')
+    if len(parts) < 2:
+        parts = ['docassemble.base', filereference]
+    if re.search(r'\.\./', parts[1]):
+        return(None)
+    if not re.match(r'data/.*', parts[1]):
+        parts[1] = 'data/static/' + parts[1]
+    return(parts[0] + ':' + parts[1])
+
+def static_image(filereference, **kwargs):
+    filename = static_filename(filereference)
+    if filename is None:
+        return('ERROR: invalid image reference')
+    width = kwargs.get('width', None)
+    if width is None:
+        return('[IMAGE ' + filename + ']')
+    else:
+        return('[IMAGE ' + filename + ', ' + width + ']')
+
+def standard_template_filename(the_file):
+    try:
+        return(pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.base'), "docassemble/base/data/templates/" + str(the_file)))
+    except:
+        #logmessage("Error retrieving data file\n")
+        return(None)
+
+def standard_question_filename(the_file):
+    #try:
+    return(pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.base'), "docassemble/base/data/questions/" + str(the_file)))
+    #except:
+    #logmessage("Error retrieving question file\n")
+    return(None)
+
+def package_data_filename(the_file):
+    if the_file is None:
+        return(None)
+    parts = the_file.split(":")
+    if len(parts) == 2:
+        try:
+            return(pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1]))
+        except:
+            return(None)
+    return(None)
+
+def package_question_filename(the_file):
+    parts = the_file.split(":")
+    if len(parts) == 2:
+        try:
+            return(pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1]))
+        except:
+            return(None)
+    return(None)
+
+def absolute_filename(the_file):
+    if os.path.isfile(the_file) and os.access(the_file, os.R_OK):
+        return(the_file)
+    return(None)

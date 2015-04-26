@@ -10,7 +10,6 @@ import tempfile
 import httplib2
 import datetime
 import operator
-import pkg_resources
 import docassemble.base.filter
 from docassemble.base.error import DAError, MandatoryQuestion
 from docassemble.base.util import pickleable_objects, word
@@ -21,6 +20,15 @@ from types import CodeType
 match_mako = re.compile(r'<%|\${|% if|% for|% while')
 
 PANDOC_PATH = 'pandoc'
+
+class PackageImage(object):
+    def __init__(self, **kwargs):
+        self.filename = kwargs.get('filename', None)
+        self.attribution = kwargs.get('attribution', None)
+        self.setname = kwargs.get('setname', None)
+        self.package = kwargs.get('package', 'docassemble.base')
+    def get_filename(self):
+        return(docassemble.base.util.static_filename_path(str(self.package) + ':' + str(self.filename)))
 
 class InterviewSource(object):
     def __init__(self, **kwargs):
@@ -61,8 +69,15 @@ class InterviewSourceFile(InterviewSource):
         return super(InterviewSourceFile, self).__init__(**kwargs)
     def set_path(self, path):
         self.path = path
+        parts = path.split(":")
+        if len(parts) == 2:
+            self.package = parts[0]
+        else:
+            self.package = None
         if self.filepath is None:
             self.set_filepath(interview_source_from_string(self.path))
+        if self.package is None and re.search(r'docassemble.base.data.', self.filepath):
+            self.package = 'docassemble.base'
         return
     def set_filepath(self, filepath):
         self.filepath = filepath
@@ -124,43 +139,6 @@ class InterviewSourceURL(InterviewSource):
                 return(new_source)
         return None
 
-def standard_template_filename(the_file):
-    try:
-        return(pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.base'), "docassemble/base/data/templates/" + str(the_file)))
-    except:
-        #logmessage("Error retrieving data file\n")
-        return(None)
-
-def standard_question_filename(the_file):
-    #try:
-    return(pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.base'), "docassemble/base/data/questions/" + str(the_file)))
-    #except:
-    #logmessage("Error retrieving question file\n")
-    return(None)
-
-def package_template_filename(the_file):
-    parts = the_file.split(":")
-    if len(parts) == 2:
-        try:
-            return(pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1]))
-        except:
-            return(None)
-    return(None)
-
-def package_question_filename(the_file):
-    parts = the_file.split(":")
-    if len(parts) == 2:
-        try:
-            return(pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1]))
-        except:
-            return(None)
-    return(None)
-
-def absolute_filename(the_file):
-    if os.path.isfile(the_file) and os.access(the_file, os.R_OK):
-        return(the_file)
-    return(None)
-
 def set_pandoc_path(path):
     global PANDOC_PATH
     PANDOC_PATH = path
@@ -178,13 +156,12 @@ class InterviewStatus(object):
         self.question = question_result['question']
         self.questionText = question_result['question_text']
         self.subquestionText = question_result['subquestion_text']
+        self.decorations = question_result['decorations']
         self.helpText = question_result['help_text']
-        #self.missingVariable = question_result['missing_variable']
         self.attachments = question_result['attachments']
         self.selectcompute = question_result['selectcompute']
         self.defaults = question_result['defaults']
         self.hints = question_result['hints']
-        #self.genericVariables = {'x': question_result['variable_x'], 'i': question_result['variable_i']}
         if len(interview_help) > 0:
             self.helpText.extend(interview_help)
     pass
@@ -202,16 +179,16 @@ class Pandoc(object):
         self.arguments = []
     def convert_to_file(self):
         if self.output_format == 'rtf' and self.template_file is None:
-            self.template_file = standard_template_filename('Legal-Template.rtf')
+            self.template_file = docassemble.base.util.standard_template_filename('Legal-Template.rtf')
         if (self.output_format == 'pdf' or self.output_format == 'tex') and self.template_file is None:
-            self.template_file = standard_template_filename('Legal-Template.tex')
+            self.template_file = docassemble.base.util.standard_template_filename('Legal-Template.tex')
         yaml_to_use = []
         if self.output_format == 'pdf' or self.output_format == 'tex':
             print "Before: " + str(self.input_content)
             self.input_content = docassemble.base.filter.pdf_filter(self.input_content)
             print "After: " + str(self.input_content)
             if len(self.initial_yaml) == 0:
-                standard_file = standard_template_filename('Legal-Template.yml')
+                standard_file = docassemble.base.util.standard_template_filename('Legal-Template.yml')
                 if standard_file is not None:
                     self.initial_yaml.append(standard_file)
             yaml_to_use.extend(self.initial_yaml)
@@ -275,22 +252,6 @@ class Pandoc(object):
 
 # increment_question_counter = new_counter()
 
-# class Content(object):
-#     def __init__(self, **kwargs):
-#         self.compute = False
-#         if 'code' in kwargs:
-#             self.compute = True
-#             self.code = compile(kwargs['code'], '', 'eval')
-#         else:
-#             self.compute = False
-#         if 'content' in kwargs:
-#             self.content = kwargs['content']
-#     def text(self, user_dict):
-#         if self.compute:
-#             return eval(self.code, user_dict)
-#         else:
-#             return self.content
-
 class TextObject(object):
     def __init__(self, x):
         self.original_text = x
@@ -299,10 +260,8 @@ class TextObject(object):
             self.uses_mako = True
         else:
             self.uses_mako = False
-    def text(self, user_dict, **kwargs):
+    def text(self, user_dict):
         if self.uses_mako:
-            #if ('the_x' in kwargs or 'the_i' in kwargs) and (kwargs['the_x'] != 'None' or kwargs['the_i'] != 'None'):
-            #    exec("x = " + kwargs['the_x'] + "\ni = " + kwargs['the_i'], user_dict)
             return(self.template.render(**user_dict))
         else:
             return(self.original_text)
@@ -344,6 +303,7 @@ class Question:
             register_target = self
             main_list = True
         self.from_path = kwargs.get('path', None)
+        self.package = kwargs.get('package', None)
         self.interview = caller
         self.fields = []
         self.attachments = []
@@ -352,6 +312,7 @@ class Question:
         self.helptext = None
         self.subcontent = None
         self.progress = None
+        self.decorations = None
         self.fields_used = set()
         self.names_used  = set()
         self.role = set()
@@ -380,6 +341,33 @@ class Question:
                     raise DAError("Unknown data type within objects")
         if 'id' in data:
             self.id = data['id']
+        if 'image sets' in data:
+            should_append = False
+            if type(data['image sets']) is not dict:
+                raise DAError("An 'image sets' section needs to be a dictionary, not a list")
+            for setname, image_set in data['image sets'].iteritems():
+                if type(image_set) is not dict:
+                    raise DAError("Each item in an 'image sets' section needs to be a dictionary, not a list.  Expected dictionary keys are 'attribution' and 'images.'")
+                if 'attribution' in image_set:
+                    if type(image_set['attribution']) in [dict, list]:
+                        raise DAError("Attribution in an 'image set' cannot be a dictionary or a list.")
+                    attribution = image_set['attribution']
+                else:
+                    attribution = None
+                if 'images' in image_set:
+                    if type(image_set['images']) is list:
+                        image_list = image_set['images']
+                    elif type(image_set['images']) is dict:
+                        image_list = [image_set['images']]
+                    else:
+                        raise DAError("The 'images' in the 'image set' was not a dictionary or a list")
+                    for image in image_list:
+                        if type(image) is not dict:
+                            the_image = {str(image): str(image)}
+                        else:
+                            the_image = image
+                        for key, value in the_image.iteritems():
+                            self.interview.images[key] = PackageImage(filename=value, attribution=attribution, setname=setname, package=self.package)
         if 'interview help' in data:
             should_append = False
             if type(data['interview help']) is not dict:
@@ -454,7 +442,7 @@ class Question:
                     raise
                 if 'orelse' in data:
                     if type(data['orelse']) is dict:
-                        self.or_else_question = Question(data['orelse'], self.interview, register_target=register_target, path=self.from_path)
+                        self.or_else_question = Question(data['orelse'], self.interview, register_target=register_target, path=self.from_path, package=self.package)
                     else:
                         raise DAError("Unknown data type in orelse")
                 else:
@@ -483,6 +471,24 @@ class Question:
             self.subcontent = TextObject(data['subquestion'])
         if 'help' in data:
             self.helptext = TextObject(data['help'])
+        if 'decoration' in data:
+            if type(data['decoration']) is dict:
+                decoration_list = [data['decoration']]
+            elif type(data['decoration']) is list:
+                decoration_list = data['decoration']
+            else:
+                decoration_list = [{'image': str(data['decoration'])}]
+            processed_decoration_list = []
+            for item in decoration_list:
+                if type(item) is dict:
+                    the_item = item
+                else:
+                    the_item = {'image': str(item)}
+                item_to_add = dict()
+                for key, value in the_item.iteritems():
+                    item_to_add[key] = TextObject(value)
+                processed_decoration_list.append(item_to_add)
+            self.decorations = processed_decoration_list
         if 'yesno' in data:
             self.fields.append(Field({'saveas': data['yesno'], 'boolean': 1}))
             self.fields_used.add(data['yesno'])
@@ -613,13 +619,22 @@ class Question:
             exec("i = " + the_i, user_dict)
             logmessage("i is " + the_i + "\n")
         if self.helptext is not None:
-            help_text_list = [{'heading': None, 'content': self.helptext.text(user_dict, the_x=the_x, the_i=the_i)}]
+            help_text_list = [{'heading': None, 'content': self.helptext.text(user_dict)}]
         else:
             help_text_list = list()
         if self.subcontent is not None:
-            subquestion = self.subcontent.text(user_dict, the_x=the_x, the_i=the_i)
+            subquestion = self.subcontent.text(user_dict)
         else:
             subquestion = None
+        if self.decorations is not None:
+            decorations = list()
+            for decoration_item in self.decorations:
+                processed_item = dict()
+                for key, value in decoration_item.iteritems():
+                    processed_item[key] = value.text(user_dict)
+                decorations.append(processed_item)
+        else:
+            decorations = None
         if self.need is not None:
             for need_entry in self.need:
                 exec(need_entry, user_dict)
@@ -644,10 +659,10 @@ class Question:
                     defaults[field.saveas] = eval(field.saveas, user_dict)
                 except:
                     if hasattr(field, 'default'):
-                        defaults[field.saveas] = field.default.text(user_dict, the_x=the_x, the_i=the_i)
+                        defaults[field.saveas] = field.default.text(user_dict)
                 if hasattr(field, 'hint'):
-                    hints[field.saveas] = field.hint.text(user_dict, the_x=the_x, the_i=the_i)
-        return({'type': 'question', 'question_text': self.content.text(user_dict, the_x=the_x, the_i=the_i), 'subquestion_text': subquestion, 'help_text': help_text_list, 'attachments': self.processed_attachments(user_dict, the_x=the_x, the_i=the_i), 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints})
+                    hints[field.saveas] = field.hint.text(user_dict)
+        return({'type': 'question', 'question_text': self.content.text(user_dict), 'subquestion_text': subquestion, 'decorations': decorations, 'help_text': help_text_list, 'attachments': self.processed_attachments(user_dict, the_x=the_x, the_i=the_i), 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints})
 
     def processed_attachments(self, user_dict, **kwargs):
         return(list(map((lambda x: make_attachment(x, user_dict, **kwargs)), self.attachments)))
@@ -655,31 +670,36 @@ class Question:
         result_list = list()
         has_code = False
         if type(the_list) is not list:
-            raise DAError("Unknown data type for the_list in parse_fields")
+            raise DAError("Multiple choices need to be provided in list form, not dictionary form")
         for the_dict in the_list:
             if type(the_dict) is str:
                 the_dict = {the_dict: the_dict}
             elif type(the_dict) is not dict:
                 raise DAError("Unknown data type for the_dict in parse_fields")
+            result_dict = dict()
             for key in the_dict:
                 value = the_dict[key]
+                if key == 'image':
+                    result_dict['image'] = value
+                    continue
                 if uses_field:
                     if key == 'code':
                         has_code = True
-                        result_list.append({'compute': compile(value, '', 'eval')})
+                        result_dict['compute'] = compile(value, '', 'eval')
                     else:
-                        result_list.append({key: value})
+                        result_dict[key] = value
                 elif type(value) == dict:
-                    result_list.append({key: Question(value, self.interview, register_target=register_target, path=self.from_path)})
+                    result_dict[key] = Question(value, self.interview, register_target=register_target, path=self.from_path, package=self.package)
                 elif type(value) == str:
                     if value in ["continue", "exit", "restart"]:
-                        result_list.append({key: Question({'command': value}, self.interview, register_target=register_target, path=self.from_path)})
+                        result_dict[key] = Question({'command': value}, self.interview, register_target=register_target, path=self.from_path, package=self.package)
                     else:
-                        result_list.append({key: value})
+                        result_dict[key] = value
                 elif type(value) == bool:
-                    result_list.append({key: value})
+                    result_dict[key] = value
                 else:
                     raise DAError("Unknown data type in parse_fields:" + str(type(value)))
+            result_list.append(result_dict)
         return(has_code, result_list)
     def follow_multiple_choice(self, user_dict):
         #if self.name:
@@ -691,6 +711,8 @@ class Question:
             user_dict['answered'].add(self.name)
             the_choice = self.fields[0].choices[int(user_dict['answers'][self.name])]
             for key in the_choice:
+                if key == 'image':
+                    continue
                 #logmessage("Setting target\n")
                 target = the_choice[key]
                 break
@@ -715,9 +737,9 @@ def interview_source_from_string(path, **kwargs):
         new_source = context_interview.source.append(path)
         if new_source is not None:
             return new_source
-    sys.stderr.write("Trying to find it")
-    for the_filename in [package_question_filename(path), standard_question_filename(path), absolute_filename(path)]:
-        sys.stderr.write("Trying " + str(the_filename))
+    sys.stderr.write("Trying to find it\n")
+    for the_filename in [docassemble.base.util.package_question_filename(path), docassemble.base.util.standard_question_filename(path), docassemble.base.util.absolute_filename(path)]:
+        sys.stderr.write("Trying " + str(the_filename) + "\n")
         if the_filename is not None:
             new_source = InterviewSourceFile(filepath=the_filename, path=path)
             if new_source.update():
@@ -734,6 +756,7 @@ class Interview:
         self.generic_questions = dict()
         self.questions_by_id = dict()
         self.questions_list = list()
+        self.images = dict()
         self.metadata = list()
         self.helptext = list()
         if 'source' in kwargs:
@@ -743,26 +766,12 @@ class Interview:
             self.source = source
             #self.firstPath = source.path
             #self.rootDirectory = source.directory
+        if hasattr(source, 'package'):
+            source_package = source.package
+        else:
+            source_package = None
         for document in yaml.load_all(source.content):
-            question = Question(document, self, path=source.path)
-    # def read_yaml_string(self, questionString, **kwargs):
-    #     path = kwargs.get('path', None)
-    #     if self.firstFile is None:
-    #         self.firstFile = path
-    #         self.rootDirectory = kwargs.get('directory', None)
-    #     for document in yaml.load(questionString):
-    #         question = Question(document, self, path=path)
-    # def read_yaml_file(self, questionFilepath):
-    #     if not os.path.isfile(questionFilepath):
-    #         raise DAError("File " + questionFilepath + " does not exist")
-    #     if not os.access(questionFilepath, os.R_OK):
-    #         raise DAError("File " + questionFilepath + " is not readable")
-    #     if self.firstFile is None:
-    #         self.firstFile = questionFilepath
-    #         self.rootDirectory = os.path.dirname(questionFilepath)
-    #     stream = file(questionFilepath, 'r')
-    #     for document in yaml.load_all(stream):
-    #         question = Question(document, self, path=questionFilepath)
+            question = Question(document, self, path=source.path, package=source_package)
     def assemble(self, user_dict, *args):
         if len(args):
             interview_status = args[0]
@@ -1059,7 +1068,7 @@ def process_attachment_list(target):
     
         
 def make_attachment(attachment, user_dict, **kwargs):
-    result = {'name': attachment['name'].text(user_dict, **kwargs), 'filename': attachment['filename'].text(user_dict, **kwargs), 'valid_formats': attachment['valid_formats']}
+    result = {'name': attachment['name'].text(user_dict), 'filename': attachment['filename'].text(user_dict), 'valid_formats': attachment['valid_formats']}
     result['markdown'] = dict();
     result['content'] = dict();
     result['file'] = dict();
@@ -1075,11 +1084,11 @@ def make_attachment(attachment, user_dict, **kwargs):
                 for key in attachment['metadata']:
                     data = attachment['metadata'][key]
                     if type(data) is list:
-                        metadata[key] = list(map((lambda x: x.text(user_dict, doc_format=doc_format, **kwargs)), data))
+                        metadata[key] = list(map((lambda x: x.text(user_dict)), data))
                     else:
-                        metadata[key] = data.text(user_dict, doc_format=doc_format, **kwargs)
+                        metadata[key] = data.text(user_dict)
                 the_markdown += "---\n" + yaml.dump(metadata) + "\n...\n"
-            the_markdown += attachment['content'].text(user_dict, doc_format=doc_format, **kwargs)
+            the_markdown += attachment['content'].text(user_dict)
             result['markdown'][doc_format] = the_markdown
             converter = Pandoc()
             converter.output_format = doc_format
@@ -1088,7 +1097,7 @@ def make_attachment(attachment, user_dict, **kwargs):
             result['file'][doc_format] = converter.output_filename
             result['content'][doc_format] = result['markdown'][doc_format]
         elif doc_format in ['html']:
-            result['markdown'][doc_format] = attachment['content'].text(user_dict, doc_format=doc_format, **kwargs)
+            result['markdown'][doc_format] = attachment['content'].text(user_dict)
             result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format])
     return(result)
             

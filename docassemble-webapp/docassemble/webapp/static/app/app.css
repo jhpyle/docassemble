@@ -24,3 +24,10 @@ a.nohover:hover {
     text-decoration: none !important;
 }
 
+button.btn-da-custom {
+    width: 8em;
+    height: 8em;
+    white-space: normal;
+    text-align: center;
+    vertical-align: middle;
+}

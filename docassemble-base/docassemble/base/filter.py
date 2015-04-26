@@ -71,8 +71,8 @@ def set_url_finder(func):
     return
 
 def rtf_filter(text):
-    text = re.sub(r'\[IMAGE ([0-9]+), *([0-9A-Za-z.]+)\]', image_as_rtf, text)
-    text = re.sub(r'\[IMAGE ([0-9]+)\]', image_as_rtf, text)
+    text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
+    text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_as_rtf, text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', rtf_caption_table, text)
     text = re.sub(r'\[SINGLESPACING\] *', r'', text)
     text = re.sub(r'\[DOUBLESPACING\] *', r'', text)
@@ -93,8 +93,8 @@ def rtf_filter(text):
     return(text)
 
 def pdf_filter(text):
-    text = re.sub(r'\[IMAGE ([0-9]+), *([0-9A-Za-z.]+)\]', image_include_string, text)
-    text = re.sub(r'\[IMAGE ([0-9]+)\]', image_include_string, text)
+    text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_include_string, text)
+    text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_include_string, text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', r'\\begingroup\\singlespacing\\mynoindent\\begin{tabular}{@{}m{0.49\\textwidth}|@{\\hspace{1em}}m{0.49\\textwidth}@{}}{\1} & {\2} \\\\ \\end{tabular}\\endgroup\\myskipline', text)
     text = re.sub(r'\[SINGLESPACING\] *', r'\\singlespacing ', text)
     text = re.sub(r'\[DOUBLESPACING\] *', r'\\doublespacing ', text)
@@ -115,8 +115,8 @@ def pdf_filter(text):
 
 def html_filter(text):
     text = re.sub(r'^[|] (.*)$', r'\1<br>', text, flags=re.MULTILINE)
-    text = re.sub(r'\[IMAGE ([0-9]+), *([0-9A-Za-z.]+)\]', image_url_string, text)
-    text = re.sub(r'\[IMAGE ([0-9]+)\]', image_url_string, text)
+    text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_url_string, text)
+    text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_url_string, text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', r'<table style="width: 100%"><tr><td style="width: 50%; border-style: solid; border-right-width: 1px; padding-right: 1em; border-left-width: 0px; border-top-width: 0px; border-bottom-width: 0px">\1</td><td style="padding-left: 1em; width: 50%;">\2</td></tr></table>', text)
     text = re.sub(r'\[SINGLESPACING\] *', r'', text)
     text = re.sub(r'\[DOUBLESPACING\] *', r'', text)
@@ -142,8 +142,8 @@ def image_as_rtf(match):
         width_supplied = True
     except:
         width = DEFAULT_IMAGE_WIDTH
-    file_number = match.group(1)
-    file_info = file_finder(file_number)
+    file_reference = match.group(1)
+    file_info = file_finder(file_reference)
     if 'width' in file_info:
         return rtf_image(file_info, width)
     elif file_info['extension'] == 'pdf':
@@ -211,37 +211,41 @@ def pixels_in(length):
     return(300)
 
 def image_url_string(match):
-    file_number = match.group(1)
+    file_reference = match.group(1)
     try:
         width = match.group(2)
     except:
         width = "300px"
-    file_info = file_finder(file_number)
+    file_info = file_finder(file_reference)
     if 'extension' in file_info:
+        if re.match(r'.*%$', width):
+            width_string = "width:" + width
+        else:
+            width_string = "max-width:" + width
         if file_info['extension'] in ['png', 'jpg', 'gif', 'svg']:
-            return('<img style="max-width:' + width + '" src="' + url_finder(file_number) + '">')
+            return('<img style="image-orientation:from-image;' + width_string + '" src="' + url_finder(file_reference) + '">')
         elif file_info['extension'] == 'pdf':
-            output = '<img style="max-width:' + width + '" src="' + url_finder(file_number, size="screen", page=1) + '">'
+            output = '<img style="image-orientation:from-image;' + width_string + '" src="' + url_finder(file_reference, size="screen", page=1) + '">'
             if 'pages' in file_info and file_info['pages'] > 1:
                 output += " (" + str(file_info['pages']) + " " + docassemble.base.util.word('pages') + ")"
             return(output)
         else:
-            return('<a href="' + url_finder(file_number) + '">' + file_info['filename'] + '</a>')
+            return('<a href="' + url_finder(file_reference) + '">' + file_info['filename'] + '</a>')
     else:
-        return('[Invalid image reference; number=' + str(file_number) + ', width=' + str(width) + ', filename=' + file_info['filename'] + ']')
+        return('[Invalid image reference; reference=' + str(file_reference) + ', width=' + str(width) + ', filename=' + file_info.get('filename', 'unknown') + ']')
 
 def convert_pixels(match):
     pixels = match.group(1)
     return (str(int(pixels)/72.0) + "in")
 
 def image_include_string(match):
-    file_number = match.group(1)
+    file_reference = match.group(1)
     try:
         width = match.group(2)
         width = re.sub(r'^(.*)px', convert_pixels, width)
     except:
         width = DEFAULT_IMAGE_WIDTH
-    file_info = file_finder(file_number)
+    file_info = file_finder(file_reference)
     if 'path' in file_info:
         if 'extension' in file_info:
             if file_info['extension'] in ['png', 'jpg', 'gif', 'pdf', 'eps']:

@@ -16,6 +16,15 @@ interview help:
     Answer each question.  At the end, you may be given a document
     that you can save.
 ---
+image sets:
+  freepik:
+    attribution: |
+      Icon made by [Freepik](http://www.flaticon.com/authors/freepik)
+    images:
+      baby: crawling.svg
+      people: users6.svg
+      injury: accident3.svg
+---
 include:
   - basic-questions.yml
 comment: >-
@@ -39,7 +48,17 @@ comment : >-
   question file.
 mandatory: True
 code: |
-  need(user_understands_no_attorney_client_relationship, user_done)
+  need(user_understands_no_attorney_client_relationship, test_picture, user_done)
+---
+question: |
+  Do you have a support order?
+subquestion: |
+  If you aren't sure, look through your papers for a document that looks
+  something like this.  If this document is signed by the judge, then
+  you have a support order.
+    
+  [IMAGE docassemble.demo:sample-support-order.jpg, 100%]
+yesno: test_picture
 ---
 comment: >-
   This is an example of a multiple-choice question that runs Python code.
@@ -47,6 +66,7 @@ comment: >-
   that the code "sets," because docassemble is not able to determine these
   variables automatically, as it usually can.
 question: What form do you want to prepare?
+decoration: document
 sets:
   - pleading.title
 buttons:
@@ -55,11 +75,13 @@ buttons:
         law_category = "custody"
         pleading.type = "complaint"
         pleading.title = "Complaint for Custody"
+    image: parentchild
   - "Support Complaint":
       code: |
         law_category = "support"
         pleading.type = "complaint"
         pleading.title = "Complaint for Support"
+    image: coins
 ---
 comment: >-
   The following seven lines of code ask all the necessary questions to
@@ -106,6 +128,7 @@ code: |
 ---
 progress: 50
 question: Were you injured?
+decoration: injury
 yesno: user_has_injury
 ---
 question: >-
@@ -114,6 +137,7 @@ question: >-
 yesno: injury_in_jurisdiction
 ---
 question: When did your injury take place?
+decoration: calendar
 fields:
   - Date of Injury: injury_date
     datatype: date
@@ -178,6 +202,7 @@ code: |
     statute_of_limitations_ok = False
 ---
 progress: 100
+decoration: finishline
 question: |
   % if user_has_standing:
     You have a valid claim.
@@ -244,6 +269,7 @@ help: |
   I hope you enjoyed this interview.
 ---
 generic object: Individual
+decoration: home
 question: >-
   Where ${ x.do_question('live') }?
 fields:
@@ -271,6 +297,7 @@ comment: >-
   imported this module earlier.
 ---
 question: Please upload a picture.
+decoration: picture
 fields:
   - A test file: user.picture
     datatype: file

@@ -3,11 +3,12 @@ import sys
 import datetime
 import time
 import pip
+import shutil
 import docassemble.base.parse
 import docassemble.base.interview_cache
 from docassemble.base.standardformatter import as_html
+import xml.etree.ElementTree as ET
 import docassemble.webapp.database
-import mimetypes
 import tempfile
 import zipfile
 from docassemble.base.error import DAError
@@ -145,22 +146,30 @@ def flask_logger(message):
 
 logmessage("foo bar\n")
 
-def get_url_from_file_number(file_number, **kwargs):
+def get_url_from_file_reference(file_reference, **kwargs):
     root = daconfig.get('root', None)
     if root is None:
         root = ''
-    if 'page' in kwargs:
-        page = kwargs['page']
-        size = kwargs.get('size', 'page')
-        url = root + '/uploadedpage'
-        if size == 'screen':
-            url += 'screen'
-        url += '/' + str(file_number) + '/' + str(page)
+    if re.match('[0-9]+', file_reference):
+        file_number = file_reference
+        if 'page' in kwargs:
+            page = kwargs['page']
+            size = kwargs.get('size', 'page')
+            url = root + '/uploadedpage'
+            if size == 'screen':
+                url += 'screen'
+            url += '/' + str(file_number) + '/' + str(page)
+        else:
+            url = root + '/uploadedfile/' + str(file_number)
     else:
-        url = root + '/uploadedfile/' + str(file_number)
+        parts = file_reference.split(':')
+        if len(parts) < 2:
+            parts = ['docassemble.base', file_reference]
+        parts[1] = re.sub(r'^data/static/', '', parts[1])
+        url = root + '/packagestatic/' + parts[0] + '/' + parts[1]
     return(url)
 
-docassemble.base.parse.set_url_finder(get_url_from_file_number)
+docassemble.base.parse.set_url_finder(get_url_from_file_reference)
 
 def get_path_from_file_number(file_number, directory=False):
     parts = re.sub(r'(...)', r'\1/', '{0:012x}'.format(int(file_number))).split('/')
@@ -181,18 +190,46 @@ def get_info_from_file_number(file_number):
         break
     conn.commit()
     filename = result['path'] + '.' + result['extension']
+    add_info_about_file(filename, result)
     if os.path.isfile(filename):
-        if result['extension'] == 'pdf':
-            reader = pyPdf.PdfFileReader(open(filename))
-            result['pages'] = reader.getNumPages()
-        elif result['extension'] in ['png', 'jpg', 'gif']:
-            im = Image.open(filename)
-            result['width'], result['height'] = im.size
+        add_info_about_file(filename, result)
     else:
-        logmessage("Filename DID NOT EXIST.\n")    
+        logmessage("Filename DID NOT EXIST.\n")
     return(result)
 
-docassemble.base.parse.set_file_finder(get_info_from_file_number)
+def add_info_about_file(filename, result):
+    if result['extension'] == 'pdf':
+        reader = pyPdf.PdfFileReader(open(filename))
+        result['pages'] = reader.getNumPages()
+    elif result['extension'] in ['png', 'jpg', 'gif']:
+        im = Image.open(filename)
+        result['width'], result['height'] = im.size
+    elif result['extension'] == 'svg':
+        tree = ET.parse(filename)
+        root = tree.getroot()
+        viewBox = root.attrib.get('viewBox', None)
+        if viewBox is not None:
+            dimen = viewBox.split(' ')
+            if len(dimen) == 4:
+                result['width'] = float(dimen[2]) - float(dimen[0])
+                result['height'] = float(dimen[3]) - float(dimen[1])
+    return
+
+def get_info_from_file_reference(file_reference):
+    if re.match('[0-9]+', file_reference):
+        return(get_info_from_file_number(file_reference))
+    result = dict()
+    result['path'] = docassemble.base.util.static_filename_path(file_reference)
+    sys.stderr.write("path is " + str(result['path']) + "\n")
+    if result['path'] is not None and os.path.isfile(result['path']):
+        result['filename'] = os.path.basename(result['path'])
+        result['extension'], result['mimetype'] = get_ext_and_mimetype(result['path'])
+        add_info_about_file(result['path'], result)
+    else:
+        logmessage("File reference " + str(file_reference) + " DID NOT EXIST.\n")
+    return(result)
+
+docassemble.base.parse.set_file_finder(get_info_from_file_reference)
 
 scripts = """\
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
@@ -203,7 +240,7 @@ scripts = """\
               $('.tabs a:last').tab('show')
             })
     </script>
-    <script>$("#daform input, #daform textarea, #daform button, #daform select").first().focus();</script>
+    <script>$("#daform input, #daform textarea, #daform select").first().focus();</script>
 """
 
 match_invalid = re.compile('[^A-Za-z0-9_\[\].]')
@@ -545,7 +582,20 @@ def index():
                     file_number = get_new_file_number(session['uid'], filename)
                     extension, mimetype = get_ext_and_mimetype(filename)
                     path = get_file_path(file_number)
-                    the_file.save(path)
+                    if extension == "jpg" and 'imagemagick' in daconfig:
+                        unrotated = tempfile.NamedTemporaryFile(suffix="jpg")
+                        the_file.save(unrotated.name)
+                        call_array = [daconfig['imagemagick'], str(unrotated.name), '-auto-orient', '-density', '300']
+                        # width, height = PIL.Image.open(unrotated.name).size
+                        # if width > 3000 or height > 3000:
+                        #     call_array.append('-resize')
+                        #     call_array.append('1000x1000')
+                        call_array.append('jpeg:' + str(path))
+                        result = call(call_array)
+                        if result > 0:
+                            shutil.copyfile(unrotated.name, path)
+                    else:
+                        the_file.save(path)
                     os.symlink(path, path + '.' + extension)
                     if extension == "pdf":
                         make_image_files(path)
@@ -804,7 +854,7 @@ def _endpoint_url(endpoint):
 @app.route('/uploadedfile/<number>', methods=['GET'])
 def serve_uploaded_file(number):
     number = re.sub(r'[^0-9]', '', str(number))
-    file_info = get_info_from_file_number(number)
+    file_info = get_info_from_file_reference(number)
     block_size = 4096
     status = '200 OK'
     return(send_file(file_info['path'], mimetype=file_info['mimetype']))
@@ -813,7 +863,7 @@ def serve_uploaded_file(number):
 def serve_uploaded_page(number, page):
     number = re.sub(r'[^0-9]', '', str(number))
     page = re.sub(r'[^0-9]', '', str(page))
-    file_info = get_info_from_file_number(number)
+    file_info = get_info_from_file_reference(number)
     block_size = 4096
     status = '200 OK'
     filename = file_info['path'] + 'page-' + str(page) + '.png'
@@ -826,7 +876,7 @@ def serve_uploaded_page(number, page):
 def serve_uploaded_pagescreen(number, page):
     number = re.sub(r'[^0-9]', '', str(number))
     page = re.sub(r'[^0-9]', '', str(page))
-    file_info = get_info_from_file_number(number)
+    file_info = get_info_from_file_reference(number)
     block_size = 4096
     status = '200 OK'
     filename = file_info['path'] + 'screen-' + str(page) + '.png'
@@ -884,6 +934,7 @@ def update_package():
                             db.session.add(package_entry)
                             db.session.commit()
                         flash(word("Install successful"), 'success')
+                        restart_wsgi()
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
             except Exception as errMess:
@@ -911,6 +962,7 @@ def update_package():
                                 package_entry.giturl = giturl
                                 db.session.commit()
                         flash(word("Install successful"), 'success')
+                        restart_wsgi()
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
             else:
@@ -985,7 +1037,7 @@ from setuptools import setup, find_packages
       packages=find_packages(),
       namespace_packages = ['docassemble'],
       zip_safe = False,
-      package_data={'docassemble.""" + str(pkgname) + """': ['data/templates/*', 'data/questions/*']},
+      package_data={'docassemble.""" + str(pkgname) + """': ['data/templates/*', 'data/questions/*', 'data/static/*']},
      )
 
 """
@@ -1021,8 +1073,14 @@ yesno: user.doing_well
             templatereadme = """\
 # Template directory
 
-If you wanted to use non-standard document templates with pandoc,
-you would put template files in this directory.
+If you want to use non-standard document templates with pandoc,
+put template files in this directory.
+"""
+            staticreadme = """\
+# Static file directory
+
+If you want to make files available in the web app, put them in
+this directory.
 """
             objectfile = """\
 # This is a Python module in which you can write your own Python code,
@@ -1057,8 +1115,10 @@ class Fruit(DAObject):
             packagedir = os.path.join(directory, 'docassemble_' + str(pkgname))
             questionsdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'questions')
             templatesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'templates')
+            staticdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'static')
             os.makedirs(questionsdir)
             os.makedirs(templatesdir)
+            os.makedirs(staticdir)
             with open(os.path.join(packagedir, 'README.md'), 'a') as the_file:
                 the_file.write(readme)
             with open(os.path.join(packagedir, 'LICENSE'), 'a') as the_file:
@@ -1073,6 +1133,8 @@ class Fruit(DAObject):
                 the_file.write(objectfile)
             with open(os.path.join(templatesdir, 'README.md'), 'a') as the_file:
                 the_file.write(templatereadme)
+            with open(os.path.join(staticdir, 'README.md'), 'a') as the_file:
+                the_file.write(staticreadme)
             with open(os.path.join(questionsdir, 'questions.yml'), 'a') as the_file:
                 the_file.write(questionfiletext)
             archive = tempfile.NamedTemporaryFile()
@@ -1129,3 +1191,17 @@ def get_ext_and_mimetype(filename):
         extension = "tif"
     return(extension, mimetype)
 
+def restart_wsgi():
+    wsgi_file = daconfig.get('webapp', '/var/lib/docassemble/flask.wsgi')
+    if os.path.isfile(wsgi_file):
+        with open(wsgi_file, 'a'):
+            os.utime(wsgi_file, None)
+    return
+
+@app.route('/packagestatic/<package>/<filename>', methods=['GET'])
+def package_static(package, filename):
+    the_file = docassemble.base.util.package_data_filename(str(package) + ':data/static/' + str(filename))
+    if the_file is None:
+        abort(404)
+    extension, mimetype = get_ext_and_mimetype(the_file)
+    return(send_file(the_file, mimetype=str(mimetype)))
