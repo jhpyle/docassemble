@@ -37,6 +37,7 @@ The sample web application depends on:
 * [Pillow](https://pypi.python.org/pypi/Pillow/)
 * [PyPDF](https://pypi.python.org/pypi/pyPdf/1.13)
 * [pdftoppm](http://www.foolabs.com/xpdf/download.html)
+* [ImageMagick](http://http://www.imagemagick.org/) (This is needed for adjusting the rotation of user-supplied JPEGs.  The web app will not fail if it is missing.)
 * A web server
 * A mail server
 
@@ -45,7 +46,7 @@ To run the demo question file you will need:
 
 ## Installation
 
-These installation instructions assume a Debian GNU/Linux machine, but docassemble has been developed to be os-independent.  If you can install the dependencies, you should be able to get docassemble to run.
+These installation instructions assume a Debian GNU/Linux machine, but docassemble has been developed to be os-independent.  If you can install the dependencies, you should be able to get docassemble to run.  I haven't tested Windows (only Debian and Ubuntu), but I believe all the dependencies are available for installation on Windows (see [MiKTeX](http://miktex.org/download) for LaTeX on Windows).
 
 ### Dependencies
 
@@ -145,6 +146,7 @@ Create the directory for the Flask WSGI file needed by the web server:
 
     sudo mkdir -p /var/lib/docassemble/
     sudo cp docassemble/docassemble-webapp/flask.wsgi /var/lib/docassemble/
+	sudo chown www-data.www-data /var/lib/docassemble/flask.wsgi
 
 Create the uploads directory:
 
@@ -230,6 +232,20 @@ or
     sudo systemctl restart apache2.service
 
 The system will be running at http://example.com/demo.
+
+# Upgrading
+
+To upgrade docassemble to the latest version, do:
+
+    cd docassemble
+    git pull
+    sudo ./compile.sh && sudo touch /var/lib/docassemble/flask.wsgi
+
+Note that after making changes to docassemble interviews and Python code, it is not necessary to restart Apache.  Changing the modification time of /var/lib/docassemble/flask.wsgi will trigger Apache to restart the WSGI processes.
+
+# Debugging the web app
+
+If you get a standard Apache error message, look in /var/log/apache2/error.log.  If you get an abbreviated message, the error message is probably in /tmp/flask.log.
 
 ## Author
 
