@@ -1,20 +1,38 @@
 ---
 metadata:
-  description: >-
+  description: |
     This is demo of the docassemble system.
   authors:
     - name: Jonathan Pyle
       organization: Philadelphia Legal Assistance
   revision_date: 2015-04-05
-comment: >-
+comment: |
   A "metadata" block contains information about the YAML file, such as
   the name of the author.
 ---
 interview help:
   heading: About this interview
-  content: >-
-    Answer each question.  At the end, you may be given a document
-    that you can save.
+  content: |
+    Answer each question.  At the end, you may be given a document that you
+    can save.
+comment: |
+  An "interview help" block adds text to the "Help" page of every question in the
+  interview.  If the question has help text of its own, the "interview help" will
+  appear after the question-specific help.
+---
+include:
+  - basic-questions.yml
+comment: |
+  This loads some question definitions that are common to many legal
+  interviews.  It also defines basic variables like "user" and sets the
+  names of icons that you can use to "decorate" your questions.
+
+  The "basic-questions.yml" file is in the docassemble.base package, in the
+  directory docassemble/base/data/questions.
+
+  You can include question files from other packages by explicitly referring
+  to their package names.  E.g., "docassemble.helloworld:questions.yml" refers
+  to the file questions.yml in the docassemble/helloworld/data/questions directory.
 ---
 image sets:
   freepik:
@@ -24,31 +42,82 @@ image sets:
       baby: crawling.svg
       people: users6.svg
       injury: accident3.svg
----
-include:
-  - basic-questions.yml
-comment: >-
-  This loads some question definitions that are common to many legal
-  interviews.
+comment: |
+  An "image sets" block defines the names of icons that you can use to
+  "decorate" your questions.  Loading the "basic-questions.yml" file
+  already defined a number of icons, but this block defines some more
+  icons.
+
+  Since this file, questions.yml, is in the docassemble.demo package, the
+  image files referenced here are also in the docassemble.demo package.  The
+  files are located in the directory docassemble/demo/data/static.
+
+  Since most free icons available on the internet require attribution,
+  the "image sets" block allows you to specify what attribution text
+  to use for particular icons.  The web app shows the appropriate
+  attribution text at the bottom of any page that uses one of the
+  icons.
 ---
 imports:
   - datetime
   - dateutil.relativedelta
   - dateutil.parser
   - us
-comment: Loads some Python modules that we will need
+comment: |
+  This loads some Python modules that we will need in the interview.
 ---
 objects:
   - village_idiot: Individual
+comment: |
+  In a question below we will refer to the variable "village_idiot."
+  This "objects" block creates the variable "village_idiot" and
+  specifies that it is an object of type "Individual."  It is
+  important to define objects early on in your interview, before any
+  "mandatory" code blocks.
 ---
-comment : >-
-  This is a little bit of code for directing the interview.  It
-  indicates to the system that we need to get to the endpoint "user_done."
-  "Mandatory" sections are evaluated in the order they appear in the
-  question file.
 mandatory: True
 code: |
-  need(user_understands_no_attorney_client_relationship, test_picture, user_done)
+  if user_understands_no_attorney_client_relationship == "understands":
+    need(user_done)
+  else:
+    need(user_kicked_out)
+comment: |
+  This is the code that directs the flow of the interview.  It
+  indicates to the system that we need to get to the endpoint
+  "user_done."  There is a question below that "sets" the variable
+  "user_done."  Docassemble will ask all the questions necessary to
+  get the information need to pose that that final question to the
+  user.
+
+  However, if the answer to the question
+  user_understands_no_attorney_client_relationship is not
+  "understands," the interview will looks for a question that sets the
+  variable "user_kicked_out."
+  
+  "Mandatory" sections like this one are evaluated in the order they appear
+  in the question file.
+---
+progress: 100
+question: |
+  Sorry, you cannot proceed with the interview.
+subquestion: |
+  You can only proceed with the interview if you agree that your
+  completion of the interview does not create an attorney-client
+  relationship.
+
+  % if user_understands_no_attorney_client_relationship == 'unsure':
+  We suggest that you call us at 215-981-3800 to talk to us about the
+  kinds of services we provide.
+  % endif
+decoration: exit
+buttons:
+  - Exit: exit
+  - Restart: restart
+sets: user_kicked_out
+comment: |
+  If docassemble is configured to show a progress bar, the progress bar will
+  be set to 100% on this question, which is an endpoint question (since the only
+  options are exiting or restarting).
 ---
 question: |
   Do you have a support order?
@@ -58,17 +127,19 @@ subquestion: |
   you have a support order.
     
   [IMAGE docassemble.demo:sample-support-order.jpg, 100%]
-yesno: test_picture
+yesno: user.has_support_order
+comment: |
+  This question illustrates how you can include images in your questions.
+  The file sample-support-order.jpg is stored in the docassemble.demo package
+  in the subdirectory docassemble/demo/data/static.  This is how you refer to
+  a "static" file that exists within a docassemble subpackage.
 ---
-comment: >-
-  This is an example of a multiple-choice question that runs Python code.
-  Questions that run Python code need to include a list of the variables
-  that the code "sets," because docassemble is not able to determine these
-  variables automatically, as it usually can.
 question: What form do you want to prepare?
 decoration: document
 sets:
   - pleading.title
+  - law_category
+  - pleading.type
 buttons:
   - "Custody Complaint":
       code: |
@@ -82,8 +153,17 @@ buttons:
         pleading.type = "complaint"
         pleading.title = "Complaint for Support"
     image: coins
+comment: |
+  This is an example of a multiple-choice question that runs Python
+  code (as opposed to simply setting the value of a single variable.
+  Questions that run Python code need to include a list of the
+  variables that the code "sets," because docassemble is not able to
+  determine these variables automatically, as it usually can.
+
+  This example also shows how you can create square buttons with icons
+  and labels: you just add an "image" value to the button item.
 ---
-comment: >-
+comment: |
   The following seven lines of code ask all the necessary questions to
   gather the names of the plaintiffs in the case, when the user may
   not be a plaintiff.
@@ -99,6 +179,9 @@ code: |
   case.plaintiff.gathering = False
   case.plaintiff.gathered = True
 ---
+comment: |
+  This code will ask the user if he or she is a defendant, so long as the user
+  is not already a plaintiff.  Then it will ask for the names of the defendants.
 code: |
   case.defendant.gathering = True
   if user not in case.defendant and not user_is_plaintiff and user_is_defendant:
@@ -111,8 +194,8 @@ code: |
   case.defendant.gathering = False
   case.defendant.gathered = True
 ---
-comment: >-
-  Gathers the names of the children of all of the parties.
+comment: |
+  This code gathers the names of the children of all of the parties.
 code: |
   people = [user]
   people.extend(case.parties())
@@ -125,13 +208,20 @@ code: |
     user_has_standing = True
   else:
     user_has_standing = False
+comment: |
+  This is an example of how docassemble can serve as an "expert system."
+  The variable "user_has_standing" (a legal concept) can be set using simple
+  logical expressions in Python.
 ---
-progress: 50
 question: Were you injured?
 decoration: injury
 yesno: user_has_injury
+help: |
+  An injury can take many forms.  It can be a physical injury or a
+  purely financial injury.
+progress: 50
 ---
-question: >-
+question: |
   I understand that you live in ${ user.address.city }.
   Were you injured in ${ jurisdiction.state }?
 yesno: injury_in_jurisdiction
@@ -141,9 +231,6 @@ decoration: calendar
 fields:
   - Date of Injury: injury_date
     datatype: date
----
-question: Would you like to enter your address yet again?
-yesno: retry_address
 ---
 code: |
   user.asset.gathering = True
@@ -175,6 +262,12 @@ code: |
   if user.address.address and retry_address:
     retry_address = False
     force_ask('user.address.address')
+comment: |
+  This is an example of how the "force_ask" function can be used to
+  ask a question that has already been asked.
+---
+question: Would you like to enter your address yet again?
+yesno: retry_address
 ---
 code: |
   jurisdiction.state = "Pennsylvania"
@@ -182,95 +275,28 @@ code: |
 ---
 code: |
   if jurisdiction.state == "Pennsylvania":
-    statute_of_limitations_years = 5
+      statute_of_limitations_years = 5
   else:
-    statute_of_limitations_years = 2
+      statute_of_limitations_years = 2
 ---
 code: |
   if jurisdiction.state == "Pennsylvania":
-    if law_category == "custody" or law_category == "support":
-      court.name = "Court of Common Pleas of " + jurisdiction.county + " County"
+      if law_category == "custody" or law_category == "support":
+          court.name = "Court of Common Pleas of " + jurisdiction.county + " County"
 ---
-comment: >-
-  This uses some Python functions to determine whether the date of the
+comment: |
+  This block uses some Python functions to determine whether the date of the
   injury is within the statute of limitations period.
 code: |
   cutoff = datetime.datetime.now() - dateutil.relativedelta.relativedelta(years=statute_of_limitations_years)
   if dateutil.parser.parse(injury_date) > cutoff:
-    statute_of_limitations_ok = True
+      statute_of_limitations_ok = True
   else:
-    statute_of_limitations_ok = False
----
-progress: 100
-decoration: finishline
-question: |
-  % if user_has_standing:
-    You have a valid claim.
-  % else:
-    Sorry, you do not have a valid claim.
-  % endif
-sets: user_done
-buttons:
-  - Exit: exit
-  - Restart: restart
-need: case.asked_about_children
-attachment:
-  - name: Advice Letter for ${ user }
-    filename: advice_letter_${ space_to_underscore(user) }
-    metadata:
-      FooterCenter: "[HYPHEN] [PAGENUM] [HYPHEN]"
-    content: |
-      [CENTER] Advice Letter [BR] for a really
-      important client
-
-      ${ user.address_block() }
-      
-      Dear ${ user.salutation() + ' ' + user.name.last }:
-
-      [TAB] Your marital status is ${ user.marital_status.lower() }.
-      % if user.marital_status == 'Single':
-      Perhaps you should marry ${ village_idiot }.
-      % endif
-      
-      [TAB] Your annual income is ${ currency(user.income.total()) }
-      and the value of all you own is ${ currency(user.asset.total()) }.
-      % if user_has_standing:
-      You have a valid claim.
-      % else:
-      Sorry, you do not have a valid claim.
-      % endif
-
-      [PAGEBREAK]
-      
-      [TAB] If you have any questions, you can call us at 215-981-3843.
-  - name: ${ pleading.title }
-    filename: ${ space_to_underscore(pleading.title) }
-    metadata:
-      FirstFooterCenter: "[HYPHEN] [PAGENUM] [HYPHEN]"
-      FooterCenter: "[HYPHEN] [PAGENUM] [HYPHEN]"
-    content: |
-      ${ pleading.caption() }
-
-      This is a pleading.
-      % if user.picture_verified:
-      Look how cute I am:
-
-      ${ user.picture.show() }
-      % endif
-
-      % if user.child.number() > 0:
-      I have ${ user.child.number_as_word() } ${ user.child.as_noun() }.
-      % endif
-      
-      Please grant me the relief I request!
-help: |
-  This is the end of the interview, ${ user }.  You can exit or restart.
-
-  I hope you enjoyed this interview.
+      statute_of_limitations_ok = False
 ---
 generic object: Individual
 decoration: home
-question: >-
+question: |
   Where ${ x.do_question('live') }?
 fields:
   - Type of home: x.address.type
@@ -288,7 +314,7 @@ fields:
       us.states.mapping('abbr', 'name')
   - Zip: x.address.zip
     required: false
-comment: >-
+comment: |
   This question demonstrates fields that have the style of dropdown
   lists.  The values of a dropdown list can be generated with code
   that runs at the time the question is asked, or they can be
@@ -301,10 +327,90 @@ decoration: picture
 fields:
   - A test file: user.picture
     datatype: file
+comment: |
+  You can accept files from users by using the datatype of "file."
 ---
 question: |
   Is this your picture?
 subquestion: |  
   ${ user.picture.show() }
 yesno: user.picture_verified
+comment: |
+  This is how you can display a picture that a user has uploaded.
+---
+comment: |
+  The following question is the interview's main endpoint.  This
+  question has two attachment documents.  Most of the questions in the
+  interview are asked because they are needed by this question or one
+  of its attachments.
+question: |
+  % if user_has_standing:
+    Congratulations!  You have a valid claim.
+  % else:
+    Sorry, you do not have a valid claim.
+  % endif
+decoration: finishline
+buttons:
+  - Exit: exit
+  - Restart: restart
+sets: user_done
+need:
+  - case.asked_about_children
+attachments:
+  - name: Advice Letter for ${ user }
+    content: |
+      [CENTER] Advice Letter [BR] for a really
+      important client
+
+      ${ user.address_block() }
+      
+      Dear ${ user.salutation() } ${ user.name.last }:
+
+      [TAB] Your marital status is ${ user.marital_status.lower() }.
+      % if user.marital_status == 'Single':
+      Perhaps you should marry ${ village_idiot }.
+      % endif
+      
+      [TAB] Your annual income is ${ currency(user.income.total()) }
+      and the value of all you own is ${ currency(user.asset.total()) }.
+      % if user_has_standing:
+      You have a valid claim.
+      % else:
+      Sorry, you do not have a valid claim.
+      % endif
+
+      [PAGEBREAK]
+      
+      [TAB] If you have any questions, you can call us at 215-981-3843.
+    metadata:
+      FooterCenter: "[HYPHEN] [PAGENUM] [HYPHEN]"
+    filename: Advice_letter_${ space_to_underscore(user) }
+  - name: ${ pleading.title }
+    content: |
+      ${ pleading.caption() }
+
+      This is a pleading.
+      % if user.picture_verified:
+      Look how cute I am:
+
+      ${ user.picture.show() }
+      % endif
+
+      % if user.child.number() > 0:
+      I have ${ user.child.number_as_word() } ${ user.child.as_noun() }.
+      % if user.has_support_order:
+      I already have a support order.
+      % endif
+      % endif
+      
+      Please grant me the relief I request!
+    metadata:
+      FirstFooterCenter: "[HYPHEN] [PAGENUM] [HYPHEN]"
+      FooterCenter: "[HYPHEN] [PAGENUM] [HYPHEN]"
+    filename: ${ space_to_underscore(pleading.title) }
+help: |
+  This is the end of the interview, ${ user }.  You can exit or restart.
+
+  I hope you enjoyed this interview.
+progress: 100
 ...

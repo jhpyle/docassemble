@@ -52,6 +52,7 @@ image sets:
       picture: picture64.svg
       parentchild: man32.svg
       coins: coins36.svg
+      exit: open203.svg
 ---
 question: Are you the defendant?
 yesno: user_is_defendant

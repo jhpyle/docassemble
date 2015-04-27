@@ -325,6 +325,8 @@ def package_data_filename(the_file):
 def package_question_filename(the_file):
     parts = the_file.split(":")
     if len(parts) == 2:
+        if not re.match(r'data/.*', parts[1]):
+            parts[1] = 'data/question/' + parts[1]
         try:
             return(pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1]))
         except:
