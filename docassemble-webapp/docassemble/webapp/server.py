@@ -26,6 +26,7 @@ import Cookie
 import re
 import urlparse
 import json
+import base64
 from flask import make_response
 from flask import render_template
 from flask import request
@@ -43,7 +44,7 @@ from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm
 from flask_mail import Mail, Message
 import flask.ext.user.signals
 import httplib2
-from werkzeug import secure_filename
+from werkzeug import secure_filename, FileStorage
 from rauth import OAuth1Service, OAuth2Service
 from flask_kvsession import KVSessionExtension
 from simplekv.db.sql import SQLAlchemyStore
@@ -144,7 +145,7 @@ def flask_logger(message):
 
 #docassemble.base.logger.set_logmessage(flask_logger)
 
-logmessage("foo bar\n")
+#logmessage("foo bar\n")
 
 def get_url_from_file_reference(file_reference, **kwargs):
     root = daconfig.get('root', None)
@@ -836,7 +837,7 @@ def utility_processor():
     return dict(random_social=random_social, word=word)
 
 def standard_start():
-    return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css" rel="stylesheet"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css"><link rel="stylesheet" href="' + url_for('static', filename='app/app.css') + '"><title>docassemble</title></head><body>'
+    return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css" rel="stylesheet"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css"><link rel="stylesheet" href="' + url_for('static', filename='app/app.css') + '"><title>docassemble</title></head><body>'
 
 def reset_session():
     session['uid'] = get_unique_name(yaml_filename)
@@ -872,6 +873,27 @@ def serve_uploaded_page(number, page):
     else:
         abort(401)
 
+@app.route('/uploadsignature', methods=['POST'])
+def upload_draw():
+    post_data = request.form.copy()
+    sys.stderr.write("Got to upload_draw\n")
+    if 'success' in post_data and post_data['success'] and 'theImage' in post_data:
+        theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['theImage']).group(1) + '==')
+        sys.stderr.write("Got theImage and it is " + str(len(theImage)) + " bytes long\n")
+        with open('/tmp/testme.png', 'w') as ifile:
+            ifile.write(theImage)
+        sys.stderr.write("Saved theImage\n")
+    sys.stderr.write("Done with upload_draw\n")
+    return redirect(url_for('index'))
+        
+@app.route('/testsignature', methods=['GET'])
+def test_signature():
+    output = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link rel="stylesheet" href="' + url_for('static', filename='app/signature.css') + '"><title>' + word('Signature') + '</title></head><body onresize="resizeCanvas()"><div id="page"><div class="header" id="header"><a id="new" class="navbtn nav-left">Clear</a><a id="save" class="navbtn nav-right">Save</a><div class="title">' + word('Your Signature') + '</div></div><div class="toppart" id="toppart">' + word('I am a citizen of the United States.') + '</div><div class="bottompart" id="bottompart">' + word('Jonathan Pyle') + '</div><div id="content"><p style="text-align:center"></p></div></div><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><form id="imageSubmit" action="' + url_for('upload_draw') + '" method="post"><input type="hidden" name="variable" value="' + word('Jonathan Pyle') + '"><input type="hidden" id="theImage" name="theImage" value=""><input type="hidden" id="success" name="success" value="0"></form></body></html>'
+    status = '200 OK'
+    response = make_response(output.encode('utf8'), status)
+    response.headers['Content-type'] = 'text/html; charset=utf-8'
+    return response
+        
 @app.route('/uploadedpagescreen/<number>/<page>', methods=['GET'])
 def serve_uploaded_pagescreen(number, page):
     number = re.sub(r'[^0-9]', '', str(number))

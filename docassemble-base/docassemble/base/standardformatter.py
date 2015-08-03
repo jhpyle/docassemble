@@ -29,14 +29,14 @@ def as_html(status, validation_rules, debug):
     decorations = list()
     attributions = set()
     if status.decorations is not None:
-        sys.stderr.write("yoo1\n")
+        #sys.stderr.write("yoo1\n")
         for decoration in status.decorations:
-            sys.stderr.write("yoo2\n")
+            #sys.stderr.write("yoo2\n")
             if 'image' in decoration:
-                sys.stderr.write("yoo3\n")
+                #sys.stderr.write("yoo3\n")
                 the_image = status.question.interview.images.get(decoration['image'], None)
                 if the_image is not None:
-                    sys.stderr.write("yoo4\n")
+                    #sys.stderr.write("yoo4\n")
                     url = docassemble.base.filter.url_finder(str(the_image.package) + ':' + str(the_image.filename))
                     width_value = 2.0
                     width_units = 'em'
@@ -48,9 +48,9 @@ def as_html(status, validation_rules, debug):
                     else:
                         sizing += 'height:auto;'    
                     if url is not None:
-                        sys.stderr.write("yoo5\n")
+                        #sys.stderr.write("yoo5\n")
                         if the_image.attribution is not None:
-                            sys.stderr.write("yoo6\n")
+                            #sys.stderr.write("yoo6\n")
                             attributions.add(the_image.attribution)
                         decorations.append('<img style="image-orientation:from-image;float:right;' + sizing + '" src="' + url + '">')
     if len(decorations):

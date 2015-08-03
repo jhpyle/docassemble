@@ -71,6 +71,7 @@ def set_url_finder(func):
     return
 
 def rtf_filter(text):
+    text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
     text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
     text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_as_rtf, text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', rtf_caption_table, text)
@@ -93,6 +94,7 @@ def rtf_filter(text):
     return(text)
 
 def pdf_filter(text):
+    text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
     text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_include_string, text)
     text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_include_string, text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', r'\\begingroup\\singlespacing\\mynoindent\\begin{tabular}{@{}m{0.49\\textwidth}|@{\\hspace{1em}}m{0.49\\textwidth}@{}}{\1} & {\2} \\\\ \\end{tabular}\\endgroup\\myskipline', text)
@@ -272,10 +274,15 @@ def rtf_caption_table(match):
     table_text = re.sub(r'\\rtlch\\fcs1 \\af0 \\ltrch\\fcs0', r'\\rtlch\\fcs1 \\af0 \\ltrch\\fcs0 \\sl240 \\slmult1', table_text)
     return table_text
 
-def markdown_to_html(a, trim=False, pclass=None):
+def markdown_to_html(a, trim=False, pclass=None, interview_status=None):
     a = docassemble.base.filter.html_filter(unicode(a))
     result = markdown.markdown(a, extensions=[SmartypantsExt(configs=dict())], output_format='html5')
     result = re.sub('<a href', '<a target="_blank" href', result)
+    if re.search(r'\[\[', result):
+        if interview_status is None:
+            result = re.sub(r'\[\[([^\]]*)\]\]', r'\1', result)
+        else:
+            result = re.sub(r'\[\[([^\]]*)\]\]', (lambda x: add_terms(x.group[1], interview_status)), result)
     if trim:
         return(result[3:-4])
     else:
@@ -283,3 +290,5 @@ def markdown_to_html(a, trim=False, pclass=None):
             result = re.sub('<p>', '<p class="' + pclass + '">', result)
         return(result)
 
+def add_terms(termname, interview_status):
+    return('<a onclick="">' + str(termname) + '</a>')
