@@ -126,6 +126,7 @@ $.fn.drawTouch = function() {
     y = e.changedTouches[0].pageY-theTop;
     ctx.lineTo(x,y);
     ctx.stroke();
+    ctx.fillRect(x-0.5*theWidth,y-0.5*theWidth,theWidth,theWidth);
   };
   var dot = function(e) {
     e.preventDefault();
