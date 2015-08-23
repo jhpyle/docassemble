@@ -1,5 +1,10 @@
 var ctx, color = "#000";	
 
+var theTop;
+var theLeft;
+var theWidth;
+var aspectRatio = 0.35;
+
 $(document).ready(function () {
   setTimeout(function(){
     if (!isCanvasSupported()){
@@ -33,19 +38,26 @@ function resizeCanvas(){
   newCanvas();
   //console.log("I resized");
   return;
-  var cheight = $(window).width()*0.5;
-  if (cheight > $(window).height()-44){
-    cheight = $(window).height()-44;
+  var cheight = $(window).width()*aspectRatio;
+  if (cheight > $(window).height()-theTop){
+    cheight = $(window).height()-theTop;
   }
   if (cheight > 350){
     cheight = 350;
   }
+  var cwidth = $(window).width() - 20;
   
   $("#content").height(cheight);
   //$("#content").css('top', ($("#header").height() + $("#toppart").height()) + "px");
-  $("#bottompart").css('top', (cheight) + "px");
-  $("#canvas").width($(window).width());
+  //$("#bottompart").css('top', (cheight) + "px");
+  $("#canvas").width(cwidth);
   $("#canvas").height(cheight);
+  theTop = $("#canvas").offset().top;
+  theLeft = $("#canvas").offset().left;
+  theWidth = cwidth/100.0;
+  if (theWidth < 1){
+    theWidth = 1;
+  }
   return;
 }
 
@@ -59,24 +71,31 @@ function saveCanvas(){
 function newCanvas(){
   //define and resize canvas
   //var cheight = $(window).height()-($("#header").height() + $("#toppart").height() + $("#bottompart").height());
-  var cheight = $(window).width()*0.5;
-  if (cheight > $(window).height()-44){
-    cheight = $(window).height()-44;
+  var cheight = $(window).width()*aspectRatio;
+  if (cheight > $(window).height()-theTop){
+    cheight = $(window).height()-theTop;
   }
   if (cheight > 350){
     cheight = 350;
   }
+  var cwidth = $(window).width() - 20;
   $("#content").height(cheight);
-  $("#bottompart").css('top', (cheight) + "px");
+  //$("#bottompart").css('top', (cheight) + "px");
   //$("#content").css('top', ($("#header").height() + $("#toppart").height()) + "px");
   //$("#content").css('bottom', ($("#bottompart").height()) + "px");
-  var canvas = '<canvas id="canvas" width="'+$(window).width()+'px" height="'+(cheight)+'px"></canvas>';
+  var canvas = '<canvas id="canvas" width="'+(cwidth)+'px" height="'+(cheight)+'px"></canvas>';
   $("#content").html(canvas);
+  theTop = $("#canvas").offset().top;
+  theLeft = $("#canvas").offset().left;
+  theWidth = cwidth/100.0;
+  if (theWidth < 1){
+    theWidth = 1;
+  }
   
   // setup canvas
   ctx=document.getElementById("canvas").getContext("2d");
   ctx.strokeStyle = color;
-  ctx.lineWidth = 5;	
+  ctx.lineWidth = theWidth;	
   
   // setup to trigger drawing on mouse or touch
   $("#canvas").drawTouch();
@@ -89,15 +108,15 @@ $.fn.drawTouch = function() {
   var start = function(e) {
     e = e.originalEvent;
     ctx.beginPath();
-    x = e.changedTouches[0].pageX;
-    y = e.changedTouches[0].pageY-44;
+    x = e.changedTouches[0].pageX-theLeft;
+    y = e.changedTouches[0].pageY-theTop;
     ctx.moveTo(x,y);
   };
   var move = function(e) {
     e.preventDefault();
     e = e.originalEvent;
-    x = e.changedTouches[0].pageX;
-    y = e.changedTouches[0].pageY-44;
+    x = e.changedTouches[0].pageX-theLeft;
+    y = e.changedTouches[0].pageY-theTop;
     ctx.lineTo(x,y);
     ctx.stroke();
   };
@@ -105,9 +124,9 @@ $.fn.drawTouch = function() {
     e.preventDefault();
     e = e.originalEvent;
     ctx.beginPath();
-    x = e.pageX;
-    y = e.pageY-44;
-    ctx.fillRect(x-2.5,y-2.5,5,5);
+    x = e.pageX-theLeft;
+    y = e.pageY-theTop;
+    ctx.fillRect(x-0.5*theWidth,y-0.5*theWidth,theWidth,theWidth);
     //console.log("Got click");
   };
   $(this).on("click", dot);
@@ -121,15 +140,15 @@ $.fn.drawPointer = function() {
   var start = function(e) {
     e = e.originalEvent;
     ctx.beginPath();
-    x = e.pageX;
-    y = e.pageY-44;
+    x = e.pageX-theLeft;
+    y = e.pageY-theTop;
     ctx.moveTo(x,y);
   };
   var move = function(e) {
     e.preventDefault();
     e = e.originalEvent;
-    x = e.pageX;
-    y = e.pageY-44;
+    x = e.pageX-theLeft;
+    y = e.pageY-theTop;
     ctx.lineTo(x,y);
     ctx.stroke();
   };
@@ -144,14 +163,14 @@ $.fn.drawMouse = function() {
   var start = function(e) {
     clicked = 1;
     ctx.beginPath();
-    x = e.pageX;
-    y = e.pageY-44;
+    x = e.pageX-theLeft;
+    y = e.pageY-theTop;
     ctx.moveTo(x,y);
   };
   var move = function(e) {
     if(clicked){
-      x = e.pageX;
-      y = e.pageY-44;
+      x = e.pageX-theLeft;
+      y = e.pageY-theTop;
       ctx.lineTo(x,y);
       ctx.stroke();
     }

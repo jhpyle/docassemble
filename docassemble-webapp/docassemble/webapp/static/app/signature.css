@@ -73,16 +73,21 @@ body {
 }
 
 #content{
-    position: absolute;
-    top: 44px;
+    /*position: absolute;*/
+    /*top: 44px;
     left: 0px;
     right: 0px;
     bottom: 46px;
-    overflow: hidden;
+    overflow: hidden;*/
+    padding-left: 10px;
+    padding-right: 10px;
     /* background-color:#fff; */
 }
 #canvas{
-    cursor:crosshair ;
+    cursor:crosshair;
+    border-style: solid;
+    border-color: black;
+    border-width: 1px;
     /*background-color:#fff; */
 }
 .palette-case {
@@ -116,20 +121,21 @@ body {
     border:2px dashed #fff;
 }
 .toppart {
-    position: absolute;
+    /* position: absolute; */
     text-align: center;
-    top: 44px;
+    /*top: 44px;
     left: 0px;
-    right: 0px;
-    padding-top: 6px;
+    right: 0px; */
+    padding-top: 50px;
+    padding-bottom: 12px;
 }
 .bottompart {
-    position: absolute;
+    /* position: absolute; */
     text-align: center;
-    top: 350px;
+    /* top: 350px;
     left: 10px;
-    right: 10px;
+    right: 10px; */
     padding-top:12px;
-    border-style: solid none none none;
-    border-width: medium;
+    /* border-style: solid none none none;
+    border-width: medium; */
 }
