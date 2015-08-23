@@ -74,8 +74,8 @@ function newCanvas(){
   //define and resize canvas
   //var cheight = $(window).height()-($("#header").height() + $("#toppart").height() + $("#bottompart").height());
   var cheight = $(window).width()*aspectRatio;
-  if (cheight > $(window).height()-theTop){
-    cheight = $(window).height()-theTop;
+  if (cheight > $(window).height()-44){
+    cheight = $(window).height()-44;
   }
   if (cheight > 350){
     cheight = 350;
@@ -115,15 +115,15 @@ $.fn.drawTouch = function() {
     e = e.originalEvent;
     ctx.beginPath();
     ctx.lineJoin="round";
-    x = e.changedTouches[0].pageX-theLeft;
-    y = e.changedTouches[0].pageY-theTop;
+    x = e.changedTouches[0].pageX-$("#canvas").offset().left;
+    y = e.changedTouches[0].pageY-$("#canvas").offset().top;
     ctx.moveTo(x,y);
   };
   var move = function(e) {
     e.preventDefault();
     e = e.originalEvent;
-    x = e.changedTouches[0].pageX-theLeft;
-    y = e.changedTouches[0].pageY-theTop;
+    x = e.changedTouches[0].pageX-$("#canvas").offset().left;
+    y = e.changedTouches[0].pageY-$("#canvas").offset().top;
     ctx.lineTo(x,y);
     ctx.stroke();
     ctx.fillRect(x-0.5*theWidth,y-0.5*theWidth,theWidth,theWidth);
@@ -133,8 +133,8 @@ $.fn.drawTouch = function() {
     e = e.originalEvent;
     ctx.beginPath();
     ctx.lineJoin="round";
-    x = e.pageX-theLeft;
-    y = e.pageY-theTop;
+    x = e.pageX-$("#canvas").offset().left;
+    y = e.pageY-$("#canvas").offset().top;
     ctx.fillRect(x-0.5*theWidth,y-0.5*theWidth,theWidth,theWidth);
     //console.log("Got click");
   };
@@ -151,15 +151,15 @@ $.fn.drawPointer = function() {
     e = e.originalEvent;
     ctx.beginPath();
     ctx.lineJoin="round";
-    x = e.pageX-theLeft;
-    y = e.pageY-theTop;
+    x = e.pageX-$("#canvas").offset().left;
+    y = e.pageY-$("#canvas").offset().top;
     ctx.moveTo(x,y);
   };
   var move = function(e) {
     e.preventDefault();
     e = e.originalEvent;
-    x = e.pageX-theLeft;
-    y = e.pageY-theTop;
+    x = e.pageX-$("#canvas").offset().left;
+    y = e.pageY-$("#canvas").offset().top;
     ctx.lineTo(x,y);
     ctx.stroke();
   };
@@ -175,14 +175,14 @@ $.fn.drawMouse = function() {
     clicked = 1;
     ctx.beginPath();
     ctx.lineJoin="round";
-    x = e.pageX-theLeft;
-    y = e.pageY-theTop;
+    x = e.pageX-$("#canvas").offset().left;
+    y = e.pageY-$("#canvas").offset().top;
     ctx.moveTo(x,y);
   };
   var move = function(e) {
     if(clicked){
-      x = e.pageX-theLeft;
-      y = e.pageY-theTop;
+      x = e.pageX-$("#canvas").offset().left;
+      y = e.pageY-$("#canvas").offset().top;
       ctx.lineTo(x,y);
       ctx.stroke();
     }
