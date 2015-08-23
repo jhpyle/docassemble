@@ -3,7 +3,8 @@ var ctx, color = "#000";
 var theTop;
 var theLeft;
 var theWidth;
-var aspectRatio = 0.35;
+var aspectRatio = 0.30;
+var theBorders = 50;
 
 $(document).ready(function () {
   setTimeout(function(){
@@ -46,7 +47,7 @@ function resizeCanvas(){
   if (cheight > 350){
     cheight = 350;
   }
-  var cwidth = $(window).width() - 20;
+  var cwidth = $(window).width() - theBorders;
   
   $("#content").height(cheight);
   //$("#content").css('top', ($("#header").height() + $("#toppart").height()) + "px");
@@ -79,7 +80,7 @@ function newCanvas(){
   if (cheight > 350){
     cheight = 350;
   }
-  var cwidth = $(window).width() - 20;
+  var cwidth = $(window).width() - theBorders;
   $("#content").height(cheight);
   //$("#bottompart").css('top', (cheight) + "px");
   //$("#content").css('top', ($("#header").height() + $("#toppart").height()) + "px");
@@ -102,10 +103,10 @@ function newCanvas(){
   $("#canvas").drawTouch();
   $("#canvas").drawPointer();
   $("#canvas").drawMouse();
-  $(document).on("touchend", function(){});
-  $(document).on("touchcancel", function(){});
-  $(document).on("touchstart", function(){});
-  $(document).on("touchmove", function(){});	
+  //$(document).on("touchend", function(event){event.preventDefault();});
+  //$(document).on("touchcancel", function(event){event.preventDefault();});
+  //$(document).on("touchstart", function(event){event.preventDefault();});
+  $(document).on("touchmove", function(event){event.preventDefault();});	
 }
 
 // prototype to	start drawing on touch using canvas moveTo and lineTo
