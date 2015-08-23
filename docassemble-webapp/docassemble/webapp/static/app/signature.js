@@ -20,6 +20,7 @@ $(document).ready(function () {
     $(this).css("border-style", "dashed");
     color = $(this).css("background-color");
     ctx.beginPath();
+    ctx.lineJoin="round";
     ctx.strokeStyle = color;
   });
   $("#new").click(function() {
@@ -108,6 +109,7 @@ $.fn.drawTouch = function() {
   var start = function(e) {
     e = e.originalEvent;
     ctx.beginPath();
+    ctx.lineJoin="round";
     x = e.changedTouches[0].pageX-theLeft;
     y = e.changedTouches[0].pageY-theTop;
     ctx.moveTo(x,y);
@@ -124,6 +126,7 @@ $.fn.drawTouch = function() {
     e.preventDefault();
     e = e.originalEvent;
     ctx.beginPath();
+    ctx.lineJoin="round";
     x = e.pageX-theLeft;
     y = e.pageY-theTop;
     ctx.fillRect(x-0.5*theWidth,y-0.5*theWidth,theWidth,theWidth);
@@ -131,6 +134,7 @@ $.fn.drawTouch = function() {
   };
   $(this).on("click", dot);
   $(this).on("touchend", move);
+  $(this).on("touchcancel", move);
   $(this).on("touchstart", start);
   $(this).on("touchmove", move);	
 }; 
@@ -140,6 +144,7 @@ $.fn.drawPointer = function() {
   var start = function(e) {
     e = e.originalEvent;
     ctx.beginPath();
+    ctx.lineJoin="round";
     x = e.pageX-theLeft;
     y = e.pageY-theTop;
     ctx.moveTo(x,y);
@@ -163,6 +168,7 @@ $.fn.drawMouse = function() {
   var start = function(e) {
     clicked = 1;
     ctx.beginPath();
+    ctx.lineJoin="round";
     x = e.pageX-theLeft;
     y = e.pageY-theTop;
     ctx.moveTo(x,y);
