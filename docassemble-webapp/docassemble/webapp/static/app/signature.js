@@ -102,6 +102,10 @@ function newCanvas(){
   $("#canvas").drawTouch();
   $("#canvas").drawPointer();
   $("#canvas").drawMouse();
+  $(document).on("touchend", function(){});
+  $(document).on("touchcancel", function(){});
+  $(document).on("touchstart", function(){});
+  $(document).on("touchmove", function(){});	
 }
 
 // prototype to	start drawing on touch using canvas moveTo and lineTo
