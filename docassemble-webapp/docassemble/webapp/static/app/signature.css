@@ -22,6 +22,7 @@ body {
     text-align: center;
 }
 .header {
+    position: fixed;
     top: 0px;
     left: 0px;
     right: 0px;
@@ -127,7 +128,7 @@ body {
     left: 0px;
     right: 0px; */
     padding-top: 50px;
-    padding-bottom: 12px;
+    padding-bottom: 6px;
 }
 .bottompart {
     /* position: absolute; */
@@ -135,7 +136,7 @@ body {
     /* top: 350px;
     left: 10px;
     right: 10px; */
-    padding-top:12px;
+    padding-top:6px;
     /* border-style: solid none none none;
     border-width: medium; */
 }
