@@ -208,7 +208,7 @@ function post(params) {
       }
     }
   }
-  $('#imageSubmit').submit();
+  $('#daform').submit();
   return;
 }
 

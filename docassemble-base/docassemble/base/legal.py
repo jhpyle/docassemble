@@ -325,8 +325,13 @@ class DAFile(DAObject):
             self.filename = kwargs['extension']
         if 'number' in kwargs:
             self.number = kwargs['number']
+            self.ok = True
+        else:
+            self.ok = False
         return
     def show(self, width=None):
+        if not self.ok:
+            return('')
         if width is not None:
             return('[IMAGE ' + str(self.number) + ', ' + str(width) + ']')
         else:

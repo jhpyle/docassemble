@@ -25,6 +25,21 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
         sizing += 'height:auto;'    
     return('<img src="' + url + '" style="image-orientation:from-image;' + sizing + '"> ')
 
+def signature_html(status, debug):
+    output = '<div id="page"><div class="header" id="header"><a id="new" class="navbtn nav-left">' + word('Clear') + '</a><a id="save" class="navbtn nav-right">' + word('Save') + '</a><div class="title">' + word('Sign Your Name') + '</div></div><div class="toppart" id="toppart">'
+    if status.questionText:
+        output += markdown_to_html(status.questionText, trim=True)
+    output += '</div>'
+    if status.subquestionText:
+        output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
+    output += '<div id="content"><p style="text-align:center"></p></div><div class="bottompart" id="bottompart">'
+    if (status.underText):
+        output += markdown_to_html(status.underText, trim=True)
+    output += '</div></div><form id="daform" method="POST"><input type="hidden" name="saveas" value="' + status.question.fields[0].saveas + '"><input type="hidden" id="theImage" name="theImage" value=""><input type="hidden" id="success" name="success" value="0">'
+    output += question_name_tag(status.question)
+    output += '</form>'
+    return output
+
 def as_html(status, validation_rules, debug):
     decorations = list()
     attributions = set()

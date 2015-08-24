@@ -84,6 +84,23 @@ comment: |
 ---
 mandatory: True
 code: |
+ if user.name.first and user.is_citizen and user_is_willing_to_sign_citizenship_attestation and user_understands_how_to_use_signature_feature:
+   need(user.signature, user.signature_verified)
+---
+question: |
+  I am a citizen of the United States.
+signature: user.signature
+under: |
+  ${ user.name }
+---
+question: |
+  Is this your signature?
+subquestion: |  
+  ${ user.signature.show() }
+yesno: user.signature_verified
+---
+mandatory: True
+code: |
   if user_understands_no_attorney_client_relationship == "understands":
     need(user_done)
   else:

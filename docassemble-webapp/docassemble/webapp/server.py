@@ -6,7 +6,7 @@ import pip
 import shutil
 import docassemble.base.parse
 import docassemble.base.interview_cache
-from docassemble.base.standardformatter import as_html
+from docassemble.base.standardformatter import as_html, signature_html
 import xml.etree.ElementTree as ET
 import docassemble.webapp.database
 import tempfile
@@ -568,6 +568,31 @@ def index():
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     interview_status = docassemble.base.parse.InterviewStatus()
     changed = False
+    if 'theImage' in post_data:
+        interview.assemble(user_dict, interview_status)
+        file_field = post_data['saveas'];
+        if 'success' in post_data and post_data['success']:
+            theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['theImage']).group(1) + '==')
+            sys.stderr.write("Got theImage and it is " + str(len(theImage)) + " bytes long\n")
+            filename = secure_filename('canvas.png')
+            file_number = get_new_file_number(session['uid'], filename)
+            extension, mimetype = get_ext_and_mimetype(filename)
+            path = get_file_path(file_number)
+            with open(path, 'w') as ifile:
+                ifile.write(theImage)
+            os.symlink(path, path + '.' + extension)
+            sys.stderr.write("Saved theImage\n")
+            string = file_field + " = DAFile('" + file_field + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
+        else:
+            string = file_field + " = DAFile('" + file_field + "')"
+        sys.stderr.write(string + "\n")
+        try:
+            exec(string, user_dict)
+            changed = True
+            steps += 1
+        except Exception as errMess:
+            sys.stderr.write("Error: " + str(errMess) + "\n")
+            flash_content += "<p>Error: " + str(errMess) + "</p>"
     if 'files' in post_data:
         logmessage("There are files\n")
         interview.assemble(user_dict, interview_status)
@@ -604,11 +629,13 @@ def index():
                         flash_content += "<p>Error: Invalid character in file_field: " + file_field + " </p>"
                         break
                     string = file_field + " = DAFile('" + file_field + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
+                    sys.stderr.write(string + "\n")
                     try:
                         exec(string, user_dict)
                         changed = True
                         steps += 1
                     except Exception as errMess:
+                        sys.stderr.write("Error: " + str(errMess) + "\n")
                         flash_content += "<p>Error: " + str(errMess) + "</p>"
                     #post_data.add(file_field, str(file_number))
     if 'checkboxes' in post_data:
@@ -617,7 +644,7 @@ def index():
             if checkbox_field not in post_data:
                 post_data.add(checkbox_field, 'False')
     for key in post_data:
-        if key == 'checkboxes' or key == 'back_one' or key == 'files' or key == 'questionname':
+        if key == 'checkboxes' or key == 'back_one' or key == 'files' or key == 'questionname' or key == 'theImage' or key == 'saveas' or key == 'success':
             continue
         logmessage("Got a key: " + key + "\n")
         data = post_data[key]
@@ -659,13 +686,18 @@ def index():
     if interview_status.question.question_type == "exit":
         return redirect(exit_page)
     save_user_dict(user_code, user_dict, yaml_filename, changed=changed)
-    output = standard_start() + make_navbar(daconfig['brandname'], steps) + flash_content + '<div class="container"><div class="tab-content">'
-    if USE_PROGRESS_BAR:
-        output += progress_bar(user_dict['progress'])
-    validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'help-inline'}
-    output += as_html(interview_status, validation_rules, DEBUG)
-    extra_scripts = '<script>$("#daform").validate(' + json.dumps(validation_rules) + ');</script>'
-    output += """</div></div>""" + scripts + extra_scripts + """</body></html>"""
+    if interview_status.question.question_type == "signature":
+        output = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link rel="stylesheet" href="' + url_for('static', filename='app/signature.css') + '"><title>' + word('Sign Your Name') + '</title></head><body onresize="resizeCanvas()">'
+        output += signature_html(interview_status, DEBUG)
+        output += '</body></html>'
+    else:
+        output = standard_start() + make_navbar(daconfig['brandname'], steps) + flash_content + '<div class="container"><div class="tab-content">'
+        if USE_PROGRESS_BAR:
+            output += progress_bar(user_dict['progress'])
+        validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'help-inline'}
+        output += as_html(interview_status, validation_rules, DEBUG)
+        extra_scripts = '<script>$("#daform").validate(' + json.dumps(validation_rules) + ');</script>'
+        output += """</div></div>""" + scripts + extra_scripts + """</body></html>"""
     response = make_response(output.encode('utf8'), status)
     response.headers['Content-type'] = 'text/html; charset=utf-8'
     return response
@@ -888,7 +920,7 @@ def upload_draw():
         
 @app.route('/testsignature', methods=['GET'])
 def test_signature():
-    output = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link rel="stylesheet" href="' + url_for('static', filename='app/signature.css') + '"><title>' + word('Signature') + '</title></head><body onresize="resizeCanvas()"><div id="page"><div class="header" id="header"><a id="new" class="navbtn nav-left">Clear</a><a id="save" class="navbtn nav-right">Save</a><div class="title">' + word('Your Signature') + '</div></div><div class="toppart" id="toppart">' + word('I am a citizen of the United States.') + '</div><div id="content"><p style="text-align:center"></p></div><div class="bottompart" id="bottompart">' + word('Jonathan Pyle') + '</div></div><form id="imageSubmit" action="' + url_for('upload_draw') + '" method="post"><input type="hidden" name="variable" value="' + word('Jonathan Pyle') + '"><input type="hidden" id="theImage" name="theImage" value=""><input type="hidden" id="success" name="success" value="0"></form></body></html>'
+    output = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link rel="stylesheet" href="' + url_for('static', filename='app/signature.css') + '"><title>' + word('Signature') + '</title></head><body onresize="resizeCanvas()"><div id="page"><div class="header" id="header"><a id="new" class="navbtn nav-left">Clear</a><a id="save" class="navbtn nav-right">Save</a><div class="title">' + word('Your Signature') + '</div></div><div class="toppart" id="toppart">' + word('I am a citizen of the United States.') + '</div><div id="content"><p style="text-align:center"></p></div><div class="bottompart" id="bottompart">' + word('Jonathan Pyle') + '</div></div><form id="daform" action="' + url_for('upload_draw') + '" method="post"><input type="hidden" name="variable" value="' + word('Jonathan Pyle') + '"><input type="hidden" id="theImage" name="theImage" value=""><input type="hidden" id="success" name="success" value="0"></form></body></html>'
     status = '200 OK'
     response = make_response(output.encode('utf8'), status)
     response.headers['Content-type'] = 'text/html; charset=utf-8'

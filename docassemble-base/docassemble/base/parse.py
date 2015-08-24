@@ -156,6 +156,7 @@ class InterviewStatus(object):
         self.question = question_result['question']
         self.questionText = question_result['question_text']
         self.subquestionText = question_result['subquestion_text']
+        self.underText = question_result['under_text']
         self.decorations = question_result['decorations']
         self.helpText = question_result['help_text']
         self.attachments = question_result['attachments']
@@ -311,6 +312,7 @@ class Question:
         self.need = None
         self.helptext = None
         self.subcontent = None
+        self.undertext = None
         self.progress = None
         self.decorations = None
         self.fields_used = set()
@@ -489,6 +491,12 @@ class Question:
                     item_to_add[key] = TextObject(value)
                 processed_decoration_list.append(item_to_add)
             self.decorations = processed_decoration_list
+        if 'signature' in data:
+            self.question_type = 'signature'
+            self.fields.append(Field({'saveas': data['signature']}))
+            self.fields_used.add(data['signature'])
+            if 'under' in data:
+                self.undertext = TextObject(data['under'])
         if 'yesno' in data:
             self.fields.append(Field({'saveas': data['yesno'], 'boolean': 1}))
             self.fields_used.add(data['yesno'])
@@ -626,6 +634,10 @@ class Question:
             subquestion = self.subcontent.text(user_dict)
         else:
             subquestion = None
+        if self.undertext is not None:
+            undertext = self.undertext.text(user_dict)
+        else:
+            undertext = None
         if self.decorations is not None:
             decorations = list()
             for decoration_item in self.decorations:
@@ -662,7 +674,7 @@ class Question:
                         defaults[field.saveas] = field.default.text(user_dict)
                 if hasattr(field, 'hint'):
                     hints[field.saveas] = field.hint.text(user_dict)
-        return({'type': 'question', 'question_text': self.content.text(user_dict), 'subquestion_text': subquestion, 'decorations': decorations, 'help_text': help_text_list, 'attachments': self.processed_attachments(user_dict, the_x=the_x, the_i=the_i), 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints})
+        return({'type': 'question', 'question_text': self.content.text(user_dict), 'subquestion_text': subquestion, 'under_text': undertext, 'decorations': decorations, 'help_text': help_text_list, 'attachments': self.processed_attachments(user_dict, the_x=the_x, the_i=the_i), 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints})
 
     def processed_attachments(self, user_dict, **kwargs):
         return(list(map((lambda x: make_attachment(x, user_dict, **kwargs)), self.attachments)))
