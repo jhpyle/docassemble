@@ -15,7 +15,7 @@ imports:
 ---
 mandatory: True
 code: |
-  if user.name.first and user.is_citizen and user_is_willing_to_sign_citizenship_attestation and ok_to_submit_attestation_form:
+  if user.name.first and user.is_citizen and user_is_willing_to_sign_citizenship_attestation and user.signature_verified and ok_to_submit_attestation_form:
     email_recipients = []
     if user_wants_copy_emailed:
       email_recipients.append(user.email)
@@ -68,8 +68,6 @@ subquestion: |
   The citizenship attestation is below.  Please review to make sure it is ok to submit.  If you would like to submit the document, press "Yes."
 decoration: finishline
 yesno: ok_to_submit_attestation_form
-need:
-  - user.signature_verified
 attachments:
   - name: Citizenship attestation of ${ user }
     content: |
