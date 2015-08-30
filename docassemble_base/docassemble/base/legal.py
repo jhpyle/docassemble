@@ -1,5 +1,6 @@
 from docassemble.base.core import DAObject
-from docassemble.base.util import comma_and_list, get_language, set_language, word, words, comma_list, ordinal, need, nice_number, possessify, your, her, his, do_you, does_a_b, verb_past, verb_present, noun_plural, underscore_to_space, space_to_underscore, force_ask, period_list, currency, indefinite_article, today, remove
+from docassemble.base.util import comma_and_list, get_language, set_language, word, words, comma_list, ordinal, need, nice_number, possessify, your, her, his, do_you, does_a_b, verb_past, verb_present, noun_plural, underscore_to_space, space_to_underscore, force_ask, period_list, currency, indefinite_article, today, remove, nodoublequote
+from docassemble.base.filter import file_finder, url_finder, mail_variable
 #from docassemble.base.logger import logmessage
 from datetime import date
 import inspect
@@ -109,6 +110,10 @@ class Person(DAObject):
         return self.name.full()
     def address_block(self):
         return('| ' + self.name.full() + "\n" + self.address.block())
+    def email_address(self, include_name=None):
+        if include_name is True or (hasattr(self.name, 'first') and include_name is not False):
+            return('"' + nodoublequote(self.name) + '" <' + str(self.email) + '>')
+        return(str(self.email))
     def age(self):
         if (hasattr(self, 'age_in_years')):
             return self.age_in_years
@@ -336,3 +341,64 @@ class DAFile(DAObject):
             return('[IMAGE ' + str(self.number) + ', ' + str(width) + ']')
         else:
             return('[IMAGE ' + str(self.number) + ']')
+
+def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", attachments=[]):
+    from flask_mail import Message
+    sys.stderr.write("moo1\n")
+    if type(to) is not list or len(to) == 0:
+        return False
+    if body is None and html is None:
+        body = ""
+    sys.stderr.write("moo2\n")
+    email_stringer = lambda x: email_string(x, include_name=False)
+    msg = Message(subject, sender=email_stringer(sender), recipients=email_stringer(to), cc=email_stringer(cc), bcc=email_stringer(bcc), body=body, html=html)
+    success = True
+    for attachment in attachments:
+        sys.stderr.write("moo31\n")
+        if type(attachment) is DAFile and attachment.ok:
+            sys.stderr.write("moo32\n")
+            file_info = file_finder(str(attachment.number))
+            if ('path' in file_info):
+                sys.stderr.write("moo33\n")
+                failed = True
+                with open(file_info['path'], 'r') as fp:
+                    sys.stderr.write("moo3\n")
+                    msg.attach(file_info['filename'], file_info['mimetype'], fp.read())
+                    failed = False
+                if failed:
+                    sys.stderr.write("moo4\n")
+                    success = False
+            else:
+                success = False
+                sys.stderr.write("moo34\n")
+        else:
+            success = False
+            sys.stderr.write("moo35\n")
+    appmail = mail_variable()
+    if not appmail:
+        sys.stderr.write("moo36\n")
+        success = False
+    if success:
+        sys.stderr.write("moo37\n")
+        try:
+            appmail.send(msg)
+        except Exception as errmess:
+            sys.stderr.write("moo38: " + str(errmess) + "\n")
+            success = False
+    return(success)
+    
+def email_string(persons, include_name=None):
+    if persons is None:
+        return None
+    if type(persons) is not list:
+        persons = [persons]
+    result = []
+    for person in persons:
+        if isinstance(person, Person):
+            sys.stderr.write("email string: contemplating " + person.object_name() + "\n")
+            result.append(person.email_address(include_name=include_name))
+            sys.stderr.write("email string was" + person.email_address(include_name=include_name) + "\n")
+        else:
+            sys.stderr.write("email string not a person: contemplating " + str(person) + "\n")
+            result.append(str(person))
+    return result

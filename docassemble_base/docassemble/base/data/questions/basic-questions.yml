@@ -114,6 +114,7 @@ question: >-
   What is ${ x.possessive('e-mail address') }?
 fields:
   - E-mail: x.email
+    datatype: email
 ---
 generic object: Individual
 question: >-

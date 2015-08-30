@@ -217,6 +217,7 @@ def add_info_about_file(filename, result):
     return
 
 def get_info_from_file_reference(file_reference):
+    #sys.stderr.write('file reference is ' + str(file_reference) + "\n")
     if re.match('[0-9]+', file_reference):
         return(get_info_from_file_number(file_reference))
     result = dict()
@@ -231,6 +232,11 @@ def get_info_from_file_reference(file_reference):
     return(result)
 
 docassemble.base.parse.set_file_finder(get_info_from_file_reference)
+
+def get_mail_variable(*args, **kwargs):
+    return mail
+
+docassemble.base.parse.set_mail_variable(get_mail_variable)
 
 scripts = """\
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
@@ -527,6 +533,7 @@ def index():
             logmessage("No dictionary for that code\n")
             del user_code
             del user_dict
+        #user_dict['appmail'] = mail
     else:
         logmessage("Did not find user code in session\n")
     try:

@@ -13,20 +13,18 @@ include:
 imports:
   - datetime
 ---
+objects:
+  - attestation_recipient: Individual
+---
+code: |
+  attestation_recipient.name.first = 'Jonathan'
+  attestation_recipient.name.last  = 'Pyle'
+  attestation_recipient.email      = 'jpyle@philalegal.org'
+---
 mandatory: True
 code: |
-  if user.name.first and user.is_citizen and user_is_willing_to_sign_citizenship_attestation and user.signature_verified and ok_to_submit_attestation_form:
-    email_recipients = []
-    if user_wants_copy_emailed:
-      email_recipients.append(user.email)
-    from flask_mail import Message
-    msg = Message("Citizenship attestation",
-                  sender="no-reply@docassemble.org",
-                  recipients=["jpyle@philalegal.org"])
-    #form_path = 
-    #with app.open_resource(form_path) as fp:
-      #msg.attach(form_filename, form_mimetype, fp.read())
-    need(user_done_submitting_citizenship_attestation)
+  if user.is_citizen and user_is_willing_to_sign_citizenship_attestation and user.signature_verified and ok_to_submit_attestation_form:
+    need(attestation_submitted)
   else:
     need(form_not_appropriate)
 ---
@@ -41,13 +39,31 @@ need: user_understands_how_to_use_signature_feature
 under: |
   ${ user.name }
 ---
+sets: success_sending_attestation
+code: |
+  to_recipients = []
+  bcc_recipients = None
+  if user_wants_copy_emailed:
+    to_recipients.append(user)
+    bcc_recipients = [attestation_recipient]
+  else:
+    to_recipients.append(attestation_recipient)
+  success_sending_attestation = send_email(to=to_recipients, bcc=bcc_recipients, body="The citizenship attestation for " + str(user.name) + " is attached", subject="Citizenship attestation for " + str(user.name), attachments=[user.signature])
+---
 question: |
-  Thank you for submitting the citizenship attestation form.
-decoration: finishline
+  % if success_sending_attestation:
+    Thank you for submitting the citizenship attestation form.
+  % else:
+    We are sorry, but there was a problem submitting your citizenship attestation.
+  % endif
+subquestion: |
+  % if not success_sending_attestation:
+    Please contact us so that we can mail you a citizenship attestation form.
+  % endif
 buttons:
   - Exit: exit
   - Restart: restart
-sets: user_done_submitting_citizenship_attestation
+sets: attestation_submitted
 ---
 question: |
   Are you willing to electronically sign a statement saying that you are a citizen?

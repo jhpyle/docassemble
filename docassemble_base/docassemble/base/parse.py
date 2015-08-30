@@ -1141,3 +1141,6 @@ def set_url_finder(func):
 
 def set_file_finder(func):
     docassemble.base.filter.set_file_finder(func)
+
+def set_mail_variable(func):
+    docassemble.base.filter.set_mail_variable(func)

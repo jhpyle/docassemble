@@ -49,6 +49,17 @@ def set_max_width_points(points):
 def get_max_width_points():
     return(MAX_WIDTH_POINTS)
 
+def blank_mail_variable(*args, **kwargs):
+    return(None)
+
+mail_variable = blank_mail_variable
+
+def set_mail_variable(func):
+    global mail_variable
+    logmessage("set the mail variable to " + str(func) + "\n")
+    mail_variable = func
+    return
+
 def blank_file_finder(*args, **kwargs):
     return(dict(filename="invalid"))
 

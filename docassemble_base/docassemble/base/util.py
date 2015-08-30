@@ -351,3 +351,27 @@ def absolute_filename(the_file):
     if os.path.isfile(the_file) and os.access(the_file, os.R_OK):
         return(the_file)
     return(None)
+
+def nodoublequote(text):
+    return re.sub(r'"', '', str(text))
+
+# def blank_file_finder(*args, **kwargs):
+#     return(dict(filename="invalid"))
+
+# file_finder = blank_file_finder
+
+# def set_file_finder(func):
+#     global file_finder
+#     logmessage("set the file finder to " + str(func) + "\n")
+#     file_finder = func
+#     return
+
+# def blank_url_finder(*args, **kwargs):
+#     return('about:blank')
+
+# url_finder = blank_url_finder
+
+# def set_url_finder(func):
+#     global url_finder
+#     url_finder = func
+#     return
