@@ -344,46 +344,46 @@ class DAFile(DAObject):
 
 def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", attachments=[]):
     from flask_mail import Message
-    sys.stderr.write("moo1\n")
+    #sys.stderr.write("moo1\n")
     if type(to) is not list or len(to) == 0:
         return False
     if body is None and html is None:
         body = ""
-    sys.stderr.write("moo2\n")
+    #sys.stderr.write("moo2\n")
     email_stringer = lambda x: email_string(x, include_name=False)
     msg = Message(subject, sender=email_stringer(sender), recipients=email_stringer(to), cc=email_stringer(cc), bcc=email_stringer(bcc), body=body, html=html)
     success = True
     for attachment in attachments:
-        sys.stderr.write("moo31\n")
+        #sys.stderr.write("moo31\n")
         if type(attachment) is DAFile and attachment.ok:
-            sys.stderr.write("moo32\n")
+            #sys.stderr.write("moo32\n")
             file_info = file_finder(str(attachment.number))
             if ('path' in file_info):
-                sys.stderr.write("moo33\n")
+                #sys.stderr.write("moo33\n")
                 failed = True
                 with open(file_info['path'], 'r') as fp:
-                    sys.stderr.write("moo3\n")
+                    #sys.stderr.write("moo3\n")
                     msg.attach(file_info['filename'], file_info['mimetype'], fp.read())
                     failed = False
                 if failed:
-                    sys.stderr.write("moo4\n")
+                    #sys.stderr.write("moo4\n")
                     success = False
             else:
                 success = False
-                sys.stderr.write("moo34\n")
+                #sys.stderr.write("moo34\n")
         else:
             success = False
-            sys.stderr.write("moo35\n")
+            #sys.stderr.write("moo35\n")
     appmail = mail_variable()
     if not appmail:
-        sys.stderr.write("moo36\n")
+        #sys.stderr.write("moo36\n")
         success = False
     if success:
-        sys.stderr.write("moo37\n")
+        #sys.stderr.write("moo37\n")
         try:
             appmail.send(msg)
         except Exception as errmess:
-            sys.stderr.write("moo38: " + str(errmess) + "\n")
+            #sys.stderr.write("moo38: " + str(errmess) + "\n")
             success = False
     return(success)
     

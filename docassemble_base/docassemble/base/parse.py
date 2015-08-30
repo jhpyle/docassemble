@@ -1042,6 +1042,7 @@ def find_fields_in(code, fields_used, names_used):
 
 def process_attachment(target):
     metadata = dict()
+    variable_name = str()
     if type(target) is dict:
         if 'filename' not in target:
             target['filename'] = word("Document")
@@ -1054,6 +1055,8 @@ def process_attachment(target):
                 raise DAError('Unknown data type in attachment valid_formats')
         else:
             target['valid_formats'] = ['*']
+        if 'variable_name' in target:
+            variable_name = target['variable_name']
         if 'metadata' in target:
             if type(target['metadata']) is not dict:
                 raise DAError('Unknown data type in attachment metadata')
@@ -1071,9 +1074,9 @@ def process_attachment(target):
                     raise DAError('Unknown data type ' + str(type(data)) + ' in key in attachment metadata')
         if 'content' not in target:
             raise DAError("No content provided in attachment")
-        return({'name': TextObject(target['name']), 'filename': TextObject(target['filename']), 'content': TextObject(target['content']), 'valid_formats': target['valid_formats'], 'metadata': metadata})
+        return({'name': TextObject(target['name']), 'filename': TextObject(target['filename']), 'content': TextObject(target['content']), 'valid_formats': target['valid_formats'], 'metadata': metadata, 'variable_name': variable_name})
     elif type(target) is str:
-        return({'name': TextObject('Document'), 'filename': TextObject('document'), 'content': TextObject(target), 'valid_formats': ['*'], 'metadata': metadata})
+        return({'name': TextObject('Document'), 'filename': TextObject('document'), 'content': TextObject(target), 'valid_formats': ['*'], 'metadata': metadata, 'metadata': metadata, 'variable_name': variable_nname})
     else:
         raise DAError("Unknown data type in process_attachment")
 
@@ -1116,6 +1119,8 @@ def make_attachment(attachment, user_dict, **kwargs):
         elif doc_format in ['html']:
             result['markdown'][doc_format] = attachment['content'].text(user_dict)
             result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format])
+    if attachment['variable_name']:
+        user_dict[attachment['variable_name']] = result
     return(result)
             
 def process_selections(data):

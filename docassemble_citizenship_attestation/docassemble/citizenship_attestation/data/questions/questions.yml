@@ -98,5 +98,6 @@ attachments:
 
       Date: ${ today() }
     filename: Citizenship_Attestation_${ space_to_underscore(user) }
+    variable_name: citizenship_attestation
 progress: 100
 ...
