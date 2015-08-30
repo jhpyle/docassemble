@@ -713,6 +713,9 @@ class Question:
                     raise DAError("Unknown data type in parse_fields:" + str(type(value)))
             result_list.append(result_dict)
         return(has_code, result_list)
+    def mark_as_answered(self, user_dict):
+        user_dict['answered'].add(self.name)
+        return
     def follow_multiple_choice(self, user_dict):
         #if self.name:
             #logmessage("question is " + self.name + "\n")
@@ -720,7 +723,7 @@ class Question:
             #logmessage("question has no name\n")
         if self.name and self.name in user_dict['answers']:
             #logmessage("question in answers\n")
-            user_dict['answered'].add(self.name)
+            #user_dict['answered'].add(self.name)
             the_choice = self.fields[0].choices[int(user_dict['answers'][self.name])]
             for key in the_choice:
                 if key == 'image':
@@ -734,6 +737,7 @@ class Question:
                     pass
                 elif isinstance(target, Question):
                     logmessage("Reassigning question\n")
+                    #self.mark_as_answered(user_dict)
                     return(target.follow_multiple_choice(user_dict))
         return(self)
 
@@ -879,7 +883,7 @@ class Interview:
         if m:
             newMissingVariable = re.sub('\[[^\]+]\]', '[i]', missingVariable)
             totry.insert(0, {'real': missingVariable, 'vari': newMissingVariable})
-        logmessage("Length of totry is" + str(len(totry)) + "\n")
+        logmessage("Length of totry is " + str(len(totry)) + "\n")
         for mv in totry:
             realMissingVariable = mv['real']
             missingVariable = mv['vari']
@@ -970,6 +974,7 @@ class Interview:
                                 variable_stack.remove(missingVariable)
                             try:
                                 eval(missingVariable, user_dict)
+                                question.mark_as_answered(user_dict)
                                 return({'type': 'continue'})
                             except:
                                 logmessage("Try another method of setting the variable" + "\n")

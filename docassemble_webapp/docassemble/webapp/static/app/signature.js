@@ -23,6 +23,7 @@ $(document).ready(function () {
     ctx.beginPath();
     ctx.lineJoin="round";
     ctx.strokeStyle = color;
+    ctx.fillStyle = color;
   });
   $("#new").click(function() {
     newCanvas();
@@ -113,10 +114,13 @@ function newCanvas(){
 $.fn.drawTouch = function() {
   var start = function(e) {
     e = e.originalEvent;
-    ctx.beginPath();
-    ctx.lineJoin="round";
     x = e.changedTouches[0].pageX-$("#canvas").offset().left;
     y = e.changedTouches[0].pageY-$("#canvas").offset().top;
+    ctx.beginPath();
+    ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.lineJoin="round";
     ctx.moveTo(x,y);
   };
   var move = function(e) {
@@ -126,16 +130,22 @@ $.fn.drawTouch = function() {
     y = e.changedTouches[0].pageY-$("#canvas").offset().top;
     ctx.lineTo(x,y);
     ctx.stroke();
-    ctx.fillRect(x-0.5*theWidth,y-0.5*theWidth,theWidth,theWidth);
+    //ctx.fillRect(x-0.5*theWidth,y-0.5*theWidth,theWidth,theWidth);
+    //ctx.beginPath();
+    //ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
+    //ctx.fill();
   };
   var dot = function(e) {
     e.preventDefault();
     e = e.originalEvent;
-    ctx.beginPath();
-    ctx.lineJoin="round";
+    //ctx.lineJoin="round";
     x = e.pageX-$("#canvas").offset().left;
     y = e.pageY-$("#canvas").offset().top;
-    ctx.fillRect(x-0.5*theWidth,y-0.5*theWidth,theWidth,theWidth);
+    ctx.beginPath();
+    ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
+    ctx.fill();
+    ctx.moveTo(x,y);
+    //ctx.fillRect(x-0.5*theWidth,y-0.5*theWidth,theWidth,theWidth);
     //console.log("Got click");
   };
   $(this).on("click", dot);
@@ -154,6 +164,8 @@ $.fn.drawPointer = function() {
     x = e.pageX-$("#canvas").offset().left;
     y = e.pageY-$("#canvas").offset().top;
     ctx.moveTo(x,y);
+    //ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
+    //ctx.fill();
   };
   var move = function(e) {
     e.preventDefault();
@@ -162,6 +174,11 @@ $.fn.drawPointer = function() {
     y = e.pageY-$("#canvas").offset().top;
     ctx.lineTo(x,y);
     ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x,y);
   };
   $(this).on("MSPointerDown", start);
   $(this).on("MSPointerMove", move);
@@ -173,10 +190,13 @@ $.fn.drawMouse = function() {
   var clicked = 0;
   var start = function(e) {
     clicked = 1;
-    ctx.beginPath();
-    ctx.lineJoin="round";
     x = e.pageX-$("#canvas").offset().left;
     y = e.pageY-$("#canvas").offset().top;
+    ctx.beginPath();
+    ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.lineJoin="round";
     ctx.moveTo(x,y);
   };
   var move = function(e) {
@@ -185,6 +205,11 @@ $.fn.drawMouse = function() {
       y = e.pageY-$("#canvas").offset().top;
       ctx.lineTo(x,y);
       ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(x,y);
     }
   };
   var stop = function(e) {

@@ -32,7 +32,7 @@ def signature_html(status, debug):
     output += '</div>'
     if status.subquestionText:
         output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
-    output += '<div id="content"><p style="text-align:center"></p></div><div class="bottompart" id="bottompart">'
+    output += '<div id="content"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div><div class="bottompart" id="bottompart">'
     if (status.underText):
         output += markdown_to_html(status.underText, trim=True)
     output += '</div></div><form id="daform" method="POST"><input type="hidden" name="saveas" value="' + status.question.fields[0].saveas + '"><input type="hidden" id="theImage" name="theImage" value=""><input type="hidden" id="success" name="success" value="0">'

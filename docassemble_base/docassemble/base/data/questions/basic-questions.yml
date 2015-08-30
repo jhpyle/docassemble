@@ -76,7 +76,19 @@ question: |
   Is this your signature?
 subquestion: |  
   ${ user.signature.show() }
-yesno: user.signature_verified
+sets:
+  - user.signature_verified
+buttons:
+  - "Yes":
+      code: |
+        user.signature_verified = True
+  - "No":
+      code: |
+        user.signature_verified = False
+  - "Let me try again":
+      code: |
+        answers = dict()
+        remove('user.signature')
 ---
 question: Are you a citizen of the United States?
 yesno: user.is_citizen

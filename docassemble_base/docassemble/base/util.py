@@ -270,6 +270,13 @@ def underscore_to_space(a):
 def space_to_underscore(a):
     return(re.sub(' +', '_', unicode(a)))
 
+def remove(variable_name):
+    try:
+        exec('del ' + variable_name)
+    except:
+        pass
+    return force_ask(variable_name)
+
 def force_ask(variable_name):
     raise NameError("name '" + variable_name + "' is not defined")
 
