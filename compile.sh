@@ -1,18 +1,10 @@
 origdir=$PWD
-pip uninstall -y docassemble.demo
-pip uninstall -y docassemble.webapp
-pip uninstall -y docassemble.base
-pip uninstall -y docassemble
-cd $origdir/docassemble && \
-rm -rf dist build *egg-info && \
-python setup.py install && \
-cd $origdir/docassemble-base && \
-rm -rf dist build *egg-info && \
-python setup.py install && \
-cd $origdir/docassemble-webapp && \
-rm -rf dist build *egg-info && \
-python setup.py install && \
-cd $origdir/docassemble-demo && \
-rm -rf dist build *egg-info && \
-python setup.py install
+for package in `ls -d docassemble* | sort -r | sed 's/_/./'`; do
+    pip uninstall -y $package
+done
+for package in `ls -d docassemble*`; do
+    cd $origdir/$package && \
+    rm -rf dist build *egg-info && \
+    python setup.py install || exit 1
+done
 cd $origdir

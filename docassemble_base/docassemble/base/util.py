@@ -3,6 +3,8 @@ import en
 import re
 import os
 import mimetypes
+import datetime
+import locale
 import pkg_resources
 #from docassemble.logger import logmessage
 #import sys
@@ -251,6 +253,11 @@ def does_a_b(a, b, **kwargs):
     else:
         return('does ' + unicode(a) + ' ' + unicode(b))
 
+def today():
+    date_format = locale.nl_langinfo(locale.D_FMT)
+    today = datetime.date.today()
+    return(today.strftime('%x'))
+    
 def capitalize(a):
     if a and type(a) is str and len(a) > 1:
         return(a[0].upper() + a[1:])

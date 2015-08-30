@@ -65,18 +65,18 @@ choices:
   - Divorced
   - Separated
 ---
-question: |
-  Are you willing to electronically sign a statement saying that you are a citizen?
-subquestion: |
-  If you say yes, you will be asked to sign your name electronically.  If you are using a computer, you can use your mouse or trackpad to write your signature.  If you are using a mobile device with a touch screen, you can use your finger to sign.  If you cannot sign your name this way, say "no" here.
-yesno: user_is_willing_to_sign_citizenship_attestation
----
 field: user_understands_how_to_use_signature_feature
 question: Instructions for signing your name
 subquestion: |
   On the next screen, you will see a box in which you can sign your name using your mouse, track pad, or touch screen.  If you make a mistake, you can press "Clear" and try again.  For best results, try signing your name *slowly*.  
 buttons:
   - Continue: continue
+---
+question: |
+  Is this your signature?
+subquestion: |  
+  ${ user.signature.show() }
+yesno: user.signature_verified
 ---
 question: Are you a citizen of the United States?
 yesno: user.is_citizen
@@ -96,6 +96,12 @@ question: >-
 fields:
   - Date of birth: x.birthdate
     datatype: date
+---
+generic object: Individual
+question: >-
+  What is ${ x.possessive('e-mail address') }?
+fields:
+  - E-mail: x.email
 ---
 generic object: Individual
 question: >-

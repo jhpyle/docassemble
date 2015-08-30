@@ -84,31 +84,6 @@ comment: |
 ---
 mandatory: True
 code: |
-  if user.name.first and user.is_citizen and user_is_willing_to_sign_citizenship_attestation and ok_to_submit_attestation_form:
-    from flask_mail import Message
-    msg = Message("Citizenship attestation",
-                  sender="no-reply@philalegal.org",
-                  recipients=["jpyle@philalegal.org"])
-    form_path = 
-    with app.open_resource(form_path) as fp:
-      msg.attach(form_filename, form_mimetype, fp.read())
-    need(user_done_submitting_citizenship_attestation)
----
-question: |
-  I am a citizen of the United States.
-signature: user.signature
-need: user_understands_how_to_use_signature_feature
-under: |
-  ${ user.name }
----
-question: |
-  Is this your signature?
-subquestion: |  
-  ${ user.signature.show() }
-yesno: user.signature_verified
----
-mandatory: True
-code: |
   if user_understands_no_attorney_client_relationship == "understands":
     need(user_done)
   else:
@@ -370,14 +345,6 @@ yesno: user.picture_verified
 comment: |
   This is how you can display a picture that a user has uploaded.
 ---
-question: |
-  Thank you for submitting the citizenship attestation form.
-decoration: finishline
-buttons:
-  - Exit: exit
-  - Restart: restart
-sets: user_done_submitting_citizenship_attestation
----
 comment: |
   The following question is the interview's main endpoint.  This
   question has two attachment documents.  Most of the questions in the
@@ -452,22 +419,5 @@ help: |
   This is the end of the interview, ${ user }.  You can exit or restart.
 
   I hope you enjoyed this interview.
-progress: 100
----
-question: |
-  
-decoration: finishline
-yesno: ok_to_submit_attestation_form
-need:
-  - user.signature_verified
-attachments:
-  - name: Citizenship attestation of ${ user }
-    content: |
-      I am a citizen of the United States.
-
-      ${ user.signature.show() }
-
-      ${ user }
-    filename: Citizenship_Attestation_${ space_to_underscore(user) }
 progress: 100
 ...

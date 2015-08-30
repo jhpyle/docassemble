@@ -107,20 +107,20 @@ This creates a directory called `docassemble`.  To install the docassemble packa
 The compile.sh script installs the four Python packages contained in the git repository:
 
 1. docassemble
-2. docassemble-base
-3. docassemble-webapp
-4. docassemble-demo
+2. docassemble_base
+3. docassemble_webapp
+4. docassemble_demo
 
-The "docassemble" package is empty because it is a "namespace" package.  (This facilitates the creation of add-on packages.)  The core functionality is in the docassemble-base package.  These two packages are the only packages required to use the docassemble module.  If you do not want to install all the packages, you can skip running compile.sh and simply run `python setup.py install` in each of the packages you wish to install.
+The "docassemble" package is empty because it is a "namespace" package.  (This facilitates the creation of add-on packages.)  The core functionality is in the docassemble_base package.  These two packages are the only packages required to use the docassemble module.  If you do not want to install all the packages, you can skip running compile.sh and simply run `python setup.py install` in each of the packages you wish to install.
 
-The "docassemble-webapp" package contains the standard docassemble web application.  The "docassemble-demo" package contains a demonstration interview.
+The `docassemble_webapp` package contains the standard docassemble web application.  The `docassemble_demo` package contains a demonstration interview.
 
 ## Testing docassemble
 
-The following will run a test of the core docassemble module.  This requires `docassemble`, `docassemble-base`, and `docassemble-demo` to be installed.
+The following will run a test of the core docassemble module.  This requires `docassemble`, `docassemble_base`, and `docassemble_demo` to be installed.
 
     cd ~/docassemble
-    python docassemble-base/tests/test-parse.py
+    python docassemble_base/tests/test-parse.py
 
 If it fails with an exception, there was a problem with the installation.  The output should end with:
 
@@ -145,7 +145,7 @@ Create the root directory for user-contributed Python packages (see [site.USER_B
 Create the directory for the Flask WSGI file needed by the web server:
 
     sudo mkdir -p /var/lib/docassemble/
-    sudo cp docassemble/docassemble-webapp/flask.wsgi /var/lib/docassemble/
+    sudo cp docassemble/docassemble_webapp/flask.wsgi /var/lib/docassemble/
 	sudo chown www-data.www-data /var/lib/docassemble/flask.wsgi
 
 Create the uploads directory:
@@ -156,7 +156,7 @@ Create the uploads directory:
 Set up and edit the configuration file:
 
     sudo mkdir /etc/docassemble
-    sudo cp docassemble/docassemble-base/config.yml /etc/docassemble/
+    sudo cp docassemble/docassemble_base/config.yml /etc/docassemble/
     sudo vi /etc/docassemble/config.yml
 
 If you need to change the location 
@@ -212,7 +212,7 @@ Then, within psql, run the following SQL statements to create the database and t
 
 While still running as the `postgres` user, create the database tables by running:
 
-    python docassemble/docassemble-webapp/docassemble/webapp/create_tables.py
+    python docassemble/docassemble_webapp/docassemble/webapp/create_tables.py
 
 Lastly, run `psql docassemble` and give permissions to the "www-data" user:
 

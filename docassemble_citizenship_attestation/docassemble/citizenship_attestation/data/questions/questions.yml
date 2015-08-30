@@ -1,0 +1,88 @@
+---
+metadata:
+  description: |
+    Citizenship attestation
+  authors:
+    - name:  
+      organization: None
+  revision_date: 2015-08-29
+---
+include:
+  - basic-questions.yml
+---
+imports:
+  - datetime
+---
+mandatory: True
+code: |
+  if user.name.first and user.is_citizen and user_is_willing_to_sign_citizenship_attestation and ok_to_submit_attestation_form:
+    email_recipients = []
+    if user_wants_copy_emailed:
+      email_recipients.append(user.email)
+    from flask_mail import Message
+    msg = Message("Citizenship attestation",
+                  sender="no-reply@docassemble.org",
+                  recipients=["jpyle@philalegal.org"])
+    #form_path = 
+    #with app.open_resource(form_path) as fp:
+      #msg.attach(form_filename, form_mimetype, fp.read())
+    need(user_done_submitting_citizenship_attestation)
+  else:
+    need(form_not_appropriate)
+---
+question: |
+  Would you like a copy of the citizenship attestation to be e-mailed to you?
+yesno: user_wants_copy_emailed
+---
+question: |
+  I am a citizen of the United States.
+signature: user.signature
+need: user_understands_how_to_use_signature_feature
+under: |
+  ${ user.name }
+---
+question: |
+  Thank you for submitting the citizenship attestation form.
+decoration: finishline
+buttons:
+  - Exit: exit
+  - Restart: restart
+sets: user_done_submitting_citizenship_attestation
+---
+question: |
+  Are you willing to electronically sign a statement saying that you are a citizen?
+subquestion: |
+  If you say yes, you will be asked to sign your name electronically.  If you are using a computer, you can use your mouse or trackpad to write your signature.  If you are using a mobile device with a touch screen, you can use your finger to sign.  If you cannot sign your name this way, say "no" here.
+yesno: user_is_willing_to_sign_citizenship_attestation
+---
+question: |
+  A citizenship attestation form will not be submitted.
+buttons:
+  - Exit: exit
+  - Restart: restart
+sets: form_not_appropriate
+---
+question: |
+  Would you like to submit the signed document?
+subquestion: |
+  The citizenship attestation is below.  Please review to make sure it is ok to submit.  If you would like to submit the document, press "Yes."
+decoration: finishline
+yesno: ok_to_submit_attestation_form
+need:
+  - user.signature_verified
+attachments:
+  - name: Citizenship attestation of ${ user }
+    content: |
+      [BOLDCENTER] CITIZENSHIP ATTESTATION
+
+      I am a citizen of the United States.
+
+      [SKIPLINE]
+      ${ user.signature.show(width='2in') }
+
+      Name: ${ user }
+
+      Date: ${ today() }
+    filename: Citizenship_Attestation_${ space_to_underscore(user) }
+progress: 100
+...

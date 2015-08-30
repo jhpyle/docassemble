@@ -57,7 +57,7 @@ from PIL import Image
 import pyPdf
 from subprocess import call
 
-yaml_filename = 'docassemble.demo:data/questions/questions.yml'
+default_yaml_filename = daconfig.get('default_interview', 'docassemble.demo:data/questions/questions.yml')
 #yaml_filename = 'docassemble.hello-world:data/questions/questions.yaml'
 
 if not daconfig['mail']:
@@ -273,7 +273,7 @@ def logout():
     # Use Flask-Login to sign out user
     logout_user()
 
-    reset_session()
+    reset_session(session.get('i', default_yaml_filename))
 
     # Prepare one-time system message
     flash(word('You have signed out successfully.'), 'success')
@@ -512,7 +512,13 @@ def slogin():
 @app.route("/", methods=['POST', 'GET'])
 def index():
     session_id = session.get('uid', None)
+    yaml_filename = session.get('i', default_yaml_filename)
     steps = 0
+    yaml_parameter = request.args.get('i', None)
+    if yaml_parameter:
+        if yaml_parameter != yaml_filename:
+            reset_session(yaml_parameter)
+        return redirect(url_for('index'))
     if session_id:
         user_code = session_id
         logmessage("Found user code " + session_id + "\n")
@@ -527,7 +533,7 @@ def index():
         user_dict
         user_code
     except:
-        user_code, user_dict = reset_session()
+        user_code, user_dict = reset_session(yaml_filename)
         steps = 0
     post_data = request.form.copy()
     if 'back_one' in post_data and steps > 1:
@@ -871,7 +877,8 @@ def utility_processor():
 def standard_start():
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css" rel="stylesheet"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css"><link rel="stylesheet" href="' + url_for('static', filename='app/app.css') + '"><title>docassemble</title></head><body>'
 
-def reset_session():
+def reset_session(yaml_filename):
+    session['i'] = yaml_filename
     session['uid'] = get_unique_name(yaml_filename)
     user_code = session['uid']
     logmessage("Saving a dictionary for code " + user_code + "\n")
