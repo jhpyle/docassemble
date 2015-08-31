@@ -171,6 +171,7 @@ def comma_and_list(*pargs, **kargs):
 def need(*pargs):
     for argument in pargs:
         argument
+    return True
 
 def possessify(word, target):
     #language-specific methods can go here

@@ -1,5 +1,5 @@
 from docassemble.base.core import DAObject
-from docassemble.base.util import comma_and_list, get_language, set_language, word, words, comma_list, ordinal, need, nice_number, possessify, your, her, his, do_you, does_a_b, verb_past, verb_present, noun_plural, underscore_to_space, space_to_underscore, force_ask, period_list, currency, indefinite_article, today, remove, nodoublequote
+from docassemble.base.util import comma_and_list, get_language, set_language, word, words, comma_list, ordinal, need, nice_number, possessify, your, her, his, do_you, does_a_b, verb_past, verb_present, noun_plural, underscore_to_space, space_to_underscore, force_ask, period_list, currency, indefinite_article, today, remove, nodoublequote, capitalize
 from docassemble.base.filter import file_finder, url_finder, mail_variable
 #from docassemble.base.logger import logmessage
 from datetime import date
@@ -342,6 +342,9 @@ class DAFile(DAObject):
         else:
             return('[IMAGE ' + str(self.number) + ']')
 
+class DAFileCollection(DAObject):
+    pass
+
 def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", attachments=[]):
     from flask_mail import Message
     #sys.stderr.write("moo1\n")
@@ -355,6 +358,12 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
     success = True
     for attachment in attachments:
         #sys.stderr.write("moo31\n")
+        if type(attachment) is DAFileCollection:
+            subattachment = getattr(attachment, 'pdf', getattr(attachment, 'rtf', getattr(attachment, 'html', getattr(attachment, 'tex', None))))
+            if subattachment is not None:
+                attachment = subattachment
+            else:
+                success = False
         if type(attachment) is DAFile and attachment.ok:
             #sys.stderr.write("moo32\n")
             file_info = file_finder(str(attachment.number))

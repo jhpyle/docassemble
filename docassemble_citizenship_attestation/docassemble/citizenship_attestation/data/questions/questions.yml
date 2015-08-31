@@ -14,22 +14,33 @@ imports:
   - datetime
 ---
 objects:
-  - attestation_recipient: Individual
+  - form_recipient: Individual
 ---
 code: |
-  attestation_recipient.name.first = 'Jonathan'
-  attestation_recipient.name.last  = 'Pyle'
-  attestation_recipient.email      = 'jpyle@philalegal.org'
+  form_recipient.name.first = 'Jonathan'
+  form_recipient.name.last  = 'Pyle'
+  form_recipient.email      = 'jpyle@philalegal.org'
 ---
 mandatory: True
 code: |
-  if user.is_citizen and user_is_willing_to_sign_citizenship_attestation and user.signature_verified and ok_to_submit_attestation_form:
-    need(attestation_submitted)
+  if user.is_citizen:
+    form_type = "citizenship attestation"
+    if user_is_willing_to_sign_citizenship_attestation and user.signature_verified and ok_to_submit_attestation_form:
+      need(form_submitted)
+    else:
+      need(form_not_appropriate)
   else:
-    need(form_not_appropriate)
+    form_type = "immigration documentation"
+    need(user_understands_documentation_is_needed)
+    if not able_to_upload:
+      need(show_information_about_mailing)
+    if ok_to_submit_immigration_documentation:
+      need(form_submitted)
+    else:
+      need(form_not_appropriate)
 ---
 question: |
-  Would you like a copy of the citizenship attestation to be e-mailed to you?
+  Would you like a copy of the ${ form_type } to be e-mailed to you?
 yesno: user_wants_copy_emailed
 ---
 question: |
@@ -39,31 +50,31 @@ need: user_understands_how_to_use_signature_feature
 under: |
   ${ user.name }
 ---
-sets: success_sending_attestation
+sets: success_sending_form
 code: |
   to_recipients = []
   bcc_recipients = None
   if user_wants_copy_emailed:
     to_recipients.append(user)
-    bcc_recipients = [attestation_recipient]
+    bcc_recipients = [form_recipient]
   else:
-    to_recipients.append(attestation_recipient)
-  success_sending_attestation = send_email(to=to_recipients, bcc=bcc_recipients, body="The citizenship attestation for " + str(user.name) + " is attached", subject="Citizenship attestation for " + str(user.name), attachments=[user.signature])
+    to_recipients.append(form_recipient)
+  success_sending_form = send_email(to=to_recipients, bcc=bcc_recipients, body="The " + form_type + " for " + str(user.name) + " is attached", subject=capitalize(form_type) + " for " + str(user.name), attachments=[form_attachment])
 ---
+sets: form_submitted
 question: |
-  % if success_sending_attestation:
-    Thank you for submitting the citizenship attestation form.
+  % if success_sending_form:
+    Thank you for submitting your ${ form_type }.
   % else:
-    We are sorry, but there was a problem submitting your citizenship attestation.
+    We are sorry, but there was a problem submitting your ${ form_type }.
   % endif
 subquestion: |
-  % if not success_sending_attestation:
-    Please contact us so that we can mail you a citizenship attestation form.
+  % if not success_sending_form:
+    Please contact us about submitting your ${ form_type }.
   % endif
 buttons:
   - Exit: exit
   - Restart: restart
-sets: attestation_submitted
 ---
 question: |
   Are you willing to electronically sign a statement saying that you are a citizen?
@@ -72,11 +83,20 @@ subquestion: |
 yesno: user_is_willing_to_sign_citizenship_attestation
 ---
 question: |
-  A citizenship attestation form will not be submitted.
+  Your ${ form_type } will not be submitted.
 buttons:
   - Exit: exit
   - Restart: restart
 sets: form_not_appropriate
+---
+yesno: able_to_upload
+question: |
+  Are you able to upload your immigration documentation?
+subquestion: |
+  Say yes if:
+  
+    *   You are using a mobile phone or tablet that has a camera; or
+    *   You have a scanned copy of your documentation accessible from the computer or device you are using right now.
 ---
 question: |
   Would you like to submit the signed document?
@@ -98,6 +118,54 @@ attachments:
 
       Date: ${ today() }
     filename: Citizenship_Attestation_${ space_to_underscore(user) }
-    variable_name: citizenship_attestation
-progress: 100
+    variable_name: form_attachment
+---
+field: user_understands_documentation_is_needed
+question: Documentation of immigration status is needed
+subquestion: |
+  Funding for free legal assistance is only available to citizens and to persons with certain immigration statuses.  Our funder requires us to obtain documentation of citizenship status or immigration status from the people we assist.
+
+  Since you are not a citizen, we need a copy of your immigration documentation for our records.  If you are a lawful permanent resident, we need a copy of your permanent resident card (green card).  If you are an asylee, we need a copy of the court order granting asylum.  Other immigration statuses have different types of documentation.
+---
+sets: show_information_about_mailing
+buttons:
+  - Exit: exit
+  - Restart: restart
+question: |
+  There are several ways you can provide us with a copy of your immigration documentation:
+    * You can come to our office and we can make a copy of it;
+    * You can mail a copy of it to us.
+    * You can fax a copy of it to 215-981-3870;
+    * You can scan and e-mail it to faxes@philalegal.org.
+  Our address is:
+    Philadelphia Legal Assistance [BR]
+    718 Arch Street [BR]
+    Suite 300N [BR]
+    Philadelphia, PA 19106
+
+  Our phone number is 215-981-3800.
+---
+yesno: ok_to_submit_immigration_documentation
+question: |
+  Would you like to submit this documentation?
+subquestion: |
+  Your documentation of immigration status is below.  Please review to make sure it is ok to submit to Philadelphia Legal Assistance.  If you would like to submit the document, press "Yes."
+attachments:
+  - name: Immigration documentation for ${ user }
+    content: |
+      [BOLDCENTER] DOCUMENTATION OF IMMIGRATION STATUS
+
+      Name: ${ user }
+
+      Date: ${ today() }
+
+      ${ immigration_documentation.show() }
+    filename: Immigration_documentation_of_${ space_to_underscore(user) }
+    variable_name: form_attachment
+---
+question: |
+  Please upload your immigration documentation.
+fields:
+  - Document: immigration_documentation
+    datatype: file
 ...

@@ -130,7 +130,15 @@ def as_html(status, validation_rules, debug):
             output += '<input type="hidden" name="checkboxes" value="' + ",".join(checkboxes) + '"></input>'
         if len(files):
             output += '<input type="hidden" name="files" value="' + ",".join(files) + '"></input>'
-        output += '<div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">Continue</button></div>'
+        output += '<div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button></div>'
+        output += question_name_tag(status.question)
+        output += '</fieldset></form>'
+    elif status.question.question_type == "continue":
+        output += '<form id="daform" method="POST"><fieldset>'
+        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True) + '<div style="clear:both"></div></h3></div>'
+        if status.subquestionText:
+            output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
+        output += '<div class="form-actions"><button type="submit" class="btn btn-lg btn-primary" name="' + status.question.fields[0].saveas + '" value="True"> ' + word('Continue') + '</button></div>'
         output += question_name_tag(status.question)
         output += '</fieldset></form>'
     elif status.question.question_type == "multiple_choice":
@@ -172,7 +180,7 @@ def as_html(status, validation_rules, debug):
                     indexno += 1
                     validation_rules['rules']['multiple_choice'] = {'required': True}
                     validation_rules['messages']['multiple_choice'] = {'required': word("You need to select one.")}
-            output += '<br><button class="btn btn-lg btn-primary" type="submit">Continue</button>'
+            output += '<br><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button>'
         else:
             output += '<div class="btn-toolbar">'
             if hasattr(status.question.fields[0], 'saveas'):
@@ -220,7 +228,7 @@ def as_html(status, validation_rules, debug):
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
-        output += '<div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">Continue</button></div>'
+        output += '<div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button></div>'
         output += question_name_tag(status.question)
         output += '</fieldset></form>'
     if len(status.attachments) > 0:

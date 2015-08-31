@@ -236,7 +236,16 @@ docassemble.base.parse.set_file_finder(get_info_from_file_reference)
 def get_mail_variable(*args, **kwargs):
     return mail
 
+def save_numbered_file(filename, orig_path):
+    file_number = get_new_file_number(session['uid'], filename)
+    extension, mimetype = get_ext_and_mimetype(filename)
+    path = get_file_path(file_number)
+    shutil.copyfile(orig_path, path)
+    os.symlink(path, path + '.' + extension)
+    return(file_number, extension, mimetype)
+
 docassemble.base.parse.set_mail_variable(get_mail_variable)
+docassemble.base.parse.set_save_numbered_file(save_numbered_file)
 
 scripts = """\
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
@@ -1273,3 +1282,4 @@ def package_static(package, filename):
         abort(404)
     extension, mimetype = get_ext_and_mimetype(the_file)
     return(send_file(the_file, mimetype=str(mimetype)))
+

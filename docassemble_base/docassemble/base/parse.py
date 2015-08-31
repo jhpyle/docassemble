@@ -21,6 +21,26 @@ match_mako = re.compile(r'<%|\${|% if|% for|% while')
 
 PANDOC_PATH = 'pandoc'
 
+def set_url_finder(func):
+    docassemble.base.filter.set_url_finder(func)
+
+def set_file_finder(func):
+    docassemble.base.filter.set_file_finder(func)
+
+def set_mail_variable(func):
+    docassemble.base.filter.set_mail_variable(func)
+
+def blank_save_numbered_file(*args, **kwargs):
+    return(None, None, None)
+
+save_numbered_file = blank_save_numbered_file
+
+def set_save_numbered_file(func):
+    global save_numbered_file
+    logmessage("set the save_numbered_file function to " + str(func) + "\n")
+    save_numbered_file = func
+    return
+
 class PackageImage(object):
     def __init__(self, **kwargs):
         self.filename = kwargs.get('filename', None)
@@ -452,9 +472,9 @@ class Question:
             else:
                 raise DAError("Unknown data type in require")
         if 'attachment' in data:
-            self.attachments = process_attachment_list(data['attachment'])
+            self.attachments = self.process_attachment_list(data['attachment'])
         elif 'attachments' in data:
-            self.attachments = process_attachment_list(data['attachments'])
+            self.attachments = self.process_attachment_list(data['attachments'])
         if 'role' in data:
             if type(data['role']) is list:
                 for rolename in data['role']:
@@ -537,6 +557,11 @@ class Question:
                     field_data['type'] = data['datatype']
             self.fields.append(Field(field_data))
             self.question_type = 'multiple_choice'
+        elif 'field' in data:
+            self.fields_used.add(data['field'])
+            field_data = {'saveas': data['field']}
+            self.fields.append(Field(field_data))
+            self.question_type = 'continue'
         if 'need' in data:
             if type(data['need']) == str:
                 need_list = [data['need']]
@@ -618,6 +643,53 @@ class Question:
                 if field_name not in self.interview.generic_questions[self.generic_object]:
                     self.interview.generic_questions[self.generic_object][field_name] = list()
                 self.interview.generic_questions[self.generic_object][field_name].append(register_target)
+
+    def process_attachment_list(self, target):
+        if type(target) is list:
+            return(list(map((lambda x: self.process_attachment(x)), target)))
+        else:
+            return([self.process_attachment(target)])
+
+    def process_attachment(self, target):
+        metadata = dict()
+        variable_name = str()
+        if type(target) is dict:
+            if 'filename' not in target:
+                target['filename'] = word("Document")
+            if 'name' not in target:
+                target['name'] = word("Document")
+            if 'valid_formats' in target:
+                if type(target['valid_formats']) is str:
+                    target['valid_formats'] = [target['valid_formats']]
+                elif type(target['valid_formats']) is not list:
+                    raise DAError('Unknown data type in attachment valid_formats')
+            else:
+                target['valid_formats'] = ['*']
+            if 'variable_name' in target:
+                variable_name = target['variable_name']
+                self.fields_used.add(target['variable_name'])
+            if 'metadata' in target:
+                if type(target['metadata']) is not dict:
+                    raise DAError('Unknown data type in attachment metadata')
+                for key in target['metadata']:
+                    data = target['metadata'][key]
+                    if data is list:
+                        for sub_data in data:
+                            if sub_data is not str:
+                                raise DAError('Unknown data type in list in attachment metadata')
+                        newdata = list(map((lambda x: TextObject(x)), data))
+                        metadata[key] = newdata
+                    elif type(data) is str:
+                        metadata[key] = TextObject(data)
+                    else:
+                        raise DAError('Unknown data type ' + str(type(data)) + ' in key in attachment metadata')
+            if 'content' not in target:
+                raise DAError("No content provided in attachment")
+            return({'name': TextObject(target['name']), 'filename': TextObject(target['filename']), 'content': TextObject(target['content']), 'valid_formats': target['valid_formats'], 'metadata': metadata, 'variable_name': variable_name})
+        elif type(target) is str:
+            return({'name': TextObject('Document'), 'filename': TextObject('document'), 'content': TextObject(target), 'valid_formats': ['*'], 'metadata': metadata, 'metadata': metadata, 'variable_name': variable_nname})
+        else:
+            raise DAError("Unknown data type in process_attachment")
 
     def ask(self, user_dict, the_x, the_i):
         if the_x != 'None':
@@ -1040,53 +1112,6 @@ def find_fields_in(code, fields_used, names_used):
         if item not in definables:
             names_used.add(item)
 
-def process_attachment(target):
-    metadata = dict()
-    variable_name = str()
-    if type(target) is dict:
-        if 'filename' not in target:
-            target['filename'] = word("Document")
-        if 'name' not in target:
-            target['name'] = word("Document")
-        if 'valid_formats' in target:
-            if type(target['valid_formats']) is str:
-                target['valid_formats'] = [target['valid_formats']]
-            elif type(target['valid_formats']) is not list:
-                raise DAError('Unknown data type in attachment valid_formats')
-        else:
-            target['valid_formats'] = ['*']
-        if 'variable_name' in target:
-            variable_name = target['variable_name']
-        if 'metadata' in target:
-            if type(target['metadata']) is not dict:
-                raise DAError('Unknown data type in attachment metadata')
-            for key in target['metadata']:
-                data = target['metadata'][key]
-                if data is list:
-                    for sub_data in data:
-                        if sub_data is not str:
-                            raise DAError('Unknown data type in list in attachment metadata')
-                    newdata = list(map((lambda x: TextObject(x)), data))
-                    metadata[key] = newdata
-                elif type(data) is str:
-                    metadata[key] = TextObject(data)
-                else:
-                    raise DAError('Unknown data type ' + str(type(data)) + ' in key in attachment metadata')
-        if 'content' not in target:
-            raise DAError("No content provided in attachment")
-        return({'name': TextObject(target['name']), 'filename': TextObject(target['filename']), 'content': TextObject(target['content']), 'valid_formats': target['valid_formats'], 'metadata': metadata, 'variable_name': variable_name})
-    elif type(target) is str:
-        return({'name': TextObject('Document'), 'filename': TextObject('document'), 'content': TextObject(target), 'valid_formats': ['*'], 'metadata': metadata, 'metadata': metadata, 'variable_name': variable_nname})
-    else:
-        raise DAError("Unknown data type in process_attachment")
-
-def process_attachment_list(target):
-    if type(target) is list:
-        return(list(map((lambda x: process_attachment(x)), target)))
-    else:
-        return([process_attachment(target)])
-    
-        
 def make_attachment(attachment, user_dict, **kwargs):
     result = {'name': attachment['name'].text(user_dict), 'filename': attachment['filename'].text(user_dict), 'valid_formats': attachment['valid_formats']}
     result['markdown'] = dict();
@@ -1120,7 +1145,14 @@ def make_attachment(attachment, user_dict, **kwargs):
             result['markdown'][doc_format] = attachment['content'].text(user_dict)
             result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format])
     if attachment['variable_name']:
-        user_dict[attachment['variable_name']] = result
+        exec(attachment['variable_name'] + " = DAFileCollection('" + attachment['variable_name'] + "')", user_dict)
+        for doc_format in result['file']:
+            variable_string = attachment['variable_name'] + '.' + doc_format
+            filename = result['filename'] + '.' + doc_format
+            file_number, extension, mimetype = save_numbered_file(filename, result['file'][doc_format])
+            if file_number is None:
+                raise Exception("Could not save numbered file")
+            exec(variable_string + " = DAFile('" + variable_string + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')", user_dict)
     return(result)
             
 def process_selections(data):
@@ -1141,11 +1173,3 @@ def process_selections(data):
         raise DAError("Unknown data type in choices selection")
     return(result)
 
-def set_url_finder(func):
-    docassemble.base.filter.set_url_finder(func)
-
-def set_file_finder(func):
-    docassemble.base.filter.set_file_finder(func)
-
-def set_mail_variable(func):
-    docassemble.base.filter.set_mail_variable(func)
