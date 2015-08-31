@@ -39,6 +39,8 @@ code: |
   other_form_recipient.email = url_args.get('caseid', None)
   if other_form_recipient.email is None:
     other_form_recipient.email = form_recipient.email
+  else:
+    other_form_recipient.email += '@pla.legalserver.org'
 ---
 template: how_to_send_documents
 content: |
