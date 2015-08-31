@@ -111,9 +111,9 @@ USE_PROGRESS_BAR = daconfig.get('use_progress_bar', True)
 #USER_PACKAGES = daconfig.get('user_packages', '/var/lib/docassemble/dist-packages')
 #sys.path.append(USER_PACKAGES)
 if USE_PROGRESS_BAR:
-    initial_dict = daconfig.get('initial_dict', dict(progress=0))
+    initial_dict = daconfig.get('initial_dict', dict(progress=0, url_args=dict()))
 else:
-    initial_dict = daconfig.get('initial_dict', dict())
+    initial_dict = daconfig.get('initial_dict', dict(url_args=dict()))
 LOGFILE = daconfig.get('flask_log', '/tmp/flask.log')
 #APACHE_LOGFILE = daconfig.get('apache_log', '/var/log/apache2/error.log')
 
@@ -529,11 +529,13 @@ def index():
     session_id = session.get('uid', None)
     yaml_filename = session.get('i', default_yaml_filename)
     steps = 0
+    need_to_reset = False
     yaml_parameter = request.args.get('i', None)
-    if yaml_parameter:
-        if yaml_parameter != yaml_filename:
-            reset_session(yaml_parameter)
-        return redirect(url_for('index'))
+    if yaml_parameter is not None: # and yaml_parameter != yaml_filename
+        yaml_filename = yaml_parameter
+        user_code, user_dict = reset_session(yaml_filename)
+        session_id = session.get('uid', None)
+        need_to_reset = True
     if session_id:
         user_code = session_id
         logmessage("Found user code " + session_id + "\n")
@@ -551,6 +553,15 @@ def index():
     except:
         user_code, user_dict = reset_session(yaml_filename)
         steps = 0
+    if len(request.args):
+        for argname in request.args:
+            if argname in ('filename', 'question', 'format', 'next', 'index', 'i'):
+                continue
+            if re.match('[A-Za-z_]+', argname):
+                exec("url_args['" + argname + "'] = '" + request.args.get(argname).encode('unicode_escape') + "'", user_dict)
+            need_to_reset = True
+    if need_to_reset:
+        return redirect(url_for('index'))
     post_data = request.form.copy()
     if 'back_one' in post_data and steps > 1:
         steps, user_dict = fetch_previous_user_dict(user_code, yaml_filename)

@@ -15,6 +15,7 @@ imports:
 ---
 objects:
   - form_recipient: Individual
+  - other_form_recipient: Individual  
 ---
 code: |
   form_recipient.name.first      = 'Jonathan'
@@ -29,6 +30,15 @@ code: |
   form_recipient.phone           = '215.981.3800'
   form_recipient.fax             = '215.981.3870'
   form_recipient.org_email       = 'faxes@philalegal.org'
+---
+code: |
+  other_form_recipient.name.first = 'Legal'
+  other_form_recipient.name.last = 'Server'
+---
+code: |
+  other_form_recipient.email = url_args.get('caseid', None)
+  if other_form_recipient.email is None:
+    other_form_recipient.email = form_recipient.email
 ---
 template: how_to_send_documents
 content: |
@@ -77,7 +87,7 @@ code: |
     bcc_recipients = [form_recipient]
   else:
     to_recipients.append(form_recipient)
-  success_sending_form = send_email(to=to_recipients, bcc=bcc_recipients, body="The " + form_type + " for " + str(user.name) + " is attached", subject=capitalize(form_type) + " for " + str(user.name), attachments=[form_attachment])
+  success_sending_form = send_email(to=to_recipients, bcc=bcc_recipients, body="The " + form_type + " for " + str(user.name) + " is attached.", subject=capitalize(form_type) + " for " + str(user.name), attachments=[form_attachment])
 ---
 sets: form_submitted
 question: |
