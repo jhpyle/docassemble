@@ -359,7 +359,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
     for attachment in attachments:
         #sys.stderr.write("moo31\n")
         if type(attachment) is DAFileCollection:
-            subattachment = getattr(attachment, 'pdf', getattr(attachment, 'rtf', getattr(attachment, 'html', getattr(attachment, 'tex', None))))
+            subattachment = getattr(attachment, 'pdf', getattr(attachment, 'rtf', getattr(attachment, 'tex', None)))
             if subattachment is not None:
                 attachment = subattachment
             else:
