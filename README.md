@@ -55,7 +55,7 @@ The following dependencies can be installed from Debian packages:
     sudo apt-get install python-html2text python-markdown python-yaml \
       python-mako python-dateutil python-setuptools python-httplib2 \
       python-dev python-imaging python-pip wget unzip git locales \
-      language-pack-en pandoc texlive texlive-latex-extra
+      pandoc texlive texlive-latex-extra
 
 docassemble uses locale settings to format numbers, get currency symbols, and other things.  Do `echo $LANG` to see what locale you are using.  If it is not something like `en_US.UTF8`, you will want to set up an appropriate locale for your region:
 
@@ -87,11 +87,11 @@ The following will install the Debian dependencies needed for the web server:
       libapache2-mod-wsgi python-flask python-flask-login \
       python-flask-sqlalchemy python-flaskext.wtf python-passlib \
       python-flask-babel python-bcrypt python-speaklater poppler-utils \
-      python-pil
+      python-pil libffi-dev libffi6
 
 To install the additional dependencies for the web server ([WTForms](https://wtforms.readthedocs.org/en/latest/), [rauth](https://github.com/litl/rauth), [simplekv](https://github.com/mbr/simplekv), [Flask-KVSession](https://pypi.python.org/pypi/Flask-KVSession), [Flask-User](https://pythonhosted.org/Flask-User)), and [PyPDF](https://pypi.python.org/pypi/pyPdf/1.13), do:
 
-    sudo pip install wtforms rauth simplekv Flask-KVSession flask-user pypdf
+    sudo pip install cffi wtforms rauth simplekv Flask-KVSession flask-user pypdf
 
 ### Installing docassemble
 
@@ -144,9 +144,9 @@ Create the root directory for user-contributed Python packages (see [site.USER_B
 
 Create the directory for the Flask WSGI file needed by the web server:
 
-    sudo mkdir -p /var/lib/docassemble/
-    sudo cp docassemble/docassemble_webapp/flask.wsgi /var/lib/docassemble/
-	sudo chown www-data.www-data /var/lib/docassemble/flask.wsgi
+    sudo mkdir -p /var/lib/docassemble/webapp
+    sudo cp docassemble/docassemble_webapp/flask.wsgi /var/lib/docassemble/webapp
+	sudo chown www-data.www-data /var/lib/docassemble/webapp/flask.wsgi
 
 Create the uploads directory:
 
