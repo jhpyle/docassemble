@@ -84,9 +84,10 @@ code: |
   bcc_recipients = None
   if user_wants_copy_emailed:
     to_recipients.append(user)
-    bcc_recipients = [form_recipient]
+    bcc_recipients = [form_recipient, other_form_recipient]
   else:
     to_recipients.append(form_recipient)
+    to_recipients.append(other_form_recipient)
   success_sending_form = send_email(to=to_recipients, bcc=bcc_recipients, body="The " + form_type + " for " + str(user.name) + " is attached.", subject=capitalize(form_type) + " for " + str(user.name), attachments=[form_attachment])
 ---
 sets: form_submitted
