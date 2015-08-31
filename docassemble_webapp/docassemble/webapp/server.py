@@ -561,6 +561,7 @@ def index():
                 exec("url_args['" + argname + "'] = '" + request.args.get(argname).encode('unicode_escape') + "'", user_dict)
             need_to_reset = True
     if need_to_reset:
+        save_user_dict(user_code, user_dict, yaml_filename)
         return redirect(url_for('index'))
     post_data = request.form.copy()
     if 'back_one' in post_data and steps > 1:
