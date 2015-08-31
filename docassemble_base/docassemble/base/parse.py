@@ -1145,14 +1145,18 @@ def make_attachment(attachment, user_dict, **kwargs):
             result['markdown'][doc_format] = attachment['content'].text(user_dict)
             result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format])
     if attachment['variable_name']:
-        exec(attachment['variable_name'] + " = DAFileCollection('" + attachment['variable_name'] + "')", user_dict)
+        string = attachment['variable_name'] + " = DAFileCollection('" + attachment['variable_name'] + "')"
+        sys.stderr.write("Executing " + string + "\n")
+        exec(string, user_dict)
         for doc_format in result['file']:
             variable_string = attachment['variable_name'] + '.' + doc_format
             filename = result['filename'] + '.' + doc_format
             file_number, extension, mimetype = save_numbered_file(filename, result['file'][doc_format])
             if file_number is None:
                 raise Exception("Could not save numbered file")
-            exec(variable_string + " = DAFile('" + variable_string + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')", user_dict)
+            string = variable_string + " = DAFile('" + variable_string + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
+            sys.stderr.write("Executing " + string + "\n")
+            exec(string, user_dict)
     return(result)
             
 def process_selections(data):
