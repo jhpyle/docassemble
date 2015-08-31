@@ -17,9 +17,27 @@ objects:
   - form_recipient: Individual
 ---
 code: |
-  form_recipient.name.first = 'Jonathan'
-  form_recipient.name.last  = 'Pyle'
-  form_recipient.email      = 'jpyle@philalegal.org'
+  form_recipient.name.first      = 'Jonathan'
+  form_recipient.name.last       = 'Pyle'
+  form_recipient.email           = 'jpyle@philalegal.org'
+  form_recipient.organization    = 'Philadelphia Legal Assistance'
+  form_recipient.address.address = '718 Arch Street'
+  form_recipient.address.unit    = 'Suite 300N'
+  form_recipient.address.city    = 'Philadelphia'
+  form_recipient.address.state   = 'PA'
+  form_recipient.address.zip     = '19106'
+  form_recipient.phone           = '215.981.3800'
+  form_recipient.fax             = '215.981.3870'
+  form_recipient.org_email       = 'faxes@philalegal.org'
+---
+template: how_to_send_documents
+content: |
+  There are several ways you can provide us with a copy of your ${ form_type }:
+
+    *   You can come to our office and we can make a copy of it;
+    *   You can mail a copy of it to us;
+    *   You can fax a copy of it to ${ form_recipient.fax }; or
+    *   You can scan and e-mail it to ${ form_recipient.org_email }.
 ---
 mandatory: True
 code: |
@@ -99,9 +117,9 @@ subquestion: |
     *   You have a scanned copy of your documentation accessible from the computer or device you are using right now.
 ---
 question: |
-  Would you like to submit the signed document?
+  Would you like to submit the signed document to ${ form_recipient.organization }?
 subquestion: |
-  The citizenship attestation is below.  Please review to make sure it is ok to submit.  If you would like to submit the document, press "Yes."
+  The citizenship attestation is below.  Please review to make sure it is ok to submit to ${ form_recipient.organization}.  You can review the document by pressing "Preview" or by opening the PDF file.  If you would like to submit the document, press "Yes."
 decoration: finishline
 yesno: ok_to_submit_attestation_form
 attachments:
@@ -132,24 +150,21 @@ buttons:
   - Exit: exit
   - Restart: restart
 question: |
-  There are several ways you can provide us with a copy of your immigration documentation:
-    * You can come to our office and we can make a copy of it;
-    * You can mail a copy of it to us.
-    * You can fax a copy of it to 215-981-3870;
-    * You can scan and e-mail it to faxes@philalegal.org.
+  Please send us your ${ form_type }.
+subquestion: |
+  ${ how_to_send_documents }
+  
   Our address is:
-    Philadelphia Legal Assistance [BR]
-    718 Arch Street [BR]
-    Suite 300N [BR]
-    Philadelphia, PA 19106
-
-  Our phone number is 215-981-3800.
+  
+  ${ form_recipient.address }
+    
+  Our phone number is ${ form_recipient.phone }.
 ---
 yesno: ok_to_submit_immigration_documentation
 question: |
   Would you like to submit this documentation?
 subquestion: |
-  Your documentation of immigration status is below.  Please review to make sure it is ok to submit to Philadelphia Legal Assistance.  If you would like to submit the document, press "Yes."
+  Your documentation of immigration status is below.  Please review to make sure it is ok to submit to ${ form_recipient.organization }.  You can review the document by pressing "Preview" or by opening the PDF file.  If you would like to submit the document, press "Yes."
 attachments:
   - name: Immigration documentation for ${ user }
     content: |

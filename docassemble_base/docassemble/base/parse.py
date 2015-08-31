@@ -574,6 +574,16 @@ class Question:
             except:
                 logmessage("Compile error in need code:\n" + str(data['need']) + "\n" + str(sys.exc_info()[0]) + "\n")
                 raise
+        if 'template' in data and 'content' in data:
+            if type(data['template']) in (list, dict):
+                raise DAError("Unknown data type for template in code: " + str(data))
+            if type(data['content']) in (list, dict):
+                raise DAError("Unknown data type for content in code: " + str(data))
+            self.fields_used.add(data['template'])
+            field_data = {'saveas': data['template']}
+            self.fields.append(Field(field_data))
+            self.content = TextObject(data['content'])
+            self.question_type = 'template'
         if 'code' in data:
             self.question_type = 'code'
             if type(data['code']) == str:
@@ -1031,6 +1041,10 @@ class Interview:
                                 logmessage("ok" + "\n")
                             else:
                                 continue
+                        if question.question_type == "template":
+                            exec(question.fields[0].saveas + " = '" + question.content.text(user_dict).encode('unicode_escape') + "'", user_dict)
+                            question.mark_as_answered(user_dict)
+                            return({'type': 'continue'})
                         if question.question_type == "code":
                             logmessage("Running some code:\n\n" + question.sourcecode + "\n")
                             if is_generic:
