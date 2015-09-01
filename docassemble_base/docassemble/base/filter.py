@@ -149,7 +149,7 @@ def html_filter(text):
     text = re.sub('\[TAB\] *', '<span style="display: inline-block; width: 4em;"></span>', text)
     text = re.sub(r'\[CENTER\] *(.+?)\n\n', r'<p style="text-align: center;">\1</p>\n\n', text, flags=re.MULTILINE | re.DOTALL)
     text = re.sub(r'\[BOLDCENTER\] *(.+?)\n\n', r'<p style="text-align: center; font-weight: bold">\1</p>\n\n', text, flags=re.MULTILINE | re.DOTALL)
-    text = re.sub(r'\\_', r'_', text)
+    text = re.sub(r'\\_', r'__', text)
     return(text)
 
 def image_as_rtf(match):
