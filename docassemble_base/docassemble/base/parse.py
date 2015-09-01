@@ -111,8 +111,8 @@ class InterviewSourceFile(InterviewSource):
             with open(self.filepath) as the_file:
                 self.set_content(the_file.read())
                 return True
-        except:
-            pass
+        except Exception as errmess:
+            sys.stderr.write("Error:" + str(errmess) + "\n")
         return False
     def get_modtime(self):
         self._modtime = os.path.getmtime(self.filepath)
@@ -837,7 +837,7 @@ def interview_source_from_string(path, **kwargs):
             return new_source
     sys.stderr.write("Trying to find it\n")
     for the_filename in [docassemble.base.util.package_question_filename(path), docassemble.base.util.standard_question_filename(path), docassemble.base.util.absolute_filename(path)]:
-        sys.stderr.write("Trying " + str(the_filename) + "\n")
+        sys.stderr.write("Trying " + str(the_filename) + " with path " + str(path) + "\n")
         if the_filename is not None:
             new_source = InterviewSourceFile(filepath=the_filename, path=path)
             if new_source.update():
@@ -1042,7 +1042,7 @@ class Interview:
                             else:
                                 continue
                         if question.question_type == "template":
-                            exec(question.fields[0].saveas + " = '" + question.content.text(user_dict).encode('unicode_escape') + "'", user_dict)
+                            exec(question.fields[0].saveas + ' = """' + question.content.text(user_dict).rstrip().encode('unicode_escape') + '"""', user_dict)
                             question.mark_as_answered(user_dict)
                             return({'type': 'continue'})
                         if question.question_type == "code":

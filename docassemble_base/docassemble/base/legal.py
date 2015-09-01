@@ -87,10 +87,10 @@ class Address(DAObject):
     def __str__(self):
         return(self.block())
     def block(self):
-        output = '| ' + self.address + "\n"
+        output = self.address + " [NEWLINE] "
         if hasattr(self, 'unit') and self.unit:
-            output += '| ' + self.unit + "\n"
-        output += '| ' + self.city + ", " + self.state + " " + self.zip
+            output += self.unit + " [NEWLINE] "
+        output += self.city + ", " + self.state + " " + self.zip
         return(output)
     pass
 

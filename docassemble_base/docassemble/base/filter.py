@@ -86,6 +86,7 @@ def rtf_filter(text):
     text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
     text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_as_rtf, text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', rtf_caption_table, text)
+    text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', rtf_caption_table, text)
     text = re.sub(r'\[SINGLESPACING\] *', r'', text)
     text = re.sub(r'\[DOUBLESPACING\] *', r'', text)
     text = re.sub(r'\[NBSP\]', r'\\~ ', text)
@@ -109,6 +110,7 @@ def pdf_filter(text):
     text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_include_string, text)
     text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_include_string, text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', r'\\begingroup\\singlespacing\\mynoindent\\begin{tabular}{@{}m{0.49\\textwidth}|@{\\hspace{1em}}m{0.49\\textwidth}@{}}{\1} & {\2} \\\\ \\end{tabular}\\endgroup\\myskipline', text)
+    text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', r'\\begingroup\\singlespacing\\mynoindent\\begin{tabular}{@{}p{0.49\\textwidth}@{\\hspace{1em}}p{0.49\\textwidth}@{}}{\1} & {\2} \\\\ \\end{tabular}\\endgroup\\myskipline', text)
     text = re.sub(r'\[SINGLESPACING\] *', r'\\singlespacing ', text)
     text = re.sub(r'\[DOUBLESPACING\] *', r'\\doublespacing ', text)
     text = re.sub(r'\[NBSP\]', r'\\myshow{\\nonbreakingspace}', text)
@@ -131,6 +133,7 @@ def html_filter(text):
     text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_url_string, text)
     text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_url_string, text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', r'<table style="width: 100%"><tr><td style="width: 50%; border-style: solid; border-right-width: 1px; padding-right: 1em; border-left-width: 0px; border-top-width: 0px; border-bottom-width: 0px">\1</td><td style="padding-left: 1em; width: 50%;">\2</td></tr></table>', text)
+    text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', r'<table style="width: 100%"><tr><td style="width: 50%; vertical-align: top; border-style: none; padding-right: 1em;">\1</td><td style="padding-left: 1em; vertical-align: top; width: 50%;">\2</td></tr></table>', text)
     text = re.sub(r'\[SINGLESPACING\] *', r'', text)
     text = re.sub(r'\[DOUBLESPACING\] *', r'', text)
     text = re.sub(r'\[NBSP\]', r'&nbsp;', text)
@@ -146,6 +149,7 @@ def html_filter(text):
     text = re.sub('\[TAB\] *', '<span style="display: inline-block; width: 4em;"></span>', text)
     text = re.sub(r'\[CENTER\] *(.+?)\n\n', r'<p style="text-align: center;">\1</p>\n\n', text, flags=re.MULTILINE | re.DOTALL)
     text = re.sub(r'\[BOLDCENTER\] *(.+?)\n\n', r'<p style="text-align: center; font-weight: bold">\1</p>\n\n', text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\\_', r'_', text)
     return(text)
 
 def image_as_rtf(match):
