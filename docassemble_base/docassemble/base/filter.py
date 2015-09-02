@@ -83,10 +83,10 @@ def set_url_finder(func):
 
 def rtf_filter(text):
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
+    text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', rtf_caption_table, text)
     text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
     text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_as_rtf, text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', rtf_caption_table, text)
-    text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', rtf_caption_table, text)
     text = re.sub(r'\[SINGLESPACING\] *', r'', text)
     text = re.sub(r'\[DOUBLESPACING\] *', r'', text)
     text = re.sub(r'\[NBSP\]', r'\\~ ', text)
