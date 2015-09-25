@@ -29,6 +29,7 @@ $(document).ready(function () {
     newCanvas();
   });
   $("#save").click(function() {
+    document.getElementById('save').disabled = true;
     saveCanvas();
   });
   window.scrollTo(0,1);
