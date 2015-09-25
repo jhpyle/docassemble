@@ -14,6 +14,7 @@ header-includes:
   - \usepackage{longtable}
   - \usepackage{array}
   - \usepackage{pdfpages}
+  - \usepackage[none]{hyphenat}
   - \renewcommand{\headrulewidth}{0pt}
   - \renewcommand{\thesection}{\Roman{section}.} 
   - \renewcommand{\thesubsection}{\Alph{subsection}.}
