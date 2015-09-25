@@ -109,7 +109,7 @@ class Person(DAObject):
     def __str__(self):
         return self.name.full()
     def address_block(self):
-        return('| ' + self.name.full() + "\n" + self.address.block())
+        return("[FLUSHLEFT] " + self.name.full() + " [NEWLINE] " + self.address.block())
     def email_address(self, include_name=None):
         if include_name is True or (hasattr(self.name, 'first') and include_name is not False):
             return('"' + nodoublequote(self.name) + '" <' + str(self.email) + '>')
