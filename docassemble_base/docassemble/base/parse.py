@@ -172,7 +172,7 @@ def set_pandoc_path(path):
 class InterviewStatus(object):
     def __init__(self):
         self.attachments = None
-    def populate(self, question_result, interview_help):
+    def populate(self, question_result):
         self.question = question_result['question']
         self.questionText = question_result['question_text']
         self.subquestionText = question_result['subquestion_text']
@@ -183,8 +183,6 @@ class InterviewStatus(object):
         self.selectcompute = question_result['selectcompute']
         self.defaults = question_result['defaults']
         self.hints = question_result['hints']
-        if len(interview_help) > 0:
-            self.helpText.extend(interview_help)
     pass
 
 class Pandoc(object):
@@ -712,6 +710,9 @@ class Question:
             help_text_list = [{'heading': None, 'content': self.helptext.text(user_dict)}]
         else:
             help_text_list = list()
+        interview_help_text_list = self.interview.processed_helptext(user_dict)
+        if len(interview_help_text_list) > 0:
+            help_text_list.extend(interview_help_text_list)
         if self.subcontent is not None:
             subquestion = self.subcontent.text(user_dict)
         else:
@@ -934,7 +935,7 @@ class Interview:
                             user_dict['answered'].add(question.name)
                     if hasattr(question, 'content') and question.name and question.is_mandatory:
                         sys.stderr.write("Asking mandatory question\n")
-                        interview_status.populate(question.ask(user_dict, 'None', 'None'), self.processed_helptext(user_dict))
+                        interview_status.populate(question.ask(user_dict, 'None', 'None'))
                         sys.stderr.write("Asked mandatory question\n")
                         raise MandatoryQuestion()
             except NameError as errMess:
@@ -945,7 +946,7 @@ class Interview:
                     continue
                 else:
                     logmessage("Need to ask:\n  " + question_result['question_text'] + "\n")
-                    interview_status.populate(question_result, self.processed_helptext(user_dict))
+                    interview_status.populate(question_result)
                     break
             except AttributeError as errMess:
                 logmessage(str(errMess.args) + "\n")
