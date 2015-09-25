@@ -49,8 +49,16 @@ header-includes:
   - \setlength{\parindent}{0in}
   - \setlength{\RaggedRightParindent}{\parindent}
   - \setlength{\parskip}{0pt}
-  - \setlist[enumerate]{leftmargin=0pt,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
-  - \setlist[itemize]{leftmargin=0pt,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[enumerate,1]{leftmargin=0.0in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[enumerate,2]{leftmargin=0.5in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[enumerate,3]{leftmargin=1.0in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[enumerate,4]{leftmargin=1.5in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[enumerate,5]{leftmargin=2.0in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[itemize,1]{leftmargin=0.0in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[itemize,2]{leftmargin=0.5in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[itemize,3]{leftmargin=1.0in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[itemize,4]{leftmargin=1.5in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[itemize,5]{leftmargin=2.0in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
   - \setlist[trivlist]{topsep=0pt,partopsep=0pt}
 include-before:
   - \RaggedRight
