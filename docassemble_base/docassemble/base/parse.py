@@ -396,14 +396,14 @@ class Question:
                 raise DAError("Unknown data type within help")
             if 'heading' in data['interview help']:
                 if type(data['interview help']['heading']) not in [dict, list]:
-                    help_heading = data['interview help']['heading']
+                    help_heading = TextObject(data['interview help']['heading'])
                 else:
                     raise DAError("Unknown data type within help heading")
             else:
                 help_heading = None
             if 'content' in data['interview help']:
                 if type(data['interview help']['content']) not in [dict, list]:
-                    help_content = data['interview help']['content']
+                    help_content = TextObject(data['interview help']['content'])
                 else:
                     raise DAError("Unknown data type within help content")
             else:
@@ -870,6 +870,17 @@ class Interview:
             source_package = None
         for document in yaml.load_all(source.content):
             question = Question(document, self, path=source.path, package=source_package)
+    def processed_helptext(self, user_dict):
+        result = list()
+        for source in self.helptext:
+            help_item = dict()
+            if source['heading'] is None:
+                help_item['heading'] = None
+            else:
+                help_item['heading'] = source['heading'].text(user_dict)
+            help_item['content'] = source['content'].text(user_dict)
+            result.append(help_item)
+        return result
     def assemble(self, user_dict, *args):
         if len(args):
             interview_status = args[0]
@@ -923,7 +934,7 @@ class Interview:
                             user_dict['answered'].add(question.name)
                     if hasattr(question, 'content') and question.name and question.is_mandatory:
                         sys.stderr.write("Asking mandatory question\n")
-                        interview_status.populate(question.ask(user_dict, 'None', 'None'), self.helptext)
+                        interview_status.populate(question.ask(user_dict, 'None', 'None'), self.processed_helptext(user_dict))
                         sys.stderr.write("Asked mandatory question\n")
                         raise MandatoryQuestion()
             except NameError as errMess:
@@ -934,7 +945,7 @@ class Interview:
                     continue
                 else:
                     logmessage("Need to ask:\n  " + question_result['question_text'] + "\n")
-                    interview_status.populate(question_result, self.helptext)
+                    interview_status.populate(question_result, self.processed_helptext(user_dict))
                     break
             except AttributeError as errMess:
                 logmessage(str(errMess.args) + "\n")
