@@ -49,6 +49,7 @@ header-includes:
   - \setlength{\RaggedRightParindent}{\parindent}
   - \setlength{\parskip}{0pt}
   - \setlist[enumerate]{leftmargin=0pt,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[itemize]{leftmargin=0pt,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
   - \setlist[trivlist]{topsep=0pt,partopsep=0pt}
 include-before:
   - \RaggedRight

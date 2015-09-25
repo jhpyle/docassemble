@@ -124,8 +124,8 @@ def pdf_filter(text):
     text = re.sub(r'\[NEWLINE\] *', r'\\newline ', text)
     text = re.sub(r'\[BR\] *', r'\\manuallinebreak ', text)
     text = re.sub(r'\[TAB\] *', r'\\manualindent ', text)
-    text = re.sub(r'\[CENTER\] *(.+?)\n\n', r'\\begingroup\\Centering \1\\par\\endgroup' + "\n\n", text, flags=re.MULTILINE | re.DOTALL)
-    text = re.sub(r'\[BOLDCENTER\] *(.+?)\n\n', r'\\begingroup\\Centering\\bfseries \1\\par\\endgroup' + "\n\n", text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[CENTER\] *(.+?)\n\n', r'\\begingroup\\singlespacing\\Centering \1\\par\\endgroup' + "\n\n", text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[BOLDCENTER\] *(.+?)\n\n', r'\\begingroup\\singlespacing\\Centering\\bfseries \1\\par\\endgroup' + "\n\n", text, flags=re.MULTILINE | re.DOTALL)
     return(text)
 
 def html_filter(text):
