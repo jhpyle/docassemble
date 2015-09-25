@@ -87,7 +87,7 @@ The following will install the Debian dependencies needed for the web server:
       libapache2-mod-wsgi python-flask python-flask-login \
       python-flask-sqlalchemy python-flaskext.wtf python-passlib \
       python-flask-babel python-bcrypt python-speaklater poppler-utils \
-      python-pil libffi-dev libffi6
+      python-pil libffi-dev libffi6 python-itsdangerous
 
 To install the additional dependencies for the web server ([WTForms](https://wtforms.readthedocs.org/en/latest/), [rauth](https://github.com/litl/rauth), [simplekv](https://github.com/mbr/simplekv), [Flask-KVSession](https://pypi.python.org/pypi/Flask-KVSession), [Flask-User](https://pythonhosted.org/Flask-User)), and [PyPDF](https://pypi.python.org/pypi/pyPdf/1.13), do:
 

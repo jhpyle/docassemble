@@ -289,9 +289,16 @@ def rtf_caption_table(match):
     table_text = re.sub(r'\\rtlch\\fcs1 \\af0 \\ltrch\\fcs0', r'\\rtlch\\fcs1 \\af0 \\ltrch\\fcs0 \\sl240 \\slmult1', table_text)
     return table_text
 
-def markdown_to_html(a, trim=False, pclass=None, interview_status=None):
+def markdown_to_html(a, trim=False, pclass=None, interview_status=None, use_pandoc=False):
     a = docassemble.base.filter.html_filter(unicode(a))
-    result = markdown.markdown(a, extensions=[SmartypantsExt(configs=dict())], output_format='html5')
+    if use_pandoc:
+        converter = Pandoc()
+        converter.output_format = 'html'
+        converter.input_content = a
+        converter.convert()
+        result = converter.output_content
+    else:
+        result = markdown.markdown(a, extensions=[SmartypantsExt(configs=dict())], output_format='html5')
     result = re.sub('<a href', '<a target="_blank" href', result)
     if re.search(r'\[\[', result):
         if interview_status is None:
