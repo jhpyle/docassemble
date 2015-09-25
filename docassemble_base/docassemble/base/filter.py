@@ -3,6 +3,7 @@ import re
 import markdown
 import docassemble.base.util
 import docassemble.base.filter
+from docassemble.base.pandoc import Pandoc
 from mdx_smartypants import SmartypantsExt
 
 from docassemble.base.logger import logmessage
