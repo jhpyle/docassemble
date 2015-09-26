@@ -268,9 +268,9 @@ app.config['USE_GOOGLE_LOGIN'] = False
 app.config['USE_FACEBOOK_LOGIN'] = False
 if 'oauth' in daconfig:
     app.config['OAUTH_CREDENTIALS'] = daconfig['oauth']
-    if 'google' in daconfig['oauth'] and not ('enabled' in daconfig['oauth']['google'] and daconfig['oauth']['google']['enabled'] is False):
+    if 'google' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['google'] and daconfig['oauth']['google']['enable'] is False):
         app.config['USE_GOOGLE_LOGIN'] = True
-    if 'facebook' in daconfig['oauth'] and not ('enabled' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enabled'] is False):
+    if 'facebook' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enable'] is False):
         app.config['USE_FACEBOOK_LOGIN'] = True
 
 app.secret_key = daconfig['secretkey']
