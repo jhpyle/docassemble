@@ -17,7 +17,7 @@
 
     {{ render_field(form.last_name, tabindex=250) }}
 
-    {% if current_user.has_roles(['admin', 'developer']) %}
+    {% if (not current_user.is_anonymous) and current_user.has_roles(['admin', 'developer']) %}
 
       {{ render_field(form.country, tabindex=260, right_message='<a target="_blank" href="http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2">List of Country Codes</a>') }} 
 
