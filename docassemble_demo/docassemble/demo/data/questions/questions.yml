@@ -82,6 +82,10 @@ comment: |
   important to define objects early on in your interview, before any
   "mandatory" code blocks.
 ---
+code: |
+  if 6 == 9:
+    user.name.first = "Mordechai"
+---
 mandatory: True
 code: |
   if user_understands_no_attorney_client_relationship == "understands":

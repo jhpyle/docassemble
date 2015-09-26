@@ -873,14 +873,14 @@ class Interview:
         return(pickleable_objects(user_dict))
     def askfor(self, missingVariable, user_dict, **kwargs):
         variable_stack = kwargs.get('variable_stack', set())
-        the_i = 'None'
-        the_x = 'None'
+        #the_i = 'None'
+        #the_x = 'None'
         logmessage("I don't have " + missingVariable + "\n")
         if missingVariable in variable_stack:
             raise DAError("Infinite loop:" + missingVariable + " already looked for")
         variable_stack.add(missingVariable)
-        is_generic = False
-        is_iterator = False
+        found_generic = False
+        #q_is_iterator = False
         realMissingVariable = missingVariable
         totry = [{'real': missingVariable, 'vari': missingVariable}]
         #logmessage("moo1" + "\n")
@@ -895,15 +895,24 @@ class Interview:
             realMissingVariable = mv['real']
             missingVariable = mv['vari']
             logmessage("Trying missingVariable " + missingVariable + "\n")
-            if missingVariable not in self.questions:
-                components = missingVariable.split(".")
-                realComponents = realMissingVariable.split(".")
-                logmessage("Vari Components are " + str(components) + "\n")
-                logmessage("Real Components are " + str(realComponents) + "\n")
-                n = len(components)
-                if n == 1:
+            questions_to_try = list()
+            if missingVariable in self.questions:
+                for the_question in self.questions[missingVariable]:
+                    questions_to_try.append((the_question, False, 'None', 'None', missingVariable))
+                generic_needed = False
+            else:
+                generic_needed = True;
+            components = missingVariable.split(".")
+            realComponents = realMissingVariable.split(".")
+            logmessage("Vari Components are " + str(components) + "\n")
+            logmessage("Real Components are " + str(realComponents) + "\n")
+            n = len(components)
+            if n == 1:
+                if generic_needed:
                     logmessage("There is no question for " + missingVariable + "\n")
-                    continue
+                else:
+                    logmessage("There are no generic options for " + missingVariable + "\n")                    
+            else:
                 found_x = 0;
                 for i in range(1, n):
                     if found_x:
@@ -915,6 +924,7 @@ class Interview:
                         brackets_part = m.group(2)
                         sub_totry.insert(0, {'var': "x[i]." + ".".join(components[i:n]), 'realvar': "x" + brackets_part + "." + ".".join(realComponents[i:n]), 'root': before_brackets, 'root_for_object': before_brackets + brackets_part})
                     for d in sub_totry:
+                        the_i_to_use = 'None'
                         if found_x:
                             break;
                         var = d['var']
@@ -924,7 +934,7 @@ class Interview:
                             if len(mm) > 1:
                                 logmessage("Variable " + var + " is no good because it has more than one iterator\n")
                                 continue;
-                            the_i = mm[0];
+                            the_i_to_use = mm[0];
                         root = d['root']
                         root_for_object = d['root_for_object']
                         logmessage("testing variable " + var + " and root " + root + " and root for object " + root_for_object + "\n")
@@ -942,22 +952,25 @@ class Interview:
                                     if var in self.generic_questions[generic_object]:
                                         logmessage("ok3\n")
                             if generic_object in self.generic_questions and var in self.questions and var in self.generic_questions[generic_object]:
-                                logmessage("Got a hit, setting var " + var + " and realMissingVariable " + realMissingVariable + "\n")
-                                realMissingVariable = missingVariable
+                                logmessage("Got a hit with var " + var + "where realMissingVariable is " + realMissingVariable + "\n")
+                                #logmessage("Got a hit, setting var " + var + " and realMissingVariable " + realMissingVariable + "\n")
+                                #realMissingVariable = missingVariable
                                 missingVariable = var
-                                is_generic = True
-                                the_x = root
+                                found_generic = True
+                                #the_x = root
                                 found_x = 1
+                                for the_question_to_use in self.questions[var]:
+                                    questions_to_try.append((the_question_to_use, True, root, the_i_to_use, var))
                                 break
                             logmessage("I should be looping around now\n")
                         except:
                             logmessage("variable did not exist in user_dict: " + str(sys.exc_info()[0]) + "\n")
-                if not (is_generic or is_iterator):
+                if generic_needed and not found_generic: # or is_iterator
                     logmessage("There is no question for " + missingVariable + "\n")
                     continue
             while True:
                 try:
-                    for the_question in self.questions[missingVariable]:
+                    for the_question, is_generic, the_x, the_i, missing_var in questions_to_try:
                         question = the_question.follow_multiple_choice(user_dict)
                         if is_generic:
                             if question.is_generic:
@@ -980,11 +993,11 @@ class Interview:
                                     exec("i = " + the_i, user_dict)
                                     logmessage("Set i\n")
                             exec(question.compute, user_dict)
-                            logmessage("the missing variable is " + str(missingVariable) + "\n")
-                            if missingVariable in variable_stack:
-                                variable_stack.remove(missingVariable)
+                            logmessage("the missing variable is " + str(missing_var) + "\n")
+                            if missing_var in variable_stack:
+                                variable_stack.remove(missing_var)
                             try:
-                                eval(missingVariable, user_dict)
+                                eval(missing_var, user_dict)
                                 question.mark_as_answered(user_dict)
                                 return({'type': 'continue'})
                             except:
