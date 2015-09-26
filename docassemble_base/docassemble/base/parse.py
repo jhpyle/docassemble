@@ -17,6 +17,9 @@ from types import CodeType
 
 match_mako = re.compile(r'<%|\${|% if|% for|% while')
 
+def textify(data):
+    return list(map((lambda x: x.text(user_dict)), data))
+    
 def set_url_finder(func):
     docassemble.base.filter.set_url_finder(func)
 
@@ -1065,7 +1068,7 @@ def make_attachment(attachment, user_dict, **kwargs):
                 for key in attachment['metadata']:
                     data = attachment['metadata'][key]
                     if type(data) is list:
-                        metadata[key] = list(map((lambda x: x.text(user_dict)), data))
+                        metadata[key] = textify(data)
                     else:
                         metadata[key] = data.text(user_dict)
                 the_markdown += "---\n" + yaml.dump(metadata) + "\n...\n"

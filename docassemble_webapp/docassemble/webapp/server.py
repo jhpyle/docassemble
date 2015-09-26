@@ -441,14 +441,14 @@ class TwitterSignIn(OAuthSignIn):
 
 @app.route('/authorize/<provider>', methods=['POST', 'GET'])
 def oauth_authorize(provider):
-    if not current_user.is_anonymous():
+    if not current_user.is_anonymous:
         return redirect(url_for('index'))
     oauth = OAuthSignIn.get_provider(provider)
     return oauth.authorize()
 
 @app.route('/callback/<provider>')
 def oauth_callback(provider):
-    if not current_user.is_anonymous():
+    if not current_user.is_anonymous:
         return redirect(url_for('index'))
     oauth = OAuthSignIn.get_provider(provider)
     social_id, username, email = oauth.callback()
@@ -463,7 +463,7 @@ def oauth_callback(provider):
         db.session.add(user)
         db.session.commit()
     login_user(user, remember=False)
-    if not current_user.is_anonymous():
+    if not current_user.is_anonymous:
         update_user_id(session['uid'])
         flash(word('Welcome!  You are logged in as ') + email, 'success')
     return redirect(url_for('index'))
@@ -879,7 +879,7 @@ def make_navbar(page_title, steps):
           </ul>
           <ul class="nav navbar-nav navbar-right">
 """
-    if current_user.is_anonymous():
+    if current_user.is_anonymous:
         navbar += '            <li><a href="' + url_for('user.login', next=url_for('index')) + '">' + word('Sign in') + '</a></li>'
     else:
         navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">' + current_user.email + '<b class="caret"></b></a><ul class="dropdown-menu">'

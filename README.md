@@ -80,18 +80,18 @@ To install [PyRTF-ng](https://github.com/nekstrom/pyrtf-ng), do:
     git clone https://github.com/nekstrom/pyrtf-ng
     cd pyrtf-ng
     sudo python setup.py install
+	cd ..
 
 The following will install the Debian dependencies needed for the web server:
 
     sudo apt-get install apache2 postgresql python-psycopg2 \
-      libapache2-mod-wsgi python-flask python-flask-login \
-      python-flask-sqlalchemy python-flaskext.wtf python-passlib \
-      python-flask-babel python-bcrypt python-speaklater poppler-utils \
-      python-pil libffi-dev libffi6 python-itsdangerous
+      libapache2-mod-wsgi python-bcrypt python-speaklater \
+	  poppler-utils python-pil libffi-dev libffi6 libjs-jquery
 
 To install the additional dependencies for the web server ([WTForms](https://wtforms.readthedocs.org/en/latest/), [rauth](https://github.com/litl/rauth), [simplekv](https://github.com/mbr/simplekv), [Flask-KVSession](https://pypi.python.org/pypi/Flask-KVSession), [Flask-User](https://pythonhosted.org/Flask-User)), and [PyPDF](https://pypi.python.org/pypi/pyPdf/1.13), do:
 
-    sudo pip install cffi wtforms rauth simplekv Flask-KVSession flask-user pypdf
+    sudo pip install cffi wtforms werkzeug rauth simplekv Flask-KVSession flask-user pypdf flask \
+      flask-login flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
 
 ### Installing docassemble
 
@@ -122,18 +122,16 @@ The following will run a test of the core docassemble module.  This requires `do
     cd ~/docassemble
     python docassemble_base/tests/test-parse.py
 
-If it fails with an exception, there was a problem with the installation.  The output should end with:
+The output should end with:
 
     Need to ask:
-      What is your name?
-
-    to get x.name.first
+      Your use of this system does not mean that you have a lawyer.  Do you understand this?
 
 ## Setting up the web server
 
 The following instructions assume a Debian system on which you have cloned `docassemble` into your home directory.  You will have to make some changes to adapt this to your platform.
 
-Turn on wsgi:
+Enable the Apache wsgi module if it is not already enabled:
 
     sudo a2enmod wsgi
 
@@ -145,7 +143,7 @@ Create the root directory for user-contributed Python packages (see [site.USER_B
 Create the directory for the Flask WSGI file needed by the web server:
 
     sudo mkdir -p /var/lib/docassemble/webapp
-    sudo cp docassemble/docassemble_webapp/flask.wsgi /var/lib/docassemble/webapp
+    sudo cp ~/docassemble/docassemble_webapp/flask.wsgi /var/lib/docassemble/webapp
 	sudo chown www-data.www-data /var/lib/docassemble/webapp/flask.wsgi
 
 Create the uploads directory:
@@ -153,10 +151,10 @@ Create the uploads directory:
     sudo mkdir -p /usr/share/docassemble/files
     sudo chown www-data.www-data /usr/share/docassemble/files
 
-Set up and edit the configuration file:
+Set up and edit the configuration file (e.g., to edit the default e-mail addresses):
 
     sudo mkdir /etc/docassemble
-    sudo cp docassemble/docassemble_base/config.yml /etc/docassemble/
+    sudo cp ~/docassemble/docassemble_base/config.yml /etc/docassemble/
     sudo vi /etc/docassemble/config.yml
 
 If you need to change the location 
@@ -198,26 +196,11 @@ Set /etc/apache2/sites-available/000-default.conf to something like:
 
 You can run `docassemble` on HTTP rather than HTTPS if you want to, but since the `docassemble` web application uses a password system, it is a good idea to run it on HTTPS.
 
-Set up the database.  First, do:
+Set up the database by running:
 
-    sudo su postgres
-    cd ~
-    psql
-
-Then, within psql, run the following SQL statements to create the database and to give read and write access to the web application:
-
-    create role "www-data" login;
-    create database docassemble;
-    \q
-
-While still running as the `postgres` user, create the database tables by running:
-
-    python docassemble/docassemble_webapp/docassemble/webapp/create_tables.py
-
-Lastly, run `psql docassemble` and give permissions to the "www-data" user:
-
-    grant all on all tables in schema public to "www-data";
-    grant all on all sequences in schema public to "www-data";
+    echo 'create role "www-data" login; create database docassemble;' | sudo -u postgres psql
+    sudo -u postgres python ~/docassemble/docassemble_webapp/docassemble/webapp/create_tables.py
+    echo 'grant all on all tables in schema public to "www-data"; grant all on all sequences in schema public to "www-data";' | sudo -u postgres psql docassemble
 
 In order for the "Sign in with Google" and "Sign in with Facebook" buttons to work, you will need to register your site on [Google Developers Console](https://console.developers.google.com/) and on [Facebook Developers](https://developers.facebook.com/) and obtain IDs and secrets, which you supply to docassemble by editing /etc/docassemble/config.yml.
 
