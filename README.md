@@ -75,7 +75,7 @@ To install the [us](https://pypi.python.org/pypi/us) and [SmartyPants](https://p
 
 (The mdx_smartypants module depends on 3to2 and guess-language-spirit, and may have trouble installing if those modules are not already installed.)
 
-To install [PyRTF-ng](https://github.com/nekstrom/pyrtf-ng), do:
+To install [PyRTF-ng](https://github.com/nekstrom/pyrtf-ng), which is needed for generating RTF files, do:
 
     git clone https://github.com/nekstrom/pyrtf-ng
     cd pyrtf-ng
@@ -101,8 +101,9 @@ Clone the repository (e.g., in your home directory):
 
 This creates a directory called `docassemble`.  To install the docassemble packages, do the following as root:
 
-    cd docassemble
+    cd ~/docassemble
     sudo ./compile.sh
+	cd ..
 
 The compile.sh script installs the four Python packages contained in the git repository:
 
@@ -157,8 +158,6 @@ Set up and edit the configuration file (e.g., to edit the default e-mail address
     sudo cp ~/docassemble/docassemble_base/config.yml /etc/docassemble/
     sudo vi /etc/docassemble/config.yml
 
-If you need to change the location 
-
 Set /etc/apache2/sites-available/000-default.conf to something like:
 
     <VirtualHost *:80>
@@ -178,6 +177,7 @@ Set /etc/apache2/sites-available/000-default.conf to something like:
         SSLCertificateChainFile /etc/ssl/sub.class1.server.ca.pem
         SSLProxyEngine on
         DocumentRoot /var/www/html
+
         WSGIDaemonProcess docassemble.webserver user=www-data group=www-data threads=5
         WSGIScriptAlias /demo /var/lib/docassemble/webapp/flask.wsgi
         <Directory /var/lib/docassemble/webapp>
@@ -186,17 +186,16 @@ Set /etc/apache2/sites-available/000-default.conf to something like:
           AllowOverride none
           Require all granted
         </Directory>
-        Alias /robots.txt /var/www/html/robots.txt
-        Alias /favicon.ico /var/www/html/favicon.ico
+
         ErrorLog /var/log/apache2/error.log
         LogLevel warn
         CustomLog /var/log/apache2/access-da.log combined
       </VirtualHost>
     </IfModule>
 
-You can run `docassemble` on HTTP rather than HTTPS if you want to, but since the `docassemble` web application uses a password system, it is a good idea to run it on HTTPS.
+You can run `docassemble` on HTTP rather than HTTPS if you want to, but since the `docassemble` web application uses a password system, it is a good idea to run it on HTTPS.  If you want to run docassemble on HTTP, copy the `WSGIDaemonProcess` line, the `WSGIScriptAlias` line, and the `Directory` section into the `<VirtualHost *:80>` section of your Apache configuration file.
 
-Set up the database by running:
+`docassemble` uses a SQL database.  These instructions assume a PostgreSQL database, but any database compatible with Python's sqlalchemy should work with appropriate changes to the `/etc/docassemble/config.yml` file.  Set up the database by running:
 
     echo 'create role "www-data" login; create database docassemble;' | sudo -u postgres psql
     sudo -u postgres python ~/docassemble/docassemble_webapp/docassemble/webapp/create_tables.py
@@ -210,7 +209,7 @@ Restart Apache:
 
     sudo /etc/init.d/apache2 restart
 
-or
+or, if you use systemd:
 
     sudo systemctl restart apache2.service
 
