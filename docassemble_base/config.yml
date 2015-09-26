@@ -10,9 +10,11 @@ db:
   port: null
 oauth:
   facebook:
+    enable: false
     id: 423759825983740
     secret: 34993a09909c0909b9000a090d09f099
   google:
+    enable: false
     id: 23123018240-32239fj28fj4fuhf394h3984eurhfurh.apps.googleusercontent.com
     secret: DGE34gdgerg3GDG545tgdfRf
 secretkey: 28asflwjeifwlfjsd2fejfiefw3g4o87

@@ -264,15 +264,14 @@ match_triplequote = re.compile('"""')
 
 APPLICATION_NAME = 'docassemble'
 app.config['SQLALCHEMY_DATABASE_URI'] = alchemy_connect_string
+app.config['USE_GOOGLE_LOGIN'] = False
+app.config['USE_FACEBOOK_LOGIN'] = False
 if 'oauth' in daconfig:
     app.config['OAUTH_CREDENTIALS'] = daconfig['oauth']
-    if 'google' in daconfig['oauth']:
+    if 'google' in daconfig['oauth'] and not ('enabled' in daconfig['oauth']['google'] and daconfig['oauth']['google']['enabled'] is False):
         app.config['USE_GOOGLE_LOGIN'] = True
-    if 'facebook' in daconfig['oauth']:
+    if 'facebook' in daconfig['oauth'] and not ('enabled' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enabled'] is False):
         app.config['USE_FACEBOOK_LOGIN'] = True
-else:
-    app.config['USE_GOOGLE_LOGIN'] = False
-    app.config['USE_FACEBOOK_LOGIN'] = False
 
 app.secret_key = daconfig['secretkey']
 #app.secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits)
