@@ -305,11 +305,12 @@ def as_html(status, extra_scripts, debug):
                 output += '</div>'
             output += '</div></div>'
             attachment_index += 1
-        if len(status.attachments) > 1:
-            email_header = word("E-mail these documents to yourself")
-        else:
-            email_header = word("E-mail this document to yourself")
-        output += """
+        if status.question.allow_emailing:
+            if len(status.attachments) > 1:
+                email_header = word("E-mail these documents to yourself")
+            else:
+                email_header = word("E-mail this document to yourself")
+            output += """
 <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
   <div class="panel panel-default">
     <div class="panel-heading" role="tab" id="headingOne">
@@ -324,19 +325,19 @@ def as_html(status, extra_scripts, debug):
         <form id="emailform" class="form-horizontal" method="POST">
           <fieldset>
             <div class="form-group"><label for="attachment_email_address" class="control-label col-sm-4">""" + word('E-mail address') + """</label><div class="col-sm-8"><input class="form-control" type="email" name="attachment_email_address" id="attachment_email_address"></input></div></div>"""
-        if rtfs_included:
-            output += """
+            if rtfs_included:
+                output += """
             <div class="form-group"><label for="attachment_include_rtf" class="control-label col-sm-4">""" + '&nbsp;</label><div class="col-sm-8"><input type="checkbox" value="True" name="attachment_include_rtf" id="attachment_include_rtf"> ' + word('Include RTF files for editing') + '</div></div>'
-        output += """
+            output += """
             <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Send') + '</button></div><input type="hidden" name="email_attachments" value="1"></input><input type="hidden" name="question_number" value="' + str(status.question.number) + '"></input>'
-        output += """
+            output += """
           </fieldset>
         </form>
       </div>
     </div>
   </div>
 </div>"""
-        extra_scripts.append("""<script>$("#emailform").validate(""" + json.dumps({'rules': {'attachment_email_address': {'notEmpty': True, 'required': True, 'email': True}}, 'messages': {'attachment_email_address': {'required': word("An e-mail address is required."), 'email': word("You need to enter a complete e-mail address.")}}, 'errorClass': 'help-inline'}) + """);</script>""")
+            extra_scripts.append("""<script>$("#emailform").validate(""" + json.dumps({'rules': {'attachment_email_address': {'notEmpty': True, 'required': True, 'email': True}}, 'messages': {'attachment_email_address': {'required': word("An e-mail address is required."), 'email': word("You need to enter a complete e-mail address.")}}, 'errorClass': 'help-inline'}) + """);</script>""")
     if len(attributions):
         output += '<br><br><br><br><br><br><br>'
     for attribution in sorted(attributions):
