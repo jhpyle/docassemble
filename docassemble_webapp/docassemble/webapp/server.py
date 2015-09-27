@@ -631,6 +631,7 @@ def index():
                         mail.send(msg)
                         success = True
                     except Exception as errmess:
+                        logmessage(str(errmess) + "\n")
                         success = False
         if success:
             flash(word("Your documents were e-mailed to") + " " + str(attachment_email_address) + ".", 'info')
