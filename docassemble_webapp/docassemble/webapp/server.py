@@ -11,6 +11,7 @@ import xml.etree.ElementTree as ET
 import docassemble.webapp.database
 import tempfile
 import zipfile
+import traceback
 from docassemble.base.error import DAError
 from docassemble.base.util import pickleable_objects
 from docassemble.base.util import word
@@ -56,6 +57,8 @@ from docassemble.webapp.config import daconfig
 from PIL import Image
 import pyPdf
 from subprocess import call
+
+app.debug = False
 
 default_yaml_filename = daconfig.get('default_interview', 'docassemble.demo:data/questions/questions.yml')
 #yaml_filename = 'docassemble.hello-world:data/questions/questions.yaml'
@@ -105,7 +108,7 @@ PDFTOPPM_COMMAND = daconfig.get('pdftoppm_command', 'pdftoppm')
 docassemble.base.util.set_language(daconfig.get('language', 'en'))
 docassemble.base.util.set_locale(daconfig.get('locale', 'US.UTF8'))
 docassemble.base.util.update_locale()
-app.logger.info("default sender is " + app.config['MAIL_DEFAULT_SENDER'] + "\n")
+app.logger.warning("default sender is " + app.config['MAIL_DEFAULT_SENDER'] + "\n")
 exit_page = daconfig.get('exitpage', '/')
 USE_PROGRESS_BAR = daconfig.get('use_progress_bar', True)
 #USER_PACKAGES = daconfig.get('user_packages', '/var/lib/docassemble/dist-packages')
@@ -135,15 +138,16 @@ conn = psycopg2.connect(connect_string)
 
 KVSessionExtension(store, app)
 
-file_handler = logging.FileHandler(filename=LOGFILE)
-file_handler.setLevel(logging.WARNING)
-app.logger.addHandler(file_handler)
+error_file_handler = logging.FileHandler(filename=LOGFILE)
+error_file_handler.setLevel(logging.DEBUG)
+app.logger.addHandler(error_file_handler)
 
 def flask_logger(message):
-    app.logger.info(message)
+    app.logger.warning(message)
+    sys.stderr.write(message)
     return
 
-#docassemble.base.logger.set_logmessage(flask_logger)
+docassemble.base.logger.set_logmessage(flask_logger)
 
 #logmessage("foo bar\n")
 
@@ -1253,21 +1257,28 @@ def make_image_files(path):
         raise DAError("Call to pdftoppm failed")
     return
 
-@app.errorhandler(DAError)
-def server_error(e):
+@app.errorhandler(Exception)
+def server_error(the_error):
+    errmess = str(the_error)
+    if type(the_error) is DAError:
+        the_trace = None
+        logmessage(errmess)
+    else:
+        the_trace = traceback.format_exc()
+        logmessage(the_trace)
     flask_logtext = []
     with open(LOGFILE) as the_file:
         for line in the_file:
             if re.match('Exception', line):
                 flask_logtext = []
             flask_logtext.append(line)
-    apache_logtext = []
+    # apache_logtext = []
     # with open(APACHE_LOGFILE) as the_file:
     #     for line in the_file:
     #         if re.search('configured -- resuming normal operations', line):
     #             apache_logtext = []
     #         apache_logtext.append(line)
-    return render_template('pages/501.html', error=e, logtext=''.join(flask_logtext)), 501
+    return render_template('pages/501.html', error=errmess, logtext=str(the_trace)), 501
 
 def get_ext_and_mimetype(filename):
     mimetype, encoding = mimetypes.guess_type(filename)

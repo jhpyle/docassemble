@@ -1007,7 +1007,7 @@ class Interview:
                             logmessage("Question type is " + question.question_type + "\n")
                             #logmessage("Ask:\n  " + question.content.original_text + "\n")
                             return question.ask(user_dict, the_x, the_i)
-                    raise DAError("Failed to set " + missingVariable)
+                    raise DAError("Found a reference to a variable '" + missingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
                 except NameError as errMess:
                     newMissingVariable = str(errMess).split("'")[1]
                     logmessage(str(errMess) + "\n")

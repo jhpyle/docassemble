@@ -1,11 +1,16 @@
 {% extends "base_templates/page_base.html" %}
 
 {% block main %}
-<h1>Error</h1>
+<h1>{{ word('Error') }}</h1>
 
 <blockquote>{{ error }}</blockquote>
 
-<h3>Log</h3>
+{% if logtext != 'None' %}
+
+<h3>{{ word('Log') }}</h3>
+
 <pre>{{ logtext }}</pre>
+
+{% endif %}
 
 {% endblock %}
