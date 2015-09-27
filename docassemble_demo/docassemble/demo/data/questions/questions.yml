@@ -20,13 +20,19 @@ comment: |
   interview.  If the question has help text of its own, the "interview help" will
   appear after the question-specific help.
 ---
-#terms:
-#  custody order: |
-#    An order signed by a family court judge that says who gets to have what
-#    kind of custody over a child.
-#  complaint: |
-#    A document that you file in court to start a lawsuit.
-#---
+terms:
+  custody order: |
+    An order signed by a family court judge that says who gets to have what
+    kind of custody over a child.
+  complaint: |
+    A document that you file in court to start a lawsuit.
+  lawyer: |
+    Someone with a license to practice law.
+  plaintiff: |
+    The person who starts a case.
+  defendant: |
+    The person who is on the defensive in a case.  In a lawsuit, the plaintiff sues the defendant.
+---
 include:
   - basic-questions.yml
 comment: |

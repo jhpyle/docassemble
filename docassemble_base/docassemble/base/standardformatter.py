@@ -76,17 +76,17 @@ def as_html(status, validation_rules, debug):
     output += '<section id="question" class="tab-pane active col-md-6">'
     if status.question.question_type == "yesno":
         output += '<form id="daform" method="POST"><fieldset>'
-        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True) + '<div style="clear:both"></div></h3></div>'
+        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, terms=status.question.interview.terms) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
-            output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
+            output += '<div>' + markdown_to_html(status.subquestionText, terms=status.question.interview.terms) + '</div>'
         output += '<div class="btn-toolbar"><button class="btn btn-primary btn-lg " name="' + status.question.fields[0].saveas + '" type="submit" value="True">Yes</button> <button class="btn btn-lg btn-info" name="' + status.question.fields[0].saveas + '" type="submit" value="False">No</button></div>'
         output += question_name_tag(status.question)
         output += '</fieldset></form>'
     elif status.question.question_type == "noyes":
         output += '<form id="daform" method="POST"><fieldset>'
-        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True) + '<div style="clear:both"></div></h3></div>'
+        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, terms=status.question.interview.terms) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
-            output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
+            output += '<div>' + markdown_to_html(status.subquestionText, terms=status.question.interview.terms) + '</div>'
         output += '<div class="btn-toolbar"><button class="btn btn-primary btn-lg" name="' + status.question.fields[0].saveas + '" type="submit" value="False">Yes</button> <button class="btn btn-lg btn-info" name="' + status.question.fields[0].saveas + '" type="submit" value="True">No</button></div>'
         output += question_name_tag(status.question)
         output += '</fieldset></form>'
@@ -119,9 +119,9 @@ def as_html(status, validation_rules, debug):
             else:
                 fieldlist.append('<div class="form-group"><label for="' + field.saveas + '" class="control-label col-sm-4">' + field.label + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>')
         output += '<form id="daform" class="form-horizontal" method="POST"' + enctype_string + '><fieldset>'
-        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True) + '<div style="clear:both"></div></h3></div>'
+        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, terms=status.question.interview.terms) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
-            output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
+            output += '<div>' + markdown_to_html(status.subquestionText, terms=status.question.interview.terms) + '</div>'
         if (len(fieldlist)):
             output += "".join(fieldlist)
         else:
@@ -135,17 +135,17 @@ def as_html(status, validation_rules, debug):
         output += '</fieldset></form>'
     elif status.question.question_type == "continue":
         output += '<form id="daform" method="POST"><fieldset>'
-        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True) + '<div style="clear:both"></div></h3></div>'
+        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, terms=status.question.interview.terms) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
-            output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
+            output += '<div>' + markdown_to_html(status.subquestionText, terms=status.question.interview.terms) + '</div>'
         output += '<div class="form-actions"><button type="submit" class="btn btn-lg btn-primary" name="' + status.question.fields[0].saveas + '" value="True"> ' + word('Continue') + '</button></div>'
         output += question_name_tag(status.question)
         output += '</fieldset></form>'
     elif status.question.question_type == "multiple_choice":
         output += '<form id="daform" method="POST"><fieldset>'
-        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True) + '<div style="clear:both"></div></h3></div>'
+        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, terms=status.question.interview.terms) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
-            output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
+            output += '<div>' + markdown_to_html(status.subquestionText, terms=status.question.interview.terms) + '</div>'
         output += '<div id="errorcontainer" style="display:none"></div>'
         validation_rules['errorClass'] = "alert alert-error"
         validation_rules['errorLabelContainer'] = "#errorcontainer"
@@ -225,9 +225,9 @@ def as_html(status, validation_rules, debug):
         output += '</fieldset></form>'
     else:
         output += '<form id="daform" class="form-horizontal" method="POST"><fieldset>'
-        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True) + '<div style="clear:both"></div></h3></div>'
+        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, terms=status.question.interview.terms) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
-            output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
+            output += '<div>' + markdown_to_html(status.subquestionText, terms=status.question.interview.terms) + '</div>'
         output += '<div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button></div>'
         output += question_name_tag(status.question)
         output += '</fieldset></form>'
@@ -296,7 +296,7 @@ def as_html(status, validation_rules, debug):
     for help_section in status.helpText:
         if help_section['heading'] is not None:
             output += '<div class="page-header"><h3>' + help_section['heading'] + '</h3></div>'
-        output += markdown_to_html(help_section['content'])
+        output += markdown_to_html(help_section['content'], terms=status.question.interview.terms)
     output += '</section>'
     return output
 

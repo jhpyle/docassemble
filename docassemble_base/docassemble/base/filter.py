@@ -12,6 +12,10 @@ import PIL
 
 DEFAULT_PAGE_WIDTH = '6.5in'
 
+term_start = re.compile(r'\[\[')
+term_match = re.compile(r'\[\[([^\]]*)\]\]')
+noquote_match = re.compile(r'"')
+
 def set_default_page_width(width):
     global DEFAULT_PAGE_WIDTH
     DEFAULT_PAGE_WIDTH = str(width)
@@ -293,7 +297,12 @@ def rtf_caption_table(match):
     table_text = re.sub(r'\\rtlch\\fcs1 \\af0 \\ltrch\\fcs0', r'\\rtlch\\fcs1 \\af0 \\ltrch\\fcs0 \\sl240 \\slmult1', table_text)
     return table_text
 
-def markdown_to_html(a, trim=False, pclass=None, interview_status=None, use_pandoc=False):
+def markdown_to_html(a, trim=False, pclass=None, interview_status=None, use_pandoc=False, terms=None):
+    if terms is not None and type(terms) is dict and len(terms) > 0:
+        for term in terms:
+            #logmessage("Searching for term " + term + "\n")
+            a = terms[term]['re'].sub(r'[[\1]]', a)
+            #logmessage("string is now " + str(a) + "\n")
     a = docassemble.base.filter.html_filter(unicode(a))
     if use_pandoc:
         converter = Pandoc()
@@ -304,11 +313,9 @@ def markdown_to_html(a, trim=False, pclass=None, interview_status=None, use_pand
     else:
         result = markdown.markdown(a, extensions=[SmartypantsExt(configs=dict())], output_format='html5')
     result = re.sub('<a href', '<a target="_blank" href', result)
-    if re.search(r'\[\[', result):
-        if interview_status is None:
-            result = re.sub(r'\[\[([^\]]*)\]\]', r'\1', result)
-        else:
-            result = re.sub(r'\[\[([^\]]*)\]\]', (lambda x: add_terms(x.group[1], interview_status)), result)
+    if terms is not None and term_start.search(result):
+        logmessage("Found a term\n")
+        result = term_match.sub((lambda x: add_terms(x.group(1), terms)), result)
     if trim:
         return(result[3:-4])
     else:
@@ -316,5 +323,15 @@ def markdown_to_html(a, trim=False, pclass=None, interview_status=None, use_pand
             result = re.sub('<p>', '<p class="' + pclass + '">', result)
         return(result)
 
-def add_terms(termname, interview_status):
-    return('<a onclick="">' + str(termname) + '</a>')
+def add_terms(termname, terms):
+    logmessage("add terms with " + termname + "\n")
+    lower_termname = termname.lower()
+    if lower_termname in terms:
+        # title="' + noquote(termname) + '"
+        return('<a style="cursor:pointer;" data-toggle="popover" data-content="' + noquote(terms[lower_termname]['definition']) + '">' + str(termname) + '</a>')
+    else:
+        logmessage(lower_termname + " is not in terms dictionary\n")
+        return termname
+
+def noquote(string):
+    return noquote_match.sub('\\\"', string)

@@ -226,6 +226,8 @@ class Field:
             self.required = True
 
 class Question:
+    def idebug(self, data):
+        return "\nIn file" + str(self.from_path) + " from package " + str(self.package) + ":\n" + yaml.dump(data)
     def __init__(self, data, caller, **kwargs):
         should_append = True
         if 'register_target' in kwargs:
@@ -259,7 +261,7 @@ class Question:
             return
         if 'objects' in data:
             if type(data['objects']) is not list:
-                raise DAError("Unknown data type in objects")
+                raise DAError("An objects section must be organized as a list." + self.idebug(data))
             self.question_type = 'objects'
             self.objects = data['objects']
             for item in data['objects']:
@@ -271,19 +273,19 @@ class Question:
                     self.fields.append(Field({'saveas': item, 'type': 'object', 'objecttype': data['objects'][key]}))
                     self.fields_used.add(item)
                 else:
-                    raise DAError("Unknown data type within objects")
+                    raise DAError("An objects section cannot contain a nested list." + self.idebug(data))
         if 'id' in data:
             self.id = data['id']
         if 'image sets' in data:
             should_append = False
             if type(data['image sets']) is not dict:
-                raise DAError("An 'image sets' section needs to be a dictionary, not a list")
+                raise DAError("An 'image sets' section needs to be a dictionary, not a list." + self.idebug(data))
             for setname, image_set in data['image sets'].iteritems():
                 if type(image_set) is not dict:
-                    raise DAError("Each item in an 'image sets' section needs to be a dictionary, not a list.  Expected dictionary keys are 'attribution' and 'images.'")
+                    raise DAError("Each item in an 'image sets' section needs to be a dictionary, not a list.  Each dictionary item should have an 'images' definition (which can be a dictionary or list) and an optional 'attribution' definition (which must be text)." + self.idebug(data))
                 if 'attribution' in image_set:
                     if type(image_set['attribution']) in [dict, list]:
-                        raise DAError("Attribution in an 'image set' cannot be a dictionary or a list.")
+                        raise DAError("An attribution in an 'image set' section cannot be a dictionary or a list." + self.idebug(data))
                     attribution = image_set['attribution']
                 else:
                     attribution = None
@@ -293,7 +295,7 @@ class Question:
                     elif type(image_set['images']) is dict:
                         image_list = [image_set['images']]
                     else:
-                        raise DAError("The 'images' in the 'image set' was not a dictionary or a list")
+                        raise DAError("An 'images' definition in an 'image set' item must be a dictionary or a list." + self.idebug(data))
                     for image in image_list:
                         if type(image) is not dict:
                             the_image = {str(image): str(image)}
@@ -303,22 +305,24 @@ class Question:
                             self.interview.images[key] = PackageImage(filename=value, attribution=attribution, setname=setname, package=self.package)
         if 'interview help' in data:
             should_append = False
-            if type(data['interview help']) is not dict:
-                raise DAError("Unknown data type within help")
+            if type(data['interview help']) is list:
+                raise DAError("An interview help section must not be in the form of a list." + self.idebug(data))
+            elif type(data['interview help']) is not dict:
+                data['interview help'] = {'content': str(data['interview help'])}
             if 'heading' in data['interview help']:
                 if type(data['interview help']['heading']) not in [dict, list]:
                     help_heading = TextObject(data['interview help']['heading'])
                 else:
-                    raise DAError("Unknown data type within help heading")
+                    raise DAError("A heading within an interview help section must be text, not a list or a dictionary." + self.idebug(data))
             else:
                 help_heading = None
             if 'content' in data['interview help']:
                 if type(data['interview help']['content']) not in [dict, list]:
                     help_content = TextObject(data['interview help']['content'])
                 else:
-                    raise DAError("Unknown data type within help content")
+                    raise DAError("Help content must be text, not a list or a dictionary." + self.idebug(data))
             else:
-                raise DAError("No content within help")
+                raise DAError("No content section was found in an interview help section." + self.idebug(data))
             self.interview.helptext.append({'content': help_content, 'heading': help_heading})
         if 'generic object' in data:
             self.is_generic = True
@@ -336,33 +340,49 @@ class Question:
                 data['metadata']['origin_path'] = self.from_path
                 self.interview.metadata.append(data['metadata'])
             else:
-                raise DAError("Unknown data type in metadata")
+                raise DAError("A metadata section must be organized as a dictionary." + self.idebug(data))
         if 'modules' in data:
             if type(data['modules']) is list:
                 self.question_type = 'modules'
                 self.module_list = data['modules']
             else:
-                raise DAError("Unknown data type in modules")
+                raise DAError("A modules section must be organized as a list." + self.idebug(data))
         if 'imports' in data:
             if type(data['imports']) is list:
                 self.question_type = 'imports'
                 self.module_list = data['imports']
             else:
-                raise DAError("Unknown data type in imports")
+                raise DAError("An imports section must be organized as a list." + self.idebug(data))
+        if 'terms' in data:
+            should_append = False
+            if type(data['terms']) is list:
+                for termitem in data['terms']:
+                    if type(termitem) is dict:
+                        for term in termitem:
+                            lower_term = term.lower()
+                            self.interview.terms[lower_term] = {'definition': termitem[term], 're': re.compile(r"(?i)\b(%s)\b" % lower_term, re.IGNORECASE)}
+                    else:
+                        raise DAError("A terms section organized as a list must be a list of dictionary items." + self.idebug(data))
+            elif type(data['terms']) is dict:
+                for term in data['terms']:
+                    lower_term = term.lower()
+                    self.interview.terms[lower_term] = {'definition': data['terms'][term], 're': re.compile(r"(?i)\b(%s)\b" % lower_term, re.IGNORECASE)}
+            else:
+                raise DAError("A terms section must be organized as a dictionary or a list." + self.idebug(data))
         if 'include' in data:
             should_append = False
             if type(data['include']) is list:
                 for questionPath in data['include']:
                     self.interview.read_from(interview_source_from_string(questionPath, context_interview=self.interview))
             else:
-                raise DAError("Unknown data type in include")
+                raise DAError("An include section must be organized as a list." + self.idebug(data))
         if 'if' in data:
             if type(data['if']) == str:
                 self.condition = [data['if']]
             elif type(data['if']) == list:
                 self.condition = data['if']
             else:
-                raise DAError("Unknown data type in if statement")
+                raise DAError("An if statement must either be text or a list." + self.idebug(data))
         else:
             self.condition = []
         if 'require' in data:
@@ -377,11 +397,11 @@ class Question:
                     if type(data['orelse']) is dict:
                         self.or_else_question = Question(data['orelse'], self.interview, register_target=register_target, path=self.from_path, package=self.package)
                     else:
-                        raise DAError("Unknown data type in orelse")
+                        raise DAError("The orelse part of a require section must be organized as a dictionary." + self.idebug(data))
                 else:
-                    raise DAError("Require question lacks an orelse")
+                    raise DAError("A require section must have an orelse part." + self.idebug(data))
             else:
-                raise DAError("Unknown data type in require")
+                raise DAError("A require section must be organized as a list." + self.idebug(data))
         if 'attachment' in data:
             self.attachments = self.process_attachment_list(data['attachment'])
         elif 'attachments' in data:
@@ -393,7 +413,7 @@ class Question:
             elif type(data['role']) is str:
                 self.role.add(data['role'])
             else:
-                raise DAError("Unknown data type in role")
+                raise DAError("A role section must be text or a list." + self.idebug(data))
         if 'language' in data:
             self.language = data['language']
         if 'progress' in data:
@@ -443,7 +463,7 @@ class Question:
                 for key in data['sets']:
                     self.fields_used.add(key)
             else:
-                raise DAError("Unknown data type in sets: " + str(data))
+                raise DAError("A sets phrase must be text or a list." + self.idebug(data))
         if 'choices' in data or 'buttons' in data:
             if 'field' in data:
                 uses_field = True
@@ -479,7 +499,7 @@ class Question:
             elif type(data['need']) == list:
                 need_list = data['need']
             else:
-                raise DAError("Unknown data type in need code: " + str(data))
+                raise DAError("A need phrase must be text or a list." + self.idebug(data))
             try:
                 self.need = list(map((lambda x: compile(x, '', 'exec')), need_list))
             except:
@@ -487,9 +507,9 @@ class Question:
                 raise
         if 'template' in data and 'content' in data:
             if type(data['template']) in (list, dict):
-                raise DAError("Unknown data type for template in code: " + str(data))
+                raise DAError("A template must designate a single variable expressed as text." + self.idebug(data))
             if type(data['content']) in (list, dict):
-                raise DAError("Unknown data type for content in code: " + str(data))
+                raise DAError("The content of a template must be expressed as text." + self.idebug(data))
             self.fields_used.add(data['template'])
             field_data = {'saveas': data['template']}
             self.fields.append(Field(field_data))
@@ -506,11 +526,11 @@ class Question:
                     raise
                 find_fields_in(data['code'], self.fields_used, self.names_used)
             else:
-                raise DAError("Unknown data type in code: " + str(data))
+                raise DAError("A code section must be text, not a list or a dictionary." + self.idebug(data))
         if 'fields' in data:
             self.question_type = 'fields'
             if type(data['fields']) is not list:
-                raise DAError("Unknown data type in fields:" + str(type(data['fields'])) + "\n" + str(data['fields']))
+                raise DAError("The fields must be written in the form of a list." + self.idebug(data))
             else:
                 for field in data['fields']:
                     if type(field) is dict:
@@ -538,12 +558,12 @@ class Question:
                             self.fields.append(Field(field_info))
                             self.fields_used.add(field_info['saveas'])
                         else:
-                            raise DAError("fields without value for saving:\n" + str(data))
+                            raise DAError("A field was listed without indicating a label or a variable name." + self.idebug(data))
                     else:
-                        raise DAError("Unknown data type within fields")
+                        raise DAError("Each individual field in a list of fields must be expressed as a dictionary item, e.g., ' - Fruit: user.favorite_fruit'." + self.idebug(data))
         if should_append:
             if not hasattr(self, 'question_type'):
-                raise DAError("Question has no question_type: " + str(data))
+                raise DAError("No question type could be determined for this section." + self.idebug(data))
             if main_list:
                 self.interview.questions_list.append(self)
             self.number = len(self.interview.questions_list) - 1
@@ -771,6 +791,7 @@ class Interview:
         self.images = dict()
         self.metadata = list()
         self.helptext = list()
+        self.terms = dict()
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
     def read_from(self, source):
