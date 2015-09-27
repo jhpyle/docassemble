@@ -782,7 +782,9 @@ def index():
         #logmessage("Updating attachment info\n")
         update_attachment_info(user_code, user_dict, interview_status)
     if interview_status.question.question_type == "restart":
+        url_args = user_dict['url_args']
         user_dict = initial_dict.copy()
+        user_dict['url_args'] = url_args
         interview_status = docassemble.base.parse.InterviewStatus()
         reset_user_dict(user_code, user_dict, yaml_filename)
         steps = 0
