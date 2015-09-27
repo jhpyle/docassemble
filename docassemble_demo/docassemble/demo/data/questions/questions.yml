@@ -89,7 +89,6 @@ code: |
 mandatory: True
 code: |
   if user_understands_no_attorney_client_relationship == "understands":
-    need(foozball)
     need(user_done)
   else:
     need(user_kicked_out)

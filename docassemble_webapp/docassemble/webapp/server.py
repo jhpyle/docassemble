@@ -721,6 +721,8 @@ def index():
     if USE_PROGRESS_BAR and interview_status.question.progress is not None and interview_status.question.progress > user_dict['progress']:
         user_dict['progress'] = interview_status.question.progress
     if interview_status.question.question_type == "exit":
+        user_dict = initial_dict.copy()
+        reset_user_dict(user_code, user_dict, yaml_filename)
         return redirect(exit_page)
     save_user_dict(user_code, user_dict, yaml_filename, changed=changed)
     if interview_status.question.question_type == "signature":
