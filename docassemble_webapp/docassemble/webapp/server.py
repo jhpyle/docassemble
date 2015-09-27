@@ -15,6 +15,7 @@ import traceback
 from docassemble.base.error import DAError
 from docassemble.base.util import pickleable_objects
 from docassemble.base.util import word
+from docassemble.base.util import comma_and_list
 from docassemble.base.logger import logmessage
 import mimetypes
 import logging
@@ -226,7 +227,7 @@ def get_info_from_file_reference(file_reference):
         return(get_info_from_file_number(file_reference))
     result = dict()
     result['path'] = docassemble.base.util.static_filename_path(file_reference)
-    sys.stderr.write("path is " + str(result['path']) + "\n")
+    #sys.stderr.write("path is " + str(result['path']) + "\n")
     if result['path'] is not None and os.path.isfile(result['path']):
         result['filename'] = os.path.basename(result['path'])
         result['extension'], result['mimetype'] = get_ext_and_mimetype(result['path'])
@@ -285,7 +286,7 @@ app.secret_key = daconfig['secretkey']
 
 def logout():
     user_manager =  current_app.user_manager
-    logmessage("Entering custom logout\n")
+    #logmessage("Entering custom logout\n")
 
     # Send user_logged_out signal
     flask.ext.user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
@@ -360,19 +361,19 @@ class GoogleSignIn(OAuthSignIn):
             base_url=None
         )
     def authorize(self):
-        logmessage("Entering authorize\n")
+        #logmessage("Entering authorize\n")
         result = urlparse.parse_qs(request.data)
         #logmessage("authorize: data is " + str() + "\n")
         session['google_id'] = result.get('id', [None])[0]
         session['google_email'] = result.get('email', [None])[0]
-        logmessage("authorize: id is " + str(result.get('id', None)) + "\n")
+        #logmessage("authorize: id is " + str(result.get('id', None)) + "\n")
         response = make_response(json.dumps('Successfully connected user.', 200))
         response.headers['Content-Type'] = 'application/json'
-        logmessage("authorize: got to end\n")
+        #logmessage("authorize: got to end\n")
         return response
     
     def callback(self):
-        logmessage(str(session.get('credentials')) + "\n")
+        #logmessage(str(session.get('credentials')) + "\n")
         email = session.get('google_email')
         return (
             'google$' + str(session.get('google_id')),
@@ -543,10 +544,10 @@ def index():
         need_to_reset = True
     if session_id:
         user_code = session_id
-        logmessage("Found user code " + session_id + "\n")
+        #logmessage("Found user code " + session_id + "\n")
         steps, user_dict = fetch_user_dict(user_code, yaml_filename)
         if user_dict is None:
-            logmessage("No dictionary for that code\n")
+            #logmessage("No dictionary for that code\n")
             del user_code
             del user_dict
         #user_dict['appmail'] = mail
@@ -569,19 +570,85 @@ def index():
         save_user_dict(user_code, user_dict, yaml_filename)
         return redirect(url_for('index'))
     post_data = request.form.copy()
-    if 'back_one' in post_data and steps > 1:
-        steps, user_dict = fetch_previous_user_dict(user_code, yaml_filename)
-        logmessage("Went back\n")
-    elif 'filename' in request.args:
-        logmessage("Got a GET statement with filename!\n")
-        the_user_dict = get_attachment_info(user_code, request.args.get('question'), request.args.get('filename'))
+    if 'email_attachments' in post_data and 'attachment_email_address' in post_data and 'question_number' in post_data:
+        success = False
+        question_number = post_data['question_number']
+        attachment_email_address = post_data['attachment_email_address']
+        if 'attachment_include_rtf' in post_data:
+            if post_data['attachment_include_rtf'] == 'True':
+                include_rtfs = True
+            else:
+                include_rtfs = False
+            del post_data['attachment_include_rtf']
+        else:
+            include_rtfs = False
+        del post_data['question_number']
+        del post_data['email_attachments']
+        del post_data['attachment_email_address']
+        logmessage("Got e-mail request for " + str(question_number) + " with e-mail " + str(attachment_email_address) + " and rtf inclusion of " + str(include_rtfs) + " and using yaml file " + yaml_filename + "\n")
+        the_user_dict = get_attachment_info(user_code, question_number, yaml_filename)
         if the_user_dict is not None:
             logmessage("the_user_dict is not none!\n")
+            interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+            interview_status = docassemble.base.parse.InterviewStatus()
+            interview.assemble(the_user_dict, interview_status)
+            if len(interview_status.attachments) > 0:
+                #logmessage("there are attachments!\n")
+                attached_file_count = 0
+                attachment_info = list()
+                for the_attachment in interview_status.attachments:
+                    file_formats = list()
+                    if 'pdf' in the_attachment['valid_formats'] or '*' in the_attachment['valid_formats']:
+                        file_formats.append('pdf')
+                    if include_rtfs and ('rtf' in the_attachment['valid_formats'] or '*' in the_attachment['valid_formats']):
+                        file_formats.append('rtf')
+                    for the_format in file_formats:
+                        the_filename = the_attachment['file'][the_format]
+                        if the_format == "pdf":
+                            mime_type = 'application/pdf'
+                        elif the_format == "rtf":
+                            mime_type = 'application/rtf'
+                        attachment_info.append({'filename': str(the_attachment['filename']) + '.' + str(the_format), 'path': str(the_filename), 'mimetype': str(mime_type), 'attachment': the_attachment})
+                        logmessage("Need to attach to the e-mail a file called " + str(the_attachment['filename']) + '.' + str(the_format) + ", which is located on the server at " + str(the_filename) + ", with mime type " + str(mime_type) + "\n")
+                        attached_file_count += 1
+                if attached_file_count > 0:
+                    doc_names = list()
+                    for attach_info in attachment_info:
+                        if attach_info['attachment']['name'] not in doc_names:
+                            doc_names.append(attach_info['attachment']['name'])
+                    subject = comma_and_list(doc_names)
+                    if len(doc_names) > 1:
+                        body = "Your " + subject + " are attached."
+                    else:
+                        body = "Your " + subject + " is attached."
+                    html = "<p>" + body + "</p>"
+                    logmessage("Need to send an e-mail with subject " + subject + " to " + str(attachment_email_address) + " with " + str(attached_file_count) + " attachment(s)\n")
+                    msg = Message(subject, recipients=attachment_email_address, body=body, html=html)
+                    for attach_info in attachment_info:
+                        with open(attach_info['path'], 'r') as fp:
+                            msg.attach(attach_info['filename'], attach_info['mimetype'], fp.read())
+                    try:
+                        mail.send(msg)
+                        success = True
+                    except Exception as errmess:
+                        success = False
+        if success:
+            flash(word("Your documents were e-mailed to") + " " + str(attachment_email_address) + ".", 'info')
+        else:
+            flash(word("Unable to e-mail your documents to") + " " + str(attachment_email_address) + ".", 'error')
+    if 'back_one' in post_data and steps > 1:
+        steps, user_dict = fetch_previous_user_dict(user_code, yaml_filename)
+        #logmessage("Went back\n")
+    elif 'filename' in request.args:
+        #logmessage("Got a GET statement with filename!\n")
+        the_user_dict = get_attachment_info(user_code, request.args.get('question'), request.args.get('filename'))
+        if the_user_dict is not None:
+            #logmessage("the_user_dict is not none!\n")
             interview = docassemble.base.interview_cache.get_interview(request.args.get('filename'))
             interview_status = docassemble.base.parse.InterviewStatus()
             interview.assemble(the_user_dict, interview_status)
             if len(interview_status.attachments) > 0:
-                logmessage("there are attachments!\n")
+                #logmessage("there are attachments!\n")
                 the_attachment = interview_status.attachments[int(request.args.get('index'))]
                 the_filename = the_attachment['file'][request.args.get('format')]
                 the_format = request.args.get('format')
@@ -612,7 +679,7 @@ def index():
         file_field = post_data['saveas'];
         if 'success' in post_data and post_data['success']:
             theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['theImage']).group(1) + '==')
-            sys.stderr.write("Got theImage and it is " + str(len(theImage)) + " bytes long\n")
+            #sys.stderr.write("Got theImage and it is " + str(len(theImage)) + " bytes long\n")
             filename = secure_filename('canvas.png')
             file_number = get_new_file_number(session['uid'], filename)
             extension, mimetype = get_ext_and_mimetype(filename)
@@ -620,29 +687,29 @@ def index():
             with open(path, 'w') as ifile:
                 ifile.write(theImage)
             os.symlink(path, path + '.' + extension)
-            sys.stderr.write("Saved theImage\n")
+            #sys.stderr.write("Saved theImage\n")
             string = file_field + " = DAFile('" + file_field + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
         else:
             string = file_field + " = DAFile('" + file_field + "')"
-        sys.stderr.write(string + "\n")
+        #sys.stderr.write(string + "\n")
         try:
             exec(string, user_dict)
             changed = True
             steps += 1
         except Exception as errMess:
-            sys.stderr.write("Error: " + str(errMess) + "\n")
+            #sys.stderr.write("Error: " + str(errMess) + "\n")
             flash_content += "<p>Error: " + str(errMess) + "</p>"
     if 'files' in post_data:
-        logmessage("There are files\n")
+        #logmessage("There are files\n")
         interview.assemble(user_dict, interview_status)
         file_fields = post_data['files'].split(",")
         for file_field in file_fields:
-            logmessage("There is a file_field\n")
+            #logmessage("There is a file_field\n")
             if file_field in request.files:
-                logmessage("There is a file_field in request.files\n")
+                #logmessage("There is a file_field in request.files\n")
                 the_file = request.files[file_field]
                 if the_file:
-                    logmessage("There is a file_field in request.files and it is there\n")
+                    #logmessage("There is a file_field in request.files and it is there\n")
                     filename = secure_filename(the_file.filename)
                     file_number = get_new_file_number(session['uid'], filename)
                     extension, mimetype = get_ext_and_mimetype(filename)
@@ -668,7 +735,7 @@ def index():
                         flash_content += "<p>Error: Invalid character in file_field: " + file_field + " </p>"
                         break
                     string = file_field + " = DAFile('" + file_field + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
-                    sys.stderr.write(string + "\n")
+                    #sys.stderr.write(string + "\n")
                     try:
                         exec(string, user_dict)
                         changed = True
@@ -685,7 +752,7 @@ def index():
     for key in post_data:
         if key == 'checkboxes' or key == 'back_one' or key == 'files' or key == 'questionname' or key == 'theImage' or key == 'saveas' or key == 'success':
             continue
-        logmessage("Got a key: " + key + "\n")
+        #logmessage("Got a key: " + key + "\n")
         data = post_data[key]
         if match_invalid.search(key):
             flash_content += "<p>Error: Invalid character in key: " + key + " </p>"
@@ -711,7 +778,7 @@ def index():
         user_dict['answered'].add(post_data['questionname'])
     interview.assemble(user_dict, interview_status)
     if len(interview_status.attachments) > 0:
-        logmessage("Updating attachment info\n")
+        #logmessage("Updating attachment info\n")
         update_attachment_info(user_code, user_dict, interview_status)
     if interview_status.question.question_type == "restart":
         user_dict = initial_dict.copy()
@@ -735,10 +802,9 @@ def index():
         output = standard_start() + make_navbar(daconfig['brandname'], steps) + flash_content + '<div class="container"><div class="tab-content">'
         if USE_PROGRESS_BAR:
             output += progress_bar(user_dict['progress'])
-        validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'help-inline'}
-        output += as_html(interview_status, validation_rules, DEBUG)
-        extra_scripts = '<script>$("#daform").validate(' + json.dumps(validation_rules) + ');</script>'
-        output += """</div></div>""" + scripts + extra_scripts + """</body></html>"""
+        extra_scripts = list()
+        output += as_html(interview_status, extra_scripts, DEBUG)
+        output += """</div></div>""" + scripts + "".join(extra_scripts) + """</body></html>"""
     response = make_response(output.encode('utf8'), status)
     response.headers['Content-type'] = 'text/html; charset=utf-8'
     return response
@@ -757,7 +823,7 @@ def get_unique_name(filename):
         cur = conn.cursor()
         cur.execute("SELECT key from userdict where key=%s", [newname])
         if cur.fetchone():
-            logmessage("Key already exists in database")
+            #logmessage("Key already exists in database")
             continue
         cur.execute("INSERT INTO userdict (key, filename, dictionary) values (%s, %s, %s);", [newname, filename, pickle.dumps(initial_dict.copy())])
         conn.commit()
@@ -782,14 +848,14 @@ def get_attachment_info(the_user_code, question_number, filename):
     return the_user_dict
 
 def update_attachment_info(the_user_code, the_user_dict, the_interview_status):
-    logmessage("Got to update_attachment_info\n")
+    #logmessage("Got to update_attachment_info\n")
     cur = conn.cursor()
     cur.execute("delete from attachments where key=%s and question=%s and filename=%s", [the_user_code, the_interview_status.question.number, the_interview_status.question.interview.source.path])
     conn.commit()
     cur.execute("insert into attachments (key, dictionary, question, filename) values (%s, %s, %s, %s)", [the_user_code, pickle.dumps(pickleable_objects(the_user_dict)), the_interview_status.question.number, the_interview_status.question.interview.source.path])
     conn.commit()
-    logmessage("Delete from attachments where key = " + the_user_code + " and question is " + str(the_interview_status.question.number) + " and filename is " + the_interview_status.question.interview.source.path + "\n")
-    logmessage("Insert into attachments (key, dictionary, question, filename) values (" + the_user_code + ", saved_user_dict, " + str(the_interview_status.question.number) + ", " + the_interview_status.question.interview.source.path + ")\n")
+    #logmessage("Delete from attachments where key = " + the_user_code + " and question is " + str(the_interview_status.question.number) + " and filename is " + the_interview_status.question.interview.source.path + "\n")
+    #logmessage("Insert into attachments (key, dictionary, question, filename) values (" + the_user_code + ", saved_user_dict, " + str(the_interview_status.question.number) + ", " + the_interview_status.question.interview.source.path + ")\n")
     return
 
 def fetch_user_dict(user_code, filename):
@@ -916,7 +982,7 @@ def reset_session(yaml_filename):
     session['i'] = yaml_filename
     session['uid'] = get_unique_name(yaml_filename)
     user_code = session['uid']
-    logmessage("Saving a dictionary for code " + user_code + "\n")
+    #logmessage("Saving a dictionary for code " + user_code + "\n")
     user_dict = initial_dict.copy()
     return(user_code, user_dict)
 
@@ -950,14 +1016,14 @@ def serve_uploaded_page(number, page):
 @app.route('/uploadsignature', methods=['POST'])
 def upload_draw():
     post_data = request.form.copy()
-    sys.stderr.write("Got to upload_draw\n")
+    #sys.stderr.write("Got to upload_draw\n")
     if 'success' in post_data and post_data['success'] and 'theImage' in post_data:
         theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['theImage']).group(1) + '==')
-        sys.stderr.write("Got theImage and it is " + str(len(theImage)) + " bytes long\n")
+        #sys.stderr.write("Got theImage and it is " + str(len(theImage)) + " bytes long\n")
         with open('/tmp/testme.png', 'w') as ifile:
             ifile.write(theImage)
-        sys.stderr.write("Saved theImage\n")
-    sys.stderr.write("Done with upload_draw\n")
+        #sys.stderr.write("Saved theImage\n")
+    #sys.stderr.write("Done with upload_draw\n")
     return redirect(url_for('index'))
         
 @app.route('/testsignature', methods=['GET'])
@@ -983,9 +1049,9 @@ def serve_uploaded_pagescreen(number, page):
 
 def user_can_edit_package(pkgname=None, giturl=None):
     cur = conn.cursor()
-    sys.stderr.write("Got to user_can_edit_package\n")
+    #sys.stderr.write("Got to user_can_edit_package\n")
     if pkgname is not None:
-        sys.stderr.write("Testing for:" + pkgname + ":\n")
+        #sys.stderr.write("Testing for:" + pkgname + ":\n")
         cur.execute("select a.id, b.user_id, b.authtype from package as a left outer join package_auth as b on (a.id=b.package_id) where a.name=%s", [pkgname])
         if cur.rowcount <= 0:
             return(True)

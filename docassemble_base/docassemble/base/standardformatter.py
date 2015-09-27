@@ -5,7 +5,12 @@ from docassemble.base.parse import Question
 import urllib
 import sys
 import os
+import re
 import mimetypes
+import json
+
+noquote_match = re.compile(r'"')
+
 def question_name_tag(question):
     if question.name:
         return('<input type="hidden" name="questionname" value="' + question.name + '">')
@@ -40,9 +45,10 @@ def signature_html(status, debug):
     output += '</form>'
     return output
 
-def as_html(status, validation_rules, debug):
+def as_html(status, extra_scripts, debug):
     decorations = list()
     attributions = set()
+    validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'help-inline'}
     if status.decorations is not None:
         #sys.stderr.write("yoo1\n")
         for decoration in status.decorations:
@@ -96,6 +102,12 @@ def as_html(status, validation_rules, debug):
         checkboxes = list()
         files = list()
         for field in status.question.fields:
+            if field.saveas in status.helptexts:
+                helptext_start = '<a style="cursor:pointer;color:#408E30" data-container="body" data-toggle="popover" data-placement="bottom" data-content="' + noquote(unicode(status.helptexts[field.saveas])) + '">' 
+                helptext_end = '</a>'
+            else:
+                helptext_start = ''
+                helptext_end = ''
             if field.required:
                 validation_rules['rules'][field.saveas] = {'required': True}
                 validation_rules['messages'][field.saveas] = {'required': word("This field is required.")}
@@ -106,6 +118,9 @@ def as_html(status, validation_rules, debug):
                 validation_rules['messages'][field.saveas]['date'] = word("You need to enter a valid date.")
             if field.datatype == 'email':
                 validation_rules['rules'][field.saveas]['email'] = True
+                if field.required:
+                    validation_rules['rules'][field.saveas]['notEmpty'] = True
+                    validation_rules['messages'][field.saveas]['notEmpty'] = word("This field is required.")
                 validation_rules['messages'][field.saveas]['email'] = word("You need to enter a complete e-mail address.")
             if field.datatype == 'number' or field.datatype == 'currency':
                 validation_rules['rules'][field.saveas]['number'] = True
@@ -117,7 +132,7 @@ def as_html(status, validation_rules, debug):
                 checkboxes.append(field.saveas)
                 fieldlist.append('<div class="form-group"><div class="col-sm-12"><div class="checkbox"><label>' + input_for(status, field) + '</label></div></div></div>')
             else:
-                fieldlist.append('<div class="form-group"><label for="' + field.saveas + '" class="control-label col-sm-4">' + field.label + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>')
+                fieldlist.append('<div class="form-group"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + field.label + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>')
         output += '<form id="daform" class="form-horizontal" method="POST"' + enctype_string + '><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, terms=status.question.interview.terms) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
@@ -238,7 +253,10 @@ def as_html(status, validation_rules, debug):
         else:
             output += '<div class="alert alert-success" role="alert">' + word('attachment_message_singular') + '</div>'
         attachment_index = 0
+        rtfs_included = False
         for attachment in status.attachments:
+            if 'rtf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
+                rtfs_included = True
             if debug:
                 show_markdown = True
             else:
@@ -287,18 +305,54 @@ def as_html(status, validation_rules, debug):
                 output += '</div>'
             output += '</div></div>'
             attachment_index += 1
+        if len(status.attachments) > 1:
+            email_header = word("E-mail these documents to yourself")
+        else:
+            email_header = word("E-mail this document to yourself")
+        output += """
+<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="headingOne">
+      <h4 class="panel-title">
+        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+          """ + email_header + """
+        </a>
+      </h4>
+    </div>
+    <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+      <div class="panel-body">
+        <form id="emailform" class="form-horizontal" method="POST">
+          <fieldset>
+            <div class="form-group"><label for="attachment_email_address" class="control-label col-sm-4">""" + word('E-mail address') + """</label><div class="col-sm-8"><input class="form-control" type="email" name="attachment_email_address" id="attachment_email_address"></input></div></div>"""
+        if rtfs_included:
+            output += """
+            <div class="form-group"><label for="attachment_include_rtf" class="control-label col-sm-4">""" + '&nbsp;</label><div class="col-sm-8"><input type="checkbox" value="True" name="attachment_include_rtf" id="attachment_include_rtf"> ' + word('Include RTF files for editing') + '</div></div>'
+        output += """
+            <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Send') + '</button></div><input type="hidden" name="email_attachments" value="1"></input><input type="hidden" name="question_number" value="' + str(status.question.number) + '"></input>'
+        output += """
+          </fieldset>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>"""
+        extra_scripts.append("""<script>$("#emailform").validate(""" + json.dumps({'rules': {'attachment_email_address': {'notEmpty': True, 'required': True, 'email': True}}, 'messages': {'attachment_email_address': {'required': word("An e-mail address is required."), 'email': word("You need to enter a complete e-mail address.")}}, 'errorClass': 'help-inline'}) + """);</script>""")
     if len(attributions):
         output += '<br><br><br><br><br><br><br>'
     for attribution in sorted(attributions):
         output += '<div><small>' + markdown_to_html(attribution) + '</small></div>'
     output += '</section>'
-    output += '<section id="help" class="tab-pane">'
+    output += '<section id="help" class="tab-pane col-md-6">'
     for help_section in status.helpText:
         if help_section['heading'] is not None:
             output += '<div class="page-header"><h3>' + help_section['heading'] + '</h3></div>'
         output += markdown_to_html(help_section['content'], terms=status.question.interview.terms)
     output += '</section>'
+    extra_scripts.append('<script>$("#daform").validate(' + json.dumps(validation_rules) + ');</script>')
     return output
+
+def noquote(string):
+    return noquote_match.sub('\\\"', string)
 
 def input_for(status, field):
     output = ""

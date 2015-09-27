@@ -61,7 +61,7 @@ mail_variable = blank_mail_variable
 
 def set_mail_variable(func):
     global mail_variable
-    logmessage("set the mail variable to " + str(func) + "\n")
+    #logmessage("set the mail variable to " + str(func) + "\n")
     mail_variable = func
     return
 
@@ -72,7 +72,7 @@ file_finder = blank_file_finder
 
 def set_file_finder(func):
     global file_finder
-    logmessage("set the file finder to " + str(func) + "\n")
+    #logmessage("set the file finder to " + str(func) + "\n")
     file_finder = func
     return
 
@@ -174,12 +174,12 @@ def image_as_rtf(match):
     elif file_info['extension'] == 'pdf':
         output = ''
         if not width_supplied:
-            logmessage("Adding page break\n")
+            #logmessage("Adding page break\n")
             width = DEFAULT_PAGE_WIDTH
             output += '\\page '
-        logmessage("maxpage is " + str(int(file_info['pages'])) + "\n")
+        #logmessage("maxpage is " + str(int(file_info['pages'])) + "\n")
         for page in range(1, 1 + int(file_info['pages'])):
-            logmessage("Doing page " + str(page) + "\n")
+            #logmessage("Doing page " + str(page) + "\n")
             page_file = dict()
             page_file['extension'] = 'png'
             page_file['path'] = file_info['path'] + 'page-' + str(page)
@@ -187,11 +187,11 @@ def image_as_rtf(match):
             page_file['width'], page_file['height'] = im.size
             output += rtf_image(page_file, width)
             if not width_supplied:
-                logmessage("Adding page break\n")
+                #logmessage("Adding page break\n")
                 output += '\\page '
             else:
                 output += ' '
-        logmessage("Returning output\n")
+        #logmessage("Returning output\n")
         return(output)
     else:
         return('')
@@ -200,17 +200,17 @@ def rtf_image(file_info, width):
     pixels = pixels_in(width)
     if pixels > 0 and file_info['width'] > 0:
         scale = float(pixels)/float(file_info['width'])
-        logmessage("scale is " + str(scale) + "\n")
+        #logmessage("scale is " + str(scale) + "\n")
         if scale*float(file_info['height']) > float(MAX_HEIGHT_POINTS):
             scale = float(MAX_HEIGHT_POINTS)/float(file_info['height'])
-        logmessage("scale is " + str(scale) + "\n")
+        #logmessage("scale is " + str(scale) + "\n")
         if scale*float(file_info['width']) > float(MAX_WIDTH_POINTS):
             scale = float(MAX_WIDTH_POINTS)/float(file_info['width'])
-        logmessage("scale is " + str(scale) + "\n")
+        #logmessage("scale is " + str(scale) + "\n")
         #scale *= 100.0
-        logmessage("scale is " + str(scale) + "\n")
+        #logmessage("scale is " + str(scale) + "\n")
         #scale = int(scale)
-        logmessage("scale is " + str(scale) + "\n")
+        #logmessage("scale is " + str(scale) + "\n")
         wtwips = int(scale*float(file_info['width'])*20.0)
         htwips = int(scale*float(file_info['height'])*20.0)
         image = Image( file_info['path'] + '.' + file_info['extension'] )
@@ -227,10 +227,10 @@ def pixels_in(length):
     if m:
         value = float(m.group(1))
         unit = m.group(2)
-        logmessage("value is " + str(value) + " and unit is " + unit + "\n")
+        #logmessage("value is " + str(value) + " and unit is " + unit + "\n")
         if unit in unit_multipliers:
             size = float(unit_multipliers[unit]) * value
-            logmessage("size is " + str(size) + "\n")
+            #logmessage("size is " + str(size) + "\n")
             return(int(size))
     logmessage("Could not read " + str(length) + "\n")
     return(300)
@@ -314,7 +314,7 @@ def markdown_to_html(a, trim=False, pclass=None, interview_status=None, use_pand
         result = markdown.markdown(a, extensions=[SmartypantsExt(configs=dict())], output_format='html5')
     result = re.sub('<a href', '<a target="_blank" href', result)
     if terms is not None and term_start.search(result):
-        logmessage("Found a term\n")
+        #logmessage("Found a term\n")
         result = term_match.sub((lambda x: add_terms(x.group(1), terms)), result)
     if trim:
         return(result[3:-4])
@@ -324,13 +324,13 @@ def markdown_to_html(a, trim=False, pclass=None, interview_status=None, use_pand
         return(result)
 
 def add_terms(termname, terms):
-    logmessage("add terms with " + termname + "\n")
+    #logmessage("add terms with " + termname + "\n")
     lower_termname = termname.lower()
     if lower_termname in terms:
         # title="' + noquote(termname) + '"
-        return('<a style="cursor:pointer;" data-toggle="popover" data-content="' + noquote(terms[lower_termname]['definition']) + '">' + str(termname) + '</a>')
+        return('<a style="cursor:pointer;color:#408E30" data-toggle="popover" data-placement="bottom" data-content="' + noquote(terms[lower_termname]['definition']) + '">' + str(termname) + '</a>')
     else:
-        logmessage(lower_termname + " is not in terms dictionary\n")
+        #logmessage(lower_termname + " is not in terms dictionary\n")
         return termname
 
 def noquote(string):

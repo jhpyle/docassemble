@@ -36,7 +36,7 @@ save_numbered_file = blank_save_numbered_file
 
 def set_save_numbered_file(func):
     global save_numbered_file
-    logmessage("set the save_numbered_file function to " + str(func) + "\n")
+    #logmessage("set the save_numbered_file function to " + str(func) + "\n")
     save_numbered_file = func
     return
 
@@ -172,6 +172,7 @@ class InterviewStatus(object):
         self.selectcompute = question_result['selectcompute']
         self.defaults = question_result['defaults']
         self.hints = question_result['hints']
+        self.helptexts = question_result['helptexts']
     pass
 
 # def new_counter(initial_value=0):
@@ -210,6 +211,8 @@ class Field:
             self.default = data['default']
         if 'hint' in data:
             self.hint = data['hint']
+        if 'help' in data:
+            self.helptext = data['help']
         if 'selections' in data:
             self.selections = data['selections']
         if 'boolean' in data:
@@ -538,7 +541,7 @@ class Question:
                         for key in field:
                             if key == 'required':
                                 field_info['required'] = field[key]
-                            elif key == 'default' or key == 'hint':
+                            elif key == 'default' or key == 'hint' or key == 'help':
                                 if type(field[key]) is not dict and type(field[key]) is not list:
                                     field_info[key] = TextObject(unicode(field[key]))
                             elif key == 'datatype':
@@ -635,10 +638,10 @@ class Question:
     def ask(self, user_dict, the_x, the_i):
         if the_x != 'None':
             exec("x = " + the_x, user_dict)
-            logmessage("x is " + the_x + "\n")
+            #logmessage("x is " + the_x + "\n")
         if the_i != 'None':
             exec("i = " + the_i, user_dict)
-            logmessage("i is " + the_i + "\n")
+            #logmessage("i is " + the_i + "\n")
         if self.helptext is not None:
             help_text_list = [{'heading': None, 'content': self.helptext.text(user_dict)}]
         else:
@@ -669,6 +672,7 @@ class Question:
         selectcompute = dict()
         defaults = dict()
         hints = dict()
+        helptexts = dict()
         for field in self.fields:
             if hasattr(field, 'has_code') and field.has_code:
                 selections = list()
@@ -688,9 +692,11 @@ class Question:
                 except:
                     if hasattr(field, 'default'):
                         defaults[field.saveas] = field.default.text(user_dict)
+                if hasattr(field, 'helptext'):
+                    helptexts[field.saveas] = field.helptext.text(user_dict)
                 if hasattr(field, 'hint'):
                     hints[field.saveas] = field.hint.text(user_dict)
-        return({'type': 'question', 'question_text': self.content.text(user_dict), 'subquestion_text': subquestion, 'under_text': undertext, 'decorations': decorations, 'help_text': help_text_list, 'attachments': self.processed_attachments(user_dict, the_x=the_x, the_i=the_i), 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints})
+        return({'type': 'question', 'question_text': self.content.text(user_dict), 'subquestion_text': subquestion, 'under_text': undertext, 'decorations': decorations, 'help_text': help_text_list, 'attachments': self.processed_attachments(user_dict, the_x=the_x, the_i=the_i), 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts})
 
     def processed_attachments(self, user_dict, **kwargs):
         return(list(map((lambda x: make_attachment(x, user_dict, **kwargs)), self.attachments)))
@@ -752,7 +758,7 @@ class Question:
                 if type(target) is str:
                     pass
                 elif isinstance(target, Question):
-                    logmessage("Reassigning question\n")
+                    #logmessage("Reassigning question\n")
                     #self.mark_as_answered(user_dict)
                     return(target.follow_multiple_choice(user_dict))
         return(self)
@@ -769,9 +775,9 @@ def interview_source_from_string(path, **kwargs):
         new_source = context_interview.source.append(path)
         if new_source is not None:
             return new_source
-    sys.stderr.write("Trying to find it\n")
+    #sys.stderr.write("Trying to find it\n")
     for the_filename in [docassemble.base.util.package_question_filename(path), docassemble.base.util.standard_question_filename(path), docassemble.base.util.absolute_filename(path)]:
-        sys.stderr.write("Trying " + str(the_filename) + " with path " + str(path) + "\n")
+        #sys.stderr.write("Trying " + str(the_filename) + " with path " + str(path) + "\n")
         if the_filename is not None:
             new_source = InterviewSourceFile(filepath=the_filename, path=path)
             if new_source.update():
@@ -845,7 +851,7 @@ class Interview:
                     if question.name and question.name in user_dict['answered']:
                         continue
                     if question.question_type == 'objects':
-                        logmessage("Running objects\n")
+                        #logmessage("Running objects\n")
                         for keyvalue in question.objects:
                             for variable in keyvalue:
                                 object_type = keyvalue[variable]
@@ -868,9 +874,9 @@ class Interview:
                         if question.name:
                             user_dict['answered'].add(question.name)
                     if hasattr(question, 'content') and question.name and question.is_mandatory:
-                        sys.stderr.write("Asking mandatory question\n")
+                        #sys.stderr.write("Asking mandatory question\n")
                         interview_status.populate(question.ask(user_dict, 'None', 'None'))
-                        sys.stderr.write("Asked mandatory question\n")
+                        #sys.stderr.write("Asked mandatory question\n")
                         raise MandatoryQuestion()
             except NameError as errMess:
                 missingVariable = str(errMess).split("'")[1]
@@ -911,11 +917,11 @@ class Interview:
         if m:
             newMissingVariable = re.sub('\[[^\]+]\]', '[i]', missingVariable)
             totry.insert(0, {'real': missingVariable, 'vari': newMissingVariable})
-        logmessage("Length of totry is " + str(len(totry)) + "\n")
+        #logmessage("Length of totry is " + str(len(totry)) + "\n")
         for mv in totry:
             realMissingVariable = mv['real']
             missingVariable = mv['vari']
-            logmessage("Trying missingVariable " + missingVariable + "\n")
+            #logmessage("Trying missingVariable " + missingVariable + "\n")
             questions_to_try = list()
             if missingVariable in self.questions:
                 for the_question in self.questions[missingVariable]:
@@ -925,15 +931,16 @@ class Interview:
                 generic_needed = True;
             components = missingVariable.split(".")
             realComponents = realMissingVariable.split(".")
-            logmessage("Vari Components are " + str(components) + "\n")
-            logmessage("Real Components are " + str(realComponents) + "\n")
+            #logmessage("Vari Components are " + str(components) + "\n")
+            #logmessage("Real Components are " + str(realComponents) + "\n")
             n = len(components)
-            if n == 1:
-                if generic_needed:
-                    logmessage("There is no question for " + missingVariable + "\n")
-                else:
-                    logmessage("There are no generic options for " + missingVariable + "\n")                    
-            else:
+            #if n == 1:
+                # if generic_needed:
+                #     logmessage("There is no question for " + missingVariable + "\n")
+                # else:
+                #     logmessage("There are no generic options for " + missingVariable + "\n")
+            #else:
+            if n != 1:
                 found_x = 0;
                 for i in range(1, n):
                     if found_x:
@@ -953,27 +960,27 @@ class Interview:
                         mm = match_inside_brackets.findall(realVar)
                         if (mm):
                             if len(mm) > 1:
-                                logmessage("Variable " + var + " is no good because it has more than one iterator\n")
+                                #logmessage("Variable " + var + " is no good because it has more than one iterator\n")
                                 continue;
                             the_i_to_use = mm[0];
                         root = d['root']
                         root_for_object = d['root_for_object']
-                        logmessage("testing variable " + var + " and root " + root + " and root for object " + root_for_object + "\n")
+                        #logmessage("testing variable " + var + " and root " + root + " and root for object " + root_for_object + "\n")
                         try:
-                            logmessage("Looking for " + root_for_object + "\n")
+                            #logmessage("Looking for " + root_for_object + "\n")
                             root_evaluated = eval(root_for_object, user_dict)
-                            logmessage("Looking for type of root evaluated\n")
+                            #logmessage("Looking for type of root evaluated\n")
                             generic_object = type(root_evaluated).__name__
-                            logmessage("ok -4\n")
-                            logmessage("Generic object is " + generic_object + "\n")
-                            if generic_object in self.generic_questions:
-                                logmessage("ok1\n")
-                                if var in self.questions:
-                                    logmessage("ok2\n")
-                                    if var in self.generic_questions[generic_object]:
-                                        logmessage("ok3\n")
+                            #logmessage("ok -4\n")
+                            #logmessage("Generic object is " + generic_object + "\n")
+                            #if generic_object in self.generic_questions:
+                                #logmessage("ok1\n")
+                                #if var in self.questions:
+                                    #logmessage("ok2\n")
+                                    #if var in self.generic_questions[generic_object]:
+                                        #logmessage("ok3\n")
                             if generic_object in self.generic_questions and var in self.questions and var in self.generic_questions[generic_object]:
-                                logmessage("Got a hit with var " + var + "where realMissingVariable is " + realMissingVariable + "\n")
+                                #logmessage("Got a hit with var " + var + "where realMissingVariable is " + realMissingVariable + "\n")
                                 #logmessage("Got a hit, setting var " + var + " and realMissingVariable " + realMissingVariable + "\n")
                                 #realMissingVariable = missingVariable
                                 missingVariable = var
@@ -983,7 +990,7 @@ class Interview:
                                 for the_question_to_use in self.questions[var]:
                                     questions_to_try.append((the_question_to_use, True, root, the_i_to_use, var))
                                 break
-                            logmessage("I should be looping around now\n")
+                            #logmessage("I should be looping around now\n")
                         except:
                             logmessage("variable did not exist in user_dict: " + str(sys.exc_info()[0]) + "\n")
                 if generic_needed and not found_generic: # or is_iterator
@@ -997,7 +1004,7 @@ class Interview:
                             if question.is_generic:
                                 if question.generic_object != generic_object:
                                     continue
-                                logmessage("ok" + "\n")
+                                #logmessage("ok" + "\n")
                             else:
                                 continue
                         if question.question_type == "template":
@@ -1005,16 +1012,16 @@ class Interview:
                             question.mark_as_answered(user_dict)
                             return({'type': 'continue'})
                         if question.question_type == "code":
-                            logmessage("Running some code:\n\n" + question.sourcecode + "\n")
+                            #logmessage("Running some code:\n\n" + question.sourcecode + "\n")
                             if is_generic:
                                 if the_x != 'None':
                                     exec("x = " + the_x, user_dict)
-                                    logmessage("Set x\n")
+                                    #logmessage("Set x\n")
                                 if the_i != 'None':
                                     exec("i = " + the_i, user_dict)
-                                    logmessage("Set i\n")
+                                    #logmessage("Set i\n")
                             exec(question.compute, user_dict)
-                            logmessage("the missing variable is " + str(missing_var) + "\n")
+                            #logmessage("the missing variable is " + str(missing_var) + "\n")
                             if missing_var in variable_stack:
                                 variable_stack.remove(missing_var)
                             try:
@@ -1022,10 +1029,10 @@ class Interview:
                                 question.mark_as_answered(user_dict)
                                 return({'type': 'continue'})
                             except:
-                                logmessage("Try another method of setting the variable" + "\n")
+                                #logmessage("Try another method of setting the variable" + "\n")
                                 continue
                         else:
-                            logmessage("Question type is " + question.question_type + "\n")
+                            #logmessage("Question type is " + question.question_type + "\n")
                             #logmessage("Ask:\n  " + question.content.original_text + "\n")
                             return question.ask(user_dict, the_x, the_i)
                     raise DAError("Found a reference to a variable '" + missingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
@@ -1119,7 +1126,7 @@ def make_attachment(attachment, user_dict, **kwargs):
             result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True)
     if attachment['variable_name']:
         string = attachment['variable_name'] + " = DAFileCollection('" + attachment['variable_name'] + "')"
-        sys.stderr.write("Executing " + string + "\n")
+        #sys.stderr.write("Executing " + string + "\n")
         exec(string, user_dict)
         for doc_format in result['file']:
             variable_string = attachment['variable_name'] + '.' + doc_format
@@ -1128,7 +1135,7 @@ def make_attachment(attachment, user_dict, **kwargs):
             if file_number is None:
                 raise Exception("Could not save numbered file")
             string = variable_string + " = DAFile('" + variable_string + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
-            sys.stderr.write("Executing " + string + "\n")
+            #sys.stderr.write("Executing " + string + "\n")
             exec(string, user_dict)
     return(result)
             

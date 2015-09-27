@@ -37,9 +37,9 @@ class Pandoc(object):
             self.template_file = docassemble.base.util.standard_template_filename('Legal-Template.tex')
         yaml_to_use = []
         if self.output_format == 'pdf' or self.output_format == 'tex':
-            print "Before: " + str(self.input_content)
+            #print "Before: " + str(self.input_content)
             self.input_content = docassemble.base.filter.pdf_filter(self.input_content)
-            print "After: " + str(self.input_content)
+            #print "After: " + str(self.input_content)
             if len(self.initial_yaml) == 0:
                 standard_file = docassemble.base.util.standard_template_filename('Legal-Template.yml')
                 if standard_file is not None:
@@ -59,8 +59,8 @@ class Pandoc(object):
             subprocess_arguments.extend(['--template=%s' % self.template_file])
         subprocess_arguments.extend(['-s -o %s' % temp_outfile.name])
         subprocess_arguments.extend(self.arguments)
-        for argum in subprocess_arguments:
-            logmessage(str(argum) + "\n")
+        #for argum in subprocess_arguments:
+        #    logmessage(str(argum) + "\n")
         cmd = " ".join(subprocess_arguments)
         fin = os.popen(cmd)
         msg = fin.read()
