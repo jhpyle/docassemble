@@ -623,7 +623,7 @@ def index():
                         body = "Your " + subject + " is attached."
                     html = "<p>" + body + "</p>"
                     logmessage("Need to send an e-mail with subject " + subject + " to " + str(attachment_email_address) + " with " + str(attached_file_count) + " attachment(s)\n")
-                    msg = Message(subject, recipients=attachment_email_address, body=body, html=html)
+                    msg = Message(subject, recipients=[attachment_email_address], body=body, html=html)
                     for attach_info in attachment_info:
                         with open(attach_info['path'], 'r') as fp:
                             msg.attach(attach_info['filename'], attach_info['mimetype'], fp.read())
