@@ -412,7 +412,6 @@ class Question:
             self.attachments = self.process_attachment_list(data['attachments'])
         if 'allow emailing' in data:
             self.allow_emailing = data['allow emailing']
-            logmessage("Setting allow_emailing to " + str(data['allow emailing']) . "\n")
         if 'role' in data:
             if type(data['role']) is list:
                 for rolename in data['role']:
