@@ -251,6 +251,7 @@ class Question:
         self.undertext = None
         self.progress = None
         self.decorations = None
+        self.allow_emailing = True
         self.fields_used = set()
         self.names_used  = set()
         self.role = set()
@@ -409,6 +410,8 @@ class Question:
             self.attachments = self.process_attachment_list(data['attachment'])
         elif 'attachments' in data:
             self.attachments = self.process_attachment_list(data['attachments'])
+        if 'allow emailing' in data:
+            self.allow_emailing = data['allow emailing']
         if 'role' in data:
             if type(data['role']) is list:
                 for rolename in data['role']:
