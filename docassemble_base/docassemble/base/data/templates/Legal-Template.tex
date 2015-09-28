@@ -1,4 +1,50 @@
 \documentclass[$if(fontsize)$$fontsize$,$endif$$if(lang)$$lang$,$endif$$if(papersize)$$papersize$,$endif$$for(classoption)$$classoption$$sep$,$endfor$]{$documentclass$}
+\usepackage{ifthen}
+\newboolean{usesfirstheader}
+\setboolean{usesfirstheader}{false}
+\newboolean{usesfirstfooter}
+\setboolean{usesfirstfooter}{false}
+\newboolean{usesheader}
+\setboolean{usesheader}{false}
+\newboolean{usesfooter}
+\setboolean{usesfooter}{false}
+$if(FirstFooterLeft)$
+\setboolean{usesfirstfooter}{true}
+$endif$
+$if(FirstFooterRight)$
+\setboolean{usesfirstfooter}{true}
+$endif$
+$if(FirstFooterCenter)$
+\setboolean{usesfirstfooter}{true}
+$endif$
+$if(FirstHeaderLeft)$
+\setboolean{usesfirstheader}{true}
+$endif$
+$if(FirstHeaderRight)$
+\setboolean{usesfirstheader}{true}
+$endif$
+$if(FirstHeaderCenter)$
+\setboolean{usesfirstheader}{true}
+$endif$
+$if(FooterLeft)$
+\setboolean{usesfooter}{true}
+$endif$
+$if(FooterRight)$
+\setboolean{usesfooter}{true}
+$endif$
+$if(FooterCenter)$
+\setboolean{usesfooter}{true}
+$endif$
+$if(HeaderLeft)$
+\setboolean{usesheader}{true}
+$endif$
+$if(HeaderRight)$
+\setboolean{usesheader}{true}
+$endif$
+$if(HeaderCenter)$
+\setboolean{usesheader}{true}
+$endif$
+
 $if(fontfamily)$
 \usepackage{$fontfamily$}
 $else$
@@ -43,8 +89,21 @@ $endif$
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 % use microtype if available
 \IfFileExists{microtype.sty}{\usepackage{microtype}}{}
+\usepackage{calc}
 $if(geometry)$
 \usepackage[$for(geometry)$$geometry$$sep$,$endfor$]{geometry}
+$endif$
+\newcommand{\headerlines}{1}
+$if(HeaderLines)$
+\renewcommand{\headerlines}{$HeaderLines$}
+$endif$
+\ifthenelse{\boolean{usesheader} \OR \boolean{usesfirstheader}}{\geometry{headheight=\baselineskip*\real{\headerlines}}}{\geometry{headsep=0pt,headheight=0pt}}
+
+$if(FooterSkip)$
+\geometry{footskip=$FooterSkip$}
+\geometry{bottom=1in-$FooterSkip$}
+$else$
+\geometry{bottom=1in-\footskip}
 $endif$
 $if(natbib)$
 \usepackage{natbib}
@@ -109,6 +168,8 @@ $if(strikeout)$
 \pdfstringdefDisableCommands{\renewcommand{\sout}{}}
 $endif$
 \setlength{\parindent}{0pt}
+%\setlength{\headheight}{0pt}
+%\setlength{\headsep}{0pt}
 \setlength{\parskip}{6pt plus 2pt minus 1pt}
 \setlength{\emergencystretch}{3em}  % prevent overfull lines
 $if(numbersections)$
@@ -191,6 +252,17 @@ $endif$
 \pagestyle{basicstyle}
 
 \begin{document}
+\newlength{\mynegspace}
+\setlength\mynegspace{\baselineskip*\real{\headerlines}*\real{2}+\headsep}
+\ifthenelse{\boolean{usesfirstheader} \AND \boolean{usesheader}}{}{\vspace*{-\mynegspace}}
+$if(SingleSpacing)$
+\setlength{\parskip}{\myfontsize}
+$else$
+\doublespacing
+\setlength{\parindent}{0.5in}
+\setlength{\RaggedRightParindent}{\parindent}
+$endif$
+
 $if(title)$
 \maketitle
 $endif$

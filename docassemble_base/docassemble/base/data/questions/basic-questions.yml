@@ -13,7 +13,9 @@ comment: >-
 modules:
   - docassemble.base.legal
 comment: >-
-  A "modules" section imports functions from Python modules
+  A "modules" section imports functions from Python modules.  The
+  basic building blocks of docassemble variables are defined in the
+  docassemble.legal module.
 ---
 objects:
   - case: Case
@@ -23,8 +25,8 @@ objects:
   - jurisdiction: Jurisdiction
   - court: Court
 comment: >-
-  An "objects" section defines variables that are Python objects.  The object types
-  here are defined in the docassemble.legal module.
+  An "objects" section defines variables that are Python objects.  The
+  object types here are defined in the docassemble.legal module.
 ---
 mandatory: True
 code: |
@@ -53,9 +55,15 @@ image sets:
       parentchild: man32.svg
       coins: coins36.svg
       exit: open203.svg
+comment: |
+  Here we pre-define some icon files so that we can easily refer to
+  them later.  These files are located in the docassemble.base package
+  in the subdirectory docassemble/base/data/static.
 ---
 question: Are you the defendant?
 yesno: user_is_defendant
+comment: |
+  After defining the basic variables, we define some standard questions.
 ---
 field: user.marital_status
 question: How would you describe yourself?
@@ -68,9 +76,31 @@ choices:
 field: user_understands_how_to_use_signature_feature
 question: Instructions for signing your name
 subquestion: |
-  On the next screen, you will see a box in which you can sign your name using your mouse, track pad, or touch screen.  If you make a mistake, you can press "Clear" and try again.  For best results, try signing your name *slowly*.  
+  On the next screen, you will see a box in which you can sign your
+  name using your mouse, track pad, or touch screen.  If you make a
+  mistake, you can press "Clear" and try again.  For best results, try
+  signing your name *slowly*.
 buttons:
   - Continue: continue
+---
+comment: |
+  docassemble can collect signatures from users, who can write their
+  signature with their finger on a touchscreen device, or use a mouse
+  or trackpad.  The signatures can be added to documents.
+question: |
+  Please sign your name below.
+signature: user.signature
+need: user_understands_how_to_use_signature_feature
+under: |
+  ${ user.name }
+---
+template: blank_signature
+content: |
+  [SKIPLINE] \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ [SKIPLINE]
+---
+template: empty_signature
+content: |
+  [SKIPLINE] \_\_\_[Your signature here]\_\_\_ [SKIPLINE]
 ---
 question: |
   Is this your signature?
@@ -101,6 +131,12 @@ buttons:
   - "I understand": understands
   - code: |
       [{'does not understand':"I do not understand"}, {'unsure':"I'm not sure"}]
+comment: |
+  You can specify whether you want the multiple choices to appear as
+  buttons by using the word "buttons" instead of the word "choices."
+  Also, the example below shows how you can use Python code to
+  generate the selections of multiple-choice question.  The code is
+  evaluated at the time the question is asked.
 ---
 generic object: Individual
 question: >-
@@ -108,6 +144,19 @@ question: >-
 fields:
   - Date of birth: x.birthdate
     datatype: date
+comment: |
+  docassemble allows you to write "generic" questions.  For example,
+  if your code uses a variable called user.birthdate, docassemble will
+  first look for a question that sets user.birthdate specifically, but
+  if it does not find it, it will look for a question for which the
+  generic object property is set to the object type of the user
+  object, which is Individual, and where the question sets the
+  variable x.birthdate.
+  
+  It will find that question here.  The question uses the possessive
+  function, which is a method of the Individual class.  The result is
+  that the question will be "What is your date of birth?" if x is the
+  user, but will otherwise ask "What is Jane Doe's date of birth?"
 ---
 generic object: Individual
 question: >-
@@ -124,6 +173,16 @@ choices:
   - Male: male
   - Female: female
   - Other: other
+comment: |
+  By using "generic" questions, you can write a single question that
+  works in a variety of circumstances, saving you a lot of time.  And
+  if you ever want to use a more specific question for a specific
+  variable, you can.  For example, if your code calls for
+  spouse.birthdate, you may to ask the question in a different way.
+  (E.g., "What is the birthdate of your lovely spouse?  If you don't
+  know this, you are in deep trouble!")  You would do this by defining
+  a non-generic question that sets spouse.birthdate, in which case
+  docassemble would use that question instead of the generic question.
 ---
 generic object: Individual
 question: |
@@ -133,6 +192,15 @@ fields:
   - Middle Name: x.name.middle
     required: False
   - Last Name: x.name.last
+comment: |
+  If the object does not have a name yet, generic questions can refer
+  to it by the name of the variable itself.  For example, suppose you
+  create an object, case.judge, with the class of Individual.  If the
+  name of case.judge is ever needed, docassemble will use the question
+  below to ask "What is the name of the judge in the case?"  If the
+  object is called user, it will ask "What is your name?"  If the
+  object is called village_idiot, it will ask "What is the village
+  idiot's name?"
 ---
 generic list object: Individual
 question: |
@@ -142,6 +210,14 @@ fields:
   - Middle Name: x[i].name.middle
     required: False
   - Last Name: x[i].name.last
+comment: |
+  Generic questions can also use indices, for example to fill out the
+  names of a list of people.  (E.g., case.plaintiff.)
+
+  This example also illustates how the author can control whether the
+  user can leave a field blank.  By default, all fields are required,
+  but the author can add required: False to a field to indicate that
+  the field can be left blank.
 ---
 generic list object: Individual
 question: |
@@ -156,11 +232,17 @@ comment: |
   Example 1: What is your second child's name?
   Example 2: What is John Doe's first child's name?
 ---
+comment: |
+  As you can see in the following examples, it can get a little bit
+  complicated to use lots of functions within questions.  However, it
+  ultimately saves you a lot of trouble, because without the
+  functions, you would have to define multiple different questions to
+  ask the same thing in different contexts.
 generic object: Individual
 code: |
   x.child.gathering = True
   if x.has_children:
-    if x.child.number() == 0:
+    if x.child.number_gathered() == 0:
       newchild = x.child.addObject(Individual)
     while x.has_other_children:
       newchild = x.child.addObject(Individual)
@@ -180,7 +262,7 @@ comment: |
 generic object: Individual
 question: |
   So far, you have told me about
-  ${ x.possessive(x.child.number_as_word()) }
+  ${ x.possessive(x.child.number_gathered_as_word()) }
   ${ x.child.as_noun() }, ${ x.child }.
   ${ x.do_question('have', capitalize=True) } any other children?
 yesno: x.has_other_children
@@ -195,16 +277,22 @@ comment: |
 generic object: PartyList
 question: |
   You have told me that there ${ x.does_verb("is", ) }
-  ${ x.number_as_word() } ${ x.as_noun() }, ${ x }.  Is there another
+  ${ x.number_gathered_as_word() } ${ x.as_noun() }, ${ x }.  Is there another
   ${ x.as_singular_noun() }?
 yesno: x.there_is_another
 ---
 question: Are you a plaintiff in this case?
 subquestion: |
-  A "plaintiff" is a person who starts a case by filing a lawsuit against a person called a "defendant."  Plaintiffs and defendants are the "parties" in a case.
+  A "plaintiff" is a person who starts a case by filing a lawsuit
+  against a person called a "defendant."  Plaintiffs and defendants
+  are the "parties" in a case.
 decoration: scalesofjustice
 yesno: user_is_plaintiff
 ---
+comment: |
+  Here are some standard questions that ask about a person's income
+  and assets.  These examples illustrate that if you do not want a
+  field to be labeled, you can use "" as the label name.
 generic object: Individual
 question: How much ${ x.do_question("make") } from employment?
 decoration: bills

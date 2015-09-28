@@ -1,7 +1,7 @@
 import sys
 
 def default_logmessage(message):
-    sys.stderr.write(message)
+    sys.stderr.write(message + "\n")
 
 the_logmessage = default_logmessage
 

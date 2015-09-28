@@ -6,12 +6,14 @@ import mimetypes
 import datetime
 import locale
 import pkg_resources
+from titlecase import titlecase
 #from docassemble.logger import logmessage
 #import sys
+import babel.dates
 import locale
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'comma_list', 'words', 'word', 'set_language', 'get_language', 'set_locale', 'get_locale', 'update_locale', 'comma_and_list', 'need', 'possessify', 'possessify_long', 'nice_number', 'pickleable_objects', 'in_the', 'a_in_the_b', 'of_the', 'the', 'your', 'his', 'her', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'do_you', 'does_a_b', 'capitalize', 'underscore_to_space', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'static_image']
+__all__ = ['ordinal', 'comma_list', 'words', 'word', 'set_language', 'get_language', 'set_locale', 'get_locale', 'update_locale', 'comma_and_list', 'need', 'possessify', 'possessify_long', 'nice_number', 'pickleable_objects', 'in_the', 'a_in_the_b', 'of_the', 'the', 'your', 'his', 'her', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'do_you', 'does_a_b', 'capitalize', 'underscore_to_space', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'static_image', 'titlecase']
 
 language = 'en'
 this_locale = 'US.utf8'
@@ -255,9 +257,8 @@ def does_a_b(a, b, **kwargs):
         return('does ' + unicode(a) + ' ' + unicode(b))
 
 def today():
-    date_format = locale.nl_langinfo(locale.D_FMT)
-    today = datetime.date.today()
-    return(today.strftime('%x'))
+    return(babel.dates.format_date(datetime.date.today(), format='long', locale=language))
+    #return(today.strftime('%x'))
     
 def capitalize(a):
     if a and type(a) is str and len(a) > 1:

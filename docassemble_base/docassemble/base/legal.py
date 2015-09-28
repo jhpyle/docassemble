@@ -1,7 +1,7 @@
 from docassemble.base.core import DAObject
-from docassemble.base.util import comma_and_list, get_language, set_language, word, words, comma_list, ordinal, need, nice_number, possessify, your, her, his, do_you, does_a_b, verb_past, verb_present, noun_plural, underscore_to_space, space_to_underscore, force_ask, period_list, currency, indefinite_article, today, remove, nodoublequote, capitalize
+from docassemble.base.util import comma_and_list, get_language, set_language, word, words, comma_list, ordinal, need, nice_number, possessify, your, her, his, do_you, does_a_b, verb_past, verb_present, noun_plural, underscore_to_space, space_to_underscore, force_ask, period_list, currency, indefinite_article, today, remove, nodoublequote, capitalize, titlecase
 from docassemble.base.filter import file_finder, url_finder, mail_variable
-#from docassemble.base.logger import logmessage
+from docassemble.base.logger import logmessage
 from datetime import date
 import inspect
 import re
@@ -22,6 +22,13 @@ class Case(DAObject):
         self.secondParty = self.defendant
         self.case_id = ""
         return super(Case, self).init()
+    def role_of(self, party):
+        for partyname in ['plaintiff', 'defendant', 'petitioner', 'respondent']:
+            if hasattr(self, partyname) and getattr(self, partyname).gathered:
+                for indiv in getattr(self, partyname):
+                    if indiv is party:
+                        return partyname
+        return 'third party'
     def parties(self):
         output_list = list()
         for partyname in ['plaintiff', 'defendant', 'petitioner', 'respondent']:
@@ -57,6 +64,7 @@ class LegalFiling(Document):
         output += "[END_CAPTION]\n\n"
         if self.title is not None:
             output += "[BOLDCENTER] " + self.title.upper() + "\n"
+        #logmessage("I reached the end of caption: " + output)
         return(output)
 
 # class LegalAction(DAObject):
@@ -98,7 +106,7 @@ class Person(DAObject):
     def init(self):
         self.initializeAttribute(name='name', objectType=Name)
         self.initializeAttribute(name='address', objectType=Address)
-        #logmessage("Got to this place\n")
+        #logmessage("Got to this place")
         self.roles = set()
         return super(Person, self).init()
     def __setattr__(self, attrname, value):
@@ -128,13 +136,13 @@ class Person(DAObject):
         else:
             return today.year - born.year
     def do_question(self, the_verb, **kwargs):
-        #logmessage("do_question kwargs are " + str(kwargs) + "\n")
+        #logmessage("do_question kwargs are " + str(kwargs))
         if self.instanceName == 'user':
             return(do_you(the_verb, **kwargs))
         else:
             return(does_a_b(self.name, the_verb, **kwargs))
     def does_verb(self, the_verb, **kwargs):
-        #logmessage("does_verb kwargs are " + str(kwargs) + "\n")
+        #logmessage("does_verb kwargs are " + str(kwargs))
         if self.instanceName == 'user':
             tense = 1
         else:
@@ -157,7 +165,7 @@ class Individual(Person):
         self.initializeAttribute(name='income', objectType=Income)
         self.initializeAttribute(name='asset', objectType=Asset)
         self.initializeAttribute(name='expense', objectType=Expense)
-        #logmessage("Got to this here place\n")
+        #logmessage("Got to this here place")
         return super(Individual, self).init()
     def possessive(self, target):
         if self.instanceName == 'user':
@@ -190,9 +198,12 @@ class Individual(Person):
             return word('him')
 
 class DAList(DAObject):
-    def init(self):
+    def init(self, **kwargs):
         self.elements = list()
         self.gathering = False
+        if 'elements' in kwargs:
+            for element in kwargs['elements']:
+                self.add(element)
         return super(DAList, self).init()
     def add(self, element):
         self.elements.append(element)
@@ -245,12 +256,13 @@ class DAList(DAObject):
         else:
             return the_noun
     def number(self):
-        if not self.gathering:
-            self.gathered
+        self.gathered
         return len(self.elements)
+    def number_gathered(self):
+        return len(self.elements)
+    def number_gathered_as_word(self):
+        return nice_number(self.number_gathered())
     def number_as_word(self):
-        if not self.gathering:
-            self.gathered
         return nice_number(self.number())
     def comma_and_list(self):
         if not self.gathering:
@@ -344,6 +356,17 @@ class DAFile(DAObject):
 
 class DAFileCollection(DAObject):
     pass
+
+class DAFileList(DAList):
+    def show(self, width=None):
+        output = ''
+        for element in self.elements:
+            if element.ok:
+                if width is not None:
+                    output += '[IMAGE ' + str(element.number) + ', ' + str(width) + ']' + "\n"
+                else:
+                    output += '[IMAGE ' + str(element.number) + ']' + "\n"
+        return output
 
 def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", attachments=[]):
     from flask_mail import Message

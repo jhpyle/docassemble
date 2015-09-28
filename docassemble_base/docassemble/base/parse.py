@@ -36,7 +36,7 @@ save_numbered_file = blank_save_numbered_file
 
 def set_save_numbered_file(func):
     global save_numbered_file
-    #logmessage("set the save_numbered_file function to " + str(func) + "\n")
+    #logmessage("set the save_numbered_file function to " + str(func))
     save_numbered_file = func
     return
 
@@ -307,6 +307,23 @@ class Question:
                             the_image = image
                         for key, value in the_image.iteritems():
                             self.interview.images[key] = PackageImage(filename=value, attribution=attribution, setname=setname, package=self.package)
+        if 'def' in data:
+            should_append = False
+            if type(data['def']) is not str:
+                raise DAError("A def name must be a string." + self.idebug(data))
+            if data['def'] not in self.interview.defs:
+                self.interview.defs[data['def']] = list()
+            if 'mako' in data:
+                if type(data['mako']) is str:
+                    list_of_defs = [data['mako']]
+                elif type(data['mako']) is list:
+                    list_of_defs = data['mako']
+                else:
+                    raise DAError("A mako template definition must be a string or a list of strings." + self.idebug(data))
+                for definition in list_of_defs:
+                    if type(definition) is not str:
+                        raise DAError("A mako template definition must be a string." + self.idebug(data))
+                    self.interview.defs[data['def']].append(definition)
         if 'interview help' in data:
             should_append = False
             if type(data['interview help']) is list:
@@ -395,7 +412,7 @@ class Question:
                 try:
                     self.require_list = list(map((lambda x: compile(x, '', 'eval')), data['require']))
                 except:
-                    logmessage("Compile error in require:\n" + str(data['require']) + "\n" + str(sys.exc_info()[0]) + "\n")
+                    logmessage("Compile error in require:\n" + str(data['require']) + "\n" + str(sys.exc_info()[0]))
                     raise
                 if 'orelse' in data:
                     if type(data['orelse']) is dict:
@@ -509,7 +526,7 @@ class Question:
             try:
                 self.need = list(map((lambda x: compile(x, '', 'exec')), need_list))
             except:
-                logmessage("Compile error in need code:\n" + str(data['need']) + "\n" + str(sys.exc_info()[0]) + "\n")
+                logmessage("Compile error in need code:\n" + str(data['need']) + "\n" + str(sys.exc_info()[0]))
                 raise
         if 'template' in data and 'content' in data:
             if type(data['template']) in (list, dict):
@@ -528,7 +545,7 @@ class Question:
                     self.compute = compile(data['code'], '', 'exec')
                     self.sourcecode = data['code']
                 except:
-                    logmessage("Compile error in code:\n" + str(data['code']) + "\n" + str(sys.exc_info()[0]) + "\n")
+                    logmessage("Compile error in code:\n" + str(data['code']) + "\n" + str(sys.exc_info()[0]))
                     raise
                 find_fields_in(data['code'], self.fields_used, self.names_used)
             else:
@@ -600,16 +617,31 @@ class Question:
     def process_attachment(self, target):
         metadata = dict()
         variable_name = str()
+        defs = list()
         if type(target) is dict:
             if 'filename' not in target:
                 target['filename'] = word("Document")
             if 'name' not in target:
                 target['name'] = word("Document")
+            for key in ['def', 'defs']:
+                if key in target:
+                    if type(target[key]) is str:
+                        the_list = [target[key]]
+                    elif type(target[key]) is list:
+                        the_list = target[key]
+                    else:
+                        raise DAError('The defs included in an attachment must be specified as a list of strings or a single string.' + self.idebug(target))
+                    for def_key in the_list:
+                        if type(def_key) is not str:
+                            raise DAError('The defs in an attachment must be strings.' + self.idebug(target))
+                        if def_key not in self.interview.defs:
+                            raise DAError('Referred to a non-existent def "' + def_key + '."  All defs must be defined before they are used.' + self.idebug(target))
+                        defs.extend(self.interview.defs[def_key])
             if 'valid_formats' in target:
                 if type(target['valid_formats']) is str:
                     target['valid_formats'] = [target['valid_formats']]
                 elif type(target['valid_formats']) is not list:
-                    raise DAError('Unknown data type in attachment valid_formats')
+                    raise DAError('Unknown data type in attachment valid_formats.' + self.idebug(target))
             else:
                 target['valid_formats'] = ['*']
             if 'variable_name' in target:
@@ -617,22 +649,24 @@ class Question:
                 self.fields_used.add(target['variable_name'])
             if 'metadata' in target:
                 if type(target['metadata']) is not dict:
-                    raise DAError('Unknown data type in attachment metadata')
+                    raise DAError('Unknown data type ' + str(type(target['metadata'])) + ' in attachment metadata.' + self.idebug(target))
                 for key in target['metadata']:
                     data = target['metadata'][key]
                     if data is list:
                         for sub_data in data:
                             if sub_data is not str:
-                                raise DAError('Unknown data type in list in attachment metadata')
+                                raise DAError('Unknown data type ' + str(type(sub_data)) + ' in list in attachment metadata' + self.idebug(target))
                         newdata = list(map((lambda x: TextObject(x)), data))
                         metadata[key] = newdata
                     elif type(data) is str:
                         metadata[key] = TextObject(data)
+                    elif type(data) is bool:
+                        metadata[key] = data
                     else:
-                        raise DAError('Unknown data type ' + str(type(data)) + ' in key in attachment metadata')
+                        raise DAError('Unknown data type ' + str(type(data)) + ' in key in attachment metadata' + self.idebug(target))
             if 'content' not in target:
                 raise DAError("No content provided in attachment")
-            return({'name': TextObject(target['name']), 'filename': TextObject(target['filename']), 'content': TextObject(target['content']), 'valid_formats': target['valid_formats'], 'metadata': metadata, 'variable_name': variable_name})
+            return({'name': TextObject(target['name']), 'filename': TextObject(target['filename']), 'content': TextObject("\n".join(defs) + "\n" + target['content']), 'valid_formats': target['valid_formats'], 'metadata': metadata, 'variable_name': variable_name})
         elif type(target) is str:
             return({'name': TextObject('Document'), 'filename': TextObject('document'), 'content': TextObject(target), 'valid_formats': ['*'], 'metadata': metadata, 'metadata': metadata, 'variable_name': variable_nname})
         else:
@@ -641,10 +675,10 @@ class Question:
     def ask(self, user_dict, the_x, the_i):
         if the_x != 'None':
             exec("x = " + the_x, user_dict)
-            #logmessage("x is " + the_x + "\n")
+            #logmessage("x is " + the_x)
         if the_i != 'None':
             exec("i = " + the_i, user_dict)
-            #logmessage("i is " + the_i + "\n")
+            #logmessage("i is " + the_i)
         if self.helptext is not None:
             help_text_list = [{'heading': None, 'content': self.helptext.text(user_dict)}]
         else:
@@ -743,25 +777,25 @@ class Question:
         return
     def follow_multiple_choice(self, user_dict):
         #if self.name:
-            #logmessage("question is " + self.name + "\n")
+            #logmessage("question is " + self.name)
         #else:
-            #logmessage("question has no name\n")
+            #logmessage("question has no name")
         if self.name and self.name in user_dict['answers']:
-            #logmessage("question in answers\n")
+            #logmessage("question in answers")
             #user_dict['answered'].add(self.name)
             the_choice = self.fields[0].choices[int(user_dict['answers'][self.name])]
             for key in the_choice:
                 if key == 'image':
                     continue
-                #logmessage("Setting target\n")
+                #logmessage("Setting target")
                 target = the_choice[key]
                 break
             if target:
-                #logmessage("Target defined\n")
+                #logmessage("Target defined")
                 if type(target) is str:
                     pass
                 elif isinstance(target, Question):
-                    #logmessage("Reassigning question\n")
+                    #logmessage("Reassigning question")
                     #self.mark_as_answered(user_dict)
                     return(target.follow_multiple_choice(user_dict))
         return(self)
@@ -800,6 +834,7 @@ class Interview:
         self.images = dict()
         self.metadata = list()
         self.helptext = list()
+        self.defs = dict()
         self.terms = dict()
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
@@ -840,13 +875,13 @@ class Interview:
             user_dict['i_stack'] = list()
         for question in self.questions_list:
             if question.question_type == 'imports':
-                #logmessage("Found imports\n")
+                #logmessage("Found imports")
                 for module_name in question.module_list:
-                    #logmessage("Imported a module " + module_name + "\n")
+                    #logmessage("Imported a module " + module_name)
                     exec('import ' + module_name, user_dict)
             if question.question_type == 'modules':
                 for module_name in question.module_list:
-                    #logmessage("Imported from module " + module_name + "\n")
+                    #logmessage("Imported from module " + module_name)
                     exec('from ' + module_name + ' import *', user_dict)
         while True:
             try:
@@ -854,7 +889,7 @@ class Interview:
                     if question.name and question.name in user_dict['answered']:
                         continue
                     if question.question_type == 'objects':
-                        #logmessage("Running objects\n")
+                        #logmessage("Running objects")
                         for keyvalue in question.objects:
                             for variable in keyvalue:
                                 object_type = keyvalue[variable]
@@ -863,7 +898,7 @@ class Interview:
                                     variable = m.group(1)
                                     attribute = m.group(2)
                                     command = variable + ".initializeAttribute(name='" + attribute + "', objectType=" + object_type + ")"
-                                    logmessage("Running " + command + "\n")
+                                    logmessage("Running " + command)
                                     exec(command, user_dict)
                                 else:
                                     command = variable + ' = ' + object_type + '("' + variable + '")'
@@ -872,7 +907,7 @@ class Interview:
                         if question.name:
                             user_dict['answered'].add(question.name)
                     if question.question_type == 'code' and question.is_mandatory:
-                        #logmessage("Running some code:\n\n" + question.sourcecode + "\n")
+                        #logmessage("Running some code:\n\n" + question.sourcecode)
                         exec(question.compute, user_dict)
                         if question.name:
                             user_dict['answered'].add(question.name)
@@ -883,16 +918,16 @@ class Interview:
                         raise MandatoryQuestion()
             except NameError as errMess:
                 missingVariable = str(errMess).split("'")[1]
-                #logmessage(str(errMess) + "\n")
+                #logmessage(str(errMess))
                 question_result = self.askfor(missingVariable, user_dict)
                 if question_result['type'] == 'continue':
                     continue
                 else:
-                    logmessage("Need to ask:\n  " + question_result['question_text'] + "\n")
+                    logmessage("Need to ask:\n  " + question_result['question_text'])
                     interview_status.populate(question_result)
                     break
             except AttributeError as errMess:
-                logmessage(str(errMess.args) + "\n")
+                logmessage(str(errMess.args))
                 raise DAError('Got error ' + str(errMess))
                 #break
             except MandatoryQuestion:
@@ -905,7 +940,7 @@ class Interview:
         variable_stack = kwargs.get('variable_stack', set())
         #the_i = 'None'
         #the_x = 'None'
-        logmessage("I don't have " + missingVariable + "\n")
+        logmessage("I don't have " + missingVariable)
         if missingVariable in variable_stack:
             raise DAError("Infinite loop:" + missingVariable + " already looked for")
         variable_stack.add(missingVariable)
@@ -913,18 +948,18 @@ class Interview:
         #q_is_iterator = False
         realMissingVariable = missingVariable
         totry = [{'real': missingVariable, 'vari': missingVariable}]
-        #logmessage("moo1" + "\n")
+        #logmessage("moo1")
         match_brackets_at_end = re.compile(r'^(.*)(\[[^\[]+\])$')
         match_inside_brackets = re.compile(r'\[([^\]+])\]')
         m = match_inside_brackets.search(missingVariable)
         if m:
             newMissingVariable = re.sub('\[[^\]+]\]', '[i]', missingVariable)
             totry.insert(0, {'real': missingVariable, 'vari': newMissingVariable})
-        #logmessage("Length of totry is " + str(len(totry)) + "\n")
+        #logmessage("Length of totry is " + str(len(totry)))
         for mv in totry:
             realMissingVariable = mv['real']
             missingVariable = mv['vari']
-            #logmessage("Trying missingVariable " + missingVariable + "\n")
+            #logmessage("Trying missingVariable " + missingVariable)
             questions_to_try = list()
             if missingVariable in self.questions:
                 for the_question in self.questions[missingVariable]:
@@ -934,14 +969,14 @@ class Interview:
                 generic_needed = True;
             components = missingVariable.split(".")
             realComponents = realMissingVariable.split(".")
-            #logmessage("Vari Components are " + str(components) + "\n")
-            #logmessage("Real Components are " + str(realComponents) + "\n")
+            #logmessage("Vari Components are " + str(components))
+            #logmessage("Real Components are " + str(realComponents))
             n = len(components)
             #if n == 1:
                 # if generic_needed:
-                #     logmessage("There is no question for " + missingVariable + "\n")
+                #     logmessage("There is no question for " + missingVariable)
                 # else:
-                #     logmessage("There are no generic options for " + missingVariable + "\n")
+                #     logmessage("There are no generic options for " + missingVariable)
             #else:
             if n != 1:
                 found_x = 0;
@@ -963,28 +998,28 @@ class Interview:
                         mm = match_inside_brackets.findall(realVar)
                         if (mm):
                             if len(mm) > 1:
-                                #logmessage("Variable " + var + " is no good because it has more than one iterator\n")
+                                #logmessage("Variable " + var + " is no good because it has more than one iterator")
                                 continue;
                             the_i_to_use = mm[0];
                         root = d['root']
                         root_for_object = d['root_for_object']
-                        #logmessage("testing variable " + var + " and root " + root + " and root for object " + root_for_object + "\n")
+                        #logmessage("testing variable " + var + " and root " + root + " and root for object " + root_for_object)
                         try:
-                            #logmessage("Looking for " + root_for_object + "\n")
+                            #logmessage("Looking for " + root_for_object)
                             root_evaluated = eval(root_for_object, user_dict)
-                            #logmessage("Looking for type of root evaluated\n")
+                            #logmessage("Looking for type of root evaluated")
                             generic_object = type(root_evaluated).__name__
-                            #logmessage("ok -4\n")
-                            #logmessage("Generic object is " + generic_object + "\n")
+                            #logmessage("ok -4")
+                            #logmessage("Generic object is " + generic_object)
                             #if generic_object in self.generic_questions:
-                                #logmessage("ok1\n")
+                                #logmessage("ok1")
                                 #if var in self.questions:
-                                    #logmessage("ok2\n")
+                                    #logmessage("ok2")
                                     #if var in self.generic_questions[generic_object]:
-                                        #logmessage("ok3\n")
+                                        #logmessage("ok3")
                             if generic_object in self.generic_questions and var in self.questions and var in self.generic_questions[generic_object]:
-                                #logmessage("Got a hit with var " + var + "where realMissingVariable is " + realMissingVariable + "\n")
-                                #logmessage("Got a hit, setting var " + var + " and realMissingVariable " + realMissingVariable + "\n")
+                                #logmessage("Got a hit with var " + var + "where realMissingVariable is " + realMissingVariable)
+                                #logmessage("Got a hit, setting var " + var + " and realMissingVariable " + realMissingVariable)
                                 #realMissingVariable = missingVariable
                                 missingVariable = var
                                 found_generic = True
@@ -993,11 +1028,11 @@ class Interview:
                                 for the_question_to_use in self.questions[var]:
                                     questions_to_try.append((the_question_to_use, True, root, the_i_to_use, var))
                                 break
-                            #logmessage("I should be looping around now\n")
+                            #logmessage("I should be looping around now")
                         except:
-                            logmessage("variable did not exist in user_dict: " + str(sys.exc_info()[0]) + "\n")
+                            logmessage("variable did not exist in user_dict: " + str(sys.exc_info()[0]))
                 if generic_needed and not found_generic: # or is_iterator
-                    logmessage("There is no question for " + missingVariable + "\n")
+                    logmessage("There is no question for " + missingVariable)
                     continue
             while True:
                 try:
@@ -1007,7 +1042,7 @@ class Interview:
                             if question.is_generic:
                                 if question.generic_object != generic_object:
                                     continue
-                                #logmessage("ok" + "\n")
+                                #logmessage("ok")
                             else:
                                 continue
                         if question.question_type == "template":
@@ -1015,16 +1050,16 @@ class Interview:
                             question.mark_as_answered(user_dict)
                             return({'type': 'continue'})
                         if question.question_type == "code":
-                            #logmessage("Running some code:\n\n" + question.sourcecode + "\n")
+                            #logmessage("Running some code:\n\n" + question.sourcecode)
                             if is_generic:
                                 if the_x != 'None':
                                     exec("x = " + the_x, user_dict)
-                                    #logmessage("Set x\n")
+                                    #logmessage("Set x")
                                 if the_i != 'None':
                                     exec("i = " + the_i, user_dict)
-                                    #logmessage("Set i\n")
+                                    #logmessage("Set i")
                             exec(question.compute, user_dict)
-                            #logmessage("the missing variable is " + str(missing_var) + "\n")
+                            #logmessage("the missing variable is " + str(missing_var))
                             if missing_var in variable_stack:
                                 variable_stack.remove(missing_var)
                             try:
@@ -1032,16 +1067,16 @@ class Interview:
                                 question.mark_as_answered(user_dict)
                                 return({'type': 'continue'})
                             except:
-                                #logmessage("Try another method of setting the variable" + "\n")
+                                #logmessage("Try another method of setting the variable")
                                 continue
                         else:
-                            #logmessage("Question type is " + question.question_type + "\n")
-                            #logmessage("Ask:\n  " + question.content.original_text + "\n")
+                            #logmessage("Question type is " + question.question_type)
+                            #logmessage("Ask:\n  " + question.content.original_text)
                             return question.ask(user_dict, the_x, the_i)
                     raise DAError("Found a reference to a variable '" + missingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
                 except NameError as errMess:
                     newMissingVariable = str(errMess).split("'")[1]
-                    logmessage(str(errMess) + "\n")
+                    logmessage(str(errMess))
                     question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack)
                     if question_result['type'] == 'continue':
                         continue
@@ -1064,7 +1099,7 @@ class myvisitnode(ast.NodeVisitor):
         self.targets = {}
         self.depth = 0;
     def generic_visit(self, node):
-        #logmessage(' ' * self.depth + type(node).__name__ + "\n")
+        #logmessage(' ' * self.depth + type(node).__name__)
         self.depth += 1
         ast.NodeVisitor.generic_visit(self, node)
         self.depth -= 1
@@ -1111,7 +1146,9 @@ def make_attachment(attachment, user_dict, **kwargs):
                 metadata = dict()
                 for key in attachment['metadata']:
                     data = attachment['metadata'][key]
-                    if type(data) is list:
+                    if type(data) is bool:
+                        metadata[key] = data
+                    elif type(data) is list:
                         metadata[key] = textify(data)
                     else:
                         metadata[key] = data.text(user_dict)

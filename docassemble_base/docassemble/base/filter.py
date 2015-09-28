@@ -112,13 +112,14 @@ def rtf_filter(text):
     return(text)
 
 def pdf_filter(text):
+    text = text + "\n\n"
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
     text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_include_string, text)
     text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_include_string, text)
-    text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', r'\\begingroup\\singlespacing\\mynoindent\\begin{tabular}{@{}m{0.49\\textwidth}|@{\\hspace{1em}}m{0.49\\textwidth}@{}}{\1} & {\2} \\\\ \\end{tabular}\\endgroup\\myskipline', text)
-    text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', r'\\begingroup\\singlespacing\\mynoindent\\begin{tabular}{@{}p{0.49\\textwidth}@{\\hspace{1em}}p{0.49\\textwidth}@{}}{\1} & {\2} \\\\ \\end{tabular}\\endgroup\\myskipline', text)
-    text = re.sub(r'\[SINGLESPACING\] *', r'\\singlespacing ', text)
-    text = re.sub(r'\[DOUBLESPACING\] *', r'\\doublespacing ', text)
+    text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', r'\\noindent\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\mynoindent\\begin{tabular}{@{}m{0.49\\textwidth}|@{\\hspace{1em}}m{0.49\\textwidth}@{}}{\1} & {\2} \\\\ \\end{tabular}\\endgroup\\myskipline', text)
+    text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', r'\\noindent\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\mynoindent\\begin{tabular}{@{}p{0.49\\textwidth}@{\\hspace{1em}}p{0.49\\textwidth}@{}}{\1} & {\2} \\\\ \\end{tabular}\\endgroup\\myskipline', text)
+    text = re.sub(r'\[SINGLESPACING\] *', r'\\singlespacing\\setlength{\\parskip}{\\myfontsize} ', text)
+    text = re.sub(r'\[DOUBLESPACING\] *', r'\\doublespacing\\setlength{\\parindent}{0.5in}\\setlength{\\RaggedRightParindent}{\\parindent} ', text)
     text = re.sub(r'\[NBSP\]', r'\\myshow{\\nonbreakingspace}', text)
     text = re.sub(r'\[ENDASH\]', r'\\myshow{\\myendash}', text)
     text = re.sub(r'\[EMDASH\]', r'\\myshow{\\myemdash}', text)
@@ -126,16 +127,18 @@ def pdf_filter(text):
     text = re.sub(r'\[PAGEBREAK\] *', r'\\clearpage ', text)
     text = re.sub(r'\[PAGENUM\] *', r'\\myshow{\\thepage} ', text)
     text = re.sub(r'\[SECTIONNUM\] *', r'\\myshow{\\thesection} ', text)
-    text = re.sub(r'\[SKIPLINE\] *', r'\\myskipline ', text)
+    text = re.sub(r'\[SKIPLINE\] *', r'\\par\\myskipline ', text)
+    text = re.sub(r'\[VERTICALSPACE\] *', r'\\rule[-24pt]{0pt}{0pt}', text)
     text = re.sub(r'\[NEWLINE\] *', r'\\newline ', text)
     text = re.sub(r'\[BR\] *', r'\\manuallinebreak ', text)
     text = re.sub(r'\[TAB\] *', r'\\manualindent ', text)
-    text = re.sub(r'\[FLUSHLEFT\] *(.+?)\n\n', r'\\begingroup\\singlespacing \1\\par\\endgroup' + "\n\n", text, flags=re.MULTILINE | re.DOTALL)
-    text = re.sub(r'\[CENTER\] *(.+?)\n\n', r'\\begingroup\\singlespacing\\Centering \1\\par\\endgroup' + "\n\n", text, flags=re.MULTILINE | re.DOTALL)
-    text = re.sub(r'\[BOLDCENTER\] *(.+?)\n\n', r'\\begingroup\\singlespacing\\Centering\\bfseries \1\\par\\endgroup' + "\n\n", text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[FLUSHLEFT\] *(.+?)\n\n', r'\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\noindent \1\\par\\endgroup' + "\n\n", text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[CENTER\] *(.+?)\n\n', r'\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\Centering\\noindent \1\\par\\endgroup' + "\n\n", text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[BOLDCENTER\] *(.+?)\n\n', r'\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\Centering\\bfseries\\noindent \1\\par\\endgroup' + "\n\n", text, flags=re.MULTILINE | re.DOTALL)
     return(text)
 
 def html_filter(text):
+    text = text + "\n\n"
     text = re.sub(r'^[|] (.*)$', r'\1<br>', text, flags=re.MULTILINE)
     text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_url_string, text)
     text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_url_string, text)
@@ -158,6 +161,7 @@ def html_filter(text):
     text = re.sub(r'\[CENTER\] *(.+?)\n\n', r'<p style="text-align: center;">\1</p>\n\n', text, flags=re.MULTILINE | re.DOTALL)
     text = re.sub(r'\[BOLDCENTER\] *(.+?)\n\n', r'<p style="text-align: center; font-weight: bold">\1</p>\n\n', text, flags=re.MULTILINE | re.DOTALL)
     text = re.sub(r'\\_', r'__', text)
+    text = re.sub(r'\n+$', r'', text)
     return(text)
 
 def image_as_rtf(match):
@@ -278,7 +282,7 @@ def image_include_string(match):
                 if file_info['extension'] == 'pdf':
                     output += '\\includepdf[pages={-}]{' + file_info['path'] + '.pdf}'
                 else:
-                    output += '\\includegraphics[width=' + width + ']{' + file_info['path'] + '}'
+                    output += '\\hbox{\\includegraphics[width=' + width + ']{' + file_info['path'] + '}}'
                 return(output)
     return('[invalid graphics reference]')
 

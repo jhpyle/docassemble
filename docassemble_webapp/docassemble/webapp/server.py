@@ -145,12 +145,12 @@ app.logger.addHandler(error_file_handler)
 
 def flask_logger(message):
     app.logger.warning(message)
-    sys.stderr.write(message)
+    sys.stderr.write(message + "\n")
     return
 
 docassemble.base.logger.set_logmessage(flask_logger)
 
-#logmessage("foo bar\n")
+#logmessage("foo bar")
 
 def get_url_from_file_reference(file_reference, **kwargs):
     root = daconfig.get('root', None)
@@ -200,7 +200,7 @@ def get_info_from_file_number(file_number):
     if os.path.isfile(filename):
         add_info_about_file(filename, result)
     else:
-        logmessage("Filename DID NOT EXIST.\n")
+        logmessage("Filename DID NOT EXIST.")
     return(result)
 
 def add_info_about_file(filename, result):
@@ -233,7 +233,7 @@ def get_info_from_file_reference(file_reference):
         result['extension'], result['mimetype'] = get_ext_and_mimetype(result['path'])
         add_info_about_file(result['path'], result)
     else:
-        logmessage("File reference " + str(file_reference) + " DID NOT EXIST.\n")
+        logmessage("File reference " + str(file_reference) + " DID NOT EXIST.")
     return(result)
 
 docassemble.base.parse.set_file_finder(get_info_from_file_reference)
@@ -286,7 +286,7 @@ app.secret_key = daconfig['secretkey']
 
 def logout():
     user_manager =  current_app.user_manager
-    #logmessage("Entering custom logout\n")
+    #logmessage("Entering custom logout")
 
     # Send user_logged_out signal
     flask.ext.user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
@@ -361,19 +361,19 @@ class GoogleSignIn(OAuthSignIn):
             base_url=None
         )
     def authorize(self):
-        #logmessage("Entering authorize\n")
+        #logmessage("Entering authorize")
         result = urlparse.parse_qs(request.data)
-        #logmessage("authorize: data is " + str() + "\n")
+        #logmessage("authorize: data is " + str())
         session['google_id'] = result.get('id', [None])[0]
         session['google_email'] = result.get('email', [None])[0]
-        #logmessage("authorize: id is " + str(result.get('id', None)) + "\n")
+        #logmessage("authorize: id is " + str(result.get('id', None)))
         response = make_response(json.dumps('Successfully connected user.', 200))
         response.headers['Content-Type'] = 'application/json'
-        #logmessage("authorize: got to end\n")
+        #logmessage("authorize: got to end")
         return response
     
     def callback(self):
-        #logmessage(str(session.get('credentials')) + "\n")
+        #logmessage(str(session.get('credentials')))
         email = session.get('google_email')
         return (
             'google$' + str(session.get('google_id')),
@@ -544,15 +544,15 @@ def index():
         need_to_reset = True
     if session_id:
         user_code = session_id
-        #logmessage("Found user code " + session_id + "\n")
+        #logmessage("Found user code " + session_id)
         steps, user_dict = fetch_user_dict(user_code, yaml_filename)
         if user_dict is None:
-            #logmessage("No dictionary for that code\n")
+            #logmessage("No dictionary for that code")
             del user_code
             del user_dict
         #user_dict['appmail'] = mail
     else:
-        logmessage("Did not find user code in session\n")
+        logmessage("Did not find user code in session")
     try:
         user_dict
         user_code
@@ -585,15 +585,15 @@ def index():
         del post_data['question_number']
         del post_data['email_attachments']
         del post_data['attachment_email_address']
-        logmessage("Got e-mail request for " + str(question_number) + " with e-mail " + str(attachment_email_address) + " and rtf inclusion of " + str(include_rtfs) + " and using yaml file " + yaml_filename + "\n")
+        logmessage("Got e-mail request for " + str(question_number) + " with e-mail " + str(attachment_email_address) + " and rtf inclusion of " + str(include_rtfs) + " and using yaml file " + yaml_filename)
         the_user_dict = get_attachment_info(user_code, question_number, yaml_filename)
         if the_user_dict is not None:
-            logmessage("the_user_dict is not none!\n")
+            logmessage("the_user_dict is not none!")
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             interview_status = docassemble.base.parse.InterviewStatus()
             interview.assemble(the_user_dict, interview_status)
             if len(interview_status.attachments) > 0:
-                #logmessage("there are attachments!\n")
+                #logmessage("there are attachments!")
                 attached_file_count = 0
                 attachment_info = list()
                 for the_attachment in interview_status.attachments:
@@ -609,7 +609,7 @@ def index():
                         elif the_format == "rtf":
                             mime_type = 'application/rtf'
                         attachment_info.append({'filename': str(the_attachment['filename']) + '.' + str(the_format), 'path': str(the_filename), 'mimetype': str(mime_type), 'attachment': the_attachment})
-                        logmessage("Need to attach to the e-mail a file called " + str(the_attachment['filename']) + '.' + str(the_format) + ", which is located on the server at " + str(the_filename) + ", with mime type " + str(mime_type) + "\n")
+                        logmessage("Need to attach to the e-mail a file called " + str(the_attachment['filename']) + '.' + str(the_format) + ", which is located on the server at " + str(the_filename) + ", with mime type " + str(mime_type))
                         attached_file_count += 1
                 if attached_file_count > 0:
                     doc_names = list()
@@ -622,7 +622,7 @@ def index():
                     else:
                         body = "Your " + subject + " is attached."
                     html = "<p>" + body + "</p>"
-                    logmessage("Need to send an e-mail with subject " + subject + " to " + str(attachment_email_address) + " with " + str(attached_file_count) + " attachment(s)\n")
+                    logmessage("Need to send an e-mail with subject " + subject + " to " + str(attachment_email_address) + " with " + str(attached_file_count) + " attachment(s)")
                     msg = Message(subject, recipients=[attachment_email_address], body=body, html=html)
                     for attach_info in attachment_info:
                         with open(attach_info['path'], 'r') as fp:
@@ -631,7 +631,7 @@ def index():
                         mail.send(msg)
                         success = True
                     except Exception as errmess:
-                        logmessage(str(errmess) + "\n")
+                        logmessage(str(errmess))
                         success = False
         if success:
             flash(word("Your documents were e-mailed to") + " " + str(attachment_email_address) + ".", 'info')
@@ -639,17 +639,17 @@ def index():
             flash(word("Unable to e-mail your documents to") + " " + str(attachment_email_address) + ".", 'error')
     if 'back_one' in post_data and steps > 1:
         steps, user_dict = fetch_previous_user_dict(user_code, yaml_filename)
-        #logmessage("Went back\n")
+        #logmessage("Went back")
     elif 'filename' in request.args:
-        #logmessage("Got a GET statement with filename!\n")
+        #logmessage("Got a GET statement with filename!")
         the_user_dict = get_attachment_info(user_code, request.args.get('question'), request.args.get('filename'))
         if the_user_dict is not None:
-            #logmessage("the_user_dict is not none!\n")
+            #logmessage("the_user_dict is not none!")
             interview = docassemble.base.interview_cache.get_interview(request.args.get('filename'))
             interview_status = docassemble.base.parse.InterviewStatus()
             interview.assemble(the_user_dict, interview_status)
             if len(interview_status.attachments) > 0:
-                #logmessage("there are attachments!\n")
+                #logmessage("there are attachments!")
                 the_attachment = interview_status.attachments[int(request.args.get('index'))]
                 the_filename = the_attachment['file'][request.args.get('format')]
                 the_format = request.args.get('format')
@@ -701,42 +701,56 @@ def index():
             #sys.stderr.write("Error: " + str(errMess) + "\n")
             flash_content += "<p>Error: " + str(errMess) + "</p>"
     if 'files' in post_data:
-        #logmessage("There are files\n")
+        #logmessage("There are files")
         interview.assemble(user_dict, interview_status)
         file_fields = post_data['files'].split(",")
         for file_field in file_fields:
-            #logmessage("There is a file_field\n")
+            #logmessage("There is a file_field")
             if file_field in request.files:
-                #logmessage("There is a file_field in request.files\n")
-                the_file = request.files[file_field]
-                if the_file:
-                    #logmessage("There is a file_field in request.files and it is there\n")
-                    filename = secure_filename(the_file.filename)
-                    file_number = get_new_file_number(session['uid'], filename)
-                    extension, mimetype = get_ext_and_mimetype(filename)
-                    path = get_file_path(file_number)
-                    if extension == "jpg" and 'imagemagick' in daconfig:
-                        unrotated = tempfile.NamedTemporaryFile(suffix="jpg")
-                        the_file.save(unrotated.name)
-                        call_array = [daconfig['imagemagick'], str(unrotated.name), '-auto-orient', '-density', '300']
-                        # width, height = PIL.Image.open(unrotated.name).size
-                        # if width > 3000 or height > 3000:
-                        #     call_array.append('-resize')
-                        #     call_array.append('1000x1000')
-                        call_array.append('jpeg:' + str(path))
-                        result = call(call_array)
-                        if result > 0:
-                            shutil.copyfile(unrotated.name, path)
-                    else:
-                        the_file.save(path)
-                    os.symlink(path, path + '.' + extension)
-                    if extension == "pdf":
-                        make_image_files(path)
+                #logmessage("There is a file_field in request.files")
+                the_files = request.files.getlist(file_field)
+                if the_files:
+                    files_to_process = list()
+                    for the_file in the_files:
+                        logmessage("There is a file_field in request.files and it has a type of " + str(type(the_file)) + " and its str representation is " + str(the_file))
+                        filename = secure_filename(the_file.filename)
+                        file_number = get_new_file_number(session['uid'], filename)
+                        extension, mimetype = get_ext_and_mimetype(filename)
+                        path = get_file_path(file_number)
+                        if extension == "jpg" and 'imagemagick' in daconfig:
+                            unrotated = tempfile.NamedTemporaryFile(suffix="jpg")
+                            the_file.save(unrotated.name)
+                            call_array = [daconfig['imagemagick'], str(unrotated.name), '-auto-orient', '-density', '300']
+                            # width, height = PIL.Image.open(unrotated.name).size
+                            # if width > 3000 or height > 3000:
+                            #     call_array.append('-resize')
+                            #     call_array.append('1000x1000')
+                            call_array.append('jpeg:' + str(path))
+                            result = call(call_array)
+                            if result > 0:
+                                shutil.copyfile(unrotated.name, path)
+                        else:
+                            the_file.save(path)
+                        os.symlink(path, path + '.' + extension)
+                        if extension == "pdf":
+                            make_image_files(path)
+                        files_to_process.append((filename, file_number, mimetype, extension))
                     if match_invalid.search(file_field):
                         flash_content += "<p>Error: Invalid character in file_field: " + file_field + " </p>"
                         break
-                    string = file_field + " = DAFile('" + file_field + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
-                    #sys.stderr.write(string + "\n")
+                    # if len(files_to_process) == 1:
+                    #     (filename, file_number, mimetype, extension) = files_to_process[0]
+                    #     string = file_field + " = DAFile('" + file_field + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
+                    if len(files_to_process) > 0:
+                        elements = list()
+                        indexno = 0
+                        for (filename, file_number, mimetype, extension) in files_to_process:
+                            elements.append("DAFile('" + file_field + "[" + str(indexno) + "]', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')")
+                            indexno += 1
+                        string = file_field + " = DAFileList('" + file_field + "', elements=[" + ", ".join(elements) + "])"
+                    else:
+                        string = file_field + " = None"
+                    logmessage("string is " + string)
                     try:
                         exec(string, user_dict)
                         changed = True
@@ -753,7 +767,7 @@ def index():
     for key in post_data:
         if key == 'checkboxes' or key == 'back_one' or key == 'files' or key == 'questionname' or key == 'theImage' or key == 'saveas' or key == 'success':
             continue
-        #logmessage("Got a key: " + key + "\n")
+        #logmessage("Got a key: " + key)
         data = post_data[key]
         if match_invalid.search(key):
             flash_content += "<p>Error: Invalid character in key: " + key + " </p>"
@@ -768,7 +782,7 @@ def index():
             else:
                 flash_content += "<p>Error: this was not the question</p>"
         string = key + ' = ' + data
-        logmessage("Doing " + str(string) + "\n")
+        logmessage("Doing " + str(string))
         try:
             exec(string, user_dict)
             changed = True
@@ -779,7 +793,7 @@ def index():
         user_dict['answered'].add(post_data['questionname'])
     interview.assemble(user_dict, interview_status)
     if len(interview_status.attachments) > 0:
-        #logmessage("Updating attachment info\n")
+        #logmessage("Updating attachment info")
         update_attachment_info(user_code, user_dict, interview_status)
     if interview_status.question.question_type == "restart":
         url_args = user_dict['url_args']
@@ -806,7 +820,7 @@ def index():
         if USE_PROGRESS_BAR:
             output += progress_bar(user_dict['progress'])
         extra_scripts = list()
-        output += as_html(interview_status, extra_scripts, DEBUG)
+        output += as_html(interview_status, extra_scripts, url_for, DEBUG)
         output += """</div></div>""" + scripts + "".join(extra_scripts) + """</body></html>"""
     response = make_response(output.encode('utf8'), status)
     response.headers['Content-type'] = 'text/html; charset=utf-8'
@@ -851,14 +865,14 @@ def get_attachment_info(the_user_code, question_number, filename):
     return the_user_dict
 
 def update_attachment_info(the_user_code, the_user_dict, the_interview_status):
-    #logmessage("Got to update_attachment_info\n")
+    #logmessage("Got to update_attachment_info")
     cur = conn.cursor()
     cur.execute("delete from attachments where key=%s and question=%s and filename=%s", [the_user_code, the_interview_status.question.number, the_interview_status.question.interview.source.path])
     conn.commit()
     cur.execute("insert into attachments (key, dictionary, question, filename) values (%s, %s, %s, %s)", [the_user_code, pickle.dumps(pickleable_objects(the_user_dict)), the_interview_status.question.number, the_interview_status.question.interview.source.path])
     conn.commit()
-    #logmessage("Delete from attachments where key = " + the_user_code + " and question is " + str(the_interview_status.question.number) + " and filename is " + the_interview_status.question.interview.source.path + "\n")
-    #logmessage("Insert into attachments (key, dictionary, question, filename) values (" + the_user_code + ", saved_user_dict, " + str(the_interview_status.question.number) + ", " + the_interview_status.question.interview.source.path + ")\n")
+    #logmessage("Delete from attachments where key = " + the_user_code + " and question is " + str(the_interview_status.question.number) + " and filename is " + the_interview_status.question.interview.source.path)
+    #logmessage("Insert into attachments (key, dictionary, question, filename) values (" + the_user_code + ", saved_user_dict, " + str(the_interview_status.question.number) + ", " + the_interview_status.question.interview.source.path + ")")
     return
 
 def fetch_user_dict(user_code, filename):
@@ -978,14 +992,14 @@ def utility_processor():
         return 'local$' + ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
     return dict(random_social=random_social, word=word)
 
-def standard_start():
-    return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css"><link rel="stylesheet" href="' + url_for('static', filename='app/app.css') + '"><title>' + daconfig['brandname'] + '</title></head><body>'
+def standard_start(extra_css=list()):
+    return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css"><link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="' + url_for('static', filename='app/app.css') + '"><title>' + daconfig['brandname'] + '</title></head><body>'
 
 def reset_session(yaml_filename):
     session['i'] = yaml_filename
     session['uid'] = get_unique_name(yaml_filename)
     user_code = session['uid']
-    #logmessage("Saving a dictionary for code " + user_code + "\n")
+    #logmessage("Saving a dictionary for code " + user_code)
     user_dict = initial_dict.copy()
     return(user_code, user_dict)
 

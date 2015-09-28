@@ -45,7 +45,7 @@ def signature_html(status, debug):
     output += '</form>'
     return output
 
-def as_html(status, extra_scripts, debug):
+def as_html(status, extra_scripts, url_for, debug):
     decorations = list()
     attributions = set()
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'help-inline'}
@@ -125,7 +125,7 @@ def as_html(status, extra_scripts, debug):
             if field.datatype == 'number' or field.datatype == 'currency':
                 validation_rules['rules'][field.saveas]['number'] = True
                 validation_rules['messages'][field.saveas]['number'] = word("You need to enter a number.")
-            if field.datatype == 'file':
+            if (field.datatype in ['files', 'file']):
                 enctype_string = ' enctype="multipart/form-data"'
                 files.append(field.saveas)
             if field.datatype == 'yesno':
@@ -145,6 +145,12 @@ def as_html(status, extra_scripts, debug):
             output += '<input type="hidden" name="checkboxes" value="' + ",".join(checkboxes) + '"></input>'
         if len(files):
             output += '<input type="hidden" name="files" value="' + ",".join(files) + '"></input>'
+            init_string = '<script>'
+            for saveasname in files:
+                init_string += '$("#' + saveasname + '").fileinput();' + "\n"
+            init_string += '</script>'
+            extra_scripts.append('<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + init_string)
+            #extra_css.append('<link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />')
         output += '<div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button></div>'
         output += question_name_tag(status.question)
         output += '</fieldset></form>'
@@ -388,8 +394,13 @@ def input_for(status, field):
         if defaultvalue:
             output += ' checked'
         output += '> ' + field.label
-    elif field.datatype == 'file':
-        output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + field.saveas + '" id="' + field.saveas + '"></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>'
+    elif field.datatype in ['file', 'files']:
+        if field.datatype == 'file':
+            multipleflag = ''
+        else:
+            multipleflag = ' multiple'
+        output += '<input type="file" class="file" data-show-upload="false" data-preview-file-type="text" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + '>'
+        #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>'
     elif field.datatype == 'area':
         output += '<textarea class="form-control" rows="4" name="' + field.saveas + '" id="' + field.saveas + '"' + placeholdertext + '>'
         if defaultvalue is not None:

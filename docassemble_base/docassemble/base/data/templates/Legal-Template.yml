@@ -5,7 +5,7 @@ papersize: letterpaper
 documentclass: article
 numbersections: true
 graphics: true
-geometry: left=1in,right=1in,top=1in,bottom=1in
+geometry: left=1in,right=1in,top=1in,heightrounded,includeheadfoot
 header-includes:
   - \usepackage{setspace}
   - \usepackage{fancyhdr}
@@ -63,5 +63,4 @@ header-includes:
 include-before:
   - \RaggedRight
   - \myfontfamily
-  - \doublespacing
 ...

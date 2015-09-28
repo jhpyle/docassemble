@@ -71,7 +71,7 @@ To install the [Nodebox English Linguistics library](https://www.nodebox.net/cod
 
 To install the [us](https://pypi.python.org/pypi/us) and [SmartyPants](https://pypi.python.org/pypi/mdx_smartypants) modules, do:
 
-    sudo pip install us 3to2 guess-language-spirit mdx_smartypants
+    sudo pip install us 3to2 guess-language-spirit mdx_smartypants titlecase
 
 (The mdx_smartypants module depends on 3to2 and guess-language-spirit, and may have trouble installing if those modules are not already installed.)
 
