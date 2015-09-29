@@ -63,4 +63,5 @@ header-includes:
 include-before:
   - \RaggedRight
   - \myfontfamily
+  - \sloppy
 ...
