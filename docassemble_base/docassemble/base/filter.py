@@ -298,7 +298,7 @@ def image_include_string(match):
                 if file_info['extension'] == 'pdf':
                     output = '\\includepdf[pages={-}]{' + file_info['path'] + '.pdf}'
                 else:
-                    output = '\\hbox{\\includegraphics[width=' + width + ']{' + file_info['path'] + '}}'
+                    output = '\\mbox{\\includegraphics[width=' + width + ']{' + file_info['path'] + '}}'
                     if width == '\\textwidth':
                         output = '\\clearpage ' + output + '\\clearpage '
                 return(output)
