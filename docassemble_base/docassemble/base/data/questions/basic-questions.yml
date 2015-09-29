@@ -96,11 +96,11 @@ under: |
 ---
 template: blank_signature
 content: |
-  [SKIPLINE] \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ [SKIPLINE]
+  \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 ---
 template: empty_signature
 content: |
-  [SKIPLINE] \_\_\_[Your signature here]\_\_\_ [SKIPLINE]
+  \_\_\_[Your signature here]\_\_\_
 ---
 question: |
   Is this your signature?
