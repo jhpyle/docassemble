@@ -204,6 +204,7 @@ class DAList(DAObject):
         if 'elements' in kwargs:
             for element in kwargs['elements']:
                 self.add(element)
+            self.gathered = True
         return super(DAList, self).init()
     def add(self, element):
         self.elements.append(element)

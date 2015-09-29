@@ -347,7 +347,7 @@ comment: |
   U.S. states from a helpful Python module called "us."  Note that we
   imported this module earlier.
 ---
-question: Please upload a picture.
+question: Please upload one or more pictures.
 decoration: picture
 fields:
   - A test file: user.picture
@@ -358,7 +358,11 @@ comment: |
 comment: |
   This is how you can display a picture that a user has uploaded.
 question: |
-  Is this your picture?
+  % if user.picture.number() > 1:
+  Are these the pictures you uploaded?
+  % else:
+  Is this the picture you uploaded?
+  % endif
 subquestion: |  
   ${ user.picture.show() }
 yesno: user.picture_verified

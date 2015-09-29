@@ -116,6 +116,7 @@ def pdf_filter(text):
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
     text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_include_string, text)
     text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_include_string, text)
+    text = re.sub(r'\\clearpage *\\clearpage', r'\\clearpage', text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', r'\\noindent\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\mynoindent\\begin{tabular}{@{}m{0.49\\textwidth}|@{\\hspace{1em}}m{0.49\\textwidth}@{}}{\1} & {\2} \\\\ \\end{tabular}\\endgroup\\myskipline', text)
     text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', r'\\noindent\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\mynoindent\\begin{tabular}{@{}p{0.49\\textwidth}@{\\hspace{1em}}p{0.49\\textwidth}@{}}{\1} & {\2} \\\\ \\end{tabular}\\endgroup\\myskipline', text)
     text = re.sub(r'\[SINGLESPACING\] *', r'\\singlespacing\\setlength{\\parskip}{\\myfontsize} ', text)
@@ -171,10 +172,12 @@ def image_as_rtf(match):
         width_supplied = True
     except:
         width = DEFAULT_IMAGE_WIDTH
+    if width == 'full':
+        width_supplied = False
     file_reference = match.group(1)
     file_info = file_finder(file_reference)
     if 'width' in file_info:
-        return rtf_image(file_info, width)
+        return rtf_image(file_info, width, not width_supplied)
     elif file_info['extension'] == 'pdf':
         output = ''
         if not width_supplied:
@@ -189,7 +192,7 @@ def image_as_rtf(match):
             page_file['path'] = file_info['path'] + 'page-' + str(page)
             im = PIL.Image.open(page_file['path'] + ".png")
             page_file['width'], page_file['height'] = im.size
-            output += rtf_image(page_file, width)
+            output += rtf_image(page_file, width, False)
             if not width_supplied:
                 #logmessage("Adding page break\n")
                 output += '\\page '
@@ -200,7 +203,7 @@ def image_as_rtf(match):
     else:
         return('')
 
-def rtf_image(file_info, width):
+def rtf_image(file_info, width, insert_page_breaks):
     pixels = pixels_in(width)
     if pixels > 0 and file_info['width'] > 0:
         scale = float(pixels)/float(file_info['width'])
@@ -222,7 +225,11 @@ def rtf_image(file_info, width):
         image.Data = re.sub(r'\\pichgoal([0-9]+)', r'\\pichgoal' + str(htwips), image.Data)
     else:
         image = Image( file_info['path'] + '.' + file_info['extension'] )
-    return(image.Data)
+    if insert_page_breaks:
+        content = '\\page '
+    else:
+        content = ''
+    return(content + image.Data)
     
 unit_multipliers = {'in':72, 'pt':1, 'px':1, 'em':12, 'cm':28.346472}
 
@@ -245,6 +252,8 @@ def image_url_string(match):
         width = match.group(2)
     except:
         width = "300px"
+    if width == "full":
+        width = "300px"    
     file_info = file_finder(file_reference)
     if 'extension' in file_info:
         if re.match(r'.*%$', width):
@@ -272,17 +281,20 @@ def image_include_string(match):
     try:
         width = match.group(2)
         width = re.sub(r'^(.*)px', convert_pixels, width)
+        if width == "full":
+            width = '\\textwidth'
     except:
         width = DEFAULT_IMAGE_WIDTH
     file_info = file_finder(file_reference)
     if 'path' in file_info:
         if 'extension' in file_info:
             if file_info['extension'] in ['png', 'jpg', 'gif', 'pdf', 'eps']:
-                output = ""
                 if file_info['extension'] == 'pdf':
-                    output += '\\includepdf[pages={-}]{' + file_info['path'] + '.pdf}'
+                    output = '\\includepdf[pages={-}]{' + file_info['path'] + '.pdf}'
                 else:
-                    output += '\\hbox{\\includegraphics[width=' + width + ']{' + file_info['path'] + '}}'
+                    output = '\\hbox{\\includegraphics[width=' + width + ']{' + file_info['path'] + '}}'
+                    if width == '\\textwidth':
+                        output = '\\clearpage ' + output + '\\clearpage '
                 return(output)
     return('[invalid graphics reference]')
 
