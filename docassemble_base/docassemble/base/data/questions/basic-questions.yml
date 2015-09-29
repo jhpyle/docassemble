@@ -4,8 +4,8 @@ metadata:
     These are basic questions common to a lot of different scenarios
   authors:
     - name: Jonathan Pyle
-      organization: Philadelphia Legal Assistance
-  revision_date: 2015-03-21
+      organization: Example, Inc.
+  revision_date: 2015-09-28
 comment: >-
   A "metadata" section contains information about who wrote the
   YAML file and how it is intended to be used.

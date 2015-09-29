@@ -4,7 +4,7 @@ metadata:
   authors:
     - name: Jonathan Pyle
       organization: Example, Inc.
-  revision_date: 2015-09-27
+  revision_date: 2015-09-28
 comment: |
   A "metadata" block contains information about the YAML file, such as
   the name of the author.
@@ -555,7 +555,7 @@ attachments:
       % if user.picture_verified:
       Look how cute I am:
 
-      ${ user.picture.show() }
+      [FLUSHLEFT] ${ user.picture.show() }
       % endif
 
       Chambray art party craft beer pork belly health goth, locavore
