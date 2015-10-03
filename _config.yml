@@ -1,0 +1,13 @@
+# Site settings
+title: Docassemble
+email: jhpyle@gmail.com
+description: "A guided interview and document assembly platform"
+baseurl: ""
+url: "http://docassemble.org"
+#twitter_username: jhpyle
+github_username:  jhpyle
+highlighter: pygments
+
+# Build settings
+markdown: kramdown
+permalink: pretty

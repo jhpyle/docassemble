@@ -1,0 +1,12 @@
+*~
+*.pyc
+en
+*/auto
+foobar.pickle
+*/build
+*.egg-info
+*/dist
+make_session_store.py
+da.wsgi
+oauth.wsgi
+trash
