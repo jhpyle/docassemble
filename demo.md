@@ -1,6 +1,7 @@
 ---
 layout: page
-title: Demo
+title: A demonstration of docassemble
+short_title: Demo
 ---
 
 [Run a simple demonstration] to see what the standard web interface
