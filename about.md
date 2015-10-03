@@ -1,10 +1,9 @@
 ---
 layout: page
-title: About
+short_title: About
+title: How docassemble works
 permalink: /about/
 ---
-
-## How does it work?
 
 docassemble uses the [Mako](http://www.makotemplates.org/) templating
 system, which allows the full power of the

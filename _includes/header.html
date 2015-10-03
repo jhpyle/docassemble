@@ -15,13 +15,16 @@
 
       <div class="trigger">
         {% for page in site.pages %}
-          {% if page.short_title %}
-          <a class="page-link" href="{{ page.url | prepend: site.baseurl }}">{{ page.short_title }}</a>
-          {% elseif page.title %}
-          <a class="page-link" href="{{ page.url | prepend: site.baseurl }}">{{ page.title }}</a>
+  	  {% if page.url contains '/index.html' %}
+	  {% else %}
+            {% if page.short_title %}
+        <a class="page-link" href="{{ page.url | prepend: site.baseurl }}">{{ page.short_title }}</a>
+            {% elsif page.title %}
+        <a class="page-link" href="{{ page.url | prepend: site.baseurl }}">{{ page.title }}</a>
+            {% endif %}
           {% endif %}
         {% endfor %}
-          <a class="page-link" href="{{ site.github.repository_url }}">View on GitHub</a>
+        <a class="page-link" href="{{ site.github.repository_url }}">View on GitHub</a>
       </div>
     </nav>
 
