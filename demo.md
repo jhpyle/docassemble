@@ -1,9 +1,10 @@
 ---
 layout: page
-title: A demonstration of docassemble
+title: Demo
 ---
 
-[Run a simple demo] to see what the standard web interface looks like.
+[Run a simple demonstration] to see what the standard web interface
+looks like.
 
 The interface is based on [Bootstrap], which is both mobile-friendly
 and desktop-friendly.  Try it out on a mobile device.
@@ -1018,5 +1019,5 @@ fields:
 ...
 {% endhighlight %}
 
-[Run a simple demo]: https://docassemble.org/demo?i%3Ddocassemble.demo:data/questions/questions.yml
+[Run a simple demonstration]: https://docassemble.org/demo?i%3Ddocassemble.demo:data/questions/questions.yml
 [Bootstrap]: http://bootstrapdocs.com/v2.0.2/docs/index.html
