@@ -1,19 +1,17 @@
 ---
 layout: page
-title: Demo
+title: A demonstration of docassemble
 ---
 
-[Run a simple demo](https://docassemble.org/demo?i%3Ddocassemble.demo:data/questions/questions.yml)
-to see what the standard web interface looks like.
+[Run a simple demo] to see what the standard web interface looks like.
 
-The interface is based on
-[Bootstrap](http://bootstrapdocs.com/v2.0.2/docs/index.html), which is
-both mobile-friendly and desktop-friendly.  Try it out on a mobile
-device.
+The interface is based on [Bootstrap], which is both mobile-friendly
+and desktop-friendly.  Try it out on a mobile device.
 
 Keep in mind that this system is under active development.  The
 example interview is not intended to make logical sense as an
-interview; it is simply intended for testing purposes.
+interview; it is simply intended to demonstrate the features of
+docassemble.
 
 ## The demo YAML file
 
@@ -57,9 +55,10 @@ interview help:
     see more information about the word.  You can try this out by here
     to find out more about rhododendron plants.
 comment: |
-  An "interview help" block adds text to the "Help" page of every question in the
-  interview.  If the question has help text of its own, the "interview help" will
-  appear after the question-specific help.
+  An "interview help" block adds text to the "Help" page of every
+  question in the interview.  If the question has help text of its
+  own, the "interview help" will appear after the question-specific
+  help.
 ---
 include:
   - basic-questions.yml
@@ -1019,3 +1018,5 @@ fields:
 ...
 {% endhighlight %}
 
+[Run a simple demo]: https://docassemble.org/demo?i%3Ddocassemble.demo:data/questions/questions.yml
+[Bootstrap]: http://bootstrapdocs.com/v2.0.2/docs/index.html
