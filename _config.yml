@@ -4,8 +4,8 @@ email: jhpyle@gmail.com
 description: > 
   A python module for assembling documents from templates while 
   automatically querying a user for necessary information.
-baseurl: "/docassemble"
-url: "http://jhpyle.github.io" # the base hostname & protocol for your site
+baseurl: ""
+url: "http://docs.docassemble.org" # the base hostname & protocol for your site
 github_username:  jhpyle
 
 # Build settings
