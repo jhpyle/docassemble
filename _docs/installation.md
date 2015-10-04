@@ -1,4 +1,5 @@
 ---
+layout: docs
 title: How to install docassemble
 short_title: Install
 ---

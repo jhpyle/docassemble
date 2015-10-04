@@ -1,0 +1,16 @@
+{% assign items = include.items %}
+{% for item in items %}
+  {% assign item_url = item | prepend:"/docs/" | append:".html" %}
+  {% if item_url == page.url %}
+    {% assign c = "active" %}
+  {% else %}
+    {% assign c = "" %}
+  {% endif %}
+  {% for p in site.docs %}
+    {% if p.url == item_url %}
+      <li class="{{ c }}"><a href="{{ p.url | prepend: site.baseurl }}">{{ p.short_title }}</a></li>
+      {% break %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+

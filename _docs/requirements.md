@@ -1,4 +1,5 @@
 ---
+layout: docs
 title: Requirements
 short_title: Requirements
 ---
@@ -38,4 +39,5 @@ The web application depends on:
 * A mail server
 
 To run the demo question file you will need:
+
 * [DateUtil](https://moin.conectiva.com.br/DateUtil)

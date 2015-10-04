@@ -11,11 +11,12 @@ collections:
   docs:
     output: true
 defaults:
-  - scope:
-      path: ""
+  -
+    scope:
+      path: "docs"
       type: docs
     values:
-      layout: page
+      layout: docs
 
 # Build settings
 markdown: kramdown
