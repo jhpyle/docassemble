@@ -44,7 +44,7 @@ conditional statement such as:
 	  
 then the user will be asked if he is disabled, and will only be asked
 for his age if he says he is not disabled.  Authors need to provide a
-question for every variable (e.g., ~user_is_disabled~ and ~user.age~)
+question for every variable (e.g., `user_is_disabled` and `user.age`)
 but docassemble will figure out when and whether to ask those
 questions.
 

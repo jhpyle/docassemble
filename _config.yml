@@ -7,6 +7,15 @@ description: >
 baseurl: ""
 url: "http://docs.docassemble.org" # the base hostname & protocol for your site
 github_username:  jhpyle
+collections:
+  docs:
+    output: true
+defaults:
+  - scope:
+      path: ""
+      type: docs
+    values:
+      layout: page
 
 # Build settings
 markdown: kramdown

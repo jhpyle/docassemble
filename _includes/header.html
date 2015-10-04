@@ -1,4 +1,33 @@
-<header class="site-header">
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="{{ site.baseurl }}/">{{ site.title }}</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav navbar-right">
+        {% for thepage in site.pages %}
+  	  {% if thepage.url contains '/index.html' %}
+	  {% else %}
+            {% if thepage.short_title %}
+        <li{% if page.url == thepage.url%} class="active"{% endif %}><a href="{{ thepage.url | prepend: site.baseurl }}">{{ thepage.short_title }}</a>
+            {% elsif thepage.title %}
+        <li><a href="{{ thepage.url | prepend: site.baseurl }}">{{ thepage.title }}</a></li>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+        <li><a href="{{ site.github.repository_url }}">View on GitHub</a></li>
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+<!--<header class="site-header">
 
   <div class="wrapper">
 
@@ -30,4 +59,4 @@
 
   </div>
 
-</header>
+</header>-->
