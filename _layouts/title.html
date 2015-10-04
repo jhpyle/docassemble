@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" class="title-body">
+{% include head.html %}
+  <body class="title-body">
+    <div class="site-wrapper">
+      <div class="site-wrapper-inner">
+	<div class="title-nav">
+          {% include header.html %}
+	</div>
+	<div class="cover-container">
+	  {{ content }}
+          <div class="mastfoot">
+	    {% include footer-attribution.html %}
+          </div>
+	</div>
+      </div>
+    </div>
+  </body>
+</html>

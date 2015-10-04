@@ -1,9 +1,7 @@
 <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 <footer style="text-align:center;padding-bottom:20px">
-  <hr>
-  <p>Designed and built by <a href="http://jonathanpyle.com">Jonathan Pyle</a><br>
-  Code licensed under <a rel="license" href="https://github.com/jhpyle/docassemble/blob/master/LICENSE" target="_blank">MIT</a>, documentation under <a rel="license" href="https://creativecommons.org/licenses/by/3.0/" target="_blank">CC BY 3.0</a>.</p>
+  {% include footer-attribution.html %}
   {% for thepage in site.pages %}
   {% if thepage.url contains '/index.html' %}
   {% else %}
