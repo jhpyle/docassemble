@@ -15,7 +15,7 @@
   	  {% if thepage.url contains '/index.html' %}
 	  {% else %}
             {% if thepage.short_title %}
-        <li{% if page.url == thepage.url%} class="active"{% endif %}><a href="{{ thepage.url | prepend: site.baseurl }}">{{ thepage.short_title }}</a>
+        <li{% if page.url == thepage.url or (page.url contains 'docs' and thepage.url == '/docs.html') %} class="active"{% endif %}><a href="{{ thepage.url | prepend: site.baseurl }}">{{ thepage.short_title }}</a>
             {% elsif thepage.title %}
         <li><a href="{{ thepage.url | prepend: site.baseurl }}">{{ thepage.title }}</a></li>
             {% endif %}

@@ -1,7 +1,7 @@
 ---
 layout: docs
 title: How to install docassemble
-short_title: Install
+short_title: Installation
 ---
 
 These installation instructions assume a Debian GNU/Linux machine, but

@@ -2,7 +2,10 @@
   docs:
     - requirements
     - installation
-- title: Quick start
+- title: Tutorials
   docs:
     - helloworld
+- title: Authoring
+  docs:
+    - interviews
     

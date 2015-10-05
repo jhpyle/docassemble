@@ -14,4 +14,4 @@ You can also download the package as a [tarball]({{ site.github.tar_url }}) or a
 
 See the [installation page]({{site.baseurl}}/docs/installation.html)
 for instructions about how to install **docassemble** and its
-dependencies.
+[dependencies]({{site.baseurl}}/docs/requirements.html).
