@@ -25,7 +25,7 @@ class UserAuth(db.Model, UserMixin):
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
     password = db.Column(db.String(255), nullable=False, server_default='')
     reset_password_token = db.Column(db.String(100), nullable=False, server_default='')
-    active = db.Column(db.Boolean(), nullable=False, server_default='0')
+    #active = db.Column(db.Boolean(), nullable=False, server_default='0')
     user = db.relationship('User', uselist=False, primaryjoin="User.id==UserAuth.user_id")
 
 class Role(db.Model):

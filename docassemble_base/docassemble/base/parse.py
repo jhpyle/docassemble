@@ -255,7 +255,7 @@ class Question:
         self.fields_used = set()
         self.names_used  = set()
         self.role = set()
-        if 'mandatory' in data and data['mandatory']:
+        if 'mandatory' in data and data['mandatory'] is True:
             self.is_mandatory = True
         else:
             self.is_mandatory = False
@@ -848,7 +848,8 @@ class Interview:
         else:
             source_package = None
         for document in yaml.load_all(source.content):
-            question = Question(document, self, path=source.path, package=source_package)
+            if document is not None:
+                question = Question(document, self, path=source.path, package=source_package)
     def processed_helptext(self, user_dict):
         result = list()
         for source in self.helptext:

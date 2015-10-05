@@ -970,11 +970,14 @@ def make_navbar(page_title, steps):
           <ul class="nav navbar-nav navbar-right">
 """
     if current_user.is_anonymous:
+        logmessage("is_anonymous is " + str(current_user.is_anonymous))
         navbar += '            <li><a href="' + url_for('user.login', next=url_for('index')) + '">' + word('Sign in') + '</a></li>'
     else:
         navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">' + current_user.email + '<b class="caret"></b></a><ul class="dropdown-menu">'
-        if current_user.has_roles(['admin', 'developer']):
+        if current_user.has_role('admin', 'developer'):
             navbar +='<li><a href="' + url_for('package_page') + '">' + word('Package Management') + '</a></li>'
+            if current_user.has_role('admin'):
+                navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
         navbar += '<li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li><li><a href="' + url_for('user.logout') + '">' + word('Sign out') + '</a></li></ul></li>'
     navbar += """\
           </ul>
