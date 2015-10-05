@@ -4,7 +4,7 @@ title: A demonstration of docassemble
 short_title: Demo
 ---
 
-[Run a simple demonstration] to see **docassemble** in action.
+[Run a simple demonstration](https://docassemble.org/demo?i%3Ddocassemble.demo:data/questions/questions.yml){:target="_blank"} to see **docassemble** in action.
 
 The interface is based on [Bootstrap], which is both mobile-friendly
 and desktop-friendly.  Try it out on a mobile device.
@@ -1025,6 +1025,5 @@ fields:
 ...
 {% endhighlight %}
 
-[Run a simple demonstration]: https://docassemble.org/demo?i%3Ddocassemble.demo:data/questions/questions.yml
 [Bootstrap]: https://en.wikipedia.org/wiki/Bootstrap_%28front-end_framework%29
 [YAML]: https://en.wikipedia.org/wiki/YAML
