@@ -4,29 +4,32 @@ title: A demonstration of docassemble
 short_title: Demo
 ---
 
-[Run a simple demonstration] to see what the standard web interface
-looks like.
+[Run a simple demonstration] to see **docassemble** in action.
 
 The interface is based on [Bootstrap], which is both mobile-friendly
 and desktop-friendly.  Try it out on a mobile device.
 
-Keep in mind that this system is under active development.  The
-example interview is not intended to make logical sense as an
-interview; it is simply intended to demonstrate the features of
-docassemble.
+Note that the example interview is not intended to make logical sense
+as an interview; it is simply intended to demonstrate the features of
+**docassemble**.
 
-## The demo YAML file
+100% of the source code for the example interview is listed below in
+the form of two [YAML] files, which are annotated with comments.
 
-The YAML file that generates the interview is listed below.  Note that:
+### The YAML file that generates the demonstration interview
 
-* It incorporates by reference another YAML file, which specifies how
-  basic questions should be asked.
+The [YAML] file that generates the interview, `questions.yml`, is
+listed below.  Note that:
+
+* It incorporates by reference another [YAML] file,
+  `basic-questions.yml`, which specifies how certain common questions
+  should be asked.
 * The code is not entirely self-explanatory, but for computer code, it
   is pretty close to plain English.
 * Note that complicated processes, such as a series of questions that
-  gather the names of the user's children, can be specified in a few
-  lines of code.
-* Most of the bits of logic are not specified in any particular order.
+  gather the names of the user's children, can be specified in just a
+  few lines of code.
+* The questions and logic are not specified in any particular order.
   If docassemble needs to get the value of a variable, it knows where
   to find it.  This makes things easier for the author, who can
   organize the code however he or she wants.  Moreover, the author can
@@ -633,10 +636,12 @@ progress: 100
 ...
 {% endhighlight %}
 
-## The basic-questions.yaml file
+### The basic-questions.yml file
 
-Many of the questions are defined in the `basic-questions.yaml` file.
-Here is an annotated guide to how this file works.
+Many of the questions asked in the demonstration interview do not need
+to be defined in the [YAML] source file because they are already
+defined in the `basic-questions.yaml` file.  Here is an annotated
+guide to how this file works.
 
 {% highlight yaml %}
 metadata:
@@ -1021,4 +1026,5 @@ fields:
 {% endhighlight %}
 
 [Run a simple demonstration]: https://docassemble.org/demo?i%3Ddocassemble.demo:data/questions/questions.yml
-[Bootstrap]: http://bootstrapdocs.com/v2.0.2/docs/index.html
+[Bootstrap]: https://en.wikipedia.org/wiki/Bootstrap_%28front-end_framework%29
+[YAML]: https://en.wikipedia.org/wiki/YAML

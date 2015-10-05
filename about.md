@@ -1,42 +1,76 @@
 ---
 layout: page
 short_title: About
-title: How docassemble works
+title: What is docassemble?
 permalink: /about/
 ---
 
-docassemble uses the [Mako](http://www.makotemplates.org/) templating
-system, which allows the full power of the
-[Python programming language](https://www.python.org/) to be embedded
-into interview questions and document templates.  Documents are
-composed in [Markdown](http://daringfireball.net/projects/markdown/)
-and then converted using [pandoc](http://johnmacfarlane.net/pandoc/)
-into other formats, such as HTML, RTF, and PDF.
+**docassemble** is a free, open-source expert system for guided
+interviews and document assembly.  It provides a web site that
+conducts "interviews" with users.  Based on the information gathered,
+the interviews can present users with documents in PDF and RTF format,
+which users can download or e-mail to themselves.
 
-It is meant to be as flexible as possible, so that Python programs can
-present the interview questions and the resulting documents to the
-user in any number of ways.  The most common method will be through
-the web.  The package includes a web application for presenting
-interview questions in mobile-responsive HTML format and saving
-interview state to a database (see below for a demonstration), but
-this is just one of many possible applications.  The docassemble API
-could be used for conducting interviews over the phone (using a
-text-to-speech engine) or through text messaging (e.g., using the
-[Twilio API](https://www.twilio.com/docs/libraries)).
+**docassemble** was created by a lawyer/computer programmer for
+purposes of automating the practice of law, but it is a
+general-purpose platform that can find applications a variety of
+fields.
 
-To create a docassemble interview, the author writes a
-[YAML](http://yaml.org) file that containing the interview questions,
-logic, and the
-[Markdown](http://daringfireball.net/projects/markdown/) source of any
-documents to be assembled on the basis of the answers to the
-questions.
+Though the name emphasizes the document assembly feature,
+**docassemble** interviews do not need to assemble a document; they
+might submit an application, direct the user to other resources on the
+internet, or simply provide the user with information.
 
-While conducting an interview, docassemble will determine what
-questions to ask, and the order in which to ask them, based on the
-specified logic; the author does not need to specify the path of the
-questions.  The system will refrain from asking the user unnecessary
-questions.  For example, if a question or document contains a
-conditional statement such as:
+## Features
+
+### User-friendly
+
+The user interface is user-friendly.  **docassemble** uses [Bootstrap]
+to provide a mobile-friendly and desktop-friendly interface.  In
+addition to gathering yes/no answers and fill-in forms,
+**docassemble** can collect uploaded documents, pictures taken with a
+smartphone, and the user's signature, which the user can write using a
+touchscreen or mouse.  The documents created by **docassemble** can
+incorporate the user's signature and/or uploaded images.
+
+### Easy to develop
+
+Interviews in **docassemble** are easy to create.  Interviews are
+authored as [YAML] files.  Within the [YAML] files, the text of the
+interview questions and documents is written in [Markdown], and the
+logic of the interview flow is created by writing if/then/else
+statements in [Python].
+
+Authors do not need to have any prior experience with [Python] or
+computer programming in order to author interviews.  The only [Python]
+statements authors will need to write are rudimentary statements that
+are very close to plain English.  For example:
+
+	if user.is_citizen or user.is_legal_permanent_resident:
+	  user.is_eligible = True
+	else:
+	  user.is_eligible = False
+
+The [Markdown] language is very simple.  For example, if you write
+this [Markdown] text:
+
+    It is *very* important that you obtain your
+    [free credit report](https://www.annualcreditreport.com) as soon
+    as possible.
+
+then you get text that looks like this:
+
+> It is *very* important that you obtain your
+> [free credit report](https://www.annualcreditreport.com) as soon
+> as possible.
+
+**docassemble** interviews are especially easy to create because
+interview authors do not have to design the "flow" of the interview;
+**docassemble** will determine what questions to ask, and the order in
+which to ask them, based on what information is necessary to gather.
+The system will refrain from asking unnecessary questions.  For
+example, if a question or document contains a conditional statement
+such as:
 
     % if user_is_disabled or user.age > 60:
       We have special funding to assist you.
@@ -44,138 +78,166 @@ conditional statement such as:
 	  
 then the user will be asked if he is disabled, and will only be asked
 for his age if he says he is not disabled.  Authors need to provide a
-question for every variable (e.g., `user_is_disabled` and `user.age`)
-but docassemble will figure out when and whether to ask those
-questions.
+question for every variable (e.g., there need to be questions that
+determine `user_is_disabled` and `user.age`) but **docassemble** will
+automatically figure out when and whether to ask those questions.
 
 This allows authors to concentrate on the end result rather than
 worrying about how to construct an interview process.  Authors who are
 lawyers can "practice at the top of their license" by spending their
 time thinking about the law (a lawyer function) rather than thinking
-about the interview process (a paralegal function).
+about the interview process (a non-lawyer function).
 
-In addition, there are many common questions that authors do not need
-to think about at all; authors can incorporate by reference the
-questions that other authors have written (in the form of one or more
-[YAML](http://yaml.org) files), and thereby devote all of their
-attention the special aspects of their interviews and documents.  ##
-Has it been released yet?  docassemble is still in development, but it
-is usable.
+[YAML] has a very short set of rules, so it is not hard to learn.
+**docassemble**'s YAML files are pretty easy to read, and if you forget
+the right words to use, you can easily copy, paste, and edit an
+example.
 
-## Can I run a demo?
+There are many text editors that have special features for editing
+[YAML] files.  On Windows, the best is
+[Notepad++](http://notepad-plus-plus.org/).
 
-The [demonstration page](file:demo.org) contains a demo interview that
-asks questions and assembles a document at the end.  It also contains
-a complete annotated YAML source listing of the code used to generate
-the interview.
+### The full power of Python
 
-## How does it compare with the alternatives?
+While interview authors do not need to by [Python] experts, authors
+who know [Python] (or are willing to learn [Python]) can extend the
+functionality of the interviews by writing [Python] classes.  This
+allows the interviews to do anything [Python] can do (e.g., retrieve
+information from web services, interact with databases, send e-mail,
+interact with third-party APIs, etc.)
 
-Much of what docassemble does can be accomplished with HotDocs and
-A2J.  However, docassemble has superior features for incorporating
+### Reusable content
+
+Interview authors never have to reinvent the wheel because
+**docassemble** allows interview questions and logic to be re-used.
+By developing one interview, an author effectively creates a "library"
+of questions that can be incorporated by reference into future
+interviews.
+
+An interview author writes a [YAML] file that is contained within a
+[Python] package.  Authors can incorporate the work of another author
+simply by installing the other author's [Python] package on the server
+and incorporating the author's interview questions or modules by
+reference.  The web interface allows [Python] packages to be installed
+either as .zip files or through the cloning of [GitHub] repositories.
+
+### Multilingual
+
+All of the text presented to the user of the **docassemble** web
+application can be translated to a language other than English.
+
+### Multi-purpose
+
+At its core, **docassemble** is a multi-purpose expert system.  The
+logic engine of **docassemble** is the [Python] package
+`docassemble-base`, which provides an API.  The web application is a
+separate [Python] package, `docassemble-webapp`, which uses the API.
+This allows for a number of possible applications.  For example, the
+[Twilio API](https://www.twilio.com/docs/libraries) could be used
+with `docassemble-base` to conduct interviews over the phone (using a
+text-to-speech engine) or through text messaging.  A single interview
+file (i.e., a [YAML] file) could be used to power both a web-based
+interview and a telephone interview.
+
+### Superior to the alternatives
+
+Much of what **docassemble** does can be accomplished with [HotDocs] and
+[A2J].  However, **docassemble** has superior features for incorporating
 "libraries" of questions.  Since all the authoring is done within a
 YAML file, content can easily be reused through incorporation by
 reference (the "include" function) or copy-and-paste.
 
-While for some people, docassemble may have a steeper learning curve
-than A2J and HotDocs, but in the long run, creating forms and
-interviews in docassemble is probably more efficient because
-everything can be created in a text editor.  docassemble was designed
-to minimize unnececessary work.  For example, it does not require
-authors to give names to every interview question.
+While for some people, **docassemble** may have a steeper learning
+curve than [A2J] and [HotDocs], but in the long run, creating forms
+and interviews in **docassemble** is more efficient because everything
+can be created in a text editor.  **docassemble** was designed to
+minimize unnececessary work.  For example, it does not require authors
+to give names to every interview question.
 
-In addition, docassemble gives authors all the power and convenience
-of a general-purpose, object-orientated programming language.
+In addition, **docassemble** gives authors all the power and
+convenience of a general-purpose, object-orientated programming
+language.
 
-HotDocs is a proprietary system, and its usefulness in a server
+[HotDocs] is a proprietary system, and its usefulness in a server
 environment is limited by licensing requirements.  By contrast,
-docassemble is free and open source.
+**docassemble** is free and open source.
 
-Features of the docassemble web application include:
+## Technical details
 
-* Sign-in system with web-based registration, forgot-my-password
-  support, and sign-in through Google and Facebook.
-* File upload, so that users can include their own photographs and
-  documents in the documents they assemble.
-* Extension packages through [GitHub](http://github.com).  Interviews,
-  code, and images can easily be shared among developers so that
-  nobody ever has to reinvent the wheel.
-
-## Is writing a YAML file too difficult?
-
-[YAML](http://yaml.org) has a very short set of rules, so it is not
-hard to learn.  docassemble's YAML files are pretty easy to read, and
-if you forget the right words to use, you can easily copy, paste, and
-edit an example.  There are many text editors that have special
-features for editing YAML files.  On Windows, the best is
-[Notepad++](http://notepad-plus-plus.org/).
-
-## Do I need to know Python in order to write docassemble interviews?
-
-Prior experience coding in Python is not required.  The Python code
-typically used in interviews is rudimentary.
-
-## How can I run my interviews in the web app?
+The **docassemble** web application is a [WSGI] application written in
+[Python] that runs on a server and stores information with a SQL
+database.
 
 In the web app, interviews are loaded into the app as Python
-subpackages of the docassemble package (e.g.,
-docassemble.hello_world).  These packages can be loaded directly from
-[GitHub](http://github.com) or from a .zip file.  The YAML interview
-file is a data file within this package.
+subpackages of the **docassemble** package (e.g.,
+docassemble.hello-world).  Packages can be loaded directly from
+[GitHub](http://github.com) or from a .zip file.  This can be done
+entirely through the web interface.  The [YAML] interview file is a
+data file within this package.
 
-The web application provides a downloadable template (in the form of a
-.zip file) of a Python package that you can use as a starting point
-for writing an interview.  This provides an easy way for interview
-authors to bundle docassemble interviews with supporting Python
-modules.
+To create a new **docassemble** interview, the author logs in through
+the web application's sign-in system and generates a new [Python]
+extension package, which the author downloads as a .zip file and
+unpacks on his or her computer.  The author writes interview questions
+by editing a file (typically `questions.yml`) that is located within
+the `data/questions` subfolder of the [Python] package.  If the author
+wishes to extend the functionality of the interview with [Python]
+code, he or she can edit a [Python] module (typically `objects.py`).
 
-## Is it fast?
+The interview files are written in [YAML].  Within the [YAML] file,
+interview questions and document text are represented in [Markdown]
+enhanced with the [Mako] templating system.  [Mako] allows the full
+power of [Python] to be embedded into interview questions and document
+templates.  Documents are converted from [Markdown] into PDF, RTF, and
+HTML using [pandoc](http://johnmacfarlane.net/pandoc/).
 
-Yes.
+To test the interview, the author re-packs the [Python] subpackage as
+a .zip file and uploads it to a **docassemble** server.  Alternatively,
+the author can push the [Python] package to a [GitHub] repository and
+then tell the web application to install the package directly from
+[GitHub].  [GitHub] and Microsoft have developed a user-friendly
+[GitHub] application for Windows, which makes this process very easy.
 
-In some ways, the code is repetitive, so you might expect it to be
-slow.  It goes along trying to assemble a document or calculate a
-mandatory value, until it finds a variable that is undefined, and then
-it generates a NameError exception, and that exception is trapped and
-docassemble looks for an interview question that provides the missing
-variable, and that question might depend on a variable that is
-undefined, which leads to another NameError exception, and so on.
+**docassemble** figures out which questions to ask by taking advantage
+of the exception-trapping features of [Python].  **docassemble** will
+try to assemble a document or process a logic statement, but when it
+encounters a variable that is undefined, a NameError exception is
+triggered.  That exception is trapped and then **docassemble** looks
+for an interview question that provides the missing variable.  That
+question itself might depend on a variable that is undefined, which
+leads to another NameError exception, and then **docassemble** will
+again look for an interview question that provides the missing
+variable, and so on.
 
-However, the process runs quickly because the Python and
-[Mako](http://www.makotemplates.org/) code within interviews is
-compiled at the time the interview's [YAML](http://yaml.org) file (and
-its dependencies) are loaded and an instance of an Interview object is
-created.  In a web server environment, these Interview instances can
-be cached in memory, so the compilation only needs to take place the
-first time a
-[WSGI](http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface)
-process sees a given interview, or any time the interview's underlying
-[YAML](http://yaml.org) file is changed (which in a production
-environment is very rarely).  As the user answers questions in the web
-app, the interview state (containing the user's answers) is stored in
-a Python
-[dictionary](https://docs.python.org/2/tutorial/datastructures.html#dictionaries)
-that is [serialized](https://docs.python.org/2/library/pickle.html)
-and saved to a database.  The next question is obtained by calling a
-method on the cached instance of the Interview object with the
-dictionary as an argument.  So all the compiled code representing the
-logic of the interview remains in the memory of the process.
+The process is repetitive, but it runs quickly because the Python and
+[Mako] code within interviews is compiled at the time the interview's
+[YAML] file (and its dependencies) are loaded.  In a web server
+environment, interviews can be cached in memory, so the compilation
+only needs to take place the first time a [WSGI] process sees a given
+interview, or any time the interview's underlying [YAML] file is
+changed (which in a production environment is very rarely).  As the
+user answers questions in the web app, the interview state (containing
+the user's answers) is stored in a [Python] [dictionary] that is
+[serialized] and saved to a database.  The next question is obtained
+by calling a method on the cached instance of the Interview object
+with the dictionary as an argument.  All the compiled code
+representing the logic of the interview remains in the memory of the
+[WSGI] process.
 
 Furthermore, because state is saved as a serialized object in a
-database, multiple servers in a load-balanced arrangement could be
-used to serve the interviews.  Different servers could handle the same
-interview for the same user.
+database, multiple servers in a load-balanced arrangement can be used
+to serve the interviews.  Different servers could handle the same
+interview for the same user, just as different [WSGI] processes handle
+the same interview on a single server.
 
-## Who wrote it?
-
-Jonathan Pyle, jhpyle@gmail.com
-
-## How do I get it?
-
-The source code is
-[available on GitHub](https://github.com/jhpyle/docassemble), where
-the
-[README](https://github.com/jhpyle/docassemble/blob/master/README.md)
-explains how to install the software.
-
-docassemble is free, open-source software.
+[Markdown]: https://daringfireball.net/projects/markdown/syntax
+[Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
+[YAML]: https://en.wikipedia.org/wiki/YAML
+[Bootstrap]: https://en.wikipedia.org/wiki/Bootstrap_%28front-end_framework%29
+[GitHub]: https://github.com/
+[Mako]: http://www.makotemplates.org/
+[WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
+[dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[serialized]: https://docs.python.org/2/library/pickle.html
+[HotDocs]: https://en.wikipedia.org/wiki/HotDocs
+[A2J]: https://www.kentlaw.iit.edu/institutes-centers/center-for-access-to-justice-and-technology/a2j-author

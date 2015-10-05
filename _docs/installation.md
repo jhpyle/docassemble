@@ -5,10 +5,10 @@ short_title: Install
 ---
 
 These installation instructions assume a Debian GNU/Linux machine, but
-docassemble has been developed to be operating system independent.  If
+docassemble has been developed to be operating-system-independent.  If
 you can install the dependencies, you should be able to get
-docassemble to run.  I haven't tested Windows (only Debian and
-Ubuntu), but I believe all the dependencies are available for
+docassemble to run.  It has not been tested on Windows (only Debian
+and Ubuntu), but all the dependencies are likely to be available for
 installation on Windows (see [MiKTeX](http://miktex.org/download) for
 LaTeX on Windows).
 
