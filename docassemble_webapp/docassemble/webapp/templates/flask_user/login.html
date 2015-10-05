@@ -73,7 +73,7 @@
 <a class="nohover" href="{{ url_for('oauth_authorize', provider='facebook') }}"><div class="daiconbox"><table style="height:100%"><td><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/facebook-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">Sign in with Facebook</td></tr></table></div></a>
 {% endif %}
 {% if config['USE_GOOGLE_LOGIN'] %}
-<script src="https://apis.google.com/js/platform.js"></script>
+<script src="https://apis.google.com/js/platform.js" async defer></script>
 <script>
 function onSignIn(googleUser) {
   var profile = googleUser.getBasicProfile();
