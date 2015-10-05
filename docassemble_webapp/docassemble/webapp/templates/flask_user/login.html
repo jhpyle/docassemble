@@ -67,12 +67,13 @@
 <p style="padding:15px;"><strong>or</strong></p>
 {% endif %}
 {% if config['USE_GOOGLE_LOGIN'] %}
-<div class="g-signin2" data-width="250" data-longtitle="true" data-onsuccess="onSignIn"></div>
+<a class="nohover" href="{{ url_for('google_page') }}"><div class="daiconbox"><table style="height:100%"><td><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/google-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">Sign in with Google</td></tr></table></div></a>
+<!--<div class="g-signin2" data-width="250" data-longtitle="true" data-onsuccess="onSignIn"></div>-->
 {% endif %}
 {% if config['USE_FACEBOOK_LOGIN'] %}
 <a class="nohover" href="{{ url_for('oauth_authorize', provider='facebook') }}"><div class="daiconbox"><table style="height:100%"><td><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/facebook-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">Sign in with Facebook</td></tr></table></div></a>
 {% endif %}
-{% if config['USE_GOOGLE_LOGIN'] %}
+{% if False and config['USE_GOOGLE_LOGIN'] %}
 <script>
 function myOnLoadCallback() {
   console.log("myOnLoadCallback()");

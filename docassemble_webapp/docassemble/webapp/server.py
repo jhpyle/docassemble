@@ -485,6 +485,10 @@ def login():
     form = LoginForm()
     return render_template('flask_user/login.html', form=form, login_form=form, title="Sign in")
 
+@app.route('/user/google-sign-in')
+def google_page():
+    return render_template('flask_user/google_login.html', title="Sign in")
+
 @app.route('/slogin')
 def slogin():
     output = standard_start() + """<div class="container">"""
