@@ -1145,8 +1145,8 @@ def make_attachment(attachment, user_dict, **kwargs):
     for doc_format in formats_to_use:
         if doc_format in ['pdf', 'rtf', 'tex']:
             the_markdown = ""
+            metadata = dict()
             if len(attachment['metadata']) > 0:
-                metadata = dict()
                 for key in attachment['metadata']:
                     data = attachment['metadata'][key]
                     if type(data) is bool:
