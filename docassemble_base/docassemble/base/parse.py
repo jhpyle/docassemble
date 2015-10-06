@@ -623,6 +623,8 @@ class Question:
                 target['filename'] = word("Document")
             if 'name' not in target:
                 target['name'] = word("Document")
+            if 'description' not in target:
+                target['description'] = ''
             for key in ['def', 'defs']:
                 if key in target:
                     if type(target[key]) is str:
@@ -666,7 +668,7 @@ class Question:
                         raise DAError('Unknown data type ' + str(type(data)) + ' in key in attachment metadata' + self.idebug(target))
             if 'content' not in target:
                 raise DAError("No content provided in attachment")
-            return({'name': TextObject(target['name']), 'filename': TextObject(target['filename']), 'content': TextObject("\n".join(defs) + "\n" + target['content']), 'valid_formats': target['valid_formats'], 'metadata': metadata, 'variable_name': variable_name})
+            return({'name': TextObject(target['name']), 'filename': TextObject(target['filename']), 'description': TextObject(target['description']), 'content': TextObject("\n".join(defs) + "\n" + target['content']), 'valid_formats': target['valid_formats'], 'metadata': metadata, 'variable_name': variable_name})
         elif type(target) is str:
             return({'name': TextObject('Document'), 'filename': TextObject('document'), 'content': TextObject(target), 'valid_formats': ['*'], 'metadata': metadata, 'metadata': metadata, 'variable_name': variable_nname})
         else:
@@ -1132,7 +1134,7 @@ def find_fields_in(code, fields_used, names_used):
             names_used.add(item)
 
 def make_attachment(attachment, user_dict, **kwargs):
-    result = {'name': attachment['name'].text(user_dict), 'filename': attachment['filename'].text(user_dict), 'valid_formats': attachment['valid_formats']}
+    result = {'name': attachment['name'].text(user_dict), 'filename': attachment['filename'].text(user_dict), 'description': attachment['description'].text(user_dict), 'valid_formats': attachment['valid_formats']}
     result['markdown'] = dict();
     result['content'] = dict();
     result['file'] = dict();
@@ -1159,6 +1161,7 @@ def make_attachment(attachment, user_dict, **kwargs):
             converter = Pandoc()
             converter.output_format = doc_format
             converter.input_content = the_markdown
+            converter.metadata = metadata
             converter.convert()
             result['file'][doc_format] = converter.output_filename
             result['content'][doc_format] = result['markdown'][doc_format]

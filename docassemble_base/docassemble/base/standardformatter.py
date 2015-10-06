@@ -280,6 +280,8 @@ def as_html(status, extra_scripts, url_for, debug):
             else:
                 multiple_formats = False
             output += '<div><h3>' + attachment['name'] + '</h3></div>'
+            if attachment['description']:
+                output += '<div><p>' + markdown_to_html(attachment['description'], terms=status.question.interview.terms) + '</p></div>'
             output += '<div class="tabbable"><ul class="nav nav-tabs">'
             if show_download:
                 output += '<li class="active"><a href="#download' + str(attachment_index) + '" data-toggle="tab">' + word('Download') + '</a></li>'

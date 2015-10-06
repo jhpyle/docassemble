@@ -416,6 +416,8 @@ buttons:
   - Restart: restart
 attachments:
   - name: Advice Letter for ${ user }
+    description:
+      This is a *very* helpful advice letter.
     content: |
       ${ today() }
 

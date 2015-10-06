@@ -86,16 +86,45 @@ def set_url_finder(func):
     url_finder = func
     return
 
-def rtf_filter(text):
+rtf_spacing = {'single': '', 'oneandahalf': '\\sl360\\slmult1', 'double': '\\sl480\\slmult1', 'triple': '\\sl720\\slmult1'}
+
+rtf_after_space = {'single': 1, 'oneandahalf': 0, 'double': 0, 'triplespacing': 0}
+
+def rtf_filter(text, metadata=dict()):
+    if 'fontsize' in metadata:
+        text = re.sub(r'{\\pard', '\\fs' + str(convert_length(metadata['fontsize'], 'hp')) + ' {\\pard', text, count=1)
+        after_space_multiplier = str(convert_length(metadata['fontsize'], 'twips'))
+    else:
+        after_space_multiplier = 240
+    if 'IndentationAmount' in metadata:
+        indentation_amount = str(convert_length(metadata['IndentationAmount'], 'twips'))
+    else:
+        indentation_amount = '720'
+    if 'Indentation' in metadata:
+        if metadata['Indentation']:
+            default_indentation = True
+        else:
+            default_indentation = False            
+    else:
+        default_indentation = True
+    if 'SingleSpacing' in metadata and metadata['SingleSpacing']:
+        default_spacing = 'single'
+    elif 'OneAndAHalfSpacing' in metadata and metadata['OneAndAHalfSpacing']:
+        default_spacing = 'oneandahalf'
+    elif 'DoubleSpacing' in metadata and metadata['DoubleSpacing']:
+        default_spacing = 'double'
+    elif 'TripleSpacing' in metadata and metadata['TripleSpacing']:
+        default_spacing = 'triple'
+    else:
+        default_spacing = 'double'
+    after_space = after_space_multiplier * rtf_after_space[default_spacing]
+    text = re.sub(r'{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 \[(BEGIN_TWOCOL|BREAK|END_TWOCOL|BEGIN_CAPTION|VERTICAL_LINE|END_CAPTION|SINGLESPACING|DOUBLESPACING|INDENTATION|NOINDENTATION|PAGEBREAK|SKIPLINE)\] *', r'[\1]{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 ', text)
+    text = re.sub(r'{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 *\\par}', r'', text)
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
     text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', rtf_caption_table, text)
     text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
     text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_as_rtf, text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', rtf_caption_table, text)
-    text = re.sub(r'\[SINGLESPACING\] *', r'', text)
-    text = re.sub(r'\[DOUBLESPACING\] *', r'', text)
-    text = re.sub(r'\[INDENTATION\] *', r'', text)
-    text = re.sub(r'\[NOINDENTATION\] *', r'', text)
     text = re.sub(r'\[NBSP\]', r'\\~ ', text)
     text = re.sub(r'\[ENDASH\]', r'{\\endash}', text)
     text = re.sub(r'\[EMDASH\]', r'{\\emdash}', text)
@@ -111,9 +140,39 @@ def rtf_filter(text):
     text = re.sub(r'\[CENTER\] *', r'\\qc ', text)
     text = re.sub(r'\[BOLDCENTER\] *', r'\\qc \\b ', text)
     text = re.sub(r'\\sa180', '\sa0', text)
+    if re.search(r'\[(SINGLESPACING|DOUBLESPACING|TRIPLESPACING|ONEANDAHALFSPACING|INDENTATION|NOINDENTATION)\]', text):
+        text = re.sub(r'[\n ]*[\[(SINGLESPACING|DOUBLESPACING|TRIPLESPACING|ONEANDAHALFSPACING|INDENTATION|NOINDENTATION)\][\n ]*', r'\n[\1]\n', text)
+        lines = text.split('\n')
+        spacing_command = rtf_spacing[default_spacing]
+        if default_indentation:
+            indentation_command = '\\fi' + indentation_amount
+        else:
+            indentation_command = ''
+        text = ''
+        for line in lines:
+            if re.search(r'\[SINGLESPACING\]', line):
+                spacing_command = rtf_spacing['single']
+                after_space = after_space_multiplier * rtf_after_space[default_spacing]
+            elif re.search(r'\[ONEANDAHALFSPACING\]', line):
+                spacing_command = rtf_spacing['oneandahalf']
+                after_space = after_space_multiplier * rtf_after_space[default_spacing]
+            elif re.search(r'\[DOUBLESPACING\]', line):
+                spacing_command = rtf_spacing['double']
+                after_space = after_space_multiplier * rtf_after_space[default_spacing]
+            elif re.search(r'\[TRIPLESPACING\]', line):
+                spacing_command = rtf_spacing['triple']
+                after_space = after_space_multiplier * rtf_after_space[default_spacing]
+            if re.search(r'\[INDENTATION\]', line):
+                indentation_command = '\\fi' + indentation_amount
+            elif re.search(r'\[NOINDENTATION\]', line):
+                indentation_command = ''
+            line = re.sub(r'\\pard ', '\\pard ' + spacing_command + indentation_command + ' ', line)
+            if after_space > 0:
+                line = re.sub(r'\\sa[0-9]+ ', '\\sa' + str(after_space) + ' ', line)
+            text += line + '\n'
     return(text)
 
-def pdf_filter(text):
+def pdf_filter(text, metadata=dict()):
     text = text + "\n\n"
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
     text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_include_string, text)
@@ -137,9 +196,9 @@ def pdf_filter(text):
     text = re.sub(r'\[NEWLINE\] *', r'\\newline ', text)
     text = re.sub(r'\[BR\] *', r'\\manuallinebreak ', text)
     text = re.sub(r'\[TAB\] *', r'\\manualindent ', text)
-    text = re.sub(r'\[FLUSHLEFT\] *(.+?)\n\n', r'\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\noindent \1\\par\\endgroup' + "\n\n", text, flags=re.MULTILINE | re.DOTALL)
-    text = re.sub(r'\[CENTER\] *(.+?)\n\n', r'\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\Centering\\noindent \1\\par\\endgroup' + "\n\n", text, flags=re.MULTILINE | re.DOTALL)
-    text = re.sub(r'\[BOLDCENTER\] *(.+?)\n\n', r'\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\Centering\\bfseries\\noindent \1\\par\\endgroup' + "\n\n", text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[FLUSHLEFT\] *(.+?)\n\n', flushleft_pdf, text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[CENTER\] *(.+?)\n\n', center_pdf, text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[BOLDCENTER\] *(.+?)\n\n', boldcenter_pdf, text, flags=re.MULTILINE | re.DOTALL)
     return(text)
 
 def html_filter(text):
@@ -170,6 +229,27 @@ def html_filter(text):
     text = re.sub(r'\\_', r'__', text)
     text = re.sub(r'\n+$', r'', text)
     return(text)
+
+def add_newlines(string):
+    string = re.sub(r'\[(BR)\]', r'[NEWLINE]', string)
+    string = re.sub(r' *\n', r'\n', string)
+    string = re.sub(r'(?<!\[NEWLINE\])\n', r' [NEWLINE]\n', string)
+    return string    
+
+def flushleft_pdf(match):
+    string = match.group(1)
+    string = re.sub(r'\[NEWLINE\] *', r'\\newline ', string)
+    return('\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\noindent ' + str(string) + '\\par\\endgroup' + "\n\n")
+
+def center_pdf(match):
+    string = match.group(1)
+    string = re.sub(r'\[NEWLINE\] *', r'\\newline ', string)
+    return('\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\Centering\\noindent ' + str(string) + '\\par\\endgroup' + "\n\n")
+
+def boldcenter_pdf(match):
+    string = match.group(1)
+    string = re.sub(r'\[NEWLINE\] *', r'\\newline ', string)
+    return('\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\Centering\\bfseries\\noindent ' + str(string) + '\\par\\endgroup' + "\n\n")
 
 def image_as_rtf(match):
     width_supplied = False
@@ -237,8 +317,17 @@ def rtf_image(file_info, width, insert_page_breaks):
         content = ''
     return(content + image.Data)
     
-unit_multipliers = {'in':72, 'pt':1, 'px':1, 'em':12, 'cm':28.346472}
+unit_multipliers = {'twips':1440, 'hp': 144, 'in':72, 'pt':1, 'px':1, 'em':12, 'cm':28.346472}
 
+def convert_length(length, unit):
+    value = pixels_in(length)
+    if unit in unit_multipliers:
+        size = float(value)/float(unit_multipliers[unit])
+        return(int(size))
+    else:
+        logmessage("Unit " + str(unit) + " is not a valid unit\n")
+    return(300)
+    
 def pixels_in(length):
     m = re.search(r"([0-9.]+) *([a-z]+)", str(length).lower())
     if m:
