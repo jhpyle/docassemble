@@ -7,7 +7,6 @@ RUN pip install --upgrade mdx_smartypants titlecase
 RUN pip install --upgrade cffi
 RUN pip install --upgrade bcrypt
 RUN pip install --upgrade wtforms werkzeug rauth simplekv Flask-KVSession flask-user pypdf flask flask-login flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
-RUN ./compile.sh
 
 RUN mkdir -p /var/www/.local
 RUN chown www-data.www-data /var/www/.local
@@ -20,16 +19,17 @@ RUN mkdir -p /etc/docassemble
 COPY docassemble_base/config.yml /etc/docassemble/
 COPY docassemble_webapp/apache.conf /etc/apache2/sites-available/000-default.conf 
 
-USER postgres
-RUN echo 'create role "www-data" login; create database docassemble;' | psql
-RUN python docassemble_webapp/docassemble/webapp/create_tables.py
-RUN echo 'grant all on all tables in schema public to "www-data"; grant all on all sequences in schema public to "www-data";' | psql docassemble
-
-USER root
 WORKDIR /tmp
 RUN git clone https://github.com/nekstrom/pyrtf-ng && cd pyrtf-ng && python setup.py install
 WORKDIR /tmp
 RUN wget https://www.nodebox.net/code/data/media/linguistics.zip && unzip linguistics.zip -d /usr/local/lib/python2.7/dist-packages && rm linguistics.zip
+
+RUN mkdir -p /tmp/docassemble
+COPY . /tmp/docassemble/
+WORKDIR /tmp/docassemble
+RUN ./compile.sh
+WORKDIR /tmp/docassemble
+RUN ./setup-database.sh
 
 RUN a2enmod wsgi
 ENV APACHE_RUN_USER www-data
@@ -38,4 +38,4 @@ ENV APACHE_LOG_DIR /var/log/apache2
 
 EXPOSE 80
 
-CMD ["/usr/sbin/apache2", "-D", "FOREGROUND"]
+CMD /tmp/docassemble/run-on-docker.sh
