@@ -61,7 +61,8 @@ server:
 
     sudo apt-get install apache2 postgresql python-psycopg2 \
       libapache2-mod-wsgi python-bcrypt python-speaklater \
-	  poppler-utils python-pil libffi-dev libffi6 libjs-jquery
+	  poppler-utils python-pil libffi-dev libffi6 libjs-jquery \
+	  imagemagick
 
 To install the additional dependencies for the web server
 ([WTForms](https://wtforms.readthedocs.org/en/latest/),
@@ -153,7 +154,7 @@ Create the uploads directory:
 Set up and edit the configuration file (e.g., to edit the default
 e-mail addresses):
 
-    sudo mkdir /etc/docassemble
+    sudo mkdir -p /etc/docassemble
     sudo cp ~/docassemble/docassemble_base/config.yml /etc/docassemble/
     sudo vi /etc/docassemble/config.yml
 
