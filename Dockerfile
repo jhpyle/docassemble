@@ -2,9 +2,9 @@ FROM debian:latest
 
 RUN apt-get update && apt-get install -y python-html2text python-markdown python-yaml python-mako python-dateutil python-setuptools python-httplib2 python-dev python-imaging python-pip wget unzip git locales pandoc texlive texlive-latex-extra apache2 postgresql python-psycopg2 libapache2-mod-wsgi python-bcrypt python-speaklater poppler-utils python-pil libffi-dev libffi6 libjs-jquery
 
-RUN pip install -y us 3to2 guess-language-spirit
-RUN pip install -y mdx_smartypants titlecase
-RUN pip install -y cffi wtforms werkzeug rauth simplekv Flask-KVSession flask-user pypdf flask flask-login flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
+RUN pip install us 3to2 guess-language-spirit
+RUN pip install mdx_smartypants titlecase
+RUN pip install cffi wtforms werkzeug rauth simplekv Flask-KVSession flask-user pypdf flask flask-login flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
 RUN ./compile.sh
 
 RUN mkdir -p /var/www/.local
