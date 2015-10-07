@@ -29,7 +29,7 @@ COPY . /tmp/docassemble/
 WORKDIR /tmp/docassemble
 RUN ./compile.sh
 WORKDIR /tmp/docassemble
-RUN ./setup-database.sh
+RUN ./setup-docassemble.sh
 
 RUN a2enmod wsgi
 ENV APACHE_RUN_USER www-data
