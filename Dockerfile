@@ -4,7 +4,8 @@ RUN apt-get update && apt-get install -y python-html2text python-markdown python
 
 RUN pip install us 3to2 guess-language-spirit
 RUN pip install mdx_smartypants titlecase
-RUN pip install cffi wtforms werkzeug rauth simplekv Flask-KVSession flask-user pypdf flask flask-login flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
+RUN pip install cffi
+RUN pip install wtforms werkzeug rauth simplekv Flask-KVSession flask-user pypdf flask flask-login flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
 RUN ./compile.sh
 
 RUN mkdir -p /var/www/.local
