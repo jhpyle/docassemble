@@ -1,6 +1,6 @@
 FROM debian:latest
 
-RUN apt-get update && apt-get install -y python-html2text python-markdown python-yaml python-mako python-dateutil python-setuptools python-httplib2 python-dev python-imaging wget unzip git locales pandoc texlive texlive-latex-extra apache2 postgresql python-psycopg2 libapache2-mod-wsgi python-speaklater poppler-utils python-pil libffi-dev libffi6 libjs-jquery
+RUN apt-get update && apt-get install -y python-html2text python-markdown python-yaml python-mako python-dateutil python-setuptools python-httplib2 python-dev python-imaging wget unzip git locales pandoc texlive texlive-latex-extra apache2 postgresql python-psycopg2 libapache2-mod-wsgi python-speaklater poppler-utils python-pil libffi-dev libffi6 libjs-jquery imagemagick
 
 RUN easy_install pip
 RUN pip install --upgrade us 3to2 guess-language-spirit
@@ -17,7 +17,7 @@ RUN chown www-data.www-data /var/lib/docassemble/webapp/flask.wsgi
 RUN mkdir -p /usr/share/docassemble/files
 RUN chown www-data.www-data /usr/share/docassemble/files
 RUN mkdir -p /etc/docassemble
-COPY docassemble_base/config.yml /etc/docassemble/
+COPY docassemble_base/docker-config.yml /etc/docassemble/
 COPY docassemble_webapp/apache.conf /etc/apache2/sites-available/000-default.conf 
 
 WORKDIR /tmp
@@ -30,7 +30,7 @@ COPY . /tmp/docassemble/
 WORKDIR /tmp/docassemble
 RUN ./compile.sh
 WORKDIR /tmp/docassemble
-RUN ./setup-docassemble.sh
+RUN ./docassemble_webapp/setup-docassemble.sh
 
 RUN locale-gen --purge en_US.utf-8
 RUN echo -e 'LANG="en_US.UTF-8"\nLANGUAGE="en_US:en"\n' > /etc/default/locale
@@ -40,4 +40,4 @@ ENV APACHE_RUN_GROUP www-data
 ENV APACHE_LOG_DIR /var/log/apache2
 EXPOSE 80
 
-CMD /tmp/docassemble/run-on-docker.sh
+CMD /tmp/docassemble/docassemble_webapp/run-on-docker.sh
