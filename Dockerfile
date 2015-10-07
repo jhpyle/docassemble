@@ -1,7 +1,8 @@
 FROM debian:latest
 
-RUN apt-get update && apt-get install -y python-html2text python-markdown python-yaml python-mako python-dateutil python-setuptools python-httplib2 python-dev python-imaging python-pip wget unzip git locales pandoc texlive texlive-latex-extra apache2 postgresql python-psycopg2 libapache2-mod-wsgi python-speaklater poppler-utils python-pil libffi-dev libffi6 libjs-jquery
+RUN apt-get update && apt-get install -y python-html2text python-markdown python-yaml python-mako python-dateutil python-setuptools python-httplib2 python-dev python-imaging wget unzip git locales pandoc texlive texlive-latex-extra apache2 postgresql python-psycopg2 libapache2-mod-wsgi python-speaklater poppler-utils python-pil libffi-dev libffi6 libjs-jquery
 
+RUN easy_install pip
 RUN pip install --upgrade us 3to2 guess-language-spirit
 RUN pip install --upgrade mdx_smartypants titlecase
 RUN pip install --upgrade cffi
@@ -31,11 +32,12 @@ RUN ./compile.sh
 WORKDIR /tmp/docassemble
 RUN ./setup-docassemble.sh
 
+RUN locale-gen --purge en_US.utf-8
+RUN echo -e 'LANG="en_US.UTF-8"\nLANGUAGE="en_US:en"\n' > /etc/default/locale
 RUN a2enmod wsgi
 ENV APACHE_RUN_USER www-data
 ENV APACHE_RUN_GROUP www-data
 ENV APACHE_LOG_DIR /var/log/apache2
-
 EXPOSE 80
 
 CMD /tmp/docassemble/run-on-docker.sh
