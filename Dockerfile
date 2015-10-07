@@ -17,8 +17,8 @@ RUN chown www-data.www-data /var/lib/docassemble/webapp/flask.wsgi
 RUN mkdir -p /usr/share/docassemble/files
 RUN chown www-data.www-data /usr/share/docassemble/files
 RUN mkdir -p /etc/docassemble
-COPY docassemble_base/docker-config.yml /etc/docassemble/config.yml
-COPY docassemble_webapp/apache.conf /etc/apache2/sites-available/000-default.conf 
+COPY Docker/docker-config.yml /etc/docassemble/config.yml
+COPY Docker/apache.conf /etc/apache2/sites-available/000-default.conf 
 
 WORKDIR /tmp
 RUN git clone https://github.com/nekstrom/pyrtf-ng && cd pyrtf-ng && python setup.py install
@@ -30,7 +30,7 @@ COPY . /tmp/docassemble/
 WORKDIR /tmp/docassemble
 RUN ./compile.sh
 WORKDIR /tmp/docassemble
-RUN ./docassemble_webapp/setup-docassemble.sh
+RUN Docker/setup-docassemble.sh
 
 RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 RUN locale-gen
@@ -41,4 +41,4 @@ ENV APACHE_RUN_GROUP www-data
 ENV APACHE_LOG_DIR /var/log/apache2
 EXPOSE 80
 
-CMD bash -C '/tmp/docassemble/docassemble_webapp/run-on-docker.sh';'bash'
+CMD bash -C '/tmp/docassemble/Docker/run-on-docker.sh';'bash'
