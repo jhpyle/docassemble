@@ -32,12 +32,13 @@ RUN ./compile.sh
 WORKDIR /tmp/docassemble
 RUN ./docassemble_webapp/setup-docassemble.sh
 
-RUN locale-gen --purge en_US.utf-8
-RUN echo 'LANG="en_US.UTF-8"\nLANGUAGE="en_US:en"\n' > /etc/default/locale
+RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
+RUN locale-gen
+RUN update-locale LANG=en_US.UTF-8
 RUN a2enmod wsgi
 ENV APACHE_RUN_USER www-data
 ENV APACHE_RUN_GROUP www-data
 ENV APACHE_LOG_DIR /var/log/apache2
 EXPOSE 80
 
-CMD /tmp/docassemble/docassemble_webapp/run-on-docker.sh
+CMD bash -C '/tmp/docassemble/docassemble_webapp/run-on-docker.sh';'bash'
