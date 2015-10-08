@@ -5,21 +5,23 @@ short_title: Installation
 ---
 
 These installation instructions assume a Debian GNU/Linux machine, but
-docassemble has been developed to be operating-system-independent.  If
-you can install the dependencies, you should be able to get
-docassemble to run.  It has not been tested on Windows (only Debian
-and Ubuntu), but all the dependencies are likely to be available for
-installation on Windows (see [MiKTeX](http://miktex.org/download) for
-LaTeX on Windows).
+**docassemble** has been developed to be operating-system-independent.
+If you can install the dependencies, you should be able to get
+**docassemble** to run.  It has not been tested on Windows (only
+Debian and Ubuntu), but all the dependencies are likely to be
+available for installation on Windows (see
+[MiKTeX](http://miktex.org/download) for LaTeX on Windows).
 
-### Dependencies
+Since **docassemble** has a lot of [dependencies]({{ site.baseurl }}/docs/requirements.html), you may wish to [run it using Docker]({{ site.baseurl }}/docs/docker.html) rather than follow all of these installation instructions.
+
+### Installing dependencies
 
 The following dependencies can be installed from Debian packages:
 
     sudo apt-get install python-html2text python-markdown python-yaml \
       python-mako python-dateutil python-setuptools python-httplib2 \
-      python-dev python-imaging python-pip wget unzip git locales \
-      pandoc texlive texlive-latex-extra
+      python-dev python-imaging wget unzip git locales pandoc texlive \
+	  texlive-latex-extra gcc
 
 docassemble uses locale settings to format numbers, get currency
 symbols, and other things.  Do `echo $LANG` to see what locale you are
@@ -38,15 +40,29 @@ do:
     sudo unzip linguistics.zip -d /usr/local/lib/python2.7/dist-packages
     rm linguistics.zip
 
+Many of the Python packages used by **docassemble** need to be
+downloading using pip, either because they are not available through
+`apt-get`, or because the versions available through `apt-get` are too
+old.
+
+First, you need to install the latest version of `pip`:
+
+    easy_install pip
+
 To install the [us](https://pypi.python.org/pypi/us) and
 [SmartyPants](https://pypi.python.org/pypi/mdx_smartypants) modules,
 do:
 
-    sudo pip install us 3to2 guess-language-spirit mdx_smartypants titlecase
+    sudo pip install --upgrade us 3to2 guess-language-spirit
+    sudo pip install --upgrade mdx_smartypants titlecase
+    sudo pip install --upgrade cffi
+    sudo pip install --upgrade bcrypt
+    sudo pip install --upgrade wtforms werkzeug rauth simplekv Flask-KVSession flask-user pypdf flask flask-login flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
 
-(The mdx_smartypants module depends on 3to2 and guess-language-spirit,
+The mdx_smartypants module depends on 3to2 and guess-language-spirit,
 and may have trouble installing if those modules are not already
-installed.)
+installed.  The cffi and bcrypt packages can give errors if they are
+not installed in the right order.
 
 To install [PyRTF-ng](https://github.com/nekstrom/pyrtf-ng), which is
 needed for generating RTF files, do:
@@ -60,9 +76,8 @@ The following will install the Debian dependencies needed for the web
 server:
 
     sudo apt-get install apache2 postgresql python-psycopg2 \
-      libapache2-mod-wsgi python-bcrypt python-speaklater \
-	  poppler-utils python-pil libffi-dev libffi6 libjs-jquery \
-	  imagemagick
+      libapache2-mod-wsgi python-speaklater poppler-utils \
+	  python-pil libffi-dev libffi6 libjs-jquery imagemagick
 
 To install the additional dependencies for the web server
 ([WTForms](https://wtforms.readthedocs.org/en/latest/),
@@ -72,9 +87,9 @@ To install the additional dependencies for the web server
 [Flask-User](https://pythonhosted.org/Flask-User), and
 [PyPDF](https://pypi.python.org/pypi/pyPdf/1.13)), do:
 
-    sudo pip install cffi wtforms werkzeug rauth simplekv Flask-KVSession \
-      flask-user pypdf flask flask-login flask-sqlalchemy Flask-WTF \
-	  babel blinker sqlalchemy
+    sudo pip install --upgrade wtforms werkzeug rauth simplekv \
+      Flask-KVSession flask-user pypdf flask flask-login \
+	  flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
 
 ### Installing docassemble
 
@@ -125,7 +140,7 @@ The output should end with:
 
 ## Setting up the web server
 
-The following instructions assume a Debian system on which you have
+The following instructions assume a Debian/Ubuntu system on which you have
 cloned `docassemble` into your home directory.  You will have to make
 some changes to adapt this to your platform.
 

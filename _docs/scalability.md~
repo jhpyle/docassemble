@@ -1,0 +1,26 @@
+---
+layout: docs
+title: Scalability of docassemble
+short_title: Scalability
+---
+
+**docassemble** is easily scalable.  It does not store any user
+information in memory or in an in-memory cache.  Rather, it uses a SQL
+database to store user answers and a filesystem to store user
+documents.  As a result, a cluster of servers configured to point to
+the same SQL database and mounting the same filesystem can serve
+responses to client browsers.
+
+Each server's configuration is defined in `/etc/docassemble/config.yml`.
+The default SQL configuration is:
+
+	db:
+	  prefix: postgresql+psycopg2://
+	  name: docassemble
+	  user: null
+	  password: null
+	  host: null
+	  port: null
+
+This assumes a PostgreSQL database called "docassemble"
+
