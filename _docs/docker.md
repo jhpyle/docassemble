@@ -11,9 +11,11 @@ dependencies on your server, you can run it as a [Docker] image.
 container on [Amazon AWS] within an EC2 virtual machine running Amazon
 Linux.
 
-[Docker] is a good platform to try out **docassemble** and it is also
-a good platform for deploying **docassemble**.  Amazon's EC2 Container
-Service can be used to maintain a cluster of **docassemble** images.
+[Docker] is a good platform for trying out **docassemble** for the first
+time and it is also a good production environment.
+Amazon's [EC2 Container Service](https://aws.amazon.com/ecs/) can be
+used to maintain a cluster of **docassemble** images.  See 
+[scalability of docassemble]({{ site.baseurl }}/docs/scalability.html).
 
 ## Installing Docker
 
@@ -47,16 +49,27 @@ running container by running:
 
     docker exec -t -i <containerid> bash
 
-You can find out the ID of the container by doing `docker ps`.
+You can find out the ID of the running container by doing `docker ps`.
 
 ## Creating your own Docker image
 
-To create your own docker image of docassemble, first download docassemble:
+To create your own [Docker] image of docassemble, first download docassemble:
 
 	git clone https://github.com/jhpyle/docassemble
 
-The files used for setup are in the directory docassemble
+To make changes to the configuration of the **docassemble**
+application that will be installed in the image, edit the following
+files:
 
+* `docassemble/Dockerfile`: you may want to change the locale
+* `docassemble/Docker/apache.conf`: note that this configuration only
+  uses http, not https
+* `docassemble/Docker/config.yml`: note that this file sets `root` to
+  `null`
+
+To build the image, run:
+
+    cd docassemble
 	docker build -t yourdockerhubusername/mydocassemble .
 
 You can then run your image:
