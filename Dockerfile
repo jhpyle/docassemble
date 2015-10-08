@@ -17,7 +17,7 @@ RUN chown www-data.www-data /var/lib/docassemble/webapp/flask.wsgi
 RUN mkdir -p /usr/share/docassemble/files
 RUN chown www-data.www-data /usr/share/docassemble/files
 RUN mkdir -p /etc/docassemble
-COPY Docker/docker-config.yml /etc/docassemble/config.yml
+COPY Docker/config.yml /etc/docassemble/config.yml
 COPY Docker/apache.conf /etc/apache2/sites-available/000-default.conf 
 
 WORKDIR /tmp
@@ -41,4 +41,4 @@ ENV APACHE_RUN_GROUP www-data
 ENV APACHE_LOG_DIR /var/log/apache2
 EXPOSE 80
 
-CMD bash -C '/tmp/docassemble/Docker/run-on-docker.sh';'bash'
+CMD ['/tmp/docassemble/Docker/run-on-docker.sh']
