@@ -18,10 +18,10 @@ Since **docassemble** has a lot of [dependencies]({{ site.baseurl }}/docs/requir
 
 The following dependencies can be installed from Debian packages:
 
-    sudo apt-get install python-html2text python-markdown python-yaml \
-      python-mako python-dateutil python-setuptools python-httplib2 \
-      python-dev python-imaging wget unzip git locales pandoc texlive \
-	  texlive-latex-extra gcc
+    sudo apt-get install python-markdown python-yaml python-mako \
+      python-dateutil python-setuptools python-httplib2 \
+      python-dev python-imaging pandoc texlive texlive-latex-extra \
+	  gcc wget unzip git locales
 
 docassemble uses locale settings to format numbers, get currency
 symbols, and other things.  Do `echo $LANG` to see what locale you are
@@ -57,7 +57,9 @@ do:
     sudo pip install --upgrade mdx_smartypants titlecase
     sudo pip install --upgrade cffi
     sudo pip install --upgrade bcrypt
-    sudo pip install --upgrade wtforms werkzeug rauth simplekv Flask-KVSession flask-user pypdf flask flask-login flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
+    sudo pip install --upgrade wtforms werkzeug rauth simplekv \
+	  Flask-KVSession flask-user pypdf flask flask-login \
+	  flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
 
 The mdx_smartypants module depends on 3to2 and guess-language-spirit,
 and may have trouble installing if those modules are not already
@@ -77,7 +79,7 @@ server:
 
     sudo apt-get install apache2 postgresql python-psycopg2 \
       libapache2-mod-wsgi python-speaklater poppler-utils \
-	  python-pil libffi-dev libffi6 libjs-jquery imagemagick
+	  python-pil libffi-dev libffi6 imagemagick
 
 To install the additional dependencies for the web server
 ([WTForms](https://wtforms.readthedocs.org/en/latest/),
