@@ -7,7 +7,6 @@ from docassemble.webapp.packages.models import Package, PackageAuth
 from docassemble.webapp.users.models import User, UserAuth, Role, UserRoles, UserDict, Attachments, Uploads, KVStore, Ticket, TicketNote
 from docassemble.webapp.config import daconfig
 import docassemble.webapp.database
-import psycopg2
 import random
 import string
 
