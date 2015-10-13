@@ -13,7 +13,7 @@ import babel.dates
 import locale
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'comma_list', 'words', 'word', 'set_language', 'get_language', 'set_locale', 'get_locale', 'update_locale', 'comma_and_list', 'need', 'possessify', 'possessify_long', 'nice_number', 'pickleable_objects', 'in_the', 'a_in_the_b', 'of_the', 'the', 'your', 'his', 'her', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'do_you', 'does_a_b', 'capitalize', 'underscore_to_space', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'static_image', 'titlecase']
+__all__ = ['ordinal', 'comma_list', 'words', 'word', 'set_language', 'get_language', 'set_locale', 'get_locale', 'update_locale', 'comma_and_list', 'need', 'possessify', 'possessify_long', 'nice_number', 'pickleable_objects', 'in_the', 'a_in_the_b', 'of_the', 'the', 'your', 'his', 'her', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'do_you', 'does_a_b', 'capitalize', 'underscore_to_space', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'static_image', 'titlecase', 'is_are']
 
 language = 'en'
 this_locale = 'US.utf8'
@@ -175,9 +175,9 @@ def need(*pargs):
         argument
     return True
 
-def possessify(word, target):
+def possessify(theword, target):
     #language-specific methods can go here
-    return unicode(word) + "'s " + unicode(target)
+    return unicode(theword) + "'s " + unicode(target)
 
 def possessify_long(word, target):
     #language-specific methods can go here

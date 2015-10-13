@@ -17,10 +17,37 @@ comment: >-
   basic building blocks of docassemble variables are defined in the
   docassemble.legal module.
 ---
+default role: client
+code: |
+  if current_info['user']['is_authenticated'] and 'advocate' in current_info['user']['roles']:
+    user = advocate
+    role = 'advocate'
+  else:
+    user = client
+    role = 'client'
+  update_info(user, role, current_info)
+---
+error: role_error
+question: You are done for now.
+subquestion: |
+  % if role_needed == 'advocate':
+    An advocate needs to review your answers before you can proceed.
+
+    Please remember the following link and come back to it when you receive notice to do so:
+
+    | ${ interview_url() }
+  % else:
+    Thanks, the client needs to resume the interview now.  Role_needed is ${ role_needed } and role is ${ role }.
+  % endif
+decoration: exit
+buttons:
+  - Exit: leave
+---
 objects:
   - case: Case
-  - user: Individual
+  - client: Individual
   - spouse: Individual
+  - advocate: Individual
   - pleading: LegalFiling
   - jurisdiction: Jurisdiction
   - court: Court
@@ -60,13 +87,17 @@ comment: |
   them later.  These files are located in the docassemble.base package
   in the subdirectory docassemble/base/data/static.
 ---
-question: Are you the defendant?
-yesno: user_is_defendant
+generic object: Individual
+question: |
+  ${ x.is_are_you(capitalize=True) } a defendant in this case?
+yesno: x.is_defendant
 comment: |
   After defining the basic variables, we define some standard questions.
 ---
-field: user.marital_status
-question: How would you describe yourself?
+generic object: Individual
+field: x.marital_status
+question: |
+  What is ${ x.possessive('marital status') }?
 choices:
   - Married
   - Single
@@ -83,16 +114,17 @@ subquestion: |
 buttons:
   - Continue: continue
 ---
+generic object: Individual
 comment: |
   docassemble can collect signatures from users, who can write their
   signature with their finger on a touchscreen device, or use a mouse
   or trackpad.  The signatures can be added to documents.
 question: |
   Please sign your name below.
-signature: user.signature
+signature: x.signature
 need: user_understands_how_to_use_signature_feature
 under: |
-  ${ user.name }
+  ${ x.name }
 ---
 template: blank_signature
 content: |
@@ -102,26 +134,30 @@ template: empty_signature
 content: |
   \_\_\_[Your signature here]\_\_\_
 ---
+generic object: Individual
 question: |
-  Is this your signature?
-subquestion: |  
-  ${ user.signature.show() }
+  Is this ${ x.possessive('signature') }?
+subquestion: |
+  ${ x.signature.show() }
 sets:
-  - user.signature_verified
+  - x.signature_verified
 buttons:
   - "Yes":
+      generic object: Individual
       code: |
-        user.signature_verified = True
+        x.signature_verified = True
   - "No":
+      generic object: Individual
       code: |
-        user.signature_verified = False
+        x.signature_verified = False
   - "Let me try again":
+      generic object: Individual
       code: |
         answers = dict()
-        remove('user.signature')
+        remove('x.signature')
 ---
-question: Are you a citizen of the United States?
-yesno: user.is_citizen
+question: ${ x.does_verb("is", ) } a citizen of the United States?
+yesno: x.is_citizen
 ---
 field: user_understands_no_attorney_client_relationship
 question: >-
@@ -137,6 +173,11 @@ comment: |
   Also, the example below shows how you can use Python code to
   generate the selections of multiple-choice question.  The code is
   evaluated at the time the question is asked.
+---
+question: |
+  What is the basic airspeed velocity?
+fields:
+  - Velocity: airspeed_velocity
 ---
 generic object: Individual
 question: >-
@@ -281,13 +322,15 @@ question: |
   ${ x.as_singular_noun() }?
 yesno: x.there_is_another
 ---
-question: Are you a plaintiff in this case?
+generic object: Individual
+question: |
+  ${ x.is_are_you(capitalize=True) } a plaintiff in this case?
 subquestion: |
   A "plaintiff" is a person who starts a case by filing a lawsuit
   against a person called a "defendant."  Plaintiffs and defendants
   are the "parties" in a case.
 decoration: scalesofjustice
-yesno: user_is_plaintiff
+yesno: x.is_plaintiff
 ---
 comment: |
   Here are some standard questions that ask about a person's income

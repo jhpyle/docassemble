@@ -146,15 +146,16 @@ comment: |
   be set to 100% on this question, which is an endpoint question (since the only
   options are exiting or restarting).
 ---
+generic object: Individual
 question: |
-  Do you have a support order?
+  ${ x.do_question('have', capitalize=True) } a support order?
 subquestion: |
   If you aren't sure, look through your papers for a document that looks
   something like this.  If this document is signed by the judge, then
   you have a support order.
     
   [IMAGE docassemble.demo:sample-support-order.jpg, 100%]
-yesno: user.has_support_order
+yesno: x.has_support_order
 comment: |
   This question illustrates how you can include images in your questions.
   The file sample-support-order.jpg is stored in the docassemble.demo package
@@ -196,7 +197,7 @@ comment: |
   not be a plaintiff.
 code: |
   case.plaintiff.gathering = True
-  if user_is_plaintiff and user not in case.plaintiff:
+  if user.is_plaintiff and user not in case.plaintiff:
     case.plaintiff.add(user)
   if case.plaintiff.number_gathered() == 0:
     newplaintiff = case.plaintiff.addObject(Individual)
@@ -211,7 +212,7 @@ comment: |
   is not already a plaintiff.  Then it will ask for the names of the defendants.
 code: |
   case.defendant.gathering = True
-  if user not in case.defendant and not user_is_plaintiff and user_is_defendant:
+  if user not in case.defendant and not user.is_plaintiff and user.is_defendant:
     case.defendant.add(user)
   if case.defendant.number_gathered() == 0:
     newdefendant = case.defendant.addObject(Individual)
@@ -258,21 +259,22 @@ fields:
   - Date of Injury: injury_date
     datatype: date
 ---
+generic object: Individual
 comment: |
-  This code gathers information about the user's income and assets if necessary.
+  This code gathers information about a person's income and assets if necessary.
 code: |
-  user.asset.gathering = True
-  user.income.gathering = True
+  x.asset.gathering = True
+  x.income.gathering = True
   assets_to_ask_about = ['checking', 'savings', 'stocksbonds']
   income_to_ask_about = ['employment', 'selfemployment', 'ssi', 'tanf']
   for asset_item in assets_to_ask_about:
-    user.asset.new(asset_item, period=12)
+    x.asset.new(asset_item, period=12)
   for income_item in income_to_ask_about:
-    user.income.new(income_item, period=12)
-  user.asset.gathering = False
-  user.income.gathering = False
-  user.asset.gathered = True
-  user.income.gathered = True
+    x.income.new(income_item, period=12)
+  x.asset.gathering = False
+  x.income.gathering = False
+  x.asset.gathered = True
+  x.income.gathered = True
 ---
 question: |
   Why do you think you deserve to win this case?
@@ -347,25 +349,27 @@ comment: |
   U.S. states from a helpful Python module called "us."  Note that we
   imported this module earlier.
 ---
+generic object: Individual
 question: Please upload one or more pictures.
 decoration: picture
 fields:
-  - A test file: user.picture
+  - A test file: x.picture
     datatype: files
 comment: |
   You can accept files from users by using the datatype of "file."
 ---
 comment: |
   This is how you can display a picture that a user has uploaded.
+generic object: Individual
 question: |
-  % if user.picture.number() > 1:
+  % if x.picture.number() > 1:
   Are these the pictures you uploaded?
   % else:
   Is this the picture you uploaded?
   % endif
 subquestion: |  
-  ${ user.picture.show() }
-yesno: user.picture_verified
+  ${ x.picture.show() }
+yesno: x.picture_verified
 ---
 comment: |
   docassemble uses the Mako templating system to expand variables
@@ -510,7 +514,7 @@ attachments:
       SingleSpacing: true
     filename: Advice_letter_${ space_to_underscore(user) }
   - name: ${ pleading.title }
-    defs:
+    usedefs:
       - kid_defs
     content: |
       ${ pleading.caption() }
@@ -593,4 +597,9 @@ help: |
 
   I hope you enjoyed this interview.
 progress: 100
+---
+question: |
+  What is the specific airspeed velocity?
+fields:
+  - Velocity: airspeed_velocity
 ...

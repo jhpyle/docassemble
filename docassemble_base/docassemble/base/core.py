@@ -32,8 +32,6 @@ class DAObject(object):
     def object_name(self):
         return(reduce(a_in_the_b, map(underscore_to_space, reversed(self.instanceName.split(".")))))
     def object_possessive(self, target):
-        if self.instanceName == 'user':
-            return(your(target))
         if len(self.instanceName.split(".")) > 1:
             return(possessify_long(self.object_name(), target))
         else:

@@ -470,7 +470,7 @@ def oauth_callback(provider):
         db.session.commit()
     login_user(user, remember=False)
     if not current_user.is_anonymous:
-        update_user_id(session['uid'])
+        #update_user_id(session['uid'])
         flash(word('Welcome!  You are logged in as ') + email, 'success')
     return redirect(url_for('index'))
 
@@ -546,6 +546,14 @@ def index():
         user_code, user_dict = reset_session(yaml_filename)
         session_id = session.get('uid', None)
         need_to_reset = True
+    session_parameter = request.args.get('session', None)
+    if session_parameter is not None:
+        session_id = session_parameter
+        session['uid'] = session_id
+        user_code = session_id
+        #logmessage("Found user code " + session_id)
+        steps, user_dict = fetch_user_dict(user_code, yaml_filename)
+        need_to_reset = True
     if session_id:
         user_code = session_id
         #logmessage("Found user code " + session_id)
@@ -594,7 +602,7 @@ def index():
         if the_user_dict is not None:
             logmessage("the_user_dict is not none!")
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-            interview_status = docassemble.base.parse.InterviewStatus()
+            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
             interview.assemble(the_user_dict, interview_status)
             if len(interview_status.attachments) > 0:
                 #logmessage("there are attachments!")
@@ -650,7 +658,7 @@ def index():
         if the_user_dict is not None:
             #logmessage("the_user_dict is not none!")
             interview = docassemble.base.interview_cache.get_interview(request.args.get('filename'))
-            interview_status = docassemble.base.parse.InterviewStatus()
+            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
             interview.assemble(the_user_dict, interview_status)
             if len(interview_status.attachments) > 0:
                 #logmessage("there are attachments!")
@@ -677,7 +685,7 @@ def index():
             flash_content += '<div class="row"><div class="col-md-6"><div class="alert alert-' + classname + '"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div></div></div>'
         flash_content += '</div>'
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-    interview_status = docassemble.base.parse.InterviewStatus()
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
     changed = False
     if 'theImage' in post_data:
         interview.assemble(user_dict, interview_status)
@@ -814,6 +822,8 @@ def index():
         user_dict = initial_dict.copy()
         reset_user_dict(user_code, user_dict, yaml_filename)
         return redirect(exit_page)
+    if interview_status.question.question_type == "leave":
+        return redirect(exit_page)
     save_user_dict(user_code, user_dict, yaml_filename, changed=changed)
     if interview_status.question.question_type == "signature":
         output = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link rel="stylesheet" href="' + url_for('static', filename='app/signature.css') + '"><title>' + word('Sign Your Name') + '</title></head><body onresize="resizeCanvas()">'
@@ -850,12 +860,12 @@ def get_unique_name(filename):
         conn.commit()
         return newname
 
-def update_user_id(the_user_code):
-    if current_user.id is not None and the_user_code is not None:
-        cur = conn.cursor()
-        cur.execute("UPDATE userdict set user_id=%s where key=%s", [current_user.id, the_user_code])
-        conn.commit()
-    return
+# def update_user_id(the_user_code):
+#     if current_user.id is not None and the_user_code is not None:
+#         cur = conn.cursor()
+#         cur.execute("UPDATE userdict set user_id=%s where key=%s", [current_user.id, the_user_code])
+#         conn.commit()
+#     return
     
 def get_attachment_info(the_user_code, question_number, filename):
     the_user_dict = None
@@ -1399,3 +1409,17 @@ def package_static(package, filename):
     extension, mimetype = get_ext_and_mimetype(the_file)
     return(send_file(the_file, mimetype=str(mimetype)))
 
+def current_info(yaml=None, req=None):
+    if current_user.is_authenticated:
+        email = current_user.email
+        roles = [role.name for role in current_user.roles]
+        theid = current_user.id
+    else:
+        email = None
+        theid = None
+        roles = list()
+    if req is None:
+        url = 'localhost'
+    else:
+        url = req.base_url
+    return({'session': session['uid'], 'yaml_filename': yaml, 'url': url, 'user': {'id': theid, 'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated, 'email': email, 'roles': roles}})

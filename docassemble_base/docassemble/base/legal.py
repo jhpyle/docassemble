@@ -5,8 +5,27 @@ from docassemble.base.logger import logmessage
 from datetime import date
 import inspect
 import re
+import urllib
 import sys
 from decimal import Decimal
+
+__all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'set_language', 'word', 'words', 'comma_list', 'ordinal', 'need', 'nice_number', 'possessify', 'your', 'her', 'his', 'do_you', 'does_a_b', 'verb_past', 'verb_present', 'noun_plural', 'underscore_to_space', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'indefinite_article', 'today', 'remove', 'nodoublequote', 'capitalize', 'titlecase']
+
+user = None
+role = None
+current_info = dict()
+
+def update_info(new_user, new_role, new_current_info):
+    global user
+    global role
+    global current_info
+    user = new_user
+    role = new_role
+    current_info = new_current_info
+    return
+
+def interview_url():
+    return str(current_info['url']) + '?i=' + urllib.quote(current_info['yaml_filename']) + '&session=' + urllib.quote(current_info['session'])
 
 class Court(DAObject):
     def __str__(self):
@@ -116,6 +135,21 @@ class Person(DAObject):
             self.__dict__[attrname] = value
     def __str__(self):
         return self.name.full()
+    def object_possessive(self, target):
+        if self is user:
+            return your(target)
+        return super(Person, self).object_possessive(target)
+    def is_are_you(self, **kwargs):
+        if self is user:
+            output = 'are you'
+        else:
+            output = 'is ' + str(self.name)
+        if 'capitalize' in kwargs:
+            return(capitalize(output))
+        else:
+            return(output)
+    def is_user(self):
+        return self is user
     def address_block(self):
         return("[FLUSHLEFT] " + self.name.full() + " [NEWLINE] " + self.address.block())
     def email_address(self, include_name=None):
@@ -135,15 +169,22 @@ class Person(DAObject):
             return today.year - born.year - 1
         else:
             return today.year - born.year
+    def is_question(self, **kwargs):
+        #logmessage("do_question kwargs are " + str(kwargs))
+        #if self.instanceName == 'user':
+        if self == user:
+            return(are_you(the_verb, **kwargs))
+        else:
+            return(does_a_b(self.name, the_verb, **kwargs))
     def do_question(self, the_verb, **kwargs):
         #logmessage("do_question kwargs are " + str(kwargs))
-        if self.instanceName == 'user':
+        if self == user:
             return(do_you(the_verb, **kwargs))
         else:
             return(does_a_b(self.name, the_verb, **kwargs))
     def does_verb(self, the_verb, **kwargs):
         #logmessage("does_verb kwargs are " + str(kwargs))
-        if self.instanceName == 'user':
+        if self == user:
             tense = 1
         else:
             tense = 3
@@ -152,7 +193,7 @@ class Person(DAObject):
         else:
             return verb_present(the_verb, person=tense)
     def did_verb(self, the_verb, **kwargs):
-        if self.instanceName == 'user':
+        if self == user:
             tense = 1
         else:
             tense = 3
@@ -168,12 +209,12 @@ class Individual(Person):
         #logmessage("Got to this here place")
         return super(Individual, self).init()
     def possessive(self, target):
-        if self.instanceName == 'user':
+        if self is user:
             return your(target)
         else:
             return possessify(self.name, target)
     def do_verb(self, verb):
-        if self.instanceName == 'user':
+        if self is user:
             return ""
         else:
             return possessify(self.name, target)
@@ -183,14 +224,14 @@ class Individual(Person):
         else:
             return('Mr.')
     def pronoun_possessive(self, target):
-        if self.instanceName == 'user':
+        if self == user:
             return your(target)
         if self.gender == 'female':
             return her(target)
         else:
             return his(target)
     def pronoun(self):
-        if self.instanceName == 'user':
+        if self == user:
             return word('you')
         if self.gender == 'female':
             return word('her')

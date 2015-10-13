@@ -159,7 +159,8 @@ class InterviewSourceURL(InterviewSource):
         return None
 
 class InterviewStatus(object):
-    def __init__(self):
+    def __init__(self, current_info=dict()):
+        self.current_info = current_info
         self.attachments = None
     def populate(self, question_result):
         self.question = question_result['question']
@@ -254,12 +255,31 @@ class Question:
         self.allow_emailing = True
         self.fields_used = set()
         self.names_used  = set()
-        self.role = set()
+        if 'usedefs' in data:
+            defs = list()
+            if type(data['usedefs']) is list:
+                usedefs = data['usedefs']
+            else:
+                usedefs = [data['usedefs']]
+            for usedef in usedefs:
+                if type(usedef) in [dict, list, bool]:
+                    raise DAError("A usedefs section must consist of a list of strings or a single string." + self.idebug(data))
+                if usedef not in self.interview.defs:
+                    raise DAError('Referred to a non-existent def "' + usedef + '."  All defs must be defined before they are used.' + self.idebug(data))
+                defs.extend(self.interview.defs[usedef])
+            definitions = "\n".join(defs) + "\n";
+        else:
+            definitions = "";        
         if 'mandatory' in data and data['mandatory'] is True:
             self.is_mandatory = True
         else:
             self.is_mandatory = False
-        if 'command' in data and data['command'] in ['exit', 'continue', 'restart']:
+        if ('initial' in data and data['initial'] is True) or ('default role' in data):
+            #logmessage("Setting a code block to initial\n")
+            self.is_initial = True
+        else:
+            self.is_initial = False
+        if 'command' in data and data['command'] in ['exit', 'continue', 'restart', 'leave']:
             self.question_type = data['command']
             self.content = TextObject("")
             return
@@ -332,14 +352,14 @@ class Question:
                 data['interview help'] = {'content': str(data['interview help'])}
             if 'heading' in data['interview help']:
                 if type(data['interview help']['heading']) not in [dict, list]:
-                    help_heading = TextObject(data['interview help']['heading'])
+                    help_heading = TextObject(definitions + data['interview help']['heading'])
                 else:
                     raise DAError("A heading within an interview help section must be text, not a list or a dictionary." + self.idebug(data))
             else:
                 help_heading = None
             if 'content' in data['interview help']:
                 if type(data['interview help']['content']) not in [dict, list]:
-                    help_content = TextObject(data['interview help']['content'])
+                    help_content = TextObject(definitions + data['interview help']['content'])
                 else:
                     raise DAError("Help content must be text, not a list or a dictionary." + self.idebug(data))
             else:
@@ -357,7 +377,7 @@ class Question:
             self.is_generic = False
         if 'metadata' in data:
             should_append = False
-            if (type(data['metadata']) == dict):
+            if type(data['metadata']) == dict:
                 data['metadata']['origin_path'] = self.from_path
                 self.interview.metadata.append(data['metadata'])
             else:
@@ -390,6 +410,22 @@ class Question:
                     self.interview.terms[lower_term] = {'definition': data['terms'][term], 're': re.compile(r"(?i)\b(%s)\b" % lower_term, re.IGNORECASE)}
             else:
                 raise DAError("A terms section must be organized as a dictionary or a list." + self.idebug(data))
+        if 'default role' in data:
+            if 'code' not in data:
+                should_append = False
+            if type(data['default role']) is str:
+                self.interview.default_role = data['default role']
+            else:
+                raise DAError("A default role must be a string." + self.idebug(data))
+        if 'role' in data:
+            if type(data['role']) is str:
+                self.role = [data['role']]
+            elif type(data['role']) is list:
+                self.role = data['role']
+            else:
+                raise DAError("The role of a question must be a string or a list." + self.idebug(data))
+        else:
+            self.role = None
         if 'include' in data:
             should_append = False
             if type(data['include']) is list:
@@ -442,11 +478,11 @@ class Question:
         if 'progress' in data:
             self.progress = data['progress']
         if 'question' in data:
-            self.content = TextObject(data['question'])
+            self.content = TextObject(definitions + data['question'])
         if 'subquestion' in data:
-            self.subcontent = TextObject(data['subquestion'])
+            self.subcontent = TextObject(definitions + data['subquestion'])
         if 'help' in data:
-            self.helptext = TextObject(data['help'])
+            self.helptext = TextObject(definitions + data['help'])
         if 'decoration' in data:
             if type(data['decoration']) is dict:
                 decoration_list = [data['decoration']]
@@ -470,7 +506,7 @@ class Question:
             self.fields.append(Field({'saveas': data['signature']}))
             self.fields_used.add(data['signature'])
             if 'under' in data:
-                self.undertext = TextObject(data['under'])
+                self.undertext = TextObject(definitions + data['under'])
         if 'yesno' in data:
             self.fields.append(Field({'saveas': data['yesno'], 'boolean': 1}))
             self.fields_used.add(data['yesno'])
@@ -487,6 +523,14 @@ class Question:
                     self.fields_used.add(key)
             else:
                 raise DAError("A sets phrase must be text or a list." + self.idebug(data))
+        if 'error' in data:
+            if type(data['error']) is str:
+                self.fields_used.add(data['error'])
+            elif type(data['error']) is list:
+                for key in data['error']:
+                    self.fields_used.add(key)
+            else:
+                raise DAError("An error phrase must be text or a list." + self.idebug(data))
         if 'choices' in data or 'buttons' in data:
             if 'field' in data:
                 uses_field = True
@@ -536,7 +580,7 @@ class Question:
             self.fields_used.add(data['template'])
             field_data = {'saveas': data['template']}
             self.fields.append(Field(field_data))
-            self.content = TextObject(data['content'])
+            self.content = TextObject(definitions + data['content'])
             self.question_type = 'template'
         if 'code' in data:
             self.question_type = 'code'
@@ -563,7 +607,7 @@ class Question:
                                 field_info['required'] = field[key]
                             elif key == 'default' or key == 'hint' or key == 'help':
                                 if type(field[key]) is not dict and type(field[key]) is not list:
-                                    field_info[key] = TextObject(unicode(field[key]))
+                                    field_info[key] = TextObject(definitions + unicode(field[key]))
                             elif key == 'datatype':
                                 field_info['type'] = field[key]
                                 if field[key] == 'yesno' and 'required' not in field_info:
@@ -625,20 +669,19 @@ class Question:
                 target['name'] = word("Document")
             if 'description' not in target:
                 target['description'] = ''
-            for key in ['def', 'defs']:
-                if key in target:
-                    if type(target[key]) is str:
-                        the_list = [target[key]]
-                    elif type(target[key]) is list:
-                        the_list = target[key]
-                    else:
-                        raise DAError('The defs included in an attachment must be specified as a list of strings or a single string.' + self.idebug(target))
-                    for def_key in the_list:
-                        if type(def_key) is not str:
-                            raise DAError('The defs in an attachment must be strings.' + self.idebug(target))
-                        if def_key not in self.interview.defs:
-                            raise DAError('Referred to a non-existent def "' + def_key + '."  All defs must be defined before they are used.' + self.idebug(target))
-                        defs.extend(self.interview.defs[def_key])
+            if 'usedefs' in target:
+                if type(target['usedefs']) is str:
+                    the_list = [target['usedefs']]
+                elif type(target['usedefs']) is list:
+                    the_list = target['usedefs']
+                else:
+                    raise DAError('The usedefs included in an attachment must be specified as a list of strings or a single string.' + self.idebug(target))
+                for def_key in the_list:
+                    if type(def_key) is not str:
+                        raise DAError('The defs in an attachment must be strings.' + self.idebug(target))
+                    if def_key not in self.interview.defs:
+                        raise DAError('Referred to a non-existent def "' + def_key + '."  All defs must be defined before they are used.' + self.idebug(target))
+                    defs.extend(self.interview.defs[def_key])
             if 'valid_formats' in target:
                 if type(target['valid_formats']) is str:
                     target['valid_formats'] = [target['valid_formats']]
@@ -681,6 +724,15 @@ class Question:
         if the_i != 'None':
             exec("i = " + the_i, user_dict)
             #logmessage("i is " + the_i)
+        if 'role' in user_dict:                
+            current_role = user_dict['role']
+            if self.role is not None:
+                if current_role not in self.role and 'role_error' not in self.fields_used:
+                    user_dict['role_needed'] = self.role[0]
+                    raise NameError("Need 'role_error'")
+            elif self.interview.default_role is not None and current_role != self.interview.default_role and 'role_error' not in self.fields_used:
+                user_dict['role_needed'] = self.interview.default_role
+                raise NameError("Need 'role_error'")
         if self.helptext is not None:
             help_text_list = [{'heading': None, 'content': self.helptext.text(user_dict)}]
         else:
@@ -735,6 +787,7 @@ class Question:
                     helptexts[field.saveas] = field.helptext.text(user_dict)
                 if hasattr(field, 'hint'):
                     hints[field.saveas] = field.hint.text(user_dict)
+        
         return({'type': 'question', 'question_text': self.content.text(user_dict), 'subquestion_text': subquestion, 'under_text': undertext, 'decorations': decorations, 'help_text': help_text_list, 'attachments': self.processed_attachments(user_dict, the_x=the_x, the_i=the_i), 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts})
 
     def processed_attachments(self, user_dict, **kwargs):
@@ -764,7 +817,7 @@ class Question:
                 elif type(value) == dict:
                     result_dict[key] = Question(value, self.interview, register_target=register_target, path=self.from_path, package=self.package)
                 elif type(value) == str:
-                    if value in ["continue", "exit", "restart"]:
+                    if value in ["continue", "exit", "restart", "leave"]:
                         result_dict[key] = Question({'command': value}, self.interview, register_target=register_target, path=self.from_path, package=self.package)
                     else:
                         result_dict[key] = value
@@ -778,13 +831,13 @@ class Question:
         user_dict['answered'].add(self.name)
         return
     def follow_multiple_choice(self, user_dict):
-        #if self.name:
-            #logmessage("question is " + self.name)
-        #else:
-            #logmessage("question has no name")
+        # if self.name:
+        #     logmessage("question is " + self.name)
+        # else:
+        #     logmessage("question has no name")
         if self.name and self.name in user_dict['answers']:
             #logmessage("question in answers")
-            #user_dict['answered'].add(self.name)
+            user_dict['answered'].add(self.name)
             the_choice = self.fields[0].choices[int(user_dict['answers'][self.name])]
             for key in the_choice:
                 if key == 'image':
@@ -838,6 +891,7 @@ class Interview:
         self.helptext = list()
         self.defs = dict()
         self.terms = dict()
+        self.default_role = None
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
     def read_from(self, source):
@@ -872,10 +926,12 @@ class Interview:
             user_dict['answered'] = set()
         if 'answers' not in user_dict:
             user_dict['answers'] = dict()
-        if 'x_stack' not in user_dict:
-            user_dict['x_stack'] = list()
-        if 'i_stack' not in user_dict:
-            user_dict['i_stack'] = list()
+        interview_status.current_info.update({'default_role': self.default_role})
+        user_dict['current_info'] = interview_status.current_info
+        # if 'x_stack' not in user_dict:
+        #     user_dict['x_stack'] = list()
+        # if 'i_stack' not in user_dict:
+        #     user_dict['i_stack'] = list()
         for question in self.questions_list:
             if question.question_type == 'imports':
                 #logmessage("Found imports")
@@ -889,26 +945,29 @@ class Interview:
         while True:
             try:
                 for question in self.questions_list:
+                    if question.question_type == 'code' and question.is_initial:
+                        #logmessage("Running some code:\n\n" + question.sourcecode)
+                        exec(question.compute, user_dict)
                     if question.name and question.name in user_dict['answered']:
                         continue
-                    if question.question_type == 'objects':
-                        #logmessage("Running objects")
-                        for keyvalue in question.objects:
-                            for variable in keyvalue:
-                                object_type = keyvalue[variable]
-                                if re.search(r"\.", variable):
-                                    m = re.search(r"(.*)\.(.*)", variable)
-                                    variable = m.group(1)
-                                    attribute = m.group(2)
-                                    command = variable + ".initializeAttribute(name='" + attribute + "', objectType=" + object_type + ")"
-                                    logmessage("Running " + command)
-                                    exec(command, user_dict)
-                                else:
-                                    command = variable + ' = ' + object_type + '("' + variable + '")'
-                                    exec(command, user_dict)
-                                    #user_dict[variable] = user_dict[object_type](variable)
-                        if question.name:
-                            user_dict['answered'].add(question.name)
+                    # if False and question.question_type == 'objects':
+                    #     #logmessage("Running objects")
+                    #     for keyvalue in question.objects:
+                    #         for variable in keyvalue:
+                    #             object_type = keyvalue[variable]
+                    #             if re.search(r"\.", variable):
+                    #                 m = re.search(r"(.*)\.(.*)", variable)
+                    #                 variable = m.group(1)
+                    #                 attribute = m.group(2)
+                    #                 command = variable + ".initializeAttribute(name='" + attribute + "', objectType=" + object_type + ")"
+                    #                 logmessage("Running " + command)
+                    #                 exec(command, user_dict)
+                    #             else:
+                    #                 command = variable + ' = ' + object_type + '("' + variable + '")'
+                    #                 exec(command, user_dict)
+                    #                 #user_dict[variable] = user_dict[object_type](variable)
+                    #     if question.name:
+                    #         user_dict['answered'].add(question.name)
                     if question.question_type == 'code' and question.is_mandatory:
                         #logmessage("Running some code:\n\n" + question.sourcecode)
                         exec(question.compute, user_dict)
@@ -965,7 +1024,7 @@ class Interview:
             #logmessage("Trying missingVariable " + missingVariable)
             questions_to_try = list()
             if missingVariable in self.questions:
-                for the_question in self.questions[missingVariable]:
+                for the_question in reversed(self.questions[missingVariable]):
                     questions_to_try.append((the_question, False, 'None', 'None', missingVariable))
                 generic_needed = False
             else:
@@ -1028,7 +1087,7 @@ class Interview:
                                 found_generic = True
                                 #the_x = root
                                 found_x = 1
-                                for the_question_to_use in self.questions[var]:
+                                for the_question_to_use in reversed(self.questions[var]):
                                     questions_to_try.append((the_question_to_use, True, root, the_i_to_use, var))
                                 break
                             #logmessage("I should be looping around now")
@@ -1040,14 +1099,38 @@ class Interview:
             while True:
                 try:
                     for the_question, is_generic, the_x, the_i, missing_var in questions_to_try:
+                        #logmessage("missing_var is " + str(missing_var))
+                        #logmessage("Trying question of type " + str(the_question.question_type))
                         question = the_question.follow_multiple_choice(user_dict)
+                        #logmessage("Back from follow_multiple_choice")
+                        #logmessage("Trying a question of type " + str(question.question_type))
                         if is_generic:
+                            #logmessage("Yes it's generic")
                             if question.is_generic:
+                                #logmessage("Yes question is generic")
                                 if question.generic_object != generic_object:
+                                    #logmessage("Object mismatch")
                                     continue
                                 #logmessage("ok")
                             else:
+                                #logmessage("No question is not generic")
                                 continue
+                        if question.question_type == "objects":
+                            for keyvalue in question.objects:
+                                for variable in keyvalue:
+                                    object_type = keyvalue[variable]
+                                    if re.search(r"\.", variable):
+                                        m = re.search(r"(.*)\.(.*)", variable)
+                                        variable = m.group(1)
+                                        attribute = m.group(2)
+                                        command = variable + ".initializeAttribute(name='" + attribute + "', objectType=" + object_type + ")"
+                                        logmessage("Running " + command)
+                                        exec(command, user_dict)
+                                    else:
+                                        command = variable + ' = ' + object_type + '("' + variable + '")'
+                                        exec(command, user_dict)
+                            question.mark_as_answered(user_dict)
+                            return({'type': 'continue'})
                         if question.question_type == "template":
                             exec(question.fields[0].saveas + ' = """' + question.content.text(user_dict).rstrip().encode('unicode_escape') + '"""', user_dict)
                             question.mark_as_answered(user_dict)
