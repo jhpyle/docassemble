@@ -794,7 +794,6 @@ class Question:
             elif self.interview.default_role is not None and current_role != self.interview.default_role and 'role_event' not in self.fields_used:
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("Need 'role_event'")
-            user_dict['role_event_notification_sent'] = False
         return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts})
 
     def processed_attachments(self, user_dict, **kwargs):

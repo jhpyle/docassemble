@@ -128,7 +128,6 @@ subquestion: |
   % else:
     Thanks, the client needs to resume the interview now.
   % endif
-
 decoration: exit
 buttons:
   - Exit: leave
