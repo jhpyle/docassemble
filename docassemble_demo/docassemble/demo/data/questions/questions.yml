@@ -137,7 +137,7 @@ subquestion: |
     Thanks, the client needs to resume the interview now.
   % endif
 
-  % if success_sending_role_change_email:
+  % if success_sending_role_change_email is True:
     An e-mail has been sent.
   % endif
 decoration: exit
