@@ -160,7 +160,7 @@ content: |
 ---
 template: role_event_email_to_client
 content: |
-  ${ client.salutation } ${ client.name.last }:
+  ${ client.salutation() } ${ client.name.last }:
   
   An advocate has finished reviewing your answers.
 
@@ -520,13 +520,6 @@ attachments:
         Sorry, you do not have a valid claim.
       % endif
 
-      % if explanation_is_sound:
-        Your stated reason for why you should win is a sound one.
-      % else:
-        Your stated reason for why you should win your case is complete
-        rubbish.
-      % endif
-      
       Carles 8-bit polaroid, banjo bespoke Intelligentsia actually
       PBR&B hashtag. Asymmetrical banjo mustache fashion axe cardigan,
       polaroid literally taxidermy cornhole authentic 3 wolf moon yr
