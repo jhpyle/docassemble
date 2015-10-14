@@ -7,25 +7,24 @@ import inspect
 import re
 import urllib
 import sys
+import threading
 from decimal import Decimal
 
 __all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'set_language', 'word', 'words', 'comma_list', 'ordinal', 'need', 'nice_number', 'possessify', 'your', 'her', 'his', 'do_you', 'does_a_b', 'verb_past', 'verb_present', 'noun_plural', 'underscore_to_space', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'indefinite_article', 'today', 'remove', 'nodoublequote', 'capitalize', 'titlecase']
 
-user = None
-role = None
-current_info = dict()
+this_thread = threading.local()
+this_thread.user = None
+this_thread.role = None
+this_thread.current_info = dict()
 
 def update_info(new_user, new_role, new_current_info):
-    global user
-    global role
-    global current_info
-    user = new_user
-    role = new_role
-    current_info = new_current_info
+    this_thread.user = new_user
+    this_thread.role = new_role
+    this_thread.current_info = new_current_info
     return
 
 def interview_url():
-    return str(current_info['url']) + '?i=' + urllib.quote(current_info['yaml_filename']) + '&session=' + urllib.quote(current_info['session'])
+    return str(this_thread.current_info['url']) + '?i=' + urllib.quote(this_thread.current_info['yaml_filename']) + '&session=' + urllib.quote(this_thread.current_info['session'])
 
 class Court(DAObject):
     def __str__(self):
@@ -136,11 +135,11 @@ class Person(DAObject):
     def __str__(self):
         return self.name.full()
     def object_possessive(self, target):
-        if self is user:
+        if self is this_thread.user:
             return your(target)
         return super(Person, self).object_possessive(target)
     def is_are_you(self, **kwargs):
-        if self is user:
+        if self is this_thread.user:
             output = 'are you'
         else:
             output = 'is ' + str(self.name)
@@ -149,7 +148,7 @@ class Person(DAObject):
         else:
             return(output)
     def is_user(self):
-        return self is user
+        return self is this_thread.user
     def address_block(self):
         return("[FLUSHLEFT] " + self.name.full() + " [NEWLINE] " + self.address.block())
     def email_address(self, include_name=None):
@@ -172,19 +171,19 @@ class Person(DAObject):
     def is_question(self, **kwargs):
         #logmessage("do_question kwargs are " + str(kwargs))
         #if self.instanceName == 'user':
-        if self == user:
+        if self == this_thread.user:
             return(are_you(the_verb, **kwargs))
         else:
             return(does_a_b(self.name, the_verb, **kwargs))
     def do_question(self, the_verb, **kwargs):
         #logmessage("do_question kwargs are " + str(kwargs))
-        if self == user:
+        if self == this_thread.user:
             return(do_you(the_verb, **kwargs))
         else:
             return(does_a_b(self.name, the_verb, **kwargs))
     def does_verb(self, the_verb, **kwargs):
         #logmessage("does_verb kwargs are " + str(kwargs))
-        if self == user:
+        if self == this_thread.user:
             tense = 1
         else:
             tense = 3
@@ -193,7 +192,7 @@ class Person(DAObject):
         else:
             return verb_present(the_verb, person=tense)
     def did_verb(self, the_verb, **kwargs):
-        if self == user:
+        if self == this_thread.user:
             tense = 1
         else:
             tense = 3
@@ -209,12 +208,12 @@ class Individual(Person):
         #logmessage("Got to this here place")
         return super(Individual, self).init()
     def possessive(self, target):
-        if self is user:
+        if self is this_thread.user:
             return your(target)
         else:
             return possessify(self.name, target)
     def do_verb(self, verb):
-        if self is user:
+        if self is this_thread.user:
             return ""
         else:
             return possessify(self.name, target)
@@ -224,7 +223,7 @@ class Individual(Person):
         else:
             return('Mr.')
     def pronoun_possessive(self, target, **kwargs):
-        if self == user and ('thirdperson' not in kwargs or not kwargs['thirdperson']):
+        if self == this_thread.user and ('thirdperson' not in kwargs or not kwargs['thirdperson']):
             output = your(target)
         elif self.gender == 'female':
             output = her(target)
@@ -235,7 +234,7 @@ class Individual(Person):
         else:
             return(output)            
     def pronoun(self, **kwargs):
-        if self == user:
+        if self == this_thread.user:
             output = word('you')
         if self.gender == 'female':
             output = word('her')
@@ -248,7 +247,7 @@ class Individual(Person):
     def pronoun_objective(self, **kwargs):
         return self.pronoun(**kwargs)
     def pronoun_subjective(self, **kwargs):
-        if self == user and ('thirdperson' not in kwargs or not kwargs['thirdperson']):
+        if self == this_thread.user and ('thirdperson' not in kwargs or not kwargs['thirdperson']):
             output = word('you')
         elif self.gender == 'female':
             output = word('she')
