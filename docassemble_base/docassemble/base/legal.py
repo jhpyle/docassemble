@@ -223,13 +223,17 @@ class Individual(Person):
             return('Ms.')
         else:
             return('Mr.')
-    def pronoun_possessive(self, target):
-        if self == user:
-            return your(target)
-        if self.gender == 'female':
-            return her(target)
+    def pronoun_possessive(self, target, **kwargs):
+        if self == user and ('thirdperson' not in kwargs or not kwargs['thirdperson']):
+            output = your(target)
+        elif self.gender == 'female':
+            output = her(target)
         else:
-            return his(target)
+            output = his(target)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)            
     def pronoun(self, **kwargs):
         if self == user:
             output = word('you')
@@ -244,7 +248,7 @@ class Individual(Person):
     def pronoun_objective(self, **kwargs):
         return self.pronoun(**kwargs)
     def pronoun_subjective(self, **kwargs):
-        if self == user:
+        if self == user and ('thirdperson' not in kwargs or not kwargs['thirdperson']):
             output = word('you')
         elif self.gender == 'female':
             output = word('she')
@@ -429,14 +433,14 @@ class DAFileList(DAList):
 
 def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", attachments=[]):
     from flask_mail import Message
-    sys.stderr.write("moo1\n")
+    #sys.stderr.write("moo1\n")
     if type(to) is not list:
         to = [to]
     if len(to) == 0:
         return False
     if body is None and html is None:
         body = ""
-    sys.stderr.write("moo2\n")
+    #sys.stderr.write("moo2\n")
     email_stringer = lambda x: email_string(x, include_name=False)
     msg = Message(subject, sender=email_stringer(sender), recipients=email_stringer(to), cc=email_stringer(cc), bcc=email_stringer(bcc), body=body, html=markdown_to_html(html))
     success = True
@@ -469,10 +473,10 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
             #sys.stderr.write("moo35\n")
     appmail = mail_variable()
     if not appmail:
-        sys.stderr.write("moo36\n")
+        #sys.stderr.write("moo36\n")
         success = False
     if success:
-        sys.stderr.write("moo37\n")
+        #sys.stderr.write("moo37\n")
         try:
             appmail.send(msg)
         except Exception as errmess:
@@ -488,10 +492,10 @@ def email_string(persons, include_name=None):
     result = []
     for person in persons:
         if isinstance(person, Person):
-            sys.stderr.write("email string: contemplating " + person.object_name() + "\n")
+            #sys.stderr.write("email string: contemplating " + person.object_name() + "\n")
             result.append(person.email_address(include_name=include_name))
-            sys.stderr.write("email string was" + person.email_address(include_name=include_name) + "\n")
+            #sys.stderr.write("email string was " + person.email_address(include_name=include_name) + "\n")
         else:
-            sys.stderr.write("email string not a person: contemplating " + str(person) + "\n")
+            #sys.stderr.write("email string not a person: contemplating " + str(person) + "\n")
             result.append(str(person))
     return result

@@ -144,9 +144,12 @@ buttons:
 template: role_event_email_to_advocate
 content: |
   A client, ${ client }, has partly finished an interview.
-  ${ client.pronoun_subjective(capitalize=True) } needs you to review
-  ${ client.pronoun_possessive('answers') } so that she can obtain
-  her advice letter and ${ pleading.title }.
+  ${ client.pronoun_subjective(capitalize=True, thirdperson=True) }
+  needs you to review
+  ${ client.pronoun_possessive('answers', thirdperson=True) }
+  so that ${ client.pronoun_subjective(thirdperson=True) } can obtain
+  ${ client.pronoun_possessive('advice letter', thirdperson=True) }
+  and ${ pleading.title }.
 
   Please go to [the interview](${ interview_url() }) as soon as possible.
 
