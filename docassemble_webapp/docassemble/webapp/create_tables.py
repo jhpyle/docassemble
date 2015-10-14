@@ -20,9 +20,11 @@ def populate_tables():
     admin_role = Role(name=word('admin'))
     user_role = Role(name=word('user'))
     developer_role = Role(name=word('developer'))
+    advocate_role = Role(name=word('advocate'))
     db.session.add(admin_role)
     db.session.add(user_role)
     db.session.add(developer_role)
+    db.session.add(advocate_role)
     user_manager = UserManager(SQLAlchemyAdapter(db, User, UserAuthClass=UserAuth), app)
     user_auth = UserAuth(password=app.user_manager.hash_password(defaults['password']))
     user = User(

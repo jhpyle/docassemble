@@ -1,6 +1,6 @@
 from docassemble.base.core import DAObject
 from docassemble.base.util import comma_and_list, get_language, set_language, word, words, comma_list, ordinal, need, nice_number, possessify, your, her, his, do_you, does_a_b, verb_past, verb_present, noun_plural, underscore_to_space, space_to_underscore, force_ask, period_list, currency, indefinite_article, today, remove, nodoublequote, capitalize, titlecase
-from docassemble.base.filter import file_finder, url_finder, mail_variable
+from docassemble.base.filter import file_finder, url_finder, mail_variable, markdown_to_html
 from docassemble.base.logger import logmessage
 from datetime import date
 import inspect
@@ -144,7 +144,7 @@ class Person(DAObject):
             output = 'are you'
         else:
             output = 'is ' + str(self.name)
-        if 'capitalize' in kwargs:
+        if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
             return(output)
@@ -230,13 +230,30 @@ class Individual(Person):
             return her(target)
         else:
             return his(target)
-    def pronoun(self):
+    def pronoun(self, **kwargs):
         if self == user:
-            return word('you')
+            output = word('you')
         if self.gender == 'female':
-            return word('her')
+            output = word('her')
         else:
-            return word('him')
+            output = word('him')
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)
+    def pronoun_objective(self, **kwargs):
+        return self.pronoun(**kwargs)
+    def pronoun_subjective(self, **kwargs):
+        if self == user:
+            output = word('you')
+        elif self.gender == 'female':
+            output = word('she')
+        else:
+            output = word('he')
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)
 
 class DAList(DAObject):
     def init(self, **kwargs):
@@ -419,7 +436,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
         body = ""
     #sys.stderr.write("moo2\n")
     email_stringer = lambda x: email_string(x, include_name=False)
-    msg = Message(subject, sender=email_stringer(sender), recipients=email_stringer(to), cc=email_stringer(cc), bcc=email_stringer(bcc), body=body, html=html)
+    msg = Message(subject, sender=email_stringer(sender), recipients=email_stringer(to), cc=email_stringer(cc), bcc=email_stringer(bcc), body=body, html=markdown_to_html(html))
     success = True
     for attachment in attachments:
         #sys.stderr.write("moo31\n")

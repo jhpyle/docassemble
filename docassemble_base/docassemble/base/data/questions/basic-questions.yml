@@ -35,10 +35,12 @@ subquestion: |
 
     Please remember the following link and come back to it when you receive notice to do so:
 
-    | ${ interview_url() }
+    [${ interview_url() }](${ interview_url() })
+    
   % else:
-    Thanks, the client needs to resume the interview now.  Role_needed is ${ role_needed } and role is ${ role }.
+    Thanks, the client needs to resume the interview now.
   % endif
+
 decoration: exit
 buttons:
   - Exit: leave

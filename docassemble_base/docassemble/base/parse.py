@@ -246,6 +246,7 @@ class Question:
         self.fields = []
         self.attachments = []
         self.name = None
+        self.role = list()
         self.need = None
         self.helptext = None
         self.subcontent = None
@@ -419,13 +420,16 @@ class Question:
                 raise DAError("A default role must be a string." + self.idebug(data))
         if 'role' in data:
             if type(data['role']) is str:
-                self.role = [data['role']]
+                if data['role'] not in self.role:
+                    self.role.append(data['role'])
             elif type(data['role']) is list:
-                self.role = data['role']
+                for rolename in data['role']:
+                    if data['role'] not in self.role:
+                        self.role.append(rolename)
             else:
                 raise DAError("The role of a question must be a string or a list." + self.idebug(data))
         else:
-            self.role = None
+            self.role = list()
         if 'include' in data:
             should_append = False
             if type(data['include']) is list:
@@ -465,14 +469,15 @@ class Question:
             self.attachments = self.process_attachment_list(data['attachments'])
         if 'allow emailing' in data:
             self.allow_emailing = data['allow emailing']
-        if 'role' in data:
-            if type(data['role']) is list:
-                for rolename in data['role']:
-                    self.role.add(rolename)
-            elif type(data['role']) is str:
-                self.role.add(data['role'])
-            else:
-                raise DAError("A role section must be text or a list." + self.idebug(data))
+        # if 'role' in data:
+        #     if type(data['role']) is list:
+        #         for rolename in data['role']:
+        #             if rolename not in self.role:
+        #                 self.role.append(rolename)
+        #     elif type(data['role']) is str and data['role'] not in self.role:
+        #         self.role.append(data['role'])
+        #     else:
+        #         raise DAError("A role section must be text or a list." + self.idebug(data))
         if 'language' in data:
             self.language = data['language']
         if 'progress' in data:
@@ -724,15 +729,6 @@ class Question:
         if the_i != 'None':
             exec("i = " + the_i, user_dict)
             #logmessage("i is " + the_i)
-        if 'role' in user_dict:                
-            current_role = user_dict['role']
-            if self.role is not None:
-                if current_role not in self.role and 'role_error' not in self.fields_used:
-                    user_dict['role_needed'] = self.role[0]
-                    raise NameError("Need 'role_error'")
-            elif self.interview.default_role is not None and current_role != self.interview.default_role and 'role_error' not in self.fields_used:
-                user_dict['role_needed'] = self.interview.default_role
-                raise NameError("Need 'role_error'")
         if self.helptext is not None:
             help_text_list = [{'heading': None, 'content': self.helptext.text(user_dict)}]
         else:
@@ -787,8 +783,19 @@ class Question:
                     helptexts[field.saveas] = field.helptext.text(user_dict)
                 if hasattr(field, 'hint'):
                     hints[field.saveas] = field.hint.text(user_dict)
-        
-        return({'type': 'question', 'question_text': self.content.text(user_dict), 'subquestion_text': subquestion, 'under_text': undertext, 'decorations': decorations, 'help_text': help_text_list, 'attachments': self.processed_attachments(user_dict, the_x=the_x, the_i=the_i), 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts})
+        question_text = self.content.text(user_dict)
+        attachment_text = self.processed_attachments(user_dict, the_x=the_x, the_i=the_i)
+        if 'role' in user_dict:
+            current_role = user_dict['role']
+            if len(self.role) > 0:
+                if current_role not in self.role and 'role_event' not in self.fields_used:
+                    user_dict['role_needed'] = self.role[0]
+                    raise NameError("Need 'role_event'")
+            elif self.interview.default_role is not None and current_role != self.interview.default_role and 'role_event' not in self.fields_used:
+                user_dict['role_needed'] = self.interview.default_role
+                raise NameError("Need 'role_event'")
+            user_dict['role_event_notification_sent'] = False
+        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts})
 
     def processed_attachments(self, user_dict, **kwargs):
         return(list(map((lambda x: make_attachment(x, user_dict, **kwargs)), self.attachments)))

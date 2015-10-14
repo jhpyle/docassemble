@@ -541,19 +541,21 @@ def index():
     steps = 0
     need_to_reset = False
     yaml_parameter = request.args.get('i', None)
+    session_parameter = request.args.get('session', None)
     if yaml_parameter is not None: # and yaml_parameter != yaml_filename
+        logmessage("Found yaml: " + yaml_parameter)
         yaml_filename = yaml_parameter
         user_code, user_dict = reset_session(yaml_filename)
         session_id = session.get('uid', None)
         need_to_reset = True
-    session_parameter = request.args.get('session', None)
     if session_parameter is not None:
+        logmessage("Found session parameter: " + session_parameter)
         session_id = session_parameter
         session['uid'] = session_id
         user_code = session_id
-        #logmessage("Found user code " + session_id)
         steps, user_dict = fetch_user_dict(user_code, yaml_filename)
         need_to_reset = True
+        #http://localhost/?i=docassemble.demo%3Adata/questions/questions.yml&session=OvdmxgqFfinEYdiCgBPianVrlwhqlukt
     if session_id:
         user_code = session_id
         #logmessage("Found user code " + session_id)
@@ -675,15 +677,7 @@ def index():
                     mime_type = 'application/rtf'
                 return(send_file(the_filename, mimetype=str(mime_type), as_attachment=True, attachment_filename=str(the_attachment['filename']) + '.' + str(the_format)))
     status = '200 OK'
-    flash_content = ""
-    messages = get_flashed_messages(with_categories=True)
-    if messages:
-        flash_content += '<div class="container">'
-        for classname, message in messages:
-            if classname == 'error':
-                classname = 'danger'
-            flash_content += '<div class="row"><div class="col-md-6"><div class="alert alert-' + classname + '"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div></div></div>'
-        flash_content += '</div>'
+    error_messages = list()
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
     changed = False
@@ -711,7 +705,7 @@ def index():
             steps += 1
         except Exception as errMess:
             #sys.stderr.write("Error: " + str(errMess) + "\n")
-            flash_content += "<p>Error: " + str(errMess) + "</p>"
+            error_messages.append(("error", "Error: " + str(errMess)))
     if 'files' in post_data:
         #logmessage("There are files")
         interview.assemble(user_dict, interview_status)
@@ -748,7 +742,7 @@ def index():
                             make_image_files(path)
                         files_to_process.append((filename, file_number, mimetype, extension))
                     if match_invalid.search(file_field):
-                        flash_content += "<p>Error: Invalid character in file_field: " + file_field + " </p>"
+                        error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
                         break
                     # if len(files_to_process) == 1:
                     #     (filename, file_number, mimetype, extension) = files_to_process[0]
@@ -769,7 +763,7 @@ def index():
                         steps += 1
                     except Exception as errMess:
                         sys.stderr.write("Error: " + str(errMess) + "\n")
-                        flash_content += "<p>Error: " + str(errMess) + "</p>"
+                        error_messages.append(("error", "Error: " + str(errMess)))
                     #post_data.add(file_field, str(file_number))
     if 'checkboxes' in post_data:
         checkbox_fields = post_data['checkboxes'].split(",")
@@ -782,7 +776,7 @@ def index():
         #logmessage("Got a key: " + key)
         data = post_data[key]
         if match_invalid.search(key):
-            flash_content += "<p>Error: Invalid character in key: " + key + " </p>"
+            error_messages.append(("error", "Error: Invalid character in key: " + key))
             break
         data = re.sub(r'"""', '', data)
         if not (data == "True" or data == "False"):
@@ -792,7 +786,7 @@ def index():
             if interview_status.question.question_type == "multiple_choice" and not hasattr(interview_status.question.fields[0], 'saveas'):
                 key = 'answers["' + interview_status.question.name + '"]'
             else:
-                flash_content += "<p>Error: this was not the question</p>"
+                error_messages.append(("error", "Error: multiple choice values were supplied, but docassemble was not waiting for an answer to a multiple choice question."))
         string = key + ' = ' + data
         logmessage("Doing " + str(string))
         try:
@@ -800,7 +794,7 @@ def index():
             changed = True
             steps += 1
         except Exception as errMess:
-            flash_content += "<p>Error: " + str(errMess) + "</p>"
+            error_messages.append(("error", "Error: " + str(errMess)))
     if changed and 'questionname' in post_data:
         user_dict['answered'].add(post_data['questionname'])
     interview.assemble(user_dict, interview_status)
@@ -811,7 +805,7 @@ def index():
         url_args = user_dict['url_args']
         user_dict = initial_dict.copy()
         user_dict['url_args'] = url_args
-        interview_status = docassemble.base.parse.InterviewStatus()
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
         reset_user_dict(user_code, user_dict, yaml_filename)
         steps = 0
         changed = False
@@ -825,12 +819,21 @@ def index():
     if interview_status.question.question_type == "leave":
         return redirect(exit_page)
     save_user_dict(user_code, user_dict, yaml_filename, changed=changed)
+    flash_content = ""
+    messages = get_flashed_messages(with_categories=True) + error_messages
+    if messages:
+        #flash_content += '<div class="container">'
+        for classname, message in messages:
+            if classname == 'error':
+                classname = 'danger'
+            flash_content += '<div class="row"><div class="col-md-6"><div class="alert alert-' + classname + '"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div></div></div>'
+        #flash_content += '</div>'
     if interview_status.question.question_type == "signature":
         output = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link rel="stylesheet" href="' + url_for('static', filename='app/signature.css') + '"><title>' + word('Sign Your Name') + '</title></head><body onresize="resizeCanvas()">'
         output += signature_html(interview_status, DEBUG)
         output += '</body></html>'
     else:
-        output = standard_start() + make_navbar(daconfig['brandname'], steps) + flash_content + '<div class="container"><div class="tab-content">'
+        output = standard_start() + make_navbar(daconfig['brandname'], steps) + '<div class="container">' + '<div class="tab-content">' + flash_content
         if USE_PROGRESS_BAR:
             output += progress_bar(user_dict['progress'])
         extra_scripts = list()

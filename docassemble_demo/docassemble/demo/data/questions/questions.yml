@@ -78,6 +78,11 @@ comment: |
   important to define objects early on in your interview, before any
   "mandatory" code blocks.
 ---
+code:
+  advocate.name.first = "John"
+  advocate.name.last = "Smith"
+  advocate.email = "jpyle@philalegal.org"
+---
 terms:
   rhododendron: |
      A genus of shrubs or small trees, often having handsome
@@ -102,24 +107,72 @@ comment: |
   turn them into hyperlinks wherever they appear.  When the user
   clicks on the hyperlink, a popup appears with the word's definition.
 ---
+error: role_error
+question: You are done for now.
+subquestion: |
+  <%
+    if not role_event_notification_sent:
+      if role_needed == 'advocate':
+        send_email(to=advocate, html=role_error_email_to_advocate, subject="Client interview waiting for your attention: " + str(client.name))
+      else:
+        send_email(to=client, html=role_error_email_to_client, subject="Your interview answers have been reviewed")
+      role_event_notification_sent = True
+  %>
+  % if role_needed == 'advocate':
+    An advocate needs to review your answers before you can proceed.
+
+    Please remember the following link and come back to it when you receive notice to do so:
+
+    [${ interview_url() }](${ interview_url() })
+    
+  % else:
+    Thanks, the client needs to resume the interview now.
+  % endif
+
+decoration: exit
+buttons:
+  - Exit: leave
+---
+template: role_error_email_to_advocate
+content: |
+  A client, ${ client }, has partly finished an interview.
+  ${ client.pronoun_subjective(capitalize=True) } needs you to review
+  ${ client.pronoun_possessive() } answers so that she can obtain
+  her advice letter and ${ pleading.title }.
+
+  Please go to [the interview](${ interview_url() }) as soon as possible.
+
+  Thank you!
+---
+template: role_error_email_to_client
+content: |
+  ${ client.salutation } ${ client.name.last }:
+  
+  An advocate has finished reviewing your answers.
+
+  Please go to [${ interview_url() }](${ interview_url() })
+  to continue the interview.
+
+  Thank you for your patience.
+---
 mandatory: True
 code: |
   if user_understands_no_attorney_client_relationship == "understands":
-    need(user_done)
+    need(client_done)
   else:
-    need(user_kicked_out)
+    need(client_kicked_out)
 comment: |
   This is the code that directs the flow of the interview.  It
   indicates to the system that we need to get to the endpoint
-  "user_done."  There is a question below that "sets" the variable
-  "user_done."  Docassemble will ask all the questions necessary to
+  "client_done."  There is a question below that "sets" the variable
+  "client_done."  Docassemble will ask all the questions necessary to
   get the information need to pose that that final question to the
   user.
 
   However, if the answer to the question
   user_understands_no_attorney_client_relationship is not
   "understands," the interview will looks for a question that sets the
-  variable "user_kicked_out."
+  variable "client_kicked_out."
   
   "Mandatory" sections like this one are evaluated in the order they appear
   in the question file.
@@ -140,7 +193,7 @@ decoration: exit
 buttons:
   - Exit: exit
   - Restart: restart
-sets: user_kicked_out
+sets: client_kicked_out
 comment: |
   If docassemble is configured to show a progress bar, the progress bar will
   be set to 100% on this question, which is an endpoint question (since the only
@@ -161,6 +214,17 @@ comment: |
   The file sample-support-order.jpg is stored in the docassemble.demo package
   in the subdirectory docassemble/demo/data/static.  This is how you refer to
   a "static" file that exists within a docassemble subpackage.
+---
+question: Is this reason a sound one?
+subquestion: |
+  The client, ${ client }, proposed the following reason for winning:
+  
+  > ${ explanation }
+
+  Is this a sound reason for why the judge should rule in the client's
+  favor in this ${ law_category } case?
+yesno: explanation_is_sound
+role: advocate
 ---
 question: What form do you want to prepare?
 decoration: document
@@ -197,8 +261,8 @@ comment: |
   not be a plaintiff.
 code: |
   case.plaintiff.gathering = True
-  if user.is_plaintiff and user not in case.plaintiff:
-    case.plaintiff.add(user)
+  if client.is_plaintiff and client not in case.plaintiff:
+    case.plaintiff.add(client)
   if case.plaintiff.number_gathered() == 0:
     newplaintiff = case.plaintiff.addObject(Individual)
   while case.plaintiff.there_is_another:
@@ -212,8 +276,8 @@ comment: |
   is not already a plaintiff.  Then it will ask for the names of the defendants.
 code: |
   case.defendant.gathering = True
-  if user not in case.defendant and not user.is_plaintiff and user.is_defendant:
-    case.defendant.add(user)
+  if client not in case.defendant and not client.is_plaintiff and client.is_defendant:
+    case.defendant.add(client)
   if case.defendant.number_gathered() == 0:
     newdefendant = case.defendant.addObject(Individual)
   while case.defendant.there_is_another:
@@ -225,31 +289,31 @@ code: |
 comment: |
   This code gathers the names of the children of all of the parties.
 code: |
-  people = [user]
+  people = [client]
   people.extend(case.parties())
   for indiv in people:
     indiv.child.gathered
 ---
 comment: |
   This is an example of how docassemble can serve as an "expert system."
-  The variable "user_has_standing" (a legal concept) can be set using simple
+  The variable "client_has_standing" (a legal concept) can be set using simple
   logical expressions in Python.
 code: |
-  if user_has_injury and injury_in_jurisdiction and statute_of_limitations_ok:
-    user_has_standing = True
+  if client_has_injury and injury_in_jurisdiction and statute_of_limitations_ok:
+    client_has_standing = True
   else:
-    user_has_standing = False
+    client_has_standing = False
 ---
 question: Were you injured?
 decoration: injury
-yesno: user_has_injury
+yesno: client_has_injury
 help: |
   An injury can take many forms.  It can be a physical injury or a
   purely financial injury.
 progress: 50
 ---
 question: |
-  I understand that you live in ${ user.address.city }.
+  I understand that you live in ${ client.address.city }.
   Were you injured in ${ jurisdiction.state }?
 yesno: injury_in_jurisdiction
 ---
@@ -285,9 +349,9 @@ fields:
       I should win because . . .
 ---
 code: |
-  if user.address.address and retry_address:
+  if client.address.address and retry_address:
     retry_address = False
-    force_ask('user.address.address')
+    force_ask('client.address.address')
 comment: |
   This is an example of how the "force_ask" function can be used to
   ask a question that has already been asked.
@@ -402,12 +466,12 @@ comment: |
   docassemble to gather the information up front, before it starts
   processing the question and its attachments.  This helps to direct
   the order of the questions in a more sensible fashion.
-sets: user_done
+sets: client_done
 need:
   - case.plaintiff.gathered
   - case.defendant.gathered
 question: |
-  % if user_has_standing:
+  % if client_has_standing:
     Congratulations!  You have a valid claim.
   % else:
     Sorry, you do not have a valid claim.
@@ -419,29 +483,36 @@ buttons:
   - Exit: exit
   - Restart: restart
 attachments:
-  - name: Advice Letter for ${ user }
+  - name: Advice Letter for ${ client }
     description:
       This is a *very* helpful advice letter.
     content: |
       ${ today() }
 
-      ${ user.address_block() }
+      ${ client.address_block() }
 
-      Dear ${ user.salutation() } ${ user.name.last }:
+      Dear ${ client.salutation() } ${ client.name.last }:
 
-      Your marital status is ${ user.marital_status.lower() }.
-      % if user.marital_status == 'Single':
+      Your marital status is ${ client.marital_status.lower() }.
+      % if client.marital_status == 'Single':
         Perhaps you should marry ${ village_idiot }.
       % endif
-      Your annual income is ${ currency(user.income.total()) }
-      and the value of all you own is ${ currency(user.asset.total()) }.
+      Your annual income is ${ currency(client.income.total()) }
+      and the value of all you own is ${ currency(client.asset.total()) }.
 
-      % if user_has_standing:
+      % if client_has_standing:
         You have a valid claim.
       % else:
         Sorry, you do not have a valid claim.
       % endif
 
+      % if explanation_is_sound:
+        Your stated reason for why you should win is a sound one.
+      % else:
+        Your stated reason for why you should win your case is complete
+        rubbish.
+      % endif
+      
       Carles 8-bit polaroid, banjo bespoke Intelligentsia actually
       PBR&B hashtag. Asymmetrical banjo mustache fashion axe cardigan,
       polaroid literally taxidermy cornhole authentic 3 wolf moon yr
@@ -509,29 +580,29 @@ attachments:
       John Smith, Attorney
     metadata:
       FirstHeaderRight: "Philadelphia Legal Assistance [NEWLINE] 718 Arch Street, Suite 300N [NEWLINE] Philadelphia, PA 19106"
-      HeaderLeft: "${ user } [NEWLINE] ${ today() } [NEWLINE] Page [PAGENUM]"
+      HeaderLeft: "${ client } [NEWLINE] ${ today() } [NEWLINE] Page [PAGENUM]"
       HeaderLines: "3"
       SingleSpacing: true
-    filename: Advice_letter_${ space_to_underscore(user) }
+    filename: Advice_letter_${ space_to_underscore(client) }
   - name: ${ pleading.title }
     usedefs:
       - kid_defs
     content: |
       ${ pleading.caption() }
 
-      I am the ${ case.role_of(user) } in this case.
-      % if user.child.number() > 0:
-      I have ${ user.child.number_as_word() } ${ user.child.as_noun() }:
+      I am the ${ case.role_of(client) } in this case.
+      % if client.child.number() > 0:
+      I have ${ client.child.number_as_word() } ${ client.child.as_noun() }:
 
-      % for child in user.child:
+      % for child in client.child:
       #. ${ child }
       % endfor
 
-      % for child in user.child:
+      % for child in client.child:
       ${ describe_as_adorable(child) }
       % endfor
       Aren't children such a blessing?
-      % if user.has_support_order:
+      % if client.has_support_order:
       I already have a support order.
       % endif
       % endif
@@ -558,10 +629,10 @@ attachments:
       % endfor
       
       This petition should be granted.  ${ explanation }
-      % if user.picture_verified:
+      % if client.picture_verified:
       Look how cute I am:
 
-      [FLUSHLEFT] ${ user.picture.show() }
+      [FLUSHLEFT] ${ client.picture.show() }
       % endif
 
       Chambray art party craft beer pork belly health goth, locavore
@@ -579,13 +650,13 @@ attachments:
 
       [FLUSHLEFT] Respectfully submitted,
 
-      % if user.signature_verified:
-      [FLUSHLEFT] ${ user.signature.show(width='2in') }
+      % if client.signature_verified:
+      [FLUSHLEFT] ${ client.signature.show(width='2in') }
       % else:
       [FLUSHLEFT] ${ blank_signature }
       % endif
 
-      [FLUSHLEFT] ${ user }, ${ titlecase(case.role_of(user)) }
+      [FLUSHLEFT] ${ client }, ${ titlecase(case.role_of(client)) }
     metadata:
       FirstFooterCenter: "[HYPHEN] [PAGENUM] [HYPHEN]"
       FooterCenter: "[HYPHEN] [PAGENUM] [HYPHEN]"
@@ -593,7 +664,7 @@ attachments:
       FooterLeft: "${ pleading.title }"
     filename: ${ space_to_underscore(pleading.title) }
 help: |
-  This is the end of the interview, ${ user }.  You can exit or restart.
+  This is the end of the interview, ${ client }.  You can exit or restart.
 
   I hope you enjoyed this interview.
 progress: 100
