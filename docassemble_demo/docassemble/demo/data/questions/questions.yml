@@ -107,15 +107,15 @@ comment: |
   turn them into hyperlinks wherever they appear.  When the user
   clicks on the hyperlink, a popup appears with the word's definition.
 ---
-error: role_error
+error: role_event
 question: You are done for now.
 subquestion: |
   <%
     if not role_event_notification_sent:
       if role_needed == 'advocate':
-        send_email(to=advocate, html=role_error_email_to_advocate, subject="Client interview waiting for your attention: " + str(client.name))
+        send_email(to=advocate, html=role_event_email_to_advocate, subject="Client interview waiting for your attention: " + str(client.name))
       else:
-        send_email(to=client, html=role_error_email_to_client, subject="Your interview answers have been reviewed")
+        send_email(to=client, html=role_event_email_to_client, subject="Your interview answers have been reviewed")
       role_event_notification_sent = True
   %>
   % if role_needed == 'advocate':
@@ -133,7 +133,7 @@ decoration: exit
 buttons:
   - Exit: leave
 ---
-template: role_error_email_to_advocate
+template: role_event_email_to_advocate
 content: |
   A client, ${ client }, has partly finished an interview.
   ${ client.pronoun_subjective(capitalize=True) } needs you to review
@@ -144,7 +144,7 @@ content: |
 
   Thank you!
 ---
-template: role_error_email_to_client
+template: role_event_email_to_client
 content: |
   ${ client.salutation } ${ client.name.last }:
   
