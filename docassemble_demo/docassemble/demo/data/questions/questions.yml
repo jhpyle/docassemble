@@ -107,7 +107,7 @@ comment: |
   turn them into hyperlinks wherever they appear.  When the user
   clicks on the hyperlink, a popup appears with the word's definition.
 ---
-sets: success_sending_role_change_email:
+sets: success_sending_role_change_email
 code: |
   if not role_event_notification_sent:
     if role_needed == 'advocate':
@@ -127,18 +127,17 @@ error: role_event
 question: You are done for now.
 subquestion: |
   % if role_needed == 'advocate':
-    An advocate needs to review your answers before you can proceed.
+  An advocate needs to review your answers before you can proceed.
 
-    Please remember the following link and come back to it when you receive notice to do so:
+  Please remember the following link and come back to it when you receive notice to do so:
 
-    [${ interview_url() }](${ interview_url() })
-    
+  [${ interview_url() }](${ interview_url() })  
   % else:
-    Thanks, the client needs to resume the interview now.
+  Thanks, the client needs to resume the interview now.
   % endif
 
-  % if success_sending_role_change_email is True:
-    An e-mail has been sent.
+  % if success_sending_role_change_email:
+  An e-mail has been sent.
   % endif
 decoration: exit
 buttons:
