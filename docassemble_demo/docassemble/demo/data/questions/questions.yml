@@ -78,7 +78,7 @@ comment: |
   important to define objects early on in your interview, before any
   "mandatory" code blocks.
 ---
-code:
+code: |
   advocate.name.first = "John"
   advocate.name.last = "Smith"
   advocate.email = "jpyle@philalegal.org"
