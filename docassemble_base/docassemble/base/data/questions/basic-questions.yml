@@ -128,10 +128,6 @@ need: user_understands_how_to_use_signature_feature
 under: |
   ${ x.name }
 ---
-mandatory: true
-code:
-  role_event_notification_sent = False
----
 template: blank_signature
 content: |
   \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
