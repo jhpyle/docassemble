@@ -791,10 +791,12 @@ class Question:
                 if current_role not in self.role and 'role_event' not in self.fields_used:
                     user_dict['role_needed'] = self.role[0]
                     user_dict['role_event_notification_sent'] = False
+                    del user_dict['success_sending_role_change_email']
                     raise NameError("Need 'role_event'")
             elif self.interview.default_role is not None and current_role != self.interview.default_role and 'role_event' not in self.fields_used:
                 user_dict['role_needed'] = self.interview.default_role
                 user_dict['role_event_notification_sent'] = False
+                del user_dict['success_sending_role_change_email']
                 raise NameError("Need 'role_event'")
         return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts})
 
