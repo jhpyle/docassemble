@@ -195,7 +195,7 @@ Set /etc/apache2/sites-available/000-default.conf to something like:
         SSLProxyEngine on
         DocumentRoot /var/www/html
 
-        WSGIDaemonProcess docassemble.webserver user=www-data group=www-data threads=5
+        WSGIDaemonProcess docassemble.webserver user=www-data group=www-data processes=5 threads=1
         WSGIScriptAlias /demo /var/lib/docassemble/webapp/flask.wsgi
         <Directory /var/lib/docassemble/webapp>
           WSGIProcessGroup docassemble.webserver
