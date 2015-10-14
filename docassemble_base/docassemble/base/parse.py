@@ -991,6 +991,7 @@ class Interview:
                 #logmessage(str(errMess))
                 question_result = self.askfor(missingVariable, user_dict)
                 if question_result['type'] == 'continue':
+                    logmessage("Continuing after asking for " + missingVariable + "...")
                     continue
                 else:
                     logmessage("Need to ask:\n  " + question_result['question_text'])
