@@ -225,7 +225,7 @@ above function by doing:
 {% highlight yaml %}
 ---
 question: |
-  {% describe_as_adorable(spouse) %} Am I right?
+  ${ describe_as_adorable(spouse) } Am I right?
 yesno: user_agrees_spouse_is_adorable
 usedef:
  - adorability
