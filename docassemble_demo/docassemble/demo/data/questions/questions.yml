@@ -111,11 +111,9 @@ sets: success_sending_role_change_email
 code: |
   if not role_event_notification_sent:
     if role_needed == 'advocate':
-      send_email(to=advocate, html=role_event_email_to_advocate, subject="Client interview waiting for your attention: " + str(client.name))
-      success_sending_role_change_email = True
+      success_sending_role_change_email = send_email(to=advocate, html=role_event_email_to_advocate, subject="Client interview waiting for your attention: " + str(client.name))
     else:
-      send_email(to=client, html=role_event_email_to_client, subject="Your interview answers have been reviewed")
-      success_sending_role_change_email = True
+      success_sending_role_change_email = send_email(to=client, html=role_event_email_to_client, subject="Your interview answers have been reviewed")
     role_event_notification_sent = True
   else:
     success_sending_role_change_email = False
