@@ -124,6 +124,8 @@ code: |
 error: role_event
 question: You are done for now.
 subquestion: |
+  need(client.email)
+  need(client.salutation)
   % if role_needed == 'advocate':
   An advocate needs to review your answers before you can proceed.
 
