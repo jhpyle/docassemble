@@ -430,7 +430,9 @@ class DAFileList(DAList):
 def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", attachments=[]):
     from flask_mail import Message
     sys.stderr.write("moo1\n")
-    if type(to) is not list or len(to) == 0:
+    if type(to) is not list:
+        to = [to]
+    if len(to) == 0:
         return False
     if body is None and html is None:
         body = ""
