@@ -10,7 +10,7 @@ import sys
 import threading
 from decimal import Decimal
 
-__all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'set_language', 'word', 'words', 'comma_list', 'ordinal', 'need', 'nice_number', 'possessify', 'your', 'her', 'his', 'do_you', 'does_a_b', 'verb_past', 'verb_present', 'noun_plural', 'underscore_to_space', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'indefinite_article', 'today', 'remove', 'nodoublequote', 'capitalize', 'titlecase']
+__all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'RoleChangeTracker', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'set_language', 'word', 'words', 'comma_list', 'ordinal', 'need', 'nice_number', 'possessify', 'your', 'her', 'his', 'do_you', 'does_a_b', 'verb_past', 'verb_present', 'noun_plural', 'underscore_to_space', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'indefinite_article', 'today', 'remove', 'nodoublequote', 'capitalize', 'titlecase']
 
 this_thread = threading.local()
 this_thread.user = None
