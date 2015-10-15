@@ -102,7 +102,10 @@ def as_html(status, extra_scripts, url_for, debug):
         checkboxes = list()
         files = list()
         for field in status.question.fields:
-            if field.datatype != 'heading' and field.saveas in status.helptexts:
+            if field.datatype == 'heading':
+                fieldlist.append('<div class="row"><h3>' + field.label + '</h3></div>')
+                continue
+            if field.saveas in status.helptexts:
                 helptext_start = '<a style="cursor:pointer;color:#408E30" data-container="body" data-toggle="popover" data-placement="bottom" data-content="' + noquote(unicode(status.helptexts[field.saveas])) + '">' 
                 helptext_end = '</a>'
             else:
@@ -128,9 +131,7 @@ def as_html(status, extra_scripts, url_for, debug):
             if (field.datatype in ['files', 'file']):
                 enctype_string = ' enctype="multipart/form-data"'
                 files.append(field.saveas)
-            if field.datatype == 'heading':
-                fieldlist.append('<div class="row"><h3>' + field.label + '</h3></div>')
-            elif field.datatype == 'yesno':
+            if field.datatype == 'yesno':
                 checkboxes.append(field.saveas)
                 fieldlist.append('<div class="row"><div class="col-md-6">' + input_for(status, field) + '</div></div>')
             else:
