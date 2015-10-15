@@ -130,7 +130,7 @@ def as_html(status, extra_scripts, url_for, debug):
                 files.append(field.saveas)
             if field.datatype == 'yesno':
                 checkboxes.append(field.saveas)
-                fieldlist.append('<div><div class="col-sm-12"><div class="checkbox"><label>' + input_for(status, field) + '</label></div></div></div>')
+                fieldlist.append('<div><div class="col-sm-6">' + input_for(status, field) + '</div></div>')
             else:
                 fieldlist.append('<div class="form-group"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + field.label + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>')
         output += '<form id="daform" class="form-horizontal" method="POST"' + enctype_string + '><fieldset>'
