@@ -21,8 +21,8 @@ input.labelauty { display: none !important; }
 input.labelauty + label
 {
 	display: table;
-	font-size: 11px;
-	padding: 10px;
+	font-size: 14px;
+	padding: 7px;
 	background-color: #efefef;
 	color: #b3b3b3;
 	cursor: pointer;
@@ -82,7 +82,7 @@ input.labelauty + label > span.labelauty-checked-image + span.labelauty-checked
 input.labelauty:not(:checked):not([disabled]) + label:hover
 {
 	background-color: #eaeaea;
-	color: #a7a7a7;
+	color: #575757;
 }
 input.labelauty:not(:checked) + label > span.labelauty-checked-image
 {
