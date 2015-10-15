@@ -829,7 +829,7 @@ def index():
                 classname = 'danger'
             flash_content += '<div class="row"><div class="col-md-6"><div class="alert alert-' + classname + '"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div></div></div>'
             #flash_content += '</div>'
-    pretty_scripts = '<script src="' + url_for('static', filename='prettyCheckable/dist/prettyCheckable.min.js') + '"></script>' + "\n" + """\
+    pretty_scripts = '<script src="' + url_for('static', filename='prettyCheckable/dev/prettyCheckable.js') + '"></script>' + "\n" + """\
     <script>
     $().ready(function(){
       $('input.pretty').prettyCheckable({
