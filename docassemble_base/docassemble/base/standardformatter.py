@@ -204,7 +204,7 @@ def as_html(status, extra_scripts, url_for, debug):
                     for key in choice:
                         if key == 'image':
                             continue
-                        output += '<div class="radio"><input data-labelauty="' + the_icon + key + '|' + the_icon + key '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="multiple_choice" type="radio" value="' + str(indexno) + '"><label for="multiple_choice' + str(indexno) + '_' + str(id_index) + '">' + the_icon + key + '</label></div>'
+                        output += '<div class="radio"><input data-labelauty="' + the_icon + key + '|' + the_icon + key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="multiple_choice" type="radio" value="' + str(indexno) + '"><label for="multiple_choice' + str(indexno) + '_' + str(id_index) + '">' + the_icon + key + '</label></div>'
                         #
                         id_index += 1
                     indexno += 1
