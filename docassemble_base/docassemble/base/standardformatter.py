@@ -102,6 +102,8 @@ def as_html(status, extra_scripts, url_for, debug):
         checkboxes = list()
         files = list()
         for field in status.question.fields:
+            if field.datatype == 'heading':
+                continue
             if field.saveas in status.helptexts:
                 helptext_start = '<a style="cursor:pointer;color:#408E30" data-container="body" data-toggle="popover" data-placement="bottom" data-content="' + noquote(unicode(status.helptexts[field.saveas])) + '">' 
                 helptext_end = '</a>'
