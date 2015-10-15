@@ -102,9 +102,7 @@ def as_html(status, extra_scripts, url_for, debug):
         checkboxes = list()
         files = list()
         for field in status.question.fields:
-            if field.datatype == 'heading':
-                continue
-            if field.saveas in status.helptexts:
+            if field.datatype != 'heading' and field.saveas in status.helptexts:
                 helptext_start = '<a style="cursor:pointer;color:#408E30" data-container="body" data-toggle="popover" data-placement="bottom" data-content="' + noquote(unicode(status.helptexts[field.saveas])) + '">' 
                 helptext_end = '</a>'
             else:
@@ -132,7 +130,7 @@ def as_html(status, extra_scripts, url_for, debug):
                 files.append(field.saveas)
             if field.datatype == 'heading':
                 fieldlist.append('<div class="row"><h3>' + field.label + '</h3></div>')
-            if field.datatype == 'yesno':
+            elif field.datatype == 'yesno':
                 checkboxes.append(field.saveas)
                 fieldlist.append('<div class="row"><div class="col-md-6">' + input_for(status, field) + '</div></div>')
             else:
@@ -414,7 +412,7 @@ def input_for(status, field):
             multipleflag = ''
         else:
             multipleflag = ' multiple'
-        output += '<input type="file" class="file" data-show-upload="false" data-preview-file-type="text" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + '>'
+        output += '<input type="file" class="file" data-show-upload="false" data-preview-file-type="text" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + '></input>'
         #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>'
     elif field.datatype == 'area':
         output += '<textarea class="form-control" rows="4" name="' + field.saveas + '" id="' + field.saveas + '"' + placeholdertext + '>'
