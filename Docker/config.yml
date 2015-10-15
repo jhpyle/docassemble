@@ -29,6 +29,8 @@ use_progress_bar: false
 imagemagick: convert
 default_interview: docassemble.demo:data/questions/questions.yml
 flask_log: /tmp/flask.log
+language: en
+locale: US.utf8
 default_admin_account:
   nickname: admin
   email: admin@admin.com

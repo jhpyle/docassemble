@@ -415,9 +415,11 @@ class Question:
             if 'code' not in data:
                 should_append = False
             if type(data['default role']) is str:
+                self.interview.default_role = [data['default role']]
+            elif type(data['default role']) is list:
                 self.interview.default_role = data['default role']
             else:
-                raise DAError("A default role must be a string." + self.idebug(data))
+                raise DAError("A default role must be a list or a string." + self.idebug(data))
         if 'role' in data:
             if type(data['role']) is str:
                 if data['role'] not in self.role:
@@ -586,6 +588,10 @@ class Question:
             field_data = {'saveas': data['template']}
             self.fields.append(Field(field_data))
             self.content = TextObject(definitions + data['content'])
+            if 'subject' in data:
+                self.subcontent = TextObject(definitions + data['subject'])
+            else:
+                self.subcontent = TextObject("")
             self.question_type = 'template'
         if 'code' in data:
             self.question_type = 'code'
@@ -789,20 +795,10 @@ class Question:
             current_role = user_dict['role']
             if len(self.role) > 0:
                 if current_role not in self.role and 'role_event' not in self.fields_used:
-                    user_dict['role_needed'] = self.role[0]
-                    user_dict['role_event_notification_sent'] = False
-                    try:
-                        del user_dict['success_sending_role_change_email']
-                    except:
-                        pass
+                    user_dict['role_needed'] = self.role
                     raise NameError("Need 'role_event'")
-            elif self.interview.default_role is not None and current_role != self.interview.default_role and 'role_event' not in self.fields_used:
+            elif self.interview.default_role is not None and current_role not in self.interview.default_role and 'role_event' not in self.fields_used:
                 user_dict['role_needed'] = self.interview.default_role
-                user_dict['role_event_notification_sent'] = False
-                try:
-                    del user_dict['success_sending_role_change_email']
-                except:
-                    pass
                 raise NameError("Need 'role_event'")
         return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts})
 
@@ -1149,7 +1145,7 @@ class Interview:
                             question.mark_as_answered(user_dict)
                             return({'type': 'continue'})
                         if question.question_type == "template":
-                            exec(question.fields[0].saveas + ' = """' + question.content.text(user_dict).rstrip().encode('unicode_escape') + '"""', user_dict)
+                            exec(question.fields[0].saveas + ' = DATemplate(' + "'" + question.fields[0].saveas + "', content=" + '"""' + question.content.text(user_dict).rstrip().encode('unicode_escape') + '""", subject="""' + question.subcontent.text(user_dict).rstrip().encode('unicode_escape') + '""")', user_dict)
                             question.mark_as_answered(user_dict)
                             return({'type': 'continue'})
                         if question.question_type == "code":

@@ -27,10 +27,10 @@ code: |
     role = 'client'
   update_info(user, role, current_info)
 ---
-error: role_error
+error: role_event
 question: You are done for now.
 subquestion: |
-  % if role_needed == 'advocate':
+  % if 'advocate' in role_needed:
     An advocate needs to review your answers before you can proceed.
 
     Please remember the following link and come back to it when you receive notice to do so:

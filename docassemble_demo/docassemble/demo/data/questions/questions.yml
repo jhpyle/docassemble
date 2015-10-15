@@ -71,6 +71,7 @@ comment: |
 ---
 objects:
   - village_idiot: Individual
+  - role_change: RoleChangeTracker
 comment: |
   In a question below we will refer to the variable "village_idiot."
   This "objects" block creates the variable "village_idiot" and
@@ -107,27 +108,10 @@ comment: |
   turn them into hyperlinks wherever they appear.  When the user
   clicks on the hyperlink, a popup appears with the word's definition.
 ---
-sets: success_sending_role_change_email
-code: |
-  need(client.email)
-  need(client.salutation)
-  need(advocate.email)
-  if not role_event_notification_sent:
-    if role_needed == 'advocate':
-      success_sending_role_change_email = send_email(to=advocate, html=role_event_email_to_advocate, subject="Client interview waiting for your attention: " + str(client.name))
-    else:
-      success_sending_role_change_email = send_email(to=client, html=role_event_email_to_client, subject="Your interview answers have been reviewed")
-    role_event_notification_sent = True
-  else:
-    success_sending_role_change_email = False
----
-code: |
-  role_event_notification_sent = False
----
 error: role_event
 question: You are done for now.
 subquestion: |
-  % if role_needed == 'advocate':
+  % if 'advocate' in role_needed:
   An advocate needs to review your answers before you can proceed.
 
   Please remember the following link and come back to it when you receive notice to do so:
@@ -137,7 +121,7 @@ subquestion: |
   Thanks, the client needs to resume the interview now.
   % endif
 
-  % if success_sending_role_change_email:
+  % if role_change.send_email(role_needed, advocate={'to': advocate, 'email': role_event_email_to_advocate}, client={'to': client, 'email': role_event_email_to_client}):
   An e-mail has been sent.
   % endif
 decoration: exit
@@ -145,6 +129,8 @@ buttons:
   - Exit: leave
 ---
 template: role_event_email_to_advocate
+subject: |
+  Client interview waiting for your attention: ${ client }
 content: |
   A client, ${ client }, has partly finished an interview.
   ${ client.pronoun_subjective(capitalize=True, thirdperson=True) }
@@ -159,6 +145,8 @@ content: |
   Thank you!
 ---
 template: role_event_email_to_client
+subject: |
+  Your interview answers have been reviewed
 content: |
   ${ client.salutation() } ${ client.name.last }:
   

@@ -89,6 +89,51 @@ class LegalFiling(Document):
 #     def init(self):
 #         self.court = Court('court')
 
+class RoleChangeTracker(DAObject):
+    def init(self):
+        self.last_role = None
+        return
+    def should_send_email(self):
+        return True
+    def update(self, target_role):
+        self.last_role = target_role
+        return
+    def send_email(self, roles_needed, **kwargs):
+        logmessage("Current role is " + str(this_thread.role))
+        for role_option in kwargs:
+            if 'to' in kwargs[role_option]:
+                need(kwargs[role_option]['to'].email)
+        for role_needed in roles_needed:
+            logmessage("One role needed is " + str(role_needed))
+            if role_needed == self.last_role:
+                logmessage("Already notified new role " + str(role_needed))
+                return False
+            if role_needed in kwargs:
+                logmessage("I have info on " + str(role_needed))
+                email_info = kwargs[role_needed]
+                if 'to' in email_info and 'email' in email_info:
+                    logmessage("I have email info on " + str(role_needed))
+                    result = send_email(to=email_info['to'], html=email_info['email'].content, subject=email_info['email'].subject)
+                    if result:
+                        self.update(role_needed)
+                    return result
+        return False
+
+class DATemplate(DAObject):
+    def init(self, **kwargs):
+        if 'content' in kwargs:
+            self.content = kwargs['content']
+        else:
+            self.content = ""
+        if 'subject' in kwargs:
+            self.subject = kwargs['subject']
+        else:
+            self.subject = ""
+    def __str__(self):
+        return(self.content)
+    def __repr__(self):
+        return(self.content)
+
 class Name(DAObject):
     def full(self):
         return(self.text)
@@ -498,3 +543,4 @@ def email_string(persons, include_name=None):
             #sys.stderr.write("email string not a person: contemplating " + str(person) + "\n")
             result.append(str(person))
     return result
+
