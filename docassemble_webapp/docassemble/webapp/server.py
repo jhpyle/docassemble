@@ -266,17 +266,6 @@ scripts = """\
             $("#daform input, #daform textarea, #daform select").first().focus();</script>
 """
 
-def prettyCheckableScripts():
-    output = '<script src="' + url_for('static', filename='prettyCheckable/dist/prettyCheckable.min.js') + '"></script>' + "\n"
-    output += """\
-    <script>$().ready(function(){
-              $('input.pretty').prettyCheckable();
-            });</script>
-"""
-    return output
-
-scripts += prettyCheckableScripts()
-
 match_invalid = re.compile('[^A-Za-z0-9_\[\].]')
 match_triplequote = re.compile('"""')
 
@@ -327,6 +316,13 @@ def setup_app(app, db):
 setup_app(app, db)
 lm = LoginManager(app)
 lm.login_view = 'login'
+
+scripts += '<script src="' + url_for('static', filename='prettyCheckable/dist/prettyCheckable.min.js') + '"></script>' + "\n"
+scripts += """\
+    <script>$().ready(function(){
+              $('input.pretty').prettyCheckable();
+            });</script>
+"""
 
 @lm.user_loader
 def load_user(id):
