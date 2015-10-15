@@ -173,9 +173,12 @@ def as_html(status, extra_scripts, url_for, debug):
         if status.question.question_variety == "radio":
             if hasattr(status.question.fields[0], 'saveas'):
                 if hasattr(status.question.fields[0], 'has_code') and status.question.fields[0].has_code:
+                    id_index = 0
                     for pair in status.selectcompute[status.question.fields[0].saveas]:
-                        output += '<div class="radio"><input data-label="' + pair[1] + '" class="pretty" name="' + status.question.fields[0].saveas + '" type="radio" value="' + pair[0] + '"></div>'
+                        output += '<div class="radio"><input data-label="' + pair[1] + '" class="pretty" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + pair[0] + '"></div>'
+                        id_index += 1
                 else:
+                    id_index = 0
                     for choice in status.question.fields[0].choices:
                         if 'image' in choice:
                             the_icon = icon_html(status, choice['image'])
@@ -184,7 +187,8 @@ def as_html(status, extra_scripts, url_for, debug):
                         for key in choice:
                             if key == 'image':
                                 continue
-                            output += '<div class="radio"><input data-label="' + key + '" class="pretty" name="' + status.question.fields[0].saveas + '" type="radio" value="' + choice[key] + '"></div>'
+                            output += '<div class="radio"><input data-label="' + key + '" class="pretty" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + choice[key] + '"></div>'
+                        id_index += 1
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
                 validation_rules['messages'][status.question.fields[0].saveas] = {'required': word("You need to select one.")}
             else:
@@ -194,10 +198,12 @@ def as_html(status, extra_scripts, url_for, debug):
                         the_icon = icon_html(status, choice['image'])
                     else:
                         the_icon = ''
+                    id_index = 0
                     for key in choice:
                         if key == 'image':
                             continue
-                        output += '<div class="radio"><input data-label="' + the_icon + key + '" class="pretty" name="multiple_choice" type="radio" value="' + str(indexno) + '"></div>'
+                        output += '<div class="radio"><input data-label="' + the_icon + key + '" class="pretty" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="multiple_choice" type="radio" value="' + str(indexno) + '"></div>'
+                        id_index += 1
                     indexno += 1
                     validation_rules['rules']['multiple_choice'] = {'required': True}
                     validation_rules['messages']['multiple_choice'] = {'required': word("You need to select one.")}
