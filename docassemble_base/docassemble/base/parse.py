@@ -796,11 +796,11 @@ class Question:
         if 'role' in user_dict:
             current_role = user_dict['role']
             if len(self.role) > 0:
-                if current_role not in self.role and 'role_event' not in self.fields_used:
+                if current_role not in self.role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave']:
                     logmessage("Calling role_event with " + ", ".join(self.fields_used))
                     user_dict['role_needed'] = self.role
                     raise NameError("Need 'role_event'")
-            elif self.interview.default_role is not None and current_role not in self.interview.default_role and 'role_event' not in self.fields_used:
+            elif self.interview.default_role is not None and current_role not in self.interview.default_role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave']:
                 logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("Need 'role_event'")
