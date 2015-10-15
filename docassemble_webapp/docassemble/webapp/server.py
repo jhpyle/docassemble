@@ -266,6 +266,15 @@ scripts = """\
             $("#daform input, #daform textarea, #daform select").first().focus();</script>
 """
 
+def prettyCheckableScripts():
+    output = '<script src="' + url_for('static', filename='prettyCheckable/dist/prettyCheckable.min.js') + '"></script>' + "\n"
+    output += """\
+    <script>$().ready(function(){
+              $('input.pretty').prettyCheckable();
+            });</script>
+"""
+    return output
+
 scripts += prettyCheckableScripts()
 
 match_invalid = re.compile('[^A-Za-z0-9_\[\].]')
@@ -1430,11 +1439,3 @@ def current_info(yaml=None, req=None):
         url = req.base_url
     return({'session': session['uid'], 'yaml_filename': yaml, 'url': url, 'user': {'id': theid, 'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated, 'email': email, 'roles': roles}})
 
-def prettyCheckableScripts():
-    output = '<script src="' + url_for('static', filename='prettyCheckable/dist/prettyCheckable.min.js') + '"></script>' + "\n"
-    output += """\
-    <script>$().ready(function(){
-              $('input.pretty').prettyCheckable();
-            });</script>
-"""
-    return output
