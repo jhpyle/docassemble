@@ -831,12 +831,11 @@ def index():
             #flash_content += '</div>'
     pretty_scripts = '<script src="' + url_for('static', filename='prettyCheckable/dist/prettyCheckable.min.js') + '"></script>' + "\n" + """\
     <script>
-    var prettyinputs = $('input.prettyCheckable').each(function() {
-        $(this).prettyCheckable({
-            labelPosition: 'right'
-        });
+    $().ready(function(){
+      $('input.pretty').prettyCheckable({
+        labelPosition: 'right'
+      });
     });
-    
     </script>"""
     if interview_status.question.question_type == "signature":
         output = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link rel="stylesheet" href="' + url_for('static', filename='app/signature.css') + '"><title>' + word('Sign Your Name') + '</title></head><body onresize="resizeCanvas()">'
