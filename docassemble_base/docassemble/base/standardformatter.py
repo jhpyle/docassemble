@@ -175,7 +175,7 @@ def as_html(status, extra_scripts, url_for, debug):
                 if hasattr(status.question.fields[0], 'has_code') and status.question.fields[0].has_code:
                     id_index = 0
                     for pair in status.selectcompute[status.question.fields[0].saveas]:
-                        output += '<div class="radio"><label for="' + status.question.fields[0].saveas + '_' + str(id_index) + '"><input data-label="' + pair[1] + '" class="to-labelauty-icon" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + pair[0] + '">' + pair[1] + '</label></div>'
+                        output += '<div class="radio"><input data-labelauty="' + pair[1] + '|' + pair[1] + '" class="to-labelauty-icon" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + pair[0] + '"></div>'
                         #
                         id_index += 1
                 else:
@@ -188,7 +188,7 @@ def as_html(status, extra_scripts, url_for, debug):
                         for key in choice:
                             if key == 'image':
                                 continue
-                            output += '<div class="radio"><label for="' + status.question.fields[0].saveas + '_' + str(id_index) + '"><input data-label="' + key + '" class="to-labelauty-icon" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + choice[key] + '">' + key + '</label></div>'
+                            output += '<div class="radio"><input data-labelauty="' + key + '|' + key + '" class="to-labelauty-icon" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + choice[key] + '"></div>'
                             #
                         id_index += 1
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
