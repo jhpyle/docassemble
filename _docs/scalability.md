@@ -51,26 +51,3 @@ directories, which the cluser members would mount:
 
 In addition, the `db` section of the `config.yml` file would be
 modified to point to a central SQL server.
-
-## Is docassemble thread-safe?
-
-**docassemble** uses `locale` to represent dates and currency.
-`locale` is not thread-safe if `locale.setlocale` is called by
-different threads.
-
-If your server provides interviews that all use the same locale, then
-**docassemble** will be thread-safe.
-
-If your interviews are going to change the locale (which they can do
-by calling `docassemble.util.set_locale` and
-`docassemble.util.update_locale`) then you should make sure that WSGI
-is configured to use multiple processes rather than multiple threads.
-The line in the Apache configuration would look something like this:
-
-    WSGIDaemonProcess docassemble.webserver user=www-data group=www-data processes=5 threads=1
-
-However, if the locale will not change and you would like to take
-advantage of the performance benefit of multi-threading, you can
-configure WSGI to use multiple threads:
-
-    WSGIDaemonProcess docassemble.webserver user=www-data group=www-data threads=5
