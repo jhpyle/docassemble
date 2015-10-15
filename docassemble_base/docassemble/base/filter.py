@@ -141,7 +141,7 @@ def rtf_filter(text, metadata=dict()):
     text = re.sub(r'\[BOLDCENTER\] *', r'\\qc \\b ', text)
     text = re.sub(r'\\sa180', '\sa0', text)
     if re.search(r'\[(SINGLESPACING|DOUBLESPACING|TRIPLESPACING|ONEANDAHALFSPACING|INDENTATION|NOINDENTATION)\]', text):
-        text = re.sub(r'[\n ]*[\[(SINGLESPACING|DOUBLESPACING|TRIPLESPACING|ONEANDAHALFSPACING|INDENTATION|NOINDENTATION)\][\n ]*', r'\n[\1]\n', text)
+        text = re.sub(r'[\n ]*\[(SINGLESPACING|DOUBLESPACING|TRIPLESPACING|ONEANDAHALFSPACING|INDENTATION|NOINDENTATION)\][\n ]*', r'\n[\1]\n', text)
         lines = text.split('\n')
         spacing_command = rtf_spacing[default_spacing]
         if default_indentation:

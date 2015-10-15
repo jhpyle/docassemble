@@ -174,7 +174,7 @@ def as_html(status, extra_scripts, url_for, debug):
             if hasattr(status.question.fields[0], 'saveas'):
                 if hasattr(status.question.fields[0], 'has_code') and status.question.fields[0].has_code:
                     for pair in status.selectcompute[status.question.fields[0].saveas]:
-                        output += '<div class="radio"><label><input name="' + status.question.fields[0].saveas + '" type="radio" value="' + pair[0] + '"> ' + pair[1] + '</label></div>'
+                        output += '<div class="radio"><label><input class="pretty" name="' + status.question.fields[0].saveas + '" type="radio" value="' + pair[0] + '"> ' + pair[1] + '</label></div>'
                 else:
                     for choice in status.question.fields[0].choices:
                         if 'image' in choice:
@@ -184,7 +184,7 @@ def as_html(status, extra_scripts, url_for, debug):
                         for key in choice:
                             if key == 'image':
                                 continue
-                            output += '<div class="radio"><label><input name="' + status.question.fields[0].saveas + '" type="radio" value="' + choice[key] + '"> ' + key + '</label></div>'
+                            output += '<div class="radio"><label><input class="pretty" name="' + status.question.fields[0].saveas + '" type="radio" value="' + choice[key] + '"> ' + key + '</label></div>'
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
                 validation_rules['messages'][status.question.fields[0].saveas] = {'required': word("You need to select one.")}
             else:
@@ -197,7 +197,7 @@ def as_html(status, extra_scripts, url_for, debug):
                     for key in choice:
                         if key == 'image':
                             continue
-                        output += '<div class="radio"><label><input name="multiple_choice" type="radio" value="' + str(indexno) + '"> ' + the_icon + key + '</label></div>'
+                        output += '<div class="radio"><label><input class="pretty" name="multiple_choice" type="radio" value="' + str(indexno) + '"> ' + the_icon + key + '</label></div>'
                     indexno += 1
                     validation_rules['rules']['multiple_choice'] = {'required': True}
                     validation_rules['messages']['multiple_choice'] = {'required': word("You need to select one.")}
@@ -281,7 +281,7 @@ def as_html(status, extra_scripts, url_for, debug):
                 multiple_formats = False
             output += '<div><h3>' + attachment['name'] + '</h3></div>'
             if attachment['description']:
-                output += '<div><p>' + markdown_to_html(attachment['description'], terms=status.question.interview.terms) + '</p></div>'
+                output += '<div><p><em>' + markdown_to_html(attachment['description'], terms=status.question.interview.terms) + '</em></p></div>'
             output += '<div class="tabbable"><ul class="nav nav-tabs">'
             if show_download:
                 output += '<li class="active"><a href="#download' + str(attachment_index) + '" data-toggle="tab">' + word('Download') + '</a></li>'
@@ -335,7 +335,7 @@ def as_html(status, extra_scripts, url_for, debug):
             <div class="form-group"><label for="attachment_email_address" class="control-label col-sm-4">""" + word('E-mail address') + """</label><div class="col-sm-8"><input class="form-control" type="email" name="attachment_email_address" id="attachment_email_address"></input></div></div>"""
             if rtfs_included:
                 output += """
-            <div class="form-group"><label for="attachment_include_rtf" class="control-label col-sm-4">""" + '&nbsp;</label><div class="col-sm-8"><input type="checkbox" value="True" name="attachment_include_rtf" id="attachment_include_rtf"> ' + word('Include RTF files for editing') + '</div></div>'
+            <div class="form-group"><label for="attachment_include_rtf" class="control-label col-sm-4">""" + '&nbsp;</label><div class="col-sm-8"><input class="pretty" type="checkbox" value="True" name="attachment_include_rtf" id="attachment_include_rtf"> ' + word('Include RTF files for editing') + '</div></div>'
             output += """
             <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Send') + '</button></div><input type="hidden" name="email_attachments" value="1"></input><input type="hidden" name="question_number" value="' + str(status.question.number) + '"></input>'
             output += """
@@ -392,7 +392,7 @@ def input_for(status, field):
             output += '>' + unicode(pair[1]) + '</option>'
         output += '</select> '
     elif field.datatype == 'yesno':
-        output += '<input type="checkbox" value="True" name="' + field.saveas + '" id="' + field.saveas + '"'
+        output += '<input class="pretty" type="checkbox" value="True" name="' + field.saveas + '" id="' + field.saveas + '"'
         if defaultvalue:
             output += ' checked'
         output += '> ' + field.label
