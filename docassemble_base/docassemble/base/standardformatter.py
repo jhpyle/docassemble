@@ -175,7 +175,8 @@ def as_html(status, extra_scripts, url_for, debug):
                 if hasattr(status.question.fields[0], 'has_code') and status.question.fields[0].has_code:
                     id_index = 0
                     for pair in status.selectcompute[status.question.fields[0].saveas]:
-                        output += '<div class="radio"><input data-label="' + pair[1] + '" class="pretty" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + pair[0] + '"><label for="' + status.question.fields[0].saveas + '_' + str(id_index) + '">' + pair[1] + '</label></div>'
+                        output += '<div class="radio"><input data-label="' + pair[1] + '" class="pretty" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + pair[0] + '"></div>'
+                        #<label for="' + status.question.fields[0].saveas + '_' + str(id_index) + '">' + pair[1] + '</label>
                         id_index += 1
                 else:
                     id_index = 0
@@ -187,7 +188,8 @@ def as_html(status, extra_scripts, url_for, debug):
                         for key in choice:
                             if key == 'image':
                                 continue
-                            output += '<div class="radio"><input data-label="' + key + '" class="pretty" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + choice[key] + '"><label for="' + status.question.fields[0].saveas + '_' + str(id_index) + '">' + key + '</label></div>'
+                            output += '<div class="radio"><input data-label="' + key + '" class="pretty" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + choice[key] + '"></div>'
+                            #<label for="' + status.question.fields[0].saveas + '_' + str(id_index) + '">' + key + '</label>
                         id_index += 1
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
                 validation_rules['messages'][status.question.fields[0].saveas] = {'required': word("You need to select one.")}
@@ -202,7 +204,8 @@ def as_html(status, extra_scripts, url_for, debug):
                     for key in choice:
                         if key == 'image':
                             continue
-                        output += '<div class="radio"><input data-label="' + the_icon + key + '" class="pretty" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="multiple_choice" type="radio" value="' + str(indexno) + '"><label for="multiple_choice' + str(indexno) + '_' + str(id_index) + '">' + the_icon + key + '</label></div>'
+                        output += '<div class="radio"><input data-label="' + the_icon + key + '" class="pretty" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="multiple_choice" type="radio" value="' + str(indexno) + '"></div>'
+                        #<label for="multiple_choice' + str(indexno) + '_' + str(id_index) + '">' + the_icon + key + '</label>
                         id_index += 1
                     indexno += 1
                     validation_rules['rules']['multiple_choice'] = {'required': True}
