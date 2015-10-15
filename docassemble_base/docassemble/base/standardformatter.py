@@ -103,7 +103,25 @@ def as_html(status, extra_scripts, url_for, debug):
         files = list()
         for field in status.question.fields:
             if field.datatype == 'heading':
-                fieldlist.append('<div class="row"><h3>' + field.label + '</h3></div>')
+                fieldlist.append('<div class="row"><div class="col-md-12"><h4>' + field.label + '</h4></div></div>')
+                myscript = """\
+<script>
+$("input[type=checkbox]").change(function(){
+  count = 0;
+  $("input[type=checkbox]").each(function(el){
+    if ($(this).checked){
+      count = count + 1;
+      console.log("count is " + count);
+    }
+    else{
+      console.log($(this).id + " is not checked.");
+    }
+  });
+  alert("count is " + count);
+});
+</script>
+"""
+                extra_scripts.append(myscript)
                 continue
             if field.saveas in status.helptexts:
                 helptext_start = '<a style="cursor:pointer;color:#408E30" data-container="body" data-toggle="popover" data-placement="bottom" data-content="' + noquote(unicode(status.helptexts[field.saveas])) + '">' 
@@ -133,17 +151,19 @@ def as_html(status, extra_scripts, url_for, debug):
                 files.append(field.saveas)
             if field.datatype == 'yesno':
                 checkboxes.append(field.saveas)
-                fieldlist.append('<div class="row"><div class="col-md-6">' + input_for(status, field) + '</div></div>')
+                fieldlist.append('<div class="row"><div class="col-md-12">' + input_for(status, field) + '</div></div>')
             else:
                 fieldlist.append('<div class="form-group"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + field.label + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>')
         output += '<form id="daform" class="form-horizontal" method="POST"' + enctype_string + '><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, terms=status.question.interview.terms) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, terms=status.question.interview.terms) + '</div>'
+        output += '<div class="row">'
         if (len(fieldlist)):
             output += "".join(fieldlist)
         else:
             output += "<p>Error: no fields</p>"
+        output += '</div>'
         if len(checkboxes):
             output += '<input type="hidden" name="checkboxes" value="' + ",".join(checkboxes) + '"></input>'
         if len(files):

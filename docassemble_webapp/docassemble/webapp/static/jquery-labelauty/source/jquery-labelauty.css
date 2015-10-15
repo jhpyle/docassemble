@@ -49,9 +49,9 @@ input.labelauty + label
 input.labelauty + label > span.labelauty-unchecked,
 input.labelauty + label > span.labelauty-checked
 {
-	display: inline-block;
+	/* display: inline-block; */
 	line-height: 16px;
-	vertical-align: bottom;
+	/* vertical-align: bottom; */
 }
 
 /* Stylish icons inside label */
@@ -59,17 +59,18 @@ input.labelauty + label > span.labelauty-checked
 input.labelauty + label > span.labelauty-unchecked-image,
 input.labelauty + label > span.labelauty-checked-image
 {
-	display: inline-block;
-	width: 16px;
-	height: 16px;
-	vertical-align: bottom;
-	background-repeat: no-repeat;
-	background-position: left center;
-
-	transition: background-image 0.5s linear;
-	-moz-transition: background-image 0.5s linear;
-	-webkit-transition: background-image 0.5s linear;
-	-o-transition: background-image 0.5s linear;
+    /* display: inline-block; */
+    float: left;
+    width: 16px;
+    height: 16px;
+    vertical-align: bottom;
+    background-repeat: no-repeat;
+    background-position: left center;
+    
+    transition: background-image 0.5s linear;
+    -moz-transition: background-image 0.5s linear;
+    -webkit-transition: background-image 0.5s linear;
+    -o-transition: background-image 0.5s linear;
 }
 
 /* When there's a label, add a little margin to the left */

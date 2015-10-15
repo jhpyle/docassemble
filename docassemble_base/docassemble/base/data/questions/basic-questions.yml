@@ -158,7 +158,8 @@ buttons:
         answers = dict()
         remove('x.signature')
 ---
-question: ${ x.does_verb("is", ) } a citizen of the United States?
+generic object: Individual
+question: ${ x.is_are_you(capitalize=True) } a citizen of the United States?
 yesno: x.is_citizen
 ---
 field: user_understands_no_attorney_client_relationship

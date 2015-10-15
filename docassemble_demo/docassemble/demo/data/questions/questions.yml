@@ -398,7 +398,6 @@ fields:
       - Owned house
       - Mobile home
   - Address: x.address.address
-  - heading: More information about the home
   - Unit: x.address.unit
     required: false
     help: The apartment, suite, or unit number of the residence.

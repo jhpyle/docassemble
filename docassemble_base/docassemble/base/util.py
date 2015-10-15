@@ -6,8 +6,9 @@ import mimetypes
 import datetime
 import locale
 import pkg_resources
+#import inspect
 from titlecase import titlecase
-#from docassemble.logger import logmessage
+#from docassemble.base.logger import logmessage
 #import sys
 import babel.dates
 import locale

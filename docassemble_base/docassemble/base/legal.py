@@ -486,7 +486,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
         body = ""
     #sys.stderr.write("moo2\n")
     email_stringer = lambda x: email_string(x, include_name=False)
-    msg = Message(subject, sender=email_stringer(sender), recipients=email_stringer(to), cc=email_stringer(cc), bcc=email_stringer(bcc), body=body, html=markdown_to_html(html))
+    msg = Message(subject, sender=email_stringer(sender), recipients=email_stringer(to), cc=email_stringer(cc), bcc=email_stringer(bcc), body=body, html=html)
     success = True
     for attachment in attachments:
         #sys.stderr.write("moo31\n")

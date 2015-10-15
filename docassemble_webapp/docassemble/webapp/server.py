@@ -1421,7 +1421,7 @@ def package_static(package, filename):
     return(send_file(the_file, mimetype=str(mimetype)))
 
 def current_info(yaml=None, req=None):
-    if current_user.is_authenticated:
+    if current_user.is_authenticated and not current_user.is_anonymous:
         email = current_user.email
         roles = [role.name for role in current_user.roles]
         theid = current_user.id
