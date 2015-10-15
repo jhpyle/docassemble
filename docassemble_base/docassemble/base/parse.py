@@ -631,12 +631,17 @@ class Question:
                             elif key == 'choices':
                                 field_info['type'] = 'selectmanual'
                                 field_info['selections'] = process_selections(field[key])
+                            elif key == 'heading':
+                                field_info['type'] = 'heading'
+                                field_info['label'] = field[key]
                             else:
                                 field_info['label'] = key
                                 field_info['saveas'] = field[key]
                         if 'saveas' in field_info:
                             self.fields.append(Field(field_info))
                             self.fields_used.add(field_info['saveas'])
+                        elif 'type' in field_info and field_info['type'] == 'heading':
+                            self.fields.append(Field(field_info))
                         else:
                             raise DAError("A field was listed without indicating a label or a variable name." + self.idebug(data))
                     else:

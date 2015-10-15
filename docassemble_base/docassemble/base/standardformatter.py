@@ -128,6 +128,8 @@ def as_html(status, extra_scripts, url_for, debug):
             if (field.datatype in ['files', 'file']):
                 enctype_string = ' enctype="multipart/form-data"'
                 files.append(field.saveas)
+            if field.datatype == 'heading':
+                fieldlist.append('<div class="row"><h3>' + field.label + '</h3></div>')
             if field.datatype == 'yesno':
                 checkboxes.append(field.saveas)
                 fieldlist.append('<div class="row"><div class="col-md-6">' + input_for(status, field) + '</div></div>')
