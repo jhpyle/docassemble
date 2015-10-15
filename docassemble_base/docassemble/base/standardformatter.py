@@ -401,7 +401,7 @@ def input_for(status, field):
             output += '>' + unicode(pair[1]) + '</option>'
         output += '</select> '
     elif field.datatype == 'yesno':
-        output += '<input class="to-labelauty" type="checkbox" value="True" data-labelauty="' + field.label + '|' field.label + '" name="' + field.saveas + '" id="' + field.saveas + '"'
+        output += '<input class="to-labelauty" type="checkbox" value="True" data-labelauty="' + field.label + '|' + field.label + '" name="' + field.saveas + '" id="' + field.saveas + '"'
         if defaultvalue:
             output += ' checked'
         output += '> '
