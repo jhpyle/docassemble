@@ -175,7 +175,7 @@ def as_html(status, extra_scripts, url_for, debug):
                 if hasattr(status.question.fields[0], 'has_code') and status.question.fields[0].has_code:
                     id_index = 0
                     for pair in status.selectcompute[status.question.fields[0].saveas]:
-                        output += '<div class="radio"><input data-labelauty="' + pair[1] + '|' + pair[1] + '" class="to-labelauty" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + pair[0] + '"></div>'
+                        output += '<div class="radio"><input data-labelauty="' + pair[1] + '|' + pair[1] + '" class="to-labelauty radio-icon" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + pair[0] + '"></div>'
                         #
                         id_index += 1
                 else:
@@ -188,7 +188,7 @@ def as_html(status, extra_scripts, url_for, debug):
                         for key in choice:
                             if key == 'image':
                                 continue
-                            output += '<div class="radio"><input data-labelauty="' + key + '|' + key + '" class="to-labelauty" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + choice[key] + '"></div>'
+                            output += '<div class="radio"><input data-labelauty="' + key + '|' + key + '" class="to-labelauty radio-icon" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + choice[key] + '"></div>'
                             #
                         id_index += 1
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
@@ -204,7 +204,7 @@ def as_html(status, extra_scripts, url_for, debug):
                     for key in choice:
                         if key == 'image':
                             continue
-                        output += '<div class="radio"><input data-label="' + the_icon + key + '" class="to-labelauty" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="multiple_choice" type="radio" value="' + str(indexno) + '"><label for="multiple_choice' + str(indexno) + '_' + str(id_index) + '">' + the_icon + key + '</label></div>'
+                        output += '<div class="radio"><input data-labelauty="' + the_icon + key + '|' + the_icon + key '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="multiple_choice" type="radio" value="' + str(indexno) + '"><label for="multiple_choice' + str(indexno) + '_' + str(id_index) + '">' + the_icon + key + '</label></div>'
                         #
                         id_index += 1
                     indexno += 1
@@ -401,7 +401,7 @@ def input_for(status, field):
             output += '>' + unicode(pair[1]) + '</option>'
         output += '</select> '
     elif field.datatype == 'yesno':
-        output += '<input class="to-labelauty" type="checkbox" value="True" data-labelauty="' + field.label + '|' + field.label + '" name="' + field.saveas + '" id="' + field.saveas + '"'
+        output += '<input class="to-labelauty checkbox-icon" type="checkbox" value="True" data-labelauty="' + field.label + '|' + field.label + '" name="' + field.saveas + '" id="' + field.saveas + '"'
         if defaultvalue:
             output += ' checked'
         output += '> '

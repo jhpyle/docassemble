@@ -141,3 +141,23 @@ input.labelauty + label > span.labelauty-checked-image
 {
 	background-image: url( images/input-checked.png );
 }
+
+input.labelauty.checkbox-icon + label > span.labelauty-unchecked-image
+{
+	background-image: url( images/checkbox-unchecked.png );
+}
+
+input.labelauty.checkbox-icon + label > span.labelauty-checked-image
+{
+	background-image: url( images/checkbox-checked.png );
+}
+
+input.labelauty.radio-icon + label > span.labelauty-unchecked-image
+{
+	background-image: url( images/radio-unchecked.png );
+}
+
+input.labelauty.radio-icon + label > span.labelauty-checked-image
+{
+	background-image: url( images/radio-checked.png );
+}
