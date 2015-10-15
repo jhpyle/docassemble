@@ -184,7 +184,7 @@ def as_html(status, extra_scripts, url_for, debug):
                         for key in choice:
                             if key == 'image':
                                 continue
-                            output += '<div class="radio"><label for="' + status.question.fields[0].saveas + '">' + key + '</label><input class="pretty" name="' + status.question.fields[0].saveas + '" id="' + status.question.fields[0].saveas + '" type="radio" value="' + choice[key] + '</div>'
+                            output += '<div class="radio"><label for="' + status.question.fields[0].saveas + '">' + key + '</label><input class="pretty" name="' + status.question.fields[0].saveas + '" id="' + status.question.fields[0].saveas + '" type="radio" value="' + choice[key] + '"></div>'
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
                 validation_rules['messages'][status.question.fields[0].saveas] = {'required': word("You need to select one.")}
             else:
