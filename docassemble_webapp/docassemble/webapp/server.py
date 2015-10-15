@@ -829,12 +829,11 @@ def index():
                 classname = 'danger'
             flash_content += '<div class="row"><div class="col-md-6"><div class="alert alert-' + classname + '"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div></div></div>'
             #flash_content += '</div>'
-    pretty_scripts = '<script src="' + url_for('static', filename='prettyCheckable/dev/prettyCheckable.js') + '"></script>' + "\n" + """\
+    labelauty_scripts = '<script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>' + "\n" + """\
     <script>
-    $().ready(function(){
-      $('input.pretty').prettyCheckable({
-        labelPosition: 'right'
-      });
+    $(document).ready(function(){
+      $(".to-labelauty").labelauty({ minimum_width: "155px" });
+      $(".to-labelauty-icon").labelauty({ label: false });
     });
     </script>"""
     if interview_status.question.question_type == "signature":
@@ -847,7 +846,7 @@ def index():
             output += progress_bar(user_dict['progress'])
         extra_scripts = list()
         output += as_html(interview_status, extra_scripts, url_for, DEBUG)
-        output += """</div></div>""" + scripts + pretty_scripts + "".join(extra_scripts) + """</body></html>"""
+        output += """</div></div>""" + scripts + labelauty_scripts + "".join(extra_scripts) + """</body></html>"""
     response = make_response(output.encode('utf8'), status)
     response.headers['Content-type'] = 'text/html; charset=utf-8'
     return response
@@ -1022,7 +1021,7 @@ def utility_processor():
     return dict(random_social=random_social, word=word)
 
 def standard_start(extra_css=list()):
-    return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css"><link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" /><link href="' + url_for('static', filename='prettyCheckable/dist/prettyCheckable.css') + '" rel="stylesheet"><link rel="stylesheet" href="' + url_for('static', filename='app/app.css') + '"><title>' + daconfig['brandname'] + '</title></head><body>'
+    return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css"><link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" /><link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet"><link rel="stylesheet" href="' + url_for('static', filename='app/app.css') + '"><title>' + daconfig['brandname'] + '</title></head><body>'
 
 def reset_session(yaml_filename):
     session['i'] = yaml_filename
