@@ -317,13 +317,6 @@ setup_app(app, db)
 lm = LoginManager(app)
 lm.login_view = 'login'
 
-scripts += '<script src="' + url_for('static', filename='prettyCheckable/dist/prettyCheckable.min.js') + '"></script>' + "\n"
-scripts += """\
-    <script>$().ready(function(){
-              $('input.pretty').prettyCheckable();
-            });</script>
-"""
-
 @lm.user_loader
 def load_user(id):
     return User.query.get(int(id))
@@ -835,7 +828,11 @@ def index():
             if classname == 'error':
                 classname = 'danger'
             flash_content += '<div class="row"><div class="col-md-6"><div class="alert alert-' + classname + '"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div></div></div>'
-        #flash_content += '</div>'
+            #flash_content += '</div>'
+    pretty_scripts = '<script src="' + url_for('static', filename='prettyCheckable/dist/prettyCheckable.min.js') + '"></script>' + "\n" + """\
+    <script>$().ready(function(){
+              $('input.pretty').prettyCheckable();
+            });</script>"""
     if interview_status.question.question_type == "signature":
         output = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link rel="stylesheet" href="' + url_for('static', filename='app/signature.css') + '"><title>' + word('Sign Your Name') + '</title></head><body onresize="resizeCanvas()">'
         output += signature_html(interview_status, DEBUG)
@@ -846,7 +843,7 @@ def index():
             output += progress_bar(user_dict['progress'])
         extra_scripts = list()
         output += as_html(interview_status, extra_scripts, url_for, DEBUG)
-        output += """</div></div>""" + scripts + "".join(extra_scripts) + """</body></html>"""
+        output += """</div></div>""" + scripts + pretty_scripts + "".join(extra_scripts) + """</body></html>"""
     response = make_response(output.encode('utf8'), status)
     response.headers['Content-type'] = 'text/html; charset=utf-8'
     return response
