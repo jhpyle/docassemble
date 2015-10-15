@@ -401,10 +401,10 @@ def input_for(status, field):
             output += '>' + unicode(pair[1]) + '</option>'
         output += '</select> '
     elif field.datatype == 'yesno':
-        output += '<input class="to-labelauty-icon" type="checkbox" value="True" name="' + field.saveas + '" id="' + field.saveas + '"'
+        output += '<input class="to-labelauty" type="checkbox" value="True" data-labelauty="' + field.label + '|' field.label + '" name="' + field.saveas + '" id="' + field.saveas + '"'
         if defaultvalue:
             output += ' checked'
-        output += '> ' + field.label
+        output += '> '
     elif field.datatype in ['file', 'files']:
         if field.datatype == 'file':
             multipleflag = ''
