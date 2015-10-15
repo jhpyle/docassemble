@@ -530,14 +530,16 @@ class Question:
                     self.fields_used.add(key)
             else:
                 raise DAError("A sets phrase must be text or a list." + self.idebug(data))
-        if 'error' in data:
-            if type(data['error']) is str:
-                self.fields_used.add(data['error'])
-            elif type(data['error']) is list:
-                for key in data['error']:
+        if 'event' in data:
+            # if '*' not in self.role:
+            #     self.role.append('*')
+            if type(data['event']) is str:
+                self.fields_used.add(data['event'])
+            elif type(data['event']) is list:
+                for key in data['event']:
                     self.fields_used.add(key)
             else:
-                raise DAError("An error phrase must be text or a list." + self.idebug(data))
+                raise DAError("An event phrase must be text or a list." + self.idebug(data))
         if 'choices' in data or 'buttons' in data:
             if 'field' in data:
                 uses_field = True
@@ -795,9 +797,11 @@ class Question:
             current_role = user_dict['role']
             if len(self.role) > 0:
                 if current_role not in self.role and 'role_event' not in self.fields_used:
+                    logmessage("Calling role_event with " + ", ".join(self.fields_used))
                     user_dict['role_needed'] = self.role
                     raise NameError("Need 'role_event'")
             elif self.interview.default_role is not None and current_role not in self.interview.default_role and 'role_event' not in self.fields_used:
+                logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("Need 'role_event'")
         return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts})

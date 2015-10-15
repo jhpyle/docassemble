@@ -108,7 +108,7 @@ comment: |
   turn them into hyperlinks wherever they appear.  When the user
   clicks on the hyperlink, a popup appears with the word's definition.
 ---
-error: role_event
+event: role_event
 question: You are done for now.
 subquestion: |
   % if 'advocate' in role_needed:
@@ -509,9 +509,9 @@ attachments:
       % endif
 
       % if explanation_is_sound:
-        Your explanation is sound
+        Your explanation is sound.
       % else:
-        Your explanation is not sound
+        Your explanation is not sound.
       % endif
       
       Carles 8-bit polaroid, banjo bespoke Intelligentsia actually
