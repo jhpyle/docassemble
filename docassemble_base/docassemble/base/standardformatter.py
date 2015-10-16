@@ -165,7 +165,7 @@ $( document ).ready(function() {
     });
   }
   $("input[type=checkbox]").change(function(){
-    update_checkbox_report();
+    setTimeout(function(){ update_checkbox_report(); }, 1000);
   });
   update_checkbox_report();
 });
