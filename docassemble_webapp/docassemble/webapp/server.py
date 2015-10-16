@@ -252,18 +252,22 @@ def save_numbered_file(filename, orig_path):
 docassemble.base.parse.set_mail_variable(get_mail_variable)
 docassemble.base.parse.set_save_numbered_file(save_numbered_file)
 
-scripts = """\
+scripts = """
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script src="//ajax.aspnetcdn.com/ajax/jquery.validate/1.13.1/jquery.validate.min.js"></script>
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/js/jasny-bootstrap.min.js"></script>
-    <script>$(function () {
-              $('.tabs a:last').tab('show')
-            })
-            $(function () {
-              $('[data-toggle="popover"]').popover()
-            })
-            $("#daform input, #daform textarea, #daform select").first().focus();</script>
+    <script>
+    $( document ).ready(function() {
+      $(function () {
+        $('.tabs a:last').tab('show')
+      })
+      $(function () {
+        $('[data-toggle="popover"]').popover()
+      })
+      $("#daform input, #daform textarea, #daform select").first().focus();
+    });
+    </script>
 """
 
 match_invalid = re.compile('[^A-Za-z0-9_\[\].]')
@@ -491,7 +495,7 @@ def google_page():
 
 @app.route('/slogin')
 def slogin():
-    output = standard_start() + """<div class="container">"""
+    output = standard_start() + """    <div class="container">"""
     output += "<h1>Welcome to " + daconfig['appname'] + "</h1>"
     output += '<div class="g-signin2" data-onsuccess="onSignIn"></div>'
     output += '<div><a href="' + url_for('oauth_authorize', provider='facebook') + '">' + word('Login with Facebook') + '</a></div>'
@@ -529,7 +533,7 @@ def slogin():
           }
           </script>
 """
-    output += """</div>""" + scripts + extra_script + """</body></html>"""
+    output += """</div>""" + scripts + extra_script + """\n  </body>\n</html>"""
     response = make_response(output, 200)
     response.headers['Content-Type'] = 'text/html'
     return response
@@ -829,7 +833,7 @@ def index():
                 classname = 'danger'
             flash_content += '<div class="row"><div class="col-md-6"><div class="alert alert-' + classname + '"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div></div></div>'
             #flash_content += '</div>'
-    labelauty_scripts = '<script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>' + "\n" + """\
+    labelauty_scripts = '    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>' + """
     <script>
     $(document).ready(function(){
       $(".to-labelauty").labelauty({ minimum_width: "155px" });
@@ -837,16 +841,16 @@ def index():
     });
     </script>"""
     if interview_status.question.question_type == "signature":
-        output = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link rel="stylesheet" href="' + url_for('static', filename='app/signature.css') + '"><title>' + word('Sign Your Name') + '</title></head><body onresize="resizeCanvas()">'
+        output = '<!doctype html>\n<html lang="en">\n  <head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link rel="stylesheet" href="' + url_for('static', filename='app/signature.css') + '"><title>' + word('Sign Your Name') + '</title></head>\n  <body onresize="resizeCanvas()">'
         output += signature_html(interview_status, DEBUG)
-        output += '</body></html>'
+        output += """\n  </body>\n</html>"""
     else:
-        output = standard_start() + make_navbar(daconfig['brandname'], steps) + '<div class="container">' + '<div class="tab-content">' + flash_content
+        output = standard_start() + make_navbar(daconfig['brandname'], steps) + '    <div class="container">' + '<div class="tab-content">' + flash_content
         if USE_PROGRESS_BAR:
             output += progress_bar(user_dict['progress'])
         extra_scripts = list()
         output += as_html(interview_status, extra_scripts, url_for, DEBUG)
-        output += """</div></div>""" + scripts + labelauty_scripts + "".join(extra_scripts) + """</body></html>"""
+        output += """</div></div>""" + scripts + labelauty_scripts + "".join(extra_scripts) + """\n  </body>\n</html>"""
     response = make_response(output.encode('utf8'), status)
     response.headers['Content-type'] = 'text/html; charset=utf-8'
     return response
@@ -1021,7 +1025,7 @@ def utility_processor():
     return dict(random_social=random_social, word=word)
 
 def standard_start(extra_css=list()):
-    return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css"><link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" /><link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet"><link rel="stylesheet" href="' + url_for('static', filename='app/app.css') + '"><title>' + daconfig['brandname'] + '</title></head><body>'
+    return '<!DOCTYPE html>\n<html lang="en">\n  <head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css"><link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" /><link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet"><link rel="stylesheet" href="' + url_for('static', filename='app/app.css') + '"><title>' + daconfig['brandname'] + '</title></head>\n  <body>\n'
 
 def reset_session(yaml_filename):
     session['i'] = yaml_filename

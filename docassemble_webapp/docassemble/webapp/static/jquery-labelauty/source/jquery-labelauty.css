@@ -119,7 +119,7 @@ input.labelauty:checked + label > span.labelauty-unchecked
 
 input.labelauty:checked + label > span.labelauty-checked
 {
-	display: inline-block;
+	display: inline;
 }
 
 input.labelauty.no-label:checked + label > span.labelauty-checked

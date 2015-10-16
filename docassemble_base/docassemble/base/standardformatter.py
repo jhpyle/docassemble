@@ -101,27 +101,14 @@ def as_html(status, extra_scripts, url_for, debug):
         fieldlist = list()
         checkboxes = list()
         files = list()
+        checkbox_validation = False
         for field in status.question.fields:
+            if field.datatype == 'report_number_of_checkboxes_selected':
+                fieldlist.append('<div class="row"><div class="col-md-12"><p>' + field.label + '</p></div></div>')
+                checkbox_validation = True
+                continue
             if field.datatype == 'heading':
                 fieldlist.append('<div class="row"><div class="col-md-12"><h4>' + field.label + '</h4></div></div>')
-                myscript = """\
-<script>
-$("input[type=checkbox]").change(function(){
-  count = 0;
-  $("input[type=checkbox]").each(function(el){
-    if ($(this).checked){
-      count = count + 1;
-      console.log("count is " + count);
-    }
-    else{
-      console.log($(this).id + " is not checked.");
-    }
-  });
-  alert("count is " + count);
-});
-</script>
-"""
-                extra_scripts.append(myscript)
                 continue
             if field.saveas in status.helptexts:
                 helptext_start = '<a style="cursor:pointer;color:#408E30" data-container="body" data-toggle="popover" data-placement="bottom" data-content="' + noquote(unicode(status.helptexts[field.saveas])) + '">' 
@@ -154,6 +141,37 @@ $("input[type=checkbox]").change(function(){
                 fieldlist.append('<div class="row"><div class="col-md-12">' + input_for(status, field) + '</div></div>')
             else:
                 fieldlist.append('<div class="form-group"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + field.label + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>')
+        if checkbox_validation:
+            myscript = """\
+<script>
+$( document ).ready(function() {
+  function update_checkbox_report(){
+    count = 0;
+    $("input[type=checkbox]").each(function(index){
+      if (this.checked){
+        count = count + 1;
+      }
+    });
+    $(".checkbox_count").each(function(index){
+      if (count >= this.dataset.min && count <= this.dataset.max){
+        this.style.display = "inline"
+      }
+      else{
+        this.style.display = "none"
+      }
+    });
+    $(".checkbox_count_number").each(function(index){
+      this.innerHTML = count
+    });
+  }
+  $("input[type=checkbox]").change(function(){
+    update_checkbox_report();
+  });
+  update_checkbox_report();
+});
+</script>
+"""
+            extra_scripts.append(myscript)
         output += '<form id="daform" class="form-horizontal" method="POST"' + enctype_string + '><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, terms=status.question.interview.terms) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
@@ -165,9 +183,9 @@ $("input[type=checkbox]").change(function(){
             output += "<p>Error: no fields</p>"
         output += '</div>'
         if len(checkboxes):
-            output += '<input type="hidden" name="checkboxes" value="' + ",".join(checkboxes) + '"></input>'
+            output += '<input type="hidden" name="checkboxes" value="' + ",".join(checkboxes) + '">'
         if len(files):
-            output += '<input type="hidden" name="files" value="' + ",".join(files) + '"></input>'
+            output += '<input type="hidden" name="files" value="' + ",".join(files) + '">'
             init_string = '<script>'
             for saveasname in files:
                 init_string += '$("#' + saveasname + '").fileinput();' + "\n"
@@ -369,7 +387,7 @@ $("input[type=checkbox]").change(function(){
                 output += """
             <div class="form-group"><label for="attachment_include_rtf" class="control-label col-sm-4">""" + '&nbsp;</label><div class="col-sm-8"><input type="checkbox" value="True" name="attachment_include_rtf" id="attachment_include_rtf"> ' + word('Include RTF files for editing') + '</div></div>'
             output += """
-            <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Send') + '</button></div><input type="hidden" name="email_attachments" value="1"></input><input type="hidden" name="question_number" value="' + str(status.question.number) + '"></input>'
+            <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Send') + '</button></div><input type="hidden" name="email_attachments" value="1"><input type="hidden" name="question_number" value="' + str(status.question.number) + '">'
             output += """
           </fieldset>
         </form>

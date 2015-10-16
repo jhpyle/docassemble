@@ -634,13 +634,16 @@ class Question:
                             elif key == 'heading':
                                 field_info['type'] = 'heading'
                                 field_info['label'] = field[key]
+                            elif key == 'report_number_of_checkboxes_selected':
+                                field_info['type'] = 'report_number_of_checkboxes_selected'
+                                field_info['label'] = field[key]
                             else:
                                 field_info['label'] = key
                                 field_info['saveas'] = field[key]
                         if 'saveas' in field_info:
                             self.fields.append(Field(field_info))
                             self.fields_used.add(field_info['saveas'])
-                        elif 'type' in field_info and field_info['type'] == 'heading':
+                        elif 'type' in field_info and field_info['type'] in ['heading', 'report_number_of_checkboxes_selected']:
                             self.fields.append(Field(field_info))
                         else:
                             raise DAError("A field was listed without indicating a label or a variable name." + self.idebug(data))
