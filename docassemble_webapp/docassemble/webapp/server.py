@@ -112,6 +112,7 @@ docassemble.base.util.update_locale()
 app.logger.warning("default sender is " + app.config['MAIL_DEFAULT_SENDER'] + "\n")
 exit_page = daconfig.get('exitpage', '/')
 USE_PROGRESS_BAR = daconfig.get('use_progress_bar', True)
+SHOW_LOGIN = daconfig.get('show_login', True)
 #USER_PACKAGES = daconfig.get('user_packages', '/var/lib/docassemble/dist-packages')
 #sys.path.append(USER_PACKAGES)
 if USE_PROGRESS_BAR:
@@ -537,7 +538,11 @@ def slogin():
     response = make_response(output, 200)
     response.headers['Content-Type'] = 'text/html'
     return response
-  
+
+@app.route("/exit", methods=['POST', 'GET'])
+def exit():
+    return redirect(exit_page)
+
 @app.route("/", methods=['POST', 'GET'])
 def index():
     session_id = session.get('uid', None)
@@ -845,7 +850,7 @@ def index():
         output += signature_html(interview_status, DEBUG)
         output += """\n  </body>\n</html>"""
     else:
-        output = standard_start() + make_navbar(daconfig['brandname'], steps) + '    <div class="container">' + '<div class="tab-content">' + flash_content
+        output = standard_start() + make_navbar(daconfig['brandname'], steps, SHOW_LOGIN) + '    <div class="container">' + '<div class="tab-content">' + flash_content
         if USE_PROGRESS_BAR:
             output += progress_bar(user_dict['progress'])
         extra_scripts = list()
@@ -974,7 +979,7 @@ def get_file_path(indexno):
         os.makedirs(path)
     return (os.path.join(path, 'file'))
 
-def make_navbar(page_title, steps):
+def make_navbar(page_title, steps, show_login):
     navbar = """\
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="container-fluid">
@@ -998,16 +1003,19 @@ def make_navbar(page_title, steps):
           </ul>
           <ul class="nav navbar-nav navbar-right">
 """
-    if current_user.is_anonymous:
-        logmessage("is_anonymous is " + str(current_user.is_anonymous))
-        navbar += '            <li><a href="' + url_for('user.login', next=url_for('index')) + '">' + word('Sign in') + '</a></li>'
+    if show_login:
+        if current_user.is_anonymous:
+            logmessage("is_anonymous is " + str(current_user.is_anonymous))
+            navbar += '            <li><a href="' + url_for('user.login', next=url_for('index')) + '">' + word('Sign in') + '</a></li>'
+        else:
+            navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">' + current_user.email + '<b class="caret"></b></a><ul class="dropdown-menu">'
+            if current_user.has_role('admin', 'developer'):
+                navbar +='<li><a href="' + url_for('package_page') + '">' + word('Package Management') + '</a></li>'
+                if current_user.has_role('admin'):
+                    navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
+            navbar += '<li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li><li><a href="' + url_for('user.logout') + '">' + word('Sign out') + '</a></li></ul></li>'
     else:
-        navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">' + current_user.email + '<b class="caret"></b></a><ul class="dropdown-menu">'
-        if current_user.has_role('admin', 'developer'):
-            navbar +='<li><a href="' + url_for('package_page') + '">' + word('Package Management') + '</a></li>'
-            if current_user.has_role('admin'):
-                navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
-        navbar += '<li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li><li><a href="' + url_for('user.logout') + '">' + word('Sign out') + '</a></li></ul></li>'
+        navbar += '            <li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li>'
     navbar += """\
           </ul>
         </div><!--/.nav-collapse -->
