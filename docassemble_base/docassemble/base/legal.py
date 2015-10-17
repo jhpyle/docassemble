@@ -543,4 +543,3 @@ def email_string(persons, include_name=None):
             #sys.stderr.write("email string not a person: contemplating " + str(person) + "\n")
             result.append(str(person))
     return result
-

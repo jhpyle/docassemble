@@ -392,11 +392,20 @@ question: |
   Where ${ x.do_question('live') }?
 fields:
   - Type of home: x.address.type
+    datatype: radio
     choices:
       - Apartment
       - Leased house
       - Owned house
       - Mobile home
+  - Amenities: x.address.quality
+    datatype: checkboxes
+    code: |
+      {'chimney': 'Chimney', 'stove': 'Stove'}
+  - note: |
+      On the following line, you should write something **profound**
+      about ${ client }'s home:
+  - no label: x.address.age
   - Address: x.address.address
   - Unit: x.address.unit
     required: false

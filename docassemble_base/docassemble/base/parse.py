@@ -174,6 +174,7 @@ class InterviewStatus(object):
         self.defaults = question_result['defaults']
         self.hints = question_result['hints']
         self.helptexts = question_result['helptexts']
+        self.notes = question_result['notes']
     pass
 
 # def new_counter(initial_value=0):
@@ -202,18 +203,24 @@ class TextObject(object):
             
 class Field:
     def __init__(self, data):
+        if 'number' in data:
+            self.number = data['number']
         if 'saveas' in data:
             self.saveas = data['saveas']
         if 'label' in data:
             self.label = data['label']
         if 'type' in data:
             self.datatype = data['type']
+        if 'choicetype' in data:
+            self.choicetype = data['choicetype']
         if 'default' in data:
             self.default = data['default']
         if 'hint' in data:
             self.hint = data['hint']
         if 'help' in data:
             self.helptext = data['help']
+        if 'note' in data:
+            self.note = data['note']
         if 'selections' in data:
             self.selections = data['selections']
         if 'boolean' in data:
@@ -224,6 +231,8 @@ class Field:
             self.choices = data['choices']
         if 'has_code' in data:
             self.has_code = True
+        if 'script' in data:
+            self.script = data['script']
         if 'required' in data:
             self.required = data['required']
         else:
@@ -252,6 +261,7 @@ class Question:
         self.subcontent = None
         self.undertext = None
         self.progress = None
+        self.script = None
         self.decorations = None
         self.allow_emailing = True
         self.fields_used = set()
@@ -275,6 +285,10 @@ class Question:
             self.is_mandatory = True
         else:
             self.is_mandatory = False
+        if 'script' in data:
+            if type(data) is not str:
+                raise DAError("A script section must be plain text." + self.idebug(data))
+            self.script = data
         if ('initial' in data and data['initial'] is True) or ('default role' in data):
             #logmessage("Setting a code block to initial\n")
             self.is_initial = True
@@ -612,6 +626,7 @@ class Question:
             if type(data['fields']) is not list:
                 raise DAError("The fields must be written in the form of a list." + self.idebug(data))
             else:
+                field_number = 0
                 for field in data['fields']:
                     if type(field) is dict:
                         field_info = {'type': 'text'}
@@ -626,29 +641,33 @@ class Question:
                                 if field[key] == 'yesno' and 'required' not in field_info:
                                     field_info['required'] = False
                             elif key == 'code':
-                                field_info['type'] = 'selectcompute'
+                                field_info['choicetype'] = 'compute'
                                 field_info['selections'] = {'compute': compile(field[key], '', 'eval'), 'sourcecode': field[key]}
                             elif key == 'choices':
-                                field_info['type'] = 'selectmanual'
+                                field_info['choicetype'] = 'manual'
                                 field_info['selections'] = process_selections(field[key])
-                            elif key == 'heading':
-                                field_info['type'] = 'heading'
+                            elif key == 'note':
+                                field_info['type'] = 'note'
+                                field_info['number'] = field_number
+                                field_info['note'] = TextObject(definitions + unicode(field[key]))
+                            elif key == 'html':
+                                field_info['type'] = 'html'
                                 field_info['label'] = field[key]
-                            elif key == 'report_number_of_checkboxes_selected':
-                                field_info['type'] = 'report_number_of_checkboxes_selected'
-                                field_info['label'] = field[key]
+                            elif key == 'script':
+                                field_info['script'] = field[key]
                             else:
                                 field_info['label'] = key
                                 field_info['saveas'] = field[key]
                         if 'saveas' in field_info:
                             self.fields.append(Field(field_info))
                             self.fields_used.add(field_info['saveas'])
-                        elif 'type' in field_info and field_info['type'] in ['heading', 'report_number_of_checkboxes_selected']:
+                        elif 'type' in field_info and field_info['type'] in ['note', 'html']:
                             self.fields.append(Field(field_info))
                         else:
-                            raise DAError("A field was listed without indicating a label or a variable name." + self.idebug(data))
+                            raise DAError("A field was listed without indicating a label or a variable name, and the field was not a note or raw HTML." + self.idebug(data))
                     else:
                         raise DAError("Each individual field in a list of fields must be expressed as a dictionary item, e.g., ' - Fruit: user.favorite_fruit'." + self.idebug(data))
+                    field_number += 1
         if should_append:
             if not hasattr(self, 'question_type'):
                 raise DAError("No question type could be determined for this section." + self.idebug(data))
@@ -776,6 +795,7 @@ class Question:
         defaults = dict()
         hints = dict()
         helptexts = dict()
+        notes = dict()
         for field in self.fields:
             if hasattr(field, 'has_code') and field.has_code:
                 selections = list()
@@ -787,8 +807,10 @@ class Question:
                         else:
                             selections.append([value, key])
                 selectcompute[field.saveas] = selections
-            if hasattr(field, 'datatype') and field.datatype == 'selectcompute':
+            if hasattr(field, 'choicetype') and field.choicetype == 'compute':
                 selectcompute[field.saveas] = process_selections(eval(field.selections['compute'], user_dict))
+            if hasattr(field, 'datatype') and field.datatype == 'note':
+                notes[field.number] = field.note.text(user_dict)
             if hasattr(field, 'saveas'):
                 try:
                     defaults[field.saveas] = eval(field.saveas, user_dict)
@@ -812,8 +834,7 @@ class Question:
                 logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("Need 'role_event'")
-        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts})
-
+        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'notes': notes})
     def processed_attachments(self, user_dict, **kwargs):
         return(list(map((lambda x: make_attachment(x, user_dict, **kwargs)), self.attachments)))
     def parse_fields(self, the_list, register_target, uses_field):

@@ -49,6 +49,8 @@ def as_html(status, extra_scripts, url_for, debug):
     decorations = list()
     attributions = set()
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'help-inline'}
+    if status.question.script is not None:
+        extra_scripts.append(status.question.script)
     if status.decorations is not None:
         #sys.stderr.write("yoo1\n")
         for decoration in status.decorations:
@@ -103,14 +105,16 @@ def as_html(status, extra_scripts, url_for, debug):
         files = list()
         checkbox_validation = False
         for field in status.question.fields:
-            if field.datatype == 'report_number_of_checkboxes_selected':
-                fieldlist.append('<div class="row"><div class="col-md-12"><p>' + field.label + '</p></div></div>')
-                checkbox_validation = True
-                continue
-            if field.datatype == 'heading':
-                fieldlist.append('<div class="row"><div class="col-md-12"><h4>' + field.label + '</h4></div></div>')
-                continue
-            if field.saveas in status.helptexts:
+            if hasattr(field, 'script'):
+                extra_scripts.append(field.script)
+            if hasattr(field, 'datatype'):
+                if field.datatype == 'html':
+                    fieldlist.append('<div class="row"><div class="col-md-12">' + field.label + '</div></div>')
+                    continue
+                if field.datatype == 'note':
+                    fieldlist.append('<div class="row"><div class="col-md-12">' + markdown_to_html(status.notes[field.number], terms=status.question.interview.terms) + '</div></div>')
+                    continue
+            if hasattr(field, 'saveas') and field.saveas in status.helptexts:
                 helptext_start = '<a style="cursor:pointer;color:#408E30" data-container="body" data-toggle="popover" data-placement="bottom" data-content="' + noquote(unicode(status.helptexts[field.saveas])) + '">' 
                 helptext_end = '</a>'
             else:
@@ -121,57 +125,38 @@ def as_html(status, extra_scripts, url_for, debug):
                 validation_rules['messages'][field.saveas] = {'required': word("This field is required.")}
             else:
                 validation_rules['rules'][field.saveas] = {'required': False}
-            if field.datatype == 'date':
-                validation_rules['rules'][field.saveas]['date'] = True
-                validation_rules['messages'][field.saveas]['date'] = word("You need to enter a valid date.")
-            if field.datatype == 'email':
-                validation_rules['rules'][field.saveas]['email'] = True
-                if field.required:
-                    validation_rules['rules'][field.saveas]['notEmpty'] = True
-                    validation_rules['messages'][field.saveas]['notEmpty'] = word("This field is required.")
-                validation_rules['messages'][field.saveas]['email'] = word("You need to enter a complete e-mail address.")
-            if field.datatype == 'number' or field.datatype == 'currency':
-                validation_rules['rules'][field.saveas]['number'] = True
-                validation_rules['messages'][field.saveas]['number'] = word("You need to enter a number.")
-            if (field.datatype in ['files', 'file']):
-                enctype_string = ' enctype="multipart/form-data"'
-                files.append(field.saveas)
-            if field.datatype == 'yesno':
-                checkboxes.append(field.saveas)
-                fieldlist.append('<div class="row"><div class="col-md-12">' + input_for(status, field) + '</div></div>')
-            else:
-                fieldlist.append('<div class="form-group"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + field.label + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>')
-        if checkbox_validation:
-            myscript = """\
-<script>
-$( document ).ready(function() {
-  function update_checkbox_report(){
-    count = 0;
-    $("input[type=checkbox]").each(function(index){
-      if (this.checked){
-        count = count + 1;
-      }
-    });
-    $(".checkbox_count").each(function(index){
-      if (count >= this.dataset.min && count <= this.dataset.max){
-        this.style.display = "inline"
-      }
-      else{
-        this.style.display = "none"
-      }
-    });
-    $(".checkbox_count_number").each(function(index){
-      this.innerHTML = count
-    });
-  }
-  $("input[type=checkbox]").change(function(){
-    setTimeout(function(){ update_checkbox_report(); }, 1000);
-  });
-  update_checkbox_report();
-});
-</script>
-"""
-            extra_scripts.append(myscript)
+            if hasattr(field, 'datatype'):
+                if field.datatype == 'date':
+                    validation_rules['rules'][field.saveas]['date'] = True
+                    validation_rules['messages'][field.saveas]['date'] = word("You need to enter a valid date.")
+                if field.datatype == 'email':
+                    validation_rules['rules'][field.saveas]['email'] = True
+                    if field.required:
+                        validation_rules['rules'][field.saveas]['notEmpty'] = True
+                        validation_rules['messages'][field.saveas]['notEmpty'] = word("This field is required.")
+                    validation_rules['messages'][field.saveas]['email'] = word("You need to enter a complete e-mail address.")
+                if field.datatype == 'number' or field.datatype == 'currency':
+                    validation_rules['rules'][field.saveas]['number'] = True
+                    validation_rules['messages'][field.saveas]['number'] = word("You need to enter a number.")
+                if (field.datatype in ['files', 'file']):
+                    enctype_string = ' enctype="multipart/form-data"'
+                    files.append(field.saveas)
+                if field.datatype == 'yesno':
+                    checkboxes.append(field.saveas)
+                elif field.datatype == 'checkboxes':
+                    if field.choicetype == 'compute':
+                        pairlist = status.selectcompute[field.saveas]
+                    elif field.choicetype == 'manual':
+                        pairlist = field.selections
+                    else:
+                        pairlist = list()
+                    for pair in pairlist:
+                        checkboxes.append(field.saveas + "['" + urllib.quote(pair[0], '') + "']")
+            if hasattr(field, 'label'):
+                if field.label == 'no label':
+                    fieldlist.append('<div class="form-group"><div class="col-md-12">' + input_for(status, field, wide=True) + '</div></div>')
+                else:
+                    fieldlist.append('<div class="form-group"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + field.label + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>')
         output += '<form id="daform" class="form-horizontal" method="POST"' + enctype_string + '><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, terms=status.question.interview.terms) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
@@ -413,7 +398,7 @@ $( document ).ready(function() {
 def noquote(string):
     return noquote_match.sub('\\\"', string)
 
-def input_for(status, field):
+def input_for(status, field, wide=False):
     output = ""
     if field.saveas in status.defaults:
         defaultvalue = unicode(status.defaults[field.saveas])
@@ -423,53 +408,68 @@ def input_for(status, field):
         placeholdertext = ' placeholder="' + unicode(status.hints[field.saveas]) + '"'
     else:
         placeholdertext = ''
-    if field.datatype == 'selectcompute':
-        output += '<select name="' + field.saveas + '" id="' + field.saveas + '" >'
-        output += '<option name="' + field.saveas + '" id="' + field.saveas + '" value="">' + word('Select...') + '</option>'
-        for pair in status.selectcompute[field.saveas]:
-            output += '<option value="' + unicode(pair[0]) + '"'
-            if defaultvalue is not None and unicode(pair[0]) == defaultvalue:
-                output += 'selected="selected"'
-            output += '>' + unicode(pair[1]) + '</option>'
-        output += '</select> '
-    elif field.datatype == 'selectmanual':
-        output += '<select name="' + field.saveas + '" id="' + field.saveas + '" >'
-        output += '<option value="">' + word('Select...') + '</option>'
-        for pair in field.selections:
-            output += '<option value="' + unicode(pair[0]) + '"'
-            if defaultvalue is not None and unicode(pair[0]) == defaultvalue:
-                output += 'selected="selected"'
-            output += '>' + unicode(pair[1]) + '</option>'
-        output += '</select> '
-    elif field.datatype == 'yesno':
-        output += '<input class="to-labelauty checkbox-icon" type="checkbox" value="True" data-labelauty="' + field.label + '|' + field.label + '" name="' + field.saveas + '" id="' + field.saveas + '"'
-        if defaultvalue:
-            output += ' checked'
-        output += '> '
-    elif field.datatype in ['file', 'files']:
-        if field.datatype == 'file':
-            multipleflag = ''
+    if hasattr(field, 'choicetype'):
+        if field.choicetype == 'compute':
+            pairlist = status.selectcompute[field.saveas]
         else:
-            multipleflag = ' multiple'
-        output += '<input type="file" class="file" data-show-upload="false" data-preview-file-type="text" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + '></input>'
-        #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>'
-    elif field.datatype == 'area':
-        output += '<textarea class="form-control" rows="4" name="' + field.saveas + '" id="' + field.saveas + '"' + placeholdertext + '>'
-        if defaultvalue is not None:
-            output += defaultvalue
-        output += '</textarea>'
-    else:
-        if defaultvalue is not None:
-            defaultstring = ' value="' + defaultvalue + '"'
+            pairlist = field.selections
+        if field.datatype == 'checkboxes':
+            inner_fieldlist = list()
+            id_index = 0
+            for pair in pairlist:
+                inner_field = field.saveas + "['" + urllib.quote(pair[0], '') + "']"
+                inner_fieldlist.append('<input data-labelauty="' + pair[1] + '|' + pair[1] + '" class="to-labelauty checkbox-icon" id="' + field.saveas + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True">')
+                id_index += 1
+            output += "".join(inner_fieldlist)
+        elif field.datatype == 'radio':
+            inner_fieldlist = list()
+            id_index = 0
+            for pair in pairlist:
+                inner_fieldlist.append('<input data-labelauty="' + pair[1] + '|' + pair[1] + '" class="to-labelauty radio-icon" id="' + field.saveas + '_' + str(id_index) + '" name="' + field.saveas + '" type="radio" value="' + pair[0] + '">')
+                id_index += 1
+            output += "".join(inner_fieldlist)
         else:
-            defaultstring = ''
-        input_type = field.datatype
-        if field.datatype == 'currency':
-            input_type = 'number'
-            output += '<div class="input-group"><span class="input-group-addon" id="addon-' + field.saveas + '">' + currency_symbol() + '</span>'
-        output += '<input' + defaultstring + placeholdertext + ' class="form-control" type="' + input_type + '" name="' + field.saveas + '" id="' + field.saveas + '"'
-        if field.datatype == 'currency':
-            output += ' aria-describedby="addon-' + field.saveas + '"></input></div>'
+            output += '<select name="' + field.saveas + '" id="' + field.saveas + '" >'
+            output += '<option name="' + field.saveas + '" id="' + field.saveas + '" value="">' + word('Select...') + '</option>'
+            for pair in pairlist:
+                output += '<option value="' + unicode(pair[0]) + '"'
+                if defaultvalue is not None and unicode(pair[0]) == defaultvalue:
+                    output += 'selected="selected"'
+                output += '>' + unicode(pair[1]) + '</option>'
+            output += '</select> '
+    elif hasattr(field,'datatype'):
+        if field.datatype == 'yesno':
+            if wide:
+                output += '<input class="to-labelauty checkbox-icon" type="checkbox" value="True" data-labelauty="' + field.label + '|' + field.label + '" name="' + field.saveas + '" id="' + field.saveas + '"'
+            else:
+                output += '<input class="to-labelauty-icon checkbox-icon" type="checkbox" value="True" name="' + field.saveas + '" id="' + field.saveas + '"'
+            if defaultvalue:
+                output += ' checked'
+            output += '> '
+        elif field.datatype in ['file', 'files']:
+            if field.datatype == 'file':
+                multipleflag = ''
+            else:
+                multipleflag = ' multiple'
+            output += '<input type="file" class="file" data-show-upload="false" data-preview-file-type="text" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + '></input>'
+            #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>'
+        elif field.datatype == 'area':
+            output += '<textarea class="form-control" rows="4" name="' + field.saveas + '" id="' + field.saveas + '"' + placeholdertext + '>'
+            if defaultvalue is not None:
+                output += defaultvalue
+            output += '</textarea>'
         else:
-            output += '></input>'
+            if defaultvalue is not None:
+                defaultstring = ' value="' + defaultvalue + '"'
+            else:
+                defaultstring = ''
+            input_type = field.datatype
+            if field.datatype == 'currency':
+                input_type = 'number'
+                output += '<div class="input-group"><span class="input-group-addon" id="addon-' + field.saveas + '">' + currency_symbol() + '</span>'
+            output += '<input' + defaultstring + placeholdertext + ' class="form-control" type="' + input_type + '" name="' + field.saveas + '" id="' + field.saveas + '"'
+            if field.datatype == 'currency':
+                output += ' aria-describedby="addon-' + field.saveas + '"></input></div>'
+            else:
+                output += '></input>'
     return output

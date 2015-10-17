@@ -4,6 +4,7 @@ import datetime
 import time
 import pip
 import shutil
+import urllib
 import docassemble.base.parse
 import docassemble.base.interview_cache
 from docassemble.base.standardformatter import as_html, signature_html
@@ -271,7 +272,10 @@ scripts = """
     </script>
 """
 
-match_invalid = re.compile('[^A-Za-z0-9_\[\].]')
+match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%]')
+match_brackets = re.compile('\[\'.*\'\]$')
+match_inside_and_outside_brackets = re.compile('(.*)(\[\'[^\]]+\'\])$')
+match_inside_brackets = re.compile('\[\'([^\]]+)\'\]')
 match_triplequote = re.compile('"""')
 
 APPLICATION_NAME = 'docassemble'
@@ -779,6 +783,7 @@ def index():
         for checkbox_field in checkbox_fields:
             if checkbox_field not in post_data:
                 post_data.add(checkbox_field, 'False')
+    known_variables = dict()
     for key in post_data:
         if key == 'checkboxes' or key == 'back_one' or key == 'files' or key == 'questionname' or key == 'theImage' or key == 'saveas' or key == 'success':
             continue
@@ -790,6 +795,26 @@ def index():
         data = re.sub(r'"""', '', data)
         if not (data == "True" or data == "False"):
             data = 'ur"""' + unicode(data) + '"""'
+        if match_brackets.search(key):
+            #logmessage("Searching key " + str(key))
+            match = match_inside_and_outside_brackets.search(key)
+            key = match.group(1)
+            bracket = match_inside_brackets.sub(process_bracket_expression, match.group(2))
+            #logmessage("key is " + str(key) + " and bracket is " + str(bracket))
+            if key in user_dict:
+                known_variables[key] = True
+            if key not in known_variables:
+                try:
+                    eval(key, user_dict)
+                except:
+                    logmessage("setting key " + str(key) + " to empty dict")
+                    string = key + ' = dict()'
+                    try:
+                        exec(string, user_dict)
+                        known_variables[key] = True
+                    except:
+                        raise DAError("cannot initialize " + key)
+            key = key + bracket
         if key == "multiple_choice":
             interview.assemble(user_dict, interview_status)
             if interview_status.question.question_type == "multiple_choice" and not hasattr(interview_status.question.fields[0], 'saveas'):
@@ -863,6 +888,9 @@ def index():
 if __name__ == "__main__":
     app.run()
 
+def process_bracket_expression(match):
+    return("['" + urllib.unquote(match.group(1)).encode('unicode_escape') + "']")
+    
 def progress_bar(progress):
     if progress == 0:
         return('');
