@@ -285,8 +285,11 @@ def force_ask(variable_name):
 def period_list():
     return([[12, word("Per Month")], [1, word("Per Year")], [52, word("Per Week")], [24, word("Twice Per Month")], [26, word("Every Two Weeks")]])
 
-def currency(value):
-    return(locale.currency(value, symbol=True, grouping=True))
+def currency(value, decimals=True):
+    if decimals:
+        return(locale.currency(value, symbol=True, grouping=True))
+    else:
+        return(currency_symbol() + locale.format("%d", value, grouping=True))
 
 def static_filename_path(filereference):
     return(package_data_filename(static_filename(filereference)))

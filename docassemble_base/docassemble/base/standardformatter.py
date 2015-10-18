@@ -115,7 +115,7 @@ def as_html(status, extra_scripts, url_for, debug):
                     fieldlist.append('<div class="row"><div class="col-md-12">' + markdown_to_html(status.notes[field.number], terms=status.question.interview.terms) + '</div></div>')
                     continue
             if hasattr(field, 'saveas') and field.saveas in status.helptexts:
-                helptext_start = '<a style="cursor:pointer;color:#408E30" data-container="body" data-toggle="popover" data-placement="bottom" data-content="' + noquote(unicode(status.helptexts[field.saveas])) + '">' 
+                helptext_start = '<a style="cursor:pointer;color:#408E30" data-container="body" data-toggle="popover" data-placement="bottom" data-content="' + noquote(unicode(status.helptexts[field.number])) + '">' 
                 helptext_end = '</a>'
             else:
                 helptext_start = ''
@@ -145,13 +145,14 @@ def as_html(status, extra_scripts, url_for, debug):
                     checkboxes.append(field.saveas)
                 elif field.datatype == 'checkboxes':
                     if field.choicetype == 'compute':
-                        pairlist = status.selectcompute[field.saveas]
+                        pairlist = status.selectcompute[field.number]
                     elif field.choicetype == 'manual':
                         pairlist = field.selections
                     else:
                         pairlist = list()
                     for pair in pairlist:
-                        checkboxes.append(field.saveas + "['" + urllib.quote(pair[0], '') + "']")
+                        if pair[0] is not None:
+                            checkboxes.append(field.saveas + "['" + urllib.quote(pair[0], '') + "']")
             if hasattr(field, 'label'):
                 if field.label == 'no label':
                     fieldlist.append('<div class="form-group"><div class="col-md-12">' + input_for(status, field, wide=True) + '</div></div>')
@@ -204,9 +205,11 @@ def as_html(status, extra_scripts, url_for, debug):
             if hasattr(status.question.fields[0], 'saveas'):
                 if hasattr(status.question.fields[0], 'has_code') and status.question.fields[0].has_code:
                     id_index = 0
-                    for pair in status.selectcompute[status.question.fields[0].saveas]:
-                        output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + pair[1] + '|' + pair[1] + '" class="to-labelauty radio-icon" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + pair[0] + '"></div></div>'
-                        #
+                    for pair in status.selectcompute[status.question.fields[0].number]:
+                        if pair[0] is not None:
+                            output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + str(pair[1]) + '|' + str(pair[1]) + '" class="to-labelauty radio-icon" id="' + str(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + str(status.question.fields[0].saveas) + '" type="radio" value="' + str(pair[0]) + '"></div></div>'
+                        else:
+                            output += '<div class="form-group"><div class="col-md-12">' + markdown_to_html(pair[1], terms=status.question.interview.terms) + '</div></div>'
                         id_index += 1
                 else:
                     id_index = 0
@@ -218,7 +221,7 @@ def as_html(status, extra_scripts, url_for, debug):
                         for key in choice:
                             if key == 'image':
                                 continue
-                            output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + key + '|' + key + '" class="to-labelauty radio-icon" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + choice[key] + '"></div></div>'
+                            output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + str(key) + '|' + str(key) + '" class="to-labelauty radio-icon" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + str(choice[key]) + '"></div></div>'
                             #
                         id_index += 1
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
@@ -234,7 +237,7 @@ def as_html(status, extra_scripts, url_for, debug):
                     for key in choice:
                         if key == 'image':
                             continue
-                        output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + the_icon + key + '|' + the_icon + key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="multiple_choice" type="radio" value="' + str(indexno) + '"><label for="multiple_choice' + str(indexno) + '_' + str(id_index) + '">' + the_icon + key + '</label></div></div>'
+                        output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + the_icon + str(key) + '|' + the_icon + str(key) + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="multiple_choice" type="radio" value="' + str(indexno) + '"><label for="multiple_choice' + str(indexno) + '_' + str(id_index) + '">' + the_icon + str(key) + '</label></div></div>'
                         #
                         id_index += 1
                     indexno += 1
@@ -246,8 +249,11 @@ def as_html(status, extra_scripts, url_for, debug):
             if hasattr(status.question.fields[0], 'saveas'):
                 btn_class = ' btn-primary'
                 if hasattr(status.question.fields[0], 'has_code') and status.question.fields[0].has_code:
-                    for pair in status.selectcompute[status.question.fields[0].saveas]:
-                        output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + pair[0] + '"> ' + pair[1] + '</button> '
+                    for pair in status.selectcompute[status.question.fields[0].number]:
+                        if pair[0] is not None:
+                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + str(status.question.fields[0].saveas) + '" value="' + str(pair[0]) + '"> ' + str(pair[1]) + '</button> '
+                        else:
+                            output += markdown_to_html(pair[1], terms=status.question.interview.terms)
                 else:
                     for choice in status.question.fields[0].choices:
                         if 'image' in choice:
@@ -258,7 +264,7 @@ def as_html(status, extra_scripts, url_for, debug):
                         for key in choice:
                             if key == 'image':
                                 continue
-                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + choice[key] + '"> ' + the_icon + key + '</button> '
+                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + str(choice[key]) + '"> ' + the_icon + str(key) + '</button> '
             else:
                 indexno = 0
                 for choice in status.question.fields[0].choices:
@@ -278,7 +284,7 @@ def as_html(status, extra_scripts, url_for, debug):
                                 btn_class = ' btn-warning'
                             elif choice[key].question_type == "exit":
                                 btn_class = ' btn-danger'
-                        output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="multiple_choice" value="' + str(indexno) + '"> ' + the_icon + key + '</button> '
+                        output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="multiple_choice" value="' + str(indexno) + '"> ' + the_icon + str(key) + '</button> '
                     indexno += 1
             output += '</div>'
         output += question_name_tag(status.question)
@@ -404,42 +410,50 @@ def noquote(string):
 
 def input_for(status, field, wide=False):
     output = ""
-    if field.saveas in status.defaults:
-        defaultvalue = unicode(status.defaults[field.saveas])
+    if field.number in status.defaults:
+        defaultvalue = unicode(status.defaults[field.number])
     else:
         defaultvalue = None
-    if field.saveas in status.hints:
-        placeholdertext = ' placeholder="' + unicode(status.hints[field.saveas]) + '"'
+    if field.number in status.hints:
+        placeholdertext = ' placeholder="' + unicode(status.hints[field.number]) + '"'
     else:
         placeholdertext = ''
     if hasattr(field, 'choicetype'):
         if field.choicetype == 'compute':
-            pairlist = status.selectcompute[field.saveas]
+            pairlist = status.selectcompute[field.number]
         else:
             pairlist = field.selections
         if field.datatype == 'checkboxes':
             inner_fieldlist = list()
             id_index = 0
             for pair in pairlist:
-                inner_field = field.saveas + "['" + urllib.quote(pair[0], '') + "']"
-                inner_fieldlist.append('<input data-labelauty="' + pair[1] + '|' + pair[1] + '" class="to-labelauty checkbox-icon" id="' + field.saveas + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True">')
+                if pair[0] is not None:
+                    inner_field = str(field.saveas) + "['" + urllib.quote(pair[0], u'') + u"']"
+                    #sys.stderr.write(pair[1])
+                    inner_fieldlist.append('<input data-labelauty="' + str(pair[1]) + '|' + str(pair[1]) + '" class="to-labelauty checkbox-icon" id="' + str(field.saveas) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True">')
+                else:
+                    inner_fieldlist.append('<div>' + markdown_to_html(pair[1], terms=status.question.interview.terms) + '</div>')
                 id_index += 1
-            output += "".join(inner_fieldlist)
+            output += u''.join(inner_fieldlist)
         elif field.datatype == 'radio':
             inner_fieldlist = list()
             id_index = 0
             for pair in pairlist:
-                inner_fieldlist.append('<input data-labelauty="' + pair[1] + '|' + pair[1] + '" class="to-labelauty radio-icon" id="' + field.saveas + '_' + str(id_index) + '" name="' + field.saveas + '" type="radio" value="' + pair[0] + '">')
+                if pair[0] is not None:
+                    inner_fieldlist.append('<input data-labelauty="' + str(pair[1]) + '|' + str(pair[1]) + '" class="to-labelauty radio-icon" id="' + str(field.saveas) + '_' + str(id_index) + '" name="' + str(field.saveas) + '" type="radio" value="' + str(pair[0]) + '">')
+                else:
+                    inner_fieldlist.append('<div>' + markdown_to_html(pair[1], terms=status.question.interview.terms) + '</div>')
                 id_index += 1
             output += "".join(inner_fieldlist)
         else:
             output += '<select name="' + field.saveas + '" id="' + field.saveas + '" >'
             output += '<option name="' + field.saveas + '" id="' + field.saveas + '" value="">' + word('Select...') + '</option>'
             for pair in pairlist:
-                output += '<option value="' + unicode(pair[0]) + '"'
-                if defaultvalue is not None and unicode(pair[0]) == defaultvalue:
-                    output += 'selected="selected"'
-                output += '>' + unicode(pair[1]) + '</option>'
+                if pair[0] is not None:
+                    output += '<option value="' + unicode(pair[0]) + '"'
+                    if defaultvalue is not None and unicode(pair[0]) == defaultvalue:
+                        output += 'selected="selected"'
+                    output += '>' + unicode(pair[1]) + '</option>'
             output += '</select> '
     elif hasattr(field, 'datatype'):
         if field.datatype in ['yesno', 'yesnowide']:

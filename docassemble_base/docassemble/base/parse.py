@@ -315,13 +315,20 @@ class Question:
                     raise DAError("An objects section cannot contain a nested list." + self.idebug(data))
         if 'id' in data:
             self.id = data['id']
-        if 'image sets' in data:
+        for key in ['image sets', 'images']:
+            if key not in data:
+                continue
             should_append = False
-            if type(data['image sets']) is not dict:
-                raise DAError("An 'image sets' section needs to be a dictionary, not a list." + self.idebug(data))
-            for setname, image_set in data['image sets'].iteritems():
+            if type(data[key]) is not dict:
+                raise DAError("The '" + key + "' section needs to be a dictionary, not a list or text." + self.idebug(data))
+            if key == 'images' or ('images' not in data[key] and 'attribution' not in data[key]):
+                data[key] = {'unspecified': {'images': data[key]}}
+            for setname, image_set in data[key].iteritems():
                 if type(image_set) is not dict:
-                    raise DAError("Each item in an 'image sets' section needs to be a dictionary, not a list.  Each dictionary item should have an 'images' definition (which can be a dictionary or list) and an optional 'attribution' definition (which must be text)." + self.idebug(data))
+                    if key == 'image sets':
+                        raise DAError("Each item in the 'image sets' section needs to be a dictionary, not a list.  Each dictionary item should have an 'images' definition (which can be a dictionary or list) and an optional 'attribution' definition (which must be text)." + self.idebug(data))
+                    else:
+                        raise DAError("Each item in the 'images' section needs to be a dictionary, not a list." + self.idebug(data))
                 if 'attribution' in image_set:
                     if type(image_set['attribution']) in [dict, list]:
                         raise DAError("An attribution in an 'image set' section cannot be a dictionary or a list." + self.idebug(data))
@@ -334,7 +341,10 @@ class Question:
                     elif type(image_set['images']) is dict:
                         image_list = [image_set['images']]
                     else:
-                        raise DAError("An 'images' definition in an 'image set' item must be a dictionary or a list." + self.idebug(data))
+                        if key == 'image set':
+                            raise DAError("An 'images' definition in an 'image set' item must be a dictionary or a list." + self.idebug(data))
+                        else:
+                            raise DAError("An 'images' section must be a dictionary or a list." + self.idebug(data))                            
                     for image in image_list:
                         if type(image) is not dict:
                             the_image = {str(image): str(image)}
@@ -629,7 +639,7 @@ class Question:
                 field_number = 0
                 for field in data['fields']:
                     if type(field) is dict:
-                        field_info = {'type': 'text'}
+                        field_info = {'type': 'text', 'number': field_number}
                         for key in field:
                             if key == 'required':
                                 field_info['required'] = field[key]
@@ -648,7 +658,6 @@ class Question:
                                 field_info['selections'] = process_selections(field[key])
                             elif key == 'note':
                                 field_info['type'] = 'note'
-                                field_info['number'] = field_number
                                 field_info['note'] = TextObject(definitions + unicode(field[key]))
                             elif key == 'html':
                                 field_info['type'] = 'html'
@@ -806,21 +815,21 @@ class Question:
                             selections.extend(process_selections(eval(value, user_dict)))
                         else:
                             selections.append([value, key])
-                selectcompute[field.saveas] = selections
+                selectcompute[field.number] = selections
             if hasattr(field, 'choicetype') and field.choicetype == 'compute':
-                selectcompute[field.saveas] = process_selections(eval(field.selections['compute'], user_dict))
+                selectcompute[field.number] = process_selections(eval(field.selections['compute'], user_dict))
             if hasattr(field, 'datatype') and field.datatype == 'note':
                 notes[field.number] = field.note.text(user_dict)
             if hasattr(field, 'saveas'):
                 try:
-                    defaults[field.saveas] = eval(field.saveas, user_dict)
+                    defaults[field.number] = eval(field.saveas, user_dict)
                 except:
                     if hasattr(field, 'default'):
-                        defaults[field.saveas] = field.default.text(user_dict)
+                        defaults[field.number] = field.default.text(user_dict)
                 if hasattr(field, 'helptext'):
-                    helptexts[field.saveas] = field.helptext.text(user_dict)
+                    helptexts[field.number] = field.helptext.text(user_dict)
                 if hasattr(field, 'hint'):
-                    hints[field.saveas] = field.hint.text(user_dict)
+                    hints[field.number] = field.hint.text(user_dict)
         question_text = self.content.text(user_dict)
         attachment_text = self.processed_attachments(user_dict, the_x=the_x, the_i=the_i)
         if 'role' in user_dict:
@@ -1178,7 +1187,7 @@ class Interview:
                             question.mark_as_answered(user_dict)
                             return({'type': 'continue'})
                         if question.question_type == "template":
-                            exec(question.fields[0].saveas + ' = DATemplate(' + "'" + question.fields[0].saveas + "', content=" + '"""' + question.content.text(user_dict).rstrip().encode('unicode_escape') + '""", subject="""' + question.subcontent.text(user_dict).rstrip().encode('unicode_escape') + '""")', user_dict)
+                            exec(question.fields[0].saveas + ' = DATemplate(' + "'" + question.fields[0].saveas + "', content=" + repr(question.content.text(user_dict).rstrip().encode('unicode_escape')) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip().encode('unicode_escape')) + ')', user_dict)
                             question.mark_as_answered(user_dict)
                             return({'type': 'continue'})
                         if question.question_type == "code":

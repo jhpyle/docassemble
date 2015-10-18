@@ -272,7 +272,7 @@ scripts = """
     </script>
 """
 
-match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%]')
+match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-]')
 match_brackets = re.compile('\[\'.*\'\]$')
 match_inside_and_outside_brackets = re.compile('(.*)(\[\'[^\]]+\'\])$')
 match_inside_brackets = re.compile('\[\'([^\]]+)\'\]')
@@ -591,7 +591,7 @@ def index():
             if argname in ('filename', 'question', 'format', 'next', 'index', 'i'):
                 continue
             if re.match('[A-Za-z_]+', argname):
-                exec("url_args['" + argname + "'] = '" + request.args.get(argname).encode('unicode_escape') + "'", user_dict)
+                exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)
             need_to_reset = True
     if need_to_reset:
         save_user_dict(user_code, user_dict, yaml_filename)
@@ -889,7 +889,7 @@ if __name__ == "__main__":
     app.run()
 
 def process_bracket_expression(match):
-    return("['" + urllib.unquote(match.group(1)).encode('unicode_escape') + "']")
+    return("[" + repr(urllib.unquote(match.group(1)).encode('unicode_escape')) + "]")
     
 def progress_bar(progress):
     if progress == 0:
