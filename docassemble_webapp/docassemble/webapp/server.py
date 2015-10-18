@@ -866,7 +866,7 @@ def index():
     labelauty_scripts = '    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>' + """
     <script>
     $(document).ready(function(){
-      $(".to-labelauty").labelauty({ minimum_width: "155px" });
+      $(".to-labelauty").labelauty({ width: "100%" });
       $(".to-labelauty-icon").labelauty({ label: false });
     });
     </script>"""

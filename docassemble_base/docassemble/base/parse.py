@@ -638,7 +638,7 @@ class Question:
                                     field_info[key] = TextObject(definitions + unicode(field[key]))
                             elif key == 'datatype':
                                 field_info['type'] = field[key]
-                                if field[key] == 'yesno' and 'required' not in field_info:
+                                if field[key] in ['yesno', 'yesnowide'] and 'required' not in field_info:
                                     field_info['required'] = False
                             elif key == 'code':
                                 field_info['choicetype'] = 'compute'

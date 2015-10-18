@@ -109,9 +109,9 @@ def as_html(status, extra_scripts, url_for, debug):
                 extra_scripts.append(field.script)
             if hasattr(field, 'datatype'):
                 if field.datatype == 'html':
-                    fieldlist.append('<div class="row"><div class="col-md-12">' + field.label + '</div></div>')
+                    fieldlist.append('<div class="form-group"><div class="col-md-12">' + field.label + '</div></div>')
                     continue
-                if field.datatype == 'note':
+                elif field.datatype == 'note':
                     fieldlist.append('<div class="row"><div class="col-md-12">' + markdown_to_html(status.notes[field.number], terms=status.question.interview.terms) + '</div></div>')
                     continue
             if hasattr(field, 'saveas') and field.saveas in status.helptexts:
@@ -141,7 +141,7 @@ def as_html(status, extra_scripts, url_for, debug):
                 if (field.datatype in ['files', 'file']):
                     enctype_string = ' enctype="multipart/form-data"'
                     files.append(field.saveas)
-                if field.datatype == 'yesno':
+                if field.datatype in ['yesno', 'yesnowide']:
                     checkboxes.append(field.saveas)
                 elif field.datatype == 'checkboxes':
                     if field.choicetype == 'compute':
@@ -155,18 +155,22 @@ def as_html(status, extra_scripts, url_for, debug):
             if hasattr(field, 'label'):
                 if field.label == 'no label':
                     fieldlist.append('<div class="form-group"><div class="col-md-12">' + input_for(status, field, wide=True) + '</div></div>')
+                elif hasattr(field, 'datatype') and field.datatype == 'yesnowide':
+                    fieldlist.append('<div class="row"><div class="col-md-12">' + input_for(status, field) + '</div></div>')
+                elif hasattr(field, 'datatype') and field.datatype == 'yesno':
+                    fieldlist.append('<div class="form-group"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>')
                 else:
                     fieldlist.append('<div class="form-group"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + field.label + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>')
         output += '<form id="daform" class="form-horizontal" method="POST"' + enctype_string + '><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, terms=status.question.interview.terms) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, terms=status.question.interview.terms) + '</div>'
-        output += '<div class="row">'
+        #output += '<div class="row">'
         if (len(fieldlist)):
             output += "".join(fieldlist)
         else:
             output += "<p>Error: no fields</p>"
-        output += '</div>'
+        #output += '</div>'
         if len(checkboxes):
             output += '<input type="hidden" name="checkboxes" value="' + ",".join(checkboxes) + '">'
         if len(files):
@@ -437,12 +441,9 @@ def input_for(status, field, wide=False):
                     output += 'selected="selected"'
                 output += '>' + unicode(pair[1]) + '</option>'
             output += '</select> '
-    elif hasattr(field,'datatype'):
-        if field.datatype == 'yesno':
-            if wide:
-                output += '<input class="to-labelauty checkbox-icon" type="checkbox" value="True" data-labelauty="' + field.label + '|' + field.label + '" name="' + field.saveas + '" id="' + field.saveas + '"'
-            else:
-                output += '<input class="to-labelauty-icon checkbox-icon" type="checkbox" value="True" name="' + field.saveas + '" id="' + field.saveas + '"'
+    elif hasattr(field, 'datatype'):
+        if field.datatype in ['yesno', 'yesnowide']:
+            output += '<input class="to-labelauty checkbox-icon" type="checkbox" value="True" data-labelauty="' + field.label + '|' + field.label + '" name="' + field.saveas + '" id="' + field.saveas + '"'
             if defaultvalue:
                 output += ' checked'
             output += '> '
