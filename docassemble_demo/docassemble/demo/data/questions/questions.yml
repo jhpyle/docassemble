@@ -393,6 +393,7 @@ question: |
 fields:
   - Type of home: x.address.type
     datatype: radio
+    shuffle: true
     choices:
       - Apartment
       - Leased house
@@ -405,7 +406,7 @@ fields:
   - note: |
       On the following line, you should write something **profound**
       about ${ client }'s home:
-  - no label: x.address.age
+  - no label: x.address.profound_thing
   - Address: x.address.address
   - Unit: x.address.unit
     required: false

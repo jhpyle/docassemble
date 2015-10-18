@@ -8,6 +8,7 @@ import os
 import re
 import mimetypes
 import json
+import random
 
 noquote_match = re.compile(r'"')
 
@@ -145,11 +146,13 @@ def as_html(status, extra_scripts, url_for, debug):
                     checkboxes.append(field.saveas)
                 elif field.datatype == 'checkboxes':
                     if field.choicetype == 'compute':
-                        pairlist = status.selectcompute[field.number]
+                        pairlist = list(status.selectcompute[field.number])
                     elif field.choicetype == 'manual':
-                        pairlist = field.selections
+                        pairlist = list(field.selections)
                     else:
                         pairlist = list()
+                    if hasattr(field, 'shuffle') and field.shuffle:
+                        random.shuffle(pairlist)
                     for pair in pairlist:
                         if pair[0] is not None:
                             checkboxes.append(field.saveas + "['" + urllib.quote(pair[0], '') + "']")
@@ -205,7 +208,10 @@ def as_html(status, extra_scripts, url_for, debug):
             if hasattr(status.question.fields[0], 'saveas'):
                 if hasattr(status.question.fields[0], 'has_code') and status.question.fields[0].has_code:
                     id_index = 0
-                    for pair in status.selectcompute[status.question.fields[0].number]:
+                    pairlist = list(status.selectcompute[status.question.fields[0].number])
+                    if hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle:
+                        random.shuffle(pairlist)
+                    for pair in pairlist:
                         if pair[0] is not None:
                             output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + str(pair[1]) + '|' + str(pair[1]) + '" class="to-labelauty radio-icon" id="' + str(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + str(status.question.fields[0].saveas) + '" type="radio" value="' + str(pair[0]) + '"></div></div>'
                         else:
@@ -213,7 +219,10 @@ def as_html(status, extra_scripts, url_for, debug):
                         id_index += 1
                 else:
                     id_index = 0
-                    for choice in status.question.fields[0].choices:
+                    choicelist = list(status.question.fields[0].choices)
+                    if hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle:
+                        random.shuffle(choicelist)
+                    for choice in choicelist:
                         if 'image' in choice:
                             the_icon = icon_html(status, choice['image'])
                         else:
@@ -249,13 +258,19 @@ def as_html(status, extra_scripts, url_for, debug):
             if hasattr(status.question.fields[0], 'saveas'):
                 btn_class = ' btn-primary'
                 if hasattr(status.question.fields[0], 'has_code') and status.question.fields[0].has_code:
-                    for pair in status.selectcompute[status.question.fields[0].number]:
+                    pairlist = list(status.selectcompute[status.question.fields[0].number])
+                    if hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle:
+                        random.shuffle(pairlist)
+                    for pair in pairlist:
                         if pair[0] is not None:
                             output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + str(status.question.fields[0].saveas) + '" value="' + str(pair[0]) + '"> ' + str(pair[1]) + '</button> '
                         else:
                             output += markdown_to_html(pair[1], terms=status.question.interview.terms)
                 else:
-                    for choice in status.question.fields[0].choices:
+                    choicelist = list(status.question.fields[0].choices)
+                    if hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle:
+                        random.shuffle(choicelist)
+                    for choice in choicelist:
                         if 'image' in choice:
                             the_icon = icon_html(status, choice['image'])
                             btn_class = ' btn-default'
@@ -420,9 +435,11 @@ def input_for(status, field, wide=False):
         placeholdertext = ''
     if hasattr(field, 'choicetype'):
         if field.choicetype == 'compute':
-            pairlist = status.selectcompute[field.number]
+            pairlist = list(status.selectcompute[field.number])
         else:
-            pairlist = field.selections
+            pairlist = list(field.selections)
+        if hasattr(field, 'shuffle') and field.shuffle:
+            random.shuffle(pairlist)
         if field.datatype == 'checkboxes':
             inner_fieldlist = list()
             id_index = 0

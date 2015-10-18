@@ -343,7 +343,7 @@ generic object: Individual
 question: How much ${ x.do_question("make") } from employment?
 decoration: bills
 fields:
-  - Income: x.income.employment.value
+  - Employment Income: x.income.employment.value
     datatype: currency
   - "": x.income.employment.period
     code: |
@@ -353,7 +353,7 @@ generic object: Individual
 question: How much ${ x.do_question("make") } from self-employment?
 decoration: bills
 fields:
-  - Income: x.income.selfemployment.value
+  - Self-employment Income: x.income.selfemployment.value
     datatype: currency
   - "": x.income.selfemployment.period
     code: |
@@ -363,7 +363,7 @@ generic object: Individual
 question: How much ${ x.do_question("make") } from SSI?
 decoration: bills
 fields:
-  - Income: x.income.ssi.value
+  - SSI Income: x.income.ssi.value
     datatype: currency
   - "": x.income.ssi.period
     code: |
@@ -373,7 +373,7 @@ generic object: Individual
 question: How much ${ x.do_question("make") } from cash assistance (Temporary Assistance to Needy Families or TANF)?
 decoration: bills
 fields:
-  - Income: x.income.tanf.value
+  - TANF Income: x.income.tanf.value
     datatype: currency
   - "": x.income.tanf.period
     code: |
@@ -405,22 +405,22 @@ question: What kinds of income ${ x.do_question("have") }?
 decoration: bills
 fields:
   - Employment: x.income.employment.exists
-    datatype: yesno
+    datatype: yesnowide
   - Self-employment: x.income.selfemployment.exists
-    datatype: yesno
+    datatype: yesnowide
   - SSI: x.income.ssi.exists
-    datatype: yesno
+    datatype: yesnowide
   - Cash assistance: x.income.tanf.exists
-    datatype: yesno
+    datatype: yesnowide
 ---
 generic object: Individual
 question: What kinds of assets ${ x.do_question("own") }?
 decoration: piggybank
 fields:
   - Checking Account: x.asset.checking.exists
-    datatype: yesno
+    datatype: yesnowide
   - Savings Account: x.asset.savings.exists
-    datatype: yesno
+    datatype: yesnowide
   - Stocks and Bonds: x.asset.stocksbonds.exists
-    datatype: yesno
+    datatype: yesnowide
 ...

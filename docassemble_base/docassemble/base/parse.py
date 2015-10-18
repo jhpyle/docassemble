@@ -205,6 +205,8 @@ class Field:
     def __init__(self, data):
         if 'number' in data:
             self.number = data['number']
+        else:
+            self.number = 0
         if 'saveas' in data:
             self.saveas = data['saveas']
         if 'label' in data:
@@ -233,6 +235,8 @@ class Field:
             self.has_code = True
         if 'script' in data:
             self.script = data['script']
+        if 'shuffle' in data:
+            self.shuffle = data['shuffle']
         if 'required' in data:
             self.required = data['required']
         else:
@@ -321,8 +325,10 @@ class Question:
             should_append = False
             if type(data[key]) is not dict:
                 raise DAError("The '" + key + "' section needs to be a dictionary, not a list or text." + self.idebug(data))
-            if key == 'images' or ('images' not in data[key] and 'attribution' not in data[key]):
+            if key == 'images':
                 data[key] = {'unspecified': {'images': data[key]}}
+            elif 'images' in data[key] and 'attribution' in data[key]:
+                data[key] = {'unspecified': data[key]}
             for setname, image_set in data[key].iteritems():
                 if type(image_set) is not dict:
                     if key == 'image sets':
@@ -569,15 +575,19 @@ class Question:
                 uses_field = True
             else:
                 uses_field = False
+            if 'shuffle' in data and data['shuffle']:
+                shuffle = True
+            else:
+                shuffle = False
             if 'choices' in data:
                 has_code, choices = self.parse_fields(data['choices'], register_target, uses_field)
-                field_data = {'choices': choices}
+                field_data = {'choices': choices, 'shuffle': shuffle}
                 if has_code:
                     field_data['has_code'] = True
                 self.question_variety = 'radio'
             elif 'buttons' in data:
                 has_code, choices = self.parse_fields(data['buttons'], register_target, uses_field)
-                field_data = {'choices': choices}
+                field_data = {'choices': choices, 'shuffle': shuffle}
                 if has_code:
                     field_data['has_code'] = True
                 self.question_variety = 'buttons'
@@ -664,6 +674,8 @@ class Question:
                                 field_info['label'] = field[key]
                             elif key == 'script':
                                 field_info['script'] = field[key]
+                            elif key == 'shuffle':
+                                field_info['shuffle'] = field[key]
                             else:
                                 field_info['label'] = key
                                 field_info['saveas'] = field[key]
@@ -1187,7 +1199,7 @@ class Interview:
                             question.mark_as_answered(user_dict)
                             return({'type': 'continue'})
                         if question.question_type == "template":
-                            exec(question.fields[0].saveas + ' = DATemplate(' + "'" + question.fields[0].saveas + "', content=" + repr(question.content.text(user_dict).rstrip().encode('unicode_escape')) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip().encode('unicode_escape')) + ')', user_dict)
+                            exec(question.fields[0].saveas + ' = DATemplate(' + "'" + question.fields[0].saveas + "', content=" + '"""' + question.content.text(user_dict).rstrip().encode('unicode_escape') + '""", subject="""' + question.subcontent.text(user_dict).rstrip().encode('unicode_escape') + '""")', user_dict)
                             question.mark_as_answered(user_dict)
                             return({'type': 'continue'})
                         if question.question_type == "code":
