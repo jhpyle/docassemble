@@ -114,7 +114,7 @@ def as_html(status, extra_scripts, url_for, debug):
                 elif field.datatype == 'note':
                     fieldlist.append('<div class="row"><div class="col-md-12">' + markdown_to_html(status.notes[field.number], status=status) + '</div></div>')
                     continue
-            if hasattr(field, 'saveas') and field.saveas in status.helptexts:
+            if field.number in status.helptexts:
                 helptext_start = '<a style="cursor:pointer;color:#408E30" data-container="body" data-toggle="popover" data-placement="bottom" data-content="' + noquote(unicode(status.helptexts[field.number])) + '">' 
                 helptext_end = '</a>'
             else:
