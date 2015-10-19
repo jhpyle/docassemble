@@ -949,7 +949,7 @@ class Question:
                     the_markdown += "---\n" + yaml.dump(metadata) + "\n...\n"
                 the_markdown += attachment['content'].text(user_dict)
                 if emoji_match.search(the_markdown) and len(self.interview.images) > 0:
-                    the_markdown = emoji_match.sub((lambda x: docassemble.base.filter.emoji_insert(x.group(1), self.interview.images)), the_markdown)
+                    the_markdown = emoji_match.sub((lambda x: docassemble.base.filter.emoji_insert(x.group(1), images=self.interview.images)), the_markdown)
                 result['markdown'][doc_format] = the_markdown
                 converter = Pandoc()
                 converter.output_format = doc_format
