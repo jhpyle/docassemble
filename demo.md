@@ -60,10 +60,9 @@ interview help:
     see more information about the word.  You can try this out by here
     to find out more about rhododendron plants.
 comment: |
-  An "interview help" block adds text to the "Help" page of every
-  question in the interview.  If the question has help text of its
-  own, the "interview help" will appear after the question-specific
-  help.
+  An "interview help" block adds text to the "Help" page of every question in the
+  interview.  If the question has help text of its own, the "interview help" will
+  appear after the question-specific help.
 ---
 include:
   - basic-questions.yml
@@ -113,12 +112,18 @@ comment: |
 ---
 objects:
   - village_idiot: Individual
+  - role_change: RoleChangeTracker
 comment: |
   In a question below we will refer to the variable "village_idiot."
   This "objects" block creates the variable "village_idiot" and
   specifies that it is an object of type "Individual."  It is
   important to define objects early on in your interview, before any
   "mandatory" code blocks.
+---
+code: |
+  advocate.name.first = "John"
+  advocate.name.last = "Smith"
+  advocate.email = "jpyle@philalegal.org"
 ---
 terms:
   rhododendron: |
@@ -144,24 +149,73 @@ comment: |
   turn them into hyperlinks wherever they appear.  When the user
   clicks on the hyperlink, a popup appears with the word's definition.
 ---
+event: role_event
+question: You are done for now.
+subquestion: |
+  % if 'advocate' in role_needed:
+  An advocate needs to review your answers before you can proceed.
+
+  Please remember the following link and come back to it when you receive notice to do so:
+
+  [${ interview_url() }](${ interview_url() })  
+  % else:
+  Thanks, the client needs to resume the interview now.
+  % endif
+
+  % if role_change.send_email(role_needed, advocate={'to': advocate, 'email': role_event_email_to_advocate}, client={'to': client, 'email': role_event_email_to_client}):
+  An e-mail has been sent.
+  % endif
+decoration: exit
+buttons:
+  - Exit: leave
+---
+template: role_event_email_to_advocate
+subject: |
+  Client interview waiting for your attention: ${ client }
+content: |
+  A client, ${ client }, has partly finished an interview.
+  ${ client.pronoun_subjective(capitalize=True, thirdperson=True) }
+  needs you to review
+  ${ client.pronoun_possessive('answers', thirdperson=True) }
+  so that ${ client.pronoun_subjective(thirdperson=True) } can obtain
+  ${ client.pronoun_possessive('advice letter', thirdperson=True) }
+  and ${ pleading.title }.
+
+  Please go to [the interview](${ interview_url() }) as soon as possible.
+
+  Thank you!
+---
+template: role_event_email_to_client
+subject: |
+  Your interview answers have been reviewed
+content: |
+  ${ client.salutation() } ${ client.name.last }:
+  
+  An advocate has finished reviewing your answers.
+
+  Please go to [${ interview_url() }](${ interview_url() })
+  to continue the interview.
+
+  Thank you for your patience.
+---
 mandatory: True
 code: |
   if user_understands_no_attorney_client_relationship == "understands":
-    need(user_done)
+    need(client_done)
   else:
-    need(user_kicked_out)
+    need(client_kicked_out)
 comment: |
   This is the code that directs the flow of the interview.  It
   indicates to the system that we need to get to the endpoint
-  "user_done."  There is a question below that "sets" the variable
-  "user_done."  Docassemble will ask all the questions necessary to
+  "client_done."  There is a question below that "sets" the variable
+  "client_done."  Docassemble will ask all the questions necessary to
   get the information need to pose that that final question to the
   user.
 
   However, if the answer to the question
   user_understands_no_attorney_client_relationship is not
   "understands," the interview will looks for a question that sets the
-  variable "user_kicked_out."
+  variable "client_kicked_out."
   
   "Mandatory" sections like this one are evaluated in the order they appear
   in the question file.
@@ -182,26 +236,38 @@ decoration: exit
 buttons:
   - Exit: exit
   - Restart: restart
-sets: user_kicked_out
+sets: client_kicked_out
 comment: |
   If docassemble is configured to show a progress bar, the progress bar will
   be set to 100% on this question, which is an endpoint question (since the only
   options are exiting or restarting).
 ---
+generic object: Individual
 question: |
-  Do you have a support order?
+  ${ x.do_question('have', capitalize=True) } a support order?
 subquestion: |
   If you aren't sure, look through your papers for a document that looks
   something like this.  If this document is signed by the judge, then
   you have a support order.
     
   [IMAGE docassemble.demo:sample-support-order.jpg, 100%]
-yesno: user.has_support_order
+yesno: x.has_support_order
 comment: |
   This question illustrates how you can include images in your questions.
   The file sample-support-order.jpg is stored in the docassemble.demo package
   in the subdirectory docassemble/demo/data/static.  This is how you refer to
   a "static" file that exists within a docassemble subpackage.
+---
+question: Is this reason a sound one?
+subquestion: |
+  The client, ${ client }, proposed the following reason for winning:
+  
+  > ${ explanation }
+
+  Is this a sound reason for why the judge should rule in the client's
+  favor in this ${ law_category } case?
+yesno: explanation_is_sound
+role: advocate
 ---
 question: What form do you want to prepare?
 decoration: document
@@ -224,7 +290,7 @@ buttons:
     image: coins
 comment: |
   This is an example of a multiple-choice question that runs Python
-  code (as opposed to simply setting the value of a single variable.
+  code (as opposed to simply setting the value of a single variable).
   Questions that run Python code need to include a list of the
   variables that the code "sets," because docassemble is not able to
   determine these variables automatically, as it usually can.
@@ -238,8 +304,8 @@ comment: |
   not be a plaintiff.
 code: |
   case.plaintiff.gathering = True
-  if user_is_plaintiff and user not in case.plaintiff:
-    case.plaintiff.add(user)
+  if client.is_plaintiff and client not in case.plaintiff:
+    case.plaintiff.add(client)
   if case.plaintiff.number_gathered() == 0:
     newplaintiff = case.plaintiff.addObject(Individual)
   while case.plaintiff.there_is_another:
@@ -253,8 +319,8 @@ comment: |
   is not already a plaintiff.  Then it will ask for the names of the defendants.
 code: |
   case.defendant.gathering = True
-  if user not in case.defendant and not user_is_plaintiff and user_is_defendant:
-    case.defendant.add(user)
+  if client not in case.defendant and not client.is_plaintiff and client.is_defendant:
+    case.defendant.add(client)
   if case.defendant.number_gathered() == 0:
     newdefendant = case.defendant.addObject(Individual)
   while case.defendant.there_is_another:
@@ -266,31 +332,31 @@ code: |
 comment: |
   This code gathers the names of the children of all of the parties.
 code: |
-  people = [user]
+  people = [client]
   people.extend(case.parties())
   for indiv in people:
     indiv.child.gathered
 ---
 comment: |
   This is an example of how docassemble can serve as an "expert system."
-  The variable "user_has_standing" (a legal concept) can be set using simple
+  The variable "client_has_standing" (a legal concept) can be set using simple
   logical expressions in Python.
 code: |
-  if user_has_injury and injury_in_jurisdiction and statute_of_limitations_ok:
-    user_has_standing = True
+  if client_has_injury and injury_in_jurisdiction and statute_of_limitations_ok:
+    client_has_standing = True
   else:
-    user_has_standing = False
+    client_has_standing = False
 ---
 question: Were you injured?
 decoration: injury
-yesno: user_has_injury
+yesno: client_has_injury
 help: |
   An injury can take many forms.  It can be a physical injury or a
   purely financial injury.
 progress: 50
 ---
 question: |
-  I understand that you live in ${ user.address.city }.
+  I understand that you live in ${ client.address.city }.
   Were you injured in ${ jurisdiction.state }?
 yesno: injury_in_jurisdiction
 ---
@@ -300,21 +366,22 @@ fields:
   - Date of Injury: injury_date
     datatype: date
 ---
+generic object: Individual
 comment: |
-  This code gathers information about the user's income and assets if necessary.
+  This code gathers information about a person's income and assets if necessary.
 code: |
-  user.asset.gathering = True
-  user.income.gathering = True
+  x.asset.gathering = True
+  x.income.gathering = True
   assets_to_ask_about = ['checking', 'savings', 'stocksbonds']
   income_to_ask_about = ['employment', 'selfemployment', 'ssi', 'tanf']
   for asset_item in assets_to_ask_about:
-    user.asset.new(asset_item, period=12)
+    x.asset.new(asset_item, period=12)
   for income_item in income_to_ask_about:
-    user.income.new(income_item, period=12)
-  user.asset.gathering = False
-  user.income.gathering = False
-  user.asset.gathered = True
-  user.income.gathered = True
+    x.income.new(income_item, period=12)
+  x.asset.gathering = False
+  x.income.gathering = False
+  x.asset.gathered = True
+  x.income.gathered = True
 ---
 question: |
   Why do you think you deserve to win this case?
@@ -325,9 +392,9 @@ fields:
       I should win because . . .
 ---
 code: |
-  if user.address.address and retry_address:
+  if client.address.address and retry_address:
     retry_address = False
-    force_ask('user.address.address')
+    force_ask('client.address.address')
 comment: |
   This is an example of how the "force_ask" function can be used to
   ask a question that has already been asked.
@@ -366,11 +433,21 @@ question: |
   Where ${ x.do_question('live') }?
 fields:
   - Type of home: x.address.type
+    datatype: radio
+    shuffle: true
     choices:
       - Apartment
       - Leased house
       - Owned house
       - Mobile home
+  - Amenities: x.address.quality
+    datatype: checkboxes
+    code: |
+      {'chimney': 'Chimney', 'stove': 'Stove'}
+  - note: |
+      On the following line, you should write something **profound**
+      about ${ client }'s home:
+  - no label: x.address.profound_thing
   - Address: x.address.address
   - Unit: x.address.unit
     required: false
@@ -389,25 +466,27 @@ comment: |
   U.S. states from a helpful Python module called "us."  Note that we
   imported this module earlier.
 ---
+generic object: Individual
 question: Please upload one or more pictures.
 decoration: picture
 fields:
-  - A test file: user.picture
+  - A test file: x.picture
     datatype: files
 comment: |
   You can accept files from users by using the datatype of "file."
 ---
 comment: |
   This is how you can display a picture that a user has uploaded.
+generic object: Individual
 question: |
-  % if user.picture.number() > 1:
+  % if x.picture.number() > 1:
   Are these the pictures you uploaded?
   % else:
   Is this the picture you uploaded?
   % endif
 subquestion: |  
-  ${ user.picture.show() }
-yesno: user.picture_verified
+  ${ x.picture.show() }
+yesno: x.picture_verified
 ---
 comment: |
   docassemble uses the Mako templating system to expand variables
@@ -440,12 +519,12 @@ comment: |
   docassemble to gather the information up front, before it starts
   processing the question and its attachments.  This helps to direct
   the order of the questions in a more sensible fashion.
-sets: user_done
+sets: client_done
 need:
   - case.plaintiff.gathered
   - case.defendant.gathered
 question: |
-  % if user_has_standing:
+  % if client_has_standing:
     Congratulations!  You have a valid claim.
   % else:
     Sorry, you do not have a valid claim.
@@ -457,22 +536,24 @@ buttons:
   - Exit: exit
   - Restart: restart
 attachments:
-  - name: Advice Letter for ${ user }
+  - name: Advice Letter for ${ client }
+    description:
+      This is a *very* helpful advice letter.
     content: |
       ${ today() }
 
-      ${ user.address_block() }
+      ${ client.address_block() }
 
-      Dear ${ user.salutation() } ${ user.name.last }:
+      Dear ${ client.salutation() } ${ client.name.last }:
 
-      Your marital status is ${ user.marital_status.lower() }.
-      % if user.marital_status == 'Single':
+      Your marital status is ${ client.marital_status.lower() }.
+      % if client.marital_status == 'Single':
         Perhaps you should marry ${ village_idiot }.
       % endif
-      Your annual income is ${ currency(user.income.total()) }
-      and the value of all you own is ${ currency(user.asset.total()) }.
+      Your annual income is ${ currency(client.income.total()) }
+      and the value of all you own is ${ currency(client.asset.total()) }.
 
-      % if user_has_standing:
+      % if client_has_standing:
         You have a valid claim.
       % else:
         Sorry, you do not have a valid claim.
@@ -545,29 +626,29 @@ attachments:
       John Smith, Attorney
     metadata:
       FirstHeaderRight: "Philadelphia Legal Assistance [NEWLINE] 718 Arch Street, Suite 300N [NEWLINE] Philadelphia, PA 19106"
-      HeaderLeft: "${ user } [NEWLINE] ${ today() } [NEWLINE] Page [PAGENUM]"
+      HeaderLeft: "${ client } [NEWLINE] ${ today() } [NEWLINE] Page [PAGENUM]"
       HeaderLines: "3"
       SingleSpacing: true
-    filename: Advice_letter_${ space_to_underscore(user) }
+    filename: Advice_letter_${ space_to_underscore(client) }
   - name: ${ pleading.title }
-    defs:
+    usedefs:
       - kid_defs
     content: |
       ${ pleading.caption() }
 
-      I am the ${ case.role_of(user) } in this case.
-      % if user.child.number() > 0:
-      I have ${ user.child.number_as_word() } ${ user.child.as_noun() }:
+      I am the ${ case.role_of(client) } in this case.
+      % if client.child.number() > 0:
+      I have ${ client.child.number_as_word() } ${ client.child.as_noun() }:
 
-      % for child in user.child:
+      % for child in client.child:
       #. ${ child }
       % endfor
 
-      % for child in user.child:
+      % for child in client.child:
       ${ describe_as_adorable(child) }
       % endfor
-      Aren't children such a blessing?
-      % if user.has_support_order:
+      Aren't children :baby: such a blessing?
+      % if client.has_support_order:
       I already have a support order.
       % endif
       % endif
@@ -594,10 +675,10 @@ attachments:
       % endfor
       
       This petition should be granted.  ${ explanation }
-      % if user.picture_verified:
+      % if client.picture_verified:
       Look how cute I am:
 
-      ${ user.picture.show() }
+      [FLUSHLEFT] ${ client.picture.show() }
       % endif
 
       Chambray art party craft beer pork belly health goth, locavore
@@ -615,13 +696,13 @@ attachments:
 
       [FLUSHLEFT] Respectfully submitted,
 
-      % if user.signature_verified:
-      [FLUSHLEFT] ${ user.signature.show(width='2in') }
+      % if client.signature_verified:
+      [FLUSHLEFT] ${ client.signature.show(width='2in') }
       % else:
       [FLUSHLEFT] ${ blank_signature }
       % endif
 
-      [FLUSHLEFT] ${ user }, ${ titlecase(case.role_of(user)) }
+      [FLUSHLEFT] ${ client }, ${ titlecase(case.role_of(client)) }
     metadata:
       FirstFooterCenter: "[HYPHEN] [PAGENUM] [HYPHEN]"
       FooterCenter: "[HYPHEN] [PAGENUM] [HYPHEN]"
@@ -629,10 +710,15 @@ attachments:
       FooterLeft: "${ pleading.title }"
     filename: ${ space_to_underscore(pleading.title) }
 help: |
-  This is the end of the interview, ${ user }.  You can exit or restart.
+  This is the end of the interview, ${ client }.  You can exit or restart.
 
   I hope you enjoyed this interview.
 progress: 100
+---
+question: |
+  What is the specific airspeed velocity?
+fields:
+  - Velocity: airspeed_velocity
 ...
 {% endhighlight %}
 
@@ -644,6 +730,7 @@ defined in the `basic-questions.yaml` file.  Here is an annotated
 guide to how this file works.
 
 {% highlight yaml %}
+---
 metadata:
   description: >-
     These are basic questions common to a lot of different scenarios
@@ -662,10 +749,39 @@ comment: >-
   basic building blocks of docassemble variables are defined in the
   docassemble.legal module.
 ---
+default role: client
+code: |
+  if current_info['user']['is_authenticated'] and 'advocate' in current_info['user']['roles']:
+    user = advocate
+    role = 'advocate'
+  else:
+    user = client
+    role = 'client'
+  update_info(user, role, current_info)
+---
+error: role_event
+question: You are done for now.
+subquestion: |
+  % if 'advocate' in role_needed:
+    An advocate needs to review your answers before you can proceed.
+
+    Please remember the following link and come back to it when you receive notice to do so:
+
+    [${ interview_url() }](${ interview_url() })
+    
+  % else:
+    Thanks, the client needs to resume the interview now.
+  % endif
+
+decoration: exit
+buttons:
+  - Exit: leave
+---
 objects:
   - case: Case
-  - user: Individual
+  - client: Individual
   - spouse: Individual
+  - advocate: Individual
   - pleading: LegalFiling
   - jurisdiction: Jurisdiction
   - court: Court
@@ -700,23 +816,34 @@ image sets:
       parentchild: man32.svg
       coins: coins36.svg
       exit: open203.svg
+      man: silhouette21.svg
+      person: silhouette21.svg
+      woman: women13.svg
+      girl: girl4.svg
+      male: male244.svg
+      female: female243.svg
+      map: map32.svg
 comment: |
   Here we pre-define some icon files so that we can easily refer to
   them later.  These files are located in the docassemble.base package
   in the subdirectory docassemble/base/data/static.
 ---
-question: Are you the defendant?
-yesno: user_is_defendant
+generic object: Individual
+question: |
+  ${ x.is_are_you(capitalize=True) } a defendant in this case?
+yesno: x.is_defendant
 comment: |
   After defining the basic variables, we define some standard questions.
 ---
-field: user.marital_status
-question: How would you describe yourself?
+generic object: Individual
+field: x.marital_status
+question: |
+  What is ${ x.possessive('marital status') }?
 choices:
-  - Married
-  - Single
-  - Divorced
-  - Separated
+  - Married: Married
+  - Single: Single
+  - "**Divorced**": Divorced
+  - "*Separated*": Separated
 ---
 field: user_understands_how_to_use_signature_feature
 question: Instructions for signing your name
@@ -728,16 +855,17 @@ subquestion: |
 buttons:
   - Continue: continue
 ---
+generic object: Individual
 comment: |
   docassemble can collect signatures from users, who can write their
   signature with their finger on a touchscreen device, or use a mouse
   or trackpad.  The signatures can be added to documents.
 question: |
   Please sign your name below.
-signature: user.signature
+signature: x.signature
 need: user_understands_how_to_use_signature_feature
 under: |
-  ${ user.name }
+  ${ x.name }
 ---
 template: blank_signature
 content: |
@@ -747,26 +875,31 @@ template: empty_signature
 content: |
   \_\_\_[Your signature here]\_\_\_
 ---
+generic object: Individual
 question: |
-  Is this your signature?
-subquestion: |  
-  ${ user.signature.show() }
+  Is this ${ x.possessive('signature') }?
+subquestion: |
+  ${ x.signature.show() }
 sets:
-  - user.signature_verified
+  - x.signature_verified
 buttons:
   - "Yes":
+      generic object: Individual
       code: |
-        user.signature_verified = True
+        x.signature_verified = True
   - "No":
+      generic object: Individual
       code: |
-        user.signature_verified = False
+        x.signature_verified = False
   - "Let me try again":
+      generic object: Individual
       code: |
         answers = dict()
-        remove('user.signature')
+        del x.signature
 ---
-question: Are you a citizen of the United States?
-yesno: user.is_citizen
+generic object: Individual
+question: ${ x.is_are_you(capitalize=True) } a citizen of the United States?
+yesno: x.is_citizen
 ---
 field: user_understands_no_attorney_client_relationship
 question: >-
@@ -782,6 +915,11 @@ comment: |
   Also, the example below shows how you can use Python code to
   generate the selections of multiple-choice question.  The code is
   evaluated at the time the question is asked.
+---
+question: |
+  What is the basic airspeed velocity?
+fields:
+  - Velocity: airspeed_velocity
 ---
 generic object: Individual
 question: >-
@@ -815,8 +953,8 @@ question: >-
   What is ${ x.possessive('gender') }?
 field: x.gender
 choices:
-  - Male: male
-  - Female: female
+  - "Male :male:": male
+  - "Female :female:": female
   - Other: other
 comment: |
   By using "generic" questions, you can write a single question that
@@ -926,13 +1064,15 @@ question: |
   ${ x.as_singular_noun() }?
 yesno: x.there_is_another
 ---
-question: Are you a plaintiff in this case?
+generic object: Individual
+question: |
+  ${ x.is_are_you(capitalize=True) } a plaintiff in this case?
 subquestion: |
   A "plaintiff" is a person who starts a case by filing a lawsuit
   against a person called a "defendant."  Plaintiffs and defendants
   are the "parties" in a case.
 decoration: scalesofjustice
-yesno: user_is_plaintiff
+yesno: x.is_plaintiff
 ---
 comment: |
   Here are some standard questions that ask about a person's income
@@ -942,7 +1082,7 @@ generic object: Individual
 question: How much ${ x.do_question("make") } from employment?
 decoration: bills
 fields:
-  - Income: x.income.employment.value
+  - Employment Income: x.income.employment.value
     datatype: currency
   - "": x.income.employment.period
     code: |
@@ -952,7 +1092,7 @@ generic object: Individual
 question: How much ${ x.do_question("make") } from self-employment?
 decoration: bills
 fields:
-  - Income: x.income.selfemployment.value
+  - Self-employment Income: x.income.selfemployment.value
     datatype: currency
   - "": x.income.selfemployment.period
     code: |
@@ -962,7 +1102,7 @@ generic object: Individual
 question: How much ${ x.do_question("make") } from SSI?
 decoration: bills
 fields:
-  - Income: x.income.ssi.value
+  - SSI Income: x.income.ssi.value
     datatype: currency
   - "": x.income.ssi.period
     code: |
@@ -972,7 +1112,7 @@ generic object: Individual
 question: How much ${ x.do_question("make") } from cash assistance (Temporary Assistance to Needy Families or TANF)?
 decoration: bills
 fields:
-  - Income: x.income.tanf.value
+  - TANF Income: x.income.tanf.value
     datatype: currency
   - "": x.income.tanf.period
     code: |
@@ -1004,26 +1144,25 @@ question: What kinds of income ${ x.do_question("have") }?
 decoration: bills
 fields:
   - Employment: x.income.employment.exists
-    datatype: yesno
+    datatype: yesnowide
   - Self-employment: x.income.selfemployment.exists
-    datatype: yesno
+    datatype: yesnowide
   - SSI: x.income.ssi.exists
-    datatype: yesno
+    datatype: yesnowide
   - Cash assistance: x.income.tanf.exists
-    datatype: yesno
+    datatype: yesnowide
 ---
 generic object: Individual
 question: What kinds of assets ${ x.do_question("own") }?
 decoration: piggybank
 fields:
   - Checking Account: x.asset.checking.exists
-    datatype: yesno
+    datatype: yesnowide
   - Savings Account: x.asset.savings.exists
-    datatype: yesno
+    datatype: yesnowide
   - Stocks and Bonds: x.asset.stocksbonds.exists
-    datatype: yesno
-...
-{% endhighlight %}
+    datatype: yesnowide
+...{% endhighlight %}
 
 [Bootstrap]: https://en.wikipedia.org/wiki/Bootstrap_%28front-end_framework%29
 [YAML]: https://en.wikipedia.org/wiki/YAML
