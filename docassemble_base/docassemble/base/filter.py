@@ -127,6 +127,7 @@ def rtf_filter(text, metadata=dict()):
     text = re.sub(r'{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 *\\par}', r'', text)
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
     text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', rtf_caption_table, text)
+    text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
     text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
     text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_as_rtf, text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', rtf_caption_table, text)
@@ -180,6 +181,7 @@ def rtf_filter(text, metadata=dict()):
 def pdf_filter(text, metadata=dict()):
     text = text + "\n\n"
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
+    text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', emoji_include_string, text)
     text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_include_string, text)
     text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_include_string, text)
     text = re.sub(r'\\clearpage *\\clearpage', r'\\clearpage', text)
@@ -267,7 +269,9 @@ def image_as_rtf(match):
     if width == 'full':
         width_supplied = False
     file_reference = match.group(1)
-    file_info = file_finder(file_reference)
+    file_info = file_finder(file_reference, convert={'svg': 'png'})
+    if 'path' not in file_info:
+        return ''
     if 'width' in file_info:
         return rtf_image(file_info, width, not width_supplied)
     elif file_info['extension'] == 'pdf':
@@ -296,8 +300,6 @@ def image_as_rtf(match):
         return('')
 
 def rtf_image(file_info, width, insert_page_breaks):
-    if file_info['extension'] == 'svg':
-        return ''
     pixels = pixels_in(width)
     if pixels > 0 and file_info['width'] > 0:
         scale = float(pixels)/float(file_info['width'])
@@ -314,17 +316,11 @@ def rtf_image(file_info, width, insert_page_breaks):
         #logmessage("scale is " + str(scale) + "\n")
         wtwips = int(scale*float(file_info['width'])*20.0)
         htwips = int(scale*float(file_info['height'])*20.0)
-        if extension_match.search(file_info['path']):
-            image = Image( file_info['path'] )
-        else:
-            image = Image( file_info['path'] + '.' + file_info['extension'] )
+        image = Image( file_info['fullpath'] )
         image.Data = re.sub(r'\\picwgoal([0-9]+)', r'\\picwgoal' + str(wtwips), image.Data)
         image.Data = re.sub(r'\\pichgoal([0-9]+)', r'\\pichgoal' + str(htwips), image.Data)
     else:
-        if extension_match.search(file_info['path']):
-            image = Image( file_info['path'] )
-        else:
-            image = Image( file_info['path'] + '.' + file_info['extension'] )
+        image = Image( file_info['fullpath'] )
     if insert_page_breaks:
         content = '\\page '
     else:
@@ -390,7 +386,7 @@ def convert_pixels(match):
     pixels = match.group(1)
     return (str(int(pixels)/72.0) + "in")
 
-def image_include_string(match):
+def image_include_string(match, emoji=False):
     file_reference = match.group(1)
     try:
         width = match.group(2)
@@ -399,18 +395,24 @@ def image_include_string(match):
             width = '\\textwidth'
     except:
         width = DEFAULT_IMAGE_WIDTH
-    file_info = file_finder(file_reference)
+    file_info = file_finder(file_reference, convert={'svg': 'eps'})
     if 'path' in file_info:
         if 'extension' in file_info:
             if file_info['extension'] in ['png', 'jpg', 'gif', 'pdf', 'eps']:
                 if file_info['extension'] == 'pdf':
                     output = '\\includepdf[pages={-}]{' + file_info['path'] + '.pdf}'
                 else:
-                    output = '\\mbox{\\includegraphics[width=' + width + ']{' + file_info['path'] + '}}'
+                    if emoji:
+                        output = '\\raisebox{-.6\\dp\\strutbox}{\\mbox{\\includegraphics[width=' + width + ']{' + file_info['path'] + '}}}'
+                    else:
+                        output = '\\mbox{\\includegraphics[width=' + width + ']{' + file_info['path'] + '}}'
                     if width == '\\textwidth':
                         output = '\\clearpage ' + output + '\\clearpage '
                 return(output)
     return('[invalid graphics reference]')
+
+def emoji_include_string(match):
+    return image_include_string(match, emoji=True)
 
 def rtf_caption_table(match):
     table_text = """\\trowd \\irow0\\irowband0\\lastrow \\ltrrow\\ts24\\trgaph108\\trleft0\\trbrdrt\\brdrs\\brdrw10 \\trbrdrl\\brdrs\\brdrw10 \\trbrdrb\\brdrs\\brdrw10 \\trbrdrr\\brdrs\\brdrw10 \\trbrdrh\\brdrs\\brdrw10 \\trbrdrv\\brdrs\\brdrw10 
@@ -443,7 +445,7 @@ def emoji_insert(text, status=None, images=None):
     if text in images:
         if status is not None and images[text].attribution is not None:
             status.attributions.add(images[text].attribution)
-        return("[IMAGE " + images[text].get_reference() + ', 1em]')
+        return("[EMOJI " + images[text].get_reference() + ', 1.2em]')
     else:
         return(":" + str(text) + ":")
 

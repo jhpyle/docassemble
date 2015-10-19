@@ -195,6 +195,7 @@ def get_info_from_file_number(file_number):
         result['path'] = get_path_from_file_number(file_number)
         result['filename'] = d[0]
         result['extension'], result['mimetype'] = get_ext_and_mimetype(result['filename'])
+        result['fullpath'] = result['path'] + '.' + result['extension']
         break
     conn.commit()
     filename = result['path'] + '.' + result['extension']
@@ -223,17 +224,37 @@ def add_info_about_file(filename, result):
                 result['height'] = float(dimen[3]) - float(dimen[1])
     return
 
-def get_info_from_file_reference(file_reference):
+def get_info_from_file_reference(file_reference, **kwargs):
     #sys.stderr.write('file reference is ' + str(file_reference) + "\n")
     if re.match('[0-9]+', file_reference):
         return(get_info_from_file_number(file_reference))
     result = dict()
-    result['path'] = docassemble.base.util.static_filename_path(file_reference)
-    #sys.stderr.write("path is " + str(result['path']) + "\n")
-    if result['path'] is not None and os.path.isfile(result['path']):
-        result['filename'] = os.path.basename(result['path'])
-        result['extension'], result['mimetype'] = get_ext_and_mimetype(result['path'])
-        add_info_about_file(result['path'], result)
+    if 'convert' in kwargs:
+        convert = kwargs['convert']
+    else:
+        convert = None
+    result['fullpath'] = docassemble.base.util.static_filename_path(file_reference)
+    logmessage("path is " + str(result['fullpath']))
+    if result['fullpath'] is not None and os.path.isfile(result['fullpath']):
+        result['filename'] = os.path.basename(result['fullpath'])
+        ext_type, result['mimetype'] = get_ext_and_mimetype(result['fullpath'])
+        path_parts = os.path.splitext(result['fullpath'])
+        result['path'] = path_parts[0]
+        result['extension'] = path_parts[1].lower()
+        result['extension'] = re.sub(r'\.', '', result['extension'])
+        logmessage("Extension is " + result['extension'])
+        if convert is not None and result['extension'] in convert:
+            logmessage("Converting...")
+            if os.path.isfile(result['path'] + '.' + convert[result['extension']]):
+                logmessage("Found conversion file ")
+                result['extension'] = convert[result['extension']]
+                result['fullpath'] = result['path'] + '.' + result['extension']
+                ext_type, result['mimetype'] = get_ext_and_mimetype(result['fullpath'])
+            else:
+                logmessage("Did not find file " + result['path'] + '.' + convert[result['extension']])
+                return dict()
+        logmessage("Full path is " + result['fullpath'])
+        add_info_about_file(result['fullpath'], result)
     else:
         logmessage("File reference " + str(file_reference) + " DID NOT EXIST.")
     return(result)
