@@ -264,7 +264,7 @@ def as_html(status, extra_scripts, url_for, debug):
                         random.shuffle(pairlist)
                     for pair in pairlist:
                         if pair[0] is not None:
-                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + str(status.question.fields[0].saveas) + '" value="' + str(pair[0]) + '"> ' + markdown_to_html(pair[1], status=status, trim=True) + '</button> '
+                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + str(status.question.fields[0].saveas) + '" value="' + str(pair[0]) + '"> ' + markdown_to_html(pair[1], status=status, trim=True, do_terms=False) + '</button> '
                         else:
                             output += markdown_to_html(pair[1], status=status)
                 else:
@@ -280,7 +280,7 @@ def as_html(status, extra_scripts, url_for, debug):
                         for key in choice:
                             if key == 'image':
                                 continue
-                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + str(choice[key]) + '"> ' + the_icon + markdown_to_html(key, status=status, trim=True) + '</button> '
+                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + str(choice[key]) + '"> ' + the_icon + markdown_to_html(key, status=status, trim=True, do_terms=False) + '</button> '
             else:
                 indexno = 0
                 for choice in status.question.fields[0].choices:
@@ -300,7 +300,7 @@ def as_html(status, extra_scripts, url_for, debug):
                                 btn_class = ' btn-warning'
                             elif choice[key].question_type == "exit":
                                 btn_class = ' btn-danger'
-                        output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="multiple_choice" value="' + str(indexno) + '"> ' + the_icon + markdown_to_html(key, status=status, trim=True) + '</button> '
+                        output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="multiple_choice" value="' + str(indexno) + '"> ' + the_icon + markdown_to_html(key, status=status, trim=True, do_terms=False) + '</button> '
                     indexno += 1
             output += '</div>'
         output += question_name_tag(status.question)
@@ -473,7 +473,7 @@ def input_for(status, field, wide=False):
             output += '<option name="' + field.saveas + '" id="' + field.saveas + '" value="">' + word('Select...') + '</option>'
             for pair in pairlist:
                 if pair[0] is not None:
-                    formatted_item = markdown_to_html(pair[1], status=status, trim=True)
+                    formatted_item = markdown_to_html(pair[1], status=status, trim=True, do_terms=False)
                     output += '<option value="' + unicode(pair[0]) + '"'
                     if defaultvalue is not None and unicode(pair[0]) == defaultvalue:
                         output += 'selected="selected"'

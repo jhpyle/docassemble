@@ -434,8 +434,8 @@ def emoji_insert(text, status):
     else:
         return(":" + str(text) + ":")
 
-def markdown_to_html(a, trim=False, pclass=None, status=None, use_pandoc=False, escape=False):
-    if status is not None:
+def markdown_to_html(a, trim=False, pclass=None, status=None, use_pandoc=False, escape=False, do_terms=True):
+    if do_terms and status is not None:
         if len(status.question.interview.terms) > 0:
             for term in status.question.interview.terms:
                 #logmessage("Searching for term " + term + "\n")
@@ -453,7 +453,7 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, use_pandoc=False, 
     else:
         result = markdown.markdown(a, extensions=[SmartypantsExt(configs=dict())], output_format='html5')
     result = re.sub('<a href', '<a target="_blank" href', result)
-    if status is not None and len(status.question.interview.terms) > 0 is not None and term_start.search(result):
+    if do_terms and status is not None and len(status.question.interview.terms) > 0 is not None and term_start.search(result):
         #logmessage("Found a term\n")
         result = term_match.sub((lambda x: add_terms(x.group(1), status.question.interview.terms)), result)
     if trim:

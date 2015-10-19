@@ -345,7 +345,7 @@ code: |
 question: |
   Why do you think you deserve to win this case?
 fields:
-  - "Reason you should win": explanation
+  - no label: explanation
     datatype: area
     hint: |
       I should win because . . .
