@@ -424,7 +424,7 @@ def emoji_html(text, status=None, images=None):
     if text in images:
         if status is not None and images[text].attribution is not None:
             status.attributions.add(images[text].attribution)
-        return("[EMOJI " + status.question.interview.images[text].get_reference() + ', 1em]')
+        return("[EMOJI " + images[text].get_reference() + ', 1em]')
     else:
         return(":" + str(text) + ":")
 
