@@ -19,6 +19,7 @@ lt_match = re.compile(r'<')
 gt_match = re.compile(r'>')
 amp_match = re.compile(r'&')
 emoji_match = re.compile(r':([^ ]+):')
+extension_match = re.compile(r'\.[a-z]+$')
 
 def set_default_page_width(width):
     global DEFAULT_PAGE_WIDTH
@@ -311,11 +312,17 @@ def rtf_image(file_info, width, insert_page_breaks):
         #logmessage("scale is " + str(scale) + "\n")
         wtwips = int(scale*float(file_info['width'])*20.0)
         htwips = int(scale*float(file_info['height'])*20.0)
-        image = Image( file_info['path'] + '.' + file_info['extension'] )
+        if extension_match.search(file_info['path']):
+            image = Image( file_info['path'] )
+        else:
+            image = Image( file_info['path'] + '.' + file_info['extension'] )
         image.Data = re.sub(r'\\picwgoal([0-9]+)', r'\\picwgoal' + str(wtwips), image.Data)
         image.Data = re.sub(r'\\pichgoal([0-9]+)', r'\\pichgoal' + str(htwips), image.Data)
     else:
-        image = Image( file_info['path'] + '.' + file_info['extension'] )
+        if extension_match.search(file_info['path']):
+            image = Image( file_info['path'] )
+        else:
+            image = Image( file_info['path'] + '.' + file_info['extension'] )
     if insert_page_breaks:
         content = '\\page '
     else:
