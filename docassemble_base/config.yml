@@ -21,7 +21,7 @@ secretkey: 28asflwjeifwlfjsd2fejfiefw3g4o87
 appname: docassemble
 brandname: demo
 uploads: /usr/share/docassemble/files
-webapp: /var/lib/docassemble/flask.wsgi
+webapp: /var/lib/docassemble/docassemble.wsgi
 mail:
   default_sender: '"Administrator" <no-reply@example.com>'
 admin_address: '"Administrator" <admin@example.com>'

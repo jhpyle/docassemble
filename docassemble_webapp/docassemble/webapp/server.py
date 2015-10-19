@@ -1446,7 +1446,7 @@ def get_ext_and_mimetype(filename):
     return(extension, mimetype)
 
 def restart_wsgi():
-    wsgi_file = daconfig.get('webapp', '/var/lib/docassemble/flask.wsgi')
+    wsgi_file = daconfig.get('webapp', '/var/lib/docassemble/docassemble.wsgi')
     if os.path.isfile(wsgi_file):
         with open(wsgi_file, 'a'):
             os.utime(wsgi_file, None)

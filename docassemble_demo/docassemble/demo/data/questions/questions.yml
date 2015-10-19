@@ -249,7 +249,7 @@ buttons:
     image: coins
 comment: |
   This is an example of a multiple-choice question that runs Python
-  code (as opposed to simply setting the value of a single variable.
+  code (as opposed to simply setting the value of a single variable).
   Questions that run Python code need to include a list of the
   variables that the code "sets," because docassemble is not able to
   determine these variables automatically, as it usually can.

@@ -12,8 +12,8 @@ RUN pip install --upgrade wtforms werkzeug rauth simplekv Flask-KVSession flask-
 RUN mkdir -p /var/www/.local
 RUN chown www-data.www-data /var/www/.local
 RUN mkdir -p /var/lib/docassemble/webapp
-COPY docassemble_webapp/flask.wsgi /var/lib/docassemble/webapp/
-RUN chown www-data.www-data /var/lib/docassemble/webapp/flask.wsgi
+COPY docassemble_webapp/docassemble.wsgi /var/lib/docassemble/webapp/
+RUN chown www-data.www-data /var/lib/docassemble/webapp/docassemble.wsgi
 RUN mkdir -p /usr/share/docassemble/files
 RUN chown www-data.www-data /usr/share/docassemble/files
 RUN mkdir -p /etc/docassemble
