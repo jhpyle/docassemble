@@ -418,10 +418,12 @@ def rtf_caption_table(match):
     table_text = re.sub(r'\\rtlch\\fcs1 \\af0 \\ltrch\\fcs0', r'\\rtlch\\fcs1 \\af0 \\ltrch\\fcs0 \\sl240 \\slmult1', table_text)
     return table_text
 
-def emoji_html(text, status):
-    if text in status.question.interview.images:
-        if status.question.interview.images[text].attribution is not None:
-            status.attributions.add(status.question.interview.images[text].attribution)
+def emoji_html(text, status=None, images=None):
+    if images is None:
+        images = status.question.interview.images
+    if text in images:
+        if status is not None and images[text].attribution is not None:
+            status.attributions.add(images[text].attribution)
         return("[EMOJI " + status.question.interview.images[text].get_reference() + ', 1em]')
     else:
         return(":" + str(text) + ":")
@@ -442,7 +444,7 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, use_pandoc=False, 
                 a = status.question.interview.terms[term]['re'].sub(r'[[\1]]', a)
                 #logmessage("string is now " + str(a) + "\n")
         if len(status.question.interview.images) > 0:
-            a = emoji_match.sub((lambda x: emoji_html(x.group(1), status)), a)
+            a = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status)), a)
     a = docassemble.base.filter.html_filter(unicode(a))
     if use_pandoc:
         converter = Pandoc()

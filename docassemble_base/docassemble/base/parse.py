@@ -961,7 +961,7 @@ class Question:
             elif doc_format in ['html']:
                 result['markdown'][doc_format] = attachment['content'].text(user_dict)
                 if emoji_match.search(result['markdown'][doc_format]) and len(self.interview.images) > 0:
-                    result['markdown'][doc_format] = emoji_match.sub((lambda x: docassemble.base.filter.emoji_html(x.group(1), self.interview.images)), result['markdown'][doc_format])
+                    result['markdown'][doc_format] = emoji_match.sub((lambda x: docassemble.base.filter.emoji_html(x.group(1), images=self.interview.images)), result['markdown'][doc_format])
                 result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True)
         if attachment['variable_name']:
             string = attachment['variable_name'] + " = DAFileCollection('" + attachment['variable_name'] + "')"
