@@ -296,6 +296,8 @@ def image_as_rtf(match):
         return('')
 
 def rtf_image(file_info, width, insert_page_breaks):
+    if file_info['extension'] == 'svg':
+        return ''
     pixels = pixels_in(width)
     if pixels > 0 and file_info['width'] > 0:
         scale = float(pixels)/float(file_info['width'])
