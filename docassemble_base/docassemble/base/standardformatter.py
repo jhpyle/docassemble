@@ -48,7 +48,6 @@ def signature_html(status, debug):
 
 def as_html(status, extra_scripts, url_for, debug):
     decorations = list()
-    attributions = set()
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'help-inline'}
     if status.question.script is not None:
         extra_scripts.append(status.question.script)
@@ -75,7 +74,7 @@ def as_html(status, extra_scripts, url_for, debug):
                         #sys.stderr.write("yoo5\n")
                         if the_image.attribution is not None:
                             #sys.stderr.write("yoo6\n")
-                            attributions.add(the_image.attribution)
+                            status.attributions.add(the_image.attribution)
                         decorations.append('<img style="image-orientation:from-image;float:right;' + sizing + '" src="' + url + '">')
     if len(decorations):
         decoration_text = decorations[0];
@@ -85,17 +84,17 @@ def as_html(status, extra_scripts, url_for, debug):
     output += '<section id="question" class="tab-pane active col-md-6">'
     if status.question.question_type == "yesno":
         output += '<form id="daform" method="POST"><fieldset>'
-        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, terms=status.question.interview.terms) + '<div style="clear:both"></div></h3></div>'
+        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
-            output += '<div>' + markdown_to_html(status.subquestionText, terms=status.question.interview.terms) + '</div>'
+            output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
         output += '<div class="btn-toolbar"><button class="btn btn-primary btn-lg " name="' + status.question.fields[0].saveas + '" type="submit" value="True">Yes</button> <button class="btn btn-lg btn-info" name="' + status.question.fields[0].saveas + '" type="submit" value="False">No</button></div>'
         output += question_name_tag(status.question)
         output += '</fieldset></form>'
     elif status.question.question_type == "noyes":
         output += '<form id="daform" method="POST"><fieldset>'
-        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, terms=status.question.interview.terms) + '<div style="clear:both"></div></h3></div>'
+        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
-            output += '<div>' + markdown_to_html(status.subquestionText, terms=status.question.interview.terms) + '</div>'
+            output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
         output += '<div class="btn-toolbar"><button class="btn btn-primary btn-lg" name="' + status.question.fields[0].saveas + '" type="submit" value="False">Yes</button> <button class="btn btn-lg btn-info" name="' + status.question.fields[0].saveas + '" type="submit" value="True">No</button></div>'
         output += question_name_tag(status.question)
         output += '</fieldset></form>'
@@ -113,7 +112,7 @@ def as_html(status, extra_scripts, url_for, debug):
                     fieldlist.append('<div class="form-group"><div class="col-md-12">' + field.label + '</div></div>')
                     continue
                 elif field.datatype == 'note':
-                    fieldlist.append('<div class="row"><div class="col-md-12">' + markdown_to_html(status.notes[field.number], terms=status.question.interview.terms) + '</div></div>')
+                    fieldlist.append('<div class="row"><div class="col-md-12">' + markdown_to_html(status.notes[field.number], status=status) + '</div></div>')
                     continue
             if hasattr(field, 'saveas') and field.saveas in status.helptexts:
                 helptext_start = '<a style="cursor:pointer;color:#408E30" data-container="body" data-toggle="popover" data-placement="bottom" data-content="' + noquote(unicode(status.helptexts[field.number])) + '">' 
@@ -166,9 +165,9 @@ def as_html(status, extra_scripts, url_for, debug):
                 else:
                     fieldlist.append('<div class="form-group"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + field.label + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>')
         output += '<form id="daform" class="form-horizontal" method="POST"' + enctype_string + '><fieldset>'
-        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, terms=status.question.interview.terms) + '<div style="clear:both"></div></h3></div>'
+        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
-            output += '<div>' + markdown_to_html(status.subquestionText, terms=status.question.interview.terms) + '</div>'
+            output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
         #output += '<div class="row">'
         if (len(fieldlist)):
             output += "".join(fieldlist)
@@ -190,19 +189,19 @@ def as_html(status, extra_scripts, url_for, debug):
         output += '</fieldset></form>'
     elif status.question.question_type == "continue":
         output += '<form id="daform" method="POST"><fieldset>'
-        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, terms=status.question.interview.terms) + '<div style="clear:both"></div></h3></div>'
+        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
-            output += '<div>' + markdown_to_html(status.subquestionText, terms=status.question.interview.terms) + '</div>'
+            output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
         output += '<div class="form-actions"><button type="submit" class="btn btn-lg btn-primary" name="' + status.question.fields[0].saveas + '" value="True"> ' + word('Continue') + '</button></div>'
         output += question_name_tag(status.question)
         output += '</fieldset></form>'
     elif status.question.question_type == "multiple_choice":
         output += '<form id="daform" method="POST"><fieldset>'
-        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, terms=status.question.interview.terms) + '<div style="clear:both"></div></h3></div>'
+        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
-            output += '<div>' + markdown_to_html(status.subquestionText, terms=status.question.interview.terms) + '</div>'
-        output += '<div id="errorcontainer" style="display:none"></div>'
-        validation_rules['errorClass'] = "alert alert-error"
+            output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
+        output += '<div id="errorcontainer" class="alert alert-danger" role="alert" style="display:none"></div>'
+        validation_rules['errorElement'] = "span"
         validation_rules['errorLabelContainer'] = "#errorcontainer"
         if status.question.question_variety == "radio":
             if hasattr(status.question.fields[0], 'saveas'):
@@ -212,10 +211,11 @@ def as_html(status, extra_scripts, url_for, debug):
                     if hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle:
                         random.shuffle(pairlist)
                     for pair in pairlist:
+                        formatted_item = markdown_to_html(pair[1], status=status, trim=True, escape=True)
                         if pair[0] is not None:
-                            output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + str(pair[1]) + '|' + str(pair[1]) + '" class="to-labelauty radio-icon" id="' + str(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + str(status.question.fields[0].saveas) + '" type="radio" value="' + str(pair[0]) + '"></div></div>'
+                            output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + str(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + str(status.question.fields[0].saveas) + '" type="radio" value="' + str(pair[0]) + '"></div></div>'
                         else:
-                            output += '<div class="form-group"><div class="col-md-12">' + markdown_to_html(pair[1], terms=status.question.interview.terms) + '</div></div>'
+                            output += '<div class="form-group"><div class="col-md-12">' + markdown_to_html(pair[1], status=status) + '</div></div>'
                         id_index += 1
                 else:
                     id_index = 0
@@ -230,9 +230,10 @@ def as_html(status, extra_scripts, url_for, debug):
                         for key in choice:
                             if key == 'image':
                                 continue
-                            output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + str(key) + '|' + str(key) + '" class="to-labelauty radio-icon" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + str(choice[key]) + '"></div></div>'
-                            #
+                            formatted_key = markdown_to_html(key, status=status, trim=True, escape=True)
+                            output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + formatted_key + '|' + formatted_key + '" class="to-labelauty radio-icon" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + str(choice[key]) + '"></div></div>'
                         id_index += 1
+                validation_rules['ignore'] = None
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
                 validation_rules['messages'][status.question.fields[0].saveas] = {'required': word("You need to select one.")}
             else:
@@ -246,8 +247,8 @@ def as_html(status, extra_scripts, url_for, debug):
                     for key in choice:
                         if key == 'image':
                             continue
-                        output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + the_icon + str(key) + '|' + the_icon + str(key) + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="multiple_choice" type="radio" value="' + str(indexno) + '"><label for="multiple_choice' + str(indexno) + '_' + str(id_index) + '">' + the_icon + str(key) + '</label></div></div>'
-                        #
+                        formatted_key = markdown_to_html(key, status=status, trim=True, escape=True)
+                        output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + the_icon + formatted_key + '|' + the_icon + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="multiple_choice" type="radio" value="' + str(indexno) + '"><label for="multiple_choice' + str(indexno) + '_' + str(id_index) + '">' + the_icon + markdown_to_html(key, status=status, trim=True) + '</label></div></div>'
                         id_index += 1
                     indexno += 1
                     validation_rules['rules']['multiple_choice'] = {'required': True}
@@ -263,9 +264,9 @@ def as_html(status, extra_scripts, url_for, debug):
                         random.shuffle(pairlist)
                     for pair in pairlist:
                         if pair[0] is not None:
-                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + str(status.question.fields[0].saveas) + '" value="' + str(pair[0]) + '"> ' + str(pair[1]) + '</button> '
+                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + str(status.question.fields[0].saveas) + '" value="' + str(pair[0]) + '"> ' + markdown_to_html(pair[1], status=status, trim=True) + '</button> '
                         else:
-                            output += markdown_to_html(pair[1], terms=status.question.interview.terms)
+                            output += markdown_to_html(pair[1], status=status)
                 else:
                     choicelist = list(status.question.fields[0].choices)
                     if hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle:
@@ -279,7 +280,7 @@ def as_html(status, extra_scripts, url_for, debug):
                         for key in choice:
                             if key == 'image':
                                 continue
-                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + str(choice[key]) + '"> ' + the_icon + str(key) + '</button> '
+                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + str(choice[key]) + '"> ' + the_icon + markdown_to_html(key, status=status, trim=True) + '</button> '
             else:
                 indexno = 0
                 for choice in status.question.fields[0].choices:
@@ -299,16 +300,16 @@ def as_html(status, extra_scripts, url_for, debug):
                                 btn_class = ' btn-warning'
                             elif choice[key].question_type == "exit":
                                 btn_class = ' btn-danger'
-                        output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="multiple_choice" value="' + str(indexno) + '"> ' + the_icon + str(key) + '</button> '
+                        output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="multiple_choice" value="' + str(indexno) + '"> ' + the_icon + markdown_to_html(key, status=status, trim=True) + '</button> '
                     indexno += 1
             output += '</div>'
         output += question_name_tag(status.question)
         output += '</fieldset></form>'
     else:
         output += '<form id="daform" class="form-horizontal" method="POST"><fieldset>'
-        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, terms=status.question.interview.terms) + '<div style="clear:both"></div></h3></div>'
+        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
-            output += '<div>' + markdown_to_html(status.subquestionText, terms=status.question.interview.terms) + '</div>'
+            output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
         output += '<div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button></div>'
         output += question_name_tag(status.question)
         output += '</fieldset></form>'
@@ -341,7 +342,7 @@ def as_html(status, extra_scripts, url_for, debug):
                 multiple_formats = False
             output += '<div><h3>' + attachment['name'] + '</h3></div>'
             if attachment['description']:
-                output += '<div><p><em>' + markdown_to_html(attachment['description'], terms=status.question.interview.terms) + '</em></p></div>'
+                output += '<div><p><em>' + markdown_to_html(attachment['description'], status=status) + '</em></p></div>'
             output += '<div class="tabbable"><ul class="nav nav-tabs">'
             if show_download:
                 output += '<li class="active"><a href="#download' + str(attachment_index) + '" data-toggle="tab">' + word('Download') + '</a></li>'
@@ -406,16 +407,20 @@ def as_html(status, extra_scripts, url_for, debug):
   </div>
 </div>"""
             extra_scripts.append("""<script>$("#emailform").validate(""" + json.dumps({'rules': {'attachment_email_address': {'notEmpty': True, 'required': True, 'email': True}}, 'messages': {'attachment_email_address': {'required': word("An e-mail address is required."), 'email': word("You need to enter a complete e-mail address.")}}, 'errorClass': 'help-inline'}) + """);</script>""")
-    if len(attributions):
+    if len(status.attributions):
         output += '<br><br><br><br><br><br><br>'
-    for attribution in sorted(attributions):
+    for attribution in sorted(status.attributions):
         output += '<div><small>' + markdown_to_html(attribution) + '</small></div>'
     output += '</section>'
     output += '<section id="help" class="tab-pane col-md-6">'
     for help_section in status.helpText:
         if help_section['heading'] is not None:
             output += '<div class="page-header"><h3>' + help_section['heading'] + '</h3></div>'
-        output += markdown_to_html(help_section['content'], terms=status.question.interview.terms)
+        output += markdown_to_html(help_section['content'], status=status)
+    if len(status.attributions):
+        output += '<br><br><br><br><br><br><br>'
+    for attribution in sorted(status.attributions):
+        output += '<div><small>' + markdown_to_html(attribution) + '</small></div>'
     output += '</section>'
     extra_scripts.append('<script>$("#daform").validate(' + json.dumps(validation_rules) + ');</script>')
     return output
@@ -446,10 +451,10 @@ def input_for(status, field, wide=False):
             for pair in pairlist:
                 if pair[0] is not None:
                     inner_field = str(field.saveas) + "['" + urllib.quote(pair[0], u'') + u"']"
-                    #sys.stderr.write(pair[1])
-                    inner_fieldlist.append('<input data-labelauty="' + str(pair[1]) + '|' + str(pair[1]) + '" class="to-labelauty checkbox-icon" id="' + str(field.saveas) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True">')
+                    formatted_item = markdown_to_html(pair[1], status=status, trim=True, escape=True)
+                    inner_fieldlist.append('<input data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty checkbox-icon" id="' + str(field.saveas) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True">')
                 else:
-                    inner_fieldlist.append('<div>' + markdown_to_html(pair[1], terms=status.question.interview.terms) + '</div>')
+                    inner_fieldlist.append('<div>' + markdown_to_html(pair[1], status=status) + '</div>')
                 id_index += 1
             output += u''.join(inner_fieldlist)
         elif field.datatype == 'radio':
@@ -457,9 +462,10 @@ def input_for(status, field, wide=False):
             id_index = 0
             for pair in pairlist:
                 if pair[0] is not None:
-                    inner_fieldlist.append('<input data-labelauty="' + str(pair[1]) + '|' + str(pair[1]) + '" class="to-labelauty radio-icon" id="' + str(field.saveas) + '_' + str(id_index) + '" name="' + str(field.saveas) + '" type="radio" value="' + str(pair[0]) + '">')
+                    formatted_item = markdown_to_html(pair[1], status=status, trim=True, escape=True)
+                    inner_fieldlist.append('<input data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + str(field.saveas) + '_' + str(id_index) + '" name="' + str(field.saveas) + '" type="radio" value="' + str(pair[0]) + '">')
                 else:
-                    inner_fieldlist.append('<div>' + markdown_to_html(pair[1], terms=status.question.interview.terms) + '</div>')
+                    inner_fieldlist.append('<div>' + markdown_to_html(pair[1], status=status) + '</div>')
                 id_index += 1
             output += "".join(inner_fieldlist)
         else:
@@ -467,10 +473,11 @@ def input_for(status, field, wide=False):
             output += '<option name="' + field.saveas + '" id="' + field.saveas + '" value="">' + word('Select...') + '</option>'
             for pair in pairlist:
                 if pair[0] is not None:
+                    formatted_item = markdown_to_html(pair[1], status=status, trim=True)
                     output += '<option value="' + unicode(pair[0]) + '"'
                     if defaultvalue is not None and unicode(pair[0]) == defaultvalue:
                         output += 'selected="selected"'
-                    output += '>' + unicode(pair[1]) + '</option>'
+                    output += '>' + formatted_item + '</option>'
             output += '</select> '
     elif hasattr(field, 'datatype'):
         if field.datatype in ['yesno', 'yesnowide']:

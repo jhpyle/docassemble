@@ -203,7 +203,15 @@
     if( debug && window.console && window.console.log )
       window.console.log( "jQuery-LABELAUTY: " + message );
   };
-  
+
+  function decode_html ( text )
+  {
+    text = text.replace(/&amp;/g, '&');
+    text = text.replace(/&lt;/g, '<');
+    text = text.replace(/&gt;/g, '>');
+    text = text.replace(/&quot;/g, '"');
+    return(text);
+  }
   function create( input_id, messages_object, label )
   {
     var block;
@@ -222,14 +230,15 @@
       else
 	checked_message = messages_object[1];
     }
+
     
     if( label == true )
     {
       block = '<label for="' + input_id + '">' +
 	'<span class="labelauty-unchecked-image"></span>' +
-	'<span class="labelauty-unchecked">' + unchecked_message + '</span>' +
+	'<span class="labelauty-unchecked">' + decode_html(unchecked_message) + '</span>' +
 	'<span class="labelauty-checked-image"></span>' +
-	'<span class="labelauty-checked">' + checked_message + '</span>' +
+	'<span class="labelauty-checked">' + decode_html(checked_message) + '</span>' +
 	'</label>';
     }
     else

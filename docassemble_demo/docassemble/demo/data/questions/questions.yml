@@ -606,7 +606,7 @@ attachments:
       % for child in client.child:
       ${ describe_as_adorable(child) }
       % endfor
-      Aren't children such a blessing?
+      Aren't children :baby: such a blessing?
       % if client.has_support_order:
       I already have a support order.
       % endif

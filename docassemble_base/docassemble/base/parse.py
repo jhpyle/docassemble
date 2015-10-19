@@ -16,6 +16,7 @@ from mako.template import Template
 from types import CodeType
 
 match_mako = re.compile(r'<%|\${|% if|% for|% while')
+emoji_match = re.compile(r':([^ ]+):')
 
 def textify(data):
     return list(map((lambda x: x.text(user_dict)), data))
@@ -48,6 +49,8 @@ class PackageImage(object):
         self.package = kwargs.get('package', 'docassemble.base')
     def get_filename(self):
         return(docassemble.base.util.static_filename_path(str(self.package) + ':' + str(self.filename)))
+    def get_reference(self):
+        return str(self.package) + ':' + str(self.filename)
 
 class InterviewSource(object):
     def __init__(self, **kwargs):
@@ -161,6 +164,7 @@ class InterviewSourceURL(InterviewSource):
 class InterviewStatus(object):
     def __init__(self, current_info=dict()):
         self.current_info = current_info
+        self.attributions = set()
         self.attachments = None
     def populate(self, question_result):
         self.question = question_result['question']
@@ -857,7 +861,7 @@ class Question:
                 raise NameError("Need 'role_event'")
         return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'notes': notes})
     def processed_attachments(self, user_dict, **kwargs):
-        return(list(map((lambda x: make_attachment(x, user_dict, **kwargs)), self.attachments)))
+        return(list(map((lambda x: self.make_attachment(x, user_dict, **kwargs)), self.attachments)))
     def parse_fields(self, the_list, register_target, uses_field):
         result_list = list()
         has_code = False
@@ -920,6 +924,60 @@ class Question:
                     #self.mark_as_answered(user_dict)
                     return(target.follow_multiple_choice(user_dict))
         return(self)
+    def make_attachment(self, attachment, user_dict, **kwargs):
+        result = {'name': attachment['name'].text(user_dict), 'filename': attachment['filename'].text(user_dict), 'description': attachment['description'].text(user_dict), 'valid_formats': attachment['valid_formats']}
+        result['markdown'] = dict();
+        result['content'] = dict();
+        result['file'] = dict();
+        if '*' in attachment['valid_formats']:
+            formats_to_use = ['html', 'rtf', 'pdf', 'tex']
+        else:
+            formats_to_use = attachment['valid_formats']
+        for doc_format in formats_to_use:
+            if doc_format in ['pdf', 'rtf', 'tex']:
+                the_markdown = ""
+                metadata = dict()
+                if len(attachment['metadata']) > 0:
+                    for key in attachment['metadata']:
+                        data = attachment['metadata'][key]
+                        if type(data) is bool:
+                            metadata[key] = data
+                        elif type(data) is list:
+                            metadata[key] = textify(data)
+                        else:
+                            metadata[key] = data.text(user_dict)
+                    the_markdown += "---\n" + yaml.dump(metadata) + "\n...\n"
+                the_markdown += attachment['content'].text(user_dict)
+                if emoji_match.search(the_markdown) and len(self.interview.images) > 0:
+                    the_markdown = emoji_match.sub((lambda x: docassemble.base.filter.emoji_insert(x.group(1), self.interview.images)), the_markdown)
+                result['markdown'][doc_format] = the_markdown
+                converter = Pandoc()
+                converter.output_format = doc_format
+                converter.input_content = the_markdown
+                converter.metadata = metadata
+                converter.convert()
+                result['file'][doc_format] = converter.output_filename
+                result['content'][doc_format] = result['markdown'][doc_format]
+            elif doc_format in ['html']:
+                result['markdown'][doc_format] = attachment['content'].text(user_dict)
+                if emoji_match.search(result['markdown'][doc_format]) and len(self.interview.images) > 0:
+                    result['markdown'][doc_format] = emoji_match.sub((lambda x: docassemble.base.filter.emoji_html(x.group(1), self.interview.images)), result['markdown'][doc_format])
+                result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True)
+        if attachment['variable_name']:
+            string = attachment['variable_name'] + " = DAFileCollection('" + attachment['variable_name'] + "')"
+            #sys.stderr.write("Executing " + string + "\n")
+            exec(string, user_dict)
+            for doc_format in result['file']:
+                variable_string = attachment['variable_name'] + '.' + doc_format
+                filename = result['filename'] + '.' + doc_format
+                file_number, extension, mimetype = save_numbered_file(filename, result['file'][doc_format])
+                if file_number is None:
+                    raise Exception("Could not save numbered file")
+                string = variable_string + " = DAFile('" + variable_string + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
+                #sys.stderr.write("Executing " + string + "\n")
+                exec(string, user_dict)
+        return(result)
+
 
 def interview_source_from_string(path, **kwargs):
     if path is None:
@@ -1283,56 +1341,6 @@ def find_fields_in(code, fields_used, names_used):
         if item not in definables:
             names_used.add(item)
 
-def make_attachment(attachment, user_dict, **kwargs):
-    result = {'name': attachment['name'].text(user_dict), 'filename': attachment['filename'].text(user_dict), 'description': attachment['description'].text(user_dict), 'valid_formats': attachment['valid_formats']}
-    result['markdown'] = dict();
-    result['content'] = dict();
-    result['file'] = dict();
-    if '*' in attachment['valid_formats']:
-        formats_to_use = ['html', 'rtf', 'pdf', 'tex']
-    else:
-        formats_to_use = attachment['valid_formats']
-    for doc_format in formats_to_use:
-        if doc_format in ['pdf', 'rtf', 'tex']:
-            the_markdown = ""
-            metadata = dict()
-            if len(attachment['metadata']) > 0:
-                for key in attachment['metadata']:
-                    data = attachment['metadata'][key]
-                    if type(data) is bool:
-                        metadata[key] = data
-                    elif type(data) is list:
-                        metadata[key] = textify(data)
-                    else:
-                        metadata[key] = data.text(user_dict)
-                the_markdown += "---\n" + yaml.dump(metadata) + "\n...\n"
-            the_markdown += attachment['content'].text(user_dict)
-            result['markdown'][doc_format] = the_markdown
-            converter = Pandoc()
-            converter.output_format = doc_format
-            converter.input_content = the_markdown
-            converter.metadata = metadata
-            converter.convert()
-            result['file'][doc_format] = converter.output_filename
-            result['content'][doc_format] = result['markdown'][doc_format]
-        elif doc_format in ['html']:
-            result['markdown'][doc_format] = attachment['content'].text(user_dict)
-            result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True)
-    if attachment['variable_name']:
-        string = attachment['variable_name'] + " = DAFileCollection('" + attachment['variable_name'] + "')"
-        #sys.stderr.write("Executing " + string + "\n")
-        exec(string, user_dict)
-        for doc_format in result['file']:
-            variable_string = attachment['variable_name'] + '.' + doc_format
-            filename = result['filename'] + '.' + doc_format
-            file_number, extension, mimetype = save_numbered_file(filename, result['file'][doc_format])
-            if file_number is None:
-                raise Exception("Could not save numbered file")
-            string = variable_string + " = DAFile('" + variable_string + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
-            #sys.stderr.write("Executing " + string + "\n")
-            exec(string, user_dict)
-    return(result)
-            
 def process_selections(data):
     result = []
     if type(data) is list:

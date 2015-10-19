@@ -84,6 +84,13 @@ image sets:
       parentchild: man32.svg
       coins: coins36.svg
       exit: open203.svg
+      man: silhouette21.svg
+      person: silhouette21.svg
+      woman: women13.svg
+      girl: girl4.svg
+      male: male244.svg
+      female: female243.svg
+      map: map32.svg
 comment: |
   Here we pre-define some icon files so that we can easily refer to
   them later.  These files are located in the docassemble.base package
@@ -101,10 +108,10 @@ field: x.marital_status
 question: |
   What is ${ x.possessive('marital status') }?
 choices:
-  - Married
-  - Single
-  - Divorced
-  - Separated
+  - Married: Married
+  - Single: Single
+  - "**Divorced**": Divorced
+  - "*Separated*": Separated
 ---
 field: user_understands_how_to_use_signature_feature
 question: Instructions for signing your name
@@ -214,8 +221,8 @@ question: >-
   What is ${ x.possessive('gender') }?
 field: x.gender
 choices:
-  - Male: male
-  - Female: female
+  - "Male :male:": male
+  - "Female :female:": female
   - Other: other
 comment: |
   By using "generic" questions, you can write a single question that

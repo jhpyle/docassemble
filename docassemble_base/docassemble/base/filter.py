@@ -15,6 +15,10 @@ DEFAULT_PAGE_WIDTH = '6.5in'
 term_start = re.compile(r'\[\[')
 term_match = re.compile(r'\[\[([^\]]*)\]\]')
 noquote_match = re.compile(r'"')
+lt_match = re.compile(r'<')
+gt_match = re.compile(r'>')
+amp_match = re.compile(r'&')
+emoji_match = re.compile(r':([^ ]+):')
 
 def set_default_page_width(width):
     global DEFAULT_PAGE_WIDTH
@@ -204,6 +208,7 @@ def pdf_filter(text, metadata=dict()):
 def html_filter(text):
     text = text + "\n\n"
     text = re.sub(r'^[|] (.*)$', r'\1<br>', text, flags=re.MULTILINE)
+    text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', emoji_url_string, text)
     text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_url_string, text)
     text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_url_string, text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', r'<table style="width: 100%"><tr><td style="width: 50%; border-style: solid; border-right-width: 1px; padding-right: 1em; border-left-width: 0px; border-top-width: 0px; border-bottom-width: 0px">\1</td><td style="padding-left: 1em; width: 50%;">\2</td></tr></table>', text)
@@ -341,7 +346,7 @@ def pixels_in(length):
     logmessage("Could not read " + str(length) + "\n")
     return(300)
 
-def image_url_string(match):
+def image_url_string(match, emoji=False):
     file_reference = match.group(1)
     try:
         width = match.group(2)
@@ -355,6 +360,8 @@ def image_url_string(match):
             width_string = "width:" + width
         else:
             width_string = "max-width:" + width
+        if emoji:
+            width_string += ';vertical-align: middle'
         if file_info['extension'] in ['png', 'jpg', 'gif', 'svg']:
             return('<img style="image-orientation:from-image;' + width_string + '" src="' + url_finder(file_reference) + '">')
         elif file_info['extension'] == 'pdf':
@@ -367,6 +374,9 @@ def image_url_string(match):
     else:
         return('[Invalid image reference; reference=' + str(file_reference) + ', width=' + str(width) + ', filename=' + file_info.get('filename', 'unknown') + ']')
 
+def emoji_url_string(match):
+    return(image_url_string(match, emoji=True))
+    
 def convert_pixels(match):
     pixels = match.group(1)
     return (str(int(pixels)/72.0) + "in")
@@ -408,12 +418,31 @@ def rtf_caption_table(match):
     table_text = re.sub(r'\\rtlch\\fcs1 \\af0 \\ltrch\\fcs0', r'\\rtlch\\fcs1 \\af0 \\ltrch\\fcs0 \\sl240 \\slmult1', table_text)
     return table_text
 
-def markdown_to_html(a, trim=False, pclass=None, interview_status=None, use_pandoc=False, terms=None):
-    if terms is not None and type(terms) is dict and len(terms) > 0:
-        for term in terms:
-            #logmessage("Searching for term " + term + "\n")
-            a = terms[term]['re'].sub(r'[[\1]]', a)
-            #logmessage("string is now " + str(a) + "\n")
+def emoji_html(text, status):
+    if text in status.question.interview.images:
+        if status.question.interview.images[text].attribution is not None:
+            status.attributions.add(status.question.interview.images[text].attribution)
+        return("[EMOJI " + status.question.interview.images[text].get_reference() + ', 1em]')
+    else:
+        return(":" + str(text) + ":")
+
+def emoji_insert(text, status):
+    if text in status.question.interview.images:
+        if status.question.interview.images[text].attribution is not None:
+            status.attributions.add(status.question.interview.images[text].attribution)
+        return("[IMAGE " + status.question.interview.images[text].get_reference() + ', 1em]')
+    else:
+        return(":" + str(text) + ":")
+
+def markdown_to_html(a, trim=False, pclass=None, status=None, use_pandoc=False, escape=False):
+    if status is not None:
+        if len(status.question.interview.terms) > 0:
+            for term in status.question.interview.terms:
+                #logmessage("Searching for term " + term + "\n")
+                a = status.question.interview.terms[term]['re'].sub(r'[[\1]]', a)
+                #logmessage("string is now " + str(a) + "\n")
+        if len(status.question.interview.images) > 0:
+            a = emoji_match.sub((lambda x: emoji_html(x.group(1), status)), a)
     a = docassemble.base.filter.html_filter(unicode(a))
     if use_pandoc:
         converter = Pandoc()
@@ -424,15 +453,19 @@ def markdown_to_html(a, trim=False, pclass=None, interview_status=None, use_pand
     else:
         result = markdown.markdown(a, extensions=[SmartypantsExt(configs=dict())], output_format='html5')
     result = re.sub('<a href', '<a target="_blank" href', result)
-    if terms is not None and term_start.search(result):
+    if status is not None and len(status.question.interview.terms) > 0 is not None and term_start.search(result):
         #logmessage("Found a term\n")
-        result = term_match.sub((lambda x: add_terms(x.group(1), terms)), result)
+        result = term_match.sub((lambda x: add_terms(x.group(1), status.question.interview.terms)), result)
     if trim:
-        return(result[3:-4])
-    else:
-        if pclass:
-            result = re.sub('<p>', '<p class="' + pclass + '">', result)
-        return(result)
+        result = result[3:-4]
+    elif pclass:
+        result = re.sub('<p>', '<p class="' + pclass + '">', result)
+    if escape:
+        result = noquote_match.sub('&quot;', result)
+        result = lt_match.sub('&lt;', result)
+        result = gt_match.sub('&gt;', result)
+        result = amp_match.sub('&amp;', result)
+    return(result)
 
 def add_terms(termname, terms):
     #logmessage("add terms with " + termname + "\n")
