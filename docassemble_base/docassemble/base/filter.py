@@ -428,11 +428,13 @@ def emoji_html(text, status=None, images=None):
     else:
         return(":" + str(text) + ":")
 
-def emoji_insert(text, status):
-    if text in status.question.interview.images:
-        if status.question.interview.images[text].attribution is not None:
-            status.attributions.add(status.question.interview.images[text].attribution)
-        return("[IMAGE " + status.question.interview.images[text].get_reference() + ', 1em]')
+def emoji_insert(text, status=None, images=None):
+    if images is None:
+        images = status.question.interview.images
+    if text in images:
+        if status is not None and images[text].attribution is not None:
+            status.attributions.add(images[text].attribution)
+        return("[IMAGE " + images[text].get_reference() + ', 1em]')
     else:
         return(":" + str(text) + ":")
 
