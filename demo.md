@@ -386,7 +386,7 @@ code: |
 question: |
   Why do you think you deserve to win this case?
 fields:
-  - "Reason you should win": explanation
+  - no label: explanation
     datatype: area
     hint: |
       I should win because . . .
@@ -1122,21 +1122,21 @@ generic object: Individual
 question: How much ${ x.do_question("have") } in ${ x.pronoun_possessive("checking account") }?
 decoration: piggybank
 fields:
-  - Amount: x.asset.checking.value
+  - Amount in Checking Account: x.asset.checking.value
     datatype: currency
 ---
 generic object: Individual
 question: How much ${ x.do_question("have") } in ${ x.pronoun_possessive("savings account") }?
 decoration: piggybank
 fields:
-  - Amount: x.asset.savings.value
+  - Amount in Savings Account: x.asset.savings.value
     datatype: currency
 ---
 generic object: Individual
 question: How much ${ x.do_question("have") } in stocks and bonds?
 decoration: stocks
 fields:
-  - Amount: x.asset.stocksbonds.value
+  - Amount in Stocks and Bonds: x.asset.stocksbonds.value
     datatype: currency
 ---
 generic object: Individual
@@ -1162,7 +1162,8 @@ fields:
     datatype: yesnowide
   - Stocks and Bonds: x.asset.stocksbonds.exists
     datatype: yesnowide
-...{% endhighlight %}
+...
+{% endhighlight %}
 
 [Bootstrap]: https://en.wikipedia.org/wiki/Bootstrap_%28front-end_framework%29
 [YAML]: https://en.wikipedia.org/wiki/YAML
