@@ -120,8 +120,6 @@ subquestion: |
   name using your mouse, track pad, or touch screen.  If you make a
   mistake, you can press "Clear" and try again.  For best results, try
   signing your name *slowly*.
-buttons:
-  - Continue: continue
 ---
 generic object: Individual
 comment: |

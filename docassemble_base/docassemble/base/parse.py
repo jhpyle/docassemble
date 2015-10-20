@@ -248,7 +248,7 @@ class Field:
 
 class Question:
     def idebug(self, data):
-        return "\nIn file" + str(self.from_path) + " from package " + str(self.package) + ":\n" + yaml.dump(data)
+        return "\nIn file " + str(self.from_path) + " from package " + str(self.package) + ":\n" + yaml.dump(data)
     def __init__(self, data, caller, **kwargs):
         should_append = True
         if 'register_target' in kwargs:
@@ -554,7 +554,7 @@ class Question:
             self.question_type = 'yesno'
         if 'noyes' in data:
             self.fields.append(Field({'saveas': data['noyes'], 'boolean': -1}))
-            self.fields_used.add(data['yesno'])
+            self.fields_used.add(data['noyes'])
             self.question_type = 'noyes'
         if 'sets' in data:
             if type(data['sets']) is str:
@@ -693,6 +693,9 @@ class Question:
                     else:
                         raise DAError("Each individual field in a list of fields must be expressed as a dictionary item, e.g., ' - Fruit: user.favorite_fruit'." + self.idebug(data))
                     field_number += 1
+        if not hasattr(self, 'question_type'):
+            if len(self.fields_used) > 0:
+                self.question_type = 'deadend'
         if should_append:
             if not hasattr(self, 'question_type'):
                 raise DAError("No question type could be determined for this section." + self.idebug(data))

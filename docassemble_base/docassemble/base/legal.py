@@ -454,6 +454,8 @@ class DAFile(DAObject):
         else:
             self.ok = False
         return
+    def __str__(self):
+        return self.show()
     def show(self, width=None):
         if not self.ok:
             return('')
@@ -466,6 +468,8 @@ class DAFileCollection(DAObject):
     pass
 
 class DAFileList(DAList):
+    def __str__(self):
+        return self.show()
     def show(self, width=None):
         output = ''
         for element in self.elements:

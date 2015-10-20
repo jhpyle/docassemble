@@ -305,12 +305,16 @@ def as_html(status, extra_scripts, url_for, debug):
             output += '</div>'
         output += question_name_tag(status.question)
         output += '</fieldset></form>'
+    elif status.question.question_type == 'deadend':
+        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
+        if status.subquestionText:
+            output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
     else:
         output += '<form id="daform" class="form-horizontal" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
-        output += '<div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button></div>'
+            output += '<div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button></div>'
         output += question_name_tag(status.question)
         output += '</fieldset></form>'
     if len(status.attachments) > 0:

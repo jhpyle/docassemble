@@ -444,7 +444,7 @@ question: |
   Is this the picture you uploaded?
   % endif
 subquestion: |  
-  ${ x.picture.show() }
+  ${ x.picture }
 yesno: x.picture_verified
 ---
 comment: |
@@ -491,9 +491,6 @@ question: |
 subquestion: |
   Here is an advice letter and a pleading you can file.
 decoration: finishline
-buttons:
-  - Exit: exit
-  - Restart: restart
 attachments:
   - name: Advice Letter for ${ client }
     description:
@@ -637,7 +634,7 @@ attachments:
       % if client.picture_verified:
       Look how cute I am:
 
-      [FLUSHLEFT] ${ client.picture.show() }
+      [FLUSHLEFT] ${ client.picture }
       % endif
 
       Chambray art party craft beer pork belly health goth, locavore
@@ -679,3 +676,4 @@ question: |
 fields:
   - Velocity: airspeed_velocity
 ...
+
