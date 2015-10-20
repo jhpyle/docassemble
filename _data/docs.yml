@@ -8,6 +8,8 @@
 - title: Authoring
   docs:
     - interviews
+    - initial
+    - questions
 - title: Miscellaneous
   docs:
     - docker

@@ -1,12 +1,10 @@
 ---
 layout: docs
-title: Interview authoring reference guide
-short_title: Reference
+title: Initial Blocks
+short_title: Initial Blocks
 ---
 
-## Initial information blocks
-
-### metadata
+## metadata
 
 {% highlight yaml %}
 ---
@@ -24,7 +22,7 @@ A `metadata` block contains information about the YAML file, such as
 the name of the author.  It must be a YAML dictionary, but each the
 dictionary items can contain any arbitrary YAML structure.
 
-### objects
+## objects
 
 {% highlight yaml %}
 ---
@@ -69,7 +67,7 @@ base class `DAObject` keeps track of variable names.
 Whenever possible, you should use `objects` blocks rather than code to
 initialize your objects.  `objects` blocks are clean and readable.
 
-### include
+## include
 
 {% highlight yaml %}
 ---
@@ -97,7 +95,7 @@ referring to their package names.  E.g.,
 `questions.yml` in the `docassemble/helloworld/data/questions`
 directory of that package.
 
-### image sets
+## image sets
 
 {% highlight yaml %}
 ---
@@ -136,7 +134,33 @@ of your choosing rather than by the name of the image file.
 For information on how to use the icons you have defined in an `image
 sets` block, see `decoration` and `buttons`.
 
-### imports
+## images
+
+{% highlight yaml %}
+---
+images:
+  bills: money146.svg
+  children: children2.svg
+---
+{% endhighlight %}
+
+An `images` block is just like an `image sets` block, except that it
+does not set any attribution information.  It is simpler because you
+do not need to give a name to a "set" of images.
+
+The above `images` block is essentially equivalent to writing:
+
+{% highlight yaml %}
+---
+image sets:
+  unspecified:
+	images:
+	  bills: money146.svg
+	  children: children2.svg
+---
+{% endhighlight %}
+
+## imports
 
 {% highlight yaml %}
 ---
@@ -155,7 +179,7 @@ import datetime
 import us
 {% endhighlight %}
 
-### modules
+## modules
 
 {% highlight yaml %}
 ---
@@ -173,7 +197,7 @@ running the following Python code:
 from datetime import *
 {% endhighlight %}
 
-### terms
+## terms
 
 {% highlight yaml %}
 ---
@@ -192,7 +216,7 @@ term, you can define certain vocabulary words, and **docassemble**
 will turn them into hyperlinks wherever they appear.  When the user
 clicks on the hyperlink, a popup appears with the word's definition.
 
-### interview help
+## interview help
 
 {% highlight yaml %}
 ---
@@ -208,7 +232,7 @@ question in the interview.  If the question has `help` text of its
 own, the `interview help` will appear after the question-specific
 help.
 
-### def
+## def
 
 {% highlight yaml %}
 def: adorability
@@ -218,9 +242,10 @@ mako: |
   </%def>
 {% endhighlight %}
 
-A `def` block allows you to define Mako "def" functions that you can
-re-use later in your question or document templates.  You can use the
-above function by doing:
+A `def` block allows you to define [Mako]
+"[def](http://docs.makotemplates.org/en/latest/defs.html)" functions
+that you can re-use later in your question or document templates.  You
+can use the above function by doing:
 
 {% highlight yaml %}
 ---
@@ -232,46 +257,47 @@ usedef:
 ---
 {% endhighlight %}
 
-Due to the way **docassemble** parses interviews, you need to define 
+Due to the way **docassemble** parses interviews, the `def` block
+needs to be defined before it is used.
 
-## question
+## default role
 
-## subquestion
+{% highlight yaml %}
+---
+default role: client
+code: |
+  if current_info['user']['is_authenticated'] and 'advocate' in current_info['user']['roles']:
+    user = advocate
+    role = 'advocate'
+  else:
+    user = client
+    role = 'client'
+  update_info(user, role, current_info)
+---
+{% endhighlight %}
 
-## code
+If your interview uses the [roles]({{ site.baseurl}}/docs/roles.html)
+feature for multi-user interviews, the `default role` statement will
+define what role or roles will be required for any question that does
+not contain an explicit `role` statement.
 
+When you use the roles feature, you need to have some way of telling
+your interview logic what the role of the interviewee is.
 
-## help
+If you include `code` within the same block as your `default role`
+statement, that code will be executed every time the interview logic
+is processed, as if it was marked as `initial`.  For this reason, any
+`default role` statement that contains code should be placed earlier
+in the interview file than and `mandatory` questions or code blocks.
 
-## buttons
+In the example above, the interview has two roles: "client" and
+"advocate".  The special variables `user` and `role` are set in the
+`code` block, which is executed every time the interview logic is
+processed.
 
-## comment
-
-## mandatory
-
-This is the code that directs the flow of the interview.  It
-indicates to the system that we need to get to the endpoint
-"user_done."  There is a question below that "sets" the variable
-"user_done."  Docassemble will ask all the questions necessary to
-get the information need to pose that that final question to the
-user.
-
-However, if the answer to the question
-user_understands_no_attorney_client_relationship is not
-"understands," the interview will looks for a question that sets the
-variable "user_kicked_out."
-
-"Mandatory" sections like this one are evaluated in the order they appear
-in the question file.
-
-## progress
-
-"progress" If docassemble is configured to show a progress bar, the progress bar will
-be set to 100% on this question, which is an endpoint question (since the only
-options are exiting or restarting).
-
-## generic object
-
-## attachment
-
-## attachments
+In addition, the `update_info()` function from
+`docassemble.base.legal` is called.  This lets the linguistic
+functions in `docassemble.base.legal` know who the user is, so that
+questions can ask "What is your date of birth?" or "What is John
+Smith's date of birth" depending on whether the current user is John
+Smith or not.
