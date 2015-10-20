@@ -104,13 +104,102 @@ The `noyes` statement is just like `yesno`, except that "Yes" means
 
 ### buttons
 
+{% highlight yaml %}
+---
+field: user_understands
+question: Do you understand what I have explained to you?
+buttons:
+  - "I understand": understands
+  - "I do not understand": does not understand
+  - "I'm not sure": I'm not sure
+---
+{% endhighlight %}
+
+(Note that in the example above, quotation marks are used because the
+apostrophe in "I'm not sure" would otherwise confuse the [YAML]
+parser.)
+
+A `question` block with a `buttons` statement will set the variable
+identified in `field` to a particular value depending on which of the
+buttons the user presses.
+
+The `buttons` statement must always refer to a [YAML] list, so that
+**docassemble** knows the order of the buttons.
+
+Each item under `buttons` can either be a [YAML] key-value pair
+(written in the form of "- key: value"), where the key is the button
+label that the user sees and the value is what the variable identified
+in `field` will be set to if the user presses that button.
+
+An item under `buttons` can also be plain text; in that case
+**docassemble** uses the text for both the label and the variable
+value.  For example, this:
+
+{% highlight yaml %}
+---
+field: user_gender
+question: What is your gender?
+buttons:
+  - Male
+  - Female
+---
+{% endhighlight %}
+
+is equivalent to:
+
+{% highlight yaml %}
+---
+field: user_gender
+question: What is your gender?
+buttons:
+  - Male: Male
+  - Female: Female
+---
+{% endhighlight %}
+
+A powerful feature of `buttons` is the ability to use Python code to
+generate button choices.  If an item under `buttons` is a key-value
+pair in which the key is the word `code`, then **docassemble**
+executes the value as Python code, which it expects to return a list.
+This code is executed at the time the question is asked, and the code
+can include variables from the interview.  **docassemble** will
+process the resulting list and create additional buttons for each
+item.  To illustrate this, the first example above could alternatively
+have been written as:
+
+{% highlight yaml %}
+---
+field: user_understands_no_attorney_client_relationship
+question: >-
+  Your use of this system does not mean that you have a lawyer.  Do
+  you understand this?
+buttons:
+  - "I understand": understands
+  - code: |
+      [{'does not understand':"I do not understand"}, {'unsure':"I'm not sure"}]
+---
+{% endhighlight %}
+
+Note that the Python code needs to return key-value pairs (Python
+dictionaries) where the key is what the variable should be set to and
+the value is the button label.  This is different from the [YAML]
+syntax.
+
 ### field
+
+coming soon
 
 ### fields
 
+coming soon
+
 ### sets
 
+coming soon
+
 ## Providing documents
+
+coming soon
 
 ### attachments
 
