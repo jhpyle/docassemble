@@ -59,7 +59,7 @@ The `buttons` statement must always refer to a [YAML] list, so that
 **docassemble** knows the order of the buttons.
 
 Each item under `buttons` can either be a [YAML] key-value pair
-(written in the form of "- key: value"), where the key is the button
+(written in the form of `- key: value`), where the key is the button
 label that the user sees and the value is what the variable identified
 in `field` will be set to if the user presses that button.
 
@@ -395,7 +395,7 @@ buttons:
   - Ford Focus:
     code: |
       car_model = "Focus"
-	  car_make = "Ford"
+      car_make = "Ford"
   - Toyota Camry:
     code: |
       car_model = "Camry"
