@@ -1,3 +1,21 @@
+@mixin border-radius($radius...) {
+    -webkit-border-radius: $radius;
+    -moz-border-radius: $radius;
+    border-radius: $radius;
+}
+
+@mixin box-shadow($shadow...) {
+-webkit-box-shadow: $shadow;
+-moz-box-shadow: $shadow;
+box-shadow: $shadow;
+}
+
+.left { float: left; }
+.right { float: right; }
+.align-right { text-align: right; }
+.align-left { text-align: left; }
+.align-center { text-align: center; }
+
 @media (min-width: 768px) {
   .sidebar-nav .navbar .navbar-collapse {
 	padding: 0;
@@ -174,4 +192,58 @@
   .cover-container {
     width: 700px;
   }
+}
+
+.section-nav {
+    text-align: center;
+    padding-top: 40px;
+    position: relative;
+    background-color: white;
+    margin: 40px -20px 10px;
+    
+    > div { width: 49.5%; }
+    
+    a,
+    span {
+	color: #fff;
+	font-size: 16px;
+	text-transform: uppercase;
+	font-weight: 700;
+	padding: 8px 12px 10px;
+	@include border-radius(5px);
+	/*border: 1px solid #333;*/
+	@include box-shadow(0 1px 3px rgba(0,0,0,.3), inset 0 1px 1px rgba(255,255,255,.5));
+	background-color: #c6c6c6;
+    }
+    a:hover {
+	color: #fff;
+	background-color: #222;
+    }
+    .next,
+    .prev { position: relative; }
+    .next:after,
+    .prev:before {
+	font-size: 36px;
+	color: #222;
+	font-weight: 900;
+	text-shadow: 0 1px 0 rgba(255,255,255,.4);
+	position: absolute;
+	top: -7px;
+    }
+    .next:after {
+	content: '\203A';
+	right: 10px;
+    }
+    .prev:before {
+	content: '\2039';
+	left: 10px;
+    }
+    .prev,
+    .prev:hover { padding-left: 30px; }
+    .next,
+    .next:hover { padding-right: 30px; }
+    .disabled {
+	opacity: .5;
+	cursor: default;
+    }
 }

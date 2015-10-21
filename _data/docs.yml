@@ -10,6 +10,9 @@
     - interviews
     - initial
     - questions
+    - fields
+    - modifiers
+    - code
 - title: Miscellaneous
   docs:
     - docker
