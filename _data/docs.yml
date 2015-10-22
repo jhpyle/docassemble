@@ -13,6 +13,7 @@
     - fields
     - modifiers
     - code
+    - logic
 - title: Miscellaneous
   docs:
     - docker

@@ -79,42 +79,36 @@ code:
 (If you don't remember what an `import` block does, see
 [initial blocks].)
 
-It is not necessary to have any `code` blocks in your interviews, but
-they are the most elegant way of expressing your interview logic.
+All of the variables you set with `question` blocks are available to
+your Python code.  If your code uses a variable that is not defined
+yet, **docassemble** will "ask" `question` blocks and `code` blocks in
+order to define the variables.
 
-## Modifiers
-
-### mandatory
-
-This is the code that directs the flow of the interview.  It indicates
-to the system that we need to get to the endpoint "user_done."  There
-is a question below that "sets" the variable "user_done."  Docassemble
-will ask all the questions necessary to get the information need to
-pose that that final question to the user.
-
-However, if the answer to the question
-user_understands_no_attorney_client_relationship is not "understands,"
-the interview will looks for a question that sets the variable
-"user_kicked_out."
-
-"Mandatory" sections like this one are evaluated in the order they
-appear in the question file.
-
-### initial
-
-If you want your `code` to be run every time **docassemble** processes
-your interview logic, add the `initial` modifier:
+Consider the following example:
 
 {% highlight yaml %}
 ---
-initial: true
 code: |
-  my_counter = 0
+  if user_age > 60:
+    product_recommendation = 'Oldsmobile'
+  else:
+    product_recommendation = 'Mustang'
+---
+question: What is your age?
+fields:
+  - Age in Years: user_age
+    datatype: number
 ---
 {% endhighlight %}
 
-The location of `initial` code in the interview file matters.  Code
-marked as `initial` will be executed when it is encountered as
-**docassemble** goes through the interview file from top to bottom
-(and follows `include` statements when it sees them)
+If **docassemble** needs to know `product_recommendation`, it will
+execute the code block, but the code block will fail to execute
+because `user_age` is undefined.  **docassemble** will then go looking
+for a question that answers `user_age`, and it will ask the user "What
+is your age?"  Upon receiving a response, **docassemble** will
+continue in its effort to find a definition for
+`product_recommendation` and will complete the execution of the `code`
+block.
 
+It is not necessary to have any `code` blocks in your interviews, but
+they are the most elegant way of expressing your interview logic.
