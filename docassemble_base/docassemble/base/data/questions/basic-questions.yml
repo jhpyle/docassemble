@@ -182,11 +182,6 @@ comment: |
   generate the selections of multiple-choice question.  The code is
   evaluated at the time the question is asked.
 ---
-question: |
-  What is the basic airspeed velocity?
-fields:
-  - Velocity: airspeed_velocity
----
 generic object: Individual
 question: >-
   What is ${ x.possessive('date of birth') }?

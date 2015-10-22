@@ -7,6 +7,7 @@ import sys
 import httplib2
 import datetime
 import operator
+import pprint
 import docassemble.base.filter
 from docassemble.base.error import DAError, MandatoryQuestion
 from docassemble.base.util import pickleable_objects, word
@@ -606,7 +607,7 @@ class Question:
             self.fields_used.add(data['field'])
             field_data = {'saveas': data['field']}
             self.fields.append(Field(field_data))
-            self.question_type = 'continue'
+            self.question_type = 'settrue'
         if 'need' in data:
             if type(data['need']) == str:
                 need_list = [data['need']]
@@ -677,6 +678,8 @@ class Question:
                                 field_info['type'] = 'html'
                                 field_info['label'] = field[key]
                             elif key == 'script':
+                                if field_info['type'] == 'text':
+                                    field_info['type'] = 'script'
                                 field_info['script'] = field[key]
                             elif key == 'shuffle':
                                 field_info['shuffle'] = field[key]
@@ -686,22 +689,23 @@ class Question:
                         if 'saveas' in field_info:
                             self.fields.append(Field(field_info))
                             self.fields_used.add(field_info['saveas'])
-                        elif 'type' in field_info and field_info['type'] in ['note', 'html']:
+                        elif 'type' in field_info and field_info['type'] in ['note', 'html', 'script']:
                             self.fields.append(Field(field_info))
                         else:
-                            raise DAError("A field was listed without indicating a label or a variable name, and the field was not a note or raw HTML." + self.idebug(data))
+                            raise DAError("A field was listed without indicating a label or a variable name, and the field was not a note or raw HTML." + self.idebug(field_info))
                     else:
                         raise DAError("Each individual field in a list of fields must be expressed as a dictionary item, e.g., ' - Fruit: user.favorite_fruit'." + self.idebug(data))
                     field_number += 1
         if not hasattr(self, 'question_type'):
-            if len(self.fields_used) > 0:
+            if hasattr(self, 'content'):
                 self.question_type = 'deadend'
         if should_append:
             if not hasattr(self, 'question_type'):
                 raise DAError("No question type could be determined for this section." + self.idebug(data))
             if main_list:
                 self.interview.questions_list.append(self)
-            self.number = len(self.interview.questions_list) - 1
+            self.number = self.interview.next_number()
+            #self.number = len(self.interview.questions_list) - 1
             self.name = "__Question_" + str(self.number)
         if hasattr(self, 'id'):
             try:
@@ -902,6 +906,7 @@ class Question:
         return(has_code, result_list)
     def mark_as_answered(self, user_dict):
         user_dict['answered'].add(self.name)
+        logmessage("1 Question name was " + self.name)
         return
     def follow_multiple_choice(self, user_dict):
         # if self.name:
@@ -909,8 +914,9 @@ class Question:
         # else:
         #     logmessage("question has no name")
         if self.name and self.name in user_dict['answers']:
-            #logmessage("question in answers")
+            logmessage("question in answers")
             user_dict['answered'].add(self.name)
+            logmessage("2 Question name was " + self.name)
             the_choice = self.fields[0].choices[int(user_dict['answers'][self.name])]
             for key in the_choice:
                 if key == 'image':
@@ -1018,9 +1024,13 @@ class Interview:
         self.helptext = list()
         self.defs = dict()
         self.terms = dict()
+        self.question_index = 0
         self.default_role = None
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
+    def next_number(self):
+        self.question_index += 1
+        return(self.question_index - 1)
     def read_from(self, source):
         if self.source is None:
             self.source = source
@@ -1076,6 +1086,7 @@ class Interview:
                         #logmessage("Running some code:\n\n" + question.sourcecode)
                         exec(question.compute, user_dict)
                     if question.name and question.name in user_dict['answered']:
+                        logmessage("Skipping " + question.name + " because answered")
                         continue
                     # if False and question.question_type == 'objects':
                     #     #logmessage("Running objects")
@@ -1096,8 +1107,10 @@ class Interview:
                     #     if question.name:
                     #         user_dict['answered'].add(question.name)
                     if question.question_type == 'code' and question.is_mandatory:
-                        #logmessage("Running some code:\n\n" + question.sourcecode)
+                        logmessage("Running some code:\n\n" + question.sourcecode)
+                        logmessage("Question name is " + question.name)
                         exec(question.compute, user_dict)
+                        logmessage("Code completed")
                         if question.name:
                             user_dict['answered'].add(question.name)
                     if hasattr(question, 'content') and question.name and question.is_mandatory:
@@ -1109,11 +1122,12 @@ class Interview:
                 missingVariable = str(errMess).split("'")[1]
                 #logmessage(str(errMess))
                 question_result = self.askfor(missingVariable, user_dict)
+                pp = pprint.PrettyPrinter(indent=4)
                 if question_result['type'] == 'continue':
-                    #logmessage("Continuing after asking for " + missingVariable + "...")
+                    logmessage("Continuing after asking for " + missingVariable + "...")
                     continue
                 else:
-                    logmessage("Need to ask:\n  " + question_result['question_text'])
+                    logmessage("Need to ask:\n  " + question_result['question_text'] + "\n" + "type is " + str(question_result['question'].question_type) + "\n" + pp.pformat(question_result) + "\n" + pp.pformat(question_result['question']))
                     interview_status.populate(question_result)
                     break
             except AttributeError as errMess:
@@ -1286,6 +1300,8 @@ class Interview:
                         else:
                             #logmessage("Question type is " + question.question_type)
                             #logmessage("Ask:\n  " + question.content.original_text)
+                            if question.question_type == 'continue':
+                                continue
                             return question.ask(user_dict, the_x, the_i)
                     raise DAError("Found a reference to a variable '" + missingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
                 except NameError as errMess:

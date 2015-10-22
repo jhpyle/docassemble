@@ -670,10 +670,4 @@ help: |
 
   I hope you enjoyed this interview.
 progress: 100
----
-question: |
-  What is the specific airspeed velocity?
-fields:
-  - Velocity: airspeed_velocity
 ...
-

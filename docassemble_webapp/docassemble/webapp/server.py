@@ -852,6 +852,7 @@ def index():
             error_messages.append(("error", "Error: " + str(errMess)))
     if changed and 'questionname' in post_data:
         user_dict['answered'].add(post_data['questionname'])
+        logmessage("From server.py, answered name is " + post_data['questionname'])
         user_dict['role_event_notification_sent'] = False
     interview.assemble(user_dict, interview_status)
     if len(interview_status.attachments) > 0:

@@ -1,0 +1,122 @@
+---
+question: |
+  It's a nice evening, isn't it?
+yesno: user_agrees_it_is_a_nice_evening
+---
+question: Do you want to go to the dance with me?
+yesno: user_wants_to_go_to_dance
+---
+mandatory: true
+code: |
+  if user_agrees_it_is_a_nice_evening and user_wants_to_go_to_dance:
+    life_is_good
+---
+question: Which of these statements is true?
+choices:
+  - "I am old-fashioned":
+      question: |
+        My darling, would you do me the honor of accompanying me to
+        the dance this fine evening?
+      yesno: user_wants_to_go_to_dance
+  - "I don't care for flowerly language": continue
+---
+question: That is splendid news!
+sets:
+  - life_is_good
+---
+question: |
+  What is the specific airspeed velocity?
+fields:
+  - Velocity: airspeed_velocity
+---
+question: What is your favorite color?
+buttons:
+  - Red:
+      question: Dark red or light red?
+      field: favorite_color
+      buttons:
+        - Dark Red
+        - Light Red
+  - Green:
+      question: Dark green or light green?
+      field: favorite_color
+      buttons:
+        - Dark Green
+        - Light Green
+---
+question: Tell me more about yourself
+fields:
+  - Description: user_description
+    datatype: area
+    hint: |
+      E.g., you can describe your hair color, eye color, 
+      favorite movies, etc.
+  - Annual income: user_annual_income
+    datatype: currency
+  - E-mail address: user_email_address
+    datatype: email
+  - Been vaccinated: user_vaccinated
+    datatype: yesno
+  - Seen Mount Rushmore: mount_rushmore_visited
+    datatype: yesnowide
+  - Belly button type: belly_button_type
+    datatype: radio
+    choices:
+      - Innie
+      - Outie
+  - html: |
+      <p>The date and time is <span id="today_time"></span>.
+  - script: |
+      <script>
+        document.getElementById("today_time").innerHTML = Date();
+      </script>
+  - Number of friends: number_of_friends
+    datatype: radio
+    choices:
+      - 1: One
+      - 2: Two
+      - 3: Three
+  - Degrees obtained: degrees
+    datatype: checkboxes
+    choices:
+      - High school
+      - College
+      - Graduate school
+  - State you grew up in: home_state
+    code: |
+      us.states.mapping('abbr', 'name')
+  - note: |
+      #### Politics
+
+      Tell me about your political views.
+  - no label: political views
+    default: I have no political views
+  - Political preference: political_party
+    datatype: radio
+    shuffle: true 
+    choices:
+      - Republican
+      - Democrat
+      - Independent
+---
+sets: user_understands_no_attorney_client_relationship
+question: third try!
+buttons:
+  - Continue: continue
+---
+sets: user_understands_no_attorney_client_relationship
+question: second try!
+buttons:
+  - Continue: continue
+---
+sets: user_understands_no_attorney_client_relationship
+question: first try!
+buttons:
+  - Continue: continue
+---
+question: |
+  What is the basic airspeed velocity?
+fields:
+  - Velocity: airspeed_velocity
+
+#localhost?i=docassemble.demo:data/questions/test.yml

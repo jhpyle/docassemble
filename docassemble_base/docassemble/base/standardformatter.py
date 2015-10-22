@@ -114,6 +114,8 @@ def as_html(status, extra_scripts, url_for, debug):
                 elif field.datatype == 'note':
                     fieldlist.append('<div class="row"><div class="col-md-12">' + markdown_to_html(status.notes[field.number], status=status) + '</div></div>')
                     continue
+                elif field.datatype == 'script':
+                    continue
             if field.number in status.helptexts:
                 helptext_start = '<a style="cursor:pointer;color:#408E30" data-container="body" data-toggle="popover" data-placement="bottom" data-content="' + noquote(unicode(status.helptexts[field.number])) + '">' 
                 helptext_end = '</a>'
@@ -121,6 +123,7 @@ def as_html(status, extra_scripts, url_for, debug):
                 helptext_start = ''
                 helptext_end = ''
             if field.required:
+                sys.stderr.write(field.datatype + "\n")
                 validation_rules['rules'][field.saveas] = {'required': True}
                 validation_rules['messages'][field.saveas] = {'required': word("This field is required.")}
             else:
@@ -187,7 +190,7 @@ def as_html(status, extra_scripts, url_for, debug):
         output += '<div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button></div>'
         output += question_name_tag(status.question)
         output += '</fieldset></form>'
-    elif status.question.question_type == "continue":
+    elif status.question.question_type == "settrue":
         output += '<form id="daform" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
@@ -248,7 +251,7 @@ def as_html(status, extra_scripts, url_for, debug):
                         if key == 'image':
                             continue
                         formatted_key = markdown_to_html(key, status=status, trim=True, escape=True)
-                        output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + the_icon + formatted_key + '|' + the_icon + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="multiple_choice" type="radio" value="' + str(indexno) + '"><label for="multiple_choice' + str(indexno) + '_' + str(id_index) + '">' + the_icon + markdown_to_html(key, status=status, trim=True) + '</label></div></div>'
+                        output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + the_icon + formatted_key + '|' + the_icon + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="multiple_choice" type="radio" value="' + str(indexno) + '"></div></div>'
                         id_index += 1
                     indexno += 1
                     validation_rules['rules']['multiple_choice'] = {'required': True}
@@ -466,10 +469,11 @@ def input_for(status, field, wide=False):
             id_index = 0
             for pair in pairlist:
                 if pair[0] is not None:
-                    formatted_item = markdown_to_html(pair[1], status=status, trim=True, escape=True)
+                    sys.stderr.write(str(field.saveas) + "\n")
+                    formatted_item = markdown_to_html(str(pair[1]), status=status, trim=True, escape=True)
                     inner_fieldlist.append('<input data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + str(field.saveas) + '_' + str(id_index) + '" name="' + str(field.saveas) + '" type="radio" value="' + str(pair[0]) + '">')
                 else:
-                    inner_fieldlist.append('<div>' + markdown_to_html(pair[1], status=status) + '</div>')
+                    inner_fieldlist.append('<div>' + markdown_to_html(str(pair[1]), status=status) + '</div>')
                 id_index += 1
             output += "".join(inner_fieldlist)
         else:
