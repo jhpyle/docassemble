@@ -44,7 +44,9 @@ that the `user` variable is an object of type `Individual`.
 
 And in fact, it is even easier than that.  You can write:
 
-    Hello, ${ user.name }!
+    Hello, ${ user }!
+
+instead.
 
 (to be continued...)
 

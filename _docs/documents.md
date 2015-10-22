@@ -16,7 +16,7 @@ attachment:
   - name: A document with a classic message
     filename: Hello_World_Document
     content: |
-	  Hello, world!
+      Hello, world!
 ---
 {% endhighlight %}
 

@@ -60,4 +60,4 @@ question: |
 [Markdown]: https://daringfireball.net/projects/markdown/
 [YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
 [mark up]: https://en.wikipedia.org/wiki/Markup_language
-[Pandoc](http://johnmacfarlane.net/pandoc/)
+[Pandoc]: http://johnmacfarlane.net/pandoc/
