@@ -225,11 +225,95 @@ a value for `user_wants_to_got_to_dance`.  Not giving up,
 dance with me?" question, which was defined earlier in
 `question_library.yml`.
 
+## How **docassemble** runs your code
+
+**docassemble** goes through your interview [YAML] file from start to
+finish, incorporating `include`d files as it goes.  It always executes
+`initial` code when it sees it, executes `mandatory` `code` blocks
+that have not been successfully executed yet, and if it encounters a
+`mandatory` `question` that it has not been successfully
+asked yet, it will stop and ask the question.  If at any time it
+encounters a variable that is undefined, for example while trying to
+formulate a question, it will interrupt itself in order to go find the
+a definition for that variable.
+
+Whenever **docassemble** comes back from one of these excursions to
+find the definition of a variable, it does not pick up where it left
+off; it starts from the beginning again.
+
+Therefore, when writing code for an interview, you need to keep in
+mind that any particular block of code may be re-run from the
+beginning multiple times.
+
+For example, consider the following code:
+
+{% highlight yaml %}
+---
+mandatory: true
+code: |
+  if user_has_car:
+    user_net_worth = user_net_worth + resale_value_of_user_car
+    if user_car_brand == 'Toyota':
+	  user_is_sensible = True
+    elif user_car_is_convertible:
+	  user_is_sensible = False
+---
+{% endhighlight %}
+
+The intention of this code is to increase the user's net worth by the
+resale value of the user's car, if the user has a car.  If the code
+only ran once, it would work as intended.  However, because of
+**docassemble**'s design, which is to ask questions "as needed," the
+code actually runs like this:
+
+1. **docassemble** starts running the code; it encounters
+ `user_has_car`, which is undefined.  It finds a question that defines
+ `user_has_car` and asks it.  (We will assume `user_has_car` is set to True.)
+2. **docassemble** runs the code again, and tries to increment the
+ `user_net_worth` (which we can assume is already defined); it
+ encounters `resale_value_of_user_car`, which is undefined.  It finds
+ a question that defines `resale_value_of_user_car` and asks it.
+3. **docassemble** runs the code again.  The value of `user_net_worth`
+ is increased.  Then the code encounters `user_car_brand`, which is
+ undefined.  It finds a question that defines
+ `user_car_brand` and asks it.
+4. **docassemble** runs the code again.  The value of `user_net_worth`
+ is increased (again).  If `user_car_brand` is equal to "Toyota," then
+ `user_is_sensible` is set.  In that case, the code runs successfully
+ to the end, and the `mandatory` code block is marked as completed, so
+ that it will not be run again.
+5. However, if `user_car_brand` is not equal to "Toyota," the code
+ will encounter `user_car_is_convertible`, which is undefined.
+ **docassemble** will find a question that defines
+ `user_car_is_convertible` and ask it.  **docassemble** will then run
+ the code again, the value of `user_net_worth` will increase yet
+ again, and then (finally) the code will run successfully to the end.
+
+The solution here is to make sure that your code is prepared to be
+stopped and restarted.  For example, you could have a separate code
+block to compute `user_net_worth`:
+
+{% highlight yaml %}
+---
+mandatory: true
+code: |
+  user_net_worth = 0
+  if user_has_car:
+    user_net_worth = user_net_worth + resale_value_of_user_car
+  if user_has_house:
+	user_net_worth = user_net_worth + resale_value_of_user_house
+---
+{% endhighlight %}
+
+Note that `mandatory` must be true for this to work sensibly.
+If this were an optional code block, it would not run to completion
+because `user_net_worth` would already be defined when **docassemble**
+came back from asking whether the user has a car.
+
 ## Best practices for interview logic and organization
 
 * Use only a single `mandatory` `code` block for each interview, and
   put it at the top of the file after the [initial blocks].
-
 
 ## Best practices for sharing with others
 
