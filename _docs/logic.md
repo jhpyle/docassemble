@@ -254,9 +254,9 @@ code: |
   if user_has_car:
     user_net_worth = user_net_worth + resale_value_of_user_car
     if user_car_brand == 'Toyota':
-	  user_is_sensible = True
+      user_is_sensible = True
     elif user_car_is_convertible:
-	  user_is_sensible = False
+      user_is_sensible = False
 ---
 {% endhighlight %}
 
@@ -301,7 +301,7 @@ code: |
   if user_has_car:
     user_net_worth = user_net_worth + resale_value_of_user_car
   if user_has_house:
-	user_net_worth = user_net_worth + resale_value_of_user_house
+    user_net_worth = user_net_worth + resale_value_of_user_house
 ---
 {% endhighlight %}
 
