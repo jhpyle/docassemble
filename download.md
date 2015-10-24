@@ -4,7 +4,7 @@ title: Download docassemble
 short_title: Download
 ---
 
-**docassemble** consists of a collection of [Python] packages.
+**docassemble** consists of a collection of [Python](https://www.python.org/) packages.
 
 You can download **docassemble** from its [GitHub repository]({{ site.github.repository_url }}):
 
