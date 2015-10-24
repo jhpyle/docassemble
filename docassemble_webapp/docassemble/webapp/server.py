@@ -58,7 +58,14 @@ from docassemble.webapp.packages.models import Package, PackageAuth
 from docassemble.webapp.config import daconfig
 from PIL import Image
 import pyPdf
+import yaml
 from subprocess import call
+DEBUG = daconfig.get('debug', False)
+docassemble.base.parse.debug = DEBUG
+if DEBUG:
+    from pygments import highlight
+    from pygments.lexers import YamlLexer
+    from pygments.formatters import HtmlFormatter
 
 app.debug = False
 
@@ -68,7 +75,6 @@ default_yaml_filename = daconfig.get('default_interview', 'docassemble.demo:data
 if not daconfig['mail']:
     daconfig['mail'] = dict()
 os.environ['PYTHON_EGG_CACHE'] = tempfile.mkdtemp()
-DEBUG = daconfig.get('debug', False)
 app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
 app.config['BRAND_NAME'] = daconfig.get('brandname', daconfig.get('appname', 'docassemble'))
 app.config['MAIL_USERNAME'] = daconfig['mail'].get('username', None)
@@ -274,24 +280,6 @@ def save_numbered_file(filename, orig_path):
 
 docassemble.base.parse.set_mail_variable(get_mail_variable)
 docassemble.base.parse.set_save_numbered_file(save_numbered_file)
-
-scripts = """
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-    <script src="//ajax.aspnetcdn.com/ajax/jquery.validate/1.13.1/jquery.validate.min.js"></script>
-    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/js/jasny-bootstrap.min.js"></script>
-    <script>
-    $( document ).ready(function() {
-      $(function () {
-        $('.tabs a:last').tab('show')
-      })
-      $(function () {
-        $('[data-toggle="popover"]').popover()
-      })
-      $("#daform input, #daform textarea, #daform select").first().focus();
-    });
-    </script>
-"""
 
 match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-]')
 match_brackets = re.compile('\[\'.*\'\]$')
@@ -519,50 +507,50 @@ def login():
 def google_page():
     return render_template('flask_user/google_login.html', title="Sign in")
 
-@app.route('/slogin')
-def slogin():
-    output = standard_start() + """    <div class="container">"""
-    output += "<h1>Welcome to " + daconfig['appname'] + "</h1>"
-    output += '<div class="g-signin2" data-onsuccess="onSignIn"></div>'
-    output += '<div><a href="' + url_for('oauth_authorize', provider='facebook') + '">' + word('Login with Facebook') + '</a></div>'
-    output += '<div><a href="' + url_for('oauth_authorize', provider='twitter') + '">' + word('Login with Twitter') + '</a></div>'
-    extra_script = """\
-          <script src="https://apis.google.com/js/platform.js" async defer></script>
-          <script>
-          function onSignIn(googleUser) {
-            var profile = googleUser.getBasicProfile();
-            console.log('ID: ' + profile.getId());
-            console.log('Name: ' + profile.getName());
-            console.log('Image URL: ' + profile.getImageUrl());
-            console.log('Email: ' + profile.getEmail());
-            if (profile.getId()){
-              $.ajax({
-                type: 'POST',
-                url: '""" + url_for('oauth_authorize', provider='google') + """',
-                contentType: 'application/octet-stream; charset=utf-8',
-                success: function(result) {
-                  console.log(result);
-                  window.location = '""" + url_for('oauth_callback', provider='google', _external=True) + """';
-                },
-                dataType: "json",
-                data: {
-                  "id": profile.getId(),
-                  "name": profile.getName(),
-                  "image": profile.getImageUrl(),
-                  "email": profile.getEmail()
-                }
-              });
-            }
-            else if (authResult['error']) {
-              console.log('There was an error: ' + authResult['error']);
-            }
-          }
-          </script>
-"""
-    output += """</div>""" + scripts + extra_script + """\n  </body>\n</html>"""
-    response = make_response(output, 200)
-    response.headers['Content-Type'] = 'text/html'
-    return response
+# @app.route('/slogin')
+# def slogin():
+#     output = standard_start + """    <div class="container">"""
+#     output += "<h1>Welcome to " + daconfig['appname'] + "</h1>"
+#     output += '<div class="g-signin2" data-onsuccess="onSignIn"></div>'
+#     output += '<div><a href="' + url_for('oauth_authorize', provider='facebook') + '">' + word('Login with Facebook') + '</a></div>'
+#     output += '<div><a href="' + url_for('oauth_authorize', provider='twitter') + '">' + word('Login with Twitter') + '</a></div>'
+#     extra_script = """\
+#           <script src="https://apis.google.com/js/platform.js" async defer></script>
+#           <script>
+#           function onSignIn(googleUser) {
+#             var profile = googleUser.getBasicProfile();
+#             console.log('ID: ' + profile.getId());
+#             console.log('Name: ' + profile.getName());
+#             console.log('Image URL: ' + profile.getImageUrl());
+#             console.log('Email: ' + profile.getEmail());
+#             if (profile.getId()){
+#               $.ajax({
+#                 type: 'POST',
+#                 url: '""" + url_for('oauth_authorize', provider='google') + """',
+#                 contentType: 'application/octet-stream; charset=utf-8',
+#                 success: function(result) {
+#                   console.log(result);
+#                   window.location = '""" + url_for('oauth_callback', provider='google', _external=True) + """';
+#                 },
+#                 dataType: "json",
+#                 data: {
+#                   "id": profile.getId(),
+#                   "name": profile.getName(),
+#                   "image": profile.getImageUrl(),
+#                   "email": profile.getEmail()
+#                 }
+#               });
+#             }
+#             else if (authResult['error']) {
+#               console.log('There was an error: ' + authResult['error']);
+#             }
+#           }
+#           </script>
+# """
+#     output += """</div>""" + scripts + extra_script + """\n  </body>\n</html>"""
+#     response = make_response(output, 200)
+#     response.headers['Content-Type'] = 'text/html'
+#     return response
 
 @app.route("/exit", methods=['POST', 'GET'])
 def exit():
@@ -885,9 +873,22 @@ def index():
                 classname = 'danger'
             flash_content += '<div class="row"><div class="col-md-6"><div class="alert alert-' + classname + '"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div></div></div>'
             #flash_content += '</div>'
-    labelauty_scripts = '    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>' + """
+    scripts = """
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="//ajax.aspnetcdn.com/ajax/jquery.validate/1.13.1/jquery.validate.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/js/jasny-bootstrap.min.js"></script>
+"""
+    scripts += '    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>' + """
     <script>
-    $(document).ready(function(){
+    $( document ).ready(function() {
+      $(function () {
+        $('.tabs a:last').tab('show')
+      })
+      $(function () {
+        $('[data-toggle="popover"]').popover()
+      })
+      $("#daform input, #daform textarea, #daform select").first().focus();
       $(".to-labelauty").labelauty({ width: "100%" });
       $(".to-labelauty-icon").labelauty({ label: false });
     });
@@ -897,12 +898,28 @@ def index():
         output += signature_html(interview_status, DEBUG)
         output += """\n  </body>\n</html>"""
     else:
-        output = standard_start() + make_navbar(daconfig['brandname'], steps, SHOW_LOGIN) + '    <div class="container">' + '<div class="tab-content">' + flash_content
+        output = '<!DOCTYPE html>\n<html lang="en">\n  <head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css"><link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" /><link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet"><link rel="stylesheet" href="' + url_for('static', filename='app/app.css') + '">'
+        if DEBUG:
+            output += '<link rel="stylesheet" href="' + url_for('static', filename='app/pygments.css') + '">'
+        output += '<title>' + daconfig['brandname'] + '</title></head>\n  <body>\n'
+        output += make_navbar(interview_status, daconfig['brandname'], steps, SHOW_LOGIN) + '    <div class="container">' + "\n      "+ '<div class="tab-content">' + flash_content
         if USE_PROGRESS_BAR:
             output += progress_bar(user_dict['progress'])
         extra_scripts = list()
         output += as_html(interview_status, extra_scripts, url_for, DEBUG)
-        output += """</div></div>""" + scripts + labelauty_scripts + "".join(extra_scripts) + """\n  </body>\n</html>"""
+        output += """</div>\n"""
+        if DEBUG:
+            output += '      <div id="source" class="col-md-12 collapse">' + "\n"
+            output += '        <h3>Source code for question</h3>' + "\n"
+            #output += '<pre>'
+            if interview_status.question.source_code is None:
+                output += 'unavailable'
+            else:
+                output += highlight(interview_status.question.source_code, YamlLexer(), HtmlFormatter())
+            #output += '</pre>' + "\n"
+            output += '      </div>' + "\n"
+        output += '    </div>'
+        output += scripts + "\n    " + "".join(extra_scripts) + """\n  </body>\n</html>"""
     response = make_response(output.encode('utf8'), status)
     response.headers['Content-type'] = 'text/html; charset=utf-8'
     return response
@@ -1029,7 +1046,7 @@ def get_file_path(indexno):
         os.makedirs(path)
     return (os.path.join(path, 'file'))
 
-def make_navbar(page_title, steps, show_login):
+def make_navbar(status, page_title, steps, show_login):
     navbar = """\
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="container-fluid">
@@ -1049,7 +1066,15 @@ def make_navbar(page_title, steps, show_login):
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
           <ul class="nav navbar-nav navbar-left">
             <li class="active"><a href="#question" data-toggle="tab">""" + word('Question') + """</a></li>
-            <li><a href="#help" data-toggle="tab">""" + word('Help') + """</a></li>
+            <li><a href="#help" data-toggle="tab">""" + word('Help')
+    if status.question.helptext is not None:
+        navbar += '+'
+    navbar += "</a></li>\n"
+    if DEBUG:
+        navbar += """\
+            <li><a href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">""" + word('Source') + """</a></li>
+"""
+    navbar += """\
           </ul>
           <ul class="nav navbar-nav navbar-right">
 """
@@ -1081,9 +1106,6 @@ def utility_processor():
     def random_social():
         return 'local$' + ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
     return dict(random_social=random_social, word=word)
-
-def standard_start(extra_css=list()):
-    return '<!DOCTYPE html>\n<html lang="en">\n  <head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css"><link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" /><link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet"><link rel="stylesheet" href="' + url_for('static', filename='app/app.css') + '"><title>' + daconfig['brandname'] + '</title></head>\n  <body>\n'
 
 def reset_session(yaml_filename):
     session['i'] = yaml_filename
@@ -1497,3 +1519,8 @@ def current_info(yaml=None, req=None):
         url = req.base_url
     return({'session': session['uid'], 'yaml_filename': yaml, 'url': url, 'user': {'id': theid, 'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated, 'email': email, 'roles': roles}})
 
+def html_escape(text):
+    text = re.sub('&', '&amp;', text)
+    text = re.sub('<', '&lt;', text)
+    text = re.sub('>', '&gt;', text)
+    return text;

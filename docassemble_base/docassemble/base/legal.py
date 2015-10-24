@@ -303,6 +303,15 @@ class Individual(Person):
             return(capitalize(output))
         else:
             return(output)
+    def yourself_or_name(self, **kwargs):
+        if self == this_thread.user:
+            output = word('yourself')
+        else:
+            output = self.name.full()
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)
 
 class DAList(DAObject):
     def init(self, **kwargs):

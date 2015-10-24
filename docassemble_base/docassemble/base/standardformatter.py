@@ -1,7 +1,7 @@
 from docassemble.base.util import word, currency_symbol
 import docassemble.base.filter
 from docassemble.base.filter import markdown_to_html
-from docassemble.base.parse import Question
+from docassemble.base.parse import Question, debug
 import urllib
 import sys
 import os
@@ -423,6 +423,8 @@ def as_html(status, extra_scripts, url_for, debug):
     for help_section in status.helpText:
         if help_section['heading'] is not None:
             output += '<div class="page-header"><h3>' + help_section['heading'] + '</h3></div>'
+        else:
+            output += '<div class="page-header"><h3>' + word('Help with this question') + '</h3></div>'
         output += markdown_to_html(help_section['content'], status=status)
     if len(status.attributions):
         output += '<br><br><br><br><br><br><br>'

@@ -16,8 +16,11 @@ from docassemble.base.pandoc import Pandoc
 from mako.template import Template
 from types import CodeType
 
+debug = False
 match_mako = re.compile(r'<%|\${|% if|% for|% while')
 emoji_match = re.compile(r':([^ ]+):')
+document_match = re.compile(r'^---$', flags=re.MULTILINE)
+remove_trailing_dots = re.compile(r'\.\.\.$')
 
 def textify(data):
     return list(map((lambda x: x.text(user_dict)), data))
@@ -261,6 +264,8 @@ class Question:
         self.from_path = kwargs.get('path', None)
         self.package = kwargs.get('package', None)
         self.interview = caller
+        if debug:
+            self.source_code = kwargs.get('source_code', None)
         self.fields = []
         self.attachments = []
         self.name = None
@@ -873,12 +878,12 @@ class Question:
         result_list = list()
         has_code = False
         if type(the_list) is not list:
-            raise DAError("Multiple choices need to be provided in list form, not dictionary form")
+            raise DAError("Multiple choices need to be provided in list form, not dictionary form.  " + self.idebug(the_list))
         for the_dict in the_list:
             if type(the_dict) is str:
                 the_dict = {the_dict: the_dict}
             elif type(the_dict) is not dict:
-                raise DAError("Unknown data type for the_dict in parse_fields")
+                raise DAError("Unknown data type for the_dict in parse_fields.  " + self.idebug(the_list))
             result_dict = dict()
             for key in the_dict:
                 value = the_dict[key]
@@ -901,7 +906,7 @@ class Question:
                 elif type(value) == bool:
                     result_dict[key] = value
                 else:
-                    raise DAError("Unknown data type in parse_fields:" + str(type(value)))
+                    raise DAError("Unknown data type in parse_fields:" + str(type(value)) + ".  " + self.idebug(the_list))
             result_list.append(result_dict)
         return(has_code, result_list)
     def mark_as_answered(self, user_dict):
@@ -1040,9 +1045,12 @@ class Interview:
             source_package = source.package
         else:
             source_package = None
-        for document in yaml.load_all(source.content):
+        #for document in yaml.load_all(source.content):
+        for source_code in document_match.split(source.content):
+            source_code = remove_trailing_dots.sub('', source_code)
+            document = yaml.load(source_code)
             if document is not None:
-                question = Question(document, self, path=source.path, package=source_package)
+                question = Question(document, self, path=source.path, package=source_package, source_code=source_code)
     def processed_helptext(self, user_dict):
         result = list()
         for source in self.helptext:

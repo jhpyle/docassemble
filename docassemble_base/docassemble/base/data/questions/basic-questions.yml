@@ -19,7 +19,8 @@ comment: >-
 ---
 default role: client
 code: |
-  if current_info['user']['is_authenticated'] and 'advocate' in current_info['user']['roles']:
+  if current_info['user']['is_authenticated'] and \
+     'advocate' in current_info['user']['roles']:
     user = advocate
     role = 'advocate'
   else:
@@ -33,7 +34,8 @@ subquestion: |
   % if 'advocate' in role_needed:
     An advocate needs to review your answers before you can proceed.
 
-    Please remember the following link and come back to it when you receive notice to do so:
+    Please remember the following link and come back to it when you
+    receive notice to do so:
 
     [${ interview_url() }](${ interview_url() })
     
@@ -57,11 +59,13 @@ comment: >-
   An "objects" section defines variables that are Python objects.  The
   object types here are defined in the docassemble.legal module.
 ---
-mandatory: True
 code: |
   court.jurisdiction = jurisdiction
   case.court = court
   pleading.case = case
+comment: >-
+  This code sets some basic relations among the objects created in the
+  objects block of this YAML file.
 ---
 image sets:
   freepik:
@@ -164,7 +168,8 @@ buttons:
         del x.signature
 ---
 generic object: Individual
-question: ${ x.is_are_you(capitalize=True) } a citizen of the United States?
+question: |
+  ${ x.is_are_you(capitalize=True) } a citizen of the United States?
 yesno: x.is_citizen
 ---
 field: user_understands_no_attorney_client_relationship
@@ -178,7 +183,7 @@ buttons:
 comment: |
   You can specify whether you want the multiple choices to appear as
   buttons by using the word "buttons" instead of the word "choices."
-  Also, the example below shows how you can use Python code to
+  Also, the example above shows how you can use Python code to
   generate the selections of multiple-choice question.  The code is
   evaluated at the time the question is asked.
 ---
@@ -241,7 +246,7 @@ comment: |
   to it by the name of the variable itself.  For example, suppose you
   create an object, case.judge, with the class of Individual.  If the
   name of case.judge is ever needed, docassemble will use the question
-  below to ask "What is the name of the judge in the case?"  If the
+  above to ask "What is the name of the judge in the case?"  If the
   object is called user, it will ask "What is your name?"  If the
   object is called village_idiot, it will ask "What is the village
   idiot's name?"
@@ -273,7 +278,12 @@ fields:
   - Last Name: x.child[i].name.last
     default: ${ x.name.last }
 comment: |
+  This illustrates the use of the "possessive" method of the class
+  Individual.  Depending on who x is, this question will ask different
+  things:
+
   Example 1: What is your second child's name?
+
   Example 2: What is John Doe's first child's name?
 ---
 comment: |
@@ -300,7 +310,12 @@ question: >-
 yesno: x.has_children
 decoration: children
 comment: |
+  This illustrates the use of the "do_question" method of the class
+  Individual.  Depending on who x is, this question will ask different
+  things:
+
   Example 1: Do you have any children?
+
   Example 2: Does Jane Doe have any children?
 ---
 generic object: Individual
@@ -312,6 +327,9 @@ question: |
 yesno: x.has_other_children
 decoration: children
 comment: |
+  This illustrates the use of various methods of the class Individual.
+  Depending on who x is, this question will ask different things:
+
   Example 1: So far, you have told me about John Doe's two children, 
   Sally Doe and Harold Doe.  Does John Doe have any other children?
 
@@ -321,8 +339,8 @@ comment: |
 generic object: PartyList
 question: |
   You have told me that there ${ x.does_verb("is", ) }
-  ${ x.number_gathered_as_word() } ${ x.as_noun() }, ${ x }.  Is there another
-  ${ x.as_singular_noun() }?
+  ${ x.number_gathered_as_word() } ${ x.as_noun() }, ${ x }.
+  Is there another ${ x.as_singular_noun() }?
 yesno: x.there_is_another
 ---
 generic object: Individual
@@ -370,7 +388,9 @@ fields:
       period_list()
 ---
 generic object: Individual
-question: How much ${ x.do_question("make") } from cash assistance (Temporary Assistance to Needy Families or TANF)?
+question: |
+  How much ${ x.do_question("make") } from cash assistance 
+  (Temporary Assistance to Needy Families or TANF)?
 decoration: bills
 fields:
   - TANF Income: x.income.tanf.value
@@ -380,14 +400,18 @@ fields:
       period_list()
 ---
 generic object: Individual
-question: How much ${ x.do_question("have") } in ${ x.pronoun_possessive("checking account") }?
+question: |
+  How much ${ x.do_question("have") } in 
+  ${ x.pronoun_possessive("checking account") }?
 decoration: piggybank
 fields:
   - Amount in Checking Account: x.asset.checking.value
     datatype: currency
 ---
 generic object: Individual
-question: How much ${ x.do_question("have") } in ${ x.pronoun_possessive("savings account") }?
+question: |
+  How much ${ x.do_question("have") } in 
+  ${ x.pronoun_possessive("savings account") }?
 decoration: piggybank
 fields:
   - Amount in Savings Account: x.asset.savings.value
