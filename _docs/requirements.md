@@ -46,6 +46,8 @@ The web application depends on:
   data in a SQL server
 * [WTForms](https://wtforms.readthedocs.org/en/latest/) - required by
   Flask
+* [Pygments](http://pygments.org) - for showing [YAML] in a special
+  debug mode
 * [rauth](https://github.com/litl/rauth) - required by Flask-User
 * [simplekv](https://github.com/mbr/simplekv) - required by
   Flask-KVSession
@@ -70,3 +72,5 @@ To run the demo question file you will need:
 * [DateUtil](https://moin.conectiva.com.br/DateUtil) - used in the
   demo file to calculate whether an injury took place within the
   statute of limitations period
+
+[YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML

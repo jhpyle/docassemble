@@ -92,6 +92,7 @@ To install the additional dependencies for the web server
     sudo pip install --upgrade wtforms werkzeug rauth simplekv \
       Flask-KVSession flask-user pypdf flask flask-login \
 	  flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
+	  Pygments
 
 ### Installing docassemble
 
