@@ -338,7 +338,7 @@ comment: |
 ---
 generic object: PartyList
 question: |
-  You have told me that there ${ x.does_verb("is", ) }
+  You have told me that there ${ x.does_verb("is") }
   ${ x.number_gathered_as_word() } ${ x.as_noun() }, ${ x }.
   Is there another ${ x.as_singular_noun() }?
 yesno: x.there_is_another

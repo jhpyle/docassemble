@@ -910,13 +910,27 @@ def index():
         output += """</div>\n"""
         if DEBUG:
             output += '      <div id="source" class="col-md-12 collapse">' + "\n"
-            output += '        <h3>Source code for question</h3>' + "\n"
-            #output += '<pre>'
+            output += '        <h3>' + word('Source code for question') + '</h3>' + "\n"
             if interview_status.question.source_code is None:
-                output += 'unavailable'
+                output += word('unavailable')
             else:
                 output += highlight(interview_status.question.source_code, YamlLexer(), HtmlFormatter())
-            #output += '</pre>' + "\n"
+            if len(interview_status.seeking) > 1:
+                output += '        <h4>' + word('How question came to be asked') + '</h4>' + "\n"
+                for stage in interview_status.seeking:
+                    if 'question' in stage and 'reason' in stage and stage['question'] is not interview_status.question:
+                        if stage['reason'] == 'initial':
+                            output += "        <h5>" + word('Ran initial code') + "</h5>\n"
+                        elif stage['reason'] == 'mandatory question':
+                            output += "        <h5>" + word('Tried to ask mandatory question') + "</h5>\n"
+                        elif stage['reason'] == 'mandatory code':
+                            output += "        <h5>" + word('Tried to run mandatory code') + "</h5>\n"
+                        elif stage['reason'] == 'asking':
+                            output += "        <h5>" + word('Tried to ask question') + "</h5>\n"
+                        output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter())
+                    elif 'variable' in stage:
+                        output += "        <h5>" + word('Needed definition of') + " <code>" + str(stage['variable']) + "</code></h5>\n"
+                output += '        <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.util.pickleable_objects(user_dict))]) + '</p>' + "\n"
             output += '      </div>' + "\n"
         output += '    </div>'
         output += scripts + "\n    " + "".join(extra_scripts) + """\n  </body>\n</html>"""

@@ -169,6 +169,7 @@ class InterviewStatus(object):
     def __init__(self, current_info=dict()):
         self.current_info = current_info
         self.attributions = set()
+        self.seeking = list()
         self.attachments = None
     def populate(self, question_result):
         self.question = question_result['question']
@@ -1073,10 +1074,6 @@ class Interview:
             user_dict['answers'] = dict()
         interview_status.current_info.update({'default_role': self.default_role})
         user_dict['current_info'] = interview_status.current_info
-        # if 'x_stack' not in user_dict:
-        #     user_dict['x_stack'] = list()
-        # if 'i_stack' not in user_dict:
-        #     user_dict['i_stack'] = list()
         for question in self.questions_list:
             if question.question_type == 'imports':
                 #logmessage("Found imports")
@@ -1092,6 +1089,8 @@ class Interview:
                 for question in self.questions_list:
                     if question.question_type == 'code' and question.is_initial:
                         #logmessage("Running some code:\n\n" + question.sourcecode)
+                        if debug:
+                            interview_status.seeking.append({'question': question, 'reason': 'initial'})
                         exec(question.compute, user_dict)
                     if question.name and question.name in user_dict['answered']:
                         logmessage("Skipping " + question.name + " because answered")
@@ -1115,6 +1114,8 @@ class Interview:
                     #     if question.name:
                     #         user_dict['answered'].add(question.name)
                     if question.question_type == 'code' and question.is_mandatory:
+                        if debug:
+                            interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
                         logmessage("Running some code:\n\n" + question.sourcecode)
                         logmessage("Question name is " + question.name)
                         exec(question.compute, user_dict)
@@ -1123,41 +1124,41 @@ class Interview:
                             user_dict['answered'].add(question.name)
                     if hasattr(question, 'content') and question.name and question.is_mandatory:
                         #sys.stderr.write("Asking mandatory question\n")
+                        if debug:
+                            interview_status.seeking.append({'question': question, 'reason': 'mandatory question'})
                         interview_status.populate(question.ask(user_dict, 'None', 'None'))
                         #sys.stderr.write("Asked mandatory question\n")
                         raise MandatoryQuestion()
             except NameError as errMess:
                 missingVariable = str(errMess).split("'")[1]
                 #logmessage(str(errMess))
-                question_result = self.askfor(missingVariable, user_dict)
-                pp = pprint.PrettyPrinter(indent=4)
+                question_result = self.askfor(missingVariable, user_dict, seeking=interview_status.seeking)
                 if question_result['type'] == 'continue':
                     logmessage("Continuing after asking for " + missingVariable + "...")
                     continue
                 else:
+                    pp = pprint.PrettyPrinter(indent=4)
                     logmessage("Need to ask:\n  " + question_result['question_text'] + "\n" + "type is " + str(question_result['question'].question_type) + "\n" + pp.pformat(question_result) + "\n" + pp.pformat(question_result['question']))
                     interview_status.populate(question_result)
                     break
             except AttributeError as errMess:
                 logmessage(str(errMess.args))
                 raise DAError('Got error ' + str(errMess))
-                #break
             except MandatoryQuestion:
                 break
             else:
                 raise DAError('All was defined')
-                #break
         return(pickleable_objects(user_dict))
     def askfor(self, missingVariable, user_dict, **kwargs):
         variable_stack = kwargs.get('variable_stack', set())
-        #the_i = 'None'
-        #the_x = 'None'
+        seeking = kwargs.get('seeking', list())
+        if debug:
+            seeking.append({'variable': missingVariable})
         logmessage("I don't have " + missingVariable)
         if missingVariable in variable_stack:
             raise DAError("Infinite loop:" + missingVariable + " already looked for")
         variable_stack.add(missingVariable)
         found_generic = False
-        #q_is_iterator = False
         realMissingVariable = missingVariable
         totry = [{'real': missingVariable, 'vari': missingVariable}]
         #logmessage("moo1")
@@ -1265,6 +1266,8 @@ class Interview:
                             else:
                                 #logmessage("No question is not generic")
                                 continue
+                        if debug:
+                            seeking.append({'question': question, 'reason': 'asking'})
                         if question.question_type == "objects":
                             for keyvalue in question.objects:
                                 for variable in keyvalue:
@@ -1315,7 +1318,7 @@ class Interview:
                 except NameError as errMess:
                     newMissingVariable = str(errMess).split("'")[1]
                     logmessage(str(errMess))
-                    question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack)
+                    question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking)
                     if question_result['type'] == 'continue':
                         continue
                     return(question_result)
