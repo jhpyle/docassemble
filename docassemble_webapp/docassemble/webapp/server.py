@@ -704,8 +704,13 @@ def index():
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
     changed = False
     if 'theImage' in post_data:
-        interview.assemble(user_dict, interview_status)
+        #interview.assemble(user_dict, interview_status)
         file_field = post_data['saveas'];
+        initial_string = 'import docassemble.base.core'
+        try:
+            exec(initial_string, user_dict)
+        except Exception as errMess:
+            error_messages.append(("error", "Error: " + str(errMess)))
         if 'success' in post_data and post_data['success']:
             theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['theImage']).group(1) + '==')
             #sys.stderr.write("Got theImage and it is " + str(len(theImage)) + " bytes long\n")
@@ -717,9 +722,9 @@ def index():
                 ifile.write(theImage)
             os.symlink(path, path + '.' + extension)
             #sys.stderr.write("Saved theImage\n")
-            string = file_field + " = DAFile('" + file_field + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
+            string = file_field + " = docassemble.base.core.DAFile('" + file_field + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
         else:
-            string = file_field + " = DAFile('" + file_field + "')"
+            string = file_field + " = docassemble.base.core.DAFile('" + file_field + "')"
         #sys.stderr.write(string + "\n")
         try:
             exec(string, user_dict)
@@ -730,7 +735,12 @@ def index():
             error_messages.append(("error", "Error: " + str(errMess)))
     if 'files' in post_data:
         #logmessage("There are files")
-        interview.assemble(user_dict, interview_status)
+        #interview.assemble(user_dict, interview_status)
+        initial_string = 'import docassemble.base.core'
+        try:
+            exec(initial_string, user_dict)
+        except Exception as errMess:
+            error_messages.append(("error", "Error: " + str(errMess)))
         file_fields = post_data['files'].split(",")
         for file_field in file_fields:
             #logmessage("There is a file_field")
@@ -766,16 +776,13 @@ def index():
                     if match_invalid.search(file_field):
                         error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
                         break
-                    # if len(files_to_process) == 1:
-                    #     (filename, file_number, mimetype, extension) = files_to_process[0]
-                    #     string = file_field + " = DAFile('" + file_field + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
                     if len(files_to_process) > 0:
                         elements = list()
                         indexno = 0
                         for (filename, file_number, mimetype, extension) in files_to_process:
-                            elements.append("DAFile('" + file_field + "[" + str(indexno) + "]', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')")
+                            elements.append("docassemble.base.core.DAFile('" + file_field + "[" + str(indexno) + "]', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')")
                             indexno += 1
-                        string = file_field + " = DAFileList('" + file_field + "', elements=[" + ", ".join(elements) + "])"
+                        string = file_field + " = docassemble.base.core.DAFileList('" + file_field + "', elements=[" + ", ".join(elements) + "])"
                     else:
                         string = file_field + " = None"
                     logmessage("string is " + string)
@@ -891,6 +898,12 @@ def index():
       $("#daform input, #daform textarea, #daform select").first().focus();
       $(".to-labelauty").labelauty({ width: "100%" });
       $(".to-labelauty-icon").labelauty({ label: false });
+      $(function(){ 
+        var navMain = $("#navbar-collapse");
+        navMain.on("click", "a", null, function () {
+          navMain.collapse('hide');
+        });
+      });
     });
     </script>"""
     if interview_status.question.question_type == "signature":
@@ -927,7 +940,12 @@ def index():
                             output += "        <h5>" + word('Tried to run mandatory code') + "</h5>\n"
                         elif stage['reason'] == 'asking':
                             output += "        <h5>" + word('Tried to ask question') + "</h5>\n"
-                        output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter())
+                        if stage['question'].from_path != interview.source.path:
+                            output += '        <p style="font-weight: bold;"><small>(' + word('from') + ' ' + stage['question'].from_path +")</small></p>\n"
+                        if stage['question'].source_code is None:
+                            output += word('unavailable')
+                        else:
+                            output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter())
                     elif 'variable' in stage:
                         output += "        <h5>" + word('Needed definition of') + " <code>" + str(stage['variable']) + "</code></h5>\n"
                 output += '        <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.util.pickleable_objects(user_dict))]) + '</p>' + "\n"
@@ -1065,25 +1083,38 @@ def make_navbar(status, page_title, steps, show_login):
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="container-fluid">
         <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
             <span class="sr-only">Toggle navigation</span>
+"""
+    if status.question.helptext is not None:
+        navbar += """\
+            <span style="background-color: yellow" class="icon-bar"></span>
+            <span style="background-color: yellow" class="icon-bar"></span>
+            <span style="background-color: yellow" class="icon-bar"></span>
+"""
+    else:
+        navbar += """\
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
-          </button>"""
+"""
+    navbar += """\
+          </button>
+"""
     if steps > 1:
         navbar += """\
-          <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="back_one" value="1"><button style="background:none; cursor:pointer; border:none; margin:0; padding:0;" type="submit"><i style="font-size:1.2em;" class="glyphicon glyphicon-chevron-left"></i></button></form></span>"""
+          <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="back_one" value="1"><button style="background:none; cursor:pointer; border:none; margin:0; padding:0;" type="submit"><i style="font-size:1.2em;" class="glyphicon glyphicon-chevron-left"></i></button></form></span>
+"""
     navbar += """\
           <span class="navbar-brand">""" + page_title + """</span>
         </div>
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <div class="collapse navbar-collapse" id="navbar-collapse">
           <ul class="nav navbar-nav navbar-left">
-            <li class="active"><a href="#question" data-toggle="tab">""" + word('Question') + """</a></li>
-            <li><a href="#help" data-toggle="tab">""" + word('Help')
-    if status.question.helptext is not None:
-        navbar += '+'
-    navbar += "</a></li>\n"
+            <li class="active"><a href="#question" data-toggle="tab">""" + word('Question') + """</a></li>"""
+    if status.question.helptext is None:
+        navbar += '<li><a href="#help" data-toggle="tab">' + word('Help') + "</a></li>\n"
+    else:
+        navbar += '<li><a style="color: yellow" href="#help" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i>' + "</a></li>\n"
     if DEBUG:
         navbar += """\
             <li><a href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">""" + word('Source') + """</a></li>
@@ -1095,7 +1126,7 @@ def make_navbar(status, page_title, steps, show_login):
     if show_login:
         if current_user.is_anonymous:
             logmessage("is_anonymous is " + str(current_user.is_anonymous))
-            navbar += '            <li><a href="' + url_for('user.login', next=url_for('index')) + '">' + word('Sign in') + '</a></li>'
+            navbar += '            <li><a href="' + url_for('user.login', next=url_for('index')) + '">' + word('Sign in') + '</a></li>' + "\n"
         else:
             navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">' + current_user.email + '<b class="caret"></b></a><ul class="dropdown-menu">'
             if current_user.has_role('admin', 'developer'):
@@ -1107,7 +1138,7 @@ def make_navbar(status, page_title, steps, show_login):
         navbar += '            <li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li>'
     navbar += """\
           </ul>
-        </div><!--/.nav-collapse -->
+        </div>
       </div>
     </div>
 """

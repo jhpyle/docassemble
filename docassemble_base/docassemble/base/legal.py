@@ -1,4 +1,4 @@
-from docassemble.base.core import DAObject
+from docassemble.base.core import DAObject, DAList, DAFile, DAFileCollection, DAFileList
 from docassemble.base.util import comma_and_list, get_language, set_language, word, words, comma_list, ordinal, need, nice_number, possessify, your, her, his, do_you, does_a_b, verb_past, verb_present, noun_plural, underscore_to_space, space_to_underscore, force_ask, period_list, currency, indefinite_article, today, nodoublequote, capitalize, titlecase
 from docassemble.base.filter import file_finder, url_finder, mail_variable, markdown_to_html
 from docassemble.base.logger import logmessage
@@ -8,7 +8,6 @@ import re
 import urllib
 import sys
 import threading
-#import string
 from decimal import Decimal
 
 __all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'RoleChangeTracker', 'DATemplate', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'set_language', 'word', 'words', 'comma_list', 'ordinal', 'need', 'nice_number', 'possessify', 'your', 'her', 'his', 'do_you', 'does_a_b', 'verb_past', 'verb_present', 'noun_plural', 'underscore_to_space', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'indefinite_article', 'today', 'nodoublequote', 'capitalize', 'titlecase']
@@ -83,12 +82,7 @@ class LegalFiling(Document):
         output += "[END_CAPTION]\n\n"
         if self.title is not None:
             output += "[BOLDCENTER] " + self.title.upper() + "\n"
-        #logmessage("I reached the end of caption: " + output)
         return(output)
-
-# class LegalAction(DAObject):
-#     def init(self):
-#         self.court = Court('court')
 
 class RoleChangeTracker(DAObject):
     def init(self):
@@ -170,7 +164,6 @@ class Person(DAObject):
     def init(self):
         self.initializeAttribute(name='name', objectType=Name)
         self.initializeAttribute(name='address', objectType=Address)
-        #logmessage("Got to this place")
         self.roles = set()
         return super(Person, self).init()
     def __setattr__(self, attrname, value):
@@ -208,27 +201,23 @@ class Person(DAObject):
         born = self.birthdate
         try: 
             birthday = born.replace(year=today.year)
-        except ValueError: # raised when birth date is February 29 and the current year is not a leap year
+        except ValueError:
             birthday = born.replace(year=today.year, month=born.month+1, day=1)
         if birthday > today:
             return today.year - born.year - 1
         else:
             return today.year - born.year
     def is_question(self, **kwargs):
-        #logmessage("do_question kwargs are " + str(kwargs))
-        #if self.instanceName == 'user':
         if self == this_thread.user:
             return(are_you(the_verb, **kwargs))
         else:
             return(does_a_b(self.name, the_verb, **kwargs))
     def do_question(self, the_verb, **kwargs):
-        #logmessage("do_question kwargs are " + str(kwargs))
         if self == this_thread.user:
             return(do_you(the_verb, **kwargs))
         else:
             return(does_a_b(self.name, the_verb, **kwargs))
     def does_verb(self, the_verb, **kwargs):
-        #logmessage("does_verb kwargs are " + str(kwargs))
         if self == this_thread.user:
             tense = 1
         else:
@@ -251,7 +240,6 @@ class Individual(Person):
         self.initializeAttribute(name='income', objectType=Income)
         self.initializeAttribute(name='asset', objectType=Asset)
         self.initializeAttribute(name='expense', objectType=Expense)
-        #logmessage("Got to this here place")
         return super(Individual, self).init()
     def possessive(self, target):
         if self is this_thread.user:
@@ -313,83 +301,6 @@ class Individual(Person):
         else:
             return(output)
 
-class DAList(DAObject):
-    def init(self, **kwargs):
-        self.elements = list()
-        self.gathering = False
-        if 'elements' in kwargs:
-            for element in kwargs['elements']:
-                self.add(element)
-            self.gathered = True
-        return super(DAList, self).init()
-    def add(self, element):
-        self.elements.append(element)
-    def addObject(self, objectFunction):
-        newobject = objectFunction(self.instanceName + '[' + str(len(self.elements)) + ']')
-        self.elements.append(newobject)
-        return newobject
-    def first(self):
-        return self.elements[0]
-    def last(self):
-        return self.elements[-1]
-    def does_verb(self, the_verb, **kwargs):
-        if not self.gathering:
-            self.gathered
-        if len(self.elements) > 1:
-            tense = 'plural'
-        else:
-            tense = 3
-        if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
-            return verb_past(the_verb, person=tense)
-        else:
-            return verb_present(the_verb, person=tense)
-    def did_verb(self, the_verb, **kwargs):
-        if not self.gathering:
-            self.gathered
-        if len(self.elements) > 1:
-            tense = 'plural'
-        else:
-            tense = 3
-        return verb_past(the_verb, person=tense)
-    def as_singular_noun(self, *pargs):
-        if not self.gathering:
-            self.gathered
-        if len(pargs) > 0:
-            the_noun = pargs[0]
-        else:
-            the_noun = self.instanceName
-        the_noun = re.sub(r'.*\.', '', the_noun)
-        return the_noun        
-    def as_noun(self, *pargs):
-        if not self.gathering:
-            self.gathered
-        if len(pargs) > 0:
-            the_noun = pargs[0]
-        else:
-            the_noun = self.instanceName
-        the_noun = re.sub(r'.*\.', '', the_noun)
-        if len(self.elements) > 1 or len(self.elements) == 0:
-            return noun_plural(the_noun)
-        else:
-            return the_noun
-    def number(self):
-        self.gathered
-        return len(self.elements)
-    def number_gathered(self):
-        return len(self.elements)
-    def number_gathered_as_word(self):
-        return nice_number(self.number_gathered())
-    def number_as_word(self):
-        return nice_number(self.number())
-    def comma_and_list(self):
-        if not self.gathering:
-            self.gathered
-        return comma_and_list(self.elements)        
-    def __getitem__(self, index):
-        return self.elements[index]
-    def __str__(self):
-        return self.comma_and_list()
-
 class PartyList(DAList):
     pass
 
@@ -449,61 +360,18 @@ class Value(DAObject):
 class PeriodicValue(Value):
     pass
 
-class DAFile(DAObject):
-    def init(self, **kwargs):
-        if 'filename' in kwargs:
-            self.filename = kwargs['filename']
-        if 'mimetype' in kwargs:
-            self.filename = kwargs['mimetype']
-        if 'extension' in kwargs:
-            self.filename = kwargs['extension']
-        if 'number' in kwargs:
-            self.number = kwargs['number']
-            self.ok = True
-        else:
-            self.ok = False
-        return
-    def __str__(self):
-        return self.show()
-    def show(self, width=None):
-        if not self.ok:
-            return('')
-        if width is not None:
-            return('[IMAGE ' + str(self.number) + ', ' + str(width) + ']')
-        else:
-            return('[IMAGE ' + str(self.number) + ']')
-
-class DAFileCollection(DAObject):
-    pass
-
-class DAFileList(DAList):
-    def __str__(self):
-        return self.show()
-    def show(self, width=None):
-        output = ''
-        for element in self.elements:
-            if element.ok:
-                if width is not None:
-                    output += '[IMAGE ' + str(element.number) + ', ' + str(width) + ']' + "\n"
-                else:
-                    output += '[IMAGE ' + str(element.number) + ']' + "\n"
-        return output
-
 def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", attachments=[]):
     from flask_mail import Message
-    #sys.stderr.write("moo1\n")
     if type(to) is not list:
         to = [to]
     if len(to) == 0:
         return False
     if body is None and html is None:
         body = ""
-    #sys.stderr.write("moo2\n")
     email_stringer = lambda x: email_string(x, include_name=False)
     msg = Message(subject, sender=email_stringer(sender), recipients=email_stringer(to), cc=email_stringer(cc), bcc=email_stringer(bcc), body=body, html=html)
     success = True
     for attachment in attachments:
-        #sys.stderr.write("moo31\n")
         if type(attachment) is DAFileCollection:
             subattachment = getattr(attachment, 'pdf', getattr(attachment, 'rtf', getattr(attachment, 'tex', None)))
             if subattachment is not None:
@@ -511,34 +379,25 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
             else:
                 success = False
         if type(attachment) is DAFile and attachment.ok:
-            #sys.stderr.write("moo32\n")
             file_info = file_finder(str(attachment.number))
             if ('path' in file_info):
-                #sys.stderr.write("moo33\n")
                 failed = True
                 with open(file_info['path'], 'r') as fp:
-                    #sys.stderr.write("moo3\n")
                     msg.attach(file_info['filename'], file_info['mimetype'], fp.read())
                     failed = False
                 if failed:
-                    #sys.stderr.write("moo4\n")
                     success = False
             else:
                 success = False
-                #sys.stderr.write("moo34\n")
         else:
             success = False
-            #sys.stderr.write("moo35\n")
     appmail = mail_variable()
     if not appmail:
-        #sys.stderr.write("moo36\n")
         success = False
     if success:
-        #sys.stderr.write("moo37\n")
         try:
             appmail.send(msg)
         except Exception as errmess:
-            #sys.stderr.write("moo38: " + str(errmess) + "\n")
             success = False
     return(success)
     
@@ -550,10 +409,7 @@ def email_string(persons, include_name=None):
     result = []
     for person in persons:
         if isinstance(person, Person):
-            #sys.stderr.write("email string: contemplating " + person.object_name() + "\n")
             result.append(person.email_address(include_name=include_name))
-            #sys.stderr.write("email string was " + person.email_address(include_name=include_name) + "\n")
         else:
-            #sys.stderr.write("email string not a person: contemplating " + str(person) + "\n")
             result.append(str(person))
     return result

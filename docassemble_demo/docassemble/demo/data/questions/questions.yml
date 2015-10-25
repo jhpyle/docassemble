@@ -3,8 +3,8 @@ metadata:
     This is a demonstration of the docassemble system.
   authors:
     - name: Jonathan Pyle
-      organization: Example, Inc.
-  revision_date: 2015-09-28
+      organization: none
+  revision_date: 2015-10-25
 comment: |
   A "metadata" block contains information about the YAML file, such as
   the name of the author.
@@ -31,8 +31,8 @@ comment: |
   interviews.  It also defines basic variables like "user" and sets
   the names of icons that you can use to "decorate" your questions.
 
-  The "basic-questions.yml" file is in the docassemble.base package,
-  in the directory docassemble/base/data/questions.
+  The "basic-questions.yml" comes from the docassemble.base package
+  and is located in the directory docassemble/base/data/questions.
 
   You can include question files from other packages by explicitly
   referring to their package names.  E.g.,
@@ -66,12 +66,11 @@ comment: |
   icons.
 ---
 imports:
-  - datetime
-  - dateutil.relativedelta
-  - dateutil.parser
   - us
 comment: |
-  This loads some Python modules that we will need in the interview.
+  This loads a Python module that we will need later when we ask the
+  user for his or her address.  The module "us" provides a list of
+  states in the United States.
 ---
 objects:
   - village_idiot: Individual
@@ -214,8 +213,9 @@ subquestion: |
 
   In the navigation bar above, you can click "Help" to see the help
   text associated with the interview and with the individual question
-  (if any).  If "Help +" appears in the navigation bar, that means
-  help text specific to the question is available.
+  (if any).  If "Help <i class="glyphicon glyphicon-star"></i>"
+  appears in the navigation bar, that means help text specific to the
+  question is available.
 
   Click "Source" to toggle the display of the [YAML] code used to
   generate the question.
@@ -275,57 +275,57 @@ comment: |
   This example also shows how you can create square buttons with icons
   and labels: you just add an "image" value to the button item.
 ---
-comment: |
-  The following seven lines of code ask all the necessary questions to
-  gather the names of the plaintiffs in the case, when the user may
-  not be a plaintiff.
 code: |
   case.plaintiff.gathering = True
   if client.is_plaintiff and client not in case.plaintiff:
     case.plaintiff.add(client)
   if case.plaintiff.number_gathered() == 0:
-    newplaintiff = case.plaintiff.addObject(Individual)
+    case.plaintiff.addObject(Individual)
   while case.plaintiff.there_is_another:
-    newplaintiff = case.plaintiff.addObject(Individual)
+    case.plaintiff.addObject(Individual)
     del case.plaintiff.there_is_another
   case.plaintiff.gathering = False
   case.plaintiff.gathered = True
----
 comment: |
-  This code will ask the user if he or she is a defendant, so long as
-  the user is not already a plaintiff.  Then it will ask for the names
-  of the defendants.
+  These seven lines of code ask all the necessary questions to
+  gather the names of the plaintiffs in the case, when the user may
+  not be a plaintiff.
+---
 code: |
   case.defendant.gathering = True
   if client not in case.defendant and not client.is_plaintiff and \
      client.is_defendant:
     case.defendant.add(client)
   if case.defendant.number_gathered() == 0:
-    newdefendant = case.defendant.addObject(Individual)
+    case.defendant.addObject(Individual)
   while case.defendant.there_is_another:
-    newdefendant = case.defendant.addObject(Individual)
+    case.defendant.addObject(Individual)
     del case.defendant.there_is_another
   case.defendant.gathering = False
   case.defendant.gathered = True
----
 comment: |
-  This code gathers the names of the children of all of the parties.
+  This code will ask the user if he or she is a defendant, so long as
+  the user is not already a plaintiff.  Then it will ask for the names
+  of the defendants.
+---
 code: |
   people = [client]
   people.extend(case.parties())
   for indiv in people:
     indiv.child.gathered
----
 comment: |
-  This is an example of how docassemble can serve as an "expert
-  system."  The variable "client_has_standing" (a legal concept) can
-  be set using simple logical expressions in Python.
+  This code gathers the names of the children of all of the parties.
+---
 code: |
   if client_has_injury and injury_in_jurisdiction and \
      statute_of_limitations_ok:
     client_has_standing = True
   else:
     client_has_standing = False
+comment: |
+  This is an example of how docassemble can serve as an "expert
+  system."  The variable "client_has_standing" (a legal concept) can
+  be set using simple logical expressions in Python.
 ---
 question: Were you injured?
 decoration: injury
@@ -347,9 +347,6 @@ fields:
     datatype: date
 ---
 generic object: Individual
-comment: |
-  This code gathers information about a person's income and assets if
-  necessary.
 code: |
   x.asset.gathering = True
   x.income.gathering = True
@@ -363,6 +360,9 @@ code: |
   x.income.gathering = False
   x.asset.gathered = True
   x.income.gathered = True
+comment: |
+  This code gathers information about a person's income and assets if
+  necessary.
 ---
 question: |
   Why do you think you deserve to win this case?
@@ -399,21 +399,48 @@ code: |
           court.name = "Court of Common Pleas of " + \
           jurisdiction.county + " County"
 ---
-comment: |
-  This block uses some Python functions to determine whether the date
-  of the injury is within the statute of limitations period.
 code: |
-  cutoff = datetime.datetime.now() - \
+  import datetime
+  import dateutil.relativedelta
+  import dateutil.parser
+  cutoff_date = datetime.datetime.now() - \
   dateutil.relativedelta.relativedelta(years=statute_of_limitations_years)
-  if dateutil.parser.parse(injury_date) > cutoff:
+  if dateutil.parser.parse(injury_date) > cutoff_date:
       statute_of_limitations_ok = True
   else:
       statute_of_limitations_ok = False
+comment: |
+  This code uses some Python functions to determine whether the date
+  of the injury is within the statute of limitations period.
+
+  The variable cutoff_date represents the latest date in the past when
+  an injury could have occurred that would still be actionable under
+  the statute of limitations.  To calculate cutoff_date, we start with
+  today's date and subtract a number of number of years given by the
+  applicable statute of limitations.  The number of years in the
+  applicable statute of limitations period is the number stored in the
+  variable statute_of_limitations_years.
+
+  In Python, we calculate cutoff_date using the subtraction operator,
+  the minus sign, which does special things when the variables
+  involved are dates and intervals.  The call to
+  "datetime.datetime.now()" returns today's date and time as a date
+  object.  The call to "relativedelta()" returns a time interval
+  object where the length of the interval is number of years given by
+  statute_of_limitations_years.  Today's date "minus" that interval
+  gives the date in the past we are looking for.
+
+  This code relies on the special Python modules datetime,
+  dateutil.relativedelta, and dateutil.parser.  We could have used an
+  "import" block to import these modules.  If we did that, the Python
+  "import" command would be run every time a question is asked in the
+  interview.  There may be a slight efficiency boost to importing
+  module names into the namespace only when and if they are necessary.
 ---
 generic object: Individual
 decoration: home
 question: |
-  Where ${ x.do_question('live') }?
+  What is ${ x.possessive('home') } like?
 fields:
   - Type of home: x.address.type
     datatype: radio
@@ -423,14 +450,46 @@ fields:
       - Leased house
       - Owned house
       - Mobile home
-  - Amenities: x.address.quality
+  - Amenities: x.address.amenities
     datatype: checkboxes
     code: |
       {'chimney': 'Chimney', 'stove': 'Stove'}
   - note: |
-      On the following line, you should write something **profound**
-      about ${ client }'s home:
-  - no label: x.address.profound_thing
+      How would you describe the general *milieu* of ${ x.possessive('abode') }?
+  - no label: x.address.milieu
+    required: false
+comment: >-
+  In this question, the type of home uses a "radio" selector.  The
+  address type will be set to one of "Apartment," "Leased house,"
+  "Owned house," or "Mobile home."  Because "shuffle" is true, the
+  order of the choices will be random (different every time the page
+  is loaded).
+
+  The "amenities" of the home, by contrast, use a "checkbox" selector.
+  This means that the variable will be defined as a Python dictionary
+  containing two key/value pairs, not as text.  For example, if this
+  question is asked regarding an Individual with the variable name
+  "client," and the user selects "Chimney" only, the value of
+  client.address.amenities will be a Python dictionary in which
+  "chimney" is set to True and "stove" is set to False.
+
+  The "amenities" field also demonstrates that checkbox values and
+  labels can be set using Python code.  The code needs to evaluate to
+  a Python dictionary, where the values are the labels to be shown to
+  the user and the keys are the keys that will be used in the
+  resulting Python dictionary (x.address.amenities).
+
+  The third "field" is not really a field; it is a "note."  This
+  places text onto the screen.  The text can include Markdown and can
+  be a Mako template.  In this case, the text introduces the fourth
+  field, which is a text field with no label.  Since the label has the
+  special value "no label," the field fills the width of the form.
+---
+generic object: Individual
+decoration: home
+question: |
+  Where ${ x.do_question('live') }?
+fields:
   - Address: x.address.address
   - Unit: x.address.unit
     required: false
@@ -552,7 +611,8 @@ attachments:
       % endif
       Your annual income is ${ currency(client.income.total()) }
       and the value of all you own is 
-      ${ currency(client.asset.total()) }.
+      ${ currency(client.asset.total()) }.  Your home is best described as
+      an "${ client.address.type }."
 
       % if client_has_standing:
         You have a valid claim.

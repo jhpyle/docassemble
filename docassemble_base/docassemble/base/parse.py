@@ -1095,24 +1095,6 @@ class Interview:
                     if question.name and question.name in user_dict['answered']:
                         logmessage("Skipping " + question.name + " because answered")
                         continue
-                    # if False and question.question_type == 'objects':
-                    #     #logmessage("Running objects")
-                    #     for keyvalue in question.objects:
-                    #         for variable in keyvalue:
-                    #             object_type = keyvalue[variable]
-                    #             if re.search(r"\.", variable):
-                    #                 m = re.search(r"(.*)\.(.*)", variable)
-                    #                 variable = m.group(1)
-                    #                 attribute = m.group(2)
-                    #                 command = variable + ".initializeAttribute(name='" + attribute + "', objectType=" + object_type + ")"
-                    #                 logmessage("Running " + command)
-                    #                 exec(command, user_dict)
-                    #             else:
-                    #                 command = variable + ' = ' + object_type + '("' + variable + '")'
-                    #                 exec(command, user_dict)
-                    #                 #user_dict[variable] = user_dict[object_type](variable)
-                    #     if question.name:
-                    #         user_dict['answered'].add(question.name)
                     if question.question_type == 'code' and question.is_mandatory:
                         if debug:
                             interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
@@ -1123,11 +1105,9 @@ class Interview:
                         if question.name:
                             user_dict['answered'].add(question.name)
                     if hasattr(question, 'content') and question.name and question.is_mandatory:
-                        #sys.stderr.write("Asking mandatory question\n")
                         if debug:
                             interview_status.seeking.append({'question': question, 'reason': 'mandatory question'})
                         interview_status.populate(question.ask(user_dict, 'None', 'None'))
-                        #sys.stderr.write("Asked mandatory question\n")
                         raise MandatoryQuestion()
             except NameError as errMess:
                 missingVariable = str(errMess).split("'")[1]

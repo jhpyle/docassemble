@@ -95,7 +95,7 @@ image sets:
       male: male244.svg
       female: female243.svg
       map: map32.svg
-comment: |
+comment: >-
   Here we pre-define some icon files so that we can easily refer to
   them later.  These files are located in the docassemble.base package
   in the subdirectory docassemble/base/data/static.
@@ -104,7 +104,7 @@ generic object: Individual
 question: |
   ${ x.is_are_you(capitalize=True) } a defendant in this case?
 yesno: x.is_defendant
-comment: |
+comment: >-
   After defining the basic variables, we define some standard questions.
 ---
 generic object: Individual
@@ -126,16 +126,16 @@ subquestion: |
   signing your name *slowly*.
 ---
 generic object: Individual
-comment: |
-  docassemble can collect signatures from users, who can write their
-  signature with their finger on a touchscreen device, or use a mouse
-  or trackpad.  The signatures can be added to documents.
 question: |
   Please sign your name below.
 signature: x.signature
 need: user_understands_how_to_use_signature_feature
 under: |
   ${ x.name }
+comment: >-
+  docassemble can collect signatures from users, who can write their
+  signature with their finger on a touchscreen device, or use a mouse
+  or trackpad.  The signatures can be added to documents.
 ---
 template: blank_signature
 content: |
@@ -180,7 +180,7 @@ buttons:
   - "I understand": understands
   - code: |
       [{'does not understand':"I do not understand"}, {'unsure':"I'm not sure"}]
-comment: |
+comment: >-
   You can specify whether you want the multiple choices to appear as
   buttons by using the word "buttons" instead of the word "choices."
   Also, the example above shows how you can use Python code to
@@ -193,7 +193,7 @@ question: >-
 fields:
   - Date of birth: x.birthdate
     datatype: date
-comment: |
+comment: >-
   docassemble allows you to write "generic" questions.  For example,
   if your code uses a variable called user.birthdate, docassemble will
   first look for a question that sets user.birthdate specifically, but
@@ -222,7 +222,7 @@ choices:
   - "Male :male:": male
   - "Female :female:": female
   - Other: other
-comment: |
+comment: >-
   By using "generic" questions, you can write a single question that
   works in a variety of circumstances, saving you a lot of time.  And
   if you ever want to use a more specific question for a specific
@@ -241,7 +241,7 @@ fields:
   - Middle Name: x.name.middle
     required: False
   - Last Name: x.name.last
-comment: |
+comment: >-
   If the object does not have a name yet, generic questions can refer
   to it by the name of the variable itself.  For example, suppose you
   create an object, case.judge, with the class of Individual.  If the
@@ -259,7 +259,7 @@ fields:
   - Middle Name: x[i].name.middle
     required: False
   - Last Name: x[i].name.last
-comment: |
+comment: >-
   Generic questions can also use indices, for example to fill out the
   names of a list of people.  (E.g., case.plaintiff.)
 
@@ -277,7 +277,7 @@ fields:
     required: False
   - Last Name: x.child[i].name.last
     default: ${ x.name.last }
-comment: |
+comment: >-
   This illustrates the use of the "possessive" method of the class
   Individual.  Depending on who x is, this question will ask different
   things:
@@ -286,12 +286,6 @@ comment: |
 
   Example 2: What is John Doe's first child's name?
 ---
-comment: |
-  As you can see in the following examples, it can get a little bit
-  complicated to use lots of functions within questions.  However, it
-  ultimately saves you a lot of trouble, because without the
-  functions, you would have to define multiple different questions to
-  ask the same thing in different contexts.
 generic object: Individual
 code: |
   x.child.gathering = True
@@ -309,7 +303,7 @@ question: >-
   ${ x.do_question('have', capitalize=True) } any children?
 yesno: x.has_children
 decoration: children
-comment: |
+comment: >-
   This illustrates the use of the "do_question" method of the class
   Individual.  Depending on who x is, this question will ask different
   things:
@@ -326,7 +320,7 @@ question: |
   ${ x.do_question('have', capitalize=True) } any other children?
 yesno: x.has_other_children
 decoration: children
-comment: |
+comment: >-
   This illustrates the use of various methods of the class Individual.
   Depending on who x is, this question will ask different things:
 
@@ -353,10 +347,6 @@ subquestion: |
 decoration: scalesofjustice
 yesno: x.is_plaintiff
 ---
-comment: |
-  Here are some standard questions that ask about a person's income
-  and assets.  These examples illustrate that if you do not want a
-  field to be labeled, you can use "" as the label name.
 generic object: Individual
 question: How much ${ x.do_question("make") } from employment?
 decoration: bills
@@ -366,6 +356,9 @@ fields:
   - "": x.income.employment.period
     code: |
       period_list()
+comment: >-
+  If you do not want a field to be labeled, you can use "" as the
+  label name.
 ---
 generic object: Individual
 question: How much ${ x.do_question("make") } from self-employment?
