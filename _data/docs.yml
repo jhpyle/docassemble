@@ -17,6 +17,7 @@
     - objects
     - markup
     - documents
+    - errors
 - title: Miscellaneous
   docs:
     - docker
