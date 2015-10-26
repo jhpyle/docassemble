@@ -1,11 +1,11 @@
 ---
 metadata:
   description: >-
-    These are basic questions common to a lot of different scenarios
+    These are basic questions common to a variety of scenarios
   authors:
     - name: Jonathan Pyle
-      organization: Example, Inc.
-  revision_date: 2015-09-28
+      organization: none
+  revision_date: 2015-10-25
 comment: >-
   A "metadata" section contains information about who wrote the
   YAML file and how it is intended to be used.
@@ -14,8 +14,8 @@ modules:
   - docassemble.base.legal
 comment: >-
   A "modules" section imports functions from Python modules.  The
-  basic building blocks of docassemble variables are defined in the
-  docassemble.legal module.
+  docassemble.base.legal module defines some object classes and functions
+  that are useful in legal applications.
 ---
 default role: client
 code: |
@@ -27,8 +27,21 @@ code: |
     user = client
     role = 'client'
   update_info(user, role, current_info)
+comment: >-
+  The default role is "client" and an optional role is "advocate."
+  Unless otherwise specified, all questions require the user to be a
+  "client."  The user is assumed to have the "advocate" role in this
+  interview if the user is logged in and the user has "advocate" as a
+  user role.
+
+  The functions in docassemble.base.legal need to know who the user
+  is.  The update_info function communicates that information to the
+  docassemble.base.legal module.  Since the code is paired with the
+  "default role" declaration, this code is run as "initial" code,
+  meaning that it is run every time **docassemble** processes the
+  interview (i.e., every time the screen loads).
 ---
-error: role_event
+event: role_event
 question: You are done for now.
 subquestion: |
   % if 'advocate' in role_needed:
@@ -46,6 +59,13 @@ subquestion: |
 decoration: exit
 buttons:
   - Exit: leave
+comment: >-
+  The "event" declaration acts like "sets."  When **docassemble**
+  needs to ask a question that requires a role other than the user's
+  role, it displays a special message for the user.  You need to
+  configure this message by defining a question tagged with "event:
+  role_event."  **docassemble** will search for this question just as
+  it searches for a question to define a variable.
 ---
 objects:
   - case: Case
@@ -101,11 +121,39 @@ comment: >-
   in the subdirectory docassemble/base/data/static.
 ---
 generic object: Individual
+question: >-
+  What is ${ x.possessive('date of birth') }?
+fields:
+  - Date of birth: x.birthdate
+    datatype: date
+comment: >-
+  docassemble allows you to write "generic" questions.  For example,
+  if your code uses a variable called user.birthdate, docassemble will
+  first look for a question that sets user.birthdate specifically, but
+  if it does not find it, it will look for a question for which the
+  generic object property is set to the object type of the user
+  object, which is Individual, and where the question sets the
+  variable x.birthdate.
+  
+  It will find that question here.  The question uses the possessive
+  function, which is a method of the Individual class.  The result is
+  that the question will be "What is your date of birth?" if x is the
+  user, but will otherwise ask "What is Jane Doe's date of birth?"
+
+  By using "generic" questions, you can write a single question that
+  works in a variety of circumstances, saving you a lot of time.  And
+  if you ever want to use a more specific question for a specific
+  variable, you can.  For example, if your code calls for
+  spouse.birthdate, you may to ask the question in a different way.
+  (E.g., "What is the birthdate of your lovely spouse?  If you don't
+  know this, you are in deep trouble!")  You would do this by defining
+  a non-generic question that sets spouse.birthdate, in which case
+  docassemble would use that question instead of the generic question.
+---
+generic object: Individual
 question: |
   ${ x.is_are_you(capitalize=True) } a defendant in this case?
 yesno: x.is_defendant
-comment: >-
-  After defining the basic variables, we define some standard questions.
 ---
 generic object: Individual
 field: x.marital_status
@@ -114,8 +162,17 @@ question: |
 choices:
   - Married: Married
   - Single: Single
-  - "**Divorced**": Divorced
+  - Divorced: Divorced
   - "*Separated*": Separated
+comment: >-
+  This is an example of a multiple-choice question.  Each of the
+  choices can be a key/value pair, or it can be a single text item.
+  If the choice is a key/value pair, the key is the label that is
+  shown to the user and value is the value to which the variable will
+  be set.
+  
+  This example also illustrates that Markdown can be used to add
+  formatting to labels.
 ---
 field: user_understands_how_to_use_signature_feature
 question: Instructions for signing your name
@@ -140,10 +197,16 @@ comment: >-
 template: blank_signature
 content: |
   \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+comment: >-
+  This template can be used for a blank line that someone might sign.
 ---
 template: empty_signature
 content: |
   \_\_\_[Your signature here]\_\_\_
+comment: >-
+  This template can be used in place of a user's signature.  It is a
+  good practice to show users where their signature would go on a
+  document before the user is asked for his or her signature.
 ---
 generic object: Individual
 question: |
@@ -164,8 +227,25 @@ buttons:
   - "Let me try again":
       generic object: Individual
       code: |
-        answers = dict()
         del x.signature
+        answers = dict()
+comment: >-
+  To create a "Let me try again" option for a variable that is already
+  collected, you have to tell **docassemble** to forget that the
+  variable was ever defined.  You do this by deleting the variable
+  from the variable store using the Python "del" statement.
+
+  In addition, you need to tell **docassemble** to forget your answer
+  to this multiple choice question; otherwise, the next time
+  **docassemble** looks for the definition of "signature_verified," it
+  will try to apply the answer the user gave the first time
+  (i.e. clicking the "Let me try again") button.  To make
+  **docassemble** forget the button the user pressed, reset the
+  special variable "answers" to an empty dictionary.
+
+  Note that in order for code or a question embedded within
+  buttons/choices to use the special variable "x," you need to declare
+  a generic object within the embedded code or question.
 ---
 generic object: Individual
 question: |
@@ -183,29 +263,10 @@ buttons:
 comment: >-
   You can specify whether you want the multiple choices to appear as
   buttons by using the word "buttons" instead of the word "choices."
+
   Also, the example above shows how you can use Python code to
   generate the selections of multiple-choice question.  The code is
   evaluated at the time the question is asked.
----
-generic object: Individual
-question: >-
-  What is ${ x.possessive('date of birth') }?
-fields:
-  - Date of birth: x.birthdate
-    datatype: date
-comment: >-
-  docassemble allows you to write "generic" questions.  For example,
-  if your code uses a variable called user.birthdate, docassemble will
-  first look for a question that sets user.birthdate specifically, but
-  if it does not find it, it will look for a question for which the
-  generic object property is set to the object type of the user
-  object, which is Individual, and where the question sets the
-  variable x.birthdate.
-  
-  It will find that question here.  The question uses the possessive
-  function, which is a method of the Individual class.  The result is
-  that the question will be "What is your date of birth?" if x is the
-  user, but will otherwise ask "What is Jane Doe's date of birth?"
 ---
 generic object: Individual
 question: >-
@@ -213,6 +274,12 @@ question: >-
 fields:
   - E-mail: x.email
     datatype: email
+comment: >-
+  The datatype "email" presents a text box that is like ordinary text
+  boxes except that validation is applied that checks to make sure the
+  e-mail address is valid.  Also, on supporting mobile web browsers,
+  there is a different keyboard option (e.g, the @ sign is readily
+  available).
 ---
 generic object: Individual
 question: >-
@@ -223,15 +290,9 @@ choices:
   - "Female :female:": female
   - Other: other
 comment: >-
-  By using "generic" questions, you can write a single question that
-  works in a variety of circumstances, saving you a lot of time.  And
-  if you ever want to use a more specific question for a specific
-  variable, you can.  For example, if your code calls for
-  spouse.birthdate, you may to ask the question in a different way.
-  (E.g., "What is the birthdate of your lovely spouse?  If you don't
-  know this, you are in deep trouble!")  You would do this by defining
-  a non-generic question that sets spouse.birthdate, in which case
-  docassemble would use that question instead of the generic question.
+  You can include images "emoji-style" by putting colons around the
+  image name.  This feature works within labels as well as within question
+  text.
 ---
 generic object: Individual
 question: |
@@ -336,6 +397,19 @@ question: |
   ${ x.number_gathered_as_word() } ${ x.as_noun() }, ${ x }.
   Is there another ${ x.as_singular_noun() }?
 yesno: x.there_is_another
+comment: >-
+
+  It is possible to write highly generalized "generic" questions that
+  use functions that ask questions of users based on variable names
+  and linguistic variations of variable names.  For that reason, it is
+  a good practice to give your variables meaningful, plain-English
+  names.
+
+  For example, if you create a PartyList called "plaintiff," this
+  generic question will ask something like: "You have told me that
+  there is one plaintiff, John Smith.  Is there another plaintiff?"
+  This would not be possible if your variable name was something that
+  only made sense to you, like "bad_guys_list_two."
 ---
 generic object: Individual
 question: |
@@ -348,7 +422,8 @@ decoration: scalesofjustice
 yesno: x.is_plaintiff
 ---
 generic object: Individual
-question: How much ${ x.do_question("make") } from employment?
+question: |
+  How much ${ x.do_question("make") } from employment?
 decoration: bills
 fields:
   - Employment Income: x.income.employment.value
@@ -359,9 +434,17 @@ fields:
 comment: >-
   If you do not want a field to be labeled, you can use "" as the
   label name.
+
+  The function period_list() comes from docassemble.base.legal.  It
+  causes the variable to be set to a number representing periods per
+  year.
+
+  The datatype "currency" is like the datatype "number" except that it
+  is displayed along with a locale-specific currency symbol.
 ---
 generic object: Individual
-question: How much ${ x.do_question("make") } from self-employment?
+question: |
+  How much ${ x.do_question("make") } from self-employment?
 decoration: bills
 fields:
   - Self-employment Income: x.income.selfemployment.value
@@ -371,7 +454,8 @@ fields:
       period_list()
 ---
 generic object: Individual
-question: How much ${ x.do_question("make") } from SSI?
+question: |
+  How much ${ x.do_question("make") } from SSI?
 decoration: bills
 fields:
   - SSI Income: x.income.ssi.value
@@ -411,14 +495,16 @@ fields:
     datatype: currency
 ---
 generic object: Individual
-question: How much ${ x.do_question("have") } in stocks and bonds?
+question: |
+  How much ${ x.do_question("have") } in stocks and bonds?
 decoration: stocks
 fields:
   - Amount in Stocks and Bonds: x.asset.stocksbonds.value
     datatype: currency
 ---
 generic object: Individual
-question: What kinds of income ${ x.do_question("have") }?
+question: |
+  What kinds of income ${ x.do_question("have") }?
 decoration: bills
 fields:
   - Employment: x.income.employment.exists
@@ -429,9 +515,14 @@ fields:
     datatype: yesnowide
   - Cash assistance: x.income.tanf.exists
     datatype: yesnowide
+comment: >-
+  The datatype "yesnowide" is just like the data type "yesno" except
+  that it fills the width of the form rather than aligning with other
+  fields that use labels.
 ---
 generic object: Individual
-question: What kinds of assets ${ x.do_question("own") }?
+question: |
+  What kinds of assets ${ x.do_question("own") }?
 decoration: piggybank
 fields:
   - Checking Account: x.asset.checking.exists
