@@ -4,7 +4,7 @@ title: Error messages
 short_title: Errors
 ---
 
-Here are some error messages you might encounter in **docassemble**,
+Here are some error messages you might encounter in **docassemble**
 and how to avoid them.
 
 > can't pickle module objects

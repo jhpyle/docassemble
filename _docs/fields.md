@@ -163,6 +163,8 @@ The following are the keys that have special meaning:
 * `script`: raw HTML to be appended to the bottom of the page; usually
   used for Javascript code that interacts with HTML specified in
   `html` entries.
+* `css`: raw HTML to be appended to the HTML head; usually used to
+  provide css classes for HTML specified in `html` entries.
 
 In addition, if you use `no label` as the label for your variable, the
 label will be omitted.  On wide screens, the field will fill more of
@@ -201,6 +203,12 @@ Compare this screenshot . . .
 
 {% highlight yaml %}
 ---
+imports:
+  - us
+---
+modules:
+  - docassemble.base.util
+---
 question: Tell me more about yourself
 fields:
   - Description: user_description
@@ -222,11 +230,11 @@ fields:
       - Innie
       - Outie
   - html: |
-      <p>The date and time is <span id="today_time"></span>.
+      The date and time is <span id="today_time"></span>.
   - script: |
-      <script>
-        document.getElementById("today_time").innerHTML = Date();
-      </script>
+      <script>document.getElementById("today_time").innerHTML = Date();</script>
+  - css: |
+	  <link rel="stylesheet" href="${ url_of('docassemble.demo:data/static/my.css') }">
   - Number of friends: number_of_friends
     datatype: radio
     choices:
