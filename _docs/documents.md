@@ -54,27 +54,34 @@ attachment:
 
 ## Special markup
 
-* `[INDENTATION]` - Indent every paragraph from now on.
-* `[NOINDENTATION]` - Do not indent every paragraph
+* `[INDENTATION]` - From now on, indent every paragraph.
+* `[NOINDENTATION]` - From now on, do not indent every paragraph.
 * `[BEGIN_TWOCOL] First column text [BREAK] Second column text [END_TWOCOL]` -
   Puts text into two columns.  The text in the columns cannot contain [Markdown].
-* `[SINGLESPACING]`
-* `[DOUBLESPACING]`
-* `[NBSP]`
-* `[ENDASH]`
-* `[EMDASH]`
-* `[HYPHEN]`
-* `[PAGEBREAK]`
-* `[PAGENUM]`
-* `[SECTIONNUM]`
-* `[SKIPLINE]`
-* `[VERTICALSPACE]`
-* `[NEWLINE]`
-* `[BR]`
-* `[TAB]`
-* `[FLUSHLEFT]`
-* `[CENTER]`
-* `[BOLDCENTER]`
+* `[FLUSHLEFT]` - Used at the beginning of a paragraph to designate
+  that the paragraph should be flushed left and not indented.
+* `[CENTER]` - Used at the beginning of a paragraph to designate that
+  the paragraph should be centered.
+* `[BOLDCENTER]` - Like `[CENTER]` except that text is bolded.
+* `[SINGLESPACING]` - From now on, paragraphs should be single-spaced.
+* `[DOUBLESPACING]` - From now on, paragraphs should be double-spaced.
+* `[NBSP]` - Insert a non-breaking space.
+* `[ENDASH]` - Insert an en dash.
+* `[EMDASH]` - Insert an em dash.
+* `[HYPHEN]` - Insert a hyphen.
+* `[PAGEBREAK]` - Insert a manual page break.
+* `[PAGENUM]` - Insert the current page number.
+* `[SECTIONNUM]` - Insert the current section number.
+* `[SKIPLINE]` - Skip a line (insert vertical space).  Cannot be used
+  within environments like `[FLUSHLEFT]`, `[CENTER]`, and
+  `[BOLDCENTER]`.
+* `[BR]` - Insert a line break.  `[BR]` is useful to use with
+  environments like `[FLUSHLEFT]`, `[CENTER]`, and `[BOLDCENTER]` that
+  only apply to a single paragraph.  Within `[BEGIN_TWOCOL]`, a paragraph
+  break (pressing enter twice, i.e., leaving one blank line) has the
+  same effect.
+* `[TAB]` - Insert a tab (horizontal space), e.g., to indent the first
+  line of a paragraph when it otherwise would not be indented.
 
 ## Document metadata
 
