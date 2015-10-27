@@ -161,6 +161,7 @@ content: |
 ---
 mandatory: True
 code: |
+  need(all_done)
   need(user_saw_initial_screen)
   if user_understands_no_attorney_client_relationship == "understands":
     need(client_done)
@@ -343,8 +344,26 @@ yesno: injury_in_jurisdiction
 question: When did your injury take place?
 decoration: calendar
 fields:
+  - html: |
+      The current date and time is <span class="mytime" id="today_time"></span>.
+    script: |
+      <script>document.getElementById("today_time").innerHTML = Date();</script>
+    css: |
+      <link rel="stylesheet" href="${ url_of('docassemble.demo:data/static/my.css') }">
   - Date of Injury: injury_date
     datatype: date
+comment: >-
+  You can embed raw HTML into a list of fields using the 'html' key.
+  You can also expand the capabilities of what you do with this HTML by
+  adding 'script' and 'css' keys.
+
+  The text of 'script' is added to the bottom of the page, while the
+  text of 'css' is added to the <head>.
+
+  Note that you can use Mako templates in each of these declarations.
+  The function url_of, which is available in docassemble.base.util and
+  docassemble.base.legal, will give you a URL to a file in a given
+  package.
 ---
 generic object: Individual
 code: |
@@ -764,4 +783,25 @@ attachments:
       % endif
 
       [FLUSHLEFT] ${ client }, ${ titlecase(case.role_of(client)) }
+---
+sets: all_done
+question: Hi there
+attachment:
+  - name: the attachment
+    filename: helloworld
+    content: |
+      Hi there.
+
+      [BEGIN_TWOCOL]
+
+      Hi there.
+
+      Hi *there* again.
+      [BREAK]
+      Hello there.
+
+      Hello there again and again.
+
+      And again.
+      [END_TWOCOL]
 ...

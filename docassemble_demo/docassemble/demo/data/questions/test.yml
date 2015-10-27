@@ -1,4 +1,10 @@
 ---
+imports:
+  - us
+---
+modules:
+  - docassemble.base.util
+---
 question: |
   It's a nice evening, isn't it?
 yesno: user_agrees_it_is_a_nice_evening
@@ -8,6 +14,7 @@ yesno: user_wants_to_go_to_dance
 ---
 mandatory: true
 code: |
+  belly_button_type
   if user_agrees_it_is_a_nice_evening and user_wants_to_go_to_dance:
     life_is_good
 ---
@@ -65,11 +72,11 @@ fields:
       - Innie
       - Outie
   - html: |
-      <p>The date and time is <span id="today_time"></span>.
+      <p>The date and time is <span class="mytime" id="today_time"></span>.
   - script: |
-      <script>
-        document.getElementById("today_time").innerHTML = Date();
-      </script>
+      <script>document.getElementById("today_time").innerHTML = Date();</script>
+  - css: |
+      <link rel="stylesheet" href="${ url_of('docassemble.demo:data/static/my.css') }">
   - Number of friends: number_of_friends
     datatype: radio
     choices:

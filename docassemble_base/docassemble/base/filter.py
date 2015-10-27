@@ -126,7 +126,7 @@ def rtf_filter(text, metadata=dict()):
     text = re.sub(r'{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 \[(BEGIN_TWOCOL|BREAK|END_TWOCOL|BEGIN_CAPTION|VERTICAL_LINE|END_CAPTION|SINGLESPACING|DOUBLESPACING|INDENTATION|NOINDENTATION|PAGEBREAK|SKIPLINE)\] *', r'[\1]{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 ', text)
     text = re.sub(r'{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 *\\par}', r'', text)
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
-    text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', rtf_caption_table, text)
+    text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', rtf_caption_table, text, flags=re.DOTALL)
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
     text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
     text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_as_rtf, text)
@@ -187,8 +187,8 @@ def pdf_filter(text, metadata=dict()):
     text = re.sub(r'\\clearpage *\\clearpage', r'\\clearpage', text)
     text = re.sub(r'\[INDENTATION\]', r'\\setlength{\\parindent}{0.5in}\\setlength{\\RaggedRightParindent}{\\parindent}', text)    
     text = re.sub(r'\[NOINDENTATION\]', r'\\setlength{\\parindent}{0in}\\setlength{\\RaggedRightParindent}{\\parindent}', text)    
-    text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', r'\\noindent\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\mynoindent\\begin{tabular}{@{}m{0.49\\textwidth}|@{\\hspace{1em}}m{0.49\\textwidth}@{}}{\1} & {\2} \\\\ \\end{tabular}\\endgroup\\myskipline', text)
-    text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', r'\\noindent\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\mynoindent\\begin{tabular}{@{}p{0.49\\textwidth}@{\\hspace{1em}}p{0.49\\textwidth}@{}}{\1} & {\2} \\\\ \\end{tabular}\\endgroup\\myskipline', text)
+    text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', pdf_caption, text, flags=re.DOTALL)
+    text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', pdf_two_col, text, flags=re.DOTALL)
     text = re.sub(r'\[SINGLESPACING\] *', r'\\singlespacing\\setlength{\\parskip}{\\myfontsize} ', text)
     text = re.sub(r'\[DOUBLESPACING\] *', r'\\doublespacing\\setlength{\\parindent}{0.5in}\\setlength{\\RaggedRightParindent}{\\parindent} ', text)
     text = re.sub(r'\[NBSP\]', r'\\myshow{\\nonbreakingspace}', text)
@@ -215,7 +215,7 @@ def html_filter(text):
     text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_url_string, text)
     text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_url_string, text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', r'<table style="width: 100%"><tr><td style="width: 50%; border-style: solid; border-right-width: 1px; padding-right: 1em; border-left-width: 0px; border-top-width: 0px; border-bottom-width: 0px">\1</td><td style="padding-left: 1em; width: 50%;">\2</td></tr></table>', text)
-    text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', r'<table style="width: 100%"><tr><td style="width: 50%; vertical-align: top; border-style: none; padding-right: 1em;">\1</td><td style="padding-left: 1em; vertical-align: top; width: 50%;">\2</td></tr></table>', text)
+    text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', r'<table style="width: 100%"><tr><td style="width: 50%; vertical-align: top; border-style: none; padding-right: 1em;">\1</td><td style="padding-left: 1em; vertical-align: top; width: 50%;">\2</td></tr></table>', text, flags=re.DOTALL)
     text = re.sub(r'\[SINGLESPACING\] *', r'', text)
     text = re.sub(r'\[DOUBLESPACING\] *', r'', text)
     text = re.sub(r'\[INDENTATION\] *', r'', text)
@@ -237,6 +237,25 @@ def html_filter(text):
     text = re.sub(r'\\_', r'__', text)
     text = re.sub(r'\n+$', r'', text)
     return(text)
+
+def pdf_two_col(match, add_line=False):
+    firstcol = match.group(1)
+    secondcol = match.group(2)
+    firstcol = re.sub(r'^[\n ]+', r'', firstcol)
+    secondcol = re.sub(r'^[\n ]+', r'', secondcol)
+    firstcol = re.sub(r'[\n ]+$', r'', firstcol)
+    secondcol = re.sub(r'[\n ]+$', r'', secondcol)
+    firstcol = re.sub(r' *\n *$', r'\n', firstcol)
+    secondcol = re.sub(r' *\n *$', r'\n', secondcol)
+    firstcol = re.sub(r'\n{2,}', r'[NEWLINE]', firstcol)
+    secondcol = re.sub(r'\n{2,}', r'[NEWLINE]', secondcol)
+    if add_line:
+        return '\\noindent\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\mynoindent\\begin{tabular}{@{}m{0.49\\textwidth}|@{\\hspace{1em}}m{0.49\\textwidth}@{}}{' + firstcol + '} & {' + secondcol + '} \\\\ \\end{tabular}\\endgroup\\myskipline'
+    else:
+        return '\\noindent\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\mynoindent\\begin{tabular}{@{}p{0.49\\textwidth}@{\\hspace{1em}}p{0.49\\textwidth}@{}}{' + firstcol + '} & {' + secondcol + '} \\\\ \\end{tabular}\\endgroup\\myskipline'
+
+def pdf_caption(match):
+    return pdf_two_col(match, add_line=True)
 
 def add_newlines(string):
     string = re.sub(r'\[(BR)\]', r'[NEWLINE]', string)

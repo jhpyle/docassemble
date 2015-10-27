@@ -46,7 +46,7 @@ def signature_html(status, debug):
     output += '</form>'
     return output
 
-def as_html(status, extra_scripts, url_for, debug):
+def as_html(status, extra_scripts, extra_css, url_for, debug):
     decorations = list()
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'help-inline'}
     if status.question.script is not None:
@@ -105,16 +105,20 @@ def as_html(status, extra_scripts, url_for, debug):
         files = list()
         checkbox_validation = False
         for field in status.question.fields:
-            if hasattr(field, 'script'):
-                extra_scripts.append(field.script)
+            if hasattr(field, 'extras'):
+                if 'script' in field.extras and 'script' in status.extras:
+                    extra_scripts.append(status.extras['script'][field.number])
+                if 'css' in field.extras and 'css' in status.extras:
+                    extra_css.append(status.extras['css'][field.number])
+                #fieldlist.append("<div>datatype is " + str(field.datatype) + "</div>")
             if hasattr(field, 'datatype'):
                 if field.datatype == 'html':
-                    fieldlist.append('<div class="form-group"><div class="col-md-12">' + field.label + '</div></div>')
+                    fieldlist.append('<div class="form-group"><div class="col-md-12">' + status.extras['html'][field.number] + '</div></div>')
                     continue
                 elif field.datatype == 'note':
-                    fieldlist.append('<div class="row"><div class="col-md-12">' + markdown_to_html(status.notes[field.number], status=status) + '</div></div>')
+                    fieldlist.append('<div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status) + '</div></div>')
                     continue
-                elif field.datatype == 'script':
+                elif field.datatype in ['script', 'css']:
                     continue
             if field.number in status.helptexts:
                 helptext_start = '<a style="cursor:pointer;color:#408E30" data-container="body" data-toggle="popover" data-placement="bottom" data-content="' + noquote(unicode(status.helptexts[field.number])) + '">' 
@@ -123,7 +127,7 @@ def as_html(status, extra_scripts, url_for, debug):
                 helptext_start = ''
                 helptext_end = ''
             if field.required:
-                sys.stderr.write(field.datatype + "\n")
+                #sys.stderr.write(field.datatype + "\n")
                 validation_rules['rules'][field.saveas] = {'required': True}
                 validation_rules['messages'][field.saveas] = {'required': word("This field is required.")}
             else:
@@ -347,7 +351,7 @@ def as_html(status, extra_scripts, url_for, debug):
                 multiple_formats = True
             else:
                 multiple_formats = False
-            output += '<div><h3>' + attachment['name'] + '</h3></div>'
+            output += '<div><h3>' + markdown_to_html(attachment['name'], trim=True) + '</h3></div>'
             if attachment['description']:
                 output += '<div><p><em>' + markdown_to_html(attachment['description'], status=status) + '</em></p></div>'
             output += '<div class="tabbable"><ul class="nav nav-tabs">'
@@ -400,7 +404,7 @@ def as_html(status, extra_scripts, url_for, debug):
       <div class="panel-body">
         <form id="emailform" class="form-horizontal" method="POST">
           <fieldset>
-            <div class="form-group"><label for="attachment_email_address" class="control-label col-sm-4">""" + word('E-mail address') + """</label><div class="col-sm-8"><input class="form-control" type="email" name="attachment_email_address" id="attachment_email_address"></input></div></div>"""
+            <div class="form-group"><label for="attachment_email_address" class="control-label col-sm-4">""" + word('E-mail address') + """</label><div class="col-sm-8"><input class="form-control" type="email" name="attachment_email_address" id="attachment_email_address"></div></div>"""
             if rtfs_included:
                 output += """
             <div class="form-group"><label for="attachment_include_rtf" class="control-label col-sm-4">""" + '&nbsp;</label><div class="col-sm-8"><input type="checkbox" value="True" name="attachment_include_rtf" id="attachment_include_rtf"> ' + word('Include RTF files for editing') + '</div></div>'
@@ -471,7 +475,7 @@ def input_for(status, field, wide=False):
             id_index = 0
             for pair in pairlist:
                 if pair[0] is not None:
-                    sys.stderr.write(str(field.saveas) + "\n")
+                    #sys.stderr.write(str(field.saveas) + "\n")
                     formatted_item = markdown_to_html(str(pair[1]), status=status, trim=True, escape=True)
                     inner_fieldlist.append('<input data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + str(field.saveas) + '_' + str(id_index) + '" name="' + str(field.saveas) + '" type="radio" value="' + str(pair[0]) + '">')
                 else:
@@ -500,7 +504,7 @@ def input_for(status, field, wide=False):
                 multipleflag = ''
             else:
                 multipleflag = ' multiple'
-            output += '<input type="file" class="file" data-show-upload="false" data-preview-file-type="text" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + '></input>'
+            output += '<input type="file" class="file" data-show-upload="false" data-preview-file-type="text" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + '>'
             #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>'
         elif field.datatype == 'area':
             output += '<textarea class="form-control" rows="4" name="' + field.saveas + '" id="' + field.saveas + '"' + placeholdertext + '>'
@@ -518,7 +522,7 @@ def input_for(status, field, wide=False):
                 output += '<div class="input-group"><span class="input-group-addon" id="addon-' + field.saveas + '">' + currency_symbol() + '</span>'
             output += '<input' + defaultstring + placeholdertext + ' class="form-control" type="' + input_type + '" name="' + field.saveas + '" id="' + field.saveas + '"'
             if field.datatype == 'currency':
-                output += ' aria-describedby="addon-' + field.saveas + '"></input></div>'
+                output += ' aria-describedby="addon-' + field.saveas + '"></div>'
             else:
-                output += '></input>'
+                output += '>'
     return output

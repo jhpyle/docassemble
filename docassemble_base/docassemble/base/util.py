@@ -6,15 +6,13 @@ import mimetypes
 import datetime
 import locale
 import pkg_resources
-#import inspect
 from titlecase import titlecase
 #from docassemble.base.logger import logmessage
-#import sys
 import babel.dates
 import locale
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'comma_list', 'words', 'word', 'get_language', 'get_locale', 'comma_and_list', 'need', 'possessify', 'possessify_long', 'nice_number', 'pickleable_objects', 'in_the', 'a_in_the_b', 'of_the', 'the', 'your', 'his', 'her', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'do_you', 'does_a_b', 'capitalize', 'underscore_to_space', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'static_image', 'titlecase', 'is_are']
+__all__ = ['ordinal', 'comma_list', 'words', 'word', 'get_language', 'get_locale', 'comma_and_list', 'need', 'possessify', 'possessify_long', 'nice_number', 'pickleable_objects', 'in_the', 'a_in_the_b', 'of_the', 'the', 'your', 'his', 'her', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'do_you', 'does_a_b', 'capitalize', 'underscore_to_space', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'static_image', 'titlecase', 'url_of']
 
 language = 'en'
 this_locale = 'US.utf8'
@@ -86,6 +84,16 @@ nice_numbers = {
     '9': 'nine',
     '10': 'ten'
 }
+
+def basic_url_of(text):
+    return text
+
+url_of = basic_url_of
+
+def set_url_finder(func):
+    global url_of
+    url_of = func
+    return
 
 def ordinal(j):
     i = j + 1

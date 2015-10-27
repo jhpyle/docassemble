@@ -785,7 +785,7 @@ def index():
                         string = file_field + " = docassemble.base.core.DAFileList('" + file_field + "', elements=[" + ", ".join(elements) + "])"
                     else:
                         string = file_field + " = None"
-                    logmessage("string is " + string)
+                    #logmessage("string is " + string)
                     try:
                         exec(string, user_dict)
                         changed = True
@@ -847,7 +847,7 @@ def index():
             error_messages.append(("error", "Error: " + str(errMess)))
     if changed and 'questionname' in post_data:
         user_dict['answered'].add(post_data['questionname'])
-        logmessage("From server.py, answered name is " + post_data['questionname'])
+        #logmessage("From server.py, answered name is " + post_data['questionname'])
         user_dict['role_event_notification_sent'] = False
     interview.assemble(user_dict, interview_status)
     if len(interview_status.attachments) > 0:
@@ -911,16 +911,18 @@ def index():
         output += signature_html(interview_status, DEBUG)
         output += """\n  </body>\n</html>"""
     else:
-        output = '<!DOCTYPE html>\n<html lang="en">\n  <head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css"><link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" /><link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet"><link rel="stylesheet" href="' + url_for('static', filename='app/app.css') + '">'
+        extra_scripts = list()
+        extra_css = list()
+        content = as_html(interview_status, extra_scripts, extra_css, url_for, DEBUG)
+        output = '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css"><link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" /><link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet"><link rel="stylesheet" href="' + url_for('static', filename='app/app.css') + '">'
         if DEBUG:
             output += '<link rel="stylesheet" href="' + url_for('static', filename='app/pygments.css') + '">'
-        output += '<title>' + daconfig['brandname'] + '</title></head>\n  <body>\n'
+        output += "".join(extra_css)
+        output += '    <title>' + daconfig['brandname'] + '</title>\n  </head>\n  <body>\n'
         output += make_navbar(interview_status, daconfig['brandname'], steps, SHOW_LOGIN) + '    <div class="container">' + "\n      "+ '<div class="tab-content">' + flash_content
         if USE_PROGRESS_BAR:
             output += progress_bar(user_dict['progress'])
-        extra_scripts = list()
-        output += as_html(interview_status, extra_scripts, url_for, DEBUG)
-        output += """</div>\n"""
+        output += content + "</div>\n"
         if DEBUG:
             output += '      <div id="source" class="col-md-12 collapse">' + "\n"
             output += '        <h3>' + word('Source code for question') + '</h3>' + "\n"
@@ -1125,7 +1127,7 @@ def make_navbar(status, page_title, steps, show_login):
 """
     if show_login:
         if current_user.is_anonymous:
-            logmessage("is_anonymous is " + str(current_user.is_anonymous))
+            #logmessage("is_anonymous is " + str(current_user.is_anonymous))
             navbar += '            <li><a href="' + url_for('user.login', next=url_for('index')) + '">' + word('Sign in') + '</a></li>' + "\n"
         else:
             navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">' + current_user.email + '<b class="caret"></b></a><ul class="dropdown-menu">'

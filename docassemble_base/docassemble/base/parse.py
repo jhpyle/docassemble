@@ -27,6 +27,7 @@ def textify(data):
     
 def set_url_finder(func):
     docassemble.base.filter.set_url_finder(func)
+    docassemble.base.util.set_url_finder(func)
 
 def set_file_finder(func):
     docassemble.base.filter.set_file_finder(func)
@@ -183,7 +184,7 @@ class InterviewStatus(object):
         self.defaults = question_result['defaults']
         self.hints = question_result['hints']
         self.helptexts = question_result['helptexts']
-        self.notes = question_result['notes']
+        self.extras = question_result['extras']
     pass
 
 # def new_counter(initial_value=0):
@@ -230,8 +231,8 @@ class Field:
             self.hint = data['hint']
         if 'help' in data:
             self.helptext = data['help']
-        if 'note' in data:
-            self.note = data['note']
+        if 'extras' in data:
+            self.extras = data['extras']
         if 'selections' in data:
             self.selections = data['selections']
         if 'boolean' in data:
@@ -242,8 +243,10 @@ class Field:
             self.choices = data['choices']
         if 'has_code' in data:
             self.has_code = True
-        if 'script' in data:
-            self.script = data['script']
+        # if 'script' in data:
+        #     self.script = data['script']
+        # if 'css' in data:
+        #     self.css = data['css']
         if 'shuffle' in data:
             self.shuffle = data['shuffle']
         if 'required' in data:
@@ -304,6 +307,10 @@ class Question:
             if type(data) is not str:
                 raise DAError("A script section must be plain text." + self.idebug(data))
             self.script = data
+        if 'css' in data:
+            if type(data) is not str:
+                raise DAError("A css section must be plain text." + self.idebug(data))
+            self.css = data
         if ('initial' in data and data['initial'] is True) or ('default role' in data):
             #logmessage("Setting a code block to initial\n")
             self.is_initial = True
@@ -679,14 +686,20 @@ class Question:
                                 field_info['selections'] = process_selections(field[key])
                             elif key == 'note':
                                 field_info['type'] = 'note'
-                                field_info['note'] = TextObject(definitions + unicode(field[key]))
+                                if 'extras' not in field_info:
+                                    field_info['extras'] = dict()
+                                field_info['extras']['note'] = TextObject(definitions + unicode(field[key]))
                             elif key == 'html':
+                                if 'extras' not in field_info:
+                                    field_info['extras'] = dict()
                                 field_info['type'] = 'html'
-                                field_info['label'] = field[key]
-                            elif key == 'script':
+                                field_info['extras'][key] = TextObject(definitions + unicode(field[key]))
+                            elif key in ['css', 'script']:
+                                if 'extras' not in field_info:
+                                    field_info['extras'] = dict()
                                 if field_info['type'] == 'text':
-                                    field_info['type'] = 'script'
-                                field_info['script'] = field[key]
+                                    field_info['type'] = key
+                                field_info['extras'][key] = TextObject(definitions + unicode(field[key]))
                             elif key == 'shuffle':
                                 field_info['shuffle'] = field[key]
                             else:
@@ -695,7 +708,7 @@ class Question:
                         if 'saveas' in field_info:
                             self.fields.append(Field(field_info))
                             self.fields_used.add(field_info['saveas'])
-                        elif 'type' in field_info and field_info['type'] in ['note', 'html', 'script']:
+                        elif 'type' in field_info and field_info['type'] in ['note', 'html', 'script', 'css']:
                             self.fields.append(Field(field_info))
                         else:
                             raise DAError("A field was listed without indicating a label or a variable name, and the field was not a note or raw HTML." + self.idebug(field_info))
@@ -833,7 +846,7 @@ class Question:
         defaults = dict()
         hints = dict()
         helptexts = dict()
-        notes = dict()
+        extras = dict()
         for field in self.fields:
             if hasattr(field, 'has_code') and field.has_code:
                 selections = list()
@@ -847,8 +860,12 @@ class Question:
                 selectcompute[field.number] = selections
             if hasattr(field, 'choicetype') and field.choicetype == 'compute':
                 selectcompute[field.number] = process_selections(eval(field.selections['compute'], user_dict))
-            if hasattr(field, 'datatype') and field.datatype == 'note':
-                notes[field.number] = field.note.text(user_dict)
+            if hasattr(field, 'extras'):
+                for key in ['note', 'html', 'script', 'css']:
+                    if key in field.extras:
+                        if key not in extras:
+                            extras[key] = dict()
+                        extras[key][field.number] = field.extras[key].text(user_dict)
             if hasattr(field, 'saveas'):
                 try:
                     defaults[field.number] = eval(field.saveas, user_dict)
@@ -872,7 +889,7 @@ class Question:
                 logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("Need 'role_event'")
-        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'notes': notes})
+        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras})
     def processed_attachments(self, user_dict, **kwargs):
         return(list(map((lambda x: self.make_attachment(x, user_dict, **kwargs)), self.attachments)))
     def parse_fields(self, the_list, register_target, uses_field):
@@ -912,7 +929,7 @@ class Question:
         return(has_code, result_list)
     def mark_as_answered(self, user_dict):
         user_dict['answered'].add(self.name)
-        logmessage("1 Question name was " + self.name)
+        #logmessage("1 Question name was " + self.name)
         return
     def follow_multiple_choice(self, user_dict):
         # if self.name:
@@ -920,9 +937,9 @@ class Question:
         # else:
         #     logmessage("question has no name")
         if self.name and self.name in user_dict['answers']:
-            logmessage("question in answers")
+            #logmessage("question in answers")
             user_dict['answered'].add(self.name)
-            logmessage("2 Question name was " + self.name)
+            #logmessage("2 Question name was " + self.name)
             the_choice = self.fields[0].choices[int(user_dict['answers'][self.name])]
             for key in the_choice:
                 if key == 'image':
@@ -1093,13 +1110,13 @@ class Interview:
                             interview_status.seeking.append({'question': question, 'reason': 'initial'})
                         exec(question.compute, user_dict)
                     if question.name and question.name in user_dict['answered']:
-                        logmessage("Skipping " + question.name + " because answered")
+                        #logmessage("Skipping " + question.name + " because answered")
                         continue
                     if question.question_type == 'code' and question.is_mandatory:
                         if debug:
                             interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
                         logmessage("Running some code:\n\n" + question.sourcecode)
-                        logmessage("Question name is " + question.name)
+                        #logmessage("Question name is " + question.name)
                         exec(question.compute, user_dict)
                         logmessage("Code completed")
                         if question.name:
@@ -1117,8 +1134,9 @@ class Interview:
                     logmessage("Continuing after asking for " + missingVariable + "...")
                     continue
                 else:
-                    pp = pprint.PrettyPrinter(indent=4)
-                    logmessage("Need to ask:\n  " + question_result['question_text'] + "\n" + "type is " + str(question_result['question'].question_type) + "\n" + pp.pformat(question_result) + "\n" + pp.pformat(question_result['question']))
+                    #pp = pprint.PrettyPrinter(indent=4)
+                    #logmessage("Need to ask:\n  " + question_result['question_text'] + "\n" + "type is " + str(question_result['question'].question_type) + "\n" + pp.pformat(question_result) + "\n" + pp.pformat(question_result['question']))
+                    logmessage("Need to ask:\n  " + question_result['question_text'])
                     interview_status.populate(question_result)
                     break
             except AttributeError as errMess:
@@ -1127,7 +1145,7 @@ class Interview:
             except MandatoryQuestion:
                 break
             else:
-                raise DAError('All was defined')
+                raise DAError('Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any).  It is a best practice to end your interview with a question that says goodbye and offers an Exit button.')
         return(pickleable_objects(user_dict))
     def askfor(self, missingVariable, user_dict, **kwargs):
         variable_stack = kwargs.get('variable_stack', set())
@@ -1297,7 +1315,7 @@ class Interview:
                     raise DAError("Found a reference to a variable '" + missingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
                 except NameError as errMess:
                     newMissingVariable = str(errMess).split("'")[1]
-                    logmessage(str(errMess))
+                    #logmessage(str(errMess))
                     question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking)
                     if question_result['type'] == 'continue':
                         continue
