@@ -798,9 +798,9 @@ attachment:
 
       Hi *there* again.
       [BREAK]
-      Hello there.
-
-      Hello there again and again.
+      Hello [there](http://google.com).
+      [SKIPLINE]
+      Hello **there again** and again.
 
       And again.
       [END_TWOCOL]

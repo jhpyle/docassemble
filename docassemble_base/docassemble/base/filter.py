@@ -238,17 +238,20 @@ def html_filter(text):
     text = re.sub(r'\n+$', r'', text)
     return(text)
 
+def clean_markdown_to_latex(string):
+    string = re.sub(r'^[\n ]+', '', string)
+    string = re.sub(r'[\n ]+$', '', string)
+    string = re.sub(r' *\n *$', '\n', string)
+    string = re.sub(r'\n{2,}', '[NEWLINE]', string)
+    string = re.sub(r'\*\*([^\*]+?)\*\*', r'\\textbf{\1}', string)
+    string = re.sub(r'\*([^\*]+?)\*', r'\\emph{\1}', string)
+    string = re.sub(r'_([^_]+?)_', r'\\textbf{\1}', string)
+    string = re.sub(r'\[([^\]]+?)\]\(([^\)]+?)\)', r'\\href{\2}{\1}', string)
+    return string;
+
 def pdf_two_col(match, add_line=False):
-    firstcol = match.group(1)
-    secondcol = match.group(2)
-    firstcol = re.sub(r'^[\n ]+', r'', firstcol)
-    secondcol = re.sub(r'^[\n ]+', r'', secondcol)
-    firstcol = re.sub(r'[\n ]+$', r'', firstcol)
-    secondcol = re.sub(r'[\n ]+$', r'', secondcol)
-    firstcol = re.sub(r' *\n *$', r'\n', firstcol)
-    secondcol = re.sub(r' *\n *$', r'\n', secondcol)
-    firstcol = re.sub(r'\n{2,}', r'[NEWLINE]', firstcol)
-    secondcol = re.sub(r'\n{2,}', r'[NEWLINE]', secondcol)
+    firstcol = clean_markdown_to_latex(match.group(1))
+    secondcol = clean_markdown_to_latex(match.group(2))
     if add_line:
         return '\\noindent\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\mynoindent\\begin{tabular}{@{}m{0.49\\textwidth}|@{\\hspace{1em}}m{0.49\\textwidth}@{}}{' + firstcol + '} & {' + secondcol + '} \\\\ \\end{tabular}\\endgroup\\myskipline'
     else:
