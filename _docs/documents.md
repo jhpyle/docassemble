@@ -36,6 +36,38 @@ The `content` item can contain [Mako] and [Markdown].  [Pandoc]
 converts the content into HTML (for previewing in the browser), PDF,
 and RTF.
 
+If the `content` is lengthy and you would rather not type it into the
+interview [YAML] file, you can import the content from a separate file
+using `content file`:
+
+{% highlight yaml %}
+---
+question: Your document is ready.
+sets: provide_user_with_document
+attachment:
+  - name: A *hello world* document
+    filename: Hello_World_Document
+    content file: hello.md
+---
+{% endhighlight %}
+
+Files referenced with `content file` are assumed to reside in the
+`data/templates` directory within the package in which the interview
+[YAML] file is located.  You can specify filenames in other packages
+by referring to the package name.  For example:
+`docassemble.demo:data/templates/complaint.md`.
+
+The `content file` can also refer to a list of file names:
+
+{% highlight yaml %}
+content file:
+  - introduction.md
+  - jurisdiction.md
+  - discussion.md
+{% endhighlight %}
+
+The content of multiple `content file` files will be concatenated.
+
 You can also limit the file formats available:
 {% highlight yaml %}
 ---
