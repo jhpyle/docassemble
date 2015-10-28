@@ -161,6 +161,7 @@ content: |
 ---
 mandatory: True
 code: |
+  need(provide_user_with_document)
   need(user_saw_initial_screen)
   if user_understands_no_attorney_client_relationship == "understands":
     need(client_done)
@@ -810,12 +811,7 @@ attachment:
   - name: A *hello world* document
     filename: Hello_World_Document
     description: A document with a **classic** message
-    content: |
-      Hello, world!  Quisque ut tempus enim. Aliquam tristique
-      placerat metus sollicitudin imperdiet. Donec eget dignissim
-      libero, eu elementum justo.
-
-      Maecenas iaculis mollis aliquam. Nullam vestibulum erat in
-      sapien ultrices dignissim eu et turpis. Vivamus vestibulum felis
-      eu sodales ornare. Nunc auctor sapien et porttitor posuere.
+    content file: 
+      - base_template.md
+      - hello_template.md
 ...

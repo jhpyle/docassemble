@@ -672,6 +672,19 @@ class Question:
             except:
                 logmessage("Compile error in need code:\n" + str(data['need']) + "\n" + str(sys.exc_info()[0]))
                 raise
+        if 'template' in data and 'content file' in data:
+            if type(data['content file']) is not list:
+                data['content file'] = [data['content file']]
+            data['content'] = ''
+            for content_file in data['content file']:
+                if type(content_file) is not str:
+                    raise DAError('A content file must be specified as text or a list of text filenames' + self.idebug(data))
+                file_to_read = docassemble.base.util.package_template_filename(content_file, package=self.package)
+                if os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
+                    with open(file_to_read, 'r') as the_file:
+                        data['content'] += the_file.read()
+                else:
+                    raise DAError('Unable to read content file ' + str(target['content file']) + ' after trying to find it at ' + str(file_to_read) + self.idebug(data))
         if 'template' in data and 'content' in data:
             if type(data['template']) in (list, dict):
                 raise DAError("A template must designate a single variable expressed as text." + self.idebug(data))
@@ -864,6 +877,19 @@ class Question:
                         metadata[key] = data
                     else:
                         raise DAError('Unknown data type ' + str(type(data)) + ' in key in attachment metadata' + self.idebug(target))
+            if 'content file' in target:
+                if type(target['content file']) is not list:
+                    target['content file'] = [target['content file']]
+                target['content'] = ''
+                for content_file in target['content file']:
+                    if type(content_file) is not str:
+                        raise DAError('A content file must be specified as text or a list of text filenames' + self.idebug(target))
+                    file_to_read = docassemble.base.util.package_template_filename(content_file, package=self.package)
+                    if os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
+                        with open(file_to_read, 'r') as the_file:
+                            target['content'] += the_file.read()
+                    else:
+                        raise DAError('Unable to read content file ' + str(target['content file']) + ' after trying to find it at ' + str(file_to_read) + self.idebug(target))
             if 'content' not in target:
                 raise DAError("No content provided in attachment")
             return({'name': TextObject(target['name']), 'filename': TextObject(target['filename']), 'description': TextObject(target['description']), 'content': TextObject("\n".join(defs) + "\n" + target['content']), 'valid_formats': target['valid_formats'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
