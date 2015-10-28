@@ -41,15 +41,18 @@ class Pandoc(object):
             self.template_file = docassemble.base.util.standard_template_filename('Legal-Template.rtf')
         if (self.output_format == 'pdf' or self.output_format == 'tex') and self.template_file is None:
             self.template_file = docassemble.base.util.standard_template_filename('Legal-Template.tex')
-        yaml_to_use = []
+        yaml_to_use = list()
         if self.output_format == 'pdf' or self.output_format == 'tex':
             if len(self.initial_yaml) == 0:
                 standard_file = docassemble.base.util.standard_template_filename('Legal-Template.yml')
                 if standard_file is not None:
                     self.initial_yaml.append(standard_file)
-            yaml_to_use.extend(self.initial_yaml)
-            if len(self.additional_yaml) > 0:
-                yaml_to_use.extend(self.additional_yaml)
+            for yaml_file in self.initial_yaml:
+                if yaml_file is not None:
+                    yaml_to_use.append(yaml_file)
+            for yaml_file in self.additional_yaml:
+                if yaml_file is not None:
+                    yaml_to_use.append(yaml_file)
             #print "Before: " + str(self.input_content)
             self.input_content = docassemble.base.filter.pdf_filter(self.input_content, metadata=metadata_as_dict)
             #print "After: " + str(self.input_content)
@@ -59,7 +62,8 @@ class Pandoc(object):
         temp_outfile = tempfile.NamedTemporaryFile(mode="w", suffix="." + str(self.output_format), delete=False)
         temp_outfile.close()
         subprocess_arguments = [PANDOC_PATH]
-        subprocess_arguments.extend(yaml_to_use)
+        if len(yaml_to_use) > 0:
+            subprocess_arguments.extend(yaml_to_use)
         subprocess_arguments.extend([temp_file.name])
         if self.template_file is not None:
             subprocess_arguments.extend(['--template=%s' % self.template_file])

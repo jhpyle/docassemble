@@ -283,7 +283,7 @@ class Question:
         self.decorations = None
         self.allow_emailing = True
         self.fields_used = set()
-        self.names_used  = set()
+        self.names_used = set()
         if 'usedefs' in data:
             defs = list()
             if type(data['usedefs']) is list:
@@ -303,6 +303,45 @@ class Question:
             self.is_mandatory = True
         else:
             self.is_mandatory = False
+        if 'attachment options' in data:
+            should_append = False
+            if type(data['attachment options']) is not list:
+                data['attachment options'] = [data['attachment options']]
+            for attachment_option in data['attachment options']:
+                if type(attachment_option) is not dict:
+                    raise DAError("An attachment option must a dictionary." + self.idebug(data))
+                for key in attachment_option:
+                    value = attachment_option[key]
+                    if key == 'initial yaml':
+                        if 'initial_yaml' not in self.interview.attachment_options:
+                            self.interview.attachment_options['initial_yaml'] = list()
+                        if type(value) is list:
+                            the_list = value
+                        else:
+                            the_list = [value]
+                        for yaml_file in the_list:
+                            if type(yaml_file) is not str:
+                                raise DAError('An initial yaml file must be a string.' + self.idebug(data))
+                            self.interview.attachment_options['initial_yaml'].append(docassemble.base.util.package_template_filename(yaml_file, package=self.package))
+                    elif key == 'additional yaml':
+                        if 'additional_yaml' not in self.interview.attachment_options:
+                            self.interview.attachment_options['additional_yaml'] = list()
+                        if type(value) is list:
+                            the_list = value
+                        else:
+                            the_list = [value]
+                        for yaml_file in the_list:
+                            if type(yaml_file) is not str:
+                                raise DAError('An additional yaml file must be a string.' + self.idebug(data))
+                            self.interview.attachment_options['additional_yaml'].append(docassemble.base.util.package_template_filename(yaml_file, package=self.package))
+                    elif key == 'template file':
+                        if type(value) is not str:
+                            raise DAError('The template file must be a string.' + self.idebug(data))
+                        self.interview.attachment_options['template_file'] = docassemble.base.util.package_template_filename(value, package=self.package)
+                    elif key == 'rtf template file':
+                        if type(value) is not str:
+                            raise DAError('The rtf template file must be a string.' + self.idebug(data))
+                        self.interview.attachment_options['rtf_template_file'] = docassemble.base.util.package_template_filename(value, package=self.package)
         if 'script' in data:
             if type(data) is not str:
                 raise DAError("A script section must be plain text." + self.idebug(data))
@@ -753,6 +792,7 @@ class Question:
         metadata = dict()
         variable_name = str()
         defs = list()
+        options = dict()
         if type(target) is dict:
             if 'filename' not in target:
                 target['filename'] = word("Document")
@@ -760,6 +800,30 @@ class Question:
                 target['name'] = word("Document")
             if 'description' not in target:
                 target['description'] = ''
+            if 'initial yaml' in target:
+                if type(target['initial yaml']) is not list:
+                    target['initial yaml'] = [target['initial yaml']]
+                options['initial_yaml'] = list()
+                for yaml_file in target['initial yaml']:
+                    if type(yaml_file) is not str:
+                        raise DAError('An initial yaml file must be a string.' + self.idebug(target))
+                    options['initial_yaml'].append(docassemble.base.util.package_template_filename(yaml_file, package=self.package))
+            if 'additional yaml' in target:
+                if type(target['additional yaml']) is not list:
+                    target['additional yaml'] = [target['additional yaml']]
+                options['additional_yaml'] = list()
+                for yaml_file in target['additional yaml']:
+                    if type(yaml_file) is not str:
+                        raise DAError('An additional yaml file must be a string.' + self.idebug(target))
+                    options['additional_yaml'].append(docassemble.base.util.package_template_filename(yaml_file, package=self.package))
+            if 'template file' in target:
+                if type(target['template file']) is not str:
+                    raise DAError('The template file must be a string.' + self.idebug(target))
+                options['template_file'] = docassemble.base.util.package_template_filename(target['template file'], package=self.package)
+            if 'rtf template file' in target:
+                if type(target['rtf template file']) is not str:
+                    raise DAError('The rtf template file must be a string.' + self.idebug(target))
+                options['rtf_template_file'] = docassemble.base.util.package_template_filename(target['rtf template file'], package=self.package)
             if 'usedefs' in target:
                 if type(target['usedefs']) is str:
                     the_list = [target['usedefs']]
@@ -802,9 +866,9 @@ class Question:
                         raise DAError('Unknown data type ' + str(type(data)) + ' in key in attachment metadata' + self.idebug(target))
             if 'content' not in target:
                 raise DAError("No content provided in attachment")
-            return({'name': TextObject(target['name']), 'filename': TextObject(target['filename']), 'description': TextObject(target['description']), 'content': TextObject("\n".join(defs) + "\n" + target['content']), 'valid_formats': target['valid_formats'], 'metadata': metadata, 'variable_name': variable_name})
+            return({'name': TextObject(target['name']), 'filename': TextObject(target['filename']), 'description': TextObject(target['description']), 'content': TextObject("\n".join(defs) + "\n" + target['content']), 'valid_formats': target['valid_formats'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
         elif type(target) is str:
-            return({'name': TextObject('Document'), 'filename': TextObject('document'), 'content': TextObject(target), 'valid_formats': ['*'], 'metadata': metadata, 'metadata': metadata, 'variable_name': variable_nname})
+            return({'name': TextObject('Document'), 'filename': TextObject('document'), 'content': TextObject(target), 'valid_formats': ['*'], 'metadata': metadata, 'metadata': metadata, 'variable_name': variable_name, 'options': options})
         else:
             raise DAError("Unknown data type in process_attachment")
 
@@ -986,6 +1050,24 @@ class Question:
                 converter = Pandoc()
                 converter.output_format = doc_format
                 converter.input_content = the_markdown
+                if 'initial_yaml' in attachment['options']:
+                    converter.initial_yaml = attachment['options']['initial_yaml']
+                elif 'initial_yaml' in self.interview.attachment_options:
+                    converter.initial_yaml = self.interview.attachment_options['initial_yaml']
+                if 'additional_yaml' in attachment['options']:
+                    converter.additional_yaml = attachment['options']['additional_yaml']
+                elif 'additional_yaml' in self.interview.attachment_options:
+                    converter.additional_yaml = self.interview.attachment_options['additional_yaml']
+                if doc_format == 'rtf':
+                    if 'rtf_template_file' in attachment['options']:
+                        converter.template_file = attachment['options']['rtf_template_file']
+                    elif 'rtf_template_file' in self.interview.attachment_options:
+                        converter.template_file = self.interview.attachment_options['rtf_template_file']
+                else:
+                    if 'template_file' in attachment['options']:
+                        converter.template_file = attachment['options']['template_file']
+                    elif 'template_file' in self.interview.attachment_options:
+                        converter.template_file = self.interview.attachment_options['template_file']
                 converter.metadata = metadata
                 converter.convert()
                 result['file'][doc_format] = converter.output_filename
@@ -1049,6 +1131,7 @@ class Interview:
         self.terms = dict()
         self.question_index = 0
         self.default_role = None
+        self.attachment_options = dict()
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
     def next_number(self):

@@ -331,6 +331,21 @@ def standard_template_filename(the_file):
         #logmessage("Error retrieving data file\n")
         return(None)
 
+def package_template_filename(the_file, **kwargs):
+    parts = the_file.split(":")
+    if len(parts) == 1:
+        package = kwargs.get('package', None)
+        if package is not None:
+            parts = [package, the_file]
+    if len(parts) == 2:
+        if not re.match(r'data/.*', parts[1]):
+            parts[1] = 'data/templates/' + parts[1]
+        try:
+            return(pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1]))
+        except:
+            return(None)
+    return(None)
+
 def standard_question_filename(the_file):
     #try:
     return(pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.base'), "docassemble/base/data/questions/" + str(the_file)))
