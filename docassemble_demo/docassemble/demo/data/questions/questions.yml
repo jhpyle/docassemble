@@ -161,8 +161,6 @@ content: |
 ---
 mandatory: True
 code: |
-  need(provide_user_with_document)
-  need(all_done)
   need(user_saw_initial_screen)
   if user_understands_no_attorney_client_relationship == "understands":
     need(client_done)
