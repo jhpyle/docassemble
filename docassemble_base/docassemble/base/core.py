@@ -117,6 +117,8 @@ class DAList(DAObject):
         return self.elements[index]
     def __str__(self):
         return self.comma_and_list()
+    def __unicode__(self):
+        return self.comma_and_list()
 
 class DAFile(DAObject):
     def init(self, **kwargs):
@@ -134,6 +136,8 @@ class DAFile(DAObject):
         return
     def __str__(self):
         return self.show()
+    def __unicode__(self):
+        return self.show()
     def show(self, width=None):
         if not self.ok:
             return('')
@@ -147,6 +151,8 @@ class DAFileCollection(DAObject):
 
 class DAFileList(DAList):
     def __str__(self):
+        return self.show()
+    def __unicode__(self):
         return self.show()
     def show(self, width=None):
         output = ''

@@ -5,6 +5,7 @@ import time
 import pip
 import shutil
 import urllib
+import codecs
 import docassemble.base.parse
 import docassemble.base.interview_cache
 from docassemble.base.standardformatter import as_html, signature_html
@@ -153,7 +154,7 @@ app.logger.addHandler(error_file_handler)
 
 def flask_logger(message):
     app.logger.warning(message)
-    sys.stderr.write(message + "\n")
+    #sys.stderr.write(unicode(message) + "\n")
     return
 
 docassemble.base.logger.set_logmessage(flask_logger)
@@ -281,7 +282,7 @@ def save_numbered_file(filename, orig_path):
 docassemble.base.parse.set_mail_variable(get_mail_variable)
 docassemble.base.parse.set_save_numbered_file(save_numbered_file)
 
-match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-]')
+match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
 match_brackets = re.compile('\[\'.*\'\]$')
 match_inside_and_outside_brackets = re.compile('(.*)(\[\'[^\]]+\'\])$')
 match_inside_brackets = re.compile('\[\'([^\]]+)\'\]')
@@ -808,9 +809,10 @@ def index():
         if match_invalid.search(key):
             error_messages.append(("error", "Error: Invalid character in key: " + key))
             break
-        data = re.sub(r'"""', '', data)
+        #data = re.sub(r'"""', '', data)
         if not (data == "True" or data == "False"):
-            data = 'ur"""' + unicode(data) + '"""'
+            #data = 'ur"""' + str(data) + '"""'
+            data = repr(data) #.encode('utf-8')
         if match_brackets.search(key):
             #logmessage("Searching key " + str(key))
             match = match_inside_and_outside_brackets.search(key)
@@ -962,7 +964,8 @@ if __name__ == "__main__":
     app.run()
 
 def process_bracket_expression(match):
-    return("[" + repr(urllib.unquote(match.group(1)).encode('unicode_escape')) + "]")
+    #return("[" + repr(urllib.unquote(match.group(1)).encode('unicode_escape')) + "]")
+    return("[" + repr(codecs.decode(match.group(1), 'base64').decode('utf-8')) + "]")
     
 def progress_bar(progress):
     if progress == 0:
@@ -977,7 +980,7 @@ def get_unique_name(filename):
         if cur.fetchone():
             #logmessage("Key already exists in database")
             continue
-        cur.execute("INSERT INTO userdict (key, filename, dictionary) values (%s, %s, %s);", [newname, filename, pickle.dumps(initial_dict.copy())])
+        cur.execute("INSERT INTO userdict (key, filename, dictionary) values (%s, %s, %s);", [newname, filename, codecs.encode(pickle.dumps(initial_dict.copy()), 'base64').decode()])
         conn.commit()
         return newname
 
@@ -994,7 +997,7 @@ def get_attachment_info(the_user_code, question_number, filename):
     cur.execute("select dictionary from attachments where key=%s and question=%s and filename=%s", [the_user_code, question_number, filename])
     for d in cur:
         if d[0]:
-            the_user_dict = pickle.loads(d[0])
+            the_user_dict = pickle.loads(codecs.decode(d[0], 'base64'))
         break
     conn.commit()
     return the_user_dict
@@ -1004,7 +1007,7 @@ def update_attachment_info(the_user_code, the_user_dict, the_interview_status):
     cur = conn.cursor()
     cur.execute("delete from attachments where key=%s and question=%s and filename=%s", [the_user_code, the_interview_status.question.number, the_interview_status.question.interview.source.path])
     conn.commit()
-    cur.execute("insert into attachments (key, dictionary, question, filename) values (%s, %s, %s, %s)", [the_user_code, pickle.dumps(pickleable_objects(the_user_dict)), the_interview_status.question.number, the_interview_status.question.interview.source.path])
+    cur.execute("insert into attachments (key, dictionary, question, filename) values (%s, %s, %s, %s)", [the_user_code, codecs.encode(pickle.dumps(pickleable_objects(the_user_dict)), 'base64').decode(), the_interview_status.question.number, the_interview_status.question.interview.source.path])
     conn.commit()
     #logmessage("Delete from attachments where key = " + the_user_code + " and question is " + str(the_interview_status.question.number) + " and filename is " + the_interview_status.question.interview.source.path)
     #logmessage("Insert into attachments (key, dictionary, question, filename) values (" + the_user_code + ", saved_user_dict, " + str(the_interview_status.question.number) + ", " + the_interview_status.question.interview.source.path + ")")
@@ -1017,7 +1020,7 @@ def fetch_user_dict(user_code, filename):
     cur.execute("SELECT a.dictionary, b.count from userdict as a inner join (select max(indexno) as indexno, count(indexno) as count from userdict where key=%s and filename=%s and dictionary is not null) as b on (a.indexno=b.indexno)", [user_code, filename])
     for d in cur:
         if d[0]:
-            user_dict = pickle.loads(d[0])
+            user_dict = pickle.loads(codecs.decode(d[0], 'base64'))
         if d[1]:
             steps = d[1]
         break
@@ -1042,19 +1045,20 @@ def advance_progress(user_dict):
 
 def save_user_dict(user_code, user_dict, filename, changed=False):
     cur = conn.cursor()
+    logmessage(repr(pickle.dumps(pickleable_objects(user_dict))))
     if changed is True:
         if USE_PROGRESS_BAR:
             advance_progress(user_dict)
-        cur.execute("INSERT INTO userdict (key, dictionary, filename) values (%s, %s, %s)", [user_code, pickle.dumps(pickleable_objects(user_dict)), filename])
+        cur.execute("INSERT INTO userdict (key, dictionary, filename) values (%s, %s, %s)", [user_code, codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), filename])
     else:
         cur.execute("select max(indexno) as indexno from userdict where key=%s and filename=%s", [user_code, filename])
         max_indexno = None
         for d in cur:
             max_indexno = d[0]
         if max_indexno is None:
-            cur.execute("INSERT INTO userdict (key, dictionary, filename) values (%s, %s, %s)", [user_code, pickle.dumps(pickleable_objects(user_dict)), filename])
+            cur.execute("INSERT INTO userdict (key, dictionary, filename) values (%s, %s, %s)", [user_code, codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), filename])
         else:
-            cur.execute("UPDATE userdict SET dictionary=%s where key=%s and filename=%s and indexno=%s", [pickle.dumps(pickleable_objects(user_dict)), user_code, filename, max_indexno])
+            cur.execute("UPDATE userdict SET dictionary=%s where key=%s and filename=%s and indexno=%s", [codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), user_code, filename, max_indexno])
     conn.commit()
     return
 
@@ -1337,7 +1341,7 @@ except ImportError:
 The MIT License (MIT)
 
 """
-            licensetext += 'Copyright (c) ' + str(datetime.datetime.now().year) + ' ' + str(current_user.first_name) + " " + str(current_user.last_name) + """
+            licensetext += 'Copyright (c) ' + str(datetime.datetime.now().year) + ' ' + unicode(current_user.first_name) + " " + unicode(current_user.last_name) + """
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -1357,7 +1361,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-            readme = '# docassemble.' + str(pkgname) + "\n\nA docassemble extension.\n\n## Author\n" + str(current_user.first_name) + " " + str(current_user.last_name) + ", " + str(current_user.email) + "\n"
+            readme = '# docassemble.' + str(pkgname) + "\n\nA docassemble extension.\n\n## Author\n" + unicode(current_user.first_name) + " " + unicode(current_user.last_name) + ", " + unicode(current_user.email) + "\n"
             setuppy = """\
 #!/usr/bin/env python
 
@@ -1368,7 +1372,7 @@ from setuptools import setup, find_packages
             setuppy += "setup(name='docassemble." + str(pkgname) + "',\n" + """\
       version='0.1',
       description=('A docassemble extension.'),
-      author='""" + str(current_user.first_name) + " " + str(current_user.last_name) + """',
+      author='""" + unicode(current_user.first_name) + " " + unicode(current_user.last_name) + """',
       author_email='""" + str(current_user.email) + """',
       license='MIT',
       url='http://docassemble.org',
@@ -1385,8 +1389,8 @@ metadata:
   description: |
     Insert description of question file here.
   authors:
-    - name: """ + str(current_user.first_name) + " " + str(current_user.last_name) + """
-      organization: """ + str(current_user.organization) + """
+    - name: """ + unicode(current_user.first_name) + " " + unicode(current_user.last_name) + """
+      organization: """ + unicode(current_user.organization) + """
   revision_date: """ + time.strftime("%Y-%m-%d") + """
 ---
 include:
@@ -1505,7 +1509,7 @@ def make_image_files(path):
 
 @app.errorhandler(Exception)
 def server_error(the_error):
-    errmess = str(the_error)
+    errmess = unicode(the_error)
     if type(the_error) is DAError:
         the_trace = None
         logmessage(errmess)

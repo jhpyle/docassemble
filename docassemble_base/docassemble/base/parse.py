@@ -201,7 +201,7 @@ class TextObject(object):
     def __init__(self, x):
         self.original_text = x
         if match_mako.search(x):
-            self.template = Template(x, strict_undefined=True)
+            self.template = Template(x, strict_undefined=True, input_encoding='utf-8')
             self.uses_mako = True
         else:
             self.uses_mako = False
@@ -437,7 +437,7 @@ class Question:
             if type(data['interview help']) is list:
                 raise DAError("An interview help section must not be in the form of a list." + self.idebug(data))
             elif type(data['interview help']) is not dict:
-                data['interview help'] = {'content': str(data['interview help'])}
+                data['interview help'] = {'content': unicode(data['interview help'])}
             if 'heading' in data['interview help']:
                 if type(data['interview help']['heading']) not in [dict, list]:
                     help_heading = TextObject(definitions + data['interview help']['heading'])
@@ -706,7 +706,7 @@ class Question:
                     self.compute = compile(data['code'], '', 'exec')
                     self.sourcecode = data['code']
                 except:
-                    logmessage("Compile error in code:\n" + str(data['code']) + "\n" + str(sys.exc_info()[0]))
+                    logmessage("Compile error in code:\n" + unicode(data['code']) + "\n" + str(sys.exc_info()[0]))
                     raise
                 find_fields_in(data['code'], self.fields_used, self.names_used)
             else:
@@ -1103,6 +1103,7 @@ class Question:
                 if emoji_match.search(result['markdown'][doc_format]) and len(self.interview.images) > 0:
                     result['markdown'][doc_format] = emoji_match.sub((lambda x: docassemble.base.filter.emoji_html(x.group(1), images=self.interview.images)), result['markdown'][doc_format])
                 result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True)
+                #logmessage("output was:\n" + repr(result['content'][doc_format]))
         if attachment['variable_name']:
             string = attachment['variable_name'] + " = DAFileCollection('" + attachment['variable_name'] + "')"
             #sys.stderr.write("Executing " + string + "\n")

@@ -57,7 +57,7 @@ class Pandoc(object):
             self.input_content = docassemble.base.filter.pdf_filter(self.input_content, metadata=metadata_as_dict)
             #print "After: " + str(self.input_content)
         temp_file = tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False)
-        temp_file.write(self.input_content)
+        temp_file.write(self.input_content.encode('UTF-8'))
         temp_file.close()
         temp_outfile = tempfile.NamedTemporaryFile(mode="w", suffix="." + str(self.output_format), delete=False)
         temp_outfile.close()
@@ -103,5 +103,6 @@ class Pandoc(object):
                 stdout=subprocess.PIPE
             )
             self.output_filename = None
-            self.output_content = p.communicate(self.input_content)[0]
+            
+            self.output_content = p.communicate(self.input_content.encode('utf-8'))[0]
         return

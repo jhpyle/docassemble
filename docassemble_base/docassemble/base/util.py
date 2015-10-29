@@ -279,7 +279,7 @@ def underscore_to_space(a):
     return(re.sub('_', ' ', unicode(a)))
 
 def space_to_underscore(a):
-    return(re.sub(' +', '_', unicode(a)))
+    return(re.sub(' +', '_', unicode(a).encode('ascii', errors='ignore')))
 
 def remove(variable_name):
     try:
@@ -381,7 +381,7 @@ def absolute_filename(the_file):
     return(None)
 
 def nodoublequote(text):
-    return re.sub(r'"', '', str(text))
+    return re.sub(r'"', '', unicode(text))
 
 # def blank_file_finder(*args, **kwargs):
 #     return(dict(filename="invalid"))

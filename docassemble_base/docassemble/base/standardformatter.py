@@ -9,6 +9,8 @@ import re
 import mimetypes
 import json
 import random
+import sys
+import codecs
 
 noquote_match = re.compile(r'"')
 
@@ -161,7 +163,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
                         random.shuffle(pairlist)
                     for pair in pairlist:
                         if pair[0] is not None:
-                            checkboxes.append(field.saveas + "['" + urllib.quote(pair[0], '') + "']")
+                            checkboxes.append(field.saveas + "[" + myb64quote(pair[0]) + "]")
             if hasattr(field, 'label'):
                 if field.label == 'no label':
                     fieldlist.append('<div class="form-group"><div class="col-md-12">' + input_for(status, field, wide=True) + '</div></div>')
@@ -218,9 +220,9 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
                     if hasattr(status.question.fields[0], 'shuffle') and status.question.fields[0].shuffle:
                         random.shuffle(pairlist)
                     for pair in pairlist:
-                        formatted_item = markdown_to_html(pair[1], status=status, trim=True, escape=True)
+                        formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
                         if pair[0] is not None:
-                            output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + str(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + str(status.question.fields[0].saveas) + '" type="radio" value="' + str(pair[0]) + '"></div></div>'
+                            output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + str(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + str(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(pair[0]) + '"></div></div>'
                         else:
                             output += '<div class="form-group"><div class="col-md-12">' + markdown_to_html(pair[1], status=status) + '</div></div>'
                         id_index += 1
@@ -238,7 +240,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
                             if key == 'image':
                                 continue
                             formatted_key = markdown_to_html(key, status=status, trim=True, escape=True)
-                            output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + formatted_key + '|' + formatted_key + '" class="to-labelauty radio-icon" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + str(choice[key]) + '"></div></div>'
+                            output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + formatted_key + '|' + formatted_key + '" class="to-labelauty radio-icon" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + unicode(choice[key]) + '"></div></div>'
                         id_index += 1
                 validation_rules['ignore'] = None
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
@@ -271,7 +273,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
                         random.shuffle(pairlist)
                     for pair in pairlist:
                         if pair[0] is not None:
-                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + str(status.question.fields[0].saveas) + '" value="' + str(pair[0]) + '"> ' + markdown_to_html(pair[1], status=status, trim=True, do_terms=False) + '</button> '
+                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + str(status.question.fields[0].saveas) + '" value="' + unicode(pair[0]) + '"> ' + markdown_to_html(pair[1], status=status, trim=True, do_terms=False) + '</button> '
                         else:
                             output += markdown_to_html(pair[1], status=status)
                 else:
@@ -287,7 +289,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
                         for key in choice:
                             if key == 'image':
                                 continue
-                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + str(choice[key]) + '"> ' + the_icon + markdown_to_html(key, status=status, trim=True, do_terms=False) + '</button> '
+                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + unicode(choice[key]) + '"> ' + the_icon + markdown_to_html(key, status=status, trim=True, do_terms=False) + '</button> '
             else:
                 indexno = 0
                 for choice in status.question.fields[0].choices:
@@ -377,11 +379,11 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
                 output += '</div>'
             if show_preview:
                 output += '<div class="tab-pane" id="preview' + str(attachment_index) + '">'
-                output += '<blockquote>' + str(attachment['content']['html']) + '</blockquote>'
+                output += '<blockquote>' + unicode(attachment['content']['html']) + '</blockquote>'
                 output += '</div>'
             if show_markdown:
                 output += '<div class="tab-pane" id="markdown' + str(attachment_index) + '">'
-                output += '<pre>' + str(attachment['markdown']['html']) + '</pre>'
+                output += '<pre>' + unicode(attachment['markdown']['html']) + '</pre>'
                 output += '</div>'
             output += '</div></div>'
             attachment_index += 1
@@ -463,8 +465,9 @@ def input_for(status, field, wide=False):
             id_index = 0
             for pair in pairlist:
                 if pair[0] is not None:
-                    inner_field = str(field.saveas) + "['" + urllib.quote(pair[0], u'') + u"']"
-                    formatted_item = markdown_to_html(pair[1], status=status, trim=True, escape=True)
+                    inner_field = str(field.saveas) + "[" + myb64quote(pair[0]) + "]"
+                    sys.stderr.write("I've got a " + repr(pair[1]) + "\n")
+                    formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
                     inner_fieldlist.append('<input data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty checkbox-icon" id="' + str(field.saveas) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True">')
                 else:
                     inner_fieldlist.append('<div>' + markdown_to_html(pair[1], status=status) + '</div>')
@@ -476,10 +479,10 @@ def input_for(status, field, wide=False):
             for pair in pairlist:
                 if pair[0] is not None:
                     #sys.stderr.write(str(field.saveas) + "\n")
-                    formatted_item = markdown_to_html(str(pair[1]), status=status, trim=True, escape=True)
-                    inner_fieldlist.append('<input data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + str(field.saveas) + '_' + str(id_index) + '" name="' + str(field.saveas) + '" type="radio" value="' + str(pair[0]) + '">')
+                    formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
+                    inner_fieldlist.append('<input data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + str(field.saveas) + '_' + str(id_index) + '" name="' + str(field.saveas) + '" type="radio" value="' + unicode(pair[0]) + '">')
                 else:
-                    inner_fieldlist.append('<div>' + markdown_to_html(str(pair[1]), status=status) + '</div>')
+                    inner_fieldlist.append('<div>' + markdown_to_html(unicode(pair[1]), status=status) + '</div>')
                 id_index += 1
             output += "".join(inner_fieldlist)
         else:
@@ -487,7 +490,7 @@ def input_for(status, field, wide=False):
             output += '<option name="' + field.saveas + '" id="' + field.saveas + '" value="">' + word('Select...') + '</option>'
             for pair in pairlist:
                 if pair[0] is not None:
-                    formatted_item = markdown_to_html(pair[1], status=status, trim=True, do_terms=False)
+                    formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, do_terms=False)
                     output += '<option value="' + unicode(pair[0]) + '"'
                     if defaultvalue is not None and unicode(pair[0]) == defaultvalue:
                         output += 'selected="selected"'
@@ -526,3 +529,6 @@ def input_for(status, field, wide=False):
             else:
                 output += '>'
     return output
+
+def myb64quote(text):
+    return "'" + codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '') + "'"

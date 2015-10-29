@@ -269,17 +269,17 @@ def add_newlines(string):
 def flushleft_pdf(match):
     string = match.group(1)
     string = re.sub(r'\[NEWLINE\] *', r'\\newline ', string)
-    return('\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\noindent ' + str(string) + '\\par\\endgroup' + "\n\n")
+    return('\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\noindent ' + unicode(string) + '\\par\\endgroup' + "\n\n")
 
 def center_pdf(match):
     string = match.group(1)
     string = re.sub(r'\[NEWLINE\] *', r'\\newline ', string)
-    return('\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\Centering\\noindent ' + str(string) + '\\par\\endgroup' + "\n\n")
+    return('\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\Centering\\noindent ' + unicode(string) + '\\par\\endgroup' + "\n\n")
 
 def boldcenter_pdf(match):
     string = match.group(1)
     string = re.sub(r'\[NEWLINE\] *', r'\\newline ', string)
-    return('\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\Centering\\bfseries\\noindent ' + str(string) + '\\par\\endgroup' + "\n\n")
+    return('\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\Centering\\bfseries\\noindent ' + unicode(string) + '\\par\\endgroup' + "\n\n")
 
 def image_as_rtf(match):
     width_supplied = False
@@ -484,9 +484,10 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, use_pandoc=False, 
     if use_pandoc:
         converter = Pandoc()
         converter.output_format = 'html'
+        logmessage("input was:\n" + repr(a))
         converter.input_content = a
         converter.convert()
-        result = converter.output_content
+        result = converter.output_content.decode('utf-8')
     else:
         result = markdown.markdown(a, extensions=[SmartypantsExt(configs=dict())], output_format='html5')
     result = re.sub('<a href', '<a target="_blank" href', result)
@@ -509,7 +510,7 @@ def add_terms(termname, terms):
     lower_termname = termname.lower()
     if lower_termname in terms:
         # title="' + noquote(termname) + '"
-        return('<a style="cursor:pointer;color:#408E30" data-toggle="popover" data-placement="bottom" data-content="' + noquote(terms[lower_termname]['definition']) + '">' + str(termname) + '</a>')
+        return('<a style="cursor:pointer;color:#408E30" data-toggle="popover" data-placement="bottom" data-content="' + noquote(terms[lower_termname]['definition']) + '">' + unicode(termname) + '</a>')
     else:
         #logmessage(lower_termname + " is not in terms dictionary\n")
         return termname
