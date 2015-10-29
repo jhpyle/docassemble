@@ -68,9 +68,7 @@ attachment:
 
 Content of the [Markdown] file, `hello.md`:
 
-{% highlight markdown %}
-Hello, world!
-{% endhighlight %}
+    Hello, world!
 
 Files referenced with `content file` are assumed to reside in the
 `data/templates` directory within the package in which the interview
