@@ -21,11 +21,9 @@ attachment:
 ---
 {% endhighlight %}
 
-The above question creates a document containing the text "Hello,
-world!"  By default, the document is created in PDF and RTF format,
-and the user will be given the option to e-mail the document to
-himself.  The filenames will be `Hello_World_Document.pdf` and
-`Hello_World_Document.rtf`
+On the screen, the user will see:
+
+![document screenshot]({{ site.baseurl }}/img/document-example.png)
 
 The `name`, `filename`, and `description` items can contain [Mako]
 templates.  The `name` and `description` filenames can also contain
@@ -33,8 +31,25 @@ templates.  The `name` and `description` filenames can also contain
 filename, after all.)
 
 The `content` item can contain [Mako] and [Markdown].  [Pandoc]
-converts the content into HTML (for previewing in the browser), PDF,
-and RTF.
+converts the content into PDF, RTF, and HTML (for previewing in the
+browser).
+
+The PDF file will be called `Hello_World_Document.pdf` and will look
+like this in a PDF viewer (depending on the user's software):
+
+![document screenshot]({{ site.baseurl }}/img/document-example-pdf.png)
+
+The RTF file will be called `Hello_World_Document.rtf` and will look
+like this in a word processor (depending on the user's software):
+
+![document screenshot]({{ site.baseurl }}/img/document-example-rtf.png)
+
+If the user clicks the "Preview" tab, an HTML version of the document
+will be visible:
+
+![document screenshot]({{ site.baseurl }}/img/document-example-preview.png)
+
+## Storing document text in separate files
 
 If the `content` is lengthy and you would rather not type it into the
 interview [YAML] file, you can import the content from a separate file
@@ -49,6 +64,12 @@ attachment:
     filename: Hello_World_Document
     content file: hello.md
 ---
+{% endhighlight %}
+
+Content of the [Markdown] file, `hello.md`:
+
+{% highlight markdown %}
+Hello, world!
 {% endhighlight %}
 
 Files referenced with `content file` are assumed to reside in the
@@ -68,6 +89,8 @@ content file:
 
 The content of multiple `content file` files will be concatenated.
 
+## Limiting availability of formats
+
 You can also limit the file formats available:
 {% highlight yaml %}
 ---
@@ -84,6 +107,11 @@ attachment:
 ---
 {% endhighlight %}
 
+In this example, the user will not have the option of seeing an HTML
+preview and will only be able to download the PDF file:
+
+![document screenshot]({{ site.baseurl }}/img/document-example-pdf-only.png)
+
 ## Formatting documents with special markup tags
 
 In addition to using [Markdown] syntax, you can use
@@ -93,7 +121,7 @@ documents.
 * `[INDENTATION]` - From now on, indent every paragraph.
 * `[NOINDENTATION]` - From now on, do not indent every paragraph.
 * `[BEGIN_TWOCOL] First column text [BREAK] Second column text [END_TWOCOL]` -
-  Puts text into two columns.  The text in the columns cannot contain [Markdown].
+  Puts text into two columns.
 * `[FLUSHLEFT]` - Used at the beginning of a paragraph to designate
   that the paragraph should be flushed left and not indented.
 * `[CENTER]` - Used at the beginning of a paragraph to designate that
@@ -108,18 +136,17 @@ documents.
 * `[PAGEBREAK]` - Insert a manual page break.
 * `[PAGENUM]` - Insert the current page number.
 * `[SECTIONNUM]` - Insert the current section number.
-* `[SKIPLINE]` - Skip a line (insert vertical space).  Cannot be used
-  within environments like `[FLUSHLEFT]`, `[CENTER]`, and
-  `[BOLDCENTER]`.
+* `[SKIPLINE]` - Skip a line (insert vertical space).  (Cannot be used
+  within `[FLUSHLEFT]`, `[CENTER]`, and `[BOLDCENTER]` environments.)
 * `[BR]` - Insert a line break.  `[BR]` is useful to use with
   environments like `[FLUSHLEFT]`, `[CENTER]`, and `[BOLDCENTER]` that
-  only apply to a single paragraph.  Within `[BEGIN_TWOCOL]`, a paragraph
-  break (pressing enter twice, i.e., leaving one blank line) has the
-  same effect.
+  only apply to a single paragraph.  Within the `[BEGIN_TWOCOL]`
+  environment, a standard [Markdown] paragraph break (pressing enter
+  twice, i.e., leaving one blank line) has the same effect.
 * `[TAB]` - Insert a tab (horizontal space), e.g., to indent the first
   line of a paragraph when it otherwise would not be indented.
 
-## Document metadata
+## Formatting documents with Pandoc templates and metadata
 
 You can also control global formatting options by setting `metadata`
 for the document.  These options are passed through to [Pandoc], where
@@ -147,20 +174,31 @@ attachment:
 ---
 {% endhighlight %}
 
-### Metadata applicable to RTF and PDF
+Metadata values can contain [Mako] template commands.  However, they
+cannot contain [Markdown].
 
-* `SingleSpacing` - set to `true` for single spacing.
+### Metadata applicable to RTF and PDF files
+
+* If you wish to use a standard document title, set the following:
+  * `title`
+  * `author` - a list
+  * `date`
+* `toc` - default is not defined.  If defined, a table of contents is
+  included.
+* `SingleSpacing` - set this to `true` for single spacing.
 * `OneAndAHalfSpacing` - set to `true` for 1.5 spacing.
-* `DoubleSpacing` - set to `true` for double spacing.  Double spacing
+* `DoubleSpacing` - set this to `true` for double spacing.  Double spacing
   is the default.
-* `TripleSpacing` - set to `true` for triple spacing.
+* `TripleSpacing` - set this to `true` for triple spacing.
 * `fontsize` - default is `12pt`.  Must be one of `10pt`, `11pt`, and `12pt`.
 * `Indentation` - not defined by default.  By default, the first line
   of each paragraph is indented, unless `SingleSpacing` is set, in
   which case there is no indentation.
-* `IndentationAmount` - not defined by default.  The default is double
-  spacing with half an inch of indentation on the first line of each paragraph.
-* To set headers and footers, define one or more of the following. 
+* `IndentationAmount` - not defined by default.  When double spacing
+  is used, the default is 0.5 inches of first-line indentation in each
+  paragraph.
+* To set the text of headers and footers (which can contain [Mako] and
+  [Markdown]), define one or more of the following:
   * `FirstFooterLeft`
   * `FirstFooterCenter`
   * `FirstFooterRight`
@@ -173,12 +211,35 @@ attachment:
   * `HeaderLeft`
   * `HeaderCenter`
   * `HeaderRight`
-* `HeaderLines` - if you have a header containing more than one line,
-  set `HeaderLines` to the number of the lines in the header, so that
-  [LaTeX] can apply the appropriate spacing between the header and the
-  text.
-  
+* `HeaderLines` - if you have a header containing more than one line
+  (lines should be separated by `[BR]`), set `HeaderLines` to the number
+  of the lines in the header, so that [LaTeX] can apply the
+  appropriate spacing between the header and the text.
+
+The use of `HeaderLines` is important.  For example, a business letter
+may contain a first page header with three lines on it, and a second
+page header with two lines:
+
+{% highlight yaml %}
+    metadata:
+      FirstHeaderRight: |
+        Example, LLP [BR] 123 Main Street, Suite 1500 [BR]
+        Philadelphia, PA 19102
+      HeaderLeft: |
+        ${ client } [BR] ${ today() } [BR] Page [PAGENUM]
+      HeaderLines: "3"
+{% endhighlight %}
+
+In this case, the `HeaderLines: "3"` metadata will ensure that [LaTeX]
+formats the headers correctly.  Otherwise the header may overlap the
+document text.
+
 ### Metadata applicable to PDF only
+
+The following metadata tags only apply to PDF file generation.  To
+change analogous formatting in RTF files, you will need to create your
+own RTF document template (for more information on how to do that, see
+the next section).
 
 * `fontfamily` - default is `mathptmx` (Times Roman).
 * `lang` - not defined by default.  If defined, [polyglossia] (for
@@ -188,8 +249,6 @@ attachment:
 * `numbersections` - default is `true`.  If true, sections are
   numbered; if false, they are not.  (In [LaTeX], `secnumdepth` is
   set to 5, otherwise 0.)
-* `graphics` - default is `true`, which causes the [graphicx] package
-  to be loaded.
 * `geometry` - default is
 `left=1in,right=1in,top=1in,heightrounded,includeheadfoot`.  These are
 options for the the [geometry] package that set the page margins.
@@ -206,13 +265,8 @@ options for the the [geometry] package that set the page margins.
   of [hyperref], which will default to `blue` if this is not defined.
 * `linkcolor` - default is not defined.  Sets the `linkcolor` option
   of [hyperref], which will default to `magenta` if this is not defined.
-* If you wish to use the standard [LaTeX] title and abstract, set the following:
-  * `title`
-  * `author` - a list
-  * `date`
-  * `abstract`
-* `toc` - default is not defined.  If defined, a table of contents is
-  included.
+* `abstract` - default is not defined.  If defined, it will include an
+  article abstract in the standard [LaTeX] format.
 
 ## Additional customization of document formatting
 
