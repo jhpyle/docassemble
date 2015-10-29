@@ -72,8 +72,8 @@ Content of the [Markdown] file, `hello.md`:
 
 Files referenced with `content file` are assumed to reside in the
 `data/templates` directory within the package in which the interview
-[YAML] file is located.  You can specify filenames in other packages
-by referring to the package name.  For example:
+[YAML] file is located.  You can specify filenames in other locations
+by specifying a package name and path.  For example:
 `docassemble.demo:data/templates/complaint.md`.
 
 The `content file` can also refer to a list of file names:
@@ -172,8 +172,7 @@ attachment:
 ---
 {% endhighlight %}
 
-Metadata values can contain [Mako] template commands.  However, they
-cannot contain [Markdown].
+Metadata values can contain [Mako] template commands.
 
 ### Metadata applicable to RTF and PDF files
 
