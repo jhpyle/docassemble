@@ -4,7 +4,7 @@ title: Initial Blocks
 short_title: Initial Blocks
 ---
 
-## metadata
+## `metadata`
 
 {% highlight yaml %}
 ---
@@ -22,7 +22,7 @@ A `metadata` block contains information about the YAML file, such as
 the name of the author.  It must be a YAML dictionary, but each the
 dictionary items can contain any arbitrary YAML structure.
 
-## objects
+## `objects`
 
 {% highlight yaml %}
 ---
@@ -67,7 +67,7 @@ base class `DAObject` keeps track of variable names.
 Whenever possible, you should use `objects` blocks rather than code to
 initialize your objects.  `objects` blocks are clean and readable.
 
-## include
+## `include`
 
 {% highlight yaml %}
 ---
@@ -95,7 +95,7 @@ referring to their package names.  E.g.,
 `questions.yml` in the `docassemble/helloworld/data/questions`
 directory of that package.
 
-## image sets
+## `image sets`
 
 {% highlight yaml %}
 ---
@@ -134,7 +134,7 @@ of your choosing rather than by the name of the image file.
 For information on how to use the icons you have defined in an `image
 sets` block, see `decoration` and `buttons`.
 
-## images
+## `images`
 
 {% highlight yaml %}
 ---
@@ -160,7 +160,7 @@ image sets:
 ---
 {% endhighlight %}
 
-## imports
+## `imports`
 
 {% highlight yaml %}
 ---
@@ -179,7 +179,7 @@ import datetime
 import us
 {% endhighlight %}
 
-## modules
+## `modules`
 
 {% highlight yaml %}
 ---
@@ -197,7 +197,7 @@ running the following Python code:
 from datetime import *
 {% endhighlight %}
 
-## terms
+## `terms`
 
 {% highlight yaml %}
 ---
@@ -216,7 +216,7 @@ term, you can define certain vocabulary words, and **docassemble**
 will turn them into hyperlinks wherever they appear.  When the user
 clicks on the hyperlink, a popup appears with the word's definition.
 
-## interview help
+## `interview help`
 
 {% highlight yaml %}
 ---
@@ -232,7 +232,7 @@ question in the interview.  If the question has `help` text of its
 own, the `interview help` will appear after the question-specific
 help.
 
-## def
+## `def`
 
 {% highlight yaml %}
 def: adorability
@@ -260,7 +260,7 @@ usedef:
 Due to the way **docassemble** parses interviews, the `def` block
 needs to be defined before it is used.
 
-## default role
+## `default role`
 
 {% highlight yaml %}
 ---
@@ -302,5 +302,27 @@ questions can ask "What is your date of birth?" or "What is John
 Smith's date of birth" depending on whether the current user is John
 Smith or not.
 
-[Mako]: http://www.makotemplates.org/
+## `default language`
 
+{% highlight yaml %}
+---
+default language: es
+---
+{% endhighlight %}
+
+This sets the language to use for all of the remaining questions in
+the file for which a `language` is not specified.  The purpose of this
+is to save typing; otherwise you would have to set a `language` for
+each question.  Note that this does not extend to questions in `include`d
+files.
+
+If your interview only supports one language, it is not necessary to
+(and probably not a good idea to) set a `default language`.
+
+See [language support] for more information about how to create
+multi-lingual interviews.  See [modifiers] for information about the
+`language` setting of a question.
+
+[Mako]: http://www.makotemplates.org/
+[language support]: {{ site.baseurl }}/docs/language.html
+[modifiers]: {{ site.baseurl }}/docs/modifiers.html

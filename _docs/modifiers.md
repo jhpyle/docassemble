@@ -55,6 +55,39 @@ progress: 50
 If **docassemble** is configured to show a progress bar, the progress
 bar will be set to 50% when this question is asked.
 
+## `language`
+
+{% highlight yaml %}
+---
+question: |
+  What is the meaning of life?
+fields:
+  - Meaning of life: meaning_life
+---
+language: es
+question: |
+  ¿Cuál es el significado de la vida?
+fields:
+  - Significado de la Vida: meaning_life
+---
+{% endhighlight %}
+
+**docassemble**'s [language support] allows a single interview to asks
+questions different ways depending on the user's language.  You can
+write questions in different languages that set the same variables.
+**docassemble** will use whatever question matches the active
+language.
+
+The value of `language` must be a two-character lowercase [ISO-639-1]
+code.  For example, Spanish is `es`, French is `fr`, and Arabic is `ar`.
+
+For more information about how to set the active language, see
+[language support].
+
+Instead of explicitly setting a `language` for every question, you can
+use `default language` to apply a particular language to the remaining
+questions in the file (see [initial blocks]).
+
 ## `generic object`
 
 {% highlight yaml %}
@@ -132,4 +165,7 @@ To make a note to yourself about a question, which will not be seen by
 the end user, you can use a `comment` statement.  It will be ignored
 by **docassemble**, so it can contain any valid [YAML].
 
-[YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
+[YAML]: https://en.wikipedia.org/wiki/YAML
+[initial blocks]: {{ site.baseurl }}/docs/initial.html
+[language support]: {{ site.baseurl }}/docs/language.html
+[ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes

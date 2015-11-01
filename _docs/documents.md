@@ -239,8 +239,10 @@ own RTF document template (for more information on how to do that, see
 the next section).
 
 * `fontfamily` - default is `mathptmx` (Times Roman).
-* `lang` - not defined by default.  If defined, [polyglossia] (for
-  XeTeX) or [babel] is loaded and the language is set to this.
+* `lang` and `mainlang` - not defined by default.  If defined,
+  [polyglossia] (for XeTeX) or [babel] is loaded and the language is
+  set to `mainlang` if [polyglossia] is loaded and `lang` if [babel]
+  is loaded.
 * `papersize` - default is `letterpaper`.
 * `documentclass` - default is `article`.
 * `numbersections` - default is `true`.  If true, sections are
