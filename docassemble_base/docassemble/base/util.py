@@ -10,14 +10,30 @@ from titlecase import titlecase
 #from docassemble.base.logger import logmessage
 import babel.dates
 import locale
+import threading
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'comma_list', 'words', 'word', 'get_language', 'get_locale', 'comma_and_list', 'need', 'possessify', 'possessify_long', 'nice_number', 'pickleable_objects', 'in_the', 'a_in_the_b', 'of_the', 'the', 'your', 'his', 'her', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'do_you', 'does_a_b', 'capitalize', 'underscore_to_space', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'static_image', 'titlecase', 'url_of']
+__all__ = ['ordinal', 'comma_list', 'words', 'word', 'get_language', 'set_language', 'get_locale', 'comma_and_list', 'need', 'possessify', 'possessify_long', 'nice_number', 'pickleable_objects', 'in_the', 'a_in_the_b', 'of_the', 'the', 'your', 'his', 'her', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'do_you', 'does_a_b', 'capitalize', 'underscore_to_space', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'static_image', 'titlecase', 'url_of']
 
-language = 'en'
-this_locale = 'US.utf8'
+default_language = 'en'
+default_locale = 'US.utf8'
+
+class ThreadVariables(threading.local):
+    language = default_language
+    this_locale = default_locale
+    initialized = False
+    def __init__(self, **kw):
+        if self.initialized:
+            raise SystemError('__init__ called too many times')
+        self.initialized = True
+        self.__dict__.update(kw)
+
+this_thread = ThreadVariables()
 
 word_collection = {
+    'es': {
+        'Continue': 'Continuar'
+        },
     'en': {
         'and': "and",
         'or': "or",
@@ -115,33 +131,53 @@ def comma_list(*argv):
     return ", ".join(map(str, argv))
 
 def words():
-    return word_collection[language]
+    return word_collection[this_thread.language]
 
 def word(theword):
     try:
-        return word_collection[language][theword]
+        return word_collection[this_thread.language][theword]
     except:
         return theword
 
+def update_word_collection(lang, defs):
+    if lang not in word_collection:
+        word_collection[lang] = dict()
+    for word, translation in defs:
+        word_collection[lang][word] = translation
+    return
+
+def set_default_language(lang):
+    global default_language
+    default_language = lang
+    return
+
+def reset_language_locale():
+    this_thread.language = default_language
+    this_thread.locale = default_locale
+    return
+
 def set_language(lang):
-    global language
-    language = lang
+    this_thread.language = lang
     return
 
 def get_language():
-    return language
+    return this_thread.language
+
+def set_default_locale(loc):
+    global default_locale
+    default_locale = loc
+    return
 
 def set_locale(loc):
-    global this_locale
-    this_locale = loc
+    this_thread.this_locale = loc
     return
 
 def get_locale():
-    return this_locale
+    return this_thread.this_locale
 
 def update_locale():
     #logmessage("Using " + str(language) + '_' + str(this_locale) + "\n")
-    locale.setlocale(locale.LC_ALL, str(language) + '_' + str(this_locale))
+    locale.setlocale(locale.LC_ALL, str(this_thread.language) + '_' + str(this_thread.this_locale))
     return
 
 def comma_and_list(*pargs, **kargs):
@@ -152,7 +188,7 @@ def comma_and_list(*pargs, **kargs):
     if 'and_string' in kargs:
         and_string = kargs['and_string']
     else:
-        and_string = word_collection[language]['and']
+        and_string = word('and')
     if 'comma_string' in kargs:
         comma_string = kargs['comma_string']
     else:
@@ -266,7 +302,7 @@ def does_a_b(a, b, **kwargs):
         return('does ' + unicode(a) + ' ' + unicode(b))
 
 def today():
-    return(babel.dates.format_date(datetime.date.today(), format='long', locale=language))
+    return(babel.dates.format_date(datetime.date.today(), format='long', locale=this_thread.language))
     #return(today.strftime('%x'))
     
 def capitalize(a):
@@ -403,3 +439,4 @@ def nodoublequote(text):
 #     global url_finder
 #     url_finder = func
 #     return
+# grep -E -R -o -h "word\(['\"][^\)]+\)" * | sed "s/^[^'\"]+['\"]//g"

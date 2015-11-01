@@ -114,6 +114,8 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 PNG_RESOLUTION = daconfig.get('png_resolution', 300)
 PNG_SCREEN_RESOLUTION = daconfig.get('png_screen_resolution', 72)
 PDFTOPPM_COMMAND = daconfig.get('pdftoppm_command', 'pdftoppm')
+docassemble.base.util.set_default_language(daconfig.get('language', 'en'))
+docassemble.base.util.set_default_locale(daconfig.get('locale', 'US.utf8'))
 docassemble.base.util.set_language(daconfig.get('language', 'en'))
 docassemble.base.util.set_locale(daconfig.get('locale', 'US.utf8'))
 docassemble.base.util.update_locale()
@@ -154,7 +156,7 @@ app.logger.addHandler(error_file_handler)
 
 def flask_logger(message):
     app.logger.warning(message)
-    #sys.stderr.write(unicode(message) + "\n")
+    sys.stderr.write(unicode(message) + "\n")
     return
 
 docassemble.base.logger.set_logmessage(flask_logger)
@@ -241,7 +243,7 @@ def get_info_from_file_reference(file_reference, **kwargs):
     else:
         convert = None
     result['fullpath'] = docassemble.base.util.static_filename_path(file_reference)
-    logmessage("path is " + str(result['fullpath']))
+    #logmessage("path is " + str(result['fullpath']))
     if result['fullpath'] is not None and os.path.isfile(result['fullpath']):
         result['filename'] = os.path.basename(result['fullpath'])
         ext_type, result['mimetype'] = get_ext_and_mimetype(result['fullpath'])
@@ -249,18 +251,18 @@ def get_info_from_file_reference(file_reference, **kwargs):
         result['path'] = path_parts[0]
         result['extension'] = path_parts[1].lower()
         result['extension'] = re.sub(r'\.', '', result['extension'])
-        logmessage("Extension is " + result['extension'])
+        #logmessage("Extension is " + result['extension'])
         if convert is not None and result['extension'] in convert:
-            logmessage("Converting...")
+            #logmessage("Converting...")
             if os.path.isfile(result['path'] + '.' + convert[result['extension']]):
-                logmessage("Found conversion file ")
+                #logmessage("Found conversion file ")
                 result['extension'] = convert[result['extension']]
                 result['fullpath'] = result['path'] + '.' + result['extension']
                 ext_type, result['mimetype'] = get_ext_and_mimetype(result['fullpath'])
             else:
-                logmessage("Did not find file " + result['path'] + '.' + convert[result['extension']])
+                #logmessage("Did not find file " + result['path'] + '.' + convert[result['extension']])
                 return dict()
-        logmessage("Full path is " + result['fullpath'])
+        #logmessage("Full path is " + result['fullpath'])
         add_info_about_file(result['fullpath'], result)
     else:
         logmessage("File reference " + str(file_reference) + " DID NOT EXIST.")
@@ -588,8 +590,8 @@ def index():
             del user_code
             del user_dict
         #user_dict['appmail'] = mail
-    else:
-        logmessage("Did not find user code in session")
+    #else:
+        #logmessage("Did not find user code in session")
     try:
         user_dict
         user_code
@@ -751,7 +753,7 @@ def index():
                 if the_files:
                     files_to_process = list()
                     for the_file in the_files:
-                        logmessage("There is a file_field in request.files and it has a type of " + str(type(the_file)) + " and its str representation is " + str(the_file))
+                        #logmessage("There is a file_field in request.files and it has a type of " + str(type(the_file)) + " and its str representation is " + str(the_file))
                         filename = secure_filename(the_file.filename)
                         file_number = get_new_file_number(session['uid'], filename)
                         extension, mimetype = get_ext_and_mimetype(filename)
@@ -825,7 +827,7 @@ def index():
                 try:
                     eval(key, user_dict)
                 except:
-                    logmessage("setting key " + str(key) + " to empty dict")
+                    #logmessage("setting key " + str(key) + " to empty dict")
                     string = key + ' = dict()'
                     try:
                         exec(string, user_dict)
@@ -840,7 +842,7 @@ def index():
             else:
                 error_messages.append(("error", "Error: multiple choice values were supplied, but docassemble was not waiting for an answer to a multiple choice question."))
         string = key + ' = ' + data
-        logmessage("Doing " + str(string))
+        #logmessage("Doing " + str(string))
         try:
             exec(string, user_dict)
             changed = True
@@ -1045,7 +1047,7 @@ def advance_progress(user_dict):
 
 def save_user_dict(user_code, user_dict, filename, changed=False):
     cur = conn.cursor()
-    logmessage(repr(pickle.dumps(pickleable_objects(user_dict))))
+    #logmessage(repr(pickle.dumps(pickleable_objects(user_dict))))
     if changed is True:
         if USE_PROGRESS_BAR:
             advance_progress(user_dict)

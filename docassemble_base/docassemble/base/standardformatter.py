@@ -466,7 +466,7 @@ def input_for(status, field, wide=False):
             for pair in pairlist:
                 if pair[0] is not None:
                     inner_field = str(field.saveas) + "[" + myb64quote(pair[0]) + "]"
-                    sys.stderr.write("I've got a " + repr(pair[1]) + "\n")
+                    #sys.stderr.write("I've got a " + repr(pair[1]) + "\n")
                     formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
                     inner_fieldlist.append('<input data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty checkbox-icon" id="' + str(field.saveas) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True">')
                 else:

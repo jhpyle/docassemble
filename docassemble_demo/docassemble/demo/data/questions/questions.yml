@@ -80,11 +80,6 @@ comment: |
   This "objects" block creates the variable "village_idiot" and
   specifies that it is an object of type "Individual."
 ---
-code: |
-  advocate.name.first = "John"
-  advocate.name.last = "Smith"
-  advocate.email = "jpyle@philalegal.org"
----
 terms:
   rhododendron: |
      A genus of shrubs or small trees, often having handsome
@@ -159,7 +154,11 @@ content: |
 
   Thank you for your patience.
 ---
-mandatory: True
+initial: true
+code: |
+  set_language(client.language)
+---
+mandatory: true
 code: |
   need(user_saw_initial_screen)
   if user_understands_no_attorney_client_relationship == "understands":
@@ -203,6 +202,11 @@ comment: |
   If docassemble is configured to show a progress bar, the progress
   bar will be set to 100% on this question, which is an endpoint
   question (since the only options are exiting or restarting).
+---
+code: |
+  advocate.name.first = "John"
+  advocate.name.last = "Smith"
+  advocate.email = "jpyle@philalegal.org"
 ---
 question: |
   Welcome to the **docassemble** demonstration.
@@ -609,9 +613,10 @@ attachments:
     description: |
       This is a *very* helpful advice letter.
     metadata:
-      FirstHeaderRight: |
-        Example, LLP [BR] 123 Main Street, 
-        Suite 1500 [BR] Philadelphia, PA 19102
+      FirstHeaderRight: >-
+        Example, LLP [BR] 
+        123 Main Street, Suite 1500 [BR]
+        Philadelphia, PA 19102
       HeaderLeft: |
         ${ client } [BR] ${ today() } [BR] Page [PAGENUM]
       HeaderLines: "3"
@@ -824,4 +829,38 @@ attachment:
       FirstFooterLeft: Can you do *markdown*?
     content: |
       Hello, ${ user }!
+---
+language: es
+question: |
+  Bienvenidos a la **docassemble** demonstration.
+subquestion: |
+  The following interviewario is designed to demonstrate almost all of
+  **docassemble**'s features.  At the end, you will be provided with a
+  fake cliento letter and a fake pleading.
+
+  In the navigation bar above, you can click "Help" to see the help
+  text associated with the interview and with the individual question
+  (if any).  If "Help <i class="glyphicon glyphicon-star"></i>"
+  appears in the navigation bar, that means help text specific to the
+  question is available.
+
+  Click "Source" to toggle the display of the [YAML] code used to
+  generate the question.
+
+  [YAML]: https://en.wikipedia.org/wiki/YAML
+field: user_saw_initial_screen
+buttons:
+  - Yo comprendo: True
+---
+generic object: Individual
+question: |
+  What language ${ x.do_question('speak') }?
+field: x.language
+choices:
+  - English: en
+  - Español: es
+---
+language: es
+terms:
+  cliento: El cliento que llama taboot taboot
 ...

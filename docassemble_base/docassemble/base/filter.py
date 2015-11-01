@@ -473,10 +473,10 @@ def emoji_insert(text, status=None, images=None):
 
 def markdown_to_html(a, trim=False, pclass=None, status=None, use_pandoc=False, escape=False, do_terms=True):
     if do_terms and status is not None:
-        if len(status.question.interview.terms) > 0:
-            for term in status.question.interview.terms:
+        if status.question.language in status.question.interview.terms and len(status.question.interview.terms[status.question.language]) > 0:
+            for term in status.question.interview.terms[status.question.language]:
                 #logmessage("Searching for term " + term + "\n")
-                a = status.question.interview.terms[term]['re'].sub(r'[[\1]]', a)
+                a = status.question.interview.terms[status.question.language][term]['re'].sub(r'[[\1]]', a)
                 #logmessage("string is now " + str(a) + "\n")
         if len(status.question.interview.images) > 0:
             a = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status)), a)
@@ -484,16 +484,16 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, use_pandoc=False, 
     if use_pandoc:
         converter = Pandoc()
         converter.output_format = 'html'
-        logmessage("input was:\n" + repr(a))
+        #logmessage("input was:\n" + repr(a))
         converter.input_content = a
         converter.convert()
         result = converter.output_content.decode('utf-8')
     else:
         result = markdown.markdown(a, extensions=[SmartypantsExt(configs=dict())], output_format='html5')
     result = re.sub('<a href', '<a target="_blank" href', result)
-    if do_terms and status is not None and len(status.question.interview.terms) > 0 is not None and term_start.search(result):
+    if do_terms and status is not None and status.question.language in status.question.interview.terms and len(status.question.interview.terms[status.question.language]) > 0 is not None and term_start.search(result):
         #logmessage("Found a term\n")
-        result = term_match.sub((lambda x: add_terms(x.group(1), status.question.interview.terms)), result)
+        result = term_match.sub((lambda x: add_terms(x.group(1), status.question.interview.terms[status.question.language])), result)
     if trim:
         result = result[3:-4]
     elif pclass:

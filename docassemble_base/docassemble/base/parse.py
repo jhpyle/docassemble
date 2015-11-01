@@ -10,7 +10,7 @@ import operator
 import pprint
 import docassemble.base.filter
 from docassemble.base.error import DAError, MandatoryQuestion
-from docassemble.base.util import pickleable_objects, word
+from docassemble.base.util import pickleable_objects, word, get_language
 from docassemble.base.logger import logmessage
 from docassemble.base.pandoc import Pandoc
 from mako.template import Template
@@ -59,6 +59,7 @@ class PackageImage(object):
 
 class InterviewSource(object):
     def __init__(self, **kwargs):
+        self.language = '*'
         pass
     def set_path(self, path):
         self.path = path
@@ -69,10 +70,15 @@ class InterviewSource(object):
     def set_content(self, content):
         self.content = content
         return
+    def set_language(self, language):
+        self.language = language
+        return
     def update(self):
         return True
     def get_modtime(self):
         return self._modtime
+    def get_language(self):
+        return self.language
     def get_interview(self):
         return Interview(source=self)
     def append(self, path):
@@ -256,7 +262,7 @@ class Field:
 
 class Question:
     def idebug(self, data):
-        return "\nIn file " + str(self.from_path) + " from package " + str(self.package) + ":\n" + yaml.dump(data)
+        return "\nIn file " + str(self.from_source.path) + " from package " + str(self.package) + ":\n" + yaml.dump(data)
     def __init__(self, data, caller, **kwargs):
         should_append = True
         if 'register_target' in kwargs:
@@ -265,7 +271,7 @@ class Question:
         else:
             register_target = self
             main_list = True
-        self.from_path = kwargs.get('path', None)
+        self.from_source = kwargs.get('source', None)
         self.package = kwargs.get('package', None)
         self.interview = caller
         if debug:
@@ -284,6 +290,12 @@ class Question:
         self.allow_emailing = True
         self.fields_used = set()
         self.names_used = set()
+        if 'default language' in data:
+            self.from_source.set_language(data['default language'])
+        if 'language' in data:
+            self.language = data['language']
+        else:
+            self.language = self.from_source.get_language()
         if 'usedefs' in data:
             defs = list()
             if type(data['usedefs']) is list:
@@ -452,7 +464,9 @@ class Question:
                     raise DAError("Help content must be text, not a list or a dictionary." + self.idebug(data))
             else:
                 raise DAError("No content section was found in an interview help section." + self.idebug(data))
-            self.interview.helptext.append({'content': help_content, 'heading': help_heading})
+            if self.language not in self.interview.helptext:
+                self.interview.helptext[self.language] = list()
+            self.interview.helptext[self.language].append({'content': help_content, 'heading': help_heading})
         if 'generic object' in data:
             self.is_generic = True
             self.is_generic_list = False
@@ -466,7 +480,7 @@ class Question:
         if 'metadata' in data:
             should_append = False
             if type(data['metadata']) == dict:
-                data['metadata']['origin_path'] = self.from_path
+                data['metadata']['origin_path'] = self.from_source.path
                 self.interview.metadata.append(data['metadata'])
             else:
                 raise DAError("A metadata section must be organized as a dictionary." + self.idebug(data))
@@ -484,18 +498,20 @@ class Question:
                 raise DAError("An imports section must be organized as a list." + self.idebug(data))
         if 'terms' in data:
             should_append = False
+            if self.language not in self.interview.terms:
+                self.interview.terms[self.language] = dict()
             if type(data['terms']) is list:
                 for termitem in data['terms']:
                     if type(termitem) is dict:
                         for term in termitem:
                             lower_term = term.lower()
-                            self.interview.terms[lower_term] = {'definition': termitem[term], 're': re.compile(r"(?i)\b(%s)\b" % lower_term, re.IGNORECASE)}
+                            self.interview.terms[self.language][lower_term] = {'definition': termitem[term], 're': re.compile(r"(?i)\b(%s)\b" % lower_term, re.IGNORECASE)}
                     else:
                         raise DAError("A terms section organized as a list must be a list of dictionary items." + self.idebug(data))
             elif type(data['terms']) is dict:
                 for term in data['terms']:
                     lower_term = term.lower()
-                    self.interview.terms[lower_term] = {'definition': data['terms'][term], 're': re.compile(r"(?i)\b(%s)\b" % lower_term, re.IGNORECASE)}
+                    self.interview.terms[self.language][lower_term] = {'definition': data['terms'][term], 're': re.compile(r"(?i)\b(%s)\b" % lower_term, re.IGNORECASE)}
             else:
                 raise DAError("A terms section must be organized as a dictionary or a list." + self.idebug(data))
         if 'default role' in data:
@@ -545,7 +561,7 @@ class Question:
                     raise
                 if 'orelse' in data:
                     if type(data['orelse']) is dict:
-                        self.or_else_question = Question(data['orelse'], self.interview, register_target=register_target, path=self.from_path, package=self.package)
+                        self.or_else_question = Question(data['orelse'], self.interview, register_target=register_target, source=self.from_source, package=self.package)
                     else:
                         raise DAError("The orelse part of a require section must be organized as a dictionary." + self.idebug(data))
                 else:
@@ -567,8 +583,6 @@ class Question:
         #         self.role.append(data['role'])
         #     else:
         #         raise DAError("A role section must be text or a list." + self.idebug(data))
-        if 'language' in data:
-            self.language = data['language']
         if 'progress' in data:
             self.progress = data['progress']
         if 'question' in data:
@@ -784,16 +798,19 @@ class Question:
             except:
                 self.interview.questions_by_id[self.id] = [self]
         for field_name in self.fields_used:
-            try:
-                self.interview.questions[field_name].append(register_target)
-            except:
-                self.interview.questions[field_name] = [register_target]
+            if field_name not in self.interview.questions:
+                self.interview.questions[field_name] = dict()
+            if self.language not in self.interview.questions[field_name]:
+                self.interview.questions[field_name][self.language] = list()
+            self.interview.questions[field_name][self.language].append(register_target)
             if self.is_generic:
                 if self.generic_object not in self.interview.generic_questions:
                     self.interview.generic_questions[self.generic_object] = dict()
                 if field_name not in self.interview.generic_questions[self.generic_object]:
-                    self.interview.generic_questions[self.generic_object][field_name] = list()
-                self.interview.generic_questions[self.generic_object][field_name].append(register_target)
+                    self.interview.generic_questions[self.generic_object][field_name] = dict()
+                if self.language not in self.interview.generic_questions[self.generic_object][field_name]:
+                    self.interview.generic_questions[self.generic_object][field_name][self.language] = list()
+                self.interview.generic_questions[self.generic_object][field_name][self.language].append(register_target)
 
     def process_attachment_list(self, target):
         if type(target) is list:
@@ -894,7 +911,7 @@ class Question:
                 raise DAError("No content provided in attachment")
             return({'name': TextObject(target['name']), 'filename': TextObject(target['filename']), 'description': TextObject(target['description']), 'content': TextObject("\n".join(defs) + "\n" + target['content']), 'valid_formats': target['valid_formats'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
         elif type(target) is str:
-            return({'name': TextObject('Document'), 'filename': TextObject('document'), 'content': TextObject(target), 'valid_formats': ['*'], 'metadata': metadata, 'metadata': metadata, 'variable_name': variable_name, 'options': options})
+            return({'name': TextObject('Document'), 'filename': TextObject('document'), 'content': TextObject(target), 'valid_formats': ['*'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
         else:
             raise DAError("Unknown data type in process_attachment")
 
@@ -909,7 +926,7 @@ class Question:
             help_text_list = [{'heading': None, 'content': self.helptext.text(user_dict)}]
         else:
             help_text_list = list()
-        interview_help_text_list = self.interview.processed_helptext(user_dict)
+        interview_help_text_list = self.interview.processed_helptext(user_dict, self.language)
         if len(interview_help_text_list) > 0:
             help_text_list.extend(interview_help_text_list)
         if self.subcontent is not None:
@@ -972,11 +989,11 @@ class Question:
             current_role = user_dict['role']
             if len(self.role) > 0:
                 if current_role not in self.role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave']:
-                    logmessage("Calling role_event with " + ", ".join(self.fields_used))
+                    #logmessage("Calling role_event with " + ", ".join(self.fields_used))
                     user_dict['role_needed'] = self.role
                     raise NameError("Need 'role_event'")
             elif self.interview.default_role is not None and current_role not in self.interview.default_role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave']:
-                logmessage("Calling role_event with " + ", ".join(self.fields_used))
+                #logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("Need 'role_event'")
         return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras})
@@ -1005,10 +1022,10 @@ class Question:
                     else:
                         result_dict[key] = value
                 elif type(value) == dict:
-                    result_dict[key] = Question(value, self.interview, register_target=register_target, path=self.from_path, package=self.package)
+                    result_dict[key] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                 elif type(value) == str:
                     if value in ["continue", "exit", "restart", "leave"]:
-                        result_dict[key] = Question({'command': value}, self.interview, register_target=register_target, path=self.from_path, package=self.package)
+                        result_dict[key] = Question({'command': value}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                     else:
                         result_dict[key] = value
                 elif type(value) == bool:
@@ -1068,7 +1085,7 @@ class Question:
                             metadata[key] = textify(data)
                         else:
                             metadata[key] = data.text(user_dict)
-                    the_markdown += "---\n" + yaml.dump(metadata) + "\n...\n"
+                    the_markdown += "---\n" + yaml.safe_dump(metadata, default_flow_style=False, default_style = '|') + "...\n"
                 the_markdown += attachment['content'].text(user_dict)
                 if emoji_match.search(the_markdown) and len(self.interview.images) > 0:
                     the_markdown = emoji_match.sub((lambda x: docassemble.base.filter.emoji_insert(x.group(1), images=self.interview.images)), the_markdown)
@@ -1076,6 +1093,7 @@ class Question:
                 converter = Pandoc()
                 converter.output_format = doc_format
                 converter.input_content = the_markdown
+                #logmessage("Markdown is:\n" + the_markdown + "END");
                 if 'initial_yaml' in attachment['options']:
                     converter.initial_yaml = attachment['options']['initial_yaml']
                 elif 'initial_yaml' in self.interview.attachment_options:
@@ -1153,7 +1171,7 @@ class Interview:
         self.questions_list = list()
         self.images = dict()
         self.metadata = list()
-        self.helptext = list()
+        self.helptext = dict()
         self.defs = dict()
         self.terms = dict()
         self.question_index = 0
@@ -1178,17 +1196,18 @@ class Interview:
             source_code = remove_trailing_dots.sub('', source_code)
             document = yaml.load(source_code)
             if document is not None:
-                question = Question(document, self, path=source.path, package=source_package, source_code=source_code)
-    def processed_helptext(self, user_dict):
+                question = Question(document, self, source=source, package=source_package, source_code=source_code)
+    def processed_helptext(self, user_dict, language):
         result = list()
-        for source in self.helptext:
-            help_item = dict()
-            if source['heading'] is None:
-                help_item['heading'] = None
-            else:
-                help_item['heading'] = source['heading'].text(user_dict)
-            help_item['content'] = source['content'].text(user_dict)
-            result.append(help_item)
+        if language in self.helptext:
+            for source in self.helptext[language]:
+                help_item = dict()
+                if source['heading'] is None:
+                    help_item['heading'] = None
+                else:
+                    help_item['heading'] = source['heading'].text(user_dict)
+                help_item['content'] = source['content'].text(user_dict)
+                result.append(help_item)
         return result
     def assemble(self, user_dict, *args):
         if len(args):
@@ -1199,6 +1218,7 @@ class Interview:
             user_dict['answered'] = set()
         if 'answers' not in user_dict:
             user_dict['answers'] = dict()
+        docassemble.base.util.reset_language_locale()
         interview_status.current_info.update({'default_role': self.default_role})
         user_dict['current_info'] = interview_status.current_info
         for question in self.questions_list:
@@ -1225,10 +1245,10 @@ class Interview:
                     if question.question_type == 'code' and question.is_mandatory:
                         if debug:
                             interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
-                        logmessage("Running some code:\n\n" + question.sourcecode)
+                        #logmessage("Running some code:\n\n" + question.sourcecode)
                         #logmessage("Question name is " + question.name)
                         exec(question.compute, user_dict)
-                        logmessage("Code completed")
+                        #logmessage("Code completed")
                         if question.name:
                             user_dict['answered'].add(question.name)
                     if hasattr(question, 'content') and question.name and question.is_mandatory:
@@ -1241,16 +1261,16 @@ class Interview:
                 #logmessage(str(errMess))
                 question_result = self.askfor(missingVariable, user_dict, seeking=interview_status.seeking)
                 if question_result['type'] == 'continue':
-                    logmessage("Continuing after asking for " + missingVariable + "...")
+                    #logmessage("Continuing after asking for " + missingVariable + "...")
                     continue
                 else:
                     #pp = pprint.PrettyPrinter(indent=4)
                     #logmessage("Need to ask:\n  " + question_result['question_text'] + "\n" + "type is " + str(question_result['question'].question_type) + "\n" + pp.pformat(question_result) + "\n" + pp.pformat(question_result['question']))
-                    logmessage("Need to ask:\n  " + question_result['question_text'])
+                    #logmessage("Need to ask:\n  " + question_result['question_text'])
                     interview_status.populate(question_result)
                     break
             except AttributeError as errMess:
-                logmessage(str(errMess.args))
+                #logmessage(str(errMess.args))
                 raise DAError('Got error ' + str(errMess))
             except MandatoryQuestion:
                 break
@@ -1259,10 +1279,11 @@ class Interview:
         return(pickleable_objects(user_dict))
     def askfor(self, missingVariable, user_dict, **kwargs):
         variable_stack = kwargs.get('variable_stack', set())
+        language = get_language()
         seeking = kwargs.get('seeking', list())
         if debug:
             seeking.append({'variable': missingVariable})
-        logmessage("I don't have " + missingVariable)
+        #logmessage("I don't have " + missingVariable)
         if missingVariable in variable_stack:
             raise DAError("Infinite loop:" + missingVariable + " already looked for")
         variable_stack.add(missingVariable)
@@ -1282,23 +1303,23 @@ class Interview:
             missingVariable = mv['vari']
             #logmessage("Trying missingVariable " + missingVariable)
             questions_to_try = list()
+            generic_needed = True;
             if missingVariable in self.questions:
-                for the_question in reversed(self.questions[missingVariable]):
-                    questions_to_try.append((the_question, False, 'None', 'None', missingVariable))
-                generic_needed = False
-            else:
-                generic_needed = True;
+                for lang in [language, '*']:
+                    if lang in self.questions[missingVariable]:
+                        for the_question in reversed(self.questions[missingVariable][lang]):
+                            questions_to_try.append((the_question, False, 'None', 'None', missingVariable))
+                        generic_needed = False
             components = missingVariable.split(".")
             realComponents = realMissingVariable.split(".")
             #logmessage("Vari Components are " + str(components))
             #logmessage("Real Components are " + str(realComponents))
             n = len(components)
-            #if n == 1:
-                # if generic_needed:
-                #     logmessage("There is no question for " + missingVariable)
-                # else:
-                #     logmessage("There are no generic options for " + missingVariable)
-            #else:
+            # if n == 1:
+            #     if generic_needed:
+            #         logmessage("There is no question for " + missingVariable)
+            #     else:
+            #         logmessage("There are no generic options for " + missingVariable)
             if n != 1:
                 found_x = 0;
                 for i in range(1, n):
@@ -1326,28 +1347,20 @@ class Interview:
                         root_for_object = d['root_for_object']
                         #logmessage("testing variable " + var + " and root " + root + " and root for object " + root_for_object)
                         try:
-                            #logmessage("Looking for " + root_for_object)
                             root_evaluated = eval(root_for_object, user_dict)
-                            #logmessage("Looking for type of root evaluated")
                             generic_object = type(root_evaluated).__name__
-                            #logmessage("ok -4")
-                            #logmessage("Generic object is " + generic_object)
-                            #if generic_object in self.generic_questions:
-                                #logmessage("ok1")
-                                #if var in self.questions:
-                                    #logmessage("ok2")
-                                    #if var in self.generic_questions[generic_object]:
-                                        #logmessage("ok3")
-                            if generic_object in self.generic_questions and var in self.questions and var in self.generic_questions[generic_object]:
-                                #logmessage("Got a hit with var " + var + "where realMissingVariable is " + realMissingVariable)
-                                #logmessage("Got a hit, setting var " + var + " and realMissingVariable " + realMissingVariable)
-                                #realMissingVariable = missingVariable
+                            if generic_object in self.generic_questions and var in self.questions and var in self.generic_questions[generic_object] and (language in self.generic_questions[generic_object][var] or '*' in self.generic_questions[generic_object][var]) and (language in self.questions[var] or '*' in self.questions[var]):
+                                #logmessage("foo1" + var)
+                                for lang in [language, '*']:
+                                    #logmessage("foo2" + lang)
+                                    if lang in self.questions[var]:
+                                        #logmessage("foo3" + var + lang)
+                                        for the_question_to_use in reversed(self.questions[var][lang]):
+                                            #logmessage("foo4 " + var + lang)
+                                            questions_to_try.append((the_question_to_use, True, root, the_i_to_use, var))
                                 missingVariable = var
                                 found_generic = True
-                                #the_x = root
                                 found_x = 1
-                                for the_question_to_use in reversed(self.questions[var]):
-                                    questions_to_try.append((the_question_to_use, True, root, the_i_to_use, var))
                                 break
                             #logmessage("I should be looping around now")
                         except:
@@ -1385,7 +1398,7 @@ class Interview:
                                         variable = m.group(1)
                                         attribute = m.group(2)
                                         command = variable + ".initializeAttribute(name='" + attribute + "', objectType=" + object_type + ")"
-                                        logmessage("Running " + command)
+                                        #logmessage("Running " + command)
                                         exec(command, user_dict)
                                     else:
                                         command = variable + ' = ' + object_type + '("' + variable + '")'
@@ -1418,7 +1431,7 @@ class Interview:
                                 continue
                         else:
                             #logmessage("Question type is " + question.question_type)
-                            #logmessage("Ask:\n  " + question.content.original_text)
+                            #logmessage("Ask:\n" + question.content.original_text)
                             if question.question_type == 'continue':
                                 continue
                             return question.ask(user_dict, the_x, the_i)
@@ -1430,7 +1443,7 @@ class Interview:
                     if question_result['type'] == 'continue':
                         continue
                     return(question_result)
-        raise DAError("Exiting")
+        raise DAError("Found a reference to a variable '" + missingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.  The askfor function reached its end.")
         
 class myextract(ast.NodeVisitor):
     def __init__(self):
