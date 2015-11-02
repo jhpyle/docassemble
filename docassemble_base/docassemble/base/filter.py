@@ -481,6 +481,7 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, use_pandoc=False, 
         if len(status.question.interview.images) > 0:
             a = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status)), a)
     a = docassemble.base.filter.html_filter(unicode(a))
+    #logmessage("before: " + a)
     if use_pandoc:
         converter = Pandoc()
         converter.output_format = 'html'
@@ -503,6 +504,7 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, use_pandoc=False, 
         result = lt_match.sub('&lt;', result)
         result = gt_match.sub('&gt;', result)
         result = amp_match.sub('&amp;', result)
+    #logmessage("after: " + result)
     return(result)
 
 def add_terms(termname, terms):

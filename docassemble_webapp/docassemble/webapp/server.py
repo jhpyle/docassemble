@@ -71,9 +71,8 @@ if DEBUG:
 app.debug = False
 
 default_yaml_filename = daconfig.get('default_interview', 'docassemble.demo:data/questions/questions.yml')
-#yaml_filename = 'docassemble.hello-world:data/questions/questions.yaml'
 
-if not daconfig['mail']:
+if 'mail' not in daconfig:
     daconfig['mail'] = dict()
 os.environ['PYTHON_EGG_CACHE'] = tempfile.mkdtemp()
 app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
@@ -87,7 +86,7 @@ app.config['MAIL_USE_SSL'] = daconfig['mail'].get('use_ssl', False)
 app.config['MAIL_USE_TLS'] = daconfig['mail'].get('use_tls', False)
 app.config['ADMINS'] = [daconfig.get('admin_address', None)]
 app.config['APP_SYSTEM_ERROR_SUBJECT_LINE'] = app.config['APP_NAME'] + " system error"
-app.config['APPLICATION_ROOT'] = daconfig.get('root', None)
+app.config['APPLICATION_ROOT'] = daconfig.get('root', '/demo')
 app.config['CSRF_ENABLED'] = False
 app.config['USER_APP_NAME'] = app.config['APP_NAME']
 app.config['USER_SEND_PASSWORD_CHANGED_EMAIL'] = False
@@ -113,7 +112,7 @@ app.config['USER_AFTER_RESET_PASSWORD_ENDPOINT'] = 'user.login'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 PNG_RESOLUTION = daconfig.get('png_resolution', 300)
 PNG_SCREEN_RESOLUTION = daconfig.get('png_screen_resolution', 72)
-PDFTOPPM_COMMAND = daconfig.get('pdftoppm_command', 'pdftoppm')
+PDFTOPPM_COMMAND = daconfig.get('pdftoppm_command', None)
 docassemble.base.util.set_default_language(daconfig.get('language', 'en'))
 docassemble.base.util.set_default_locale(daconfig.get('locale', 'US.utf8'))
 docassemble.base.util.set_language(daconfig.get('language', 'en'))
@@ -121,14 +120,17 @@ docassemble.base.util.set_locale(daconfig.get('locale', 'US.utf8'))
 docassemble.base.util.update_locale()
 app.logger.warning("default sender is " + app.config['MAIL_DEFAULT_SENDER'] + "\n")
 exit_page = daconfig.get('exitpage', '/')
+UPLOAD_DIRECTORY = daconfig.get('uploads', '/usr/share/docassemble/files')
 USE_PROGRESS_BAR = daconfig.get('use_progress_bar', True)
 SHOW_LOGIN = daconfig.get('show_login', True)
 #USER_PACKAGES = daconfig.get('user_packages', '/var/lib/docassemble/dist-packages')
 #sys.path.append(USER_PACKAGES)
 if USE_PROGRESS_BAR:
-    initial_dict = daconfig.get('initial_dict', dict(progress=0, url_args=dict()))
+    initial_dict = dict(_internal=dict(progress=0, answered=set(), answers=dict()), url_args=dict())
 else:
-    initial_dict = daconfig.get('initial_dict', dict(url_args=dict()))
+    initial_dict = dict(_internal=dict(progress=0, answered=set(), answers=dict()), url_args=dict())
+if 'initial_dict' in daconfig:
+    initial_dict.update(daconfig['initial_dict'])
 LOGFILE = daconfig.get('flask_log', '/tmp/flask.log')
 #APACHE_LOGFILE = daconfig.get('apache_log', '/var/log/apache2/error.log')
 
@@ -190,7 +192,7 @@ docassemble.base.parse.set_url_finder(get_url_from_file_reference)
 
 def get_path_from_file_number(file_number, directory=False):
     parts = re.sub(r'(...)', r'\1/', '{0:012x}'.format(int(file_number))).split('/')
-    path = os.path.join(daconfig['uploads'], *parts)
+    path = os.path.join(UPLOAD_DIRECTORY, *parts)
     if directory:
         return(path)
     else:
@@ -301,7 +303,7 @@ if 'oauth' in daconfig:
     if 'facebook' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enable'] is False):
         app.config['USE_FACEBOOK_LOGIN'] = True
 
-app.secret_key = daconfig['secretkey']
+app.secret_key = daconfig.get('secretkey', '38ihfiFehfoU34mcq_4clirglw3g4o87')
 #app.secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits)
 #                         for x in xrange(32))
 
@@ -838,9 +840,10 @@ def index():
         if key == "multiple_choice":
             interview.assemble(user_dict, interview_status)
             if interview_status.question.question_type == "multiple_choice" and not hasattr(interview_status.question.fields[0], 'saveas'):
-                key = 'answers["' + interview_status.question.name + '"]'
+                key = '_internal["answers"]["' + interview_status.question.name + '"]'
             else:
-                error_messages.append(("error", "Error: multiple choice values were supplied, but docassemble was not waiting for an answer to a multiple choice question."))
+                continue
+                #error_messages.append(("error", "Error: multiple choice values were supplied, but docassemble was not waiting for an answer to a multiple choice question."))
         string = key + ' = ' + data
         #logmessage("Doing " + str(string))
         try:
@@ -850,9 +853,9 @@ def index():
         except Exception as errMess:
             error_messages.append(("error", "Error: " + str(errMess)))
     if changed and 'questionname' in post_data:
-        user_dict['answered'].add(post_data['questionname'])
+        user_dict['_internal']['answered'].add(post_data['questionname'])
         #logmessage("From server.py, answered name is " + post_data['questionname'])
-        user_dict['role_event_notification_sent'] = False
+        #user_dict['role_event_notification_sent'] = False
     interview.assemble(user_dict, interview_status)
     if len(interview_status.attachments) > 0:
         #logmessage("Updating attachment info")
@@ -866,14 +869,17 @@ def index():
         steps = 0
         changed = False
         interview.assemble(user_dict, interview_status)
-    if USE_PROGRESS_BAR and interview_status.question.progress is not None and interview_status.question.progress > user_dict['progress']:
-        user_dict['progress'] = interview_status.question.progress
+    if USE_PROGRESS_BAR and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_progress']:
+        user_dict['_progress'] = interview_status.question.progress
     if interview_status.question.question_type == "exit":
         user_dict = initial_dict.copy()
         reset_user_dict(user_code, user_dict, yaml_filename)
         return redirect(exit_page)
+    if interview_status.question.question_type == "refresh":
+        return redirect(url_for('index'))
     if interview_status.question.question_type == "leave":
         return redirect(exit_page)
+    user_dict['_internal']['answers'] = dict()
     save_user_dict(user_code, user_dict, yaml_filename, changed=changed)
     flash_content = ""
     messages = get_flashed_messages(with_categories=True) + error_messages
@@ -907,6 +913,9 @@ def index():
         navMain.on("click", "a", null, function () {
           navMain.collapse('hide');
         });
+        $("#sourcetoggle").on("click", function(){
+          $(this).toggleClass("sourceactive");
+        });
       });
     });
     </script>"""
@@ -922,10 +931,10 @@ def index():
         if DEBUG:
             output += '<link rel="stylesheet" href="' + url_for('static', filename='app/pygments.css') + '">'
         output += "".join(extra_css)
-        output += '    <title>' + daconfig['brandname'] + '</title>\n  </head>\n  <body>\n'
-        output += make_navbar(interview_status, daconfig['brandname'], steps, SHOW_LOGIN) + '    <div class="container">' + "\n      "+ '<div class="tab-content">' + flash_content
+        output += '    <title>' + app.config['BRAND_NAME'] + '</title>\n  </head>\n  <body>\n'
+        output += make_navbar(interview_status, app.config['BRAND_NAME'], steps, SHOW_LOGIN) + '    <div class="container">' + "\n      "+ '<div class="tab-content">' + flash_content
         if USE_PROGRESS_BAR:
-            output += progress_bar(user_dict['progress'])
+            output += progress_bar(user_dict['_progress'])
         output += content + "</div>\n"
         if DEBUG:
             output += '      <div id="source" class="col-md-12 collapse">' + "\n"
@@ -946,18 +955,20 @@ def index():
                             output += "        <h5>" + word('Tried to run mandatory code') + "</h5>\n"
                         elif stage['reason'] == 'asking':
                             output += "        <h5>" + word('Tried to ask question') + "</h5>\n"
-                        if stage['question'].from_path != interview.source.path:
-                            output += '        <p style="font-weight: bold;"><small>(' + word('from') + ' ' + stage['question'].from_path +")</small></p>\n"
+                        if stage['question'].from_source.path != interview.source.path:
+                            output += '        <p style="font-weight: bold;"><small>(' + word('from') + ' ' + stage['question'].from_source.path +")</small></p>\n"
                         if stage['question'].source_code is None:
                             output += word('unavailable')
                         else:
                             output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter())
                     elif 'variable' in stage:
                         output += "        <h5>" + word('Needed definition of') + " <code>" + str(stage['variable']) + "</code></h5>\n"
-                output += '        <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.util.pickleable_objects(user_dict))]) + '</p>' + "\n"
+                output += '        <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(user_dict)]) + '</p>' + "\n"
+                #output += '        <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.util.pickleable_objects(user_dict))]) + '</p>' + "\n"
             output += '      </div>' + "\n"
         output += '    </div>'
         output += scripts + "\n    " + "".join(extra_scripts) + """\n  </body>\n</html>"""
+    #logmessage(output.encode('utf8'))
     response = make_response(output.encode('utf8'), status)
     response.headers['Content-type'] = 'text/html; charset=utf-8'
     return response
@@ -1042,7 +1053,7 @@ def fetch_previous_user_dict(user_code, filename):
     return fetch_user_dict(user_code, filename)
 
 def advance_progress(user_dict):
-    user_dict['progress'] += 0.05*(100-user_dict['progress'])
+    user_dict['_progress'] += 0.05*(100-user_dict['_progress'])
     return
 
 def save_user_dict(user_code, user_dict, filename, changed=False):
@@ -1125,7 +1136,7 @@ def make_navbar(status, page_title, steps, show_login):
         navbar += '<li><a style="color: yellow" href="#help" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i>' + "</a></li>\n"
     if DEBUG:
         navbar += """\
-            <li><a href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">""" + word('Source') + """</a></li>
+            <li><a id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">""" + word('Source') + """</a></li>
 """
     navbar += """\
           </ul>
@@ -1141,6 +1152,7 @@ def make_navbar(status, page_title, steps, show_login):
                 navbar +='<li><a href="' + url_for('package_page') + '">' + word('Package Management') + '</a></li>'
                 if current_user.has_role('admin'):
                     navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
+                    navbar +='<li><a href="' + url_for('privilege_list') + '">' + word('Privileges List') + '</a></li>'
             navbar += '<li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li><li><a href="' + url_for('user.logout') + '">' + word('Sign out') + '</a></li></ul></li>'
     else:
         navbar += '            <li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li>'
@@ -1499,14 +1511,15 @@ def package_page():
     return render_template('pages/packages.html'), 200
 
 def make_image_files(path):
-    args = [PDFTOPPM_COMMAND, '-r', str(PNG_RESOLUTION), '-png', path, path + 'page']
-    result = call(args)
-    if result > 0:
-        raise DAError("Call to pdftoppm failed")
-    args = [PDFTOPPM_COMMAND, '-r', str(PNG_SCREEN_RESOLUTION), '-png', path, path + 'screen']
-    result = call(args)
-    if result > 0:
-        raise DAError("Call to pdftoppm failed")
+    if PDFTOPPM_COMMAND is not None:
+        args = [PDFTOPPM_COMMAND, '-r', str(PNG_RESOLUTION), '-png', path, path + 'page']
+        result = call(args)
+        if result > 0:
+            raise DAError("Call to pdftoppm failed")
+        args = [PDFTOPPM_COMMAND, '-r', str(PNG_SCREEN_RESOLUTION), '-png', path, path + 'screen']
+        result = call(args)
+        if result > 0:
+            raise DAError("Call to pdftoppm failed")
     return
 
 @app.errorhandler(Exception)
@@ -1559,18 +1572,16 @@ def package_static(package, filename):
 
 def current_info(yaml=None, req=None):
     if current_user.is_authenticated and not current_user.is_anonymous:
-        email = current_user.email
-        roles = [role.name for role in current_user.roles]
-        theid = current_user.id
+        ext = dict(email=current_user.email, roles=[role.name for role in current_user.roles], theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization)
     else:
-        email = None
-        theid = None
-        roles = list()
+        ext = dict(email=None, theid=None, roles=list())
     if req is None:
         url = 'localhost'
     else:
         url = req.base_url
-    return({'session': session['uid'], 'yaml_filename': yaml, 'url': url, 'user': {'id': theid, 'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated, 'email': email, 'roles': roles}})
+    return_val = {'session': session['uid'], 'yaml_filename': yaml, 'url': url, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}}
+    return_val['user'].update(ext)
+    return(return_val)
 
 def html_escape(text):
     text = re.sub('&', '&amp;', text)

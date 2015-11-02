@@ -42,3 +42,8 @@ button.btn-da-custom {
 .helpavailable {
     background-color: yellow;
 }
+
+a.sourceactive {
+    background-color: #080808;
+    background-image: linear-gradient(to bottom, #080808 0px, #0F0F0F 100%);
+}

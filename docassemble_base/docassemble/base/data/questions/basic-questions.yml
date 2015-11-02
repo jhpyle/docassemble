@@ -227,22 +227,8 @@ buttons:
   - "Let me try again":
       generic object: Individual
       code: |
-        del x.signature
-        answers = dict()
+        force_ask('x.signature')
 comment: >-
-  To create a "Let me try again" option for a variable that is already
-  collected, you have to tell **docassemble** to forget that the
-  variable was ever defined.  You do this by deleting the variable
-  from the variable store using the Python "del" statement.
-
-  In addition, you need to tell **docassemble** to forget your answer
-  to this multiple choice question; otherwise, the next time
-  **docassemble** looks for the definition of "signature_verified," it
-  will try to apply the answer the user gave the first time
-  (i.e. clicking the "Let me try again") button.  To make
-  **docassemble** forget the button the user pressed, reset the
-  special variable "answers" to an empty dictionary.
-
   Note that in order for code or a question embedded within
   buttons/choices to use the special variable "x," you need to declare
   a generic object within the embedded code or question.
@@ -352,9 +338,9 @@ code: |
   x.child.gathering = True
   if x.has_children:
     if x.child.number_gathered() == 0:
-      newchild = x.child.addObject(Individual)
+      x.child.addObject(Individual)
     while x.has_other_children:
-      newchild = x.child.addObject(Individual)
+      x.child.addObject(Individual)
       del x.has_other_children
   x.child.gathering = False
   x.child.gathered = True

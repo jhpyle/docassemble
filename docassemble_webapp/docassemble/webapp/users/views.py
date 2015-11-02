@@ -1,12 +1,26 @@
 from flask import redirect, render_template, render_template_string, request, url_for, flash
 from flask_user import current_user, login_required, roles_required
 from docassemble.webapp.app_and_db import app, db
-from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, MyRegisterForm
+from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, MyRegisterForm, NewPrivilegeForm
 from docassemble.webapp.users.models import UserAuth, User, Role
 from docassemble.base.util import word
 from docassemble.base.logger import logmessage
 import random
 import string
+
+@app.route('/privilegelist', methods=['GET', 'POST'])
+@login_required
+@roles_required('admin')
+def privilege_list():
+    output = '<ol>';
+    for role in db.session.query(Role).order_by(Role.name):
+        if role.name not in ['user', 'admin', 'developer', 'advocate']:
+            output += '<li>' + str(role.name) + ' <a href="' + url_for('delete_privilege', id=role.id) + '">Delete</a></li>'
+        else:
+            output += '<li>' + str(role.name) + '</li>'
+            
+    output += '</ol>'
+    return render_template('users/rolelist.html', privilegelist=output)
 
 @app.route('/userlist', methods=['GET', 'POST'])
 @login_required
@@ -27,6 +41,31 @@ def user_list():
         output += '<li>' + str(name_string) + '<a href="' + url_for('edit_user_profile_page', id=user.id) + '">' + str(user.email) + "</a>" + active_string + "</li>"
     output += '</ol>'
     return render_template('users/userlist.html', userlist=output)
+
+@app.route('/privilege/<id>/delete', methods=['GET'])
+@login_required
+@roles_required('admin')
+def delete_privilege(id):
+    role = Role.query.filter_by(id=id).first()
+    user_role = Role.query.filter_by(name='user').first()
+    if role is None or role.name in ['user', 'admin', 'developer', 'advocate']:
+        flash(word('The role could not be deleted.'), 'error')
+    else:
+        for user in db.session.query(User):
+            roles_to_remove = list()
+            for the_role in user.roles:
+                if the_role.name == role.name:
+                    roles_to_remove.append(the_role)
+            if len(roles_to_remove) > 0:
+                for the_role in roles_to_remove:
+                    user.roles.remove(the_role)
+                if len(user.roles) == 0:
+                    user.roles.append(user_role)
+        db.session.commit()
+        db.session.delete(role)
+        db.session.commit()
+        flash(word('The role ' + role.name + ' was deleted.'), 'success')
+    return redirect(url_for('privilege_list'))
 
 @app.route('/user/<id>/editprofile', methods=['GET', 'POST'])
 @login_required
@@ -61,7 +100,26 @@ def edit_user_profile_page(id):
         return redirect(url_for('user_list'))
 
     return render_template('users/edit_user_profile_page.html', form=form)
-    
+
+@app.route('/privilege/add', methods=['GET', 'POST'])
+@login_required
+def add_privilege():
+    form = NewPrivilegeForm(request.form, current_user)
+
+    if request.method == 'POST' and form.validate():
+        for role in db.session.query(Role).order_by(Role.name):
+            if role.name == form.name.data:
+                flash(word('The privilege could not be added because it already exists.'), 'error')
+                return redirect(url_for('privilege_list'))
+        
+        db.session.add(Role(name=form.name.data))
+        db.session.commit()
+        flash(word('The privilege was added.'), 'success')
+        return redirect(url_for('privilege_list'))
+
+    return render_template('users/new_role_page.html',
+        form=form)
+
 @app.route('/user/profile', methods=['GET', 'POST'])
 @login_required
 def user_profile_page():

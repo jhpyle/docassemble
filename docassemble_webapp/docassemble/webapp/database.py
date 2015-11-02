@@ -1,14 +1,14 @@
 from docassemble.base.error import DAError
 from docassemble.webapp.config import daconfig
 
-if not daconfig['db']:
+if 'db' not in daconfig:
     daconfig['db'] = dict()
 dbuser = daconfig['db'].get('user', None)
 dbpassword = daconfig['db'].get('password', None)
 dbhost = daconfig['db'].get('host', None)
 dbport = daconfig['db'].get('port', None)
-dbprefix = daconfig['db'].get('prefix', None)
-dbname = daconfig['db'].get('name', None)
+dbprefix = daconfig['db'].get('prefix', 'postgresql+psycopg2://')
+dbname = daconfig['db'].get('name', 'docassemble')
 
 connect_string = ""
 if dbname is not None:

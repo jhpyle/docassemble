@@ -367,7 +367,7 @@ class Question:
             self.is_initial = True
         else:
             self.is_initial = False
-        if 'command' in data and data['command'] in ['exit', 'continue', 'restart', 'leave']:
+        if 'command' in data and data['command'] in ['exit', 'continue', 'restart', 'leave', 'refresh']:
             self.question_type = data['command']
             self.content = TextObject("")
             return
@@ -632,8 +632,6 @@ class Question:
             else:
                 raise DAError("A sets phrase must be text or a list." + self.idebug(data))
         if 'event' in data:
-            # if '*' not in self.role:
-            #     self.role.append('*')
             if type(data['event']) is str:
                 self.fields_used.add(data['event'])
             elif type(data['event']) is list:
@@ -988,11 +986,11 @@ class Question:
         if 'role' in user_dict:
             current_role = user_dict['role']
             if len(self.role) > 0:
-                if current_role not in self.role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave']:
+                if current_role not in self.role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave', 'refresh']:
                     #logmessage("Calling role_event with " + ", ".join(self.fields_used))
                     user_dict['role_needed'] = self.role
                     raise NameError("Need 'role_event'")
-            elif self.interview.default_role is not None and current_role not in self.interview.default_role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave']:
+            elif self.interview.default_role is not None and current_role not in self.interview.default_role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave', 'refresh']:
                 #logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("Need 'role_event'")
@@ -1024,7 +1022,7 @@ class Question:
                 elif type(value) == dict:
                     result_dict[key] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                 elif type(value) == str:
-                    if value in ["continue", "exit", "restart", "leave"]:
+                    if value in ["continue", "exit", "restart", "leave", "refresh"]:
                         result_dict[key] = Question({'command': value}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                     else:
                         result_dict[key] = value
@@ -1035,7 +1033,7 @@ class Question:
             result_list.append(result_dict)
         return(has_code, result_list)
     def mark_as_answered(self, user_dict):
-        user_dict['answered'].add(self.name)
+        user_dict['_internal']['answered'].add(self.name)
         #logmessage("1 Question name was " + self.name)
         return
     def follow_multiple_choice(self, user_dict):
@@ -1043,11 +1041,11 @@ class Question:
         #     logmessage("question is " + self.name)
         # else:
         #     logmessage("question has no name")
-        if self.name and self.name in user_dict['answers']:
+        if self.name and self.name in user_dict['_internal']['answers']:
             #logmessage("question in answers")
-            user_dict['answered'].add(self.name)
+            user_dict['_internal']['answered'].add(self.name)
             #logmessage("2 Question name was " + self.name)
-            the_choice = self.fields[0].choices[int(user_dict['answers'][self.name])]
+            the_choice = self.fields[0].choices[int(user_dict['_internal']['answers'][self.name])]
             for key in the_choice:
                 if key == 'image':
                     continue
@@ -1214,10 +1212,10 @@ class Interview:
             interview_status = args[0]
         else:
             interview_status = InterviewStatus()
-        if 'answered' not in user_dict:
-            user_dict['answered'] = set()
-        if 'answers' not in user_dict:
-            user_dict['answers'] = dict()
+        # if '_answered' not in user_dict:
+        #     user_dict['_answered'] = set()
+        # if '_answers' not in user_dict:
+        #     user_dict['_answers'] = dict()
         docassemble.base.util.reset_language_locale()
         interview_status.current_info.update({'default_role': self.default_role})
         user_dict['current_info'] = interview_status.current_info
@@ -1239,7 +1237,7 @@ class Interview:
                         if debug:
                             interview_status.seeking.append({'question': question, 'reason': 'initial'})
                         exec(question.compute, user_dict)
-                    if question.name and question.name in user_dict['answered']:
+                    if question.name and question.name in user_dict['_internal']['answered']:
                         #logmessage("Skipping " + question.name + " because answered")
                         continue
                     if question.question_type == 'code' and question.is_mandatory:
@@ -1250,7 +1248,7 @@ class Interview:
                         exec(question.compute, user_dict)
                         #logmessage("Code completed")
                         if question.name:
-                            user_dict['answered'].add(question.name)
+                            user_dict['_internal']['answered'].add(question.name)
                     if hasattr(question, 'content') and question.name and question.is_mandatory:
                         if debug:
                             interview_status.seeking.append({'question': question, 'reason': 'mandatory question'})
@@ -1366,7 +1364,7 @@ class Interview:
                         except:
                             logmessage("variable did not exist in user_dict: " + str(sys.exc_info()[0]))
                 if generic_needed and not found_generic: # or is_iterator
-                    logmessage("There is no question for " + missingVariable)
+                    #logmessage("There is no question for " + missingVariable)
                     continue
             while True:
                 try:

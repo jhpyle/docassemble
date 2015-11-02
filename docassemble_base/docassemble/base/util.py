@@ -32,7 +32,10 @@ this_thread = ThreadVariables()
 
 word_collection = {
     'es': {
-        'Continue': 'Continuar'
+        'Continue': 'Continuar',
+        'Help': 'Ayuda',
+        'Sign in': 'Registrarse',
+        'Question': 'Interrogación'
         },
     'en': {
         'and': "and",
@@ -135,7 +138,7 @@ def words():
 
 def word(theword):
     try:
-        return word_collection[this_thread.language][theword]
+        return word_collection[this_thread.language][theword].decode('utf-8')
     except:
         return theword
 

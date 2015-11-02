@@ -2,6 +2,7 @@ from docassemble.base.core import DAObject, DAList, DAFile, DAFileCollection, DA
 from docassemble.base.util import comma_and_list, get_language, set_language, word, words, comma_list, ordinal, need, nice_number, possessify, your, her, his, do_you, does_a_b, verb_past, verb_present, noun_plural, underscore_to_space, space_to_underscore, force_ask, period_list, currency, indefinite_article, today, nodoublequote, capitalize, titlecase, url_of
 from docassemble.base.filter import file_finder, url_finder, mail_variable, markdown_to_html
 from docassemble.base.logger import logmessage
+from docassemble.base.error import DAError
 from datetime import date
 import inspect
 import re
@@ -108,7 +109,10 @@ class RoleChangeTracker(DAObject):
                 email_info = kwargs[role_needed]
                 if 'to' in email_info and 'email' in email_info:
                     logmessage("I have email info on " + str(role_needed))
-                    result = send_email(to=email_info['to'], html=email_info['email'].content, subject=email_info['email'].subject)
+                    try:
+                        result = send_email(to=email_info['to'], html=email_info['email'].content, subject=email_info['email'].subject)
+                    except DAError:
+                        result = False
                     if result:
                         self.update(role_needed)
                     return result

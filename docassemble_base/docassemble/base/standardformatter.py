@@ -302,11 +302,15 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
                     for key in choice:
                         if key == 'image':
                             continue
-                        if isinstance(choice[key], Question) and choice[key].question_type in ["exit", "continue", "restart"]:
+                        if isinstance(choice[key], Question) and choice[key].question_type in ["exit", "continue", "restart", "refresh"]:
                             if choice[key].question_type == "continue":
                                 btn_class = ' btn-primary'
                             elif choice[key].question_type == "restart":
                                 btn_class = ' btn-warning'
+                            elif choice[key].question_type == "leave":
+                                btn_class = ' btn-warning'
+                            elif choice[key].question_type == "refresh":
+                                btn_class = ' btn-primary'
                             elif choice[key].question_type == "exit":
                                 btn_class = ' btn-danger'
                         output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="multiple_choice" value="' + str(indexno) + '"> ' + the_icon + markdown_to_html(key, status=status, trim=True, do_terms=False) + '</button> '

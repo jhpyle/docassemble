@@ -24,6 +24,13 @@ comment: |
   own, the "interview help" will appear after the question-specific
   help.
 ---
+language: es
+interview help:
+  heading: Acerca de este sitio web
+  content: |
+    Conteste cada pregunta. Al final, se le puede dar un documento
+    que puede ahorrar.
+---
 include:
   - basic-questions.yml
 comment: |
@@ -832,25 +839,30 @@ attachment:
 ---
 language: es
 question: |
-  Bienvenidos a la **docassemble** demonstration.
+  Bienvenido a la demostración **docassemble**.
 subquestion: |
-  The following interviewario is designed to demonstrate almost all of
-  **docassemble**'s features.  At the end, you will be provided with a
-  fake cliento letter and a fake pleading.
+  La siguiente entrevista está diseñado para demostrar la casi
+  totalidad de características de **docassemble**. Al final, se le
+  proporcionará un carta cliente falso y un escrito falso.
 
-  In the navigation bar above, you can click "Help" to see the help
-  text associated with the interview and with the individual question
-  (if any).  If "Help <i class="glyphicon glyphicon-star"></i>"
-  appears in the navigation bar, that means help text specific to the
-  question is available.
+  En la barra de navegación de arriba, puede hacer clic en "Ayuda"
+  para ver el texto de ayuda asociado a la entrevista y con la
+  pregunta individual. Si "Ayuda <i class="glyphicon
+  glyphicon-star"></i>" aparece en la barra de navegación, eso
+  significa que el texto de ayuda específica a la cuestión está
+  disponible.
 
-  Click "Source" to toggle the display of the [YAML] code used to
-  generate the question.
+  Haga clic en "Fuente" para cambiar la visualización del código
+  [YAML] utilizado para generar la pregunta.
+  
+  (This demonstration interview has not been fully translated into
+  Spanish; only this page has.  The remainder of the interview will
+  fall back to using the available English versions of each question.)
 
   [YAML]: https://en.wikipedia.org/wiki/YAML
 field: user_saw_initial_screen
 buttons:
-  - Yo comprendo: True
+  - Comprendo: True
 ---
 generic object: Individual
 question: |
@@ -862,5 +874,36 @@ choices:
 ---
 language: es
 terms:
-  cliento: El cliento que llama taboot taboot
+  cliente: |
+    El cliente es la persona que está llenando este formulario
+---
+sets: markdown_demo
+question: Markdown demonstration
+subquestion: |
+  This is *italic text*.
+  This is **bold text**.
+  This is __also bold text__.
+
+  > This is some block-quoted
+  > text.
+
+  ### This is a heading
+
+  This is an image from the internet:
+
+  ![Bass logo](https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Bass_logo.svg/199px-Bass_logo.svg.png)
+
+  Here is a bullet list:
+
+  * Apple
+  * Peach
+  * Pear
+
+  Here is a numbered list:
+
+  1. Nutmeg
+  2. Celery
+  3. Oregano
+
+  Here is a [link to a web site](http://google.com).
 ...

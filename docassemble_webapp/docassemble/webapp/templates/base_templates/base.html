@@ -33,6 +33,7 @@
 		<li><a href="{{ url_for('package_page') }}">{{ word('Package Management') }}</a></li>
 		  {% if current_user.has_roles(['admin']) %}
 		<li><a href="{{ url_for('user_list') }}">{{ word('User List') }}</a></li>
+		<li><a href="{{ url_for('privilege_list') }}">{{ word('Privileges List') }}</a></li>
 		  {% endif %}
 		{% endif %}
 		<li><a href="{{ url_for('user_profile_page') }}">{{ word('Profile') }}</a></li><li><a href="{{ url_for('user.logout') }}">{{ word('Sign out') }}</a></li></ul></li>
