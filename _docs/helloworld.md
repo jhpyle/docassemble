@@ -72,8 +72,8 @@ Then repeat steps 8 through 12, above.
 It should now ask you "What is your planet's name?" and then greet
 your world by its name.
 
-[installation]({{ site.baseurl }}/docs/installation.html)
-[reconfigured user roles]({{ site.baseurl }}/docs/users.html)
-[YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
+[installation]: {{ site.baseurl }}/docs/installation.html
+[reconfigured user roles]: {{ site.baseurl }}/docs/users.html
+[YAML]: https://en.wikipedia.org/wiki/YAML
 [WordPad]: http://windows.microsoft.com/en-us/windows/using-wordpad#1TC=windows-7
 [Notepad++]: https://notepad-plus-plus.org/

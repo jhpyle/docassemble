@@ -5,9 +5,9 @@ short_title: Markup
 ---
 
 **docassemble** allows you to format your text using [Markdown] and to
-use [Mako] to make your documents "smart."  These [markup] methods
-works on `question` text, field labels, `interview help` text, the
-content of [documents], and other text elements.
+use [Mako] to make your documents "smart."  These [mark up] methods
+are available for use in `question` text, field labels, `interview
+help` text, the content of [documents], and other text elements.
 
 ## Markdown
 
@@ -21,16 +21,20 @@ Here are some examples of things you can do with Markdown:
 
 {% highlight yaml %}
 ---
-question: |
+question: Markdown demonstration
+subquestion: |
   This is *italic text*.
   This is **bold text**.
   This is __also bold text__.
-  This is _underlined text_.
 
   > This is some block-quoted
   > text
 
   ### This is a heading
+
+  This is an image:
+
+  ![Bass logo](https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Bass_logo.svg/199px-Bass_logo.svg.png)
 
   Here is a bullet list:
 
@@ -44,16 +48,95 @@ question: |
   2. Celery
   3. Oregano
 
-  This is equivalent to the above:
-
-  #. Nutmeg
-  #. Celery
-  #. Oregano
-
   Here is a [link to a web site](http://google.com).
 ---
 {% endhighlight %}
 
+In the web application, this comes out looking like this:
+
+![Markdown demo screenshot]({{ site.baseurl }}/img/markdown-demo.png)
+
+All of these methods will format text in questions as well as PDF and
+RTF documents, with the exception of the `!` image insertion command,
+which does not work within PDF and RTF documents.
+
+## Inserting images
+
+To insert an image that is located in the `static` folder of a custom
+Python package, use the `IMAGE` command.  This works within PDF and
+RTF documents as well as within questions.
+
+For example:
+
+{% highlight yaml %}
+---
+question: |
+  Did your attacker look like this?
+subquestion: |
+  Please study the face below closely before answering.
+
+  [IMAGE docassemble.crimesolver:mugshot.jpg]
+yesno: suspect_identified
+{% endhighlight %}
+
+This example presumes that there is a Python package called
+`docassemble.crimesolver` installed on the server, and there is a file
+`mugshot.jpg` located within the `static` directory inside that
+package.
+
+Optionally, you can set the width of the image:
+
+    [IMAGE docassemble.crimesolver:mugshot.jpg, 100%]
+
+or:
+
+    [IMAGE docassemble.crimesolver:mugshot.jpg, 150px]
+
+To insert an image that has been uploaded, simply refer to the
+file variable using [Mako].  For example:
+
+{% highlight yaml %}
+---
+question: |
+  Do you look cute in this picture?
+subquestion: |
+  ${ user_picture }
+yesno: user_is_cute
+---
+question: |
+  Please upload a picture of yourself.
+fields:
+  - Your Picture: user_picture
+    datatype: file
+---
+{% endhighlight %}
+
+Alternatively, you can call the `show()` method on the file object:
+
+{% highlight yaml %}
+---
+question: |
+  Do you look cute in this picture?
+subquestion: |
+  ${ user_picture.show() }
+yesno: user_is_cute
+---
+{% endhighlight %}
+
+The `show()` method takes an optional argument, `width`:
+
+{% highlight yaml %}
+---
+question: |
+  Do you look cute in this picture?
+subquestion: |
+  ${ user_picture.show(width='250px') }
+yesno: user_is_cute
+---
+{% endhighlight %}
+
+In the above example, the picture will be shrunk or expanded so that
+its width is 250 pixels.
 
 [documents]: {{ site.baseurl }}/docs/documents.html
 [Mako]: http://www.makotemplates.org/

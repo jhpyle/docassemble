@@ -416,6 +416,40 @@ calls for either `car_model` or `car_make`, the question should be
 tried.  When the user clicks on one of the buttons, the code will be
 executed and the variables will be set.
 
+## Special question: `event`
+
+
+## `event`
+
+{% highlight yaml %}
+---
+event: role_event
+question: All done for now.
+subquestion: |
+  Someone else needs to answer questions now.  You will be notified
+  when you can resume the interview.
+buttons:
+  - Exit: leave
+---
+{% endhighlight %}
+
+The `event` line acts just like `sets`: it advertises to
+**docassemble** that the question will potentially define a variable.
+
+In the example above, the `event` line tells **docassemble** that this
+`question` should be displayed to the user if **docassemble**
+encounters the `role_event`, which is a special "event" that can
+happen in multi-user interviews (see
+[roles]({{site.baseurl}}/docs/roles.html)).  The event is triggered
+when the interview reaches a point when a person other than the
+current user needs to answer a question.  For example, while a client is
+filling out an interview, the interview logic might call for a
+variable that can only be set by an advocate who reviews the client's
+answers.  In this scenario, a `role_event` will be triggered.  When this happens,
+**docassemble** will look for a `question` or `code` block that
+defines the variable `role_event`, and it will find the example
+question above.
+
 [configuration]: {{ site.baseurl }}/docs/configuration.html
 [select]: http://www.w3schools.com/tags/tag_select.asp
 [placeholder]: http://www.w3schools.com/tags/att_input_placeholder.asp

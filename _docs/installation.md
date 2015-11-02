@@ -218,13 +218,12 @@ HTTP, copy the `WSGIDaemonProcess` line, the `WSGIScriptAlias` line,
 and the `Directory` section into the `<VirtualHost *:80>` section of
 your Apache configuration file.
 
-`docassemble` uses a SQL database.  These instructions assume a
-PostgreSQL database, but any database compatible with Python's
-sqlalchemy should work with appropriate changes to the
-`/etc/docassemble/config.yml` file.  Set up the database by running:
+`docassemble` uses a SQL database.  Set up the database by running the
+following commands.  (You may wish to make changes to the database
+information in `/etc/docassemble/config.yml` first.)
 
     echo 'create role "www-data" login; create database docassemble;' | sudo -u postgres psql
-    sudo -u postgres python ~/docassemble/docassemble_webapp/docassemble/webapp/create_tables.py
+    sudo -u postgres python ~/docassemble/docassemble_webapp/docassemble/webapp/create_tables.py /etc/docassemble/config.yml
     echo 'grant all on all tables in schema public to "www-data"; grant all on all sequences in schema public to "www-data";' | sudo -u postgres psql docassemble
 
 In order for the "Sign in with Google" and "Sign in with Facebook"

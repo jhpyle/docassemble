@@ -2,6 +2,7 @@
   docs:
     - requirements
     - installation
+    - config
 - title: Tutorials
   docs:
     - helloworld
@@ -16,7 +17,10 @@
     - logic
     - objects
     - markup
+    - functions
     - documents
+    - roles
+    - reserved
     - errors
 - title: Miscellaneous
   docs:

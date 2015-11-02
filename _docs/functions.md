@@ -5,10 +5,20 @@ short_title: Functions
 ---
 
 ## force_ask 
+
+
+{% highlight yaml %}
+---
+question: |
+  Are you a communist?
+yesno: user_is_communist
+---
+mandatory: true
 code: |
-  if user.address.address and retry_address:
-    retry_address = False
-    force_ask('user.address.address')
-comment: |
-  This is an example of how the "force_ask" function can be used to
-  ask a question that has already been asked.
+  if user_is_communist:
+    allow_user_to_reconsider
+---
+question: |
+  Why don't you reconsider your answer?
+
+{% endhighlight %}
