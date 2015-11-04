@@ -338,9 +338,9 @@ code: |
   x.child.gathering = True
   if x.has_children:
     if x.child.number_gathered() == 0:
-      x.child.addObject(Individual)
+      x.child.appendObject(Individual)
     while x.has_other_children:
-      x.child.addObject(Individual)
+      x.child.appendObject(Individual)
       del x.has_other_children
   x.child.gathering = False
   x.child.gathered = True
@@ -415,6 +415,7 @@ fields:
   - Employment Income: x.income.employment.value
     datatype: currency
   - "": x.income.employment.period
+    datatype: number
     code: |
       period_list()
 comment: >-
@@ -436,6 +437,7 @@ fields:
   - Self-employment Income: x.income.selfemployment.value
     datatype: currency
   - "": x.income.selfemployment.period
+    datatype: number
     code: |
       period_list()
 ---
@@ -447,6 +449,7 @@ fields:
   - SSI Income: x.income.ssi.value
     datatype: currency
   - "": x.income.ssi.period
+    datatype: number
     code: |
       period_list()
 ---
@@ -459,6 +462,7 @@ fields:
   - TANF Income: x.income.tanf.value
     datatype: currency
   - "": x.income.tanf.period
+    datatype: number
     code: |
       period_list()
 ---

@@ -1,0 +1,59 @@
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  - respondents: DADict
+---
+comment: |
+        respondents.addObject(DAObject, current_info['user']['email'])
+initial: true
+code: |
+  if current_info['user']['is_authenticated']:
+    if current_info['user']['email'] not in respondents:
+      respondents.setObject(current_info['user']['email'], DAObject)
+    user = respondents[current_info['user']['email']]
+    final_page
+  else:
+    must_be_logged_in_page
+---
+sets: final_page
+question: |
+  <%
+    cat_count = 0
+    for email in respondents:
+      respondent = respondents[email]
+      if respondent is user or hasattr(respondent, 'number_of_cats'):
+        cat_count += respondent.number_of_cats
+  %>
+  % if cat_count == 0:
+  There are zero cats so far.
+  % elif cat_count == 1:
+  There is only one cat so far.
+  % else:
+  There are ${ cat_count } cats in all.
+  % endif
+subquestion: |
+  Share this link with others!
+
+  [${ interview_url }](${ interview_url })
+buttons:
+  - Check: refresh
+---
+code: |
+  interview_url = current_info['url'] + '?i=' + current_info['yaml_filename'] + '&session=' + current_info['session']
+---
+generic object: DAObject
+question: How many cats do you have?
+fields:
+  - Number of cats: x.number_of_cats
+    datatype: integer
+---
+sets: must_be_logged_in_page
+question: Please log in
+subquestion: |
+  Please click "Sign in" to continue.  If you do not have
+  an account, you can register for one.
+buttons:
+  - Sign in: signin
+...

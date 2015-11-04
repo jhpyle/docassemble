@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import types
 import en
 import re
@@ -35,7 +36,14 @@ word_collection = {
         'Continue': 'Continuar',
         'Help': 'Ayuda',
         'Sign in': 'Registrarse',
-        'Question': 'Interrogación'
+        'Question': 'Interrogación',
+        'save_as_multiple': 'The document is available in the following formats:',
+        'save_as_singular': 'The document is available in the following format:',
+        'pdf_message': 'for printing; requires Adobe Reader or similar application',
+        'rtf_message': 'for editing; requires Microsoft Word, Wordpad, or similar application',
+        'tex_message': 'for debugging PDF output',
+        'attachment_message_plural': 'The following documents have been created for you.',
+        'attachment_message_singular': 'The following document has been created for you.'
         },
     'en': {
         'and': "and",

@@ -69,7 +69,7 @@ function resizeCanvas(){
 function saveCanvas(){
   var dataURL = document.getElementById("canvas").toDataURL();
   //console.log(dataURL)
-  post({'success': 1, 'theImage': dataURL});
+  post({'_success': 1, '_theImage': dataURL});
 }
 
 function newCanvas(){

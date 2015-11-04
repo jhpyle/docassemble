@@ -233,6 +233,7 @@ subquestion: |
 
   [YAML]: https://en.wikipedia.org/wiki/YAML
 field: user_saw_initial_screen
+datatype: boolean
 buttons:
   - Ok, got it: True
 ---
@@ -289,11 +290,11 @@ comment: |
 code: |
   case.plaintiff.gathering = True
   if client.is_plaintiff and client not in case.plaintiff:
-    case.plaintiff.add(client)
+    case.plaintiff.append(client)
   if case.plaintiff.number_gathered() == 0:
-    case.plaintiff.addObject(Individual)
+    case.plaintiff.appendObject(Individual)
   while case.plaintiff.there_is_another:
-    case.plaintiff.addObject(Individual)
+    case.plaintiff.appendObject(Individual)
     del case.plaintiff.there_is_another
   case.plaintiff.gathering = False
   case.plaintiff.gathered = True
@@ -306,11 +307,11 @@ code: |
   case.defendant.gathering = True
   if client not in case.defendant and not client.is_plaintiff and \
      client.is_defendant:
-    case.defendant.add(client)
+    case.defendant.append(client)
   if case.defendant.number_gathered() == 0:
-    case.defendant.addObject(Individual)
+    case.defendant.appendObject(Individual)
   while case.defendant.there_is_another:
-    case.defendant.addObject(Individual)
+    case.defendant.appendObject(Individual)
     del case.defendant.there_is_another
   case.defendant.gathering = False
   case.defendant.gathered = True
@@ -861,6 +862,7 @@ subquestion: |
 
   [YAML]: https://en.wikipedia.org/wiki/YAML
 field: user_saw_initial_screen
+datatype: boolean
 buttons:
   - Comprendo: True
 ---

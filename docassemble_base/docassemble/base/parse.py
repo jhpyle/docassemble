@@ -19,8 +19,12 @@ from types import CodeType
 debug = False
 match_mako = re.compile(r'<%|\${|% if|% for|% while')
 emoji_match = re.compile(r':([^ ]+):')
+nameerror_match = re.compile(r'\'(.*)\' is not defined')
 document_match = re.compile(r'^---$', flags=re.MULTILINE)
 remove_trailing_dots = re.compile(r'\.\.\.$')
+dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
+match_brackets_at_end = re.compile(r'^(.*)(\[[^\[]+\])$')
+match_inside_brackets = re.compile(r'\[([^\]+])\]')
 
 def textify(data):
     return list(map((lambda x: x.text(user_dict)), data))
@@ -173,10 +177,11 @@ class InterviewSourceURL(InterviewSource):
         return None
 
 class InterviewStatus(object):
-    def __init__(self, current_info=dict()):
+    def __init__(self, current_info=dict(), **kwargs):
         self.current_info = current_info
         self.attributions = set()
         self.seeking = list()
+        self.tracker = kwargs.get('tracker', -1)
         self.attachments = None
     def populate(self, question_result):
         self.question = question_result['question']
@@ -191,7 +196,8 @@ class InterviewStatus(object):
         self.hints = question_result['hints']
         self.helptexts = question_result['helptexts']
         self.extras = question_result['extras']
-    pass
+    def set_tracker(self, tracker):
+        self.tracker = tracker
 
 # def new_counter(initial_value=0):
 #     d = {'counter': initial_value}
@@ -367,13 +373,14 @@ class Question:
             self.is_initial = True
         else:
             self.is_initial = False
-        if 'command' in data and data['command'] in ['exit', 'continue', 'restart', 'leave', 'refresh']:
+        if 'command' in data and data['command'] in ['exit', 'continue', 'restart', 'leave', 'refresh', 'signin']:
             self.question_type = data['command']
             self.content = TextObject("")
             return
         if 'objects' in data:
             if type(data['objects']) is not list:
-                raise DAError("An objects section must be organized as a list." + self.idebug(data))
+                data['objects'] = [data['objects']]
+                #raise DAError("An objects section must be organized as a list." + self.idebug(data))
             self.question_type = 'objects'
             self.objects = data['objects']
             for item in data['objects']:
@@ -789,7 +796,7 @@ class Question:
                 self.interview.questions_list.append(self)
             self.number = self.interview.next_number()
             #self.number = len(self.interview.questions_list) - 1
-            self.name = "__Question_" + str(self.number)
+            self.name = "Question_" + str(self.number)
         if hasattr(self, 'id'):
             try:
                 self.interview.questions_by_id[self.id].append(self)
@@ -914,6 +921,7 @@ class Question:
             raise DAError("Unknown data type in process_attachment")
 
     def ask(self, user_dict, the_x, the_i):
+        logmessage("asking: " + str(self.content.original_text))
         if the_x != 'None':
             exec("x = " + the_x, user_dict)
             #logmessage("x is " + the_x)
@@ -986,11 +994,11 @@ class Question:
         if 'role' in user_dict:
             current_role = user_dict['role']
             if len(self.role) > 0:
-                if current_role not in self.role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave', 'refresh']:
+                if current_role not in self.role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave', 'refresh', 'signin']:
                     #logmessage("Calling role_event with " + ", ".join(self.fields_used))
                     user_dict['role_needed'] = self.role
                     raise NameError("Need 'role_event'")
-            elif self.interview.default_role is not None and current_role not in self.interview.default_role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave', 'refresh']:
+            elif self.interview.default_role is not None and current_role not in self.interview.default_role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave', 'refresh', 'signin']:
                 #logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("Need 'role_event'")
@@ -1022,7 +1030,7 @@ class Question:
                 elif type(value) == dict:
                     result_dict[key] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                 elif type(value) == str:
-                    if value in ["continue", "exit", "restart", "leave", "refresh"]:
+                    if value in ["continue", "exit", "restart", "leave", "refresh", "signin"]:
                         result_dict[key] = Question({'command': value}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                     else:
                         result_dict[key] = value
@@ -1045,7 +1053,7 @@ class Question:
             #logmessage("question in answers")
             user_dict['_internal']['answered'].add(self.name)
             #logmessage("2 Question name was " + self.name)
-            the_choice = self.fields[0].choices[int(user_dict['_internal']['answers'][self.name])]
+            the_choice = self.fields[0].choices[user_dict['_internal']['answers'][self.name]]
             for key in the_choice:
                 if key == 'image':
                     continue
@@ -1208,10 +1216,13 @@ class Interview:
                 result.append(help_item)
         return result
     def assemble(self, user_dict, *args):
+        #logmessage("I am assembling.")
+        user_dict['_internal']['tracker'] += 1
         if len(args):
             interview_status = args[0]
         else:
             interview_status = InterviewStatus()
+        interview_status.set_tracker(user_dict['_internal']['tracker'])
         # if '_answered' not in user_dict:
         #     user_dict['_answered'] = set()
         # if '_answers' not in user_dict:
@@ -1255,7 +1266,8 @@ class Interview:
                         interview_status.populate(question.ask(user_dict, 'None', 'None'))
                         raise MandatoryQuestion()
             except NameError as errMess:
-                missingVariable = str(errMess).split("'")[1]
+                missingVariable = extract_missing_name(errMess)
+                #missingVariable = str(errMess).split("'")[1]
                 #logmessage(str(errMess))
                 question_result = self.askfor(missingVariable, user_dict, seeking=interview_status.seeking)
                 if question_result['type'] == 'continue':
@@ -1281,7 +1293,7 @@ class Interview:
         seeking = kwargs.get('seeking', list())
         if debug:
             seeking.append({'variable': missingVariable})
-        #logmessage("I don't have " + missingVariable)
+        logmessage("I don't have " + missingVariable)
         if missingVariable in variable_stack:
             raise DAError("Infinite loop:" + missingVariable + " already looked for")
         variable_stack.add(missingVariable)
@@ -1289,8 +1301,6 @@ class Interview:
         realMissingVariable = missingVariable
         totry = [{'real': missingVariable, 'vari': missingVariable}]
         #logmessage("moo1")
-        match_brackets_at_end = re.compile(r'^(.*)(\[[^\[]+\])$')
-        match_inside_brackets = re.compile(r'\[([^\]+])\]')
         m = match_inside_brackets.search(missingVariable)
         if m:
             newMissingVariable = re.sub('\[[^\]+]\]', '[i]', missingVariable)
@@ -1308,10 +1318,12 @@ class Interview:
                         for the_question in reversed(self.questions[missingVariable][lang]):
                             questions_to_try.append((the_question, False, 'None', 'None', missingVariable))
                         generic_needed = False
-            components = missingVariable.split(".")
-            realComponents = realMissingVariable.split(".")
-            #logmessage("Vari Components are " + str(components))
-            #logmessage("Real Components are " + str(realComponents))
+            #components = missingVariable.split(".")
+            #realComponents = realMissingVariable.split(".")
+            components = dot_split.split(missingVariable)[1::2]
+            realComponents = dot_split.split(realMissingVariable)[1::2]
+            logmessage("Vari Components are " + str(components))
+            logmessage("Real Components are " + str(realComponents))
             n = len(components)
             # if n == 1:
             #     if generic_needed:
@@ -1435,7 +1447,8 @@ class Interview:
                             return question.ask(user_dict, the_x, the_i)
                     raise DAError("Found a reference to a variable '" + missingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
                 except NameError as errMess:
-                    newMissingVariable = str(errMess).split("'")[1]
+                    newMissingVariable = extract_missing_name(errMess)
+                    #newMissingVariable = str(errMess).split("'")[1]
                     #logmessage(str(errMess))
                     question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking)
                     if question_result['type'] == 'continue':
@@ -1508,3 +1521,7 @@ def process_selections(data):
         raise DAError("Unknown data type in choices selection")
     return(result)
 
+def extract_missing_name(string):
+    #logmessage("string was " + str(string))
+    m = nameerror_match.search(str(string))
+    return m.group(1)

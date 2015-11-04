@@ -126,9 +126,9 @@ SHOW_LOGIN = daconfig.get('show_login', True)
 #USER_PACKAGES = daconfig.get('user_packages', '/var/lib/docassemble/dist-packages')
 #sys.path.append(USER_PACKAGES)
 if USE_PROGRESS_BAR:
-    initial_dict = dict(_internal=dict(progress=0, answered=set(), answers=dict()), url_args=dict())
+    initial_dict = dict(_internal=dict(progress=0, tracker=0, answered=set(), answers=dict()), url_args=dict())
 else:
-    initial_dict = dict(_internal=dict(progress=0, answered=set(), answers=dict()), url_args=dict())
+    initial_dict = dict(_internal=dict(tracker=0, answered=set(), answers=dict()), url_args=dict())
 if 'initial_dict' in daconfig:
     initial_dict.update(daconfig['initial_dict'])
 LOGFILE = daconfig.get('flask_log', '/tmp/flask.log')
@@ -286,6 +286,7 @@ def save_numbered_file(filename, orig_path):
 docassemble.base.parse.set_mail_variable(get_mail_variable)
 docassemble.base.parse.set_save_numbered_file(save_numbered_file)
 
+key_requires_preassembly = re.compile('^(x\.|x\[|_multiple_choice)')
 match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
 match_brackets = re.compile('\[\'.*\'\]$')
 match_inside_and_outside_brackets = re.compile('(.*)(\[\'[^\]]+\'\])$')
@@ -569,20 +570,19 @@ def index():
     need_to_reset = False
     yaml_parameter = request.args.get('i', None)
     session_parameter = request.args.get('session', None)
-    if yaml_parameter is not None: # and yaml_parameter != yaml_filename
-        logmessage("Found yaml: " + yaml_parameter)
+    if yaml_parameter is not None:
+        #logmessage("Found yaml: " + yaml_parameter)
         yaml_filename = yaml_parameter
         user_code, user_dict = reset_session(yaml_filename)
         session_id = session.get('uid', None)
         need_to_reset = True
     if session_parameter is not None:
-        logmessage("Found session parameter: " + session_parameter)
+        #logmessage("Found session parameter: " + session_parameter)
         session_id = session_parameter
         session['uid'] = session_id
         user_code = session_id
         steps, user_dict = fetch_user_dict(user_code, yaml_filename)
         need_to_reset = True
-        #http://localhost/?i=docassemble.demo%3Adata/questions/questions.yml&session=OvdmxgqFfinEYdiCgBPianVrlwhqlukt
     if session_id:
         user_code = session_id
         #logmessage("Found user code " + session_id)
@@ -611,21 +611,21 @@ def index():
         save_user_dict(user_code, user_dict, yaml_filename)
         return redirect(url_for('index'))
     post_data = request.form.copy()
-    if 'email_attachments' in post_data and 'attachment_email_address' in post_data and 'question_number' in post_data:
+    if '_email_attachments' in post_data and '_attachment_email_address' in post_data and '_question_number' in post_data:
         success = False
-        question_number = post_data['question_number']
-        attachment_email_address = post_data['attachment_email_address']
-        if 'attachment_include_rtf' in post_data:
-            if post_data['attachment_include_rtf'] == 'True':
+        question_number = post_data['_question_number']
+        attachment_email_address = post_data['_attachment_email_address']
+        if '_attachment_include_rtf' in post_data:
+            if post_data['_attachment_include_rtf'] == 'True':
                 include_rtfs = True
             else:
                 include_rtfs = False
-            del post_data['attachment_include_rtf']
+            del post_data['_attachment_include_rtf']
         else:
             include_rtfs = False
-        del post_data['question_number']
-        del post_data['email_attachments']
-        del post_data['attachment_email_address']
+        del post_data['_question_number']
+        del post_data['_email_attachments']
+        del post_data['_attachment_email_address']
         logmessage("Got e-mail request for " + str(question_number) + " with e-mail " + str(attachment_email_address) + " and rtf inclusion of " + str(include_rtfs) + " and using yaml file " + yaml_filename)
         the_user_dict = get_attachment_info(user_code, question_number, yaml_filename)
         if the_user_dict is not None:
@@ -678,7 +678,7 @@ def index():
             flash(word("Your documents were e-mailed to") + " " + str(attachment_email_address) + ".", 'info')
         else:
             flash(word("Unable to e-mail your documents to") + " " + str(attachment_email_address) + ".", 'error')
-    if 'back_one' in post_data and steps > 1:
+    if '_back_one' in post_data and steps > 1:
         steps, user_dict = fetch_previous_user_dict(user_code, yaml_filename)
         #logmessage("Went back")
     elif 'filename' in request.args:
@@ -703,110 +703,146 @@ def index():
                 elif the_format == "rtf":
                     mime_type = 'application/rtf'
                 return(send_file(the_filename, mimetype=str(mime_type), as_attachment=True, attachment_filename=str(the_attachment['filename']) + '.' + str(the_format)))
-    status = '200 OK'
-    error_messages = list()
-    interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
-    changed = False
-    if 'theImage' in post_data:
-        #interview.assemble(user_dict, interview_status)
-        file_field = post_data['saveas'];
-        initial_string = 'import docassemble.base.core'
-        try:
-            exec(initial_string, user_dict)
-        except Exception as errMess:
-            error_messages.append(("error", "Error: " + str(errMess)))
-        if 'success' in post_data and post_data['success']:
-            theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['theImage']).group(1) + '==')
-            #sys.stderr.write("Got theImage and it is " + str(len(theImage)) + " bytes long\n")
-            filename = secure_filename('canvas.png')
-            file_number = get_new_file_number(session['uid'], filename)
-            extension, mimetype = get_ext_and_mimetype(filename)
-            path = get_file_path(file_number)
-            with open(path, 'w') as ifile:
-                ifile.write(theImage)
-            os.symlink(path, path + '.' + extension)
-            #sys.stderr.write("Saved theImage\n")
-            string = file_field + " = docassemble.base.core.DAFile('" + file_field + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
-        else:
-            string = file_field + " = docassemble.base.core.DAFile('" + file_field + "')"
-        #sys.stderr.write(string + "\n")
-        try:
-            exec(string, user_dict)
-            changed = True
-            steps += 1
-        except Exception as errMess:
-            #sys.stderr.write("Error: " + str(errMess) + "\n")
-            error_messages.append(("error", "Error: " + str(errMess)))
-    if 'files' in post_data:
-        #logmessage("There are files")
-        #interview.assemble(user_dict, interview_status)
-        initial_string = 'import docassemble.base.core'
-        try:
-            exec(initial_string, user_dict)
-        except Exception as errMess:
-            error_messages.append(("error", "Error: " + str(errMess)))
-        file_fields = post_data['files'].split(",")
-        for file_field in file_fields:
-            #logmessage("There is a file_field")
-            if file_field in request.files:
-                #logmessage("There is a file_field in request.files")
-                the_files = request.files.getlist(file_field)
-                if the_files:
-                    files_to_process = list()
-                    for the_file in the_files:
-                        #logmessage("There is a file_field in request.files and it has a type of " + str(type(the_file)) + " and its str representation is " + str(the_file))
-                        filename = secure_filename(the_file.filename)
-                        file_number = get_new_file_number(session['uid'], filename)
-                        extension, mimetype = get_ext_and_mimetype(filename)
-                        path = get_file_path(file_number)
-                        if extension == "jpg" and 'imagemagick' in daconfig:
-                            unrotated = tempfile.NamedTemporaryFile(suffix="jpg")
-                            the_file.save(unrotated.name)
-                            call_array = [daconfig['imagemagick'], str(unrotated.name), '-auto-orient', '-density', '300']
-                            # width, height = PIL.Image.open(unrotated.name).size
-                            # if width > 3000 or height > 3000:
-                            #     call_array.append('-resize')
-                            #     call_array.append('1000x1000')
-                            call_array.append('jpeg:' + str(path))
-                            result = call(call_array)
-                            if result > 0:
-                                shutil.copyfile(unrotated.name, path)
-                        else:
-                            the_file.save(path)
-                        os.symlink(path, path + '.' + extension)
-                        if extension == "pdf":
-                            make_image_files(path)
-                        files_to_process.append((filename, file_number, mimetype, extension))
-                    if match_invalid.search(file_field):
-                        error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
-                        break
-                    if len(files_to_process) > 0:
-                        elements = list()
-                        indexno = 0
-                        for (filename, file_number, mimetype, extension) in files_to_process:
-                            elements.append("docassemble.base.core.DAFile('" + file_field + "[" + str(indexno) + "]', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')")
-                            indexno += 1
-                        string = file_field + " = docassemble.base.core.DAFileList('" + file_field + "', elements=[" + ", ".join(elements) + "])"
-                    else:
-                        string = file_field + " = None"
-                    #logmessage("string is " + string)
-                    try:
-                        exec(string, user_dict)
-                        changed = True
-                        steps += 1
-                    except Exception as errMess:
-                        sys.stderr.write("Error: " + str(errMess) + "\n")
-                        error_messages.append(("error", "Error: " + str(errMess)))
-                    #post_data.add(file_field, str(file_number))
-    if 'checkboxes' in post_data:
-        checkbox_fields = post_data['checkboxes'].split(",")
+    if '_checkboxes' in post_data:
+        checkbox_fields = json.loads(myb64unquote(post_data['_checkboxes'])) #post_data['_checkboxes'].split(",")
         for checkbox_field in checkbox_fields:
             if checkbox_field not in post_data:
                 post_data.add(checkbox_field, 'False')
+    something_changed = False
+    if '_tracker' in post_data and user_dict['_internal']['tracker'] != int(post_data['_tracker']):
+        logmessage("Something changed.")
+        #logmessage("user dict has " + str(user_dict['_internal']['tracker']) + " and post data has " + post_data['_tracker'])
+        something_changed = True
+    should_assemble = False
+    if something_changed:
+        for key in post_data:
+            if key_requires_preassembly.search(key):
+                should_assemble = True
+                break
+    interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request), tracker=user_dict['_internal']['tracker'])
+    if should_assemble:
+        logmessage("Reassembling.")
+        interview.assemble(user_dict, interview_status)
+    #else:
+        #logmessage("I am not assembling.")        
+    changed = False
+    error_messages = list()
+    if '_theImage' in post_data:
+        #interview.assemble(user_dict, interview_status)
+        file_field = post_data['_saveas'];
+        if match_invalid.search(file_field):
+            error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
+        else:
+            if something_changed and key_requires_preassembly.search(file_field) and not should_assemble:
+                interview.assemble(user_dict, interview_status)
+            initial_string = 'import docassemble.base.core'
+            try:
+                exec(initial_string, user_dict)
+            except Exception as errMess:
+                error_messages.append(("error", "Error: " + str(errMess)))
+            if '_success' in post_data and post_data['_success']:
+                theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['_theImage']).group(1) + '==')
+                #sys.stderr.write("Got theImage and it is " + str(len(theImage)) + " bytes long\n")
+                filename = secure_filename('canvas.png')
+                file_number = get_new_file_number(session['uid'], filename)
+                extension, mimetype = get_ext_and_mimetype(filename)
+                path = get_file_path(file_number)
+                with open(path, 'w') as ifile:
+                    ifile.write(theImage)
+                os.symlink(path, path + '.' + extension)
+                #sys.stderr.write("Saved theImage\n")
+                string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ", filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
+            else:
+                string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ")"
+            #sys.stderr.write(string + "\n")
+            try:
+                exec(string, user_dict)
+                changed = True
+                steps += 1
+            except Exception as errMess:
+                #sys.stderr.write("Error: " + str(errMess) + "\n")
+                error_messages.append(("error", "Error: " + str(errMess)))
+    if '_files' in post_data:
+        #logmessage("There are files")
+        #interview.assemble(user_dict, interview_status)
+        file_fields = json.loads(myb64unquote(post_data['_files'])) #post_data['_files'].split(",")
+        has_invalid_fields = False
+        should_assemble_now = False
+        for file_field in file_fields:
+            if match_invalid.search(file_field):
+                has_invalid_fields = True
+                error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
+                break
+            if key_requires_preassembly.search(file_field):
+                should_assemble_now = True
+        if not has_invalid_fields:
+            initial_string = 'import docassemble.base.core'
+            try:
+                exec(initial_string, user_dict)
+            except Exception as errMess:
+                error_messages.append(("error", "Error: " + str(errMess)))
+            if something_changed and should_assemble_now and not should_assemble:
+                interview.assemble(user_dict, interview_status)
+            for file_field in file_fields:
+                #logmessage("There is a file_field")
+                if file_field in request.files:
+                    #logmessage("There is a file_field in request.files")
+                    the_files = request.files.getlist(file_field)
+                    if the_files:
+                        files_to_process = list()
+                        for the_file in the_files:
+                            #logmessage("There is a file_field in request.files and it has a type of " + str(type(the_file)) + " and its str representation is " + str(the_file))
+                            filename = secure_filename(the_file.filename)
+                            file_number = get_new_file_number(session['uid'], filename)
+                            extension, mimetype = get_ext_and_mimetype(filename)
+                            path = get_file_path(file_number)
+                            if extension == "jpg" and 'imagemagick' in daconfig:
+                                unrotated = tempfile.NamedTemporaryFile(suffix="jpg")
+                                the_file.save(unrotated.name)
+                                call_array = [daconfig['imagemagick'], str(unrotated.name), '-auto-orient', '-density', '300']
+                                # width, height = PIL.Image.open(unrotated.name).size
+                                # if width > 3000 or height > 3000:
+                                #     call_array.append('-resize')
+                                #     call_array.append('1000x1000')
+                                call_array.append('jpeg:' + str(path))
+                                result = call(call_array)
+                                if result > 0:
+                                    shutil.copyfile(unrotated.name, path)
+                            else:
+                                the_file.save(path)
+                            os.symlink(path, path + '.' + extension)
+                            if extension == "pdf":
+                                make_image_files(path)
+                            files_to_process.append((filename, file_number, mimetype, extension))
+                        if match_invalid.search(file_field):
+                            error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
+                            break
+                        if len(files_to_process) > 0:
+                            elements = list()
+                            indexno = 0
+                            for (filename, file_number, mimetype, extension) in files_to_process:
+                                elements.append("docassemble.base.core.DAFile('" + file_field + "[" + str(indexno) + "]', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')")
+                                indexno += 1
+                            string = file_field + " = docassemble.base.core.DAFileList('" + file_field + "', elements=[" + ", ".join(elements) + "])"
+                        else:
+                            string = file_field + " = None"
+                        #logmessage("string is " + string)
+                        try:
+                            exec(string, user_dict)
+                            changed = True
+                            steps += 1
+                        except Exception as errMess:
+                            sys.stderr.write("Error: " + str(errMess) + "\n")
+                            error_messages.append(("error", "Error: " + str(errMess)))
+                        #post_data.add(file_field, str(file_number))
+    known_datatypes = dict()
+    if '_datatypes' in post_data:
+        #logmessage(myb64unquote(post_data['_datatypes']))
+        known_datatypes = json.loads(myb64unquote(post_data['_datatypes']))
     known_variables = dict()
     for key in post_data:
-        if key == 'checkboxes' or key == 'back_one' or key == 'files' or key == 'questionname' or key == 'theImage' or key == 'saveas' or key == 'success':
+        if key in ['_checkboxes', '_back_one', '_files', '_questionname', '_theImage', '_saveas', '_success', '_datatypes', '_tracker']:
             continue
         #logmessage("Got a key: " + key)
         data = post_data[key]
@@ -814,13 +850,11 @@ def index():
             error_messages.append(("error", "Error: Invalid character in key: " + key))
             break
         #data = re.sub(r'"""', '', data)
-        if not (data == "True" or data == "False"):
-            #data = 'ur"""' + str(data) + '"""'
-            data = repr(data) #.encode('utf-8')
         if match_brackets.search(key):
             #logmessage("Searching key " + str(key))
             match = match_inside_and_outside_brackets.search(key)
             key = match.group(1)
+            real_key = key
             bracket = match_inside_brackets.sub(process_bracket_expression, match.group(2))
             #logmessage("key is " + str(key) + " and bracket is " + str(bracket))
             if key in user_dict:
@@ -837,12 +871,38 @@ def index():
                     except:
                         raise DAError("cannot initialize " + key)
             key = key + bracket
-        if key == "multiple_choice":
-            interview.assemble(user_dict, interview_status)
-            if interview_status.question.question_type == "multiple_choice" and not hasattr(interview_status.question.fields[0], 'saveas'):
-                key = '_internal["answers"]["' + interview_status.question.name + '"]'
+        else:
+            real_key = key
+        if real_key in known_datatypes:
+            #logmessage("key is in datatypes: " + known_datatypes[key])
+            if known_datatypes[real_key] in ['boolean', 'checkboxes', 'yesno', 'noyes', 'yesnowide', 'noyeswide']:
+                if data == "True":
+                    data = "True"
+                else:
+                    data = "False"
+            elif known_datatypes[key] == 'integer':
+                if data == '':
+                    data = 0
+                data = "int(" + repr(data) + ")"
+            elif known_datatypes[key] in ['number', 'float', 'currency']:
+                if data == '':
+                    data = 0
+                data = "float(" + repr(data) + ")"
             else:
-                continue
+                data = repr(data)
+        elif key == "_multiple_choice":
+            data = "int(" + repr(data) + ")"
+        else:
+            #logmessage("key is not in datatypes")
+            data = repr(data)
+        if key == "_multiple_choice":
+            #interview.assemble(user_dict, interview_status)
+            #if interview_status.question.question_type == "multiple_choice" and not hasattr(interview_status.question.fields[0], 'saveas'):
+                #key = '_internal["answers"]["' + interview_status.question.name + '"]'
+            if '_questionname' in post_data:
+                key = '_internal["answers"][' + repr(post_data['_questionname']) + ']'
+            #else:
+                #continue
                 #error_messages.append(("error", "Error: multiple choice values were supplied, but docassemble was not waiting for an answer to a multiple choice question."))
         string = key + ' = ' + data
         #logmessage("Doing " + str(string))
@@ -852,9 +912,13 @@ def index():
             steps += 1
         except Exception as errMess:
             error_messages.append(("error", "Error: " + str(errMess)))
-    if changed and 'questionname' in post_data:
-        user_dict['_internal']['answered'].add(post_data['questionname'])
-        #logmessage("From server.py, answered name is " + post_data['questionname'])
+    # if 'x' in user_dict:
+    #     del user_dict['x']
+    # if 'i' in user_dict:
+    #     del user_dict['i']
+    if changed and '_questionname' in post_data:
+        user_dict['_internal']['answered'].add(post_data['_questionname'])
+        #logmessage("From server.py, answered name is " + post_data['_questionname'])
         #user_dict['role_event_notification_sent'] = False
     interview.assemble(user_dict, interview_status)
     if len(interview_status.attachments) > 0:
@@ -869,17 +933,23 @@ def index():
         steps = 0
         changed = False
         interview.assemble(user_dict, interview_status)
-    if USE_PROGRESS_BAR and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_progress']:
-        user_dict['_progress'] = interview_status.question.progress
+    if USE_PROGRESS_BAR and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
+        user_dict['_internal']['progress'] = interview_status.question.progress
     if interview_status.question.question_type == "exit":
         user_dict = initial_dict.copy()
         reset_user_dict(user_code, user_dict, yaml_filename)
         return redirect(exit_page)
     if interview_status.question.question_type == "refresh":
         return redirect(url_for('index'))
+    if interview_status.question.question_type == "signin":
+        return redirect(url_for('user.login'))
     if interview_status.question.question_type == "leave":
         return redirect(exit_page)
     user_dict['_internal']['answers'] = dict()
+    # if 'x' in user_dict:
+    #     del user_dict['x']
+    # if 'i' in user_dict:
+    #     del user_dict['i']
     save_user_dict(user_code, user_dict, yaml_filename, changed=changed)
     flash_content = ""
     messages = get_flashed_messages(with_categories=True) + error_messages
@@ -934,7 +1004,7 @@ def index():
         output += '    <title>' + app.config['BRAND_NAME'] + '</title>\n  </head>\n  <body>\n'
         output += make_navbar(interview_status, app.config['BRAND_NAME'], steps, SHOW_LOGIN) + '    <div class="container">' + "\n      "+ '<div class="tab-content">' + flash_content
         if USE_PROGRESS_BAR:
-            output += progress_bar(user_dict['_progress'])
+            output += progress_bar(user_dict['_internal']['progress'])
         output += content + "</div>\n"
         if DEBUG:
             output += '      <div id="source" class="col-md-12 collapse">' + "\n"
@@ -963,13 +1033,13 @@ def index():
                             output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter())
                     elif 'variable' in stage:
                         output += "        <h5>" + word('Needed definition of') + " <code>" + str(stage['variable']) + "</code></h5>\n"
-                output += '        <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(user_dict)]) + '</p>' + "\n"
-                #output += '        <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.util.pickleable_objects(user_dict))]) + '</p>' + "\n"
+                #output += '        <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(user_dict)]) + '</p>' + "\n"
+                output += '        <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.util.pickleable_objects(user_dict))]) + '</p>' + "\n"
             output += '      </div>' + "\n"
         output += '    </div>'
         output += scripts + "\n    " + "".join(extra_scripts) + """\n  </body>\n</html>"""
     #logmessage(output.encode('utf8'))
-    response = make_response(output.encode('utf8'), status)
+    response = make_response(output.encode('utf8'), '200 OK')
     response.headers['Content-type'] = 'text/html; charset=utf-8'
     return response
 
@@ -979,6 +1049,9 @@ if __name__ == "__main__":
 def process_bracket_expression(match):
     #return("[" + repr(urllib.unquote(match.group(1)).encode('unicode_escape')) + "]")
     return("[" + repr(codecs.decode(match.group(1), 'base64').decode('utf-8')) + "]")
+
+def myb64unquote(string):
+    return(codecs.decode(string, 'base64').decode('utf-8'))
     
 def progress_bar(progress):
     if progress == 0:
@@ -1053,8 +1126,12 @@ def fetch_previous_user_dict(user_code, filename):
     return fetch_user_dict(user_code, filename)
 
 def advance_progress(user_dict):
-    user_dict['_progress'] += 0.05*(100-user_dict['_progress'])
+    user_dict['_internal']['progress'] += 0.05*(100-user_dict['_internal']['progress'])
     return
+
+# def advance_tracker(user_dict):
+#     user_dict['_internal']['tracker'] += 1
+#     return
 
 def save_user_dict(user_code, user_dict, filename, changed=False):
     cur = conn.cursor()
@@ -1122,7 +1199,7 @@ def make_navbar(status, page_title, steps, show_login):
 """
     if steps > 1:
         navbar += """\
-          <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="back_one" value="1"><button style="background:none; cursor:pointer; border:none; margin:0; padding:0;" type="submit"><i style="font-size:1.2em;" class="glyphicon glyphicon-chevron-left"></i></button></form></span>
+          <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="_back_one" value="1"><button style="background:none; cursor:pointer; border:none; margin:0; padding:0;" type="submit"><i style="font-size:1.2em;" class="glyphicon glyphicon-chevron-left"></i></button></form></span>
 """
     navbar += """\
           <span class="navbar-brand">""" + page_title + """</span>
@@ -1211,8 +1288,8 @@ def serve_uploaded_page(number, page):
 def upload_draw():
     post_data = request.form.copy()
     #sys.stderr.write("Got to upload_draw\n")
-    if 'success' in post_data and post_data['success'] and 'theImage' in post_data:
-        theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['theImage']).group(1) + '==')
+    if '_success' in post_data and post_data['_success'] and '_theImage' in post_data:
+        theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['_theImage']).group(1) + '==')
         #sys.stderr.write("Got theImage and it is " + str(len(theImage)) + " bytes long\n")
         with open('/tmp/testme.png', 'w') as ifile:
             ifile.write(theImage)
@@ -1222,7 +1299,7 @@ def upload_draw():
         
 @app.route('/testsignature', methods=['GET'])
 def test_signature():
-    output = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link rel="stylesheet" href="' + url_for('static', filename='app/signature.css') + '"><title>' + word('Signature') + '</title></head><body onresize="resizeCanvas()"><div id="page"><div class="header" id="header"><a id="new" class="navbtn nav-left">Clear</a><a id="save" class="navbtn nav-right">Save</a><div class="title">' + word('Your Signature') + '</div></div><div class="toppart" id="toppart">' + word('I am a citizen of the United States.') + '</div><div id="content"><p style="text-align:center"></p></div><div class="bottompart" id="bottompart">' + word('Jonathan Pyle') + '</div></div><form id="daform" action="' + url_for('upload_draw') + '" method="post"><input type="hidden" name="variable" value="' + word('Jonathan Pyle') + '"><input type="hidden" id="theImage" name="theImage" value=""><input type="hidden" id="success" name="success" value="0"></form></body></html>'
+    output = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link rel="stylesheet" href="' + url_for('static', filename='app/signature.css') + '"><title>' + word('Signature') + '</title></head><body onresize="resizeCanvas()"><div id="page"><div class="header" id="header"><a id="new" class="navbtn nav-left">Clear</a><a id="save" class="navbtn nav-right">Save</a><div class="title">' + word('Your Signature') + '</div></div><div class="toppart" id="toppart">' + word('I am a citizen of the United States.') + '</div><div id="content"><p style="text-align:center"></p></div><div class="bottompart" id="bottompart">' + word('Jonathan Pyle') + '</div></div><form id="daform" action="' + url_for('upload_draw') + '" method="post"><input type="hidden" name="variable" value="' + word('Jonathan Pyle') + '"><input type="hidden" id="theImage" name="_theImage" value=""><input type="hidden" id="success" name="_success" value="0"></form></body></html>'
     status = '200 OK'
     response = make_response(output.encode('utf8'), status)
     response.headers['Content-type'] = 'text/html; charset=utf-8'

@@ -1,7 +1,10 @@
 import string
 import random
+from docassemble.base.logger import logmessage
 import re
 from docassemble.base.util import possessify, possessify_long, a_in_the_b, your, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list
+
+__all__ = ['DAObject', 'DAList', 'DADict', 'DAFile', 'DAFileCollection', 'DAFileList']
 
 unique_names = set()
 
@@ -19,15 +22,24 @@ class DAObject(object):
     def __init__(self, *args, **kwargs):
         if len(args):
             thename = args[0]
+            self.has_nonrandom_instance_name = True
         else:
             thename = get_unique_name()
+            self.has_nonrandom_instance_name = False
         self.instanceName = thename
         self.init(**kwargs)
+    def set_instance_name(self, thename):
+        if not self.has_nonrandom_instance_name:
+            self.instanceName = thename
+            self.has_nonrandom_instance_name = True
+        else:
+            logmessage("Not resetting name of " + self.instanceName)
+        return
     def __getattr__(self, thename):
         if hasattr(self, thename) or thename == "__getstate__" or thename == "__slots__":
             return(object.__getattribute__(self, thename))
         else:
-            raise NameError("Undefined name '" + object.__getattribute__(self, 'instanceName') + "." + thename + "'")
+            raise NameError("name '" + object.__getattribute__(self, 'instanceName') + "." + thename + "' is not defined")
     def object_name(self):
         return(reduce(a_in_the_b, map(underscore_to_space, reversed(self.instanceName.split(".")))))
     def object_possessive(self, target):
@@ -47,15 +59,15 @@ class DAList(DAObject):
         self.gathering = False
         if 'elements' in kwargs:
             for element in kwargs['elements']:
-                self.add(element)
+                self.append(element)
             self.gathered = True
         return super(DAList, self).init()
-    def add(self, element):
-        self.elements.append(element)
-    def addObject(self, objectFunction):
+    def appendObject(self, objectFunction):
         newobject = objectFunction(self.instanceName + '[' + str(len(self.elements)) + ']')
         self.elements.append(newobject)
         return newobject
+    def append(self, value):
+        self.elements.append(value)
     def first(self):
         return self.elements[0]
     def last(self):
@@ -119,6 +131,36 @@ class DAList(DAObject):
         return self.comma_and_list()
     def __unicode__(self):
         return self.comma_and_list()
+
+class DADict(DAObject):
+    def init(self, **kwargs):
+        self.elements = dict()
+        return super(DADict, self).init()
+    def setObject(self, objectFunction, entry):
+        newobject = objectFunction(self.instanceName + '[' + repr(entry) + ']')
+        self.elements[entry] = newobject
+        return newobject
+    def __getitem__(self, index):
+        return self.elements[index]
+    def __setitem__(self, key, value):
+        self.elements[key] = value
+        return
+    def __contains__(self, index):
+        return self.elements.__contains__(index)
+    def keys(self):
+        return self.elements.keys()
+    def values(self):
+        return self.elements.values()
+    def __iter__(self):
+        return self.elements.__iter__()
+    def __len__(self):
+        return self.elements.__len__()
+    def __reversed__(self):
+        return self.elements.__reversed__()
+    def __delitem__(self, key):
+        return self.elements.__delitem__(key)
+    def __missing__(self, key):
+        return self.elements.__missing__(key)
 
 class DAFile(DAObject):
     def init(self, **kwargs):

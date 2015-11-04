@@ -14,10 +14,22 @@ import codecs
 
 noquote_match = re.compile(r'"')
 
-def question_name_tag(question):
-    if question.name:
-        return('<input type="hidden" name="questionname" value="' + question.name + '">')
-    return('')
+def tracker_tag(status):
+    output = ''
+    if status.question.name:
+        output += '<input type="hidden" name="_questionname" value="' + status.question.name + '">'
+    output += '<input type="hidden" name="_tracker" value="' + str(status.tracker) + '">'
+    return output
+
+def datatype_tag(datatypes):
+    if len(datatypes):
+        return('<input type="hidden" name="_datatypes" value=' + myb64quote(json.dumps(datatypes)) + '>')
+    return ('')
+
+# def question_name_tag(question):
+#     if question.name:
+#         return('<input type="hidden" name="_questionname" value="' + question.name + '">')
+#     return('')
 
 def icon_html(status, name, width_value=1.0, width_units='em'):
     the_image = status.question.interview.images.get(name, None)
@@ -43,13 +55,15 @@ def signature_html(status, debug):
     output += '<div id="content"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div><div class="bottompart" id="bottompart">'
     if (status.underText):
         output += markdown_to_html(status.underText, trim=True)
-    output += '</div></div><form id="daform" method="POST"><input type="hidden" name="saveas" value="' + status.question.fields[0].saveas + '"><input type="hidden" id="theImage" name="theImage" value=""><input type="hidden" id="success" name="success" value="0">'
-    output += question_name_tag(status.question)
+    output += '</div></div><form id="daform" method="POST"><input type="hidden" name="_saveas" value="' + status.question.fields[0].saveas + '"><input type="hidden" id="_theImage" name="_theImage" value=""><input type="hidden" id="_success" name="_success" value="0">'
+    #output += question_name_tag(status.question)
+    output += tracker_tag(status)
     output += '</form>'
     return output
 
 def as_html(status, extra_scripts, extra_css, url_for, debug):
     decorations = list()
+    datatypes = dict()
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'help-inline'}
     if status.question.script is not None:
         extra_scripts.append(status.question.script)
@@ -85,20 +99,26 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
     output = ""
     output += '<section id="question" class="tab-pane active col-md-6">'
     if status.question.question_type == "yesno":
+        datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
         output += '<form id="daform" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
         output += '<div class="btn-toolbar"><button class="btn btn-primary btn-lg " name="' + status.question.fields[0].saveas + '" type="submit" value="True">Yes</button> <button class="btn btn-lg btn-info" name="' + status.question.fields[0].saveas + '" type="submit" value="False">No</button></div>'
-        output += question_name_tag(status.question)
+        #output += question_name_tag(status.question)
+        output += tracker_tag(status)
+        output += datatype_tag(datatypes)
         output += '</fieldset></form>'
     elif status.question.question_type == "noyes":
+        datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
         output += '<form id="daform" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
         output += '<div class="btn-toolbar"><button class="btn btn-primary btn-lg" name="' + status.question.fields[0].saveas + '" type="submit" value="False">Yes</button> <button class="btn btn-lg btn-info" name="' + status.question.fields[0].saveas + '" type="submit" value="True">No</button></div>'
-        output += question_name_tag(status.question)
+        #output += question_name_tag(status.question)
+        output += tracker_tag(status)
+        output += datatype_tag(datatypes)
         output += '</fieldset></form>'
     elif status.question.question_type == "fields":
         enctype_string = ""
@@ -122,6 +142,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
                     continue
                 elif field.datatype in ['script', 'css']:
                     continue
+                else:
+                    datatypes[field.saveas] = field.datatype
             if field.number in status.helptexts:
                 helptext_start = '<a style="cursor:pointer;color:#408E30" data-container="body" data-toggle="popover" data-placement="bottom" data-content="' + noquote(unicode(status.helptexts[field.number])) + '">' 
                 helptext_end = '</a>'
@@ -144,7 +166,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
                         validation_rules['rules'][field.saveas]['notEmpty'] = True
                         validation_rules['messages'][field.saveas]['notEmpty'] = word("This field is required.")
                     validation_rules['messages'][field.saveas]['email'] = word("You need to enter a complete e-mail address.")
-                if field.datatype == 'number' or field.datatype == 'currency':
+                if field.datatype in ['number', 'currency', 'float', 'integer']:
                     validation_rules['rules'][field.saveas]['number'] = True
                     validation_rules['messages'][field.saveas]['number'] = word("You need to enter a number.")
                 if (field.datatype in ['files', 'file']):
@@ -184,9 +206,9 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
             output += "<p>Error: no fields</p>"
         #output += '</div>'
         if len(checkboxes):
-            output += '<input type="hidden" name="checkboxes" value="' + ",".join(checkboxes) + '">'
+            output += '<input type="hidden" name="_checkboxes" value=' + myb64quote(json.dumps(checkboxes)) + '>'
         if len(files):
-            output += '<input type="hidden" name="files" value="' + ",".join(files) + '">'
+            output += '<input type="hidden" name="_files" value=' + myb64quote(json.dumps(files)) + '>'
             init_string = '<script>'
             for saveasname in files:
                 init_string += '$("#' + saveasname + '").fileinput();' + "\n"
@@ -194,17 +216,24 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
             extra_scripts.append('<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + init_string)
             #extra_css.append('<link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />')
         output += '<div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button></div>'
-        output += question_name_tag(status.question)
+        #output += question_name_tag(status.question)
+        output += tracker_tag(status)
+        output += datatype_tag(datatypes)
         output += '</fieldset></form>'
     elif status.question.question_type == "settrue":
+        datatypes[status.question.fields[0].saveas] = "boolean"
         output += '<form id="daform" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
         output += '<div class="form-actions"><button type="submit" class="btn btn-lg btn-primary" name="' + status.question.fields[0].saveas + '" value="True"> ' + word('Continue') + '</button></div>'
-        output += question_name_tag(status.question)
+        #output += question_name_tag(status.question)
+        output += tracker_tag(status)
+        output += datatype_tag(datatypes)
         output += '</fieldset></form>'
     elif status.question.question_type == "multiple_choice":
+        if hasattr(status.question.fields[0], 'datatype'):
+            datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
         output += '<form id="daform" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
@@ -257,11 +286,11 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
                         if key == 'image':
                             continue
                         formatted_key = markdown_to_html(key, status=status, trim=True, escape=True)
-                        output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + the_icon + formatted_key + '|' + the_icon + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="multiple_choice" type="radio" value="' + str(indexno) + '"></div></div>'
+                        output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + the_icon + formatted_key + '|' + the_icon + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="_multiple_choice" type="radio" value="' + str(indexno) + '"></div></div>'
                         id_index += 1
                     indexno += 1
-                    validation_rules['rules']['multiple_choice'] = {'required': True}
-                    validation_rules['messages']['multiple_choice'] = {'required': word("You need to select one.")}
+                    validation_rules['rules']['_multiple_choice'] = {'required': True}
+                    validation_rules['messages']['_multiple_choice'] = {'required': word("You need to select one.")}
             output += '<br><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button>'
         else:
             output += '<div class="btn-toolbar">'
@@ -302,7 +331,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
                     for key in choice:
                         if key == 'image':
                             continue
-                        if isinstance(choice[key], Question) and choice[key].question_type in ["exit", "continue", "restart", "refresh"]:
+                        if isinstance(choice[key], Question) and choice[key].question_type in ["exit", "continue", "restart", "refresh", "signin", "leave"]:
                             if choice[key].question_type == "continue":
                                 btn_class = ' btn-primary'
                             elif choice[key].question_type == "restart":
@@ -310,13 +339,17 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
                             elif choice[key].question_type == "leave":
                                 btn_class = ' btn-warning'
                             elif choice[key].question_type == "refresh":
-                                btn_class = ' btn-primary'
+                                btn_class = ' btn-success'
+                            elif choice[key].question_type == "signin":
+                                btn_class = ' btn-info'
                             elif choice[key].question_type == "exit":
                                 btn_class = ' btn-danger'
-                        output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="multiple_choice" value="' + str(indexno) + '"> ' + the_icon + markdown_to_html(key, status=status, trim=True, do_terms=False) + '</button> '
+                        output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="_multiple_choice" value="' + str(indexno) + '"> ' + the_icon + markdown_to_html(key, status=status, trim=True, do_terms=False) + '</button> '
                     indexno += 1
             output += '</div>'
-        output += question_name_tag(status.question)
+        #output += question_name_tag(status.question)
+        output += tracker_tag(status)
+        output += datatype_tag(datatypes)
         output += '</fieldset></form>'
     elif status.question.question_type == 'deadend':
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
@@ -328,7 +361,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
             output += '<div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button></div>'
-        output += question_name_tag(status.question)
+        #output += question_name_tag(status.question)
+        output += tracker_tag(status)
         output += '</fieldset></form>'
     if len(status.attachments) > 0:
         output += '<br>'
@@ -410,12 +444,12 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
       <div class="panel-body">
         <form id="emailform" class="form-horizontal" method="POST">
           <fieldset>
-            <div class="form-group"><label for="attachment_email_address" class="control-label col-sm-4">""" + word('E-mail address') + """</label><div class="col-sm-8"><input class="form-control" type="email" name="attachment_email_address" id="attachment_email_address"></div></div>"""
+            <div class="form-group"><label for="_attachment_email_address" class="control-label col-sm-4">""" + word('E-mail address') + """</label><div class="col-sm-8"><input class="form-control" type="email" name="_attachment_email_address" id="_attachment_email_address"></div></div>"""
             if rtfs_included:
                 output += """
-            <div class="form-group"><label for="attachment_include_rtf" class="control-label col-sm-4">""" + '&nbsp;</label><div class="col-sm-8"><input type="checkbox" value="True" name="attachment_include_rtf" id="attachment_include_rtf"> ' + word('Include RTF files for editing') + '</div></div>'
+            <div class="form-group"><label for="_attachment_include_rtf" class="control-label col-sm-4">""" + '&nbsp;</label><div class="col-sm-8"><input type="checkbox" value="True" name="_attachment_include_rtf" id="_attachment_include_rtf"> ' + word('Include RTF files for editing') + '</div></div>'
             output += """
-            <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Send') + '</button></div><input type="hidden" name="email_attachments" value="1"><input type="hidden" name="question_number" value="' + str(status.question.number) + '">'
+            <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Send') + '</button></div><input type="hidden" name="_email_attachments" value="1"><input type="hidden" name="_question_number" value="' + str(status.question.number) + '">'
             output += """
           </fieldset>
         </form>
@@ -423,7 +457,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
     </div>
   </div>
 </div>"""
-            extra_scripts.append("""<script>$("#emailform").validate(""" + json.dumps({'rules': {'attachment_email_address': {'notEmpty': True, 'required': True, 'email': True}}, 'messages': {'attachment_email_address': {'required': word("An e-mail address is required."), 'email': word("You need to enter a complete e-mail address.")}}, 'errorClass': 'help-inline'}) + """);</script>""")
+            extra_scripts.append("""<script>$("#emailform").validate(""" + json.dumps({'rules': {'_attachment_email_address': {'notEmpty': True, 'required': True, 'email': True}}, 'messages': {'_attachment_email_address': {'required': word("An e-mail address is required."), 'email': word("You need to enter a complete e-mail address.")}}, 'errorClass': 'help-inline'}) + """);</script>""")
     if len(status.attributions):
         output += '<br><br><br><br><br><br><br>'
     for attribution in sorted(status.attributions):
@@ -524,8 +558,9 @@ def input_for(status, field, wide=False):
             else:
                 defaultstring = ''
             input_type = field.datatype
-            if field.datatype == 'currency':
+            if field.datatype in ['integer', 'float', 'currency']:
                 input_type = 'number'
+            if field.datatype == 'currency':
                 output += '<div class="input-group"><span class="input-group-addon" id="addon-' + field.saveas + '">' + currency_symbol() + '</span>'
             output += '<input' + defaultstring + placeholdertext + ' class="form-control" type="' + input_type + '" name="' + field.saveas + '" id="' + field.saveas + '"'
             if field.datatype == 'currency':

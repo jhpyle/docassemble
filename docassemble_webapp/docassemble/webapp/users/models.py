@@ -48,6 +48,13 @@ class UserDict(db.Model):
     dictionary = db.Column(db.Text())
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
 
+class UserDictLock(db.Model):
+    __tablename__ = "userdictlock"
+    indexno = db.Column(db.Integer(), primary_key=True)
+    filename = db.Column(db.Text())
+    key = db.Column(db.String(250))
+    locktime = db.Column(db.DateTime(), default=db.func.now())
+
 class Attachments(db.Model):
     __tablename__ = "attachments"
     id = db.Column(db.Integer(), primary_key=True)
