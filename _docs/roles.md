@@ -6,40 +6,41 @@ short_title: Roles
 
 **docassemble** allows you to create multi-user interviews.
 
-There are several possible applications for multi-user interviews:
-* In a legal application, a client uses the interview first to answer
+For example:
+* In a legal application, a client uses the interview to answer
   questions about the facts of a case, and then an attorney reviews
-  the responses, applies the law to the facts, makes some decisions,
-  and then the client comes back to the interview to receive a legal
-  advice letter.
+  the responses, answers questions about how the law applies to the
+  facts, and then the client comes back to the interview to receive a
+  legal advice letter.
 * If a user's language is not English, a translator will be invited to
   join the interview to translate the user's textual responses into
   English before the interview process is completed.
-* In a negotiation context, two parties will fill in answers to an
-  interview, and when both are done, the interview will suggest a
-  resolution based on the answers of both parties.
+* Two parties who are negotiating with one another will fill in
+  answers to an interview, and when both are done, the interview will
+  suggest a resolution based on the answers of both parties.
 
 Multi-user interviews are implemented through the [user login] feature
 and three authoring features that were introduced in other sections:
 
-* `role` [modifier]: designates certain questions as being reserved
-  for particular users to fill out.
-* `default role` [initial block]: sets the role for questions that do
-  not have a `role` set.  Its associated `code` is run as `initial`
-  code and should set the variable `role` depending on the identity of
-  the person logged in (which can be determined from the
+* `role` [modifier]: designates certain questions as being answerable
+  only by a particular user (or group of users).
+* `default role` [initial block]: sets the `role` modifier for
+  questions that do not have a `role` explicitly set.  The `code`
+  within this block is run as `initial` code.  The responsibility of
+  this `code` is to set the variable `role` depending on the
+  circumstances, which can include the identity and privileges of the
+  person logged in (which can be determined from the
   `current_info['user']` dictionary).
 * `event` [variables]: when the current user cannot proceed further
   with the interview because the interview needs input from a
-  different user, **docassemble** will need to display a message for
-  the current user.  The way it is this is by looking for a question
-  that offers to define the variable `role_event`.  So if you create a
-  question with a line indicating `event: role_event`, **docassemble**
-  will present this question to the user when the required role
-  changes.
+  different user, **docassemble** will display a message for the
+  current user.  It finds this message by looking for a question
+  marked with `event: role_event`.  [Mako] template commands can be
+  used in this question to say different things depending on who the
+  current user is and who the new user needs to be.
 
-To see how the multi-user system works, consider the following example
-of a three-role interview.
+The following example of a three-role interview demonstrates how
+multi-user interviews are created in **docassemble**.
 
 The interview starts with an organizer, who clicks past an
 introductory screen and is asked for the e-mail addresses of two
@@ -48,7 +49,9 @@ to invite the participants to bid by clicking on a particular link and
 logging in.  Once both bidders have entered their bids, the winner
 (the participant with the lowest bid) is announced.  Until both
 participants have entered bids, users will see a page telling them to
-wait and to press the "Check" button to see if the bids are in yet.
+wait and to press the "Check" button to see if the bids are in yet
+(except for bidders who haven't bid yet, who will be asked for their
+bids).
 
 {% highlight yaml %}
 ---
@@ -240,6 +243,190 @@ This would be arbitrary and could cause unnecessary delay.  The
 additional code here will ask each participant for his bid regardless
 of which one is first to log in.
 
+The `interview_url` text looks very complicated, because it is.
+
+{% highlight yaml %}
+---
+code: |
+  interview_url = current_info['url'] + '?i=' + current_info['yaml_filename'] + '&session=' + current_info['session']
+---
+{% endhighlight %}
+
+The URL that is defined in `interview_url` contains the secret
+`session` key of the interview, which was created when the organizer
+started the interview.  When someone goes to this URL, they will enter
+the interview that is already in progress, whatever the current state
+of the interview is.  Note that the URL in the location bar of the web
+browser will be shortened, but the interview-specific information in
+the URL will not be forgotten (essentially, it is moved from the
+location bar into web browser cookies).
+
+It isn't a good practice to include complicated computer code in your
+interview [YAML].  We included it here so that we could give you a
+complete example with no hidden detail.
+
+In practice, it's a good idea to `include` a question file, such as
+`basic-questions.yml` from `docassemble.base`, which defines functions
+that handle complicated computer code for you.  One of the functions
+that `basic-questions.yml` gives you is `interview_url()`, from the
+`docassemble.base.legal` module.
+
+If we had included:
+
+{% highlight yaml %}
+---
+include: basic-questions.yml
+---
+{% endhighlight %}
+
+then we could have written:
+
+{% highlight yaml %}
+  Tell them to go to the following URL:
+
+  [${ interview_url() }](${ interview_url() })
+{% endhighlight %}
+
+## Interviews with an unknown number of users
+
+In the example above, there were two participants in the interview
+(besides the organizer): `first_person` and `second_person`.  But what
+if you will have more than two participants?  Do you have to create
+`role`s up to `ten_thousandth_person`?  No -- there are other ways to
+handle this situation.
+
+Consider the following example, which uses [generic objects]:
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  - respondents: DADict
+---
+initial: true
+code: |
+  if current_info['user']['is_authenticated']:
+    if current_info['user']['email'] not in respondents:
+      respondents.setObject(current_info['user']['email'], DAObject)
+    user = respondents[current_info['user']['email']]
+    final_page
+  else:
+    must_be_logged_in_page
+---
+sets: final_page
+question: |
+  <%
+    cat_count = 0
+    for email in respondents:
+      respondent = respondents[email]
+      if respondent is user or hasattr(respondent, 'number_of_cats'):
+        cat_count += respondent.number_of_cats
+  %>
+  % if cat_count == 0:
+  There are zero cats so far.
+  % elif cat_count == 1:
+  There is only one cat so far.
+  % else:
+  There are ${ cat_count } cats in all.
+  % endif
+subquestion: |
+  Share this link with others!
+
+  [${ interview_url }](${ interview_url })
+buttons:
+  - Check: refresh
+---
+code: |
+  interview_url = current_info['url'] + '?i=' + current_info['yaml_filename'] + '&session=' + current_info['session']
+---
+generic object: DAObject
+question: How many cats do you have?
+fields:
+  - Number of cats: x.number_of_cats
+    datatype: integer
+---
+sets: must_be_logged_in_page
+question: Please log in
+subquestion: |
+  Please click "Sign in" to continue.  If you do not have
+  an account, you can register for one.
+buttons:
+  - Sign in: signin
+...
+{% endhighlight %}
+
+This interview asks every user how many cats he or she has, and then
+tells the user the total number of cats of all of the interview
+respondents.
+
+Note that this interview allows multiple users but does not make use
+of the `role` and `default role` features.  The purpose of those
+features is to put one user on hold while waiting for input from
+another user.  There are some situations, like the above interview,
+that do not require one user to wait for another user.  In that case,
+it is not necessary to set user roles.
+
+The `initial` code block makes sure that the user is logged in, and
+sets the `user` variable to a `DAObject`.
+
+The fact that the `user` is a `DAObject` means that the `user` can
+have attributes and those attributes can be gathered with `generic
+object` questions.
+
+The `initial` code block also keeps track of all the users that have
+used the interview (i.e. by either starting it or clicking on the link
+given by `interview_url`) so that [Mako] code can loop over all of the
+users and tally up the number of cats.
+
+These lines in the `initial` block set the `user` and keep track of
+each user:
+{% highlight yaml %}
+if current_info['user']['email'] not in respondents:
+  respondents.setObject(current_info['user']['email'], DAObject)
+user = respondents[current_info['user']['email']]
+{% endhighlight %}
+
+`current_info['user']` is a Python dictionary containing information
+about the logged-in user.  If the user was not logged in, the `email`
+would not be known.  The `email` is a unique identifier for each user
+in the login system.
+
+The `objects` block defines `respondents` as an object of type DADict.
+A DADict acts much like an ordinary Python dictionary, except that it
+has special properties that allow **docassemble** to set its
+attributes using `generic object` questions.
+
+The second line in the excerpt above defines an entry in this
+dictionary, `respondents[current_info['user']['email']]` as a new
+object of type DAObject.  The `setObject` method effectively does:
+
+    respondents[current_info['user']['email']] = DAObject()
+
+However, it does not work to actually write that; the `setObject`
+method takes care of the **docassemble** internals that will allow
+**docassemble** to set undefined attributes.
+
+Note that the `modules` block is necessary; otherwise we could not
+refer to terms like `DAObject` and `DADict`.
+
+The [Mako] code contains this line:
+
+{% highlight yaml %}
+if respondent is user or hasattr(respondent, 'number_of_cats'):
+  cat_count += respondent.number_of_cats
+{% endhighlight %}
+
+The `hasattr` function is a built-in Python function that returns True
+if `respondent` has an attribute `number_of_cats`, and False if not.
+If we did not test for this, then the user could be asked for the
+number of cats of a different respondent, if the user refreshed the
+screen between the time the other respondent logged in and the time
+the respondent entered the number of his cats.
+
 [initial block]: {{ site.baseurl }}/docs/initial.html
 [modifier]: {{ site.baseurl }}/docs/modifiers.html
 [fields]: {{ site.baseurl }}/docs/fields.html
+[Mako]: http://www.makotemplates.org/
+[generic objects]: {{ site.baseurl }}/docs/objects.html
