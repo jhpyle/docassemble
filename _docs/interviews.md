@@ -132,15 +132,18 @@ need it.
 This is a very simple interview; there are more types of blocks that
 you can write.  These blocks are explained in the following sections:
 
-* [Initial Blocks] - Explains the special blocks you can write that set the
-  stage for the rest of the interview.
+* [Initial Blocks] - Explains special blocks you can write that have
+  an effect on whole interview.
 * [Question Blocks] - Explains the basics of the `question` block, which presents a
-  question through the user interface.
-* [Setting Variables] - Explains how to collect information from users
-  within `question` blocks.
+  screen to the user (which usually asks a question but does not need to).
+* [Setting Variables] - Explains how to use collect information from users
+  using `question` blocks.
 * [Question Modifiers] - Explains ways you can enhance questions with
-  special features.
-* [Code] - Explains `code` blocks.
+  special features, for example by adding help text or icons.
+* [Code] - Explains `code` blocks, which are like `question`s except
+  that instead of presenting something to the user, they run [Python]
+  code that defines variables or does other things that computer code
+  can do.
 * [Interview Logic] - Explains `mandatory` and `initial` blocks and how
   **docassemble** processes your interview.
 * [Objects] - Explains the use of Python objects to simplify the way
@@ -158,7 +161,7 @@ you can write.  These blocks are explained in the following sections:
 
 ## How you run a **docassemble** interview
 
-You start the interview by going to a URL.  In the case of the
+You start the interview by going to its URL.  In the case of the
 interview linked from the [demonstration page], you can get to the
 interview by doing:
 
