@@ -47,7 +47,9 @@ that the package was installed successfully.
 12. Point your browser to
     `http://localhost/demo?i=docassemble.hello_world:data/questions/questions.yml`
     (substituting the actual domain and base URL of your
-    **docassemble** site).
+    **docassemble** site).  The base url is set during the
+    [installation] of the WSGI server and in the **docassemble**
+    [configuration] file.
 	13. You should see "Hello, world!" with an exit button.
 
 Now let's get it to ask a question.  Edit

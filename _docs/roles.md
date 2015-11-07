@@ -30,7 +30,7 @@ and three authoring features that were introduced in other sections:
   this `code` is to set the variable `role` depending on the
   circumstances, which can include the identity and privileges of the
   person logged in (which can be determined from the
-  `current_info['user']` dictionary).
+  `current_info['user']` [dictionary]).
 * `event` [variables]: when the current user cannot proceed further
   with the interview because the interview needs input from a
   different user, **docassemble** will display a message for the
@@ -49,9 +49,9 @@ to invite the participants to bid by clicking on a particular link and
 logging in.  Once both bidders have entered their bids, the winner
 (the participant with the lowest bid) is announced.  Until both
 participants have entered bids, users will see a page telling them to
-wait and to press the "Check" button to see if the bids are in yet
-(except for bidders who haven't bid yet, who will be asked for their
-bids).
+wait and to press the "Check" button to see if both bids have been
+made yet (except for bidders who haven't bid yet, who will be asked
+for their bids).
 
 {% highlight yaml %}
 ---
@@ -185,7 +185,7 @@ code: |
 ---
 {% endhighlight %}
 
-Here, we set the `default role` to organizer.  This simply means that
+Here, we set the `default role` to `organizer`.  This simply means that
 questions in the interview that do not have a `role` specified will
 require the `organizer` role.
 
@@ -202,7 +202,8 @@ Second, note that the flow of the interview is being controlled here.
 The references to `introduction_made` and `participants invited` mean
 that questions will be asked to define those variables if they are
 undefined.  This is the code that causes those questions to appear for
-the organizer.
+the organizer.  After the role is set, the `mandatory` `code` block
+controls the flow of the interview.
 
 Third, note that by requiring `participants invited` to be set before
 we consider whether the user's e-mail address is equal to
@@ -211,11 +212,13 @@ way we want it to.  Suppose we did not check for `participants
 invited` before doing this.  If the organizer was logged in and gave
 his own e-mail address as that of a participant, he would assume the
 role of a participant before learning the URL that he needs to give to
-the other participant.  There are times when you just want
-**docassemble** to figure out the interview flow implicitly, and there
-are times when you want to be explicit about it.  Setting up roles is
-one situation where you want to be explicit, so that you account for
-all the unexpected scenarios that may occur.
+the other participant.
+
+There are times when you just want **docassemble** to figure out the
+interview flow implicitly, and there are times when you want to be
+explicit about it.  Setting up roles is one situation where you want
+to be pretty explicit, so that you account for all the unexpected
+scenarios that may occur.
 
 Another block that warrants explanation is the `mandatory` `code`
 block:
@@ -235,8 +238,8 @@ code: |
 We could simply shorten the code to `announce_winner`, and the
 interview could still get done, because `announce_winner` implicitly
 asks for both `firth_person_bid` and `second_person_bid`.  The problem
-(or inconvenience) is that `announce_winner` looks for the value of
-`first_person_bid` before it looks for the value of
+with that (or the inconvenience) is that `announce_winner` looks for
+the value of `first_person_bid` before it looks for the value of
 `second_person_bid`.  This means that the second participant would
 have to wait to enter his bid until the first participant had done so.
 This would be arbitrary and could cause unnecessary delay.  The
@@ -257,19 +260,21 @@ The URL that is defined in `interview_url` contains the secret
 started the interview.  When someone goes to this URL, they will enter
 the interview that is already in progress, whatever the current state
 of the interview is.  Note that the URL in the location bar of the web
-browser will be shortened, but the interview-specific information in
-the URL will not be forgotten (essentially, it is moved from the
-location bar into web browser cookies).
+browser will be shortened after the first page load, but the
+interview-specific information in the URL will not be forgotten
+(essentially, it is moved from the location bar into a cookie in the
+web browser).
 
-It isn't a good practice to include complicated computer code in your
-interview [YAML].  We included it here so that we could give you a
-complete example with no hidden detail.
+It isn't a good practice to include complicated computer code like
+this `interview_url` block in your interview [YAML].  We included it
+here so that we could give you a complete example with no hidden
+detail.
 
 In practice, it's a good idea to `include` a question file, such as
-`basic-questions.yml` from `docassemble.base`, which defines functions
-that handle complicated computer code for you.  One of the functions
-that `basic-questions.yml` gives you is `interview_url()`, from the
-`docassemble.base.legal` module.
+`basic-questions.yml` from `docassemble.base`, which provides you with
+functions that handle complicated computer code for you.  One of the
+functions that `basic-questions.yml` gives you is `interview_url()`,
+from the `docassemble.base.legal` module.
 
 If we had included:
 
@@ -287,13 +292,15 @@ then we could have written:
   [${ interview_url() }](${ interview_url() })
 {% endhighlight %}
 
+Then we would not need to have the `interview_url` variable.
+
 ## Interviews with an unknown number of users
 
 In the example above, there were two participants in the interview
-(besides the organizer): `first_person` and `second_person`.  But what
-if you will have more than two participants?  Do you have to create
-`role`s up to `ten_thousandth_person`?  No -- there are other ways to
-handle this situation.
+(other than the organizer): `first_person` and `second_person`.  But
+what if you will have more than two participants?  Do you have to
+create `role`s up to `ten_thousandth_person`?  No -- there are other
+ways to handle multi-user interviews.
 
 Consider the following example, which uses [generic objects]:
 
@@ -324,6 +331,7 @@ question: |
       if respondent is user or hasattr(respondent, 'number_of_cats'):
         cat_count += respondent.number_of_cats
   %>
+        
   % if cat_count == 0:
   There are zero cats so far.
   % elif cat_count == 1:
@@ -371,62 +379,78 @@ it is not necessary to set user roles.
 The `initial` code block makes sure that the user is logged in, and
 sets the `user` variable to a `DAObject`.
 
-The fact that the `user` is a `DAObject` means that the `user` can
-have attributes and those attributes can be gathered with `generic
-object` questions.
+A `DAObject` is the most basic type of **docassemble** object.  Its
+definition is in `docassemble.base.core`.  The fact that the `user` is
+a `DAObject` means that the `user` can have [attributes] and those
+[attributes] can be gathered with [generic object] questions.
 
 The `initial` code block also keeps track of all the users that have
-used the interview (i.e. by either starting it or clicking on the link
-given by `interview_url`) so that [Mako] code can loop over all of the
-users and tally up the number of cats.
+used the interview (i.e. by either starting the interview from scratch
+or clicking on the link given by `interview_url`) so that the [Mako]
+code in the `final_page` question can loop over all of the users and
+tally up the number of cats.
 
-These lines in the `initial` block set the `user` and keep track of
-each user:
+These lines in the `initial` block define the `user` variable and keep
+track of each user:
+
 {% highlight yaml %}
 if current_info['user']['email'] not in respondents:
   respondents.setObject(current_info['user']['email'], DAObject)
 user = respondents[current_info['user']['email']]
 {% endhighlight %}
 
-`current_info['user']` is a Python dictionary containing information
+`current_info['user']` is a Python [dictionary] containing information
 about the logged-in user.  If the user was not logged in, the `email`
 would not be known.  The `email` is a unique identifier for each user
 in the login system.
 
 The `objects` block defines `respondents` as an object of type DADict.
-A DADict acts much like an ordinary Python dictionary, except that it
+A DADict acts much like an ordinary Python [dictionary], except that it
 has special properties that allow **docassemble** to set its
 attributes using `generic object` questions.
 
 The second line in the excerpt above defines an entry in this
-dictionary, `respondents[current_info['user']['email']]` as a new
-object of type DAObject.  The `setObject` method effectively does:
+[dictionary], `respondents[current_info['user']['email']]` as a new
+object of type DAObject.  The `setObject` method effectively does this:
 
-    respondents[current_info['user']['email']] = DAObject()
+{% highlight python %}
+respondents[current_info['user']['email']] = DAObject()
+{% endhighlight %}
 
 However, it does not work to actually write that; the `setObject`
-method takes care of the **docassemble** internals that will allow
+method takes care of the **docassemble** internals that allow
 **docassemble** to set undefined attributes.
 
-Note that the `modules` block is necessary; otherwise we could not
-refer to terms like `DAObject` and `DADict`.
+Note that the `modules` block is necessary in this interview;
+otherwise we could not refer to names like `DAObject` and `DADict`.
 
 The [Mako] code contains this line:
 
-{% highlight yaml %}
+{% highlight python %}
 if respondent is user or hasattr(respondent, 'number_of_cats'):
   cat_count += respondent.number_of_cats
 {% endhighlight %}
 
-The `hasattr` function is a built-in Python function that returns True
-if `respondent` has an attribute `number_of_cats`, and False if not.
-If we did not test for this, then the user could be asked for the
-number of cats of a different respondent, if the user refreshed the
-screen between the time the other respondent logged in and the time
-the respondent entered the number of his cats.
+The `hasattr` function is a [built-in Python function] that returns
+`True` if `respondent` has an attribute called `number_of_cats`, and
+`False` if not.  We are saying here that we want to tally the total
+number of cats for the user and all respondents who have answered the
+question about the number of cats they have.  If we did not exclude
+respondents who had not yet indicated their number of cats, then the
+user might be asked for the number of cats belonging to a different
+respondent.  It would be rare that this would ever happen -- it would
+happen if the user checked the number of cats between the time another
+respondent logged in and the time the respondent entered his number of
+his cats -- but it is important to anticipate and control for rare
+cases.
 
 [initial block]: {{ site.baseurl }}/docs/initial.html
 [modifier]: {{ site.baseurl }}/docs/modifiers.html
 [fields]: {{ site.baseurl }}/docs/fields.html
 [Mako]: http://www.makotemplates.org/
+[generic object]: {{ site.baseurl }}/docs/objects.html
 [generic objects]: {{ site.baseurl }}/docs/objects.html
+[attributes]: https://docs.python.org/2/tutorial/classes.html#python-scopes-and-namespaces
+[attribute]: https://docs.python.org/2/tutorial/classes.html#python-scopes-and-namespaces
+[built-in Python function]: https://docs.python.org/2/library/functions.html#hasattr
+[dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
