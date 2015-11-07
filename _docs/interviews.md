@@ -132,29 +132,29 @@ need it.
 This is a very simple interview; there are more types of blocks that
 you can write.  These blocks are explained in the following sections:
 
-* [Initial Blocks]: Explains the special blocks you can write that set the
+* [Initial Blocks] - Explains the special blocks you can write that set the
   stage for the rest of the interview.
-* [Question Blocks]: Explains the basics of the `question` block, which presents a
+* [Question Blocks] - Explains the basics of the `question` block, which presents a
   question through the user interface.
-* [Setting Variables]: Explains how to collect information from users
+* [Setting Variables] - Explains how to collect information from users
   within `question` blocks.
-* [Question Modifiers]: Explains ways you can enhance questions with
+* [Question Modifiers] - Explains ways you can enhance questions with
   special features.
-* [Code]: Explains `code` blocks.
-* [Interview Logic]: Explains `mandatory` and `initial` blocks and how
+* [Code] - Explains `code` blocks.
+* [Interview Logic] - Explains `mandatory` and `initial` blocks and how
   **docassemble** processes your interview.
-* [Objects]: Explains the use of Python objects to simplify the way
+* [Objects] - Explains the use of Python objects to simplify the way
   information is organized.
-* [Markup]: Explains how to change the formatting of text in **docassemble**.
-* [Functions]: Explains how to use special [Python] functions to
+* [Markup] - Explains how to change the formatting of text in **docassemble**.
+* [Functions] - Explains how to use special [Python] functions to
   simplify and generalize the way questions are asked.
-* [Documents]: Explains how to offer your users documents in PDF and
+* [Documents] - Explains how to offer your users documents in PDF and
   RTF format based on the user's answers to the interview questions.
-* [Roles]: Explains **docassemble**'s features for multi-user interviews
-* [Reserved Names]: Lists the variable names you aren't allowed to use
+* [Roles] - Explains **docassemble**'s features for multi-user interviews.
+* [Reserved Names] - Lists the variable names you aren't allowed to use
   because they would conflict with the functionality of
-  **docassemble** and [Python]
-* [Errors]: Explains some common error messages and how to avoid them.
+  **docassemble** and [Python].
+* [Errors] - Explains some common error messages and how to avoid them.
 
 ## How you run a **docassemble** interview
 
