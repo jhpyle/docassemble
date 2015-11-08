@@ -916,10 +916,12 @@ def index():
     #     del user_dict['x']
     # if 'i' in user_dict:
     #     del user_dict['i']
-    if changed and '_questionname' in post_data:
+    # if changed and '_questionname' in post_data:
+        # user_dict['_internal']['answered'].add(post_data['_questionname'])
+        # logmessage("From server.py, answered name is " + post_data['_questionname'])
+        # user_dict['role_event_notification_sent'] = False
+    if changed and '_questionname' in post_data and post_data['_questionname'] not in user_dict['_internal']['answers']:
         user_dict['_internal']['answered'].add(post_data['_questionname'])
-        #logmessage("From server.py, answered name is " + post_data['_questionname'])
-        #user_dict['role_event_notification_sent'] = False
     interview.assemble(user_dict, interview_status)
     if len(interview_status.attachments) > 0:
         #logmessage("Updating attachment info")
@@ -981,6 +983,7 @@ def index():
       $(function(){ 
         var navMain = $("#navbar-collapse");
         navMain.on("click", "a", null, function () {
+          $(this).css('color', '')
           navMain.collapse('hide');
         });
         $("#sourcetoggle").on("click", function(){

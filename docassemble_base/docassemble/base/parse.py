@@ -1042,31 +1042,33 @@ class Question:
         return(has_code, result_list)
     def mark_as_answered(self, user_dict):
         user_dict['_internal']['answered'].add(self.name)
-        #logmessage("1 Question name was " + self.name)
+        logmessage("1 Question name was " + self.name)
         return
     def follow_multiple_choice(self, user_dict):
-        # if self.name:
-        #     logmessage("question is " + self.name)
-        # else:
-        #     logmessage("question has no name")
+        logmessage("follow_multiple_choice")
+        if self.name:
+            logmessage("question is " + self.name)
+        else:
+            logmessage("question has no name")
         if self.name and self.name in user_dict['_internal']['answers']:
+            self.mark_as_answered(user_dict)
             #logmessage("question in answers")
-            user_dict['_internal']['answered'].add(self.name)
+            #user_dict['_internal']['answered'].add(self.name)
             #logmessage("2 Question name was " + self.name)
             the_choice = self.fields[0].choices[user_dict['_internal']['answers'][self.name]]
             for key in the_choice:
                 if key == 'image':
                     continue
-                #logmessage("Setting target")
+                logmessage("Setting target")
                 target = the_choice[key]
                 break
             if target:
-                #logmessage("Target defined")
+                logmessage("Target defined")
                 if type(target) is str:
                     pass
                 elif isinstance(target, Question):
-                    #logmessage("Reassigning question")
-                    #self.mark_as_answered(user_dict)
+                    logmessage("Reassigning question")
+                    # self.mark_as_answered(user_dict)
                     return(target.follow_multiple_choice(user_dict))
         return(self)
     def make_attachment(self, attachment, user_dict, **kwargs):
@@ -1263,7 +1265,12 @@ class Interview:
                     if hasattr(question, 'content') and question.name and question.is_mandatory:
                         if debug:
                             interview_status.seeking.append({'question': question, 'reason': 'mandatory question'})
-                        interview_status.populate(question.ask(user_dict, 'None', 'None'))
+                        if question.name and question.name in user_dict['_internal']['answers']:
+                            #logmessage("in answers")
+                            #question.mark_as_answered(user_dict)
+                            interview_status.populate(question.follow_multiple_choice(user_dict).ask(user_dict, 'None', 'None'))
+                        else:
+                            interview_status.populate(question.ask(user_dict, 'None', 'None'))
                         raise MandatoryQuestion()
             except NameError as errMess:
                 missingVariable = extract_missing_name(errMess)
@@ -1381,11 +1388,11 @@ class Interview:
             while True:
                 try:
                     for the_question, is_generic, the_x, the_i, missing_var in questions_to_try:
-                        #logmessage("missing_var is " + str(missing_var))
-                        #logmessage("Trying question of type " + str(the_question.question_type))
+                        logmessage("missing_var is " + str(missing_var))
+                        logmessage("Trying question of type " + str(the_question.question_type))
                         question = the_question.follow_multiple_choice(user_dict)
-                        #logmessage("Back from follow_multiple_choice")
-                        #logmessage("Trying a question of type " + str(question.question_type))
+                        logmessage("Back from follow_multiple_choice")
+                        logmessage("Trying a question of type " + str(question.question_type))
                         if is_generic:
                             #logmessage("Yes it's generic")
                             if question.is_generic:
@@ -1413,11 +1420,11 @@ class Interview:
                                     else:
                                         command = variable + ' = ' + object_type + '("' + variable + '")'
                                         exec(command, user_dict)
-                            question.mark_as_answered(user_dict)
+                            #question.mark_as_answered(user_dict)
                             return({'type': 'continue'})
                         if question.question_type == "template":
                             exec(question.fields[0].saveas + ' = DATemplate(' + "'" + question.fields[0].saveas + "', content=" + '"""' + question.content.text(user_dict).rstrip().encode('unicode_escape') + '""", subject="""' + question.subcontent.text(user_dict).rstrip().encode('unicode_escape') + '""")', user_dict)
-                            question.mark_as_answered(user_dict)
+                            #question.mark_as_answered(user_dict)
                             return({'type': 'continue'})
                         if question.question_type == "code":
                             #logmessage("Running some code:\n\n" + question.sourcecode)
@@ -1440,7 +1447,7 @@ class Interview:
                                 #logmessage("Try another method of setting the variable")
                                 continue
                         else:
-                            #logmessage("Question type is " + question.question_type)
+                            logmessage("Question type is " + question.question_type)
                             #logmessage("Ask:\n" + question.content.original_text)
                             if question.question_type == 'continue':
                                 continue

@@ -1,0 +1,11 @@
+---
+question: Hello, ${ planet }!
+buttons:
+  - Exit: exit
+mandatory: true
+---
+question: |
+  What is your planet's name?
+fields:
+  - Your Planet: planet
+---
