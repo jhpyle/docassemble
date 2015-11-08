@@ -15,8 +15,9 @@ mandatory: true
 ---
 {% endhighlight %}
 
-To try this out yourself, follow these steps.  (This assumes you have
-already followed the [installation] instructions.)
+To run this on your own **docassemble** server, follow these steps.
+(This assumes you have already followed the [installation]
+instructions.)
 
 1. Click "Log in" in the upper right hand corner and log in as:
  
@@ -50,9 +51,11 @@ that the package was installed successfully.
     **docassemble** site).  The base url is set during the
     [installation] of the WSGI server and in the **docassemble**
     [configuration] file.
-	13. You should see "Hello, world!" with an exit button.
+13. You should see "Hello, world!" with an exit button.
 
-Now let's get it to ask a question.  Edit
+(If you do not have a server yet you can [try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello.yml).)
+
+Now let's change the interview so that it asks the user a question.  Edit
 `docassemble_hello_world/docassemble/hello_world/data/questions.yml`
 again and change the contents to:
 
@@ -63,16 +66,50 @@ buttons:
   - Exit: exit
 mandatory: true
 ---
-question: What is your planet's name?
+question: |
+  What is your planet's name?
 fields:
   - Your Planet: planet
 ---
 {% endhighlight %}
 
-Then repeat steps 8 through 12, above.
+Then repeat steps 8 through 12, above.  (If you do not have your own server yet, you can [try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello2.yml).)
 
 It should now ask you "What is your planet's name?" and then greet
 your world by its name.
+
+Now let's extend the interview by adding a `code` section that
+makes a calculation based on a number provided by the user.
+
+{% highlight yaml %}
+---
+question: Hello, ${ planet }!
+subquestion: |
+  I surmise that you have no more than ${ inhabitant_count }
+  inhabitants.
+buttons:
+  - Exit: exit
+mandatory: true
+---
+question: |
+  What is your planet's name?
+fields:
+  - Your Planet: planet
+---
+code: |
+  if favorite_number == 42:
+    inhabitant_count = 2
+  else:
+    inhabitant_count = 2000 + favorite_number * 45
+---
+question: What is your favorite number?
+fields:
+  - Number: favorite_number
+    datatype: number
+---
+{% endhighlight %}
+
+([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello3.yml))
 
 [installation]: {{ site.baseurl }}/docs/installation.html
 [reconfigured user roles]: {{ site.baseurl }}/docs/users.html
