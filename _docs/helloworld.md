@@ -53,7 +53,7 @@ that the package was installed successfully.
     [configuration] file.
 13. You should see "Hello, world!" with an exit button.
 
-(If you do not have a server yet you can [try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello.yml).)
+(If you do not have a server yet you can [try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello.yml){:target="_blank"}.)
 
 Now let's change the interview so that it asks the user a question.  Edit
 `docassemble_hello_world/docassemble/hello_world/data/questions.yml`
@@ -73,7 +73,7 @@ fields:
 ---
 {% endhighlight %}
 
-Then repeat steps 8 through 12, above.  (If you do not have your own server yet, you can [try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello2.yml).)
+Then repeat steps 8 through 12, above.  (If you do not have your own server yet, you can [try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello2.yml){:target="_blank"}.)
 
 It should now ask you "What is your planet's name?" and then greet
 your world by its name.
@@ -109,7 +109,7 @@ fields:
 ---
 {% endhighlight %}
 
-([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello3.yml))
+([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello3.yml){:target="_blank"})
 
 [installation]: {{ site.baseurl }}/docs/installation.html
 [reconfigured user roles]: {{ site.baseurl }}/docs/users.html
