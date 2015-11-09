@@ -89,14 +89,15 @@ question: |
   % if user_is_communist:
   I am referring your case to Mr. McCarthy.
   % else:
-  I am glad you are a true American
+  I am glad you are a true American.
   % endif
 {% endhighlight %}
 
 This may be useful in particular circumstances.  Note, however, that
 it does not make any change to the variables that are defined.  If the
 user refreshes the screen while looking at the `user_is_communist`
-question a second time, the interview will not ask the question again.
+question a second time, it will be as though `force_ask` never
+happened.
 
 Note also that no code that comes after `force_ask` will ever be
 executed.  That is why, in the example above, we set
@@ -142,6 +143,7 @@ This is useful if you do not want spaces in the filenames of your
 
 {% highlight yaml %}
 ---
+sets: user_done
 question: Thanks!
 subquestion: Here is your letter.
 attachment:
@@ -162,6 +164,7 @@ and you would refer to them by writing something like:
 
 {% highlight yaml %}
 ---
+sets: user_done
 question: You are done.
 subquestion: |
   To learn more about this topic, read
@@ -232,7 +235,7 @@ docassemble.base.util.set_locale('FR.utf8')
 docassemble.base.util.update_locale()
 {% endhighlight %}
 
-then the locale will be changed to `fr_FR.utf8`.
+then the [Python locale] will be changed to `fr_FR.utf8`.
 
 Running `update_locale()` is necessary in order to affect the behavior
 of functions like `currency()` and `currency_symbol()`.
@@ -243,11 +246,12 @@ there is a risk that between the time **docassemble** runs
 user on the same server may cause **docassemble** to run
 `update_locale()` and change it to the wrong setting.
 
-If you want to host different interviews on the same server that use
-different locale settings (e.g., to format a numbers as 1,000,000 in
+If you want to host different interviews that use different locale
+settings on the same server (e.g., to format a numbers as 1,000,000 in
 one interview, but 1.000.000 in another), you will need to make sure
-your [installation] runs the web server in a multi-process,
-single-thread configuration.  Then you can begin each interview with
+you run the **docassemble** web server in a multi-process,
+single-thread configuration.  (See [installation] for instructions on
+how to do that.)  Then you would need to begin each interview with
 `initial` code such as:
 
 {% highlight yaml %}
@@ -261,7 +265,7 @@ code: |
 ---
 {% endhighlight %}
 
-## Word and number functions
+## Simple translation of words
 
 ### word
 
@@ -292,20 +296,6 @@ u'fish'
 In your own Python code you may wish to use `word()` to help make your
 code multi-lingual.
 
-### ordinal_number
-
-* `ordinal_number(8)` returns `eighth`
-* `ordinal_number(11)` returns `11th`
-
-This function can be customized by calling
-`docassemble.base.util.update_ordinal_numbers()` and
-`docassemble.base.util.update_ordinal_function()`.
-
-### ordinal
-
-`ordinal(x)` returns `ordinal_number(x + 1)`.  This is useful when
-working with indexes that start at zero.
-
 ## Language-specific functions
 
 These functions behave differently according to the language and
@@ -326,9 +316,11 @@ question: |
 yesno: user_will_eat_dinner
 {% endhighlight %}
 
+There is also the `title_case()` function, which is described below.
+
 ### comma_and_list
 
-If `things` is a [Python] [list] with the elements
+If `things` is a [Python list] with the elements
 `['lions', 'tigers', 'bears']`, then:
 
 * `comma_and_list(things)` returns `lions, tigers, and bears`.
@@ -347,18 +339,17 @@ If `things` is a [Python list] with the elements
 ### currency
 
 If the locale is `US.utf8`, `currency(45.2)` returns `$45.20`.
+
 `currency(45)` returns `$45.00`, but `currency(45, decimals=False)`
 returns `$45`.
 
-The locale can be set in the [configuration] or through the
-`set_locale()` function.
-
 With `decimals` unset or equal to `True`, this function uses the
 `locale` module to express the currency.  However, `currency(x,
-decimals=False)` will return `currency_symbol()` followed by `x`
-formatted as an integer.  This is due to a limitation in the
-[locale module].  If the `currency` function does not meet your
-currency formatting needs, you may want to define your own.
+decimals=False)` will simply return `currency_symbol()` followed by
+`x` formatted as an integer, which might not be correct in your
+locale.  This is due to a limitation in the [locale module].  If the
+`currency` function does not meet your currency formatting needs, you
+may want to define your own.
 
 ### currency_symbol
 
@@ -399,6 +390,20 @@ This function can be customized by calling
 The English language version of
 this function passes through all arguments to the `en.noun.plural()`
 function of the [NodeBox English Linguistics Library].
+
+### ordinal_number
+
+* `ordinal_number(8)` returns `eighth`.
+* `ordinal_number(11)` returns `11th`.
+
+This function can be customized with
+`docassemble.base.util.update_ordinal_numbers()` and
+`docassemble.base.util.update_ordinal_function()`.
+
+### ordinal
+
+`ordinal(x)` returns `ordinal_number(x + 1)`.  This is useful when
+working with indexes that start at zero.
 
 ### period_list
 
@@ -451,7 +456,13 @@ docassemble.base.util.update_language_function('*', 'period_list', my_period_lis
 
 ### title_case
 
-`title_case("the importance of being ernest")` returns `The Importance of Being Ernest`.
+`title_case("the importance of being ernest")` returns `The Importance
+of Being Ernest`.
+
+The default version of this function passes through all arguments to
+the `titlecase()` function of the [titlecase] module.
+
+There is also the `capitalize()` function, which is described above.
 
 ### verb_past
 
@@ -533,3 +544,4 @@ docassemble.base.util.update_language_function('fr', 'her', docassemble.base.uti
 [Python locale]: https://docs.python.org/2/library/locale.html
 [locale module]: https://docs.python.org/2/library/locale.html
 [NodeBox English Linguistics Library]: https://www.nodebox.net/code/index.php/Linguistics
+[titlecase]: https://pypi.python.org/pypi/titlecase
