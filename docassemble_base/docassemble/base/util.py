@@ -146,18 +146,6 @@ ordinal_functions = {
     'en': ordinal_function_en
 }
 
-def ordinal(j):
-    return ordinal_number(j + 1)
-
-def ordinal_number(i):
-    num = unicode(i)
-    if this_thread.language in ordinal_numbers and num in ordinal_numbers[this_thread.language]:
-        return ordinal_numbers[this_thread.language][num]
-    if this_thread.language in ordinal_functions:
-        return ordinal_functions[this_thread.language](i)
-    else:
-        return default_ordinal_function(i)
-
 def words():
     return word_collection[this_thread.language]
 
@@ -282,6 +270,18 @@ def pickleable_objects(input_dict):
         output_dict[key] = input_dict[key]
     return(output_dict)
 
+def ordinal_number_default(i):
+    num = unicode(i)
+    if this_thread.language in ordinal_numbers and num in ordinal_numbers[this_thread.language]:
+        return ordinal_numbers[this_thread.language][num]
+    if this_thread.language in ordinal_functions:
+        return ordinal_functions[this_thread.language](i)
+    else:
+        return default_ordinal_function(i)
+
+def ordinal_default(j):
+    return ordinal_number(j + 1)
+
 def nice_number_default(num):
     if this_thread.language in nice_numbers and unicode(num) in nice_numbers[this_thread.language]:
         return nice_numbers[this_thread.language][unicode(num)]
@@ -401,6 +401,12 @@ language_functions = {
     'nice_number': {
         '*': nice_number_default
     },
+    'ordinal_number': {
+        '*': ordinal_number_default
+    },
+    'ordinal': {
+        '*': ordinal_default
+    },
     'capitalize': {
         '*': capitalize_default
     },
@@ -447,6 +453,8 @@ comma_and_list = language_function_constructor('comma_and_list')
 nice_number = language_function_constructor('nice_number')
 capitalize = language_function_constructor('capitalize')
 title_case = language_function_constructor('title_case')
+ordinal_number = language_function_constructor('ordinal_number')
+ordinal = language_function_constructor('ordinal')
 
 def underscore_to_space(a):
     return(re.sub('_', ' ', unicode(a)))
