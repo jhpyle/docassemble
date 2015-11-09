@@ -55,7 +55,9 @@ that the package was installed successfully.
 
 (If you do not have a server yet you can [try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello.yml){:target="_blank"}.)
 
-Now let's change the interview so that it asks the user a question.  Edit
+## Adding a question
+
+Now let's change the interview so that it asks the user a [question].  Edit
 `docassemble_hello_world/docassemble/hello_world/data/questions.yml`
 again and change the contents to:
 
@@ -78,7 +80,9 @@ Then repeat steps 8 through 12, above.  (If you do not have your own server yet,
 It should now ask you "What is your planet's name?" and then greet
 your world by its name.
 
-Now let's extend the interview by adding a `code` section that
+## Adding some Python code
+
+Now let's extend the interview by adding a [code] section that
 makes a calculation based on a number provided by the user.
 
 {% highlight yaml %}
@@ -109,10 +113,60 @@ fields:
 ---
 {% endhighlight %}
 
-([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello3.yml){:target="_blank"})
+([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello3.yml){:target="_blank"}.)
+
+## Creating a document
+
+Now let's provide the user with a [document] by adding an `attachment`.
+
+{% highlight yaml %}
+---
+question: Hello, ${ planet }!
+subquestion: |
+  I surmise that you have no more than ${ inhabitant_count }
+  inhabitants.
+attachment:
+  - name: A letter for the inhabitants of ${ planet }
+    filename: hello
+    metadata:
+      SingleSpacing: true
+    content: |
+      Dear ${ planet } residents,
+
+      Hello to all ${ inhabitant_count } of you.
+
+      Goodbye,
+
+      Your friend
+buttons:
+  - Exit: exit
+mandatory: true
+---
+question: |
+  What is your planet's name?
+fields:
+  - Your Planet: planet
+---
+code: |
+  if favorite_number == 42:
+    inhabitant_count = 2
+  else:
+    inhabitant_count = 2000 + favorite_number * 45
+---
+question: What is your favorite number?
+fields:
+  - Number: favorite_number
+    datatype: number
+---
+{% endhighlight %}
+
+([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello4.yml){:target="_blank"}.)
 
 [installation]: {{ site.baseurl }}/docs/installation.html
 [reconfigured user roles]: {{ site.baseurl }}/docs/users.html
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [WordPad]: http://windows.microsoft.com/en-us/windows/using-wordpad#1TC=windows-7
 [Notepad++]: https://notepad-plus-plus.org/
+[document]: {{ site.baseurl }}/docs/documents.html
+[code]: {{ site.baseurl }}/docs/code.html
+[question]: {{ site.baseurl }}/docs/questions.html

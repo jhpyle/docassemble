@@ -9,10 +9,12 @@ These installation instructions assume a Debian GNU/Linux machine, but
 If you can install the dependencies, you should be able to get
 **docassemble** to run.  It has not been tested on Windows (only
 Debian and Ubuntu), but all the dependencies are likely to be
-available for installation on Windows (see
-[MiKTeX](http://miktex.org/download) for LaTeX on Windows).
+available for installation on Windows (see [MiKTeX] for LaTeX on
+Windows).
 
-Since **docassemble** has a lot of [dependencies]({{ site.baseurl }}/docs/requirements.html), you may wish to [run it using Docker]({{ site.baseurl }}/docs/docker.html) rather than follow all of these installation instructions.
+Since **docassemble** has a lot of [dependencies], you may wish to
+[run it using Docker] rather than follow all of these installation
+instructions.
 
 ### Installing dependencies
 
@@ -25,16 +27,14 @@ The following dependencies can be installed from Debian packages:
 
 docassemble uses locale settings to format numbers, get currency
 symbols, and other things.  Do `echo $LANG` to see what locale you are
-using.  If it is not something like `en_US.UTF8`, you will want to set
+using.  If it is not something like `en_US.UTF-8`, you will want to set
 up an appropriate locale for your region:
 
     sudo dpkg-reconfigure locales
 
 (On Ubuntu, you may need to do `sudo apt-get install language-pack-en`.)
 
-To install the
-[Nodebox English Linguistics library](https://www.nodebox.net/code/index.php/Linguistics),
-do:
+To install the [Nodebox English Linguistics library], do:
 
     wget https://www.nodebox.net/code/data/media/linguistics.zip
     sudo unzip linguistics.zip -d /usr/local/lib/python2.7/dist-packages
@@ -100,7 +100,8 @@ Clone the repository (e.g., in your home directory):
 
     git clone https://github.com/jhpyle/docassemble
 
-This creates a directory called `docassemble`.  To install the docassemble packages, do the following as root:
+This creates a directory called `docassemble`.  To install the
+docassemble packages, do the following as root:
 
     cd ~/docassemble
     sudo ./compile.sh
@@ -152,8 +153,7 @@ Enable the Apache wsgi module if it is not already enabled:
     sudo a2enmod wsgi
 
 Create the root directory for user-contributed Python packages (see
-[site.USER_BASE](https://pythonhosted.org/setuptools/easy_install.html#custom-installation-locations)),
-and make sure it is writeable:
+[site.USER_BASE]), and make sure it is writeable:
 
     sudo mkdir -p /var/www/.local
     sudo chown www-data.www-data /var/www/.local
@@ -196,7 +196,7 @@ Set /etc/apache2/sites-available/000-default.conf to something like:
         SSLProxyEngine on
         DocumentRoot /var/www/html
 
-        WSGIDaemonProcess docassemble.webserver user=www-data group=www-data processes=5 threads=1
+        WSGIDaemonProcess docassemble.webserver user=www-data group=www-data threads=5
         WSGIScriptAlias /demo /var/lib/docassemble/webapp/flask.wsgi
         <Directory /var/lib/docassemble/webapp>
           WSGIProcessGroup docassemble.webserver
@@ -217,6 +217,12 @@ is a good idea to run it on HTTPS.  If you want to run docassemble on
 HTTP, copy the `WSGIDaemonProcess` line, the `WSGIScriptAlias` line,
 and the `Directory` section into the `<VirtualHost *:80>` section of
 your Apache configuration file.
+
+If your **docassemble** interviews are not thread-safe, for example
+because different interviews use different locales, change `threads=5`
+to `processes=5 threads=1`.  This will cause Apache to run WSGI in a
+"prefork" configuration.  This is slower than the multi-thread
+configuration.
 
 `docassemble` uses a SQL database.  Set up the database by running the
 following commands.  (You may wish to make changes to the database
@@ -264,3 +270,9 @@ Apache to restart the WSGI processes.
 If you get a standard Apache error message, look in
 /var/log/apache2/error.log.  If you get an abbreviated message, the
 error message is probably in /tmp/flask.log.
+
+[dependencies]: {{ site.baseurl }}/docs/requirements.html
+[run it using Docker]: {{ site.baseurl }}/docs/docker.html
+[MiKTeX]: http://miktex.org/download
+[Nodebox English Linguistics library]: https://www.nodebox.net/code/index.php/Linguistics
+[site.USER_BASE]: https://pythonhosted.org/setuptools/easy_install.html#custom-installation-locations

@@ -13,6 +13,13 @@ usable in languages other than English.
 By default, the active language and locale are determined by the
 `language` and `locale` settings in the **docassemble** [configuration].
 
+The value of `language` must be a two-character lowercase [ISO-639-1]
+code.  For example, Spanish is `es`, French is `fr`, and Arabic is `ar`.
+
+The value of `locale` must be a locale name without the language
+prefix, such as `US.utf8` or `DE.utf8`.  Any locale you use must be
+available on your system.
+
 The functions `set_language` and `set_locale` from
 `docassemble.base.util` will change the active language and locale.
 If you write functions that need to know the current language or
@@ -84,8 +91,6 @@ choices:
   - Español: es
 ---
 {% endhighlight %}
-
-
 
 ## Creating documents in languages other than English
 

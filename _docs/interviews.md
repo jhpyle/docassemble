@@ -4,22 +4,6 @@ title: How to write an interview
 short_title: Interviews
 ---
 
-This documentation is intended more as a reference guide than as a
-manual that you have to read before getting started.
-
-The best way to learn about **docassemble** is to study working
-examples.  There is a full-featured sample interview linked from the
-[demonstration page].  The full source code of that interview is
-available on the [demonstration page], and while you are using the
-interview you can click "Source" in the navigation bar to toggle
-display of the source code for the question and an explanation of the
-path **docassemble** took to decide to ask that question.
-
-Another good way to start learning about **docassemble** is to start
-creating your own interview.  There is a "Hello, world" [tutorial]
-that explains how to create a simple interview.  Once you get that
-working, you can experiment with adding more questions to it.
-
 ## What is a **docassemble** interview?
 
 An "interview" in **docassemble** is a [YAML] file that
@@ -191,6 +175,21 @@ typing in a URL like:
 
 > http://example.com/interview?i=docassemble.mypackage:data/questions/myinterview.yml
 
+## Leaving an interview and coming back
+
+If the user is not logged in through **docassemble**'s
+[username and password system], then the user's progress through an
+interview will be lost if the web browser is closed.
+
+If the user is logged in, however, then when the user logs in again,
+the user will resume the interview where he left off.
+
+When a user starts a new interview, a new "variable store" is created.
+A variable store is a [Python dictionary] containing the names of the
+variables that get defined during the course of the interview, such as
+`favorite_animal` in the example interview above.  The variable store
+is saved on the **docassemble** server.
+
 [demonstration page]: {{ site.baseurl}}/demo.html
 [tutorial]: {{ site.baseurl}}/docs/helloworld.html
 [configuration]: {{ site.baseurl}}/docs/configuration.html
@@ -209,3 +208,5 @@ typing in a URL like:
 [Roles]: {{ site.baseurl}}/docs/roles.html
 [Reserved Names]: {{ site.baseurl}}/docs/reserved.html
 [Errors]: {{ site.baseurl}}/docs/errors.html
+[username and password system]: {{ site.baseurl }}/docs/users.html
+[Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries

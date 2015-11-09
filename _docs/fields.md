@@ -317,29 +317,55 @@ The above example allows the user to "exit" the interview (be redirected
 to a specific web site that is pre-set in the **docassemble**
 [configuration] or "restart" the interview (go back to the beginning).
 
-There are four special button functions:
+There are six special button functions:
 
 * `restart`
 * `exit`
 * `leave`
 * `continue`
+* `refresh`
+* `signin`
 
 `restart` resets the user's variable store, except that any parameters
 that were originally passed through as URL parameters will be used again.
 
 `exit` means that the user's variable store will be reset and the user
-will be redirected to a pre-defined web site.  If the user tries to come
-back to the interview again, he will start the interview again, as
-though it had never been started.  Original URL parameters will be
-lost.
+will be redirected either to the URL given by the associated `url`
+text, or if no `url` is defined, to the `exit` page defined in the
+[configuration].  If the user tries to come back to the interview
+again, he will start the interview again, as though it had never been
+started.  Original URL parameters will be lost.
 
-`leave` means that the user will be redirected to a pre-defined web
-site, but the user's variable store will be left intact.  This means
-that if the user comes back to the interview again, he will pick up
-where he left off.
+For example:
+
+{% highlight yaml %}
+---
+question: |
+  Congratulations, you found Nemo!
+sets: user_done
+choices:
+  - Try again: restart
+  - Learn More: exit
+    url: https://en.wikipedia.org/wiki/Amphiprioninae
+---
+{% endhighlight %}
+
+[Mako] can be used in the `url` text.
+
+`leave` works like `exit` except that the user's variable store will be left
+intact.  This means that if the user comes back to the interview
+again, he will pick up where he left off.
 
 `continue` means that **docassemble** will look for another question
-in the interview that might provide the necessary variable.
+in the interview that might define the necessary variable.
+
+`refresh` re-runs the interview logic.  It has much the same effect as
+refreshing the page in the browser.  It is useful in multi-user
+interviews when the user is waiting for another user to finish
+entering information.  It can also be useful in interviews that use
+external data sources.
+
+`signin` redirects the user to the **docassemble** sign-in page.
 
 Instead of using `buttons`, you can use `choices` to get a radio list
 instead of a selection of buttons.
