@@ -1040,14 +1040,14 @@ class Question:
         return(has_code, result_list)
     def mark_as_answered(self, user_dict):
         user_dict['_internal']['answered'].add(self.name)
-        logmessage("1 Question name was " + self.name)
+        #logmessage("1 Question name was " + self.name)
         return
     def follow_multiple_choice(self, user_dict):
-        logmessage("follow_multiple_choice")
-        if self.name:
-            logmessage("question is " + self.name)
-        else:
-            logmessage("question has no name")
+        #logmessage("follow_multiple_choice")
+        #if self.name:
+        #    logmessage("question is " + self.name)
+        #else:
+        #    logmessage("question has no name")
         if self.name and self.name in user_dict['_internal']['answers']:
             self.mark_as_answered(user_dict)
             #logmessage("question in answers")
@@ -1057,15 +1057,15 @@ class Question:
             for key in the_choice:
                 if key == 'image':
                     continue
-                logmessage("Setting target")
+                #logmessage("Setting target")
                 target = the_choice[key]
                 break
             if target:
-                logmessage("Target defined")
+                #logmessage("Target defined")
                 if type(target) is str:
                     pass
                 elif isinstance(target, Question):
-                    logmessage("Reassigning question")
+                    #logmessage("Reassigning question")
                     # self.mark_as_answered(user_dict)
                     return(target.follow_multiple_choice(user_dict))
         return(self)
@@ -1298,7 +1298,7 @@ class Interview:
         seeking = kwargs.get('seeking', list())
         if debug:
             seeking.append({'variable': missingVariable})
-        logmessage("I don't have " + missingVariable)
+        #logmessage("I don't have " + missingVariable)
         if missingVariable in variable_stack:
             raise DAError("Infinite loop: " + missingVariable + " already looked for")
         variable_stack.add(missingVariable)
@@ -1327,8 +1327,8 @@ class Interview:
             #realComponents = realMissingVariable.split(".")
             components = dot_split.split(missingVariable)[1::2]
             realComponents = dot_split.split(realMissingVariable)[1::2]
-            logmessage("Vari Components are " + str(components))
-            logmessage("Real Components are " + str(realComponents))
+            #logmessage("Vari Components are " + str(components))
+            #logmessage("Real Components are " + str(realComponents))
             n = len(components)
             # if n == 1:
             #     if generic_needed:
@@ -1386,11 +1386,11 @@ class Interview:
             while True:
                 try:
                     for the_question, is_generic, the_x, the_i, missing_var in questions_to_try:
-                        logmessage("missing_var is " + str(missing_var))
-                        logmessage("Trying question of type " + str(the_question.question_type))
+                        #logmessage("missing_var is " + str(missing_var))
+                        #logmessage("Trying question of type " + str(the_question.question_type))
                         question = the_question.follow_multiple_choice(user_dict)
-                        logmessage("Back from follow_multiple_choice")
-                        logmessage("Trying a question of type " + str(question.question_type))
+                        #logmessage("Back from follow_multiple_choice")
+                        #logmessage("Trying a question of type " + str(question.question_type))
                         if is_generic:
                             #logmessage("Yes it's generic")
                             if question.is_generic:
@@ -1445,7 +1445,7 @@ class Interview:
                                 #logmessage("Try another method of setting the variable")
                                 continue
                         else:
-                            logmessage("Question type is " + question.question_type)
+                            #logmessage("Question type is " + question.question_type)
                             #logmessage("Ask:\n" + question.content.original_text)
                             if question.question_type == 'continue':
                                 continue

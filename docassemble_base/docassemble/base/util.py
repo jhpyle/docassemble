@@ -8,7 +8,7 @@ import datetime
 import locale
 import pkg_resources
 import titlecase
-#from docassemble.base.logger import logmessage
+from docassemble.base.logger import logmessage
 import babel.dates
 import locale
 import threading
@@ -288,7 +288,7 @@ def nice_number_default(num):
     return unicode(num)
 
 def capitalize_default(a):
-    if a and type(a) is str and len(a) > 1:
+    if a and (type(a) is str or type(a) is unicode) and len(a) > 1:
         return(a[0].upper() + a[1:])
     else:
         return(unicode(a))
