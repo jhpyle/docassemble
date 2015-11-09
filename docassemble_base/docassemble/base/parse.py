@@ -921,7 +921,7 @@ class Question:
             raise DAError("Unknown data type in process_attachment")
 
     def ask(self, user_dict, the_x, the_i):
-        logmessage("asking: " + str(self.subcontent.original_text))
+        #logmessage("asking: " + str(self.content.original_text))
         if the_x != 'None':
             exec("x = " + the_x, user_dict)
         if the_i != 'None':
