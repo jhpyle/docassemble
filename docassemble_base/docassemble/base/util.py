@@ -302,7 +302,7 @@ def currency_default(value, decimals=True):
     else:
         return currency_symbol() + locale.format("%d", value, grouping=True)
 
-def prefix_constructor(prefix, **kwargs):
+def prefix_constructor(prefix):
     def func(word, **kwargs):
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize(unicode(prefix)) + unicode(word)
@@ -310,7 +310,7 @@ def prefix_constructor(prefix, **kwargs):
             return unicode(prefix) + unicode(word)
     return func
 
-def double_prefix_constructor(prefix_one, prefix_two, **kwargs):
+def double_prefix_constructor(prefix_one, prefix_two):
     def func(word_one, word_two, **kwargs):
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize(unicode(prefix_one)) + unicode(word_one) + unicode(prefix_two) + unicode(word_two)
