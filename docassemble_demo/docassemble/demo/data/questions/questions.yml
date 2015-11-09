@@ -794,7 +794,7 @@ attachments:
       [FLUSHLEFT] ${ blank_signature }
       % endif
 
-      [FLUSHLEFT] ${ client }, ${ titlecase(case.role_of(client)) }
+      [FLUSHLEFT] ${ client }, ${ title_case(case.role_of(client)) }
 ---
 sets: all_done
 question: Hi there

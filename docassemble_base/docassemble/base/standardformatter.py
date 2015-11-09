@@ -331,12 +331,10 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
                     for key in choice:
                         if key == 'image':
                             continue
-                        if isinstance(choice[key], Question) and choice[key].question_type in ["exit", "continue", "restart", "refresh", "signin", "leave"]:
+                        if isinstance(choice[key], Question) and choice[key].question_type in ["exit", "continue", "restart", "refresh", "signin", "leave", "link"]:
                             if choice[key].question_type == "continue":
                                 btn_class = ' btn-primary'
-                            elif choice[key].question_type == "restart":
-                                btn_class = ' btn-warning'
-                            elif choice[key].question_type == "leave":
+                            elif choice[key].question_type in ["leave", "link", "restart"]:
                                 btn_class = ' btn-warning'
                             elif choice[key].question_type == "refresh":
                                 btn_class = ' btn-success'

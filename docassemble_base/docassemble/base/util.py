@@ -7,14 +7,14 @@ import mimetypes
 import datetime
 import locale
 import pkg_resources
-from titlecase import titlecase
+import titlecase
 #from docassemble.base.logger import logmessage
 import babel.dates
 import locale
 import threading
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'comma_list', 'words', 'word', 'get_language', 'set_language', 'get_locale', 'comma_and_list', 'need', 'possessify', 'possessify_long', 'nice_number', 'pickleable_objects', 'in_the', 'a_in_the_b', 'of_the', 'the', 'your', 'his', 'her', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'do_you', 'does_a_b', 'capitalize', 'underscore_to_space', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'static_image', 'titlecase', 'url_of']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'static_image', 'title_case', 'url_of']
 
 default_language = 'en'
 default_locale = 'US.utf8'
@@ -85,31 +85,35 @@ word_collection = {
 }
 
 ordinal_numbers = {
-    '0': 'zeroeth',
-    '1': 'first',
-    '2': 'second',
-    '3': 'third',
-    '4': 'fourth',
-    '5': 'fifth',
-    '6': 'sixth',
-    '7': 'seventh',
-    '8': 'eighth',
-    '9': 'ninth',
-    '10': 'tenth'
+    'en': {
+        '0': 'zeroeth',
+        '1': 'first',
+        '2': 'second',
+        '3': 'third',
+        '4': 'fourth',
+        '5': 'fifth',
+        '6': 'sixth',
+        '7': 'seventh',
+        '8': 'eighth',
+        '9': 'ninth',
+        '10': 'tenth'
+    }
 }
 
 nice_numbers = {
-    '0': 'zero',
-    '1': 'one',
-    '2': 'two',
-    '3': 'three',
-    '4': 'four',
-    '5': 'five',
-    '6': 'six',
-    '7': 'seven',
-    '8': 'eight',
-    '9': 'nine',
-    '10': 'ten'
+    'en': {
+        '0': 'zero',
+        '1': 'one',
+        '2': 'two',
+        '3': 'three',
+        '4': 'four',
+        '5': 'five',
+        '6': 'six',
+        '7': 'seven',
+        '8': 'eight',
+        '9': 'nine',
+        '10': 'ten'
+    }
 }
 
 def basic_url_of(text):
@@ -122,11 +126,11 @@ def set_url_finder(func):
     url_of = func
     return
 
-def ordinal(j):
-    i = j + 1
+def default_ordinal_function(i):
+    return unicode(i)
+
+def ordinal_function_en(i):
     num = unicode(i)
-    if num in ordinal_numbers:
-        return ordinal_numbers[num]
     if 10 <= i % 100 <= 20:
         return num + 'th'
     elif i % 10 == 3:
@@ -138,8 +142,21 @@ def ordinal(j):
     else:
         return num + 'th'
 
-def comma_list(*argv):
-    return ", ".join(map(str, argv))
+ordinal_functions = {
+    'en': ordinal_function_en
+}
+
+def ordinal(j):
+    return ordinal_number(j + 1)
+
+def ordinal_number(i):
+    num = unicode(i)
+    if this_thread.language in ordinal_numbers and num in ordinal_numbers[this_thread.language]:
+        return ordinal_numbers[this_thread.language][num]
+    if this_thread.language in ordinal_functions:
+        return ordinal_functions[this_thread.language](i)
+    else:
+        return default_ordinal_function(i)
 
 def words():
     return word_collection[this_thread.language]
@@ -148,12 +165,36 @@ def word(theword):
     try:
         return word_collection[this_thread.language][theword].decode('utf-8')
     except:
-        return theword
+        return unicode(theword)
+
+def update_language_function(lang, term, func):
+    if term not in language_functions:
+        language_functions[term] = dict()
+    language_functions[term][lang] = func
+    return
+
+def update_nice_numbers(lang, defs):
+    if lang not in nice_numbers:
+        nice_numbers[lang] = dict()
+    for number, word in defs.iteritems():
+        nice_numbers[lang][unicode(number)] = word
+    return
+
+def update_ordinal_numbers(lang, defs):
+    if lang not in ordinal_numbers:
+        ordinal_numbers[lang] = dict()
+    for number, word in defs.iteritems():
+        ordinal_numbers[lang][unicode(number)] = word
+    return
+
+def update_ordinal_function(lang, func):
+    ordinal_functions[lang] = func
+    return
 
 def update_word_collection(lang, defs):
     if lang not in word_collection:
         word_collection[lang] = dict()
-    for word, translation in defs:
+    for word, translation in defs.iteritems():
         word_collection[lang][word] = translation
     return
 
@@ -191,7 +232,7 @@ def update_locale():
     locale.setlocale(locale.LC_ALL, str(this_thread.language) + '_' + str(this_thread.this_locale))
     return
 
-def comma_and_list(*pargs, **kargs):
+def comma_and_list_en(*pargs, **kargs):
     if 'oxford' in kargs and kargs['oxford'] == False:
         extracomma = ""
     else:
@@ -231,19 +272,6 @@ def need(*pargs):
         argument
     return True
 
-def possessify(theword, target):
-    #language-specific methods can go here
-    return unicode(theword) + "'s " + unicode(target)
-
-def possessify_long(word, target):
-    #language-specific methods can go here
-    return the(target) + " " + of_the(word)
-
-def nice_number(num):
-    if unicode(num) in nice_numbers:
-        return nice_numbers[unicode(num)]
-    return unicode(num)
-
 def pickleable_objects(input_dict):
     output_dict = dict()
     for key in input_dict:
@@ -254,73 +282,171 @@ def pickleable_objects(input_dict):
         output_dict[key] = input_dict[key]
     return(output_dict)
 
-def in_the(a):
-    #language-specific methods can go here
-    return 'in ' + unicode(a)
+def nice_number_default(num):
+    if this_thread.language in nice_numbers and unicode(num) in nice_numbers[this_thread.language]:
+        return nice_numbers[this_thread.language][unicode(num)]
+    return unicode(num)
 
-def a_in_the_b(a, b):
-    #language-specific methods can go here
-    return unicode(a) + ' in the ' + unicode(b)
-
-def of_the(a):
-    #language-specific methods can go here
-    return 'of the ' + unicode(a)
-
-def the(a):
-    #language-specific methods can go here
-    return 'the ' + unicode(a)
-
-def your(a):
-    #language-specific methods can go here
-    return 'your ' + unicode(a)
-
-def his(a):
-    #language-specific methods can go here
-    return 'his ' + unicode(a)
-
-def her(a):
-    #language-specific methods can go here
-    return 'her ' + unicode(a)
-
-def currency_symbol():
-    #locale-specific methods can go here
-    return(locale.localeconv()['currency_symbol'])
-
-def verb_past(the_verb, **kwargs):
-    return(en.verb.past(the_verb, **kwargs))
-
-def verb_present(the_verb, **kwargs):
-    return(en.verb.present(the_verb, **kwargs))
-
-def noun_plural(the_noun):
-    return(en.noun.plural(the_noun))
-
-def indefinite_article(the_noun):
-    return(en.noun.article(the_noun))
-
-def do_you(a, **kwargs):
-    #logmessage("do_you kwargs are " + unicode(kwargs) + "\n")
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return('Do you ' + unicode(a))
-    else:
-        return('do you ' + unicode(a))
-        
-def does_a_b(a, b, **kwargs):
-    #logmessage("does_a_b kwargs are " + unicode(kwargs) + "\n")
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return('Does ' + unicode(a) + ' ' + unicode(b))
-    else:
-        return('does ' + unicode(a) + ' ' + unicode(b))
-
-def today():
-    return(babel.dates.format_date(datetime.date.today(), format='long', locale=this_thread.language))
-    #return(today.strftime('%x'))
-    
-def capitalize(a):
+def capitalize_default(a):
     if a and type(a) is str and len(a) > 1:
         return(a[0].upper() + a[1:])
     else:
         return(unicode(a))
+
+def currency_symbol_default():
+    return locale.localeconv()['currency_symbol'].decode('utf8')
+
+def currency_default(value, decimals=True):
+    if decimals:
+        return locale.currency(value, symbol=True, grouping=True).decode('utf8')
+    else:
+        return currency_symbol() + locale.format("%d", value, grouping=True)
+
+def prefix_constructor(prefix, **kwargs):
+    def func(word, **kwargs):
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return capitalize(unicode(prefix)) + unicode(word)
+        else:
+            return unicode(prefix) + unicode(word)
+    return func
+
+def double_prefix_constructor(prefix_one, prefix_two, **kwargs):
+    def func(word_one, word_two, **kwargs):
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return capitalize(unicode(prefix_one)) + unicode(word_one) + unicode(prefix_two) + unicode(word_two)
+        else:
+            return unicode(prefix_one) + unicode(word_one) + unicode(prefix_two) + unicode(word_two)
+    return func
+
+def prefix_constructor_two_arguments(prefix, **kwargs):
+    def func(word_one, word_two, **kwargs):
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return capitalize(unicode(prefix)) + unicode(word_one) + ' ' + unicode(word_two)
+        else:
+            return unicode(prefix) + unicode(word_one) + ' ' + unicode(word_two)
+    return func
+
+def middle_constructor(middle, **kwargs):
+    def func(a, b, **kwargs):
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return capitalize(unicode(a)) + unicode(middle) + unicode(b)
+        else:
+            return unicode(a) + unicode(middle) + unicode(b)
+    return func
+
+language_functions = {
+    'in_the': {
+        'en': prefix_constructor('in the ')
+    },
+    'a_in_the_b': {
+        'en': middle_constructor(' in the ')
+    },
+    'her': {
+        'en': prefix_constructor('her ')
+    },
+    'his': {
+        'en': prefix_constructor('his ')
+    },
+    'of_the': {
+        'en': prefix_constructor('of the ')
+    },
+    'your': {
+        'en': prefix_constructor('your ')
+    },
+    'the': {
+        'en': prefix_constructor('the ')
+    },
+    'does_a_b': {
+        'en': prefix_constructor_two_arguments('does ')
+    },
+    'do_you': {
+        'en': prefix_constructor('do you ')
+    },
+    'verb_past': {
+        'en': lambda x, **kwargs: en.verb.past(x, **kwargs)
+    },
+    'verb_present': {
+        'en': lambda x, **kwargs: en.verb.present(x, **kwargs)
+    },
+    'noun_plural': {
+        'en': lambda x, **kwargs: en.noun.plural(x, **kwargs)
+    },
+    'indefinite_article': {
+        'en': lambda x, **kwargs: en.noun.article(x, **kwargs)
+    },
+    'currency_symbol': {
+        '*': currency_symbol_default
+    },
+    'today': {
+        '*': lambda: babel.dates.format_date(datetime.date.today(), format='long', locale=this_thread.language)
+    },
+    'period_list': {
+        '*': lambda: [[12, word("Per Month")], [1, word("Per Year")], [52, word("Per Week")], [24, word("Twice Per Month")], [26, word("Every Two Weeks")]]
+    },
+    'currency': {
+        '*': currency_default
+    },
+    'possessify': {
+        'en': middle_constructor("'s ")
+    },
+    'possessify_long': {
+        'en': double_prefix_constructor('the ', ' of the ')
+    },
+    'comma_and_list': {
+        'en': comma_and_list_en
+    },
+    'comma_list': {
+        'en': lambda *argv: ", ".join(map(str, argv))
+    },
+    'nice_number': {
+        '*': nice_number_default
+    },
+    'capitalize': {
+        '*': capitalize_default
+    },
+    'title_case': {
+        '*': titlecase.titlecase
+    }
+}
+
+def language_function_constructor(term):
+    if term not in language_functions:
+        raise SystemError("term " + str(term) + " not in language_functions")
+    def func(*args, **kwargs):
+        if this_thread.language in language_functions[term]:
+            return language_functions[term][this_thread.language](*args, **kwargs)
+        if '*' in language_functions[term]:
+            return language_functions[term]['*'](*args, **kwargs)
+        if 'en' in language_functions[term]:
+            logmessage("Term " + str(term) + " is not defined for language " + str(this_thread.language))
+            return language_functions[term]['en'](*args, **kwargs)
+        raise SystemError("term " + str(term) + " not defined in language_functions for English or *")
+    return func
+    
+in_the = language_function_constructor('in_the')
+a_in_the_b = language_function_constructor('a_in_the_b')
+her = language_function_constructor('her')
+his = language_function_constructor('his')
+your  = language_function_constructor('your')
+of_the = language_function_constructor('of_the')
+the = language_function_constructor('the')
+do_you = language_function_constructor('do_you')
+does_a_b = language_function_constructor('does_a_b')
+verb_past = language_function_constructor('verb_past')
+verb_present = language_function_constructor('verb_present')
+noun_plural = language_function_constructor('noun_plural')
+indefinite_article = language_function_constructor('indefinite_article')
+today = language_function_constructor('today')
+period_list = language_function_constructor('period_list')
+currency = language_function_constructor('currency')
+currency_symbol = language_function_constructor('currency_symbol')
+possessify = language_function_constructor('possessify')
+possessify_long = language_function_constructor('possessify_long')
+comma_list = language_function_constructor('comma_list')
+comma_and_list = language_function_constructor('comma_and_list')
+nice_number = language_function_constructor('nice_number')
+capitalize = language_function_constructor('capitalize')
+title_case = language_function_constructor('title_case')
 
 def underscore_to_space(a):
     return(re.sub('_', ' ', unicode(a)))
@@ -337,14 +463,6 @@ def remove(variable_name):
 def force_ask(variable_name):
     raise NameError("name '" + variable_name + "' is not defined")
 
-def period_list():
-    return([[12, word("Per Month")], [1, word("Per Year")], [52, word("Per Week")], [24, word("Twice Per Month")], [26, word("Every Two Weeks")]])
-
-def currency(value, decimals=True):
-    if decimals:
-        return(locale.currency(value, symbol=True, grouping=True))
-    else:
-        return(currency_symbol() + locale.format("%d", value, grouping=True))
 
 def static_filename_path(filereference):
     return(package_data_filename(static_filename(filereference)))
@@ -394,10 +512,7 @@ def package_template_filename(the_file, **kwargs):
     return(None)
 
 def standard_question_filename(the_file):
-    #try:
     return(pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.base'), "docassemble/base/data/questions/" + str(the_file)))
-    #except:
-    #logmessage("Error retrieving question file\n")
     return(None)
 
 def package_data_filename(the_file):
@@ -430,24 +545,4 @@ def absolute_filename(the_file):
 def nodoublequote(text):
     return re.sub(r'"', '', unicode(text))
 
-# def blank_file_finder(*args, **kwargs):
-#     return(dict(filename="invalid"))
-
-# file_finder = blank_file_finder
-
-# def set_file_finder(func):
-#     global file_finder
-#     logmessage("set the file finder to " + str(func) + "\n")
-#     file_finder = func
-#     return
-
-# def blank_url_finder(*args, **kwargs):
-#     return('about:blank')
-
-# url_finder = blank_url_finder
-
-# def set_url_finder(func):
-#     global url_finder
-#     url_finder = func
-#     return
 # grep -E -R -o -h "word\(['\"][^\)]+\)" * | sed "s/^[^'\"]+['\"]//g"

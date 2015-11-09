@@ -118,6 +118,8 @@ docassemble.base.util.set_default_locale(daconfig.get('locale', 'US.utf8'))
 docassemble.base.util.set_language(daconfig.get('language', 'en'))
 docassemble.base.util.set_locale(daconfig.get('locale', 'US.utf8'))
 docassemble.base.util.update_locale()
+if 'currency symbol' in daconfig:
+    docassemble.base.util.update_language_function('*', 'currency_symbol', lambda: daconfig['currency symbol'])
 app.logger.warning("default sender is " + app.config['MAIL_DEFAULT_SENDER'] + "\n")
 exit_page = daconfig.get('exitpage', '/')
 UPLOAD_DIRECTORY = daconfig.get('uploads', '/usr/share/docassemble/files')
@@ -309,30 +311,20 @@ app.secret_key = daconfig.get('secretkey', '38ihfiFehfoU34mcq_4clirglw3g4o87')
 #                         for x in xrange(32))
 
 def logout():
-    user_manager =  current_app.user_manager
-    #logmessage("Entering custom logout")
-
-    # Send user_logged_out signal
+    user_manager = current_app.user_manager
     flask.ext.user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
-
-    # Use Flask-Login to sign out user
     logout_user()
-
     reset_session(session.get('i', default_yaml_filename))
-
-    # Prepare one-time system message
     flash(word('You have signed out successfully.'), 'success')
-
-    # Redirect to logout_next endpoint or '/'
-    next = request.args.get('next', _endpoint_url(user_manager.after_logout_endpoint))  # Get 'next' query param
+    next = request.args.get('next', _endpoint_url(user_manager.after_logout_endpoint))
     return redirect(next)
 
 def setup_app(app, db):
     from docassemble.webapp.users.forms import MyRegisterForm
     from docassemble.webapp.users.views import user_profile_page
-    from docassemble.webapp.users import models
-    from docassemble.webapp.pages import views
-    from docassemble.webapp.users import views
+    #from docassemble.webapp.users import models
+    #from docassemble.webapp.pages import views
+    #from docassemble.webapp.users import views
     db_adapter = SQLAlchemyAdapter(db, User, UserAuthClass=UserAuth)
     user_manager = UserManager(db_adapter, app, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout)
     return(app)
@@ -385,19 +377,14 @@ class GoogleSignIn(OAuthSignIn):
             base_url=None
         )
     def authorize(self):
-        #logmessage("Entering authorize")
         result = urlparse.parse_qs(request.data)
-        #logmessage("authorize: data is " + str())
         session['google_id'] = result.get('id', [None])[0]
         session['google_email'] = result.get('email', [None])[0]
-        #logmessage("authorize: id is " + str(result.get('id', None)))
         response = make_response(json.dumps('Successfully connected user.', 200))
         response.headers['Content-Type'] = 'application/json'
-        #logmessage("authorize: got to end")
         return response
     
     def callback(self):
-        #logmessage(str(session.get('credentials')))
         email = session.get('google_email')
         return (
             'google$' + str(session.get('google_id')),
@@ -437,37 +424,37 @@ class FacebookSignIn(OAuthSignIn):
             me.get('email')
         )
 
-class TwitterSignIn(OAuthSignIn):
-    def __init__(self):
-        super(TwitterSignIn, self).__init__('twitter')
-        self.service = OAuth1Service(
-            name='twitter',
-            consumer_key=self.consumer_id,
-            consumer_secret=self.consumer_secret,
-            request_token_url='https://api.twitter.com/oauth/request_token',
-            authorize_url='https://api.twitter.com/oauth/authorize',
-            access_token_url='https://api.twitter.com/oauth/access_token',
-            base_url='https://api.twitter.com/1.1/'
-        )
-    def authorize(self):
-        request_token = self.service.get_request_token(
-            params={'oauth_callback': self.get_callback_url()}
-        )
-        session['request_token'] = request_token
-        return redirect(self.service.get_authorize_url(request_token[0]))
-    def callback(self):
-        request_token = session.pop('request_token')
-        if 'oauth_verifier' not in request.args:
-            return None, None, None
-        oauth_session = self.service.get_auth_session(
-            request_token[0],
-            request_token[1],
-            data={'oauth_verifier': request.args['oauth_verifier']}
-        )
-        me = oauth_session.get('account/verify_credentials.json').json()
-        social_id = 'twitter$' + str(me.get('id'))
-        username = me.get('screen_name')
-        return social_id, username, None   # Twitter does not provide email
+# class TwitterSignIn(OAuthSignIn):
+#     def __init__(self):
+#         super(TwitterSignIn, self).__init__('twitter')
+#         self.service = OAuth1Service(
+#             name='twitter',
+#             consumer_key=self.consumer_id,
+#             consumer_secret=self.consumer_secret,
+#             request_token_url='https://api.twitter.com/oauth/request_token',
+#             authorize_url='https://api.twitter.com/oauth/authorize',
+#             access_token_url='https://api.twitter.com/oauth/access_token',
+#             base_url='https://api.twitter.com/1.1/'
+#         )
+#     def authorize(self):
+#         request_token = self.service.get_request_token(
+#             params={'oauth_callback': self.get_callback_url()}
+#         )
+#         session['request_token'] = request_token
+#         return redirect(self.service.get_authorize_url(request_token[0]))
+#     def callback(self):
+#         request_token = session.pop('request_token')
+#         if 'oauth_verifier' not in request.args:
+#             return None, None, None
+#         oauth_session = self.service.get_auth_session(
+#             request_token[0],
+#             request_token[1],
+#             data={'oauth_verifier': request.args['oauth_verifier']}
+#         )
+#         me = oauth_session.get('account/verify_credentials.json').json()
+#         social_id = 'twitter$' + str(me.get('id'))
+#         username = me.get('screen_name')
+#         return social_id, username, None   # Twitter does not provide email
 
 @app.route('/authorize/<provider>', methods=['POST', 'GET'])
 def oauth_authorize(provider):
@@ -498,65 +485,20 @@ def oauth_callback(provider):
         flash(word('Welcome!  You are logged in as ') + email, 'success')
     return redirect(url_for('index'))
 
-@app.route('/login')
-def login():
-    msg = Message("Test message",
-                  sender="Docassemble <no-reply@docassemble.org>",
-                  recipients=["jhpyle@gmail.com"])
-    msg.body = "Testing, testing"
-    msg.html = "<p>Testing, testing.  Someone used the login page.</p>"
-    mail.send(msg)
-    form = LoginForm()
-    return render_template('flask_user/login.html', form=form, login_form=form, title="Sign in")
+# @app.route('/login')
+# def login():
+#     msg = Message("Test message",
+#                   sender="Docassemble <no-reply@docassemble.org>",
+#                   recipients=["jhpyle@gmail.com"])
+#     msg.body = "Testing, testing"
+#     msg.html = "<p>Testing, testing.  Someone used the login page.</p>"
+#     mail.send(msg)
+#     form = LoginForm()
+#     return render_template('flask_user/login.html', form=form, login_form=form, title="Sign in")
 
 @app.route('/user/google-sign-in')
 def google_page():
     return render_template('flask_user/google_login.html', title="Sign in")
-
-# @app.route('/slogin')
-# def slogin():
-#     output = standard_start + """    <div class="container">"""
-#     output += "<h1>Welcome to " + daconfig['appname'] + "</h1>"
-#     output += '<div class="g-signin2" data-onsuccess="onSignIn"></div>'
-#     output += '<div><a href="' + url_for('oauth_authorize', provider='facebook') + '">' + word('Login with Facebook') + '</a></div>'
-#     output += '<div><a href="' + url_for('oauth_authorize', provider='twitter') + '">' + word('Login with Twitter') + '</a></div>'
-#     extra_script = """\
-#           <script src="https://apis.google.com/js/platform.js" async defer></script>
-#           <script>
-#           function onSignIn(googleUser) {
-#             var profile = googleUser.getBasicProfile();
-#             console.log('ID: ' + profile.getId());
-#             console.log('Name: ' + profile.getName());
-#             console.log('Image URL: ' + profile.getImageUrl());
-#             console.log('Email: ' + profile.getEmail());
-#             if (profile.getId()){
-#               $.ajax({
-#                 type: 'POST',
-#                 url: '""" + url_for('oauth_authorize', provider='google') + """',
-#                 contentType: 'application/octet-stream; charset=utf-8',
-#                 success: function(result) {
-#                   console.log(result);
-#                   window.location = '""" + url_for('oauth_callback', provider='google', _external=True) + """';
-#                 },
-#                 dataType: "json",
-#                 data: {
-#                   "id": profile.getId(),
-#                   "name": profile.getName(),
-#                   "image": profile.getImageUrl(),
-#                   "email": profile.getEmail()
-#                 }
-#               });
-#             }
-#             else if (authResult['error']) {
-#               console.log('There was an error: ' + authResult['error']);
-#             }
-#           }
-#           </script>
-# """
-#     output += """</div>""" + scripts + extra_script + """\n  </body>\n</html>"""
-#     response = make_response(output, 200)
-#     response.headers['Content-Type'] = 'text/html'
-#     return response
 
 @app.route("/exit", methods=['POST', 'GET'])
 def exit():
@@ -571,13 +513,11 @@ def index():
     yaml_parameter = request.args.get('i', None)
     session_parameter = request.args.get('session', None)
     if yaml_parameter is not None:
-        #logmessage("Found yaml: " + yaml_parameter)
         yaml_filename = yaml_parameter
         user_code, user_dict = reset_session(yaml_filename)
         session_id = session.get('uid', None)
         need_to_reset = True
     if session_parameter is not None:
-        #logmessage("Found session parameter: " + session_parameter)
         session_id = session_parameter
         session['uid'] = session_id
         user_code = session_id
@@ -585,15 +525,10 @@ def index():
         need_to_reset = True
     if session_id:
         user_code = session_id
-        #logmessage("Found user code " + session_id)
         steps, user_dict = fetch_user_dict(user_code, yaml_filename)
         if user_dict is None:
-            #logmessage("No dictionary for that code")
             del user_code
             del user_dict
-        #user_dict['appmail'] = mail
-    #else:
-        #logmessage("Did not find user code in session")
     try:
         user_dict
         user_code
@@ -940,13 +875,19 @@ def index():
     if interview_status.question.question_type == "exit":
         user_dict = initial_dict.copy()
         reset_user_dict(user_code, user_dict, yaml_filename)
-        return redirect(exit_page)
+        if interview_status.questionText != '':
+            return redirect(interview_status.questionText)
+        else:
+            return redirect(exit_page)
     if interview_status.question.question_type == "refresh":
         return redirect(url_for('index'))
     if interview_status.question.question_type == "signin":
         return redirect(url_for('user.login'))
     if interview_status.question.question_type == "leave":
-        return redirect(exit_page)
+        if interview_status.questionText != '':
+            return redirect(interview_status.questionText)
+        else:
+            return redirect(exit_page)
     user_dict['_internal']['answers'] = dict()
     # if 'x' in user_dict:
     #     del user_dict['x']
@@ -1256,7 +1197,6 @@ def reset_session(yaml_filename):
     session['i'] = yaml_filename
     session['uid'] = get_unique_name(yaml_filename)
     user_code = session['uid']
-    #logmessage("Saving a dictionary for code " + user_code)
     user_dict = initial_dict.copy()
     return(user_code, user_dict)
 

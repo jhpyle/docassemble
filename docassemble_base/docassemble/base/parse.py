@@ -375,7 +375,7 @@ class Question:
             self.is_initial = False
         if 'command' in data and data['command'] in ['exit', 'continue', 'restart', 'leave', 'refresh', 'signin']:
             self.question_type = data['command']
-            self.content = TextObject("")
+            self.content = TextObject(data.get('url', ''))
             return
         if 'objects' in data:
             if type(data['objects']) is not list:
@@ -921,20 +921,12 @@ class Question:
             raise DAError("Unknown data type in process_attachment")
 
     def ask(self, user_dict, the_x, the_i):
-        logmessage("asking: " + str(self.content.original_text))
+        logmessage("asking: " + str(self.subcontent.original_text))
         if the_x != 'None':
             exec("x = " + the_x, user_dict)
-            #logmessage("x is " + the_x)
         if the_i != 'None':
             exec("i = " + the_i, user_dict)
-            #logmessage("i is " + the_i)
-        if self.helptext is not None:
-            help_text_list = [{'heading': None, 'content': self.helptext.text(user_dict)}]
-        else:
-            help_text_list = list()
-        interview_help_text_list = self.interview.processed_helptext(user_dict, self.language)
-        if len(interview_help_text_list) > 0:
-            help_text_list.extend(interview_help_text_list)
+        question_text = self.content.text(user_dict)
         if self.subcontent is not None:
             subquestion = self.subcontent.text(user_dict)
         else:
@@ -943,6 +935,13 @@ class Question:
             undertext = self.undertext.text(user_dict)
         else:
             undertext = None
+        if self.helptext is not None:
+            help_text_list = [{'heading': None, 'content': self.helptext.text(user_dict)}]
+        else:
+            help_text_list = list()
+        interview_help_text_list = self.interview.processed_helptext(user_dict, self.language)
+        if len(interview_help_text_list) > 0:
+            help_text_list.extend(interview_help_text_list)
         if self.decorations is not None:
             decorations = list()
             for decoration_item in self.decorations:
@@ -952,9 +951,6 @@ class Question:
                 decorations.append(processed_item)
         else:
             decorations = None
-        if self.need is not None:
-            for need_entry in self.need:
-                exec(need_entry, user_dict)
         selectcompute = dict()
         defaults = dict()
         hints = dict()
@@ -989,7 +985,6 @@ class Question:
                     helptexts[field.number] = field.helptext.text(user_dict)
                 if hasattr(field, 'hint'):
                     hints[field.number] = field.hint.text(user_dict)
-        question_text = self.content.text(user_dict)
         attachment_text = self.processed_attachments(user_dict, the_x=the_x, the_i=the_i)
         if 'role' in user_dict:
             current_role = user_dict['role']
@@ -997,11 +992,11 @@ class Question:
                 if current_role not in self.role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave', 'refresh', 'signin']:
                     #logmessage("Calling role_event with " + ", ".join(self.fields_used))
                     user_dict['role_needed'] = self.role
-                    raise NameError("Need 'role_event'")
+                    raise NameError("name 'role_event' is not defined")
             elif self.interview.default_role is not None and current_role not in self.interview.default_role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave', 'refresh', 'signin']:
                 #logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
-                raise NameError("Need 'role_event'")
+                raise NameError("name 'role_event' is not defined")
         return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras})
     def processed_attachments(self, user_dict, **kwargs):
         return(list(map((lambda x: self.make_attachment(x, user_dict, **kwargs)), self.attachments)))
@@ -1016,8 +1011,7 @@ class Question:
             elif type(the_dict) is not dict:
                 raise DAError("Unknown data type for the_dict in parse_fields.  " + self.idebug(the_list))
             result_dict = dict()
-            for key in the_dict:
-                value = the_dict[key]
+            for key, value in the_dict.iteritems():
                 if key == 'image':
                     result_dict['image'] = value
                     continue
@@ -1030,8 +1024,12 @@ class Question:
                 elif type(value) == dict:
                     result_dict[key] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                 elif type(value) == str:
-                    if value in ["continue", "exit", "restart", "leave", "refresh", "signin"]:
+                    if value in ['exit', 'leave'] and 'url' in the_dict:
+                        result_dict[key] = Question({'command': value, 'url': the_dict['url']}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
+                    elif value in ["continue", "restart", "refresh", "signin", "exit", "leave"]:
                         result_dict[key] = Question({'command': value}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
+                    elif key == 'url' and 'link' in the_dict.values():
+                        pass
                     else:
                         result_dict[key] = value
                 elif type(value) == bool:
@@ -1302,7 +1300,7 @@ class Interview:
             seeking.append({'variable': missingVariable})
         logmessage("I don't have " + missingVariable)
         if missingVariable in variable_stack:
-            raise DAError("Infinite loop:" + missingVariable + " already looked for")
+            raise DAError("Infinite loop: " + missingVariable + " already looked for")
         variable_stack.add(missingVariable)
         found_generic = False
         realMissingVariable = missingVariable

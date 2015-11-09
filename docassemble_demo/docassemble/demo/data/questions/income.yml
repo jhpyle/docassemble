@@ -1,0 +1,21 @@
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  Your income
+subquestion: |
+  You earn ${ currency(user_income_amount * user_income_period, decimals=False) }
+  per year.
+mandatory: true
+---
+question: |
+  What is your income?
+fields:
+  - Income: user_income_amount
+    datatype: currency
+  - Period: user_income_period
+    datatype: number
+    code: |
+      period_list()
+---

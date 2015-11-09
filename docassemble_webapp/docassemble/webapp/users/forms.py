@@ -1,16 +1,9 @@
-# Copyright 2014 SolidBuilds.com. All rights reserved
-#
-# Authors: Ling Thio <ling.thio@gmail.com>
-
 from flask_user.forms import RegisterForm
 from flask.ext.wtf import Form
 from wtforms import StringField, SubmitField, ValidationError, BooleanField, SelectField
 from wtforms.validators import DataRequired, Email
 
 from docassemble.base.util import word
-
-# Define the User registration form
-# It augments the Flask-User RegisterForm with additional fields
 
 def fix_nickname(form, field):
     field.data = form.first_name.data + ' ' + form.last_name.data
@@ -31,7 +24,6 @@ class NewPrivilegeForm(Form):
         DataRequired(word('Name of New Privilege is required'))])
     submit = SubmitField(word('Add'))
 
-# Define the User profile form
 class UserProfileForm(Form):
     first_name = StringField(word('First name'), validators=[
         DataRequired(word('First name is required'))])
