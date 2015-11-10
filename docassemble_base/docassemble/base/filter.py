@@ -491,7 +491,7 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, use_pandoc=False, 
         result = converter.output_content.decode('utf-8')
     else:
         result = markdown.markdown(a, extensions=[SmartypantsExt(configs=dict())], output_format='html5')
-    result = re.sub('<a href', '<a target="_blank" href', result)
+    result = re.sub('<a href="(?!\?)', '<a target="_blank" href="', result)
     if do_terms and status is not None and status.question.language in status.question.interview.terms and len(status.question.interview.terms[status.question.language]) > 0 is not None and term_start.search(result):
         #logmessage("Found a term\n")
         result = term_match.sub((lambda x: add_terms(x.group(1), status.question.interview.terms[status.question.language])), result)

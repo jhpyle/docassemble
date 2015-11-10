@@ -45,7 +45,7 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
         sizing += 'height:auto;'    
     return('<img src="' + url + '" style="image-orientation:from-image;' + sizing + '"> ')
 
-def signature_html(status, debug):
+def signature_html(status, debug, root):
     output = '<div id="page"><div class="header" id="header"><a id="new" class="navbtn nav-left">' + word('Clear') + '</a><a id="save" class="navbtn nav-right">' + word('Done') + '</a><div class="title">' + word('Sign Your Name') + '</div></div><div class="toppart" id="toppart">'
     if status.questionText:
         output += markdown_to_html(status.questionText, trim=True)
@@ -55,13 +55,13 @@ def signature_html(status, debug):
     output += '<div id="content"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div><div class="bottompart" id="bottompart">'
     if (status.underText):
         output += markdown_to_html(status.underText, trim=True)
-    output += '</div></div><form id="daform" method="POST"><input type="hidden" name="_saveas" value="' + status.question.fields[0].saveas + '"><input type="hidden" id="_theImage" name="_theImage" value=""><input type="hidden" id="_success" name="_success" value="0">'
+    output += '</div></div><form action="' + root + '" id="daform" method="POST"><input type="hidden" name="_saveas" value="' + status.question.fields[0].saveas + '"><input type="hidden" id="_theImage" name="_theImage" value=""><input type="hidden" id="_success" name="_success" value="0">'
     #output += question_name_tag(status.question)
     output += tracker_tag(status)
     output += '</form>'
     return output
 
-def as_html(status, extra_scripts, extra_css, url_for, debug):
+def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     decorations = list()
     datatypes = dict()
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'help-inline'}
@@ -100,7 +100,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
     output += '<section id="question" class="tab-pane active col-md-6">'
     if status.question.question_type == "yesno":
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
-        output += '<form id="daform" method="POST"><fieldset>'
+        output += '<form action="' + root + '" id="daform" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
@@ -111,7 +111,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
         output += '</fieldset></form>'
     elif status.question.question_type == "noyes":
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
-        output += '<form id="daform" method="POST"><fieldset>'
+        output += '<form action="' + root + '" id="daform" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
@@ -195,7 +195,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
                     fieldlist.append('<div class="form-group"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>')
                 else:
                     fieldlist.append('<div class="form-group"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + field.label + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>')
-        output += '<form id="daform" class="form-horizontal" method="POST"' + enctype_string + '><fieldset>'
+        output += '<form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
@@ -222,7 +222,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
         output += '</fieldset></form>'
     elif status.question.question_type == "settrue":
         datatypes[status.question.fields[0].saveas] = "boolean"
-        output += '<form id="daform" method="POST"><fieldset>'
+        output += '<form action="' + root + '" id="daform" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
@@ -234,7 +234,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
     elif status.question.question_type == "multiple_choice":
         if hasattr(status.question.fields[0], 'datatype'):
             datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
-        output += '<form id="daform" method="POST"><fieldset>'
+        output += '<form action="' + root + '" id="daform" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
@@ -354,7 +354,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
     else:
-        output += '<form id="daform" class="form-horizontal" method="POST"><fieldset>'
+        output += '<form action="' + root + '" id="daform" class="form-horizontal" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
@@ -440,7 +440,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug):
     </div>
     <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
       <div class="panel-body">
-        <form id="emailform" class="form-horizontal" method="POST">
+        <form action=\"""" + root + """\" id="emailform" class="form-horizontal" method="POST">
           <fieldset>
             <div class="form-group"><label for="_attachment_email_address" class="control-label col-sm-4">""" + word('E-mail address') + """</label><div class="col-sm-8"><input class="form-control" type="email" name="_attachment_email_address" id="_attachment_email_address"></div></div>"""
             if rtfs_included:

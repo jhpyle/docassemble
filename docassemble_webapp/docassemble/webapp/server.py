@@ -4,7 +4,6 @@ import datetime
 import time
 import pip
 import shutil
-import urllib
 import codecs
 import docassemble.base.parse
 import docassemble.base.interview_cache
@@ -118,6 +117,9 @@ docassemble.base.util.set_default_locale(daconfig.get('locale', 'US.utf8'))
 docassemble.base.util.set_language(daconfig.get('language', 'en'))
 docassemble.base.util.set_locale(daconfig.get('locale', 'US.utf8'))
 docassemble.base.util.update_locale()
+ROOT = daconfig.get('root', None)
+if ROOT is None:
+    ROOT = '/'
 if 'currency symbol' in daconfig:
     docassemble.base.util.update_language_function('*', 'currency_symbol', lambda: daconfig['currency symbol'])
 app.logger.warning("default sender is " + app.config['MAIL_DEFAULT_SENDER'] + "\n")
@@ -535,9 +537,12 @@ def index():
     except:
         user_code, user_dict = reset_session(yaml_filename)
         steps = 0
+    action = None
     if len(request.args):
+        if 'action' in request.args:
+            action = json.loads(myb64unquote(request.args['action']))
         for argname in request.args:
-            if argname in ('filename', 'question', 'format', 'next', 'index', 'i'):
+            if argname in ('filename', 'question', 'format', 'next', 'index', 'i', 'action'):
                 continue
             if re.match('[A-Za-z_]+', argname):
                 exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)
@@ -566,7 +571,7 @@ def index():
         if the_user_dict is not None:
             logmessage("the_user_dict is not none!")
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
+            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action))
             interview.assemble(the_user_dict, interview_status)
             if len(interview_status.attachments) > 0:
                 #logmessage("there are attachments!")
@@ -622,7 +627,7 @@ def index():
         if the_user_dict is not None:
             #logmessage("the_user_dict is not none!")
             interview = docassemble.base.interview_cache.get_interview(request.args.get('filename'))
-            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
+            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action))
             interview.assemble(the_user_dict, interview_status)
             if len(interview_status.attachments) > 0:
                 #logmessage("there are attachments!")
@@ -655,7 +660,7 @@ def index():
                 should_assemble = True
                 break
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request), tracker=user_dict['_internal']['tracker'])
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action), tracker=user_dict['_internal']['tracker'])
     if should_assemble:
         logmessage("Reassembling.")
         interview.assemble(user_dict, interview_status)
@@ -935,12 +940,12 @@ def index():
     </script>"""
     if interview_status.question.question_type == "signature":
         output = '<!doctype html>\n<html lang="en">\n  <head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link rel="stylesheet" href="' + url_for('static', filename='app/signature.css') + '"><title>' + word('Sign Your Name') + '</title></head>\n  <body onresize="resizeCanvas()">'
-        output += signature_html(interview_status, DEBUG)
+        output += signature_html(interview_status, DEBUG, ROOT)
         output += """\n  </body>\n</html>"""
     else:
         extra_scripts = list()
         extra_css = list()
-        content = as_html(interview_status, extra_scripts, extra_css, url_for, DEBUG)
+        content = as_html(interview_status, extra_scripts, extra_css, url_for, DEBUG, ROOT)
         output = '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css"><link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" /><link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet"><link rel="stylesheet" href="' + url_for('static', filename='app/app.css') + '">'
         if DEBUG:
             output += '<link rel="stylesheet" href="' + url_for('static', filename='app/pygments.css') + '">'
@@ -1590,7 +1595,7 @@ def package_static(package, filename):
     extension, mimetype = get_ext_and_mimetype(the_file)
     return(send_file(the_file, mimetype=str(mimetype)))
 
-def current_info(yaml=None, req=None):
+def current_info(yaml=None, req=None, action=None):
     if current_user.is_authenticated and not current_user.is_anonymous:
         ext = dict(email=current_user.email, roles=[role.name for role in current_user.roles], theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization)
     else:
@@ -1600,6 +1605,8 @@ def current_info(yaml=None, req=None):
     else:
         url = req.base_url
     return_val = {'session': session['uid'], 'yaml_filename': yaml, 'url': url, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}}
+    if action is not None:
+        return_val.update(action)
     return_val['user'].update(ext)
     return(return_val)
 

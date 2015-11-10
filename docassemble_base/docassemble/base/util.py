@@ -11,10 +11,13 @@ import titlecase
 from docassemble.base.logger import logmessage
 import babel.dates
 import locale
+import json
 import threading
+import urllib
+import codecs
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'static_image', 'title_case', 'url_of']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action']
 
 default_language = 'en'
 default_locale = 'US.utf8'
@@ -471,7 +474,6 @@ def remove(variable_name):
 def force_ask(variable_name):
     raise NameError("name '" + variable_name + "' is not defined")
 
-
 def static_filename_path(filereference):
     return(package_data_filename(static_filename(filereference)))
 
@@ -552,5 +554,18 @@ def absolute_filename(the_file):
 
 def nodoublequote(text):
     return re.sub(r'"', '', unicode(text))
+
+def process_action(current_info):
+    if 'action' not in current_info:
+        return
+    the_action = current_info['action']
+    del current_info['action']
+    force_ask(the_action)
+
+def url_action(action, **kwargs):
+    return '?action=' + urllib.quote(myb64quote(json.dumps({'action': action, 'arguments': kwargs})))
+
+def myb64quote(text):
+    return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
 
 # grep -E -R -o -h "word\(['\"][^\)]+\)" * | sed "s/^[^'\"]+['\"]//g"

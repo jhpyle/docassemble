@@ -1,0 +1,43 @@
+---
+modules:
+  - docassemble.base.util
+---
+initial: true
+code: |
+  process_action(current_info)
+---
+mandatory: true
+code: |
+  if lucky_information_confirmed:
+    need(final_screen)
+---
+question: |
+  Please confirm the following information.
+subquestion: |
+  Your lucky number is ${ lucky_number }.
+  [Increase](${ url_action('set_number_event', increment=1) })
+  [Decrease](${ url_action('set_number_event', increment=-1) })
+
+  Also, your lucky color is ${ lucky_color }.
+  [Edit](${ url_action('lucky_color') })
+field: lucky_information_confirmed
+---
+question: What is your lucky color?
+fields:
+  - Color: lucky_color
+---
+sets: final_screen
+question: Thank you
+subquestion: |
+  You have confirmed that your lucky color is ${ lucky_color }
+  and your lucky number is ${ lucky_number }.
+buttons:
+  - Restart: restart
+---
+event: set_number_event
+code: |
+  lucky_number += current_info['arguments']['increment']
+---
+code: |
+  lucky_number = 2
+---

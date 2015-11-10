@@ -719,7 +719,10 @@ class Question:
                 self.subcontent = TextObject("")
             self.question_type = 'template'
         if 'code' in data:
-            self.question_type = 'code'
+            if 'event' in data:
+                self.question_type = 'event_code'
+            else:
+                self.question_type = 'code'
             if type(data['code']) == str:
                 try:
                     self.compute = compile(data['code'], '', 'exec')
@@ -1278,6 +1281,8 @@ class Interview:
                 if question_result['type'] == 'continue':
                     #logmessage("Continuing after asking for " + missingVariable + "...")
                     continue
+                elif question_result['type'] == 'refresh':
+                    PPP
                 else:
                     #pp = pprint.PrettyPrinter(indent=4)
                     #logmessage("Need to ask:\n  " + question_result['question_text'] + "\n" + "type is " + str(question_result['question'].question_type) + "\n" + pp.pformat(question_result) + "\n" + pp.pformat(question_result['question']))
@@ -1424,7 +1429,7 @@ class Interview:
                             exec(question.fields[0].saveas + ' = DATemplate(' + "'" + question.fields[0].saveas + "', content=" + '"""' + question.content.text(user_dict).rstrip().encode('unicode_escape') + '""", subject="""' + question.subcontent.text(user_dict).rstrip().encode('unicode_escape') + '""")', user_dict)
                             #question.mark_as_answered(user_dict)
                             return({'type': 'continue'})
-                        if question.question_type == "code":
+                        if question.question_type in ["code", "event_code"]:
                             #logmessage("Running some code:\n\n" + question.sourcecode)
                             if is_generic:
                                 if the_x != 'None':
@@ -1437,6 +1442,8 @@ class Interview:
                             #logmessage("the missing variable is " + str(missing_var))
                             if missing_var in variable_stack:
                                 variable_stack.remove(missing_var)
+                            if question.question_type == 'event_code':
+                                return({'type': 'continue'})
                             try:
                                 eval(missing_var, user_dict)
                                 question.mark_as_answered(user_dict)

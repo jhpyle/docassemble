@@ -1,0 +1,36 @@
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - user: Individual
+---
+initial: true
+code: |
+  process_action(current_info)
+---
+question: |
+  What's your name?
+fields:
+  - First: user.name.first
+  - Last: user.name.last
+---
+code: |
+  lucky_number = 2
+---
+question: |
+  Hello, ${ user }!
+subquestion: |
+  Your lucky number is ${ lucky_number }.
+
+  [Visit Google](http://google.com)
+  
+  [Add to the lucky number](${ url_action('set_number_event', increment=2) })
+buttons:
+  - Check: refresh
+mandatory: true
+---
+event: set_number_event
+code: |
+  lucky_number += current_info['arguments']['increment']
+---
