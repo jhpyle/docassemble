@@ -26,28 +26,24 @@ A better way is to take advantage of the **docassemble** object,
 
 {% highlight yaml %}
 ---
-include:
-  - docassemble.base:data/questions/basic-questions.yml
+modules:
+  - docassemble.base.legal
 ---
-question: What's your name?
+objects:
+  - user: Individual
+---
+question: |
+  What's your name?
 fields:
   - First: user.name.first
   - Last: user.name.last
 ---
 question: |
-  Hello, ${ user.name }!
+  Hello, ${ user }!
 mandatory: true
+---
 {% endhighlight %}
 
-Loading the `basic-questions.yml` file means that your code can assume
-that the `user` variable is an object of type `Individual`.
 
-And in fact, it is even easier than that.  You can write:
-
-    Hello, ${ user }!
-
-instead.
-
-(to be continued...)
 
 [object-oriented programming]: https://en.wikipedia.org/wiki/Object-oriented_programming
