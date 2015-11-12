@@ -47,3 +47,19 @@ a.sourceactive {
     background-color: #080808;
     background-image: linear-gradient(to bottom, #080808 0px, #0F0F0F 100%);
 }
+.form-group.required .control-label:after {
+    position: absolute;
+    content: '*';
+    color: red;
+    right:5px;
+    top:0;
+}
+.form-group.required.greyedout .control-label:after { 
+    display: none;
+}
+.form-group.greyedout .control-label { 
+    color: #999999;
+}
+.daselect {
+    margin-top: 7px;
+}

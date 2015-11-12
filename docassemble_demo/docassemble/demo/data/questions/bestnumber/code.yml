@@ -1,0 +1,19 @@
+---
+modules:
+  - docassemble.base.util
+---
+initial: true
+code: |
+  set_language(user_language)
+  need(final_screen)
+---
+question: |
+  What language do you speak?  (¿Qué idioma habla?)
+choices:
+  - English: en
+  - Español: es
+field: user_language
+---
+code: |
+  best_number = favorite_number + 1
+---

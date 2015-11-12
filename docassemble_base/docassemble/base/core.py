@@ -2,6 +2,7 @@ import string
 import random
 from docassemble.base.logger import logmessage
 import re
+import codecs
 from docassemble.base.util import possessify, possessify_long, a_in_the_b, your, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DAFile', 'DAFileCollection', 'DAFileList']
@@ -125,6 +126,8 @@ class DAList(DAObject):
         if not self.gathering:
             self.gathered
         return comma_and_list(self.elements)        
+    def __setitem__(self, index, value):
+        return self.elements.__setitem__(index, value)
     def __getitem__(self, index):
         return self.elements[index]
     def __str__(self):
@@ -206,3 +209,35 @@ class DAFileList(DAList):
                     output += '[IMAGE ' + str(element.number) + ']' + "\n"
         return output
 
+def selections(*pargs, **kwargs):
+    to_exclude = set()
+    if 'exclude' in kwargs:
+        setify(kwargs['exclude'], to_exclude)
+    output = list()
+    seen = set()
+    for arg in pargs:
+        if isinstance(arg, DAList):
+            arg.gathered
+            the_list = arg.elements
+        elif type(arg) is list:
+            the_list = arg
+        else:
+            the_list = [arg]
+        for subarg in the_list:
+            if isinstance(subarg, DAObject) and subarg not in to_exclude and subarg not in seen:
+                output.append({myb64quote(subarg.instanceName): str(subarg)})
+                seen.add(subarg)
+    return output
+
+def myb64quote(text):
+    return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
+
+def setify(item, output=set()):
+    if isinstance(item, DAList):
+        setify(item.elements, output)
+    elif type(item) is list:
+        for subitem in item:
+            setify(subitem, output)
+    else:
+        output.add(item)
+    return output

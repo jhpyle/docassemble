@@ -1,5 +1,5 @@
-from docassemble.base.core import DAObject, DAList, DAFile, DAFileCollection, DAFileList
-from docassemble.base.util import comma_and_list, get_language, set_language, word, comma_list, ordinal, ordinal_number, need, nice_number, possessify, verb_past, verb_present, noun_plural, space_to_underscore, force_ask, period_list, currency, indefinite_article, today, nodoublequote, capitalize, title_case, url_of, do_you, does_a_b, your, her, his, the, in_the, a_in_the_b, of_the, get_locale, set_locale, process_action, url_action
+from docassemble.base.core import DAObject, DAList, DAFile, DAFileCollection, DAFileList, selections
+from docassemble.base.util import comma_and_list, get_language, set_language, word, comma_list, ordinal, ordinal_number, need, nice_number, possessify, verb_past, verb_present, noun_plural, space_to_underscore, force_ask, period_list, name_suffix, currency, indefinite_article, today, nodoublequote, capitalize, title_case, url_of, do_you, does_a_b, your, her, his, the, in_the, a_in_the_b, of_the, get_locale, set_locale, process_action, url_action
 from docassemble.base.filter import file_finder, url_finder, mail_variable, markdown_to_html
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
@@ -11,7 +11,7 @@ import sys
 import threading
 from decimal import Decimal
 
-__all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'RoleChangeTracker', 'DATemplate', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'set_language', 'word', 'comma_list', 'ordinal', 'ordinal_number', 'need', 'nice_number', 'verb_past', 'verb_present', 'noun_plural', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'indefinite_article', 'today', 'nodoublequote', 'capitalize', 'title_case', 'url_of', 'get_locale', 'set_locale', 'process_action', 'url_action']
+__all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'RoleChangeTracker', 'DATemplate', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'set_language', 'word', 'comma_list', 'ordinal', 'ordinal_number', 'need', 'nice_number', 'verb_past', 'verb_present', 'noun_plural', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'indefinite_article', 'today', 'nodoublequote', 'capitalize', 'title_case', 'url_of', 'get_locale', 'set_locale', 'process_action', 'url_action', 'selections']
 
 this_thread = threading.local()
 this_thread.user = None
@@ -48,6 +48,17 @@ class Case(DAObject):
                     if indiv is party:
                         return partyname
         return 'third party'
+    def all_known_people(self):
+        output_list = list()
+        for partyname in ['plaintiff', 'defendant', 'petitioner', 'respondent']:
+            if hasattr(self, partyname):
+                for party in getattr(self, partyname).elements:
+                    if party not in output_list and party.identified():
+                        output_list.append(party)
+                        for child in party.child.elements:
+                            if child not in output_list and child.identified():
+                                output_list.append(child)
+        return(output_list)
     def parties(self):
         output_list = list()
         for partyname in ['plaintiff', 'defendant', 'petitioner', 'respondent']:
@@ -142,12 +153,27 @@ class Name(DAObject):
         return(self.full())
 
 class IndividualName(Name):
-    def full(self):
-        return(self.first + " " + self.last)
+    def full(self, middle='initial', use_suffix=True):
+        names = [self.first]
+        if hasattr(self, 'middle') and len(self.middle):
+            if middle is False or middle is None:
+                pass
+            elif middle == 'initial':
+                names.append(self.middle[0] + '.')
+            else:
+                names.append(self.middle)
+        if hasattr(self, 'last') and len(self.last):
+            names.append(self.last)
+        if hasattr(self, 'suffix') and use_suffix and len(self.suffix):
+            names.append(self.suffix)
+        return(" ".join(names))
     def firstlast(self):
         return(self.first + " " + self.last)
     def lastfirst(self):
-        return(self.last + ", " + self.first)
+        output = self.last + ", " + self.first
+        if hasattr(self, 'suffix'):
+            output += " " + self.suffix
+        return output
     def __str__(self):
         return(self.full())
     def __repr__(self):
@@ -245,6 +271,10 @@ class Individual(Person):
         self.initializeAttribute(name='asset', objectType=Asset)
         self.initializeAttribute(name='expense', objectType=Expense)
         return super(Individual, self).init()
+    def identified(self):
+        if hasattr(self.name, 'first'):
+            return True
+        return False
     def possessive(self, target):
         if self is this_thread.user:
             return your(target)

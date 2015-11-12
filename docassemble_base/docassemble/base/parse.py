@@ -8,6 +8,7 @@ import httplib2
 import datetime
 import operator
 import pprint
+import codecs
 import docassemble.base.filter
 from docassemble.base.error import DAError, MandatoryQuestion
 from docassemble.base.util import pickleable_objects, word, get_language
@@ -237,6 +238,8 @@ class Field:
             self.datatype = data['type']
         if 'choicetype' in data:
             self.choicetype = data['choicetype']
+        if 'disable others' in data:
+            self.disableothers = data['disable others']
         if 'default' in data:
             self.default = data['default']
         if 'hint' in data:
@@ -297,6 +300,7 @@ class Question:
         self.fields_used = set()
         self.names_used = set()
         if 'default language' in data:
+            should_append = False
             self.from_source.set_language(data['default language'])
         if 'language' in data:
             self.language = data['language']
@@ -730,7 +734,8 @@ class Question:
                 except:
                     logmessage("Compile error in code:\n" + unicode(data['code']) + "\n" + str(sys.exc_info()[0]))
                     raise
-                find_fields_in(data['code'], self.fields_used, self.names_used)
+                if self.question_type == 'code':
+                    find_fields_in(data['code'], self.fields_used, self.names_used)
             else:
                 raise DAError("A code section must be text, not a list or a dictionary." + self.idebug(data))
         if 'fields' in data:
@@ -748,6 +753,8 @@ class Question:
                             elif key == 'default' or key == 'hint' or key == 'help':
                                 if type(field[key]) is not dict and type(field[key]) is not list:
                                     field_info[key] = TextObject(definitions + unicode(field[key]))
+                            elif key == 'disable others':
+                                field_info['disable others'] = True
                             elif key == 'datatype':
                                 field_info['type'] = field[key]
                                 if field[key] in ['yesno', 'yesnowide'] and 'required' not in field_info:
@@ -929,6 +936,9 @@ class Question:
             exec("x = " + the_x, user_dict)
         if the_i != 'None':
             exec("i = " + the_i, user_dict)
+        if self.need is not None:
+            for need_code in self.need:
+                exec(need_code, user_dict)
         question_text = self.content.text(user_dict)
         if self.subcontent is not None:
             subquestion = self.subcontent.text(user_dict)
@@ -972,6 +982,22 @@ class Question:
                 selectcompute[field.number] = selections
             if hasattr(field, 'choicetype') and field.choicetype == 'compute':
                 selectcompute[field.number] = process_selections(eval(field.selections['compute'], user_dict))
+            if hasattr(field, 'datatype') and field.datatype == 'object':
+                if field.number not in selectcompute:
+                    raise DAError("datatype was set to object but no code was provided")
+                string = "_internal['objselections'][" + repr(field.saveas) + "] = dict()"
+                logmessage("Doing " + string)
+                try:
+                    exec(string, user_dict)
+                    for selection in selectcompute[field.number]:
+                        key = selection[0]
+                        #logmessage("key is " + str(key))
+                        real_key = codecs.decode(key, 'base64').decode('utf-8')
+                        string = "_internal['objselections'][" + repr(field.saveas) + "][" + repr(key) + "] = " + real_key
+                        logmessage("Doing " + string)
+                        exec(string, user_dict)
+                except:
+                    raise DAError("Failure while processing field with datatype of object")
             if hasattr(field, 'extras'):
                 for key in ['note', 'html', 'script', 'css']:
                     if key in field.extras:
@@ -1254,6 +1280,21 @@ class Interview:
                     if question.name and question.name in user_dict['_internal']['answered']:
                         #logmessage("Skipping " + question.name + " because answered")
                         continue
+                    if question.question_type == "objects":
+                        for keyvalue in question.objects:
+                            for variable in keyvalue:
+                                object_type = keyvalue[variable]
+                                if re.search(r"\.", variable):
+                                    m = re.search(r"(.*)\.(.*)", variable)
+                                    variable = m.group(1)
+                                    attribute = m.group(2)
+                                    command = variable + ".initializeAttribute(name='" + attribute + "', objectType=" + object_type + ")"
+                                    #logmessage("Running " + command)
+                                    exec(command, user_dict)
+                                else:
+                                    command = variable + ' = ' + object_type + '("' + variable + '")'
+                                    exec(command, user_dict)
+                        question.mark_as_answered(user_dict)
                     if question.question_type == 'code' and question.is_mandatory:
                         if debug:
                             interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
@@ -1423,7 +1464,7 @@ class Interview:
                                     else:
                                         command = variable + ' = ' + object_type + '("' + variable + '")'
                                         exec(command, user_dict)
-                            #question.mark_as_answered(user_dict)
+                            question.mark_as_answered(user_dict)
                             return({'type': 'continue'})
                         if question.question_type == "template":
                             exec(question.fields[0].saveas + ' = DATemplate(' + "'" + question.fields[0].saveas + "', content=" + '"""' + question.content.text(user_dict).rstrip().encode('unicode_escape') + '""", subject="""' + question.subcontent.text(user_dict).rstrip().encode('unicode_escape') + '""")', user_dict)

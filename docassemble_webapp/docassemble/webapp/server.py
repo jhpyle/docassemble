@@ -83,7 +83,7 @@ app.config['MAIL_SERVER'] = daconfig['mail'].get('server', 'localhost')
 app.config['MAIL_PORT'] = daconfig['mail'].get('port', 25)
 app.config['MAIL_USE_SSL'] = daconfig['mail'].get('use_ssl', False)
 app.config['MAIL_USE_TLS'] = daconfig['mail'].get('use_tls', False)
-app.config['ADMINS'] = [daconfig.get('admin_address', None)]
+#app.config['ADMINS'] = [daconfig.get('admin_address', None)]
 app.config['APP_SYSTEM_ERROR_SUBJECT_LINE'] = app.config['APP_NAME'] + " system error"
 app.config['APPLICATION_ROOT'] = daconfig.get('root', '/demo')
 app.config['CSRF_ENABLED'] = False
@@ -130,9 +130,9 @@ SHOW_LOGIN = daconfig.get('show_login', True)
 #USER_PACKAGES = daconfig.get('user_packages', '/var/lib/docassemble/dist-packages')
 #sys.path.append(USER_PACKAGES)
 if USE_PROGRESS_BAR:
-    initial_dict = dict(_internal=dict(progress=0, tracker=0, answered=set(), answers=dict()), url_args=dict())
+    initial_dict = dict(_internal=dict(progress=0, tracker=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
 else:
-    initial_dict = dict(_internal=dict(tracker=0, answered=set(), answers=dict()), url_args=dict())
+    initial_dict = dict(_internal=dict(tracker=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
 if 'initial_dict' in daconfig:
     initial_dict.update(daconfig['initial_dict'])
 LOGFILE = daconfig.get('flask_log', '/tmp/flask.log')
@@ -813,8 +813,9 @@ def index():
             key = key + bracket
         else:
             real_key = key
+        #logmessage("Real key is " + real_key + " and key is " + key)
         if real_key in known_datatypes:
-            #logmessage("key is in datatypes: " + known_datatypes[key])
+            #logmessage("key " + real_key + "is in datatypes: " + known_datatypes[key])
             if known_datatypes[real_key] in ['boolean', 'checkboxes', 'yesno', 'noyes', 'yesnowide', 'noyeswide']:
                 if data == "True":
                     data = "True"
@@ -828,12 +829,18 @@ def index():
                 if data == '':
                     data = 0
                 data = "float(" + repr(data) + ")"
+            elif known_datatypes[key] in ['object']:
+                if data == '':
+                    continue
+                #logmessage("Got to here")
+                data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
             else:
                 data = repr(data)
         elif key == "_multiple_choice":
+            #logmessage("key is multiple choice")
             data = "int(" + repr(data) + ")"
         else:
-            #logmessage("key is not in datatypes")
+            #logmessage("key is not in datatypes where datatypes is " + str(known_datatypes))
             data = repr(data)
         if key == "_multiple_choice":
             #interview.assemble(user_dict, interview_status)
@@ -845,7 +852,7 @@ def index():
                 #continue
                 #error_messages.append(("error", "Error: multiple choice values were supplied, but docassemble was not waiting for an answer to a multiple choice question."))
         string = key + ' = ' + data
-        #logmessage("Doing " + str(string))
+        logmessage("Doing " + str(string))
         try:
             exec(string, user_dict)
             changed = True

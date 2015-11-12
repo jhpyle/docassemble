@@ -1,0 +1,21 @@
+---
+default language: en
+---
+terms:
+  favorite number: The number you most like to calculate.
+---
+question: |
+  What is your favorite number?
+fields:
+  - Number: favorite_number
+    datatype: number
+---
+sets: final_screen
+question: |
+  All done.
+subquestion: |
+  The best number in the world is not ${ favorite_number },
+  but ${ best_number }.
+buttons:
+  - Restart: restart
+---

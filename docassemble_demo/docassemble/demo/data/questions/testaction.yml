@@ -11,6 +11,7 @@ code: |
   if lucky_information_confirmed:
     need(final_screen)
 ---
+field: lucky_information_confirmed
 question: |
   Please confirm the following information.
 subquestion: |
@@ -20,7 +21,6 @@ subquestion: |
 
   Also, your lucky color is ${ lucky_color }.
   [Edit](${ url_action('lucky_color') })
-field: lucky_information_confirmed
 ---
 question: What is your lucky color?
 fields:

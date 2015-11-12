@@ -288,6 +288,10 @@ fields:
   - Middle Name: x.name.middle
     required: False
   - Last Name: x.name.last
+  - Suffix: x.name.suffix
+    required: False
+    code: |
+      name_suffix()
 comment: >-
   If the object does not have a name yet, generic questions can refer
   to it by the name of the variable itself.  For example, suppose you
@@ -306,6 +310,10 @@ fields:
   - Middle Name: x[i].name.middle
     required: False
   - Last Name: x[i].name.last
+  - Suffix: x[i].name.suffix
+    required: False
+    code: |
+      name_suffix()
 comment: >-
   Generic questions can also use indices, for example to fill out the
   names of a list of people.  (E.g., case.plaintiff.)
@@ -319,11 +327,21 @@ generic list object: Individual
 question: |
   What is ${ x.possessive(ordinal(i) + " child") }'s name?
 fields:
+  - Somebody already mentioned: x.child[i]
+    datatype: object
+    required: False
+    disable others: true
+    code: |
+      selections(case.all_known_people(), exclude=[x, x.child])
   - First Name: x.child[i].name.first
   - Middle Name: x.child[i].name.middle
     required: False
   - Last Name: x.child[i].name.last
     default: ${ x.name.last }
+  - Suffix: x.child[i].name.suffix
+    required: False
+    code: |
+      name_suffix()
 comment: >-
   This illustrates the use of the "possessive" method of the class
   Individual.  Depending on who x is, this question will ask different

@@ -2,6 +2,7 @@ from docassemble.base.util import word, currency_symbol
 import docassemble.base.filter
 from docassemble.base.filter import markdown_to_html
 from docassemble.base.parse import Question, debug
+from docassemble.base.logger import logmessage
 import urllib
 import sys
 import os
@@ -64,6 +65,7 @@ def signature_html(status, debug, root):
 def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     decorations = list()
     datatypes = dict()
+    onchange = list()
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'help-inline'}
     if status.question.script is not None:
         extra_scripts.append(status.question.script)
@@ -127,6 +129,10 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         files = list()
         checkbox_validation = False
         for field in status.question.fields:
+            if field.required:
+                req_tag = ' required'
+            else:
+                req_tag = ''
             if hasattr(field, 'extras'):
                 if 'script' in field.extras and 'script' in status.extras:
                     extra_scripts.append(status.extras['script'][field.number])
@@ -135,7 +141,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                 #fieldlist.append("<div>datatype is " + str(field.datatype) + "</div>")
             if hasattr(field, 'datatype'):
                 if field.datatype == 'html':
-                    fieldlist.append('<div class="form-group"><div class="col-md-12">' + status.extras['html'][field.number] + '</div></div>')
+                    fieldlist.append('<div class="form-group' + req_tag +'"><div class="col-md-12">' + status.extras['html'][field.number] + '</div></div>')
                     continue
                 elif field.datatype == 'note':
                     fieldlist.append('<div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status) + '</div></div>')
@@ -150,6 +156,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
             else:
                 helptext_start = ''
                 helptext_end = ''
+            if hasattr(field, 'disableothers') and field.disableothers:
+                onchange.append(field.saveas)
             if field.required:
                 #sys.stderr.write(field.datatype + "\n")
                 validation_rules['rules'][field.saveas] = {'required': True}
@@ -188,13 +196,13 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                             checkboxes.append(field.saveas + "[" + myb64quote(pair[0]) + "]")
             if hasattr(field, 'label'):
                 if field.label == 'no label':
-                    fieldlist.append('<div class="form-group"><div class="col-md-12">' + input_for(status, field, wide=True) + '</div></div>')
+                    fieldlist.append('<div class="form-group' + req_tag +'"><div class="col-md-12">' + input_for(status, field, wide=True) + '</div></div>')
                 elif hasattr(field, 'datatype') and field.datatype == 'yesnowide':
                     fieldlist.append('<div class="row"><div class="col-md-12">' + input_for(status, field) + '</div></div>')
                 elif hasattr(field, 'datatype') and field.datatype == 'yesno':
-                    fieldlist.append('<div class="form-group"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>')
+                    fieldlist.append('<div class="form-group' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>')
                 else:
-                    fieldlist.append('<div class="form-group"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + field.label + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>')
+                    fieldlist.append('<div class="form-group' + req_tag +'"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + field.label + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>')
         output += '<form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
@@ -474,6 +482,24 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         output += '<div><small>' + markdown_to_html(attribution) + '</small></div>'
     output += '</section>'
     extra_scripts.append('<script>$("#daform").validate(' + json.dumps(validation_rules) + ');</script>')
+    for element_id_unescaped in onchange:
+        element_id = re.sub(r'(:|\.|\[|\]|,)', r'\\\\\1', element_id_unescaped)
+        the_script = """\
+<script>$("#""" + element_id + """").change(function(){
+if ($( this ).val() == ""){
+  $("#daform input:not(#""" + element_id + """):not(:hidden)").prop("disabled", false);
+  $("#daform select:not(#""" + element_id + """):not(:hidden)").prop("disabled", false);
+  $("#daform input:not(#""" + element_id + """):not(:hidden)").parent().parent().removeClass("greyedout");
+  $("#daform select:not(#""" + element_id + """):not(:hidden)").parent().parent().removeClass("greyedout");
+}
+else{
+  $("#daform input:not(#""" + element_id + """):not(:hidden)").prop("disabled", true);
+  $("#daform select:not(#""" + element_id + """):not(:hidden)").prop("disabled", true);
+  $("#daform input:not(#""" + element_id + """):not(:hidden)").parent().parent().addClass("greyedout");
+  $("#daform select:not(#""" + element_id + """):not(:hidden)").parent().parent().addClass("greyedout");
+}
+});</script>"""
+        extra_scripts.append(the_script)
     return output
 
 def noquote(string):
@@ -481,7 +507,7 @@ def noquote(string):
 
 def input_for(status, field, wide=False):
     output = ""
-    if field.number in status.defaults:
+    if field.number in status.defaults and type(status.defaults[field.number]) in [str, unicode, int, float]:
         defaultvalue = unicode(status.defaults[field.number])
     else:
         defaultvalue = None
@@ -522,7 +548,7 @@ def input_for(status, field, wide=False):
                 id_index += 1
             output += "".join(inner_fieldlist)
         else:
-            output += '<select name="' + field.saveas + '" id="' + field.saveas + '" >'
+            output += '<select class="daselect" name="' + field.saveas + '" id="' + field.saveas + '" >'
             output += '<option name="' + field.saveas + '" id="' + field.saveas + '" value="">' + word('Select...') + '</option>'
             for pair in pairlist:
                 if pair[0] is not None:

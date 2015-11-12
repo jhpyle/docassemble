@@ -17,7 +17,7 @@ import urllib
 import codecs
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action']
 
 default_language = 'en'
 default_locale = 'US.utf8'
@@ -386,6 +386,9 @@ language_functions = {
     'period_list': {
         '*': lambda: [[12, word("Per Month")], [1, word("Per Year")], [52, word("Per Week")], [24, word("Twice Per Month")], [26, word("Every Two Weeks")]]
     },
+    'name_suffix': {
+        '*': lambda: ['Jr', 'Sr', 'II', 'III', 'IV', 'V', 'VI']
+    },
     'currency': {
         '*': currency_default
     },
@@ -447,6 +450,7 @@ noun_plural = language_function_constructor('noun_plural')
 indefinite_article = language_function_constructor('indefinite_article')
 today = language_function_constructor('today')
 period_list = language_function_constructor('period_list')
+name_suffix = language_function_constructor('name_suffix')
 currency = language_function_constructor('currency')
 currency_symbol = language_function_constructor('currency_symbol')
 possessify = language_function_constructor('possessify')
