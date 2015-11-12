@@ -136,13 +136,13 @@ network drive.
 
 ### webapp
 
-This is the path to the WSGI file loaded by the web server.
+This is the path to the [WSGI] file loaded by the web server.
 
 **docassemble** needs to know this filename because the server needs
 to reset itself after an add-on package is updated.  This happens by
-"touch"ing (updating the modification time of) the WSGI file.
+"touch"ing (updating the modification time of) the [WSGI] file.
 
-If you are using a [multi-server arrangement], the WSGI file needs to be
+If you are using a [multi-server arrangement], the [WSGI] file needs to be
 stored on a central network drive.  When a package is updated, all
 servers need to reset, not just the server that happened to process
 the package update.
@@ -182,9 +182,13 @@ default_interview: docassemble.demo:data/questions/questions.yml
 
 ### flask_log
 
-/tmp/flask.log
+**docassemble** uses the [Flask] web framework.  This is the path to the
+[Flask] log file.  Most errors write to the standard web server error
+logs, but there are some that will only write to this log file.
 
 ### language and locale
+
+These directives set the default [language and locale settings] for **docassemble**.
 
 {% highlight yaml %}
 language: en
@@ -193,6 +197,12 @@ locale: US.utf8
 
 ### default_admin_account
 
+These settings are only used by the setup script `create_tables.py` in
+the `docassemble.webapp` as part of the [installation] of
+**docassemble**.  Using the information defined here, that script sets
+up a single account in the [user login system] with "admin"
+privileges.
+
 {% highlight yaml %}
 default_admin_account:
   nickname: admin
@@ -200,12 +210,32 @@ default_admin_account:
   password: password
 {% endhighlight %}
 
+After `create_tables.py` runs, you can delete the
+`default_admin_account` information from the configuration file.
+
 ### secretkey
 
-38ihfiFehfoU34mcq_4clirglw3g4o87
-### png_resolution and png_screen_resolution
-### show_login: true
+The [Flask] web framework needs a secret key in order to manage
+session information and provide [protection] against
+[cross-site request forgery].  Set the `secretkey` to a random value
+that cannot be guessed.
 
+### png_resolution and png_screen_resolution
+
+When users supply PDF files and **docassemble** includes those files
+within a [document], the PDF pages are converted to PNG images in
+order to be included within RTF files.  `png_resolution` defines the
+dots per inch to be used during this conversion.
+
+PDF files are also converted to PNG for previewing within the web app,
+but at a lower resolution.  `png_screen_resolution` defines the dots
+per inch to be used for conversion of PDF pages to PNG files for
+display in the web browser.
+
+### show_login
+
+If set to false, users will not see a "Sign in" link in the
+upper-right-hand corner of the web app.
 
 ## Enabling optional features
 
@@ -283,3 +313,10 @@ This symbol will be used in the user interface when a field has the
 [multi-server arrangement]: {{ site.baseurl }}/docs/scalability.html
 [modifier]: {{ site.baseurl }}/docs/modifiers.html
 [interview]: {{ site.baseurl }}/docs/interviews.html
+[WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
+[Flask]: http://flask.pocoo.org/
+[language and locale settings]: {{ site.baseurl }}/docs/language.html
+[user login system]: {{ site.baseurl }}/docs/users.html
+[protection]: http://flask-wtf.readthedocs.org/en/latest/csrf.html
+[cross-site request forgery]: https://en.wikipedia.org/wiki/Cross-site_request_forgery
+[document]: {{ site.baseurl }}/docs/documents.html

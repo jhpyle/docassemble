@@ -94,14 +94,13 @@ the right words to use, you can easily copy, paste, and edit an
 example.
 
 There are many text editors that have special features for editing
-[YAML] files.  On Windows, the best is
-[Notepad++](http://notepad-plus-plus.org/).
+[YAML] files.  On Windows, the best is [Notepad++].
 
 ### The full power of Python
 
 While interview authors do not need to by [Python] experts, authors
 who know [Python] (or are willing to learn [Python]) can extend the
-functionality of the interviews by writing [Python] classes.  This
+functionality of the interviews by writing [Python classes].  This
 allows the interviews to do anything [Python] can do (e.g., retrieve
 information from web services, interact with databases, send e-mail,
 interact with third-party APIs, etc.)
@@ -115,23 +114,25 @@ of questions that can be incorporated by reference into future
 interviews.
 
 An interview author writes a [YAML] file that is contained within a
-[Python] package.  Authors can incorporate the work of another author
-simply by installing the other author's [Python] package on the server
+[Python package].  Authors can incorporate the work of another author
+simply by [installing] the other author's [Python package] on the server
 and incorporating the author's interview questions or modules by
-reference.  The web interface allows [Python] packages to be installed
+reference.  The web interface allows [Python packages] to be installed
 either as .zip files or through the cloning of [GitHub] repositories.
 
 ### Multilingual
 
 All of the text presented to the user of the **docassemble** web
-application can be translated to a language other than English.
+application can be [translated] to a language other than English.
+**docassemble** supports the full use of [Unicode] characters in
+interviews.
 
 ### Multi-purpose
 
 At its core, **docassemble** is a multi-purpose expert system.  The
-logic engine of **docassemble** is the [Python] package
+logic engine of **docassemble** is the [Python package]
 `docassemble-base`, which provides an API.  The web application is a
-separate [Python] package, `docassemble-webapp`, which uses the API.
+separate [Python package], `docassemble-webapp`, which uses the API.
 This allows for a number of possible applications.  For example, the
 [Twilio API](https://www.twilio.com/docs/libraries) could be used
 with `docassemble-base` to conduct interviews over the phone (using a
@@ -171,29 +172,29 @@ database.
 In the web app, interviews are loaded into the app as Python
 subpackages of the **docassemble** package (e.g.,
 docassemble.hello-world).  Packages can be loaded directly from
-[GitHub](http://github.com) or from a .zip file.  This can be done
-entirely through the web interface.  The [YAML] interview file is a
+[GitHub] or from a .zip file.  This can be done
+entirely [through the web interface].  The [YAML] interview file is a
 data file within this package.
 
 To create a new **docassemble** interview, the author logs in through
-the web application's sign-in system and generates a new [Python]
+the web application's [sign-in system] and generates a new [Python]
 extension package, which the author downloads as a .zip file and
 unpacks on his or her computer.  The author writes interview questions
 by editing a file (typically `questions.yml`) that is located within
-the `data/questions` subfolder of the [Python] package.  If the author
+the `data/questions` subfolder of the [Python package].  If the author
 wishes to extend the functionality of the interview with [Python]
-code, he or she can edit a [Python] module (typically `objects.py`).
+code, he or she can edit a [Python module] (typically `objects.py`).
 
 The interview files are written in [YAML].  Within the [YAML] file,
 interview questions and document text are represented in [Markdown]
 enhanced with the [Mako] templating system.  [Mako] allows the full
-power of [Python] to be embedded into interview questions and document
-templates.  Documents are converted from [Markdown] into PDF, RTF, and
+power of [Python] to be embedded into interview [questions] and [document
+templates].  Documents are converted from [Markdown] into PDF, RTF, and
 HTML using [pandoc](http://johnmacfarlane.net/pandoc/).
 
 To test the interview, the author re-packs the [Python] subpackage as
-a .zip file and uploads it to a **docassemble** server.  Alternatively,
-the author can push the [Python] package to a [GitHub] repository and
+a .zip file and [uploads] it to a **docassemble** server.  Alternatively,
+the author can push the [Python package] to a [GitHub] repository and
 then tell the web application to install the package directly from
 [GitHub].  [GitHub] and Microsoft have developed a user-friendly
 [GitHub] application for Windows, which makes this process very easy.
@@ -201,11 +202,11 @@ then tell the web application to install the package directly from
 **docassemble** figures out which questions to ask by taking advantage
 of the exception-trapping features of [Python].  **docassemble** will
 try to assemble a document or process a logic statement, but when it
-encounters a variable that is undefined, a NameError exception is
+encounters a variable that is undefined, a [NameError] exception is
 triggered.  That exception is trapped and then **docassemble** looks
 for an interview question that provides the missing variable.  That
 question itself might depend on a variable that is undefined, which
-leads to another NameError exception, and then **docassemble** will
+leads to another [NameError] exception, and then **docassemble** will
 again look for an interview question that provides the missing
 variable, and so on.
 
@@ -217,14 +218,14 @@ only needs to take place the first time a [WSGI] process sees a given
 interview, or any time the interview's underlying [YAML] file is
 changed (which in a production environment is very rarely).  As the
 user answers questions in the web app, the interview state (containing
-the user's answers) is stored in a [Python] [dictionary] that is
+the user's answers) is stored in a [Python dictionary] that is
 [serialized] and saved to a database.  The next question is obtained
 by calling a method on the cached instance of the Interview object
-with the dictionary as an argument.  All the compiled code
+with the [dictionary] as an argument.  All the compiled code
 representing the logic of the interview remains in the memory of the
 [WSGI] process.
 
-Furthermore, because state is saved as a serialized object in a
+Furthermore, because state is saved as a [serialized object] in a
 database, multiple servers in a load-balanced arrangement can be used
 to serve the interviews.  Different servers could handle the same
 interview for the same user, just as different [WSGI] processes handle
@@ -237,7 +238,23 @@ the same interview on a single server.
 [GitHub]: https://github.com/
 [Mako]: http://www.makotemplates.org/
 [WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
+[Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [serialized]: https://docs.python.org/2/library/pickle.html
 [HotDocs]: https://en.wikipedia.org/wiki/HotDocs
 [A2J]: https://www.kentlaw.iit.edu/institutes-centers/center-for-access-to-justice-and-technology/a2j-author
+[Python package]: https://docs.python.org/2/tutorial/modules.html#packages
+[Python packages]: https://docs.python.org/2/tutorial/modules.html#packages
+[through the web interface]: {{ site.baseurl }}/docs/packages.html
+[installing]: {{ site.baseurl }}/docs/packages.html
+[Python classes]: https://docs.python.org/2/tutorial/classes.html
+[translated]: {{ site.baseurl }}/docs/language.html
+[Unicode]: https://en.wikipedia.org/wiki/Unicode
+[sign-in system]: {{ site.baseurl }}/docs/users.html
+[Python module]: https://docs.python.org/2/tutorial/modules.html
+[questions]: {{ site.baseurl }}/docs/questions.html
+[document templates]: {{ site.baseurl }}/docs/documents.html
+[uploads]: {{ site.baseurl }}/docs/packages.html
+[NameError]: https://docs.python.org/2/library/exceptions.html#exceptions.NameError
+[serialized object]: https://docs.python.org/2/library/pickle.html
+[Notepad++]: http://notepad-plus-plus.org/

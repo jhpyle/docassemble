@@ -169,8 +169,9 @@ Create the uploads directory:
     sudo mkdir -p /usr/share/docassemble/files
     sudo chown www-data.www-data /usr/share/docassemble/files
 
-Set up and edit the configuration file (e.g., to edit the default
-e-mail addresses):
+Set up and edit the [configuration] file.  At the very least, you should
+edit the `secretkey` value to something random and unique to your
+site.
 
     sudo mkdir -p /etc/docassemble
     sudo cp ~/docassemble/docassemble_base/config.yml /etc/docassemble/
@@ -237,10 +238,10 @@ buttons to work, you will need to register your site on
 [Google Developers Console](https://console.developers.google.com/)
 and on [Facebook Developers](https://developers.facebook.com/) and
 obtain IDs and secrets, which you supply to docassemble by editing
-/etc/docassemble/config.yml.
+the `/etc/docassemble/config.yml` [configuration] file.
 
-The /etc/docassemble/config.yml file also contains configuration for
-connecting to the Postgresql database and the mail server.
+The `/etc/docassemble/config.yml` file also contains settings for
+connecting to the PostgreSQL database and the mail server.
 
 Restart Apache:
 
@@ -276,3 +277,4 @@ error message is probably in /tmp/flask.log.
 [MiKTeX]: http://miktex.org/download
 [Nodebox English Linguistics library]: https://www.nodebox.net/code/index.php/Linguistics
 [site.USER_BASE]: https://pythonhosted.org/setuptools/easy_install.html#custom-installation-locations
+[configuration]: {{ site.baseurl }}/docs/config.html
