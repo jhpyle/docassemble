@@ -29,10 +29,12 @@ locale, use the `get_language()` and `get_locale()` function from the
 The `language` and `locale` settings have the following effects:
 
 * When **docassemble** looks for a `question` or `code` block that
-  define a variable, it first tries `question`s and `code` blocks for
-  which the `language` [modifier] is set to the active language.  If it
-  does not find any such `question`s or `code` blocks, it looks for
-  ones that do not have `language` [modifier] set.
+  defines a variable, it first tries `question`s and `code` blocks for
+  which the `language` [modifier] is set to the active language
+  (either explicitly or by operation of the `default language`
+  [initial block]).  If **docassemble** does not find any such
+  `question`s or `code` blocks, it looks for ones that do not have
+  `language` [modifier] set.
 * Built-in words like "Continue" for a continue button, or "Login" for
   the login link, can be translated into the active language.
   Whenever **docassemble** prints such a word or phrase, it calls the
@@ -70,7 +72,7 @@ correct values.
 If you use the `language` [modifier] or the `default language`
 [initial block], you will need to have `initial` code that calls
 `set_language()`.  **docassemble** does not remember the active
-language from one question to the next, but the `initial` code will
+language from one screen to the next, but the `initial` code will
 make sure that it is always set to the correct value.
 
 {% highlight yaml %}
@@ -92,6 +94,113 @@ choices:
 ---
 {% endhighlight %}
 
+If you are writing an interview that offers multiple language options,
+you may want to break out your interview into different files:
+
+* `code.yml` - for language-independent [initial blocks],
+  [interview logic], [questions], and [code blocks].
+* `en.yml` - for English-language `question`s and `terms`, with
+  `default language: en` as the first line.
+* `es.yml` - for Spanish-language `question`s and `terms`, with
+  `default language: es` as the first line.
+* `interview.yml` - the main file, which simply `include`s the above
+  three files.
+
+Below is an example of a multi-language interview that asks the user
+for a language, then asks for a number, then makes a statement about
+the number.  The interview is split into the four files listed above,
+and all files reside in a folder called `bestnumber` within the
+`data/questions` folder.
+
+The contents of `code.yml` are:
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.util
+---
+initial: true
+code: |
+  set_language(user_language)
+  need(final_screen)
+---
+question: |
+  What language do you speak?  (¿Qué idioma habla?)
+choices:
+  - English: en
+  - Español: es
+field: user_language
+---
+code: |
+  best_number = favorite_number + 1
+---
+{% endhighlight %}
+
+The contents of `en.yml` are:
+
+{% highlight yaml %}
+---
+default language: en
+---
+terms:
+  favorite number: The number you most like to calculate.
+---
+question: |
+  What is your favorite number?
+fields:
+  - Number: favorite_number
+    datatype: number
+---
+sets: final_screen
+question: |
+  All done.
+subquestion: |
+  The best number in the world is not ${ favorite_number },
+  but ${ best_number }.
+buttons:
+  - Restart: restart
+---
+{% endhighlight %}
+
+The contents of `es.yml` are:
+
+{% highlight yaml %}
+---
+default language: es
+---
+terms:
+  numero favorito: El número que más le guste para calcular.
+---
+question: |
+  ¿Cual es tu numero favorito?
+fields:
+  - Número: favorite_number
+    datatype: number
+---
+sets: final_screen
+question: |
+  Completado
+subquestion: |
+  El mejor número en el mundo es de ${ best_number },
+  no ${ favorite_number }.
+buttons:
+  - Reanudar: restart
+---
+{% endhighlight %}
+
+Finally, the contents of `interview.yml` are:
+
+{% highlight yaml %}
+---
+include:
+  - code.yml
+  - en.yml
+  - es.yml
+---
+{% endhighlight %}
+
+([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/bestnumber/interview.yml){:target="_blank"}.)
+
 ## Creating documents in languages other than English
 
 The [documents] feature, which allows RTF and PDF documents to be
@@ -106,6 +215,9 @@ templates in order to enable fonts that support your language.
 
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [initial block]: {{ site.baseurl }}/docs/initial.html
+[interview logic]: {{ site.baseurl}}/docs/logic.html
+[code blocks]: {{ site.baseurl}}/docs/code.html
+[questions]: {{ site.baseurl}}/docs/questions.html
 [configuration]: {{ site.baseurl }}/docs/configuration.html
 [modifier]: {{ site.baseurl }}/docs/modifiers.html
 [Unicode]: https://en.wikipedia.org/wiki/Unicode
@@ -115,3 +227,4 @@ templates in order to enable fonts that support your language.
 [LaTeX]: http://www.latex-project.org/
 [polyglossia]: https://www.ctan.org/pkg/polyglossia
 [babel]: https://www.ctan.org/pkg/babel
+[ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes

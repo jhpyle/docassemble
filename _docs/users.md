@@ -17,16 +17,18 @@ back in again, and pick up where they left off.
 When a user registers in the **docassemble** system, their default
 "privilege" is that of "user," which has the lowest privileges.  There are
 four privileges defined by default in **docassemble**:
+
 * user
 * admin
 * developer
 * advocate
 
 A user who has the "admin" privilege can upgrade the privleges of any
-user.
+user by going to the User List on the menu.
 
 When **docassemble** is first installed, it creates a user with
 "admin" privileges with the following login information:
+
 * Email: admin@admin.com
 * Password: password
 
@@ -38,4 +40,12 @@ You can also change these defaults during [installation] by editing the
 [configuration] before running the `create_tables.py` script from the
 `docassemble.webapp` package.
 
+Users can log in with Facebook or Google.  This requires obtaining API
+keys with those companies.  See [configuration] for details.
+
+If you do not want your users to be able to log in, you can hide the
+Login button by setting the `show_login` setting in the
+[configuration].
+
 [configuration]: {{ site.baseurl }}/docs/config.html
+[installation]: {{ site.baseurl }}/docs/installation.html

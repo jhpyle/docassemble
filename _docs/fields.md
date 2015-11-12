@@ -149,7 +149,8 @@ The following are the keys that have special meaning:
 * `hint`: in text inputs, the value is provided as a [placeholder].
 * `help`: the value is explanatory help text that appears when user
   clicks on the label.
-* `default`: the value will be set as the default value of the input field
+* `default`: the value will be set as the default value of the 
+  field.
 * `choices`: a list of possible options for a multiple choice field.
   Can be a list of key/value pairs (key is what the variable will be
   set to; value is the label seen by the user) or a list of plain text
@@ -157,6 +158,9 @@ The following are the keys that have special meaning:
 * `code`: code that generates a list of possible options for a multiple choice field
 * `shuffle`: the value is either `true` or `false`.  When used with `code`
   or `choices`, it randomizes the list of choices.
+* `disable others`: if set to true, then when the user changes the
+  value of the field to something, all the other fields in the
+  question will be disabled.
 * `note`: the value is [Markdown] text that will appear on the screen;
   useful for providing guidance to the user on how to enter information.
 * `html`: like `note`, except raw HTML.
@@ -189,6 +193,11 @@ The possible `datatype` values are:
   dictionary with items set to true or false depending on whether the
   option was checked.  No validation is done to see if the user
   selected at least one, regardless of the value of `required`.
+* `object`: this is used in combination with `code` that calls
+  `selections()` (a function from `docassemble.base.util`) with a list
+  of **docassemble** [objects].  This gives you a pull-down selector
+  that allows you to define a variable as an object that has already
+  been defined.
 * `radio`: show `choices` list as radio buttons instead of a dropdown
   [select] tag (which is the default).  Variable will be set to the
   value of the choice.
@@ -482,4 +491,5 @@ question above.
 [code blocks]: {{ site.baseurl }}/docs/code.html
 [Mako]: http://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
-[YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
+[YAML]: https://en.wikipedia.org/wiki/YAML
+[objects]: {{ site.baseurl }}/docs/objects.html

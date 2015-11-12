@@ -190,23 +190,23 @@ variables that get defined during the course of the interview, such as
 `favorite_animal` in the example interview above.  The variable store
 is saved on the **docassemble** server.
 
-[demonstration page]: {{ site.baseurl}}/demo.html
-[tutorial]: {{ site.baseurl}}/docs/helloworld.html
-[configuration]: {{ site.baseurl}}/docs/configuration.html
+[demonstration page]: {{ site.baseurl }}/demo.html
+[tutorial]: {{ site.baseurl }}/docs/helloworld.html
+[configuration]: {{ site.baseurl }}/docs/config.html
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [Python]: https://www.python.org/
-[Initial Blocks]: {{ site.baseurl}}/docs/initial.html
-[Question Blocks]: {{ site.baseurl}}/docs/questions.html
-[Setting Variables]: {{ site.baseurl}}/docs/fields.html
-[Question Modifiers]: {{ site.baseurl}}/docs/modifiers.html
-[Code]: {{ site.baseurl}}/docs/code.html
-[Interview Logic]: {{ site.baseurl}}/docs/logic.html
-[Objects]: {{ site.baseurl}}/docs/objects.html
-[Markup]: {{ site.baseurl}}/docs/markup.html
-[Functions]: {{ site.baseurl}}/docs/functions.html
-[Documents]: {{ site.baseurl}}/docs/documents.html
-[Roles]: {{ site.baseurl}}/docs/roles.html
-[Reserved Names]: {{ site.baseurl}}/docs/reserved.html
-[Errors]: {{ site.baseurl}}/docs/errors.html
+[Initial Blocks]: {{ site.baseurl }}/docs/initial.html
+[Question Blocks]: {{ site.baseurl }}/docs/questions.html
+[Setting Variables]: {{ site.baseurl }}/docs/fields.html
+[Question Modifiers]: {{ site.baseurl }}/docs/modifiers.html
+[Code]: {{ site.baseurl }}/docs/code.html
+[Interview Logic]: {{ site.baseurl }}/docs/logic.html
+[Objects]: {{ site.baseurl }}/docs/objects.html
+[Markup]: {{ site.baseurl }}/docs/markup.html
+[Functions]: {{ site.baseurl }}/docs/functions.html
+[Documents]: {{ site.baseurl }}/docs/documents.html
+[Roles]: {{ site.baseurl }}/docs/roles.html
+[Reserved Names]: {{ site.baseurl }}/docs/reserved.html
+[Errors]: {{ site.baseurl }}/docs/errors.html
 [username and password system]: {{ site.baseurl }}/docs/users.html
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries

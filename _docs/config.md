@@ -42,7 +42,7 @@ db:
   host: none
   port: none
 appname: docassemble
-brandname: demo
+brandname: docassemble
 uploads: /usr/share/docassemble/files
 webapp: /var/lib/docassemble/docassemble.wsgi
 mail:
@@ -50,9 +50,9 @@ mail:
   username: none
   password: none
   server: localhost
+  port: 25
   use_ssl: false
   use_tls: false
-admin_address: none #'"Administrator" <admin@example.com>'
 use_progress_bar: false
 default_interview: docassemble.demo:data/questions/questions.yml
 flask_log: /tmp/flask.log
@@ -66,14 +66,150 @@ secretkey: 38ihfiFehfoU34mcq_4clirglw3g4o87
 png_resolution: 300
 png_screen_resolution: 72
 show_login: true
-initial_dict:
-  url_args: {}
 {% endhighlight %}
 
 By default, `imagemagick`, `pdftoppm_command`, and `oauth` are
 undefined.
 
+## Standard configuration directives
+
+### debug
+
+Set this to `true` on development servers.  It enables the following
+features:
+
+* The "Source" button in the web app, which shows the [YAML] source code used
+  to generate the current question.
+* Viewing [LaTeX] and [Markdown] source in document attachments.
+
+### root
+
+This depends on how you configured your web server during [installation]
+Set this to `null` if the WSGI application runs from the root of the
+URL.  If your server runs from url path `/da`, set `root` to `/da`.
+
+### exitpage
+
+This is the default URL to which the user should be directed after
+clicking a button that runs an `exit` or `leave` command.  (See
+the [Setting Variables] section.)
+
+For example:
+
+{% highlight yaml %}
+exitpage: http://example.com/pages/thankyou.html
+{% endhighlight %}
+
+### db
+
+This tells the **docassemble** web app where to find the database in
+which to store users' answers, login information, and other information.
+
+{% highlight yaml %}
+db:
+  prefix: postgresql+psycopg2://
+  name: docassemble
+  user: none
+  password: none
+  host: none
+  port: none
+{% endhighlight %}
+
+If you are using multiple servers in load-balanced arrangement, you
+will want to set this to the central database server.
+
+### appname and brandname
+
+These are branding names.
+
+The `appname` appears in the web browser tab.  The `brandname` appears
+in the navigation bar.
+
+The `brandname` will default to the `appname` if `brandname` is not
+specified.
+
+### uploads
+
+This is the directory in which uploaded files are stored.  If you are
+using a [multi-server arrangement], this needs to point to a central
+network drive.
+
+### webapp
+
+This is the path to the WSGI file loaded by the web server.
+
+**docassemble** needs to know this filename because the server needs
+to reset itself after an add-on package is updated.  This happens by
+"touch"ing (updating the modification time of) the WSGI file.
+
+If you are using a [multi-server arrangement], the WSGI file needs to be
+stored on a central network drive.  When a package is updated, all
+servers need to reset, not just the server that happened to process
+the package update.
+
+### mail
+
+**docassemble** needs to send e-mail, for example to reset people's
+passwords, or to let users of a multi-user interview know that it is
+their turn to start answering questions.
+
+The default configuration assumes that a mail server is installed on
+the same machine as the web server.
+
+If you are going to send mail, you should at least set the `default_sender`:
+
+{% highlight yaml %}
+mail:
+  default_sender: '"Administrator" <no-reply@example.com>'
+{% endhighlight %}
+
+### use_progress_bar
+
+This controls whether the web app will show a progress bar at the top
+of the screen.  The progress of the bar can be controlled by setting
+the `progress` [modifier] on questions.
+
+### default_interview
+
+If no [interview] is specified in the URL when the web browser first
+connects to the **docassemble** server, this interview will be used.
+The interview needs to be specified in package name:relative file path
+format.  For example:
+
+{% highlight yaml %}
+default_interview: docassemble.demo:data/questions/questions.yml
+{% endhighlight %}
+
+### flask_log
+
+/tmp/flask.log
+
+### language and locale
+
+{% highlight yaml %}
+language: en
+locale: US.utf8
+{% endhighlight %}
+
+### default_admin_account
+
+{% highlight yaml %}
+default_admin_account:
+  nickname: admin
+  email: admin@admin.com
+  password: password
+{% endhighlight %}
+
+### secretkey
+
+38ihfiFehfoU34mcq_4clirglw3g4o87
+### png_resolution and png_screen_resolution
+### show_login: true
+
+
 ## Enabling optional features
+
+### Image conversion
 
 If you have ImageMagick and pdftoppm installed on your system, you
 need to tell **docassemble** the names of the commands to use.
@@ -82,6 +218,8 @@ need to tell **docassemble** the names of the commands to use.
 imagemagick: convert
 pdftoppm_command: pdftoppm
 {% endhighlight %}
+
+### Facebook and Google login
 
 If you want to enable logging in with Facebook or with Google, you
 will need to tell **docassemble** your oauth keys:
@@ -100,7 +238,32 @@ oauth:
 
 You can disable these login methods by setting `enable` to false.
 
-You can also set a default currency symbol if the symbol generated by
+### Pre-defined variables for all interviews
+
+If you would like to pass variable definitions from the configuration
+into the interviews, you can set values of the `initial_dict`:
+
+{% highlight yaml %}
+initial_dict:
+  host_company: Example, Inc.
+  host_url: http://example.com
+{% endhighlight %}
+
+Then, in all of the interviews running on the server, you can include
+things like:
+
+{% highlight yaml %}
+---
+sets: splash_screen
+question: Welcome to the interview.
+subquestion: |
+  Web hosting has been graciously provided by ${ host_company }.
+---
+{% endhighlight %}
+
+### Currency symbol
+
+You can set a default currency symbol if the symbol generated by
 the locale is not what you want:
 
 {% highlight yaml %}
@@ -113,3 +276,10 @@ This symbol will be used in the user interface when a field has the
 
 [Flask]: http://flask.pocoo.org/
 [YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
+[LaTeX]: http://www.latex-project.org/
+[Markdown]: https://daringfireball.net/projects/markdown/
+[installation]: {{ site.baseurl }}/docs/installation.html
+[Setting Variables]: {{ site.baseurl }}/docs/fields.html
+[multi-server arrangement]: {{ site.baseurl }}/docs/scalability.html
+[modifier]: {{ site.baseurl }}/docs/modifiers.html
+[interview]: {{ site.baseurl }}/docs/interviews.html

@@ -3,7 +3,7 @@
     - requirements
     - installation
     - config
-- title: Tutorials
+- title: Tutorial
   docs:
     - helloworld
 - title: Authoring
@@ -25,6 +25,7 @@
 - title: Miscellaneous
   docs:
     - language
+    - packages
     - docker
     - scalability
     

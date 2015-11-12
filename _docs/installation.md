@@ -197,7 +197,7 @@ Set /etc/apache2/sites-available/000-default.conf to something like:
         DocumentRoot /var/www/html
 
         WSGIDaemonProcess docassemble.webserver user=www-data group=www-data threads=5
-        WSGIScriptAlias /demo /var/lib/docassemble/webapp/flask.wsgi
+        WSGIScriptAlias /demo /var/lib/docassemble/webapp/docassemble.wsgi
         <Directory /var/lib/docassemble/webapp>
           WSGIProcessGroup docassemble.webserver
           WSGIApplicationGroup %{GLOBAL}
@@ -258,11 +258,11 @@ To upgrade docassemble to the latest version, do:
 
     cd docassemble
     git pull
-    sudo ./compile.sh && sudo touch /var/lib/docassemble/flask.wsgi
+    sudo ./compile.sh && sudo touch /var/lib/docassemble/docassemble.wsgi
 
 Note that after making changes to docassemble interviews and Python
 code, it is not necessary to restart Apache.  Changing the
-modification time of /var/lib/docassemble/flask.wsgi will trigger
+modification time of /var/lib/docassemble/docassemble.wsgi will trigger
 Apache to restart the WSGI processes.
 
 # Debugging the web app

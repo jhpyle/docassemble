@@ -53,7 +53,7 @@ that the package was installed successfully.
     [configuration] file.
 13. You should see "Hello, world!" with an exit button.
 
-(If you do not have a server yet you can [try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello.yml){:target="_blank"}.)
+(If you do not have a server yet, you can [try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello.yml){:target="_blank"}.)
 
 ## Adding a question
 
@@ -163,6 +163,7 @@ fields:
 ([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello4.yml){:target="_blank"}.)
 
 [installation]: {{ site.baseurl }}/docs/installation.html
+[configuration]: {{ site.baseurl }}/docs/config.html
 [reconfigured user roles]: {{ site.baseurl }}/docs/users.html
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [WordPad]: http://windows.microsoft.com/en-us/windows/using-wordpad#1TC=windows-7
