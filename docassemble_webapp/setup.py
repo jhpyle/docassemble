@@ -14,5 +14,5 @@ setup(name='docassemble.webapp',
       namespace_packages = ['docassemble'],
       install_requires = ['docassemble'],
       zip_safe = False,
-      package_data={'docassemble.webapp': ['templates/base_templates/*.html', 'templates/flask_user/*.html', 'templates/pages/*.html', 'templates/users/*.html', 'static/app/*.*', 'static/bootstrap-fileinput/css/*.css', 'static/bootstrap-fileinput/js/*.js', 'static/bootstrap-fileinput/*.md', 'static/jquery-labelauty/source/*.*', 'static/jquery-labelauty/source/images/*.*']},
+      package_data={'docassemble.webapp': ['templates/base_templates/*.html', 'templates/flask_user/*.html', 'templates/pages/*.html', 'templates/users/*.html', 'static/app/*.*', 'static/bootstrap-fileinput/img/*', 'static/bootstrap-fileinput/css/*.css', 'static/bootstrap-fileinput/js/*.js', 'static/bootstrap-fileinput/*.md', 'static/jquery-labelauty/source/*.*', 'static/jquery-labelauty/source/images/*.*']},
      )
