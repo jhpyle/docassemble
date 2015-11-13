@@ -71,6 +71,13 @@ comment: |
   own, the "interview help" will appear after the question-specific
   help.
 ---
+language: es
+interview help:
+  heading: Acerca de este sitio web
+  content: |
+    Conteste cada pregunta. Al final, se le puede dar un documento
+    que puede ahorrar.
+---
 include:
   - basic-questions.yml
 comment: |
@@ -126,11 +133,6 @@ comment: |
   In a later question we will refer to the variable "village_idiot."
   This "objects" block creates the variable "village_idiot" and
   specifies that it is an object of type "Individual."
----
-code: |
-  advocate.name.first = "John"
-  advocate.name.last = "Smith"
-  advocate.email = "jpyle@philalegal.org"
 ---
 terms:
   rhododendron: |
@@ -206,7 +208,11 @@ content: |
 
   Thank you for your patience.
 ---
-mandatory: True
+initial: true
+code: |
+  set_language(client.language)
+---
+mandatory: true
 code: |
   need(user_saw_initial_screen)
   if user_understands_no_attorney_client_relationship == "understands":
@@ -251,6 +257,11 @@ comment: |
   bar will be set to 100% on this question, which is an endpoint
   question (since the only options are exiting or restarting).
 ---
+code: |
+  advocate.name.first = "John"
+  advocate.name.last = "Smith"
+  advocate.email = "jpyle@philalegal.org"
+---
 question: |
   Welcome to the **docassemble** demonstration.
 subquestion: |
@@ -269,6 +280,7 @@ subquestion: |
 
   [YAML]: https://en.wikipedia.org/wiki/YAML
 field: user_saw_initial_screen
+datatype: boolean
 buttons:
   - Ok, got it: True
 ---
@@ -325,11 +337,11 @@ comment: |
 code: |
   case.plaintiff.gathering = True
   if client.is_plaintiff and client not in case.plaintiff:
-    case.plaintiff.add(client)
+    case.plaintiff.append(client)
   if case.plaintiff.number_gathered() == 0:
-    case.plaintiff.addObject(Individual)
+    case.plaintiff.appendObject(Individual)
   while case.plaintiff.there_is_another:
-    case.plaintiff.addObject(Individual)
+    case.plaintiff.appendObject(Individual)
     del case.plaintiff.there_is_another
   case.plaintiff.gathering = False
   case.plaintiff.gathered = True
@@ -342,11 +354,11 @@ code: |
   case.defendant.gathering = True
   if client not in case.defendant and not client.is_plaintiff and \
      client.is_defendant:
-    case.defendant.add(client)
+    case.defendant.append(client)
   if case.defendant.number_gathered() == 0:
-    case.defendant.addObject(Individual)
+    case.defendant.appendObject(Individual)
   while case.defendant.there_is_another:
-    case.defendant.addObject(Individual)
+    case.defendant.appendObject(Individual)
     del case.defendant.there_is_another
   case.defendant.gathering = False
   case.defendant.gathered = True
@@ -390,8 +402,26 @@ yesno: injury_in_jurisdiction
 question: When did your injury take place?
 decoration: calendar
 fields:
+  - html: |
+      The current date and time is <span class="mytime" id="today_time"></span>.
+    script: |
+      <script>document.getElementById("today_time").innerHTML = Date();</script>
+    css: |
+      <link rel="stylesheet" href="${ url_of('docassemble.demo:data/static/my.css') }">
   - Date of Injury: injury_date
     datatype: date
+comment: >-
+  You can embed raw HTML into a list of fields using the 'html' key.
+  You can also expand the capabilities of what you do with this HTML by
+  adding 'script' and 'css' keys.
+
+  The text of 'script' is added to the bottom of the page, while the
+  text of 'css' is added to the <head>.
+
+  Note that you can use Mako templates in each of these declarations.
+  The function url_of, which is available in docassemble.base.util and
+  docassemble.base.legal, will give you a URL to a file in a given
+  package.
 ---
 generic object: Individual
 code: |
@@ -500,7 +530,7 @@ fields:
   - Amenities: x.address.amenities
     datatype: checkboxes
     code: |
-      {'chimney': 'Chimney', 'stove': 'Stove'}
+      {u'chimney': u'Chimney', 'stove': 'Stove'}
   - note: |
       How would you describe the general *milieu* of ${ x.possessive('abode') }?
   - no label: x.address.milieu
@@ -638,11 +668,12 @@ attachments:
     description: |
       This is a *very* helpful advice letter.
     metadata:
-      FirstHeaderRight: |
-        Philadelphia Legal Assistance [NEWLINE] 718 Arch Street, 
-        Suite 300N [NEWLINE] Philadelphia, PA 19106
+      FirstHeaderRight: >-
+        Example, LLP [BR] 
+        123 Main Street, Suite 1500 [BR]
+        Philadelphia, PA 19102
       HeaderLeft: |
-        ${ client } [NEWLINE] ${ today() } [NEWLINE] Page [PAGENUM]
+        ${ client } [BR] ${ today() } [BR] Page [PAGENUM]
       HeaderLines: "3"
       SingleSpacing: true
     content: |
@@ -653,7 +684,7 @@ attachments:
       Dear ${ client.salutation() } ${ client.name.last }:
 
       Your marital status is ${ client.marital_status.lower() }.
-      % if client.marital_status == 'Single':
+      % if client.marital_status == 'Single' and village_idiot is not client:
         Perhaps you should marry ${ village_idiot }.
       % endif
       Your annual income is ${ currency(client.income.total()) }
@@ -810,7 +841,138 @@ attachments:
       [FLUSHLEFT] ${ blank_signature }
       % endif
 
-      [FLUSHLEFT] ${ client }, ${ titlecase(case.role_of(client)) }
+      [FLUSHLEFT] ${ client }, ${ title_case(case.role_of(client)) }
+---
+sets: all_done
+question: Hi there
+attachment:
+  - name: the attachment
+    filename: helloworld
+    content: |
+      Hi there.
+
+      [BEGIN_TWOCOL]
+
+      Hi there.
+
+      Hi *there* again.
+      [BREAK]
+      Hello [there](http://google.com).
+      [SKIPLINE]
+      Hello **there again** and again.
+
+      And again.
+      [END_TWOCOL]
+---
+question: Your document is ready.
+sets: provide_user_with_document
+attachment:
+  - name: A *hello world* document
+    filename: Hello_World_Document
+    description: A document with a **classic** message
+    content file: 
+      - base_template.md
+      - hello_template.md
+---
+question: Your document is ready, ${ user }.
+sets: provide_user_with_document
+attachment:
+  - name: A *hello world* document
+    filename: Hello_World_Document
+    description: A document with a **classic** message
+    metadata:
+      FirstFooterLeft: Can you do *markdown*?
+    content: |
+      Hello, ${ user }!
+---
+language: es
+question: |
+  Bienvenido a la demostración **docassemble**.
+subquestion: |
+  La siguiente entrevista está diseñado para demostrar la casi
+  totalidad de características de **docassemble**. Al final, se le
+  proporcionará un carta cliente falso y un escrito falso.
+
+  En la barra de navegación de arriba, puede hacer clic en "Ayuda"
+  para ver el texto de ayuda asociado a la entrevista y con la
+  pregunta individual. Si "Ayuda <i class="glyphicon
+  glyphicon-star"></i>" aparece en la barra de navegación, eso
+  significa que el texto de ayuda específica a la cuestión está
+  disponible.
+
+  Haga clic en "Fuente" para cambiar la visualización del código
+  [YAML] utilizado para generar la pregunta.
+  
+  (This demonstration interview has not been fully translated into
+  Spanish; only this page has.  The remainder of the interview will
+  fall back to using the available English versions of each question.)
+
+  [YAML]: https://en.wikipedia.org/wiki/YAML
+field: user_saw_initial_screen
+datatype: boolean
+buttons:
+  - Comprendo: True
+---
+generic object: Individual
+question: |
+  What language ${ x.do_question('speak') }?
+field: x.language
+choices:
+  - English: en
+  - Español: es
+---
+language: es
+terms:
+  cliente: |
+    El cliente es la persona que está llenando este formulario
+---
+sets: markdown_demo
+question: Markdown demonstration
+subquestion: |
+  This is *italic text*.
+  This is **bold text**.
+  This is __also bold text__.
+
+  > This is some block-quoted
+  > text.
+
+  ### This is a heading
+
+  This is an image from the internet:
+
+  ![Bass logo](https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Bass_logo.svg/199px-Bass_logo.svg.png)
+
+  Here is a bullet list:
+
+  * Apple
+  * Peach
+  * Pear
+
+  Here is a numbered list:
+
+  1. Nutmeg
+  2. Celery
+  3. Oregano
+
+  Here is a [link to a web site](http://google.com).
+---
+question: |
+  What is the village idiot's name?
+fields:
+  - Somebody already mentioned: village_idiot
+    datatype: object
+    required: False
+    disable others: true
+    code: |
+      selections(case.plaintiff, case.defendant)
+  - First Name: village_idiot.name.first
+  - Middle Name: village_idiot.name.middle
+    required: False
+  - Last Name: village_idiot.name.last
+  - Suffix: village_idiot.name.suffix
+    required: False
+    code: |
+      name_suffix()
 ...
 {% endhighlight %}
 
@@ -1051,22 +1213,8 @@ buttons:
   - "Let me try again":
       generic object: Individual
       code: |
-        del x.signature
-        answers = dict()
+        force_ask('x.signature')
 comment: >-
-  To create a "Let me try again" option for a variable that is already
-  collected, you have to tell **docassemble** to forget that the
-  variable was ever defined.  You do this by deleting the variable
-  from the variable store using the Python "del" statement.
-
-  In addition, you need to tell **docassemble** to forget your answer
-  to this multiple choice question; otherwise, the next time
-  **docassemble** looks for the definition of "signature_verified," it
-  will try to apply the answer the user gave the first time
-  (i.e. clicking the "Let me try again") button.  To make
-  **docassemble** forget the button the user pressed, reset the
-  special variable "answers" to an empty dictionary.
-
   Note that in order for code or a question embedded within
   buttons/choices to use the special variable "x," you need to declare
   a generic object within the embedded code or question.
@@ -1126,6 +1274,10 @@ fields:
   - Middle Name: x.name.middle
     required: False
   - Last Name: x.name.last
+  - Suffix: x.name.suffix
+    required: False
+    code: |
+      name_suffix()
 comment: >-
   If the object does not have a name yet, generic questions can refer
   to it by the name of the variable itself.  For example, suppose you
@@ -1144,6 +1296,10 @@ fields:
   - Middle Name: x[i].name.middle
     required: False
   - Last Name: x[i].name.last
+  - Suffix: x[i].name.suffix
+    required: False
+    code: |
+      name_suffix()
 comment: >-
   Generic questions can also use indices, for example to fill out the
   names of a list of people.  (E.g., case.plaintiff.)
@@ -1157,11 +1313,21 @@ generic list object: Individual
 question: |
   What is ${ x.possessive(ordinal(i) + " child") }'s name?
 fields:
+  - Somebody already mentioned: x.child[i]
+    datatype: object
+    required: False
+    disable others: true
+    code: |
+      selections(case.all_known_people(), exclude=[x, x.child])
   - First Name: x.child[i].name.first
   - Middle Name: x.child[i].name.middle
     required: False
   - Last Name: x.child[i].name.last
     default: ${ x.name.last }
+  - Suffix: x.child[i].name.suffix
+    required: False
+    code: |
+      name_suffix()
 comment: >-
   This illustrates the use of the "possessive" method of the class
   Individual.  Depending on who x is, this question will ask different
@@ -1176,9 +1342,9 @@ code: |
   x.child.gathering = True
   if x.has_children:
     if x.child.number_gathered() == 0:
-      newchild = x.child.addObject(Individual)
+      x.child.appendObject(Individual)
     while x.has_other_children:
-      newchild = x.child.addObject(Individual)
+      x.child.appendObject(Individual)
       del x.has_other_children
   x.child.gathering = False
   x.child.gathered = True
@@ -1253,6 +1419,7 @@ fields:
   - Employment Income: x.income.employment.value
     datatype: currency
   - "": x.income.employment.period
+    datatype: number
     code: |
       period_list()
 comment: >-
@@ -1274,6 +1441,7 @@ fields:
   - Self-employment Income: x.income.selfemployment.value
     datatype: currency
   - "": x.income.selfemployment.period
+    datatype: number
     code: |
       period_list()
 ---
@@ -1285,6 +1453,7 @@ fields:
   - SSI Income: x.income.ssi.value
     datatype: currency
   - "": x.income.ssi.period
+    datatype: number
     code: |
       period_list()
 ---
@@ -1297,6 +1466,7 @@ fields:
   - TANF Income: x.income.tanf.value
     datatype: currency
   - "": x.income.tanf.period
+    datatype: number
     code: |
       period_list()
 ---
