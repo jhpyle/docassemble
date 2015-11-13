@@ -20,7 +20,7 @@ Also, when you are using the demonstration, you can click "Source" to
 see the [YAML] source code that generated the question, along with a
 review of the conditions that led to the question being asked.  You
 can learn a lot about how to do things in **docassemble** by clicking
-"Script" and comparing the [YAML] source to the end result.
+"Source" and comparing the [YAML] source to the end result.
 
 ### The YAML file that generates the demonstration interview
 
