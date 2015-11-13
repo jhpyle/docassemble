@@ -1,5 +1,5 @@
 debug: false
-root: /demo
+root: /da/
 exitpage: /
 db:
   prefix: postgresql+psycopg2://
@@ -19,12 +19,11 @@ oauth:
     secret: DGE34gdgerg3GDG545tgdfRf
 secretkey: 28asflwjeifwlfjsd2fejfiefw3g4o87
 appname: docassemble
-brandname: demo
+brandname: docassemble
 uploads: /usr/share/docassemble/files
 webapp: /var/lib/docassemble/docassemble.wsgi
 mail:
   default_sender: '"Administrator" <no-reply@example.com>'
-admin_address: '"Administrator" <admin@example.com>'
 use_progress_bar: false
 imagemagick: convert
 default_interview: docassemble.demo:data/questions/questions.yml

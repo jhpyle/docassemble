@@ -14,9 +14,7 @@ import tempfile
 import zipfile
 import traceback
 from docassemble.base.error import DAError
-from docassemble.base.util import pickleable_objects
-from docassemble.base.util import word
-from docassemble.base.util import comma_and_list
+from docassemble.base.util import pickleable_objects, word, comma_and_list
 from docassemble.base.logger import logmessage
 import mimetypes
 import logging
@@ -198,6 +196,16 @@ def get_path_from_file_number(file_number, directory=False):
     else:
         return (os.path.join(path, 'file'))
 
+def get_ext_and_mimetype(filename):
+    mimetype, encoding = mimetypes.guess_type(filename)
+    extension = filename.lower()
+    extension = re.sub('.*\.', '', extension)
+    if extension == "jpeg":
+        extension = "jpg"
+    if extension == "tiff":
+        extension = "tif"
+    return(extension, mimetype)
+
 def get_info_from_file_number(file_number):
     result = dict()
     cur = conn.cursor()
@@ -307,6 +315,26 @@ if 'oauth' in daconfig:
 app.secret_key = daconfig.get('secretkey', '38ihfiFehfoU34mcq_4clirglw3g4o87')
 #app.secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits)
 #                         for x in xrange(32))
+
+word_file_list = daconfig.get('words', list())
+if type(word_file_list) is not list:
+    word_file_list = [word_file_list]
+for word_file in word_file_list:
+    logmessage("Reading from " + str(word_file))
+    file_info = get_info_from_file_reference(word_file)
+    if 'fullpath' in file_info:
+        with open(file_info['fullpath'], 'r') as stream:
+            for document in yaml.load_all(stream):
+                if document and type(document) is dict:
+                    for lang, words in document.iteritems():
+                        if type(words) is dict:
+                            docassemble.base.util.update_word_collection(lang, words)
+                        else:
+                            logmessage("Error reading " + str(word_file) + ": words not in dictionary form.")
+                else:
+                    logmessage("Error reading " + str(word_file) + ": yaml file not in dictionary form.")
+    else:
+        logmessage("Error reading " + str(word_file) + ": yaml file not found.")
 
 def logout():
     user_manager = current_app.user_manager
@@ -1408,7 +1436,48 @@ SOFTWARE.
 #!/usr/bin/env python
 
 import os
+import sys
 from setuptools import setup, find_packages
+from fnmatch import fnmatchcase
+from distutils.util import convert_path
+
+standard_exclude = ('*.py', '*.pyc', '*~', '.*', '*.bak', '*.swp*')
+standard_exclude_directories = ('.*', 'CVS', '_darcs', './build', './dist', 'EGG-INFO', '*.egg-info')
+def find_package_data(where='.', package='', exclude=standard_exclude, exclude_directories=standard_exclude_directories):
+    out = {}
+    stack = [(convert_path(where), '', package)]
+    while stack:
+        where, prefix, package = stack.pop(0)
+        for name in os.listdir(where):
+            fn = os.path.join(where, name)
+            if os.path.isdir(fn):
+                bad_name = False
+                for pattern in exclude_directories:
+                    if (fnmatchcase(name, pattern)
+                        or fn.lower() == pattern.lower()):
+                        bad_name = True
+                        break
+                if bad_name:
+                    continue
+                if os.path.isfile(os.path.join(fn, '__init__.py')):
+                    if not package:
+                        new_package = name
+                    else:
+                        new_package = package + '.' + name
+                        stack.append((fn, '', new_package))
+                else:
+                    stack.append((fn, prefix + name + '/', package))
+            else:
+                bad_name = False
+                for pattern in exclude:
+                    if (fnmatchcase(name, pattern)
+                        or fn.lower() == pattern.lower()):
+                        bad_name = True
+                        break
+                if bad_name:
+                    continue
+                out.setdefault(package, []).append(prefix+name)
+    return out
 
 """
             setuppy += "setup(name='docassemble." + str(pkgname) + "',\n" + """\
@@ -1421,7 +1490,7 @@ from setuptools import setup, find_packages
       packages=find_packages(),
       namespace_packages = ['docassemble'],
       zip_safe = False,
-      package_data={'docassemble.""" + str(pkgname) + """': ['data/templates/*', 'data/questions/*', 'data/static/*']},
+      package_data=find_package_data(where='docassemble/""" + str(pkgname) + """/', package='docassemble.""" + str(pkgname) + """'),
      )
 
 """
@@ -1435,15 +1504,15 @@ metadata:
       organization: """ + unicode(current_user.organization) + """
   revision_date: """ + time.strftime("%Y-%m-%d") + """
 ---
-include:
-  - basic-questions.yml
----
 mandatory: true
+code: |
+  user_done
+---
 question: |
-  % if user.doing_well:
-    Good to hear it!
+  % if user_doing_well:
+  Good to hear it!
   % else:
-    Sorry to hear that!
+  Sorry to hear that!
   % endif
 sets: user_done
 buttons:
@@ -1451,7 +1520,7 @@ buttons:
   - Restart: restart
 ---
 question: Are you doing well today?
-yesno: user.doing_well
+yesno: user_doing_well
 ...
 """
             templatereadme = """\
@@ -1481,10 +1550,10 @@ this directory.
 # objects:
 #   - favorite_fruit: Fruit
 # ---
+# mandatory: true
 # question: |
-#   When I eat ${ indefinite_article(favorite_fruit.name) }, 
-#   I think, "${ favorite_fruit.eat() }"  Do you agree?
-# yesno: agrees_favorite_fruit_is_good
+#   When I eat some ${ favorite_fruit.name }, 
+#   I think, "${ favorite_fruit.eat() }"
 # ---
 # question: What is the best fruit?
 # fields:
@@ -1493,7 +1562,7 @@ this directory.
 
 class Fruit(DAObject):
     def eat():
-        return("Yum, that " + self.name + " was good!")
+        return "Yum, that " + self.name + " was good!"
 """
             directory = tempfile.mkdtemp()
             packagedir = os.path.join(directory, 'docassemble_' + str(pkgname))
@@ -1572,16 +1641,6 @@ def server_error(the_error):
     #             apache_logtext = []
     #         apache_logtext.append(line)
     return render_template('pages/501.html', error=errmess, logtext=str(the_trace)), 501
-
-def get_ext_and_mimetype(filename):
-    mimetype, encoding = mimetypes.guess_type(filename)
-    extension = filename.lower()
-    extension = re.sub('.*\.', '', extension)
-    if extension == "jpeg":
-        extension = "jpg"
-    if extension == "tiff":
-        extension = "tif"
-    return(extension, mimetype)
 
 def restart_wsgi():
     wsgi_file = daconfig.get('webapp', '/var/lib/docassemble/docassemble.wsgi')
