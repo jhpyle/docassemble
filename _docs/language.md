@@ -43,7 +43,9 @@ The `language` and `locale` settings have the following effects:
   table.  If the `word()` function finds the word `Login` in the
   translation table for the active language, it will return
   the translated value.  If it does not find a translation, it will
-  return `Login`.
+  return `Login`.  For more information about how `word()` works, see
+  [functions].  For information on how to define translations for a
+  server, see [configuration].
 * Some functions have language-specific responses, such as `today()`
   in the `docassemble.base.util` module, which returns today's date in
   a readable format such as "October 31, 2015" (for language `en`) or
@@ -220,6 +222,7 @@ templates in order to enable fonts that support your language.
 [questions]: {{ site.baseurl}}/docs/questions.html
 [configuration]: {{ site.baseurl }}/docs/configuration.html
 [modifier]: {{ site.baseurl }}/docs/modifiers.html
+[functions]: {{ site.baseurl }}/docs/functions.html
 [Unicode]: https://en.wikipedia.org/wiki/Unicode
 [documents]: {{ site.baseurl }}/docs/documents.html
 [Mako]: http://www.makotemplates.org/

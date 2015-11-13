@@ -422,8 +422,23 @@ u'pescado'
 u'fish'
 {% endhighlight %}
 
-In your own Python code you may wish to use `word()` to help make your
-code multi-lingual.
+In your own [Python] code you may wish to use `word()` to help make
+your code multi-lingual.
+
+It is not a good idea to call
+`docassemble.base.util.update_word_collection()` in interviews.  You
+can use it in [Python] modules, but keep in mind that the changes you
+make will have global effect within the [WSGI] process.  If other
+interviews on the server define the same word translations for the
+same language using `docassemble.base.util.update_word_collection()`,
+the module that happened to load last will win, and the results could
+be unpredictable.
+
+The best practice is to load translations at the server level by using
+the `words` [configuration] directive to load translations from one or
+more [YAML] files.  This causes **docassemble** to call
+`docassemble.base.util.update_word_collection()` at the time the
+server is initialized.
 
 ## Language-specific functions
 
@@ -681,3 +696,6 @@ docassemble.base.util.update_language_function('fr', 'her', docassemble.base.uti
 [dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [Setting Variables]: {{ site.baseurl}}/docs/fields.html
+[Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
+[WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
+[YAML]: https://en.wikipedia.org/wiki/YAML

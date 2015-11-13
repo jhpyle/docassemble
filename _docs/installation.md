@@ -198,7 +198,7 @@ Set /etc/apache2/sites-available/000-default.conf to something like:
         DocumentRoot /var/www/html
 
         WSGIDaemonProcess docassemble.webserver user=www-data group=www-data threads=5
-        WSGIScriptAlias /demo /var/lib/docassemble/webapp/docassemble.wsgi
+        WSGIScriptAlias /da /var/lib/docassemble/webapp/docassemble.wsgi
         <Directory /var/lib/docassemble/webapp>
           WSGIProcessGroup docassemble.webserver
           WSGIApplicationGroup %{GLOBAL}
@@ -251,7 +251,7 @@ or, if you use systemd:
 
     sudo systemctl restart apache2.service
 
-The system will be running at http://example.com/demo.
+The system will be running at http://example.com/da.
 
 # Upgrading
 

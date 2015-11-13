@@ -7,6 +7,7 @@ short_title: Roles
 **docassemble** allows you to create multi-user interviews.
 
 For example:
+
 * In a legal application, a client uses the interview to answer
   questions about the facts of a case, and then an attorney reviews
   the responses, answers questions about how the law applies to the
