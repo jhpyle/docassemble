@@ -85,7 +85,7 @@ app.config['MAIL_USE_SSL'] = daconfig['mail'].get('use_ssl', False)
 app.config['MAIL_USE_TLS'] = daconfig['mail'].get('use_tls', False)
 #app.config['ADMINS'] = [daconfig.get('admin_address', None)]
 app.config['APP_SYSTEM_ERROR_SUBJECT_LINE'] = app.config['APP_NAME'] + " system error"
-app.config['APPLICATION_ROOT'] = daconfig.get('root', '/demo')
+app.config['APPLICATION_ROOT'] = daconfig.get('root', '/')
 app.config['CSRF_ENABLED'] = False
 app.config['USER_APP_NAME'] = app.config['APP_NAME']
 app.config['USER_SEND_PASSWORD_CHANGED_EMAIL'] = False
@@ -117,9 +117,7 @@ docassemble.base.util.set_default_locale(daconfig.get('locale', 'US.utf8'))
 docassemble.base.util.set_language(daconfig.get('language', 'en'))
 docassemble.base.util.set_locale(daconfig.get('locale', 'US.utf8'))
 docassemble.base.util.update_locale()
-ROOT = daconfig.get('root', None)
-if ROOT is None:
-    ROOT = '/'
+ROOT = daconfig.get('root', '/')
 if 'currency symbol' in daconfig:
     docassemble.base.util.update_language_function('*', 'currency_symbol', lambda: daconfig['currency symbol'])
 app.logger.warning("default sender is " + app.config['MAIL_DEFAULT_SENDER'] + "\n")
@@ -170,26 +168,24 @@ docassemble.base.logger.set_logmessage(flask_logger)
 #logmessage("foo bar")
 
 def get_url_from_file_reference(file_reference, **kwargs):
-    root = daconfig.get('root', None)
-    if root is None:
-        root = ''
+    root = daconfig.get('root', '/')
     if re.match('[0-9]+', file_reference):
         file_number = file_reference
         if 'page' in kwargs:
             page = kwargs['page']
             size = kwargs.get('size', 'page')
-            url = root + '/uploadedpage'
+            url = root + 'uploadedpage'
             if size == 'screen':
                 url += 'screen'
             url += '/' + str(file_number) + '/' + str(page)
         else:
-            url = root + '/uploadedfile/' + str(file_number)
+            url = root + 'uploadedfile/' + str(file_number)
     else:
         parts = file_reference.split(':')
         if len(parts) < 2:
             parts = ['docassemble.base', file_reference]
         parts[1] = re.sub(r'^data/static/', '', parts[1])
-        url = root + '/packagestatic/' + parts[0] + '/' + parts[1]
+        url = root + 'packagestatic/' + parts[0] + '/' + parts[1]
     return(url)
 
 docassemble.base.parse.set_url_finder(get_url_from_file_reference)
