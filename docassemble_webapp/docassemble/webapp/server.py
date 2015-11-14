@@ -566,7 +566,7 @@ def index():
         if 'action' in request.args:
             action = json.loads(myb64unquote(request.args['action']))
         for argname in request.args:
-            if argname in ('filename', 'question', 'format', 'next', 'index', 'i', 'action'):
+            if argname in ('filename', 'question', 'format', 'index', 'i', 'action'):
                 continue
             if re.match('[A-Za-z_]+', argname):
                 exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)
@@ -692,9 +692,9 @@ def index():
         #logmessage("I am not assembling.")        
     changed = False
     error_messages = list()
-    if '_theImage' in post_data:
+    if '_the_image' in post_data:
         #interview.assemble(user_dict, interview_status)
-        file_field = post_data['_saveas'];
+        file_field = post_data['_save_as'];
         if match_invalid.search(file_field):
             error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
         else:
@@ -706,7 +706,7 @@ def index():
             except Exception as errMess:
                 error_messages.append(("error", "Error: " + str(errMess)))
             if '_success' in post_data and post_data['_success']:
-                theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['_theImage']).group(1) + '==')
+                theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['_the_image']).group(1) + '==')
                 #sys.stderr.write("Got theImage and it is " + str(len(theImage)) + " bytes long\n")
                 filename = secure_filename('canvas.png')
                 file_number = get_new_file_number(session['uid'], filename)
@@ -806,7 +806,7 @@ def index():
         known_datatypes = json.loads(myb64unquote(post_data['_datatypes']))
     known_variables = dict()
     for key in post_data:
-        if key in ['_checkboxes', '_back_one', '_files', '_questionname', '_theImage', '_saveas', '_success', '_datatypes', '_tracker']:
+        if key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker']:
             continue
         #logmessage("Got a key: " + key)
         data = post_data[key]
@@ -870,8 +870,8 @@ def index():
             #interview.assemble(user_dict, interview_status)
             #if interview_status.question.question_type == "multiple_choice" and not hasattr(interview_status.question.fields[0], 'saveas'):
                 #key = '_internal["answers"]["' + interview_status.question.name + '"]'
-            if '_questionname' in post_data:
-                key = '_internal["answers"][' + repr(post_data['_questionname']) + ']'
+            if '_question_name' in post_data:
+                key = '_internal["answers"][' + repr(post_data['_question_name']) + ']'
             #else:
                 #continue
                 #error_messages.append(("error", "Error: multiple choice values were supplied, but docassemble was not waiting for an answer to a multiple choice question."))
@@ -887,12 +887,12 @@ def index():
     #     del user_dict['x']
     # if 'i' in user_dict:
     #     del user_dict['i']
-    # if changed and '_questionname' in post_data:
-        # user_dict['_internal']['answered'].add(post_data['_questionname'])
-        # logmessage("From server.py, answered name is " + post_data['_questionname'])
+    # if changed and '_question_name' in post_data:
+        # user_dict['_internal']['answered'].add(post_data['_question_name'])
+        # logmessage("From server.py, answered name is " + post_data['_question_name'])
         # user_dict['role_event_notification_sent'] = False
-    if changed and '_questionname' in post_data and post_data['_questionname'] not in user_dict['_internal']['answers']:
-        user_dict['_internal']['answered'].add(post_data['_questionname'])
+    if changed and '_question_name' in post_data and post_data['_question_name'] not in user_dict['_internal']['answers']:
+        user_dict['_internal']['answered'].add(post_data['_question_name'])
     interview.assemble(user_dict, interview_status)
     if len(interview_status.attachments) > 0:
         #logmessage("Updating attachment info")
@@ -1267,8 +1267,8 @@ def serve_uploaded_page(number, page):
 def upload_draw():
     post_data = request.form.copy()
     #sys.stderr.write("Got to upload_draw\n")
-    if '_success' in post_data and post_data['_success'] and '_theImage' in post_data:
-        theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['_theImage']).group(1) + '==')
+    if '_success' in post_data and post_data['_success'] and '_the_image' in post_data:
+        theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['_the_image']).group(1) + '==')
         #sys.stderr.write("Got theImage and it is " + str(len(theImage)) + " bytes long\n")
         with open('/tmp/testme.png', 'w') as ifile:
             ifile.write(theImage)
@@ -1278,7 +1278,7 @@ def upload_draw():
         
 @app.route('/testsignature', methods=['GET'])
 def test_signature():
-    output = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link rel="stylesheet" href="' + url_for('static', filename='app/signature.css') + '"><title>' + word('Signature') + '</title></head><body onresize="resizeCanvas()"><div id="page"><div class="header" id="header"><a id="new" class="navbtn nav-left">Clear</a><a id="save" class="navbtn nav-right">Save</a><div class="title">' + word('Your Signature') + '</div></div><div class="toppart" id="toppart">' + word('I am a citizen of the United States.') + '</div><div id="content"><p style="text-align:center"></p></div><div class="bottompart" id="bottompart">' + word('Jonathan Pyle') + '</div></div><form id="daform" action="' + url_for('upload_draw') + '" method="post"><input type="hidden" name="variable" value="' + word('Jonathan Pyle') + '"><input type="hidden" id="theImage" name="_theImage" value=""><input type="hidden" id="success" name="_success" value="0"></form></body></html>'
+    output = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link rel="stylesheet" href="' + url_for('static', filename='app/signature.css') + '"><title>' + word('Signature') + '</title></head><body onresize="resizeCanvas()"><div id="page"><div class="header" id="header"><a id="new" class="navbtn nav-left">Clear</a><a id="save" class="navbtn nav-right">Save</a><div class="title">' + word('Your Signature') + '</div></div><div class="toppart" id="toppart">' + word('I am a citizen of the United States.') + '</div><div id="content"><p style="text-align:center"></p></div><div class="bottompart" id="bottompart">' + word('Jonathan Pyle') + '</div></div><form id="daform" action="' + url_for('upload_draw') + '" method="post"><input type="hidden" name="variable" value="' + word('Jonathan Pyle') + '"><input type="hidden" id="theImage" name="_the_image" value=""><input type="hidden" id="success" name="_success" value="0"></form></body></html>'
     status = '200 OK'
     response = make_response(output.encode('utf8'), status)
     response.headers['Content-type'] = 'text/html; charset=utf-8'
@@ -1663,7 +1663,7 @@ def current_info(yaml=None, req=None, action=None):
     else:
         ext = dict(email=None, theid=None, roles=list())
     if req is None:
-        url = 'localhost'
+        url = 'http://localhost'
     else:
         url = req.base_url
     return_val = {'session': session['uid'], 'yaml_filename': yaml, 'url': url, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}}

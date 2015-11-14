@@ -13,10 +13,18 @@ from decimal import Decimal
 
 __all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'RoleChangeTracker', 'DATemplate', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'set_language', 'word', 'comma_list', 'ordinal', 'ordinal_number', 'need', 'nice_number', 'verb_past', 'verb_present', 'noun_plural', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'indefinite_article', 'today', 'capitalize', 'title_case', 'url_of', 'get_locale', 'set_locale', 'process_action', 'url_action', 'selections']
 
-this_thread = threading.local()
-this_thread.user = None
-this_thread.role = None
-this_thread.current_info = dict()
+class ThreadVariables(threading.local):
+    user = None
+    role = None
+    current_info = dict()
+    initialized = False
+    def __init__(self, **kw):
+        if self.initialized:
+            raise SystemError('__init__ called too many times')
+        self.initialized = True
+        self.__dict__.update(kw)
+
+this_thread = ThreadVariables()
 
 def update_info(new_user, new_role, new_current_info):
     this_thread.user = new_user

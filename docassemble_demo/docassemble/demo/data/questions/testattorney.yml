@@ -1,0 +1,34 @@
+---
+modules:
+  - docassemble.demo.attorney
+---
+imports:
+  - us
+---
+objects:
+  - lawyer: Attorney
+---
+mandatory: true
+question: |
+  % if lawyer.can_practice_in('MA'):
+  ${ lawyer } can practice in Massachusetts.
+  % else:
+  Sorry, ${ lawyer } cannot practice in Massachusetts.
+  % endif
+---
+generic object: Attorney
+question: |
+  In what state(s) ${ x.is_are_you() } admitted to practice?
+fields:
+  - no label: x.bar_admissions
+    datatype: checkboxes
+    code: |
+      us.states.mapping('abbr', 'name')
+---
+generic object: Attorney
+question: |
+  What is the attorney's name?
+fields:
+  - First Name: x.name.first
+  - Last Name: x.name.last
+---

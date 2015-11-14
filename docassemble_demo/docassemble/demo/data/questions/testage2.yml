@@ -6,10 +6,14 @@ objects:
   - user: Individual
 ---
 question: >-
-  What is your date of birth?
+  How old are you?
 fields:
-  - no label: user.birthdate
-    datatype: date
+  - Age in years: user.age
+    datatype: number
+---
+mandatory: true
+code: |
+  need(user.age)
 ---
 mandatory: true
 question: |

@@ -18,7 +18,7 @@ noquote_match = re.compile(r'"')
 def tracker_tag(status):
     output = ''
     if status.question.name:
-        output += '<input type="hidden" name="_questionname" value="' + status.question.name + '">'
+        output += '<input type="hidden" name="_question_name" value="' + status.question.name + '">'
     output += '<input type="hidden" name="_tracker" value="' + str(status.tracker) + '">'
     return output
 
@@ -29,7 +29,7 @@ def datatype_tag(datatypes):
 
 # def question_name_tag(question):
 #     if question.name:
-#         return('<input type="hidden" name="_questionname" value="' + question.name + '">')
+#         return('<input type="hidden" name="_question_name" value="' + question.name + '">')
 #     return('')
 
 def icon_html(status, name, width_value=1.0, width_units='em'):
@@ -56,7 +56,7 @@ def signature_html(status, debug, root):
     output += '<div id="content"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div><div class="bottompart" id="bottompart">'
     if (status.underText):
         output += markdown_to_html(status.underText, trim=True)
-    output += '</div></div><form action="' + root + '" id="daform" method="POST"><input type="hidden" name="_saveas" value="' + status.question.fields[0].saveas + '"><input type="hidden" id="_theImage" name="_theImage" value=""><input type="hidden" id="_success" name="_success" value="0">'
+    output += '</div></div><form action="' + root + '" id="daform" method="POST"><input type="hidden" name="_save_as" value="' + status.question.fields[0].saveas + '"><input type="hidden" id="_the_image" name="_the_image" value=""><input type="hidden" id="_success" name="_success" value="0">'
     #output += question_name_tag(status.question)
     output += tracker_tag(status)
     output += '</form>'
