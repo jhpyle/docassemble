@@ -47,5 +47,12 @@ If you do not want your users to be able to log in, you can hide the
 Login button by setting the `show_login` setting in the
 [configuration].
 
+When a user is logged in, the user's information is made available to
+**docassemble** interviews through the variable `current_info`.  See
+[special variables] for more information.
+
+[special variables]: {{ site.baseurl }}/docs/special.html
 [configuration]: {{ site.baseurl }}/docs/config.html
 [installation]: {{ site.baseurl }}/docs/installation.html
+[roles]: {{ site.baseurl }}/docs/roles.html
+[Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries

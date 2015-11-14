@@ -342,6 +342,27 @@ This symbol will be used in the user interface when a field has the
 `datatype` of `currency`.  It will also be used in the
 `currency_symbol()` function defined in `docassemble.base.util`.
 
+## Using your own configuration variables
+
+Feel free to use the configuration file to pass your own variables to
+your code.  To retrieve their values, import `daconfig` from
+`docassemble.webapp.config`:
+
+{% highlight python %}
+from docassemble.webapp.config import daconfig
+twilio_api_key = daconfig.get('twilio api key', None)
+local_db_access_info = daconfig.get('local_db', dict())
+{% endhighlight %}
+
+`daconfig` is a dictionary resulting from importing the [YAML] in the
+configuration file, so the values of the keys may be text, lists, or
+dictionaries depending on what is written in the configuration file.
+
+It is a good practice to use the configuration file to store any
+sensitive information, such as passwords and API keys.  This allows
+you to share your code on [GitHub] without worrying about redacting it
+first.
+
 [Flask]: http://flask.pocoo.org/
 [YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
 [LaTeX]: http://www.latex-project.org/
@@ -360,3 +381,4 @@ This symbol will be used in the user interface when a field has the
 [document]: {{ site.baseurl }}/docs/documents.html
 [functions]:  {{ site.baseurl }}/docs/functions.html
 [ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+[GitHub]: https://github.com/

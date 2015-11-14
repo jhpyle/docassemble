@@ -20,11 +20,13 @@
     - functions
     - documents
     - roles
+    - special
     - reserved
     - errors
 - title: Miscellaneous
   docs:
     - language
+    - users
     - packages
     - docker
     - scalability

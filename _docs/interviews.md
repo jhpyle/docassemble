@@ -10,23 +10,32 @@ An "interview" in **docassemble** is a [YAML] file that
 **docassemble** reads, and on the basis of what it finds, asks
 questions of a user.
 
+**docassemble** stores the user's answers in "variables."  The values
+of these variables may be incorporated into the the text of questions,
+or into the text of [documents].
+
+The interview can ask different questions of the user depending on
+what the answers to earlier questions were.
+
 ## The contents of an interview file
 
 The interview file is a series of possible questions that could
-potentially be asked, arranged in no particular order.  The order of
-the questions is determined by the interview logic, which tells
+potentially be asked, arranged in no particular order.  Which
+questions will be asked, and the order in which they are asked, will
+be determined by **docassemble**.  All you need to do is give
 **docassemble** an end goal.
 
-The interview logic could be as simple as "show the exit screen."
-This will instruct **docassemble** to try to show the exit screen.
-But **docassemble** will doubtless find that in order to show the exit
+The end goal might be as simple as "show the exit screen."  This will
+instruct **docassemble** to try to show the exit screen.  But
+**docassemble** will doubtless find that in order to show the exit
 screen, it will need a piece of information.  It will look for a
 question in the [YAML] file that will provide that information, and it
-will try to ask that question.  But it may find that in order to even
-ask that question, it needs to know another piece of information, and
-it will look for a question that provides it, and so forth and so on.
-The first question will turn out to be something basic, like "What is
-your name?"
+will try to ask that question.  But it may find that in order to ask
+that question, it needs to know another piece of information, and it
+will look for a question that provides that information, and so forth
+and so on.  The first question will turn out to be something basic,
+like "What is your name?" and **docassemble** might not reach the exit
+screen until 20 questions have been asked and answered.
 
 In addition to questions, the [YAML] file can contain bits of logic,
 written as lines of [Python] code.  For example:
@@ -52,7 +61,7 @@ the user is under 65, **docassemble** will ask questions to determine
 whether the household is low income.
 
 A [YAML] interview file is simply a text file consisting of "blocks"
-separated by `---`.  For example, this [YAML] interview has four blocks:
+separated by `---`.  For example, this interview has four blocks:
 
 {% highlight yaml %}
 ---
@@ -77,25 +86,28 @@ fields:
 ---
 {% endhighlight %}
 
-The first block is the interview logic.  It tells **docassemble** that
-the goal is to get to the `exit_page`.
+The first block is a bit of [Python] code that is marked `mandatory`.
+This is very simple code; is simply refers to a variable, `exit_page`.
+This tells **docassemble** that the goal of the interview is to get a
+definition for the `exit_page` variable.
 
-The second block is a "question" that presents the `exit_page`.  It
-refers to the variable `favorite_animal`.
+The second block is a "question" that offers to define the
+`exit_page`.  It refers to the variable `favorite_animal`.
 
-The third block is a "question" that defines the `favorite_animal`.
+The third block is a "question" that defines the variable `favorite_animal`.
 
-The fourth block is a "question" that defines the `favorite_vegetable`.
+The fourth block is a "question" that defines the variable `favorite_vegetable`.
 
 When **docassemble** presents this interview to the user, it follows
 these steps:
 
 1. It scans the file and processes everything that is "mandatory."  It
   treats everything else as optional.
-2. It finds `mandatory` code in the first block and tries to run it.
-3. It can't run the code because it doesn't know what `exit_page` is,
+2. It finds `mandatory` [Python] code in the first block and tries to
+   run it.
+3. It can't run the code because `exit_page` is not defined,
 so it looks for a question that defines `exit_page`.
-4. It looks through the blocks for a question that defines
+4. It looks through the blocks for a question that offers to define
 `exit_page`, and finds it in the second block.
 5. It tries to ask the `exit_page` question, but runs into a variable
 it doesn't know: `favorite_animal`.
@@ -110,8 +122,16 @@ The order of the blocks in the file is irrelevant; **docassemble**
 would do the same thing regardless of the order of the blocks.
 
 Note that the fourth block, containing the question about the user's
-favorite vegetable, was never used because the interview logic did not
-need it.
+favorite vegetable, was never used because it was never needed.
+
+The logic of the interview was as follows:
+
+* I need `exit_page`
+* For that, I need to ask `favorite_animal`
+
+You can
+[try out this interview](https://docassemble.org/demo?i=docassemble.demo:data/questions/animal.yml){:target="_blank"}
+to see how it looks from the user's perspective.
 
 This is a very simple interview; there are more types of blocks that
 you can write.  These blocks are explained in the following sections:
@@ -175,6 +195,14 @@ typing in a URL like:
 
 > http://example.com/interview?i=docassemble.mypackage:data/questions/myinterview.yml
 
+## How answers are stored
+
+When a user starts a new interview, a new "variable store" is created.
+A variable store is a [Python dictionary] containing the names of the
+variables that get defined during the course of the interview, such as
+`favorite_animal` in the example interview above.  The variable store
+is saved on the **docassemble** server.
+
 ## Leaving an interview and coming back
 
 If the user is not logged in through **docassemble**'s
@@ -183,12 +211,6 @@ interview will be lost if the web browser is closed.
 
 If the user is logged in, however, then when the user logs in again,
 the user will resume the interview where he left off.
-
-When a user starts a new interview, a new "variable store" is created.
-A variable store is a [Python dictionary] containing the names of the
-variables that get defined during the course of the interview, such as
-`favorite_animal` in the example interview above.  The variable store
-is saved on the **docassemble** server.
 
 [demonstration page]: {{ site.baseurl }}/demo.html
 [tutorial]: {{ site.baseurl }}/docs/helloworld.html

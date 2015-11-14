@@ -5,8 +5,42 @@ short_title: Setting Variables
 ---
 
 To instruct **docassemble** to store user input in a variable in
-response to a question, add one of the following statements to the
-`question` block.
+response to a question, you need to include in your `question` a
+variable name as well as some indication about how you would like
+**docassemble** to ask for the value of the variable.
+
+## A note about variable names
+
+Variable names are [Python identifiers], which means they can be any
+sequence of uppercase or lowercase letters, digits, and underscores,
+except the first character cannot be a digit.  No spaces are allowed
+and no punctuation is allowed except for the underscore, `_`.
+
+The following are valid variable names:
+
+* `fried_fish1`
+* `NyanCat`
+* `nyancat` (variables are case-sensitive, so this is not the same as
+  the above)
+* `__f645456DG_greij_43` (but why would you use something so ugly?)
+* `USER_PHONE_NUMBER` (ok, but why are you yelling?)
+
+The following are **not** valid variable names, and if you try to use
+such variable names you will may get an error or unexpected results:
+
+* `8th_plaintiff` (you can't begin a variable name with a number;
+  [Python] will say "invalid syntax")
+* `fried.fish1` (this is valid code, but [Python] will think you are
+referring to the attribute `fish1` of the object `fried`)
+* `user's_phone_number` (apostrophes are not allowed; [Python]
+  recognizes them as single quotes)
+* `favorite animal` (spaces are not allowed)
+* `beneficiary#1` (punctuation marks other than `_` are not allowed)
+* `applicant_résumé` (only plain alphabet characters can be used)
+
+See [reserved variable names] for a list of variable names that you
+cannot use because they conflict with built-in names that [Python] and
+**docassemble** use.
 
 ## `yesno` or `noyes`
 
@@ -493,3 +527,5 @@ question above.
 [Markdown]: https://daringfireball.net/projects/markdown/
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [objects]: {{ site.baseurl }}/docs/objects.html
+[Python identifiers]: https://docs.python.org/2/reference/lexical_analysis.html#identifiers
+[reserved variable names]: {{ site.baseurl }}/docs/reserved.html
