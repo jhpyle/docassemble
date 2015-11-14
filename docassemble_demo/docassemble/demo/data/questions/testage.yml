@@ -1,0 +1,8 @@
+---
+include:
+  - basic-questions.yml
+---
+mandatory: true
+question: |
+  You are ${ user.age_in_years() } years old.
+---

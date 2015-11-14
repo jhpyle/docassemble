@@ -76,8 +76,9 @@ objects:
   - jurisdiction: Jurisdiction
   - court: Court
 comment: >-
-  An "objects" section defines variables that are Python objects.  The
-  object types here are defined in the docassemble.legal module.
+  An "objects" section defines variables that are docassemble objects.
+  The object types here are defined in the docassemble.base.core and
+  docassemble.base.legal modules.
 ---
 code: |
   court.jurisdiction = jurisdiction
@@ -124,7 +125,7 @@ generic object: Individual
 question: >-
   What is ${ x.possessive('date of birth') }?
 fields:
-  - Date of birth: x.birthdate
+  - Date of Birth: x.birthdate
     datatype: date
 comment: >-
   docassemble allows you to write "generic" questions.  For example,

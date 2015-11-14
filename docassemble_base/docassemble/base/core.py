@@ -209,6 +209,21 @@ class DAFileList(DAList):
                     output += '[IMAGE ' + str(element.number) + ']' + "\n"
         return output
 
+class DATemplate(DAObject):
+    def init(self, **kwargs):
+        if 'content' in kwargs:
+            self.content = kwargs['content']
+        else:
+            self.content = ""
+        if 'subject' in kwargs:
+            self.subject = kwargs['subject']
+        else:
+            self.subject = ""
+    def __str__(self):
+        return(self.content)
+    def __repr__(self):
+        return(self.content)
+
 def selections(*pargs, **kwargs):
     to_exclude = set()
     if 'exclude' in kwargs:
