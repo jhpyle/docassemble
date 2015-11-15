@@ -526,6 +526,12 @@ def oauth_callback(provider):
 def google_page():
     return render_template('flask_user/google_login.html', title="Sign in")
 
+@app.route("/user/post-sign-in", methods=['GET'])
+def post_sign_in():
+    session_id = session.get('uid', None)
+    return redirect(url_for('index'))
+    #PPP
+
 @app.route("/exit", methods=['POST', 'GET'])
 def exit():
     return redirect(exit_page)
@@ -542,12 +548,16 @@ def index():
         yaml_filename = yaml_parameter
         user_code, user_dict = reset_session(yaml_filename)
         session_id = session.get('uid', None)
+        if 'key_logged' in session:
+            del session['key_logged']
         need_to_reset = True
     if session_parameter is not None:
         session_id = session_parameter
         session['uid'] = session_id
         user_code = session_id
         steps, user_dict = fetch_user_dict(user_code, yaml_filename)
+        if 'key_logged' in session:
+            del session['key_logged']
         need_to_reset = True
     if session_id:
         user_code = session_id
@@ -560,8 +570,12 @@ def index():
         user_code
     except:
         user_code, user_dict = reset_session(yaml_filename)
+        if 'key_logged' in session:
+            del session['key_logged']
         steps = 0
     action = None
+    if current_user.is_authenticated and 'key_logged' not in session:
+        save_user_dict_key(user_code, yaml_filename)
     if len(request.args):
         if 'action' in request.args:
             action = json.loads(myb64unquote(request.args['action']))
@@ -1113,20 +1127,35 @@ def advance_progress(user_dict):
 #     user_dict['_internal']['tracker'] += 1
 #     return
 
+def save_user_dict_key(user_code, filename):
+    cur = conn.cursor()
+    cur.execute("select id from userdictkeys where key=%s and filename=%s and user_id=%s", [user_code, filename, current_user.id])
+    found = False
+    for d in cur:
+        found = True
+    if not found:
+        cur.execute("INSERT INTO userdictkeys (key, filename, user_id) values (%s, %s, %s)", [user_code, filename, the_user_id])
+    conn.commit()
+    return
+
 def save_user_dict(user_code, user_dict, filename, changed=False):
     cur = conn.cursor()
     #logmessage(repr(pickle.dumps(pickleable_objects(user_dict))))
+    if current_user.is_authenticated and not current_user.is_anonymous:
+        the_user_id = current_user.id
+    else:
+        the_user_id = None
     if changed is True:
         if USE_PROGRESS_BAR:
             advance_progress(user_dict)
-        cur.execute("INSERT INTO userdict (key, dictionary, filename) values (%s, %s, %s)", [user_code, codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), filename])
+        cur.execute("INSERT INTO userdict (key, dictionary, filename, user_id) values (%s, %s, %s, %s)", [user_code, codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), filename, the_user_id])
     else:
         cur.execute("select max(indexno) as indexno from userdict where key=%s and filename=%s", [user_code, filename])
         max_indexno = None
         for d in cur:
             max_indexno = d[0]
         if max_indexno is None:
-            cur.execute("INSERT INTO userdict (key, dictionary, filename) values (%s, %s, %s)", [user_code, codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), filename])
+            cur.execute("INSERT INTO userdict (key, dictionary, filename, user_id) values (%s, %s, %s, %s)", [user_code, codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), filename, the_user_id])
         else:
             cur.execute("UPDATE userdict SET dictionary=%s where key=%s and filename=%s and indexno=%s", [codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), user_code, filename, max_indexno])
     conn.commit()

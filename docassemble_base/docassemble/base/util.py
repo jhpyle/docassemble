@@ -17,14 +17,14 @@ import urllib
 import codecs
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info']
 
 default_language = 'en'
 default_locale = 'US.utf8'
 
 class ThreadVariables(threading.local):
     language = default_language
-    this_locale = default_locale
+    locale = default_locale
     initialized = False
     def __init__(self, **kw):
         if self.initialized:
@@ -34,6 +34,14 @@ class ThreadVariables(threading.local):
 
 this_thread = ThreadVariables()
 
+def get_info(att):
+    if hasattr(this_thread, att):
+        return getattr(this_thread, att)
+
+def set_info(**kwargs):
+    for att, value in kwargs.iteritems():
+        setattr(this_thread, att, value)
+    
 word_collection = {
     'es': {
         'Continue': 'Continuar',
@@ -212,15 +220,15 @@ def set_default_locale(loc):
     return
 
 def set_locale(loc):
-    this_thread.this_locale = loc
+    this_thread.locale = loc
     return
 
 def get_locale():
-    return this_thread.this_locale
+    return this_thread.locale
 
 def update_locale():
     #logmessage("Using " + str(language) + '_' + str(this_locale) + "\n")
-    locale.setlocale(locale.LC_ALL, str(this_thread.language) + '_' + str(this_thread.this_locale))
+    locale.setlocale(locale.LC_ALL, str(this_thread.language) + '_' + str(this_thread.locale))
     return
 
 def comma_and_list_en(*pargs, **kargs):

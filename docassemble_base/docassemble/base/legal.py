@@ -1,5 +1,5 @@
 from docassemble.base.core import DAObject, DAList, DAFile, DAFileCollection, DAFileList, DATemplate, selections
-from docassemble.base.util import comma_and_list, get_language, set_language, word, comma_list, ordinal, ordinal_number, need, nice_number, possessify, verb_past, verb_present, noun_plural, space_to_underscore, force_ask, period_list, name_suffix, currency, indefinite_article, today, nodoublequote, capitalize, title_case, url_of, do_you, does_a_b, your, her, his, the, in_the, a_in_the_b, of_the, get_locale, set_locale, process_action, url_action
+from docassemble.base.util import comma_and_list, get_language, set_language, word, comma_list, ordinal, ordinal_number, need, nice_number, possessify, verb_past, verb_present, noun_plural, space_to_underscore, force_ask, period_list, name_suffix, currency, indefinite_article, today, nodoublequote, capitalize, title_case, url_of, do_you, does_a_b, your, her, his, the, in_the, a_in_the_b, of_the, get_locale, set_locale, process_action, url_action, get_info, set_info
 from docassemble.base.filter import file_finder, url_finder, mail_variable, markdown_to_html
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
@@ -9,9 +9,10 @@ import re
 import urllib
 import sys
 import threading
+import html2text
 from decimal import Decimal
 
-__all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'RoleChangeTracker', 'DATemplate', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'set_language', 'word', 'comma_list', 'ordinal', 'ordinal_number', 'need', 'nice_number', 'verb_past', 'verb_present', 'noun_plural', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'indefinite_article', 'today', 'capitalize', 'title_case', 'url_of', 'get_locale', 'set_locale', 'process_action', 'url_action', 'selections']
+__all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'RoleChangeTracker', 'DATemplate', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'set_language', 'word', 'comma_list', 'ordinal', 'ordinal_number', 'need', 'nice_number', 'verb_past', 'verb_present', 'noun_plural', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'indefinite_article', 'today', 'capitalize', 'title_case', 'url_of', 'get_locale', 'set_locale', 'process_action', 'url_action', 'selections', 'get_info', 'set_info']
 
 class ThreadVariables(threading.local):
     user = None
@@ -26,10 +27,12 @@ class ThreadVariables(threading.local):
 
 this_thread = ThreadVariables()
 
-def update_info(new_user, new_role, new_current_info):
+def update_info(new_user, new_role, new_current_info, **kwargs):
     this_thread.user = new_user
     this_thread.role = new_role
     this_thread.current_info = new_current_info
+    for att, value in kwargs.iteritems():
+        setattr(this_thread, att, value)
     return
 
 def interview_url():
@@ -277,7 +280,14 @@ class Individual(Person):
             return float(rd.years)
         else:
             return int(rd.years)
-        
+    def first_name_hint(self):
+        if self is this_thread.user and this_thread.current_info['user']['is_authenticated'] and 'firstname' in this_thread.current_info['user'] and this_thread.current_info['user']['firstname']:
+            return this_thread.current_info['user']['firstname'];
+        return ''
+    def last_name_hint(self):
+        if self is this_thread.user and this_thread.current_info['user']['is_authenticated'] and 'lastname' in this_thread.current_info['user'] and this_thread.current_info['user']['lastname']:
+            return this_thread.current_info['user']['lastname'];
+        return ''
     def possessive(self, target):
         if self is this_thread.user:
             return your(target)
@@ -397,12 +407,20 @@ class Value(DAObject):
 class PeriodicValue(Value):
     pass
 
-def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", attachments=[]):
+def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None, html=None, subject="", attachments=[]):
     from flask_mail import Message
     if type(to) is not list:
         to = [to]
     if len(to) == 0:
         return False
+    if template is not None:
+        if subject == '':
+            subject = template.subject
+        body_html = '<html><body>' + markdown_to_html(template.content) + '</body></html>'
+        if body is None:
+            body = html2text.html2text(body_html)
+        if html is None:
+            html = body_html
     if body is None and html is None:
         body = ""
     email_stringer = lambda x: email_string(x, include_name=False)

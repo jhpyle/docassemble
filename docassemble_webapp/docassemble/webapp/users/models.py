@@ -48,12 +48,19 @@ class UserDict(db.Model):
     dictionary = db.Column(db.Text())
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
 
+class UserDictKeys(db.Model):
+    __tablename__ = "userdictkeys"
+    indexno = db.Column(db.Integer(), primary_key=True)
+    filename = db.Column(db.Text())
+    key = db.Column(db.String(250))
+    user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
+
 class UserDictLock(db.Model):
     __tablename__ = "userdictlock"
     indexno = db.Column(db.Integer(), primary_key=True)
     filename = db.Column(db.Text())
     key = db.Column(db.String(250))
-    locktime = db.Column(db.DateTime(), default=db.func.now())
+    locktime = db.Column(db.DateTime(), server_default=db.func.now())
 
 class Attachments(db.Model):
     __tablename__ = "attachments"
@@ -81,7 +88,7 @@ class Ticket(db.Model):
     request_type = db.Column(db.String(50), nullable=False)
     description = db.Column(db.Text())
     opened_by = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
-    open_time = db.Column(db.DateTime(), default=db.func.now())
+    open_time = db.Column(db.DateTime(), server_default=db.func.now())
     close_time = db.Column(db.DateTime())
     closed_by = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
     close_type = db.Column(db.String(50))
@@ -94,6 +101,6 @@ class TicketNote(db.Model):
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
     note_type = db.Column(db.String(50), nullable=False)
     ticket_id = db.Column(db.Integer(), db.ForeignKey('ticket.id', ondelete='CASCADE'))
-    create_time = db.Column(db.DateTime(), default=db.func.now())
+    create_time = db.Column(db.DateTime(), server_default=db.func.now())
     description = db.Column(db.Text())
 
