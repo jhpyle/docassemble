@@ -31,7 +31,7 @@ code: |
 template: hello_email
 subject: |
   A picture for ${ user }
-content:
+content: |
   Hello, ${ user }!
 
   Attached please find an incredibly *cool* picture.
