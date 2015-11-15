@@ -806,7 +806,7 @@ def index():
                             string = file_field + " = docassemble.base.core.DAFileList('" + file_field + "', elements=[" + ", ".join(elements) + "])"
                         else:
                             string = file_field + " = None"
-                        #logmessage("string is " + string)
+                        logmessage("Doing " + string)
                         try:
                             exec(string, user_dict)
                             changed = True
