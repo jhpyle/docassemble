@@ -431,23 +431,29 @@ def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None
     for attachment in attachments:
         logmessage("moo3")
         if type(attachment) is DAFileCollection:
+            logmessage("moo3.5")
             subattachment = getattr(attachment, 'pdf', getattr(attachment, 'rtf', getattr(attachment, 'tex', None)))
             if subattachment is not None:
                 attachment = subattachment
             else:
                 success = False
         if type(attachment) is DAFile and attachment.ok:
+            logmessage("moo3.6")
             file_info = file_finder(str(attachment.number))
             if ('path' in file_info):
+                logmessage("moo3.7")
                 failed = True
                 with open(file_info['path'], 'r') as fp:
                     msg.attach(file_info['filename'], file_info['mimetype'], fp.read())
                     failed = False
+                logmessage("moo3.8 failed is " + str(failed))
                 if failed:
                     success = False
             else:
+                logmessage("moo3.9")
                 success = False
         else:
+            logmessage("moo3.95")
             success = False
     appmail = mail_variable()
     logmessage("moo3 success is " + str(success))
