@@ -423,10 +423,13 @@ def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None
             html = body_html
     if body is None and html is None:
         body = ""
+    logmessage("moo1")
     email_stringer = lambda x: email_string(x, include_name=False)
+    logmessage("moo2")
     msg = Message(subject, sender=email_stringer(sender), recipients=email_stringer(to), cc=email_stringer(cc), bcc=email_stringer(bcc), body=body, html=html)
     success = True
     for attachment in attachments:
+        logmessage("moo3")
         if type(attachment) is DAFileCollection:
             subattachment = getattr(attachment, 'pdf', getattr(attachment, 'rtf', getattr(attachment, 'tex', None)))
             if subattachment is not None:
@@ -447,13 +450,16 @@ def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None
         else:
             success = False
     appmail = mail_variable()
+    logmessage("moo3 success is " + str(success))
     if not appmail:
         success = False
+    logmessage("moo4 success is " + str(success))
     if success:
         try:
             appmail.send(msg)
         except Exception as errmess:
             success = False
+    logmessage("moo5 success is " + str(success))
     return(success)
     
 def email_string(persons, include_name=None):
