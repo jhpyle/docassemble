@@ -54,6 +54,23 @@ buttons
 ---
 {% endhighlight %}
 
+> AssertionError: A blueprint's name collision occurred between
+> <flask.blueprints.Blueprint object at 0x7fab5a780850> and
+> <flask.blueprints.Blueprint object at 0x7fab59da1b90>.  Both
+> share the same name "flask_user".  Blueprints that are created
+> on the fly need unique names.
+
+If you get this error, try restarting the web server.  Normally,
+"touch"ing the [WSGI] file succeeds at restarting the server, but
+sometimes it does not, and this error appears.
+
+If that does not solve the problem, try reinstalling the [Flask]
+packages.  Also make sure that you do not have multiple versions of
+[Flask] installed at the same time (e.g., one version in `/usr/lib`
+and another in `/usr/local/lib`).
+
+[Flask]: http://flask.pocoo.org/
+[WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
 [Mako]: http://www.makotemplates.org/
 [exec]: https://docs.python.org/2.0/ref/exec.html
 [pickle]: https://docs.python.org/2/library/pickle.html

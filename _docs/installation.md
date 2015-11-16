@@ -53,7 +53,7 @@ To install the [us](https://pypi.python.org/pypi/us) and
 [SmartyPants](https://pypi.python.org/pypi/mdx_smartypants) modules,
 do:
 
-    sudo pip install --upgrade us 3to2 guess-language-spirit
+    sudo pip install --upgrade us 3to2 guess-language-spirit html2text
     sudo pip install --upgrade mdx_smartypants titlecase
     sudo pip install --upgrade cffi
     sudo pip install --upgrade bcrypt

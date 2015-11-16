@@ -151,6 +151,53 @@ dictionaries) where the key is what the variable should be set to and
 the value is the button label.  This is different from the [YAML]
 syntax.
 
+## `signature`
+
+The `signature` directive presents a special screen in which the user
+can sign his or her name with the trackpad or other pointing device.
+
+For example:
+
+{% highlight yaml %}
+---
+question: |
+  Please sign your name below.
+signature: user_signature
+under: |
+  ${ user_first_name } ${ user_last_name } 
+---
+{% endhighlight %}
+
+On the screen, the `question` text appears first, then the
+`subquestion` text, then the signature area appears, and then the
+`under` text appears.
+
+In this example, the `user_signature` will be set to an object of type
+`DAFile`.  This variable can be included in the same way that a
+document upload can be included.  For example:
+
+{% highlight yaml %}
+---
+question: |
+  Is this your signature?
+subquestion: |
+  ${ user_signature }
+yesno: user_signature_verified
+---
+{% endhighlight %}
+
+or, if you want to control the width of the image:
+
+{% highlight yaml %}
+---
+question: |
+  Is this your signature?
+subquestion: |
+  ${ user_signature.show(width='1in') }
+yesno: user_signature_verified
+---
+{% endhighlight %}
+
 ## `fields`
 
 The `fields` statement is used to present the user with a list of
@@ -219,8 +266,8 @@ The possible `datatype` values are:
 * `number`: a valid numeric value.
 * `currency`: a valid numeric value; input box shows a currency symbol
   based on locale defined in the [configuration].
-* `file`: a single file upload (`DAFile` object).
-* `files`: single or multiple file upload (`DAFileList` object).
+* `file`: a single file upload (a `DAFileList` [object] results).
+* `files`: single or multiple file upload (a `DAFileList` [object] results).
 * `yesno`: checkbox with label, aligned with labeled fields.
 * `yesnowide`: checkbox with label, full width of area.
 * `checkboxes`: show `choices` list as checkboxes; variable will be a
@@ -526,6 +573,7 @@ question above.
 [Mako]: http://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
 [YAML]: https://en.wikipedia.org/wiki/YAML
+[object]: {{ site.baseurl }}/docs/objects.html
 [objects]: {{ site.baseurl }}/docs/objects.html
 [Python identifiers]: https://docs.python.org/2/reference/lexical_analysis.html#identifiers
 [reserved variable names]: {{ site.baseurl }}/docs/reserved.html

@@ -337,10 +337,10 @@ class Recipe(DAObject):
             return str(self.oven_temperature) + ' K'
 {% endhighlight %}
 
-The `str()` function is a Python function that converts something to
+(The `str()` function is a Python function that converts something to
 text.  Here, it is necessary because `self.oven_temperature` may be a
-number, and [Python] will complain if you ask it to "add"
-text to a number.
+number, and [Python] will complain if you ask it to "add" text to a
+number.)
 
 Then you could change the `temperature_type` from an interview:
 
@@ -358,18 +358,60 @@ code: |
 ...
 {% endhighlight %}
 
-This will work correctly 99% of the time.  However, it is not
-[thread-safe].  If your server is under heavy load, users might
-randomly be advised to turn their ovens to 350 degrees Celsius, which
-would scorch the food.  This is because the variable
-`temperature_type` is defined at the level of the web server process,
-and the process might be supporting several users simultaneously (in
-different "threads" of the process).  Between the time one thread sets
-`temperature_type` to `Fahrenheit` and tries to use it, another thread
+This works because the `modules` block loads all the names from
+`docassemble.cooking.objects` into the variable store of the
+interview, including `temperature_type`.
+
+However, this is not [thread-safe] and it will not work correctly 100%
+of the time.  If your server is under heavy load, users might randomly
+be advised to turn their ovens to 350 degrees Celsius, which would
+scorch the food.  This is because the variable `temperature_type`
+exists at the level of the web server process, and the process might
+be supporting several users simultaneously (in different "threads" of
+the process).  Between the time one thread sets `temperature_type` to
+`Fahrenheit` and tries to use it, another user inside the same process
 might set `temperature_type` to `Celsius`.
 
-To get around this problem, use Python's [threading module] to store
-global variables.
+The simplest way to get around this problem is to use the `set_info()`
+and `get_info()` functions from `docassemble.base.util`:
+
+{% highlight python %}
+from docassemble.base.core import DAObject
+from docassemble.base.util import get_info
+
+class Recipe(DAObject):
+    def summary(self):
+        return "#### Ingredients\n\n" + self.ingredients + "\n\n#### Instructions\n\n" + self.instructions
+    def get_oven_temperature(self):
+        if get_info('temperature_type') == 'Celsius':
+            return str(self.oven_temperature) + ' °C'
+        elif get_info('temperature_type') == 'Fahrenheit':
+            return str(self.oven_temperature) + ' °F'
+        elif get_info('temperature_type') == 'Kelvin': 
+            return str(self.oven_temperature) + ' K'
+{% endhighlight %}
+
+Then from your interview you can bring in `docassemble.base.util` and run `set_info()`:
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.util
+  - docassemble.cooking.objects
+---
+initial: true
+code: |
+  if user_is_scientist:
+    set_info(temperature_type='Kelvin')
+  elif user_country in ['United States', 'Great Britain']:
+    set_info(temperature_type='Fahrenheit')
+  else:
+    set_info(temperature_type='Celsius')
+...
+{% endhighlight %}
+
+Alternatively, you can do what `docassemble.base.util` does and use
+Python's [threading module] to store global variables.
 
 {% highlight python %}
 from docassemble.base.core import DAObject
@@ -397,10 +439,11 @@ class Recipe(DAObject):
             return str(self.oven_temperature) + ' K'
 {% endhighlight %}
 
-We added an `__all__` statement so that interviews can include names
-from `docassemble.cooking.objects` without including extraneous names
-like `threading`.  We also added functions for setting and retrieving
-the value of the "temperature type."
+We added an `__all__` statement so that interviews can a `module`
+block including `docassemble.cooking.objects` does not clutter the
+variable store with extraneous names like `threading`.  We also added
+functions for setting and retrieving the value of the "temperature
+type."
 
 The temperature type is now an attribute of the object `this_thread`,
 which is an instance of `threading.local`.  This attribute needs to be
@@ -428,7 +471,8 @@ Note that you do not need to worry about whether your global variables
 are [thread-safe] if they do not change from interview to interview.
 
 For example, if you only wanted to allow people to change the
-temperature type from the **docassemble** [configuration], you could do:
+temperature type from the **docassemble** [configuration], you could
+do the following in your [Python module]:
 
 {% highlight python %}
 from docassemble.base.core import DAObject
@@ -440,7 +484,8 @@ temperature_type = daconfig.get('temperature type', 'Celsius')
 Then your interviews would not have to do anything with `temperature_type`.
 
 Also, you could avoid the complication of global variables entirely if
-you always pass the temperature type as an argument to `get_oven_temperature`:
+you are willing to pass the temperature type as an argument to
+`get_oven_temperature`:
 
 {% highlight python %}
 from docassemble.base.core import DAObject
@@ -474,11 +519,256 @@ and then in your question text you could write:
     Set your oven to ${ apple_pie.get_oven_temperature(temperature_type) }
     and let it warm up.
 
-### Extending existing classes
+## Standard docassemble classes
+
+### DAObject
+
+All **docassemble** objects are instances of the `DAObject` class.
+`DAObject`s are different from normal [Python objects] because they
+have special attributes that allow their attributes to be set by
+**docassemble** questions.  If `fruit` is an ordinary [Python object]
+and you refer to `fruit.seeds` when `seeds` is not an existing
+attribute of `fruit`, [Python] will generate an [AttributeError].  But
+if `fruit` is a `DAObject`, **docassemble** will ask a question that
+offers to define `fruit.seeds`, or ask a `generic object` question for
+object `DAObject` that offers to define `x.seeds`.
+
+If you wish to add an attribute to a `DAObject` that is an instance
+`DAObject`, you may need to use the `initializeAttribute()` method.
+
+Suppose you try the following:
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  - tree: DAObject
+  - long_branch: DAObject
+---
+mandatory: true
+question: |
+  The length of the branch is ${ tree.branch.length }.
+---
+code: |
+  tree.branch = long_branch
+---
+question: |
+  What is the length of the branch on the tree?
+fields:
+  - Length: tree.branch.length
+---
+{% endhighlight %}
+
+This will result in the following error:
+
+> Found a reference to a variable 'long_branch.length' that could not
+> be looked up in the question file or in any of the files
+> incorporated by reference into the question file, despite reaching
+> the very end of the file.
+
+If you had a question that defined `long_branch.length` or a `generic
+object` question for the `x.length` where `x` is a `DAObject`, then
+**docassemble** would use that question, but it is not able to ask for
+the length of the branch with `tree.branch.length` since the intrinsic
+name of the branch is `long_branch`, not `tree.branch`.
+
+However, this will work as intended:
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  - tree: DAObject
+---
+sets: tree.branch
+code: |
+  tree.initializeAttribute('branch', DAObject)
+---
+mandatory: true
+question: |
+  The length of the branch is ${ tree.branch.length }.
+---
+question: |
+  What is the length of the branch on the tree?
+fields:
+  - Length: tree.branch.length
+---
+{% endhighlight %}
+
+The `initializeAttribute` section here creates a new `DAObject` with
+the intrinsic name of `tree.branch`, and adds the `branch` attribute
+to the object `tree`.
+
+Note that we had to add `sets: tree.branch` to the `code` section with
+`tree.initializeAttribute('branch', DAObject)`, but this was not
+necessary when the code was `tree.branch = long_branch`.  This is
+because **docassemble** reads the code in `code` sections and looks
+for assignments with the `=` operator, and keeps track of which code
+sections define which variables.  But sometimes variables are assigned
+by functions, and **docassemble** does not realize that.  The
+`sets: tree.branch` line tells **docassemble** that the code promises
+to define `tree.branch`.
+
+One of the useful things about `DAObject`s is that you can write
+`generic object` questions that work in a wide variety of
+circumstances because the questions can use the variable name itself
+when forming the text of the question to ask the user.
+
+If you refer to a `DAObject` in a [Mako] template (or reduce it to
+text with Python's [str function]), this will have the effect of
+calling the `object_name()` method, which attempts to return a
+human-friendly name for the object.
+
+For example:
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  - park: DAObject
+  - turnip: DAObject
+---
+mandatory: true
+code: |
+  park.initializeAttribute('front_gate', DAObject)
+---
+mandatory: true
+question: |
+  The ${ turnip.color } turnip sat before the
+  ${ park.front_gate.color } gate.
+---
+generic object: DAObject
+question: |
+  What is the color of the ${ x }?
+fields:
+  - Color: x.color
+---
+{% endhighlight %}
+
+([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/testdaobject.yml){:target="_blank"}.)
+
+Although there is only one question for `x.color`, this question
+generates both "What is the color of the turnip?" and "What is the
+color of the front gate in the park?"  This is because `object_name()`
+is implicitly called and it turns `park.front_gate` into "front gate
+in the park."
+
+The `object_name()` method is multi-lingual-friendly.  By using
+`docassemble.base.util.update_word_collection()`, you can provide
+non-English translations for words that come from variable names, such
+as "turnip," "park," and "front gate."  By using
+`docassemble.base.util.update_language_function()`, you can define a
+non-English version of the `a_in_the_b()` function, which
+`object_name()` uses to convert an attribute name like
+`park.front_gate` into "front gate in the park."  (It calls
+`a_in_the_b('front gate', 'park')`.)  So in a Spanish interview,
+`park.front_gate.object_name()` would return "puerta de entrada en el
+parque."  (The Spanish version of `a_in_the_b()` will be more
+complicated than the English version because it will need to determine
+the gender of the second argument.)
+
+A related method of `DAObject` is `object_possessive()`.  Calling
+`turnip.object_possessive('leaves')` will return `the turnip's
+leaves`.  Calling `park.front_gate.object_possessive('latch')` will
+return `the latch of the front gate in the park`.
+
+The `DAObject` is the most basic object, and all other **docassemble**
+objects inherit from it.  These objects will have different methods
+and behaviors.  For example, if `friend` is an `Individual` (from
+`docassemble.base.legal`), calling `${ friend }` in a [Mako] template
+will not return `friend.object_name()`; rather, it will return
+`friend.full_name()`, which may require asking the user for the
+`friend`'s name.
+
+### DAList
+
+A `DAList` acts like an ordinary [Python list], except that
+**docassemble** can ask questions to define elements of the list.  For
+example, you could define `recipient` as a `DAList` containing five
+`Individual`s:
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - recipient: DAList
+  - trustee: Individual
+  - beneficiary: Individual
+  - grantor: Individual
+---
+mandatory: true
+code: |
+  recipient.append(trustee)
+  recipient.append(beneficiary)
+  recipient.append(grantor)
+  recipient.appendObject(Individual)
+  recipient.appendObject(Individual)
+---
+mandatory: true
+question: The recipients
+subquestion: |
+  % for person in recipient:
+  ${ person } is a recipient.
+  % endfor
+---
+generic object: Individual
+question: |
+  What is the name of the ${ x.object_name() }?
+fields:
+  - First Name: x.name.first
+  - Last Name: x.name.last
+---
+generic list object: Individual
+question: |
+  What is the name of the ${ x[i].object_name() }?
+fields:
+  - First Name: x[i].name.first
+  - Last Name: x[i].name.last
+---
+{% endhighlight %}
+
+([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/testdalist.yml){:target="_blank"}.)
+
+This will result in the following five questions being asked:
+
+* What is the name of the trustee? (generated by the `generic
+  object` question)
+* What is the name of the beneficiary? (generated by the `generic
+  object` question)
+* What is the name of the grantor? (generated by the `generic
+  object` question)
+* What is the name of the fourth recipient? (generated by the `generic
+  list object` question)
+* What is the name of the fifth recipient? (generated by the `generic
+  list object` question)
+
+The `appendObject()` method is somewhat like the
+`initializeAttribute()` method we discussed earlier.  In the 
+
+
+### DADict
+
+### DAFile
+
+### DAFileCollection
+
+### DAFileList
+
+### DATemplate
+
+## Extending existing classes
 
 If you want to add a method to an existing **docassemble** class, such
-as `Individual`, you do not need to reinvent the wheel.  Just take
-advantage of [inheritance].
+as `Individual`, you do not need to reinvent the wheel or copy and
+paste code from anywhere.  Just take advantage of [inheritance].
 
 For example, if your package is `docassemble.missouri_family_law`, you
 could create/edit the file
@@ -588,3 +878,7 @@ and not an instance of the `Attorney` class.
 [package system]: {{ site.baseurl }}/docs/packages.html
 [configuration]: {{ site.baseurl }}/docs/config.html
 [Markdown]: https://daringfireball.net/projects/markdown/syntax
+[AttributeError]: https://docs.python.org/2/library/exceptions.html#exceptions.AttributeError
+[Python objects]: https://docs.python.org/2/tutorial/classes.html
+[Python object]: https://docs.python.org/2/tutorial/classes.html
+[str function]: https://docs.python.org/2/library/functions.html#str

@@ -301,6 +301,34 @@ code: |
 ---
 {% endhighlight %}
 
+## Functions for managing global variables
+
+### set_info()
+
+
+
+### get_info()
+
+This function is used to retrieve information passed to
+`set_info()`.
+
+For example, if you passed `interview_type` as a [keyword argument] to
+`set_info()`, you can retrieve the value by doing:
+
+{% highlight python %}
+from docassemble.base.legal import *
+
+class Recipe(DAObject):
+    def difficulty_level(self):
+        if get_info('interview_type') == 'standard':
+            #etc.
+{% endhighlight %}
+
+If the information does not exist, `get_info()` returns `None`.
+
+
+
+
 ## Language and locale functions
 
 These functions access and change the active language and locale.  See

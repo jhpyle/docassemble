@@ -27,6 +27,8 @@ The docassemble module depends on:
   provide a list of U.S. states
 * [SmartyPants](https://pypi.python.org/pypi/mdx_smartypants) - for
   converting straight quotes to curly quotes
+* [html2text](https://pypi.python.org/pypi/html2text) for converting
+  HTML to text for the plain text part of an e-mail.
 
 The web application depends on:
 
@@ -42,6 +44,7 @@ The web application depends on:
   for handling Flask sessions
 * [Flask-User](https://pythonhosted.org/Flask-User) - for a
   username/password system
+* [Flask-Mail](https://pythonhosted.org/Flask-Mail/) - for sending e-mail
 * [SQLAlchemy](http://www.sqlalchemy.org/) - used by Flask to store
   data in a SQL server
 * [WTForms](https://wtforms.readthedocs.org/en/latest/) - required by
