@@ -786,13 +786,30 @@ Other methods available on a DAList are:
 * `did_verb(verb)` - like the `verb_past()` function from
   `docassemble.base.util`, except that it uses the singular or plural
   form depending on whether the list has more than one element or not.
-* `as_singular_noun()`
-* `as_noun()`
-* `number()`
-* `number_gathered()`
-* `number_gathered_as_word()`
-* `number_as_word()`
-* `comma_and_list()`
+* `as_singular_noun()` - if the variable name is `case.plaintiff`,
+  returns `plaintiff`; if the variable name is `applicant`, returns `applicant`.
+* `as_noun()` - if the variable name is `case.plaintiff`, returns
+  `plaintiffs` or `plaintiff` depending on the number of elements in
+  the list; if the variable name is `applicant`, returns `applicants`
+  or `applicant` depending on the number of elements in the list.
+* `number()` - returns the total number of elements in the list, with
+  the side effect of checking on the value of the `gathered`
+  attribute, which might trigger questions that ask for all of the
+  elements of the list to be populated.
+* `number_as_word()` - same as `number()`, except that the
+  `nice_number()` [function] is applied to the result.
+* `number_gathered()` - like `number()` except that it does not have
+  the side effect of checking on the value of the `gathered`
+  attribute.
+* `number_gathered_as_word()` - same as `number_gathered()`, except that the
+  `nice_number()` [function] is applied to the result.
+* `comma_and_list()` - returns the elements of the list run through
+  the `comma_and_list()` [function].
+
+If you refer to a list in a [Mako] template (e.g., `The applicants
+include: ${ applicant }`) or convert it to text with the
+[str function] (e.g. (`str(applicant)`) in [Python] code, the result
+will be the output of the `comma_and_list()` method.
 
 ### DADict
 
@@ -922,3 +939,4 @@ and not an instance of the `Attorney` class.
 [Python objects]: https://docs.python.org/2/tutorial/classes.html
 [Python object]: https://docs.python.org/2/tutorial/classes.html
 [str function]: https://docs.python.org/2/library/functions.html#str
+[function]: {{ site.baseurl }}/docs/functions.html
