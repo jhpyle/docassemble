@@ -107,7 +107,6 @@ app.config['USER_AFTER_REGISTER_ENDPOINT'] = 'index'
 app.config['USER_AFTER_RESEND_CONFIRM_EMAIL_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_RESET_PASSWORD_ENDPOINT'] = 'user.login' 
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 PNG_RESOLUTION = daconfig.get('png_resolution', 300)
 PNG_SCREEN_RESOLUTION = daconfig.get('png_screen_resolution', 72)
 PDFTOPPM_COMMAND = daconfig.get('pdftoppm_command', None)
@@ -148,7 +147,7 @@ app.handle_url_build_error = my_default_url
 engine = create_engine(alchemy_connect_string, convert_unicode=True)
 metadata = MetaData(bind=engine)
 store = SQLAlchemyStore(engine, metadata, 'kvstore')
-    
+
 conn = psycopg2.connect(connect_string)
 
 KVSessionExtension(store, app)

@@ -1,0 +1,39 @@
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - recipient: DAList
+  - trustee: Individual
+  - beneficiary: Individual
+  - grantor: Individual
+---
+mandatory: true
+code: |
+  recipient.append(trustee)
+  recipient.append(beneficiary)
+  recipient.append(grantor)
+  recipient.appendObject(Individual)
+  recipient.appendObject(Individual)
+---
+mandatory: true
+question: The recipients
+subquestion: |
+  % for person in recipient:
+  ${ person } is a recipient.
+  % endfor
+---
+generic object: Individual
+question: |
+  What is the name of the ${ x.object_name() }?
+fields:
+  - First Name: x.name.first
+  - Last Name: x.name.last
+---
+generic list object: Individual
+question: |
+  What is the name of the ${ x[i].object_name() }?
+fields:
+  - First Name: x[i].name.first
+  - Last Name: x[i].name.last
+---

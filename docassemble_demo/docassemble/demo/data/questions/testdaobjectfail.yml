@@ -1,0 +1,20 @@
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  - tree: DAObject
+  - long_branch: DAObject
+---
+mandatory: true
+question: |
+  The length of the branch is ${ tree.branch.length }.
+---
+code: |
+  tree.branch = long_branch
+---
+question: |
+  What is the length of the branch on the tree?
+fields:
+  - Length: tree.branch.length
+---

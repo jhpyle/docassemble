@@ -3,11 +3,28 @@ import random
 from docassemble.base.logger import logmessage
 import re
 import codecs
-from docassemble.base.util import possessify, possessify_long, a_in_the_b, your, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list
+from docassemble.base.util import possessify, possessify_long, a_preposition_b, a_in_the_b, your, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DAFile', 'DAFileCollection', 'DAFileList']
 
 unique_names = set()
+
+match_inside_and_outside_brackets = re.compile('(.*)\[([^\]]+)\]$')
+is_number = re.compile(r'[0-9]+')
+
+def noquote(text):
+    return re.sub(r'["\']', '', text)
+
+def object_name_convert(text):
+    match = match_inside_and_outside_brackets.search(text)
+    if match:
+        index = noquote(match.group(2))
+        if is_number.match(index):
+            prefix = ordinal(index) + ' '
+        else:
+            prefix = index + ' '
+        return prefix + word(underscore_to_space(match.group(1)))
+    return word(underscore_to_space(text))
 
 def get_unique_name():
     while True:
@@ -18,7 +35,10 @@ def get_unique_name():
         return newname
 
 class DAObject(object):
-    def init(self):
+    def init(self, **kwargs):
+        for key, value in kwargs.iteritems():
+            logmessage("Found key " + str(key) + " with value " + str(value))
+            setattr(self, key, value)
         return
     def __init__(self, *args, **kwargs):
         if len(args):
@@ -42,18 +62,20 @@ class DAObject(object):
         else:
             raise NameError("name '" + object.__getattribute__(self, 'instanceName') + "." + thename + "' is not defined")
     def object_name(self):
-        return(reduce(a_in_the_b, map(underscore_to_space, reversed(self.instanceName.split(".")))))
+        return (reduce(a_in_the_b, map(object_name_convert, reversed(self.instanceName.split(".")))))
     def object_possessive(self, target):
         if len(self.instanceName.split(".")) > 1:
             return(possessify_long(self.object_name(), target))
         else:
             return(possessify(the(self.object_name()), target))
-    def initializeAttribute(self, name, objectType):
+    def initializeAttribute(self, name, objectType, **kwargs):
         if name in self.__dict__:
             return
         else:
-            object.__setattr__(self, name, objectType(self.instanceName + "." + name))
-
+            object.__setattr__(self, name, objectType(self.instanceName + "." + name, **kwargs))
+    def __str__(self):
+        return self.object_name()
+            
 class DAList(DAObject):
     def init(self, **kwargs):
         self.elements = list()
@@ -62,13 +84,16 @@ class DAList(DAObject):
             for element in kwargs['elements']:
                 self.append(element)
             self.gathered = True
-        return super(DAList, self).init()
+            del kwargs['elements']
+        return super(DAList, self).init(**kwargs)
     def appendObject(self, objectFunction):
         newobject = objectFunction(self.instanceName + '[' + str(len(self.elements)) + ']')
         self.elements.append(newobject)
         return newobject
     def append(self, value):
         self.elements.append(value)
+    def extend(self, the_list):
+        self.elements.extend(the_list)
     def first(self):
         return self.elements[0]
     def last(self):
@@ -138,9 +163,9 @@ class DAList(DAObject):
 class DADict(DAObject):
     def init(self, **kwargs):
         self.elements = dict()
-        return super(DADict, self).init()
-    def setObject(self, objectFunction, entry):
-        newobject = objectFunction(self.instanceName + '[' + repr(entry) + ']')
+        return super(DADict, self).init(**kwargs)
+    def initializeObject(self, entry, objectFunction, **kwargs):
+        newobject = objectFunction(self.instanceName + '[' + repr(entry) + ']', **kwargs)
         self.elements[entry] = newobject
         return newobject
     def __getitem__(self, index):

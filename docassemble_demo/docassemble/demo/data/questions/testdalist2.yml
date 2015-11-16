@@ -1,0 +1,26 @@
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  - neighborhood: DAObject
+---
+mandatory: true
+code: |
+  neighborhood.initializeAttribute('garden', DAList)
+  neighborhood.garden.appendObject(DAObject)
+  neighborhood.garden.appendObject(DAObject)
+  neighborhood.garden[0].initializeAttribute('flower', DAList)
+  neighborhood.garden[1].initializeAttribute('flower', DAList)
+  neighborhood.garden[1].flower.appendObject(DAObject)
+---
+mandatory: true
+question: |
+  The flower I was thinking of is ${ neighborhood.garden[1].flower[0].color }.
+---
+generic object: DAObject
+question: |
+  What is the color of the ${ x }?
+fields:
+  - Color: x.color
+---

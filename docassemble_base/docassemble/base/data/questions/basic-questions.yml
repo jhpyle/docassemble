@@ -307,7 +307,7 @@ comment: >-
 ---
 generic list object: Individual
 question: |
-  What is the name of the ${ ordinal(i) } ${ x.object_name() }?
+  What is the name of the ${ x[i].object_name() }?
 fields:
   - First Name: x[i].name.first
   - Middle Name: x[i].name.middle

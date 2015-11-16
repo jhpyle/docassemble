@@ -1,0 +1,23 @@
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  - park: DAObject
+  - turnip: DAObject
+---
+mandatory: true
+code: |
+  park.initializeAttribute('front_gate', DAObject)
+---
+mandatory: true
+question: |
+  The ${ turnip.color } turnip sat before the
+  ${ park.front_gate.color } gate.
+---
+generic object: DAObject
+question: |
+  What is the color of the ${ x }?
+fields:
+  - Color: x.color
+---

@@ -45,13 +45,13 @@ class Court(DAObject):
         return(self.name)
 
 class Case(DAObject):
-    def init(self):
+    def init(self, **kwargs):
         self.initializeAttribute(name='plaintiff', objectType=PartyList)
         self.initializeAttribute(name='defendant', objectType=PartyList)
         self.firstParty = self.plaintiff
         self.secondParty = self.defendant
         self.case_id = ""
-        return super(Case, self).init()
+        return super(Case, self).init(**kwargs)
     def role_of(self, party):
         for partyname in ['plaintiff', 'defendant', 'petitioner', 'respondent']:
             if hasattr(self, partyname) and getattr(self, partyname).gathered:
@@ -86,9 +86,9 @@ class Document(DAObject):
     pass
 
 class LegalFiling(Document):
-    def init(self):
+    def init(self, **kwargs):
         self.title = None
-        return super(Document, self).init()
+        return super(Document, self).init(**kwargs)
     def caption(self):
         self.case.firstParty.gathered
         self.case.secondParty.gathered
@@ -187,11 +187,11 @@ class Address(DAObject):
     pass
 
 class Person(DAObject):
-    def init(self):
+    def init(self, **kwargs):
         self.initializeAttribute(name='name', objectType=Name)
         self.initializeAttribute(name='address', objectType=Address)
         self.roles = set()
-        return super(Person, self).init()
+        return super(Person, self).init(**kwargs)
     def __setattr__(self, attrname, value):
         if attrname == 'name' and type(value) == str:
             self.name.text = value
@@ -255,13 +255,13 @@ class Person(DAObject):
         return verb_past(the_verb, person=tense)
 
 class Individual(Person):
-    def init(self):
+    def init(self, **kwargs):
         self.initializeAttribute(name='name', objectType=IndividualName)
         self.initializeAttribute(name='child', objectType=ChildList)
         self.initializeAttribute(name='income', objectType=Income)
         self.initializeAttribute(name='asset', objectType=Asset)
         self.initializeAttribute(name='expense', objectType=Expense)
-        return super(Individual, self).init()
+        return super(Individual, self).init(**kwargs)
     def identified(self):
         if hasattr(self.name, 'first'):
             return True
@@ -355,9 +355,9 @@ class ChildList(DAList):
     pass
 
 class FinancialList(DAObject):
-    def init(self):
+    def init(self, **kwargs):
         self.elements = set()
-        return super(FinancialList, self).init()
+        return super(FinancialList, self).init(**kwargs)
     def new(self, item, **kwargs):
         self.initializeAttribute(name=item, objectType=Value)
         self.elements.add(item)
@@ -373,9 +373,9 @@ class FinancialList(DAObject):
         return self.total()
     
 class PeriodicFinancialList(DAObject):
-    def init(self):
+    def init(self, **kwargs):
         self.elements = set()
-        return super(PeriodicFinancialList, self).init()
+        return super(PeriodicFinancialList, self).init(**kwargs)
     def new(self, item, **kwargs):
         self.initializeAttribute(name=item, objectType=PeriodicValue)
         self.elements.add(item)
@@ -414,7 +414,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None
     if len(to) == 0:
         return False
     if template is not None:
-        if subject == '':
+        if subject is None or subject == '':
             subject = template.subject
         body_html = '<html><body>' + markdown_to_html(template.content) + '</body></html>'
         if body is None:
@@ -423,57 +423,44 @@ def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None
             html = body_html
     if body is None and html is None:
         body = ""
-    logmessage("moo1")
     email_stringer = lambda x: email_string(x, include_name=False)
-    logmessage("moo2")
     msg = Message(subject, sender=email_stringer(sender), recipients=email_stringer(to), cc=email_stringer(cc), bcc=email_stringer(bcc), body=body, html=html)
     success = True
     for attachment in attachments:
-        logmessage("moo3")
         attachment_list = list()
         if type(attachment) is DAFileCollection:
-            logmessage("moo3.5")
             subattachment = getattr(attachment, 'pdf', getattr(attachment, 'rtf', getattr(attachment, 'tex', None)))
             if subattachment is not None:
                 attachment_list.append(subattachment)
             else:
                 success = False
         elif type(attachment) is DAFile:
-            logmessage("moo3.55")
             attachment_list.append(attachment)
         elif type(attachment) is DAFileList:
             attachment_list.extend(attachment.elements)
         else:
-            logmessage("moo3.95")
             success = False
         if success:
             for the_attachment in attachment_list:
                 if the_attachment.ok:
-                    logmessage("moo3.6")
                     file_info = file_finder(str(the_attachment.number))
                     if ('path' in file_info):
-                        logmessage("moo3.7")
                         failed = True
                         with open(file_info['path'], 'r') as fp:
                             msg.attach(file_info['filename'], file_info['mimetype'], fp.read())
                             failed = False
-                        logmessage("moo3.8 failed is " + str(failed))
                         if failed:
                             success = False
                     else:
-                        logmessage("moo3.9")
                         success = False
     appmail = mail_variable()
-    logmessage("moo3 success is " + str(success))
     if not appmail:
         success = False
-    logmessage("moo4 success is " + str(success))
     if success:
         try:
             appmail.send(msg)
         except Exception as errmess:
             success = False
-    logmessage("moo5 success is " + str(success))
     return(success)
     
 def email_string(persons, include_name=None):

@@ -291,7 +291,7 @@ def ordinal_number_default(i):
         return default_ordinal_function(i)
 
 def ordinal_default(j):
-    return ordinal_number(j + 1)
+    return ordinal_number(int(j) + 1)
 
 def nice_number_default(num):
     if this_thread.language in nice_numbers and unicode(num) in nice_numbers[this_thread.language]:
@@ -321,12 +321,12 @@ def prefix_constructor(prefix):
             return unicode(prefix) + unicode(word)
     return func
 
-def double_prefix_constructor(prefix_one, prefix_two):
+def double_prefix_constructor_reverse(prefix_one, prefix_two):
     def func(word_one, word_two, **kwargs):
         if 'capitalize' in kwargs and kwargs['capitalize']:
-            return capitalize(unicode(prefix_one)) + unicode(word_one) + unicode(prefix_two) + unicode(word_two)
+            return capitalize(unicode(prefix_one)) + unicode(word_two) + unicode(prefix_two) + unicode(word_one)
         else:
-            return unicode(prefix_one) + unicode(word_one) + unicode(prefix_two) + unicode(word_two)
+            return unicode(prefix_one) + unicode(word_two) + unicode(prefix_two) + unicode(word_one)
     return func
 
 def prefix_constructor_two_arguments(prefix, **kwargs):
@@ -345,9 +345,24 @@ def middle_constructor(middle, **kwargs):
             return unicode(a) + unicode(middle) + unicode(b)
     return func
 
+def a_preposition_b_default(a, b, **kwargs):
+    logmessage("Got here")
+    if hasattr(a, 'preposition'):
+        logmessage("Has preposition")
+        preposition = a.preposition
+    else:
+        preposition = word('in the')
+    if 'capitalize' in kwargs and kwargs['capitalize']:
+        return capitalize(unicode(a)) + unicode(' ' + preposition + ' ') + unicode(b)
+    else:
+        return unicode(a) + unicode(' ' + preposition + ' ') + unicode(b)
+
 language_functions = {
     'in_the': {
         'en': prefix_constructor('in the ')
+    },
+    'a_preposition_b': {
+        'en': a_preposition_b_default
     },
     'a_in_the_b': {
         'en': middle_constructor(' in the ')
@@ -404,7 +419,7 @@ language_functions = {
         'en': middle_constructor("'s ")
     },
     'possessify_long': {
-        'en': double_prefix_constructor('the ', ' of the ')
+        'en': double_prefix_constructor_reverse('the ', ' of the ')
     },
     'comma_and_list': {
         'en': comma_and_list_en
@@ -444,6 +459,7 @@ def language_function_constructor(term):
     return func
     
 in_the = language_function_constructor('in_the')
+a_preposition_b = language_function_constructor('a_preposition_b')
 a_in_the_b = language_function_constructor('a_in_the_b')
 her = language_function_constructor('her')
 his = language_function_constructor('his')

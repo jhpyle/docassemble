@@ -24,8 +24,8 @@ nameerror_match = re.compile(r'\'(.*)\' is not defined')
 document_match = re.compile(r'^---$', flags=re.MULTILINE)
 remove_trailing_dots = re.compile(r'\.\.\.$')
 dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
-match_brackets_at_end = re.compile(r'^(.*)(\[[^\[]+\])$')
-match_inside_brackets = re.compile(r'\[([^\]+])\]')
+match_brackets_at_end = re.compile(r'^(.*)(\[.+?\])$')
+match_inside_brackets = re.compile(r'\[(.+?)\]')
 
 def textify(data):
     return list(map((lambda x: x.text(user_dict)), data))
@@ -480,11 +480,11 @@ class Question:
             self.interview.helptext[self.language].append({'content': help_content, 'heading': help_heading})
         if 'generic object' in data:
             self.is_generic = True
-            self.is_generic_list = False
+            #self.is_generic_list = False
             self.generic_object = data['generic object']
         elif 'generic list object' in data:
             self.is_generic = True
-            self.is_generic_list = True
+            #self.is_generic_list = True
             self.generic_object = data['generic list object']
         else:
             self.is_generic = False
@@ -1354,7 +1354,8 @@ class Interview:
         #logmessage("moo1")
         m = match_inside_brackets.search(missingVariable)
         if m:
-            newMissingVariable = re.sub('\[[^\]+]\]', '[i]', missingVariable)
+            newMissingVariable = re.sub('\[.+?\]', '[i]', missingVariable)
+            #logmessage("newMissingVariable is " + newMissingVariable)
             totry.insert(0, {'real': missingVariable, 'vari': newMissingVariable})
         #logmessage("Length of totry is " + str(len(totry)))
         for mv in totry:
@@ -1398,12 +1399,17 @@ class Interview:
                             break;
                         var = d['var']
                         realVar = d['realvar']
+                        #logmessage("Searching for brackets in " + str(realVar))
                         mm = match_inside_brackets.findall(realVar)
                         if (mm):
+                            #logmessage("Found stuff inside brackets")
                             if len(mm) > 1:
                                 #logmessage("Variable " + var + " is no good because it has more than one iterator")
                                 continue;
                             the_i_to_use = mm[0];
+                            #logmessage("The i to use is " + str(the_i_to_use))
+                        #else:
+                            #logmessage("Did not find stuff inside brackets")
                         root = d['root']
                         root_for_object = d['root_for_object']
                         #logmessage("testing variable " + var + " and root " + root + " and root for object " + root_for_object)
@@ -1433,6 +1439,8 @@ class Interview:
                 try:
                     for the_question, is_generic, the_x, the_i, missing_var in questions_to_try:
                         #logmessage("missing_var is " + str(missing_var))
+                        #logmessage("x is " + str(the_x))
+                        #logmessage("i is " + str(the_i))
                         #logmessage("Trying question of type " + str(the_question.question_type))
                         question = the_question.follow_multiple_choice(user_dict)
                         #logmessage("Back from follow_multiple_choice")
@@ -1495,6 +1503,8 @@ class Interview:
                         else:
                             #logmessage("Question type is " + question.question_type)
                             #logmessage("Ask:\n" + question.content.original_text)
+                            #logmessage("the_x is " + str(the_x))
+                            #logmessage("the_i is " + str(the_i))
                             if question.question_type == 'continue':
                                 continue
                             return question.ask(user_dict, the_x, the_i)
@@ -1507,8 +1517,8 @@ class Interview:
                     if question_result['type'] == 'continue':
                         continue
                     return(question_result)
-        raise DAError("Found a reference to a variable '" + missingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.  The askfor function reached its end.")
-        
+        raise DAError("Found a reference to a variable '" + missingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file, despite reaching the very end of the file.")
+
 class myextract(ast.NodeVisitor):
     def __init__(self):
         self.stack = []
