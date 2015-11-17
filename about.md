@@ -72,14 +72,14 @@ The system will refrain from asking unnecessary questions.  For
 example, if a question or document contains a conditional statement
 such as:
 
-    % if user_is_disabled or user.age > 60:
+    % if user.is_disabled or user.age > 60:
       We have special funding to assist you.
     % endif
 	  
 then the user will be asked if he is disabled, and will only be asked
 for his age if he says he is not disabled.  Authors need to provide a
 question for every variable (e.g., there need to be questions that
-determine `user_is_disabled` and `user.age`) but **docassemble** will
+determine `user.is_disabled` and `user.age`) but **docassemble** will
 automatically figure out when and whether to ask those questions.
 
 This allows authors to concentrate on the end result rather than
@@ -102,8 +102,13 @@ While interview authors do not need to by [Python] experts, authors
 who know [Python] (or are willing to learn [Python]) can extend the
 functionality of the interviews by writing [Python classes].  This
 allows the interviews to do anything [Python] can do (e.g., retrieve
-information from web services, interact with databases, send e-mail,
-interact with third-party APIs, etc.)
+information from web services, interact with databases, interact with
+third-party APIs, etc.)
+
+**docassemble** contains support for interview authors to accomplish
+common tasks that would otherwise require significant coding.  For
+example, sending an HTML e-mail with documents attached to it can be
+accomplished in one line of code.
 
 ### Reusable content
 
@@ -127,6 +132,31 @@ application can be [translated] to a language other than English.
 **docassemble** supports the full use of [Unicode] characters in
 interviews.
 
+### Superior to the alternatives
+
+Much of what **docassemble** does can be accomplished with [HotDocs] and
+[A2J].  However, **docassemble** has superior features for incorporating
+"libraries" of questions.  Since all the authoring is done within a
+YAML file, content can easily be reused through incorporation by
+reference (the "include" function) or copy-and-paste.
+
+While for some people, **docassemble** may have a steeper learning
+curve than [A2J] and [HotDocs], in the long run, creating forms and
+interviews in **docassemble** is more efficient because 1) authors do
+not have to plan out every last detail of the interview flow; 2)
+authors have the power of "copy and paste" and "search and replace" at
+their fingertips; and 3) the ability to incorporate libraries of
+questions means that authors can easily take advantage of work other
+authors have done.
+
+In addition, **docassemble** gives authors all the power and
+convenience of a general-purpose, object-orientated programming
+language.
+
+[HotDocs] is a proprietary system, and its usefulness in a server
+environment is limited by licensing requirements.  By contrast,
+**docassemble** is free and open source.
+
 ### Multi-purpose
 
 At its core, **docassemble** is a multi-purpose expert system.  The
@@ -139,29 +169,6 @@ with `docassemble-base` to conduct interviews over the phone (using a
 text-to-speech engine) or through text messaging.  A single interview
 file (i.e., a [YAML] file) could be used to power both a web-based
 interview and a telephone interview.
-
-### Superior to the alternatives
-
-Much of what **docassemble** does can be accomplished with [HotDocs] and
-[A2J].  However, **docassemble** has superior features for incorporating
-"libraries" of questions.  Since all the authoring is done within a
-YAML file, content can easily be reused through incorporation by
-reference (the "include" function) or copy-and-paste.
-
-While for some people, **docassemble** may have a steeper learning
-curve than [A2J] and [HotDocs], but in the long run, creating forms
-and interviews in **docassemble** is more efficient because everything
-can be created in a text editor.  **docassemble** was designed to
-minimize unnececessary work.  For example, it does not require authors
-to give names to every interview question.
-
-In addition, **docassemble** gives authors all the power and
-convenience of a general-purpose, object-orientated programming
-language.
-
-[HotDocs] is a proprietary system, and its usefulness in a server
-environment is limited by licensing requirements.  By contrast,
-**docassemble** is free and open source.
 
 ## Technical details
 
