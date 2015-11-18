@@ -62,7 +62,7 @@ def signature_html(status, debug, root):
     output += '</form>'
     return output
 
-def get_audio_url(the_audio):
+def get_audio_urls(the_audio):
     m = re.search(r'^\[IMAGE ([^,\]]+)', the_audio['text'])
     if m:
         audio_ref = m.group(1)
@@ -76,7 +76,37 @@ def get_audio_url(the_audio):
         url = docassemble.base.filter.url_finder(the_audio['package'] + ':' + audio_ref)
         if url is None:
             url = docassemble.base.filter.url_finder(audio_ref)
-    return url
+    if url is None:
+        return None        
+    output = list()
+    m = re.search(r'^(.*)\.([A-Za-z0-9]+$)', url)
+    if m:
+        if m.group(2) == 'MP3':
+            output.append([url, "audio/mpeg"])
+            output.append([m.group(1) + '.OGG', "audio/ogg"])
+        elif m.group(2) == 'OGG':
+            output.append([url, "audio/ogg"])
+            output.append([m.group(1) + '.MP3', "audio/mpeg"])
+        elif m.group(2) == 'mp3':
+            output.append([url, "audio/mpeg"])
+            output.append([m.group(1) + '.ogg', "audio/ogg"])
+        elif m.group(2) == 'ogg':
+            output.append([url, "audio/ogg"])
+            output.append([m.group(1) + '.mp3', "audio/mpeg"])
+        else:
+            output.append([url, None])
+    return output
+
+def audio_control(files):
+    output = "<audio controls>\n"
+    for d in files:
+        output += '  <source src="' + d[0] + '"'
+        if d[1] is not None:
+            output += ' type="' + d[1] + '">'
+        output += "\n"
+    output += word("Your browser does not support audio.")
+    output += "</audio>"
+    return output
 
 def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     decorations = list()
@@ -89,9 +119,9 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         extra_scripts.append(status.question.script)
     if status.audio is not None:
         uses_audio = True
-        url = get_audio_url(status.audio)
-        if url is not None:
-            audio_text = '<div><audio src="' + url + '" /></div>'
+        urls = get_audio_urls(status.audio)
+        if urls is not None:
+            audio_text = '<div>' + audio_control(urls) + '</div>'
     if status.decorations is not None:
         #sys.stderr.write("yoo1\n")
         for decoration in status.decorations:
@@ -500,9 +530,9 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
             output += '<div class="page-header"><h3>' + word('Help with this question') + '</h3></div>'
         if help_section['audio'] is not None:
             uses_audio = True
-            url = get_audio_url(help_section['audio'])
-            if url is not None:
-                output += '<div><audio src="' + url + '" /></div>'
+            urls = get_audio_urls(help_section['audio'])
+            if urls is not None:
+                output += '<div>' + audio_control(urls) + '</div>'
         output += markdown_to_html(help_section['content'], status=status)
     if len(status.attributions):
         output += '<br><br><br><br><br><br><br>'
@@ -528,7 +558,7 @@ else{
 }
 });</script>"""
         extra_scripts.append(the_script)
-    if uses_audio:
+    if False and uses_audio:
         extra_scripts.append('<script src="' + url_for('static', filename='audiojs/audiojs/audio.min.js') + '"></script>')
         run_audiojs = """\
 <script>
