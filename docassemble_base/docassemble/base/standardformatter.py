@@ -91,7 +91,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         uses_audio = True
         url = get_audio_url(status.audio)
         if url is not None:
-            audio_text = '<div><audio src="' + url + '" preload="auto" /></div>'
+            audio_text = '<div><audio src="' + url + '" /></div>'
     if status.decorations is not None:
         #sys.stderr.write("yoo1\n")
         for decoration in status.decorations:
@@ -502,7 +502,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
             uses_audio = True
             url = get_audio_url(help_section['audio'])
             if url is not None:
-                output += '<div><audio src="' + url + '" preload="auto" /></div>'
+                output += '<div><audio src="' + url + '" /></div>'
         output += markdown_to_html(help_section['content'], status=status)
     if len(status.attributions):
         output += '<br><br><br><br><br><br><br>'
