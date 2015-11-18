@@ -11,7 +11,7 @@ comment: |
 ---
 interview help:
   heading: About this web site
-  audio: schumann-clip-2.mp3
+  #audio: schumann-clip-2.mp3
   content: |
     Answer each question.  At the end, you may be given a document
     that you can save.
@@ -234,7 +234,7 @@ subquestion: |
 
   [YAML]: https://en.wikipedia.org/wiki/YAML
 help:
-  audio: schumann-clip-3.mp3
+  #audio: schumann-clip-3.mp3
   content: |
     This is the help page.
 field: user_saw_initial_screen
@@ -875,7 +875,7 @@ generic object: Individual
 question: |
   What language ${ x.do_question('speak') }?
 field: x.language
-audio: schumann-clip-1.mp3
+#audio: schumann-clip-1.mp3
 choices:
   - English: en
   - Español: es
