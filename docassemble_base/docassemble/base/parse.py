@@ -190,6 +190,7 @@ class InterviewStatus(object):
         self.subquestionText = question_result['subquestion_text']
         self.underText = question_result['under_text']
         self.decorations = question_result['decorations']
+        self.audio = question_result['audio']
         self.helpText = question_result['help_text']
         self.attachments = question_result['attachments']
         self.selectcompute = question_result['selectcompute']
@@ -296,6 +297,7 @@ class Question:
         self.progress = None
         self.script = None
         self.decorations = None
+        self.audio = None
         self.allow_emailing = True
         self.fields_used = set()
         self.names_used = set()
@@ -461,6 +463,10 @@ class Question:
                 raise DAError("An interview help section must not be in the form of a list." + self.idebug(data))
             elif type(data['interview help']) is not dict:
                 data['interview help'] = {'content': unicode(data['interview help'])}
+            if 'audio' in data['interview help'] and type(data['interview help']['audio'] not in [list, dict]):
+                audio = {'text': TextObject(definitions + data['interview help']['audio']), 'package': self.package}
+            else:
+                audio = None
             if 'heading' in data['interview help']:
                 if type(data['interview help']['heading']) not in [dict, list]:
                     help_heading = TextObject(definitions + data['interview help']['heading'])
@@ -477,7 +483,7 @@ class Question:
                 raise DAError("No content section was found in an interview help section." + self.idebug(data))
             if self.language not in self.interview.helptext:
                 self.interview.helptext[self.language] = list()
-            self.interview.helptext[self.language].append({'content': help_content, 'heading': help_heading})
+            self.interview.helptext[self.language].append({'content': help_content, 'heading': help_heading, 'audio': audio})
         if 'generic object' in data:
             self.is_generic = True
             #self.is_generic_list = False
@@ -601,7 +607,26 @@ class Question:
         if 'subquestion' in data:
             self.subcontent = TextObject(definitions + data['subquestion'])
         if 'help' in data:
-            self.helptext = TextObject(definitions + data['help'])
+            if type(data['help']) is dict:
+                for key, value in data['help'].iteritems():
+                    if key == 'audio':
+                        if type(value) in [dict, list]:
+                            raise DAError("An audio declaration in a help block can only contain text." + self.idebug(data))
+                        if self.audio is None:
+                            self.audio = dict()
+                        self.audio['help'] = {'text': TextObject(definitions + value), 'package': self.package}
+                    if key == 'content':
+                        if type(value) in [dict, list]:
+                            raise DAError("A content declaration in a help block can only contain text." + self.idebug(data))
+                        self.helptext = TextObject(definitions + value)
+            else:
+                self.helptext = TextObject(definitions + data['help'])
+        if 'audio' in data:
+            if type(data['audio']) in [dict, list]:
+                raise DAError("An audio declaration can only contain text." + self.idebug(data))
+            if self.audio is None:
+                self.audio = dict()    
+            self.audio['question'] = {'text': TextObject(definitions + data['audio']), 'package': self.package}
         if 'decoration' in data:
             if type(data['decoration']) is dict:
                 decoration_list = [data['decoration']]
@@ -949,12 +974,20 @@ class Question:
         else:
             undertext = None
         if self.helptext is not None:
-            help_text_list = [{'heading': None, 'content': self.helptext.text(user_dict)}]
+            if self.audio is not None and 'help' in self.audio:
+                the_audio = {'text': self.audio['help']['text'].text(user_dict), 'package': self.audio['help']['package']}
+            else:
+                the_audio = None
+            help_text_list = [{'heading': None, 'content': self.helptext.text(user_dict), 'audio': the_audio}]
         else:
             help_text_list = list()
         interview_help_text_list = self.interview.processed_helptext(user_dict, self.language)
         if len(interview_help_text_list) > 0:
             help_text_list.extend(interview_help_text_list)
+        if self.audio is not None and 'question' in self.audio:
+            audio = {'text': self.audio['question']['text'].text(user_dict), 'package': self.audio['question']['package']}
+        else:
+            audio = None
         if self.decorations is not None:
             decorations = list()
             for decoration_item in self.decorations:
@@ -1026,7 +1059,7 @@ class Question:
                 #logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("name 'role_event' is not defined")
-        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras})
+        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'audio': audio, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras})
     def processed_attachments(self, user_dict, **kwargs):
         return(list(map((lambda x: self.make_attachment(x, user_dict, **kwargs)), self.attachments)))
     def parse_fields(self, the_list, register_target, uses_field):
@@ -1241,6 +1274,10 @@ class Interview:
                     help_item['heading'] = None
                 else:
                     help_item['heading'] = source['heading'].text(user_dict)
+                if source['audio'] is None:
+                    help_item['audio'] = None
+                else:
+                    help_item['audio'] = {'text': source['audio']['text'].text(user_dict), 'package': source['audio']['package']}
                 help_item['content'] = source['content'].text(user_dict)
                 result.append(help_item)
         return result

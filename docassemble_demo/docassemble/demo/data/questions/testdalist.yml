@@ -30,9 +30,9 @@ fields:
   - First Name: x.name.first
   - Last Name: x.name.last
 ---
-generic list object: Individual
+generic object: Individual
 question: |
-  What is the name of the ${ x[i].object_name() }?
+  The ${ ordinal(i) } ${ x.object_name() } must have a name.  What is it?
 fields:
   - First Name: x[i].name.first
   - Last Name: x[i].name.last

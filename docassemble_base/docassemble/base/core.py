@@ -117,20 +117,15 @@ class DAList(DAObject):
         else:
             tense = 3
         return verb_past(the_verb, person=tense)
-    def as_singular_noun(self, *pargs):
-        if not self.gathering:
-            self.gathered
-        if len(pargs) > 0:
-            the_noun = pargs[0]
-        else:
-            the_noun = self.instanceName
+    def as_singular_noun(self):
+        the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
         return the_noun        
     def as_noun(self, *pargs):
         if not self.gathering:
             self.gathered
-        if len(pargs) > 0:
-            the_noun = pargs[0]
+            if len(pargs) > 0:
+                the_noun = pargs[0]
         else:
             the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)

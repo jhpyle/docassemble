@@ -62,13 +62,36 @@ def signature_html(status, debug, root):
     output += '</form>'
     return output
 
+def get_audio_url(the_audio):
+    m = re.search(r'^\[IMAGE ([^,\]]+)', the_audio['text'])
+    if m:
+        audio_ref = m.group(1)
+    else:
+        audio_ref = the_audio['text']
+    if re.search(r'^[0-9]+', audio_ref):
+        url = docassemble.base.filter.url_finder(audio_ref)
+    elif re.search(r'^http', audio_ref) or re.search(r':', audio_ref):
+        url = audio_ref
+    else:
+        url = docassemble.base.filter.url_finder(the_audio['package'] + ':' + audio_ref)
+        if url is None:
+            url = docassemble.base.filter.url_finder(audio_ref)
+    return url
+
 def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     decorations = list()
+    uses_audio = False
+    audio_text = ''
     datatypes = dict()
     onchange = list()
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'help-inline'}
     if status.question.script is not None:
         extra_scripts.append(status.question.script)
+    if status.audio is not None:
+        uses_audio = True
+        url = get_audio_url(status.audio)
+        if url is not None:
+            audio_text = '<div><audio src="' + url + '" preload="auto" /></div>'
     if status.decorations is not None:
         #sys.stderr.write("yoo1\n")
         for decoration in status.decorations:
@@ -102,7 +125,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     output += '<section id="question" class="tab-pane active col-md-6">'
     if status.question.question_type == "yesno":
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
-        output += '<form action="' + root + '" id="daform" method="POST"><fieldset>'
+        output += audio_text + '<form action="' + root + '" id="daform" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
@@ -113,7 +136,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         output += '</fieldset></form>'
     elif status.question.question_type == "noyes":
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
-        output += '<form action="' + root + '" id="daform" method="POST"><fieldset>'
+        output += audio_text + '<form action="' + root + '" id="daform" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
@@ -203,7 +226,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                     fieldlist.append('<div class="form-group' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>')
                 else:
                     fieldlist.append('<div class="form-group' + req_tag +'"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + field.label + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>')
-        output += '<form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '><fieldset>'
+        output += audio_text + '<form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
@@ -230,7 +253,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         output += '</fieldset></form>'
     elif status.question.question_type == "settrue":
         datatypes[status.question.fields[0].saveas] = "boolean"
-        output += '<form action="' + root + '" id="daform" method="POST"><fieldset>'
+        output += audio_text + '<form action="' + root + '" id="daform" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
@@ -242,7 +265,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     elif status.question.question_type == "multiple_choice":
         if hasattr(status.question.fields[0], 'datatype'):
             datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
-        output += '<form action="' + root + '" id="daform" method="POST"><fieldset>'
+        output += audio_text + '<form action="' + root + '" id="daform" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
@@ -358,11 +381,11 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         output += datatype_tag(datatypes)
         output += '</fieldset></form>'
     elif status.question.question_type == 'deadend':
-        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
+        output += audio_text + '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
     else:
-        output += '<form action="' + root + '" id="daform" class="form-horizontal" method="POST"><fieldset>'
+        output += audio_text + '<form action="' + root + '" id="daform" class="form-horizontal" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
@@ -475,6 +498,11 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
             output += '<div class="page-header"><h3>' + help_section['heading'] + '</h3></div>'
         else:
             output += '<div class="page-header"><h3>' + word('Help with this question') + '</h3></div>'
+        if help_section['audio'] is not None:
+            uses_audio = True
+            url = get_audio_url(help_section['audio'])
+            if url is not None:
+                output += '<div><audio src="' + url + '" preload="auto" /></div>'
         output += markdown_to_html(help_section['content'], status=status)
     if len(status.attributions):
         output += '<br><br><br><br><br><br><br>'
@@ -500,6 +528,15 @@ else{
 }
 });</script>"""
         extra_scripts.append(the_script)
+    if uses_audio:
+        extra_scripts.append('<script src="' + url_for('static', filename='audiojs/audiojs/audio.min.js') + '"></script>')
+        run_audiojs = """\
+<script>
+  audiojs.events.ready(function() {
+    var as = audiojs.createAll();
+  });
+</script>"""
+        extra_scripts.append(run_audiojs)
     return output
 
 def noquote(string):
