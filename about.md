@@ -132,6 +132,9 @@ application can be [translated] to a language other than English.
 **docassemble** supports the full use of [Unicode] characters in
 interviews.
 
+**docassemble** also allows audio files to be integrated with
+  questions.
+
 ### Superior to the alternatives
 
 Much of what **docassemble** does can be accomplished with [HotDocs] and

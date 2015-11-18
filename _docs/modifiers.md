@@ -8,6 +8,42 @@ There are a number of optional modifiers that can be included in
 `question` blocks to control the appearance or behavior of the
 question.
 
+## `audio`
+
+{% highlight yaml %}
+---
+question: Are you traveling to New York City?
+yesno: going_to_nyc
+audio: nyc_question.mp3
+---
+{% endhighlight %}
+
+The `audio` modifier allows you to add audio to your questions.  An
+audio player will appear above the question, and the user can press
+play to hear the sound.  Uses [audio.js], which means that for maximum
+portability you should always use mp3 audio files.
+
+The filename can be constructed with [Mako].  A plain file path will
+be assumed to point to a file in the `static` directory of the package
+in which the [YAML] file resides.  A package reference may also be
+included: e.g., `docassemble.demo:data/static/schumann-clip-3.mp3`.
+A URL beginning with `http` or `https` may also be provided.
+
+You can also play uploaded files:
+
+{% highlight yaml %}
+---
+question: Please upload an MP3
+fields:
+  - MP3 file: user_mp3_file
+    datatype: file
+---
+question: Let's listen to what you uploaded.
+field: heard_music
+audio: ${ user_mp3_file }
+---
+{% endhighlight %}
+
 ## `help`
 
 {% highlight yaml %}
@@ -27,6 +63,22 @@ In the web app, users can use the navigation bar to toggle between the
 consist of the contents of any `help` statements in the question being
 presented, followed by the contents of any `interview help` blocks
 contained within the interview.
+
+You can add audio to your help text:
+
+{% highlight yaml %}
+---
+question: How much money do you wish to seek in damages?
+fields:
+  - Money: damages_sought
+    datatype: currency
+help: |
+  content: |
+    If you are not sure how much money to seek in damages, just ask
+    for a million dollars, since you want the defendant to suffer.
+  audio: message_re_damages.mp3
+---
+{% endhighlight %}
 
 ## `decoration`
 
@@ -169,3 +221,5 @@ by **docassemble**, so it can contain any valid [YAML].
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [language support]: {{ site.baseurl }}/docs/language.html
 [ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+[audio.js]: http://kolber.github.io/audiojs/
+[Mako]: http://www.makotemplates.org/

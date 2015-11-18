@@ -112,3 +112,5 @@ block.
 
 It is not necessary to have any `code` blocks in your interviews, but
 they are the most elegant way of expressing your interview logic.
+
+[initial blocks]: {{ site.baseurl }}/docs/initial.html

@@ -232,6 +232,21 @@ question in the interview.  If the question has `help` text of its
 own, the `interview help` will appear after the question-specific
 help.
 
+You can also add audio to your interview help:
+
+{% highlight yaml %}
+---
+interview help:
+  heading: How to use this web site
+  audio: answer_each_question.mp3
+  content: |
+    Answer each question.  At the end, you will get a prize.
+---
+{% endhighlight %}
+
+See the [modifiers] section for an explanation of how audio file
+references work.
+
 ## `def`
 
 {% highlight yaml %}
