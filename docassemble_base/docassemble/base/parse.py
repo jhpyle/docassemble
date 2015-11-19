@@ -1622,6 +1622,9 @@ def process_selections(data):
     return(result)
 
 def extract_missing_name(string):
-    #logmessage("string was " + str(string))
+    logmessage("extract_missing_name: string was " + str(string))
     m = nameerror_match.search(str(string))
-    return m.group(1)
+    if m:
+        return m.group(1)
+    else:
+        return None
