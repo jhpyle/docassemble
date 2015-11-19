@@ -82,14 +82,14 @@ def get_audio_urls(the_audio):
     m = re.search(r'^(.*)\.([A-Za-z0-9]+$)', url)
     if m:
         if m.group(2) == 'MP3':
-            output.append([url, "audio/mpeg"])
             output.append([m.group(1) + '.OGG', "audio/ogg"])
+            output.append([url, "audio/mpeg"])
         elif m.group(2) == 'OGG':
             output.append([url, "audio/ogg"])
             output.append([m.group(1) + '.MP3', "audio/mpeg"])
         elif m.group(2) == 'mp3':
-            output.append([url, "audio/mpeg"])
             output.append([m.group(1) + '.ogg', "audio/ogg"])
+            output.append([url, "audio/mpeg"])
         elif m.group(2) == 'ogg':
             output.append([url, "audio/ogg"])
             output.append([m.group(1) + '.mp3', "audio/mpeg"])
@@ -98,13 +98,13 @@ def get_audio_urls(the_audio):
     return output
 
 def audio_control(files):
-    output = '<audio controls="controls" preload="none">' + "\n"
+    output = '<audio controls="controls" preload="metadata">' + "\n"
     for d in files:
         output += '  <source src="' + d[0] + '"'
         if d[1] is not None:
             output += ' type="' + d[1] + '">'
         output += "\n"
-    output += word("Your browser does not support audio.")
+    output += '  <a target="_blank" href="' + files[-1][0] +  '">' + word('Listen') + '</a>'
     output += "</audio>"
     return output
 
