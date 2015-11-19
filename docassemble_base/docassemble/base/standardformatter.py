@@ -98,7 +98,7 @@ def get_audio_urls(the_audio):
     return output
 
 def audio_control(files):
-    output = "<audio controls>\n"
+    output = '<audio controls="controls" preload="none">' + "\n"
     for d in files:
         output += '  <source src="' + d[0] + '"'
         if d[1] is not None:

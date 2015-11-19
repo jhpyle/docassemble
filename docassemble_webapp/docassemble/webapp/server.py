@@ -107,6 +107,7 @@ app.config['USER_AFTER_REGISTER_ENDPOINT'] = 'index'
 app.config['USER_AFTER_RESEND_CONFIRM_EMAIL_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_RESET_PASSWORD_ENDPOINT'] = 'user.login' 
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+app.config['USE_X_SENDFILE'] = True
 PNG_RESOLUTION = daconfig.get('png_resolution', 300)
 PNG_SCREEN_RESOLUTION = daconfig.get('png_screen_resolution', 72)
 PDFTOPPM_COMMAND = daconfig.get('pdftoppm_command', None)
@@ -1685,7 +1686,7 @@ def package_static(package, filename):
         abort(404)
     extension, mimetype = get_ext_and_mimetype(the_file)
     return(send_file(the_file, mimetype=str(mimetype)))
-
+#PPP
 def current_info(yaml=None, req=None, action=None):
     if current_user.is_authenticated and not current_user.is_anonymous:
         ext = dict(email=current_user.email, roles=[role.name for role in current_user.roles], theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization)

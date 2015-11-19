@@ -36,6 +36,7 @@ RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 RUN locale-gen
 RUN update-locale LANG=en_US.UTF-8
 RUN a2enmod wsgi
+RUN a2enmod xsendfile
 ENV APACHE_RUN_USER www-data
 ENV APACHE_RUN_GROUP www-data
 ENV APACHE_LOG_DIR /var/log/apache2
