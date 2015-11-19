@@ -122,12 +122,11 @@ class DAList(DAObject):
         the_noun = re.sub(r'.*\.', '', the_noun)
         return the_noun        
     def as_noun(self, *pargs):
+        the_noun = self.instanceName
         if not self.gathering:
             self.gathered
             if len(pargs) > 0:
                 the_noun = pargs[0]
-        else:
-            the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
         if len(self.elements) > 1 or len(self.elements) == 0:
             return noun_plural(the_noun)
