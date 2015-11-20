@@ -206,9 +206,9 @@ class DAFile(DAObject):
         if not self.ok:
             return('')
         if width is not None:
-            return('[IMAGE ' + str(self.number) + ', ' + str(width) + ']')
+            return('[FILE ' + str(self.number) + ', ' + str(width) + ']')
         else:
-            return('[IMAGE ' + str(self.number) + ']')
+            return('[FILE ' + str(self.number) + ']')
 
 class DAFileCollection(DAObject):
     pass
@@ -223,9 +223,9 @@ class DAFileList(DAList):
         for element in self.elements:
             if element.ok:
                 if width is not None:
-                    output += '[IMAGE ' + str(element.number) + ', ' + str(width) + ']' + "\n"
+                    output += '[FILE ' + str(element.number) + ', ' + str(width) + ']' + "\n"
                 else:
-                    output += '[IMAGE ' + str(element.number) + ']' + "\n"
+                    output += '[FILE ' + str(element.number) + ']' + "\n"
         return output
 
 class DATemplate(DAObject):

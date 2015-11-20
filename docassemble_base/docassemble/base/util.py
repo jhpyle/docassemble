@@ -523,9 +523,9 @@ def static_image(filereference, **kwargs):
         return('ERROR: invalid image reference')
     width = kwargs.get('width', None)
     if width is None:
-        return('[IMAGE ' + filename + ']')
+        return('[FILE ' + filename + ']')
     else:
-        return('[IMAGE ' + filename + ', ' + width + ']')
+        return('[FILE ' + filename + ', ' + width + ']')
 
 def standard_template_filename(the_file):
     try:

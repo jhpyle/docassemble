@@ -1,13 +1,12 @@
 from docassemble.base.util import word, currency_symbol
 import docassemble.base.filter
-from docassemble.base.filter import markdown_to_html
+from docassemble.base.filter import markdown_to_html, get_audio_urls
 from docassemble.base.parse import Question, debug
 from docassemble.base.logger import logmessage
 import urllib
 import sys
 import os
 import re
-import mimetypes
 import json
 import random
 import sys
@@ -60,41 +59,6 @@ def signature_html(status, debug, root):
     #output += question_name_tag(status.question)
     output += tracker_tag(status)
     output += '</form>'
-    return output
-
-def get_audio_urls(the_audio):
-    m = re.search(r'^\[IMAGE ([^,\]]+)', the_audio['text'])
-    if m:
-        audio_ref = m.group(1)
-    else:
-        audio_ref = the_audio['text']
-    if re.search(r'^[0-9]+', audio_ref):
-        url = docassemble.base.filter.url_finder(audio_ref)
-    elif re.search(r'^http', audio_ref) or re.search(r':', audio_ref):
-        url = audio_ref
-    else:
-        url = docassemble.base.filter.url_finder(the_audio['package'] + ':' + audio_ref)
-        if url is None:
-            url = docassemble.base.filter.url_finder(audio_ref)
-    if url is None:
-        return None        
-    output = list()
-    m = re.search(r'^(.*)\.([A-Za-z0-9]+$)', url)
-    if m:
-        if m.group(2) == 'MP3':
-            output.append([m.group(1) + '.OGG', "audio/ogg"])
-            output.append([url, "audio/mpeg"])
-        elif m.group(2) == 'OGG':
-            output.append([url, "audio/ogg"])
-            output.append([m.group(1) + '.MP3', "audio/mpeg"])
-        elif m.group(2) == 'mp3':
-            output.append([m.group(1) + '.ogg', "audio/ogg"])
-            output.append([url, "audio/mpeg"])
-        elif m.group(2) == 'ogg':
-            output.append([url, "audio/ogg"])
-            output.append([m.group(1) + '.mp3', "audio/mpeg"])
-        else:
-            output.append([url, None])
     return output
 
 def audio_control(files):

@@ -27,6 +27,12 @@ dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
 match_brackets_at_end = re.compile(r'^(.*)(\[.+?\])$')
 match_inside_brackets = re.compile(r'\[(.+?)\]')
 
+def process_audio_list(the_list, user_dict):
+    output = list()
+    for the_item in the_list:
+        output.append({'text': the_item['text'].text(user_dict), 'package': the_item['package']})
+    return output
+
 def textify(data):
     return list(map((lambda x: x.text(user_dict)), data))
     
@@ -463,8 +469,16 @@ class Question:
                 raise DAError("An interview help section must not be in the form of a list." + self.idebug(data))
             elif type(data['interview help']) is not dict:
                 data['interview help'] = {'content': unicode(data['interview help'])}
-            if 'audio' in data['interview help'] and type(data['interview help']['audio'] not in [list, dict]):
-                audio = {'text': TextObject(definitions + data['interview help']['audio']), 'package': self.package}
+            if 'audio' in data['interview help']:
+                if type(data['interview help']['audio']) is not list:
+                    the_list = [data['interview help']['audio']]
+                else:
+                    the_list = data['interview help']['audio']
+                audio = list()
+                for the_item in the_list:
+                    if type(the_item) in [list, dict]:
+                        raise DAError("An interview help audio section must be in the form of a text item or a list of text items." + self.idebug(data))
+                    audio.append({'text': TextObject(definitions + data['interview help']['audio']), 'package': self.package})
             else:
                 audio = None
             if 'heading' in data['interview help']:
@@ -610,11 +624,18 @@ class Question:
             if type(data['help']) is dict:
                 for key, value in data['help'].iteritems():
                     if key == 'audio':
-                        if type(value) in [dict, list]:
-                            raise DAError("An audio declaration in a help block can only contain text." + self.idebug(data))
-                        if self.audio is None:
-                            self.audio = dict()
-                        self.audio['help'] = {'text': TextObject(definitions + value), 'package': self.package}
+                        if type(value) is not list:
+                            the_list = [value]
+                        else:
+                            the_list = value
+                        for list_item in the_list:
+                            if type(list_item) in [dict, list]:
+                                raise DAError("An audio declaration in a help block can only contain a text item or a list of text items." + self.idebug(data))
+                            if self.audio is None:
+                                self.audio = dict()
+                            if 'help' not in self.audio:
+                                self.audio['help'] = list()
+                            self.audio['help'].append({'text': TextObject(definitions + list_item), 'package': self.package})
                     if key == 'content':
                         if type(value) in [dict, list]:
                             raise DAError("A content declaration in a help block can only contain text." + self.idebug(data))
@@ -622,11 +643,18 @@ class Question:
             else:
                 self.helptext = TextObject(definitions + data['help'])
         if 'audio' in data:
-            if type(data['audio']) in [dict, list]:
-                raise DAError("An audio declaration can only contain text." + self.idebug(data))
-            if self.audio is None:
-                self.audio = dict()    
-            self.audio['question'] = {'text': TextObject(definitions + data['audio']), 'package': self.package}
+            if type(data['audio']) is not list:
+                the_list = [data['audio']]
+            else:
+                the_list = data['audio']
+            for list_item in the_list:
+                if type(list_item) in [dict, list]:
+                    raise DAError("An audio declaration can only contain a text item or a list of text items." + self.idebug(data))
+                if self.audio is None:
+                    self.audio = dict()    
+                if 'question' not in self.audio:
+                    self.audio['question'] = list()
+                self.audio['question'].append({'text': TextObject(definitions + list_item), 'package': self.package})
         if 'decoration' in data:
             if type(data['decoration']) is dict:
                 decoration_list = [data['decoration']]
@@ -975,7 +1003,7 @@ class Question:
             undertext = None
         if self.helptext is not None:
             if self.audio is not None and 'help' in self.audio:
-                the_audio = {'text': self.audio['help']['text'].text(user_dict), 'package': self.audio['help']['package']}
+                the_audio = process_audio_list(self.audio['help'], user_dict)
             else:
                 the_audio = None
             help_text_list = [{'heading': None, 'content': self.helptext.text(user_dict), 'audio': the_audio}]
@@ -985,7 +1013,7 @@ class Question:
         if len(interview_help_text_list) > 0:
             help_text_list.extend(interview_help_text_list)
         if self.audio is not None and 'question' in self.audio:
-            audio = {'text': self.audio['question']['text'].text(user_dict), 'package': self.audio['question']['package']}
+            audio = process_audio_list(self.audio['question'], user_dict)
         else:
             audio = None
         if self.decorations is not None:
@@ -1277,7 +1305,7 @@ class Interview:
                 if source['audio'] is None:
                     help_item['audio'] = None
                 else:
-                    help_item['audio'] = {'text': source['audio']['text'].text(user_dict), 'package': source['audio']['package']}
+                    help_item['audio'] = process_audio_list(source['audio'], user_dict)
                 help_item['content'] = source['content'].text(user_dict)
                 result.append(help_item)
         return result

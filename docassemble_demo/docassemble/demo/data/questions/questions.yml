@@ -11,7 +11,7 @@ comment: |
 ---
 interview help:
   heading: About this web site
-  #audio: schumann-clip-2.mp3
+  audio: schumann-clip-2.mp3
   content: |
     Answer each question.  At the end, you may be given a document
     that you can save.
@@ -233,10 +233,6 @@ subquestion: |
   generate the question.
 
   [YAML]: https://en.wikipedia.org/wiki/YAML
-#help:
-  #audio: schumann-clip-3.mp3
-  #content: |
-    #This is the help page.
 field: user_saw_initial_screen
 datatype: boolean
 buttons:
@@ -350,6 +346,7 @@ yesno: client_has_injury
 help: |
   An injury can take many forms.  It can be a physical injury or a
   purely financial injury.
+  audio: schumann-clip-3.mp3
 progress: 50
 ---
 question: |
@@ -932,4 +929,9 @@ fields:
     required: False
     code: |
       name_suffix()
+---
+question: Upload an audio file.
+fields:
+  - no label: my_audio_file
+    datatype: file
 ...

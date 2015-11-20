@@ -1,6 +1,8 @@
 import sys
 import re
+import os
 import markdown
+import mimetypes
 import docassemble.base.util
 import docassemble.base.filter
 from docassemble.base.pandoc import Pandoc
@@ -128,8 +130,8 @@ def rtf_filter(text, metadata=dict()):
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
     text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', rtf_caption_table, text, flags=re.DOTALL)
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
-    text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
-    text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_as_rtf, text)
+    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
+    text = re.sub(r'\[FILE ([^,\]]+)\]', image_as_rtf, text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', rtf_caption_table, text)
     text = re.sub(r'\[NBSP\]', r'\\~ ', text)
     text = re.sub(r'\[ENDASH\]', r'{\\endash}', text)
@@ -182,8 +184,8 @@ def pdf_filter(text, metadata=dict()):
     text = text + "\n\n"
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', emoji_include_string, text)
-    text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_include_string, text)
-    text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_include_string, text)
+    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_include_string, text)
+    text = re.sub(r'\[FILE ([^,\]]+)\]', image_include_string, text)
     text = re.sub(r'\\clearpage *\\clearpage', r'\\clearpage', text)
     text = re.sub(r'\[INDENTATION\]', r'\\setlength{\\parindent}{0.5in}\\setlength{\\RaggedRightParindent}{\\parindent}', text)    
     text = re.sub(r'\[NOINDENTATION\]', r'\\setlength{\\parindent}{0in}\\setlength{\\RaggedRightParindent}{\\parindent}', text)    
@@ -212,8 +214,8 @@ def html_filter(text):
     text = text + "\n\n"
     text = re.sub(r'^[|] (.*)$', r'\1<br>', text, flags=re.MULTILINE)
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', emoji_url_string, text)
-    text = re.sub(r'\[IMAGE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_url_string, text)
-    text = re.sub(r'\[IMAGE ([^,\]]+)\]', image_url_string, text)
+    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_url_string, text)
+    text = re.sub(r'\[FILE ([^,\]]+)\]', image_url_string, text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', r'<table style="width: 100%"><tr><td style="width: 50%; border-style: solid; border-right-width: 1px; padding-right: 1em; border-left-width: 0px; border-top-width: 0px; border-bottom-width: 0px">\1</td><td style="padding-left: 1em; width: 50%;">\2</td></tr></table>', text)
     text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', r'<table style="width: 100%"><tr><td style="width: 50%; vertical-align: top; border-style: none; padding-right: 1em;">\1</td><td style="padding-left: 1em; vertical-align: top; width: 50%;">\2</td></tr></table>', text, flags=re.DOTALL)
     text = re.sub(r'\[SINGLESPACING\] *', r'', text)
@@ -519,3 +521,63 @@ def add_terms(termname, terms):
 
 def noquote(string):
     return noquote_match.sub('\\\"', string)
+
+def get_audio_urls(the_audio):
+    output = list()
+    the_list = list()
+    to_try = dict()
+    for audio_item in the_audio:
+        found_upload = False
+        pattern = re.compile(r'^\[FILE ([^,\]]+)')
+        for (file_ref) in re.findall(pattern, audio_item['text']):
+            found_upload = True
+            m = re.match(r'[0-9]+', file_ref)
+            if m:
+                file_info = file_finder(file_ref)
+                audio_ref = url_finder(file_ref)
+                if audio_ref is not None:
+                    if 'mimetype' in file_info:
+                        output.append([audio_ref, file_info['mimetype']])
+                    else:
+                        output.append([audio_ref, None])
+            else:
+                the_list.append({'text': file_ref, 'package': audio_item['package']})
+        if not found_upload:
+            the_list.append(audio_item)
+    for audio_item in the_list:
+        mimetype, encoding = mimetypes.guess_type(audio_item['text'])
+        if re.search(r'^http', audio_item['text']):
+            output.append([audio_item['text'], mimetype])
+            continue
+        basename = os.path.splitext(audio_item['text'])[0]
+        ext = os.path.splitext(audio_item['text'])[1]
+        if not mimetype in to_try:
+            to_try[mimetype] = list();
+        to_try[mimetype].append({'basename': basename, 'filename': audio_item['text'], 'ext': ext, 'package': audio_item['package']})
+    if 'audio/mpeg' in to_try and 'audio/ogg' not in to_try:
+        to_try['audio/ogg'] = list()
+        for attempt in to_try['audio/mpeg']:
+            if attempt['ext'] == '.MP3':
+                to_try['audio/ogg'].append({'basename': attempt['basename'], 'filename': attempt['basename'] + '.OGG', 'ext': '.OGG', 'package': attempt['package']})
+            else:
+                to_try['audio/ogg'].append({'basename': attempt['basename'], 'filename': attempt['basename'] + '.ogg', 'ext': '.ogg', 'package': attempt['package']})
+    if 'audio/ogg' in to_try and 'audio/mpeg' not in to_try:
+        to_try['audio/mpeg'] = list()
+        for attempt in to_try['audio/ogg']:
+            if attempt['ext'] == '.OGG':
+                to_try['audio/mpeg'].append({'basename': attempt['basename'], 'filename': attempt['basename'] + '.MP3', 'ext': '.MP3', 'package': attempt['package']})
+            else:
+                to_try['audio/mpeg'].append({'basename': attempt['basename'], 'filename': attempt['basename'] + '.mp3', 'ext': '.mp3', 'package': attempt['package']})
+    for mimetype in reversed(sorted(to_try.iterkeys())):
+        for attempt in to_try[mimetype]:
+            parts = attempt['filename'].split(':')
+            if len(parts) < 2:
+                parts = [attempt['package'], attempt['filename']]
+            parts[1] = re.sub(r'^data/static/', '', parts[1])
+            full_file = parts[0] + ':data/static/' + parts[1]
+            file_info = file_finder(full_file)
+            if 'fullpath' in file_info:
+                url = url_finder(full_file)
+                output.append([url, mimetype])
+    return output
+

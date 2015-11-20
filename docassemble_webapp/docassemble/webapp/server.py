@@ -28,7 +28,7 @@ import re
 import urlparse
 import json
 import base64
-from flask import make_response
+from flask import make_response, abort
 from flask import render_template
 from flask import request
 from flask import session
@@ -218,6 +218,8 @@ def get_info_from_file_number(file_number):
         result['fullpath'] = result['path'] + '.' + result['extension']
         break
     conn.commit()
+    if 'path' not in result:
+        return result
     filename = result['path'] + '.' + result['extension']
     add_info_about_file(filename, result)
     if os.path.isfile(filename):
@@ -1275,10 +1277,14 @@ def _endpoint_url(endpoint):
 @app.route('/uploadedfile/<number>', methods=['GET'])
 def serve_uploaded_file(number):
     number = re.sub(r'[^0-9]', '', str(number))
-    file_info = get_info_from_file_reference(number)
-    block_size = 4096
-    status = '200 OK'
-    return(send_file(file_info['path'], mimetype=file_info['mimetype']))
+    file_info = get_info_from_file_number(number)
+    #file_info = get_info_from_file_reference(number)
+    if 'path' not in file_info:
+        abort(404)
+    else:
+        #block_size = 4096
+        #status = '200 OK'
+        return(send_file(file_info['path'], mimetype=file_info['mimetype']))
 
 @app.route('/uploadedpage/<number>/<page>', methods=['GET'])
 def serve_uploaded_page(number, page):
