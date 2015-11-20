@@ -78,8 +78,8 @@ The following will install the Debian dependencies needed for the web
 server:
 
     sudo apt-get install apache2 postgresql python-psycopg2 \
-      libapache2-mod-wsgi python-speaklater poppler-utils \
-	  python-pil libffi-dev libffi6 imagemagick
+      libapache2-mod-wsgi libapache2-mod-xsendfile python-speaklater \
+      poppler-utils python-pil libffi-dev libffi6 imagemagick
 
 To install the additional dependencies for the web server
 ([WTForms](https://wtforms.readthedocs.org/en/latest/),
@@ -148,9 +148,10 @@ The following instructions assume a Debian/Ubuntu system on which you have
 cloned `docassemble` into your home directory.  You will have to make
 some changes to adapt this to your platform.
 
-Enable the Apache wsgi module if it is not already enabled:
+Enable the Apache wsgi and xsendfile modules if they are not already enabled:
 
     sudo a2enmod wsgi
+    sudo a2enmod xsendfile
 
 Create the root directory for user-contributed Python packages (see
 [site.USER_BASE]), and make sure it is writeable:
@@ -197,6 +198,10 @@ Set /etc/apache2/sites-available/000-default.conf to something like:
         SSLProxyEngine on
         DocumentRoot /var/www/html
 
+        XSendFile on
+        XSendFilePath /usr
+        XSendFilePath /var
+        XSendFilePath /tmp
         WSGIDaemonProcess docassemble.webserver user=www-data group=www-data threads=5
         WSGIScriptAlias /da /var/lib/docassemble/webapp/docassemble.wsgi
         <Directory /var/lib/docassemble/webapp>

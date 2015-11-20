@@ -75,7 +75,7 @@ question: |
 subquestion: |
   Please study the face below closely before answering.
 
-  [IMAGE docassemble.crimesolver:mugshot.jpg]
+  [FILE docassemble.crimesolver:mugshot.jpg]
 yesno: suspect_identified
 {% endhighlight %}
 
@@ -86,11 +86,11 @@ package.
 
 Optionally, you can set the width of the image:
 
-    [IMAGE docassemble.crimesolver:mugshot.jpg, 100%]
+    [FILE docassemble.crimesolver:mugshot.jpg, 100%]
 
 or:
 
-    [IMAGE docassemble.crimesolver:mugshot.jpg, 150px]
+    [FILE docassemble.crimesolver:mugshot.jpg, 150px]
 
 To insert an image that has been uploaded, simply refer to the
 file variable using [Mako].  For example:
