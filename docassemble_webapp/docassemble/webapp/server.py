@@ -587,6 +587,7 @@ def index():
     action = None
     if current_user.is_authenticated and 'key_logged' not in session:
         save_user_dict_key(user_code, yaml_filename)
+        session['key_logged'] = True 
     if len(request.args):
         if 'action' in request.args:
             action = json.loads(myb64unquote(request.args['action']))

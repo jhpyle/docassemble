@@ -9,6 +9,7 @@ from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.packages.models import Package, PackageAuth
 from docassemble.webapp.users.models import User, UserAuth, Role, UserRoles, UserDict, UserDictLock, Attachments, Uploads, KVStore, Ticket, TicketNote
 from sqlalchemy import create_engine, MetaData
+import docassemble.webapp.config
 from docassemble.webapp.config import daconfig
 if len(sys.argv) > 1:
     yaml_config = sys.argv[1]
