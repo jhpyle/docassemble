@@ -879,7 +879,7 @@ generic object: Individual
 question: |
   What language ${ x.do_question('speak') }?
 field: x.language
-video: ${ my_av_file }
+#video: ${ my_av_file }
 #audio: |
 #  [FILE docassemble.demo:data/static/schumann-clip-1.mp3]
 choices:
