@@ -527,19 +527,19 @@ function daSetPosition(position) {
 function daShowError(error) {
     switch(error.code) {
         case error.PERMISSION_DENIED:
-            document.getElementById('_track_location').value = JSON.stringify({'error': "User denied the request for Geolocation"});
+            document.getElementById('_track_location').value = JSON.stringify({error: "User denied the request for Geolocation"});
             console.log("User denied the request for Geolocation.");
             break;
         case error.POSITION_UNAVAILABLE:
-            document.getElementById('_track_location').value = JSON.stringify({'error': "Location information is unavailable"});
+            document.getElementById('_track_location').value = JSON.stringify({error: "Location information is unavailable"});
             console.log("Location information is unavailable.");
             break;
         case error.TIMEOUT:
-            document.getElementById('_track_location').value = JSON.stringify({'error': "The request to get user location timed out"});
+            document.getElementById('_track_location').value = JSON.stringify({error: "The request to get user location timed out"});
             console.log("The request to get user location timed out.");
             break;
         case error.UNKNOWN_ERROR:
-            document.getElementById('_track_location').value = JSON.stringify({'error': "An unknown error occurred"});
+            document.getElementById('_track_location').value = JSON.stringify({error: "An unknown error occurred"});
             console.log("An unknown error occurred.");
             break;
     }
@@ -547,7 +547,11 @@ function daShowError(error) {
 $( document ).ready(function() {
   $(function () {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(daSetPosition, daShowError);
+      document.getElementById('_track_location').value = JSON.stringify({error: "getCurrentPosition was still running"});
+      navigator.geolocation.getCurrentPosition(daSetPosition, daShowError, {timeout: 1000, maximumAge: 3600000});
+    }
+    else{
+      document.getElementById('_track_location').value = JSON.stringify({error: "navigator.geolocation not available in browser"});
     }
   });
 });
