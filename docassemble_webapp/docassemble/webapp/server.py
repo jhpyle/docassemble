@@ -1174,7 +1174,7 @@ def save_user_dict_key(user_code, filename):
     for d in cur:
         found = True
     if not found:
-        cur.execute("INSERT INTO userdictkeys (key, filename, user_id) values (%s, %s, %s)", [user_code, filename, the_user_id])
+        cur.execute("INSERT INTO userdictkeys (key, filename, user_id) values (%s, %s, %s)", [user_code, filename, current_user.id])
     conn.commit()
     return
 
