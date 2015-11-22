@@ -244,8 +244,10 @@ interview help:
 ---
 {% endhighlight %}
 
-See the [modifiers] section for an explanation of how audio file
-references work.
+You can also add video to help text using the `video` declaration.
+
+See the [modifiers] section for an explanation of how audio and video
+file references work.
 
 ## `def`
 

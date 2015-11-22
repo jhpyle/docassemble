@@ -44,7 +44,119 @@ audio: ${ user_mp3_file }
 ---
 {% endhighlight %}
 
+**docassemble** uses the [HTML5 audio tag] to allow users to play the
+audio.  Not all browsers support every type of audio file.  In order
+to make your audio files accessible to the greatest number of users,
+you should include files in both `mp3` and `ogg` format.
 
+For example, if your `audio` declaration points to a file, such as
+`nyc_question.mp3`, then your interview package will contain a file
+called `nyc_question.mp3` in the `data/static` directory.  If you also
+include an OGG version of this audio file, called `nyc_question.ogg`,
+in the same directory, then **docassemble** will make both files
+available to the user, and the user's browser will use whichever file
+works.  In your `audio` declaration, you can refer to either the `mp3`
+or the `ogg` file.
+
+Or, if your `mp3` and `ogg` alternatives are located in different
+directories, you can do this:
+
+{% highlight yaml %}
+---
+question: Are you traveling to New York City?
+yesno: going_to_nyc
+audio:
+  - mp3/nyc_question.mp3
+  - ogg/nyc_question.ogg
+---
+{% endhighlight %}
+
+Or, if you are using hyperlinks to files on another server, you can
+include different versions by doing something like this:
+
+{% highlight yaml %}
+---
+question: Are you traveling to New York City?
+yesno: going_to_nyc
+audio:
+  - http://example.com/files/audio/51/nyc_question.mp3
+  - http://example.com/files/audio/23/nyc_question.ogg
+---
+{% endhighlight %}
+
+If you refer to an uploaded file, **docassemble** will take care of
+providing both `mp3` and `ogg` versions.  When users upload an audio
+file, **docassemble** tries to convert it to the appropriate formats.
+For this to work, ffmpeg and pacpl must be installed on your system.
+Currently, **docassemble** can handle audio files uploaded in `mp3`,
+`ogg`, `3gpp`, and `wav` formats.  If you need to be able to process
+another type of audio file, **docassemble**'s source code can probably
+be modified to support that audio type.
+
+Note that there a number of limitations to playing audio in browsers.
+For example, older Android devices will not play audio retrieved
+through https, but will play the same audio retrieved through http.
+
+## `video`
+
+The `video` declaration is just like the `audio` declaration except that it displays a
+video instead of an audio file.
+
+{% highlight yaml %}
+---
+question: Are you traveling to New York City?
+yesno: going_to_nyc
+video: nyc_tourism.mp4
+---
+{% endhighlight %}
+
+**docassemble** uses the [HTML5 video tag] to allow users to play the
+audio.  Just as you should include both `mp3` and `ogg` audio files,
+you should include both `mp4` and `ogv` video files, so that users of
+many different browsers will all be able to see your videos.  These
+are the two formats that the [HTML5 video tag] most widely supports.
+
+If you refer to an uploaded video file, **docassemble** will take care
+of providing both `mp4` and `ogv` versions.  When users upload a
+video file, **docassemble** tries to convert it to the appropriate
+formats.  For this to work, ffmpeg and pacpl must be installed on your
+system.  Currently, **docassemble** can handle videos uploaded in
+`mp4`, `ogv`, and `mov` formats.  If you need to be able to process
+another type of video, **docassemble**'s source code can probably be
+modified to support that video type.
+
+You can also use the `video` declaration to embed [YouTube] and
+[Vimeo] videos.  For example, if you want to embed a [YouTube] video
+and the URL for the video is
+`https://www.youtube.com/watch?v=RpgYyuLt7Dx` or
+`https://youtu.be/RpgYyuLt7Dx`, you would write this:
+
+{% highlight yaml %}
+---
+question: Are you traveling to New York City?
+yesno: going_to_nyc
+video: |
+  [YOUTUBE RpgYyuLt7Dx]
+---
+{% endhighlight %}
+
+If you want to embed a [Vimeo] video, the URL of which is
+`https://vimeo.com/96044910`, you would write:
+
+{% highlight yaml %}
+---
+question: Are you traveling to New York City?
+yesno: going_to_nyc
+video: |
+  [VIMEO 96044910]
+---
+{% endhighlight %}
+
+Note that you could not have written the above as `video:
+[VIMEO 96044910]` -- that would have generated an error because [YAML]
+thinks square brackets indicate a list of items, not plain text.  If
+you want to write the declaration on one line, write `video:
+"[VIMEO 96044910]"`.
 
 ## `help`
 
@@ -81,6 +193,8 @@ help: |
   audio: message_re_damages.mp3
 ---
 {% endhighlight %}
+
+You can also add video to help text using the `video` declaration.
 
 ## `decoration`
 
@@ -225,3 +339,7 @@ by **docassemble**, so it can contain any valid [YAML].
 [ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
 [audio.js]: http://kolber.github.io/audiojs/
 [Mako]: http://www.makotemplates.org/
+[HTML5 audio tag]: http://www.w3schools.com/html/html5_audio.asp
+[HTML5 video tag]: http://www.w3schools.com/html/html5_video.asp
+[YouTube]: https://www.youtube.com/
+[Vimeo]: https://vimeo.com/

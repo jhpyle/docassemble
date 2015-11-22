@@ -66,9 +66,10 @@ secretkey: 38ihfiFehfoU34mcq_4clirglw3g4o87
 png_resolution: 300
 png_screen_resolution: 72
 show_login: true
+xsendfile: true
 {% endhighlight %}
 
-By default, `imagemagick`, `pdftoppm_command`, and `oauth` are
+By default, `imagemagick`, `pdftoppm`, `pacpl`, `ffmpeg`, and `oauth` are
 undefined.
 
 ## Standard configuration directives
@@ -238,6 +239,16 @@ display in the web browser.
 If set to false, users will not see a "Sign in" link in the
 upper-right-hand corner of the web app.
 
+### xsendfile
+
+If your web server is not configured to support X-SENDFILE headers,
+set this to False.  Use of X-SENDFILE is recommended because it allows
+the web server, rather than the Python [WSGI] server, to serve files.
+This is particularly useful when serving sound files, since the web
+browser typically asks for only a range of bytes from the sound file
+at a time, and the [WSGI] server does not support the HTTP Range
+header.
+
 ## Enabling optional features
 
 ### Image conversion
@@ -247,7 +258,18 @@ need to tell **docassemble** the names of the commands to use.
 
 {% highlight yaml %}
 imagemagick: convert
-pdftoppm_command: pdftoppm
+pdftoppm: pdftoppm
+{% endhighlight %}
+
+### Sound file conversion
+
+If you have pacpl (the [Perl Audio Converter]) and/or ffmpeg installed
+on your system, you need to tell **docassemble** the name of the
+commands to use.
+
+{% highlight yaml %}
+pacpl: pacpl
+ffmpeg: ffmpeg
 {% endhighlight %}
 
 ### Facebook and Google login
@@ -382,3 +404,4 @@ first.
 [functions]:  {{ site.baseurl }}/docs/functions.html
 [ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
 [GitHub]: https://github.com/
+[Perl Audio Converter]: http://vorzox.wix.com/pacpl

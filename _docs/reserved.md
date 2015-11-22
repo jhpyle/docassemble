@@ -18,7 +18,12 @@ experience errors or unexpected results.
 * `i`: used as an iterator when [generic objects] are defined.
 * `role`: used to store the role of the current user for purposes of
   the [roles] system.
+* `track_location`: used to indicate whether the web app should
+  attempt to determine the user's latitude and longitude and make it
+  available in `current_info`.
 * `role_event`: a special variable that is used as part of the [roles]
+  system.
+* `role_needed`: a special variable that is used as part of the [roles]
   system.
 * `url_args`: a dictionary available to interview code that contains
   values encoded in the URL with which the interview was initially
@@ -64,6 +69,7 @@ the list of reserved names expands to the following:
 * `current_info`
 * `cutoff_date`
 * `force_ask`
+* `get_info`
 * `get_language`
 * `get_locale`
 * `i`
@@ -82,6 +88,7 @@ the list of reserved names expands to the following:
 * `role_event`
 * `selections`
 * `send_email`
+* `set_info`
 * `set_language`
 * `set_locale`
 * `space_to_underscore`
@@ -93,6 +100,7 @@ the list of reserved names expands to the following:
 * `url_args`
 * `url_of`
 * `us`
+* `user_lat_lon`
 * `user_understands_how_to_use_signature_feature`
 * `user_understands_no_attorney_client_relationship`
 * `user`

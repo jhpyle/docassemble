@@ -138,7 +138,72 @@ yesno: user_is_cute
 In the above example, the picture will be shrunk or expanded so that
 its width is 250 pixels.
 
+## Inserting audio and video
+
+In addition to using the `audio` and `video` [modifiers], you can
+insert audio and video into your [Mako] text.
+
+{% highlight yaml %}
+---
+question: Listen to this!
+subquestion: |
+  Best song ever:
+
+  ${ my_file }
+
+  Don't you think so?
+---
+question: Upload an audio file.
+fields:
+  - no label: my_file
+    datatype: file
+---
+{% endhighlight %}
+
+Or, if you have a file in `data/static`, you can write:
+
+{% highlight yaml %}
+---
+question: Listen to this!
+subquestion: |
+  This excerpt of whalesong will give you goosebumps.
+
+  [FILE whale_song.mp3]
+---
+{% endhighlight %}
+
+It works the same with videos.
+
+{% highlight yaml %}
+---
+question: Watch this!
+subquestion: |
+  This video of otters sunbathing is going to go viral.
+
+  [FILE awesome_otters.mp4]
+---
+{% endhighlight %}
+
+You can also embed [YouTube] and [Vimeo] videos.  For example, if you
+want to embed a [YouTube] video for which the URL is
+`https://www.youtube.com/watch?v=RpgYyuLt7Dx` or
+`https://youtu.be/RpgYyuLt7Dx`, you would write this:
+
+{% highlight yaml %}
+---
+question: Are you traveling to New York City?
+yesno: going_to_nyc
+video: |
+  New York is such a happening place.  Check it out:
+
+  [YOUTUBE RpgYyuLt7Dx]
+---
+{% endhighlight %}
+
+See [modifiers] for more information about including audio and video.
+
 [documents]: {{ site.baseurl }}/docs/documents.html
+[modifiers]: {{ site.baseurl }}/docs/modifiers.html
 [Mako]: http://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
 [YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML

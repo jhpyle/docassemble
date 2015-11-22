@@ -81,7 +81,7 @@ server:
       libapache2-mod-wsgi libapache2-mod-xsendfile python-speaklater \
       poppler-utils python-pil libffi-dev libffi6 imagemagick
 
-To install the additional dependencies for the web server
+To install the additional Python dependencies for the web server
 ([WTForms](https://wtforms.readthedocs.org/en/latest/),
 [rauth](https://github.com/litl/rauth),
 [simplekv](https://github.com/mbr/simplekv),
@@ -93,6 +93,23 @@ To install the additional dependencies for the web server
       Flask-KVSession flask-user pypdf flask flask-login \
 	  flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
 	  Pygments
+
+If you want to be able to convert uploaded sound files into different
+formats, you will also need to install [ffmpeg] and the
+[Perl Audio Converter]:
+
+    sudo apt-get install libaudio-flac-header-perl \
+      libaudio-musepack-perl libmp3-tag-perl \
+      libogg-vorbis-header-pureperl-perl perl make libvorbis-dev \
+      libcddb-perl libinline-perl libcddb-get-perl libmp3-tag-perl \
+      libaudio-scan-perl libaudio-flac-header-perl \
+      libparallel-forkmanager-perl ffmpeg
+    git clone git://git.code.sf.net/p/pacpl/code pacpl-code 
+    cd pacpl-code
+    ./configure
+    make
+    sudo make install
+    cd ..
 
 ### Installing docassemble
 
@@ -283,3 +300,5 @@ error message is probably in /tmp/flask.log.
 [Nodebox English Linguistics library]: https://www.nodebox.net/code/index.php/Linguistics
 [site.USER_BASE]: https://pythonhosted.org/setuptools/easy_install.html#custom-installation-locations
 [configuration]: {{ site.baseurl }}/docs/config.html
+[Perl Audio Converter]: http://vorzox.wix.com/pacpl
+[ffmpeg]: https://www.ffmpeg.org/
