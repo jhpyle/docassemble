@@ -28,6 +28,7 @@ class ThreadVariables(threading.local):
 this_thread = ThreadVariables()
 
 def update_info(new_user, new_role, new_current_info, **kwargs):
+    logmessage("Updating info!")
     this_thread.user = new_user
     this_thread.role = new_role
     this_thread.current_info = new_current_info
@@ -36,6 +37,12 @@ def update_info(new_user, new_role, new_current_info, **kwargs):
     return
 
 def location_returned():
+    logmessage("Location returned")
+    if 'user' in this_thread.current_info:
+        logmessage("user exists")
+        if 'location' in this_thread.current_info['user']:
+            logmessage("location exists")
+            logmessage("Type is " + str(type(this_thread.current_info['user']['location'])))
     if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and type(this_thread.current_info['user']['location']) is dict:
         return True
     return False
@@ -51,23 +58,29 @@ class LatitudeLongitude(DAObject):
         self.known = False
         return super(LatitudeLongitude, self).init(**kwargs)
     def status(self):
+        logmessage("got to status")
         if self.gathered:
+            logmessage("gathered is true")
             return False
         else:
             if location_returned():
+                logmessage("returned is true")
                 self.set_to_current()
                 return False
             else:
                 return True
     def set_to_current(self):
+        logmessage("set to current")
         if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and type(this_thread.current_info['user']['location']) is dict:
             if 'latitude' in this_thread.current_info['user']['location'] and 'longitude' in this_thread.current_info['user']['location']:
                 self.latitude = this_thread.current_info['user']['location']['latitude']
                 self.longitude = this_thread.current_info['user']['location']['longitude']
                 self.known = True
+                logmessage("known is true")
             elif 'error' in this_thread.current_info['user']['location']:
                 self.error = this_thread.current_info['user']['location']['error']
                 self.known = False
+                logmessage("known is false")
             self.gathered = True
         return
     def __str__(self):
