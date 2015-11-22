@@ -12,6 +12,7 @@ comment: |
 interview help:
   heading: About this web site
   audio: schumann-clip-2.mp3
+  #video: "[YOUTUBE wqBYHrw9_ys]"
   content: |
     Answer each question.  At the end, you may be given a document
     that you can save.
@@ -164,7 +165,8 @@ content: |
 ---
 initial: true
 code: |
-  set_language(client.language)
+  track_location = user.location.status()
+  set_language(user.language)
 ---
 mandatory: true
 code: |
@@ -232,6 +234,10 @@ subquestion: |
   Click "Source" to toggle the display of the [YAML] code used to
   generate the question.
 
+  % if user.location.known:
+  Your current location is ${ user.location }.
+  % endif
+
   [YAML]: https://en.wikipedia.org/wiki/YAML
 field: user_saw_initial_screen
 datatype: boolean
@@ -246,7 +252,7 @@ subquestion: |
   looks something like this.  If this document is signed by the judge,
   then you have a support order.
     
-  [IMAGE docassemble.demo:sample-support-order.jpg, 100%]
+  [FILE docassemble.demo:sample-support-order.jpg, 100%]
 yesno: x.has_support_order
 comment: |
   This question illustrates how you can include images in your
@@ -343,9 +349,10 @@ comment: |
 question: Were you injured?
 decoration: injury
 yesno: client_has_injury
-help: |
-  An injury can take many forms.  It can be a physical injury or a
-  purely financial injury.
+help:
+  content: |
+    An injury can take many forms.  It can be a physical injury or a
+    purely financial injury.
   audio: schumann-clip-3.mp3
 progress: 50
 ---
@@ -872,7 +879,9 @@ generic object: Individual
 question: |
   What language ${ x.do_question('speak') }?
 field: x.language
-audio: schumann-clip-1.mp3
+video: ${ my_av_file }
+#audio: |
+#  [FILE docassemble.demo:data/static/schumann-clip-1.mp3]
 choices:
   - English: en
   - Español: es
@@ -930,8 +939,8 @@ fields:
     code: |
       name_suffix()
 ---
-question: Upload an audio file.
+question: Upload an audio or video file.
 fields:
-  - no label: my_audio_file
+  - no label: my_av_file
     datatype: file
 ...

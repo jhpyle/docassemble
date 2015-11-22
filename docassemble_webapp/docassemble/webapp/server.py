@@ -107,10 +107,10 @@ app.config['USER_AFTER_REGISTER_ENDPOINT'] = 'index'
 app.config['USER_AFTER_RESEND_CONFIRM_EMAIL_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_RESET_PASSWORD_ENDPOINT'] = 'user.login' 
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-app.config['USE_X_SENDFILE'] = True
+app.config['USE_X_SENDFILE'] = daconfig.get('xsendfile', True)
 PNG_RESOLUTION = daconfig.get('png_resolution', 300)
 PNG_SCREEN_RESOLUTION = daconfig.get('png_screen_resolution', 72)
-PDFTOPPM_COMMAND = daconfig.get('pdftoppm_command', None)
+PDFTOPPM_COMMAND = daconfig.get('pdftoppm', None)
 docassemble.base.util.set_default_language(daconfig.get('language', 'en'))
 docassemble.base.util.set_default_locale(daconfig.get('locale', 'US.utf8'))
 docassemble.base.util.set_language(daconfig.get('language', 'en'))
@@ -168,6 +168,12 @@ docassemble.base.logger.set_logmessage(flask_logger)
 
 def get_url_from_file_reference(file_reference, **kwargs):
     root = daconfig.get('root', '/')
+    if 'ext' in kwargs:
+        extn = kwargs['ext']
+        extn = re.sub(r'^\.', '', extn)
+        extn = '.' + extn
+    else:
+        extn = ''
     if re.match('[0-9]+', file_reference):
         file_number = file_reference
         if 'page' in kwargs:
@@ -178,13 +184,13 @@ def get_url_from_file_reference(file_reference, **kwargs):
                 url += 'screen'
             url += '/' + str(file_number) + '/' + str(page)
         else:
-            url = root + 'uploadedfile/' + str(file_number)
+            url = root + 'uploadedfile/' + str(file_number) + extn
     else:
         parts = file_reference.split(':')
         if len(parts) < 2:
             parts = ['docassemble.base', file_reference]
         parts[1] = re.sub(r'^data/static/', '', parts[1])
-        url = root + 'packagestatic/' + parts[0] + '/' + parts[1]
+        url = root + 'packagestatic/' + parts[0] + '/' + parts[1] + extn
     return(url)
 
 docassemble.base.parse.set_url_finder(get_url_from_file_reference)
@@ -205,6 +211,8 @@ def get_ext_and_mimetype(filename):
         extension = "jpg"
     if extension == "tiff":
         extension = "tif"
+    if extension == '3gpp':
+        mimetype = 'audio/3gpp'
     return(extension, mimetype)
 
 def get_info_from_file_number(file_number):
@@ -694,6 +702,11 @@ def index():
         logmessage("Something changed.")
         #logmessage("user dict has " + str(user_dict['_internal']['tracker']) + " and post data has " + post_data['_tracker'])
         something_changed = True
+    if '_track_location' in post_data and post_data['_track_location']:
+        #logmessage("Found track location of " + post_data['_track_location'])
+        the_location = json.loads(post_data['_track_location'])
+    else:
+        the_location = None
     should_assemble = False
     if something_changed:
         for key in post_data:
@@ -701,7 +714,7 @@ def index():
                 should_assemble = True
                 break
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action), tracker=user_dict['_internal']['tracker'])
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location), tracker=user_dict['_internal']['tracker'])
     if should_assemble:
         logmessage("Reassembling.")
         interview.assemble(user_dict, interview_status)
@@ -782,10 +795,6 @@ def index():
                                 unrotated = tempfile.NamedTemporaryFile(suffix="jpg")
                                 the_file.save(unrotated.name)
                                 call_array = [daconfig['imagemagick'], str(unrotated.name), '-auto-orient', '-density', '300']
-                                # width, height = PIL.Image.open(unrotated.name).size
-                                # if width > 3000 or height > 3000:
-                                #     call_array.append('-resize')
-                                #     call_array.append('1000x1000')
                                 call_array.append('jpeg:' + str(path))
                                 result = call(call_array)
                                 if result > 0:
@@ -793,6 +802,33 @@ def index():
                             else:
                                 the_file.save(path)
                             os.symlink(path, path + '.' + extension)
+                            if mimetype == 'video/quicktime' and 'ffmpeg' in daconfig:
+                                call_array = [daconfig['ffmpeg'], '-i', path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', path + '.ogv']
+                                result = call(call_array)
+                                call_array = [daconfig['ffmpeg'], '-i', path + '.' + extension, '-vcodec', 'copy', '-acodec', 'copy', path + '.mp4']
+                                result = call(call_array)
+                            if mimetype == 'video/mp4' and 'ffmpeg' in daconfig:
+                                call_array = [daconfig['ffmpeg'], '-i', path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', path + '.ogv']
+                                result = call(call_array)
+                            if mimetype == 'video/ogg' and 'ffmpeg' in daconfig:
+                                call_array = [daconfig['ffmpeg'], '-i', path + '.' + extension, '-c:v', 'libx264', '-preset', 'veryslow', '-crf', '22', '-c:a', 'libmp3lame', '-qscale:a', '2', '-ac', '2', '-ar', '44100', path + '.mp4']
+                                result = call(call_array)
+                            if mimetype == 'audio/mpeg' and 'pacpl' in daconfig:
+                                call_array = [daconfig['pacpl'], '-t', 'ogg', path + '.' + extension]
+                                result = call(call_array)
+                            if mimetype == 'audio/ogg' and 'pacpl' in daconfig:
+                                call_array = [daconfig['pacpl'], '-t', 'mp3', path + '.' + extension]
+                                result = call(call_array)
+                            if mimetype in ['audio/3gpp'] and 'ffmpeg' in daconfig:
+                                call_array = [daconfig['ffmpeg'], '-i', path + '.' + extension, path + '.ogg']
+                                result = call(call_array)
+                                call_array = [daconfig['ffmpeg'], '-i', path + '.' + extension, path + '.mp3']
+                                result = call(call_array)
+                            if mimetype in ['audio/x-wav', 'audio/wav'] and 'pacpl' in daconfig:
+                                call_array = [daconfig['pacpl'], '-t', 'mp3', path + '.' + extension]
+                                result = call(call_array)
+                                call_array = [daconfig['pacpl'], '-t', 'ogg', path + '.' + extension]
+                                result = call(call_array)
                             if extension == "pdf":
                                 make_image_files(path)
                             files_to_process.append((filename, file_number, mimetype, extension))
@@ -823,7 +859,7 @@ def index():
         known_datatypes = json.loads(myb64unquote(post_data['_datatypes']))
     known_variables = dict()
     for key in post_data:
-        if key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker']:
+        if key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location']:
             continue
         #logmessage("Got a key: " + key)
         data = post_data[key]
@@ -1274,6 +1310,19 @@ def _endpoint_url(endpoint):
         url = url_for(endpoint)
     return url
 
+@app.route('/uploadedfile/<number>.<extension>', methods=['GET'])
+def serve_uploaded_file_with_extension(number, extension):
+    number = re.sub(r'[^0-9]', '', str(number))
+    file_info = get_info_from_file_number(number)
+    if 'path' not in file_info:
+        abort(404)
+    else:
+        if os.path.isfile(file_info['path'] + '.' + extension):
+            extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + extension)
+            return(send_file(file_info['path'] + '.' + extension, mimetype=mimetype))
+        else:
+            abort(404)
+
 @app.route('/uploadedfile/<number>', methods=['GET'])
 def serve_uploaded_file(number):
     number = re.sub(r'[^0-9]', '', str(number))
@@ -1692,8 +1741,8 @@ def package_static(package, filename):
         abort(404)
     extension, mimetype = get_ext_and_mimetype(the_file)
     return(send_file(the_file, mimetype=str(mimetype)))
-#PPP
-def current_info(yaml=None, req=None, action=None):
+
+def current_info(yaml=None, req=None, action=None, location=None):
     if current_user.is_authenticated and not current_user.is_anonymous:
         ext = dict(email=current_user.email, roles=[role.name for role in current_user.roles], theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization)
     else:
@@ -1705,6 +1754,10 @@ def current_info(yaml=None, req=None, action=None):
     return_val = {'session': session['uid'], 'yaml_filename': yaml, 'url': url, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}}
     if action is not None:
         return_val.update(action)
+    if location is not None:
+        ext['location'] = location
+    else:
+        ext['location'] = None
     return_val['user'].update(ext)
     return(return_val)
 

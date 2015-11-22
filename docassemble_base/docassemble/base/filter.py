@@ -132,6 +132,8 @@ def rtf_filter(text, metadata=dict()):
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
     text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
     text = re.sub(r'\[FILE ([^,\]]+)\]', image_as_rtf, text)
+    text = re.sub(r'\[YOUTUBE ([^,\]]+)\]', '', text)
+    text = re.sub(r'\[VIMEO ([^,\]]+)\]', '', text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', rtf_caption_table, text)
     text = re.sub(r'\[NBSP\]', r'\\~ ', text)
     text = re.sub(r'\[ENDASH\]', r'{\\endash}', text)
@@ -186,6 +188,8 @@ def pdf_filter(text, metadata=dict()):
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', emoji_include_string, text)
     text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_include_string, text)
     text = re.sub(r'\[FILE ([^,\]]+)\]', image_include_string, text)
+    text = re.sub(r'\[YOUTUBE ([^,\]]+)\]', '', text)
+    text = re.sub(r'\[VIMEO ([^,\]]+)\]', '', text)
     text = re.sub(r'\\clearpage *\\clearpage', r'\\clearpage', text)
     text = re.sub(r'\[INDENTATION\]', r'\\setlength{\\parindent}{0.5in}\\setlength{\\RaggedRightParindent}{\\parindent}', text)    
     text = re.sub(r'\[NOINDENTATION\]', r'\\setlength{\\parindent}{0in}\\setlength{\\RaggedRightParindent}{\\parindent}', text)    
@@ -216,6 +220,8 @@ def html_filter(text):
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', emoji_url_string, text)
     text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_url_string, text)
     text = re.sub(r'\[FILE ([^,\]]+)\]', image_url_string, text)
+    text = re.sub(r'\[YOUTUBE ([^,\]]+)\]', r'<iframe width="420" height="315" src="https://www.youtube.com/embed/\1" frameborder="0" allowfullscreen></iframe>', text)
+    text = re.sub(r'\[VIMEO ([^,\]]+)\]', r'<iframe src="https://player.vimeo.com/video/\1?byline=0&portrait=0" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>', text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', r'<table style="width: 100%"><tr><td style="width: 50%; border-style: solid; border-right-width: 1px; padding-right: 1em; border-left-width: 0px; border-top-width: 0px; border-bottom-width: 0px">\1</td><td style="padding-left: 1em; width: 50%;">\2</td></tr></table>', text)
     text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', r'<table style="width: 100%"><tr><td style="width: 50%; vertical-align: top; border-style: none; padding-right: 1em;">\1</td><td style="padding-left: 1em; vertical-align: top; width: 50%;">\2</td></tr></table>', text, flags=re.DOTALL)
     text = re.sub(r'\[SINGLESPACING\] *', r'', text)
@@ -296,6 +302,9 @@ def image_as_rtf(match):
     file_info = file_finder(file_reference, convert={'svg': 'png'})
     if 'path' not in file_info:
         return ''
+    if 'mimetype' in file_info:
+        if re.search(r'^(audio|video)', file_info['mimetype']):
+            return '[reference to file type that cannot be displayed]'
     if 'width' in file_info:
         return rtf_image(file_info, width, not width_supplied)
     elif file_info['extension'] == 'pdf':
@@ -384,6 +393,17 @@ def image_url_string(match, emoji=False):
     if width == "full":
         width = "300px"    
     file_info = file_finder(file_reference)
+    if 'mimetype' in file_info:
+        if re.search(r'^audio', file_info['mimetype']):
+            urls = get_audio_urls([{'text': "[FILE " + file_reference + "]", 'package': None, 'type': 'audio'}])
+            if len(urls):
+                return audio_control(urls)
+            return ''
+        if re.search(r'^video', file_info['mimetype']):
+            urls = get_video_urls([{'text': "[FILE " + file_reference + "]", 'package': None, 'type': 'video'}])
+            if len(urls):
+                return video_control(urls)
+            return ''
     if 'extension' in file_info:
         if re.match(r'.*%$', width):
             width_string = "width:" + width
@@ -420,6 +440,9 @@ def image_include_string(match, emoji=False):
     except:
         width = DEFAULT_IMAGE_WIDTH
     file_info = file_finder(file_reference, convert={'svg': 'eps'})
+    if 'mimetype' in file_info:
+        if re.search(r'^(audio|video)', file_info['mimetype']):
+            return '[reference to file type that cannot be displayed]'
     if 'path' in file_info:
         if 'extension' in file_info:
             if file_info['extension'] in ['png', 'jpg', 'gif', 'pdf', 'eps']:
@@ -522,11 +545,43 @@ def add_terms(termname, terms):
 def noquote(string):
     return noquote_match.sub('\\\"', string)
 
+def audio_control(files):
+    for d in files:
+        if type(d) in (str, unicode):
+            return d
+    output = '<audio controls="controls" preload="metadata">' + "\n"
+    for d in files:
+        if type(d) is list:
+            output += '  <source src="' + d[0] + '"'
+            if d[1] is not None:
+                output += ' type="' + d[1] + '">'
+            output += "\n"
+    output += '  <a target="_blank" href="' + files[-1][0] +  '">' + docassemble.base.util.word('Listen') + '</a>'
+    output += "</audio>"
+    return output
+
+def video_control(files):
+    for d in files:
+        if type(d) in (str, unicode):
+            return d
+    output = '<video width="320" height="240" controls="controls">' + "\n"
+    for d in files:
+        if type(d) is list:
+            output += '  <source src="' + d[0] + '"'
+            if d[1] is not None:
+                output += ' type="' + d[1] + '">'
+            output += "\n"
+    output += '  <a target="_blank" href="' + files[-1][0] +  '">' + docassemble.base.util.word('Listen') + '</a>'
+    output += "</video>"
+    return output
+
 def get_audio_urls(the_audio):
     output = list()
     the_list = list()
     to_try = dict()
     for audio_item in the_audio:
+        if audio_item['type'] != 'audio':
+            continue
         found_upload = False
         pattern = re.compile(r'^\[FILE ([^,\]]+)')
         for (file_ref) in re.findall(pattern, audio_item['text']):
@@ -534,12 +589,17 @@ def get_audio_urls(the_audio):
             m = re.match(r'[0-9]+', file_ref)
             if m:
                 file_info = file_finder(file_ref)
-                audio_ref = url_finder(file_ref)
-                if audio_ref is not None:
-                    if 'mimetype' in file_info:
-                        output.append([audio_ref, file_info['mimetype']])
-                    else:
-                        output.append([audio_ref, None])
+                if 'path' in file_info:
+                    if file_info['mimetype'] == 'audio/ogg':
+                        output.append([url_finder(file_ref), file_info['mimetype']])
+                    elif os.path.isfile(file_info['path'] + '.ogg'):
+                        output.append([url_finder(file_ref, ext='ogg'), 'audio/ogg'])
+                    if file_info['mimetype'] == 'audio/mpeg':
+                        output.append([url_finder(file_ref), file_info['mimetype']])
+                    elif os.path.isfile(file_info['path'] + '.mp3'):
+                        output.append([url_finder(file_ref, ext='mp3'), 'audio/mpeg'])
+                    if file_info['mimetype'] not in ['audio/mpeg', 'audio/ogg']:
+                        output.append([url_finder(file_ref), file_info['mimetype']])
             else:
                 the_list.append({'text': file_ref, 'package': audio_item['package']})
         if not found_upload:
@@ -573,6 +633,8 @@ def get_audio_urls(the_audio):
             parts = attempt['filename'].split(':')
             if len(parts) < 2:
                 parts = [attempt['package'], attempt['filename']]
+            if parts[0] is None:
+                parts[0] = 'docassemble.base'
             parts[1] = re.sub(r'^data/static/', '', parts[1])
             full_file = parts[0] + ':data/static/' + parts[1]
             file_info = file_finder(full_file)
@@ -581,3 +643,73 @@ def get_audio_urls(the_audio):
                 output.append([url, mimetype])
     return output
 
+def get_video_urls(the_video):
+    output = list()
+    the_list = list()
+    to_try = dict()
+    for video_item in the_video:
+        if video_item['type'] != 'video':
+            continue
+        found_upload = False
+        if re.search(r'^\[(YOUTUBE|VIMEO) ', video_item['text']):
+            output.append(html_filter(video_item['text']))
+            continue
+        pattern = re.compile(r'^\[FILE ([^,\]]+)')
+        for (file_ref) in re.findall(pattern, video_item['text']):
+            found_upload = True
+            m = re.match(r'[0-9]+', file_ref)
+            if m:
+                file_info = file_finder(file_ref)
+                if 'path' in file_info:
+                    if file_info['mimetype'] == 'video/ogg':
+                        output.append([url_finder(file_ref), file_info['mimetype']])
+                    elif os.path.isfile(file_info['path'] + '.ogv'):
+                        output.append([url_finder(file_ref, ext='ogv'), 'video/ogg'])
+                    if file_info['mimetype'] == 'video/mp4':
+                        output.append([url_finder(file_ref), file_info['mimetype']])
+                    elif os.path.isfile(file_info['path'] + '.mp4'):
+                        output.append([url_finder(file_ref, ext='mp4'), 'video/mp4'])
+                    if file_info['mimetype'] not in ['video/mp4', 'video/ogg']:
+                        output.append([url_finder(file_ref), file_info['mimetype']])
+            else:
+                the_list.append({'text': file_ref, 'package': video_item['package']})
+        if not found_upload:
+            the_list.append(video_item)
+    for video_item in the_list:
+        mimetype, encoding = mimetypes.guess_type(video_item['text'])
+        if re.search(r'^http', video_item['text']):
+            output.append([video_item['text'], mimetype])
+            continue
+        basename = os.path.splitext(video_item['text'])[0]
+        ext = os.path.splitext(video_item['text'])[1]
+        if not mimetype in to_try:
+            to_try[mimetype] = list();
+        to_try[mimetype].append({'basename': basename, 'filename': video_item['text'], 'ext': ext, 'package': video_item['package']})
+    if 'video/mp4' in to_try and 'video/ogg' not in to_try:
+        to_try['video/ogg'] = list()
+        for attempt in to_try['audio/mp4']:
+            if attempt['ext'] == '.MP4':
+                to_try['video/ogg'].append({'basename': attempt['basename'], 'filename': attempt['basename'] + '.OGV', 'ext': '.OGV', 'package': attempt['package']})
+            else:
+                to_try['video/ogg'].append({'basename': attempt['basename'], 'filename': attempt['basename'] + '.ogv', 'ext': '.ogv', 'package': attempt['package']})
+    if 'video/ogg' in to_try and 'video/mp4' not in to_try:
+        to_try['video/mp4'] = list()
+        for attempt in to_try['video/ogg']:
+            if attempt['ext'] == '.OGV':
+                to_try['video/mp4'].append({'basename': attempt['basename'], 'filename': attempt['basename'] + '.MP4', 'ext': '.MP4', 'package': attempt['package']})
+            else:
+                to_try['audio/mpeg'].append({'basename': attempt['basename'], 'filename': attempt['basename'] + '.mp4', 'ext': '.mp4', 'package': attempt['package']})
+    for mimetype in reversed(sorted(to_try.iterkeys())):
+        for attempt in to_try[mimetype]:
+            parts = attempt['filename'].split(':')
+            if len(parts) < 2:
+                parts = [attempt['package'], attempt['filename']]
+            if parts[0] is None:
+                parts[0] = 'docassemble.base'
+            parts[1] = re.sub(r'^data/static/', '', parts[1])
+            full_file = parts[0] + ':data/static/' + parts[1]
+            file_info = file_finder(full_file)
+            if 'fullpath' in file_info:
+                url = url_finder(full_file)
+                output.append([url, mimetype])
+    return output

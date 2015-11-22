@@ -12,7 +12,7 @@ import threading
 import html2text
 from decimal import Decimal
 
-__all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'RoleChangeTracker', 'DATemplate', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'set_language', 'word', 'comma_list', 'ordinal', 'ordinal_number', 'need', 'nice_number', 'verb_past', 'verb_present', 'noun_plural', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'indefinite_article', 'today', 'capitalize', 'title_case', 'url_of', 'get_locale', 'set_locale', 'process_action', 'url_action', 'selections', 'get_info', 'set_info']
+__all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'LatitudeLongitude', 'RoleChangeTracker', 'DATemplate', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'set_language', 'word', 'comma_list', 'ordinal', 'ordinal_number', 'need', 'nice_number', 'verb_past', 'verb_present', 'noun_plural', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'indefinite_article', 'today', 'capitalize', 'title_case', 'url_of', 'get_locale', 'set_locale', 'process_action', 'url_action', 'selections', 'get_info', 'set_info', 'user_lat_lon', 'location_known', 'location_returned']
 
 class ThreadVariables(threading.local):
     user = None
@@ -34,6 +34,56 @@ def update_info(new_user, new_role, new_current_info, **kwargs):
     for att, value in kwargs.iteritems():
         setattr(this_thread, att, value)
     return
+
+def location_returned():
+    if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and type(this_thread.current_info['user']['location']) is dict:
+        return True
+    return False
+
+def location_known():
+    if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and type(this_thread.current_info['user']['location']) is dict and 'latitude' in this_thread.current_info['user']['location']:
+        return True
+    return False
+
+class LatitudeLongitude(DAObject):
+    def init(self, **kwargs):
+        self.gathered = False
+        self.known = False
+        return super(LatitudeLongitude, self).init(**kwargs)
+    def status(self):
+        if self.gathered:
+            return False
+        else:
+            if location_returned():
+                self.set_to_current()
+                return False
+            else:
+                return True
+    def set_to_current(self):
+        if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and type(this_thread.current_info['user']['location']) is dict:
+            if 'latitude' in this_thread.current_info['user']['location'] and 'longitude' in this_thread.current_info['user']['location']:
+                self.latitude = this_thread.current_info['user']['location']['latitude']
+                self.longitude = this_thread.current_info['user']['location']['longitude']
+                self.known = True
+            elif 'error' in this_thread.current_info['user']['location']:
+                self.error = this_thread.current_info['user']['location']['error']
+                self.known = False
+            self.gathered = True
+        return
+    def __str__(self):
+        if hasattr(self, 'latitude') and hasattr(self, 'longitude'):
+            return str(self.latitude) + ', ' + str(self.longitude)
+        elif hasattr(self, 'error'):
+            return str(self.error)
+        return 'Unknown'
+
+def user_lat_lon():
+    if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and type(this_thread.current_info['user']['location']) is dict:
+        if 'latitude' in this_thread.current_info['user']['location'] and 'longitude' in this_thread.current_info['user']['location']:
+            return this_thread.current_info['user']['location']['latitude'], this_thread.current_info['user']['location']['longitude']
+        elif 'error' in this_thread.current_info['user']['location']:
+            return this_thread.current_info['user']['location']['error'], this_thread.current_info['user']['location']['error']
+    return None, None
 
 def interview_url():
     return str(this_thread.current_info['url']) + '?i=' + urllib.quote(this_thread.current_info['yaml_filename']) + '&session=' + urllib.quote(this_thread.current_info['session'])
@@ -190,6 +240,7 @@ class Person(DAObject):
     def init(self, **kwargs):
         self.initializeAttribute(name='name', objectType=Name)
         self.initializeAttribute(name='address', objectType=Address)
+        self.initializeAttribute(name='location', objectType=LatitudeLongitude)
         self.roles = set()
         return super(Person, self).init(**kwargs)
     def __setattr__(self, attrname, value):

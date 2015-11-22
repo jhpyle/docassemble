@@ -27,10 +27,10 @@ dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
 match_brackets_at_end = re.compile(r'^(.*)(\[.+?\])$')
 match_inside_brackets = re.compile(r'\[(.+?)\]')
 
-def process_audio_list(the_list, user_dict):
+def process_audio_video_list(the_list, user_dict):
     output = list()
     for the_item in the_list:
-        output.append({'text': the_item['text'].text(user_dict), 'package': the_item['package']})
+        output.append({'text': the_item['text'].text(user_dict), 'package': the_item['package'], 'type': the_item['type']})
     return output
 
 def textify(data):
@@ -196,7 +196,7 @@ class InterviewStatus(object):
         self.subquestionText = question_result['subquestion_text']
         self.underText = question_result['under_text']
         self.decorations = question_result['decorations']
-        self.audio = question_result['audio']
+        self.audiovideo = question_result['audiovideo']
         self.helpText = question_result['help_text']
         self.attachments = question_result['attachments']
         self.selectcompute = question_result['selectcompute']
@@ -303,7 +303,7 @@ class Question:
         self.progress = None
         self.script = None
         self.decorations = None
-        self.audio = None
+        self.audiovideo = None
         self.allow_emailing = True
         self.fields_used = set()
         self.names_used = set()
@@ -469,18 +469,28 @@ class Question:
                 raise DAError("An interview help section must not be in the form of a list." + self.idebug(data))
             elif type(data['interview help']) is not dict:
                 data['interview help'] = {'content': unicode(data['interview help'])}
+            audiovideo = list()
             if 'audio' in data['interview help']:
                 if type(data['interview help']['audio']) is not list:
                     the_list = [data['interview help']['audio']]
                 else:
                     the_list = data['interview help']['audio']
-                audio = list()
+                audiovideo = list()
                 for the_item in the_list:
                     if type(the_item) in [list, dict]:
                         raise DAError("An interview help audio section must be in the form of a text item or a list of text items." + self.idebug(data))
-                    audio.append({'text': TextObject(definitions + data['interview help']['audio']), 'package': self.package})
-            else:
-                audio = None
+                    audiovideo.append({'text': TextObject(definitions + data['interview help']['audio']), 'package': self.package, 'type': 'audio'})
+            if 'video' in data['interview help']:
+                if type(data['interview help']['video']) is not list:
+                    the_list = [data['interview help']['video']]
+                else:
+                    the_list = data['interview help']['video']
+                for the_item in the_list:
+                    if type(the_item) in [list, dict]:
+                        raise DAError("An interview help video section must be in the form of a text item or a list of text items." + self.idebug(data))
+                    audiovideo.append({'text': TextObject(definitions + data['interview help']['video']), 'package': self.package, 'type': 'video'})
+            if 'video' not in data['interview help'] and 'audio' not in data['interview help']:
+                audiovideo = None
             if 'heading' in data['interview help']:
                 if type(data['interview help']['heading']) not in [dict, list]:
                     help_heading = TextObject(definitions + data['interview help']['heading'])
@@ -497,7 +507,7 @@ class Question:
                 raise DAError("No content section was found in an interview help section." + self.idebug(data))
             if self.language not in self.interview.helptext:
                 self.interview.helptext[self.language] = list()
-            self.interview.helptext[self.language].append({'content': help_content, 'heading': help_heading, 'audio': audio})
+            self.interview.helptext[self.language].append({'content': help_content, 'heading': help_heading, 'audiovideo': audiovideo})
         if 'generic object' in data:
             self.is_generic = True
             #self.is_generic_list = False
@@ -631,11 +641,24 @@ class Question:
                         for list_item in the_list:
                             if type(list_item) in [dict, list]:
                                 raise DAError("An audio declaration in a help block can only contain a text item or a list of text items." + self.idebug(data))
-                            if self.audio is None:
-                                self.audio = dict()
-                            if 'help' not in self.audio:
-                                self.audio['help'] = list()
-                            self.audio['help'].append({'text': TextObject(definitions + list_item), 'package': self.package})
+                            if self.audiovideo is None:
+                                self.audiovideo = dict()
+                            if 'help' not in self.audiovideo:
+                                self.audiovideo['help'] = list()
+                            self.audiovideo['help'].append({'text': TextObject(definitions + list_item), 'package': self.package, 'type': 'audio'})
+                    if key == 'video':
+                        if type(value) is not list:
+                            the_list = [value]
+                        else:
+                            the_list = value
+                        for list_item in the_list:
+                            if type(list_item) in [dict, list]:
+                                raise DAError("A video declaration in a help block can only contain a text item or a list of text items." + self.idebug(data))
+                            if self.audiovideo is None:
+                                self.audiovideo = dict()
+                            if 'help' not in self.audiovideo:
+                                self.audiovideo['help'] = list()
+                            self.audiovideo['help'].append({'text': TextObject(definitions + list_item), 'package': self.package, 'type': 'video'})
                     if key == 'content':
                         if type(value) in [dict, list]:
                             raise DAError("A content declaration in a help block can only contain text." + self.idebug(data))
@@ -650,11 +673,24 @@ class Question:
             for list_item in the_list:
                 if type(list_item) in [dict, list]:
                     raise DAError("An audio declaration can only contain a text item or a list of text items." + self.idebug(data))
-                if self.audio is None:
-                    self.audio = dict()    
-                if 'question' not in self.audio:
-                    self.audio['question'] = list()
-                self.audio['question'].append({'text': TextObject(definitions + list_item), 'package': self.package})
+                if self.audiovideo is None:
+                    self.audiovideo = dict()    
+                if 'question' not in self.audiovideo:
+                    self.audiovideo['question'] = list()
+                self.audiovideo['question'].append({'text': TextObject(definitions + list_item), 'package': self.package, 'type': 'audio'})
+        if 'video' in data:
+            if type(data['video']) is not list:
+                the_list = [data['video']]
+            else:
+                the_list = data['video']
+            for list_item in the_list:
+                if type(list_item) in [dict, list]:
+                    raise DAError("A video declaration can only contain a text item or a list of text items." + self.idebug(data))
+                if self.audiovideo is None:
+                    self.audiovideo = dict()    
+                if 'question' not in self.audiovideo:
+                    self.audiovideo['question'] = list()
+                self.audiovideo['question'].append({'text': TextObject(definitions + list_item), 'package': self.package, 'type': 'video'})
         if 'decoration' in data:
             if type(data['decoration']) is dict:
                 decoration_list = [data['decoration']]
@@ -1002,20 +1038,20 @@ class Question:
         else:
             undertext = None
         if self.helptext is not None:
-            if self.audio is not None and 'help' in self.audio:
-                the_audio = process_audio_list(self.audio['help'], user_dict)
+            if self.audiovideo is not None and 'help' in self.audiovideo:
+                the_audio_video = process_audio_video_list(self.audiovideo['help'], user_dict)
             else:
-                the_audio = None
-            help_text_list = [{'heading': None, 'content': self.helptext.text(user_dict), 'audio': the_audio}]
+                the_audio_video = None
+            help_text_list = [{'heading': None, 'content': self.helptext.text(user_dict), 'audiovideo': the_audio_video}]
         else:
             help_text_list = list()
         interview_help_text_list = self.interview.processed_helptext(user_dict, self.language)
         if len(interview_help_text_list) > 0:
             help_text_list.extend(interview_help_text_list)
-        if self.audio is not None and 'question' in self.audio:
-            audio = process_audio_list(self.audio['question'], user_dict)
+        if self.audiovideo is not None and 'question' in self.audiovideo:
+            audiovideo = process_audio_video_list(self.audiovideo['question'], user_dict)
         else:
-            audio = None
+            audiovideo = None
         if self.decorations is not None:
             decorations = list()
             for decoration_item in self.decorations:
@@ -1076,6 +1112,8 @@ class Question:
                 if hasattr(field, 'hint'):
                     hints[field.number] = field.hint.text(user_dict)
         attachment_text = self.processed_attachments(user_dict, the_x=the_x, the_i=the_i)
+        if 'track_location' in user_dict:
+            extras['track_location'] = user_dict['track_location']
         if 'role' in user_dict:
             current_role = user_dict['role']
             if len(self.role) > 0:
@@ -1087,7 +1125,7 @@ class Question:
                 #logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("name 'role_event' is not defined")
-        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'audio': audio, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras})
+        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras})
     def processed_attachments(self, user_dict, **kwargs):
         return(list(map((lambda x: self.make_attachment(x, user_dict, **kwargs)), self.attachments)))
     def parse_fields(self, the_list, register_target, uses_field):
@@ -1302,10 +1340,10 @@ class Interview:
                     help_item['heading'] = None
                 else:
                     help_item['heading'] = source['heading'].text(user_dict)
-                if source['audio'] is None:
-                    help_item['audio'] = None
+                if source['audiovideo'] is None:
+                    help_item['audiovideo'] = None
                 else:
-                    help_item['audio'] = process_audio_list(source['audio'], user_dict)
+                    help_item['audiovideo'] = process_audio_video_list(source['audiovideo'], user_dict)
                 help_item['content'] = source['content'].text(user_dict)
                 result.append(help_item)
         return result

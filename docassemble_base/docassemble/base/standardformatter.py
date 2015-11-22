@@ -1,6 +1,6 @@
 from docassemble.base.util import word, currency_symbol
 import docassemble.base.filter
-from docassemble.base.filter import markdown_to_html, get_audio_urls
+from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control
 from docassemble.base.parse import Question, debug
 from docassemble.base.logger import logmessage
 import urllib
@@ -19,6 +19,8 @@ def tracker_tag(status):
     if status.question.name:
         output += '<input type="hidden" name="_question_name" value="' + status.question.name + '">'
     output += '<input type="hidden" name="_tracker" value="' + str(status.tracker) + '">'
+    if 'track_location' in status.extras and status.extras['track_location']:
+        output += '<input type="hidden" id="_track_location" name="_track_location" value="">'
     return output
 
 def datatype_tag(datatypes):
@@ -61,31 +63,23 @@ def signature_html(status, debug, root):
     output += '</form>'
     return output
 
-def audio_control(files):
-    output = '<audio controls="controls" preload="metadata">' + "\n"
-    for d in files:
-        output += '  <source src="' + d[0] + '"'
-        if d[1] is not None:
-            output += ' type="' + d[1] + '">'
-        output += "\n"
-    output += '  <a target="_blank" href="' + files[-1][0] +  '">' + word('Listen') + '</a>'
-    output += "</audio>"
-    return output
-
 def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     decorations = list()
-    uses_audio = False
-    audio_text = ''
+    uses_audio_video = False
+    audio_video_text = ''
     datatypes = dict()
     onchange = list()
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'help-inline'}
     if status.question.script is not None:
         extra_scripts.append(status.question.script)
-    if status.audio is not None:
-        uses_audio = True
-        urls = get_audio_urls(status.audio)
-        if urls is not None:
-            audio_text = '<div>' + audio_control(urls) + '</div>'
+    if status.audiovideo is not None:
+        uses_audio_video = True
+        audio_urls = get_audio_urls(status.audiovideo)
+        if len(audio_urls):
+            audio_video_text += '<div>' + audio_control(audio_urls) + '</div>'
+        video_urls = get_video_urls(status.audiovideo)
+        if len(video_urls):
+            audio_video_text += '<div>' + video_control(video_urls) + '</div>'
     if status.decorations is not None:
         #sys.stderr.write("yoo1\n")
         for decoration in status.decorations:
@@ -119,7 +113,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     output += '<section id="question" class="tab-pane active col-md-6">'
     if status.question.question_type == "yesno":
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
-        output += audio_text + '<form action="' + root + '" id="daform" method="POST"><fieldset>'
+        output += audio_video_text + '<form action="' + root + '" id="daform" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
@@ -130,7 +124,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         output += '</fieldset></form>'
     elif status.question.question_type == "noyes":
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
-        output += audio_text + '<form action="' + root + '" id="daform" method="POST"><fieldset>'
+        output += audio_video_text + '<form action="' + root + '" id="daform" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
@@ -220,7 +214,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                     fieldlist.append('<div class="form-group' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>')
                 else:
                     fieldlist.append('<div class="form-group' + req_tag +'"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + field.label + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>')
-        output += audio_text + '<form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '><fieldset>'
+        output += audio_video_text + '<form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
@@ -247,7 +241,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         output += '</fieldset></form>'
     elif status.question.question_type == "settrue":
         datatypes[status.question.fields[0].saveas] = "boolean"
-        output += audio_text + '<form action="' + root + '" id="daform" method="POST"><fieldset>'
+        output += audio_video_text + '<form action="' + root + '" id="daform" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
@@ -259,7 +253,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     elif status.question.question_type == "multiple_choice":
         if hasattr(status.question.fields[0], 'datatype'):
             datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
-        output += audio_text + '<form action="' + root + '" id="daform" method="POST"><fieldset>'
+        output += audio_video_text + '<form action="' + root + '" id="daform" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
@@ -375,11 +369,11 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         output += datatype_tag(datatypes)
         output += '</fieldset></form>'
     elif status.question.question_type == 'deadend':
-        output += audio_text + '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
+        output += audio_video_text + '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
     else:
-        output += audio_text + '<form action="' + root + '" id="daform" class="form-horizontal" method="POST"><fieldset>'
+        output += audio_video_text + '<form action="' + root + '" id="daform" class="form-horizontal" method="POST"><fieldset>'
         output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
         if status.subquestionText:
             output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
@@ -492,11 +486,14 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
             output += '<div class="page-header"><h3>' + help_section['heading'] + '</h3></div>'
         else:
             output += '<div class="page-header"><h3>' + word('Help with this question') + '</h3></div>'
-        if help_section['audio'] is not None:
-            uses_audio = True
-            urls = get_audio_urls(help_section['audio'])
-            if urls is not None:
-                output += '<div>' + audio_control(urls) + '</div>'
+        if help_section['audiovideo'] is not None:
+            uses_audio_video = True
+            audio_urls = get_audio_urls(help_section['audiovideo'])
+            if len(audio_urls):
+                output += '<div>' + audio_control(audio_urls) + '</div>'
+            video_urls = get_video_urls(help_section['audiovideo'])
+            if len(video_urls):
+                output += '<div>' + video_control(video_urls) + '</div>'
         output += markdown_to_html(help_section['content'], status=status)
     if len(status.attributions):
         output += '<br><br><br><br><br><br><br>'
@@ -522,15 +519,49 @@ else{
 }
 });</script>"""
         extra_scripts.append(the_script)
-    if False and uses_audio:
-        extra_scripts.append('<script src="' + url_for('static', filename='audiojs/audiojs/audio.min.js') + '"></script>')
-        run_audiojs = """\
-<script>
-  audiojs.events.ready(function() {
-    var as = audiojs.createAll();
+    if 'track_location' in status.extras and status.extras['track_location']:
+        track_js = """<script>
+function daSetPosition(position) {
+  document.getElementById('_track_location').value = JSON.stringify({'latitude': position.coords.latitude, 'longitude': position.coords.longitude})
+}
+function daShowError(error) {
+    switch(error.code) {
+        case error.PERMISSION_DENIED:
+            document.getElementById('_track_location').value = JSON.stringify({'error': "User denied the request for Geolocation"});
+            //console.log("User denied the request for Geolocation.");
+            break;
+        case error.POSITION_UNAVAILABLE:
+            document.getElementById('_track_location').value = JSON.stringify({'error': "Location information is unavailable"});
+            //console.log("Location information is unavailable.");
+            break;
+        case error.TIMEOUT:
+            document.getElementById('_track_location').value = JSON.stringify({'error': "The request to get user location timed out"});
+            //console.log("The request to get user location timed out.");
+            break;
+        case error.UNKNOWN_ERROR:
+            document.getElementById('_track_location').value = JSON.stringify({'error': "An unknown error occurred"});
+            //console.log("An unknown error occurred.");
+            break;
+    }
+}
+$( document ).ready(function() {
+  $(function () {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(daSetPosition, daShowError);
+    }
   });
+});
 </script>"""
-        extra_scripts.append(run_audiojs)
+        extra_scripts.append(track_js)
+#     if False and uses_audio_video:
+#         extra_scripts.append('<script src="' + url_for('static', filename='audiojs/audiojs/audio.min.js') + '"></script>')
+#         run_audiojs = """\
+# <script>
+#   audiojs.events.ready(function() {
+#     var as = audiojs.createAll();
+#   });
+# </script>"""
+#         extra_scripts.append(run_audiojs)
     return output
 
 def noquote(string):
@@ -613,11 +644,17 @@ def input_for(status, field, wide=False):
             else:
                 defaultstring = ''
             input_type = field.datatype
+            step_string = ''
             if field.datatype in ['integer', 'float', 'currency']:
                 input_type = 'number'
-            if field.datatype == 'currency':
+                if field.datatype == 'integer':
+                    step_string = ' step="1"'
+                if field.datatype == 'float':
+                    step_string = ' step="0.01"'
+                if field.datatype == 'currency':
+                    step_string = ' step="0.01"'
                 output += '<div class="input-group"><span class="input-group-addon" id="addon-' + field.saveas + '">' + currency_symbol() + '</span>'
-            output += '<input' + defaultstring + placeholdertext + ' class="form-control" type="' + input_type + '" name="' + field.saveas + '" id="' + field.saveas + '"'
+            output += '<input' + defaultstring + placeholdertext + ' class="form-control" type="' + input_type + '"' + step_string + ' name="' + field.saveas + '" id="' + field.saveas + '"'
             if field.datatype == 'currency':
                 output += ' aria-describedby="addon-' + field.saveas + '"></div>'
             else:
