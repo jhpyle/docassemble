@@ -1169,7 +1169,7 @@ def advance_progress(user_dict):
 
 def save_user_dict_key(user_code, filename):
     cur = conn.cursor()
-    cur.execute("select id from userdictkeys where key=%s and filename=%s and user_id=%s", [user_code, filename, current_user.id])
+    cur.execute("select indexno from userdictkeys where key=%s and filename=%s and user_id=%s", [user_code, filename, current_user.id])
     found = False
     for d in cur:
         found = True
