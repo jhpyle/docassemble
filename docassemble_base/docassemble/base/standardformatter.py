@@ -528,19 +528,19 @@ function daShowError(error) {
     switch(error.code) {
         case error.PERMISSION_DENIED:
             document.getElementById('_track_location').value = JSON.stringify({'error': "User denied the request for Geolocation"});
-            //console.log("User denied the request for Geolocation.");
+            console.log("User denied the request for Geolocation.");
             break;
         case error.POSITION_UNAVAILABLE:
             document.getElementById('_track_location').value = JSON.stringify({'error': "Location information is unavailable"});
-            //console.log("Location information is unavailable.");
+            console.log("Location information is unavailable.");
             break;
         case error.TIMEOUT:
             document.getElementById('_track_location').value = JSON.stringify({'error': "The request to get user location timed out"});
-            //console.log("The request to get user location timed out.");
+            console.log("The request to get user location timed out.");
             break;
         case error.UNKNOWN_ERROR:
             document.getElementById('_track_location').value = JSON.stringify({'error': "An unknown error occurred"});
-            //console.log("An unknown error occurred.");
+            console.log("An unknown error occurred.");
             break;
     }
 }
