@@ -127,28 +127,29 @@ docassemble packages, do the following as root:
 The compile.sh script installs the four Python packages contained in
 the git repository:
 
-1. docassemble
-2. docassemble_base
-3. docassemble_webapp
-4. docassemble_demo
+1. docassemble: empty namespace package;
+2. docassemble.base: core functionality;
+3. docassemble.mako: version of [Mako] modified slightly to work with **docassemble**;
+4. docassemble.webapp: the web application framework
+5. docassemble.demo: demonstration interview package
 
 The "docassemble" package is empty because it is a "namespace"
 package.  (This facilitates the creation of add-on packages.)  The
-core functionality is in the docassemble_base package.  These two
+core functionality is in the `docassemble.base` package.  These two
 packages are the only packages required to use the docassemble module.
 If you do not want to install all the packages, you can skip running
 compile.sh and simply run `python setup.py install` in each of the
 packages you wish to install.
 
-The `docassemble_webapp` package contains the standard docassemble web
-application.  The `docassemble_demo` package contains a demonstration
+The `docassemble.webapp` package contains the standard docassemble web
+application.  The `docassemble.demo` package contains a demonstration
 interview.
 
 ## Testing docassemble
 
 The following will run a test of the core docassemble module.  This
-requires `docassemble`, `docassemble_base`, and `docassemble_demo` to
-be installed.
+requires `docassemble`, `docassemble.base`, `docassemble.mako`, and
+`docassemble.demo` to be installed.
 
     cd ~/docassemble
     python docassemble_base/tests/test-parse.py
@@ -173,8 +174,8 @@ Enable the Apache wsgi and xsendfile modules if they are not already enabled:
 Create the root directory for user-contributed Python packages (see
 [site.USER_BASE]), and make sure it is writeable:
 
-    sudo mkdir -p /var/www/.local
-    sudo chown www-data.www-data /var/www/.local
+    sudo mkdir -p /var/www/.local /var/www/.cache
+    sudo chown www-data.www-data /var/www/.local /var/www/.cache
 
 Create the directory for the Flask WSGI file needed by the web server:
 
@@ -275,6 +276,19 @@ or, if you use systemd:
 
 The system will be running at http://example.com/da.
 
+# Using different web servers and/or SQL database backends
+
+**docassemble** is not dependent on Apache or PostgreSQL.  Other web
+servers that can host Python WSGI applications (e.g., nginx with
+uWSGI) could be used.
+
+**docassemble** uses [SQLAlchemy] to communicate with the SQL back
+end, so you could edit the [configuration] to point to another type of
+database system, if supported by [SQLAlchemy].  **docassemble** does
+not do fancy things with SQL, so most backends should work without a
+problem.  Any backend used must support column definitions with
+`server_default=db.func.now()`.
+
 # Upgrading
 
 To upgrade docassemble to the latest version, do:
@@ -302,3 +316,5 @@ error message is probably in /tmp/flask.log.
 [configuration]: {{ site.baseurl }}/docs/config.html
 [Perl Audio Converter]: http://vorzox.wix.com/pacpl
 [ffmpeg]: https://www.ffmpeg.org/
+[SQLAlchemy]: http://www.sqlalchemy.org/
+[Mako]: http://www.makotemplates.org/

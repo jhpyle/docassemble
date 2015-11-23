@@ -45,8 +45,8 @@ The web application depends on:
 * [Flask-User](https://pythonhosted.org/Flask-User) - for a
   username/password system
 * [Flask-Mail](https://pythonhosted.org/Flask-Mail/) - for sending e-mail
-* [SQLAlchemy](http://www.sqlalchemy.org/) - used by Flask to store
-  data in a SQL server
+* [SQLAlchemy] - used to store data in a
+  SQL server
 * [WTForms](https://wtforms.readthedocs.org/en/latest/) - required by
   Flask
 * [Pygments](http://pygments.org) - for showing [YAML] in a special
@@ -64,11 +64,9 @@ The web application depends on:
 * [Perl Audio Converter](http://vorzox.wix.com/pacpl)
 * [PostgreSQL](http://www.postgresql.org/) and
   [psycopg2](http://initd.org/psycopg/) - for storing user data; other
-  databases compatible with [SQLAlchemy](http://www.sqlalchemy.org/)
-  would probably work as well with slight modifications to the source
-  code
+  databases compatible with [SQLAlchemy] will also work
 * A web server - for serving the web application
-* A mail server - for allowing users to e-mail documents to themselves
+* An SMTP server - for allowing users to e-mail documents to themselves
   and to facilitate the username/password system
 
 To run the demo question file you will need:
@@ -78,3 +76,4 @@ To run the demo question file you will need:
   statute of limitations period
 
 [YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
+[SQLAlchemy]: http://www.sqlalchemy.org/

@@ -69,12 +69,12 @@ interview authors do not have to design the "flow" of the interview;
 **docassemble** will determine what questions to ask, and the order in
 which to ask them, based on what information is necessary to gather.
 The system will refrain from asking unnecessary questions.  For
-example, if a question or document contains a conditional statement
-such as:
+example, if the interview contains a conditional statement such as:
 
-    % if user.is_disabled or user.age > 60:
-      We have special funding to assist you.
-    % endif
+    if user.is_disabled or user.age > 60:
+      special_funding_exists = True
+    else:
+      special_funding_exists = False
 	  
 then the user will be asked if he is disabled, and will only be asked
 for his age if he says he is not disabled.  Authors need to provide a
