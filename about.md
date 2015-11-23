@@ -31,7 +31,10 @@ addition to gathering yes/no answers and fill-in forms,
 **docassemble** can collect uploaded documents, pictures taken with a
 smartphone, and the user's signature, which the user can write using a
 touchscreen or mouse.  The documents created by **docassemble** can
-incorporate the user's signature and/or uploaded images.
+incorporate the user's signature and/or uploaded images.  Audio and
+video can be easily integrated into questions.  Interviews can the
+user information relevant to their current physical location by
+accessing the geolocation feature of the user's browser.
 
 ### Easy to develop
 
@@ -131,9 +134,6 @@ All of the text presented to the user of the **docassemble** web
 application can be [translated] to a language other than English.
 **docassemble** supports the full use of [Unicode] characters in
 interviews.
-
-**docassemble** also allows audio files to be integrated with
-  questions.
 
 ### Superior to the alternatives
 
