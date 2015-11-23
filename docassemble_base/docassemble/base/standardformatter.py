@@ -188,7 +188,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                 if field.datatype in ['number', 'currency', 'float', 'integer']:
                     validation_rules['rules'][field.saveas]['number'] = True
                     validation_rules['messages'][field.saveas]['number'] = word("You need to enter a number.")
-                if (field.datatype in ['files', 'file']):
+                if (field.datatype in ['files', 'file', 'camera', 'camcorder', 'microphone']):
                     enctype_string = ' enctype="multipart/form-data"'
                     files.append(field.saveas)
                 if field.datatype in ['yesno', 'yesnowide']:
@@ -630,12 +630,20 @@ def input_for(status, field, wide=False):
             if defaultvalue:
                 output += ' checked'
             output += '> '
-        elif field.datatype in ['file', 'files']:
-            if field.datatype == 'file':
-                multipleflag = ''
-            else:
+        elif field.datatype in ['file', 'files', 'camera', 'camcorder', 'microphone']:
+            if field.datatype == 'files':
                 multipleflag = ' multiple'
-            output += '<input type="file" class="file" data-show-upload="false" data-preview-file-type="text" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + '>'
+            else:
+                multipleflag = ''
+            if field.datatype == 'camera':
+                accept = ' accept="image/*;capture=camera"'
+            elif field.datatype == 'camcorder':
+                accept = ' accept="video/*;capture=camcorder"'
+            elif field.datatype == 'microphone':
+                accept = ' accept="audio/*;capture=microphone"'
+            else:
+                accept = ''
+            output += '<input type="file" class="file" data-show-upload="false" data-preview-file-type="text" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + accept + '>'
             #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>'
         elif field.datatype == 'area':
             output += '<textarea class="form-control" rows="4" name="' + field.saveas + '" id="' + field.saveas + '"' + placeholdertext + '>'

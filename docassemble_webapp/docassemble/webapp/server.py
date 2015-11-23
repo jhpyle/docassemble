@@ -263,6 +263,7 @@ def add_info_about_file(filename, result):
 
 def get_info_from_file_reference(file_reference, **kwargs):
     #sys.stderr.write('file reference is ' + str(file_reference) + "\n")
+    logmessage('file reference is ' + str(file_reference))
     if re.match('[0-9]+', file_reference):
         return(get_info_from_file_number(file_reference))
     result = dict()

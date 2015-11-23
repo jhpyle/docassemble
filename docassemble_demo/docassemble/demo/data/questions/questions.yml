@@ -882,6 +882,8 @@ field: x.language
 #video: ${ my_av_file }
 #audio: |
 #  [FILE docassemble.demo:data/static/schumann-clip-1.mp3]
+#subquestion: |
+#  ${ my_av_file }
 choices:
   - English: en
   - Español: es
@@ -939,8 +941,8 @@ fields:
     code: |
       name_suffix()
 ---
-question: Upload an audio or video file.
+question: Take something!
 fields:
   - no label: my_av_file
-    datatype: file
+    datatype: camera
 ...
