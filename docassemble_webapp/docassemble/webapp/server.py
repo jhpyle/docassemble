@@ -5,6 +5,7 @@ import time
 import pip
 import shutil
 import codecs
+import weakref
 import docassemble.base.parse
 import docassemble.base.interview_cache
 from docassemble.base.standardformatter import as_html, signature_html
@@ -18,7 +19,7 @@ from docassemble.base.util import pickleable_objects, word, comma_and_list
 from docassemble.base.logger import logmessage
 import mimetypes
 import logging
-import psycopg2
+#import psycopg2
 import pickle
 import string
 import random
@@ -51,7 +52,7 @@ from flask_kvsession import KVSessionExtension
 from simplekv.db.sql import SQLAlchemyStore
 from sqlalchemy import create_engine, MetaData
 from docassemble.webapp.app_and_db import app, db
-from docassemble.webapp.users.models import UserAuth, User
+from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock, Attachments, Uploads
 from docassemble.webapp.packages.models import Package, PackageAuth
 from docassemble.webapp.config import daconfig
 from PIL import Image
@@ -149,7 +150,7 @@ engine = create_engine(alchemy_connect_string, convert_unicode=True)
 metadata = MetaData(bind=engine)
 store = SQLAlchemyStore(engine, metadata, 'kvstore')
 
-conn = psycopg2.connect(connect_string)
+#conn = psycopg2.connect(connect_string)
 
 KVSessionExtension(store, app)
 
@@ -217,15 +218,21 @@ def get_ext_and_mimetype(filename):
 
 def get_info_from_file_number(file_number):
     result = dict()
-    cur = conn.cursor()
-    cur.execute("SELECT filename FROM uploads where indexno=%s and key=%s", [file_number, session['uid']])
-    for d in cur:
+    upload = Uploads.query.filter_by(indexno=file_number, key=session['uid']).first()
+    if upload:
         result['path'] = get_path_from_file_number(file_number)
-        result['filename'] = d[0]
+        result['filename'] = upload.filename
         result['extension'], result['mimetype'] = get_ext_and_mimetype(result['filename'])
         result['fullpath'] = result['path'] + '.' + result['extension']
-        break
-    conn.commit()
+    # cur = conn.cursor()
+    # cur.execute("SELECT filename FROM uploads where indexno=%s and key=%s", [file_number, session['uid']])
+    # for d in cur:
+    #     result['path'] = get_path_from_file_number(file_number)
+    #     result['filename'] = d[0]
+    #     result['extension'], result['mimetype'] = get_ext_and_mimetype(result['filename'])
+    #     result['fullpath'] = result['path'] + '.' + result['extension']
+    #     break
+    # conn.commit()
     if 'path' not in result:
         return result
     filename = result['path'] + '.' + result['extension']
@@ -1095,13 +1102,19 @@ def progress_bar(progress):
 def get_unique_name(filename):
     while True:
         newname = ''.join(random.choice(string.ascii_letters) for i in range(32))
-        cur = conn.cursor()
-        cur.execute("SELECT key from userdict where key=%s", [newname])
-        if cur.fetchone():
-            #logmessage("Key already exists in database")
+        existing_key = UserDict.query.filter_by(key=newname).first()
+        if existing_key:
             continue
-        cur.execute("INSERT INTO userdict (key, filename, dictionary) values (%s, %s, %s);", [newname, filename, codecs.encode(pickle.dumps(initial_dict.copy()), 'base64').decode()])
-        conn.commit()
+        # cur = conn.cursor()
+        # cur.execute("SELECT key from userdict where key=%s", [newname])
+        # if cur.fetchone():
+        #     #logmessage("Key already exists in database")
+        #     continue
+        new_user_dict = UserDict(key=newname, filename=filename, dictionary=codecs.encode(pickle.dumps(initial_dict.copy()), 'base64').decode())
+        db.session.add(new_user_dict)
+        db.session.commit()
+        # cur.execute("INSERT INTO userdict (key, filename, dictionary) values (%s, %s, %s);", [newname, filename, codecs.encode(pickle.dumps(initial_dict.copy()), 'base64').decode()])
+        # conn.commit()
         return newname
 
 # def update_user_id(the_user_code):
@@ -1113,22 +1126,30 @@ def get_unique_name(filename):
     
 def get_attachment_info(the_user_code, question_number, filename):
     the_user_dict = None
-    cur = conn.cursor()
-    cur.execute("select dictionary from attachments where key=%s and question=%s and filename=%s", [the_user_code, question_number, filename])
-    for d in cur:
-        if d[0]:
-            the_user_dict = pickle.loads(codecs.decode(d[0], 'base64'))
-        break
-    conn.commit()
+    existing_entry = Attachments.query.filter_by(key=the_user_code, question=question_number, filename=filename).first()
+    if existing_entry and existing_entry.dictionary:
+        the_user_dict = pickle.loads(codecs.decode(existing_entry.dictionary, 'base64'))
+    # cur = conn.cursor()
+    # cur.execute("select dictionary from attachments where key=%s and question=%s and filename=%s", [the_user_code, question_number, filename])
+    # for d in cur:
+    #     if d[0]:
+    #         the_user_dict = pickle.loads(codecs.decode(d[0], 'base64'))
+    #     break
+    # conn.commit()
     return the_user_dict
 
 def update_attachment_info(the_user_code, the_user_dict, the_interview_status):
     #logmessage("Got to update_attachment_info")
-    cur = conn.cursor()
-    cur.execute("delete from attachments where key=%s and question=%s and filename=%s", [the_user_code, the_interview_status.question.number, the_interview_status.question.interview.source.path])
-    conn.commit()
-    cur.execute("insert into attachments (key, dictionary, question, filename) values (%s, %s, %s, %s)", [the_user_code, codecs.encode(pickle.dumps(pickleable_objects(the_user_dict)), 'base64').decode(), the_interview_status.question.number, the_interview_status.question.interview.source.path])
-    conn.commit()
+    Attachments.query.filter_by(key=the_user_code, question=the_interview_status.question.number, filename=the_interview_status.question.interview.source.path).delete()
+    db.session.commit()
+    new_attachment = Attachments(key=the_user_code, dictionary=codecs.encode(pickle.dumps(pickleable_objects(the_user_dict)), 'base64').decode(), question = the_interview_status.question.number, filename=the_interview_status.question.interview.source.path)
+    db.session.add(new_attachment)
+    db.session.commit()
+    # cur = conn.cursor()
+    # cur.execute("delete from attachments where key=%s and question=%s and filename=%s", [the_user_code, the_interview_status.question.number, the_interview_status.question.interview.source.path])
+    # conn.commit()
+    # cur.execute("insert into attachments (key, dictionary, question, filename) values (%s, %s, %s, %s)", [the_user_code, codecs.encode(pickle.dumps(pickleable_objects(the_user_dict)), 'base64').decode(), the_interview_status.question.number, the_interview_status.question.interview.source.path])
+    # conn.commit()
     #logmessage("Delete from attachments where key = " + the_user_code + " and question is " + str(the_interview_status.question.number) + " and filename is " + the_interview_status.question.interview.source.path)
     #logmessage("Insert into attachments (key, dictionary, question, filename) values (" + the_user_code + ", saved_user_dict, " + str(the_interview_status.question.number) + ", " + the_interview_status.question.interview.source.path + ")")
     return
@@ -1136,27 +1157,38 @@ def update_attachment_info(the_user_code, the_user_dict, the_interview_status):
 def fetch_user_dict(user_code, filename):
     user_dict = None
     steps = 0
-    cur = conn.cursor()
-    cur.execute("SELECT a.dictionary, b.count from userdict as a inner join (select max(indexno) as indexno, count(indexno) as count from userdict where key=%s and filename=%s and dictionary is not null) as b on (a.indexno=b.indexno)", [user_code, filename])
-    for d in cur:
-        if d[0]:
-            user_dict = pickle.loads(codecs.decode(d[0], 'base64'))
-        if d[1]:
-            steps = d[1]
+    subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).filter(UserDict.key == user_code and UserDict.filename == filename).subquery()
+    results = db.session.query(UserDict.dictionary, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno)
+    for d in results:
+        if d.dictionary:
+            user_dict = pickle.loads(codecs.decode(d.dictionary, 'base64'))
+        if d.count:
+            steps = d.count
         break
-    conn.commit()
+    # cur = conn.cursor()
+    # cur.execute("SELECT a.dictionary, b.count from userdict as a inner join (select max(indexno) as indexno, count(indexno) as count from userdict where key=%s and filename=%s and dictionary is not null) as b on (a.indexno=b.indexno)", [user_code, filename])
+    # for d in cur:
+    #     if d[0]:
+    #         user_dict = pickle.loads(codecs.decode(d[0], 'base64'))
+    #     if d[1]:
+    #         steps = d[1]
+    #     break
+    # conn.commit()
     return steps, user_dict
 
 def fetch_previous_user_dict(user_code, filename):
     user_dict = None
-    cur = conn.cursor()
-    cur.execute("select max(indexno) as indexno from userdict where key=%s and filename=%s and dictionary is not null", [user_code, filename])
-    max_indexno = None
-    for d in cur:
-        max_indexno = d[0]
+    max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(UserDict.key == user_code and UserDict.filename == filename).scalar()
+    # cur = conn.cursor()
+    # cur.execute("select max(indexno) as indexno from userdict where key=%s and filename=%s and dictionary is not null", [user_code, filename])
+    # max_indexno = None
+    # for d in cur:
+    #     max_indexno = d[0]
     if max_indexno is not None:
-        cur.execute("delete from userdict where indexno=%s", [max_indexno])
-    conn.commit()
+        UserDict.query.filter_by(indexno=max_indexno).delete()
+        db.session.commit()
+        #cur.execute("delete from userdict where indexno=%s", [max_indexno])
+    #conn.commit()
     return fetch_user_dict(user_code, filename)
 
 def advance_progress(user_dict):
@@ -1168,18 +1200,27 @@ def advance_progress(user_dict):
 #     return
 
 def save_user_dict_key(user_code, filename):
-    cur = conn.cursor()
-    cur.execute("select indexno from userdictkeys where key=%s and filename=%s and user_id=%s", [user_code, filename, current_user.id])
-    found = False
-    for d in cur:
+    the_record = UserDictKeys.query.filter_by(key=user_code, filename=filename, user_id=current_user.id).first()
+    if the_record:
         found = True
+    else:
+        found = False
     if not found:
-        cur.execute("INSERT INTO userdictkeys (key, filename, user_id) values (%s, %s, %s)", [user_code, filename, current_user.id])
-    conn.commit()
+        new_record = UserDictKeys(key=user_code, filename=filename, user_id=current_user.id)
+        db.session.add(new_record)
+        db.session.commit()
+    # cur = conn.cursor()
+    # cur.execute("select indexno from userdictkeys where key=%s and filename=%s and user_id=%s", [user_code, filename, current_user.id])
+    # found = False
+    # for d in cur:
+    #     found = True
+    # if not found:
+    #     cur.execute("INSERT INTO userdictkeys (key, filename, user_id) values (%s, %s, %s)", [user_code, filename, current_user.id])
+    # conn.commit()
     return
 
 def save_user_dict(user_code, user_dict, filename, changed=False):
-    cur = conn.cursor()
+    #cur = conn.cursor()
     #logmessage(repr(pickle.dumps(pickleable_objects(user_dict))))
     if current_user.is_authenticated and not current_user.is_anonymous:
         the_user_id = current_user.id
@@ -1188,34 +1229,52 @@ def save_user_dict(user_code, user_dict, filename, changed=False):
     if changed is True:
         if USE_PROGRESS_BAR:
             advance_progress(user_dict)
-        cur.execute("INSERT INTO userdict (key, dictionary, filename, user_id) values (%s, %s, %s, %s)", [user_code, codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), filename, the_user_id])
+        new_record = UserDict(key=user_code, dictionary=codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), filename=filename, user_id=the_user_id)
+        db.session.add(new_record)
+        db.session.commit()
+        #cur.execute("INSERT INTO userdict (key, dictionary, filename, user_id) values (%s, %s, %s, %s)", [user_code, codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), filename, the_user_id])
     else:
-        cur.execute("select max(indexno) as indexno from userdict where key=%s and filename=%s", [user_code, filename])
-        max_indexno = None
-        for d in cur:
-            max_indexno = d[0]
+        max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(UserDict.key == user_code and UserDict.filename == filename).scalar()
+        # cur.execute("select max(indexno) as indexno from userdict where key=%s and filename=%s", [user_code, filename])
+        # max_indexno = None
+        # for d in cur:
+        #     max_indexno = d[0]
         if max_indexno is None:
-            cur.execute("INSERT INTO userdict (key, dictionary, filename, user_id) values (%s, %s, %s, %s)", [user_code, codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), filename, the_user_id])
+            new_record = UserDict(key=user_code, dictionary=codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), filename=filename, user_id=the_user_id)
+            db.session.add(new_record)
+            db.session.commit()
+            #cur.execute("INSERT INTO userdict (key, dictionary, filename, user_id) values (%s, %s, %s, %s)", [user_code, codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), filename, the_user_id])
         else:
-            cur.execute("UPDATE userdict SET dictionary=%s where key=%s and filename=%s and indexno=%s", [codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), user_code, filename, max_indexno])
-    conn.commit()
+            for record in UserDict.query.filter_by(key=user_code, filename=filename, indexno=max_indexno).all():
+                record.dictionary = codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode()
+            db.session.commit()
+            #cur.execute("UPDATE userdict SET dictionary=%s where key=%s and filename=%s and indexno=%s", [codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), user_code, filename, max_indexno])
+    #conn.commit()
     return
 
 def reset_user_dict(user_code, user_dict, filename):
-    cur = conn.cursor()
-    cur.execute("DELETE FROM userdict where key=%s and filename=%s", [user_code, filename])
-    conn.commit()
+    UserDict.query.filter_by(key=user_code, filename=filename).delete()
+    UserDictKeys.query.filter_by(key=user_code, filename=filename).delete()
+    db.session.commit()
+    #cur = conn.cursor()
+    #cur.execute("DELETE FROM userdict where key=%s and filename=%s", [user_code, filename])
+    #cur.execute("DELETE FROM userdictkeys where key=%s and filename=%s", [user_code, filename])
+    #conn.commit()
     save_user_dict(user_code, user_dict, filename)
     return
 
 def get_new_file_number(user_code, file_name):
-    indexno = None
-    cur = conn.cursor()
-    cur.execute("INSERT INTO uploads (key, filename) values (%s, %s) RETURNING indexno", [user_code, file_name])
-    for d in cur:
-        indexno = d[0]
-    conn.commit()
-    return (indexno)
+    new_upload = Uploads(key=user_code, filename=file_name)
+    db.session.add(new_upload)
+    db.session.commit()
+    return new_upload.indexno
+    # indexno = None
+    # cur = conn.cursor()
+    # cur.execute("INSERT INTO uploads (key, filename) values (%s, %s) RETURNING indexno", [user_code, file_name])
+    # for d in cur:
+    #     indexno = d[0]
+    # conn.commit()
+    # return (indexno)
 
 def get_file_path(indexno):
     path = get_path_from_file_number(indexno, directory=True)
@@ -1340,14 +1399,18 @@ def serve_uploaded_file(number):
 def serve_uploaded_page(number, page):
     number = re.sub(r'[^0-9]', '', str(number))
     page = re.sub(r'[^0-9]', '', str(page))
-    file_info = get_info_from_file_reference(number)
-    block_size = 4096
-    status = '200 OK'
-    filename = file_info['path'] + 'page-' + str(page) + '.png'
-    if os.path.isfile(filename):
-        return(send_file(filename, mimetype='image/png'))
+    file_info = get_info_from_file_number(number)
+    if 'path' not in file_info:
+        abort(404)
     else:
-        abort(401)
+    # file_info = get_info_from_file_reference(number)
+    # block_size = 4096
+    # status = '200 OK'
+        filename = file_info['path'] + 'page-' + str(page) + '.png'
+        if os.path.isfile(filename):
+            return(send_file(filename, mimetype='image/png'))
+        else:
+            abort(404)
 
 @app.route('/uploadsignature', methods=['POST'])
 def upload_draw():
@@ -1374,33 +1437,48 @@ def test_signature():
 def serve_uploaded_pagescreen(number, page):
     number = re.sub(r'[^0-9]', '', str(number))
     page = re.sub(r'[^0-9]', '', str(page))
-    file_info = get_info_from_file_reference(number)
-    block_size = 4096
-    status = '200 OK'
-    filename = file_info['path'] + 'screen-' + str(page) + '.png'
-    if os.path.isfile(filename):
-        return(send_file(filename, mimetype='image/png'))
+    file_info = get_info_from_file_number(number)
+    if 'path' not in file_info:
+        abort(404)
     else:
-        abort(401)
+    # block_size = 4096
+    # status = '200 OK'
+        filename = file_info['path'] + 'screen-' + str(page) + '.png'
+        if os.path.isfile(filename):
+            return(send_file(filename, mimetype='image/png'))
+        else:
+            abort(404)
 
 def user_can_edit_package(pkgname=None, giturl=None):
-    cur = conn.cursor()
+    #cur = conn.cursor()
     #sys.stderr.write("Got to user_can_edit_package\n")
     if pkgname is not None:
         #sys.stderr.write("Testing for:" + pkgname + ":\n")
-        cur.execute("select a.id, b.user_id, b.authtype from package as a left outer join package_auth as b on (a.id=b.package_id) where a.name=%s", [pkgname])
-        if cur.rowcount <= 0:
+        results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(Package.name == pkgname)
+        if results.count() == 0:
             return(True)
-        for d in cur:
-            if d[1] == current_user.id:
-                return(True)
+        for d in results:
+            if d.user_id == current_user.id:
+                return True
+        # cur.execute("select a.id, b.user_id, b.authtype from package as a left outer join package_auth as b on (a.id=b.package_id) where a.name=%s", [pkgname])
+        # if cur.rowcount <= 0:
+        #     return(True)
+        # for d in cur:
+        #     if d[1] == current_user.id:
+        #         return(True)
     if giturl is not None:
-        cur.execute("select a.id, b.user_id, b.authtype from package as a left outer join package_auth as b on (a.id=b.package_id) where a.giturl=%s", [giturl])
-        if cur.rowcount <= 0:
+        results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(Package.giturl == giturl)
+        if results.count() == 0:
             return(True)
-        for d in cur:
-            if d[1] == current_user.id:
-                return(True)
+        for d in results:
+            if d.user_id == current_user.id:
+                return True
+        # cur.execute("select a.id, b.user_id, b.authtype from package as a left outer join package_auth as b on (a.id=b.package_id) where a.giturl=%s", [giturl])
+        # if cur.rowcount <= 0:
+        #     return(True)
+        # for d in cur:
+        #     if d[1] == current_user.id:
+        #         return(True)
     return(False)
                 
 @app.route('/updatepackage', methods=['GET', 'POST'])
@@ -1517,7 +1595,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-            readme = '# docassemble.' + str(pkgname) + "\n\nA docassemble extension.\n\n## Author\n" + unicode(current_user.first_name) + " " + unicode(current_user.last_name) + ", " + unicode(current_user.email) + "\n"
+            readme = '# docassemble.' + str(pkgname) + "\n\nA docassemble extension.\n\n## Author\n\n" + name_of_user(current_user, include_email=True) + "\n"
             setuppy = """\
 #!/usr/bin/env python
 
@@ -1569,8 +1647,8 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
             setuppy += "setup(name='docassemble." + str(pkgname) + "',\n" + """\
       version='0.1',
       description=('A docassemble extension.'),
-      author='""" + unicode(current_user.first_name) + " " + unicode(current_user.last_name) + """',
-      author_email='""" + str(current_user.email) + """',
+      author=""" + repr(name_of_user(current_user)) + """,
+      author_email=""" + repr(current_user.email) + """,
       license='MIT',
       url='http://docassemble.org',
       packages=find_packages(),
@@ -1645,9 +1723,10 @@ this directory.
 # fields:
 #   - Fruit Name: favorite_fruit.name
 # ---
+from docassemble.base.core import DAObject
 
 class Fruit(DAObject):
-    def eat():
+    def eat(self):
         return "Yum, that " + self.name + " was good!"
 """
             directory = tempfile.mkdtemp()
@@ -1676,7 +1755,7 @@ class Fruit(DAObject):
                 the_file.write(staticreadme)
             with open(os.path.join(questionsdir, 'questions.yml'), 'a') as the_file:
                 the_file.write(questionfiletext)
-            archive = tempfile.NamedTemporaryFile()
+            archive = tempfile.NamedTemporaryFile(delete=False)
             zf = zipfile.ZipFile(archive.name, mode='w')
             trimlength = len(directory) + 1
             for root, dirs, files in os.walk(packagedir):
@@ -1684,8 +1763,23 @@ class Fruit(DAObject):
                     thefilename = os.path.join(root, file)
                     zf.write(thefilename, thefilename[trimlength:])
             zf.close()
-            return(send_file(archive.name, mimetype='application/zip', as_attachment=True, attachment_filename='docassemble_' + str(pkgname) + '.zip'))
+            resp = send_file(archive.name, mimetype='application/zip', as_attachment=True, attachment_filename='docassemble_' + str(pkgname) + '.zip')
+            return resp
     return render_template('pages/create_package.html', form=form), 200
+
+def name_of_user(user, include_email=False):
+    output = ''
+    if user.first_name:
+        output += ''
+        if user.last_name:
+            output += ' '
+    if user.last_name:
+        output += user.last_name
+    if include_email and user.email:
+        if output:
+            output += ', '
+        output += user.email
+    return output
 
 @app.route('/packages', methods=['GET', 'POST'])
 @login_required

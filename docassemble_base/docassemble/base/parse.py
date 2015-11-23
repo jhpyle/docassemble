@@ -21,7 +21,7 @@ debug = False
 match_mako = re.compile(r'<%|\${|% if|% for|% while')
 emoji_match = re.compile(r':([^ ]+):')
 nameerror_match = re.compile(r'\'(.*)\' (is not defined|referenced before assignment)')
-document_match = re.compile(r'^---$', flags=re.MULTILINE)
+document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
 remove_trailing_dots = re.compile(r'\.\.\.$')
 dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
 match_brackets_at_end = re.compile(r'^(.*)(\[.+?\])$')
@@ -1020,7 +1020,7 @@ class Question:
             raise DAError("Unknown data type in process_attachment")
 
     def ask(self, user_dict, the_x, the_i):
-        logmessage("asking: " + str(self.content.original_text))
+        #logmessage("asking: " + str(self.content.original_text))
         if the_x != 'None':
             exec("x = " + the_x, user_dict)
         if the_i != 'None':

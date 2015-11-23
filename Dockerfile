@@ -9,13 +9,11 @@ RUN pip install --upgrade cffi
 RUN pip install --upgrade bcrypt
 RUN pip install --upgrade wtforms werkzeug rauth simplekv Flask-KVSession flask-user pypdf flask flask-login flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
 
-RUN mkdir -p /var/www/.local
-RUN chown www-data.www-data /var/www/.local
+RUN mkdir -p /var/www/.local /var/www/.cache && chown www-data.www-data /var/www/.local /var/www/.cache
 RUN mkdir -p /var/lib/docassemble/webapp
 COPY docassemble_webapp/docassemble.wsgi /var/lib/docassemble/webapp/
 RUN chown www-data.www-data /var/lib/docassemble/webapp/docassemble.wsgi
-RUN mkdir -p /usr/share/docassemble/files
-RUN chown www-data.www-data /usr/share/docassemble/files
+RUN mkdir -p /usr/share/docassemble/files && chown www-data.www-data /usr/share/docassemble/files
 RUN mkdir -p /etc/docassemble
 COPY Docker/config.yml /etc/docassemble/config.yml
 COPY Docker/apache.conf /etc/apache2/sites-available/000-default.conf 
