@@ -36,9 +36,10 @@ with `admin` privileges.  The editing screen is located on the menu
 under "Configuration."  After the configuration [YAML] is saved, the
 server is restarted.
 
-You can also edit the configuration file directly.  You will need to
-do so if you make edits to the configuration file through the web
-application that render the web application inoperative.
+You can also edit the configuration file directly on the file system.
+You will need to be able to do so if you make edits to the
+configuration file through the web application that render the web
+application inoperative.
 
 ## Configuration default values
 
