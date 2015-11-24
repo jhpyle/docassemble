@@ -58,6 +58,8 @@ comment: |
 ---
 interview help:
   heading: About this web site
+  audio: schumann-clip-2.mp3
+  #video: "[YOUTUBE wqBYHrw9_ys]"
   content: |
     Answer each question.  At the end, you may be given a document
     that you can save.
@@ -210,7 +212,8 @@ content: |
 ---
 initial: true
 code: |
-  set_language(client.language)
+  track_location = user.location.status()
+  set_language(user.language)
 ---
 mandatory: true
 code: |
@@ -278,6 +281,10 @@ subquestion: |
   Click "Source" to toggle the display of the [YAML] code used to
   generate the question.
 
+  % if user.location.known:
+  Your current location is ${ user.location }.
+  % endif
+
   [YAML]: https://en.wikipedia.org/wiki/YAML
 field: user_saw_initial_screen
 datatype: boolean
@@ -292,7 +299,7 @@ subquestion: |
   looks something like this.  If this document is signed by the judge,
   then you have a support order.
     
-  [IMAGE docassemble.demo:sample-support-order.jpg, 100%]
+  [FILE docassemble.demo:sample-support-order.jpg, 100%]
 yesno: x.has_support_order
 comment: |
   This question illustrates how you can include images in your
@@ -389,9 +396,11 @@ comment: |
 question: Were you injured?
 decoration: injury
 yesno: client_has_injury
-help: |
-  An injury can take many forms.  It can be a physical injury or a
-  purely financial injury.
+help:
+  content: |
+    An injury can take many forms.  It can be a physical injury or a
+    purely financial injury.
+  audio: schumann-clip-3.mp3
 progress: 50
 ---
 question: |
@@ -917,6 +926,11 @@ generic object: Individual
 question: |
   What language ${ x.do_question('speak') }?
 field: x.language
+#video: ${ my_av_file }
+#audio: |
+#  [FILE docassemble.demo:data/static/schumann-clip-1.mp3]
+#subquestion: |
+#  ${ my_av_file }
 choices:
   - English: en
   - Español: es
@@ -973,6 +987,11 @@ fields:
     required: False
     code: |
       name_suffix()
+---
+question: Take something!
+fields:
+  - no label: my_av_file
+    datatype: camera
 ...
 {% endhighlight %}
 
@@ -1062,8 +1081,9 @@ objects:
   - jurisdiction: Jurisdiction
   - court: Court
 comment: >-
-  An "objects" section defines variables that are Python objects.  The
-  object types here are defined in the docassemble.legal module.
+  An "objects" section defines variables that are docassemble objects.
+  The object types here are defined in the docassemble.base.core and
+  docassemble.base.legal modules.
 ---
 code: |
   court.jurisdiction = jurisdiction
@@ -1110,7 +1130,7 @@ generic object: Individual
 question: >-
   What is ${ x.possessive('date of birth') }?
 fields:
-  - Date of birth: x.birthdate
+  - Date of Birth: x.birthdate
     datatype: date
 comment: >-
   docassemble allows you to write "generic" questions.  For example,
@@ -1271,9 +1291,11 @@ question: |
   What is ${ x.object_possessive('name') }?
 fields:
   - First Name: x.name.first
+    default: ${ x.first_name_hint() }
   - Middle Name: x.name.middle
     required: False
   - Last Name: x.name.last
+    default: ${ x.last_name_hint() }
   - Suffix: x.name.suffix
     required: False
     code: |
@@ -1290,7 +1312,7 @@ comment: >-
 ---
 generic list object: Individual
 question: |
-  What is the name of the ${ ordinal(i) } ${ x.object_name() }?
+  What is the name of the ${ x[i].object_name() }?
 fields:
   - First Name: x[i].name.first
   - Middle Name: x[i].name.middle
