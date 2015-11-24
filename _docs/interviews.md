@@ -143,7 +143,10 @@ you can write.  These blocks are explained in the following sections:
 * [Setting Variables] - Explains how to use collect information from users
   using `question` blocks.
 * [Question Modifiers] - Explains ways you can enhance questions with
-  special features, for example by adding help text or icons.
+special features, for example by adding help text or icons.
+* [Templates] - Explains `template` blocks, which allow you to assign
+  text to a variable and then include it by reference in a question or
+  document.
 * [Code] - Explains `code` blocks, which are like `question`s except
   that instead of presenting something to the user, they run [Python]
   code that defines variables or does other things that computer code
@@ -221,6 +224,7 @@ the user will resume the interview where he left off.
 [Question Blocks]: {{ site.baseurl }}/docs/questions.html
 [Setting Variables]: {{ site.baseurl }}/docs/fields.html
 [Question Modifiers]: {{ site.baseurl }}/docs/modifiers.html
+[Templates]: {{ site.baseurl }}/docs/template.html
 [Code]: {{ site.baseurl }}/docs/code.html
 [Interview Logic]: {{ site.baseurl }}/docs/logic.html
 [Objects]: {{ site.baseurl }}/docs/objects.html

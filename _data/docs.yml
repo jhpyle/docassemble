@@ -13,6 +13,7 @@
     - questions
     - fields
     - modifiers
+    - template
     - code
     - logic
     - objects

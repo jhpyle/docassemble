@@ -96,11 +96,11 @@ looking for `mandatory` and `initial` blocks.  When it encounters an
 from top to bottom, and then picks up where it left off.
 
 The order in which questions appear will also matter if you have
-multiple `question` or `code` blocks that each offer to define the
-same variables.  In that case, the order of these blocks relative to
-each other is important.  **docassemble** will use later-defined
-blocks first.  Later definitions "supersede" the ones that came
-before.
+multiple `question`, `code`, or `template` blocks that each offer to
+define the same variables.  In that case, the order of these blocks
+relative to each other is important.  **docassemble** will use
+later-defined blocks first.  Later definitions "supersede" the ones
+that came before.
 
 This allows you to `import` question files that other authors have
 written and then "override" particular questions you would like to ask
@@ -318,7 +318,7 @@ came back from asking whether the user has a car.
 ## Best practices for sharing with others
 
 * Don't reinvent the wheel; `include` other people's questions.
-* Share your `question`s and `code` with others.
+* Share your `question`s, `code`, and `template`s with others.
 * To that end, keep your `question` blocks in a separate [YAML] file
   from your `mandatory` interview logic, so that other people can
   incorporate your questions without having to edit your work.  Your

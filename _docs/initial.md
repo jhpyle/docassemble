@@ -171,8 +171,8 @@ imports:
 {% endhighlight %}
 
 `imports` loads a Python module name into the namespace in which your
-templates are evaluated.  The example above is equivalent to running
-the following Python code:
+code and question templates are evaluated.  The example above is
+equivalent to running the following Python code:
 
 {% highlight python %}
 import datetime
@@ -189,9 +189,9 @@ modules:
 {% endhighlight %}
 
 Like `imports`, `modules` loads Python modules into the namespace in
-which your templates are evaluated, except that it imports all of the
-names that the module exports.  The example above is equivalent to
-running the following Python code:
+which your code and question templates are evaluated, except that it
+imports all of the names that the module exports.  The example above
+is equivalent to running the following Python code:
 
 {% highlight python %}
 from datetime import *

@@ -217,7 +217,6 @@ content: |
 ---
 {% endhighlight %}
 
-
 ## Classes for information about persons
 
 ### Person
