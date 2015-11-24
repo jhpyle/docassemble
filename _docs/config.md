@@ -24,9 +24,21 @@ file and tell it to load the configuration from a file in a different
 location.  You might want to do this if you have multiple virtual
 hosts, each running a different WSGI application on a single server.
 
-The configuration file needs to be readable by the web server, but
-should not be readable by other users of the system because it may
-contain sensitive information, such as Google and Facebook API keys.
+The configuration file needs to be readable and writable by the web
+server, but should not be readable by other users of the system
+because it may contain sensitive information, such as Google and
+Facebook API keys.
+
+## How to edit the configuration file
+
+The configuration file can be edited through the web app by any user
+with `admin` privileges.  The editing screen is located on the menu
+under "Configuration."  After the configuration [YAML] is saved, the
+server is restarted.
+
+You can also edit the configuration file directly.  You will need to
+do so if you make edits to the configuration file through the web
+application that render the web application inoperative.
 
 ## Configuration default values
 
@@ -41,6 +53,7 @@ db:
   password: none
   host: none
   port: none
+  table_prefix: none
 appname: docassemble
 brandname: docassemble
 uploads: /usr/share/docassemble/files
@@ -71,6 +84,10 @@ xsendfile: true
 
 By default, `imagemagick`, `pdftoppm`, `pacpl`, `ffmpeg`, and `oauth` are
 undefined.
+
+The key `config_file` does not appear in the configuration file, but
+it will be set to the file path for the configuration file.  (The
+function `docassemble.webapp.config.load` sets it.)
 
 ## Standard configuration directives
 
@@ -115,10 +132,14 @@ db:
   password: none
   host: none
   port: none
+  table_prefix: none
 {% endhighlight %}
 
 If you are using multiple servers in load-balanced arrangement, you
 will want to set this to the central database server.
+
+If you want separatte **docassemble** systems to share the same
+database, you can set a `table_prefix`.
 
 ### appname and brandname
 
