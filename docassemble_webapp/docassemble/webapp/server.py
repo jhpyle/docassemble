@@ -29,20 +29,11 @@ import re
 import urlparse
 import json
 import base64
-from flask import make_response, abort
-from flask import render_template
-from flask import request
-from flask import session
-from flask import send_file
-from flask import redirect
-from flask import url_for
-from flask import current_app
-from flask import get_flashed_messages
-from flask import flash
+from flask import make_response, abort, render_template, request, session, send_file, redirect, url_for, current_app, get_flashed_messages, flash, Markup
 from flask.ext.login import LoginManager, UserMixin, login_user, logout_user, current_user
 from flask.ext.user import login_required, roles_required, UserManager, SQLAlchemyAdapter
 from flask.ext.user.forms import LoginForm
-from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm
+from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm, ConfigForm
 from flask_mail import Mail, Message
 import flask.ext.user.signals
 import httplib2
@@ -515,7 +506,7 @@ def oauth_callback(provider):
     oauth = OAuthSignIn.get_provider(provider)
     social_id, username, email = oauth.callback()
     if social_id is None:
-        flash(word('Authentication failed.'))
+        flash(word('Authentication failed.'), 'error')
         return redirect(url_for('index'))
     user = User.query.filter_by(social_id=social_id).first()
     if not user:
@@ -549,7 +540,6 @@ def google_page():
 def post_sign_in():
     session_id = session.get('uid', None)
     return redirect(url_for('index'))
-    #PPP
 
 @app.route("/exit", methods=['POST', 'GET'])
 def exit():
@@ -1339,6 +1329,7 @@ def make_navbar(status, page_title, steps, show_login):
                 if current_user.has_role('admin'):
                     navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
                     navbar +='<li><a href="' + url_for('privilege_list') + '">' + word('Privileges List') + '</a></li>'
+                    navbar +='<li><a href="' + url_for('config_page') + '">' + word('Configuration') + '</a></li>'
             navbar += '<li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li><li><a href="' + url_for('user.logout') + '">' + word('Sign out') + '</a></li></ul></li>'
     else:
         navbar += '            <li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li>'
@@ -1782,6 +1773,28 @@ def name_of_user(user, include_email=False):
         output += user.email
     return output
 
+@app.route('/config', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin'])
+def config_page():
+    #PPP
+    form = ConfigForm(request.form, current_user)
+    if request.method == 'POST':
+        if form.submit.data and form.config_content.data:
+            with open(daconfig['config_file'], 'w') as fp:
+                fp.write(form.config_content.data)
+                flash(word('The configuration file was saved.'), 'success')
+                restart_wsgi()
+        elif form.cancel.data:
+            flash(word('Configuration not updated.'), 'info')
+        else:
+            flash(word('Configuration not updated.  There was an error.'), 'error')
+        return redirect(url_for('index'))
+    with open(daconfig['config_file'], 'r') as fp:
+        content = fp.read()
+        return render_template('pages/config.html', extra_css=Markup('\n    <link rel="stylesheet" href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = ' + json.dumps(content) + ';\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n    </script>'), form=form), 200
+    abort(404)
+
 @app.route('/packages', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin', 'developer'])
@@ -1862,3 +1875,4 @@ def html_escape(text):
     text = re.sub('<', '&lt;', text)
     text = re.sub('>', '&gt;', text)
     return text;
+

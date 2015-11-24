@@ -8,6 +8,7 @@ db:
   password: null
   host: null
   port: null
+  table_prefix: null
 oauth:
   facebook:
     enable: false
@@ -28,6 +29,7 @@ use_progress_bar: false
 imagemagick: convert
 pdftoppm: pdftoppm
 pacpl: pacpl
+ffmpeg: ffmpeg
 default_interview: docassemble.demo:data/questions/questions.yml
 flask_log: /tmp/flask.log
 language: en

@@ -4,11 +4,6 @@ import sys
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.user import UserManager, SQLAlchemyAdapter
-from docassemble.base.util import word
-from docassemble.webapp.app_and_db import app, db
-from docassemble.webapp.packages.models import Package, PackageAuth
-from docassemble.webapp.users.models import User, UserAuth, Role, UserRoles, UserDict, UserDictKeys, UserDictLock, Attachments, Uploads, KVStore, Ticket, TicketNote
-from sqlalchemy import create_engine, MetaData
 import docassemble.webapp.config
 from docassemble.webapp.config import daconfig
 if len(sys.argv) > 1:
@@ -16,6 +11,11 @@ if len(sys.argv) > 1:
 else:
     yaml_config = '/etc/docassemble/config.yml'
 docassemble.webapp.config.load(filename=yaml_config)
+from docassemble.base.util import word
+from docassemble.webapp.app_and_db import app, db
+from docassemble.webapp.packages.models import Package, PackageAuth
+from docassemble.webapp.users.models import User, UserAuth, Role, UserRoles, UserDict, UserDictKeys, UserDictLock, Attachments, Uploads, KVStore, Ticket, TicketNote
+from sqlalchemy import create_engine, MetaData
 import docassemble.webapp.database
 
 app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()

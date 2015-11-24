@@ -1,7 +1,7 @@
 from flask.ext.wtf import Form
 from flask.ext.wtf.file import FileField
 from docassemble.base.util import word
-from wtforms import validators, ValidationError, StringField, SubmitField
+from wtforms import validators, ValidationError, StringField, SubmitField, TextAreaField
 import re
 import sys
 
@@ -20,3 +20,8 @@ class UpdatePackageForm(Form):
     giturl = StringField(word('Git URL'))
     zipfile = FileField(word('Zip File'))
     submit = SubmitField(word('Update'))
+
+class ConfigForm(Form):
+    config_content = TextAreaField(word('Configuration YAML'))
+    submit = SubmitField(word('Save'))
+    cancel = SubmitField(word('Cancel'))

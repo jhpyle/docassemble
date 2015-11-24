@@ -62,12 +62,8 @@
 </div>
 {%- endmacro %}
 
-{% macro render_submit_field(field, label=None, tabindex=None) -%}
-    {% if not label %}{% set label=field.label.text %}{% endif %}
-    <button type="submit" class="btn btn-primary btn-lg">{{label}}</button>
-    {#<input type="submit" value="{{label}}"
-           {% if tabindex %}tabindex="{{ tabindex }}"{% endif %}
-           >#}
+{% macro render_submit_field(field, label=None, tabindex=None, class="btn btn-primary btn-lg") -%}
+    {% if not label %}{% set label=field.label.text %}{% endif %}<button type="submit" name="{{ field.id }}" class="{{ class }}" value="{{label}}"{% if tabindex %} tabindex="{{ tabindex }}"{% endif %}>{{label}}</button>
 {%- endmacro %}
 
 {% macro myrender_field(field, label=None, label_visible=true, right_url=None, right_label=None) -%}
@@ -89,10 +85,7 @@
 
 {% macro myrender_submit_field(field, label=None, tabindex=None) -%}
     {% if not label %}{% set label=field.label.text %}{% endif %}
-    <button type="submit" class="btn btn-primary btn-lg">{{label}}</button>
-    {#<input type="submit" value="{{label}}"
-           {% if tabindex %}tabindex="{{ tabindex }}"{% endif %}
-           >#}
+    <button type="submit" class="btn btn-primary btn-lg"{% if tabindex %} tabindex="{{ tabindex }}"{% endif %}>{{label}}</button>
 {%- endmacro %}
 
 {% macro myrender_hidden_field(field, value="") -%}

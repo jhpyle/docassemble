@@ -1,6 +1,11 @@
 from docassemble.webapp.app_and_db import db
+from docassemble.webapp.config import daconfig
+dbtableprefix = daconfig['db'].get('table_prefix', None)
+if not dbtableprefix:
+    dbtableprefix = ''
+
 class Package(db.Model):
-    __tablename__ = 'package'
+    __tablename__ = dbtableprefix + 'package'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False, unique=True)
     giturl = db.Column(db.String(255), nullable=True, unique=True)
@@ -8,7 +13,7 @@ class Package(db.Model):
     active = db.Column(db.Boolean(), nullable=False, server_default='1')
 
 class PackageAuth(db.Model):
-    __tablename__ = 'package_auth'
+    __tablename__ = dbtableprefix + 'package_auth'
     id = db.Column(db.Integer, primary_key=True)
     package_id = db.Column(db.Integer(), db.ForeignKey('package.id', ondelete='CASCADE'))
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
