@@ -22,8 +22,6 @@ fields:
   - Your Last Name: user.name.last
   - Your E-mail: user.email
     datatype: email
-  - A Picture: the_file
-    datatype: file
 ---
 code: |
   success_sending_email = send_email(to=[user], template=hello_email, attachments=[the_file])
