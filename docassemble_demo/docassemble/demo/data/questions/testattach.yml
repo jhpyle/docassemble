@@ -35,7 +35,7 @@ attachment:
     valid_formats:
       - pdf
     content: |
-  Hello, ${ user }!
+      Hello, ${ user }!
 ---
 template: hello_email
 subject: |
