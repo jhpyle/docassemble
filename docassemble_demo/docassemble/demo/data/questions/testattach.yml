@@ -1,0 +1,51 @@
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - user: Individual
+---
+mandatory: true
+question: |
+  So long, ${ user }!
+subquestion: |
+  % if success_sending_email:
+  We sent an e-mail to your e-mail address.
+  % else:
+  Oops, for some reason we could not send an e-mail to you.
+  % endif
+---
+question: |
+  Please fill in the following information.
+fields:
+  - Your First Name: user.name.first
+  - Your Last Name: user.name.last
+  - Your E-mail: user.email
+    datatype: email
+  - A Picture: the_file
+    datatype: file
+---
+code: |
+  success_sending_email = send_email(to=[user], template=hello_email, attachments=[the_file])
+---
+attachment:
+  - variable_name: the_file
+    name: A summary
+    filename: summary
+    valid_formats:
+      - pdf
+    content: |
+  Hello, ${ user }!
+---
+template: hello_email
+subject: |
+  A summary for ${ user }
+content: |
+  Hello, ${ user }!
+
+  Attached please find a summary.
+
+  From,
+
+  Your friend
+---

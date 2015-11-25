@@ -886,7 +886,9 @@ class Question:
                         raise DAError("Each individual field in a list of fields must be expressed as a dictionary item, e.g., ' - Fruit: user.favorite_fruit'." + self.idebug(data))
                     field_number += 1
         if not hasattr(self, 'question_type'):
-            if hasattr(self, 'content'):
+            if len(self.attachments) and len(self.fields_used):
+                self.question_type = 'attachments'
+            elif hasattr(self, 'content'):
                 self.question_type = 'deadend'
         if should_append:
             if not hasattr(self, 'question_type'):
@@ -1581,6 +1583,17 @@ class Interview:
                             exec(question.fields[0].saveas + ' = DATemplate(' + "'" + question.fields[0].saveas + "', content=" + '"""' + question.content.text(user_dict).rstrip().encode('unicode_escape') + '""", subject="""' + question.subcontent.text(user_dict).rstrip().encode('unicode_escape') + '""")', user_dict)
                             #question.mark_as_answered(user_dict)
                             return({'type': 'continue'})
+                        if question.question_type == 'attachments':
+                            attachment_text = question.processed_attachments(user_dict)
+                            if missing_var in variable_stack:
+                                variable_stack.remove(missing_var)
+                            try:
+                                eval(missing_var, user_dict)
+                                question.mark_as_answered(user_dict)
+                                return({'type': 'continue'})
+                            except:
+                                #logmessage("Try another method of setting the variable")
+                                continue
                         if question.question_type in ["code", "event_code"]:
                             #logmessage("Running some code:\n\n" + question.sourcecode)
                             if is_generic:
