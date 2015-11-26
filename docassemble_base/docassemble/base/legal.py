@@ -28,7 +28,7 @@ class ThreadVariables(threading.local):
 this_thread = ThreadVariables()
 
 def update_info(new_user, new_role, new_current_info, **kwargs):
-    logmessage("Updating info!")
+    #logmessage("Updating info!")
     this_thread.user = new_user
     this_thread.role = new_role
     this_thread.current_info = new_current_info
@@ -37,12 +37,13 @@ def update_info(new_user, new_role, new_current_info, **kwargs):
     return
 
 def location_returned():
-    logmessage("Location returned")
+    #logmessage("Location returned")
     if 'user' in this_thread.current_info:
-        logmessage("user exists")
+        #logmessage("user exists")
         if 'location' in this_thread.current_info['user']:
-            logmessage("location exists")
-            logmessage("Type is " + str(type(this_thread.current_info['user']['location'])))
+            #logmessage("location exists")
+            #logmessage("Type is " + str(type(this_thread.current_info['user']['location'])))
+            pass
     if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and type(this_thread.current_info['user']['location']) is dict:
         return True
     return False
@@ -58,29 +59,29 @@ class LatitudeLongitude(DAObject):
         self.known = False
         return super(LatitudeLongitude, self).init(**kwargs)
     def status(self):
-        logmessage("got to status")
+        #logmessage("got to status")
         if self.gathered:
-            logmessage("gathered is true")
+            #logmessage("gathered is true")
             return False
         else:
             if location_returned():
-                logmessage("returned is true")
+                #logmessage("returned is true")
                 self.set_to_current()
                 return False
             else:
                 return True
     def set_to_current(self):
-        logmessage("set to current")
+        #logmessage("set to current")
         if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and type(this_thread.current_info['user']['location']) is dict:
             if 'latitude' in this_thread.current_info['user']['location'] and 'longitude' in this_thread.current_info['user']['location']:
                 self.latitude = this_thread.current_info['user']['location']['latitude']
                 self.longitude = this_thread.current_info['user']['location']['longitude']
                 self.known = True
-                logmessage("known is true")
+                #logmessage("known is true")
             elif 'error' in this_thread.current_info['user']['location']:
                 self.error = this_thread.current_info['user']['location']['error']
                 self.known = False
-                logmessage("known is false")
+                #logmessage("known is false")
             self.gathered = True
         return
     def __str__(self):
@@ -180,20 +181,20 @@ class RoleChangeTracker(DAObject):
         self.last_role = target_role
         return
     def send_email(self, roles_needed, **kwargs):
-        logmessage("Current role is " + str(this_thread.role))
+        #logmessage("Current role is " + str(this_thread.role))
         for role_option in kwargs:
             if 'to' in kwargs[role_option]:
                 need(kwargs[role_option]['to'].email)
         for role_needed in roles_needed:
-            logmessage("One role needed is " + str(role_needed))
+            #logmessage("One role needed is " + str(role_needed))
             if role_needed == self.last_role:
-                logmessage("Already notified new role " + str(role_needed))
+                #logmessage("Already notified new role " + str(role_needed))
                 return False
             if role_needed in kwargs:
-                logmessage("I have info on " + str(role_needed))
+                #logmessage("I have info on " + str(role_needed))
                 email_info = kwargs[role_needed]
                 if 'to' in email_info and 'email' in email_info:
-                    logmessage("I have email info on " + str(role_needed))
+                    #logmessage("I have email info on " + str(role_needed))
                     try:
                         result = send_email(to=email_info['to'], html=email_info['email'].content, subject=email_info['email'].subject)
                     except DAError:
@@ -493,7 +494,11 @@ def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None
     for attachment in attachments:
         attachment_list = list()
         if type(attachment) is DAFileCollection:
-            subattachment = getattr(attachment, 'pdf', getattr(attachment, 'rtf', getattr(attachment, 'tex', None)))
+            subattachment = getattr(attachment, 'pdf', None)
+            if subattachment is None:
+                subattachment = getattr(attachment, 'rtf', None)
+            if subattachment is None:
+                subattachment = getattr(attachment, 'tex', None)
             if subattachment is not None:
                 attachment_list.append(subattachment)
             else:

@@ -1260,7 +1260,7 @@ class Question:
                 #logmessage("output was:\n" + repr(result['content'][doc_format]))
         if attachment['variable_name']:
             string = attachment['variable_name'] + " = DAFileCollection('" + attachment['variable_name'] + "')"
-            logmessage("Executing " + string + "\n")
+            #logmessage("Executing " + string + "\n")
             exec(string, user_dict)
             for doc_format in result['file']:
                 variable_string = attachment['variable_name'] + '.' + doc_format
@@ -1269,7 +1269,7 @@ class Question:
                 if file_number is None:
                     raise Exception("Could not save numbered file")
                 string = variable_string + " = DAFile('" + variable_string + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
-                logmessage("Executing " + string + "\n")
+                #logmessage("Executing " + string + "\n")
                 exec(string, user_dict)
         return(result)
 
@@ -1701,7 +1701,7 @@ def process_selections(data):
     return(result)
 
 def extract_missing_name(string):
-    logmessage("extract_missing_name: string was " + str(string))
+    #logmessage("extract_missing_name: string was " + str(string))
     m = nameerror_match.search(str(string))
     if m:
         return m.group(1)
