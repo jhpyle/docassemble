@@ -4,7 +4,7 @@ title: Initial Blocks
 short_title: Initial Blocks
 ---
 
-## `metadata`
+# `metadata`
 
 {% highlight yaml %}
 ---
@@ -22,7 +22,7 @@ A `metadata` block contains information about the YAML file, such as
 the name of the author.  It must be a YAML dictionary, but each the
 dictionary items can contain any arbitrary YAML structure.
 
-## `objects`
+# `objects`
 
 {% highlight yaml %}
 ---
@@ -67,7 +67,7 @@ base class `DAObject` keeps track of variable names.
 Whenever possible, you should use `objects` blocks rather than code to
 initialize your objects.  `objects` blocks are clean and readable.
 
-## `include`
+# `include`
 
 {% highlight yaml %}
 ---
@@ -95,7 +95,7 @@ referring to their package names.  E.g.,
 `questions.yml` in the `docassemble/helloworld/data/questions`
 directory of that package.
 
-## `image sets`
+# `image sets`
 
 {% highlight yaml %}
 ---
@@ -134,7 +134,7 @@ of your choosing rather than by the name of the image file.
 For information on how to use the icons you have defined in an `image
 sets` block, see `decoration` and `buttons`.
 
-## `images`
+# `images`
 
 {% highlight yaml %}
 ---
@@ -154,13 +154,13 @@ The above `images` block is essentially equivalent to writing:
 ---
 image sets:
   unspecified:
-	images:
-	  bills: money146.svg
-	  children: children2.svg
+    images:
+      bills: money146.svg
+      children: children2.svg
 ---
 {% endhighlight %}
 
-## `imports`
+# `imports`
 
 {% highlight yaml %}
 ---
@@ -179,7 +179,7 @@ import datetime
 import us
 {% endhighlight %}
 
-## `modules`
+# `modules`
 
 {% highlight yaml %}
 ---
@@ -197,16 +197,16 @@ is equivalent to running the following Python code:
 from datetime import *
 {% endhighlight %}
 
-## `terms`
+# `terms`
 
 {% highlight yaml %}
 ---
 terms:
   enderman: |
     A slender fellow from The End who carries enderpearls and picks up
-	blocks.
+    blocks.
   fusilli: |
-	A pasta shape that looks like a corkscrew.
+    A pasta shape that looks like a corkscrew.
 ---
 {% endhighlight %}
 
@@ -216,7 +216,7 @@ term, you can define certain vocabulary words, and **docassemble**
 will turn them into hyperlinks wherever they appear.  When the user
 clicks on the hyperlink, a popup appears with the word's definition.
 
-## `interview help`
+# `interview help`
 
 {% highlight yaml %}
 ---
@@ -249,7 +249,7 @@ You can also add video to help text using the `video` declaration.
 See the [modifiers] section for an explanation of how audio and video
 file references work.
 
-## `def`
+# `def`
 
 {% highlight yaml %}
 def: adorability
@@ -277,7 +277,7 @@ usedef:
 Due to the way **docassemble** parses interviews, the `def` block
 needs to be defined before it is used.
 
-## `default role`
+# `default role`
 
 {% highlight yaml %}
 ---
@@ -319,7 +319,7 @@ questions can ask "What is your date of birth?" or "What is John
 Smith's date of birth" depending on whether the current user is John
 Smith or not.
 
-## `default language`
+# `default language`
 
 {% highlight yaml %}
 ---

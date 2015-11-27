@@ -4,6 +4,8 @@ title: Package Management
 short_title: Packages
 ---
 
+# How **docassemble** uses packages
+
 **docassemble** interviews exist in a [Python package] and are
 installed on a server as part of that [Python package].  The
 [Python package] also includes:
@@ -19,6 +21,8 @@ the `docassemble` package.  The `docassemble` package itself is just
 a shell (a [namespace package]) that contains subpackages.  These
 subpackages include **docassemble**'s core components as well as
 user-created packages.
+
+# Creating your own packages
 
 To create your own package, start by downloading a **docassemble**
 package template from your **docassemble** server.
@@ -63,7 +67,9 @@ declaring `missouri_family_law` to be a package.
 `static`, and `templates`.  These are for [interviews], static files,
 and [document templates].
 
-## Installing through GitHub
+## Installing your package
+
+### Installing through GitHub
 
 The best way to install interviews on a server is through [GitHub].
 [GitHub] has an excellent command line interface on Linux and also has
@@ -79,7 +85,7 @@ a high-quality [Windows application].
 The package will be installed and the [WSGI] server will reset upon
 the next page load.
 
-## Installing through a .zip file
+### Installing through a .zip file
 
 1. Create a new .zip file containing the `docassemble_missouri_family_law`
 folder.  (On Windows, right-click the `docassemble_missouri_family_law`
@@ -98,7 +104,7 @@ site).  The base url is set during the [installation] of the [WSGI]
 server and in the **docassemble** [configuration] file (where it is
 called `root`).
 
-## Best practices for packaging your interviews
+# Best practices for packaging your interviews
 
 It is a good practice to bundle related interviews in a single
 package.  Think about making it easy for other people to install your

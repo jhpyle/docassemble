@@ -4,6 +4,8 @@ title: Roles
 short_title: Roles
 ---
 
+# Interviews with multiple users
+
 **docassemble** allows you to create multi-user interviews.
 
 For example:
@@ -295,7 +297,7 @@ then we could have written:
 
 Then we would not need to have the `interview_url` variable.
 
-## Interviews with an unknown number of users
+# Interviews with an unknown number of users
 
 In the example above, there were two participants in the interview
 (other than the organizer): `first_person` and `second_person`.  But

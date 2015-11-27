@@ -7,12 +7,12 @@ short_title: Special Variables
 There are some special variables that **docassemble** sets in every
 interview's variable store.
 
-## _internal
+# _internal
 
 `_internal` is a [Python dictionary] that is used by **docassemble**
 but that is not intended to be used in interviews.
 
-## url_args
+# url_args
 
 `url_args` is a [Python dictionary] that is used to access parameters
 passed via URL.
@@ -87,7 +87,7 @@ subquestion: |
 You can test this out by trying the following link:
 [https://docassemble.org/demo?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder](https://docassemble.org/demo?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder){:target="_blank"}.
 
-## current_info
+# current_info
 
 `current_info` is a [Python dictionary] that is defined by
 **docassemble** every time a screen loads.  It allows interviews to

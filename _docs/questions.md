@@ -11,7 +11,7 @@ that contains a `question` statement.
 All blocks in an interview file must either be [initial blocks],
 [code blocks], or contain a `question`.
 
-## The `question` statement
+# The `question` statement
 
 {% highlight yaml %}
 ---
@@ -48,7 +48,7 @@ In the example above, the question will end up looking like:
 
 > What is the *airspeed* velocity of an unladen African swallow?
 
-## The `subquestion` statement
+# The `subquestion` statement
 
 {% highlight yaml %}
 ---
@@ -63,7 +63,7 @@ The optional `subquestion` adds text underneath the `question`.  It is
 typically used to explain the question in more detail, if such an
 explanation is necessary.
 
-## Using questions to set variables
+# Using questions to set variables
 
 Every `question` block in a **docassemble** interview must have a
 purpose.  Otherwise, **docassemble** would never have a reason for

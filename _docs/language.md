@@ -10,6 +10,8 @@ also allows [Unicode] to be used in user-facing text and
 user input.  With these features, **docassemble** should be fully
 usable in languages other than English.
 
+# Configuration
+
 By default, the active language and locale are determined by the
 `language` and `locale` settings in the **docassemble** [configuration].
 
@@ -61,7 +63,7 @@ The `language` and `locale` settings have the following effects:
   question does not have a `language` set, **docassemble** will look
   for an `interview help` block that does not have `language` set.
 
-## Best practices for single-language interviews
+# Best practices for single-language interviews
 
 If your interview only works in one language, do not set `language`
 for any blocks and do not use `default language`, and do not call
@@ -69,7 +71,7 @@ for any blocks and do not use `default language`, and do not call
 default language and locale in the [configuration] are set to the
 correct values.
 
-## Best practices for multi-language interviews
+# Best practices for multi-language interviews
 
 If you use the `language` [modifier] or the `default language`
 [initial block], you will need to have `initial` code that calls
@@ -203,7 +205,7 @@ include:
 
 ([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/bestnumber/interview.yml){:target="_blank"}.)
 
-## Creating documents in languages other than English
+# Creating documents in languages other than English
 
 The [documents] feature, which allows RTF and PDF documents to be
 created from [Markdown] text with [Mako] templating, supports

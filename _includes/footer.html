@@ -1,5 +1,3 @@
-<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 <footer style="text-align:center;padding-bottom:20px">
   {% include footer-attribution.html %}
   {% for thepage in site.pages %}
@@ -14,6 +12,11 @@
   {% endif %}
   {% endif %}
   {% endfor %}
-  <a class="page-link" href="{{ site.github.repository_url }}">GitHub</a></li>
-
+  <a class="page-link" href="{{ site.github.repository_url }}">GitHub</a>
 </footer>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<script src="{{ '/tocmd-generator/js/jquery.toc.js' | prepend: site.baseurl }}"></script>
+<script>
+  $('#main').toc({showAlways:true});
+</script>

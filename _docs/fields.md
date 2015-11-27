@@ -9,7 +9,7 @@ response to a question, you need to include in your `question` a
 variable name as well as some indication about how you would like
 **docassemble** to ask for the value of the variable.
 
-## A note about variable names
+# A note about variable names
 
 Variable names are [Python identifiers], which means they can be any
 sequence of uppercase or lowercase letters, digits, and underscores,
@@ -42,6 +42,8 @@ See [reserved variable names] for a list of variable names that you
 cannot use because they conflict with built-in names that [Python] and
 **docassemble** use.
 
+# Directives
+
 ## `yesno` or `noyes`
 
 {% highlight yaml %}
@@ -68,7 +70,7 @@ noyes: user_has_injury
 ---
 {% endhighlight %}
 
-## Multiple-choice `buttons`
+## `buttons`
 
 {% highlight yaml %}
 ---
@@ -136,7 +138,7 @@ have been written as:
 {% highlight yaml %}
 ---
 field: user_understands_no_attorney_client_relationship
-question: >-
+question: |
   Your use of this system does not mean that you have a lawyer.  Do
   you understand this?
 buttons:
@@ -329,7 +331,7 @@ fields:
   - script: |
       <script>document.getElementById("today_time").innerHTML = Date();</script>
   - css: |
-	  <link rel="stylesheet" href="${ url_of('docassemble.demo:data/static/my.css') }">
+      <link rel="stylesheet" href="${ url_of('docassemble.demo:data/static/my.css') }">
   - Number of friends: number_of_friends
     datatype: radio
     choices:
@@ -387,7 +389,9 @@ before exiting the interview.  For example, the interview logic can
 cause the "question" above to appear by including a final line of code
 such as:
 
-    need(user_done)
+{% highlight text %}
+need(user_done)
+{% endhighlight %}
 
 The `user_done` variable will never be set to any value, but that is
 ok, because you don't want the user to be able to "get past" the final
@@ -536,9 +540,6 @@ The question above tells **docassemble** that if the interview logic
 calls for either `car_model` or `car_make`, the question should be
 tried.  When the user clicks on one of the buttons, the code will be
 executed and the variables will be set.
-
-## Special question: `event`
-
 
 ## `event`
 

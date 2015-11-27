@@ -4,7 +4,7 @@ title: How to write an interview
 short_title: Interviews
 ---
 
-## What is a **docassemble** interview?
+# What is a **docassemble** interview?
 
 An "interview" in **docassemble** is a [YAML] file that
 **docassemble** reads, and on the basis of what it finds, asks
@@ -17,7 +17,7 @@ or into the text of [documents].
 The interview can ask different questions of the user depending on
 what the answers to earlier questions were.
 
-## The contents of an interview file
+# The contents of an interview file
 
 The interview file is a series of possible questions that could
 potentially be asked, arranged in no particular order.  Which
@@ -166,7 +166,7 @@ special features, for example by adding help text or icons.
   **docassemble** and [Python].
 * [Errors] - Explains some common error messages and how to avoid them.
 
-## How you run a **docassemble** interview
+# How you run a **docassemble** interview
 
 You start the interview by going to its URL.  In the case of the
 interview linked from the [demonstration page], you can get to the
@@ -198,7 +198,7 @@ typing in a URL like:
 
 > http://example.com/interview?i=docassemble.mypackage:data/questions/myinterview.yml
 
-## How answers are stored
+# How answers are stored
 
 When a user starts a new interview, a new "variable store" is created.
 A variable store is a [Python dictionary] containing the names of the
@@ -206,7 +206,7 @@ variables that get defined during the course of the interview, such as
 `favorite_animal` in the example interview above.  The variable store
 is saved on the **docassemble** server.
 
-## Leaving an interview and coming back
+# Leaving an interview and coming back
 
 If the user is not logged in through **docassemble**'s
 [username and password system], then the user's progress through an

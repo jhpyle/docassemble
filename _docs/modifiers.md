@@ -8,7 +8,7 @@ There are a number of optional modifiers that can be included in
 `question` blocks to control the appearance or behavior of the
 question.
 
-## `audio`
+# `audio`
 
 {% highlight yaml %}
 ---
@@ -97,7 +97,7 @@ Note that there a number of limitations to playing audio in browsers.
 For example, older Android devices will not play audio retrieved
 through https, but will play the same audio retrieved through http.
 
-## `video`
+# `video`
 
 The `video` declaration is just like the `audio` declaration except that it displays a
 video instead of an audio file.
@@ -158,7 +158,7 @@ thinks square brackets indicate a list of items, not plain text.  If
 you want to write the declaration on one line, write `video:
 "[VIMEO 96044910]"`.
 
-## `help`
+# `help`
 
 {% highlight yaml %}
 ---
@@ -196,7 +196,7 @@ help: |
 
 You can also add video to help text using the `video` declaration.
 
-## `decoration`
+# `decoration`
 
 {% highlight yaml %}
 ---
@@ -210,7 +210,7 @@ The `decoration` modifier adds an icon to the right of the `question`
 text.  In the example above, `piggybank` will need to have been
 defined in an `image sets` or `images` block.
 
-## `progress`
+# `progress`
 
 {% highlight yaml %}
 ---
@@ -223,7 +223,7 @@ progress: 50
 If **docassemble** is configured to show a progress bar, the progress
 bar will be set to 50% when this question is asked.
 
-## `language`
+# `language`
 
 {% highlight yaml %}
 ---
@@ -256,7 +256,7 @@ Instead of explicitly setting a `language` for every question, you can
 use `default language` to apply a particular language to the remaining
 questions in the file (see [initial blocks]).
 
-## `generic object`
+# `generic object`
 
 {% highlight yaml %}
 ---
@@ -282,7 +282,7 @@ questions.  This question definition tells **docassemble** that if it
 ever needs an `is_defendant` attribute for any object of type
 `Individual`, it can get an answer by asking this question.
 
-## `role`
+# `role`
 
 {% highlight yaml %}
 ---
@@ -317,7 +317,7 @@ If the user does not have an appropriate role, **docassemble** will
 look for a question in the interview in which `event` has been set to
 `role_event`.
 
-## `comment`
+# `comment`
 
 {% highlight yaml %}
 ---

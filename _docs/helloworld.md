@@ -55,7 +55,7 @@ that the package was installed successfully.
 
 (If you do not have a server yet, you can [try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello.yml){:target="_blank"}.)
 
-## Adding a question
+# Adding a question
 
 Now let's change the interview so that it asks the user a [question].  Edit
 `docassemble_hello_world/docassemble/hello_world/data/questions.yml`
@@ -80,7 +80,7 @@ Then repeat steps 8 through 12, above.  (If you do not have your own server yet,
 It should now ask you "What is your planet's name?" and then greet
 your world by its name.
 
-## Adding some Python code
+# Adding some Python code
 
 Now let's extend the interview by adding a [code] section that
 makes a calculation based on a number provided by the user.
@@ -115,7 +115,7 @@ fields:
 
 ([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello3.yml){:target="_blank"}.)
 
-## Creating a document
+# Creating a document
 
 Now let's provide the user with a [document] by adding an `attachment`.
 

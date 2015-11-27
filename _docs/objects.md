@@ -4,6 +4,8 @@ title: Objects
 short_title: Objects
 ---
 
+# How docassemble uses objects
+
 [Python] allows [object-oriented programming] and so does
 **docassemble**.
 
@@ -82,7 +84,7 @@ modules:
 objects:
   - user: Individual
 ---
-question: >-
+question: |
   What is your date of birth?
 fields:
   - no label: user.birthdate
@@ -172,7 +174,7 @@ modules:
 objects:
   - user: Individual
 ---
-question: >-
+question: |
   How old are you?
 fields:
   - Age in years: user.age
@@ -207,15 +209,17 @@ objects being defined.  If an attribute is needed but not defined,
 **docassemble** will go looking for a `question` or `code` block that
 defines the attribute.  For example, if you write this in a question:
 
-    Remember that ${ trustee.possessive('phone number') } is
-    ${ trustee.phone_number }.
-
+{% highlight text %}
+Remember that ${ trustee.possessive('phone number') } is
+${ trustee.phone_number }.
+{% endhighlight %}
+    
 then in order to ask the question, **docassemble** may ask you for the
 trustee's name (so it can say "Remember that John Smith's phone number
 is ..."), and then ask for the trustee's `phone_number` if it is not
 already defined.
 
-## Writing your own classes
+# Writing your own classes
 
 If you are prepared to write your own [Python] code, it is pretty easy
 to write your own classes.
@@ -312,7 +316,7 @@ to edit your code.  All they would have to do is include the words
 referenced in a `words` directive in the **docassemble**
 [configuration].
 
-### Using global variables in your classes
+## Using global variables in your classes
 
 Normally in [Python] you can use global variables to keep track of
 information that your methods need to know but that is not passed in
@@ -516,12 +520,14 @@ field: temperature_type
 
 and then in your question text you could write:
 
-    Set your oven to ${ apple_pie.get_oven_temperature(temperature_type) }
-    and let it warm up.
+{% highlight text %}
+Set your oven to ${ apple_pie.get_oven_temperature(temperature_type) }
+and let it warm up.
+{% endhighlight %}
+    
+# Standard docassemble classes
 
-## Standard docassemble classes
-
-### DAObject
+## DAObject
 
 All **docassemble** objects are instances of the `DAObject` class.
 `DAObject`s are different from normal [Python objects] because they
@@ -686,7 +692,7 @@ will not return `friend.object_name()`; rather, it will return
 `friend.full_name()`, which may require asking the user for the
 `friend`'s name.
 
-### DAList
+## DAList
 
 A `DAList` acts like an ordinary [Python list], except that
 **docassemble** can ask questions to define elements of the list.  For
@@ -811,17 +817,120 @@ include: ${ applicant }`) or convert it to text with the
 [str function] (e.g. (`str(applicant)`) in [Python] code, the result
 will be the output of the `comma_and_list()` method.
 
-### DADict
+The `DAList` uses the following attributes:
 
-### DAFile
+* `gathering`: a boolean value, initialized to `False`.  Set this to
+`True` when the interview is in the process of asking questions to
+define all the elements of the list.
+* `gathered`: a boolean value, initially undefined.  Set this to
+`True` when then all of the elements of the list are defined.
+* `elements`: a [Python list] containing the elements of the list.
 
-### DAFileCollection
+By checking the value of the `gathered` attribute, you can trigger
+asking the necessary questions to define all of the elements of the
+list.  The methods of `DAList` behave differently depending on whether
+or not the interview is in the process of gathering the elements of
+the list.
 
-### DAFileList
+## DADict
 
-### DATemplate
+A `DADict` acts like a [Python dictionary] except that dictionary
+elements can be defined through **docassemble** questions.  To add an
+element that is a new **docassemble** object, you need to call the
+`initializeObject()` method.
 
-## Extending existing classes
+For example:
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  - player: DADict
+---
+mandatory: true
+code: |
+  player.initializeObject('trustee', DAObject)
+  player.initializeObject('beneficiary', DAObject)
+  player.initializeObject('grantor', DAObject)
+---
+mandatory: true
+question: The players
+subquestion: |
+  % for type in player:
+  ${ player[type].firstname } ${ player[type].lastname } is here.
+
+  % endfor
+---
+generic object: DAObject
+question: |
+  What is ${ x[i].object_possessive('name') }?
+fields:
+  - First Name: x[i].firstname
+  - Last Name: x[i].lastname
+---
+{% endhighlight %}
+
+([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/testdadict.yml){:target="_blank"}.)
+
+The `DADict` uses the following attributes:
+
+* `elements`: a [Python dictionary] containing the items of the dictionary.
+
+## DAFile
+
+A `DAFile` object is used to refer to a file, which might be an
+uploaded file, an assembled document, or a static document.  It has
+the following attributes:
+
+* `filename`: the path to the file on the filesystem;
+* `mimetype`: the MIME type of the file;
+* `extension`: the file extension (e.g., `pdf` or `rtf`); and
+* `number`: the internal integer number used by **docassemble** to
+  keep track of documents stored in the system
+
+## DAFileCollection
+
+`DAFileCollection` objects are created internally by **docassemble**
+in order to refer to a document assembled using the `attachments`
+[modifier] in combination with a `variable_name`.  It has attributes
+for each file type generated (e.g., `pdf` or `rtf`), where the
+attributes are objects of type `DAFile`.
+
+For example, if the variable `my_file` is a `DAFileCollection`,
+`my_file.pdf` will be a `DAFile` containing the PDF version, and
+`my_file.rtf` will be a `DAFile` containing the RTF version.
+
+## DAFileList
+
+A `DAFileList` is a `DAList`, the elements of which are expected to be
+`DAFile` objects.
+
+When a question has a field with a `datatype` for a file upload (see
+[fields]), the variable will be defined as a `DAFileList` object
+containing the file or files uploaded.
+
+When included in a template, a `DAFileList` object will effectively
+call `show()` on each `DAFile` element in order.
+
+## DATemplate
+
+The `template` block allows you to store some text to a variable.  See
+[template].  The variable will be defined as an object of the
+`DATemplate` class.
+
+Objects of this type have two attributes:
+
+* `content`
+* `subject`
+
+When **docassemble** defines a [template], it assembles any [Mako] in
+the `content` and option `subject` sets defines these attributes as
+the resulting text.  Note that the text may have [Markdown] [markup]
+in it.
+
+# Extending existing classes
 
 If you want to add a method to an existing **docassemble** class, such
 as `Individual`, you do not need to reinvent the wheel or copy and
@@ -925,6 +1034,7 @@ and not an instance of the `Attorney` class.
 [thread-safe]: https://en.wikipedia.org/wiki/Thread_safety
 [object-oriented programming]: https://en.wikipedia.org/wiki/Object-oriented_programming
 [modifiers]: {{ site.baseurl }}/docs/modifiers.html
+[modifier]: {{ site.baseurl }}/docs/modifiers.html
 [Mako]: http://www.makotemplates.org/
 [Python module]: https://docs.python.org/2/tutorial/modules.html
 [Python]: https://www.python.org/
@@ -940,3 +1050,5 @@ and not an instance of the `Attorney` class.
 [Python object]: https://docs.python.org/2/tutorial/classes.html
 [str function]: https://docs.python.org/2/library/functions.html#str
 [function]: {{ site.baseurl }}/docs/functions.html
+[template]: {{ site.baseurl }}/docs/template.html
+[markup]: {{ site.baseurl }}/docs/markup.html

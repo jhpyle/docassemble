@@ -4,6 +4,8 @@ title: Attaching documents to questions
 short_title: Documents
 ---
 
+# The `attachments` statement
+
 The `attachments` statement (which can also be written `attachment`)
 provides documents to the user.  Users can preview, download, and/or
 e-mail the documents.
@@ -68,7 +70,9 @@ attachment:
 
 Content of the [Markdown] file, `hello.md`:
 
-    Hello, world!
+{% highlight text %}
+Hello, world!
+{% endhighlight %}
 
 Files referenced with `content file` are assumed to reside in the
 `data/templates` directory within the package in which the interview
@@ -86,6 +90,111 @@ content file:
 {% endhighlight %}
 
 The content of multiple `content file` files will be concatenated.
+
+## Saving documents as variables
+
+Including an `attachments` section in a `question` block will offer
+the user a chance to download an assembled document and e-mail it to
+themselves.
+
+Sometimes, you might want to do other things with the document, like
+e-mail it, or post it to a web site.
+
+You can save an assembled document to a variable by adding
+a `variable_name` key to an attachment.  For example:
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - authority: Individual
+---
+question: Your document is ready.
+subquestion: |
+  Would you like to submit the document below to the authorities?
+yesno: submit_to_authority
+attachment:
+  - name: A *hello world* document
+    filename: Hello_World_Document
+    variable_name: hello_file
+    content: |
+      Hello, world!
+---
+mandatory: true
+question: Ok, all done.
+subquestion: |
+  % if submit_to_authority:
+    % if sent_ok:
+  Your document was sent.
+    % else:
+  For some reason, I was not able to send your document.
+    % endif
+  % else:
+  Ok, I will not send your document to The Man.
+  % endif
+---
+code: |
+  sent_ok = send_email(to=[authority], template=my_email, attachments[hello_file])
+---
+code: |
+  authority.name.first = 'The'
+  authority.name.last = 'Man'
+  authority.email = 'man@hegemony.gov'
+---
+template: my_email
+subject: |
+  A PDF file that says hello world!
+content: |
+  Dear Authority,
+
+  Please see attached.
+---
+{% endhighlight %}
+
+You can also assemble a document and save it to a variable without
+presenting it to the user.  The following example creates a PDF file
+containing the message "Hello, world!" and posts it to a slack.com
+site.
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+code: |
+  import slacker
+  slacker.Slacker(daconfig['slack_api_key']).files.upload(my_file.pdf.filename)
+---
+mandatory: true
+question: |
+  I have posted a Hello World file to Slack!
+---
+attachments:
+  - variable_name: my_file
+    filename: hello_world
+    content: |
+      Hello, world!
+---
+{% endhighlight %}
+
+Note that the varible indicated by `variable_name` will be defined as
+an object of class `DAFileCollection`.  An object of this type will
+have attributes for each file type generated, where the attributes are
+objects of type `DAFile`.  So `my_file.pdf` is the PDF `DAFile`, and
+`my_file.rtf` is the RTF `DAFile`.  A `DAFile` has the following
+attributes:
+
+* `filename`: the path to the file on the filesystem;
+* `mimetype`: the MIME type of the file;
+* `extension`: the file extension (e.g., `pdf` or `rtf`); and
+* `number`: the internal integer number used by **docassemble** to
+  keep track of documents stored in the system
+
+See [objects] for an explanation of the `DAFile` and
+`DAFileCollection` classes.
 
 ## Limiting availability of formats
 
@@ -110,7 +219,37 @@ preview and will only be able to download the PDF file:
 
 ![document screenshot]({{ site.baseurl }}/img/document-example-pdf-only.png)
 
-## Formatting documents with special markup tags
+## Assembling documents in a different language than the current language
+
+If you need to produce a document in a different language than the
+user's language, then the `word()` [function] may operate in a way you
+do not want it to operate.
+
+For example, if your user is Spanish-speaking, but you need to produce
+an English language document, you may find that a word or two in the
+English language document has been translated into Spanish.  (E.g.,
+this can happen if your document template uses linguistic [functions]
+from `docassemble.base.util`).  You can remedy this by defining a
+`language` for the document.
+
+For example:
+
+{% highlight yaml %}
+---
+language: es
+question: El documento está listo.
+sets: provide_user_with_document
+attachment:
+  - name: Alimentos
+    language: en
+    filename: food_order
+    content: |
+      This customer would like to order
+      ${ comma_and_list('fries', 'a Coke') }.
+---
+{% endhighlight %}
+
+# Formatting documents with special markup tags
 
 In addition to using [Markdown] syntax, you can use
 **docassemble**-specific markup tags to control the appearance of
@@ -144,7 +283,7 @@ documents.
 * `[TAB]` - Insert a tab (horizontal space), e.g., to indent the first
   line of a paragraph when it otherwise would not be indented.
 
-## Formatting documents with Pandoc templates and metadata
+# Formatting documents with Pandoc templates and metadata
 
 You can also control global formatting options by setting `metadata`
 for the document.  These options are passed through to [Pandoc], where
@@ -174,7 +313,7 @@ attachment:
 
 Metadata values can contain [Mako] template commands.
 
-### Metadata applicable to RTF and PDF files
+## Metadata applicable to RTF and PDF files
 
 * If you wish to use a standard document title, set the following:
   * `title`
@@ -231,7 +370,7 @@ In this case, the `HeaderLines: "3"` metadata will ensure that [LaTeX]
 formats the headers correctly.  Otherwise the header may overlap the
 document text.
 
-### Metadata applicable to PDF only
+## Metadata applicable to PDF only
 
 The following metadata tags only apply to PDF file generation.  To
 change analogous formatting in RTF files, you will need to create your
@@ -267,12 +406,12 @@ options for the the [geometry] package that set the page margins.
 * `abstract` - default is not defined.  If defined, it will include an
   article abstract in the standard [LaTeX] format.
 
-## Additional customization of document formatting
+# Additional customization of document formatting
 
 You can exercise greater control over document formatting by creating
 your own template files for [Pandoc].  The default template files are
-located in the `docassemble.base` package in the `docassemble/base/data/templates`
-directory.  The files include:
+located in the `docassemble.base` package in the
+`docassemble/base/data/templates` directory.  The files include:
 
 * `Legal-Template.tex`: this is the [LaTeX] template that [Pandoc]
   uses to generate PDF files.
@@ -351,7 +490,7 @@ If you use an interview-wide `attachment options` block to set
 defaults, you can override those defaults for a particular attachment
 by providing specific options within the question block.
 
-## A note about customization of document formatting
+# A note about customization of document formatting
 
 If exercising fine-grained control over document formatting is
 important to you, and you are not prepared to learn how [Pandoc] and
@@ -389,3 +528,6 @@ substantive content.
 [HotDocs]: https://en.wikipedia.org/wiki/HotDocs
 [WYSIWYG]: https://en.wikipedia.org/wiki/WYSIWYG
 [LaTeX]: http://www.latex-project.org/
+[objects]: {{ site.baseurl }}/docs/objects.html
+[function]: {{ site.baseurl }}/docs/functions.html
+[functions]: {{ site.baseurl }}/docs/functions.html

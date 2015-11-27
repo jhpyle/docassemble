@@ -12,6 +12,8 @@ For your interview to start asking questions, you need to mark at
 least one `question` block or `code` block with the modifier
 `mandatory: true`.
 
+# Directives that control interview logic
+
 ## `mandatory`
 
 Consider the following as a complete interview file:
@@ -83,7 +85,7 @@ code: |
 ---
 {% endhighlight %}
 
-## The logical order of an interview
+# The logical order of an interview
 
 `mandatory` and `initial` blocks are evaluated in the order they
 appear in the question file.  Therefore, the location in the interview
@@ -225,7 +227,7 @@ a value for `user_wants_to_got_to_dance`.  Not giving up,
 dance with me?" question, which was defined earlier in
 `question_library.yml`.
 
-## How **docassemble** runs your code
+# How **docassemble** runs your code
 
 **docassemble** goes through your interview [YAML] file from start to
 finish, incorporating `include`d files as it goes.  It always executes
@@ -310,12 +312,12 @@ If this were an optional code block, it would not run to completion
 because `user_net_worth` would already be defined when **docassemble**
 came back from asking whether the user has a car.
 
-## Best practices for interview logic and organization
+# Best practices for interview logic and organization
 
 * Use only a single `mandatory` `code` block for each interview, and
   put it at the top of the file after the [initial blocks].
 
-## Best practices for sharing with others
+# Best practices for sharing with others
 
 * Don't reinvent the wheel; `include` other people's questions.
 * Share your `question`s, `code`, and `template`s with others.

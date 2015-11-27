@@ -17,7 +17,7 @@ Amazon's [EC2 Container Service](https://aws.amazon.com/ecs/) can be
 used to maintain a cluster of **docassemble** images.  See 
 [scalability of docassemble]({{ site.baseurl }}/docs/scalability.html).
 
-## Installing Docker
+# Installing Docker
 
 On Amazon Linux (assuming the username ec2-user):
 
@@ -35,7 +35,7 @@ The last line allows the non-root user to run Docker.  You may need to
 log out and log back in again for the new user permission to take
 effect.
 
-## Running docassemble from a pre-packaged Docker image
+# Running docassemble from a pre-packaged Docker image
 
 **docassemble** is available on [Docker Hub](https://hub.docker.com/r/jhpyle/docassemble/).  You can download and run the image by doing:
 
@@ -51,7 +51,7 @@ running container by running:
 
 You can find out the ID of the running container by doing `docker ps`.
 
-## Creating your own Docker image
+# Creating your own Docker image
 
 To create your own [Docker] image of docassemble, first download docassemble:
 

@@ -18,8 +18,8 @@
           {% assign next_page = docs[next] | prepend:"/docs/" | append:".html" %}
 	  <li><a href="{{ next_page }}" aria-label="Next"><span aria-hidden="true">Next <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span></span></a></li>
         {% endif %}
-      </div>
-    </div>
+      </ul>
+    </nav>
     <div class="clear"></div>
     {% break %}
   {% endif %}

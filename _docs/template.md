@@ -9,8 +9,6 @@ This section explains how the `template` block is used in
 templates, see [documents].  If you are interested in how to insert
 variables into the text of your questions or documents, see [markup].
 
-## `template`
-
 A `template` allows you assign text to a variable and then re-use the
 text by referring to a variable.
 

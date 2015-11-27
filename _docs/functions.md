@@ -4,6 +4,8 @@ title: Functions
 short_title: Functions
 ---
 
+# How to use functions
+
 To use the functions described in this section in your interviews, you
 need to include them from the `docassemble.base.util` module by
 writing the following somewhere in your interview:
@@ -19,9 +21,9 @@ Unless otherwise instructed, you can assume that all of the functions
 discussed in this section are available in interviews when you include
 this `modules` block.
 
-## Miscellaneous functions
+# Miscellaneous functions
 
-### need
+## need
 
 The `need()` function takes one or more variables as arguments and
 causes **docassemble** to ask questions to define each of the
@@ -55,7 +57,7 @@ So the `need()` function does not "do" anything.  However, writing
 because it helps you convey in "natural language" that your interview
 "needs" these variables to be defined.
 
-### force_ask 
+## force_ask 
 
 Usually, **docassemble** only asks a question when it encounters a
 variable that is not defined.  However, with the `force_ask` function
@@ -134,7 +136,7 @@ second mandatory code block would cause the question to be asked
 again.  But you make your intentions more clear to readers of your
 code by calling `need()`.)
 
-### space_to_underscore
+## space_to_underscore
 
 If `user_name` is `John Wilkes Booth`,
 `space_to_underscore(user_name)` will return `John_Wilkes_Booth`.
@@ -153,7 +155,7 @@ attachment:
 ---
 {% endhighlight %}
 
-### url_of
+## url_of
 
 This function returns a URL to a file within a **docassemble**
 package.
@@ -172,7 +174,7 @@ subquestion: |
 ---
 {% endhighlight %}
 
-### url_action and process_action
+## url_action and process_action
 
 The `url_action()` and `process_action()` functions allow users to
 interact with **docassemble** using hyperlinks embedded in questions.
@@ -301,19 +303,44 @@ code: |
 ---
 {% endhighlight %}
 
-## Functions for managing global variables
+# Functions for managing global variables
 
-### set_info()
+If you try writing your own functions, you will learn that functions
+do not have access to all of the variables in your interview.
+Functions only know the variables you pass to them.
 
+If your functions need to know background information about the
+interview, but you do not want to have to pass a lot of variables to
+every function you call, you can use "global" variables.
 
+You set "global" variables in **docassemble** by calling `set_info()`
+and your retrieve them by calling `get_info()`.  Note that
+**docassemble** will forget the values of these variables every time
+the screen loads, so you will have to make sure they are set by
+setting them in `initial` code, which runs every time the screen
+loads.
 
-### get_info()
+## set_info
+
+This function is used to store information for later retrieval by
+`get_info()`.  You pass it one or more [keyword arguments]:
+
+{% highlight yaml %}
+---
+initial: true
+code: |
+  set_info(interview_type='standard')
+---
+{% endhighlight %}
+
+## get_info
 
 This function is used to retrieve information passed to
 `set_info()`.
 
 For example, if you passed `interview_type` as a [keyword argument] to
-`set_info()`, you can retrieve the value by doing:
+`set_info()`, you can retrieve the value in your [Python module] by
+doing:
 
 {% highlight python %}
 from docassemble.base.legal import *
@@ -324,22 +351,19 @@ class Recipe(DAObject):
             #etc.
 {% endhighlight %}
 
-If the information does not exist, `get_info()` returns `None`.
+If the item was never set, `get_info()` will return `None`.
 
-
-
-
-## Language and locale functions
+# Language and locale functions
 
 These functions access and change the active language and locale.  See
 [language support] for more information about these features of
 **docassemble**.
 
-### get_language
+## get_language
 
 If the language is set to English, `get_language()` returns `en`.
 
-### set_language
+## set_language
 
 This sets the language that will be used in the web application and in
 language-specific functions of **docassemble**.  It does not change
@@ -368,17 +392,17 @@ choices:
 ---
 {% endhighlight %}
 
-### get_locale
+## get_locale
 
 If the locale is set to `US.utf8`, `get_locale()` returns `US.utf8`.
 
-### set_locale
+## set_locale
 
 If you run `set_locale('FR.utf8')`, then `get_locale()` will return
 `FR.utf8`, but the actual [Python locale] will not change
 unless you run `update_locale()`.
 
-### update_locale
+## update_locale
 
 Running `update_locale` will change the [Python locale] based on the
 current language and locale settings.
@@ -422,9 +446,9 @@ code: |
 ---
 {% endhighlight %}
 
-## Simple translation of words
+# Simple translation of words
 
-### word
+## word
 
 `word()` is a general-purpose translation function that is used in the
 code of the web application to ensure that the text the user sees is
@@ -468,14 +492,14 @@ more [YAML] files.  This causes **docassemble** to call
 `docassemble.base.util.update_word_collection()` at the time the
 server is initialized.
 
-## Language-specific functions
+# Language-specific functions
 
 These functions behave differently according to the language and
 locale.  You can write functions for different languages, or reprogram
 the default functions, by calling
 `docassemble.base.util.update_language_function()`.
 
-### capitalize
+## capitalize
 
 If `favorite_food` is defined as "spaghetti marinara," then
 `capitalize(favorite_food)` will return `Spaghetti marinara`.
@@ -490,7 +514,7 @@ yesno: user_will_eat_dinner
 
 There is also the `title_case()` function, which is described below.
 
-### comma_and_list
+## comma_and_list
 
 If `things` is a [Python list] with the elements
 `['lions', 'tigers', 'bears']`, then:
@@ -502,13 +526,13 @@ toads, and frogs`.
 * `comma_and_list('fish', 'toads')` returns `fish and toads`
 * `comma_and_list('fish')` returns `fish`.
 
-### comma_list
+## comma_list
 
 If `things` is a [Python list] with the elements
 `['lions', 'tigers', 'bears']`, then `comma_list(things)` will return
 `lions, tigers, bears`.
 
-### currency
+## currency
 
 If the locale is `US.utf8`, `currency(45.2)` returns `$45.20`.
 
@@ -523,7 +547,7 @@ locale.  This is due to a limitation in the [locale module].  If the
 `currency` function does not meet your currency formatting needs, you
 may want to define your own.
 
-### currency_symbol
+## currency_symbol
 
 If the locale is `US.utf8`, `currency_symbol()` returns `$`.
 
@@ -534,7 +558,7 @@ If you set `currency symbol` in the [configuration], then
 `currency_symbol()` returns the symbol specified there, and does not
 use the locale to determine the symbol.
 
-### indefinite_article
+## indefinite_article
 
 `indefinite_article('bean')` returns `a bean` and
 `indefinite_article('apple')` returns `an apple`.
@@ -543,7 +567,7 @@ The English language version of this function passes through all
 arguments to the `en.noun.article()` function of the
 [NodeBox English Linguistics Library].
 
-### nice_number
+## nice_number
 
 * `nice_number(4)` returns `four`
 * `nice_number(10)` returns `ten`
@@ -553,7 +577,7 @@ arguments to the `en.noun.article()` function of the
 This function can be customized by calling
 `docassemble.base.util.update_nice_numbers()`.
 
-### noun_plural
+## noun_plural
 
 * `noun_plural('friend')` returns `friends`
 * `noun_plural('fish')` returns `fish`
@@ -563,7 +587,7 @@ The English language version of
 this function passes through all arguments to the `en.noun.plural()`
 function of the [NodeBox English Linguistics Library].
 
-### ordinal_number
+## ordinal_number
 
 * `ordinal_number(8)` returns `eighth`.
 * `ordinal_number(11)` returns `11th`.
@@ -572,17 +596,19 @@ This function can be customized with
 `docassemble.base.util.update_ordinal_numbers()` and
 `docassemble.base.util.update_ordinal_function()`.
 
-### ordinal
+## ordinal
 
 `ordinal(x)` returns `ordinal_number(x + 1)`.  This is useful when
 working with indexes that start at zero.
 
-### period_list
+## period_list
 
 `period_list` returns a list within a list:
 
-    [[12, "Per Month"], [1, "Per Year"], [52, "Per Week"],
-    [24, "Twice Per Month"], [26, "Every Two Weeks"]]
+{% highlight python %}
+[[12, "Per Month"], [1, "Per Year"], [52, "Per Week"],
+[24, "Twice Per Month"], [26, "Every Two Weeks"]]
+{% endhighlight %}
 
 This is useful for using in `code` associated with periodic currency
 amounts.
@@ -623,10 +649,11 @@ function by including something like the following in your
 {% highlight python %}
 def my_period_list():
   return [[365, word("Per Day")], [52, word("Per Week")]]
+
 docassemble.base.util.update_language_function('*', 'period_list', my_period_list)
 {% endhighlight %}
 
-### title_case
+## title_case
 
 `title_case("the importance of being ernest")` returns `The Importance
 of Being Ernest`.
@@ -636,13 +663,13 @@ the `titlecase()` function of the [titlecase] module.
 
 There is also the `capitalize()` function, which is described above.
 
-### verb_past
+## verb_past
 
 `verb_past('help')` returns `helped`.  The English language version of
 this function passes through all arguments to the `en.verb.past()`
 function of the [NodeBox English Linguistics Library].
 
-### verb_present
+## verb_present
 
 * `verb_present('helped')` returns `help`.
 * `verb_present('help', person=3)` returns `helps`.
@@ -651,7 +678,7 @@ The English language version of this function passes through all
 arguments to the `en.verb.present()` function of the
 [NodeBox English Linguistics Library].
 
-### Simple language functions
+# Simple language functions
 
 The following simple language functions all have the property that if
 the optional argument `capitalize=True` is added, the resulting phrase
@@ -727,3 +754,5 @@ docassemble.base.util.update_language_function('fr', 'her', docassemble.base.uti
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
 [YAML]: https://en.wikipedia.org/wiki/YAML
+[keyword arguments]: https://docs.python.org/2/glossary.html#term-argument
+[keyword argument]: https://docs.python.org/2/glossary.html#term-argument

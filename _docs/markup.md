@@ -9,7 +9,7 @@ use [Mako] to make your documents "smart."  These [mark up] methods
 are available for use in `question` text, field labels, `interview
 help` text, the content of [documents], and other text elements.
 
-## Markdown
+# Markdown
 
 The syntax of [Markdown] is explained well
 [elsewhere](http://www.makotemplates.org/).
@@ -60,7 +60,7 @@ All of these methods will format text in questions as well as PDF and
 RTF documents, with the exception of the `!` image insertion command,
 which does not work within PDF and RTF documents.
 
-## Inserting images
+# Inserting images
 
 To insert an image that is located in the `static` folder of a custom
 Python package, use the `IMAGE` command.  This works within PDF and
@@ -138,7 +138,7 @@ yesno: user_is_cute
 In the above example, the picture will be shrunk or expanded so that
 its width is 250 pixels.
 
-## Inserting audio and video
+# Inserting audio and video
 
 In addition to using the `audio` and `video` [modifiers], you can
 insert audio and video into your [Mako] text.

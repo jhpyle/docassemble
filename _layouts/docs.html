@@ -20,8 +20,8 @@
               <div class="navbar-collapse collapse sidebar-navbar-collapse">
                 <ul class="nav navbar-nav">
                   {% for section in site.data.docs %}
-                    <li style="padding-left:15px;"><strong>{{ section.title }}</strong></li>
-                    {% include docs_section.html items=section.docs %}
+                  <li style="padding-left:15px;"><strong>{{ section.title }}</strong></li>
+                  {% include docs_section.html items=section.docs %}
                   {% endfor %}
                 </ul>
               </div>
@@ -30,10 +30,12 @@
 	</div>
 	<div class="col-sm-9">
 	  <header>
-	    <h1>{{ page.title }}</h1>
+	    <h1 class="page-header">{{ page.title }}</h1>
 	  </header>
+	  <main id="main">
 	  {{ content }}
 	  {% include section_nav.html %}
+	  </main>
 	</div>
       </div>
     </div>

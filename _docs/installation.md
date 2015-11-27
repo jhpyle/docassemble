@@ -16,29 +16,35 @@ Since **docassemble** has a lot of [dependencies], you may wish to
 [run it using Docker] rather than follow all of these installation
 instructions.
 
-### Installing dependencies
+# Installing dependencies
 
 The following dependencies can be installed from Debian packages:
 
-    sudo apt-get install python-markdown python-yaml python-mako \
-      python-dateutil python-setuptools python-httplib2 \
-      python-dev python-imaging pandoc texlive texlive-latex-extra \
-	  gcc wget unzip git locales
-
+{% highlight bash %}
+sudo apt-get install python-markdown python-yaml python-mako \
+  python-dateutil python-setuptools python-httplib2 \
+  python-dev python-imaging pandoc texlive texlive-latex-extra \
+  gcc wget unzip git locales
+{% endhighlight %}
+  
 docassemble uses locale settings to format numbers, get currency
 symbols, and other things.  Do `echo $LANG` to see what locale you are
 using.  If it is not something like `en_US.UTF-8`, you will want to set
 up an appropriate locale for your region:
 
-    sudo dpkg-reconfigure locales
+{% highlight bash %}
+sudo dpkg-reconfigure locales
+{% endhighlight %}
 
 (On Ubuntu, you may need to do `sudo apt-get install language-pack-en`.)
 
 To install the [Nodebox English Linguistics library], do:
 
-    wget https://www.nodebox.net/code/data/media/linguistics.zip
-    sudo unzip linguistics.zip -d /usr/local/lib/python2.7/dist-packages
-    rm linguistics.zip
+{% highlight bash %}
+wget https://www.nodebox.net/code/data/media/linguistics.zip
+sudo unzip linguistics.zip -d /usr/local/lib/python2.7/dist-packages
+rm linguistics.zip
+{% endhighlight %}
 
 Many of the Python packages used by **docassemble** need to be
 downloading using pip, either because they are not available through
@@ -47,19 +53,23 @@ old.
 
 First, you need to install the latest version of `pip`:
 
-    easy_install pip
+{% highlight bash %}
+easy_install pip
+{% endhighlight %}
 
 To install the [us](https://pypi.python.org/pypi/us) and
 [SmartyPants](https://pypi.python.org/pypi/mdx_smartypants) modules,
 do:
 
-    sudo pip install --upgrade us 3to2 guess-language-spirit html2text
-    sudo pip install --upgrade mdx_smartypants titlecase
-    sudo pip install --upgrade cffi
-    sudo pip install --upgrade bcrypt
-    sudo pip install --upgrade wtforms werkzeug rauth simplekv \
-	  Flask-KVSession flask-user pypdf flask flask-login \
-	  flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
+{% highlight bash %}
+sudo pip install --upgrade us 3to2 guess-language-spirit html2text
+sudo pip install --upgrade mdx_smartypants titlecase
+sudo pip install --upgrade cffi
+sudo pip install --upgrade bcrypt
+sudo pip install --upgrade wtforms werkzeug rauth simplekv \
+  Flask-KVSession flask-user pypdf flask flask-login \
+  flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
+{% endhighlight %}
 
 The mdx_smartypants module depends on 3to2 and guess-language-spirit,
 and may have trouble installing if those modules are not already
@@ -69,17 +79,21 @@ not installed in the right order.
 To install [PyRTF-ng](https://github.com/nekstrom/pyrtf-ng), which is
 needed for generating RTF files, do:
 
-    git clone https://github.com/nekstrom/pyrtf-ng
-    cd pyrtf-ng
-    sudo python setup.py install
-	cd ..
+{% highlight bash %}
+git clone https://github.com/nekstrom/pyrtf-ng
+cd pyrtf-ng
+sudo python setup.py install
+cd ..
+{% endhighlight %}
 
 The following will install the Debian dependencies needed for the web
 server:
 
-    sudo apt-get install apache2 postgresql python-psycopg2 \
-      libapache2-mod-wsgi libapache2-mod-xsendfile python-speaklater \
-      poppler-utils python-pil libffi-dev libffi6 imagemagick
+{% highlight bash %}
+sudo apt-get install apache2 postgresql python-psycopg2 \
+  libapache2-mod-wsgi libapache2-mod-xsendfile python-speaklater \
+  poppler-utils python-pil libffi-dev libffi6 imagemagick
+{% endhighlight %}
 
 To install the additional Python dependencies for the web server
 ([WTForms](https://wtforms.readthedocs.org/en/latest/),
@@ -89,40 +103,48 @@ To install the additional Python dependencies for the web server
 [Flask-User](https://pythonhosted.org/Flask-User), and
 [PyPDF](https://pypi.python.org/pypi/pyPdf/1.13)), do:
 
-    sudo pip install --upgrade wtforms werkzeug rauth simplekv \
-      Flask-KVSession flask-user pypdf flask flask-login \
-	  flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
-	  Pygments
+{% highlight bash %}
+sudo pip install --upgrade wtforms werkzeug rauth simplekv \
+  Flask-KVSession flask-user pypdf flask flask-login \
+  flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
+  Pygments
+{% endhighlight %}
 
 If you want to be able to convert uploaded sound files into different
 formats, you will also need to install [ffmpeg] and the
 [Perl Audio Converter]:
 
-    sudo apt-get install libaudio-flac-header-perl \
-      libaudio-musepack-perl libmp3-tag-perl \
-      libogg-vorbis-header-pureperl-perl perl make libvorbis-dev \
-      libcddb-perl libinline-perl libcddb-get-perl libmp3-tag-perl \
-      libaudio-scan-perl libaudio-flac-header-perl \
-      libparallel-forkmanager-perl ffmpeg
-    git clone git://git.code.sf.net/p/pacpl/code pacpl-code 
-    cd pacpl-code
-    ./configure
-    make
-    sudo make install
-    cd ..
+{% highlight bash %}
+sudo apt-get install libaudio-flac-header-perl \
+  libaudio-musepack-perl libmp3-tag-perl \
+  libogg-vorbis-header-pureperl-perl perl make libvorbis-dev \
+  libcddb-perl libinline-perl libcddb-get-perl libmp3-tag-perl \
+  libaudio-scan-perl libaudio-flac-header-perl \
+  libparallel-forkmanager-perl ffmpeg
+git clone git://git.code.sf.net/p/pacpl/code pacpl-code 
+cd pacpl-code
+./configure
+make
+sudo make install
+cd ..
+{% endhighlight %}
 
-### Installing docassemble
+# Installing docassemble
 
 Clone the repository (e.g., in your home directory):
 
-    git clone https://github.com/jhpyle/docassemble
+{% highlight bash %}
+git clone https://github.com/jhpyle/docassemble
+{% endhighlight %}
 
 This creates a directory called `docassemble`.  To install the
 docassemble packages, do the following as root:
 
-    cd ~/docassemble
-    sudo ./compile.sh
-	cd ..
+{% highlight bash %}
+cd ~/docassemble
+sudo ./compile.sh
+cd ..
+{% endhighlight %}
 
 The compile.sh script installs the four Python packages contained in
 the git repository:
@@ -145,22 +167,26 @@ The `docassemble.webapp` package contains the standard docassemble web
 application.  The `docassemble.demo` package contains a demonstration
 interview.
 
-## Testing docassemble
+# Testing docassemble
 
 The following will run a test of the core docassemble module.  This
 requires `docassemble`, `docassemble.base`, `docassemble.mako`, and
 `docassemble.demo` to be installed.
 
-    cd ~/docassemble
-    python docassemble_base/tests/test-parse.py
+{% highlight bash %}
+cd ~/docassemble
+python docassemble_base/tests/test-parse.py
+{% endhighlight %}
 
 The output should end with:
 
-    Need to ask:
-      Your use of this system does not mean that you have a lawyer.
-	  Do you understand this?
+{% highlight bash %}
+Need to ask:
+  Your use of this system does not mean that you have a lawyer.
+  Do you understand this?
+{% endhighlight %}
 
-## Setting up the web server
+# Setting up the web server
 
 The following instructions assume a Debian/Ubuntu system on which you have
 cloned `docassemble` into your home directory.  You will have to make
@@ -168,72 +194,82 @@ some changes to adapt this to your platform.
 
 Enable the Apache wsgi and xsendfile modules if they are not already enabled:
 
-    sudo a2enmod wsgi
-    sudo a2enmod xsendfile
+{% highlight bash %}
+sudo a2enmod wsgi
+sudo a2enmod xsendfile
+{% endhighlight %}
 
 Create the root directory for user-contributed Python packages (see
 [site.USER_BASE]), and make sure it is writeable:
 
-    sudo mkdir -p /var/www/.local /var/www/.cache
-    sudo chown www-data.www-data /var/www/.local /var/www/.cache
+{% highlight bash %}
+sudo mkdir -p /var/www/.local /var/www/.cache
+sudo chown www-data.www-data /var/www/.local /var/www/.cache
+{% endhighlight %}
 
 Create the directory for the Flask WSGI file needed by the web server:
 
-    sudo mkdir -p /var/lib/docassemble/webapp
-    sudo cp ~/docassemble/docassemble_webapp/flask.wsgi /var/lib/docassemble/webapp
-	sudo chown www-data.www-data /var/lib/docassemble/webapp/flask.wsgi
+{% highlight bash %}
+sudo mkdir -p /var/lib/docassemble/webapp
+sudo cp ~/docassemble/docassemble_webapp/flask.wsgi /var/lib/docassemble/webapp
+sudo chown www-data.www-data /var/lib/docassemble/webapp/flask.wsgi
+{% endhighlight %}
 
 Create the uploads directory:
 
-    sudo mkdir -p /usr/share/docassemble/files
-    sudo chown www-data.www-data /usr/share/docassemble/files
+{% highlight bash %}
+sudo mkdir -p /usr/share/docassemble/files
+sudo chown www-data.www-data /usr/share/docassemble/files
+{% endhighlight %}
 
 Set up and edit the [configuration] file.  At the very least, you should
 edit the `secretkey` value to something random and unique to your
 site.
 
-    sudo mkdir -p /etc/docassemble
-    sudo cp ~/docassemble/docassemble_base/config.yml /etc/docassemble/
-    sudo vi /etc/docassemble/config.yml
+{% highlight bash %}
+sudo mkdir -p /etc/docassemble
+sudo cp ~/docassemble/docassemble_base/config.yml /etc/docassemble/
+sudo vi /etc/docassemble/config.yml
+{% endhighlight %}
 
 Set /etc/apache2/sites-available/000-default.conf to something like:
 
-    <VirtualHost *:80>
-      ServerName example.com
-      ServerAdmin webmaster@example.com
-      Redirect / https://example.com/
-      ErrorLog ${APACHE_LOG_DIR}/error.log
-      CustomLog ${APACHE_LOG_DIR}/access.log combined
-    </VirtualHost>
-    <IfModule mod_ssl.c>
-      <VirtualHost *:443>
-        ServerName example.com
-        ServerAdmin webmaster@example.com
-        SSLEngine on
-        SSLCertificateFile /etc/ssl/example.com.crt
-        SSLCertificateKeyFile /etc/ssl/example.com.key 
-        SSLCertificateChainFile /etc/ssl/sub.class1.server.ca.pem
-        SSLProxyEngine on
-        DocumentRoot /var/www/html
-
-        XSendFile on
-        XSendFilePath /usr
-        XSendFilePath /var
-        XSendFilePath /tmp
-        WSGIDaemonProcess docassemble.webserver user=www-data group=www-data threads=5
-        WSGIScriptAlias /da /var/lib/docassemble/webapp/docassemble.wsgi
-        <Directory /var/lib/docassemble/webapp>
-          WSGIProcessGroup docassemble.webserver
-          WSGIApplicationGroup %{GLOBAL}
-          AllowOverride none
-          Require all granted
-        </Directory>
-
-        ErrorLog /var/log/apache2/error.log
-        LogLevel warn
-        CustomLog /var/log/apache2/access-da.log combined
-      </VirtualHost>
-    </IfModule>
+{% highlight text %}
+<VirtualHost *:80>
+  ServerName example.com
+  ServerAdmin webmaster@example.com
+  Redirect / https://example.com/
+  ErrorLog ${APACHE_LOG_DIR}/error.log
+  CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+<IfModule mod_ssl.c>
+  <VirtualHost *:443>
+    ServerName example.com
+    ServerAdmin webmaster@example.com
+    SSLEngine on
+    SSLCertificateFile /etc/ssl/example.com.crt
+    SSLCertificateKeyFile /etc/ssl/example.com.key 
+    SSLCertificateChainFile /etc/ssl/sub.class1.server.ca.pem
+    SSLProxyEngine on
+    DocumentRoot /var/www/html
+    XSendFile on
+    XSendFilePath /usr
+    XSendFilePath /var
+    XSendFilePath /tmp
+    WSGIDaemonProcess docassemble.webserver user=www-data group=www-data threads=5
+    WSGIScriptAlias /da /var/lib/docassemble/webapp/docassemble.wsgi
+    <Directory /var/lib/docassemble/webapp>
+      WSGIProcessGroup docassemble.webserver
+      WSGIApplicationGroup %{GLOBAL}
+      AllowOverride none
+      Require all granted
+    </Directory>
+    ErrorLog /var/log/apache2/error.log
+    LogLevel warn
+    CustomLog /var/log/apache2/access-da.log combined
+  </VirtualHost>
+</IfModule>
+{% endhighlight %}
 
 You can run `docassemble` on HTTP rather than HTTPS if you want to,
 but since the `docassemble` web application uses a password system, it
@@ -252,9 +288,11 @@ configuration.
 following commands.  (You may wish to make changes to the database
 information in `/etc/docassemble/config.yml` first.)
 
-    echo 'create role "www-data" login; create database docassemble;' | sudo -u postgres psql
-    sudo -u postgres python ~/docassemble/docassemble_webapp/docassemble/webapp/create_tables.py /etc/docassemble/config.yml
-    echo 'grant all on all tables in schema public to "www-data"; grant all on all sequences in schema public to "www-data";' | sudo -u postgres psql docassemble
+{% highlight bash %}
+echo 'create role "www-data" login; create database docassemble;' | sudo -u postgres psql
+sudo -u postgres python ~/docassemble/docassemble_webapp/docassemble/webapp/create_tables.py /etc/docassemble/config.yml
+echo 'grant all on all tables in schema public to "www-data"; grant all on all sequences in schema public to "www-data";' | sudo -u postgres psql docassemble
+{% endhighlight %}
 
 In order for the "Sign in with Google" and "Sign in with Facebook"
 buttons to work, you will need to register your site on
@@ -268,15 +306,19 @@ connecting to the PostgreSQL database and the mail server.
 
 Restart Apache:
 
-    sudo /etc/init.d/apache2 restart
+{% highlight bash %}
+sudo /etc/init.d/apache2 restart
+{% endhighlight %}
 
 or, if you use systemd:
 
-    sudo systemctl restart apache2.service
+{% highlight bash %}
+sudo systemctl restart apache2.service
+{% endhighlight %}
 
 The system will be running at http://example.com/da.
 
-# Using different web servers and/or SQL database backends
+## Using different web servers and/or SQL database backends
 
 **docassemble** is not dependent on Apache or PostgreSQL.  Other web
 servers that can host Python WSGI applications (e.g., nginx with
@@ -289,13 +331,15 @@ not do fancy things with SQL, so most backends should work without a
 problem.  Any backend used must support column definitions with
 `server_default=db.func.now()`.
 
-# Upgrading
+# Upgrading docassemble
 
 To upgrade docassemble to the latest version, do:
 
-    cd docassemble
-    git pull
-    sudo ./compile.sh && sudo touch /var/lib/docassemble/docassemble.wsgi
+{% highlight bash %}
+cd docassemble
+git pull
+sudo ./compile.sh && sudo touch /var/lib/docassemble/docassemble.wsgi
+{% endhighlight %}
 
 Note that after making changes to docassemble interviews and Python
 code, it is not necessary to restart Apache.  Changing the
