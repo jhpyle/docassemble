@@ -37,7 +37,7 @@ def get_unique_name():
 class DAObject(object):
     def init(self, **kwargs):
         for key, value in kwargs.iteritems():
-            logmessage("Found key " + str(key) + " with value " + str(value))
+            #logmessage("Found key " + str(key) + " with value " + str(value))
             setattr(self, key, value)
         return
     def __init__(self, *args, **kwargs):
@@ -94,8 +94,8 @@ class DAList(DAObject):
             self.gathered = True
             del kwargs['elements']
         return super(DAList, self).init(**kwargs)
-    def appendObject(self, objectFunction):
-        newobject = objectFunction(self.instanceName + '[' + str(len(self.elements)) + ']')
+    def appendObject(self, objectFunction, **kwargs):
+        newobject = objectFunction(self.instanceName + '[' + str(len(self.elements)) + ']', **kwargs)
         self.elements.append(newobject)
         return newobject
     def append(self, value):

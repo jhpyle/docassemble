@@ -2,9 +2,6 @@
 modules:
   - docassemble.base.legal
 ---
-imports:
-  - us
----
 objects:
   - user: Individual
   - enemy: Individual

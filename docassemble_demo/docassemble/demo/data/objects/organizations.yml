@@ -1,0 +1,28 @@
+object: Organization
+module: docassemble.base.legal
+items:
+  - name: Community Legal Services
+    handles:
+      - Bankruptcy
+      - Wills
+    offices:
+      - address: 1424 Chestnut St
+        city: Philadelphia
+        state: PA
+        zip: 19102
+      - address: 1410 West Erie Ave
+        city: Philadelphia
+        state: PA
+        zip: 19140
+  - name: Philadelphia Legal Assistance
+    handles:
+      - Bankruptcy
+      - Wills
+      - Child Custody
+      - Child Support
+    offices:
+      - address: 718 Arch Street
+        unit: Suite 300N
+        city: Philadelphia
+        state: PA
+        zip: 19106

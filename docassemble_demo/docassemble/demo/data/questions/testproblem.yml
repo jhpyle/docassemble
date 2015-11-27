@@ -1,0 +1,42 @@
+---
+modules:
+  - docassemble.base.legal
+  - docassemble.demo.attorney
+---
+objects:
+  - user: Individual
+---
+initial: true
+code: |
+  update_info(user, 'user', current_info)
+---
+mandatory: true
+code: |
+  need(map_of_organizations)
+---
+sets: map_of_organizations
+question: Organizations that can help you
+subquestion:
+  ${ map_of(user, organizations_handling(legal_problem)) }
+---
+question: |
+  What is your legal problem?
+field: legal_problem
+choices:
+  - code: |
+      problem_types()
+---
+generic object: Individual
+question: |
+  Where ${ x.do_question('live') }?
+fields:
+  - Address: x.address.address
+  - Unit: x.address.unit
+    required: false
+  - City: x.address.city
+  - State: x.address.state
+    code: |
+      us.states.mapping('abbr', 'name')
+  - Zip: x.address.zip
+    required: false
+---

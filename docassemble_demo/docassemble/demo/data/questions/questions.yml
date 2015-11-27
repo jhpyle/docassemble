@@ -74,8 +74,6 @@ comment: |
   attribution text at the bottom of any page that uses one of the
   icons.
 ---
-imports:
-  - us
 comment: |
   This loads a Python module that we will need later when we ask the
   user for his or her address.  The module "us" provides a list of

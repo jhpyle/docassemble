@@ -12,9 +12,11 @@ import urllib
 import sys
 import threading
 import html2text
+import yaml
+import us
 from decimal import Decimal
 
-__all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'LatitudeLongitude', 'RoleChangeTracker', 'DATemplate', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'set_language', 'word', 'comma_list', 'ordinal', 'ordinal_number', 'need', 'nice_number', 'verb_past', 'verb_present', 'noun_plural', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'indefinite_article', 'today', 'capitalize', 'title_case', 'url_of', 'get_locale', 'set_locale', 'process_action', 'url_action', 'selections', 'get_info', 'set_info', 'user_lat_lon', 'location_known', 'location_returned', 'get_config', 'map_of']
+__all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'LatitudeLongitude', 'RoleChangeTracker', 'DATemplate', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'set_language', 'word', 'comma_list', 'ordinal', 'ordinal_number', 'need', 'nice_number', 'verb_past', 'verb_present', 'noun_plural', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'indefinite_article', 'today', 'capitalize', 'title_case', 'url_of', 'get_locale', 'set_locale', 'process_action', 'url_action', 'selections', 'get_info', 'set_info', 'user_lat_lon', 'location_known', 'location_returned', 'get_config', 'map_of', 'objects_from_file', 'us']
 
 class ThreadVariables(threading.local):
     user = None
@@ -114,8 +116,8 @@ class Court(DAObject):
 
 class Case(DAObject):
     def init(self, **kwargs):
-        self.initializeAttribute(name='defendant', objectType=PartyList)
-        self.initializeAttribute(name='plaintiff', objectType=PartyList)
+        self.initializeAttribute('defendant', PartyList)
+        self.initializeAttribute('plaintiff', PartyList)
         self.firstParty = self.plaintiff
         self.secondParty = self.defendant
         self.case_id = ""
@@ -216,12 +218,16 @@ class RoleChangeTracker(DAObject):
 class Name(DAObject):
     def full(self):
         return(self.text)
+    def defined(self):
+        return hasattr(self, 'text')
     def __str__(self):
         return(self.full())
     def __repr__(self):
         return(repr(self.full()))
 
 class IndividualName(Name):
+    def defined(self):
+        return hasattr(self, 'first')
     def full(self, middle='initial', use_suffix=True):
         names = [self.first]
         if hasattr(self, 'middle') and len(self.middle):
@@ -246,18 +252,21 @@ class IndividualName(Name):
 
 class Address(DAObject):
     def init(self, **kwargs):
-        self.initializeAttribute(name='location', objectType=LatitudeLongitude)
+        self.initializeAttribute('location', LatitudeLongitude)
         self.geolocated = False
         return super(Address, self).init(**kwargs)
     def __str__(self):
         return(self.block())
     def address_for_geolocation(self):
-        output = self.address + ", " + self.city + ", " + self.state
+        output = str(self.address) + ", " + str(self.city) + ", " + str(self.state)
         if hasattr(self, 'zip'):
-            output += " " + self.zip
+            output += " " + str(self.zip)
         return output
     def geolocate(self):
+        if self.geolocated:
+            return self.geolocate_success    
         the_address = self.address_for_geolocation()
+        logmessage("Trying to geolocate " + str(the_address))
         from pygeocoder import Geocoder
         google_config = get_config('google')
         if google_config and 'api key' in google_config:
@@ -266,7 +275,7 @@ class Address(DAObject):
             my_geocoder = Geocoder()
         results = my_geocoder.geocode(the_address)
         self.geolocated = True
-        if results.valid_address:
+        if len(results):
             self.geolocate_success = True
             self.location.gathered = True
             self.location.known = True
@@ -274,21 +283,24 @@ class Address(DAObject):
             self.location.longitude = results[0].coordinates[1]
             self.location.description = self.block()
         else:
-            logmessage("valid not ok")
+            logmessage("valid not ok: result count was " + str(len(results)))
             self.geolocate_success = False
         return self.geolocate_success
     def block(self):
-        output = self.address + " [NEWLINE] "
+        output = str(self.address) + " [NEWLINE] "
         if hasattr(self, 'unit') and self.unit:
-            output += self.unit + " [NEWLINE] "
-        output += self.city + ", " + self.state + " " + self.zip
+            output += str(self.unit) + " [NEWLINE] "
+        output += str(self.city) + ", " + str(self.state) + " " + str(self.zip)
         return(output)
 
 class Person(DAObject):
     def init(self, **kwargs):
-        self.initializeAttribute(name='name', objectType=Name)
-        self.initializeAttribute(name='address', objectType=Address)
-        self.initializeAttribute(name='location', objectType=LatitudeLongitude)
+        self.initializeAttribute('name', Name)
+        self.initializeAttribute('address', Address)
+        self.initializeAttribute('location', LatitudeLongitude)
+        if 'name' in kwargs:
+            self.name.text = kwargs['name']
+            del kwargs['name']
         self.roles = set()
         return super(Person, self).init(**kwargs)
     def map_info(self):
@@ -296,8 +308,12 @@ class Person(DAObject):
             if (self.address.location.gathered and self.address.location.known) or self.address.geolocate():
                 self.location = self.address.location
         if self.location.gathered and self.location.known:
-            the_info = self.name.full() + ' [NEWLINE] ' + self.location.description
-            return {'latitude': self.location.latitude, 'longitude': self.location.longitude, 'info': the_info}
+            if self.name.defined():
+                the_info = self.name.full()
+            else:
+                the_info = capitalize(self.object_name())
+            the_info += ' [NEWLINE] ' + self.location.description
+            return [{'latitude': self.location.latitude, 'longitude': self.location.longitude, 'info': the_info}]
         return None
     def identified(self):
         if hasattr(self.name, 'text'):
@@ -367,11 +383,11 @@ class Person(DAObject):
 
 class Individual(Person):
     def init(self, **kwargs):
-        self.initializeAttribute(name='name', objectType=IndividualName)
-        self.initializeAttribute(name='child', objectType=ChildList)
-        self.initializeAttribute(name='income', objectType=Income)
-        self.initializeAttribute(name='asset', objectType=Asset)
-        self.initializeAttribute(name='expense', objectType=Expense)
+        self.initializeAttribute('name', IndividualName)
+        self.initializeAttribute('child', ChildList)
+        self.initializeAttribute('income', Income)
+        self.initializeAttribute('asset', Asset)
+        self.initializeAttribute('expense', Expense)
         return super(Individual, self).init(**kwargs)
     def identified(self):
         if hasattr(self.name, 'first'):
@@ -471,7 +487,7 @@ class FinancialList(DAObject):
         self.gathering = False
         return super(FinancialList, self).init(**kwargs)
     def new(self, item, **kwargs):
-        self.initializeAttribute(name=item, objectType=Value)
+        self.initializeAttribute(item, Value)
         self.elements.add(item)
         for arg in kwargs:
             setattr(getattr(self, item), arg, kwargs[arg])
@@ -499,7 +515,7 @@ class PeriodicFinancialList(DAObject):
         self.gathering = False
         return super(PeriodicFinancialList, self).init(**kwargs)
     def new(self, item, **kwargs):
-        self.initializeAttribute(name=item, objectType=PeriodicValue)
+        self.initializeAttribute(item, PeriodicValue)
         self.elements.add(item)
         for arg in kwargs:
             setattr(getattr(self, item), arg, kwargs[arg])
@@ -535,6 +551,67 @@ class Value(DAObject):
 
 class PeriodicValue(Value):
     pass
+
+class Organization(Person):
+    def init(self, **kwargs):
+        self.initializeAttribute('office', DAList)
+        if 'offices' in kwargs:
+            if type(kwargs['offices']) is list:
+                for office in kwargs['offices']:
+                    if type(office) is dict:
+                        new_office = self.office.appendObject(Address, **office)
+                        new_office.geolocate()
+            del kwargs['offices']
+        return super(Organization, self).init(**kwargs)
+    def handles_problem(self, problem):
+        logmessage("Testing " + str(problem) + " against " + str(self.handles))
+        if hasattr(self, 'handles') and problem in self.handles:
+            return True
+        return False
+    def map_info(self):
+        response = list()
+        for office in self.office:
+            if (office.location.gathered and office.location.known) or office.geolocate():
+                if self.name.defined():
+                    the_info = self.name.full()
+                else:
+                    the_info = capitalize(self.object_name())
+                the_info += ' [NEWLINE] ' + office.location.description
+                response.append({'latitude': office.location.latitude, 'longitude': office.location.longitude, 'info': the_info})
+        if len(response):
+            return response
+        return None
+
+def objects_from_file(file_ref):
+    file_info = file_finder(file_ref)
+    if 'path' not in file_info:
+        raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' not found')
+    objects = list()
+    with open(file_info['fullpath'], 'r') as fp:
+        for document in yaml.load_all(fp):
+            if type(document) is not dict:
+                raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained a document that was not a YAML dictionary')
+            if len(document):
+                if not ('object' in document and 'items' in document):
+                    raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained a document that did not contain an object and items declaration')
+                if type(document['items']) is not list:
+                    raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained a document the items declaration for which was not a dictionary')
+                constructor = None
+                if document['object'] in globals():
+                    contructor = globals()[document['object']]
+                elif document['object'] in locals():
+                    contructor = locals()[document['object']]
+                if not constructor:
+                    if 'module' in document:
+                        new_module = __import__(document['module'], globals(), locals(), [document['object']], -1)
+                        constructor = getattr(new_module, document['object'], None)
+                if not constructor:
+                    raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained a document for which the object declaration, ' + str(document['object']) + ' could not be found')
+                for item in document['items']:
+                    if type(item) is not dict:
+                        raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained an item, ' + str(item) + ' that was not expressed as a dictionary')
+                    objects.append(constructor(**item))
+    return objects
 
 def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None, html=None, subject="", attachments=[]):
     from flask_mail import Message
@@ -611,20 +688,28 @@ def email_string(persons, include_name=None):
 
 def map_of(*pargs, **kwargs):
     the_map = {'markers': list()}
+    all_args = list()
     for arg in pargs:
+        if type(arg) is list:
+            all_args.extend(arg)
+        else:
+            all_args.append(arg)
+    for arg in all_args:
         if isinstance(arg, DAObject):
-            marker = arg.map_info()
-            logmessage("Marker is " + str(marker))
-            if marker:
-                if 'info' in marker and marker['info']:
-                    marker['info'] = markdown_to_html(marker['info'], trim=True)
-                the_map['markers'].append(marker)
+            markers = arg.map_info()
+            if markers:
+                for marker in markers:
+                    if arg is this_thread.user:
+                        marker['icon'] = 'home'
+                    if 'info' in marker and marker['info']:
+                        marker['info'] = markdown_to_html(marker['info'], trim=True)
+                    the_map['markers'].append(marker)
     if 'center' in kwargs:
         the_center = kwargs['center']
         if callable(getattr(the_center, 'map_info', None)):
-            marker = the_center.map_info()
-            if marker:
-                the_map['center'] = marker
+            markers = the_center.map_info()
+            if markers:
+                the_map['center'] = markers[0]
     if 'center' not in the_map and len(the_map['markers']):
         the_map['center'] = the_map['markers'][0]
     if len(the_map['markers']) or 'center' in the_map:
