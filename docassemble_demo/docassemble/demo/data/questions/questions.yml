@@ -372,7 +372,7 @@ fields:
       <link rel="stylesheet" href="${ url_of('docassemble.demo:data/static/my.css') }">
   - Date of Injury: injury_date
     datatype: date
-comment: >-
+comment: |
   You can embed raw HTML into a list of fields using the 'html' key.
   You can also expand the capabilities of what you do with this HTML by
   adding 'script' and 'css' keys.
@@ -392,7 +392,7 @@ code: |
   assets_to_ask_about = ['checking', 'savings', 'stocksbonds']
   income_to_ask_about = ['employment', 'selfemployment', 'ssi', 'tanf']
   for asset_item in assets_to_ask_about:
-    x.asset.new(asset_item, period=12)
+    x.asset.new(asset_item)
   for income_item in income_to_ask_about:
     x.income.new(income_item, period=12)
   x.asset.gathering = False
@@ -497,7 +497,7 @@ fields:
       How would you describe the general *milieu* of ${ x.possessive('abode') }?
   - no label: x.address.milieu
     required: false
-comment: >-
+comment: |
   In this question, the type of home uses a "radio" selector.  The
   address type will be set to one of "Apartment," "Leased house,"
   "Owned house," or "Mobile home."  Because "shuffle" is true, the
@@ -630,7 +630,7 @@ attachments:
     description: |
       This is a *very* helpful advice letter.
     metadata:
-      FirstHeaderRight: >-
+      FirstHeaderRight: |
         Example, LLP [BR] 
         123 Main Street, Suite 1500 [BR]
         Philadelphia, PA 19102

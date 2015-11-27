@@ -1,0 +1,22 @@
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - opponent: Person
+---
+question: |
+  What are you fighting?
+field: opponent.name.text
+choices:
+  - the Empire
+  - the Rebel Alliance
+---
+mandatory: true
+question: |
+  You are fighting ${ opponent.name.full() }.
+subquestion: |
+  Your enemy is ${ opponent.name }.
+
+  Your opponent is ${ opponent }.
+---

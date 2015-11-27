@@ -17,10 +17,11 @@ import urllib
 import codecs
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config']
 
 default_language = 'en'
 default_locale = 'US.utf8'
+daconfig = dict()
 
 class ThreadVariables(threading.local):
     language = default_language
@@ -197,6 +198,13 @@ def update_word_collection(lang, defs):
         word_collection[lang][word] = translation
     return
 
+def set_da_config(config):
+    global daconfig
+    daconfig = config
+
+def get_config(key):
+    return daconfig.get(key, None)
+    
 def set_default_language(lang):
     global default_language
     default_language = lang

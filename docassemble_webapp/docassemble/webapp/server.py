@@ -107,6 +107,7 @@ docassemble.base.util.set_default_language(daconfig.get('language', 'en'))
 docassemble.base.util.set_default_locale(daconfig.get('locale', 'US.utf8'))
 docassemble.base.util.set_language(daconfig.get('language', 'en'))
 docassemble.base.util.set_locale(daconfig.get('locale', 'US.utf8'))
+docassemble.base.util.set_da_config(daconfig)
 docassemble.base.util.update_locale()
 ROOT = daconfig.get('root', '/')
 if 'currency symbol' in daconfig:
@@ -702,7 +703,7 @@ def index():
         #logmessage("user dict has " + str(user_dict['_internal']['tracker']) + " and post data has " + post_data['_tracker'])
         something_changed = True
     if '_track_location' in post_data and post_data['_track_location']:
-        #logmessage("Found track location of " + post_data['_track_location'])
+        logmessage("Found track location of " + post_data['_track_location'])
         the_location = json.loads(post_data['_track_location'])
     else:
         the_location = None

@@ -1,10 +1,12 @@
 from docassemble.base.core import DAObject, DAList, DAFile, DAFileCollection, DAFileList, DATemplate, selections
-from docassemble.base.util import comma_and_list, get_language, set_language, word, comma_list, ordinal, ordinal_number, need, nice_number, possessify, verb_past, verb_present, noun_plural, space_to_underscore, force_ask, period_list, name_suffix, currency, indefinite_article, today, nodoublequote, capitalize, title_case, url_of, do_you, does_a_b, your, her, his, the, in_the, a_in_the_b, of_the, get_locale, set_locale, process_action, url_action, get_info, set_info
+from docassemble.base.util import comma_and_list, get_language, set_language, word, comma_list, ordinal, ordinal_number, need, nice_number, possessify, verb_past, verb_present, noun_plural, space_to_underscore, force_ask, period_list, name_suffix, currency, indefinite_article, today, nodoublequote, capitalize, title_case, url_of, do_you, does_a_b, your, her, his, the, in_the, a_in_the_b, of_the, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config
 from docassemble.base.filter import file_finder, url_finder, mail_variable, markdown_to_html
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
 from datetime import date
+import json
 import inspect
+import codecs
 import re
 import urllib
 import sys
@@ -12,7 +14,7 @@ import threading
 import html2text
 from decimal import Decimal
 
-__all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'LatitudeLongitude', 'RoleChangeTracker', 'DATemplate', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'set_language', 'word', 'comma_list', 'ordinal', 'ordinal_number', 'need', 'nice_number', 'verb_past', 'verb_present', 'noun_plural', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'indefinite_article', 'today', 'capitalize', 'title_case', 'url_of', 'get_locale', 'set_locale', 'process_action', 'url_action', 'selections', 'get_info', 'set_info', 'user_lat_lon', 'location_known', 'location_returned']
+__all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'LatitudeLongitude', 'RoleChangeTracker', 'DATemplate', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'set_language', 'word', 'comma_list', 'ordinal', 'ordinal_number', 'need', 'nice_number', 'verb_past', 'verb_present', 'noun_plural', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'indefinite_article', 'today', 'capitalize', 'title_case', 'url_of', 'get_locale', 'set_locale', 'process_action', 'url_action', 'selections', 'get_info', 'set_info', 'user_lat_lon', 'location_known', 'location_returned', 'get_config', 'map_of']
 
 class ThreadVariables(threading.local):
     user = None
@@ -57,6 +59,7 @@ class LatitudeLongitude(DAObject):
     def init(self, **kwargs):
         self.gathered = False
         self.known = False
+        self.description = ""
         return super(LatitudeLongitude, self).init(**kwargs)
     def status(self):
         #logmessage("got to status")
@@ -71,7 +74,7 @@ class LatitudeLongitude(DAObject):
             else:
                 return True
     def set_to_current(self):
-        #logmessage("set to current")
+        logmessage("set to current")
         if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and type(this_thread.current_info['user']['location']) is dict:
             if 'latitude' in this_thread.current_info['user']['location'] and 'longitude' in this_thread.current_info['user']['location']:
                 self.latitude = this_thread.current_info['user']['location']['latitude']
@@ -83,6 +86,7 @@ class LatitudeLongitude(DAObject):
                 self.known = False
                 #logmessage("known is false")
             self.gathered = True
+            self.description = str(self)
         return
     def __str__(self):
         if hasattr(self, 'latitude') and hasattr(self, 'longitude'):
@@ -106,38 +110,44 @@ class Court(DAObject):
     def __str__(self):
         return(self.name)
     def __repr__(self):
-        return(self.name)
+        return(repr(self.name))
 
 class Case(DAObject):
     def init(self, **kwargs):
-        self.initializeAttribute(name='plaintiff', objectType=PartyList)
         self.initializeAttribute(name='defendant', objectType=PartyList)
+        self.initializeAttribute(name='plaintiff', objectType=PartyList)
         self.firstParty = self.plaintiff
         self.secondParty = self.defendant
         self.case_id = ""
         return super(Case, self).init(**kwargs)
     def role_of(self, party):
-        for partyname in ['plaintiff', 'defendant', 'petitioner', 'respondent']:
-            if hasattr(self, partyname) and getattr(self, partyname).gathered:
+        for partyname in dir(self):
+            if not isinstance(getattr(self, partyname), PartyList):
+                continue
+            if getattr(self, partyname).gathered:
                 for indiv in getattr(self, partyname):
                     if indiv is party:
                         return partyname
         return 'third party'
     def all_known_people(self):
         output_list = list()
-        for partyname in ['plaintiff', 'defendant', 'petitioner', 'respondent']:
-            if hasattr(self, partyname):
-                for party in getattr(self, partyname).elements:
-                    if party not in output_list and party.identified():
-                        output_list.append(party)
+        for partyname in dir(self):
+            if not isinstance(getattr(self, partyname), PartyList):
+                continue
+            for party in getattr(self, partyname).elements:
+                if party not in output_list and party.identified():
+                    output_list.append(party)
+                    if hasattr(party, 'child'):
                         for child in party.child.elements:
                             if child not in output_list and child.identified():
                                 output_list.append(child)
         return(output_list)
     def parties(self):
         output_list = list()
-        for partyname in ['plaintiff', 'defendant', 'petitioner', 'respondent']:
-            if hasattr(self, partyname) and getattr(self, partyname).gathered:
+        for partyname in dir(self):
+            if not isinstance(getattr(self, partyname), PartyList):
+                continue
+            if getattr(self, partyname).gathered:
                 for indiv in getattr(self, partyname):
                     if indiv not in output_list:
                         output_list.append(indiv)
@@ -147,12 +157,11 @@ class Jurisdiction(DAObject):
     pass
 
 class Document(DAObject):
-    pass
-
-class LegalFiling(Document):
     def init(self, **kwargs):
         self.title = None
         return super(Document, self).init(**kwargs)
+
+class LegalFiling(Document):
     def caption(self):
         self.case.firstParty.gathered
         self.case.secondParty.gathered
@@ -160,10 +169,10 @@ class LegalFiling(Document):
         output += "[BOLDCENTER] " + (word("In the") + " " + self.case.court.name).upper() + "\n\n"
         output += "[BEGIN_CAPTION]"
         output += comma_and_list(self.case.firstParty.elements, comma_string=",[NEWLINE]", and_string=word('and'), before_and=" ", after_and='[NEWLINE]') + ",[NEWLINE]"
-        output += "[TAB][TAB]" + self.case.firstParty.as_noun().capitalize() + "[NEWLINE] "
+        output += "[TAB][TAB]" + word(self.case.firstParty.as_noun()).capitalize() + "[NEWLINE] "
         output += "[SKIPLINE][TAB]" + word('v.') + " [NEWLINE][SKIPLINE] "
         output += comma_and_list(self.case.secondParty.elements, comma_string=",[NEWLINE]", and_string=word('and'), before_and=" ", after_and='[NEWLINE]') + ",[NEWLINE]"
-        output += "[TAB][TAB]" + self.case.secondParty.as_noun().capitalize()
+        output += "[TAB][TAB]" + word(self.case.secondParty.as_noun()).capitalize()
         output += "[VERTICAL_LINE]"
         output += word('Case No.') + " " + self.case.case_id
         output += "[END_CAPTION]\n\n"
@@ -210,7 +219,7 @@ class Name(DAObject):
     def __str__(self):
         return(self.full())
     def __repr__(self):
-        return(self.full())
+        return(repr(self.full()))
 
 class IndividualName(Name):
     def full(self, middle='initial', use_suffix=True):
@@ -234,21 +243,46 @@ class IndividualName(Name):
         if hasattr(self, 'suffix'):
             output += " " + self.suffix
         return output
-    def __str__(self):
-        return(self.full())
-    def __repr__(self):
-        return(self.full())
 
 class Address(DAObject):
+    def init(self, **kwargs):
+        self.initializeAttribute(name='location', objectType=LatitudeLongitude)
+        self.geolocated = False
+        return super(Address, self).init(**kwargs)
     def __str__(self):
         return(self.block())
+    def address_for_geolocation(self):
+        output = self.address + ", " + self.city + ", " + self.state
+        if hasattr(self, 'zip'):
+            output += " " + self.zip
+        return output
+    def geolocate(self):
+        the_address = self.address_for_geolocation()
+        from pygeocoder import Geocoder
+        google_config = get_config('google')
+        if google_config and 'api key' in google_config:
+            my_geocoder = Geocoder(api_key=google_config['api key'])
+        else:
+            my_geocoder = Geocoder()
+        results = my_geocoder.geocode(the_address)
+        self.geolocated = True
+        if results.valid_address:
+            self.geolocate_success = True
+            self.location.gathered = True
+            self.location.known = True
+            self.location.latitude = results[0].coordinates[0]
+            self.location.longitude = results[0].coordinates[1]
+            self.location.description = self.block()
+        else:
+            logmessage("valid not ok")
+            self.geolocate_success = False
+        return self.geolocate_success
     def block(self):
         output = self.address + " [NEWLINE] "
         if hasattr(self, 'unit') and self.unit:
             output += self.unit + " [NEWLINE] "
         output += self.city + ", " + self.state + " " + self.zip
         return(output)
-    pass
 
 class Person(DAObject):
     def init(self, **kwargs):
@@ -257,6 +291,18 @@ class Person(DAObject):
         self.initializeAttribute(name='location', objectType=LatitudeLongitude)
         self.roles = set()
         return super(Person, self).init(**kwargs)
+    def map_info(self):
+        if not self.location.known:
+            if (self.address.location.gathered and self.address.location.known) or self.address.geolocate():
+                self.location = self.address.location
+        if self.location.gathered and self.location.known:
+            the_info = self.name.full() + ' [NEWLINE] ' + self.location.description
+            return {'latitude': self.location.latitude, 'longitude': self.location.longitude, 'info': the_info}
+        return None
+    def identified(self):
+        if hasattr(self.name, 'text'):
+            return True
+        return False
     def __setattr__(self, attrname, value):
         if attrname == 'name' and type(value) == str:
             self.name.text = value
@@ -422,6 +468,7 @@ class ChildList(DAList):
 class FinancialList(DAObject):
     def init(self, **kwargs):
         self.elements = set()
+        self.gathering = False
         return super(FinancialList, self).init(**kwargs)
     def new(self, item, **kwargs):
         self.initializeAttribute(name=item, objectType=Value)
@@ -429,10 +476,19 @@ class FinancialList(DAObject):
         for arg in kwargs:
             setattr(getattr(self, item), arg, kwargs[arg])
     def total(self):
+        if self.gathered:
+            result = 0
+            for item in self.elements:
+                if getattr(self, item).exists:
+                    result += Decimal(getattr(self, item).value)
+            return(result)
+    def total_gathered(self):
         result = 0
         for item in self.elements:
-            if getattr(self, item).exists:
-                result += Decimal(getattr(self, item).value)
+            elem = getattr(self, item)
+            if hasattr(elem, 'exists') and hasattr(elem, 'value'):
+                if elem.exists:
+                    result += Decimal(elem.value)
         return(result)
     def __str__(self):
         return self.total()
@@ -440,6 +496,7 @@ class FinancialList(DAObject):
 class PeriodicFinancialList(DAObject):
     def init(self, **kwargs):
         self.elements = set()
+        self.gathering = False
         return super(PeriodicFinancialList, self).init(**kwargs)
     def new(self, item, **kwargs):
         self.initializeAttribute(name=item, objectType=PeriodicValue)
@@ -447,12 +504,19 @@ class PeriodicFinancialList(DAObject):
         for arg in kwargs:
             setattr(getattr(self, item), arg, kwargs[arg])
     def total(self):
-        if not self.gathering:
-            self.gathered
+        if self.gathered:
+            result = 0
+            for item in self.elements:
+                if getattr(self, item).exists:
+                    result += Decimal(getattr(self, item).value) * float(getattr(self, item).period)
+            return(result)
+    def total_gathered(self):
         result = 0
         for item in self.elements:
-            if getattr(self, item).exists:
-                result += Decimal(getattr(self, item).value) * int(getattr(self, item).period)
+            elem = getattr(self, item)
+            if hasattr(elem, 'exists') and hasattr(elem, 'value') and hasattr(elem, 'period'):
+                if elem.exists:
+                    result += Decimal(elem.value * float(elem.period))
         return(result)
     def __str__(self):
         return self.total()
@@ -544,3 +608,25 @@ def email_string(persons, include_name=None):
         else:
             result.append(str(person))
     return result
+
+def map_of(*pargs, **kwargs):
+    the_map = {'markers': list()}
+    for arg in pargs:
+        if isinstance(arg, DAObject):
+            marker = arg.map_info()
+            logmessage("Marker is " + str(marker))
+            if marker:
+                if 'info' in marker and marker['info']:
+                    marker['info'] = markdown_to_html(marker['info'], trim=True)
+                the_map['markers'].append(marker)
+    if 'center' in kwargs:
+        the_center = kwargs['center']
+        if callable(getattr(the_center, 'map_info', None)):
+            marker = the_center.map_info()
+            if marker:
+                the_map['center'] = marker
+    if 'center' not in the_map and len(the_map['markers']):
+        the_map['center'] = the_map['markers'][0]
+    if len(the_map['markers']) or 'center' in the_map:
+        return '[MAP ' + codecs.encode(json.dumps(the_map).encode('utf-8'), 'base64').decode().replace('\n', '') + ']'
+    return '(Unable to display map)'

@@ -1,18 +1,18 @@
 ---
 metadata:
-  description: >-
+  description: |
     These are basic questions common to a variety of scenarios
   authors:
     - name: Jonathan Pyle
       organization: none
   revision_date: 2015-10-25
-comment: >-
+comment: |
   A "metadata" section contains information about who wrote the
   YAML file and how it is intended to be used.
 ---
 modules:
   - docassemble.base.legal
-comment: >-
+comment: |
   A "modules" section imports functions from Python modules.  The
   docassemble.base.legal module defines some object classes and functions
   that are useful in legal applications.
@@ -27,7 +27,7 @@ code: |
     user = client
     role = 'client'
   update_info(user, role, current_info)
-comment: >-
+comment: |
   The default role is "client" and an optional role is "advocate."
   Unless otherwise specified, all questions require the user to be a
   "client."  The user is assumed to have the "advocate" role in this
@@ -59,7 +59,7 @@ subquestion: |
 decoration: exit
 buttons:
   - Exit: leave
-comment: >-
+comment: |
   The "event" declaration acts like "sets."  When **docassemble**
   needs to ask a question that requires a role other than the user's
   role, it displays a special message for the user.  You need to
@@ -75,7 +75,7 @@ objects:
   - pleading: LegalFiling
   - jurisdiction: Jurisdiction
   - court: Court
-comment: >-
+comment: |
   An "objects" section defines variables that are docassemble objects.
   The object types here are defined in the docassemble.base.core and
   docassemble.base.legal modules.
@@ -84,7 +84,7 @@ code: |
   court.jurisdiction = jurisdiction
   case.court = court
   pleading.case = case
-comment: >-
+comment: |
   This code sets some basic relations among the objects created in the
   objects block of this YAML file.
 ---
@@ -116,18 +116,18 @@ image sets:
       male: male244.svg
       female: female243.svg
       map: map32.svg
-comment: >-
+comment: |
   Here we pre-define some icon files so that we can easily refer to
   them later.  These files are located in the docassemble.base package
   in the subdirectory docassemble/base/data/static.
 ---
 generic object: Individual
-question: >-
+question: |
   What is ${ x.possessive('date of birth') }?
 fields:
   - Date of Birth: x.birthdate
     datatype: date
-comment: >-
+comment: |
   docassemble allows you to write "generic" questions.  For example,
   if your code uses a variable called user.birthdate, docassemble will
   first look for a question that sets user.birthdate specifically, but
@@ -165,7 +165,7 @@ choices:
   - Single: Single
   - Divorced: Divorced
   - "*Separated*": Separated
-comment: >-
+comment: |
   This is an example of a multiple-choice question.  Each of the
   choices can be a key/value pair, or it can be a single text item.
   If the choice is a key/value pair, the key is the label that is
@@ -190,7 +190,7 @@ signature: x.signature
 need: user_understands_how_to_use_signature_feature
 under: |
   ${ x.name }
-comment: >-
+comment: |
   docassemble can collect signatures from users, who can write their
   signature with their finger on a touchscreen device, or use a mouse
   or trackpad.  The signatures can be added to documents.
@@ -198,13 +198,13 @@ comment: >-
 template: blank_signature
 content: |
   \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
-comment: >-
+comment: |
   This template can be used for a blank line that someone might sign.
 ---
 template: empty_signature
 content: |
   \_\_\_[Your signature here]\_\_\_
-comment: >-
+comment: |
   This template can be used in place of a user's signature.  It is a
   good practice to show users where their signature would go on a
   document before the user is asked for his or her signature.
@@ -229,7 +229,7 @@ buttons:
       generic object: Individual
       code: |
         force_ask('x.signature')
-comment: >-
+comment: |
   Note that in order for code or a question embedded within
   buttons/choices to use the special variable "x," you need to declare
   a generic object within the embedded code or question.
@@ -240,14 +240,14 @@ question: |
 yesno: x.is_citizen
 ---
 field: user_understands_no_attorney_client_relationship
-question: >-
+question: |
   Your use of this system does not mean that you have a lawyer.  Do
   you understand this?
 buttons:
   - "I understand": understands
   - code: |
       [{'does not understand':"I do not understand"}, {'unsure':"I'm not sure"}]
-comment: >-
+comment: |
   You can specify whether you want the multiple choices to appear as
   buttons by using the word "buttons" instead of the word "choices."
 
@@ -256,12 +256,12 @@ comment: >-
   evaluated at the time the question is asked.
 ---
 generic object: Individual
-question: >-
+question: |
   What is ${ x.possessive('e-mail address') }?
 fields:
   - E-mail: x.email
     datatype: email
-comment: >-
+comment: |
   The datatype "email" presents a text box that is like ordinary text
   boxes except that validation is applied that checks to make sure the
   e-mail address is valid.  Also, on supporting mobile web browsers,
@@ -269,14 +269,14 @@ comment: >-
   available).
 ---
 generic object: Individual
-question: >-
+question: |
   What is ${ x.possessive('gender') }?
 field: x.gender
 choices:
   - "Male :male:": male
   - "Female :female:": female
   - Other: other
-comment: >-
+comment: |
   You can include images "emoji-style" by putting colons around the
   image name.  This feature works within labels as well as within question
   text.
@@ -295,7 +295,7 @@ fields:
     required: False
     code: |
       name_suffix()
-comment: >-
+comment: |
   If the object does not have a name yet, generic questions can refer
   to it by the name of the variable itself.  For example, suppose you
   create an object, case.judge, with the class of Individual.  If the
@@ -317,7 +317,7 @@ fields:
     required: False
     code: |
       name_suffix()
-comment: >-
+comment: |
   Generic questions can also use indices, for example to fill out the
   names of a list of people.  (E.g., case.plaintiff.)
 
@@ -345,7 +345,7 @@ fields:
     required: False
     code: |
       name_suffix()
-comment: >-
+comment: |
   This illustrates the use of the "possessive" method of the class
   Individual.  Depending on who x is, this question will ask different
   things:
@@ -367,11 +367,11 @@ code: |
   x.child.gathered = True
 ---
 generic object: Individual
-question: >-
+question: |
   ${ x.do_question('have', capitalize=True) } any children?
 yesno: x.has_children
 decoration: children
-comment: >-
+comment: |
   This illustrates the use of the "do_question" method of the class
   Individual.  Depending on who x is, this question will ask different
   things:
@@ -388,7 +388,7 @@ question: |
   ${ x.do_question('have', capitalize=True) } any other children?
 yesno: x.has_other_children
 decoration: children
-comment: >-
+comment: |
   This illustrates the use of various methods of the class Individual.
   Depending on who x is, this question will ask different things:
 
@@ -404,7 +404,7 @@ question: |
   ${ x.number_gathered_as_word() } ${ x.as_noun() }, ${ x }.
   Is there another ${ x.as_singular_noun() }?
 yesno: x.there_is_another
-comment: >-
+comment: |
 
   It is possible to write highly generalized "generic" questions that
   use functions that ask questions of users based on variable names
@@ -439,7 +439,7 @@ fields:
     datatype: number
     code: |
       period_list()
-comment: >-
+comment: |
   If you do not want a field to be labeled, you can use "" as the
   label name.
 
@@ -526,7 +526,7 @@ fields:
     datatype: yesnowide
   - Cash assistance: x.income.tanf.exists
     datatype: yesnowide
-comment: >-
+comment: |
   The datatype "yesnowide" is just like the data type "yesno" except
   that it fills the width of the form rather than aligning with other
   fields that use labels.

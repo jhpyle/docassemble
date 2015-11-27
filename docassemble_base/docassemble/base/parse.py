@@ -189,6 +189,7 @@ class InterviewStatus(object):
         self.attributions = set()
         self.seeking = list()
         self.tracker = kwargs.get('tracker', -1)
+        self.maps = list()
         self.attachments = None
     def populate(self, question_result):
         self.question = question_result['question']
@@ -930,6 +931,8 @@ class Question:
         defs = list()
         options = dict()
         if type(target) is dict:
+            if 'language' in target:
+                options['language'] = target['language']
             if 'filename' not in target:
                 target['filename'] = word("Document")
             if 'name' not in target:
@@ -1200,6 +1203,11 @@ class Question:
                     return(target.follow_multiple_choice(user_dict))
         return(self)
     def make_attachment(self, attachment, user_dict, **kwargs):
+        if 'language' in attachment['options']:
+            old_language = docassemble.base.util.get_language()
+            docassemble.base.util.set_language(attachment['options']['language'])
+        else:
+            old_language = None
         result = {'name': attachment['name'].text(user_dict), 'filename': attachment['filename'].text(user_dict), 'description': attachment['description'].text(user_dict), 'valid_formats': attachment['valid_formats']}
         result['markdown'] = dict();
         result['content'] = dict();
@@ -1271,8 +1279,9 @@ class Question:
                 string = variable_string + " = DAFile('" + variable_string + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
                 #logmessage("Executing " + string + "\n")
                 exec(string, user_dict)
+        if old_language is not None:
+            docassemble.base.util.set_language(old_language)
         return(result)
-
 
 def interview_source_from_string(path, **kwargs):
     if path is None:
@@ -1580,7 +1589,7 @@ class Interview:
                             question.mark_as_answered(user_dict)
                             return({'type': 'continue'})
                         if question.question_type == "template":
-                            exec(question.fields[0].saveas + ' = DATemplate(' + "'" + question.fields[0].saveas + "', content=" + '"""' + question.content.text(user_dict).rstrip().encode('unicode_escape') + '""", subject="""' + question.subcontent.text(user_dict).rstrip().encode('unicode_escape') + '""")', user_dict)
+                            exec(question.fields[0].saveas + ' = DATemplate(' + "'" + question.fields[0].saveas + "', content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ')', user_dict)
                             #question.mark_as_answered(user_dict)
                             return({'type': 'continue'})
                         if question.question_type == 'attachments':

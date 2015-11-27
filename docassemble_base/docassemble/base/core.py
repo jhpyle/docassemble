@@ -48,6 +48,7 @@ class DAObject(object):
             thename = get_unique_name()
             self.has_nonrandom_instance_name = False
         self.instanceName = thename
+        self.attrList = list()
         self.init(**kwargs)
     def set_instance_name(self, thename):
         if not self.has_nonrandom_instance_name:
@@ -56,6 +57,8 @@ class DAObject(object):
         else:
             logmessage("Not resetting name of " + self.instanceName)
         return
+    def map_info(self):
+        return None
     def __getattr__(self, thename):
         if hasattr(self, thename) or thename == "__getstate__" or thename == "__slots__":
             return(object.__getattribute__(self, thename))
@@ -73,8 +76,13 @@ class DAObject(object):
             return
         else:
             object.__setattr__(self, name, objectType(self.instanceName + "." + name, **kwargs))
+            self.attrList.append(name)
+    def attribute_defined(self, name):
+        return hasattr(self, name)
     def __str__(self):
         return self.object_name()
+    def __dir__(self):
+        return self.attrList
             
 class DAList(DAObject):
     def init(self, **kwargs):
@@ -189,9 +197,9 @@ class DAFile(DAObject):
         if 'filename' in kwargs:
             self.filename = kwargs['filename']
         if 'mimetype' in kwargs:
-            self.filename = kwargs['mimetype']
+            self.mimetype = kwargs['mimetype']
         if 'extension' in kwargs:
-            self.filename = kwargs['extension']
+            self.extension = kwargs['extension']
         if 'number' in kwargs:
             self.number = kwargs['number']
             self.ok = True
@@ -222,10 +230,7 @@ class DAFileList(DAList):
         output = ''
         for element in self.elements:
             if element.ok:
-                if width is not None:
-                    output += '[FILE ' + str(element.number) + ', ' + str(width) + ']' + "\n"
-                else:
-                    output += '[FILE ' + str(element.number) + ']' + "\n"
+                output += element.show(width=width)
         return output
 
 class DATemplate(DAObject):

@@ -408,7 +408,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                 multiple_formats = True
             else:
                 multiple_formats = False
-            output += '<div><h3>' + markdown_to_html(attachment['name'], trim=True) + '</h3></div>'
+            output += '<div><h3>' + markdown_to_html(attachment['name'], trim=True, status=status) + '</h3></div>'
             if attachment['description']:
                 output += '<div><p><em>' + markdown_to_html(attachment['description'], status=status) + '</em></p></div>'
             output += '<div class="tabbable"><ul class="nav nav-tabs">'
@@ -557,15 +557,61 @@ $( document ).ready(function() {
 });
 </script>"""
         extra_scripts.append(track_js)
-#     if False and uses_audio_video:
-#         extra_scripts.append('<script src="' + url_for('static', filename='audiojs/audiojs/audio.min.js') + '"></script>')
-#         run_audiojs = """\
-# <script>
-#   audiojs.events.ready(function() {
-#     var as = audiojs.createAll();
-#   });
-# </script>"""
-#         extra_scripts.append(run_audiojs)
+    if len(status.maps):
+        map_js = """\
+<script>
+  $(window).ready(daUpdateHeight);
+  $(window).resize(daUpdateHeight);
+  function daUpdateHeight(){
+    $(".googleMap").each(function(){
+      var size = $( this ).width();
+      $( this ).css('height', size);
+    });
+  }
+  function daAddMap(map_num, center_lat, center_lon){
+    var map = new google.maps.Map(document.getElementById("map" + map_num), {
+      zoom: 11,
+      center: new google.maps.LatLng(center_lat, center_lon),
+      mapTypeId: google.maps.MapTypeId.ROADMAP
+    });
+    var infowindow = new google.maps.InfoWindow();
+    return({map: map, infowindow: infowindow});
+  }
+  function daAddMarker(map, lat, lon, info){
+    marker = new google.maps.Marker({
+      position: new google.maps.LatLng(lat, lon),
+      map: map.map
+    });
+    if(info){
+      google.maps.event.addListener(marker, 'click', (function(marker, info) {
+        return function() {
+          map.infowindow.setContent(info);
+          map.infowindow.open(map.map, marker);
+        }
+      })(marker, info));
+    }
+    return marker;
+  }
+  function daInitMap(){
+    maps = [];
+    map_info = [""" + ", ".join(status.maps) + """];
+    map_info_length = map_info.length;
+    for (var i = 0; i < map_info_length; i++){
+      the_map = map_info[i];
+      var bounds = new google.maps.LatLngBounds();
+      maps[i] = daAddMap(i, the_map.center.latitude, the_map.center.longitude);
+      marker_length = the_map.markers.length;
+      for (var j = 0; j < marker_length; j++){
+        var new_marker = daAddMarker(maps[i], the_map.markers[j].latitude, the_map.markers[j].longitude, the_map.markers[j].info);
+        bounds.extend(new_marker.getPosition());
+      }
+      maps[i].map.fitBounds(bounds);
+    }
+  }
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?signed_in=true&callback=daInitMap"></script>
+"""
+        extra_scripts.append(map_js)
     return output
 
 def noquote(string):

@@ -3,6 +3,7 @@ import re
 import os
 import markdown
 import mimetypes
+import codecs
 import docassemble.base.util
 import docassemble.base.filter
 from docassemble.base.pandoc import Pandoc
@@ -22,6 +23,7 @@ gt_match = re.compile(r'>')
 amp_match = re.compile(r'&')
 emoji_match = re.compile(r':([^ ]+):')
 extension_match = re.compile(r'\.[a-z]+$')
+map_match = re.compile(r'\[MAP ([^\]]+)\]', flags=re.DOTALL)
 
 def set_default_page_width(width):
     global DEFAULT_PAGE_WIDTH
@@ -132,8 +134,9 @@ def rtf_filter(text, metadata=dict()):
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
     text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
     text = re.sub(r'\[FILE ([^,\]]+)\]', image_as_rtf, text)
-    text = re.sub(r'\[YOUTUBE ([^,\]]+)\]', '', text)
-    text = re.sub(r'\[VIMEO ([^,\]]+)\]', '', text)
+    text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
+    text = re.sub(r'\[YOUTUBE ([^\]]+)\]', '', text)
+    text = re.sub(r'\[VIMEO ([^\]]+)\]', '', text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', rtf_caption_table, text)
     text = re.sub(r'\[NBSP\]', r'\\~ ', text)
     text = re.sub(r'\[ENDASH\]', r'{\\endash}', text)
@@ -188,8 +191,9 @@ def pdf_filter(text, metadata=dict()):
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', emoji_include_string, text)
     text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_include_string, text)
     text = re.sub(r'\[FILE ([^,\]]+)\]', image_include_string, text)
-    text = re.sub(r'\[YOUTUBE ([^,\]]+)\]', '', text)
-    text = re.sub(r'\[VIMEO ([^,\]]+)\]', '', text)
+    text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
+    text = re.sub(r'\[YOUTUBE ([^\]]+)\]', '', text)
+    text = re.sub(r'\[VIMEO ([^\]]+)\]', '', text)
     text = re.sub(r'\\clearpage *\\clearpage', r'\\clearpage', text)
     text = re.sub(r'\[INDENTATION\]', r'\\setlength{\\parindent}{0.5in}\\setlength{\\RaggedRightParindent}{\\parindent}', text)    
     text = re.sub(r'\[NOINDENTATION\]', r'\\setlength{\\parindent}{0in}\\setlength{\\RaggedRightParindent}{\\parindent}', text)    
@@ -214,14 +218,16 @@ def pdf_filter(text, metadata=dict()):
     text = re.sub(r'\[BOLDCENTER\] *(.+?)\n\n', boldcenter_pdf, text, flags=re.MULTILINE | re.DOTALL)
     return(text)
 
-def html_filter(text):
+def html_filter(text, status=None):
     text = text + "\n\n"
     text = re.sub(r'^[|] (.*)$', r'\1<br>', text, flags=re.MULTILINE)
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', emoji_url_string, text)
     text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_url_string, text)
     text = re.sub(r'\[FILE ([^,\]]+)\]', image_url_string, text)
-    text = re.sub(r'\[YOUTUBE ([^,\]]+)\]', r'<iframe width="420" height="315" src="https://www.youtube.com/embed/\1" frameborder="0" allowfullscreen></iframe>', text)
-    text = re.sub(r'\[VIMEO ([^,\]]+)\]', r'<iframe src="https://player.vimeo.com/video/\1?byline=0&portrait=0" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>', text)
+    if map_match.search(text):
+        text = map_match.sub((lambda x: map_string(x.group(1), status)), text)
+    text = re.sub(r'\[YOUTUBE ([^\]]+)\]', r'<iframe width="420" height="315" src="https://www.youtube.com/embed/\1" frameborder="0" allowfullscreen></iframe>', text)
+    text = re.sub(r'\[VIMEO ([^\]]+)\]', r'<iframe src="https://player.vimeo.com/video/\1?byline=0&portrait=0" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>', text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', r'<table style="width: 100%"><tr><td style="width: 50%; border-style: solid; border-right-width: 1px; padding-right: 1em; border-left-width: 0px; border-top-width: 0px; border-bottom-width: 0px">\1</td><td style="padding-left: 1em; width: 50%;">\2</td></tr></table>', text)
     text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', r'<table style="width: 100%"><tr><td style="width: 50%; vertical-align: top; border-style: none; padding-right: 1em;">\1</td><td style="padding-left: 1em; vertical-align: top; width: 50%;">\2</td></tr></table>', text, flags=re.DOTALL)
     text = re.sub(r'\[SINGLESPACING\] *', r'', text)
@@ -256,6 +262,11 @@ def clean_markdown_to_latex(string):
     string = re.sub(r'_([^_]+?)_', r'\\textbf{\1}', string)
     string = re.sub(r'\[([^\]]+?)\]\(([^\)]+?)\)', r'\\href{\2}{\1}', string)
     return string;
+
+def map_string(encoded_text, status):
+    map_number = len(status.maps)
+    status.maps.append(codecs.decode(encoded_text, 'base64').decode('utf-8'))
+    return '<div id="map' + str(map_number) + '" class="googleMap"></div>'
 
 def pdf_two_col(match, add_line=False):
     firstcol = clean_markdown_to_latex(match.group(1))
@@ -497,15 +508,16 @@ def emoji_insert(text, status=None, images=None):
         return(":" + str(text) + ":")
 
 def markdown_to_html(a, trim=False, pclass=None, status=None, use_pandoc=False, escape=False, do_terms=True):
-    if do_terms and status is not None:
-        if status.question.language in status.question.interview.terms and len(status.question.interview.terms[status.question.language]) > 0:
-            for term in status.question.interview.terms[status.question.language]:
-                #logmessage("Searching for term " + term + "\n")
-                a = status.question.interview.terms[status.question.language][term]['re'].sub(r'[[\1]]', a)
-                #logmessage("string is now " + str(a) + "\n")
+    if status is not None:
+        if do_terms:
+            if status.question.language in status.question.interview.terms and len(status.question.interview.terms[status.question.language]) > 0:
+                for term in status.question.interview.terms[status.question.language]:
+                    #logmessage("Searching for term " + term + "\n")
+                    a = status.question.interview.terms[status.question.language][term]['re'].sub(r'[[\1]]', a)
+                    #logmessage("string is now " + str(a) + "\n")
         if len(status.question.interview.images) > 0:
             a = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status)), a)
-    a = docassemble.base.filter.html_filter(unicode(a))
+    a = html_filter(unicode(a), status=status)
     #logmessage("before: " + a)
     if use_pandoc:
         converter = Pandoc()

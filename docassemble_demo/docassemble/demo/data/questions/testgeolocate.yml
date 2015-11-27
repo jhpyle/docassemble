@@ -1,0 +1,60 @@
+---
+modules:
+  - docassemble.base.legal
+---
+imports:
+  - us
+---
+objects:
+  - user: Individual
+  - enemy: Individual
+---
+initial: true
+code: |
+  update_info(user, 'user', current_info)
+  track_location = user.location.status()
+---
+mandatory: true
+code: |
+  need(welcome_screen, map_shown)
+---
+sets: map_shown
+question: Map of you and your enemy
+subquestion: |
+  ${ map_of(user, enemy) }
+---
+field: welcome_screen
+question: Welcome to the map tester
+subquestion: |
+  If you are asked for your location, please give your consent.
+---
+generic object: Individual
+question: |
+  What is ${ x.object_possessive('name') }?
+fields:
+  - First Name: x.name.first
+    default: ${ x.first_name_hint() }
+  - Middle Name: x.name.middle
+    required: False
+  - Last Name: x.name.last
+    default: ${ x.last_name_hint() }
+  - Suffix: x.name.suffix
+    required: False
+    code: |
+      name_suffix()
+---
+generic object: Individual
+question: |
+  Where ${ x.do_question('live') }?
+fields:
+  - Address: x.address.address
+  - Unit: x.address.unit
+    required: false
+    help: The apartment, suite, or unit number of the residence.
+  - City: x.address.city
+  - State: x.address.state
+    code: |
+      us.states.mapping('abbr', 'name')
+  - Zip: x.address.zip
+    required: false
+---
