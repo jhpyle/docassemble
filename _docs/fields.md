@@ -583,3 +583,4 @@ question above.
 [objects]: {{ site.baseurl }}/docs/objects.html
 [Python identifiers]: https://docs.python.org/2/reference/lexical_analysis.html#identifiers
 [reserved variable names]: {{ site.baseurl }}/docs/reserved.html
+[Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29

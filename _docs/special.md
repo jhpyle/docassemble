@@ -20,7 +20,9 @@ passed via URL.
 Users start an interview by going to a URL.  A basic URL would look
 like this:
 
-    http://example.com/da?i=docassemble.example_inc:data/questions/survey.yml
+{% highlight text %}
+http://example.com/da?i=docassemble.example_inc:data/questions/survey.yml
+{% endhighlight %}
 
 Here, the only parameter is `i`, the interview file name.
 
@@ -28,7 +30,9 @@ It is possible to use the URL to pass special parameters to the
 interview code.  For example, if the user started the interview by
 clicking on the following link:
 
-    http://example.com/da?i=docassemble.example_inc:data/questions/survey.yml&from=web
+{% highlight text %}
+http://example.com/da?i=docassemble.example_inc:data/questions/survey.yml&from=web
+{% endhighlight %}
 
 then the interview would load as usual, and the interview code could
 access the value of the `from` parameter by looking in the `url_args`

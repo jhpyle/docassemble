@@ -785,3 +785,4 @@ explanation of `DATemplate`.
 [fields]: {{ site.baseurl }}/docs/fields.html
 [list]: https://docs.python.org/2/tutorial/datastructures.html
 [objects]: {{ site.baseurl }}/docs/objects.html
+[Markdown]: https://daringfireball.net/projects/markdown/

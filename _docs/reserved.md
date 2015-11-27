@@ -330,3 +330,4 @@ All others are available for you to use and to retrieve with
 [url_args]: {{ site.baseurl }}/docs/.html
 [roles]: {{ site.baseurl }}/docs/roles.html
 [generic objects]: {{ site.baseurl }}/docs/modifiers.html
+[Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29

@@ -233,3 +233,4 @@ templates in order to enable fonts that support your language.
 [polyglossia]: https://www.ctan.org/pkg/polyglossia
 [babel]: https://www.ctan.org/pkg/babel
 [ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+[Pandoc]: http://johnmacfarlane.net/pandoc/

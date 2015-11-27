@@ -1052,3 +1052,5 @@ and not an instance of the `Attorney` class.
 [function]: {{ site.baseurl }}/docs/functions.html
 [template]: {{ site.baseurl }}/docs/template.html
 [markup]: {{ site.baseurl }}/docs/markup.html
+[Python list]: https://docs.python.org/2/tutorial/datastructures.html
+[Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries

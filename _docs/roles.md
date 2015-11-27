@@ -457,3 +457,6 @@ cases.
 [attribute]: https://docs.python.org/2/tutorial/classes.html#python-scopes-and-namespaces
 [built-in Python function]: https://docs.python.org/2/library/functions.html#hasattr
 [dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[YAML]: https://en.wikipedia.org/wiki/YAML
+[user login]: {{ site.baseurl }}/docs/users.html
+[variables]: {{ site.baseurl }}/docs/fields.html

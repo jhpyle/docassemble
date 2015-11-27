@@ -209,3 +209,5 @@ See [modifiers] for more information about including audio and video.
 [YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
 [mark up]: https://en.wikipedia.org/wiki/Markup_language
 [Pandoc]: http://johnmacfarlane.net/pandoc/
+[YouTube]: https://www.youtube.com/
+[Vimeo]: https://vimeo.com/
