@@ -1237,7 +1237,7 @@ class Question:
                 converter = Pandoc()
                 converter.output_format = doc_format
                 converter.input_content = the_markdown
-                #logmessage("Markdown is:\n" + the_markdown + "END");
+                #logmessage("Markdown is:\n" + repr(the_markdown) + "END")
                 if 'initial_yaml' in attachment['options']:
                     converter.initial_yaml = attachment['options']['initial_yaml']
                 elif 'initial_yaml' in self.interview.attachment_options:

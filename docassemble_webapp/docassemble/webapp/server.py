@@ -160,6 +160,8 @@ docassemble.base.logger.set_logmessage(flask_logger)
 #logmessage("foo bar")
 
 def get_url_from_file_reference(file_reference, **kwargs):
+    if re.search(r'^http', file_reference):
+        return(file_reference)
     root = daconfig.get('root', '/')
     if 'ext' in kwargs:
         extn = kwargs['ext']

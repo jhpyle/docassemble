@@ -79,6 +79,8 @@ class DAObject(object):
             self.attrList.append(name)
     def attribute_defined(self, name):
         return hasattr(self, name)
+    def attr(self, name):
+        return getattr(self, name, None)
     def __str__(self):
         return self.object_name()
     def __dir__(self):

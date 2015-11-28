@@ -577,21 +577,21 @@ $( document ).ready(function() {
     var infowindow = new google.maps.InfoWindow();
     return({map: map, infowindow: infowindow});
   }
-  function daAddMarker(map, marker_info, icons){
+  function daAddMarker(map, marker_info){
     var marker;
-    if (marker_info.icon && icons[marker_info.icon]){
-      marker = new google.maps.Marker({
-        position: new google.maps.LatLng(marker_info.latitude, marker_info.longitude),
-        map: map.map,
-        icon: icons[marker_info.icon]
-      });
+    if (marker_info.icon){
+      if (marker_info.icon.path){
+        marker_info.icon.path = google.maps.SymbolPath[marker_info.icon.path];
+      }
     }
     else{
-      marker = new google.maps.Marker({
-        position: new google.maps.LatLng(marker_info.latitude, marker_info.longitude),
-        map: map.map
-      });
+      marker_info.icon = null;
     }
+    marker = new google.maps.Marker({
+      position: new google.maps.LatLng(marker_info.latitude, marker_info.longitude),
+      map: map.map,
+      icon: marker_info.icon
+    });
     if(marker_info.info){
       google.maps.event.addListener(marker, 'click', (function(marker, info) {
         return function() {
@@ -606,19 +606,13 @@ $( document ).ready(function() {
     maps = [];
     map_info = [""" + ", ".join(status.maps) + """];
     map_info_length = map_info.length;
-    home_icon = {
-      path: google.maps.SymbolPath.CIRCLE,
-      scale: 5,
-      strokeColor: 'blue'
-    };
-    icons = {home: home_icon}
     for (var i = 0; i < map_info_length; i++){
       the_map = map_info[i];
       var bounds = new google.maps.LatLngBounds();
       maps[i] = daAddMap(i, the_map.center.latitude, the_map.center.longitude);
       marker_length = the_map.markers.length;
       for (var j = 0; j < marker_length; j++){
-        var new_marker = daAddMarker(maps[i], the_map.markers[j], icons);
+        var new_marker = daAddMarker(maps[i], the_map.markers[j]);
         bounds.extend(new_marker.getPosition());
       }
       maps[i].map.fitBounds(bounds);

@@ -282,6 +282,15 @@ class Address(DAObject):
             self.location.latitude = results[0].coordinates[0]
             self.location.longitude = results[0].coordinates[1]
             self.location.description = self.block()
+            self.geolocate_response = results.raw
+            geo_types = {'administrative_area_level_2': 'county', 'neighborhood': 'neighborhood', 'postal_code': 'zip', 'country': 'country'}
+            for geo_type, addr_type in geo_types.iteritems():
+                if hasattr(results[0], geo_type) and not hasattr(self, addr_type):
+                    logmessage("Setting " + str(addr_type) + " to " + str(getattr(results[0], geo_type)) + " from " + str(geo_type))
+                    setattr(self, addr_type, getattr(results[0], geo_type))
+                #else:
+                    #logmessage("Not setting " + addr_type + " from " + geo_type)
+            #logmessage(json.dumps(self.geolocate_response))
         else:
             logmessage("valid not ok: result count was " + str(len(results)))
             self.geolocate_success = False
@@ -313,7 +322,12 @@ class Person(DAObject):
             else:
                 the_info = capitalize(self.object_name())
             the_info += ' [NEWLINE] ' + self.location.description
-            return [{'latitude': self.location.latitude, 'longitude': self.location.longitude, 'info': the_info}]
+            result = {'latitude': self.location.latitude, 'longitude': self.location.longitude, 'info': the_info}
+            if hasattr(self, 'icon'):
+                result['icon'] = self.icon
+            elif self is this_thread.user:
+                result['icon'] = {'path': 'CIRCLE', 'scale': 5, 'strokeColor': 'blue'}
+            return [result]
         return None
     def identified(self):
         if hasattr(self.name, 'text'):
@@ -524,7 +538,7 @@ class PeriodicFinancialList(DAObject):
             result = 0
             for item in self.elements:
                 if getattr(self, item).exists:
-                    result += Decimal(getattr(self, item).value) * float(getattr(self, item).period)
+                    result += Decimal(getattr(self, item).value) * Decimal(getattr(self, item).period)
             return(result)
     def total_gathered(self):
         result = 0
@@ -532,7 +546,7 @@ class PeriodicFinancialList(DAObject):
             elem = getattr(self, item)
             if hasattr(elem, 'exists') and hasattr(elem, 'value') and hasattr(elem, 'period'):
                 if elem.exists:
-                    result += Decimal(elem.value * float(elem.period))
+                    result += Decimal(elem.value * Decimal(elem.period))
         return(result)
     def __str__(self):
         return self.total()
@@ -563,11 +577,15 @@ class Organization(Person):
                         new_office.geolocate()
             del kwargs['offices']
         return super(Organization, self).init(**kwargs)
-    def handles_problem(self, problem):
+    def will_handle(self, problem=None, county=None):
         logmessage("Testing " + str(problem) + " against " + str(self.handles))
-        if hasattr(self, 'handles') and problem in self.handles:
-            return True
-        return False
+        if problem:
+            if not (hasattr(self, 'handles') and problem in self.handles):
+                return False
+        if county:
+            if not (hasattr(self, 'serves') and county in self.serves):
+                return False
+        return True
     def map_info(self):
         response = list()
         for office in self.office:
@@ -577,7 +595,10 @@ class Organization(Person):
                 else:
                     the_info = capitalize(self.object_name())
                 the_info += ' [NEWLINE] ' + office.location.description
-                response.append({'latitude': office.location.latitude, 'longitude': office.location.longitude, 'info': the_info})
+                this_response = {'latitude': office.location.latitude, 'longitude': office.location.longitude, 'info': the_info}
+                if hasattr(self, 'icon'):
+                    this_response['icon'] = self.icon
+                response.append(this_response)
         if len(response):
             return response
         return None
@@ -699,8 +720,8 @@ def map_of(*pargs, **kwargs):
             markers = arg.map_info()
             if markers:
                 for marker in markers:
-                    if arg is this_thread.user:
-                        marker['icon'] = 'home'
+                    if 'icon' in marker and type(marker['icon']) is not dict:
+                        marker['icon'] = {'url': url_finder(marker['icon'])}
                     if 'info' in marker and marker['info']:
                         marker['info'] = markdown_to_html(marker['info'], trim=True)
                     the_map['markers'].append(marker)
