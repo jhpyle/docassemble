@@ -25,3 +25,8 @@ class ConfigForm(Form):
     config_content = TextAreaField(word('Configuration YAML'))
     submit = SubmitField(word('Save'))
     cancel = SubmitField(word('Cancel'))
+
+class SandboxForm(Form):
+    sandbox_content = TextAreaField(word('Sandbox YAML'))
+    submit = SubmitField(word('Save'))
+    run = SubmitField(word('Save and Run'))

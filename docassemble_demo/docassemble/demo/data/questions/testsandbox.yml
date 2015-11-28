@@ -1,0 +1,13 @@
+---
+question: |
+  Are you a foozball?
+yesno: user_is_foozball
+---
+mandatory: true
+question: |
+  % if user_is_foozball:
+  You are a total foozball.
+  % else:
+  You are not a foozball.
+  % endif
+---

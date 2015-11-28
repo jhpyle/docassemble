@@ -31,6 +31,7 @@
             <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ current_user.email }}<b class="caret"></b></a><ul class="dropdown-menu">
 		{% if current_user.has_roles(['admin', 'developer']) %}
 		<li><a href="{{ url_for('package_page') }}">{{ word('Package Management') }}</a></li>
+                <li><a href="{{ url_for('sandbox_page') }}">{{ word('Sandbox') }}</a></li>
 		  {% if current_user.has_roles(['admin']) %}
 		<li><a href="{{ url_for('user_list') }}">{{ word('User List') }}</a></li>
 		<li><a href="{{ url_for('privilege_list') }}">{{ word('Privileges List') }}</a></li>
@@ -56,7 +57,7 @@
 			  {% if category=='error' %}
 			      {% set category='danger' %}
 			  {% endif %}
-			  <div class="alert alert-{{category}}">{{ message|safe }}</div>
+			  <div class="alert alert-{{category}}"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>{{ message|safe }}</div>
 		      {% endfor %}
 		  {% endif %}
 	       {%- endwith %}

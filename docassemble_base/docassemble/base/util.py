@@ -583,8 +583,21 @@ def package_question_filename(the_file):
             return(None)
     return(None)
 
+def default_absolute_validator(the_file):
+    logmessage("Running default absolute validator")
+    return True
+
+absolute_validator = default_absolute_validator
+
+def set_absolute_validator(func):
+    logmessage("Running set_absolute_validator in util")
+    global absolute_validator
+    absolute_validator = func
+    return
+
 def absolute_filename(the_file):
-    if os.path.isfile(the_file) and os.access(the_file, os.R_OK):
+    logmessage("Running absolute filename")
+    if absolute_validator(the_file) and os.path.isfile(the_file) and os.access(the_file, os.R_OK):
         return(the_file)
     return(None)
 

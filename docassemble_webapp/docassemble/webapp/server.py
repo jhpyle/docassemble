@@ -33,7 +33,7 @@ from flask import make_response, abort, render_template, request, session, send_
 from flask.ext.login import LoginManager, UserMixin, login_user, logout_user, current_user
 from flask.ext.user import login_required, roles_required, UserManager, SQLAlchemyAdapter
 from flask.ext.user.forms import LoginForm
-from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm, ConfigForm
+from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm, ConfigForm, SandboxForm
 from flask_mail import Mail, Message
 import flask.ext.user.signals
 import httplib2
@@ -189,6 +189,14 @@ def get_url_from_file_reference(file_reference, **kwargs):
     return(url)
 
 docassemble.base.parse.set_url_finder(get_url_from_file_reference)
+
+def absolute_validator(the_file):
+    logmessage("Running my validator")
+    if the_file.startswith(os.path.join(UPLOAD_DIRECTORY, 'sandbox')) and current_user.is_authenticated and not current_user.is_anonymous and current_user.has_role('admin', 'developer') and the_file == os.path.join(UPLOAD_DIRECTORY, 'sandbox', str(current_user.id)):
+        return True
+    return False
+
+docassemble.base.parse.set_absolute_validator(absolute_validator)
 
 def get_path_from_file_number(file_number, directory=False):
     parts = re.sub(r'(...)', r'\1/', '{0:012x}'.format(int(file_number))).split('/')
@@ -1329,6 +1337,7 @@ def make_navbar(status, page_title, steps, show_login):
             navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">' + current_user.email + '<b class="caret"></b></a><ul class="dropdown-menu">'
             if current_user.has_role('admin', 'developer'):
                 navbar +='<li><a href="' + url_for('package_page') + '">' + word('Package Management') + '</a></li>'
+                navbar +='<li><a href="' + url_for('sandbox_page') + '">' + word('Sandbox') + '</a></li>'
                 if current_user.has_role('admin'):
                     navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
                     navbar +='<li><a href="' + url_for('privilege_list') + '">' + word('Privileges List') + '</a></li>'
@@ -1780,7 +1789,6 @@ def name_of_user(user, include_email=False):
 @login_required
 @roles_required(['admin'])
 def config_page():
-    #PPP
     form = ConfigForm(request.form, current_user)
     if request.method == 'POST':
         if form.submit.data and form.config_content.data:
@@ -1796,6 +1804,36 @@ def config_page():
     with open(daconfig['config_file'], 'r') as fp:
         content = fp.read()
         return render_template('pages/config.html', extra_css=Markup('\n    <link rel="stylesheet" href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = ' + json.dumps(content) + ';\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n    </script>'), form=form), 200
+    abort(404)
+
+@app.route('/sandbox', methods=['GET', 'POST'])
+@login_required
+@roles_required(['developer', 'admin'])
+def sandbox_page():
+    form = SandboxForm(request.form, current_user)
+    path = os.path.join(UPLOAD_DIRECTORY, 'sandbox')
+    javascript = ''
+    if not os.path.exists(path):
+        os.makedirs(path)
+    filename = os.path.join(path, str(current_user.id))
+    if not os.path.isfile(filename):
+        with open(filename, 'a'):
+            os.utime(filename, None)
+    if request.method == 'POST':
+        if (form.submit.data or form.run.data) and form.sandbox_content.data:
+            the_time = time.strftime('%H:%M:%S %Z', time.localtime())
+            with open(filename, 'w') as fp:
+                fp.write(form.sandbox_content.data)
+            if form.submit.data:
+                flash(word('The sandbox was saved at ' + the_time + '.'), 'success')
+            else:
+                flash(word('The sandbox was saved at ' + the_time + '.  Running in other tab.'), 'info')
+                javascript = "\n    window.open(" + repr(url_for('index', i=filename)) + ", '_blank' );"
+        else:
+            flash(word('Sandbox not saved.  There was an error.'), 'error')
+    with open(filename, 'r') as fp:
+        content = fp.read()
+        return render_template('pages/sandbox.html', extra_css=Markup('\n    <link rel="stylesheet" href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      daTextArea=document.getElementById("sandbox_content");\n      daTextArea.value = ' + json.dumps(content) + ';\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n    ' + javascript + '</script>'), form=form), 200
     abort(404)
 
 @app.route('/packages', methods=['GET', 'POST'])

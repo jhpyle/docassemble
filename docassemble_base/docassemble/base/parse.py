@@ -35,7 +35,11 @@ def process_audio_video_list(the_list, user_dict):
 
 def textify(data):
     return list(map((lambda x: x.text(user_dict)), data))
-    
+
+def set_absolute_validator(func):
+    logmessage("Running set_absolute_validator in parse")
+    docassemble.base.util.set_absolute_validator(func)
+
 def set_url_finder(func):
     docassemble.base.filter.set_url_finder(func)
     docassemble.base.util.set_url_finder(func)
@@ -132,11 +136,12 @@ class InterviewSourceFile(InterviewSource):
         return
     def update(self):
         try:
-            with open(self.filepath) as the_file:
+            with open(self.filepath, 'rU') as the_file:
                 self.set_content(the_file.read())
                 return True
         except Exception as errmess:
-            sys.stderr.write("Error:" + str(errmess) + "\n")
+            pass
+            #sys.stderr.write("Error: " + str(errmess) + "\n")
         return False
     def get_modtime(self):
         self._modtime = os.path.getmtime(self.filepath)
