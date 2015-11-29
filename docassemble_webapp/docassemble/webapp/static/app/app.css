@@ -67,3 +67,62 @@ a.sourceactive {
 .googleMap {
     width: 100%;
 }
+
+.daspacer {
+    height: 3px;
+}
+
+.daterm {
+    cursor: pointer;
+    color: #408E30
+}
+
+.daiconfloat {
+    image-orientation: from-image;
+    float: right;
+}
+
+.daicon {
+    image-orientation: from-image;
+}
+
+.daclear {
+    clear:both;
+}
+
+.daactivetext {
+    color: yellow;
+}
+
+.daactive {
+    background-color: yellow;
+}
+
+.dabackicon {
+    background: none;
+    cursor: pointer;
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+
+.dalarge {
+    font-size: 1.2em;
+}
+
+.datab {
+    display: inline-block;
+    width: 4em;
+}
+
+.daflushleft {
+    text-align: left;
+}
+
+.dabold {
+    font-weight: bold;
+}
+
+.dacenter {
+    text-align: center; 
+}

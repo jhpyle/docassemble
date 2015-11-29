@@ -1,6 +1,6 @@
 from docassemble.base.util import word, currency_symbol
 import docassemble.base.filter
-from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control
+from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote
 from docassemble.base.parse import Question, debug
 from docassemble.base.logger import logmessage
 import urllib
@@ -12,20 +12,20 @@ import random
 import sys
 import codecs
 
-noquote_match = re.compile(r'"')
+#noquote_match = re.compile(r'"')
 
 def tracker_tag(status):
     output = ''
     if status.question.name:
-        output += '<input type="hidden" name="_question_name" value="' + status.question.name + '">'
-    output += '<input type="hidden" name="_tracker" value="' + str(status.tracker) + '">'
+        output += '              <input type="hidden" name="_question_name" value="' + status.question.name + '">\n'
+    output += '              <input type="hidden" name="_tracker" value="' + str(status.tracker) + '">\n'
     if 'track_location' in status.extras and status.extras['track_location']:
-        output += '<input type="hidden" id="_track_location" name="_track_location" value="">'
+        output += '              <input type="hidden" id="_track_location" name="_track_location" value="">\n'
     return output
 
 def datatype_tag(datatypes):
     if len(datatypes):
-        return('<input type="hidden" name="_datatypes" value=' + myb64quote(json.dumps(datatypes)) + '>')
+        return('              <input type="hidden" name="_datatypes" value=' + myb64quote(json.dumps(datatypes)) + '>\n')
     return ('')
 
 # def question_name_tag(question):
@@ -45,7 +45,7 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
             sizing += 'height:' + str(width_value * (filename['height']/filename['width'])) + str(width_units) + ';'
     else:
         sizing += 'height:auto;'    
-    return('<img src="' + url + '" style="image-orientation:from-image;' + sizing + '"> ')
+    return('<img class="daicon" src="' + url + '" style="' + sizing + '">')
 
 def signature_html(status, debug, root):
     output = '<div id="page"><div class="header" id="header"><a id="new" class="navbtn nav-left">' + word('Clear') + '</a><a id="save" class="navbtn nav-right">' + word('Done') + '</a><div class="title">' + word('Sign Your Name') + '</div></div><div class="toppart" id="toppart">'
@@ -60,7 +60,7 @@ def signature_html(status, debug, root):
     output += '</div></div><form action="' + root + '" id="daform" method="POST"><input type="hidden" name="_save_as" value="' + status.question.fields[0].saveas + '"><input type="hidden" id="_the_image" name="_the_image" value=""><input type="hidden" id="_success" name="_success" value="0">'
     #output += question_name_tag(status.question)
     output += tracker_tag(status)
-    output += '</form>'
+    output += '</form>\n'
     return output
 
 def as_html(status, extra_scripts, extra_css, url_for, debug, root):
@@ -76,10 +76,10 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         uses_audio_video = True
         audio_urls = get_audio_urls(status.audiovideo)
         if len(audio_urls):
-            audio_video_text += '<div>' + audio_control(audio_urls) + '</div>'
+            audio_video_text += '<div>\n' + audio_control(audio_urls) + '</div>\n'
         video_urls = get_video_urls(status.audiovideo)
         if len(video_urls):
-            audio_video_text += '<div>' + video_control(video_urls) + '</div>'
+            audio_video_text += '<div>\n' + video_control(video_urls) + '</div>\n'
     if status.decorations is not None:
         #sys.stderr.write("yoo1\n")
         for decoration in status.decorations:
@@ -104,35 +104,35 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                         if the_image.attribution is not None:
                             #sys.stderr.write("yoo6\n")
                             status.attributions.add(the_image.attribution)
-                        decorations.append('<img style="image-orientation:from-image;float:right;' + sizing + '" src="' + url + '">')
+                        decorations.append('<img class="daiconfloat" style="' + sizing + '" src="' + url + '">')
     if len(decorations):
         decoration_text = decorations[0];
     else:
         decoration_text = ''
     output = ""
-    output += '<section id="question" class="tab-pane active col-md-6">'
+    output += '        <section id="question" class="tab-pane active col-md-6">\n'
     if status.question.question_type == "yesno":
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
-        output += audio_video_text + '<form action="' + root + '" id="daform" method="POST"><fieldset>'
-        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
+        output += indent_by(audio_video_text, 10) + '          <form action="' + root + '" id="daform" method="POST">\n            <fieldset>\n'
+        output += '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
-            output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
-        output += '<div class="btn-toolbar"><button class="btn btn-primary btn-lg " name="' + status.question.fields[0].saveas + '" type="submit" value="True">Yes</button> <button class="btn btn-lg btn-info" name="' + status.question.fields[0].saveas + '" type="submit" value="False">No</button></div>'
+            output += '              <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=16) + '              </div>\n'
+        output += '              <div class="btn-toolbar">\n                <button class="btn btn-primary btn-lg " name="' + status.question.fields[0].saveas + '" type="submit" value="True">Yes</button>\n                <button class="btn btn-lg btn-info" name="' + status.question.fields[0].saveas + '" type="submit" value="False">No</button>\n              </div>\n'
         #output += question_name_tag(status.question)
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
-        output += '</fieldset></form>'
+        output += '            </fieldset>\n          </form>\n'
     elif status.question.question_type == "noyes":
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
-        output += audio_video_text + '<form action="' + root + '" id="daform" method="POST"><fieldset>'
-        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
+        output += indent_by(audio_video_text, 10) + '          <form action="' + root + '" id="daform" method="POST">\n            <fieldset>\n'
+        output += '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
-            output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
-        output += '<div class="btn-toolbar"><button class="btn btn-primary btn-lg" name="' + status.question.fields[0].saveas + '" type="submit" value="False">Yes</button> <button class="btn btn-lg btn-info" name="' + status.question.fields[0].saveas + '" type="submit" value="True">No</button></div>'
+            output += '              <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=16) + '              </div>\n'
+        output += '              <div class="btn-toolbar">\n                <button class="btn btn-primary btn-lg" name="' + status.question.fields[0].saveas + '" type="submit" value="False">Yes</button>\n                <button class="btn btn-lg btn-info" name="' + status.question.fields[0].saveas + '" type="submit" value="True">No</button>\n              </div>\n'
         #output += question_name_tag(status.question)
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
-        output += '</fieldset></form>'
+        output += '            </fieldset>\n          </form>\n'
     elif status.question.question_type == "fields":
         enctype_string = ""
         fieldlist = list()
@@ -152,17 +152,17 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                 #fieldlist.append("<div>datatype is " + str(field.datatype) + "</div>")
             if hasattr(field, 'datatype'):
                 if field.datatype == 'html':
-                    fieldlist.append('<div class="form-group' + req_tag +'"><div class="col-md-12">' + status.extras['html'][field.number] + '</div></div>')
+                    fieldlist.append('              <div class="form-group' + req_tag +'"><div class="col-md-12">' + status.extras['html'][field.number].rstrip() + '</div></div>\n')
                     continue
                 elif field.datatype == 'note':
-                    fieldlist.append('<div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status) + '</div></div>')
+                    fieldlist.append('              <div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status, strip_newlines=True) + '</div></div>\n')
                     continue
                 elif field.datatype in ['script', 'css']:
                     continue
                 else:
                     datatypes[field.saveas] = field.datatype
             if field.number in status.helptexts:
-                helptext_start = '<a style="cursor:pointer;color:#408E30" data-container="body" data-toggle="popover" data-placement="bottom" data-content="' + noquote(unicode(status.helptexts[field.number])) + '">' 
+                helptext_start = '<a class="daterm" data-container="body" data-toggle="popover" data-placement="bottom" data-content=' + noquote(unicode(status.helptexts[field.number])) + '>' 
                 helptext_end = '</a>'
             else:
                 helptext_start = ''
@@ -207,57 +207,57 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                             checkboxes.append(field.saveas + "[" + myb64quote(pair[0]) + "]")
             if hasattr(field, 'label'):
                 if field.label == 'no label':
-                    fieldlist.append('<div class="form-group' + req_tag +'"><div class="col-md-12">' + input_for(status, field, wide=True) + '</div></div>')
+                    fieldlist.append('              <div class="form-group' + req_tag +'"><div class="col-md-12">' + input_for(status, field, wide=True) + '</div></div>\n')
                 elif hasattr(field, 'datatype') and field.datatype == 'yesnowide':
-                    fieldlist.append('<div class="row"><div class="col-md-12">' + input_for(status, field) + '</div></div>')
+                    fieldlist.append('              <div class="row"><div class="col-md-12">' + input_for(status, field) + '</div></div>\n')
                 elif hasattr(field, 'datatype') and field.datatype == 'yesno':
-                    fieldlist.append('<div class="form-group' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>')
+                    fieldlist.append('              <div class="form-group' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>\n')
                 else:
-                    fieldlist.append('<div class="form-group' + req_tag +'"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + field.label + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>')
-        output += audio_video_text + '<form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '><fieldset>'
-        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
+                    fieldlist.append('              <div class="form-group' + req_tag +'"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + field.label + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>\n')
+        output += indent_by(audio_video_text, 10) + '          <form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '>\n            <fieldset>\n'
+        output += '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
-            output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
+            output += '              <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=16) + '              </div>\n'
         #output += '<div class="row">'
         if (len(fieldlist)):
             output += "".join(fieldlist)
         else:
-            output += "<p>Error: no fields</p>"
-        #output += '</div>'
+            output += "              <p>Error: no fields</p>\n"
+        #output += '</div>\n'
         if len(checkboxes):
-            output += '<input type="hidden" name="_checkboxes" value=' + myb64quote(json.dumps(checkboxes)) + '>'
+            output += '              <input type="hidden" name="_checkboxes" value=' + myb64quote(json.dumps(checkboxes)) + '>\n'
         if len(files):
-            output += '<input type="hidden" name="_files" value=' + myb64quote(json.dumps(files)) + '>'
+            output += '              <input type="hidden" name="_files" value=' + myb64quote(json.dumps(files)) + '>\n'
             init_string = '<script>'
             for saveasname in files:
                 init_string += '$("#' + saveasname + '").fileinput();' + "\n"
             init_string += '</script>'
             extra_scripts.append('<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + init_string)
             #extra_css.append('<link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />')
-        output += '<div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button></div>'
+        output += '              <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button></div>\n'
         #output += question_name_tag(status.question)
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
-        output += '</fieldset></form>'
+        output += '            </fieldset>\n          </form>\n'
     elif status.question.question_type == "settrue":
         datatypes[status.question.fields[0].saveas] = "boolean"
-        output += audio_video_text + '<form action="' + root + '" id="daform" method="POST"><fieldset>'
-        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
+        output += indent_by(audio_video_text, 10) + '          <form action="' + root + '" id="daform" method="POST">\n            <fieldset>\n'
+        output += '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
-            output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
-        output += '<div class="form-actions"><button type="submit" class="btn btn-lg btn-primary" name="' + status.question.fields[0].saveas + '" value="True"> ' + word('Continue') + '</button></div>'
+            output += '              <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=16) + '              </div>\n'
+        output += '              <div class="form-actions"><button type="submit" class="btn btn-lg btn-primary" name="' + status.question.fields[0].saveas + '" value="True"> ' + word('Continue') + '</button></div>\n'
         #output += question_name_tag(status.question)
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
-        output += '</fieldset></form>'
+        output += '            </fieldset>\n          </form>\n'
     elif status.question.question_type == "multiple_choice":
         if hasattr(status.question.fields[0], 'datatype'):
             datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
-        output += audio_video_text + '<form action="' + root + '" id="daform" method="POST"><fieldset>'
-        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
+        output += indent_by(audio_video_text, 10) + '          <form action="' + root + '" id="daform" method="POST">\n            <fieldset>\n'
+        output += '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
-            output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
-        output += '<div id="errorcontainer" class="alert alert-danger" role="alert" style="display:none"></div>'
+            output += '              <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=16) + '              </div>\n'
+        output += '              <div id="errorcontainer" class="alert alert-danger" role="alert" style="display:none"></div>\n'
         validation_rules['errorElement'] = "span"
         validation_rules['errorLabelContainer'] = "#errorcontainer"
         if status.question.question_variety == "radio":
@@ -270,9 +270,9 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                     for pair in pairlist:
                         formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
                         if pair[0] is not None:
-                            output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + str(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + str(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(pair[0]) + '"></div></div>'
+                            output += '              <div class="row"><div class="col-md-6"><input data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + str(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + str(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(pair[0]) + '"></div></div>\n'
                         else:
-                            output += '<div class="form-group"><div class="col-md-12">' + markdown_to_html(pair[1], status=status) + '</div></div>'
+                            output += '              <div class="form-group"><div class="col-md-12">' + markdown_to_html(pair[1], status=status) + '</div></div>\n'
                         id_index += 1
                 else:
                     id_index = 0
@@ -288,7 +288,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                             if key == 'image':
                                 continue
                             formatted_key = markdown_to_html(key, status=status, trim=True, escape=True)
-                            output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + formatted_key + '|' + formatted_key + '" class="to-labelauty radio-icon" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + unicode(choice[key]) + '"></div></div>'
+                            output += '              <div class="row"><div class="col-md-6"><input data-labelauty="' + formatted_key + '|' + formatted_key + '" class="to-labelauty radio-icon" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + unicode(choice[key]) + '"></div></div>\n'
                         id_index += 1
                 validation_rules['ignore'] = None
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
@@ -305,14 +305,14 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                         if key == 'image':
                             continue
                         formatted_key = markdown_to_html(key, status=status, trim=True, escape=True)
-                        output += '<div class="row"><div class="col-md-6"><input data-labelauty="' + the_icon + formatted_key + '|' + the_icon + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="_multiple_choice" type="radio" value="' + str(indexno) + '"></div></div>'
+                        output += '              <div class="row"><div class="col-md-6"><input data-labelauty="' + the_icon + formatted_key + '|' + the_icon + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="_multiple_choice" type="radio" value="' + str(indexno) + '"></div></div>\n'
                         id_index += 1
                     indexno += 1
                     validation_rules['rules']['_multiple_choice'] = {'required': True}
                     validation_rules['messages']['_multiple_choice'] = {'required': word("You need to select one.")}
-            output += '<br><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button>'
+            output += '              <br>\n              <button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button>\n'
         else:
-            output += '<div class="btn-toolbar">'
+            output += '              <div class="btn-toolbar">\n'
             if hasattr(status.question.fields[0], 'saveas'):
                 btn_class = ' btn-primary'
                 if hasattr(status.question.fields[0], 'has_code') and status.question.fields[0].has_code:
@@ -321,7 +321,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                         random.shuffle(pairlist)
                     for pair in pairlist:
                         if pair[0] is not None:
-                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + str(status.question.fields[0].saveas) + '" value="' + unicode(pair[0]) + '"> ' + markdown_to_html(pair[1], status=status, trim=True, do_terms=False) + '</button> '
+                            output += '                <button type="submit" class="btn btn-lg' + btn_class + '" name="' + str(status.question.fields[0].saveas) + '" value="' + unicode(pair[0]) + '"> ' + markdown_to_html(pair[1], status=status, trim=True, do_terms=False) + '</button>\n'
                         else:
                             output += markdown_to_html(pair[1], status=status)
                 else:
@@ -337,7 +337,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                         for key in choice:
                             if key == 'image':
                                 continue
-                            output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + unicode(choice[key]) + '"> ' + the_icon + markdown_to_html(key, status=status, trim=True, do_terms=False) + '</button> '
+                            output += '                <button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + unicode(choice[key]) + '"> ' + the_icon + markdown_to_html(key, status=status, trim=True, do_terms=False) + '</button>\n'
             else:
                 indexno = 0
                 for choice in status.question.fields[0].choices:
@@ -361,32 +361,32 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                                 btn_class = ' btn-info'
                             elif choice[key].question_type == "exit":
                                 btn_class = ' btn-danger'
-                        output += '<button type="submit" class="btn btn-lg' + btn_class + '" name="_multiple_choice" value="' + str(indexno) + '"> ' + the_icon + markdown_to_html(key, status=status, trim=True, do_terms=False) + '</button> '
+                        output += '                <button type="submit" class="btn btn-lg' + btn_class + '" name="_multiple_choice" value="' + str(indexno) + '">' + the_icon + markdown_to_html(key, status=status, trim=True, do_terms=False, strip_newlines=True) + '</button>\n'
                     indexno += 1
-            output += '</div>'
+            output += '              </div>\n'
         #output += question_name_tag(status.question)
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
-        output += '</fieldset></form>'
+        output += '            </fieldset>\n          </form>\n'
     elif status.question.question_type == 'deadend':
-        output += audio_video_text + '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
+        output += indent_by(audio_video_text, 10) + '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
-            output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
+            output += '              <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=16) + '              </div>\n'
     else:
-        output += audio_video_text + '<form action="' + root + '" id="daform" class="form-horizontal" method="POST"><fieldset>'
-        output += '<div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status) + '<div style="clear:both"></div></h3></div>'
+        output += indent_by(audio_video_text, 10) + '          <form action="' + root + '" id="daform" class="form-horizontal" method="POST">\n            <fieldset>\n'
+        output += '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
-            output += '<div>' + markdown_to_html(status.subquestionText, status=status) + '</div>'
-            output += '<div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button></div>'
+            output += '              <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=16) + '              </div>\n'
+            output += '              <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button></div>\n'
         #output += question_name_tag(status.question)
         output += tracker_tag(status)
-        output += '</fieldset></form>'
+        output += '            </fieldset>\n          </form>\n'
     if len(status.attachments) > 0:
-        output += '<br>'
+        output += '          <br>\n'
         if len(status.attachments) > 1:
-            output += '<div class="alert alert-success" role="alert">' + word('attachment_message_plural') + '</div>'
+            output += '          <div class="alert alert-success" role="alert">' + word('attachment_message_plural') + '</div>\n'
         else:
-            output += '<div class="alert alert-success" role="alert">' + word('attachment_message_singular') + '</div>'
+            output += '          <div class="alert alert-success" role="alert">' + word('attachment_message_singular') + '</div>\n'
         attachment_index = 0
         rtfs_included = False
         for attachment in status.attachments:
@@ -408,224 +408,226 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                 multiple_formats = True
             else:
                 multiple_formats = False
-            output += '<div><h3>' + markdown_to_html(attachment['name'], trim=True, status=status) + '</h3></div>'
+            output += '          <div><h3>' + markdown_to_html(attachment['name'], trim=True, status=status, strip_newlines=True) + '</h3></div>\n'
             if attachment['description']:
-                output += '<div><p><em>' + markdown_to_html(attachment['description'], status=status) + '</em></p></div>'
-            output += '<div class="tabbable"><ul class="nav nav-tabs">'
+                output += '          <div>' + markdown_to_html(attachment['description'], status=status, strip_newlines=True) + '</div>\n'
+            output += '          <div class="tabbable">\n            <ul class="nav nav-tabs">\n'
             if show_download:
-                output += '<li class="active"><a href="#download' + str(attachment_index) + '" data-toggle="tab">' + word('Download') + '</a></li>'
+                output += '              <li class="active"><a href="#download' + str(attachment_index) + '" data-toggle="tab">' + word('Download') + '</a></li>\n'
             if show_preview:
-                output += '<li><a href="#preview' + str(attachment_index) + '" data-toggle="tab">' + word('Preview') + '</a></li>'
+                output += '              <li><a href="#preview' + str(attachment_index) + '" data-toggle="tab">' + word('Preview') + '</a></li>\n'
             if show_markdown:
-                output += '<li><a href="#markdown' + str(attachment_index) + '" data-toggle="tab">' + word('Markdown') + '</a></li>'
-            output += '</ul><div class="tab-content">'
+                output += '              <li><a href="#markdown' + str(attachment_index) + '" data-toggle="tab">' + word('Markdown') + '</a></li>\n'
+            output += '            </ul>\n            <div class="tab-content">\n'
             if show_download:
-                output += '<div class="tab-pane active" id="download' + str(attachment_index) + '">'
+                output += '              <div class="tab-pane active" id="download' + str(attachment_index) + '">\n'
                 if multiple_formats:
-                    output += '<p>' + word('save_as_multiple') + '</p>'
+                    output += '                <p>' + word('save_as_multiple') + '</p>\n'
                 else:
-                    output += '<p>' + word('save_as_singular') + '</p>'
+                    output += '                <p>' + word('save_as_singular') + '</p>\n'
                 if 'pdf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                    output += '<p><a href="?filename=' + urllib.quote(status.question.interview.source.path, '') + '&question=' + str(status.question.number) + '&index=' + str(attachment_index) + '&format=pdf"><i class="glyphicon glyphicon-print"></i> PDF</a> (' + word('pdf_message') + ')</p>'
+                    output += '                <p><a href="?filename=' + urllib.quote(status.question.interview.source.path, '') + '&question=' + str(status.question.number) + '&index=' + str(attachment_index) + '&format=pdf"><i class="glyphicon glyphicon-print"></i> PDF</a> (' + word('pdf_message') + ')</p>\n'
                 if 'rtf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                    output += '<p><a href="?filename=' + urllib.quote(status.question.interview.source.path, '') + '&question=' + str(status.question.number) + '&index=' + str(attachment_index) + '&format=rtf"><i class="glyphicon glyphicon-pencil"></i> RTF</a> (' + word('rtf_message') + ')</p>'
+                    output += '                <p><a href="?filename=' + urllib.quote(status.question.interview.source.path, '') + '&question=' + str(status.question.number) + '&index=' + str(attachment_index) + '&format=rtf"><i class="glyphicon glyphicon-pencil"></i> RTF</a> (' + word('rtf_message') + ')</p>\n'
                 if debug and ('tex' in attachment['valid_formats'] or '*' in attachment['valid_formats']):
-                    output += '<p><a href="?filename=' + urllib.quote(status.question.interview.source.path, '') + '&question=' + str(status.question.number) + '&index=' + str(attachment_index) + '&format=tex"><i class="glyphicon glyphicon-pencil"></i> LaTeX</a> (' + word('tex_message') + ')</p>'
-                output += '</div>'
+                    output += '                <p><a href="?filename=' + urllib.quote(status.question.interview.source.path, '') + '&question=' + str(status.question.number) + '&index=' + str(attachment_index) + '&format=tex"><i class="glyphicon glyphicon-pencil"></i> LaTeX</a> (' + word('tex_message') + ')</p>\n'
+                output += '              </div>\n'
             if show_preview:
-                output += '<div class="tab-pane" id="preview' + str(attachment_index) + '">'
-                output += '<blockquote>' + unicode(attachment['content']['html']) + '</blockquote>'
-                output += '</div>'
+                output += '              <div class="tab-pane" id="preview' + str(attachment_index) + '">\n'
+                output += '                <blockquote>' + unicode(attachment['content']['html']) + '</blockquote>\n'
+                output += '              </div>\n'
             if show_markdown:
-                output += '<div class="tab-pane" id="markdown' + str(attachment_index) + '">'
-                output += '<pre>' + unicode(attachment['markdown']['html']) + '</pre>'
-                output += '</div>'
-            output += '</div></div>'
+                output += '              <div class="tab-pane" id="markdown' + str(attachment_index) + '">\n'
+                output += '                <pre>' + unicode(attachment['markdown']['html']) + '</pre>\n'
+                output += '              </div>\n'
+            output += '            </div>\n          </div>\n'
             attachment_index += 1
         if status.question.allow_emailing:
             if len(status.attachments) > 1:
                 email_header = word("E-mail these documents to yourself")
             else:
                 email_header = word("E-mail this document to yourself")
-            output += """
-<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
-  <div class="panel panel-default">
-    <div class="panel-heading" role="tab" id="headingOne">
-      <h4 class="panel-title">
-        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-          """ + email_header + """
-        </a>
-      </h4>
-    </div>
-    <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
-      <div class="panel-body">
-        <form action=\"""" + root + """\" id="emailform" class="form-horizontal" method="POST">
-          <fieldset>
-            <div class="form-group"><label for="_attachment_email_address" class="control-label col-sm-4">""" + word('E-mail address') + """</label><div class="col-sm-8"><input class="form-control" type="email" name="_attachment_email_address" id="_attachment_email_address"></div></div>"""
+            output += """\
+          <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+            <div class="panel panel-default">
+              <div class="panel-heading" role="tab" id="headingOne">
+                <h4 class="panel-title">
+                  <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    """ + email_header + """
+                  </a>
+                </h4>
+              </div>
+              <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                <div class="panel-body">
+                  <form action=\"""" + root + """\" id="emailform" class="form-horizontal" method="POST">
+                    <fieldset>
+                      <div class="form-group"><label for="_attachment_email_address" class="control-label col-sm-4">""" + word('E-mail address') + """</label><div class="col-sm-8"><input class="form-control" type="email" name="_attachment_email_address" id="_attachment_email_address"></div></div>"""
             if rtfs_included:
                 output += """
-            <div class="form-group"><label for="_attachment_include_rtf" class="control-label col-sm-4">""" + '&nbsp;</label><div class="col-sm-8"><input type="checkbox" value="True" name="_attachment_include_rtf" id="_attachment_include_rtf"> ' + word('Include RTF files for editing') + '</div></div>'
+                      <div class="form-group"><label for="_attachment_include_rtf" class="control-label col-sm-4">""" + '&nbsp;</label><div class="col-sm-8"><input type="checkbox" value="True" name="_attachment_include_rtf" id="_attachment_include_rtf"> ' + word('Include RTF files for editing') + '</div></div>\n'
             output += """
-            <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Send') + '</button></div><input type="hidden" name="_email_attachments" value="1"><input type="hidden" name="_question_number" value="' + str(status.question.number) + '">'
+                      <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Send') + '</button></div><input type="hidden" name="_email_attachments" value="1"><input type="hidden" name="_question_number" value="' + str(status.question.number) + '">'
             output += """
-          </fieldset>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>"""
-            extra_scripts.append("""<script>$("#emailform").validate(""" + json.dumps({'rules': {'_attachment_email_address': {'notEmpty': True, 'required': True, 'email': True}}, 'messages': {'_attachment_email_address': {'required': word("An e-mail address is required."), 'email': word("You need to enter a complete e-mail address.")}}, 'errorClass': 'help-inline'}) + """);</script>""")
+                    </fieldset>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+"""
+            extra_scripts.append("""<script>\n      $("#emailform").validate(""" + json.dumps({'rules': {'_attachment_email_address': {'notEmpty': True, 'required': True, 'email': True}}, 'messages': {'_attachment_email_address': {'required': word("An e-mail address is required."), 'email': word("You need to enter a complete e-mail address.")}}, 'errorClass': 'help-inline'}) + """);\n    </script>""")
     if len(status.attributions):
-        output += '<br><br><br><br><br><br><br>'
+        output += '          <br><br><br><br><br><br><br>\n'
     for attribution in sorted(status.attributions):
-        output += '<div><small>' + markdown_to_html(attribution) + '</small></div>'
-    output += '</section>'
-    output += '<section id="help" class="tab-pane col-md-6">'
+        output += '          <div><small>' + markdown_to_html(attribution, strip_newlines=True) + '</small></div>\n'
+    output += '        </section>\n'
+    output += '        <section id="help" class="tab-pane col-md-6">\n'
     for help_section in status.helpText:
         if help_section['heading'] is not None:
-            output += '<div class="page-header"><h3>' + help_section['heading'] + '</h3></div>'
+            output += '          <div class="page-header"><h3>' + help_section['heading'] + '</h3></div>\n'
         else:
-            output += '<div class="page-header"><h3>' + word('Help with this question') + '</h3></div>'
+            output += '          <div class="page-header"><h3>' + word('Help with this question') + '</h3></div>\n'
         if help_section['audiovideo'] is not None:
             uses_audio_video = True
             audio_urls = get_audio_urls(help_section['audiovideo'])
             if len(audio_urls):
-                output += '<div>' + audio_control(audio_urls) + '</div>'
+                output += '          <div>\n' + indent_by(audio_control(audio_urls), 12) + '          </div>\n'
             video_urls = get_video_urls(help_section['audiovideo'])
             if len(video_urls):
-                output += '<div>' + video_control(video_urls) + '</div>'
-        output += markdown_to_html(help_section['content'], status=status)
+                output += '          <div>\n' + indent_by(video_control(video_urls), 12) + '          </div>\n'
+        output += markdown_to_html(help_section['content'], status=status, indent=10)
     if len(status.attributions):
-        output += '<br><br><br><br><br><br><br>'
+        output += '          <br><br><br><br><br><br><br>\n'
     for attribution in sorted(status.attributions):
-        output += '<div><small>' + markdown_to_html(attribution) + '</small></div>'
-    output += '</section>'
-    extra_scripts.append('<script>$("#daform").validate(' + json.dumps(validation_rules) + ');</script>')
+        output += '          <div><small>' + markdown_to_html(attribution, strip_newlines=True) + '</small></div>\n'
+    output += '        </section>\n'
+    extra_scripts.append('<script>\n      $("#daform").validate(' + json.dumps(validation_rules) + ');\n    </script>')
     for element_id_unescaped in onchange:
         element_id = re.sub(r'(:|\.|\[|\]|,)', r'\\\\\1', element_id_unescaped)
         the_script = """\
-<script>$("#""" + element_id + """").change(function(){
-if ($( this ).val() == ""){
-  $("#daform input:not(#""" + element_id + """):not(:hidden)").prop("disabled", false);
-  $("#daform select:not(#""" + element_id + """):not(:hidden)").prop("disabled", false);
-  $("#daform input:not(#""" + element_id + """):not(:hidden)").parent().parent().removeClass("greyedout");
-  $("#daform select:not(#""" + element_id + """):not(:hidden)").parent().parent().removeClass("greyedout");
-}
-else{
-  $("#daform input:not(#""" + element_id + """):not(:hidden)").prop("disabled", true);
-  $("#daform select:not(#""" + element_id + """):not(:hidden)").prop("disabled", true);
-  $("#daform input:not(#""" + element_id + """):not(:hidden)").parent().parent().addClass("greyedout");
-  $("#daform select:not(#""" + element_id + """):not(:hidden)").parent().parent().addClass("greyedout");
-}
-});</script>"""
+    <script>
+      $("#""" + element_id + """").change(function(){
+        if ($( this ).val() == ""){
+          $("#daform input:not(#""" + element_id + """):not(:hidden)").prop("disabled", false);
+          $("#daform select:not(#""" + element_id + """):not(:hidden)").prop("disabled", false);
+          $("#daform input:not(#""" + element_id + """):not(:hidden)").parent().parent().removeClass("greyedout");
+          $("#daform select:not(#""" + element_id + """):not(:hidden)").parent().parent().removeClass("greyedout");
+        }
+        else{
+          $("#daform input:not(#""" + element_id + """):not(:hidden)").prop("disabled", true);
+          $("#daform select:not(#""" + element_id + """):not(:hidden)").prop("disabled", true);
+          $("#daform input:not(#""" + element_id + """):not(:hidden)").parent().parent().addClass("greyedout");
+          $("#daform select:not(#""" + element_id + """):not(:hidden)").parent().parent().addClass("greyedout");
+        }
+      });
+    </script>
+"""
         extra_scripts.append(the_script)
     if 'track_location' in status.extras and status.extras['track_location']:
-        track_js = """<script>
-function daSetPosition(position) {
-  document.getElementById('_track_location').value = JSON.stringify({'latitude': position.coords.latitude, 'longitude': position.coords.longitude})
-}
-function daShowError(error) {
-    switch(error.code) {
-        case error.PERMISSION_DENIED:
+        track_js = """\
+    <script>
+      function daSetPosition(position) {
+        document.getElementById('_track_location').value = JSON.stringify({'latitude': position.coords.latitude, 'longitude': position.coords.longitude})
+      }
+      function daShowError(error) {
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
             document.getElementById('_track_location').value = JSON.stringify({error: "User denied the request for Geolocation"});
             console.log("User denied the request for Geolocation.");
             break;
-        case error.POSITION_UNAVAILABLE:
+          case error.POSITION_UNAVAILABLE:
             document.getElementById('_track_location').value = JSON.stringify({error: "Location information is unavailable"});
             console.log("Location information is unavailable.");
             break;
-        case error.TIMEOUT:
+          case error.TIMEOUT:
             document.getElementById('_track_location').value = JSON.stringify({error: "The request to get user location timed out"});
             console.log("The request to get user location timed out.");
             break;
-        case error.UNKNOWN_ERROR:
+          case error.UNKNOWN_ERROR:
             document.getElementById('_track_location').value = JSON.stringify({error: "An unknown error occurred"});
             console.log("An unknown error occurred.");
             break;
-    }
-}
-$( document ).ready(function() {
-  $(function () {
-    if (navigator.geolocation) {
-      document.getElementById('_track_location').value = JSON.stringify({error: "getCurrentPosition was still running"});
-      navigator.geolocation.getCurrentPosition(daSetPosition, daShowError, {timeout: 1000, maximumAge: 3600000});
-    }
-    else{
-      document.getElementById('_track_location').value = JSON.stringify({error: "navigator.geolocation not available in browser"});
-    }
-  });
-});
-</script>"""
+        }
+      }
+      $( document ).ready(function() {
+        $(function () {
+          if (navigator.geolocation) {
+            document.getElementById('_track_location').value = JSON.stringify({error: "getCurrentPosition was still running"});
+            navigator.geolocation.getCurrentPosition(daSetPosition, daShowError, {timeout: 1000, maximumAge: 3600000});
+          }
+          else{
+            document.getElementById('_track_location').value = JSON.stringify({error: "navigator.geolocation not available in browser"});
+          }
+        });
+      });
+    </script>"""
         extra_scripts.append(track_js)
     if len(status.maps):
         map_js = """\
-<script>
-  $(window).ready(daUpdateHeight);
-  $(window).resize(daUpdateHeight);
-  function daUpdateHeight(){
-    $(".googleMap").each(function(){
-      var size = $( this ).width();
-      $( this ).css('height', size);
-    });
-  }
-  function daAddMap(map_num, center_lat, center_lon){
-    var map = new google.maps.Map(document.getElementById("map" + map_num), {
-      zoom: 11,
-      center: new google.maps.LatLng(center_lat, center_lon),
-      mapTypeId: google.maps.MapTypeId.ROADMAP
-    });
-    var infowindow = new google.maps.InfoWindow();
-    return({map: map, infowindow: infowindow});
-  }
-  function daAddMarker(map, marker_info){
-    var marker;
-    if (marker_info.icon){
-      if (marker_info.icon.path){
-        marker_info.icon.path = google.maps.SymbolPath[marker_info.icon.path];
+    <script>
+      $(window).ready(daUpdateHeight);
+      $(window).resize(daUpdateHeight);
+      function daUpdateHeight(){
+        $(".googleMap").each(function(){
+          var size = $( this ).width();
+          $( this ).css('height', size);
+        });
       }
-    }
-    else{
-      marker_info.icon = null;
-    }
-    marker = new google.maps.Marker({
-      position: new google.maps.LatLng(marker_info.latitude, marker_info.longitude),
-      map: map.map,
-      icon: marker_info.icon
-    });
-    if(marker_info.info){
-      google.maps.event.addListener(marker, 'click', (function(marker, info) {
-        return function() {
-          map.infowindow.setContent(info);
-          map.infowindow.open(map.map, marker);
+      function daAddMap(map_num, center_lat, center_lon){
+        var map = new google.maps.Map(document.getElementById("map" + map_num), {
+          zoom: 11,
+          center: new google.maps.LatLng(center_lat, center_lon),
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        });
+        var infowindow = new google.maps.InfoWindow();
+        return({map: map, infowindow: infowindow});
+      }
+      function daAddMarker(map, marker_info){
+        var marker;
+        if (marker_info.icon){
+          if (marker_info.icon.path){
+            marker_info.icon.path = google.maps.SymbolPath[marker_info.icon.path];
+          }
         }
-      })(marker, marker_info.info));
-    }
-    return marker;
-  }
-  function daInitMap(){
-    maps = [];
-    map_info = [""" + ", ".join(status.maps) + """];
-    map_info_length = map_info.length;
-    for (var i = 0; i < map_info_length; i++){
-      the_map = map_info[i];
-      var bounds = new google.maps.LatLngBounds();
-      maps[i] = daAddMap(i, the_map.center.latitude, the_map.center.longitude);
-      marker_length = the_map.markers.length;
-      for (var j = 0; j < marker_length; j++){
-        var new_marker = daAddMarker(maps[i], the_map.markers[j]);
-        bounds.extend(new_marker.getPosition());
+        else{
+          marker_info.icon = null;
+        }
+        marker = new google.maps.Marker({
+          position: new google.maps.LatLng(marker_info.latitude, marker_info.longitude),
+          map: map.map,
+          icon: marker_info.icon
+        });
+        if(marker_info.info){
+          google.maps.event.addListener(marker, 'click', (function(marker, info) {
+            return function() {
+              map.infowindow.setContent(info);
+              map.infowindow.open(map.map, marker);
+            }
+          })(marker, marker_info.info));
+        }
+        return marker;
       }
-      maps[i].map.fitBounds(bounds);
-    }
-  }
-</script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?signed_in=true&callback=daInitMap"></script>
+      function daInitMap(){
+        maps = [];
+        map_info = [""" + ", ".join(status.maps) + """];
+        map_info_length = map_info.length;
+        for (var i = 0; i < map_info_length; i++){
+          the_map = map_info[i];
+          var bounds = new google.maps.LatLngBounds();
+          maps[i] = daAddMap(i, the_map.center.latitude, the_map.center.longitude);
+          marker_length = the_map.markers.length;
+          for (var j = 0; j < marker_length; j++){
+            var new_marker = daAddMarker(maps[i], the_map.markers[j]);
+            bounds.extend(new_marker.getPosition());
+          }
+          maps[i].map.fitBounds(bounds);
+        }
+      }
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?signed_in=true&callback=daInitMap"></script>
 """
         extra_scripts.append(map_js)
     return output
-
-def noquote(string):
-    return noquote_match.sub('\\\"', string)
 
 def input_for(status, field, wide=False):
     output = ""
@@ -634,7 +636,7 @@ def input_for(status, field, wide=False):
     else:
         defaultvalue = None
     if field.number in status.hints:
-        placeholdertext = ' placeholder="' + unicode(status.hints[field.number]) + '"'
+        placeholdertext = ' placeholder=' + json.dumps(unicode(status.hints[field.number].replace('\n', ' ')))
     else:
         placeholdertext = ''
     if hasattr(field, 'choicetype'):
@@ -677,7 +679,7 @@ def input_for(status, field, wide=False):
                     formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, do_terms=False)
                     output += '<option value="' + unicode(pair[0]) + '"'
                     if defaultvalue is not None and unicode(pair[0]) == defaultvalue:
-                        output += 'selected="selected"'
+                        output += ' selected="selected"'
                     output += '>' + formatted_item + '</option>'
             output += '</select> '
     elif hasattr(field, 'datatype'):
@@ -700,7 +702,7 @@ def input_for(status, field, wide=False):
             else:
                 accept = ''
             output += '<input type="file" class="file" data-show-upload="false" data-preview-file-type="text" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + accept + '>'
-            #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>'
+            #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>\n'
         elif field.datatype == 'area':
             output += '<textarea class="form-control" rows="4" name="' + field.saveas + '" id="' + field.saveas + '"' + placeholdertext + '>'
             if defaultvalue is not None:
@@ -730,4 +732,9 @@ def input_for(status, field, wide=False):
     return output
 
 def myb64quote(text):
-    return "'" + codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '') + "'"
+    return '"' + codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '') + '"'
+
+def indent_by(text, num):
+    if not text:
+        return ""
+    return (" " * num) + re.sub(r'\n', "\n" + (" " * num), text).rstrip() + "\n"

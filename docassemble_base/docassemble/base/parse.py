@@ -37,7 +37,7 @@ def textify(data):
     return list(map((lambda x: x.text(user_dict)), data))
 
 def set_absolute_validator(func):
-    logmessage("Running set_absolute_validator in parse")
+    #logmessage("Running set_absolute_validator in parse")
     docassemble.base.util.set_absolute_validator(func)
 
 def set_url_finder(func):

@@ -1,0 +1,21 @@
+{% extends 'base_templates/flask_wide_base.html' %}
+{% block content %}
+{%- from "base_templates/form_macros.html" import render_addon_field, render_submit_field, myrender_hidden_field with context %}
+<h3>{{ word('Playground') }}</h3>
+<ul class="nav nav-tabs">{% for file in files %}{% if file == current_file %}<li class="active"><a href="#">{{ file }}</a></li>{% else %}<li><a href="?file={{ file }}">{{ file }}</a></li>{% endif %}{% endfor %}{% if current_file not in files %}<li class="active"><a href="#">{{ word('New') }}</a></li>{% endif %}<li><a href="?new=1"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span></a></li></ul>
+<form action="{{ url_for('playground_page') }}" method="POST" class="form" role="form" id="form">
+  {{ form.hidden_tag() }}
+  {{ myrender_hidden_field(form.original_playground_name, value=current_file) }}
+  <div class="daspacer"></div>
+  {{ render_addon_field(form.playground_name, tabindex=20) }}
+  <div class="daspacer"></div>
+  <div class="form-group">
+    <textarea rows="24" cols="80" id="playground_content" name="playground_content" tabindex="70">{{ content }}</textarea>
+  </div>
+  <div class="form-actions">
+    {{ render_submit_field(form.submit, tabindex=100, class="btn btn-primary btn-lg") }}
+    {{ render_submit_field(form.run, tabindex=110, class="btn btn-warning btn-lg") }}
+    {{ render_submit_field(form.delete, id='daDelete', tabindex=120, class="btn btn-default btn-lg") }}
+  </div>
+</form>
+{%- endblock %}

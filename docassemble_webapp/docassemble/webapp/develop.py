@@ -26,7 +26,10 @@ class ConfigForm(Form):
     submit = SubmitField(word('Save'))
     cancel = SubmitField(word('Cancel'))
 
-class SandboxForm(Form):
-    sandbox_content = TextAreaField(word('Sandbox YAML'))
+class PlaygroundForm(Form):
+    original_playground_name = StringField(word('Original Name'))
+    playground_name = StringField(word('Name'), [validators.Length(min=1, max=255)])
+    playground_content = TextAreaField(word('Playground YAML'))
     submit = SubmitField(word('Save'))
     run = SubmitField(word('Save and Run'))
+    delete = SubmitField(word('Delete'))

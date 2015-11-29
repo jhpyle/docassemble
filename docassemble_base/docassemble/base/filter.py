@@ -4,8 +4,8 @@ import os
 import markdown
 import mimetypes
 import codecs
+import json
 import docassemble.base.util
-import docassemble.base.filter
 from docassemble.base.pandoc import Pandoc
 from mdx_smartypants import SmartypantsExt
 
@@ -244,10 +244,10 @@ def html_filter(text, status=None):
     text = re.sub(r'\[SKIPLINE\] *', r'<br />', text)
     text = re.sub(r'\[NEWLINE\] *', r'<br />', text)
     text = re.sub(r'\[BR\] *', r'<br />', text)
-    text = re.sub('\[TAB\] *', '<span style="display: inline-block; width: 4em;"></span>', text)
-    text = re.sub(r'\[FLUSHLEFT\] *(.+?)\n\n', r'<p style="text-align: left;">\1</p>\n\n', text, flags=re.MULTILINE | re.DOTALL)
-    text = re.sub(r'\[CENTER\] *(.+?)\n\n', r'<p style="text-align: center;">\1</p>\n\n', text, flags=re.MULTILINE | re.DOTALL)
-    text = re.sub(r'\[BOLDCENTER\] *(.+?)\n\n', r'<p style="text-align: center; font-weight: bold">\1</p>\n\n', text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub('\[TAB\] *', '<span class="datab"></span>', text)
+    text = re.sub(r'\[FLUSHLEFT\] *(.+?)\n\n', r'<p class="daflushleft">\1</p>\n\n', text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[CENTER\] *(.+?)\n\n', r'<p class="dacenter">\1</p>\n\n', text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[BOLDCENTER\] *(.+?)\n\n', r'<p class="dacenter dabold">\1</p>\n\n', text, flags=re.MULTILINE | re.DOTALL)
     text = re.sub(r'\\_', r'__', text)
     text = re.sub(r'\n+$', r'', text)
     return(text)
@@ -423,9 +423,9 @@ def image_url_string(match, emoji=False):
         if emoji:
             width_string += ';vertical-align: middle'
         if file_info['extension'] in ['png', 'jpg', 'gif', 'svg']:
-            return('<img style="image-orientation:from-image;' + width_string + '" src="' + url_finder(file_reference) + '">')
+            return('<img class="daicon" style="' + width_string + '" src="' + url_finder(file_reference) + '">')
         elif file_info['extension'] == 'pdf':
-            output = '<img style="image-orientation:from-image;' + width_string + '" src="' + url_finder(file_reference, size="screen", page=1) + '">'
+            output = '<img class="daicon" style="' + width_string + '" src="' + url_finder(file_reference, size="screen", page=1) + '">'
             if 'pages' in file_info and file_info['pages'] > 1:
                 output += " (" + str(file_info['pages']) + " " + docassemble.base.util.word('pages') + ")"
             return(output)
@@ -507,7 +507,7 @@ def emoji_insert(text, status=None, images=None):
     else:
         return(":" + str(text) + ":")
 
-def markdown_to_html(a, trim=False, pclass=None, status=None, use_pandoc=False, escape=False, do_terms=True):
+def markdown_to_html(a, trim=False, pclass=None, status=None, use_pandoc=False, escape=False, do_terms=True, indent=None, strip_newlines=None):
     if status is not None:
         if do_terms:
             if status.question.language in status.question.interview.terms and len(status.question.interview.terms[status.question.language]) > 0:
@@ -542,20 +542,26 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, use_pandoc=False, 
         result = gt_match.sub('&gt;', result)
         result = amp_match.sub('&amp;', result)
     #logmessage("after: " + result)
+    #result = result.replace('\n', ' ')
+    if result:
+        if strip_newlines:
+            result = result.replace('\n', ' ')
+        if indent:
+            return (" " * indent) + re.sub(r'\n', "\n" + (" " * indent), result).rstrip() + "\n"
     return(result)
+
+def noquote(string):
+    return json.dumps(string.replace('\n', ' ').rstrip())
 
 def add_terms(termname, terms):
     #logmessage("add terms with " + termname + "\n")
     lower_termname = termname.lower()
     if lower_termname in terms:
         # title="' + noquote(termname) + '"
-        return('<a style="cursor:pointer;color:#408E30" data-toggle="popover" data-placement="bottom" data-content="' + noquote(terms[lower_termname]['definition']) + '">' + unicode(termname) + '</a>')
+        return('<a class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(terms[lower_termname]['definition']) + '>' + unicode(termname) + '</a>')
     else:
         #logmessage(lower_termname + " is not in terms dictionary\n")
         return termname
-
-def noquote(string):
-    return noquote_match.sub('\\\"', string)
 
 def audio_control(files):
     for d in files:
@@ -568,8 +574,8 @@ def audio_control(files):
             if d[1] is not None:
                 output += ' type="' + d[1] + '">'
             output += "\n"
-    output += '  <a target="_blank" href="' + files[-1][0] +  '">' + docassemble.base.util.word('Listen') + '</a>'
-    output += "</audio>"
+    output += '  <a target="_blank" href="' + files[-1][0] +  '">' + docassemble.base.util.word('Listen') + '</a>\n'
+    output += "</audio>\n"
     return output
 
 def video_control(files):
@@ -583,8 +589,8 @@ def video_control(files):
             if d[1] is not None:
                 output += ' type="' + d[1] + '">'
             output += "\n"
-    output += '  <a target="_blank" href="' + files[-1][0] +  '">' + docassemble.base.util.word('Listen') + '</a>'
-    output += "</video>"
+    output += '  <a target="_blank" href="' + files[-1][0] +  '">' + docassemble.base.util.word('Listen') + '</a>\n'
+    output += "</video>\n"
     return output
 
 def get_audio_urls(the_audio):

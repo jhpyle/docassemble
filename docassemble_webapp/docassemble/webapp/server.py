@@ -33,7 +33,7 @@ from flask import make_response, abort, render_template, request, session, send_
 from flask.ext.login import LoginManager, UserMixin, login_user, logout_user, current_user
 from flask.ext.user import login_required, roles_required, UserManager, SQLAlchemyAdapter
 from flask.ext.user.forms import LoginForm
-from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm, ConfigForm, SandboxForm
+from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm
 from flask_mail import Mail, Message
 import flask.ext.user.signals
 import httplib2
@@ -191,8 +191,8 @@ def get_url_from_file_reference(file_reference, **kwargs):
 docassemble.base.parse.set_url_finder(get_url_from_file_reference)
 
 def absolute_validator(the_file):
-    logmessage("Running my validator")
-    if the_file.startswith(os.path.join(UPLOAD_DIRECTORY, 'sandbox')) and current_user.is_authenticated and not current_user.is_anonymous and current_user.has_role('admin', 'developer') and the_file == os.path.join(UPLOAD_DIRECTORY, 'sandbox', str(current_user.id)):
+    #logmessage("Running my validator")
+    if the_file.startswith(os.path.join(UPLOAD_DIRECTORY, 'playground')) and current_user.is_authenticated and not current_user.is_anonymous and current_user.has_role('admin', 'developer') and os.path.dirname(the_file) == os.path.join(UPLOAD_DIRECTORY, 'playground', str(current_user.id)):
         return True
     return False
 
@@ -316,11 +316,10 @@ docassemble.base.parse.set_mail_variable(get_mail_variable)
 docassemble.base.parse.set_save_numbered_file(save_numbered_file)
 
 key_requires_preassembly = re.compile('^(x\.|x\[|_multiple_choice)')
-match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
-match_brackets = re.compile('\[\'.*\'\]$')
-match_inside_and_outside_brackets = re.compile('(.*)(\[\'[^\]]+\'\])$')
-match_inside_brackets = re.compile('\[\'([^\]]+)\'\]')
-match_triplequote = re.compile('"""')
+match_invalid = re.compile('[^A-Za-z0-9_\[\].\"\'\%\-=]')
+match_brackets = re.compile('\[\".*\"\]$')
+match_inside_and_outside_brackets = re.compile('(.*)(\[\"[^\]]+\"\])$')
+match_inside_brackets = re.compile('\[\"([^\]]+)\"\]')
 
 APPLICATION_NAME = 'docassemble'
 app.config['SQLALCHEMY_DATABASE_URI'] = alchemy_connect_string
@@ -1010,45 +1009,45 @@ def index():
 """
     scripts += '    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>' + """
     <script>
-    $( document ).ready(function() {
-      $(function () {
-        $('.tabs a:last').tab('show')
-      })
-      $(function () {
-        $('[data-toggle="popover"]').popover()
-      })
-      $("#daform input, #daform textarea, #daform select").first().focus();
-      $(".to-labelauty").labelauty({ width: "100%" });
-      $(".to-labelauty-icon").labelauty({ label: false });
-      $(function(){ 
-        var navMain = $("#navbar-collapse");
-        navMain.on("click", "a", null, function () {
-          $(this).css('color', '')
-          navMain.collapse('hide');
-        });
-        $("#sourcetoggle").on("click", function(){
-          $(this).toggleClass("sourceactive");
+      $( document ).ready(function() {
+        $(function () {
+          $('.tabs a:last').tab('show')
+        })
+        $(function () {
+          $('[data-toggle="popover"]').popover()
+        })
+        $("#daform input, #daform textarea, #daform select").first().focus();
+        $(".to-labelauty").labelauty({ width: "100%" });
+        $(".to-labelauty-icon").labelauty({ label: false });
+        $(function(){ 
+          var navMain = $("#navbar-collapse");
+          navMain.on("click", "a", null, function () {
+            $(this).css('color', '')
+            navMain.collapse('hide');
+          });
+          $("#sourcetoggle").on("click", function(){
+            $(this).toggleClass("sourceactive");
+          });
         });
       });
-    });
     </script>"""
     if interview_status.question.question_type == "signature":
-        output = '<!doctype html>\n<html lang="en">\n  <head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link rel="stylesheet" href="' + url_for('static', filename='app/signature.css') + '"><title>' + word('Sign Your Name') + '</title></head>\n  <body onresize="resizeCanvas()">'
+        output = '<!doctype html>\n<html lang="en">\n  <head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet"><title>' + word('Sign Your Name') + '</title></head>\n  <body onresize="resizeCanvas()">'
         output += signature_html(interview_status, DEBUG, ROOT)
         output += """\n  </body>\n</html>"""
     else:
         extra_scripts = list()
         extra_css = list()
         content = as_html(interview_status, extra_scripts, extra_css, url_for, DEBUG, ROOT)
-        output = '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"><link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet"><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css"><link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" /><link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet"><link rel="stylesheet" href="' + url_for('static', filename='app/app.css') + '">'
+        output = '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet">\n    <link href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
         if DEBUG:
-            output += '<link rel="stylesheet" href="' + url_for('static', filename='app/pygments.css') + '">'
+            output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
         output += "".join(extra_css)
-        output += '    <title>' + app.config['BRAND_NAME'] + '</title>\n  </head>\n  <body>\n'
-        output += make_navbar(interview_status, app.config['BRAND_NAME'], steps, SHOW_LOGIN) + '    <div class="container">' + "\n      "+ '<div class="tab-content">' + flash_content
+        output += '\n    <title>' + app.config['BRAND_NAME'] + '</title>\n  </head>\n  <body>\n'
+        output += make_navbar(interview_status, app.config['BRAND_NAME'], steps, SHOW_LOGIN) + '    <div class="container">' + "\n      " + '<div class="tab-content">\n' + flash_content
         if USE_PROGRESS_BAR:
             output += progress_bar(user_dict['_internal']['progress'])
-        output += content + "</div>\n"
+        output += content + "      </div>\n"
         if DEBUG:
             output += '      <div id="source" class="col-md-12 collapse">' + "\n"
             output += '        <h3>' + word('Source code for question') + '</h3>' + "\n"
@@ -1099,7 +1098,7 @@ def myb64unquote(string):
 def progress_bar(progress):
     if progress == 0:
         return('');
-    return('<div class="progress"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;"></div></div>')
+    return('<div class="progress"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;"></div></div>\n')
 
 def get_unique_name(filename):
     while True:
@@ -1294,9 +1293,9 @@ def make_navbar(status, page_title, steps, show_login):
 """
     if status.question.helptext is not None:
         navbar += """\
-            <span style="background-color: yellow" class="icon-bar"></span>
-            <span style="background-color: yellow" class="icon-bar"></span>
-            <span style="background-color: yellow" class="icon-bar"></span>
+            <span class="icon-bar daactive"></span>
+            <span class="icon-bar daactive"></span>
+            <span class="icon-bar daactive"></span>
 """
     else:
         navbar += """\
@@ -1309,7 +1308,7 @@ def make_navbar(status, page_title, steps, show_login):
 """
     if steps > 1:
         navbar += """\
-          <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="_back_one" value="1"><button style="background:none; cursor:pointer; border:none; margin:0; padding:0;" type="submit"><i style="font-size:1.2em;" class="glyphicon glyphicon-chevron-left"></i></button></form></span>
+          <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="_back_one" value="1"><button class="dabackicon" type="submit"><i class="glyphicon glyphicon-chevron-left dalarge"></i></button></form></span>
 """
     navbar += """\
           <span class="navbar-brand">""" + page_title + """</span>
@@ -1320,7 +1319,7 @@ def make_navbar(status, page_title, steps, show_login):
     if status.question.helptext is None:
         navbar += '<li><a href="#help" data-toggle="tab">' + word('Help') + "</a></li>\n"
     else:
-        navbar += '<li><a style="color: yellow" href="#help" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i>' + "</a></li>\n"
+        navbar += '<li><a class="daactivetext" href="#help" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i>' + "</a></li>\n"
     if DEBUG:
         navbar += """\
             <li><a id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">""" + word('Source') + """</a></li>
@@ -1337,7 +1336,7 @@ def make_navbar(status, page_title, steps, show_login):
             navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">' + current_user.email + '<b class="caret"></b></a><ul class="dropdown-menu">'
             if current_user.has_role('admin', 'developer'):
                 navbar +='<li><a href="' + url_for('package_page') + '">' + word('Package Management') + '</a></li>'
-                navbar +='<li><a href="' + url_for('sandbox_page') + '">' + word('Sandbox') + '</a></li>'
+                navbar +='<li><a href="' + url_for('playground_page') + '">' + word('Playground') + '</a></li>'
                 if current_user.has_role('admin'):
                     navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
                     navbar +='<li><a href="' + url_for('privilege_list') + '">' + word('Privileges List') + '</a></li>'
@@ -1803,38 +1802,81 @@ def config_page():
         return redirect(url_for('index'))
     with open(daconfig['config_file'], 'r') as fp:
         content = fp.read()
-        return render_template('pages/config.html', extra_css=Markup('\n    <link rel="stylesheet" href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = ' + json.dumps(content) + ';\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n    </script>'), form=form), 200
+        return render_template('pages/config.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = ' + json.dumps(content) + ';\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n    </script>'), form=form), 200
     abort(404)
 
-@app.route('/sandbox', methods=['GET', 'POST'])
+@app.route('/playground', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])
-def sandbox_page():
-    form = SandboxForm(request.form, current_user)
-    path = os.path.join(UPLOAD_DIRECTORY, 'sandbox')
-    javascript = ''
+def playground_page():
+    form = PlaygroundForm(request.form, current_user)
+    the_file = request.args.get('file', '')
+    if request.method == 'GET':
+        is_new = request.args.get('new', False)
+    else:
+        is_new = False
+    if is_new:
+        the_file = ''
+    path = os.path.join(UPLOAD_DIRECTORY, 'playground', str(current_user.id))
     if not os.path.exists(path):
         os.makedirs(path)
-    filename = os.path.join(path, str(current_user.id))
-    if not os.path.isfile(filename):
-        with open(filename, 'a'):
-            os.utime(filename, None)
     if request.method == 'POST':
-        if (form.submit.data or form.run.data) and form.sandbox_content.data:
+        if (form.playground_name.data):
+            the_file = form.playground_name.data
+            the_file = re.sub(r'[^A-Za-z0-9]', '', the_file)
+            if the_file:
+                filename = os.path.join(path, the_file)
+                if not os.path.isfile(filename):
+                    with open(filename, 'a'):
+                        os.utime(filename, None)    
+    the_file = re.sub(r'[^A-Za-z0-9]', '', the_file)
+    javascript = ''
+    files = sorted([f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))])
+    if request.method == 'GET' and not the_file and not is_new:
+        if len(files):
+            the_file = files[0]
+        else:
+            the_file = 'test'
+    if the_file:
+        filename = os.path.join(path, the_file)
+        if not os.path.isfile(filename):
+            with open(filename, 'a'):
+                os.utime(filename, None)    
+    if request.method == 'POST' and form.validate():
+        if form.delete.data:
+            if os.path.isfile(filename):
+                os.remove(filename)
+                flash(word('Playground deleted.'), 'info')
+                return redirect(url_for('playground_page'))
+            else:
+                flash(word('Playground not deleted.  There was an error.'), 'error')
+        if (form.submit.data or form.run.data) and form.playground_content.data:
+            if form.original_playground_name.data and form.original_playground_name.data != the_file:
+                old_filename = os.path.join(path, form.original_playground_name.data)
+                if os.path.isfile(old_filename):
+                    os.remove(old_filename)
+                    files = sorted([f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))])
             the_time = time.strftime('%H:%M:%S %Z', time.localtime())
             with open(filename, 'w') as fp:
-                fp.write(form.sandbox_content.data)
+                fp.write(form.playground_content.data)
             if form.submit.data:
-                flash(word('The sandbox was saved at ' + the_time + '.'), 'success')
+                flash(word('The playground was saved at') + ' ' + the_time + '.', 'success')
             else:
-                flash(word('The sandbox was saved at ' + the_time + '.  Running in other tab.'), 'info')
+                flash(word('The playground was saved at') + ' ' + the_time + '.  ' + word('Running in other tab.'), 'info')
                 javascript = "\n    window.open(" + repr(url_for('index', i=filename)) + ", '_blank' );"
         else:
-            flash(word('Sandbox not saved.  There was an error.'), 'error')
-    with open(filename, 'r') as fp:
-        content = fp.read()
-        return render_template('pages/sandbox.html', extra_css=Markup('\n    <link rel="stylesheet" href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      daTextArea=document.getElementById("sandbox_content");\n      daTextArea.value = ' + json.dumps(content) + ';\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n    ' + javascript + '</script>'), form=form), 200
-    abort(404)
+            flash(word('Playground not saved.  There was an error.'), 'error')
+    content = ''
+    if the_file:
+        with open(filename, 'r') as fp:
+            form.original_playground_name.data = the_file
+            form.playground_name.data = the_file
+            content = fp.read()
+            #if not form.playground_content.data:
+                #form.playground_content.data = content
+    elif form.playground_content.data:
+        content = form.playground_content.data
+    return render_template('pages/playground.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});' + javascript + '\n    </script>'), form=form, files=files, current_file=the_file, content=content), 200
 
 @app.route('/packages', methods=['GET', 'POST'])
 @login_required
@@ -1917,3 +1959,6 @@ def html_escape(text):
     text = re.sub('>', '&gt;', text)
     return text;
 
+# def indent_by(text, num):
+#     return (" " * num) + re.sub(r'\n', "\n" + (" " * num), text).rstrip() + "\n"
+    

@@ -5,14 +5,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-{% if request.path == "/user/google-sign-in" and config['USE_GOOGLE_LOGIN'] %}
+{%- if request.path == "/user/google-sign-in" and config['USE_GOOGLE_LOGIN'] %}
     <meta name="google-signin-client_id" content="{{ config['OAUTH_CREDENTIALS']['google']['id'] }}">
-{% endif %}
+{%- endif %}
     <title>{{ config['APP_NAME'] }}</title>
     <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
     <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css" rel="stylesheet">
     <link href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='app/app.css') }}">{{ extra_css }}
+    <link href="{{ url_for('static', filename='app/app.css') }}" rel="stylesheet">{{ extra_css }}
   </head>
   <body>
     <div class="navbar navbar-inverse navbar-fixed-top">
@@ -24,54 +24,56 @@
             <span class="icon-bar"></span>
           </button>
           <a href="{{ url_for('index') }}" class="navbar-brand">{{ config['BRAND_NAME'] }}</a>
-	</div>
+        </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
           <ul class="nav navbar-nav navbar-right">
-            {% if not current_user.is_anonymous %}
+            {%- if not current_user.is_anonymous %}
             <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ current_user.email }}<b class="caret"></b></a><ul class="dropdown-menu">
-		{% if current_user.has_roles(['admin', 'developer']) %}
-		<li><a href="{{ url_for('package_page') }}">{{ word('Package Management') }}</a></li>
-                <li><a href="{{ url_for('sandbox_page') }}">{{ word('Sandbox') }}</a></li>
-		  {% if current_user.has_roles(['admin']) %}
-		<li><a href="{{ url_for('user_list') }}">{{ word('User List') }}</a></li>
-		<li><a href="{{ url_for('privilege_list') }}">{{ word('Privileges List') }}</a></li>
-		<li><a href="{{ url_for('config_page') }}">{{ word('Configuration') }}</a></li>
-		  {% endif %}
-		{% endif %}
-		<li><a href="{{ url_for('user_profile_page') }}">{{ word('Profile') }}</a></li><li><a href="{{ url_for('user.logout') }}">{{ word('Sign out') }}</a></li></ul></li>
-            {% elif request.path != "/login" and request.path != "/user/sign-in" %}
+              {%- if current_user.has_roles(['admin', 'developer']) %}
+            <li><a href="{{ url_for('package_page') }}">{{ word('Package Management') }}</a></li>
+            <li><a href="{{ url_for('playground_page') }}">{{ word('Playground') }}</a></li>
+                {%- if current_user.has_roles(['admin']) %}
+            <li><a href="{{ url_for('user_list') }}">{{ word('User List') }}</a></li>
+            <li><a href="{{ url_for('privilege_list') }}">{{ word('Privileges List') }}</a></li>
+            <li><a href="{{ url_for('config_page') }}">{{ word('Configuration') }}</a></li>
+                {%- endif %}
+              {%- endif %}
+            <li><a href="{{ url_for('user_profile_page') }}">{{ word('Profile') }}</a></li><li><a href="{{ url_for('user.logout') }}">{{ word('Sign out') }}</a></li></ul></li>
+            {%- elif request.path != "/login" and request.path != "/user/sign-in" %}
             <li><a href="{{ url_for('user.login', next=url_for(request.url_rule.endpoint)) }}">{{ word('Sign in') }}</a></li>
-	    {% endif %}
+            {%- endif %}
           </ul>
         </div>
       </div>
     </div>
     <div class="container">
+      {%- block flash_messages %}
+        {%- with messages = get_flashed_messages(with_categories=true) -%}
+          {%- if messages %}
       <div class="container">
-	<div class="row">
-	  <div class="col-sm-7 col-md-6 col-lg-5 col-centered">
-	    {% block flash_messages %}
-	       {%- with messages = get_flashed_messages(with_categories=true) -%}
-		  {% if messages %}
-		      {% for category, message in messages %}
-			  {% if category=='error' %}
-			      {% set category='danger' %}
-			  {% endif %}
-			  <div class="alert alert-{{category}}"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>{{ message|safe }}</div>
-		      {% endfor %}
-		  {% endif %}
-	       {%- endwith %}
-	    {% endblock %}
-	  </div>
-	</div>
+        <div class="row">
+          <div class="col-sm-8 col-md-8 col-lg-8 col-centered">
+            {%- for category, message in messages %}
+              {%- if category=='error' %}
+                {%- set category='danger' %}
+              {%- endif %}
+            <div class="alert alert-{{category}}"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>{{ message|safe }}</div>
+          </div>
+        </div>
       </div>
-    {% block main %}{% endblock %}
+            {%- endfor %}
+          {%- endif %}
+        {%- endwith %}
+      {%- endblock %}
+    {%- block main %}{% endblock %}
     </div>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/js/jasny-bootstrap.min.js"></script>
-    <script>$(function () {
-              $('.tabs a:last').tab('show')
-            })
+    <script>
+      $(function () {
+        $('.tabs a:last').tab('show')
+      });
     </script>{{ extra_js }}
+  </body>
 </html>
