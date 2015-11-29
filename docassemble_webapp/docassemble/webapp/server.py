@@ -811,16 +811,16 @@ def index():
                             else:
                                 the_file.save(path)
                             os.symlink(path, path + '.' + extension)
-                            if mimetype == 'video/quicktime' and 'ffmpeg' in daconfig:
-                                call_array = [daconfig['ffmpeg'], '-i', path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', path + '.ogv']
+                            if mimetype == 'video/quicktime' and 'avconv' in daconfig:
+                                call_array = [daconfig['avconv'], '-i', path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', path + '.ogv']
                                 result = call(call_array)
-                                call_array = [daconfig['ffmpeg'], '-i', path + '.' + extension, '-vcodec', 'copy', '-acodec', 'copy', path + '.mp4']
+                                call_array = [daconfig['avconv'], '-i', path + '.' + extension, '-vcodec', 'copy', '-acodec', 'copy', path + '.mp4']
                                 result = call(call_array)
-                            if mimetype == 'video/mp4' and 'ffmpeg' in daconfig:
-                                call_array = [daconfig['ffmpeg'], '-i', path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', path + '.ogv']
+                            if mimetype == 'video/mp4' and 'avconv' in daconfig:
+                                call_array = [daconfig['avconv'], '-i', path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', path + '.ogv']
                                 result = call(call_array)
-                            if mimetype == 'video/ogg' and 'ffmpeg' in daconfig:
-                                call_array = [daconfig['ffmpeg'], '-i', path + '.' + extension, '-c:v', 'libx264', '-preset', 'veryslow', '-crf', '22', '-c:a', 'libmp3lame', '-qscale:a', '2', '-ac', '2', '-ar', '44100', path + '.mp4']
+                            if mimetype == 'video/ogg' and 'avconv' in daconfig:
+                                call_array = [daconfig['avconv'], '-i', path + '.' + extension, '-c:v', 'libx264', '-preset', 'veryslow', '-crf', '22', '-c:a', 'libmp3lame', '-qscale:a', '2', '-ac', '2', '-ar', '44100', path + '.mp4']
                                 result = call(call_array)
                             if mimetype == 'audio/mpeg' and 'pacpl' in daconfig:
                                 call_array = [daconfig['pacpl'], '-t', 'ogg', path + '.' + extension]
@@ -828,10 +828,10 @@ def index():
                             if mimetype == 'audio/ogg' and 'pacpl' in daconfig:
                                 call_array = [daconfig['pacpl'], '-t', 'mp3', path + '.' + extension]
                                 result = call(call_array)
-                            if mimetype in ['audio/3gpp'] and 'ffmpeg' in daconfig:
-                                call_array = [daconfig['ffmpeg'], '-i', path + '.' + extension, path + '.ogg']
+                            if mimetype in ['audio/3gpp'] and 'avconv' in daconfig:
+                                call_array = [daconfig['avconv'], '-i', path + '.' + extension, path + '.ogg']
                                 result = call(call_array)
-                                call_array = [daconfig['ffmpeg'], '-i', path + '.' + extension, path + '.mp3']
+                                call_array = [daconfig['avconv'], '-i', path + '.' + extension, path + '.mp3']
                                 result = call(call_array)
                             if mimetype in ['audio/x-wav', 'audio/wav'] and 'pacpl' in daconfig:
                                 call_array = [daconfig['pacpl'], '-t', 'mp3', path + '.' + extension]

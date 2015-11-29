@@ -29,7 +29,7 @@ use_progress_bar: false
 imagemagick: convert
 pdftoppm: pdftoppm
 pacpl: pacpl
-ffmpeg: ffmpeg
+avconv: avconv
 default_interview: docassemble.demo:data/questions/questions.yml
 flask_log: /tmp/flask.log
 language: en
