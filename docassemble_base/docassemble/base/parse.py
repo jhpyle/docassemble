@@ -195,6 +195,7 @@ class InterviewStatus(object):
         self.seeking = list()
         self.tracker = kwargs.get('tracker', -1)
         self.maps = list()
+        self.can_go_back = True
         self.attachments = None
     def populate(self, question_result):
         self.question = question_result['question']
@@ -311,6 +312,7 @@ class Question:
         self.decorations = None
         self.audiovideo = None
         self.allow_emailing = True
+        self.can_go_back = True
         self.fields_used = set()
         self.names_used = set()
         if 'default language' in data:
@@ -320,6 +322,8 @@ class Question:
             self.language = data['language']
         else:
             self.language = self.from_source.get_language()
+        if 'prevent_going_back' in data and data['prevent_going_back']:
+            self.can_go_back = False
         if 'usedefs' in data:
             defs = list()
             if type(data['usedefs']) is list:
@@ -1364,18 +1368,13 @@ class Interview:
                 result.append(help_item)
         return result
     def assemble(self, user_dict, *args):
-        #logmessage("I am assembling.")
         user_dict['_internal']['tracker'] += 1
         if len(args):
             interview_status = args[0]
         else:
             interview_status = InterviewStatus()
         interview_status.set_tracker(user_dict['_internal']['tracker'])
-        # if '_answered' not in user_dict:
-        #     user_dict['_answered'] = set()
-        # if '_answers' not in user_dict:
-        #     user_dict['_answers'] = dict()
-        docassemble.base.util.reset_language_locale()
+        docassemble.base.util.reset_local_variables()
         interview_status.current_info.update({'default_role': self.default_role})
         user_dict['current_info'] = interview_status.current_info
         for question in self.questions_list:
@@ -1442,7 +1441,7 @@ class Interview:
                     #logmessage("Continuing after asking for " + missingVariable + "...")
                     continue
                 elif question_result['type'] == 'refresh':
-                    PPP
+                    pass
                 else:
                     #pp = pprint.PrettyPrinter(indent=4)
                     #logmessage("Need to ask:\n  " + question_result['question_text'] + "\n" + "type is " + str(question_result['question'].question_type) + "\n" + pp.pformat(question_result) + "\n" + pp.pformat(question_result['question']))
@@ -1456,6 +1455,8 @@ class Interview:
                 break
             else:
                 raise DAError('Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any).  It is a best practice to end your interview with a question that says goodbye and offers an Exit button.')
+        if docassemble.base.util.get_info('prevent_going_back'):
+            interview_status.can_go_back = False
         return(pickleable_objects(user_dict))
     def askfor(self, missingVariable, user_dict, **kwargs):
         variable_stack = kwargs.get('variable_stack', set())

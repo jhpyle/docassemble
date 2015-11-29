@@ -17,7 +17,7 @@ import urllib
 import codecs
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back']
 
 default_language = 'en'
 default_locale = 'US.utf8'
@@ -210,9 +210,14 @@ def set_default_language(lang):
     default_language = lang
     return
 
-def reset_language_locale():
+def reset_local_variables():
     this_thread.language = default_language
     this_thread.locale = default_locale
+    this_thread.prevent_going_back = False
+    return
+
+def prevent_going_back():
+    this_thread.prevent_going_back = True
     return
 
 def set_language(lang):

@@ -120,9 +120,9 @@ SHOW_LOGIN = daconfig.get('show_login', True)
 #USER_PACKAGES = daconfig.get('user_packages', '/var/lib/docassemble/dist-packages')
 #sys.path.append(USER_PACKAGES)
 if USE_PROGRESS_BAR:
-    initial_dict = dict(_internal=dict(progress=0, tracker=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
+    initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
 else:
-    initial_dict = dict(_internal=dict(tracker=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
+    initial_dict = dict(_internal=dict(tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
 if 'initial_dict' in daconfig:
     initial_dict.update(daconfig['initial_dict'])
 LOGFILE = daconfig.get('flask_log', '/tmp/flask.log')
@@ -956,6 +956,8 @@ def index():
     if changed and '_question_name' in post_data and post_data['_question_name'] not in user_dict['_internal']['answers']:
         user_dict['_internal']['answered'].add(post_data['_question_name'])
     interview.assemble(user_dict, interview_status)
+    if not interview_status.can_go_back:
+        user_dict['_internal']['steps_offset'] = steps
     if len(interview_status.attachments) > 0:
         #logmessage("Updating attachment info")
         update_attachment_info(user_code, user_dict, interview_status)
@@ -1044,7 +1046,7 @@ def index():
             output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
         output += "".join(extra_css)
         output += '\n    <title>' + app.config['BRAND_NAME'] + '</title>\n  </head>\n  <body>\n'
-        output += make_navbar(interview_status, app.config['BRAND_NAME'], steps, SHOW_LOGIN) + '    <div class="container">' + "\n      " + '<div class="tab-content">\n' + flash_content
+        output += make_navbar(interview_status, app.config['BRAND_NAME'], (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN) + '    <div class="container">' + "\n      " + '<div class="tab-content">\n' + flash_content
         if USE_PROGRESS_BAR:
             output += progress_bar(user_dict['_internal']['progress'])
         output += content + "      </div>\n"
@@ -1306,7 +1308,7 @@ def make_navbar(status, page_title, steps, show_login):
     navbar += """\
           </button>
 """
-    if steps > 1:
+    if status.question.can_go_back and steps > 1:
         navbar += """\
           <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="_back_one" value="1"><button class="dabackicon" type="submit"><i class="glyphicon glyphicon-chevron-left dalarge"></i></button></form></span>
 """

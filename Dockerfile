@@ -16,6 +16,7 @@ RUN chown www-data.www-data /var/lib/docassemble/webapp/docassemble.wsgi
 RUN mkdir -p /usr/share/docassemble/files && chown www-data.www-data /usr/share/docassemble/files
 RUN mkdir -p /etc/docassemble
 COPY Docker/config.yml /etc/docassemble/config.yml
+RUN chown www-data.www-data /etc/docassemble/config.yml
 COPY Docker/apache.conf /etc/apache2/sites-available/000-default.conf 
 
 WORKDIR /tmp
