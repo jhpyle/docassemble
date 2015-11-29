@@ -63,7 +63,7 @@ do:
 
 {% highlight bash %}
 sudo pip install --upgrade us 3to2 guess-language-spirit html2text
-sudo pip install --upgrade mdx_smartypants titlecase
+sudo pip install --upgrade mdx_smartypants titlecase pygeocoder
 sudo pip install --upgrade cffi
 sudo pip install --upgrade bcrypt
 sudo pip install --upgrade wtforms werkzeug rauth simplekv \

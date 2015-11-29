@@ -62,6 +62,7 @@ The web application depends on:
   adjusting the rotation of user-supplied JPEGs; the web app will not
   fail if it is missing
 * [Perl Audio Converter](http://vorzox.wix.com/pacpl)
+* [pygeocoder](https://bitbucket.org/xster/pygeocoder/wiki/Home)
 * [PostgreSQL](http://www.postgresql.org/) and
   [psycopg2](http://initd.org/psycopg/) - for storing user data; other
   databases compatible with [SQLAlchemy] will also work

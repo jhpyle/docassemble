@@ -60,7 +60,7 @@ comment: |
 ---
 interview help:
   heading: About this web site
-  audio: schumann-clip-2.mp3
+  #audio: schumann-clip-2.mp3
   #video: "[YOUTUBE wqBYHrw9_ys]"
   content: |
     Answer each question.  At the end, you may be given a document
@@ -122,13 +122,6 @@ comment: |
   to use for particular icons.  The web app shows the appropriate
   attribution text at the bottom of any page that uses one of the
   icons.
----
-imports:
-  - us
-comment: |
-  This loads a Python module that we will need later when we ask the
-  user for his or her address.  The module "us" provides a list of
-  states in the United States.
 ---
 objects:
   - village_idiot: Individual
@@ -526,6 +519,32 @@ comment: |
   module names into the namespace only when and if they are necessary.
 ---
 generic object: Individual
+question: |
+  In what country ${ x.do_question('live') }?
+fields:
+  - Country: x.address.country
+---
+generic object: Individual
+question: |
+  In what neighborhood ${ x.do_question('live') }?
+fields:
+  - Neighborhood: x.address.neighborhood
+---
+generic object: Individual
+question: |
+  In what county ${ x.do_question('live') }?
+fields:
+  - County: x.address.county
+---
+generic object: Address
+sets:
+  - x.county
+  - x.country
+  - x.neighborhood
+code: |
+  x.geolocate()
+---
+generic object: Individual
 decoration: home
 question: |
   What is ${ x.possessive('home') } like?
@@ -680,9 +699,7 @@ attachments:
       This is a *very* helpful advice letter.
     metadata:
       FirstHeaderRight: |
-        Example, LLP [BR] 
-        123 Main Street, Suite 1500 [BR]
-        Philadelphia, PA 19102
+        Example, LLP [BR] 123 Main Street, Suite 1500 [BR] Philadelphia, PA 19102
       HeaderLeft: |
         ${ client } [BR] ${ today() } [BR] Page [PAGENUM]
       HeaderLines: "3"
@@ -696,7 +713,7 @@ attachments:
 
       Your marital status is ${ client.marital_status.lower() }.
       % if client.marital_status == 'Single' and village_idiot is not client:
-        Perhaps you should marry ${ village_idiot }.
+      Perhaps you should marry ${ village_idiot }.
       % endif
       Your annual income is ${ currency(client.income.total()) }
       and the value of all you own is 
@@ -704,9 +721,9 @@ attachments:
       an "${ client.address.type }."
 
       % if client_has_standing:
-        You have a valid claim.
+      You have a valid claim.
       % else:
-        Sorry, you do not have a valid claim.
+      Sorry, you do not have a valid claim.
       % endif
 
       Carles 8-bit polaroid, banjo bespoke Intelligentsia actually
