@@ -1,10 +1,10 @@
 FROM debian:latest
 
-RUN apt-get update && apt-get install -y python-markdown python-yaml python-mako python-dateutil python-setuptools python-httplib2 python-dev python-imaging wget unzip git locales pandoc texlive texlive-latex-extra apache2 postgresql python-psycopg2 libapache2-mod-wsgi python-speaklater poppler-utils python-pil libffi-dev libffi6 libjs-jquery imagemagick gcc supervisor libaudio-flac-header-perl libaudio-musepack-perl libmp3-tag-perl libogg-vorbis-header-pureperl-perl perl make libvorbis-dev libcddb-perl libinline-perl libcddb-get-perl libmp3-tag-perl libaudio-scan-perl libaudio-flac-header-perl libparallel-forkmanager-perl libav-tools
+RUN apt-get update && apt-get install -y python-markdown python-yaml python-mako python-dateutil python-setuptools python-httplib2 python-dev python-imaging wget unzip git locales pandoc texlive texlive-latex-extra apache2 postgresql python-psycopg2 libapache2-mod-wsgi libapache2-mod-xsendfile python-speaklater poppler-utils python-pil libffi-dev libffi6 libjs-jquery imagemagick gcc supervisor libaudio-flac-header-perl libaudio-musepack-perl libmp3-tag-perl libogg-vorbis-header-pureperl-perl perl make libvorbis-dev libcddb-perl libinline-perl libcddb-get-perl libmp3-tag-perl libaudio-scan-perl libaudio-flac-header-perl libparallel-forkmanager-perl libav-tools
 
 RUN easy_install pip
-RUN pip install --upgrade us 3to2 guess-language-spirit
-RUN pip install --upgrade mdx_smartypants titlecase
+RUN pip install --upgrade us 3to2 guess-language-spirit html2text
+RUN pip install --upgrade mdx_smartypants titlecase pygeocoder
 RUN pip install --upgrade cffi
 RUN pip install --upgrade bcrypt
 RUN pip install --upgrade wtforms werkzeug rauth simplekv Flask-KVSession flask-user pypdf flask flask-login flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
@@ -40,4 +40,4 @@ ENV APACHE_RUN_GROUP www-data
 ENV APACHE_LOG_DIR /var/log/apache2
 EXPOSE 80
 
-CMD ['/var/lib/docassemble/webapp/run-on-docker.sh']
+CMD ["/var/lib/docassemble/webapp/run-on-docker.sh"]

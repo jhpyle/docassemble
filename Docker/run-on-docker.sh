@@ -1,4 +1,4 @@
 #! /bin/sh
 /etc/init.d/postgresql start
 /etc/init.d/apache2 start
-exec /usr/bin/supervisord -n
+exec /usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf
