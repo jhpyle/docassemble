@@ -316,10 +316,10 @@ docassemble.base.parse.set_mail_variable(get_mail_variable)
 docassemble.base.parse.set_save_numbered_file(save_numbered_file)
 
 key_requires_preassembly = re.compile('^(x\.|x\[|_multiple_choice)')
-match_invalid = re.compile('[^A-Za-z0-9_\[\].\"\'\%\-=]')
-match_brackets = re.compile('\[\".*\"\]$')
-match_inside_and_outside_brackets = re.compile('(.*)(\[\"[^\]]+\"\])$')
-match_inside_brackets = re.compile('\[\"([^\]]+)\"\]')
+match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
+match_brackets = re.compile('\[\'.*\'\]$')
+match_inside_and_outside_brackets = re.compile('(.*)(\[\'[^\]]+\'\])$')
+match_inside_brackets = re.compile('\[\'([^\]]+)\'\]')
 
 APPLICATION_NAME = 'docassemble'
 app.config['SQLALCHEMY_DATABASE_URI'] = alchemy_connect_string

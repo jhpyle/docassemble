@@ -25,7 +25,7 @@ def tracker_tag(status):
 
 def datatype_tag(datatypes):
     if len(datatypes):
-        return('              <input type="hidden" name="_datatypes" value=' + myb64quote(json.dumps(datatypes)) + '>\n')
+        return('              <input type="hidden" name="_datatypes" value=' + myb64doublequote(json.dumps(datatypes)) + '>\n')
     return ('')
 
 # def question_name_tag(question):
@@ -225,9 +225,9 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
             output += "              <p>Error: no fields</p>\n"
         #output += '</div>\n'
         if len(checkboxes):
-            output += '              <input type="hidden" name="_checkboxes" value=' + myb64quote(json.dumps(checkboxes)) + '>\n'
+            output += '              <input type="hidden" name="_checkboxes" value=' + myb64doublequote(json.dumps(checkboxes)) + '>\n'
         if len(files):
-            output += '              <input type="hidden" name="_files" value=' + myb64quote(json.dumps(files)) + '>\n'
+            output += '              <input type="hidden" name="_files" value=' + myb64doublequote(json.dumps(files)) + '>\n'
             init_string = '<script>'
             for saveasname in files:
                 init_string += '$("#' + saveasname + '").fileinput();' + "\n"
@@ -731,8 +731,11 @@ def input_for(status, field, wide=False):
                 output += '>'
     return output
 
-def myb64quote(text):
+def myb64doublequote(text):
     return '"' + codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '') + '"'
+
+def myb64quote(text):
+    return "'" + codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '') + "'"
 
 def indent_by(text, num):
     if not text:
