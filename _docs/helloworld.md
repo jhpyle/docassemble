@@ -39,12 +39,13 @@ instructions.)
    `docassemble_hello_world/docassemble/hello_world/data/questions.yml`
    and replace its contents with the above [YAML] text.
 8. Create a new .zip file containing the `docassemble_hello_world`
-folder.  (On Windows, right-click the `docassemble_hello_world`
-folder, select "Send To," then select "Compressed (zipped) Folder.")
+   folder.  (On Windows, right-click the `docassemble_hello_world`
+   folder, select "Send To," then select "Compressed (zipped)
+   Folder.")
 9. In the **docassemble** web app, go back to Package Management.
 10. Click "Update a package."
 11. Upload the .zip file you just created.  You should see a message
-that the package was installed successfully.
+    that the package was installed successfully.
 12. Point your browser to
     `http://localhost/demo?i=docassemble.hello_world:data/questions/questions.yml`
     (substituting the actual domain and base URL of your
@@ -162,6 +163,14 @@ fields:
 
 ([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello4.yml){:target="_blank"}.)
 
+This illustrates the complete workflow for producing final
+**docassemble** interviews.  If you are trying to work out a problem
+with an interview, it may be cumbersome to go through the process of
+uploading a new package and then updating the package within
+**docassemble**.  To test out interview [YAML] on-the-fly, you can use
+the [Playground] area.
+
+[Playground]: {{ site.baseurl }}/docs/playground.html
 [installation]: {{ site.baseurl }}/docs/installation.html
 [configuration]: {{ site.baseurl }}/docs/config.html
 [reconfigured user roles]: {{ site.baseurl }}/docs/users.html

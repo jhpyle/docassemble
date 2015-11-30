@@ -83,7 +83,7 @@ show_login: true
 xsendfile: true
 {% endhighlight %}
 
-By default, `imagemagick`, `pdftoppm`, `pacpl`, `ffmpeg`, and `oauth` are
+By default, `imagemagick`, `pdftoppm`, `pacpl`, `avconv`, and `oauth` are
 undefined.
 
 The key `config_file` does not appear in the configuration file, but
@@ -285,13 +285,20 @@ pdftoppm: pdftoppm
 
 ## Sound file conversion
 
-If you have pacpl (the [Perl Audio Converter]) and/or ffmpeg installed
+If you have pacpl (the [Perl Audio Converter]) and/or avconv installed
 on your system, you need to tell **docassemble** the name of the
-commands to use.
+commands to use.  If the applications are not installed on your
+system, do not include these lines.
 
 {% highlight yaml %}
 pacpl: pacpl
-ffmpeg: ffmpeg
+avconv: avconv
+{% endhighlight %}
+
+If you have ffmpeg instead of avconv, you can do:
+
+{% highlight yaml %}
+avconv: ffmpeg
 {% endhighlight %}
 
 ## Facebook and Google login

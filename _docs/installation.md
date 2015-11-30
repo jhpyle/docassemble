@@ -229,8 +229,13 @@ site.
 {% highlight bash %}
 sudo mkdir -p /etc/docassemble
 sudo cp ~/docassemble/docassemble_base/config.yml /etc/docassemble/
+sudo chown www-data.www-data /etc/docassemble/config.yml
 sudo vi /etc/docassemble/config.yml
 {% endhighlight %}
+
+Note that the [configuration] file needs to be readable and writeable
+by the web server if you want to be able to edit it through the web
+application.
 
 Set /etc/apache2/sites-available/000-default.conf to something like:
 
@@ -286,7 +291,8 @@ configuration.
 
 `docassemble` uses a SQL database.  Set up the database by running the
 following commands.  (You may wish to make changes to the database
-information in `/etc/docassemble/config.yml` first.)
+information in `/etc/docassemble/config.yml` first.  Note that this
+file will need to be readable by the `postgres` user.)
 
 {% highlight bash %}
 echo 'create role "www-data" login; create database docassemble;' | sudo -u postgres psql

@@ -223,6 +223,27 @@ progress: 50
 If **docassemble** is configured to show a progress bar, the progress
 bar will be set to 50% when this question is asked.
 
+# `prevent_going_back`
+
+Normally, **docassemble** allows the user to click the back button to
+get back to earlier steps in the interview.  Sometimes, it is
+necessary to prevent the user from doing so.
+
+If you add a `prevent_going_back` directive to a `question`, the web
+app will not offer the user a back button while showing the question.
+
+{% highlight yaml %}
+---
+prevent_going_back: true
+sets: final_screen
+question: |
+  Congratulations, you have filed your application!
+---
+{% endhighlight %}
+
+There is also a `prevent_going_back()` [function] that accomplishes
+the same thing from [Python] code.
+
 # `language`
 
 {% highlight yaml %}
@@ -343,3 +364,4 @@ by **docassemble**, so it can contain any valid [YAML].
 [HTML5 video tag]: http://www.w3schools.com/html/html5_video.asp
 [YouTube]: https://www.youtube.com/
 [Vimeo]: https://vimeo.com/
+[function]: {{ site.baseurl }}/docs/function.html

@@ -104,13 +104,18 @@ site).  The base url is set during the [installation] of the [WSGI]
 server and in the **docassemble** [configuration] file (where it is
 called `root`).
 
+Note that you can also test interview [YAML] using the **docassemble**
+[Playground].
+
 # Best practices for packaging your interviews
 
 It is a good practice to bundle related interviews in a single
 package.  Think about making it easy for other people to install your
 packages on their system and make use of your [questions] and [code].
 
+[Playground]: {{ site.baseurl }}/docs/playground.html
 [interviews]: {{ site.baseurl }}/docs/interviews.html
+[YAML]: https://en.wikipedia.org/wiki/YAML
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [Python packages]: https://docs.python.org/2/tutorial/modules.html#packages
 [Python package]: https://docs.python.org/2/tutorial/modules.html#packages

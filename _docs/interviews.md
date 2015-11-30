@@ -188,8 +188,7 @@ Here, the interview file name is
 and then within that package, look for the file `questions.yml`
 located in the subdirectory `data/questions`.
 
-As you will learn if you follow the [tutorial], it is easy to make
-your own Python package: you just download a ZIP file from your
+To make your own Python package, you download a ZIP file from your
 **docassemble** server, unpack it on your computer, and you will find
 the `data/questions` subdirectory inside.  You can create your own
 [YAML] files within that subdirectory.  When you re-ZIP everything and
@@ -206,6 +205,11 @@ variables that get defined during the course of the interview, such as
 `favorite_animal` in the example interview above.  The variable store
 is saved on the **docassemble** server.
 
+**docassemble** keeps a copy of the variable store for every step of
+the interview.  If the user presses the **docassemble** back button
+(not the browser back button), **docassemble** will restore the
+variable store to the next earliest version.
+
 # Leaving an interview and coming back
 
 If the user is not logged in through **docassemble**'s
@@ -215,9 +219,31 @@ interview will be lost if the web browser is closed.
 If the user is logged in, however, then when the user logs in again,
 the user will resume the interview where he left off.
 
+# How to author your own interviews
+
+To write and test your own interviews, you will need:
+
+1. A **docassemble** server (see [installation]);
+2. An account on the [username and password system] of that server,
+   where the privileges of the account have been upgraded to
+   "developer" or "admin."
+
+There are two ways to run your own interviews:
+
+1. When logged in, go to the "Playground" from the menu in the upper
+   right hand corner.  The [playground] allows you to quickly edit and
+   run interview [YAML].
+2. Create a [package] on your local computer and then push your
+   changes to the server either through [GitHub] or by uploading a ZIP
+   file.
+
+[GitHub]: https://github.com/
+[package]: {{ site.baseurl }}/packages.html
+[playground]: {{ site.baseurl }}/playground.html
 [demonstration page]: {{ site.baseurl }}/demo.html
 [tutorial]: {{ site.baseurl }}/docs/helloworld.html
 [configuration]: {{ site.baseurl }}/docs/config.html
+[installation]: {{ site.baseurl }}/docs/config.html
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [Python]: https://www.python.org/
 [Initial Blocks]: {{ site.baseurl }}/docs/initial.html

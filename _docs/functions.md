@@ -303,6 +303,18 @@ code: |
 ---
 {% endhighlight %}
 
+## prevent_going_back
+
+**docassemble**'s back button helps users when they make a mistake and
+want to go back and correct it.  But sometimes, we want to prevent
+users from going back.  For example, if the interview code causes an
+e-mail to be sent, or data to be written to a database, allowing the
+user to go back and do the process again would create confusion.
+
+You can call `prevent_going_back()` to instruct the web application to
+prevent the user from going back past that point.  See also the
+[modifier] of the same name.
+
 # Functions for managing global variables
 
 If you try writing your own functions, you will learn that functions
@@ -756,3 +768,4 @@ docassemble.base.util.update_language_function('fr', 'her', docassemble.base.uti
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [keyword arguments]: https://docs.python.org/2/glossary.html#term-argument
 [keyword argument]: https://docs.python.org/2/glossary.html#term-argument
+[modifier]: {{ site.baseurl}}/docs/modifiers.html
