@@ -17,14 +17,16 @@ import urllib
 import codecs
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back']
 
+default_dialect = 'us'
 default_language = 'en'
 default_locale = 'US.utf8'
 daconfig = dict()
 
 class ThreadVariables(threading.local):
     language = default_language
+    dialect = default_dialect
     locale = default_locale
     initialized = False
     def __init__(self, **kw):
@@ -210,6 +212,11 @@ def set_default_language(lang):
     default_language = lang
     return
 
+def set_default_dialect(dialect):
+    global default_dialect
+    default_dialect = dialect
+    return
+
 def reset_local_variables():
     this_thread.language = default_language
     this_thread.locale = default_locale
@@ -220,12 +227,19 @@ def prevent_going_back():
     this_thread.prevent_going_back = True
     return
 
-def set_language(lang):
+def set_language(lang, dialect=None):
+    if dialect:
+        this_thread.dialect = dialect
+    elif lang != this_thread.language:
+        this_thread.dialect = None
     this_thread.language = lang
     return
 
 def get_language():
     return this_thread.language
+
+def get_dialect():
+    return this_thread.dialect
 
 def set_default_locale(loc):
     global default_locale
@@ -507,6 +521,7 @@ def space_to_underscore(a):
     return(re.sub(' +', '_', unicode(a).encode('ascii', errors='ignore')))
 
 def remove(variable_name):
+    logmessage("Calling remove in util")
     try:
         exec('del ' + variable_name)
     except:

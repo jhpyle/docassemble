@@ -22,7 +22,9 @@ secretkey: 28asflwjeifwlfjsd2fejfiefw3g4o87
 appname: docassemble
 brandname: docassemble
 uploads: /usr/share/docassemble/files
-webapp: /var/lib/docassemble/docassemble.wsgi
+packages: /usr/share/docassemble/local
+packagecache: /usr/share/docassemble/cache
+webapp: /usr/share/docassemble/webapp/docassemble.wsgi
 mail:
   default_sender: '"Administrator" <no-reply@example.com>'
 use_progress_bar: false
@@ -38,3 +40,14 @@ default_admin_account:
   nickname: admin
   email: admin@admin.com
   password: password
+voicerss:
+  enable: false
+  key: 347593849874e7454b9872948a87987d
+  languages:
+    en:
+      GB: en-gb
+      US: en-us
+    es:
+      MX: es-mx
+    fr:
+      FR: fr-fr

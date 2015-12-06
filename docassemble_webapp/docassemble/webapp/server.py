@@ -1,3 +1,5 @@
+# from twilio.util import TwilioCapability
+import urllib
 import os
 import sys
 import datetime
@@ -14,6 +16,7 @@ import docassemble.webapp.database
 import tempfile
 import zipfile
 import traceback
+from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError
 from docassemble.base.util import pickleable_objects, word, comma_and_list
 from docassemble.base.logger import logmessage
@@ -43,7 +46,7 @@ from flask_kvsession import KVSessionExtension
 from simplekv.db.sql import SQLAlchemyStore
 from sqlalchemy import create_engine, MetaData
 from docassemble.webapp.app_and_db import app, db
-from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock, Attachments, Uploads
+from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock, Attachments, Uploads, SpeakList
 from docassemble.webapp.packages.models import Package, PackageAuth
 from docassemble.webapp.config import daconfig
 from PIL import Image
@@ -103,26 +106,76 @@ app.config['USE_X_SENDFILE'] = daconfig.get('xsendfile', True)
 PNG_RESOLUTION = daconfig.get('png_resolution', 300)
 PNG_SCREEN_RESOLUTION = daconfig.get('png_screen_resolution', 72)
 PDFTOPPM_COMMAND = daconfig.get('pdftoppm', None)
-docassemble.base.util.set_default_language(daconfig.get('language', 'en'))
-docassemble.base.util.set_default_locale(daconfig.get('locale', 'US.utf8'))
-docassemble.base.util.set_language(daconfig.get('language', 'en'))
-docassemble.base.util.set_locale(daconfig.get('locale', 'US.utf8'))
+DEFAULT_LANGUAGE = daconfig.get('language', 'en')
+DEFAULT_LOCALE = daconfig.get('locale', 'US.utf8')
+DEFAULT_DIALECT = daconfig.get('dialect', 'us')
+docassemble.base.util.set_default_language(DEFAULT_LANGUAGE)
+docassemble.base.util.set_default_locale(DEFAULT_LOCALE)
+docassemble.base.util.set_default_dialect(DEFAULT_DIALECT)
+docassemble.base.util.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
+docassemble.base.util.set_locale(DEFAULT_LOCALE)
 docassemble.base.util.set_da_config(daconfig)
 docassemble.base.util.update_locale()
+
+audio_mimetype_table = {'mp3': 'audio/mpeg', 'ogg': 'audio/ogg'}
+
+valid_voicerss_languages = {
+    'ca': ['es'],
+    'zh': ['cn', 'hk', 'tw'],
+    'da': ['dk'],
+    'nl': ['nl'],
+    'en': ['au', 'ca', 'gb', 'in', 'us'],
+    'fi': ['fi'],
+    'fr': ['ca, fr'],
+    'de': ['de'],
+    'it': ['it'],
+    'ja': ['jp'],
+    'ko': ['kr'],
+    'nb': ['no'],
+    'pl': ['pl'],
+    'pt': ['br', 'pt'],
+    'ru': ['ru'],
+    'es': ['mx', 'es'],
+    'sv': ['se']
+    }
+
+voicerss_config = daconfig.get('voicerss', None)
+if not voicerss_config or ('enabled' in voicerss_config and not voicerss_config['enabled']) or not ('key' in voicerss_config and voicerss_config['key']):
+    VOICERSS_ENABLED = False
+else:
+    VOICERSS_ENABLED = True
 ROOT = daconfig.get('root', '/')
 if 'currency symbol' in daconfig:
     docassemble.base.util.update_language_function('*', 'currency_symbol', lambda: daconfig['currency symbol'])
 app.logger.warning("default sender is " + app.config['MAIL_DEFAULT_SENDER'] + "\n")
 exit_page = daconfig.get('exitpage', '/')
+PACKAGE_CACHE = daconfig.get('packagecache', '/tmp/docassemble-cache')
+WEBAPP_PATH = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
+PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
 UPLOAD_DIRECTORY = daconfig.get('uploads', '/usr/share/docassemble/files')
-USE_PROGRESS_BAR = daconfig.get('use_progress_bar', True)
+FULL_PACKAGE_DIRECTORY = os.path.join(PACKAGE_DIRECTORY, 'lib', 'python2.7', 'site-packages')
+for path in [FULL_PACKAGE_DIRECTORY, PACKAGE_CACHE, UPLOAD_DIRECTORY]:
+    if not os.path.isdir(path):
+        try:
+            os.makedirs(path)
+        except:
+            print "Could not create path: " + path
+            sys.exit(1)
+    if not os.access(path, os.W_OK):
+        print "Unable to create files in directory: " + path
+        sys.exit(1)
+if not os.access(WEBAPP_PATH, os.W_OK):
+    print "Unable to modify the timestamp of the WSGI file: " + WEBAPP_PATH
+    sys.exit(1)
+
+#USE_PROGRESS_BAR = daconfig.get('use_progress_bar', True)
 SHOW_LOGIN = daconfig.get('show_login', True)
 #USER_PACKAGES = daconfig.get('user_packages', '/var/lib/docassemble/dist-packages')
 #sys.path.append(USER_PACKAGES)
-if USE_PROGRESS_BAR:
-    initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
-else:
-    initial_dict = dict(_internal=dict(tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
+#if USE_PROGRESS_BAR:
+initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
+#else:
+#    initial_dict = dict(_internal=dict(tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
 if 'initial_dict' in daconfig:
     initial_dict.update(daconfig['initial_dict'])
 LOGFILE = daconfig.get('flask_log', '/tmp/flask.log')
@@ -163,6 +216,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
     if re.search(r'^http', file_reference):
         return(file_reference)
     root = daconfig.get('root', '/')
+    fileroot = daconfig.get('fileserver', root)
     if 'ext' in kwargs:
         extn = kwargs['ext']
         extn = re.sub(r'^\.', '', extn)
@@ -174,18 +228,18 @@ def get_url_from_file_reference(file_reference, **kwargs):
         if 'page' in kwargs:
             page = kwargs['page']
             size = kwargs.get('size', 'page')
-            url = root + 'uploadedpage'
+            url = fileroot + 'uploadedpage'
             if size == 'screen':
                 url += 'screen'
             url += '/' + str(file_number) + '/' + str(page)
         else:
-            url = root + 'uploadedfile/' + str(file_number) + extn
+            url = fileroot + 'uploadedfile/' + str(file_number) + extn
     else:
         parts = file_reference.split(':')
         if len(parts) < 2:
             parts = ['docassemble.base', file_reference]
         parts[1] = re.sub(r'^data/static/', '', parts[1])
-        url = root + 'packagestatic/' + parts[0] + '/' + parts[1] + extn
+        url = fileroot + 'packagestatic/' + parts[0] + '/' + parts[1] + extn
     return(url)
 
 docassemble.base.parse.set_url_finder(get_url_from_file_reference)
@@ -309,7 +363,7 @@ def save_numbered_file(filename, orig_path):
     extension, mimetype = get_ext_and_mimetype(filename)
     path = get_file_path(file_number)
     shutil.copyfile(orig_path, path)
-    os.symlink(path, path + '.' + extension)
+    symlink_or_copy(path, path + '.' + extension)
     return(file_number, extension, mimetype)
 
 docassemble.base.parse.set_mail_variable(get_mail_variable)
@@ -753,7 +807,7 @@ def index():
                 path = get_file_path(file_number)
                 with open(path, 'w') as ifile:
                     ifile.write(theImage)
-                os.symlink(path, path + '.' + extension)
+                symlink_or_copy(path, path + '.' + extension)
                 #sys.stderr.write("Saved theImage\n")
                 string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ", filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
             else:
@@ -810,7 +864,7 @@ def index():
                                     shutil.copyfile(unrotated.name, path)
                             else:
                                 the_file.save(path)
-                            os.symlink(path, path + '.' + extension)
+                            symlink_or_copy(path, path + '.' + extension)
                             if mimetype == 'video/quicktime' and 'avconv' in daconfig:
                                 call_array = [daconfig['avconv'], '-i', path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', path + '.ogv']
                                 result = call(call_array)
@@ -970,7 +1024,7 @@ def index():
         steps = 0
         changed = False
         interview.assemble(user_dict, interview_status)
-    if USE_PROGRESS_BAR and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
+    if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
         user_dict['_internal']['progress'] = interview_status.question.progress
     if interview_status.question.question_type == "exit":
         user_dict = initial_dict.copy()
@@ -993,6 +1047,8 @@ def index():
     #     del user_dict['x']
     # if 'i' in user_dict:
     #     del user_dict['i']
+    if changed and interview_status.question.interview.use_progress_bar:
+        advance_progress(user_dict)
     save_user_dict(user_code, user_dict, yaml_filename, changed=changed)
     flash_content = ""
     messages = get_flashed_messages(with_categories=True) + error_messages
@@ -1040,18 +1096,60 @@ def index():
     else:
         extra_scripts = list()
         extra_css = list()
+        if 'speak_text' in interview_status.extras and interview_status.extras['speak_text']:
+            interview_status.initialize_screen_reader()
+            util_language = docassemble.base.util.get_language()
+            util_dialect = docassemble.base.util.get_dialect()
+            question_language = interview_status.question.language
+            if question_language != '*':
+                the_language = question_language
+            else:
+                the_language = util_language
+            if the_language == util_language and util_dialect is not None:
+                the_dialect = util_dialect
+            elif voicerss_config and 'languages' in voicerss_config and the_language in voicerss_config['languages']:
+                the_dialect = voicerss_config['languages'][the_language]
+            elif the_language in valid_voicerss_languages:
+                the_dialect = valid_voicerss_languages[the_language][0]
+            else:
+                logmessage("Unable to determine dialect; reverting to default")
+                the_language = DEFAULT_LANGUAGE
+                the_dialect = DEFAULT_DIALECT
+            for question_type in ['question', 'help']:
+                for audio_format in ['mp3', 'ogg']:
+                    interview_status.screen_reader_links[question_type].append([url_for('speak_file', question=interview_status.question.number, type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
+        else:
+            logmessage("speak_text was not here")
         content = as_html(interview_status, extra_scripts, extra_css, url_for, DEBUG, ROOT)
+        if interview_status.using_screen_reader:
+            for question_type in ['question', 'help']:
+                phrase = codecs.encode(to_text(interview_status.screen_reader_text[question_type]).encode('utf-8'), 'base64').decode().replace('\n', '')
+                existing_entry = SpeakList.query.filter_by(filename=yaml_filename, key=user_code, question=interview_status.question.number, type=question_type, language=the_language, dialect=the_dialect).first()
+                if existing_entry:
+                    if phrase != existing_entry.phrase:
+                        logmessage("The phrase changed; updating it")
+                        existing_entry.phrase = phrase
+                        existing_entry.upload = None
+                        db.session.commit()
+                else:
+                    new_entry = SpeakList(filename=yaml_filename, key=user_code, phrase=phrase, question=interview_status.question.number, type=question_type, language=the_language, dialect=the_dialect)
+                    db.session.add(new_entry)
+                    db.session.commit()
         output = '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet">\n    <link href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
         if DEBUG:
             output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
         output += "".join(extra_css)
         output += '\n    <title>' + app.config['BRAND_NAME'] + '</title>\n  </head>\n  <body>\n'
         output += make_navbar(interview_status, app.config['BRAND_NAME'], (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN) + '    <div class="container">' + "\n      " + '<div class="tab-content">\n' + flash_content
-        if USE_PROGRESS_BAR:
+        if interview_status.question.interview.use_progress_bar:
             output += progress_bar(user_dict['_internal']['progress'])
         output += content + "      </div>\n"
         if DEBUG:
             output += '      <div id="source" class="col-md-12 collapse">' + "\n"
+            if interview_status.using_screen_reader:
+                output += '        <h3>' + word('Plain text of sections') + '</h3>' + "\n"
+                for question_type in ['question', 'help']:
+                    output += '<pre style="white-space: pre-wrap;">' + to_text(interview_status.screen_reader_text[question_type]) + '</pre>\n'
             output += '        <h3>' + word('Source code for question') + '</h3>' + "\n"
             if interview_status.question.source_code is None:
                 output += word('unavailable')
@@ -1230,8 +1328,6 @@ def save_user_dict(user_code, user_dict, filename, changed=False):
     else:
         the_user_id = None
     if changed is True:
-        if USE_PROGRESS_BAR:
-            advance_progress(user_dict)
         new_record = UserDict(key=user_code, dictionary=codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), filename=filename, user_id=the_user_id)
         db.session.add(new_record)
         db.session.commit()
@@ -1375,6 +1471,61 @@ def _endpoint_url(endpoint):
         url = url_for(endpoint)
     return url
 
+@app.route('/speakfile', methods=['GET'])
+def speak_file():
+    filename = session['i']
+    key = session['uid']
+    question = request.args.get('question', None)
+    question_type = request.args.get('type', None)
+    file_format = request.args.get('format', None)
+    the_language = request.args.get('language', None)
+    the_dialect = request.args.get('dialect', None)
+    if file_format not in ['mp3', 'ogg'] or not (filename and key and question and question_type and file_format and the_language and the_dialect):
+        logmessage("Could not serve speak file because invalid or missing data was provided: filename " + str(filename) + " and key " + str(key) + " and question number " + str(question) + " and question type " + str(question_type) + " and language " + str(the_language) + " and dialect " + str(the_dialect))
+        abort(404)
+    entry = SpeakList.query.filter_by(filename=filename, key=key, question=question, type=question_type, language=the_language, dialect=the_dialect).first()
+    if not entry:
+        logmessage("Could not serve speak file because no entry could be found in speaklist for filename " + str(filename) + " and key " + str(key) + " and question number " + str(question) + " and question type " + str(question_type) + " and language " + str(the_language) + " and dialect " + str(the_dialect))
+        abort(404)
+    if not entry.upload:
+        existing_entry = SpeakList.query.filter(SpeakList.phrase == entry.phrase, SpeakList.language == entry.language, SpeakList.dialect == entry.dialect, SpeakList.upload != None).first()
+        if existing_entry:
+            logmessage("Found existing entry: " + str(existing_entry.id) + ".  Setting to " + str(existing_entry.upload))
+            entry.upload = existing_entry.upload
+            db.session.commit()
+        else:
+            if not VOICERSS_ENABLED:
+                logmessage("Could not serve speak file because voicerss not enabled")
+                abort(404)
+            new_file_number = get_new_file_number(key, 'speak.mp3')
+            path = get_file_path(new_file_number)
+            phrase = codecs.decode(entry.phrase, 'base64')
+            url = "https://api.voicerss.org/?" + urllib.urlencode({'key': voicerss_config['key'], 'src': phrase, 'hl': str(entry.language) + '-' + str(entry.dialect)})
+            logmessage("Retrieving " + url)
+            urllib.urlretrieve(url, path)
+            if os.path.getsize(path) > 100:
+                symlink_or_copy(path, path + '.mp3')
+                call_array = [daconfig['pacpl'], '-t', 'ogg', path + '.mp3']
+                result = call(call_array)
+                if result == 0:
+                    entry.upload = new_file_number
+                    db.session.commit()
+                else:
+                    logmessage("Failed to convert downloaded mp3 (" + path + ") to ogg")
+                    abort(404)
+            else:
+                logmessage("Download from voicerss (" + path + ") failed")
+                abort(404)
+    if not entry.upload:
+        logmessage("Upload file number was not set")
+        abort(404)
+    the_path = get_path_from_file_number(entry.upload) + '.' + file_format
+    if not os.path.isfile(the_path):
+        logmessage("Could not serve speak file because file (" + the_path + ") not found")
+        abort(404)
+    return(send_file(the_path, mimetype=audio_mimetype_table[file_format]))
+    #PPP
+
 @app.route('/uploadedfile/<number>.<extension>', methods=['GET'])
 def serve_uploaded_file_with_extension(number, extension):
     number = re.sub(r'[^0-9]', '', str(number))
@@ -1502,7 +1653,8 @@ def update_package():
                 if user_can_edit_package(pkgname=pkgname):
                     zippath = os.path.join(temp_directory, filename)
                     the_file.save(zippath)
-                    commands = ['install', zippath, '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user"]
+                    #commands = ['install', zippath, '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user"]
+                    commands = ['install', zippath, '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--upgrade']
                     returnval = pip.main(commands)
                     if returnval > 0:
                         with open(pip_log.name) as x: logfilecontents = x.read()
@@ -1525,7 +1677,8 @@ def update_package():
                 giturl = form.giturl.data.strip()
                 packagename = re.sub(r'.*/', '', giturl)
                 if user_can_edit_package(giturl=giturl) and user_can_edit_package(pkgname=packagename):
-                    commands = ['install', '--egg', '--src=' + temp_directory, '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user", 'git+' + giturl + '.git#egg=' + packagename]
+                    #commands = ['install', '--egg', '--src=' + temp_directory, '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user", 'git+' + giturl + '.git#egg=' + packagename]
+                    commands = ['install', '--egg', '--src=' + temp_directory, '--upgrade', 'git+' + giturl + '.git#egg=' + packagename]
                     returnval = pip.main(commands)
                     if returnval > 0:
                         with open(pip_log.name) as x: logfilecontents = x.read()
@@ -1922,11 +2075,24 @@ def server_error(the_error):
     return render_template('pages/501.html', error=errmess, logtext=str(the_trace)), 501
 
 def restart_wsgi():
-    wsgi_file = daconfig.get('webapp', '/var/lib/docassemble/docassemble.wsgi')
+    wsgi_file = WEBAPP_PATH
     if os.path.isfile(wsgi_file):
         with open(wsgi_file, 'a'):
             os.utime(wsgi_file, None)
     return
+
+@app.route('/testpost', methods=['GET', 'POST'])
+def test_post():
+    errmess = "Hello, " + str(request.method) + "!"
+    is_redir = request.args.get('redir', None)
+    if is_redir or request.method == 'GET':
+        return render_template('pages/testpost.html', error=errmess), 200
+    newargs = dict(request.args)
+    newargs['redir'] = '1'
+    logtext = url_for('test_post', **newargs)
+    #return render_template('pages/testpost.html', error=errmess, logtext=logtext), 200
+    return redirect(logtext, code=307)
+    #PPP
 
 @app.route('/packagestatic/<package>/<filename>', methods=['GET'])
 def package_static(package, filename):
@@ -1964,3 +2130,19 @@ def html_escape(text):
 # def indent_by(text, num):
 #     return (" " * num) + re.sub(r'\n', "\n" + (" " * num), text).rstrip() + "\n"
     
+# @app.route('/twiliotest', methods=['GET', 'POST'])
+# def twilio_test():
+#     account_sid = "ACfad8e668b5f9e15d499ab823523b9358"
+#     auth_token = "86549c9a407b25d32f21c758e7b09546"
+#     application_sid = "AP67affb53323193b8e2af0872aad387ad"
+#     capability = TwilioCapability(account_sid, auth_token)
+#     capability.allow_client_outgoing(application_sid)
+#     token = capability.generate()
+#     return render_template('pages/twiliotest.html', token=token)
+
+def symlink_or_copy(a, b):
+    try:
+        os.symlink(a, b)
+    except:
+        shutil.copyfile(a, b)
+    return

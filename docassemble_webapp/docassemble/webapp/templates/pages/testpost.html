@@ -1,0 +1,21 @@
+{% extends "base_templates/page_base.html" %}
+
+{% block main %}
+<h1>{{ word('Test') }}</h1>
+
+<blockquote>{{ error }}</blockquote>
+
+{% if logtext %}
+
+<h3>{{ word('Log') }}</h3>
+
+<pre>{{ logtext }}</pre>
+
+{% endif %}
+
+<form method="POST">
+  <input name="foo">
+  <button type="submit" value="Smoo">Smoop!</button>
+</form>
+
+{% endblock %}

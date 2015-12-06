@@ -9,7 +9,7 @@ from docassemble.webapp.config import daconfig
 if len(sys.argv) > 1:
     yaml_config = sys.argv[1]
 else:
-    yaml_config = '/etc/docassemble/config.yml'
+    yaml_config = '/usr/share/docassemble/config.yml'
 docassemble.webapp.config.load(filename=yaml_config)
 from docassemble.base.util import word
 from docassemble.webapp.app_and_db import app, db

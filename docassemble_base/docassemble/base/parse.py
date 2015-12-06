@@ -1,4 +1,3 @@
-# I am in the testing branch and I just made a change
 import re
 import ast
 import yaml
@@ -76,6 +75,7 @@ class PackageImage(object):
 class InterviewSource(object):
     def __init__(self, **kwargs):
         self.language = '*'
+        self.dialect = None
         pass
     def set_path(self, path):
         self.path = path
@@ -89,12 +89,17 @@ class InterviewSource(object):
     def set_language(self, language):
         self.language = language
         return
+    def set_dialect(self, dialect):
+        self.dialect = dialect
+        return
     def update(self):
         return True
     def get_modtime(self):
         return self._modtime
     def get_language(self):
         return self.language
+    def get_dialect(self):
+        return self.dialect
     def get_interview(self):
         return Interview(source=self)
     def append(self, path):
@@ -196,8 +201,13 @@ class InterviewStatus(object):
         self.seeking = list()
         self.tracker = kwargs.get('tracker', -1)
         self.maps = list()
+        self.using_screen_reader = False
         self.can_go_back = True
         self.attachments = None
+    def initialize_screen_reader(self):
+        self.using_screen_reader = True
+        self.screen_reader_text = dict()
+        self.screen_reader_links = {'question': [], 'help': []}
     def populate(self, question_result):
         self.question = question_result['question']
         self.questionText = question_result['question_text']
@@ -316,6 +326,11 @@ class Question:
         self.can_go_back = True
         self.fields_used = set()
         self.names_used = set()
+        if 'features' in data:
+            if type(usedef) is not dict:
+                raise DAError("A features section must be a dictionary." + self.idebug(data))
+            if 'progress bar' in data['features'] and data['features']['progress bar']:
+                self.interview.use_progress_bar = True
         if 'default language' in data:
             should_append = False
             self.from_source.set_language(data['default language'])
@@ -1129,6 +1144,8 @@ class Question:
         attachment_text = self.processed_attachments(user_dict, the_x=the_x, the_i=the_i)
         if 'track_location' in user_dict:
             extras['track_location'] = user_dict['track_location']
+        if 'speak_text' in user_dict:
+            extras['speak_text'] = user_dict['speak_text']
         if 'role' in user_dict:
             current_role = user_dict['role']
             if len(self.role) > 0:
@@ -1183,7 +1200,7 @@ class Question:
         return(has_code, result_list)
     def mark_as_answered(self, user_dict):
         user_dict['_internal']['answered'].add(self.name)
-        #logmessage("1 Question name was " + self.name)
+        #logmessage("Question " + str(self.name) + " marked as answered")
         return
     def follow_multiple_choice(self, user_dict):
         #logmessage("follow_multiple_choice")
@@ -1331,6 +1348,7 @@ class Interview:
         self.terms = dict()
         self.question_index = 0
         self.default_role = None
+        self.use_progress_bar = False
         self.attachment_options = dict()
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
@@ -1423,6 +1441,7 @@ class Interview:
                         #logmessage("Code completed")
                         if question.name:
                             user_dict['_internal']['answered'].add(question.name)
+                            #logmessage("Question " + str(question.name) + " marked as answered")
                     if hasattr(question, 'content') and question.name and question.is_mandatory:
                         if debug:
                             interview_status.seeking.append({'question': question, 'reason': 'mandatory question'})
@@ -1602,6 +1621,7 @@ class Interview:
                         if question.question_type == 'attachments':
                             attachment_text = question.processed_attachments(user_dict)
                             if missing_var in variable_stack:
+                                logmessage("Removing missing variable " + missing_var)
                                 variable_stack.remove(missing_var)
                             try:
                                 eval(missing_var, user_dict)
@@ -1622,6 +1642,7 @@ class Interview:
                             exec(question.compute, user_dict)
                             #logmessage("the missing variable is " + str(missing_var))
                             if missing_var in variable_stack:
+                                logmessage("Removing missing variable " + missing_var)
                                 variable_stack.remove(missing_var)
                             if question.question_type == 'event_code':
                                 return({'type': 'continue'})

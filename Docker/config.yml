@@ -21,8 +21,10 @@ oauth:
 secretkey: 28asflwjeifwlfjsd2fejfiefw3g4o87
 appname: docassemble
 brandname: demo
+packagecache: /tmp/docassemble-cache
 uploads: /usr/share/docassemble/files
-webapp: /var/lib/docassemble/docassemble.wsgi
+packages: /usr/share/docassemble/local
+webapp: /usr/share/docassemble/webapp/docassemble.wsgi
 mail:
   default_sender: '"Administrator" <no-reply@example.com>'
 admin_address: '"Administrator" <admin@example.com>'

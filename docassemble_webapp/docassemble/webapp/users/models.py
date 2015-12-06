@@ -26,7 +26,7 @@ class User(UserMixin, db.Model):
 class UserAuth(db.Model, UserMixin):
     __tablename__ = dbtableprefix + 'user_auth'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
+    user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
     password = db.Column(db.String(255), nullable=False, server_default='')
     reset_password_token = db.Column(db.String(100), nullable=False, server_default='')
     #active = db.Column(db.Boolean(), nullable=False, server_default='0')
@@ -41,8 +41,8 @@ class Role(db.Model):
 class UserRoles(db.Model):
     __tablename__ = dbtableprefix + 'user_roles'
     id = db.Column(db.Integer(), primary_key=True)
-    user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
-    role_id = db.Column(db.Integer(), db.ForeignKey('role.id', ondelete='CASCADE'))
+    user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
+    role_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'role.id', ondelete='CASCADE'))
 
 class UserDict(db.Model):
     __tablename__ = dbtableprefix + "userdict"
@@ -50,14 +50,14 @@ class UserDict(db.Model):
     filename = db.Column(db.Text())
     key = db.Column(db.String(250))
     dictionary = db.Column(db.Text())
-    user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
+    user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
 
 class UserDictKeys(db.Model):
     __tablename__ = dbtableprefix + "userdictkeys"
     indexno = db.Column(db.Integer(), primary_key=True)
     filename = db.Column(db.Text())
     key = db.Column(db.String(250))
-    user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
+    user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
 
 class UserDictLock(db.Model):
     __tablename__ = dbtableprefix + "userdictlock"
@@ -91,10 +91,10 @@ class Ticket(db.Model):
     filename = db.Column(db.String(255))
     request_type = db.Column(db.String(50), nullable=False)
     description = db.Column(db.Text())
-    opened_by = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
+    opened_by = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
     open_time = db.Column(db.DateTime(), server_default=db.func.now())
     close_time = db.Column(db.DateTime())
-    closed_by = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
+    closed_by = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
     close_type = db.Column(db.String(50))
     close_description = db.Column(db.Text())
     status = db.Column(db.String(50))
@@ -102,9 +102,20 @@ class Ticket(db.Model):
 class TicketNote(db.Model):
     __tablename__ = dbtableprefix + "ticketnote"
     id = db.Column(db.Integer(), primary_key=True)
-    user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
+    user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
     note_type = db.Column(db.String(50), nullable=False)
-    ticket_id = db.Column(db.Integer(), db.ForeignKey('ticket.id', ondelete='CASCADE'))
+    ticket_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'ticket.id', ondelete='CASCADE'))
     create_time = db.Column(db.DateTime(), server_default=db.func.now())
     description = db.Column(db.Text())
 
+class SpeakList(db.Model):
+    __tablename__ = dbtableprefix + "speaklist"
+    id = db.Column(db.Integer(), primary_key=True)
+    filename = db.Column(db.Text())
+    key = db.Column(db.String(250))
+    phrase = db.Column(db.Text())
+    question = db.Column(db.Integer())
+    type = db.Column(db.String(20))
+    language = db.Column(db.String(10))
+    dialect = db.Column(db.String(10))
+    upload = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'uploads.indexno', ondelete='CASCADE'))

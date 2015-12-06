@@ -18,7 +18,7 @@ interview help:
     that you can save.
 
     If you see a word written in green text, you can click on it to
-    see more information about the word.  You can try this out by here
+    see more information about the word.  You can try this out here 
     to find out more about rhododendron plants.
 comment: |
   An "interview help" block adds text to the "Help" page of every
@@ -155,6 +155,10 @@ content: |
   to continue the interview.
 
   Thank you for your patience.
+---
+mandatory: true
+code: |
+  speak_text = True
 ---
 initial: true
 code: |

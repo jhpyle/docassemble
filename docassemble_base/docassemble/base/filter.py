@@ -423,9 +423,9 @@ def image_url_string(match, emoji=False):
         if emoji:
             width_string += ';vertical-align: middle'
         if file_info['extension'] in ['png', 'jpg', 'gif', 'svg']:
-            return('<img class="daicon" style="' + width_string + '" src="' + url_finder(file_reference) + '">')
+            return('<img class="daicon" style="' + width_string + '" src="' + url_finder(file_reference) + '"/>')
         elif file_info['extension'] == 'pdf':
-            output = '<img class="daicon" style="' + width_string + '" src="' + url_finder(file_reference, size="screen", page=1) + '">'
+            output = '<img class="daicon" style="' + width_string + '" src="' + url_finder(file_reference, size="screen", page=1) + '"/>'
             if 'pages' in file_info and file_info['pages'] > 1:
                 output += " (" + str(file_info['pages']) + " " + docassemble.base.util.word('pages') + ")"
             return(output)
@@ -563,16 +563,16 @@ def add_terms(termname, terms):
         #logmessage(lower_termname + " is not in terms dictionary\n")
         return termname
 
-def audio_control(files):
+def audio_control(files, preload="metadata"):
     for d in files:
         if type(d) in (str, unicode):
             return d
-    output = '<audio controls="controls" preload="metadata">' + "\n"
+    output = '<audio controls="controls" preload="' + preload + '">' + "\n"
     for d in files:
         if type(d) is list:
             output += '  <source src="' + d[0] + '"'
             if d[1] is not None:
-                output += ' type="' + d[1] + '">'
+                output += ' type="' + d[1] + '"/>'
             output += "\n"
     output += '  <a target="_blank" href="' + files[-1][0] +  '">' + docassemble.base.util.word('Listen') + '</a>\n'
     output += "</audio>\n"
@@ -587,7 +587,7 @@ def video_control(files):
         if type(d) is list:
             output += '  <source src="' + d[0] + '"'
             if d[1] is not None:
-                output += ' type="' + d[1] + '">'
+                output += ' type="' + d[1] + '"/>'
             output += "\n"
     output += '  <a target="_blank" href="' + files[-1][0] +  '">' + docassemble.base.util.word('Listen') + '</a>\n'
     output += "</video>\n"
