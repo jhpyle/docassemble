@@ -7,15 +7,15 @@ short_title: Docker
 If you want to avoid having to install all of **docassemble**'s
 dependencies on your server, you can run it as a [Docker] image.
 
-**docassemble** works particularly well running as a [Docker]
-container on [Amazon AWS] within an EC2 virtual machine running Amazon
-Linux.
+It is very easy to deploy **docassemble** as a [Docker] container on
+[Amazon AWS] within an EC2 virtual machine running Amazon Linux.
 
-[Docker] is a good platform for trying out **docassemble** for the first
-time and it is also a good production environment.
-Amazon's [EC2 Container Service](https://aws.amazon.com/ecs/) can be
-used to maintain a cluster of **docassemble** images.  See 
-[scalability of docassemble]({{ site.baseurl }}/docs/scalability.html).
+[Docker] is a good platform for trying out **docassemble** for the
+first time.  It can also be used as a production environment; Amazon's
+[EC2 Container Service](https://aws.amazon.com/ecs/) can be used to
+maintain a cluster of **docassemble** images.  See
+[scalability of docassemble]({{ site.baseurl
+}}/docs/scalability.html).
 
 # Prerequisites
 
@@ -110,9 +110,9 @@ files:
   Debian mirror; the standard "httpredir" mirror can lead to random
   packages not being downloaded, depending on which mirrors it chooses
   to use.
-* `docassemble/Docker/apache.conf`: note that this configuration only
+* `docassemble/Docker/apache-single.conf`: note that this configuration only
   uses http, not https.
-* `docassemble/Docker/config.yml`: note that this configuration sets `root` to
+* `docassemble/Docker/config-single.yml`: note that this configuration sets `root` to
   `/`.
 
 To build the image, run:

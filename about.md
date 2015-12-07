@@ -32,9 +32,13 @@ addition to gathering yes/no answers and fill-in forms,
 smartphone, and the user's signature, which the user can write using a
 touchscreen or mouse.  The documents created by **docassemble** can
 incorporate the user's signature and/or uploaded images.  Audio and
-video can be easily integrated into questions.  Interviews can the
-user information relevant to their current physical location by
-accessing the geolocation feature of the user's browser.
+video can be easily integrated into questions; in particular,
+**docassemble** integrates with [Voice RSS] to provide on-the-fly
+text-to-speech generation.  Interviews can provide the user with
+information relevant to their current physical location by accessing
+the geolocation feature of the user's browser, and present Google Maps
+to the user on the basis of addresses geocoded with Google's geocoding
+API.
 
 ### Easy to develop
 

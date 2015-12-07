@@ -11,18 +11,23 @@ to launch a WSGI file.  The standard WSGI file, `docassemble.wsgi`,
 looks like this:
 
 {% highlight python %}
+import os, site
 import docassemble.webapp.config
-docassemble.webapp.config.load(filename="/etc/docassemble/config.yml")
+docassemble.webapp.config.load(filename="/usr/share/docassemble/config.yml")
+os.environ["PYTHONUSERBASE"] = docassemble.webapp.config.daconfig.get('packages', "/usr/share/docassemble/local")
+os.environ["XDG_CACHE_HOME"] = docassemble.webapp.config.daconfig.get('packagecache', "/usr/share/docassemble/cache")
+site.addusersitepackages("") 
 from docassemble.webapp.server import app as application
 {% endhighlight %}
 
-The first two lines load the **docassemble** configuration, and the
-third imports the [Flask] application server.  The configuration is
-stored in a [YAML] file, which by default is located in
-`/etc/docassemble/config.yaml`.  If you wish, you can edit the WSGI
-file and tell it to load the configuration from a file in a different
-location.  You might want to do this if you have multiple virtual
-hosts, each running a different WSGI application on a single server.
+The second and third lines load the **docassemble** configuration, and
+the last line imports the [Flask] application server.  The
+configuration is stored in a [YAML] file, which by default is located
+in `/usr/share/docassemble/config.yaml`.  If you wish, you can edit
+the WSGI file and tell it to load the configuration from a file in a
+different location.  You might want to do this if you have multiple
+virtual hosts, each running a different WSGI application on a single
+server.
 
 The configuration file needs to be readable and writable by the web
 server, but should not be readable by other users of the system
@@ -58,7 +63,9 @@ db:
 appname: docassemble
 brandname: docassemble
 uploads: /usr/share/docassemble/files
-webapp: /var/lib/docassemble/docassemble.wsgi
+packages: /usr/share/docassemble/local
+packagecache: /usr/share/docassemble/cache
+webapp: /usr/share/docassemble/docassemble.wsgi
 mail:
   default_sender: None #'"Administrator" <no-reply@example.com>'
   username: none
@@ -157,6 +164,25 @@ specified.
 This is the directory in which uploaded files are stored.  If you are
 using a [multi-server arrangement], this needs to point to a central
 network drive.
+
+## packages
+
+This is the directory in which **docassemble** extension packages are
+installed.  The PYTHONUSERBASE environment variable is set to this
+value and [pip] is called with `--install-option=--user`.  When Python
+looks for packages, it will look here.  This is normally `~/.local`,
+but it is a good practice to avoid using the web server user's home
+directory.
+
+## packagecache
+
+When [pip] runs, it needs a directory in which to cache files.  The
+XDG_CACHE_HOME environment variable is set to this value.  This is
+normally `~/.cache`, but it is a good practice to avoid using the web
+server user's home directory.
+
+On Mac and Windows, make sure that the web server user has a home
+directory to which [pip] can write.  (See pip/utils/appdirs.py.)
 
 ## webapp
 
@@ -393,6 +419,38 @@ This symbol will be used in the user interface when a field has the
 `datatype` of `currency`.  It will also be used in the
 `currency_symbol()` function defined in `docassemble.base.util`.
 
+## URL to central file server
+
+If you are using a [multi-server arrangement] and your `uploads` and
+`packages` directories are mounted on a network drive, you can reduce
+bandwidth on your web server by setting `fileserver` to a URL path to
+a dedicated file server:
+
+{% highlight yaml %}
+fileserver: files.example.com/da/
+{% endhighlight %}
+
+Always use a trailing slash.
+
+If this directive is not set, the value of `root` will be used to
+create URLs to uploaded files and static files.
+
+## voicerss
+
+{% highlight yaml %}
+voicerss:
+  enable: false
+  key: 347593849874e7454b9872948a87987d
+  languages:
+    en:
+      GB: en-gb
+      US: en-us
+    es:
+      MX: es-mx
+    fr:
+      FR: fr-fr
+{% endhighlight %}
+
 # Using your own configuration variables
 
 Feel free to use the configuration file to pass your own variables to
@@ -441,3 +499,5 @@ first.
 [ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
 [GitHub]: https://github.com/
 [Perl Audio Converter]: http://vorzox.wix.com/pacpl
+[pip]: https://en.wikipedia.org/wiki/Pip_%28package_manager%29
+[list of language codes]: http://www.voicerss.org/api/documentation.aspx

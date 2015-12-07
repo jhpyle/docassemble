@@ -37,26 +37,25 @@ uploads: /usr/share/docassemble/files
 {% endhighlight %}
 
 When developers install new Python packages, the packages are unpacked
-in `/var/www/.local` (i.e. the `.local` directory within the
-`www-data` user's home directory), and the web server is restarted by
-"touch"ing the WSGI file.  The path of the WSGI file is defined in the
-[Apache configuration] and in the **docassemble** configuration file:
+in `/usr/share/docassemble/local`, and the web server is restarted by
+"touch"ing the WSGI file,
+`/usr/share/docassemble/webapp/docassemble.wsgi`.  The path of the
+WSGI file is defined in the [Apache configuration] and in the
+**docassemble** configuration file:
 
 {% highlight yaml %}
 webapp: /var/lib/docassemble/docassemble.wsgi
 {% endhighlight %}
 
-Therefore, configuring a cluster of **docassemble** servers entails
-creating a central network file server to host the following
-directories, which the cluster members would each mount:
+Configuring a cluster of **docassemble** servers entails creating a
+central network file server to store uploaded files, which the
+application servers would use.  The easiest way to do this is with
+[Amazon S3], for which **docassemble** has built-in integration; you
+can set this up in the [configuration].  In addition, the `db` section
+of the `config.yml` file on each server must be written to point to a
+central SQL server.
 
-* `/etc/docassemble`
-* `/usr/share/docassemble/files`
-* `/var/lib/docassemble/`
-* `/var/www`
-
-In addition, the `db` section of the `config.yml` file must be
-modified to point to a central SQL server.
-
+[Apache]: https://en.wikipedia.org/wiki/Apache_HTTP_Server
 [Apache configuration]: {{ site.baseurl }}/docs/installation.html
 [configuration]: {{ site.baseurl }}/docs/config.html
+[installation]: {{ site.baseurl }}/docs/installation.html

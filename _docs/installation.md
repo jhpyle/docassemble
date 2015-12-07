@@ -21,9 +21,7 @@ instructions.
 The following dependencies can be installed from Debian packages:
 
 {% highlight bash %}
-sudo apt-get install python-markdown python-yaml python-mako \
-  python-dateutil python-setuptools python-httplib2 \
-  python-dev python-imaging pandoc texlive texlive-latex-extra \
+sudo apt-get install python python-dev pandoc texlive texlive-latex-extra \
   gcc wget unzip git locales
 {% endhighlight %}
   
@@ -42,7 +40,8 @@ To install the [Nodebox English Linguistics library], do:
 
 {% highlight bash %}
 wget https://www.nodebox.net/code/data/media/linguistics.zip
-sudo unzip linguistics.zip -d /usr/local/lib/python2.7/dist-packages
+#sudo unzip linguistics.zip -d /usr/local/lib/python2.7/dist-packages
+unzip linguistics.zip -d /usr/share/docassemble-dav/local/lib/python2.7/site-packages/
 rm linguistics.zip
 {% endhighlight %}
 
@@ -52,7 +51,7 @@ downloading using pip, either because they are not available through
 old.
 
 First, you need to install the latest version of `pip`:
-
+  
 {% highlight bash %}
 easy_install pip
 {% endhighlight %}
@@ -63,7 +62,8 @@ do:
 
 {% highlight bash %}
 sudo pip install --upgrade us 3to2 guess-language-spirit html2text
-sudo pip install --upgrade mdx_smartypants titlecase pygeocoder
+markdown pyyaml mako python-dateutil setuptools httplib2 psycopg2 pillow
+sudo pip install --upgrade mdx_smartypants titlecase pygeocoder beautifulsoup4
 sudo pip install --upgrade cffi
 sudo pip install --upgrade bcrypt
 sudo pip install --upgrade wtforms werkzeug rauth simplekv \
@@ -82,7 +82,7 @@ needed for generating RTF files, do:
 {% highlight bash %}
 git clone https://github.com/nekstrom/pyrtf-ng
 cd pyrtf-ng
-sudo python setup.py install
+../bin/python setup.py install
 cd ..
 {% endhighlight %}
 
@@ -90,9 +90,9 @@ The following will install the Debian dependencies needed for the web
 server:
 
 {% highlight bash %}
-sudo apt-get install apache2 postgresql python-psycopg2 \
-  libapache2-mod-wsgi libapache2-mod-xsendfile python-speaklater \
-  poppler-utils python-pil libffi-dev libffi6 imagemagick
+sudo apt-get install apache2 postgresql libapache2-mod-wsgi \
+  libapache2-mod-xsendfile python-speaklater poppler-utils \
+  libffi-dev libffi6 imagemagick
 {% endhighlight %}
 
 To install the additional Python dependencies for the web server
@@ -106,7 +106,7 @@ To install the additional Python dependencies for the web server
 {% highlight bash %}
 sudo pip install --upgrade wtforms werkzeug rauth simplekv \
   Flask-KVSession flask-user pypdf flask flask-login \
-  flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
+  flask-sqlalchemy Flask-WTF babel blinker sqlalchemy \
   Pygments
 {% endhighlight %}
 
@@ -199,27 +199,16 @@ sudo a2enmod wsgi
 sudo a2enmod xsendfile
 {% endhighlight %}
 
-Create the root directory for user-contributed Python packages (see
-[site.USER_BASE]), and make sure it is writeable:
+Create directories needed by **docassemble**:
 
 {% highlight bash %}
-sudo mkdir -p /var/www/.local /var/www/.cache
-sudo chown www-data.www-data /var/www/.local /var/www/.cache
+sudo mkdir -p /usr/share/docassemble/webapp
 {% endhighlight %}
 
-Create the directory for the Flask WSGI file needed by the web server:
+Copy the WSGI file to the webapp directory:
 
 {% highlight bash %}
-sudo mkdir -p /var/lib/docassemble/webapp
-sudo cp ~/docassemble/docassemble_webapp/flask.wsgi /var/lib/docassemble/webapp
-sudo chown www-data.www-data /var/lib/docassemble/webapp/flask.wsgi
-{% endhighlight %}
-
-Create the uploads directory:
-
-{% highlight bash %}
-sudo mkdir -p /usr/share/docassemble/files
-sudo chown www-data.www-data /usr/share/docassemble/files
+sudo cp ~/docassemble/docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp
 {% endhighlight %}
 
 Set up and edit the [configuration] file.  At the very least, you should
@@ -227,10 +216,14 @@ edit the `secretkey` value to something random and unique to your
 site.
 
 {% highlight bash %}
-sudo mkdir -p /etc/docassemble
-sudo cp ~/docassemble/docassemble_base/config.yml /etc/docassemble/
-sudo chown www-data.www-data /etc/docassemble/config.yml
-sudo vi /etc/docassemble/config.yml
+sudo cp ~/docassemble/docassemble_base/config.yml /usr/share/docassemble/
+sudo vi /usr/share/docassemble/config.yml
+{% endhighlight %}
+
+Make sure that everything can be read and written by the web server:
+
+{% highlight bash %}
+sudo chown -R www-data.www-data /usr/share/docassemble
 {% endhighlight %}
 
 Note that the [configuration] file needs to be readable and writeable
@@ -262,8 +255,8 @@ Set /etc/apache2/sites-available/000-default.conf to something like:
     XSendFilePath /var
     XSendFilePath /tmp
     WSGIDaemonProcess docassemble.webserver user=www-data group=www-data threads=5
-    WSGIScriptAlias /da /var/lib/docassemble/webapp/docassemble.wsgi
-    <Directory /var/lib/docassemble/webapp>
+    WSGIScriptAlias /da /usr/share/docassemble/webapp/docassemble.wsgi
+    <Directory /usr/share/docassemble/webapp>
       WSGIProcessGroup docassemble.webserver
       WSGIApplicationGroup %{GLOBAL}
       AllowOverride none
@@ -291,12 +284,12 @@ configuration.
 
 `docassemble` uses a SQL database.  Set up the database by running the
 following commands.  (You may wish to make changes to the database
-information in `/etc/docassemble/config.yml` first.  Note that this
+information in `/usr/share/docassemble/config.yml` first.  Note that this
 file will need to be readable by the `postgres` user.)
 
 {% highlight bash %}
 echo 'create role "www-data" login; create database docassemble;' | sudo -u postgres psql
-sudo -u postgres python ~/docassemble/docassemble_webapp/docassemble/webapp/create_tables.py /etc/docassemble/config.yml
+sudo -u postgres python ~/docassemble/docassemble_webapp/docassemble/webapp/create_tables.py /usr/share/docassemble/config.yml
 echo 'grant all on all tables in schema public to "www-data"; grant all on all sequences in schema public to "www-data";' | sudo -u postgres psql docassemble
 {% endhighlight %}
 
@@ -305,9 +298,9 @@ buttons to work, you will need to register your site on
 [Google Developers Console](https://console.developers.google.com/)
 and on [Facebook Developers](https://developers.facebook.com/) and
 obtain IDs and secrets, which you supply to docassemble by editing
-the `/etc/docassemble/config.yml` [configuration] file.
+the `/usr/share/docassemble/config.yml` [configuration] file.
 
-The `/etc/docassemble/config.yml` file also contains settings for
+The `/usr/share/docassemble/config.yml` file also contains settings for
 connecting to the PostgreSQL database and the mail server.
 
 Restart Apache:
@@ -344,12 +337,12 @@ To upgrade docassemble to the latest version, do:
 {% highlight bash %}
 cd docassemble
 git pull
-sudo ./compile.sh && sudo touch /var/lib/docassemble/docassemble.wsgi
+sudo ./compile.sh && sudo touch /usr/share/docassemble/docassemble.wsgi
 {% endhighlight %}
 
 Note that after making changes to docassemble interviews and Python
 code, it is not necessary to restart Apache.  Changing the
-modification time of /var/lib/docassemble/docassemble.wsgi will trigger
+modification time of /usr/share/docassemble/docassemble.wsgi will trigger
 Apache to restart the WSGI processes.
 
 # Debugging the web app
