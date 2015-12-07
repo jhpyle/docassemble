@@ -27,6 +27,7 @@ RUN ./compile.sh
 WORKDIR /tmp/docassemble
 RUN Docker/setup-docassemble.sh
 
+USER root
 RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 RUN locale-gen
 RUN update-locale LANG=en_US.UTF-8

@@ -119,3 +119,9 @@ class SpeakList(db.Model):
     language = db.Column(db.String(10))
     dialect = db.Column(db.String(10))
     upload = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'uploads.indexno', ondelete='CASCADE'))
+
+class Messages(db.Model):
+    __tablename__ = dbtableprefix + "messages"
+    id = db.Column(db.Integer(), db.Sequence(dbtableprefix + 'messages_id_seq'), primary_key=True)
+    message = db.Column(db.Text())
+    create_time = db.Column(db.DateTime(), server_default=db.func.now())

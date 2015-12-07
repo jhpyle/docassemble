@@ -22,6 +22,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_conn
 app.secret_key = daconfig.get('secretkey','28ihfiFehfoU34mcq_4clirglw3g4o87')
 
 def populate_tables():
+    existing_admin = Role.query.filter_by(name=word('admin')).first()
+    if existing_admin:
+        return
     defaults = daconfig.get('default_admin_account', {'nickname': 'admin', 'email': 'admin@admin.com', 'password': 'password'})
     admin_role = Role(name=word('admin'))
     user_role = Role(name=word('user'))
@@ -47,6 +50,6 @@ def populate_tables():
     return
 
 if __name__ == "__main__":
-    db.drop_all()
+    #db.drop_all()
     db.create_all()
     populate_tables()

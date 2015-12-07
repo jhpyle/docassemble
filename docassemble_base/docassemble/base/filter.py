@@ -313,6 +313,7 @@ def image_as_rtf(match):
     file_info = file_finder(file_reference, convert={'svg': 'png'})
     if 'path' not in file_info:
         return ''
+    logmessage('image_as_rtf: path is ' + file_info['path'])
     if 'mimetype' in file_info:
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
@@ -330,7 +331,8 @@ def image_as_rtf(match):
             page_file = dict()
             page_file['extension'] = 'png'
             page_file['path'] = file_info['path'] + 'page-' + str(page)
-            im = PIL.Image.open(page_file['path'] + ".png")
+            page_file['fullpath'] = page_file['path'] + '.png'
+            im = PIL.Image.open(page_file['fullpath'])
             page_file['width'], page_file['height'] = im.size
             output += rtf_image(page_file, width, False)
             if not width_supplied:

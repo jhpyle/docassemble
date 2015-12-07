@@ -500,13 +500,13 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     master_output += '        </section>\n'
     master_output += '        <section id="help" class="tab-pane col-md-6">\n'
     output = ""
+    if status.using_screen_reader and 'help' in status.screen_reader_links:
+        output += '          <div>\n' + indent_by(audio_control(status.screen_reader_links['help'], preload="none"), 12) + '          </div>\n'
     for help_section in status.helpText:
         if help_section['heading'] is not None:
             output += '          <div class="page-header"><h3>' + help_section['heading'] + '</h3></div>\n'
         else:
             output += '          <div class="page-header"><h3>' + word('Help with this question') + '</h3></div>\n'
-        if status.using_screen_reader and 'question' in status.screen_reader_links:
-            output += '          <div>\n' + indent_by(audio_control(status.screen_reader_links['help'], preload="none"), 12) + '          </div>\n'
         if help_section['audiovideo'] is not None:
             uses_audio_video = True
             audio_urls = get_audio_urls(help_section['audiovideo'])
@@ -519,7 +519,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     if len(status.attributions):
         output += '          <br/><br/><br/><br/><br/><br/><br/>\n'
     for attribution in sorted(status.attributions):
-        output += '          <div><small>' + markdown_to_html(attribution, strip_newlines=True) + '</small></div>\n'
+        output += '          <div><attribution><small>' + markdown_to_html(attribution, strip_newlines=True) + '</small></attribution></div>\n'
     if status.using_screen_reader:
         #status.screen_reader_text['help'] = html2text.html2text(output)
         status.screen_reader_text['help'] = unicode(output)

@@ -44,9 +44,9 @@ from werkzeug import secure_filename, FileStorage
 from rauth import OAuth1Service, OAuth2Service
 from flask_kvsession import KVSessionExtension
 from simplekv.db.sql import SQLAlchemyStore
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import create_engine, MetaData, Sequence
 from docassemble.webapp.app_and_db import app, db
-from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock, Attachments, Uploads, SpeakList
+from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock, Attachments, Uploads, SpeakList, Messages
 from docassemble.webapp.packages.models import Package, PackageAuth
 from docassemble.webapp.config import daconfig
 from PIL import Image
@@ -116,6 +116,10 @@ docassemble.base.util.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
 docassemble.base.util.set_locale(DEFAULT_LOCALE)
 docassemble.base.util.set_da_config(daconfig)
 docassemble.base.util.update_locale()
+dbtableprefix = daconfig['db'].get('table_prefix', None)
+if not dbtableprefix:
+    dbtableprefix = ''
+message_sequence = dbtableprefix + 'message_id_seq'
 
 audio_mimetype_table = {'mp3': 'audio/mpeg', 'ogg': 'audio/ogg'}
 
@@ -140,7 +144,7 @@ valid_voicerss_languages = {
     }
 
 voicerss_config = daconfig.get('voicerss', None)
-if not voicerss_config or ('enabled' in voicerss_config and not voicerss_config['enabled']) or not ('key' in voicerss_config and voicerss_config['key']):
+if not voicerss_config or ('enable' in voicerss_config and not voicerss_config['enable']) or not ('key' in voicerss_config and voicerss_config['key']):
     VOICERSS_ENABLED = False
 else:
     VOICERSS_ENABLED = True
@@ -149,6 +153,16 @@ if 'currency symbol' in daconfig:
     docassemble.base.util.update_language_function('*', 'currency_symbol', lambda: daconfig['currency symbol'])
 app.logger.warning("default sender is " + app.config['MAIL_DEFAULT_SENDER'] + "\n")
 exit_page = daconfig.get('exitpage', '/')
+s3_config = daconfig.get('s3', None)
+if not s3_config or ('enable' in s3_config and not s3_config['enable']) or not ('access_key_id' in s3_config and s3_config['access_key_id']) or not ('secret_access_key' in s3_config and s3_config['secret_access_key']):
+    S3_ENABLED = False
+else:
+    S3_ENABLED = True
+
+if S3_ENABLED:
+    import docassemble.webapp.amazon
+    s3 = docassemble.webapp.amazon.s3object(s3_config)
+
 PACKAGE_CACHE = daconfig.get('packagecache', '/tmp/docassemble-cache')
 WEBAPP_PATH = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
 PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
@@ -215,26 +229,22 @@ docassemble.base.logger.set_logmessage(flask_logger)
 def get_url_from_file_reference(file_reference, **kwargs):
     if re.search(r'^http', file_reference):
         return(file_reference)
-    root = daconfig.get('root', '/')
-    fileroot = daconfig.get('fileserver', root)
-    if 'ext' in kwargs:
-        extn = kwargs['ext']
-        extn = re.sub(r'^\.', '', extn)
-        extn = '.' + extn
-    else:
-        extn = ''
     if re.match('[0-9]+', file_reference):
         file_number = file_reference
-        if 'page' in kwargs:
-            page = kwargs['page']
-            size = kwargs.get('size', 'page')
-            url = fileroot + 'uploadedpage'
-            if size == 'screen':
-                url += 'screen'
-            url += '/' + str(file_number) + '/' + str(page)
+        if can_access_file_number(file_number):
+            the_file = SavedFile(file_number)
+            url = the_file.url_for(**kwargs)
         else:
-            url = fileroot + 'uploadedfile/' + str(file_number) + extn
+            url = 'about:blank'
     else:
+        root = daconfig.get('root', '/')
+        fileroot = daconfig.get('fileserver', root)
+        if 'ext' in kwargs:
+            extn = kwargs['ext']
+            extn = re.sub(r'^\.', '', extn)
+            extn = '.' + extn
+        else:
+            extn = ''
         parts = file_reference.split(':')
         if len(parts) < 2:
             parts = ['docassemble.base', file_reference]
@@ -252,14 +262,6 @@ def absolute_validator(the_file):
 
 docassemble.base.parse.set_absolute_validator(absolute_validator)
 
-def get_path_from_file_number(file_number, directory=False):
-    parts = re.sub(r'(...)', r'\1/', '{0:012x}'.format(int(file_number))).split('/')
-    path = os.path.join(UPLOAD_DIRECTORY, *parts)
-    if directory:
-        return(path)
-    else:
-        return (os.path.join(path, 'file'))
-
 def get_ext_and_mimetype(filename):
     mimetype, encoding = mimetypes.guess_type(filename)
     extension = filename.lower()
@@ -272,13 +274,20 @@ def get_ext_and_mimetype(filename):
         mimetype = 'audio/3gpp'
     return(extension, mimetype)
 
+def can_access_file_number(file_number):
+    upload = Uploads.query.filter_by(indexno=file_number, key=session['uid']).first()
+    if upload:
+        return True
+    return False
+
 def get_info_from_file_number(file_number):
     result = dict()
     upload = Uploads.query.filter_by(indexno=file_number, key=session['uid']).first()
     if upload:
-        result['path'] = get_path_from_file_number(file_number)
         result['filename'] = upload.filename
         result['extension'], result['mimetype'] = get_ext_and_mimetype(result['filename'])
+        result['savedfile'] = SavedFile(file_number, extension=result['extension'], fix=True)
+        result['path'] = result['savedfile'].path
         result['fullpath'] = result['path'] + '.' + result['extension']
     # cur = conn.cursor()
     # cur.execute("SELECT filename FROM uploads where indexno=%s and key=%s", [file_number, session['uid']])
@@ -290,9 +299,9 @@ def get_info_from_file_number(file_number):
     #     break
     # conn.commit()
     if 'path' not in result:
+        logmessage("path is not in result for " + str(file_number))
         return result
     filename = result['path'] + '.' + result['extension']
-    add_info_about_file(filename, result)
     if os.path.isfile(filename):
         add_info_about_file(filename, result)
     else:
@@ -320,14 +329,15 @@ def add_info_about_file(filename, result):
 def get_info_from_file_reference(file_reference, **kwargs):
     #sys.stderr.write('file reference is ' + str(file_reference) + "\n")
     #logmessage('file reference is ' + str(file_reference))
-    if re.match('[0-9]+', file_reference):
-        return(get_info_from_file_number(file_reference))
-    result = dict()
     if 'convert' in kwargs:
         convert = kwargs['convert']
     else:
         convert = None
-    result['fullpath'] = docassemble.base.util.static_filename_path(file_reference)
+    if re.match('[0-9]+', file_reference):
+        result = get_info_from_file_number(file_reference)
+    else:
+        result = dict()
+        result['fullpath'] = docassemble.base.util.static_filename_path(file_reference)
     #logmessage("path is " + str(result['fullpath']))
     if result['fullpath'] is not None and os.path.isfile(result['fullpath']):
         result['filename'] = os.path.basename(result['fullpath'])
@@ -348,7 +358,8 @@ def get_info_from_file_reference(file_reference, **kwargs):
                 #logmessage("Did not find file " + result['path'] + '.' + convert[result['extension']])
                 return dict()
         #logmessage("Full path is " + result['fullpath'])
-        add_info_about_file(result['fullpath'], result)
+        if os.path.isfile(result['fullpath']):
+            add_info_about_file(result['fullpath'], result)
     else:
         logmessage("File reference " + str(file_reference) + " DID NOT EXIST.")
     return(result)
@@ -361,9 +372,9 @@ def get_mail_variable(*args, **kwargs):
 def save_numbered_file(filename, orig_path):
     file_number = get_new_file_number(session['uid'], filename)
     extension, mimetype = get_ext_and_mimetype(filename)
-    path = get_file_path(file_number)
-    shutil.copyfile(orig_path, path)
-    symlink_or_copy(path, path + '.' + extension)
+    new_file = SavedFile(file_number, extension=extension, fix=True)
+    new_file.copy_from(orig_path)
+    new_file.save(finalize=True)
     return(file_number, extension, mimetype)
 
 docassemble.base.parse.set_mail_variable(get_mail_variable)
@@ -437,6 +448,136 @@ lm.login_view = 'login'
 def load_user(id):
     return User.query.get(int(id))
 
+class SavedFile(object):
+    def __init__(self, file_number, extension=None, fix=False):
+        self.file_number = file_number
+        self.extension = extension
+        self.fixed = False
+        if not S3_ENABLED:
+            parts = re.sub(r'(...)', r'\1/', '{0:012x}'.format(int(file_number))).split('/')
+            self.directory = os.path.join(UPLOAD_DIRECTORY, *parts)
+            self.path = os.path.join(self.directory, 'file')
+        if fix:
+            self.fix()
+    def fix(self):
+        if self.fixed:
+            return
+        if S3_ENABLED:
+            self.modtimes = dict()
+            self.keydict = dict()
+            self.directory = tempfile.mkdtemp()
+            prefix = 'files/' + str(self.file_number) + '/'
+            logmessage("fix: prefix is " + prefix)
+            for key in s3.bucket.list(prefix=prefix, delimiter='/'):
+                filename = re.sub(r'.*/', '', key.name)
+                fullpath = os.path.join(self.directory, filename)
+                logmessage("fix: saving to " + fullpath)
+                key.get_contents_to_filename(fullpath)
+                self.modtimes[filename] = os.path.getmtime(fullpath)
+                self.keydict[filename] = key
+            self.path = os.path.join(self.directory, 'file')
+        else:
+            if not os.path.isdir(self.directory):
+                os.makedirs(self.directory)        
+        self.fixed = True
+    def save(self, finalize=False):
+        if not self.fixed:
+            self.fix()
+        try:
+            os.symlink(self.path, self.path + '.' + self.extension)
+        except:
+            shutil.copyfile(self.path, self.path + '.' + self.extension)
+        if finalize:
+            self.finalize()
+        return
+    def fetch_url(self):
+        if not self.fixed:
+            self.fix()
+        urllib.urlretrieve(url, self.path)
+        self.save()
+        return
+    def size_in_bytes(self):
+        if S3_ENABLED and not self.fixed:
+            key = s3.get_key('/files/' + str(self.file_number) + '/file')
+            return key.size
+        else:
+            return os.path.getsize(self.path)
+    def copy_from(self, orig_path):
+        if not self.fixed:
+            self.fix()
+        shutil.copyfile(orig_path, self.path)
+        self.save()
+        return
+    def write_content(self, content):
+        if not self.fixed:
+            self.fix()
+        with open(self.path, 'w') as ifile:
+            ifile.write(content)
+        self.save()
+        return
+    def url_for(self, **kwargs):
+        if 'ext' in kwargs:
+            extn = kwargs['ext']
+            extn = re.sub(r'^\.', '', extn)
+        else:
+            extn = None
+        if S3_ENABLED:
+            keyname = '/files/' + str(self.file_number) + '/file'
+            page = kwargs.get('page', None)
+            if page:
+                size = kwargs.get('size', 'page')
+                page = re.sub(r'[^0-9]', '', page)
+                if size == 'screen':
+                    keyname += 'screen-' + str(page) + '.png'
+                else:
+                    keyname += 'page-' + str(page) + '.png'
+            elif extn:
+                keyname += '.' + extn
+            key = s3.get_key(keyname)
+            if key.exists():
+                return(key.generate_url(3600))
+            else:
+                return('about:blank')
+        else:
+            if extn is None:
+                extn = ''
+            else:
+                extn = '.' + extn
+            root = daconfig.get('root', '/')
+            fileroot = daconfig.get('fileserver', root)
+            if 'page' in kwargs and kwargs['page']:
+                page = re.sub(r'[^0-9]', '', str(kwargs['page']))
+                size = kwargs.get('size', 'page')
+                url = fileroot + 'uploadedpage'
+                if size == 'screen':
+                    url += 'screen'
+                url += '/' + str(self.file_number) + '/' + str(page)
+            else:
+                url = fileroot + 'uploadedfile/' + str(self.file_number) + extn
+            return(url)
+    def finalize(self):
+        if not S3_ENABLED:
+            return
+        if not self.fixed:
+            raise DAError("SavedFile: finalize called before fix")
+        for filename in os.listdir(self.directory):
+            fullpath = os.path.join(self.directory, filename)
+            if os.path.isfile(fullpath):
+                save = True
+                if filename in self.keydict:
+                    key = self.keydict[filename]
+                    if self.modtimes == os.path.getmtime(fullpath):
+                        save = False
+                else:
+                    key = s3.new_key()
+                    key.key = '/files/' + str(self.file_number) + '/' + filename
+                    if filename == 'file':
+                        extension, mimetype = get_ext_and_mimetype(filename + '.' + self.extension)
+                        key.content_type = mimetype
+                if save:
+                    key.set_contents_from_filename(fullpath)
+        return
+        
 class OAuthSignIn(object):
     providers = None
 
@@ -611,6 +752,8 @@ def exit():
 
 @app.route("/", methods=['POST', 'GET'])
 def index():
+    #seq = Sequence(message_sequence)
+    #nextid = connection.execute(seq)
     session_id = session.get('uid', None)
     yaml_filename = session.get('i', default_yaml_filename)
     steps = 0
@@ -804,10 +947,9 @@ def index():
                 filename = secure_filename('canvas.png')
                 file_number = get_new_file_number(session['uid'], filename)
                 extension, mimetype = get_ext_and_mimetype(filename)
-                path = get_file_path(file_number)
-                with open(path, 'w') as ifile:
-                    ifile.write(theImage)
-                symlink_or_copy(path, path + '.' + extension)
+                new_file = SavedFile(file_number, extension=extension, fix=True)
+                new_file.write_content(theImage)
+                new_file.finalize()
                 #sys.stderr.write("Saved theImage\n")
                 string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ", filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
             else:
@@ -853,47 +995,50 @@ def index():
                             filename = secure_filename(the_file.filename)
                             file_number = get_new_file_number(session['uid'], filename)
                             extension, mimetype = get_ext_and_mimetype(filename)
-                            path = get_file_path(file_number)
+                            saved_file = SavedFile(file_number, extension=extension, fix=True)
                             if extension == "jpg" and 'imagemagick' in daconfig:
                                 unrotated = tempfile.NamedTemporaryFile(suffix="jpg")
+                                rotated = tempfile.NamedTemporaryFile(suffix="jpg")
                                 the_file.save(unrotated.name)
-                                call_array = [daconfig['imagemagick'], str(unrotated.name), '-auto-orient', '-density', '300']
-                                call_array.append('jpeg:' + str(path))
+                                call_array = [daconfig['imagemagick'], str(unrotated.name), '-auto-orient', '-density', '300', 'jpeg:' + rotated.name]
                                 result = call(call_array)
-                                if result > 0:
-                                    shutil.copyfile(unrotated.name, path)
+                                if result == 0:
+                                    saved_file.copy_from(rotated.name)
+                                else:
+                                    saved_file.copy_from(unrotated.name)
                             else:
-                                the_file.save(path)
-                            symlink_or_copy(path, path + '.' + extension)
+                                the_file.save(saved_file.path)
+                                saved_file.save()
                             if mimetype == 'video/quicktime' and 'avconv' in daconfig:
-                                call_array = [daconfig['avconv'], '-i', path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', path + '.ogv']
+                                call_array = [daconfig['avconv'], '-i', saved_file.path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', saved_file.path + '.ogv']
                                 result = call(call_array)
-                                call_array = [daconfig['avconv'], '-i', path + '.' + extension, '-vcodec', 'copy', '-acodec', 'copy', path + '.mp4']
+                                call_array = [daconfig['avconv'], '-i', saved_file.path + '.' + extension, '-vcodec', 'copy', '-acodec', 'copy', saved_file.path + '.mp4']
                                 result = call(call_array)
                             if mimetype == 'video/mp4' and 'avconv' in daconfig:
-                                call_array = [daconfig['avconv'], '-i', path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', path + '.ogv']
+                                call_array = [daconfig['avconv'], '-i', saved_file.path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', saved_file.path + '.ogv']
                                 result = call(call_array)
                             if mimetype == 'video/ogg' and 'avconv' in daconfig:
-                                call_array = [daconfig['avconv'], '-i', path + '.' + extension, '-c:v', 'libx264', '-preset', 'veryslow', '-crf', '22', '-c:a', 'libmp3lame', '-qscale:a', '2', '-ac', '2', '-ar', '44100', path + '.mp4']
+                                call_array = [daconfig['avconv'], '-i', saved_file.path + '.' + extension, '-c:v', 'libx264', '-preset', 'veryslow', '-crf', '22', '-c:a', 'libmp3lame', '-qscale:a', '2', '-ac', '2', '-ar', '44100', saved_file.path + '.mp4']
                                 result = call(call_array)
                             if mimetype == 'audio/mpeg' and 'pacpl' in daconfig:
-                                call_array = [daconfig['pacpl'], '-t', 'ogg', path + '.' + extension]
+                                call_array = [daconfig['pacpl'], '-t', 'ogg', saved_file.path + '.' + extension]
                                 result = call(call_array)
                             if mimetype == 'audio/ogg' and 'pacpl' in daconfig:
-                                call_array = [daconfig['pacpl'], '-t', 'mp3', path + '.' + extension]
+                                call_array = [daconfig['pacpl'], '-t', 'mp3', saved_file.path + '.' + extension]
                                 result = call(call_array)
                             if mimetype in ['audio/3gpp'] and 'avconv' in daconfig:
-                                call_array = [daconfig['avconv'], '-i', path + '.' + extension, path + '.ogg']
+                                call_array = [daconfig['avconv'], '-i', saved_file.path + '.' + extension, saved_file.path + '.ogg']
                                 result = call(call_array)
-                                call_array = [daconfig['avconv'], '-i', path + '.' + extension, path + '.mp3']
+                                call_array = [daconfig['avconv'], '-i', saved_file.path + '.' + extension, saved_file.path + '.mp3']
                                 result = call(call_array)
                             if mimetype in ['audio/x-wav', 'audio/wav'] and 'pacpl' in daconfig:
-                                call_array = [daconfig['pacpl'], '-t', 'mp3', path + '.' + extension]
+                                call_array = [daconfig['pacpl'], '-t', 'mp3', saved_file.path + '.' + extension]
                                 result = call(call_array)
-                                call_array = [daconfig['pacpl'], '-t', 'ogg', path + '.' + extension]
+                                call_array = [daconfig['pacpl'], '-t', 'ogg', saved_file.path + '.' + extension]
                                 result = call(call_array)
                             if extension == "pdf":
-                                make_image_files(path)
+                                make_image_files(saved_file.path)
+                            saved_file.finalize()
                             files_to_process.append((filename, file_number, mimetype, extension))
                         if match_invalid.search(file_field):
                             error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
@@ -1375,12 +1520,6 @@ def get_new_file_number(user_code, file_name):
     # conn.commit()
     # return (indexno)
 
-def get_file_path(indexno):
-    path = get_path_from_file_number(indexno, directory=True)
-    if not os.path.isdir(path):
-        os.makedirs(path)
-    return (os.path.join(path, 'file'))
-
 def make_navbar(status, page_title, steps, show_login):
     navbar = """\
     <div class="navbar navbar-inverse navbar-fixed-top">
@@ -1473,6 +1612,7 @@ def _endpoint_url(endpoint):
 
 @app.route('/speakfile', methods=['GET'])
 def speak_file():
+    audio_file = None
     filename = session['i']
     key = session['uid']
     question = request.args.get('question', None)
@@ -1498,46 +1638,52 @@ def speak_file():
                 logmessage("Could not serve speak file because voicerss not enabled")
                 abort(404)
             new_file_number = get_new_file_number(key, 'speak.mp3')
-            path = get_file_path(new_file_number)
             phrase = codecs.decode(entry.phrase, 'base64')
             url = "https://api.voicerss.org/?" + urllib.urlencode({'key': voicerss_config['key'], 'src': phrase, 'hl': str(entry.language) + '-' + str(entry.dialect)})
             logmessage("Retrieving " + url)
-            urllib.urlretrieve(url, path)
-            if os.path.getsize(path) > 100:
-                symlink_or_copy(path, path + '.mp3')
-                call_array = [daconfig['pacpl'], '-t', 'ogg', path + '.mp3']
+            audio_file = SavedFile(new_file_number, extension='mp3', fix=True)
+            audio_file.fetch_url(url)
+            if audio_file.size_in_bytes() > 100:
+                audio_file.save()
+                call_array = [daconfig['pacpl'], '-t', 'ogg', audio_file.path + '.mp3']
                 result = call(call_array)
-                if result == 0:
-                    entry.upload = new_file_number
-                    db.session.commit()
-                else:
+                if result != 0:
                     logmessage("Failed to convert downloaded mp3 (" + path + ") to ogg")
                     abort(404)
+                entry.upload = new_file_number
+                audio_file.finalize()
+                db.session.commit()
             else:
                 logmessage("Download from voicerss (" + path + ") failed")
                 abort(404)
     if not entry.upload:
         logmessage("Upload file number was not set")
         abort(404)
-    the_path = get_path_from_file_number(entry.upload) + '.' + file_format
+    if not audio_file:
+        audio_file = SavedFile(entry.upload, extension='mp3', fix=True)
+    the_path = audio_file.path + '.' + file_format
     if not os.path.isfile(the_path):
         logmessage("Could not serve speak file because file (" + the_path + ") not found")
         abort(404)
     return(send_file(the_path, mimetype=audio_mimetype_table[file_format]))
-    #PPP
 
 @app.route('/uploadedfile/<number>.<extension>', methods=['GET'])
 def serve_uploaded_file_with_extension(number, extension):
     number = re.sub(r'[^0-9]', '', str(number))
-    file_info = get_info_from_file_number(number)
-    if 'path' not in file_info:
-        abort(404)
-    else:
-        if os.path.isfile(file_info['path'] + '.' + extension):
-            extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + extension)
-            return(send_file(file_info['path'] + '.' + extension, mimetype=mimetype))
-        else:
+    if S3_ENABLED:
+        if not can_access_file_number(number):
             abort(404)
+        the_file = SavedFile(number)
+    else:
+        file_info = get_info_from_file_number(number)
+        if 'path' not in file_info:
+            abort(404)
+        else:
+            if os.path.isfile(file_info['path'] + '.' + extension):
+                extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + extension)
+                return(send_file(file_info['path'] + '.' + extension, mimetype=mimetype))
+            else:
+                abort(404)
 
 @app.route('/uploadedfile/<number>', methods=['GET'])
 def serve_uploaded_file(number):
@@ -1595,6 +1741,7 @@ def serve_uploaded_pagescreen(number, page):
     page = re.sub(r'[^0-9]', '', str(page))
     file_info = get_info_from_file_number(number)
     if 'path' not in file_info:
+        logmessage('no access to file number ' + str(number))
         abort(404)
     else:
     # block_size = 4096
@@ -1603,6 +1750,7 @@ def serve_uploaded_pagescreen(number, page):
         if os.path.isfile(filename):
             return(send_file(filename, mimetype='image/png'))
         else:
+            logmessage('path ' + filename + ' is not a file')
             abort(404)
 
 def user_can_edit_package(pkgname=None, giturl=None):
@@ -2040,6 +2188,7 @@ def package_page():
     return render_template('pages/packages.html'), 200
 
 def make_image_files(path):
+    #logmessage("make_image_files on " + str(path))
     if PDFTOPPM_COMMAND is not None:
         args = [PDFTOPPM_COMMAND, '-r', str(PNG_RESOLUTION), '-png', path, path + 'page']
         result = call(args)
@@ -2139,10 +2288,4 @@ def html_escape(text):
 #     capability.allow_client_outgoing(application_sid)
 #     token = capability.generate()
 #     return render_template('pages/twiliotest.html', token=token)
-
-def symlink_or_copy(a, b):
-    try:
-        os.symlink(a, b)
-    except:
-        shutil.copyfile(a, b)
-    return
+    
