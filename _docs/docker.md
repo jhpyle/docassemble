@@ -14,8 +14,7 @@ It is very easy to deploy **docassemble** as a [Docker] container on
 first time.  It can also be used as a production environment; Amazon's
 [EC2 Container Service](https://aws.amazon.com/ecs/) can be used to
 maintain a cluster of **docassemble** images.  See
-[scalability of docassemble]({{ site.baseurl
-}}/docs/scalability.html).
+[scalability of docassemble].
 
 # Prerequisites
 
@@ -110,10 +109,10 @@ files:
   Debian mirror; the standard "httpredir" mirror can lead to random
   packages not being downloaded, depending on which mirrors it chooses
   to use.
-* `docassemble/Docker/apache-single.conf`: note that this configuration only
+* `docassemble/Docker/apache.conf`: note that this configuration only
   uses http, not https.
-* `docassemble/Docker/config-single.yml`: note that this configuration sets `root` to
-  `/`.
+* `docassemble/Docker/config.yml`: note that this configuration sets
+  `root` to `/`.
 
 To build the image, run:
 
@@ -138,3 +137,4 @@ docker push yourdockerhubusername/mydocassemble
 [Amazon AWS]: http://aws.amazon.com
 [docassemble repository]: {{ site.github.repository_url }}
 [automated build]: https://docs.docker.com/docker-hub/builds/
+[scalability of docassemble]: {{ site.baseurl }}/docs/scalability.html)
