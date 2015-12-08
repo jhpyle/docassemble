@@ -9,12 +9,22 @@ def load(**kwargs):
     filename = kwargs.get('filename', '/usr/share/docassemble/config.yml')
     if not os.path.isfile(filename):
         if not os.access(os.path.dirname(filename), os.W_OK):
-            print "Configuration file " + filename + " does not exist and cannot be created"
+            sys.stderr.write("Configuration file " + str(filename) + " does not exist and cannot be created\n")
             sys.exit(1)
         with open(filename, 'w') as config_file:
             config_file.write(default_config())
-    daconfig = yaml.load(open(filename, 'r').read())
-    daconfig['config_file'] = filename
+            sys.stderr.write("Wrote configuration file to " + str(filename) + "\n")
+    if not os.path.isfile(filename):
+        sys.stderr.write("Configuration file " + str(filename) + " does not exist\n")
+    with open(filename, 'rU') as stream:
+        daconfig = yaml.load(stream)
+    if daconfig is None:
+        sys.stderr.write("Could not open configuration file from " + str(filename) + "\n")
+        with open(filename, 'r') as fp:
+            sys.stderr.write(fp.read() + "\n")
+        sys.exit(1)
+    else:
+        daconfig['config_file'] = filename
     return
 
 def default_config():

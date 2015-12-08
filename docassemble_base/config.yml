@@ -51,3 +51,8 @@ voicerss:
       MX: es-mx
     fr:
       FR: fr-fr
+s3:
+  enable: false
+  access_key_id: FWIEJFIJIDGISEJFWOEF
+  secret_access_key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
+  bucket: yourbucketname

@@ -125,3 +125,11 @@ class Messages(db.Model):
     id = db.Column(db.Integer(), db.Sequence(dbtableprefix + 'messages_id_seq'), primary_key=True)
     message = db.Column(db.Text())
     create_time = db.Column(db.DateTime(), server_default=db.func.now())
+
+class Supervisors(db.Model):
+    __tablename__ = dbtableprefix + "supervisors"
+    id = db.Column(db.Integer(), primary_key=True)
+    hostname = db.Column(db.Text())
+    url = db.Column(db.Text())
+    start_time = db.Column(db.DateTime(), server_default=db.func.now())
+    

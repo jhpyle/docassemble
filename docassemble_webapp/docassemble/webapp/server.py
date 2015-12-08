@@ -1,4 +1,5 @@
 # from twilio.util import TwilioCapability
+import socket
 import urllib
 import os
 import sys
@@ -46,7 +47,7 @@ from flask_kvsession import KVSessionExtension
 from simplekv.db.sql import SQLAlchemyStore
 from sqlalchemy import create_engine, MetaData, Sequence
 from docassemble.webapp.app_and_db import app, db
-from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock, Attachments, Uploads, SpeakList, Messages
+from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock, Attachments, Uploads, SpeakList, Messages, Supervisors
 from docassemble.webapp.packages.models import Package, PackageAuth
 from docassemble.webapp.config import daconfig
 from PIL import Image
@@ -163,6 +164,7 @@ if S3_ENABLED:
     import docassemble.webapp.amazon
     s3 = docassemble.webapp.amazon.s3object(s3_config)
 
+SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
 PACKAGE_CACHE = daconfig.get('packagecache', '/tmp/docassemble-cache')
 WEBAPP_PATH = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
 PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
@@ -261,6 +263,7 @@ def absolute_validator(the_file):
     return False
 
 docassemble.base.parse.set_absolute_validator(absolute_validator)
+logmessage("Server started")
 
 def get_ext_and_mimetype(filename):
     mimetype, encoding = mimetypes.guess_type(filename)
@@ -408,7 +411,7 @@ for word_file in word_file_list:
     logmessage("Reading from " + str(word_file))
     file_info = get_info_from_file_reference(word_file)
     if 'fullpath' in file_info:
-        with open(file_info['fullpath'], 'r') as stream:
+        with open(file_info['fullpath'], 'rU') as stream:
             for document in yaml.load_all(stream):
                 if document and type(document) is dict:
                     for lang, words in document.iteritems():
@@ -443,6 +446,18 @@ def setup_app(app, db):
 setup_app(app, db)
 lm = LoginManager(app)
 lm.login_view = 'login'
+
+supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
+if supervisor_url:
+    USING_SUPERVISOR = True
+    hostname = socket.gethostname()
+    Supervisors.query.filter_by(hostname=hostname).delete()
+    db.session.commit()
+    new_entry = Supervisors(hostname=hostname, url="http://" + hostname + ":9001")
+    db.session.add(new_entry)
+    db.session.commit()
+else:
+    USING_SUPERVISOR = False
 
 @lm.user_loader
 def load_user(id):
@@ -2094,10 +2109,13 @@ def config_page():
     form = ConfigForm(request.form, current_user)
     if request.method == 'POST':
         if form.submit.data and form.config_content.data:
+            if S3_ENABLED:
+                key = s3.get_key('config.yml')
+                key.set_contents_from_string(form.config_content.data)
             with open(daconfig['config_file'], 'w') as fp:
                 fp.write(form.config_content.data)
                 flash(word('The configuration file was saved.'), 'success')
-                restart_wsgi()
+            restart_wsgi()
         elif form.cancel.data:
             flash(word('Configuration not updated.'), 'info')
         else:
@@ -2224,10 +2242,25 @@ def server_error(the_error):
     return render_template('pages/501.html', error=errmess, logtext=str(the_trace)), 501
 
 def restart_wsgi():
-    wsgi_file = WEBAPP_PATH
-    if os.path.isfile(wsgi_file):
-        with open(wsgi_file, 'a'):
-            os.utime(wsgi_file, None)
+    #logmessage("Got to restart_wsgi")
+    if USING_SUPERVISOR:
+        for host in Supervisors.query.all():
+            if host.url:
+                args = [SUPERVISORCTL, '-s', host.url, 'start reset']
+                result = call(args)
+                if result == 0:
+                    logmessage("restart_wsgi: sent reset to " + str(host.hostname))
+                else:
+                    logmessage("restart_wsgi: call to supervisorctl on " + str(host.hostname) + " was not successful")
+            else:
+                logmessage("restart_wsgi: unable to get host url")
+        time.sleep(1)
+    else:
+        logmessage("restart_wsgi: touched wsgi file")
+        wsgi_file = WEBAPP_PATH
+        if os.path.isfile(wsgi_file):
+            with open(wsgi_file, 'a'):
+                os.utime(wsgi_file, None)
     return
 
 @app.route('/testpost', methods=['GET', 'POST'])
@@ -2288,4 +2321,3 @@ def html_escape(text):
 #     capability.allow_client_outgoing(application_sid)
 #     token = capability.generate()
 #     return render_template('pages/twiliotest.html', token=token)
-    
