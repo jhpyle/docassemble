@@ -1,25 +1,24 @@
-import random
-import string
 import sys
-from flask import Flask
-from flask.ext.sqlalchemy import SQLAlchemy
-from flask.ext.user import UserManager, SQLAlchemyAdapter
 import docassemble.webapp.config
 from docassemble.webapp.config import daconfig
-if len(sys.argv) > 1:
-    yaml_config = sys.argv[1]
-else:
-    yaml_config = '/usr/share/docassemble/config.yml'
-docassemble.webapp.config.load(filename=yaml_config)
+if __name__ == "__main__":
+    docassemble.webapp.config.load(arguments=sys.argv)
 from docassemble.base.util import word
 from docassemble.webapp.app_and_db import app, db
-from docassemble.webapp.packages.models import Package, PackageAuth
-from docassemble.webapp.users.models import User, UserAuth, Role, UserRoles, UserDict, UserDictKeys, UserDictLock, Attachments, Uploads, KVStore, Ticket, TicketNote
+from docassemble.webapp.packages.models import Package, PackageAuth, Install
+from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors, KVStore
+from docassemble.webapp.users.models import User, UserAuth, Role, UserRoles, UserDict, UserDictKeys, UserDictLock
 from sqlalchemy import create_engine, MetaData
 import docassemble.webapp.database
+import random
+import string
+#from flask import Flask
+#from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.user import UserManager, SQLAlchemyAdapter
 
-app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
-app.secret_key = daconfig.get('secretkey','28ihfiFehfoU34mcq_4clirglw3g4o87')
+if __name__ == "__main__":
+    app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
+    app.secret_key = daconfig.get('secretkey','28ihfiFehfoU34mcq_4clirglw3g4o87')
 
 def populate_tables():
     existing_admin = Role.query.filter_by(name=word('admin')).first()

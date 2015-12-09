@@ -2,11 +2,20 @@ import yaml
 import os
 import sys
 
+dbtableprefix = None
 daconfig = dict()
+s3_config = dict()
+S3_ENABLED = False
 
 def load(**kwargs):
     global daconfig
-    filename = kwargs.get('filename', '/usr/share/docassemble/config.yml')
+    global s3_config
+    global S3_ENABLED
+    global dbtableprefix
+    if 'arguments' in kwargs and kwargs['arguments'] and len(kwargs['arguments']) > 1:
+        filename = kwargs['arguments'][1]
+    else:
+        filename = kwargs.get('filename', '/usr/share/docassemble/config.yml')
     if not os.path.isfile(filename):
         if not os.access(os.path.dirname(filename), os.W_OK):
             sys.stderr.write("Configuration file " + str(filename) + " does not exist and cannot be created\n")
@@ -25,6 +34,14 @@ def load(**kwargs):
         sys.exit(1)
     else:
         daconfig['config_file'] = filename
+    s3_config = daconfig.get('s3', None)
+    if not s3_config or ('enable' in s3_config and not s3_config['enable']) or not ('access_key_id' in s3_config and s3_config['access_key_id']) or not ('secret_access_key' in s3_config and s3_config['secret_access_key']):
+        S3_ENABLED = False
+    else:
+        S3_ENABLED = True
+    dbtableprefix = daconfig['db'].get('table_prefix', None)
+    if not dbtableprefix:
+        dbtableprefix = ''
     return
 
 def default_config():

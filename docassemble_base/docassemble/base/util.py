@@ -603,23 +603,16 @@ def package_question_filename(the_file):
             return(None)
     return(None)
 
-def default_absolute_validator(the_file):
-    #logmessage("Running default absolute validator")
-    return True
+def default_absolute_filename(the_file):
+    return the_file
 
-absolute_validator = default_absolute_validator
+absolute_filename = default_absolute_filename
 
-def set_absolute_validator(func):
-    #logmessage("Running set_absolute_validator in util")
-    global absolute_validator
-    absolute_validator = func
+def set_absolute_filename(func):
+    #logmessage("Running set_absolute_filename in util")
+    global absolute_filename
+    absolute_filename = func
     return
-
-def absolute_filename(the_file):
-    #logmessage("Running absolute filename")
-    if absolute_validator(the_file) and os.path.isfile(the_file) and os.access(the_file, os.R_OK):
-        return(the_file)
-    return(None)
 
 def nodoublequote(text):
     return re.sub(r'"', '', unicode(text))

@@ -36,9 +36,9 @@ def process_audio_video_list(the_list, user_dict):
 def textify(data):
     return list(map((lambda x: x.text(user_dict)), data))
 
-def set_absolute_validator(func):
-    #logmessage("Running set_absolute_validator in parse")
-    docassemble.base.util.set_absolute_validator(func)
+def set_absolute_filename(func):
+    #logmessage("Running set_absolute_filename in parse")
+    docassemble.base.util.set_absolute_filename(func)
 
 def set_url_finder(func):
     docassemble.base.filter.set_url_finder(func)
@@ -114,8 +114,17 @@ class InterviewSourceString(InterviewSource):
 
 class InterviewSourceFile(InterviewSource):
     def __init__(self, **kwargs):
+        self.playground = None
         if 'filepath' in kwargs:
-            self.set_filepath(kwargs['filepath'])
+            if re.search(r'SavedFile', str(type(kwargs['filepath']))):
+                logmessage("We have a saved file on our hands")
+                self.playground = kwargs['filepath']
+                if os.path.isfile(self.playground.path) and os.access(self.playground.path, os.R_OK):
+                    self.set_filepath(self.playground.path)
+                else:
+                    raise DAError("Reference to invalid playground path")
+            else:
+                self.set_filepath(kwargs['filepath'])
         else:
             self.filepath = None
         if 'path' in kwargs:
@@ -150,6 +159,9 @@ class InterviewSourceFile(InterviewSource):
             #sys.stderr.write("Error: " + str(errmess) + "\n")
         return False
     def get_modtime(self):
+        #logmessage("get_modtime called in parse where path is " + str(self.path))
+        if self.playground is not None:
+            return self.playground.get_modtime(filename=os.path.basename(self.path))
         self._modtime = os.path.getmtime(self.filepath)
         return(self._modtime)
     def append(self, path):
@@ -158,6 +170,7 @@ class InterviewSourceFile(InterviewSource):
             new_source = InterviewSourceFile()
             new_source.path = path
             new_source.filepath = new_file
+            new_source.playground = self.playground
             if new_source.update():
                 return(new_source)
         return(None)
@@ -204,6 +217,7 @@ class InterviewStatus(object):
         self.using_screen_reader = False
         self.can_go_back = True
         self.attachments = None
+        self.extras = dict()
     def initialize_screen_reader(self):
         self.using_screen_reader = True
         self.screen_reader_text = dict()

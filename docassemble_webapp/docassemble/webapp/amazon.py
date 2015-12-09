@@ -11,5 +11,8 @@ class s3object(object):
     def get_key(self, key_name):
         key = boto.s3.key.Key(bucket=self.bucket, name=key_name)
         return key
+    def search_key(self, key_name):
+        for key in self.bucket.list(prefix=key_name, delimiter='/'):
+            return key
     def new_key(self):
         return boto.s3.key.Key(bucket=self.bucket)

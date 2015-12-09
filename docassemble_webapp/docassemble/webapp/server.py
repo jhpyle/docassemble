@@ -1,5 +1,7 @@
 # from twilio.util import TwilioCapability
 import socket
+import copy
+import threading
 import urllib
 import os
 import sys
@@ -47,9 +49,10 @@ from flask_kvsession import KVSessionExtension
 from simplekv.db.sql import SQLAlchemyStore
 from sqlalchemy import create_engine, MetaData, Sequence
 from docassemble.webapp.app_and_db import app, db
-from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock, Attachments, Uploads, SpeakList, Messages, Supervisors
-from docassemble.webapp.packages.models import Package, PackageAuth
-from docassemble.webapp.config import daconfig
+from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Messages, Supervisors
+from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock
+from docassemble.webapp.packages.models import Package, PackageAuth, Install
+from docassemble.webapp.config import daconfig, s3_config, S3_ENABLED, dbtableprefix
 from PIL import Image
 import pyPdf
 import yaml
@@ -117,9 +120,6 @@ docassemble.base.util.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
 docassemble.base.util.set_locale(DEFAULT_LOCALE)
 docassemble.base.util.set_da_config(daconfig)
 docassemble.base.util.update_locale()
-dbtableprefix = daconfig['db'].get('table_prefix', None)
-if not dbtableprefix:
-    dbtableprefix = ''
 message_sequence = dbtableprefix + 'message_id_seq'
 
 audio_mimetype_table = {'mp3': 'audio/mpeg', 'ogg': 'audio/ogg'}
@@ -154,11 +154,6 @@ if 'currency symbol' in daconfig:
     docassemble.base.util.update_language_function('*', 'currency_symbol', lambda: daconfig['currency symbol'])
 app.logger.warning("default sender is " + app.config['MAIL_DEFAULT_SENDER'] + "\n")
 exit_page = daconfig.get('exitpage', '/')
-s3_config = daconfig.get('s3', None)
-if not s3_config or ('enable' in s3_config and not s3_config['enable']) or not ('access_key_id' in s3_config and s3_config['access_key_id']) or not ('secret_access_key' in s3_config and s3_config['secret_access_key']):
-    S3_ENABLED = False
-else:
-    S3_ENABLED = True
 
 if S3_ENABLED:
     import docassemble.webapp.amazon
@@ -256,13 +251,23 @@ def get_url_from_file_reference(file_reference, **kwargs):
 
 docassemble.base.parse.set_url_finder(get_url_from_file_reference)
 
-def absolute_validator(the_file):
-    #logmessage("Running my validator")
-    if the_file.startswith(os.path.join(UPLOAD_DIRECTORY, 'playground')) and current_user.is_authenticated and not current_user.is_anonymous and current_user.has_role('admin', 'developer') and os.path.dirname(the_file) == os.path.join(UPLOAD_DIRECTORY, 'playground', str(current_user.id)):
-        return True
-    return False
+def absolute_filename(the_file):
+    #logmessage("Running absolute filename")
+    if current_user.is_authenticated and not current_user.is_anonymous:
+        match = re.match(r'^/playground/(.*)', the_file)
+        if match:
+            filename = re.sub(r'[^A-Za-z0-9]', '', match.group(1))
+            playground = SavedFile(current_user.id, section='playground', fix=True, filename=filename)
+            return playground
+    return(None)
 
-docassemble.base.parse.set_absolute_validator(absolute_validator)
+# def absolute_validator(the_file):
+#     #logmessage("Running my validator")
+#     if the_file.startswith(os.path.join(UPLOAD_DIRECTORY, 'playground')) and current_user.is_authenticated and not current_user.is_anonymous and current_user.has_role('admin', 'developer') and os.path.dirname(the_file) == os.path.join(UPLOAD_DIRECTORY, 'playground', str(current_user.id)):
+#         return True
+#     return False
+
+docassemble.base.parse.set_absolute_filename(absolute_filename)
 logmessage("Server started")
 
 def get_ext_and_mimetype(filename):
@@ -447,10 +452,11 @@ setup_app(app, db)
 lm = LoginManager(app)
 lm.login_view = 'login'
 
+hostname = socket.gethostname()
+
 supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
 if supervisor_url:
     USING_SUPERVISOR = True
-    hostname = socket.gethostname()
     Supervisors.query.filter_by(hostname=hostname).delete()
     db.session.commit()
     new_entry = Supervisors(hostname=hostname, url="http://" + hostname + ":9001")
@@ -464,14 +470,19 @@ def load_user(id):
     return User.query.get(int(id))
 
 class SavedFile(object):
-    def __init__(self, file_number, extension=None, fix=False):
+    def __init__(self, file_number, extension=None, fix=False, section='files', filename='file'):
         self.file_number = file_number
         self.extension = extension
         self.fixed = False
+        self.section = section
+        self.filename = filename
         if not S3_ENABLED:
-            parts = re.sub(r'(...)', r'\1/', '{0:012x}'.format(int(file_number))).split('/')
-            self.directory = os.path.join(UPLOAD_DIRECTORY, *parts)
-            self.path = os.path.join(self.directory, 'file')
+            if self.section == 'files':
+                parts = re.sub(r'(...)', r'\1/', '{0:012x}'.format(int(file_number))).split('/')
+                self.directory = os.path.join(UPLOAD_DIRECTORY, *parts)
+            else:
+                self.directory = os.path.join(UPLOAD_DIRECTORY, self.section, file_number)
+            self.path = os.path.join(self.directory, filename)
         if fix:
             self.fix()
     def fix(self):
@@ -481,16 +492,17 @@ class SavedFile(object):
             self.modtimes = dict()
             self.keydict = dict()
             self.directory = tempfile.mkdtemp()
-            prefix = 'files/' + str(self.file_number) + '/'
-            logmessage("fix: prefix is " + prefix)
+            prefix = str(self.section) + '/' + str(self.file_number) + '/'
+            #logmessage("fix: prefix is " + prefix)
             for key in s3.bucket.list(prefix=prefix, delimiter='/'):
                 filename = re.sub(r'.*/', '', key.name)
                 fullpath = os.path.join(self.directory, filename)
-                logmessage("fix: saving to " + fullpath)
+                #logmessage("fix: saving to " + fullpath)
                 key.get_contents_to_filename(fullpath)
                 self.modtimes[filename] = os.path.getmtime(fullpath)
+                #logmessage("S3 modtime for file " + filename + " is " + str(key.last_modified))
                 self.keydict[filename] = key
-            self.path = os.path.join(self.directory, 'file')
+            self.path = os.path.join(self.directory, self.filename)
         else:
             if not os.path.isdir(self.directory):
                 os.makedirs(self.directory)        
@@ -498,35 +510,52 @@ class SavedFile(object):
     def save(self, finalize=False):
         if not self.fixed:
             self.fix()
-        try:
-            os.symlink(self.path, self.path + '.' + self.extension)
-        except:
-            shutil.copyfile(self.path, self.path + '.' + self.extension)
+        if self.extension is not None:
+            if os.path.isfile(self.path + '.' + self.extension):
+                os.remove(self.path + '.' + self.extension)
+            try:
+                os.symlink(self.path, self.path + '.' + self.extension)
+            except:
+                shutil.copyfile(self.path, self.path + '.' + self.extension)
         if finalize:
             self.finalize()
         return
-    def fetch_url(self):
+    def fetch_url(self, url, **kwargs):
+        filename = kwargs.get('filename', self.filename)
         if not self.fixed:
             self.fix()
-        urllib.urlretrieve(url, self.path)
+        urllib.urlretrieve(url, os.path.join(self.directory, filename))
         self.save()
         return
-    def size_in_bytes(self):
+    def size_in_bytes(self, **kwargs):
+        filename = kwargs.get('filename', self.filename)
         if S3_ENABLED and not self.fixed:
-            key = s3.get_key('/files/' + str(self.file_number) + '/file')
+            key = s3.search_key(str(self.section) + '/' + str(self.file_number) + '/' + str(filename))
             return key.size
         else:
-            return os.path.getsize(self.path)
-    def copy_from(self, orig_path):
+            return os.path.getsize(os.path.join(self.directory, filename))
+    def copy_from(self, orig_path, **kwargs):
+        filename = kwargs.get('filename', self.filename)
         if not self.fixed:
             self.fix()
-        shutil.copyfile(orig_path, self.path)
+        shutil.copyfile(orig_path, os.path.join(self.directory, filename))
         self.save()
         return
-    def write_content(self, content):
+    def get_modtime(self, **kwargs):
+        filename = kwargs.get('filename', self.filename)
+        #logmessage("Get modtime called with filename " + str(filename))
+        if S3_ENABLED:
+            key_name = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
+            key = s3.search_key(key_name)
+            #logmessage("Modtime for key " + key_name + " is now " + str(key.last_modified))
+            return key.last_modified
+        else:
+            return os.path.getmtime(os.path.join(self.directory, filename))
+    def write_content(self, content, **kwargs):
+        filename = kwargs.get('filename', self.filename)
         if not self.fixed:
             self.fix()
-        with open(self.path, 'w') as ifile:
+        with open(os.path.join(self.directory, filename), 'w') as ifile:
             ifile.write(content)
         self.save()
         return
@@ -536,8 +565,9 @@ class SavedFile(object):
             extn = re.sub(r'^\.', '', extn)
         else:
             extn = None
+        filename = kwargs.get('filename', self.filename)
         if S3_ENABLED:
-            keyname = '/files/' + str(self.file_number) + '/file'
+            keyname = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
             page = kwargs.get('page', None)
             if page:
                 size = kwargs.get('size', 'page')
@@ -560,37 +590,47 @@ class SavedFile(object):
                 extn = '.' + extn
             root = daconfig.get('root', '/')
             fileroot = daconfig.get('fileserver', root)
-            if 'page' in kwargs and kwargs['page']:
-                page = re.sub(r'[^0-9]', '', str(kwargs['page']))
-                size = kwargs.get('size', 'page')
-                url = fileroot + 'uploadedpage'
-                if size == 'screen':
-                    url += 'screen'
-                url += '/' + str(self.file_number) + '/' + str(page)
+            if self.section == 'files':
+                if 'page' in kwargs and kwargs['page']:
+                    page = re.sub(r'[^0-9]', '', str(kwargs['page']))
+                    size = kwargs.get('size', 'page')
+                    url = fileroot + 'uploadedpage'
+                    if size == 'screen':
+                        url += 'screen'
+                    url += '/' + str(self.file_number) + '/' + str(page)
+                else:
+                    url = fileroot + 'uploadedfile/' + str(self.file_number) + extn
             else:
-                url = fileroot + 'uploadedfile/' + str(self.file_number) + extn
+                url = 'about:blank'
             return(url)
     def finalize(self):
         if not S3_ENABLED:
             return
         if not self.fixed:
             raise DAError("SavedFile: finalize called before fix")
+        existing_files = list()
         for filename in os.listdir(self.directory):
+            existing_files.append(filename)
             fullpath = os.path.join(self.directory, filename)
+            #logmessage("Found " + fullpath)
             if os.path.isfile(fullpath):
                 save = True
                 if filename in self.keydict:
                     key = self.keydict[filename]
-                    if self.modtimes == os.path.getmtime(fullpath):
+                    if self.modtimes[filename] == os.path.getmtime(fullpath):
                         save = False
                 else:
                     key = s3.new_key()
-                    key.key = '/files/' + str(self.file_number) + '/' + filename
-                    if filename == 'file':
+                    key.key = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
+                    if filename == self.filename:
                         extension, mimetype = get_ext_and_mimetype(filename + '.' + self.extension)
                         key.content_type = mimetype
                 if save:
                     key.set_contents_from_filename(fullpath)
+        for filename, key in self.keydict.iteritems():
+            if filename not in existing_files:
+                logmessage("Deleting filename " + str(filename) + " from S3")
+                key.delete()
         return
         
 class OAuthSignIn(object):
@@ -820,7 +860,7 @@ def index():
     if need_to_reset:
         save_user_dict(user_code, user_dict, yaml_filename)
         return redirect(url_for('index'))
-    post_data = request.form.copy()
+    post_data = copy.deepcopy(request.form)
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data and '_question_number' in post_data:
         success = False
         question_number = post_data['_question_number']
@@ -1177,7 +1217,7 @@ def index():
         update_attachment_info(user_code, user_dict, interview_status)
     if interview_status.question.question_type == "restart":
         url_args = user_dict['url_args']
-        user_dict = initial_dict.copy()
+        user_dict = copy.deepcopy(initial_dict)
         user_dict['url_args'] = url_args
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
         reset_user_dict(user_code, user_dict, yaml_filename)
@@ -1187,7 +1227,7 @@ def index():
     if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
         user_dict['_internal']['progress'] = interview_status.question.progress
     if interview_status.question.question_type == "exit":
-        user_dict = initial_dict.copy()
+        user_dict = copy.deepcopy(initial_dict)
         reset_user_dict(user_code, user_dict, yaml_filename)
         if interview_status.questionText != '':
             return redirect(interview_status.questionText)
@@ -1203,10 +1243,6 @@ def index():
         else:
             return redirect(exit_page)
     user_dict['_internal']['answers'] = dict()
-    # if 'x' in user_dict:
-    #     del user_dict['x']
-    # if 'i' in user_dict:
-    #     del user_dict['i']
     if changed and interview_status.question.interview.use_progress_bar:
         advance_progress(user_dict)
     save_user_dict(user_code, user_dict, yaml_filename, changed=changed)
@@ -1278,8 +1314,8 @@ def index():
             for question_type in ['question', 'help']:
                 for audio_format in ['mp3', 'ogg']:
                     interview_status.screen_reader_links[question_type].append([url_for('speak_file', question=interview_status.question.number, type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
-        else:
-            logmessage("speak_text was not here")
+        # else:
+        #     logmessage("speak_text was not here")
         content = as_html(interview_status, extra_scripts, extra_css, url_for, DEBUG, ROOT)
         if interview_status.using_screen_reader:
             for question_type in ['question', 'help']:
@@ -1317,6 +1353,10 @@ def index():
                 output += highlight(interview_status.question.source_code, YamlLexer(), HtmlFormatter())
             if len(interview_status.seeking) > 1:
                 output += '        <h4>' + word('How question came to be asked') + '</h4>' + "\n"
+                output += '<ul>\n'
+                for foo in user_dict['_internal']['answered']:
+                    output += "<li>" + str(foo) + "</li>"
+                output += '</ul>\n'
                 for stage in interview_status.seeking:
                     if 'question' in stage and 'reason' in stage and stage['question'] is not interview_status.question:
                         if stage['reason'] == 'initial':
@@ -1371,7 +1411,7 @@ def get_unique_name(filename):
         # if cur.fetchone():
         #     #logmessage("Key already exists in database")
         #     continue
-        new_user_dict = UserDict(key=newname, filename=filename, dictionary=codecs.encode(pickle.dumps(initial_dict.copy()), 'base64').decode())
+        new_user_dict = UserDict(key=newname, filename=filename, dictionary=codecs.encode(pickle.dumps(copy.deepcopy(initial_dict)), 'base64').decode())
         db.session.add(new_user_dict)
         db.session.commit()
         # cur.execute("INSERT INTO userdict (key, filename, dictionary) values (%s, %s, %s);", [newname, filename, codecs.encode(pickle.dumps(initial_dict.copy()), 'base64').decode()])
@@ -1616,7 +1656,7 @@ def reset_session(yaml_filename):
     session['i'] = yaml_filename
     session['uid'] = get_unique_name(yaml_filename)
     user_code = session['uid']
-    user_dict = initial_dict.copy()
+    user_dict = copy.deepcopy(initial_dict)
     return(user_code, user_dict)
 
 def _endpoint_url(endpoint):
@@ -1659,7 +1699,6 @@ def speak_file():
             audio_file = SavedFile(new_file_number, extension='mp3', fix=True)
             audio_file.fetch_url(url)
             if audio_file.size_in_bytes() > 100:
-                audio_file.save()
                 call_array = [daconfig['pacpl'], '-t', 'ogg', audio_file.path + '.mp3']
                 result = call(call_array)
                 if result != 0:
@@ -1731,7 +1770,7 @@ def serve_uploaded_page(number, page):
 
 @app.route('/uploadsignature', methods=['POST'])
 def upload_draw():
-    post_data = request.form.copy()
+    post_data = copy.deepcopy(request.form)
     #sys.stderr.write("Got to upload_draw\n")
     if '_success' in post_data and post_data['_success'] and '_the_image' in post_data:
         theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['_the_image']).group(1) + '==')
@@ -1804,9 +1843,11 @@ def user_can_edit_package(pkgname=None, giturl=None):
 @login_required
 @roles_required(['admin', 'developer'])
 def update_package():
+    pip.utils.logging._log_state = threading.local()
+    pip.utils.logging._log_state.indentation = 0
     form = UpdatePackageForm(request.form, current_user)
     if request.method == 'POST' and form.validate_on_submit():
-        temp_directory = tempfile.mkdtemp()
+        #temp_directory = tempfile.mkdtemp()
         pip_log = tempfile.NamedTemporaryFile()
         if 'zipfile' in request.files and request.files['zipfile'].filename:
             try:
@@ -1814,22 +1855,35 @@ def update_package():
                 filename = secure_filename(the_file.filename)
                 pkgname = re.sub(r'\.zip$', r'', filename)
                 if user_can_edit_package(pkgname=pkgname):
-                    zippath = os.path.join(temp_directory, filename)
+                    #zippath = os.path.join(temp_directory, filename)
+                    file_number = get_new_file_number(session['uid'], filename)
+                    saved_file = SavedFile(file_number, extension='zip', fix=True)
+                    zippath = saved_file.path
                     the_file.save(zippath)
+                    saved_file.save()
+                    saved_file.finalize()
+                    zippath += '.zip'
                     #commands = ['install', zippath, '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user"]
-                    commands = ['install', zippath, '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--upgrade']
+                    commands = ['install', '--quiet', '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, zippath]
                     returnval = pip.main(commands)
                     if returnval > 0:
                         with open(pip_log.name) as x: logfilecontents = x.read()
                         flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + '</pre>', 'error')
                     else:
-                        if Package.query.filter_by(name=pkgname).first() is None:
+                        existing_package = Package.query.filter_by(name=pkgname).first()
+                        if existing_package is None:
                             package_auth = PackageAuth(user_id=current_user.id)
-                            package_entry = Package(name=packagename, package_auth=package_auth)
+                            package_entry = Package(name=pkgname, package_auth=package_auth, upload=file_number, active=True, type='zip', version=1)
                             db.session.add(package_auth)
                             db.session.add(package_entry)
-                            db.session.commit()
+                        else:
+                            existing_package.upload = file_number
+                            existing_package.active = True
+                            existing_package.type = 'zip'
+                            existing_package.version += 1
+                        db.session.commit()                            
                         flash(word("Install successful"), 'success')
+                        trigger_install(except_for=hostname)
                         restart_wsgi()
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
@@ -1841,7 +1895,7 @@ def update_package():
                 packagename = re.sub(r'.*/', '', giturl)
                 if user_can_edit_package(giturl=giturl) and user_can_edit_package(pkgname=packagename):
                     #commands = ['install', '--egg', '--src=' + temp_directory, '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user", 'git+' + giturl + '.git#egg=' + packagename]
-                    commands = ['install', '--egg', '--src=' + temp_directory, '--upgrade', 'git+' + giturl + '.git#egg=' + packagename]
+                    commands = ['install', '--quiet', '--egg', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, 'git+' + giturl + '.git#egg=' + packagename]
                     returnval = pip.main(commands)
                     if returnval > 0:
                         with open(pip_log.name) as x: logfilecontents = x.read()
@@ -1849,16 +1903,19 @@ def update_package():
                     else:
                         if Package.query.filter_by(name=packagename).first() is None and Package.query.filter_by(giturl=giturl).first() is None:
                             package_auth = PackageAuth(user_id=current_user.id)
-                            package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth)
+                            package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth, version=1, active=True, type='github')
                             db.session.add(package_auth)
                             db.session.add(package_entry)
                             db.session.commit()
                         else:
                             package_entry = Package.query.filter_by(name=packagename).first()
-                            if package_entry is not None and not package_entry.giturl:
+                            if package_entry is not None:
+                                package_entry.version += 1
                                 package_entry.giturl = giturl
+                                package_entry.type = 'github'
                                 db.session.commit()
                         flash(word("Install successful"), 'success')
+                        trigger_install(except_for=hostname)
                         restart_wsgi()
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
@@ -1878,13 +1935,6 @@ def create_package():
         else:
             #foobar = Package.query.filter_by(name='docassemble_' + pkgname).first()
             #sys.stderr.write("this is it: " + str(foobar) + "\n")
-            if Package.query.filter_by(name='docassemble_' + pkgname).first() is None:
-                package_auth = PackageAuth(user_id=current_user.id)
-                package_entry = Package(name='docassemble_' + pkgname, package_auth=package_auth)
-                db.session.add(package_auth)
-                db.session.add(package_entry)
-                db.session.commit()
-                #sys.stderr.write("Ok, did the commit\n")
             initpy = """\
 try:
     __import__('pkg_resources').declare_namespace(__name__)
@@ -2076,15 +2126,32 @@ class Fruit(DAObject):
                 the_file.write(staticreadme)
             with open(os.path.join(questionsdir, 'questions.yml'), 'a') as the_file:
                 the_file.write(questionfiletext)
-            archive = tempfile.NamedTemporaryFile(delete=False)
-            zf = zipfile.ZipFile(archive.name, mode='w')
+            nice_name = 'docassemble_' + str(pkgname) + '.zip'
+            file_number = get_new_file_number(session['uid'], nice_name)
+            saved_file = SavedFile(file_number, extension='zip', fix=True)
+            #archive = tempfile.NamedTemporaryFile(delete=False)
+            zf = zipfile.ZipFile(saved_file.path, mode='w')
             trimlength = len(directory) + 1
             for root, dirs, files in os.walk(packagedir):
                 for file in files:
                     thefilename = os.path.join(root, file)
                     zf.write(thefilename, thefilename[trimlength:])
             zf.close()
-            resp = send_file(archive.name, mimetype='application/zip', as_attachment=True, attachment_filename='docassemble_' + str(pkgname) + '.zip')
+            saved_file.save()
+            saved_file.finalize()
+            existing_package = Package.query.filter_by(name='docassemble_' + pkgname).first()
+            if existing_package is None:
+                package_auth = PackageAuth(user_id=current_user.id)
+                package_entry = Package(name='docassemble_' + pkgname, package_auth=package_auth, version=1, active=True, upload=file_number)
+                db.session.add(package_auth)
+                db.session.add(package_entry)
+                #sys.stderr.write("Ok, did the commit\n")
+            else:
+                existing_package.upload = file_number
+                existing_package.active = True
+                existing_package.version += 1
+            db.session.commit()
+            resp = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
             return resp
     return render_template('pages/create_package.html', form=form), 200
 
@@ -2138,28 +2205,29 @@ def playground_page():
         is_new = False
     if is_new:
         the_file = ''
-    path = os.path.join(UPLOAD_DIRECTORY, 'playground', str(current_user.id))
-    if not os.path.exists(path):
-        os.makedirs(path)
+    playground = SavedFile(current_user.id, fix=True, section='playground')
+    #path = os.path.join(UPLOAD_DIRECTORY, 'playground', str(current_user.id))
+    #if not os.path.exists(path):
+    #    os.makedirs(path)
     if request.method == 'POST':
         if (form.playground_name.data):
             the_file = form.playground_name.data
             the_file = re.sub(r'[^A-Za-z0-9]', '', the_file)
             if the_file:
-                filename = os.path.join(path, the_file)
+                filename = os.path.join(playground.directory, the_file)
                 if not os.path.isfile(filename):
                     with open(filename, 'a'):
                         os.utime(filename, None)    
     the_file = re.sub(r'[^A-Za-z0-9]', '', the_file)
     javascript = ''
-    files = sorted([f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))])
+    files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f))])
     if request.method == 'GET' and not the_file and not is_new:
         if len(files):
             the_file = files[0]
         else:
             the_file = 'test'
     if the_file:
-        filename = os.path.join(path, the_file)
+        filename = os.path.join(playground.directory, the_file)
         if not os.path.isfile(filename):
             with open(filename, 'a'):
                 os.utime(filename, None)    
@@ -2168,15 +2236,16 @@ def playground_page():
             if os.path.isfile(filename):
                 os.remove(filename)
                 flash(word('Playground deleted.'), 'info')
+                playground.finalize()
                 return redirect(url_for('playground_page'))
             else:
                 flash(word('Playground not deleted.  There was an error.'), 'error')
         if (form.submit.data or form.run.data) and form.playground_content.data:
             if form.original_playground_name.data and form.original_playground_name.data != the_file:
-                old_filename = os.path.join(path, form.original_playground_name.data)
+                old_filename = os.path.join(playground.directory, form.original_playground_name.data)
                 if os.path.isfile(old_filename):
                     os.remove(old_filename)
-                    files = sorted([f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))])
+                    files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f))])
             the_time = time.strftime('%H:%M:%S %Z', time.localtime())
             with open(filename, 'w') as fp:
                 fp.write(form.playground_content.data)
@@ -2184,11 +2253,12 @@ def playground_page():
                 flash(word('The playground was saved at') + ' ' + the_time + '.', 'success')
             else:
                 flash(word('The playground was saved at') + ' ' + the_time + '.  ' + word('Running in other tab.'), 'info')
-                javascript = "\n    window.open(" + repr(url_for('index', i=filename)) + ", '_blank' );"
+                javascript = "\n    window.open(" + repr(url_for('index', i='/playground/' + the_file)) + ", '_blank' );"
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
     content = ''
     if the_file:
+        playground.finalize()
         with open(filename, 'r') as fp:
             form.original_playground_name.data = the_file
             form.playground_name.data = the_file
@@ -2241,8 +2311,21 @@ def server_error(the_error):
     #         apache_logtext.append(line)
     return render_template('pages/501.html', error=errmess, logtext=str(the_trace)), 501
 
+def trigger_install(except_for=None):
+    logmessage("Got to trigger_install where except_for is " + str(except_for))
+    if USING_SUPERVISOR:
+        for host in Supervisors.query.all():
+            if host.url and not (except_for and host.hostname == except_for):
+                args = [SUPERVISORCTL, '-s', host.url, 'start update']
+                result = call(args)
+                if result == 0:
+                    logmessage("trigger_install: sent reset to " + str(host.hostname))
+                else:
+                    logmessage("trigger_install: call to supervisorctl on " + str(host.hostname) + " was not successful")
+    return
+
 def restart_wsgi():
-    #logmessage("Got to restart_wsgi")
+    logmessage("Got to restart_wsgi")
     if USING_SUPERVISOR:
         for host in Supervisors.query.all():
             if host.url:
