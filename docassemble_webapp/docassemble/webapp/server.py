@@ -860,7 +860,7 @@ def index():
     if need_to_reset:
         save_user_dict(user_code, user_dict, yaml_filename)
         return redirect(url_for('index'))
-    post_data = copy.deepcopy(request.form)
+    post_data = request.form.copy()
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data and '_question_number' in post_data:
         success = False
         question_number = post_data['_question_number']
@@ -1770,7 +1770,7 @@ def serve_uploaded_page(number, page):
 
 @app.route('/uploadsignature', methods=['POST'])
 def upload_draw():
-    post_data = copy.deepcopy(request.form)
+    post_data = request.form.copy()
     #sys.stderr.write("Got to upload_draw\n")
     if '_success' in post_data and post_data['_success'] and '_the_image' in post_data:
         theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['_the_image']).group(1) + '==')
