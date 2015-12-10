@@ -97,6 +97,9 @@ Note that there a number of limitations to playing audio in browsers.
 For example, older Android devices will not play audio retrieved
 through https, but will play the same audio retrieved through http.
 
+See [special variables] for information about **docassemble**'s
+automatic text-to-speech features.
+
 # `video`
 
 The `video` declaration is just like the `audio` declaration except that it displays a
@@ -365,3 +368,4 @@ by **docassemble**, so it can contain any valid [YAML].
 [YouTube]: https://www.youtube.com/
 [Vimeo]: https://vimeo.com/
 [function]: {{ site.baseurl }}/docs/function.html
+[special variables]: {{ site.baseurl }}/docs/special.html

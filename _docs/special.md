@@ -4,15 +4,17 @@ title: Special Variables
 short_title: Special Variables
 ---
 
+# Variables set by **docassemble**.
+
 There are some special variables that **docassemble** sets in every
 interview's variable store.
 
-# _internal
+## _internal
 
 `_internal` is a [Python dictionary] that is used by **docassemble**
 but that is not intended to be used in interviews.
 
-# url_args
+## url_args
 
 `url_args` is a [Python dictionary] that is used to access parameters
 passed via URL.
@@ -91,7 +93,7 @@ subquestion: |
 You can test this out by trying the following link:
 [https://docassemble.org/demo?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder](https://docassemble.org/demo?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder){:target="_blank"}.
 
-# current_info
+## current_info
 
 `current_info` is a [Python dictionary] that is defined by
 **docassemble** every time a screen loads.  It allows interviews to
@@ -127,8 +129,47 @@ of the person logged in and other information.
 * `yaml_filename` - the filename of the current interview, in the
   package:path form (e.g., `docassemble.demo:data/questions/questions.yml`)
 
+## role_needed
+
+If you use the [multi-user interview feature] and the user reaches a
+point in the interview where input is needed from a different user
+before proceeding, **docassemble** will look for a `question` that
+offers to sets `role_event`, and ask that question.  **docassemble**
+will set the variable `role_needed` to a list of roles capable of
+answering the next question in the interview.
+
+# Variables that interviews can set
+
+## role
+
+If you use the [multi-user interview feature], your interview will
+need to have a `default role` [initial block] containing code that
+sets the variable `role` to the user's role.
+
+## speak_text
+
+If this special variable is set to `True`, **docassemble** will
+present the user with an HTML5 audio control at the top of the page.
+When the user clicks it, **docassemble** will access the [VoiceRSS]
+web service to convert the text of the question to an audio file and
+then play that audio back for the user.  This requires enabling the
+`voicerss` setting in the [configuration.
+
+Since the [VoiceRSS] service costs money above the free usage tier,
+**docassemble** does not send the request to [VoiceRSS] until the user
+presses "Play" on the audio control.  It also caches the results and
+reuses them whenever possible.
+
+## track_location
+
+To access
+
+
+[VoiceRSS]: http://www.voicerss.org/
 [get]: https://docs.python.org/2/library/stdtypes.html#dict.get
 [Python list]: https://docs.python.org/2/tutorial/datastructures.html
 [initial block]: {{ site.baseurl }}/docs/initial.html
+[configuration]: {{ site.baseurl }}/docs/config.html
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
+[multi-user interview feature]: {{ site.baseurl }}/docs/roles.html

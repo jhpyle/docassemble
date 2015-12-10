@@ -437,19 +437,33 @@ create URLs to uploaded files and static files.
 
 ## voicerss
 
+If the special variable `speak_text` is set to `True`, **docassemble**
+will present the user with an audio control that will convert the text
+of the question to speech.  This relies on the [VoiceRSS] web service.
+You will need to obtain an API key from [VoiceRSS] and set the
+configuration below in order for this feature to function.  (The
+service allows 350 free requests per day.)
+
 {% highlight yaml %}
 voicerss:
-  enable: false
+  enable: true
   key: 347593849874e7454b9872948a87987d
   languages:
-    en:
-      GB: en-gb
-      US: en-us
-    es:
-      MX: es-mx
-    fr:
-      FR: fr-fr
+    en: us
+    es: mx
+    fr: fr
 {% endhighlight %}
+
+## s3
+
+{% highlight yaml %}
+s3:
+  enable: true
+  access_key_id: FWIEJFIJIDGISEJFWOEF
+  secret_access_key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
+  bucket: yourbucketname
+{% endhighlight %}
+
 
 # Using your own configuration variables
 
@@ -479,6 +493,7 @@ sensitive information, such as passwords and API keys.  This allows
 you to share your code on [GitHub] without worrying about redacting it
 first.
 
+[VoiceRSS]: http://www.voicerss.org/
 [Flask]: http://flask.pocoo.org/
 [YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
 [LaTeX]: http://www.latex-project.org/

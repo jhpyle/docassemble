@@ -13,8 +13,10 @@ It is very easy to deploy **docassemble** as a [Docker] container on
 [Docker] is a good platform for trying out **docassemble** for the
 first time.  It can also be used as a production environment; Amazon's
 [EC2 Container Service](https://aws.amazon.com/ecs/) can be used to
-maintain a cluster of **docassemble** images.  See
-[scalability of docassemble].
+maintain a cluster of **docassemble** web server instances that
+communicate with a central SQL server.  See
+[scalability of docassemble] for information about running
+**docassemble** in a multi-server arrangement.
 
 # Prerequisites
 
@@ -49,6 +51,12 @@ To start docker, do:
 
 {% highlight bash %}
 sudo /etc/init.d/docker start
+{% endhighlight %}
+
+or, on systemd,
+
+{% highlight bash %}
+systemctl start docker
 {% endhighlight %}
 
 # Running docassemble from a pre-packaged Docker image

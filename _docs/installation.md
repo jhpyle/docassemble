@@ -22,7 +22,7 @@ The following dependencies can be installed from Debian packages:
 
 {% highlight bash %}
 sudo apt-get install python python-dev pandoc texlive texlive-latex-extra \
-  gcc wget unzip git locales
+  gcc wget unzip git locales libjpeg-dev libpq-dev
 {% endhighlight %}
   
 docassemble uses locale settings to format numbers, get currency
@@ -36,37 +36,32 @@ sudo dpkg-reconfigure locales
 
 (On Ubuntu, you may need to do `sudo apt-get install language-pack-en`.)
 
-To install the [Nodebox English Linguistics library], do:
-
-{% highlight bash %}
-wget https://www.nodebox.net/code/data/media/linguistics.zip
-#sudo unzip linguistics.zip -d /usr/local/lib/python2.7/dist-packages
-unzip linguistics.zip -d /usr/share/docassemble-dav/local/lib/python2.7/site-packages/
-rm linguistics.zip
-{% endhighlight %}
-
 Many of the Python packages used by **docassemble** need to be
 downloading using pip, either because they are not available through
 `apt-get`, or because the versions available through `apt-get` are too
 old.
 
-First, you need to install the latest version of `pip`:
-  
 {% highlight bash %}
-easy_install pip
+mkdir -p /var/www/.pip
+chown www-data.www-data /var/www/.pip
 {% endhighlight %}
 
 To install the [us](https://pypi.python.org/pypi/us) and
 [SmartyPants](https://pypi.python.org/pypi/mdx_smartypants) modules,
-do:
+do the following as `www-data`:
+
+To install the [Nodebox English Linguistics library], do the following
+as www-data:
 
 {% highlight bash %}
-sudo pip install --upgrade us 3to2 guess-language-spirit html2text
+virtualenv /usr/share/docassemble/local
+source /usr/share/docassemble/local/bin/activate
+pip install --upgrade us 3to2 guess-language-spirit html2text \
 markdown pyyaml mako python-dateutil setuptools httplib2 psycopg2 pillow
-sudo pip install --upgrade mdx_smartypants titlecase pygeocoder beautifulsoup4
-sudo pip install --upgrade cffi
-sudo pip install --upgrade bcrypt
-sudo pip install --upgrade wtforms werkzeug rauth simplekv \
+pip install --upgrade mdx_smartypants titlecase pygeocoder beautifulsoup4
+pip install --upgrade cffi
+pip install --upgrade bcrypt speaklater
+pip install --upgrade wtforms werkzeug rauth simplekv \
   Flask-KVSession flask-user pypdf flask flask-login \
   flask-sqlalchemy Flask-WTF babel blinker sqlalchemy
 {% endhighlight %}
@@ -76,13 +71,21 @@ and may have trouble installing if those modules are not already
 installed.  The cffi and bcrypt packages can give errors if they are
 not installed in the right order.
 
+{% highlight bash %}
+cd /tmp
+wget https://www.nodebox.net/code/data/media/linguistics.zip
+unzip linguistics.zip -d /usr/share/docassemble/local/lib/python2.7/site-packages/
+rm linguistics.zip
+{% endhighlight %}
+
 To install [PyRTF-ng](https://github.com/nekstrom/pyrtf-ng), which is
-needed for generating RTF files, do:
+needed for generating RTF files, do the following as www-data:
 
 {% highlight bash %}
+cd /tmp
 git clone https://github.com/nekstrom/pyrtf-ng
 cd pyrtf-ng
-../bin/python setup.py install
+python setup.py install
 cd ..
 {% endhighlight %}
 
@@ -91,8 +94,8 @@ server:
 
 {% highlight bash %}
 sudo apt-get install apache2 postgresql libapache2-mod-wsgi \
-  libapache2-mod-xsendfile python-speaklater poppler-utils \
-  libffi-dev libffi6 imagemagick
+  libapache2-mod-xsendfile poppler-utils libffi-dev libffi6 \
+  imagemagick libav-tools
 {% endhighlight %}
 
 To install the additional Python dependencies for the web server
@@ -120,7 +123,7 @@ sudo apt-get install libaudio-flac-header-perl \
   libogg-vorbis-header-pureperl-perl perl make libvorbis-dev \
   libcddb-perl libinline-perl libcddb-get-perl libmp3-tag-perl \
   libaudio-scan-perl libaudio-flac-header-perl \
-  libparallel-forkmanager-perl ffmpeg
+  libparallel-forkmanager-perl
 git clone git://git.code.sf.net/p/pacpl/code pacpl-code 
 cd pacpl-code
 ./configure
@@ -269,6 +272,12 @@ Set /etc/apache2/sites-available/000-default.conf to something like:
 </IfModule>
 {% endhighlight %}
 
+Set /etc/apache2/conf-available/docassemble.conf to:
+
+{% highlight text %}
+WSGIPythonHome /usr/share/docassemble/local
+{% endhighlight %}
+
 You can run `docassemble` on HTTP rather than HTTPS if you want to,
 but since the `docassemble` web application uses a password system, it
 is a good idea to run it on HTTPS.  If you want to run docassemble on
@@ -288,8 +297,10 @@ information in `/usr/share/docassemble/config.yml` first.  Note that this
 file will need to be readable by the `postgres` user.)
 
 {% highlight bash %}
+ 
 echo 'create role "www-data" login; create database docassemble;' | sudo -u postgres psql
-sudo -u postgres python ~/docassemble/docassemble_webapp/docassemble/webapp/create_tables.py /usr/share/docassemble/config.yml
+sudo -u postgres source /usr/share/docassemble/local/bin/activate &&
+python -m docassemble.webapp.create_tables
 echo 'grant all on all tables in schema public to "www-data"; grant all on all sequences in schema public to "www-data";' | sudo -u postgres psql docassemble
 {% endhighlight %}
 

@@ -363,6 +363,10 @@ If you refer to an address in a template, it returns `.block()`.
 The `.block()` method returns a formatted address.  All attributes
 except `unit` are required.
 
+## LatitudeLongitude
+
+TBD
+
 # Classes for information about things in a court case
 
 ## Court
