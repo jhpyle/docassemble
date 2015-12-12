@@ -56,6 +56,6 @@ voicerss:
     fr: fr
 s3:
   enable: {{S3ENABLE}}
-  access_key_id: FWIEJFIJIDGISEJFWOEF
-  secret_access_key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
-  bucket: yourbucketname
+  access_key_id: {{S3ACCESSKEY}}
+  secret_access_key: {{S3SECRETACCESSKEY}}
+  bucket: {{S3BUCKET}}
