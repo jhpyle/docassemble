@@ -1,11 +1,10 @@
 import boto.s3.connection
 import boto.s3.key
+#from docassemble.base.logger import logmessage
 
-#conn = boto.s3.connection.S3Connection('AKIAJ4DPAVNHB7QLPZGA', 'VAgG1Gv4a1fITEYSy0RL+qTgwxPZ2fPKb26SHcKM')
-#bucket = conn.get_bucket('docassemble')
-#bucket.list(prefix='files/14/')
 class s3object(object):
     def __init__(self, s3_config):
+        #logmessage("Trying to connect with " + s3_config['access_key_id'] + " and " + s3_config['secret_access_key'] + " and " + s3_config['bucket'])
         self.conn = boto.s3.connection.S3Connection(s3_config['access_key_id'], s3_config['secret_access_key'])
         self.bucket = self.conn.get_bucket(s3_config['bucket'])
     def get_key(self, key_name):

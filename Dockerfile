@@ -23,7 +23,7 @@ RUN chown -R www-data.www-data /usr/share/docassemble && chmod ogu+r /usr/share/
 
 USER www-data
 RUN virtualenv /usr/share/docassemble/local
-RUN cd /tmp && source /usr/share/docassemble/local/bin/activate && pip install --upgrade us 3to2 guess-language-spirit html2text mdx_smartypants titlecase pygeocoder beautifulsoup4 psycopg2 cffi bcrypt speaklater pillow wtforms werkzeug rauth simplekv Flask-KVSession flask-user pypdf flask flask-login flask-sqlalchemy Flask-WTF babel blinker sqlalchemy Pygments mako pyyaml python-dateutil setuptools httplib2 && git clone https://github.com/nekstrom/pyrtf-ng && cd pyrtf-ng && python setup.py install && cd /tmp && wget https://www.nodebox.net/code/data/media/linguistics.zip && unzip linguistics.zip -d /usr/share/docassemble/local/lib/python2.7/site-packages/ && rm linguistics.zip && mkdir -p /tmp/docassemble
+RUN cd /tmp && source /usr/share/docassemble/local/bin/activate && pip install --upgrade us 3to2 boto guess-language-spirit html2text mdx_smartypants titlecase pygeocoder beautifulsoup4 psycopg2 cffi bcrypt speaklater pillow wtforms werkzeug rauth simplekv Flask-KVSession flask-user pypdf flask flask-login flask-sqlalchemy Flask-WTF babel blinker sqlalchemy Pygments mako pyyaml python-dateutil setuptools httplib2 && git clone https://github.com/nekstrom/pyrtf-ng && cd pyrtf-ng && python setup.py install && cd /tmp && wget https://www.nodebox.net/code/data/media/linguistics.zip && unzip linguistics.zip -d /usr/share/docassemble/local/lib/python2.7/site-packages/ && rm linguistics.zip && mkdir -p /tmp/docassemble
 COPY . /tmp/docassemble/
 RUN cd /tmp/docassemble && ./compile.sh
 
