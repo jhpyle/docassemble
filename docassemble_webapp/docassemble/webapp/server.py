@@ -159,7 +159,7 @@ hostname = socket.gethostname()
 if daconfig.get('ec2', False):
     h = httplib2.Http()
     resp, content = h.request(daconfig.get('ec2_ip_url', "http://169.254.169.254/latest/meta-data/local-ipv4"), "GET")
-    if resp['status'] >= 200 and resp['status'] < 300:
+    if resp['status'] and int(resp['status']) == 200:
         hostname = content
     else:
         sys.stderr.write("Could not get hostname")
