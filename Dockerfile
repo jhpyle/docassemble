@@ -26,9 +26,9 @@ COPY . /tmp/docassemble/
 RUN cd /tmp/docassemble && ./compile.sh
 
 USER root
-RUN if [ "${containerrole-all}" == "all"]; then /tmp/docassemble/Docker/setup-docassemble.sh; fi
-RUN if [ "${containerrole-all}" == "webserver"]; then source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.create_tables /usr/share/docassemble/config.yml; fi
-RUN if [ "${containerrole-all}" == "all"]; then cp /tmp/docassemble/Docker/docassemble-supervisor-sql.conf /etc/supervisor/conf.d/; fi
+RUN if [ "${CONTAINERROLE-all}" == "all"]; then /tmp/docassemble/Docker/setup-docassemble.sh; fi
+RUN if [ "${CONTAINERROLE-all}" == "webserver"]; then source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.create_tables /usr/share/docassemble/config.yml; fi
+RUN if [ "${CONTAINERROLE-all}" == "all"]; then cp /tmp/docassemble/Docker/docassemble-supervisor-sql.conf /etc/supervisor/conf.d/; fi
 
 RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 RUN locale-gen
