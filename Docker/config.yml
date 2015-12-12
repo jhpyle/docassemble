@@ -3,10 +3,10 @@ root: /
 exitpage: /
 db:
   prefix: postgresql+psycopg2://
-  name: docassemble
-  user: null
-  password: null
-  host: null
+  name: {{DBNAME}}
+  user: {{DBUSER}}
+  password: {{DBPASSWORD}}
+  host: {{DBHOST}}
   port: null
   table_prefix: null
 oauth:
@@ -26,6 +26,12 @@ uploads: /usr/share/docassemble/files
 packages: /usr/share/docassemble/local
 webapp: /usr/share/docassemble/webapp/docassemble.wsgi
 mail:
+  username: null
+  password: null
+  server: localhost
+  port: 25
+  use_ssl: false
+  use_tls: false
   default_sender: '"Administrator" <no-reply@example.com>'
 admin_address: '"Administrator" <admin@example.com>'
 use_progress_bar: false
@@ -41,3 +47,15 @@ default_admin_account:
   nickname: admin
   email: admin@admin.com
   password: password
+voicerss:
+  enable: false
+  key: ae8734983948ebc98239e9898f998432
+  languages:
+    en: us
+    es: mx
+    fr: fr
+s3:
+  enable: {{S3ENABLE}}
+  access_key_id: FWIEJFIJIDGISEJFWOEF
+  secret_access_key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
+  bucket: yourbucketname

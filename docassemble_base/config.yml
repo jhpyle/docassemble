@@ -42,15 +42,11 @@ default_admin_account:
   password: password
 voicerss:
   enable: false
-  key: 347593849874e7454b9872948a87987d
+  key: ae8734983948ebc98239e9898f998432
   languages:
-    en:
-      GB: en-gb
-      US: en-us
-    es:
-      MX: es-mx
-    fr:
-      FR: fr-fr
+    en: us
+    es: mx
+    fr: fr
 s3:
   enable: false
   access_key_id: FWIEJFIJIDGISEJFWOEF

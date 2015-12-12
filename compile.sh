@@ -1,5 +1,4 @@
 source /usr/share/docassemble/local/bin/activate
-#pythonhome=/usr/share/docassemble/local/bin
 origdir=$PWD
 for package in `ls -d docassemble* | sort -r | sed 's/_/./'`; do
     pip uninstall -y $package

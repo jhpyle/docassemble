@@ -1,10 +1,6 @@
 #! /bin/sh
 
-/etc/init.d/postgresql start
-echo 'create role "www-data" login;' | su -c psql postgres
-echo 'drop database if exists docassemble; create database docassemble;' | su -c psql postgres 
-su -c "python docassemble_webapp/docassemble/webapp/create_tables.py /etc/docassemble/config.yml" postgres
-echo 'grant all on all tables in schema public to "www-data"; grant all on all sequences in schema public to "www-data";' | su -c "psql docassemble" postgres
-/etc/init.d/postgresql stop
-
-
+/etc/init.d/postgresql start || exit 1
+echo "drop database if exists docassemble; drop role if exists docassemble; create role docassemble with login password 'abc123'; create database docassemble owner docassemble;" | su -c psql postgres || exit 1
+su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.create_tables /usr/share/docassemble/config.yml" postgres || exit 1
+/etc/init.d/postgresql stop || exit 1
