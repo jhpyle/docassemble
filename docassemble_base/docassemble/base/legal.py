@@ -691,6 +691,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None
         try:
             appmail.send(msg)
         except Exception as errmess:
+            logmessage("Sending mail failed: " + str(errmess))
             success = False
     return(success)
     

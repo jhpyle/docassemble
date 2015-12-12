@@ -2,7 +2,7 @@ debug: false
 root: /
 exitpage: /
 db:
-  prefix: postgresql+psycopg2://
+  prefix: {{DBPREFIX}}
   name: {{DBNAME}}
   user: {{DBUSER}}
   password: {{DBPASSWORD}}
@@ -59,3 +59,4 @@ s3:
   access_key_id: {{S3ACCESSKEY}}
   secret_access_key: {{S3SECRETACCESSKEY}}
   bucket: {{S3BUCKET}}
+ec2: {{EC2}}

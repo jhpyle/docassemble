@@ -155,6 +155,13 @@ if 'currency symbol' in daconfig:
 app.logger.warning("default sender is " + app.config['MAIL_DEFAULT_SENDER'] + "\n")
 exit_page = daconfig.get('exitpage', '/')
 
+hostname = socket.gethostname()
+if daconfig.get('ec2', False):
+    h = httplib2.Http()
+    resp, content = h.request(daconfig.get('ec2_ip_url', "http://169.254.169.254/latest/meta-data/local-ipv4"), "GET")
+    if resp['status'] >= 200 and resp['status'] < 300:
+        hostname = content
+
 if S3_ENABLED:
     import docassemble.webapp.amazon
     s3 = docassemble.webapp.amazon.s3object(s3_config)
@@ -451,8 +458,6 @@ def setup_app(app, db):
 setup_app(app, db)
 lm = LoginManager(app)
 lm.login_view = 'login'
-
-hostname = socket.gethostname()
 
 supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
 if supervisor_url:
