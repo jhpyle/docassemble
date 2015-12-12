@@ -161,6 +161,11 @@ if daconfig.get('ec2', False):
     resp, content = h.request(daconfig.get('ec2_ip_url', "http://169.254.169.254/latest/meta-data/local-ipv4"), "GET")
     if resp['status'] >= 200 and resp['status'] < 300:
         hostname = content
+    else:
+        sys.stderr.write("Could not get hostname")
+        sys.exit(1)
+else:
+    sys.stderr.write("ec2 was set to " + str(daconfig.get('ec2', False)))
 
 if S3_ENABLED:
     import docassemble.webapp.amazon
