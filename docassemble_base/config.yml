@@ -25,6 +25,7 @@ uploads: /usr/share/docassemble/files
 packages: /usr/share/docassemble/local
 packagecache: /usr/share/docassemble/cache
 webapp: /usr/share/docassemble/webapp/docassemble.wsgi
+certs: /usr/share/docassemble/certs
 mail:
   default_sender: '"Administrator" <no-reply@example.com>'
 use_progress_bar: false

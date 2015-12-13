@@ -1,13 +1,12 @@
 import sys
 import socket
 import tempfile
-from docassemble.webapp.config import s3_config, S3_ENABLED
+from docassemble.webapp.config import hostname
 if __name__ == "__main__":
     import docassemble.webapp.config
     docassemble.webapp.config.load(arguments=sys.argv)
 from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.packages.models import Package, Install
-hostname = socket.gethostname()
 
 def check_for_updates():
     packages = dict()

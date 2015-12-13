@@ -52,7 +52,7 @@ from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Messages, Supervisors
 from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
-from docassemble.webapp.config import daconfig, s3_config, S3_ENABLED, dbtableprefix
+from docassemble.webapp.config import daconfig, s3_config, S3_ENABLED, dbtableprefix, hostname
 from PIL import Image
 import pyPdf
 import yaml
@@ -154,18 +154,6 @@ if 'currency symbol' in daconfig:
     docassemble.base.util.update_language_function('*', 'currency_symbol', lambda: daconfig['currency symbol'])
 app.logger.warning("default sender is " + app.config['MAIL_DEFAULT_SENDER'] + "\n")
 exit_page = daconfig.get('exitpage', '/')
-
-hostname = socket.gethostname()
-if daconfig.get('ec2', False):
-    h = httplib2.Http()
-    resp, content = h.request(daconfig.get('ec2_ip_url', "http://169.254.169.254/latest/meta-data/local-ipv4"), "GET")
-    if resp['status'] and int(resp['status']) == 200:
-        hostname = content
-    else:
-        sys.stderr.write("Could not get hostname")
-        sys.exit(1)
-else:
-    sys.stderr.write("ec2 was set to " + str(daconfig.get('ec2', False)))
 
 if S3_ENABLED:
     import docassemble.webapp.amazon
