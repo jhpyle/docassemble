@@ -1,3 +1,5 @@
+#! /bin/bash
+
 source /usr/share/docassemble/local/bin/activate
 origdir=$PWD
 for package in `ls -d docassemble* | sort -r | sed 's/_/./'`; do
