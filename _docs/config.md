@@ -88,6 +88,8 @@ png_resolution: 300
 png_screen_resolution: 72
 show_login: true
 xsendfile: true
+ec2: false
+ec2_ip_url: http://169.254.169.254/latest/meta-data/local-ipv4
 {% endhighlight %}
 
 By default, `imagemagick`, `pdftoppm`, `pacpl`, `avconv`, and `oauth` are
@@ -197,20 +199,94 @@ stored on a central network drive.  When a package is updated, all
 servers need to reset, not just the server that happened to process
 the package update.
 
+## certs
+
+This is a path to a directory containing SSL certificates for the web
+application.  This is only necessary if you are using a [multi-server
+arrangement] with HTTPS access and you store certificates in a
+non-standard location.
+
+By default, the Apache configuration contains:
+
+{% highlight text %}
+SSLCertificateFile /etc/ssl/docassemble/docassemble.crt
+SSLCertificateKeyFile /etc/ssl/docassemble/docassemble.key 
+SSLCertificateChainFile /etc/ssl/docassemble/docassemble.ca.pem
+{% endhighlight %}
+
+In a [multi-server arrangement], when the [supervisor] process starts
+on each web server, it will execute the
+`docassemble.webapp.install_certs` module, which copies the
+certificates to `/etc/ssl/docassemble` before starting the web server.
+This is a convenience feature.  Otherwise, you would have to manually
+install the SSL certificates on every new **docassemble** web server
+you create.
+
+The value of `certs` can be a file path or an S3 URL (e.g.,
+`s3://exampledotcom/certs`).  The directory is copied to
+`/etc/ssl/docassemble` (or another directory specified by
+`cert_install_directory`.
+
+If you leave the `certs` setting undefined (which is recommended),
+**docassemble** will look in `/usr/share/docassemble/certs` if the
+`s3` setting is not enabled, and if `s3` is defined, it will look for
+S3 keys with the prefix `certs/` in the `bucket` defined in the `s3`
+configuration.
+
+Here is an example.  Install `s3cmd` if you have not done so already:
+
+{% highlight bash %}
+apt-get install s3cmd
+{% endhighlight %}
+
+Then do:
+
+{% highlight bash %}
+s3cmd --access_key=YOURACCESSKEY --secret_key=YOURSECRETKEY put yourserver.crt s3://yourbucket/certs/docassemble.crt
+s3cmd --access_key=YOURACCESSKEY --secret_key=YOURSECRETKEY put yourserver.key s3://yourbucket/certs/docassemble.key
+s3cmd --access_key=YOURACCESSKEY --secret_key=YOURSECRETKEY put yourserver.ca.pem s3://yourbucket/certs/docassemble.ca.pem
+{% endhighlight %}
+
+If your `s3` configuration has `bucket: yourbucket`, then you do not
+need to set a `certs` configuration, because **docassemble** will by
+default look in `s3://yourbucket/certs`.  However, if the certificates
+are stored in another location, you can specify a different location:
+
+{% highlight yaml %}
+certs: s3://otherbucket/certificates
+{% endhighlight %}
+
+If you want to use a location other than `/etc/ssl/docassemble`, you
+can change the `cert_install_directory` setting (see below).  You will
+also, of course, need to change the web server configuration file.
+
 ## mail
 
 **docassemble** needs to send e-mail, for example to reset people's
 passwords, or to let users of a multi-user interview know that it is
 their turn to start answering questions.
 
-The default configuration assumes that a mail server is installed on
-the same machine as the web server.
+The default configuration assumes that an SMTP server is installed on
+the same machine as the web server, using port 25.
 
 If you are going to send mail, you should at least set the `default_sender`:
 
 {% highlight yaml %}
 mail:
   default_sender: '"Administrator" <no-reply@example.com>'
+{% endhighlight %}
+
+To use another SMTP server as the mail server, do something like:
+
+{% highlight yaml %}
+mail:
+  default_sender: '"Administrator" <no-reply@example.com>'
+  username: mailuser
+  password: abc123
+  server: smtp.example.com
+  port: 25
+  use_ssl: false
+  use_tls: false
 {% endhighlight %}
 
 ## use_progress_bar
@@ -435,6 +511,16 @@ Always use a trailing slash.
 If this directive is not set, the value of `root` will be used to
 create URLs to uploaded files and static files.
 
+## google
+
+If you have a Google API key, for example for using the Google
+Geocoder, you can include it as follows:
+
+{% highlight yaml %}
+google:
+  api key: UIJGeyD-23aSdgSE34gEGRg3GDRGdrge9z-YUia
+{% endhighlight %}
+
 ## voicerss
 
 If the special variable `speak_text` is set to `True`, **docassemble**
@@ -464,6 +550,47 @@ s3:
   bucket: yourbucketname
 {% endhighlight %}
 
+## ec2
+
+If you are running **docassemble** from within an [Amazon EC2]
+instance, or a [Docker] container within such an instance, set this to
+true:
+
+{% highlight yaml %}
+ec2: true
+{% endhighlight %}
+
+This is necessary because when **docassemble** runs in a [multi-server
+arrangement], each **docassemble** web server instance needs to allow
+other **docassemble** web instances to send messages to it through
+[supervisor].  Each web server instance advertises the hostname or IP
+address through which its [supervisor] can be accessed.  Normally,
+this can be obtained using the computer's hostname, but within an EC2
+instance or Docker container, this hostname is not one that other web
+servers can resolve.  If `ec2` is set to `true`, then **docassemble**
+will determine the hostname by calling
+`http://169.254.169.254/latest/meta-data/local-ipv4`.
+
+## ec2_ip_url
+
+If `ec2` is set to `true`, docassemble will determine the hostname by
+calling `http://169.254.169.254/latest/meta-data/local-ipv4`.  If this
+URL does not work for some reason, but a different URL would work, you
+can change the URL that **docassemble** uses by setting the
+`ec2_ip_url` configuration item.
+
+{% highlight yaml %}
+ec2_ip_url: http://169.254.169.254/latest/meta-data/local-ipv4
+{% endhighlight %}
+
+## cert_install_directory
+
+By default, this is `/etc/ssl/docassemble`, but you can change it to
+wherever the web server will look for SSL certificates.  This is only
+applicable if you are using a [multi-server arrangement] and HTTPS.  A
+[supervisor] process will run as root upon startup that will copy
+files from the `certs` directory to the `cert_install_directory` and
+set appropriate file permissions on the certificates.
 
 # Using your own configuration variables
 

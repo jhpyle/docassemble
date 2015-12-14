@@ -110,7 +110,7 @@ To install the additional Python dependencies for the web server
 sudo pip install --upgrade wtforms werkzeug rauth simplekv \
   Flask-KVSession flask-user pypdf flask flask-login \
   flask-sqlalchemy Flask-WTF babel blinker sqlalchemy \
-  Pygments
+  Pygments boto
 {% endhighlight %}
 
 If you want to be able to convert uploaded sound files into different
