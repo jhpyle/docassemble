@@ -1351,10 +1351,10 @@ def index():
                 output += highlight(interview_status.question.source_code, YamlLexer(), HtmlFormatter())
             if len(interview_status.seeking) > 1:
                 output += '        <h4>' + word('How question came to be asked') + '</h4>' + "\n"
-                output += '<ul>\n'
-                for foo in user_dict['_internal']['answered']:
-                    output += "<li>" + str(foo) + "</li>"
-                output += '</ul>\n'
+                # output += '<ul>\n'
+                # for foo in user_dict['_internal']['answered']:
+                #     output += "<li>" + str(foo) + "</li>"
+                # output += '</ul>\n'
                 for stage in interview_status.seeking:
                     if 'question' in stage and 'reason' in stage and stage['question'] is not interview_status.question:
                         if stage['reason'] == 'initial':
