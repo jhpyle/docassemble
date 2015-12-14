@@ -2,7 +2,6 @@
 
 export CONFIG_FILE=/usr/share/docassemble/config.yml
 source /usr/share/docassemble/local/bin/activate
-python -m docassemble.webapp.update_config $CONFIG_FILE || exit 1
 sed -i'' \
     -e 's@{{DBPREFIX}}@'"${DBPREFIX-postgresql+psycopg2://}"'@' \
     -e 's/{{DBNAME}}/'"${DBNAME-docassemble}"'/' \
@@ -15,6 +14,7 @@ sed -i'' \
     -e 's/{{S3BUCKET}}/'"${S3BUCKET-null}"'/' \
     -e 's/{{EC2}}/'"${EC2-false}"'/' \
     $CONFIG_FILE || exit 1
+python -m docassemble.webapp.update_config $CONFIG_FILE || exit 1
 
 if [ "${CONTAINERROLE-all}" == "all" ]; then
     supervisorctl start postgres || exit 1
@@ -27,3 +27,4 @@ else
     python -m docassemble.webapp.create_tables $CONFIG_FILE
 fi
 python -m docassemble.webapp.install_certs $CONFIG_FILE || exit 1
+supervisorctl start apache2
