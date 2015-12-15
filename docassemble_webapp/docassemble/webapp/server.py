@@ -465,8 +465,8 @@ if LOGSERVER is None:
 else:
     import logging.handlers
     FORMAT = 'docassemble: ip=%(clientip)s i=%(yamlfile)s uid=%(session)s user=%(user)s %(message)s'
-    logging.basicConfig(level=logging.DEBUG)
     sys_logger = logging.getLogger('docassemble')
+    sys_logger.setLevel(logging.DEBUG)
     handler = logging.handlers.SysLogHandler(address = (LOGSERVER, 514), socktype=socket.SOCK_STREAM)
     sys_logger.addHandler(handler)
     def syslog_message(message):
