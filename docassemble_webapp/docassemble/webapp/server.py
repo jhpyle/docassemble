@@ -113,6 +113,7 @@ PDFTOPPM_COMMAND = daconfig.get('pdftoppm', None)
 DEFAULT_LANGUAGE = daconfig.get('language', 'en')
 DEFAULT_LOCALE = daconfig.get('locale', 'US.utf8')
 DEFAULT_DIALECT = daconfig.get('dialect', 'us')
+LOGSERVER = daconfig.get('log server', None)
 docassemble.base.util.set_default_language(DEFAULT_LANGUAGE)
 docassemble.base.util.set_default_locale(DEFAULT_LOCALE)
 docassemble.base.util.set_default_dialect(DEFAULT_DIALECT)
@@ -215,13 +216,9 @@ error_file_handler.setLevel(logging.DEBUG)
 app.logger.addHandler(error_file_handler)
 
 def flask_logger(message):
-    app.logger.warning(message)
+    #app.logger.warning(message)
     sys.stderr.write(unicode(message) + "\n")
     return
-
-docassemble.base.logger.set_logmessage(flask_logger)
-
-#logmessage("foo bar")
 
 def get_url_from_file_reference(file_reference, **kwargs):
     if re.search(r'^http', file_reference):
@@ -268,7 +265,7 @@ def absolute_filename(the_file):
 #     return False
 
 docassemble.base.parse.set_absolute_filename(absolute_filename)
-logmessage("Server started")
+#logmessage("Server started")
 
 def get_ext_and_mimetype(filename):
     mimetype, encoding = mimetypes.guess_type(filename)
@@ -462,6 +459,24 @@ if supervisor_url:
     db.session.commit()
 else:
     USING_SUPERVISOR = False
+
+if LOGSERVER is None:
+    docassemble.base.logger.set_logmessage(flask_logger)
+else:
+    import logging
+    import logging.handlers
+    FORMAT = 'docassemble: ip=%(clientip)s i=%(yamlfile)s uid=%(session)s user=%(user)s %(message)s'
+    logging.basicConfig(level=logging.DEBUG)
+    sys_logger = logging.getLogger('docassemble')
+    handler = logging.handlers.SysLogHandler(address = (LOGSERVER, 514), socktype=socket.SOCK_STREAM)
+    sys_logger.addHandler(handler)
+    def syslog_message(message):
+        if current_user and current_user.is_authenticated and not current_user.is_anonymous:
+            the_user = current_user.email
+        else:
+            the_user = "anonymous"
+        sys_logger.debug('%s', FORMAT % {'message': message, 'clientip': request.remote_addr, 'yamlfile': session['i'], 'user': the_user, 'session': session['uid']})
+    docassemble.base.logger.set_logmessage(syslog_message)
 
 @lm.user_loader
 def load_user(id):
