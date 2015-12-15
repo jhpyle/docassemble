@@ -463,7 +463,6 @@ else:
 if LOGSERVER is None:
     docassemble.base.logger.set_logmessage(flask_logger)
 else:
-    import logging
     import logging.handlers
     FORMAT = 'docassemble: ip=%(clientip)s i=%(yamlfile)s uid=%(session)s user=%(user)s %(message)s'
     logging.basicConfig(level=logging.DEBUG)
