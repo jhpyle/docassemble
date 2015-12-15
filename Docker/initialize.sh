@@ -2,18 +2,33 @@
 
 export CONFIG_FILE=/usr/share/docassemble/config.yml
 source /usr/share/docassemble/local/bin/activate
-sed -i'' \
-    -e 's@{{DBPREFIX}}@'"${DBPREFIX-postgresql+psycopg2://}"'@' \
-    -e 's/{{DBNAME}}/'"${DBNAME-docassemble}"'/' \
-    -e 's/{{DBUSER}}/'"${DBUSER-docassemble}"'/' \
-    -e 's/{{DBPASSWORD}}/'"${DBPASSWORD-abc123}"'/' \
-    -e 's/{{DBHOST}}/'"${DBHOST-null}"'/' \
-    -e 's/{{S3ENABLE}}/'"${S3ENABLE-false}"'/' \
-    -e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY-null}"'/' \
-    -e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
-    -e 's/{{S3BUCKET}}/'"${S3BUCKET-null}"'/' \
-    -e 's/{{EC2}}/'"${EC2-false}"'/' \
-    $CONFIG_FILE || exit 1
+if [ "${CONTAINERROLE-all}" == "all" ]; then
+  sed -i'' \
+      -e 's@{{DBPREFIX}}@'"${DBPREFIX-postgresql+psycopg2://}"'@' \
+      -e 's/{{DBNAME}}/'"${DBNAME-docassemble}"'/' \
+      -e 's/{{DBUSER}}/'"${DBUSER-null}"'/' \
+      -e 's/{{DBPASSWORD}}/'"${DBPASSWORD-null}"'/' \
+      -e 's/{{DBHOST}}/'"${DBHOST-null}"'/' \
+      -e 's/{{S3ENABLE}}/'"${S3ENABLE-false}"'/' \
+      -e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY-null}"'/' \
+      -e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
+      -e 's/{{S3BUCKET}}/'"${S3BUCKET-null}"'/' \
+      -e 's/{{EC2}}/'"${EC2-false}"'/' \
+      $CONFIG_FILE || exit 1
+else
+  sed -i'' \
+      -e 's@{{DBPREFIX}}@'"${DBPREFIX-postgresql+psycopg2://}"'@' \
+      -e 's/{{DBNAME}}/'"${DBNAME-docassemble}"'/' \
+      -e 's/{{DBUSER}}/'"${DBUSER-docassemble}"'/' \
+      -e 's/{{DBPASSWORD}}/'"${DBPASSWORD-abc123}"'/' \
+      -e 's/{{DBHOST}}/'"${DBHOST-null}"'/' \
+      -e 's/{{S3ENABLE}}/'"${S3ENABLE-false}"'/' \
+      -e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY-null}"'/' \
+      -e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
+      -e 's/{{S3BUCKET}}/'"${S3BUCKET-null}"'/' \
+      -e 's/{{EC2}}/'"${EC2-false}"'/' \
+      $CONFIG_FILE || exit 1
+fi
 python -m docassemble.webapp.update_config $CONFIG_FILE || exit 1
 
 if [ "${CONTAINERROLE-all}" == "all" ]; then
@@ -29,5 +44,7 @@ fi
 python -m docassemble.webapp.install_certs $CONFIG_FILE || exit 1
 if [ "${USEHTTPS-false}" == "true" ]; then
     a2enmod ssl
+else
+    a2dismod ssl
 fi
 supervisorctl start apache2

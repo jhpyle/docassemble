@@ -1,32 +1,32 @@
 {
-    "family": "docassemble-sql",
-    "containerDefinitions": [
+  "family": "docassemble-sql",
+  "containerDefinitions": [
+    {
+      "name": "docassemble",
+      "image": "jhpyle/docassemble-sql",
+      "cpu": 1,
+      "memory": 900,
+      "portMappings": [
         {
-            "name": "docassemble",
-            "image": "jhpyle/docassemble-sql",
-            "cpu": 1,
-            "memory": 999,
-            "portMappings": [
-                {
-                    "containerPort": 5432,
-                    "hostPort": 5432
-                }
-            ],
-            "essential": true,
-            "environment": [
-                {
-                    "name": "DBNAME",
-                    "value": "docassemble"
-                },
-                {
-                    "name": "DBUSER",
-                    "value": "docassemble"
-                },
-                {
-                    "name": "DBPASSWORD",
-                    "value": "abc123"
-                }
-            ]
+          "containerPort": 5432,
+          "hostPort": 5432
         }
-    ]
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "DBNAME",
+          "value": "docassemble"
+        },
+        {
+          "name": "DBUSER",
+          "value": "docassemble"
+        },
+        {
+          "name": "DBPASSWORD",
+          "value": "abc123"
+        }
+      ]
+    }
+  ]
 }

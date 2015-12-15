@@ -29,6 +29,7 @@ RUN locale-gen
 RUN update-locale LANG=en_US.UTF-8
 RUN a2dismod ssl
 RUN a2enmod wsgi
+RUN a2enmod rewrite
 RUN a2enmod xsendfile
 RUN a2enconf docassemble
 ENV APACHE_RUN_USER www-data

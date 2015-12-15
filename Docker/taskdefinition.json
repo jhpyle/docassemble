@@ -4,7 +4,7 @@
     {
       "name": "docassemble",
       "image": "jhpyle/docassemble",
-      "memory": 999,
+      "memory": 900,
       "cpu": 1,
       "portMappings": [
         {
@@ -61,6 +61,10 @@
         {
           "name": "EC2",
           "value": "true"
+        },
+        {
+          "name": "USEHTTPS",
+          "value": "false"
         }
       ]
     }
