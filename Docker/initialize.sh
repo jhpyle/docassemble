@@ -27,4 +27,7 @@ else
     python -m docassemble.webapp.create_tables $CONFIG_FILE
 fi
 python -m docassemble.webapp.install_certs $CONFIG_FILE || exit 1
+if [ "${USEHTTPS-false}" == "true" ]; then
+    a2enmod ssl
+fi
 supervisorctl start apache2

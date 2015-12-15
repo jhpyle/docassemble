@@ -27,7 +27,7 @@ USER root
 RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 RUN locale-gen
 RUN update-locale LANG=en_US.UTF-8
-RUN a2enmod ssl
+RUN a2dismod ssl
 RUN a2enmod wsgi
 RUN a2enmod xsendfile
 RUN a2enconf docassemble

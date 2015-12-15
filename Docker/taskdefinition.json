@@ -1,0 +1,68 @@
+{
+  "family": "docassemble-app",
+  "containerDefinitions": [
+    {
+      "name": "docassemble",
+      "image": "jhpyle/docassemble",
+      "memory": 999,
+      "cpu": 1,
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "hostPort": 80
+        },
+        {
+          "containerPort": 443,
+          "hostPort": 443
+        },
+        {
+          "containerPort": 9001,
+          "hostPort": 9001
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "CONTAINERROLE",
+          "value": "webserver"
+        },
+        {
+          "name": "DBNAME",
+          "value": "docassemble"
+        },
+        {
+          "name": "DBUSER",
+          "value": "docassemble"
+        },
+        {
+          "name": "DBPASSWORD",
+          "value": "abc123"
+        },
+        {
+          "name": "DBHOST",
+          "value": "sql.docassemble.local"
+        },
+        {
+          "name": "S3ENABLE",
+          "value": "true"
+        },
+        {
+          "name": "S3ACCESSKEY",
+          "value": "FWIEJFIJIDGISEJFWOEF"
+        },
+        {
+          "name": "S3SECRETACCESSKEY",
+          "value": "RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG"
+        },
+        {
+          "name": "S3BUCKET",
+          "value": "yourbucketname"
+        },
+        {
+          "name": "EC2",
+          "value": "true"
+        }
+      ]
+    }
+  ]
+}
