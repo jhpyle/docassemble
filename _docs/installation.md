@@ -59,7 +59,7 @@ source /usr/share/docassemble/local/bin/activate
 pip install --upgrade us 3to2 guess-language-spirit html2text \
 markdown pyyaml mako python-dateutil setuptools httplib2 psycopg2 pillow
 pip install --upgrade mdx_smartypants titlecase pygeocoder beautifulsoup4
-pip install --upgrade cffi
+pip install --upgrade cffi tailer
 pip install --upgrade bcrypt speaklater
 pip install --upgrade wtforms werkzeug rauth simplekv \
   Flask-KVSession flask-user pypdf flask flask-login \

@@ -88,6 +88,7 @@ png_resolution: 300
 png_screen_resolution: 72
 show_login: true
 xsendfile: true
+log: /usr/share/docassemble/log
 ec2: false
 ec2_ip_url: http://169.254.169.254/latest/meta-data/local-ipv4
 {% endhighlight %}
@@ -373,6 +374,16 @@ browser typically asks for only a range of bytes from the sound file
 at a time, and the [WSGI] server does not support the HTTP Range
 header.
 
+## log
+
+**docassemble** writes messages to a log file (`docassemble.log`)
+stored in this directory, which defaults to
+`/usr/share/docassemble/log`.  These messages are helpful for
+debugging problems with interviews.
+
+If a `log server` is set, **docassemble** will write messages to TCP
+port 514 on that server, and will not write to the `log` directory.
+
 # Enabling optional features
 
 ## Image conversion
@@ -591,6 +602,13 @@ applicable if you are using a [multi-server arrangement] and HTTPS.  A
 [supervisor] process will run as root upon startup that will copy
 files from the `certs` directory to the `cert_install_directory` and
 set appropriate file permissions on the certificates.
+
+## log server
+
+If set, **docassemble** will write log messages to TCP port 514 on
+this host instead of writing them to
+`/usr/share/docassemble/log/docassemble.log` (or whatever other
+directory is set in `log`).
 
 # Using your own configuration variables
 
