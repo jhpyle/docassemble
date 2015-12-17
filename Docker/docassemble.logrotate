@@ -1,4 +1,4 @@
-/var/log/docassemble/docassemble.log
+/usr/share/docassemble/log/docassemble.log
 {
 	rotate 7
 	daily

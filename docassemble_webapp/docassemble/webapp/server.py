@@ -457,10 +457,8 @@ if supervisor_url:
     new_entry = Supervisors(hostname=hostname, url="http://" + hostname + ":9001")
     db.session.add(new_entry)
     db.session.commit()
-    VAR_LOG_DIRECTORY = daconfig.get('var_log', '/var/log/docassemble')
 else:
     USING_SUPERVISOR = False
-    VAR_LOG_DIRECTORY = daconfig.get('var_log', '/usr/share/docassemble/log')
 
 LOG_DIRECTORY = daconfig.get('log', '/usr/share/docassemble/log')
 
@@ -468,7 +466,7 @@ sys_logger = logging.getLogger('docassemble')
 sys_logger.setLevel(logging.DEBUG)
 
 if LOGSERVER is None:
-    docassemble_log_handler = logging.FileHandler(filename=os.path.join(VAR_LOG_DIRECTORY, 'docassemble.log'))
+    docassemble_log_handler = logging.FileHandler(filename=os.path.join(LOG_DIRECTORY, 'docassemble.log'))
     sys_logger.addHandler(docassemble_log_handler)
 else:
     import logging.handlers
