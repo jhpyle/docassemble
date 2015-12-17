@@ -8,10 +8,11 @@
     <label class="sr-only" for="filter_string">{{ word('Filter for') }}</label>
     <div class="input-group">
       <div class="input-group-addon">{{ word('Filter for') }}</div>
-      <input type="text" class="form-control" name="filter_string" id="filter_string">
+      <input type="text" class="form-control" name="filter_string" id="filter_string" value="{{ default_filter_string }}">
     </div>
   </div>
-  <button type="submit" name="{{ form.submit.id }}" class="btn btn-primary">{{ form.submit.label.text }}</button>
+  <button type="submit" name="{{ form.submit.id }}" class="btn btn-primary" value="{{ form.submit.label.text }}">{{ form.submit.label.text }}</button>
+  <button type="submit" name="{{ form.clear.id }}" class="btn btn-default" value="{{ form.clear.label.text }}">{{ form.clear.label.text }}</button>
   <a class="btn btn-primary pull-right" href="{{ url_for('logfile', filename=current_file) }}">{{ word('Download') }}</a>
   {{ form.hidden_tag() }}
   {{ myrender_hidden_field(form.file_name, value=current_file) }}

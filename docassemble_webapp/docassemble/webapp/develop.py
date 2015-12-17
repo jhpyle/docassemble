@@ -38,3 +38,4 @@ class LogForm(Form):
     filter_string = StringField(word('Filter For'))
     file_name = StringField(word('File Name'))
     submit = SubmitField(word('Apply'))
+    clear = SubmitField(word('Clear'))

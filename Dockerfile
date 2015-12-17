@@ -2,11 +2,13 @@ FROM debian:latest
 
 RUN apt-get clean && apt-get update && apt-get -y install python python-dev python-virtualenv wget unzip git locales pandoc texlive texlive-latex-extra apache2 postgresql libapache2-mod-wsgi libapache2-mod-xsendfile  poppler-utils libffi-dev libffi6 imagemagick gcc supervisor libaudio-flac-header-perl libaudio-musepack-perl libmp3-tag-perl libogg-vorbis-header-pureperl-perl perl make libvorbis-dev libcddb-perl libinline-perl libcddb-get-perl libmp3-tag-perl libaudio-scan-perl libaudio-flac-header-perl libparallel-forkmanager-perl libav-tools autoconf automake libjpeg-dev zlib1g-dev libpq-dev logrotate
 RUN cd /tmp && git clone git://git.code.sf.net/p/pacpl/code pacpl-code && cd pacpl-code && ./configure; make && make install && cd ..
-RUN mkdir -p /etc/ssl/docassemble /usr/share/docassemble/local /usr/share/docassemble/webapp /usr/share/docassemble/files /var/www/.pip && chown www-data.www-data /var/www/.pip && chsh -s /bin/bash www-data
+RUN mkdir -p /etc/ssl/docassemble /usr/share/docassemble/local /usr/share/docassemble/webapp /usr/share/docassemble/files /var/www/.pip /var/log/docassemble /usr/share/docassemble/log && chown www-data.www-data /var/www/.pip && chsh -s /bin/bash www-data
 COPY docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/
 COPY Docker/initialize.sh /usr/share/docassemble/webapp/
 COPY Docker/config.yml /usr/share/docassemble/
 COPY Docker/apache.conf /etc/apache2/sites-available/000-default.conf
+COPY Docker/apache.logrotate /etc/logrotate.d/apache2
+COPY Docker/docassemble.logrotate /etc/logrotate.d/docassemble
 COPY Docker/docassemble.conf /etc/apache2/conf-available/
 COPY Docker/docassemble-supervisor.conf /etc/supervisor/conf.d/docassemble.conf
 COPY Docker/docassemble.key /etc/ssl/docassemble/

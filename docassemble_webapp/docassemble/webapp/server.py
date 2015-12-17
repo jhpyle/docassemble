@@ -58,7 +58,7 @@ from docassemble.webapp.config import daconfig, s3_config, S3_ENABLED, dbtablepr
 from PIL import Image
 import pyPdf
 import yaml
-from subprocess import call
+from subprocess import call, Popen, PIPE
 DEBUG = daconfig.get('debug', False)
 docassemble.base.parse.debug = DEBUG
 if DEBUG:
@@ -457,28 +457,33 @@ if supervisor_url:
     new_entry = Supervisors(hostname=hostname, url="http://" + hostname + ":9001")
     db.session.add(new_entry)
     db.session.commit()
+    VAR_LOG_DIRECTORY = daconfig.get('var_log', '/var/log/docassemble')
 else:
     USING_SUPERVISOR = False
+    VAR_LOG_DIRECTORY = daconfig.get('var_log', '/usr/share/docassemble/log')
+
+LOG_DIRECTORY = daconfig.get('log', '/usr/share/docassemble/log')
+
+sys_logger = logging.getLogger('docassemble')
+sys_logger.setLevel(logging.DEBUG)
 
 if LOGSERVER is None:
-    app.config['USING_LOGSERVER'] = False
-    docassemble.base.logger.set_logmessage(flask_logger)
+    docassemble_log_handler = logging.FileHandler(filename=os.path.join(VAR_LOG_DIRECTORY, 'docassemble.log'))
+    sys_logger.addHandler(docassemble_log_handler)
 else:
-    app.config['USING_LOGSERVER'] = True
     import logging.handlers
-    FORMAT = 'docassemble: ip=%(clientip)s i=%(yamlfile)s uid=%(session)s user=%(user)s %(message)s'
-    sys_logger = logging.getLogger('docassemble')
-    sys_logger.setLevel(logging.DEBUG)
-    handler = logging.handlers.SysLogHandler(address = (LOGSERVER, 514), socktype=socket.SOCK_STREAM)
+    handler = logging.handlers.SysLogHandler(address=(LOGSERVER, 514), socktype=socket.SOCK_STREAM)
     sys_logger.addHandler(handler)
-    def syslog_message(message):
-        message = re.sub(r'\n', ' ', message)
-        if current_user and current_user.is_authenticated and not current_user.is_anonymous:
-            the_user = current_user.email
-        else:
-            the_user = "anonymous"
-        sys_logger.debug('%s', FORMAT % {'message': message, 'clientip': request.remote_addr, 'yamlfile': session['i'], 'user': the_user, 'session': session['uid']})
-    docassemble.base.logger.set_logmessage(syslog_message)
+    
+LOGFORMAT = 'docassemble: ip=%(clientip)s i=%(yamlfile)s uid=%(session)s user=%(user)s %(message)s'
+def syslog_message(message):
+    message = re.sub(r'\n', ' ', message)
+    if current_user and current_user.is_authenticated and not current_user.is_anonymous:
+        the_user = current_user.email
+    else:
+        the_user = "anonymous"
+    sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': request.remote_addr, 'yamlfile': session['i'], 'user': the_user, 'session': session['uid']})
+docassemble.base.logger.set_logmessage(syslog_message)
 
 @lm.user_loader
 def load_user(id):
@@ -1643,8 +1648,7 @@ def make_navbar(status, page_title, steps, show_login):
             navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">' + current_user.email + '<b class="caret"></b></a><ul class="dropdown-menu">'
             if current_user.has_role('admin', 'developer'):
                 navbar +='<li><a href="' + url_for('package_page') + '">' + word('Package Management') + '</a></li>'
-                if LOGSERVER is not None:
-                    navbar +='<li><a href="' + url_for('logs') + '">' + word('Logs') + '</a></li>'
+                navbar +='<li><a href="' + url_for('logs') + '">' + word('Logs') + '</a></li>'
                 navbar +='<li><a href="' + url_for('playground_page') + '">' + word('Playground') + '</a></li>'
                 if current_user.has_role('admin'):
                     navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
@@ -2427,31 +2431,49 @@ def html_escape(text):
 @roles_required(['admin', 'developer'])
 def logfile(filename):
     if LOGSERVER is None:
-        abort(404)
-    h = httplib2.Http()
-    resp, content = h.request("http://" + LOGSERVER, "GET")
-    temp_file, headers = urllib.urlretrieve("http://" + LOGSERVER + '/' + urllib.quote(filename))
-    return(send_file(temp_file, as_attachment=True, mimetype='text/plain', attachment_filename=filename, cache_timeout=0))
+        the_file = os.path.join(LOG_DIRECTORY, filename)
+        if not os.path.isfile(the_file):
+            abort(404)
+    else:
+        h = httplib2.Http()
+        resp, content = h.request("http://" + LOGSERVER, "GET")
+        the_file, headers = urllib.urlretrieve("http://" + LOGSERVER + '/' + urllib.quote(filename))
+    return(send_file(the_file, as_attachment=True, mimetype='text/plain', attachment_filename=filename, cache_timeout=0))
 
 @app.route('/logs', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin', 'developer'])
 def logs():
     form = LogForm(request.form, current_user)
-    if LOGSERVER is None:
-        abort(404)
     the_file = request.args.get('file', None)
-    h = httplib2.Http()
-    resp, content = h.request("http://" + LOGSERVER, "GET")
-    if int(resp['status']) >= 200 and int(resp['status']) < 300:
-        files = content.split("\n")
-    else:
-        abort(404)
-    if len(files):
-        if the_file is None:
+    default_filter_string = ''
+    if request.method == 'POST' and form.file_name.data:
+        the_file = form.file_name.data
+    if LOGSERVER is None:
+        call_sync()
+        files = sorted([f for f in os.listdir(LOG_DIRECTORY) if os.path.isfile(os.path.join(LOG_DIRECTORY, f))])
+        if the_file is None and len(files):
             the_file = files[0]
-        filename, headers = urllib.urlretrieve("http://" + LOGSERVER + '/' + urllib.quote(the_file))
-        if request.method == 'POST' and form.filter_string.data:
+        if the_file is not None:
+            filename = os.path.join(LOG_DIRECTORY, the_file)
+            # if (not os.path.isfile(filename)) and len(files):
+            #     the_file = files[0]
+            # else:
+            #     the_file = None
+    else:
+        h = httplib2.Http()
+        resp, content = h.request("http://" + LOGSERVER, "GET")
+        if int(resp['status']) >= 200 and int(resp['status']) < 300:
+            files = content.split("\n")
+        else:
+            abort(404)
+        if len(files):
+            if the_file is None:
+                the_file = files[0]
+            filename, headers = urllib.urlretrieve("http://" + LOGSERVER + '/' + urllib.quote(the_file))
+    if len(files):
+        if request.method == 'POST' and form.submit.data and form.filter_string.data:
+            default_filter_string = form.filter_string.data
             reg_exp = re.compile(form.filter_string.data)
             temp_file = tempfile.NamedTemporaryFile()
             with open(filename, 'r') as fp:
@@ -2464,4 +2486,26 @@ def logs():
         content = "\n".join(lines)
     else:
         content = "No log files available"
-    return render_template('pages/logs.html', form=form, files=files, current_file=the_file, content=content), 200
+    return render_template('pages/logs.html', form=form, files=files, current_file=the_file, content=content, default_filter_string=default_filter_string), 200
+
+def call_sync():
+    if not USING_SUPERVISOR:
+        return
+    args = [SUPERVISORCTL, '-s', 'http://' + hostname + ':9001', 'start', 'sync']
+    result = call(args)
+    if result == 0:
+        logmessage("logs: sent message to " + hostname)
+    else:
+        logmessage("logs: call to supervisorctl on " + hostname + " was not successful")
+        abort(404)
+    in_process = 1
+    counter = 10
+    check_args = [SUPERVISORCTL, '-s', 'http://' + hostname + ':9001', 'status', 'sync']
+    while in_process == 1 and counter > 0:
+        output, err = Popen(check_args, stdout=PIPE, stderr=PIPE).communicate()
+        if not re.search(r'RUNNING', output):
+            in_process = 0
+        else:
+            time.sleep(1)
+        counter -= 1
+    return

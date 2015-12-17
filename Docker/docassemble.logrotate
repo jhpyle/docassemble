@@ -1,0 +1,10 @@
+/var/log/docassemble/docassemble.log
+{
+	rotate 7
+	daily
+	missingok
+	notifempty
+	postrotate
+		invoke-rc.d syslog-ng reload > /dev/null
+	endscript
+}
