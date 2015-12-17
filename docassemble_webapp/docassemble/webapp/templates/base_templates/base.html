@@ -31,6 +31,9 @@
             <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ current_user.email }}<b class="caret"></b></a><ul class="dropdown-menu">
               {%- if current_user.has_roles(['admin', 'developer']) %}
             <li><a href="{{ url_for('package_page') }}">{{ word('Package Management') }}</a></li>
+                {% if config['USING_LOGSERVER'] %}
+            <li><a href="{{ url_for('logs') }}">{{ word('Logs') }}</a></li>
+                {%- endif %}	      
             <li><a href="{{ url_for('playground_page') }}">{{ word('Playground') }}</a></li>
                 {%- if current_user.has_roles(['admin']) %}
             <li><a href="{{ url_for('user_list') }}">{{ word('User List') }}</a></li>

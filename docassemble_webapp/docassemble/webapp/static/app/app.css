@@ -126,3 +126,13 @@ a.sourceactive {
 .dacenter {
     text-align: center; 
 }
+
+.wrappre {
+    white-space: pre-wrap;
+    max-height: 400px;
+    overflow: auto;
+}
+
+.vspace {
+    margin-top: 10px;
+}

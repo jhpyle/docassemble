@@ -33,3 +33,8 @@ class PlaygroundForm(Form):
     submit = SubmitField(word('Save'))
     run = SubmitField(word('Save and Run'))
     delete = SubmitField(word('Delete'))
+
+class LogForm(Form):
+    filter_string = StringField(word('Filter For'))
+    file_name = StringField(word('File Name'))
+    submit = SubmitField(word('Apply'))

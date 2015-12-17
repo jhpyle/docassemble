@@ -3,7 +3,9 @@ import socket
 import copy
 import threading
 import urllib
+import urllib2
 import os
+import tailer
 import sys
 import datetime
 import time
@@ -25,7 +27,6 @@ from docassemble.base.util import pickleable_objects, word, comma_and_list
 from docassemble.base.logger import logmessage
 import mimetypes
 import logging
-#import psycopg2
 import pickle
 import string
 import random
@@ -35,11 +36,12 @@ import re
 import urlparse
 import json
 import base64
+import requests
 from flask import make_response, abort, render_template, request, session, send_file, redirect, url_for, current_app, get_flashed_messages, flash, Markup
 from flask.ext.login import LoginManager, UserMixin, login_user, logout_user, current_user
 from flask.ext.user import login_required, roles_required, UserManager, SQLAlchemyAdapter
 from flask.ext.user.forms import LoginForm
-from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm
+from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm
 from flask_mail import Mail, Message
 import flask.ext.user.signals
 import httplib2
@@ -206,8 +208,6 @@ app.handle_url_build_error = my_default_url
 engine = create_engine(alchemy_connect_string, convert_unicode=True)
 metadata = MetaData(bind=engine)
 store = SQLAlchemyStore(engine, metadata, 'kvstore')
-
-#conn = psycopg2.connect(connect_string)
 
 KVSessionExtension(store, app)
 
@@ -461,8 +461,10 @@ else:
     USING_SUPERVISOR = False
 
 if LOGSERVER is None:
+    app.config['USING_LOGSERVER'] = False
     docassemble.base.logger.set_logmessage(flask_logger)
 else:
+    app.config['USING_LOGSERVER'] = True
     import logging.handlers
     FORMAT = 'docassemble: ip=%(clientip)s i=%(yamlfile)s uid=%(session)s user=%(user)s %(message)s'
     sys_logger = logging.getLogger('docassemble')
@@ -470,6 +472,7 @@ else:
     handler = logging.handlers.SysLogHandler(address = (LOGSERVER, 514), socktype=socket.SOCK_STREAM)
     sys_logger.addHandler(handler)
     def syslog_message(message):
+        message = re.sub(r'\n', ' ', message)
         if current_user and current_user.is_authenticated and not current_user.is_anonymous:
             the_user = current_user.email
         else:
@@ -493,7 +496,7 @@ class SavedFile(object):
                 parts = re.sub(r'(...)', r'\1/', '{0:012x}'.format(int(file_number))).split('/')
                 self.directory = os.path.join(UPLOAD_DIRECTORY, *parts)
             else:
-                self.directory = os.path.join(UPLOAD_DIRECTORY, self.section, file_number)
+                self.directory = os.path.join(UPLOAD_DIRECTORY, str(self.section), str(file_number))
             self.path = os.path.join(self.directory, filename)
         if fix:
             self.fix()
@@ -1640,6 +1643,8 @@ def make_navbar(status, page_title, steps, show_login):
             navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">' + current_user.email + '<b class="caret"></b></a><ul class="dropdown-menu">'
             if current_user.has_role('admin', 'developer'):
                 navbar +='<li><a href="' + url_for('package_page') + '">' + word('Package Management') + '</a></li>'
+                if LOGSERVER is not None:
+                    navbar +='<li><a href="' + url_for('logs') + '">' + word('Logs') + '</a></li>'
                 navbar +='<li><a href="' + url_for('playground_page') + '">' + word('Playground') + '</a></li>'
                 if current_user.has_role('admin'):
                     navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
@@ -2416,3 +2421,47 @@ def html_escape(text):
 #     capability.allow_client_outgoing(application_sid)
 #     token = capability.generate()
 #     return render_template('pages/twiliotest.html', token=token)
+
+@app.route('/logfile/<filename>', methods=['GET'])
+@login_required
+@roles_required(['admin', 'developer'])
+def logfile(filename):
+    if LOGSERVER is None:
+        abort(404)
+    h = httplib2.Http()
+    resp, content = h.request("http://" + LOGSERVER, "GET")
+    temp_file, headers = urllib.urlretrieve("http://" + LOGSERVER + '/' + urllib.quote(filename))
+    return(send_file(temp_file, as_attachment=True, mimetype='text/plain', attachment_filename=filename, cache_timeout=0))
+
+@app.route('/logs', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def logs():
+    form = LogForm(request.form, current_user)
+    if LOGSERVER is None:
+        abort(404)
+    the_file = request.args.get('file', None)
+    h = httplib2.Http()
+    resp, content = h.request("http://" + LOGSERVER, "GET")
+    if int(resp['status']) >= 200 and int(resp['status']) < 300:
+        files = content.split("\n")
+    else:
+        abort(404)
+    if len(files):
+        if the_file is None:
+            the_file = files[0]
+        filename, headers = urllib.urlretrieve("http://" + LOGSERVER + '/' + urllib.quote(the_file))
+        if request.method == 'POST' and form.filter_string.data:
+            reg_exp = re.compile(form.filter_string.data)
+            temp_file = tempfile.NamedTemporaryFile()
+            with open(filename, 'r') as fp:
+                for line in fp:
+                    if reg_exp.search(line):
+                        temp_file.write(line)
+            lines = tailer.tail(temp_file, 30)
+        else:
+            lines = tailer.tail(open(filename), 30)
+        content = "\n".join(lines)
+    else:
+        content = "No log files available"
+    return render_template('pages/logs.html', form=form, files=files, current_file=the_file, content=content), 200
