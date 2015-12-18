@@ -14,6 +14,7 @@ class Uploads(db.Model):
     indexno = db.Column(db.Integer(), primary_key=True)
     key = db.Column(db.String(250))
     filename = db.Column(db.Text())
+    yamlfile = db.Column(db.Text())
 
 class KVStore(db.Model):
     __tablename__ = dbtableprefix + "kvstore"

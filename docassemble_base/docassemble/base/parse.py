@@ -1314,7 +1314,7 @@ class Question:
             for doc_format in result['file']:
                 variable_string = attachment['variable_name'] + '.' + doc_format
                 filename = result['filename'] + '.' + doc_format
-                file_number, extension, mimetype = save_numbered_file(filename, result['file'][doc_format])
+                file_number, extension, mimetype = save_numbered_file(filename, result['file'][doc_format], yaml_file_name=self.interview.source.path)
                 if file_number is None:
                     raise Exception("Could not save numbered file")
                 string = variable_string + " = DAFile('" + variable_string + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"

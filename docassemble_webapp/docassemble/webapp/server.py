@@ -374,8 +374,8 @@ docassemble.base.parse.set_file_finder(get_info_from_file_reference)
 def get_mail_variable(*args, **kwargs):
     return mail
 
-def save_numbered_file(filename, orig_path):
-    file_number = get_new_file_number(session['uid'], filename)
+def save_numbered_file(filename, orig_path, yaml_file_name=None):
+    file_number = get_new_file_number(session['uid'], filename, yaml_file_name=yaml_file_name)
     extension, mimetype = get_ext_and_mimetype(filename)
     new_file = SavedFile(file_number, extension=extension, fix=True)
     new_file.copy_from(orig_path)
@@ -525,6 +525,14 @@ class SavedFile(object):
             if not os.path.isdir(self.directory):
                 os.makedirs(self.directory)        
         self.fixed = True
+    def delete(self):
+        if S3_ENABLED:
+            prefix = str(self.section) + '/' + str(self.file_number) + '/'
+            for key in s3.bucket.list(prefix=prefix, delimiter='/'):
+                key.delete()
+        else:
+            if os.path.isdir(self.directory):
+                shutil.rmtree(self.directory)
     def save(self, finalize=False):
         if not self.fixed:
             self.fix()
@@ -1018,7 +1026,7 @@ def index():
                 theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['_the_image']).group(1) + '==')
                 #sys.stderr.write("Got theImage and it is " + str(len(theImage)) + " bytes long\n")
                 filename = secure_filename('canvas.png')
-                file_number = get_new_file_number(session['uid'], filename)
+                file_number = get_new_file_number(session['uid'], filename, yaml_file_name=yaml_filename)
                 extension, mimetype = get_ext_and_mimetype(filename)
                 new_file = SavedFile(file_number, extension=extension, fix=True)
                 new_file.write_content(theImage)
@@ -1066,7 +1074,7 @@ def index():
                         for the_file in the_files:
                             #logmessage("There is a file_field in request.files and it has a type of " + str(type(the_file)) + " and its str representation is " + str(the_file))
                             filename = secure_filename(the_file.filename)
-                            file_number = get_new_file_number(session['uid'], filename)
+                            file_number = get_new_file_number(session['uid'], filename, yaml_file_name=yaml_filename)
                             extension, mimetype = get_ext_and_mimetype(filename)
                             saved_file = SavedFile(file_number, extension=extension, fix=True)
                             if extension == "jpg" and 'imagemagick' in daconfig:
@@ -1570,8 +1578,19 @@ def save_user_dict(user_code, user_dict, filename, changed=False):
     return
 
 def reset_user_dict(user_code, user_dict, filename):
+    logmessage("reset_user_dict: " + str(user_code) + " " + str(filename))
     UserDict.query.filter_by(key=user_code, filename=filename).delete()
+    db.session.commit()
     UserDictKeys.query.filter_by(key=user_code, filename=filename).delete()
+    db.session.commit()
+    for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename).all():
+        old_file = SavedFile(upload.indexno)
+        old_file.delete()
+    Uploads.query.filter_by(key=user_code, yamlfile=filename).delete()
+    db.session.commit()
+    Attachments.query.filter_by(key=user_code, filename=filename).delete()
+    db.session.commit()
+    SpeakList.query.filter_by(key=user_code, filename=filename).delete()
     db.session.commit()
     #cur = conn.cursor()
     #cur.execute("DELETE FROM userdict where key=%s and filename=%s", [user_code, filename])
@@ -1580,8 +1599,8 @@ def reset_user_dict(user_code, user_dict, filename):
     save_user_dict(user_code, user_dict, filename)
     return
 
-def get_new_file_number(user_code, file_name):
-    new_upload = Uploads(key=user_code, filename=file_name)
+def get_new_file_number(user_code, file_name, yaml_file_name=None):
+    new_upload = Uploads(key=user_code, filename=file_name, yamlfile=yaml_file_name)
     db.session.add(new_upload)
     db.session.commit()
     return new_upload.indexno
@@ -1711,7 +1730,7 @@ def speak_file():
             if not VOICERSS_ENABLED:
                 logmessage("Could not serve speak file because voicerss not enabled")
                 abort(404)
-            new_file_number = get_new_file_number(key, 'speak.mp3')
+            new_file_number = get_new_file_number(key, 'speak.mp3', yaml_file_name=filename)
             phrase = codecs.decode(entry.phrase, 'base64')
             url = "https://api.voicerss.org/?" + urllib.urlencode({'key': voicerss_config['key'], 'src': phrase, 'hl': str(entry.language) + '-' + str(entry.dialect)})
             logmessage("Retrieving " + url)
