@@ -209,7 +209,7 @@ engine = create_engine(alchemy_connect_string, convert_unicode=True)
 metadata = MetaData(bind=engine)
 store = SQLAlchemyStore(engine, metadata, 'kvstore')
 
-KVSessionExtension(store, app)
+kv_session = KVSessionExtension(store, app)
 
 error_file_handler = logging.FileHandler(filename=LOGFILE)
 error_file_handler.setLevel(logging.DEBUG)
@@ -829,7 +829,16 @@ def post_sign_in():
 
 @app.route("/exit", methods=['POST', 'GET'])
 def exit():
+    session_id = session.get('uid', None)
+    yaml_filename = session.get('i', None)
+    if session_id is not None and yaml_filename is not None:
+        reset_user_dict(session_id, yaml_filename)
     return redirect(exit_page)
+
+@app.route("/cleanup_sessions", methods=['GET'])
+def cleanup_sessions():
+    kv_session.cleanup_sessions()
+    return render_template('base_templates/blank.html')
 
 @app.route("/", methods=['POST', 'GET'])
 def index():
@@ -1246,7 +1255,8 @@ def index():
         user_dict = copy.deepcopy(initial_dict)
         user_dict['url_args'] = url_args
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
-        reset_user_dict(user_code, user_dict, yaml_filename)
+        reset_user_dict(user_code, yaml_filename)
+        save_user_dict(user_code, user_dict, yaml_filename)
         steps = 0
         changed = False
         interview.assemble(user_dict, interview_status)
@@ -1254,7 +1264,8 @@ def index():
         user_dict['_internal']['progress'] = interview_status.question.progress
     if interview_status.question.question_type == "exit":
         user_dict = copy.deepcopy(initial_dict)
-        reset_user_dict(user_code, user_dict, yaml_filename)
+        reset_user_dict(user_code, yaml_filename)
+        save_user_dict(user_code, user_dict, yaml_filename)
         if interview_status.questionText != '':
             return redirect(interview_status.questionText)
         else:
@@ -1577,8 +1588,7 @@ def save_user_dict(user_code, user_dict, filename, changed=False):
     #conn.commit()
     return
 
-def reset_user_dict(user_code, user_dict, filename):
-    logmessage("reset_user_dict: " + str(user_code) + " " + str(filename))
+def reset_user_dict(user_code, filename):
     UserDict.query.filter_by(key=user_code, filename=filename).delete()
     db.session.commit()
     UserDictKeys.query.filter_by(key=user_code, filename=filename).delete()
@@ -1596,7 +1606,6 @@ def reset_user_dict(user_code, user_dict, filename):
     #cur.execute("DELETE FROM userdict where key=%s and filename=%s", [user_code, filename])
     #cur.execute("DELETE FROM userdictkeys where key=%s and filename=%s", [user_code, filename])
     #conn.commit()
-    save_user_dict(user_code, user_dict, filename)
     return
 
 def get_new_file_number(user_code, file_name, yaml_file_name=None):
