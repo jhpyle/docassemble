@@ -6,7 +6,7 @@
 
 """gettext message extraction via Babel: http://babel.edgewall.org/"""
 from babel.messages.extract import extract_python
-from docassemble.mako.ext.extract import MessageExtractor
+from docassemble.base.mako.ext.extract import MessageExtractor
 
 
 class BabelMakoExtractor(MessageExtractor):

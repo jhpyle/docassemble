@@ -14,7 +14,7 @@ from docassemble.base.error import DAError, MandatoryQuestion
 from docassemble.base.util import pickleable_objects, word, get_language
 from docassemble.base.logger import logmessage
 from docassemble.base.pandoc import Pandoc
-from docassemble.mako.template import Template
+from docassemble.base.mako.template import Template
 from types import CodeType
 
 debug = False

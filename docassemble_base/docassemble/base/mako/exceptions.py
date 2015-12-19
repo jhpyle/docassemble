@@ -8,7 +8,7 @@
 
 import traceback
 import sys
-from docassemble.mako import util, compat
+from docassemble.base.mako import util, compat
 
 
 class MakoException(Exception):
@@ -150,7 +150,7 @@ class RichTraceback(object):
         template filename, the line number adjusted relative to the template
         source, and code line from that line number of the template."""
 
-        import docassemble.mako.template
+        import docassemble.base.mako.template
         mods = {}
         rawrecords = traceback.extract_tb(trcback)
         new_trcback = []
@@ -161,7 +161,7 @@ class RichTraceback(object):
                 (line_map, template_lines) = mods[filename]
             except KeyError:
                 try:
-                    info = docassemble.mako.template._get_module_info(filename)
+                    info = docassemble.base.mako.template._get_module_info(filename)
                     module_source = info.code
                     template_source = info.source
                     template_filename = info.template_filename or filename
@@ -184,7 +184,7 @@ class RichTraceback(object):
 
                 template_ln = 1
 
-                source_map = docassemble.mako.template.ModuleInfo.\
+                source_map = docassemble.base.mako.template.ModuleInfo.\
                     get_module_source_metadata(
                         module_source, full_line_map=True)
                 line_map = source_map['full_line_map']
@@ -232,11 +232,11 @@ def text_error_template(lookup=None):
     applicable.
 
     """
-    import docassemble.mako.template
-    return docassemble.mako.template.Template(r"""
+    import docassemble.base.mako.template
+    return docassemble.base.mako.template.Template(r"""
 <%page args="error=None, traceback=None"/>
 <%!
-    from docassemble.mako.exceptions import RichTraceback
+    from docassemble.base.mako.exceptions import RichTraceback
 %>\
 <%
     tback = RichTraceback(error=error, traceback=traceback)
@@ -252,13 +252,13 @@ ${tback.errorname}: ${tback.message}
 
 def _install_pygments():
     global syntax_highlight, pygments_html_formatter
-    from docassemble.mako.ext.pygmentplugin import syntax_highlight  # noqa
-    from docassemble.mako.ext.pygmentplugin import pygments_html_formatter  # noqa
+    from docassemble.base.mako.ext.pygmentplugin import syntax_highlight  # noqa
+    from docassemble.base.mako.ext.pygmentplugin import pygments_html_formatter  # noqa
 
 
 def _install_fallback():
     global syntax_highlight, pygments_html_formatter
-    from docassemble.mako.filters import html_escape
+    from docassemble.base.mako.filters import html_escape
     pygments_html_formatter = None
 
     def syntax_highlight(filename='', language=None):
@@ -286,10 +286,10 @@ def html_error_template():
     won't be included.
 
     """
-    import docassemble.mako.template
-    return docassemble.mako.template.Template(r"""
+    import docassemble.base.mako.template
+    return docassemble.base.mako.template.Template(r"""
 <%!
-    from docassemble.mako.exceptions import RichTraceback, syntax_highlight,\
+    from docassemble.base.mako.exceptions import RichTraceback, syntax_highlight,\
             pygments_html_formatter
 %>
 <%page args="full=True, css=True, error=None, traceback=None"/>

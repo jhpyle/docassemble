@@ -44,7 +44,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
                 out.setdefault(package, []).append(prefix+name)
     return out
 
-setup(name='docassemble.mako',
+setup(name='docassemble.base.mako',
       version='0.1',
       description=('Mako for docassemble.'),
       author='Jonathan Pyle',
@@ -55,5 +55,5 @@ setup(name='docassemble.mako',
       namespace_packages = ['docassemble'],
       install_requires = ['docassemble'],
       zip_safe = False,
-      package_data=find_package_data(where='docassemble/mako/', package='docassemble.mako'),
+      package_data=find_package_data(where='docassemble.base.mako/', package='docassemble.base.mako'),
   )

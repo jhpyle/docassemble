@@ -6,7 +6,7 @@
 
 """defines the parse tree components for Mako templates."""
 
-from docassemble.mako import exceptions, ast, util, filters, compat
+from docassemble.base.mako import exceptions, ast, util, filters, compat
 import re
 
 

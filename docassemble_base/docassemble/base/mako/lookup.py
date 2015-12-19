@@ -8,8 +8,8 @@ import os
 import stat
 import posixpath
 import re
-from docassemble.mako import exceptions, util
-from docassemble.mako.template import Template
+from docassemble.base.mako import exceptions, util
+from docassemble.base.mako.template import Template
 
 try:
     import threading

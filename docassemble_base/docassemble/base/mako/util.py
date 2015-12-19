@@ -8,7 +8,7 @@ import re
 import collections
 import codecs
 import os
-from docassemble.mako import compat
+from docassemble.base.mako import compat
 import operator
 
 
@@ -35,7 +35,7 @@ class PluginLoader(object):
                 self.impls[name] = impl.load
                 return impl.load()
             else:
-                from docassemble.mako import exceptions
+                from docassemble.base.mako import exceptions
                 raise exceptions.RuntimeException(
                     "Can't load plugin %s %s" %
                     (self.group, name))

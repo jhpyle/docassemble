@@ -13,7 +13,7 @@ from pygments.token import \
     Text, Comment, Operator, Keyword, Name, String, Other
 from pygments.formatters.html import HtmlFormatter
 from pygments import highlight
-from docassemble.mako import compat
+from docassemble.base.mako import compat
 
 
 class MakoLexer(RegexLexer):

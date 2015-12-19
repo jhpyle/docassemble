@@ -2,8 +2,8 @@ import io
 from lingua.extractors import Extractor
 from lingua.extractors import Message
 from lingua.extractors import get_extractor
-from docassemble.mako.ext.extract import MessageExtractor
-from docassemble.mako import compat
+from docassemble.base.mako.ext.extract import MessageExtractor
+from docassemble.base.mako import compat
 
 
 class LinguaMakoExtractor(Extractor, MessageExtractor):

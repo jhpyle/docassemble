@@ -9,9 +9,9 @@ source code."""
 
 import time
 import re
-from docassemble.mako.pygen import PythonPrinter
-from docassemble.mako import util, ast, parsetree, filters, exceptions
-from docassemble.mako import compat
+from docassemble.base.mako.pygen import PythonPrinter
+from docassemble.base.mako import util, ast, parsetree, filters, exceptions
+from docassemble.base.mako import compat
 
 
 MAGIC_NUMBER = 10
@@ -222,7 +222,7 @@ class _GenerateRenderMethod(object):
         if self.compiler.future_imports:
             self.printer.writeline("from __future__ import %s" %
                                    (", ".join(self.compiler.future_imports),))
-        self.printer.writeline("from docassemble.mako import runtime, filters, cache")
+        self.printer.writeline("from docassemble.base.mako import runtime, filters, cache")
         self.printer.writeline("UNDEFINED = runtime.UNDEFINED")
         self.printer.writeline("STOP_RENDERING = runtime.STOP_RENDERING")
         self.printer.writeline("__M_dict_builtin = dict")

@@ -4,12 +4,12 @@
 # This module is part of Mako and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-from docassemble.mako import compat, util
+from docassemble.base.mako import compat, util
 
-_cache_plugins = util.PluginLoader("docassemble.mako.cache")
+_cache_plugins = util.PluginLoader("docassemble.base.mako.cache")
 
 register_plugin = _cache_plugins.register
-register_plugin("beaker", "docassemble.mako.ext.beaker_cache", "BeakerCacheImpl")
+register_plugin("beaker", "docassemble.base.mako.ext.beaker_cache", "BeakerCacheImpl")
 
 
 class Cache(object):

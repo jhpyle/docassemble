@@ -168,7 +168,9 @@ WEBAPP_PATH = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.
 PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
 UPLOAD_DIRECTORY = daconfig.get('uploads', '/usr/share/docassemble/files')
 FULL_PACKAGE_DIRECTORY = os.path.join(PACKAGE_DIRECTORY, 'lib', 'python2.7', 'site-packages')
-for path in [FULL_PACKAGE_DIRECTORY, PACKAGE_CACHE, UPLOAD_DIRECTORY]:
+LOG_DIRECTORY = daconfig.get('log', '/usr/share/docassemble/log')
+
+for path in [FULL_PACKAGE_DIRECTORY, PACKAGE_CACHE, UPLOAD_DIRECTORY, LOG_DIRECTORY]:
     if not os.path.isdir(path):
         try:
             os.makedirs(path)
@@ -459,8 +461,6 @@ if supervisor_url:
     db.session.commit()
 else:
     USING_SUPERVISOR = False
-
-LOG_DIRECTORY = daconfig.get('log', '/usr/share/docassemble/log')
 
 sys_logger = logging.getLogger('docassemble')
 sys_logger.setLevel(logging.DEBUG)
@@ -2462,8 +2462,8 @@ def logfile(filename):
             abort(404)
     else:
         h = httplib2.Http()
-        resp, content = h.request("http://" + LOGSERVER, "GET")
-        the_file, headers = urllib.urlretrieve("http://" + LOGSERVER + '/' + urllib.quote(filename))
+        resp, content = h.request("http://" + LOGSERVER + ':8080', "GET")
+        the_file, headers = urllib.urlretrieve("http://" + LOGSERVER + ':8080/' + urllib.quote(filename))
     return(send_file(the_file, as_attachment=True, mimetype='text/plain', attachment_filename=filename, cache_timeout=0))
 
 @app.route('/logs', methods=['GET', 'POST'])
@@ -2488,7 +2488,7 @@ def logs():
             #     the_file = None
     else:
         h = httplib2.Http()
-        resp, content = h.request("http://" + LOGSERVER, "GET")
+        resp, content = h.request("http://" + LOGSERVER + ':8080', "GET")
         if int(resp['status']) >= 200 and int(resp['status']) < 300:
             files = content.split("\n")
         else:
@@ -2496,7 +2496,7 @@ def logs():
         if len(files):
             if the_file is None:
                 the_file = files[0]
-            filename, headers = urllib.urlretrieve("http://" + LOGSERVER + '/' + urllib.quote(the_file))
+            filename, headers = urllib.urlretrieve("http://" + LOGSERVER + ':8080/' + urllib.quote(the_file))
     if len(files):
         if request.method == 'POST' and form.submit.data and form.filter_string.data:
             default_filter_string = form.filter_string.data

@@ -6,9 +6,9 @@
 from argparse import ArgumentParser
 from os.path import isfile, dirname
 import sys
-from docassemble.mako.template import Template
-from docassemble.mako.lookup import TemplateLookup
-from docassemble.mako import exceptions
+from docassemble.base.mako.template import Template
+from docassemble.base.mako.lookup import TemplateLookup
+from docassemble.base.mako import exceptions
 
 
 def varsplit(var):

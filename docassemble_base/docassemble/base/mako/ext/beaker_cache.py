@@ -1,8 +1,8 @@
 """Provide a :class:`.CacheImpl` for the Beaker caching system."""
 
-from docassemble.mako import exceptions
+from docassemble.base.mako import exceptions
 
-from docassemble.mako.cache import CacheImpl
+from docassemble.base.mako.cache import CacheImpl
 
 try:
     from beaker import cache as beaker_cache

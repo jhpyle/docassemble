@@ -11,7 +11,7 @@ requires that the TemplateLookup class is used with templates.
 usage:
 
 <%!
-    from docassemble.mako.ext.autohandler import autohandler
+    from docassemble.base.mako.ext.autohandler import autohandler
 %>
 <%inherit file="${autohandler(template, context)}"/>
 
@@ -19,7 +19,7 @@ usage:
 or with custom autohandler filename:
 
 <%!
-    from docassemble.mako.ext.autohandler import autohandler
+    from docassemble.base.mako.ext.autohandler import autohandler
 %>
 <%inherit file="${autohandler(template, context, name='somefilename')}"/>
 

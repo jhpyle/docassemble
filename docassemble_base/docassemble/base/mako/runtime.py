@@ -7,8 +7,8 @@
 """provides runtime services for templates, including Context,
 Namespace, and various helper functions."""
 
-from docassemble.mako import exceptions, util, compat
-from docassemble.mako.compat import compat_builtins
+from docassemble.base.mako import exceptions, util, compat
+from docassemble.base.mako.compat import compat_builtins
 import sys
 
 
@@ -855,7 +855,7 @@ def _kwargs_for_include(callable_, data, **kwargs):
 
 
 def _render_context(tmpl, callable_, context, *args, **kwargs):
-    import docassemble.mako.template as template
+    import docassemble.base.mako.template as template
     # create polymorphic 'self' namespace for this
     # template with possibly updated context
     if not isinstance(tmpl, template.DefTemplate):

@@ -10,8 +10,8 @@ Parsing to AST is done via _ast on Python > 2.5, otherwise the compiler
 module is used.
 """
 
-from docassemble.mako import exceptions, util, compat
-from docassemble.mako.compat import arg_stringname
+from docassemble.base.mako import exceptions, util, compat
+from docassemble.base.mako.compat import arg_stringname
 import operator
 
 if compat.py3k:
@@ -31,7 +31,7 @@ else:
 
 import _ast
 util.restore__ast(_ast)
-from docassemble.mako import _ast_util
+from docassemble.base.mako import _ast_util
 
 
 def parse(code, mode='exec', **exception_kwargs):

@@ -1,7 +1,7 @@
 import re
-from docassemble.mako import compat
-from docassemble.mako import lexer
-from docassemble.mako import parsetree
+from docassemble.base.mako import compat
+from docassemble.base.mako import lexer
+from docassemble.base.mako import parsetree
 
 
 class MessageExtractor(object):

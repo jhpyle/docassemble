@@ -4,9 +4,9 @@
 # This module is part of Mako and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-from docassemble.mako import compat
-from docassemble.mako.lookup import TemplateLookup
-from docassemble.mako.template import Template
+from docassemble.base.mako import compat
+from docassemble.base.mako.lookup import TemplateLookup
+from docassemble.base.mako.template import Template
 
 
 class TGPlugin(object):

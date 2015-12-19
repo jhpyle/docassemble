@@ -7,7 +7,7 @@
 """utilities for generating and formatting literal Python code."""
 
 import re
-from docassemble.mako import exceptions
+from docassemble.base.mako import exceptions
 
 
 class PythonPrinter(object):

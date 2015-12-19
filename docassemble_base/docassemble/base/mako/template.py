@@ -7,8 +7,8 @@
 """Provides the Template class, a facade for parsing, generating and executing
 template strings, as well as template runtime operations."""
 
-from docassemble.mako.lexer import Lexer
-from docassemble.mako import runtime, util, exceptions, codegen, cache, compat
+from docassemble.base.mako.lexer import Lexer
+from docassemble.base.mako import runtime, util, exceptions, codegen, cache, compat
 import os
 import re
 import shutil
@@ -169,7 +169,7 @@ class Template(object):
              os.close(dest)
              shutil.move(name, outputpath)
 
-         from docassemble.mako.template import Template
+         from docassemble.base.mako.template import Template
          mytemplate = Template(
                          filename="index.html",
                          module_directory="/path/to/modules",

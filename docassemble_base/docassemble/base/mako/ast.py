@@ -7,7 +7,7 @@
 """utilities for analyzing expressions and blocks of Python
 code, as well as generating Python from AST nodes"""
 
-from docassemble.mako import exceptions, pyparser, compat
+from docassemble.base.mako import exceptions, pyparser, compat
 import re
 
 

@@ -8,8 +8,8 @@
 
 import re
 import codecs
-from docassemble.mako import parsetree, exceptions, compat
-from docassemble.mako.pygen import adjust_whitespace
+from docassemble.base.mako import parsetree, exceptions, compat
+from docassemble.base.mako.pygen import adjust_whitespace
 
 _regexp_cache = {}
 

@@ -8,10 +8,10 @@
 import re
 import codecs
 
-from docassemble.mako.compat import quote_plus, unquote_plus, codepoint2name, \
+from docassemble.base.mako.compat import quote_plus, unquote_plus, codepoint2name, \
     name2codepoint
 
-from docassemble.mako import compat
+from docassemble.base.mako import compat
 
 xml_escapes = {
     '&': '&amp;',

@@ -31,7 +31,7 @@
     :license: Python License.
 """
 from _ast import *  # noqa
-from docassemble.mako.compat import arg_stringname
+from docassemble.base.mako.compat import arg_stringname
 
 BOOLOP_SYMBOLS = {
     And: 'and',
