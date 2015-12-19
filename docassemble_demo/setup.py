@@ -54,6 +54,7 @@ setup(name='docassemble.demo',
       packages=find_packages(),
       namespace_packages = ['docassemble'],
       install_requires = ['docassemble', 'docassemble.base', 'python-dateutil'],
+      dependency_links = ['git://github.com/jhpyle/docassemble.git#egg=docassemble&subdirectory=docassemble', 'git://github.com/jhpyle/docassemble.git#egg=docassemble.base&subdirectory=docassemble_base']
       zip_safe = False,
       package_data=find_package_data(where='docassemble/demo/', package='docassemble.demo'),
   )
