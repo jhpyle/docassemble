@@ -53,7 +53,7 @@ setup(name='docassemble.demo',
       url='http://docassemble.org',
       packages=find_packages(),
       namespace_packages = ['docassemble'],
-      install_requires = ['docassemble'],
+      install_requires = ['docassemble', 'docassemble.base', 'python-dateutil'],
       zip_safe = False,
       package_data=find_package_data(where='docassemble/demo/', package='docassemble.demo'),
   )

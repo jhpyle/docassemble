@@ -5,6 +5,7 @@ RUN cd /tmp && git clone git://git.code.sf.net/p/pacpl/code pacpl-code && cd pac
 RUN mkdir -p /etc/ssl/docassemble /usr/share/docassemble/local /usr/share/docassemble/webapp /usr/share/docassemble/files /var/www/.pip /usr/share/docassemble/log && chown www-data.www-data /var/www/.pip && chsh -s /bin/bash www-data
 COPY docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/
 COPY Docker/initialize.sh /usr/share/docassemble/webapp/
+COPY Docker/run-postgresql.sh /usr/share/docassemble/webapp/
 COPY Docker/config.yml /usr/share/docassemble/
 COPY Docker/apache.conf /etc/apache2/sites-available/000-default.conf
 COPY Docker/apache.logrotate /etc/logrotate.d/apache2
