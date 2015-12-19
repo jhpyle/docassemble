@@ -11,7 +11,9 @@ dependencies on your server, you can run it as a [Docker] image.
 first time.  It can also be used as a production environment; Amazon's
 [EC2 Container Service] can be used to maintain a cluster of
 **docassemble** web server instances that communicate with a central
-SQL server.
+SQL server.  For information about how to install **docassemble** in a
+multi-server arrangement on [EC2 Container Service], see the
+[scalability] section.
 
 # Prerequisites
 
@@ -83,9 +85,10 @@ You can find out the ID of the running container by doing `docker ps`.
 To run **docassemble** in a [multi-server arrangement] using [Docker],
 you need to:
 
-1. Start a single machine that will provide the SQL server;
-2. Start one or more other machines that will handle the
-   **docassemble** application.
+1. Start a container that will provide the SQL server;
+2. Start a container that will provide the log server;
+3. Start one or more other machines that will handle the
+   **docassemble** application and web server.
 
 To start the SQL server, do:
 
@@ -99,6 +102,17 @@ container that responds to web requests.
 
 Create a file `env.list` containing the access keys for SQL and [S3]:
 
+To start the log server, do:
+
+{% highlight bash %}
+docker run -d -p 514:514 -p 8080:8080 jhpyle/docassemble-log
+{% endhighlight %}
+
+Note the IP address of this server as well.
+
+Plug these the IP addresses into a file called `env.list`, along with
+any other special variables you need to define:
+
 {% highlight text %}
 CONTAINERROLE=webserver
 DBNAME=docassemble
@@ -109,14 +123,15 @@ S3ENABLE=true
 S3ACCESSKEY=FWIEJFIJIDGISEJFWOEF
 S3SECRETACCESSKEY=RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
 S3BUCKET=yourbucketname
-EC2=true
+EC2=false
 USEHTTPS=false
+log server=192.168.0.57
 {% endhighlight %}
 
 Then start the server:
 
 {% highlight bash %}
-docker run --env-file=env.list -d -p 80:80 -p 9001:9001 jhpyle/docassemble
+docker run --env-file=env.list -d -p 80:80 -p 443:443 -p 9001:9001 jhpyle/docassemble
 {% endhighlight %}
 
 See [scalability of docassemble] for information about running
@@ -126,6 +141,12 @@ See [scalability of docassemble] for information about running
 
 To create your own [Docker] image of docassemble, first make sure you
 have git installed:
+
+{% highlight bash %}
+apt-get -y install git
+{% endhighlight %}
+
+or
 
 {% highlight bash %}
 yum -y install git
@@ -167,7 +188,16 @@ files:
   that causes Apache to use the Python virtualenv.
 * `docassemble/Docker/docassemble-supervisor.conf`: [supervisor]
   configuration file.
-* `docassemble/Docker/docassemble.wsgi`: WSGI server file called by Apache.
+* `docassemble/Docker/docassemble.wsgi`: WSGI server file called by
+Apache.
+* `docassemble/Docker/docassemble.logrotate`: This file will be copied
+  into `/etc/logrotate.d` and will control the rotation of the
+  **docassemble** log file in `/usr/share/docassemble/log`.
+* `docassemble/Docker/apache.logrotate`: This replaces the standard
+  apache logrotate configuration.  It does not compress old log files,
+  so that it is easier to view them in the web application.
+* `docassemble/Docker/docassemble-syslogng.conf`: The configuration
+  for sending Apache and supervisor logs to the central log server.
 
 To build the image, run:
 
@@ -190,7 +220,6 @@ docker push yourdockerhubusername/mydocassemble
 
 [Docker]: https://www.docker.com/
 [Amazon AWS]: http://aws.amazon.com
-[docassemble repository]: {{ site.github.repository_url }}
 [automated build]: https://docs.docker.com/docker-hub/builds/
 [scalability of docassemble]: {{ site.baseurl }}/docs/scalability.html)
 [Amazon Linux]: https://aws.amazon.com/amazon-linux-ami/
@@ -201,3 +230,5 @@ docker push yourdockerhubusername/mydocassemble
 [supervisor]: http://supervisord.org/
 [available on Docker Hub]: https://hub.docker.com/r/jhpyle/docassemble/
 [Docker Hub]: https://hub.docker.com/
+[scalability]: {{ site.baseurl }}/docs/scalability.html
+[docassemble repository]: {{ site.github.repository_url }}

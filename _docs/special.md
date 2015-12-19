@@ -162,9 +162,6 @@ reuses them whenever possible.
 
 ## track_location
 
-To access
-
-
 [VoiceRSS]: http://www.voicerss.org/
 [get]: https://docs.python.org/2/library/stdtypes.html#dict.get
 [Python list]: https://docs.python.org/2/tutorial/datastructures.html
