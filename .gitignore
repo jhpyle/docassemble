@@ -11,4 +11,6 @@ da.wsgi
 oauth.wsgi
 trash
 site
+compile.sh
+requirements.txt
 docassemble_webapp/docassemble/webapp/templates/pages/twiliotest.html
