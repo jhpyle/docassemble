@@ -8,12 +8,12 @@ These installation instructions assume you are installing into a
 Debian/Ubuntu environment, but **docassemble** has been developed to
 be operating-system-independent.  If you can install the dependencies,
 you should be able to get **docassemble** to run.  It has not been
-tested on Windows, but all the dependencies are likely to be available
-for installation on Windows (see [MiKTeX] for LaTeX on Windows).
+tested on Mac or Windows, but all the dependencies are likely to be
+available for installation on those platforms (see [MacTex] for LaTeX
+on Mac, and [MiKTeX] for LaTeX on Windows).
 
-Since **docassemble** has a lot of [dependencies], you may wish to
-[run it using Docker] rather than follow all of these installation
-instructions.
+You may wish to [run it using Docker] rather than follow all of these
+installation instructions.
 
 For instructions on installing **docassemble** in a multi-server
 arrangement, for example on [Amazon EC2], see the [scalability]
@@ -23,7 +23,7 @@ section.
 
 ## Underlying packages
 
-The following dependencies can be installed from [Debian] packages:
+The following [dependencies] can be installed from [Debian] packages:
 
 {% highlight bash %}
 sudo apt-get install python python-dev pandoc texlive texlive-latex-extra \
@@ -62,30 +62,31 @@ sudo dpkg-reconfigure locales
 
 (On Ubuntu, you may need to do `sudo apt-get install language-pack-en`.)
 
-## Docassemble Python code
+## Installing docassemble itself
 
 The recommended way to install **docassemble** is to create a
 [Python virtual environment] that belongs to the web server user
 (`www-data` on Debian/Ubuntu), and to install **docassemble** and its
 dependencies into this virtual environment using [pip].
 
-There are two reasons for this.  First, this will allow developers to
-install new Python packages through the web interface, without having
-to use the command line.  Second, this will ensure that all of the
-Python packages are the latest version; the versions that are packaged
-with Linux distributions are not always current.
+There are two reasons for this.  First, changing ownership of the
+files to `www-data` will allow developers to install new Python
+packages through the web interface, without having to use the command
+line.  Second, this will ensure that all of the Python packages are
+the latest version; the versions that are packaged with Linux
+distributions are not always current.
 
-Before setting up the [Python virtual environment] as `www-data`, we
-need to create a directory needed by [pip] for temporary files, and a
-directory in which to install [Python] and its modules:
+Before setting up the [Python virtual environment], we need to create
+a directory needed by [pip] for temporary files, and a directory in
+which to install [Python] and its packages:
 
 {% highlight bash %}
 mkdir -p /var/www/.pip /usr/share/docassemble/local
 chown www-data.www-data /var/www/.pip /usr/share/docassemble
 {% endhighlight %}
 
-You may also need to run the following in order to run commands as
-`www-data`:
+In order to run commands as `www-data`, may probably need to run the
+following:
 
 {% highlight bash %}
 chsh -s /bin/bash www-data
@@ -105,16 +106,16 @@ There are four packages in the git repository:
 
 1. docassemble: empty namespace package;
 2. docassemble.base: core functionality;
-3. docassemble.webapp: the web application framework
+3. docassemble.webapp: the web application framework; and
 4. docassemble.demo: demonstration interview package
 
 The `docassemble` package is empty because it is a "namespace"
 package.  (This facilitates the use of user-created add-on packages.)
-The core functionality is in the `docassemble.base` package.  With
-these two packages only, you can use **docassemble** as an API.  The
-`docassemble.webapp` package contains the standard docassemble web
-application.  The `docassemble.demo` package contains a demonstration
-interview.
+The core functionality of parsing interviews is in the
+`docassemble.base` package.  With these two packages only, you can use
+**docassemble** as an API.  The `docassemble.webapp` package contains
+the standard docassemble web application, and the `docassemble.demo`
+package contains a demonstration interview.
 
 To install **docassemble** and its [Python] dependencies into the
 [Python virtual environment], first transfer ownership of the
@@ -149,8 +150,8 @@ rm linguistics.zip
 # Setting up the web server
 
 The following instructions assume a Debian/Ubuntu system on which you
-have cloned `docassemble` into your home directory.  You may have to
-make some changes to adapt this to your server.
+have cloned the `docassemble` git repository into your home directory.
+You may have to make some changes to adapt this to your server.
 
 Enable the Apache wsgi and xsendfile modules if they are not already enabled:
 
@@ -245,11 +246,12 @@ sudo a2enconf docassemble
 
 Of course, you can run `docassemble` on HTTP rather than HTTPS if you
 want to, but since the `docassemble` web application uses a password
-system, and end users' answers to questions may be confidential, it is
-a good idea to run **docassemble** on HTTPS.  If you want to run
-**docassemble** on HTTP, copy the `WSGIDaemonProcess` line, the
-`WSGIScriptAlias` line, and the `Directory` section into the
-`<VirtualHost *:80>` section of your Apache configuration file.
+system, and because your users' answers to questions may be
+confidential, it is a good idea to run **docassemble** on HTTPS.  If
+you want to run **docassemble** on HTTP, copy the `XSendFile` lines,
+the `WSGIDaemonProcess` line, the `WSGIScriptAlias` line, and the
+`Directory` section into the `<VirtualHost *:80>` section of your
+Apache configuration file.
 
 If your **docassemble** interviews are not thread-safe, for example
 because different interviews use different locales, change `threads=5`
@@ -258,10 +260,13 @@ to `processes=5 threads=1`.  This will cause Apache to run WSGI in a
 configuration.  See [functions] for more information about
 **docassemble** and thread safety.
 
-`docassemble` uses a SQL database.  Set up the database by running the
-following commands.  (You may wish to make changes to the database
-information in the [configuration] file first.  Note that this file
-will need to be readable by the `postgres` user.)
+# Setting up the SQL server
+
+`docassemble` uses a SQL database.  These instructions assume you are
+using PostgreSQL.  Set up the database by running the following
+commands.  (You may wish to make changes to the database information
+in the [configuration] file first.  Note that this file will need to
+be readable by the `postgres` user.)
 
 {% highlight bash %}
 sudo chmod og+r /usr/share/docassemble/config.yml
@@ -272,8 +277,10 @@ echo 'grant all on all tables in schema public to "www-data"; grant all on all s
 {% endhighlight %}
 
 (If you store your [configuration] file in a non-standard location,
-the `docassemble.webapp.create_tables` module can take a configuration
-file as an argument.)
+the `docassemble.webapp.create_tables` module will take the
+configuration file path as an argument.)
+
+# Connecting to other external services
 
 To obtain the full benefit of **docassemble**, you will need to obtain
 IDs and secrets for the web services that **docassemble** uses, which
@@ -290,6 +297,8 @@ conversion.
 The [configuration] file also contains settings for connecting to a
 mail server.
 
+# Start the server
+
 Finally, restart Apache:
 
 {% highlight bash %}
@@ -302,7 +311,7 @@ or, if you use systemd:
 sudo systemctl restart apache2.service
 {% endhighlight %}
 
-The system will be running at http://example.com/da.
+You will find **docassemble** running at http://example.com/da.
 
 ## Using different web servers and/or SQL database backends
 
@@ -320,7 +329,8 @@ problem.  Any backend used must support column definitions with
 # Upgrading docassemble
 
 To upgrade docassemble and its dependencies, do the following as
-`www-data`:
+`www-data`.  (This assumes that in the past you cloned **docassemble**
+into the directory `docassemble` in the current directory.)
 
 {% highlight bash %}
 cd docassemble
@@ -338,6 +348,10 @@ code, it is not necessary to restart Apache.  Changing the
 modification time of `/usr/share/docassemble/docassemble.wsgi` will
 trigger Apache to restart the WSGI processes.
 
+{% highlight bash %}
+touch /usr/share/docassemble/docassemble.wsgi
+{% endhighlight %}
+
 # Debugging the web app
 
 If you get a standard Apache error message, look in
@@ -350,6 +364,7 @@ The main **docassemble** log file is in
 
 [dependencies]: {{ site.baseurl }}/docs/requirements.html
 [run it using Docker]: {{ site.baseurl }}/docs/docker.html
+[MacTex]: https://tug.org/mactex/
 [MiKTeX]: http://miktex.org/download
 [Nodebox English Linguistics library]: https://www.nodebox.net/code/index.php/Linguistics
 [site.USER_BASE]: https://pythonhosted.org/setuptools/easy_install.html#custom-installation-locations
