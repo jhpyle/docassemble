@@ -51,10 +51,10 @@ sudo make install
 cd ..
 {% endhighlight %}
 
-docassemble uses locale settings to format numbers, get currency
+**docassemble** uses locale settings to format numbers, get currency
 symbols, and other things.  Do `echo $LANG` to see what locale you are
-using.  If it is not something like `en_US.UTF-8`, you will want to set
-up an appropriate locale for your region:
+using.  If it is not something like `en_US.UTF-8`, you will want to
+set up an appropriate locale for your region:
 
 {% highlight bash %}
 sudo dpkg-reconfigure locales
@@ -62,12 +62,12 @@ sudo dpkg-reconfigure locales
 
 (On Ubuntu, you may need to do `sudo apt-get install language-pack-en`.)
 
-## Python and its packages
+## Docassemble Python code
 
-The recommended way to install **docassemble**'s [Python] dependencies
-is to create a [Python virtual environment] that belongs to the web
-server user (`www-data` on Debian/Ubuntu), and to install the packages
-using [pip].
+The recommended way to install **docassemble** is to create a
+[Python virtual environment] that belongs to the web server user
+(`www-data` on Debian/Ubuntu), and to install **docassemble** and its
+dependencies into this virtual environment using [pip].
 
 There are two reasons for this.  First, this will allow developers to
 install new Python packages through the web interface, without having
@@ -91,45 +91,6 @@ You may also need to run the following in order to run commands as
 chsh -s /bin/bash www-data
 {% endhighlight %}
 
-Then run the following as `www-data`:
-
-{% highlight bash %}
-virtualenv /usr/share/docassemble/local
-source /usr/share/docassemble/local/bin/activate
-pip install --upgrade us 3to2 guess-language-spirit html2text markdown \
-  pyyaml mako python-dateutil setuptools httplib2 psycopg2 pillow \
-  mdx_smartypants titlecase pygeocoder beautifulsoup4 cffi tailer bcrypt \
-  speaklater wtforms werkzeug rauth simplekv Flask-KVSession flask-user \
-  pypdf flask flask-login flask-sqlalchemy Flask-WTF babel blinker \
-  sqlalchemy Pygments boto
-{% endhighlight %}
-
-Finally, there are some [Python] packages that need to be installed
-manually.
-
-To install the [Nodebox English Linguistics library], do the following
-as `www-data`:
-
-{% highlight bash %}
-cd /tmp
-wget https://www.nodebox.net/code/data/media/linguistics.zip
-unzip linguistics.zip -d /usr/share/docassemble/local/lib/python2.7/site-packages/
-rm linguistics.zip
-{% endhighlight %}
-
-To install [PyRTF-ng](https://github.com/nekstrom/pyrtf-ng), which is
-needed for generating RTF files, run the following as `www-data`:
-
-{% highlight bash %}
-cd /tmp
-git clone https://github.com/nekstrom/pyrtf-ng
-cd pyrtf-ng
-python setup.py install
-cd ..
-{% endhighlight %}
-
-# Installing docassemble
-
 The **docassemble** application itself is on [GitHub].  Clone the
 repository (e.g., in your home directory):
 
@@ -138,42 +99,52 @@ git clone https://github.com/jhpyle/docassemble
 {% endhighlight %}
 
 This creates a directory called `docassemble` in the current
-directory.  To install the docassemble packages, do the following as
-`www-data`:
+directory.
 
-{% highlight bash %}
-cd docassemble
-sudo ./compile.sh
-cd ..
-{% endhighlight %}
-
-The compile.sh script installs the five Python packages contained in
-the git repository:
+There are four packages in the git repository:
 
 1. docassemble: empty namespace package;
 2. docassemble.base: core functionality;
-3. docassemble.mako: version of [Mako] modified slightly to work with **docassemble**;
-4. docassemble.webapp: the web application framework
-5. docassemble.demo: demonstration interview package
+3. docassemble.webapp: the web application framework
+4. docassemble.demo: demonstration interview package
 
-The script installs these packages into the virtual environment
-located at `/usr/share/docassemble/local`.
-
-The "docassemble" package is empty because it is a "namespace"
-package.  (This facilitates the creation of add-on packages.)  The
-core functionality is in the `docassemble.base` package.  With these
-two packages only, you can use **docassemble** as an API.  If you do
-not want to install all the packages, you can skip running compile.sh
-and simply run `python setup.py install` in each of the packages you
-wish to install.
-
-The `docassemble.mako` package contains a version of [Mako] with some
-minor changes needed for **docassemble** to ask the right questions in
-the right order.
-
-The `docassemble.webapp` package contains the standard docassemble web
+The `docassemble` package is empty because it is a "namespace"
+package.  (This facilitates the use of user-created add-on packages.)
+The core functionality is in the `docassemble.base` package.  With
+these two packages only, you can use **docassemble** as an API.  The
+`docassemble.webapp` package contains the standard docassemble web
 application.  The `docassemble.demo` package contains a demonstration
 interview.
+
+To install **docassemble** and its [Python] dependencies into the
+[Python virtual environment], first transfer ownership of the
+`docassemble` directory to `www-data`:
+
+{% highlight bash %}
+chown -R www-data.www-data docassemble
+{% endhighlight %}
+
+Then do the following as `www-data`:
+
+{% highlight bash %}
+virtualenv /usr/share/docassemble/local
+source /usr/share/docassemble/local/bin/activate
+pip install -e 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
+-e docassemble/docassemble \
+-e docassemble/docassemble_base \
+-e docassemble/docassemble_demo \
+-e docassemble/docassemble_webapp \
+{% endhighlight %}
+
+Finally, to install the [Nodebox English Linguistics library], do the
+following, also as `www-data`:
+
+{% highlight bash %}
+cd /tmp
+wget https://www.nodebox.net/code/data/media/linguistics.zip
+unzip linguistics.zip -d /usr/share/docassemble/local/lib/python2.7/site-packages/
+rm linguistics.zip
+{% endhighlight %}
 
 # Setting up the web server
 
@@ -348,13 +319,18 @@ problem.  Any backend used must support column definitions with
 
 # Upgrading docassemble
 
-To upgrade docassemble to the latest version, do the following as
+To upgrade docassemble and its dependencies, do the following as
 `www-data`:
 
 {% highlight bash %}
 cd docassemble
 git pull
-sudo ./compile.sh && touch /usr/share/docassemble/docassemble.wsgi
+pip install --upgrade \
+-e 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
+-e docassemble \
+-e docassemble_base \
+-e docassemble_demo \
+-e docassemble_webapp \
 {% endhighlight %}
 
 Note that after making changes to docassemble interviews and Python
