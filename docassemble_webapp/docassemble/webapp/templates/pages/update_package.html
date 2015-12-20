@@ -3,20 +3,40 @@
 {% block content %}
 {% from "base_templates/form_macros.html" import render_field, render_file_field, render_submit_field with context %}
 
-<h1>Update package</h1>
+<h1>{{ word('Install or update a package') }}</h1>
 
-<form action="" method="POST" class="form" role="form" enctype="multipart/form-data">
+<form action="{{ url_for('update_package') }}" method="POST" class="form" role="form" enctype="multipart/form-data">
   {{ form.hidden_tag() }}
   <div class="form-group">
-    <h4>{{ word('You can either provide a:') }}</h4>
+    <h4>{{ word('You can provide a:') }}</h4>
     {{ render_field(form.giturl, tabindex=70, placeholder='https://github.com/yourname/docassemble-yourpackage') }}
     <h4>{{ word('Or you can upload a:') }}</h4>
     {{ render_file_field(form.zipfile, tabindex=80) }}
+    <h4>{{ word('Or you can specify a:') }}</h4>
+    {{ render_field(form.pippackage, tabindex=90) }}
   </div>
   <div class="form-actions">
     {{ render_submit_field(form.submit, tabindex=100) }}
   </div>
-
 </form>
+
+<h1>{{ word('Update or uninstall an existing package') }}</h1>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Package name</th>
+      <th style="text-align:right;">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for package in package_list %}
+    <tr>
+      <td>{{ package.package.name }}</td>
+      <td style="text-align:right;">{% if package.can_update %}<a class="btn btn-default btn-xs" href="{{ url_for('update_package', package=package.package.name, action='update') }}">{{ word('Update') }}</a>{% endif %} {% if package.can_uninstall %}<a class="btn btn-warning btn-xs" href="{{ url_for('update_package', package=package.package.name, action='uninstall') }}">{{ word('Uninstall') }}</a>{% endif %}</td>
+    </tr>
+{% endfor %}
+  </tbody>
+</table>
 
 {% endblock %}

@@ -15,10 +15,9 @@ class CreatePackageForm(Form):
     submit = SubmitField(word('Get template'))
 
 class UpdatePackageForm(Form):
-    #packagename = StringField(word('Package name'), validators=[
-    #    validators.Required(word('Package name is required'))])
     giturl = StringField(word('Git URL'))
     zipfile = FileField(word('Zip File'))
+    pippackage = StringField(word('Package on PyPI'))
     submit = SubmitField(word('Update'))
 
 class ConfigForm(Form):

@@ -15,6 +15,7 @@ import codecs
 import weakref
 import docassemble.base.parse
 import docassemble.base.interview_cache
+import docassemble.webapp.update
 from docassemble.base.standardformatter import as_html, signature_html
 import xml.etree.ElementTree as ET
 import docassemble.webapp.database
@@ -480,7 +481,7 @@ def syslog_message(message):
         the_user = current_user.email
     else:
         the_user = "anonymous"
-    sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': request.remote_addr, 'yamlfile': session['i'], 'user': the_user, 'session': session['uid']})
+    sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': request.remote_addr, 'yamlfile': session.get('i', 'na'), 'user': the_user, 'session': session.get('uid', 'na')})
 docassemble.base.logger.set_logmessage(syslog_message)
 
 @lm.user_loader
@@ -1035,7 +1036,7 @@ def index():
                 theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['_the_image']).group(1) + '==')
                 #sys.stderr.write("Got theImage and it is " + str(len(theImage)) + " bytes long\n")
                 filename = secure_filename('canvas.png')
-                file_number = get_new_file_number(session['uid'], filename, yaml_file_name=yaml_filename)
+                file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
                 extension, mimetype = get_ext_and_mimetype(filename)
                 new_file = SavedFile(file_number, extension=extension, fix=True)
                 new_file.write_content(theImage)
@@ -1083,7 +1084,7 @@ def index():
                         for the_file in the_files:
                             #logmessage("There is a file_field in request.files and it has a type of " + str(type(the_file)) + " and its str representation is " + str(the_file))
                             filename = secure_filename(the_file.filename)
-                            file_number = get_new_file_number(session['uid'], filename, yaml_file_name=yaml_filename)
+                            file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
                             extension, mimetype = get_ext_and_mimetype(filename)
                             saved_file = SavedFile(file_number, extension=extension, fix=True)
                             if extension == "jpg" and 'imagemagick' in daconfig:
@@ -1885,7 +1886,13 @@ def user_can_edit_package(pkgname=None, giturl=None):
         #     if d[1] == current_user.id:
         #         return(True)
     return(False)
-                
+
+class Object(object):
+    def __init__(self, **kwargs):
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
+    pass
+
 @app.route('/updatepackage', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin', 'developer'])
@@ -1893,45 +1900,42 @@ def update_package():
     pip.utils.logging._log_state = threading.local()
     pip.utils.logging._log_state.indentation = 0
     form = UpdatePackageForm(request.form, current_user)
+    action = request.args.get('action', None)
+    target = request.args.get('package', None)
+    if action is not None and target is not None:
+        package_list, package_auth = get_package_info()
+        the_package = None
+        for package in package_list:
+            if package.package.name == target:
+                the_package = package
+                break
+        if the_package is not None:
+            if action == 'uninstall' and the_package.can_uninstall:
+                uninstall_package(target)
+            elif action == 'update' and the_package.can_update:
+                existing_package = Package.query.filter_by(name=target, active=True).first()
+                if existing_package is not None:
+                    if existing_package.type == 'git' and existing_package.giturl is not None:
+                        install_git_package(target, existing_package.giturl)
+                    elif existing_package.type == 'pip':
+                        install_pip_package(target)
     if request.method == 'POST' and form.validate_on_submit():
-        #temp_directory = tempfile.mkdtemp()
-        pip_log = tempfile.NamedTemporaryFile()
         if 'zipfile' in request.files and request.files['zipfile'].filename:
             try:
                 the_file = request.files['zipfile']
                 filename = secure_filename(the_file.filename)
                 pkgname = re.sub(r'\.zip$', r'', filename)
                 if user_can_edit_package(pkgname=pkgname):
-                    #zippath = os.path.join(temp_directory, filename)
-                    file_number = get_new_file_number(session['uid'], filename)
+                    file_number = get_new_file_number(session.get('uid', None), filename)
                     saved_file = SavedFile(file_number, extension='zip', fix=True)
                     zippath = saved_file.path
                     the_file.save(zippath)
                     saved_file.save()
                     saved_file.finalize()
-                    zippath += '.zip'
+                    #zippath += '.zip'
                     #commands = ['install', zippath, '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user"]
-                    commands = ['install', '--quiet', '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, zippath]
-                    returnval = pip.main(commands)
-                    if returnval > 0:
-                        with open(pip_log.name) as x: logfilecontents = x.read()
-                        flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + '</pre>', 'error')
-                    else:
-                        existing_package = Package.query.filter_by(name=pkgname).first()
-                        if existing_package is None:
-                            package_auth = PackageAuth(user_id=current_user.id)
-                            package_entry = Package(name=pkgname, package_auth=package_auth, upload=file_number, active=True, type='zip', version=1)
-                            db.session.add(package_auth)
-                            db.session.add(package_entry)
-                        else:
-                            existing_package.upload = file_number
-                            existing_package.active = True
-                            existing_package.type = 'zip'
-                            existing_package.version += 1
-                        db.session.commit()                            
-                        flash(word("Install successful"), 'success')
-                        trigger_install(except_for=hostname)
-                        restart_wsgi()
+
+                    install_zip_package(pkgname, file_number)
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
             except Exception as errMess:
@@ -1942,33 +1946,155 @@ def update_package():
                 packagename = re.sub(r'.*/', '', giturl)
                 if user_can_edit_package(giturl=giturl) and user_can_edit_package(pkgname=packagename):
                     #commands = ['install', '--egg', '--src=' + temp_directory, '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user", 'git+' + giturl + '.git#egg=' + packagename]
-                    commands = ['install', '--quiet', '--egg', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, 'git+' + giturl + '.git#egg=' + packagename]
-                    returnval = pip.main(commands)
-                    if returnval > 0:
-                        with open(pip_log.name) as x: logfilecontents = x.read()
-                        flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + "</pre>", 'error')
-                    else:
-                        if Package.query.filter_by(name=packagename).first() is None and Package.query.filter_by(giturl=giturl).first() is None:
-                            package_auth = PackageAuth(user_id=current_user.id)
-                            package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth, version=1, active=True, type='github')
-                            db.session.add(package_auth)
-                            db.session.add(package_entry)
-                            db.session.commit()
-                        else:
-                            package_entry = Package.query.filter_by(name=packagename).first()
-                            if package_entry is not None:
-                                package_entry.version += 1
-                                package_entry.giturl = giturl
-                                package_entry.type = 'github'
-                                db.session.commit()
-                        flash(word("Install successful"), 'success')
-                        trigger_install(except_for=hostname)
-                        restart_wsgi()
+                    install_git_package(packagename, giturl)
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
             else:
                 flash(word('You need to either supply a Git URL or upload a file.'), 'error')
-    return render_template('pages/update_package.html', form=form), 200
+    package_list, package_auth = get_package_info()
+    return render_template('pages/update_package.html', form=form, package_list=package_list), 200
+
+def uninstall_package(packagename):
+    existing_package = Package.query.filter_by(name=packagename, active=True).first()
+    if existing_package is None:
+        flash(word("Package did not exist"), 'error')
+        return
+    the_upload_number = existing_package.upload
+    the_package_type = existing_package.type
+    for package in Package.query.filter_by(name=packagename, active=True).all():
+        package.active = False
+    db.session.commit()
+    ok = docassemble.webapp.update.check_for_updates()
+    if ok:
+        if the_package_type == 'zip' and the_upload_number is not None:
+            SavedFile(the_upload_number).delete()
+        trigger_update(except_for=hostname)
+        restart_wsgi()
+        flash(word("Uninstall successful"), 'success')
+    else:
+        flash(word("Uninstall not successful"), 'error')
+    return
+
+def install_zip_package(packagename, file_number):
+    existing_package = Package.query.filter_by(name=packagename, active=True).first()
+    if existing_package is None:
+        package_auth = PackageAuth(user_id=current_user.id)
+        package_entry = Package(name=packagename, package_auth=package_auth, upload=file_number, active=True, type='zip', version=1)
+        db.session.add(package_auth)
+        db.session.add(package_entry)
+    else:
+        if existing_package.type == 'zip' and existing_package.upload is not None:
+            SavedFile(existing_package.upload).delete()
+        existing_package.upload = file_number
+        existing_package.active = True
+        existing_package.type = 'zip'
+        existing_package.version += 1
+    db.session.commit()
+    ok = docassemble.webapp.update.check_for_updates()
+    if ok:
+        trigger_update(except_for=hostname)
+        restart_wsgi()
+        flash(word("Install successful"), 'success')
+    else:
+        flash(word("Install not successful"), 'error')
+    # pip_log = tempfile.NamedTemporaryFile()
+    # commands = ['install', '--quiet', '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, zippath]
+    # returnval = pip.main(commands)
+    # if returnval > 0:
+    #     with open(pip_log.name) as x:
+    #         logfilecontents = x.read()
+    #         flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + '</pre>', 'error')
+    return
+
+def install_git_package(packagename, giturl):
+    if Package.query.filter_by(name=packagename, active=True).first() is None and Package.query.filter_by(giturl=giturl, active=True).first() is None:
+        package_auth = PackageAuth(user_id=current_user.id)
+        package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth, version=1, active=True, type='git')
+        db.session.add(package_auth)
+        db.session.add(package_entry)
+        db.session.commit()
+    else:
+        package_entry = Package.query.filter_by(name=packagename).first()
+        if package_entry is not None:
+            if package_entry.type == 'zip' and package_entry.upload is not None:
+                SavedFile(package_entry.upload).delete()
+            package_entry.version += 1
+            package_entry.giturl = giturl
+            package_entry.upload = None
+            package_entry.type = 'git'
+            db.session.commit()
+    ok = docassemble.webapp.update.check_for_updates()
+    if ok:
+        trigger_update(except_for=hostname)
+        restart_wsgi()
+        flash(word("Install successful"), 'success')
+    else:
+        flash(word("Install not successful"), 'error')
+    # pip_log = tempfile.NamedTemporaryFile()
+    # commands = ['install', '--quiet', '--egg', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, 'git+' + giturl + '.git#egg=' + packagename]
+    # returnval = pip.main(commands)
+    # if returnval > 0:
+    #     with open(pip_log.name) as x: logfilecontents = x.read()
+    #     flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + "</pre>", 'error')
+    return
+
+def install_pip_package(packagename):
+    existing_package = Package.query.filter_by(name=packagename, active=True).first()
+    if existing_package is None:
+        package_auth = PackageAuth(user_id=current_user.id)
+        package_entry = Package(name=packagename, package_auth=package_auth, version=1, active=True, type='pip')
+        db.session.add(package_auth)
+        db.session.add(package_entry)
+        db.session.commit()
+    else:
+        if existing_package.type == 'zip' and existing_package.upload is not None:
+            SavedFile(existing_package.upload).delete()
+        existing_package.version += 1
+        existing_package.type = 'pip'
+        existing_package.giturl = None
+        existing_package.upload = None
+        db.session.commit()
+    ok = docassemble.webapp.update.check_for_updates()
+    if ok:
+        trigger_update(except_for=hostname)
+        restart_wsgi()
+        flash(word("Install successful"), 'success')
+    else:
+        flash(word("Install not successful"), 'error')
+    # pip_log = tempfile.NamedTemporaryFile()
+    # commands = ['install', '--quiet', '--egg', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, 'git+' + giturl + '.git#egg=' + packagename]
+    # returnval = pip.main(commands)
+    # if returnval > 0:
+    #     with open(pip_log.name) as x: logfilecontents = x.read()
+    #     flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + "</pre>", 'error')
+    return
+
+def get_package_info():
+    if current_user.has_role('admin'):
+        is_admin = True
+    else:
+        is_admin = False
+    package_list = list()
+    package_auth = dict()
+    for auth in PackageAuth.query.all():
+        if auth.package_id not in package_auth:
+            package_auth[auth.package_id] = dict()
+        package_auth[auth.package_id][auth.user_id] = auth.authtype
+    for package in Package.query.filter_by(active=True).order_by(Package.name).all():
+        if package.type is not None:
+            if package.type == 'zip':
+                can_update = False
+            else:
+                can_update = True
+            if is_admin or (package.id in package_auth and current_user.id in package_auth[package.id]):
+                can_uninstall = True
+            else:
+                can_uninstall = False
+            if package.core:
+                can_uninstall = False
+                can_update = is_admin
+            package_list.append(Object(package=package, can_update=can_update, can_uninstall=can_uninstall))
+    return package_list, package_auth
 
 @app.route('/createpackage', methods=['GET', 'POST'])
 @login_required
@@ -2174,7 +2300,7 @@ class Fruit(DAObject):
             with open(os.path.join(questionsdir, 'questions.yml'), 'a') as the_file:
                 the_file.write(questionfiletext)
             nice_name = 'docassemble_' + str(pkgname) + '.zip'
-            file_number = get_new_file_number(session['uid'], nice_name)
+            file_number = get_new_file_number(session.get('uid', None), nice_name)
             saved_file = SavedFile(file_number, extension='zip', fix=True)
             #archive = tempfile.NamedTemporaryFile(delete=False)
             zf = zipfile.ZipFile(saved_file.path, mode='w')
@@ -2186,7 +2312,7 @@ class Fruit(DAObject):
             zf.close()
             saved_file.save()
             saved_file.finalize()
-            existing_package = Package.query.filter_by(name='docassemble_' + pkgname).first()
+            existing_package = Package.query.filter_by(name='docassemble_' + pkgname, active=True).first()
             if existing_package is None:
                 package_auth = PackageAuth(user_id=current_user.id)
                 package_entry = Package(name='docassemble_' + pkgname, package_auth=package_auth, version=1, active=True, upload=file_number)
@@ -2358,17 +2484,17 @@ def server_error(the_error):
     #         apache_logtext.append(line)
     return render_template('pages/501.html', error=errmess, logtext=str(the_trace)), 501
 
-def trigger_install(except_for=None):
-    logmessage("Got to trigger_install where except_for is " + str(except_for))
+def trigger_update(except_for=None):
+    logmessage("Got to trigger_update where except_for is " + str(except_for))
     if USING_SUPERVISOR:
         for host in Supervisors.query.all():
             if host.url and not (except_for and host.hostname == except_for):
                 args = [SUPERVISORCTL, '-s', host.url, 'start update']
                 result = call(args)
                 if result == 0:
-                    logmessage("trigger_install: sent reset to " + str(host.hostname))
+                    logmessage("trigger_update: sent reset to " + str(host.hostname))
                 else:
-                    logmessage("trigger_install: call to supervisorctl on " + str(host.hostname) + " was not successful")
+                    logmessage("trigger_update: call to supervisorctl on " + str(host.hostname) + " was not successful")
     return
 
 def restart_wsgi():
@@ -2423,7 +2549,7 @@ def current_info(yaml=None, req=None, action=None, location=None):
         url = 'http://localhost'
     else:
         url = req.base_url
-    return_val = {'session': session['uid'], 'yaml_filename': yaml, 'url': url, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}}
+    return_val = {'session': session.get('uid', None), 'yaml_filename': yaml, 'url': url, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}}
     if action is not None:
         return_val.update(action)
     if location is not None:

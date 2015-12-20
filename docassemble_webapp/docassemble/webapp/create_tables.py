@@ -1,4 +1,6 @@
 import sys
+import pip
+import re
 import docassemble.webapp.config
 from docassemble.webapp.config import daconfig
 if __name__ == "__main__":
@@ -25,6 +27,7 @@ def populate_tables():
     if existing_admin:
         return
     defaults = daconfig.get('default_admin_account', {'nickname': 'admin', 'email': 'admin@admin.com', 'password': 'password'})
+    docassemble_git_url = daconfig.get('docassemble_git_url', 'https://github.com/jhpyle/docassemble')
     admin_role = Role(name=word('admin'))
     user_role = Role(name=word('user'))
     developer_role = Role(name=word('developer'))
@@ -45,6 +48,16 @@ def populate_tables():
     user.roles.append(admin_role)
     db.session.add(user_auth)
     db.session.add(user)
+    db.session.commit()
+    installed_packages = sorted(pip.get_installed_distributions())
+    for package in installed_packages:
+        package_auth = PackageAuth(user_id=user.id)
+        if package.key in ['docassemble', 'docassemble.base', 'docassemble.webapp', 'docassemble.demo']:
+            package_entry = Package(name=package.key, package_auth=package_auth, giturl=docassemble_git_url, gitsubdir=re.sub(r'\.', '_', package.key), version=1, active=True, type='git', core=True)
+        else:
+            package_entry = Package(name=package.key, package_auth=package_auth, version=1, active=True, type='pip', core=True)
+        db.session.add(package_auth)
+        db.session.add(package_entry)
     db.session.commit()
     return
 

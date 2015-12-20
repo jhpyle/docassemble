@@ -4,12 +4,14 @@ from docassemble.webapp.config import daconfig, dbtableprefix
 class Package(db.Model):
     __tablename__ = dbtableprefix + 'package'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), nullable=False, unique=True)
+    name = db.Column(db.String(255), nullable=False)
     type = db.Column(db.Text()) #github, zip, pip
-    giturl = db.Column(db.String(255), nullable=True, unique=True)
+    giturl = db.Column(db.String(255), nullable=True)
+    gitsubdir = db.Column(db.Text(), nullable=True)
     upload = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'uploads.indexno', ondelete='CASCADE'))
     package_auth = db.relationship('PackageAuth', uselist=False, primaryjoin="PackageAuth.package_id==Package.id")
     version = db.Column(db.Integer())
+    core = db.Column(db.Boolean(), nullable=False, server_default='0')
     active = db.Column(db.Boolean(), nullable=False, server_default='1')
 
 class PackageAuth(db.Model):
