@@ -1,6 +1,6 @@
 import sys
-import pip
 import pip.utils.logging
+import pip
 import socket
 import tempfile
 import threading

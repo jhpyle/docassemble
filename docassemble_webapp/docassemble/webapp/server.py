@@ -9,8 +9,8 @@ import tailer
 import sys
 import datetime
 import time
-import pip
 import pip.utils.logging
+import pip
 import shutil
 import codecs
 import weakref
