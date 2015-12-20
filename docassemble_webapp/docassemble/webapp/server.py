@@ -56,6 +56,7 @@ from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Mess
 from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.config import daconfig, s3_config, S3_ENABLED, dbtableprefix, hostname
+from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from PIL import Image
 import pyPdf
 import yaml
@@ -270,18 +271,6 @@ def absolute_filename(the_file):
 docassemble.base.parse.set_absolute_filename(absolute_filename)
 #logmessage("Server started")
 
-def get_ext_and_mimetype(filename):
-    mimetype, encoding = mimetypes.guess_type(filename)
-    extension = filename.lower()
-    extension = re.sub('.*\.', '', extension)
-    if extension == "jpeg":
-        extension = "jpg"
-    if extension == "tiff":
-        extension = "tif"
-    if extension == '3gpp':
-        mimetype = 'audio/3gpp'
-    return(extension, mimetype)
-
 def can_access_file_number(file_number):
     upload = Uploads.query.filter_by(indexno=file_number, key=session['uid']).first()
     if upload:
@@ -488,178 +477,6 @@ docassemble.base.logger.set_logmessage(syslog_message)
 def load_user(id):
     return User.query.get(int(id))
 
-class SavedFile(object):
-    def __init__(self, file_number, extension=None, fix=False, section='files', filename='file'):
-        self.file_number = file_number
-        self.extension = extension
-        self.fixed = False
-        self.section = section
-        self.filename = filename
-        if not S3_ENABLED:
-            if self.section == 'files':
-                parts = re.sub(r'(...)', r'\1/', '{0:012x}'.format(int(file_number))).split('/')
-                self.directory = os.path.join(UPLOAD_DIRECTORY, *parts)
-            else:
-                self.directory = os.path.join(UPLOAD_DIRECTORY, str(self.section), str(file_number))
-            self.path = os.path.join(self.directory, filename)
-        if fix:
-            self.fix()
-    def fix(self):
-        if self.fixed:
-            return
-        if S3_ENABLED:
-            self.modtimes = dict()
-            self.keydict = dict()
-            self.directory = tempfile.mkdtemp()
-            prefix = str(self.section) + '/' + str(self.file_number) + '/'
-            #logmessage("fix: prefix is " + prefix)
-            for key in s3.bucket.list(prefix=prefix, delimiter='/'):
-                filename = re.sub(r'.*/', '', key.name)
-                fullpath = os.path.join(self.directory, filename)
-                #logmessage("fix: saving to " + fullpath)
-                key.get_contents_to_filename(fullpath)
-                self.modtimes[filename] = os.path.getmtime(fullpath)
-                #logmessage("S3 modtime for file " + filename + " is " + str(key.last_modified))
-                self.keydict[filename] = key
-            self.path = os.path.join(self.directory, self.filename)
-        else:
-            if not os.path.isdir(self.directory):
-                os.makedirs(self.directory)        
-        self.fixed = True
-    def delete(self):
-        if S3_ENABLED:
-            prefix = str(self.section) + '/' + str(self.file_number) + '/'
-            for key in s3.bucket.list(prefix=prefix, delimiter='/'):
-                key.delete()
-        else:
-            if os.path.isdir(self.directory):
-                shutil.rmtree(self.directory)
-    def save(self, finalize=False):
-        if not self.fixed:
-            self.fix()
-        if self.extension is not None:
-            if os.path.isfile(self.path + '.' + self.extension):
-                os.remove(self.path + '.' + self.extension)
-            try:
-                os.symlink(self.path, self.path + '.' + self.extension)
-            except:
-                shutil.copyfile(self.path, self.path + '.' + self.extension)
-        if finalize:
-            self.finalize()
-        return
-    def fetch_url(self, url, **kwargs):
-        filename = kwargs.get('filename', self.filename)
-        if not self.fixed:
-            self.fix()
-        urllib.urlretrieve(url, os.path.join(self.directory, filename))
-        self.save()
-        return
-    def size_in_bytes(self, **kwargs):
-        filename = kwargs.get('filename', self.filename)
-        if S3_ENABLED and not self.fixed:
-            key = s3.search_key(str(self.section) + '/' + str(self.file_number) + '/' + str(filename))
-            return key.size
-        else:
-            return os.path.getsize(os.path.join(self.directory, filename))
-    def copy_from(self, orig_path, **kwargs):
-        filename = kwargs.get('filename', self.filename)
-        if not self.fixed:
-            self.fix()
-        shutil.copyfile(orig_path, os.path.join(self.directory, filename))
-        self.save()
-        return
-    def get_modtime(self, **kwargs):
-        filename = kwargs.get('filename', self.filename)
-        #logmessage("Get modtime called with filename " + str(filename))
-        if S3_ENABLED:
-            key_name = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
-            key = s3.search_key(key_name)
-            #logmessage("Modtime for key " + key_name + " is now " + str(key.last_modified))
-            return key.last_modified
-        else:
-            return os.path.getmtime(os.path.join(self.directory, filename))
-    def write_content(self, content, **kwargs):
-        filename = kwargs.get('filename', self.filename)
-        if not self.fixed:
-            self.fix()
-        with open(os.path.join(self.directory, filename), 'w') as ifile:
-            ifile.write(content)
-        self.save()
-        return
-    def url_for(self, **kwargs):
-        if 'ext' in kwargs:
-            extn = kwargs['ext']
-            extn = re.sub(r'^\.', '', extn)
-        else:
-            extn = None
-        filename = kwargs.get('filename', self.filename)
-        if S3_ENABLED:
-            keyname = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
-            page = kwargs.get('page', None)
-            if page:
-                size = kwargs.get('size', 'page')
-                page = re.sub(r'[^0-9]', '', page)
-                if size == 'screen':
-                    keyname += 'screen-' + str(page) + '.png'
-                else:
-                    keyname += 'page-' + str(page) + '.png'
-            elif extn:
-                keyname += '.' + extn
-            key = s3.get_key(keyname)
-            if key.exists():
-                return(key.generate_url(3600))
-            else:
-                return('about:blank')
-        else:
-            if extn is None:
-                extn = ''
-            else:
-                extn = '.' + extn
-            root = daconfig.get('root', '/')
-            fileroot = daconfig.get('fileserver', root)
-            if self.section == 'files':
-                if 'page' in kwargs and kwargs['page']:
-                    page = re.sub(r'[^0-9]', '', str(kwargs['page']))
-                    size = kwargs.get('size', 'page')
-                    url = fileroot + 'uploadedpage'
-                    if size == 'screen':
-                        url += 'screen'
-                    url += '/' + str(self.file_number) + '/' + str(page)
-                else:
-                    url = fileroot + 'uploadedfile/' + str(self.file_number) + extn
-            else:
-                url = 'about:blank'
-            return(url)
-    def finalize(self):
-        if not S3_ENABLED:
-            return
-        if not self.fixed:
-            raise DAError("SavedFile: finalize called before fix")
-        existing_files = list()
-        for filename in os.listdir(self.directory):
-            existing_files.append(filename)
-            fullpath = os.path.join(self.directory, filename)
-            #logmessage("Found " + fullpath)
-            if os.path.isfile(fullpath):
-                save = True
-                if filename in self.keydict:
-                    key = self.keydict[filename]
-                    if self.modtimes[filename] == os.path.getmtime(fullpath):
-                        save = False
-                else:
-                    key = s3.new_key()
-                    key.key = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
-                    if filename == self.filename:
-                        extension, mimetype = get_ext_and_mimetype(filename + '.' + self.extension)
-                        key.content_type = mimetype
-                if save:
-                    key.set_contents_from_filename(fullpath)
-        for filename, key in self.keydict.iteritems():
-            if filename not in existing_files:
-                logmessage("Deleting filename " + str(filename) + " from S3")
-                key.delete()
-        return
-        
 class OAuthSignIn(object):
     providers = None
 
@@ -1918,13 +1735,14 @@ def update_package():
                     if existing_package.type == 'git' and existing_package.giturl is not None:
                         install_git_package(target, existing_package.giturl)
                     elif existing_package.type == 'pip':
-                        install_pip_package(target)
+                        install_pip_package(existing_package.name, existing_package.limitation)
     if request.method == 'POST' and form.validate_on_submit():
         if 'zipfile' in request.files and request.files['zipfile'].filename:
             try:
                 the_file = request.files['zipfile']
                 filename = secure_filename(the_file.filename)
                 pkgname = re.sub(r'\.zip$', r'', filename)
+                pkgname = re.sub(r'docassemble_', 'docassemble.', pkgname)
                 if user_can_edit_package(pkgname=pkgname):
                     file_number = get_new_file_number(session.get('uid', None), filename)
                     saved_file = SavedFile(file_number, extension='zip', fix=True)
@@ -1934,7 +1752,6 @@ def update_package():
                     saved_file.finalize()
                     #zippath += '.zip'
                     #commands = ['install', zippath, '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user"]
-
                     install_zip_package(pkgname, file_number)
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
@@ -1949,12 +1766,26 @@ def update_package():
                     install_git_package(packagename, giturl)
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
+            elif form.pippackage.data:
+                m =re.match(r'([^>=<]+)([>=<]+.+)', form.pippackage.data)
+                if m:
+                    packagename = m.group(1)
+                    limitation = m.group(2)
+                else:
+                    packagename = form.pippackage.data
+                    limitation = None
+                packagename = re.sub(r'[^A-Za-z0-9\_]', '', packagename)
+                if user_can_edit_package(pkgname=packagename):
+                    install_pip_package(packagename, limitation)
+                else:
+                    flash(word("You do not have permission to install this package."), 'error')
             else:
                 flash(word('You need to either supply a Git URL or upload a file.'), 'error')
     package_list, package_auth = get_package_info()
     return render_template('pages/update_package.html', form=form, package_list=package_list), 200
 
 def uninstall_package(packagename):
+    logmessage("uninstall_package: " + packagename)
     existing_package = Package.query.filter_by(name=packagename, active=True).first()
     if existing_package is None:
         flash(word("Package did not exist"), 'error')
@@ -1964,7 +1795,7 @@ def uninstall_package(packagename):
     for package in Package.query.filter_by(name=packagename, active=True).all():
         package.active = False
     db.session.commit()
-    ok = docassemble.webapp.update.check_for_updates()
+    ok, logmessages = docassemble.webapp.update.check_for_updates()
     if ok:
         if the_package_type == 'zip' and the_upload_number is not None:
             SavedFile(the_upload_number).delete()
@@ -1973,9 +1804,13 @@ def uninstall_package(packagename):
         flash(word("Uninstall successful"), 'success')
     else:
         flash(word("Uninstall not successful"), 'error')
+    flash('pip log:  ' + str(logmessages), 'info')
+    logmessage(logmessages)
+    logmessage("uninstall_package: done")
     return
 
 def install_zip_package(packagename, file_number):
+    logmessage("install_zip_package: " + packagename + " " + str(file_number))
     existing_package = Package.query.filter_by(name=packagename, active=True).first()
     if existing_package is None:
         package_auth = PackageAuth(user_id=current_user.id)
@@ -1987,16 +1822,18 @@ def install_zip_package(packagename, file_number):
             SavedFile(existing_package.upload).delete()
         existing_package.upload = file_number
         existing_package.active = True
+        existing_package.limitation = None
         existing_package.type = 'zip'
         existing_package.version += 1
     db.session.commit()
-    ok = docassemble.webapp.update.check_for_updates()
+    ok, logmessages = docassemble.webapp.update.check_for_updates()
     if ok:
         trigger_update(except_for=hostname)
         restart_wsgi()
         flash(word("Install successful"), 'success')
     else:
         flash(word("Install not successful"), 'error')
+    flash('pip log: ' + str(logmessages), 'info')
     # pip_log = tempfile.NamedTemporaryFile()
     # commands = ['install', '--quiet', '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, zippath]
     # returnval = pip.main(commands)
@@ -2007,6 +1844,7 @@ def install_zip_package(packagename, file_number):
     return
 
 def install_git_package(packagename, giturl):
+    logmessage("install_git_package: " + packagename + " " + str(file_number))
     if Package.query.filter_by(name=packagename, active=True).first() is None and Package.query.filter_by(giturl=giturl, active=True).first() is None:
         package_auth = PackageAuth(user_id=current_user.id)
         package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth, version=1, active=True, type='git')
@@ -2021,15 +1859,17 @@ def install_git_package(packagename, giturl):
             package_entry.version += 1
             package_entry.giturl = giturl
             package_entry.upload = None
+            package_entry.limitation = None
             package_entry.type = 'git'
             db.session.commit()
-    ok = docassemble.webapp.update.check_for_updates()
+    ok, logmessages = docassemble.webapp.update.check_for_updates()
     if ok:
         trigger_update(except_for=hostname)
         restart_wsgi()
         flash(word("Install successful"), 'success')
     else:
         flash(word("Install not successful"), 'error')
+    flash('pip log: ' + str(logmessages), 'info')
     # pip_log = tempfile.NamedTemporaryFile()
     # commands = ['install', '--quiet', '--egg', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, 'git+' + giturl + '.git#egg=' + packagename]
     # returnval = pip.main(commands)
@@ -2038,11 +1878,11 @@ def install_git_package(packagename, giturl):
     #     flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + "</pre>", 'error')
     return
 
-def install_pip_package(packagename):
+def install_pip_package(packagename, limitation):
     existing_package = Package.query.filter_by(name=packagename, active=True).first()
     if existing_package is None:
         package_auth = PackageAuth(user_id=current_user.id)
-        package_entry = Package(name=packagename, package_auth=package_auth, version=1, active=True, type='pip')
+        package_entry = Package(name=packagename, package_auth=package_auth, limitation=limitation, type='pip')
         db.session.add(package_auth)
         db.session.add(package_entry)
         db.session.commit()
@@ -2051,16 +1891,18 @@ def install_pip_package(packagename):
             SavedFile(existing_package.upload).delete()
         existing_package.version += 1
         existing_package.type = 'pip'
+        existing_package.limitation = limitation
         existing_package.giturl = None
         existing_package.upload = None
         db.session.commit()
-    ok = docassemble.webapp.update.check_for_updates()
+    ok, logmessages = docassemble.webapp.update.check_for_updates()
     if ok:
         trigger_update(except_for=hostname)
         restart_wsgi()
         flash(word("Install successful"), 'success')
     else:
         flash(word("Install not successful"), 'error')
+    flash('pip log: ' + str(logmessages), 'info')
     # pip_log = tempfile.NamedTemporaryFile()
     # commands = ['install', '--quiet', '--egg', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, 'git+' + giturl + '.git#egg=' + packagename]
     # returnval = pip.main(commands)
@@ -2102,8 +1944,8 @@ def get_package_info():
 def create_package():
     form = CreatePackageForm(request.form, current_user)
     if request.method == 'POST' and form.validate():
-        pkgname = re.sub(r'^docassemble_', r'', form.name.data)
-        if not user_can_edit_package(pkgname='docassemble_' + pkgname):
+        pkgname = re.sub(r'^docassemble[_\.\-]', r'', form.name.data)
+        if not user_can_edit_package(pkgname='docassemble.' + pkgname):
             flash(word('Sorry, that package name is already in use by someone else'), 'error')
         else:
             #foobar = Package.query.filter_by(name='docassemble_' + pkgname).first()
@@ -2312,10 +2154,10 @@ class Fruit(DAObject):
             zf.close()
             saved_file.save()
             saved_file.finalize()
-            existing_package = Package.query.filter_by(name='docassemble_' + pkgname, active=True).first()
+            existing_package = Package.query.filter_by(name='docassemble.' + pkgname, active=True).first()
             if existing_package is None:
                 package_auth = PackageAuth(user_id=current_user.id)
-                package_entry = Package(name='docassemble_' + pkgname, package_auth=package_auth, version=1, active=True, upload=file_number)
+                package_entry = Package(name='docassemble.' + pkgname, package_auth=package_auth, upload=file_number, type='zip')
                 db.session.add(package_auth)
                 db.session.add(package_entry)
                 #sys.stderr.write("Ok, did the commit\n")

@@ -53,16 +53,16 @@
           {%- if messages %}
       <div class="container">
         <div class="row">
-          <div class="col-sm-8 col-md-8 col-lg-8 col-centered">
+          <div class="col-sm-7 col-md-6 col-lg-5 col-centered">
             {%- for category, message in messages %}
               {%- if category=='error' %}
                 {%- set category='danger' %}
               {%- endif %}
             <div class="alert alert-{{category}}"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>{{ message|safe }}</div>
+            {%- endfor %}
           </div>
         </div>
       </div>
-            {%- endfor %}
           {%- endif %}
         {%- endwith %}
       {%- endblock %}

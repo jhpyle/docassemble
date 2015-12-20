@@ -32,7 +32,7 @@
   <tbody>
   {% for package in package_list %}
     <tr>
-      <td>{{ package.package.name }}</td>
+      <td>{{ package.package.name }}{% if package.package.packageversion %} <span class="text-muted">{{ package.package.packageversion }}</span>{% endif %}</td>
       <td style="text-align:right;">{% if package.can_update %}<a class="btn btn-default btn-xs" href="{{ url_for('update_package', package=package.package.name, action='update') }}">{{ word('Update') }}</a>{% endif %} {% if package.can_uninstall %}<a class="btn btn-warning btn-xs" href="{{ url_for('update_package', package=package.package.name, action='uninstall') }}">{{ word('Uninstall') }}</a>{% endif %}</td>
     </tr>
 {% endfor %}

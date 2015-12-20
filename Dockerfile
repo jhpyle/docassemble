@@ -19,7 +19,7 @@ COPY . /tmp/docassemble/
 RUN chown -R www-data.www-data /usr/share/docassemble /tmp/docassemble && chmod ogu+r /usr/share/docassemble/config.yml && chmod -R og-rwx /etc/ssl/docassemble
 
 USER www-data
-RUN bash -c "cd /tmp && virtualenv /usr/share/docassemble/local && source /usr/share/docassemble/local/bin/activate && pip install -e 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' -e /tmp/docassemble/docassemble -e /tmp/docassemble/docassemble_base -e /tmp/docassemble/docassemble_demo -e /tmp/docassemble/docassemble_webapp && wget https://www.nodebox.net/code/data/media/linguistics.zip && unzip linguistics.zip -d /usr/share/docassemble/local/lib/python2.7/site-packages/ && rm linguistics.zip"
+RUN bash -c "cd /tmp && virtualenv /usr/share/docassemble/local && source /usr/share/docassemble/local/bin/activate && pip install 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' /tmp/docassemble/docassemble /tmp/docassemble/docassemble_base /tmp/docassemble/docassemble_demo /tmp/docassemble/docassemble_webapp && wget https://www.nodebox.net/code/data/media/linguistics.zip && unzip linguistics.zip -d /usr/share/docassemble/local/lib/python2.7/site-packages/ && rm linguistics.zip"
 
 USER root
 RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen

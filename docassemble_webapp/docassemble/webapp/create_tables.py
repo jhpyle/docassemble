@@ -53,9 +53,9 @@ def populate_tables():
     for package in installed_packages:
         package_auth = PackageAuth(user_id=user.id)
         if package.key in ['docassemble', 'docassemble.base', 'docassemble.webapp', 'docassemble.demo']:
-            package_entry = Package(name=package.key, package_auth=package_auth, giturl=docassemble_git_url, gitsubdir=re.sub(r'\.', '_', package.key), version=1, active=True, type='git', core=True)
+            package_entry = Package(name=package.key, package_auth=package_auth, giturl=docassemble_git_url, packageversion=package.version, gitsubdir=re.sub(r'\.', '_', package.key), type='git', core=True)
         else:
-            package_entry = Package(name=package.key, package_auth=package_auth, version=1, active=True, type='pip', core=True)
+            package_entry = Package(name=package.key, package_auth=package_auth, packageversion=package.version, type='pip', core=True)
         db.session.add(package_auth)
         db.session.add(package_entry)
     db.session.commit()
