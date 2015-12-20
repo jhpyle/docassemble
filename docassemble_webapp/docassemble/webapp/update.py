@@ -1,8 +1,10 @@
 import sys
 import pip
+import pip.utils.logging
 import socket
 import tempfile
 import threading
+
 from distutils.version import LooseVersion
 if __name__ == "__main__":
     import docassemble.webapp.config
@@ -94,11 +96,12 @@ def update_versions():
     installed_packages = pip.get_installed_distributions()
     for package in installed_packages:
         if package.key in package_by_name:
-            if package.version != install_by_id[package_by_name[package.key].id].packageversion:
+            if package_by_name[package.key].id in install_by_id and package.version != install_by_id[package_by_name[package.key].id].packageversion:
                 install_by_id[package_by_name[package.key].id].packageversion = package.version
+                db.session.commit()
             if package.version != package_by_name[package.key].packageversion:
                 package_by_name[package.key].packageversion = package.version
-    db.session.commit()
+                db.session.commit()
     return
 
 def add_dependencies(user_id):
@@ -129,8 +132,8 @@ def install_package(package):
         return 0, ''
     logmessage('install_package: ' + package.name)
     logfilecontents = ''
-    #pip.utils.logging._log_state = threading.local()
-    #pip.utils.logging._log_state.indentation = 0
+    pip.utils.logging._log_state = threading.local()
+    pip.utils.logging._log_state.indentation = 0
     pip_log = tempfile.NamedTemporaryFile()
     if package.type == 'zip' and package.upload is not None:
         saved_file = SavedFile(package.upload, extension='zip', fix=True)
@@ -159,8 +162,8 @@ def uninstall_package(package):
     logfilecontents = ''
     #sys.stderr.write("uninstall_package: uninstalling " + package.name + "\n")
     #return 0
-    #pip.utils.logging._log_state = threading.local()
-    #pip.utils.logging._log_state.indentation = 0
+    pip.utils.logging._log_state = threading.local()
+    pip.utils.logging._log_state.indentation = 0
     pip_log = tempfile.NamedTemporaryFile()
     commands = ['uninstall', '-y', '--log-file=' + pip_log.name, package.name]
     logmessage("Running pip " + " ".join(commands))
