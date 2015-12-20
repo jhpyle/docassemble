@@ -1714,8 +1714,8 @@ class Object(object):
 @login_required
 @roles_required(['admin', 'developer'])
 def update_package():
-    pip.utils.logging._log_state = threading.local()
-    pip.utils.logging._log_state.indentation = 0
+    #pip.utils.logging._log_state = threading.local()
+    #pip.utils.logging._log_state.indentation = 0
     form = UpdatePackageForm(request.form, current_user)
     action = request.args.get('action', None)
     target = request.args.get('package', None)
