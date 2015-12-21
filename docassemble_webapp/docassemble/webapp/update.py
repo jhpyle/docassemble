@@ -4,6 +4,7 @@ import pip
 import socket
 import tempfile
 import threading
+import subprocess
 
 from distutils.version import LooseVersion
 if __name__ == "__main__":
@@ -19,7 +20,7 @@ def check_for_updates():
     from docassemble.webapp.config import hostname
     ok = True
     here_already = dict()
-    installed_packages = pip.get_installed_distributions()
+    installed_packages = get_installed_distributions()
     for package in installed_packages:
         here_already[package.key] = package.version
     packages = dict()
@@ -93,7 +94,7 @@ def update_versions():
     package_by_name = dict()
     for package in Package.query.filter_by(active=True).all():
         package_by_name[package.name] = package
-    installed_packages = pip.get_installed_distributions()
+    installed_packages = get_installed_distributions()
     for package in installed_packages:
         if package.key in package_by_name:
             if package_by_name[package.key].id in install_by_id and package.version != install_by_id[package_by_name[package.key].id].packageversion:
@@ -110,7 +111,7 @@ def add_dependencies(user_id):
     package_by_name = dict()
     for package in Package.query.filter_by(active=True).all():
         package_by_name[package.name] = package
-    installed_packages = pip.get_installed_distributions()
+    installed_packages = get_installed_distributions()
     for package in installed_packages:
         if package.key in package_by_name:
             continue
@@ -175,6 +176,21 @@ def uninstall_package(package):
     logmessage(logfilecontents)
     logmessage('uninstall_package: done')
     return returnval, logfilecontents
+
+class Object(object):
+    def __init__(self, **kwargs):
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
+    pass
+
+def get_installed_distributions():
+    from docassemble.webapp.config import daconfig
+    output = list()
+    output, err = subprocess.Popen([daconfig.get('pip', 'pip'), 'freeze'], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
+    for line in output.split('\n'):
+        a = line.split("==")
+        output.append(Object(key=a[0], version=a[1]))
+    return output    
 
 if __name__ == "__main__":
     import docassemble.webapp.database
