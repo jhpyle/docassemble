@@ -1,3 +1,4 @@
+import os
 import sys
 import pip.utils.logging
 import pip
@@ -117,7 +118,7 @@ def add_dependencies(user_id):
             continue
         package_auth = PackageAuth(user_id=user_id)
         if package.key in ['docassemble', 'docassemble.base', 'docassemble.webapp', 'docassemble.demo']:
-            package_entry = Package(name=package.key, package_auth=package_auth, giturl=docassemble_git_url, packageversion=package.version, gitsubdir=re.sub(r'\.', '_', package.key), type='git', core=True)
+            package_entry = Package(name=package.key, package_auth=package_auth, giturl=docassemble_git_url, packageversion=package.version, gitsubdir=re.sub(r'\.', '-', package.key), type='git', core=True)
         else:
             package_entry = Package(name=package.key, package_auth=package_auth, type='pip', packageversion=package.version, dependency=True)
         db.session.add(package_auth)
@@ -191,7 +192,7 @@ def get_installed_distributions():
     for line in output.split('\n'):
         a = line.split("==")
         if len(a) == 2:
-            results.append(Object(key=a[0], version=a[1]))
+            results.append(Object(key=a[0].lower(), version=a[1]))
         else:
             logmessage("Did not understand line: " + str(line))
     return results

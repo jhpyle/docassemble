@@ -10,6 +10,7 @@ from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors, KVStore
 from docassemble.webapp.users.models import User, UserAuth, Role, UserRoles, UserDict, UserDictKeys, UserDictLock
+from docassemble.webapp.update import get_installed_distributions
 from sqlalchemy import create_engine, MetaData
 import docassemble.webapp.database
 import random
@@ -49,7 +50,7 @@ def populate_tables():
     db.session.add(user_auth)
     db.session.add(user)
     db.session.commit()
-    installed_packages = sorted(pip.get_installed_distributions())
+    installed_packages = sorted(get_installed_distributions())
     for package in installed_packages:
         package_auth = PackageAuth(user_id=user.id)
         if package.key in ['docassemble', 'docassemble.base', 'docassemble.webapp', 'docassemble.demo']:

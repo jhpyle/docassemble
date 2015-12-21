@@ -1743,7 +1743,7 @@ def update_package():
                 the_file = request.files['zipfile']
                 filename = secure_filename(the_file.filename)
                 pkgname = re.sub(r'\.zip$', r'', filename)
-                pkgname = re.sub(r'docassemble_', 'docassemble.', pkgname)
+                pkgname = re.sub(r'docassemble-', 'docassemble.', pkgname)
                 if user_can_edit_package(pkgname=pkgname):
                     file_number = get_new_file_number(session.get('uid', None), filename)
                     saved_file = SavedFile(file_number, extension='zip', fix=True)
@@ -1783,6 +1783,8 @@ def update_package():
             else:
                 flash(word('You need to either supply a Git URL or upload a file.'), 'error')
     package_list, package_auth = get_package_info()
+    form.pippackage.data = None
+    form.giturl.data = None
     return render_template('pages/update_package.html', form=form, package_list=package_list), 200
 
 def uninstall_package(packagename):
@@ -1945,7 +1947,7 @@ def get_package_info():
 def create_package():
     form = CreatePackageForm(request.form, current_user)
     if request.method == 'POST' and form.validate():
-        pkgname = re.sub(r'^docassemble[_\.\-]', r'', form.name.data)
+        pkgname = re.sub(r'^docassemble-', r'', form.name.data)
         if not user_can_edit_package(pkgname='docassemble.' + pkgname):
             flash(word('Sorry, that package name is already in use by someone else'), 'error')
         else:
@@ -2117,7 +2119,7 @@ class Fruit(DAObject):
         return "Yum, that " + self.name + " was good!"
 """
             directory = tempfile.mkdtemp()
-            packagedir = os.path.join(directory, 'docassemble_' + str(pkgname))
+            packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
             questionsdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'questions')
             templatesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'templates')
             staticdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'static')
@@ -2142,7 +2144,7 @@ class Fruit(DAObject):
                 the_file.write(staticreadme)
             with open(os.path.join(questionsdir, 'questions.yml'), 'a') as the_file:
                 the_file.write(questionfiletext)
-            nice_name = 'docassemble_' + str(pkgname) + '.zip'
+            nice_name = 'docassemble-' + str(pkgname) + '.zip'
             file_number = get_new_file_number(session.get('uid', None), nice_name)
             saved_file = SavedFile(file_number, extension='zip', fix=True)
             #archive = tempfile.NamedTemporaryFile(delete=False)
