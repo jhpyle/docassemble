@@ -189,7 +189,10 @@ def get_installed_distributions():
     output, err = subprocess.Popen([daconfig.get('pip', 'pip'), 'freeze'], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
     for line in output.split('\n'):
         a = line.split("==")
-        results.append(Object(key=a[0], version=a[1]))
+        if len(a) == 2:
+            results.append(Object(key=a[0], version=a[1]))
+        else:
+            logmessage("Did not understand line: " + str(line))
     return output    
 
 if __name__ == "__main__":
