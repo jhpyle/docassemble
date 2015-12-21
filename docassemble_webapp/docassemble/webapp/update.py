@@ -193,7 +193,7 @@ def get_installed_distributions():
             results.append(Object(key=a[0], version=a[1]))
         else:
             logmessage("Did not understand line: " + str(line))
-    return output    
+    return results
 
 if __name__ == "__main__":
     import docassemble.webapp.database
