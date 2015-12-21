@@ -184,9 +184,10 @@ class Object(object):
     pass
 
 def get_installed_distributions():
+    PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
     from docassemble.webapp.config import daconfig
     results = list()
-    output, err = subprocess.Popen([daconfig.get('pip', 'pip'), 'freeze'], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
+    output, err = subprocess.Popen([daconfig.get('pip', os.path.join(PACKAGE_DIRECTORY, 'bin', 'pip')), 'freeze'], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
     for line in output.split('\n'):
         a = line.split("==")
         if len(a) == 2:
