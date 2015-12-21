@@ -2,6 +2,13 @@
 
 export CONFIG_FILE=/usr/share/docassemble/config.yml
 source /usr/share/docassemble/local/bin/activate
+
+function deregister {
+    su -c '/usr/share/docassemble/local/bin/python -m docassemble.webapp.deregister' www-data
+}
+
+trap deregister SIGINT SIGTERM
+
 if [ "${CONTAINERROLE-all}" == "all" ]; then
   sed -i'' \
       -e 's@{{DBPREFIX}}@'"${DBPREFIX-postgresql+psycopg2://}"'@' \
@@ -53,3 +60,6 @@ if [ "${LOGSERVER-none}" != "none" ]; then
 fi    
 
 supervisorctl --serverurl http://localhost:9001 start apache2
+
+sleep infinity &
+wait %1

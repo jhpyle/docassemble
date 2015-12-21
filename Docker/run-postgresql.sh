@@ -1,6 +1,6 @@
 #!/bin/bash
 
-trap "{ echo stopping postgres ; pg_ctlcluster --force 9.4 main stop ; sleep 4 }" SIGINT SIGTERM
+trap "{ echo stopping postgres ; pg_ctlcluster --force 9.4 main stop ; sleep 4 ; exit 0 ; }" SIGINT SIGTERM
 
 source /usr/share/postgresql-common/init.d-functions
 
