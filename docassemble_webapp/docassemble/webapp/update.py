@@ -185,11 +185,11 @@ class Object(object):
 
 def get_installed_distributions():
     from docassemble.webapp.config import daconfig
-    output = list()
+    results = list()
     output, err = subprocess.Popen([daconfig.get('pip', 'pip'), 'freeze'], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
     for line in output.split('\n'):
         a = line.split("==")
-        output.append(Object(key=a[0], version=a[1]))
+        results.append(Object(key=a[0], version=a[1]))
     return output    
 
 if __name__ == "__main__":
