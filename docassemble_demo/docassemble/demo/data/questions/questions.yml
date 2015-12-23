@@ -160,7 +160,7 @@ code: |
 ---
 initial: true
 code: |
-  track_location = user.location.status()
+  #track_location = user.location.status()
   set_language(user.language)
 ---
 mandatory: true

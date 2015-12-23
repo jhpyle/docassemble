@@ -2450,7 +2450,10 @@ def logs():
         call_sync()
         files = sorted([f for f in os.listdir(LOG_DIRECTORY) if os.path.isfile(os.path.join(LOG_DIRECTORY, f))])
         if the_file is None and len(files):
-            the_file = files[0]
+            if 'docassemble.log' in files:
+                the_file = 'docassemble.log'
+            else:
+                the_file = files[0]
         if the_file is not None:
             filename = os.path.join(LOG_DIRECTORY, the_file)
             # if (not os.path.isfile(filename)) and len(files):
