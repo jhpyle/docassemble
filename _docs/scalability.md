@@ -28,13 +28,13 @@ configuration below.
 configuration below.
 6. Create a Service called `sql-service` that uses the task definition
 `docassemble-sql`.  Set the number of tasks to 1.  Do not
-choose an Elastic Load Balancer.  Deploy `app-service` on an [EC2]
+choose an Elastic Load Balancer.  Deploy `sql-service` on an [EC2]
 instance.  Make note of the "Private IP" of the instance.
 6. Create a Service called `log-service` that uses the task definition
 `docassemble-log`.  Set the number of tasks to 1.  Do not
 choose an Elastic Load Balancer.  Deploy `log-service` on an [EC2]
 instance.  Make note of the "Private IP" of the instance.
-7. Create a Task Definition called `docassemble` using the JSON
+7. Create a Task Definition called `docassemble-app` using the JSON
 configuration below.  Substitute the "Private IP" of the instance
 running `docassemble-sql` for `DBHOST`.  Substitute the "Private IP"
 of the instance running `docassemble-log` for `LOGSERVER`.  (Or, use
@@ -44,7 +44,7 @@ CNAME entries mapping the "Private IP"s of the instances running
 [Amazon S3] credentials.
 8. Create an Elastic Load Balancer in [EC2].
 9. Create a Service called `app-service` that uses the task definition
-`docassemble`.  Set the number of tasks to 1 and use the Elastic Load
+`docassemble-app`.  Set the number of tasks to 1 and use the Elastic Load
 Balancer you just created.
 10. Set up the security groups on the Elastic Load Balancer and the
 VPC so that the instances within the VPC can send any traffic among
@@ -52,7 +52,7 @@ eachother, but that only HTTP (or HTTPS) is open to the outside world.
 11. Decide what URL you want users to use, and edit your DNS to add a
 CNAME pointing from that URL to the URL of the load balancer.
 12. Create a sufficient number of [EC2] instances so that the
-`docassemble-sql` and `docassemble` tasks both have room to run.
+`docassemble-sql` and `docassemble-app` tasks both have room to run.
 
 Here is the task definition for `docassemble-sql`:
 
@@ -61,7 +61,7 @@ Here is the task definition for `docassemble-sql`:
   "family": "docassemble-sql",
   "containerDefinitions": [
     {
-      "name": "docassemble",
+      "name": "docassemble-sql",
       "image": "jhpyle/docassemble-sql",
       "cpu": 1,
       "memory": 900,
@@ -98,30 +98,34 @@ Here is the task definition for `docassemble-log`:
   "family": "docassemble-log",
   "containerDefinitions": [
     {
-      "name": "docassemble",
+      "name": "docassemble-log",
       "image": "jhpyle/docassemble-log",
       "cpu": 1,
-      "memory": 200,
+      "memory": 300,
       "portMappings": [
         {
           "containerPort": 514,
           "hostPort": 514
+        },
+        {
+          "containerPort": 80,
+          "hostPort": 8080
         }
       ],
-      "essential": true,
+      "essential": true
     }
   ]
 }
 {% endhighlight %}
 
-Here is the task definition for `docassemble`:
+Here is the task definition for `docassemble-app`:
 
 {% highlight json %}
 {
   "family": "docassemble-app",
   "containerDefinitions": [
     {
-      "name": "docassemble",
+      "name": "docassemble-app",
       "image": "jhpyle/docassemble",
       "memory": 900,
       "cpu": 1,
@@ -160,6 +164,10 @@ Here is the task definition for `docassemble`:
         {
           "name": "DBHOST",
           "value": "sql.docassemble.local"
+        },
+        {
+          "name": "LOGSERVER",
+          "value": "log.docassemble.local"
         },
         {
           "name": "S3ENABLE",

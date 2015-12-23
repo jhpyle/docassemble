@@ -508,9 +508,8 @@ This symbol will be used in the user interface when a field has the
 
 ## URL to central file server
 
-If you are using a [multi-server arrangement] and your `uploads` and
-`packages` directories are mounted on a network drive, you can reduce
-bandwidth on your web server by setting `fileserver` to a URL path to
+If you are using a [multi-server arrangement] you can reduce
+bandwidth on your web server(s) by setting `fileserver` to a URL path to
 a dedicated file server:
 
 {% highlight yaml %}
@@ -521,6 +520,9 @@ Always use a trailing slash.
 
 If this directive is not set, the value of `root` will be used to
 create URLs to uploaded files and static files.
+
+Whether there will be a performance benefit to using a dedicated file
+server is not certain.
 
 ## google
 

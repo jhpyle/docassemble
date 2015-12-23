@@ -130,11 +130,11 @@ Then do the following as `www-data`:
 {% highlight bash %}
 virtualenv /usr/share/docassemble/local
 source /usr/share/docassemble/local/bin/activate
-pip install -e 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
--e docassemble/docassemble \
--e docassemble/docassemble_base \
--e docassemble/docassemble_demo \
--e docassemble/docassemble_webapp \
+pip install 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
+./docassemble/docassemble \
+./docassemble/docassemble_base \
+./docassemble/docassemble_demo \
+./docassemble/docassemble_webapp \
 {% endhighlight %}
 
 Finally, to install the [Nodebox English Linguistics library], do the
@@ -336,11 +336,11 @@ into the directory `docassemble` in the current directory.)
 cd docassemble
 git pull
 pip install --upgrade \
--e 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
--e docassemble \
--e docassemble_base \
--e docassemble_demo \
--e docassemble_webapp \
+'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
+./docassemble \
+./docassemble_base \
+./docassemble_demo \
+./docassemble_webapp \
 {% endhighlight %}
 
 Note that after making changes to docassemble interviews and Python
