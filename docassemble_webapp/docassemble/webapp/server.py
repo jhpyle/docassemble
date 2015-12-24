@@ -166,7 +166,7 @@ if S3_ENABLED:
     s3 = docassemble.webapp.amazon.s3object(s3_config)
 
 SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
-PACKAGE_CACHE = daconfig.get('packagecache', '/tmp/docassemble-cache')
+PACKAGE_CACHE = daconfig.get('packagecache', '/var/www/.cache')
 WEBAPP_PATH = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
 PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
 UPLOAD_DIRECTORY = daconfig.get('uploads', '/usr/share/docassemble/files')
@@ -1634,26 +1634,26 @@ def serve_uploaded_page(number, page):
         else:
             abort(404)
 
-@app.route('/uploadsignature', methods=['POST'])
-def upload_draw():
-    post_data = request.form.copy()
-    #sys.stderr.write("Got to upload_draw\n")
-    if '_success' in post_data and post_data['_success'] and '_the_image' in post_data:
-        theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['_the_image']).group(1) + '==')
-        #sys.stderr.write("Got theImage and it is " + str(len(theImage)) + " bytes long\n")
-        with open('/tmp/testme.png', 'w') as ifile:
-            ifile.write(theImage)
-        #sys.stderr.write("Saved theImage\n")
-    #sys.stderr.write("Done with upload_draw\n")
-    return redirect(url_for('index'))
+# @app.route('/uploadsignature', methods=['POST'])
+# def upload_draw():
+#     post_data = request.form.copy()
+#     #sys.stderr.write("Got to upload_draw\n")
+#     if '_success' in post_data and post_data['_success'] and '_the_image' in post_data:
+#         theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['_the_image']).group(1) + '==')
+#         #sys.stderr.write("Got theImage and it is " + str(len(theImage)) + " bytes long\n")
+#         with open('/tmp/testme.png', 'w') as ifile:
+#             ifile.write(theImage)
+#         #sys.stderr.write("Saved theImage\n")
+#     #sys.stderr.write("Done with upload_draw\n")
+#     return redirect(url_for('index'))
         
-@app.route('/testsignature', methods=['GET'])
-def test_signature():
-    output = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link rel="stylesheet" href="' + url_for('static', filename='app/signature.css') + '"><title>' + word('Signature') + '</title></head><body onresize="resizeCanvas()"><div id="page"><div class="header" id="header"><a id="new" class="navbtn nav-left">Clear</a><a id="save" class="navbtn nav-right">Save</a><div class="title">' + word('Your Signature') + '</div></div><div class="toppart" id="toppart">' + word('I am a citizen of the United States.') + '</div><div id="content"><p style="text-align:center"></p></div><div class="bottompart" id="bottompart">' + word('Jonathan Pyle') + '</div></div><form id="daform" action="' + url_for('upload_draw') + '" method="post"><input type="hidden" name="variable" value="' + word('Jonathan Pyle') + '"><input type="hidden" id="theImage" name="_the_image" value=""><input type="hidden" id="success" name="_success" value="0"></form></body></html>'
-    status = '200 OK'
-    response = make_response(output.encode('utf8'), status)
-    response.headers['Content-type'] = 'text/html; charset=utf-8'
-    return response
+# @app.route('/testsignature', methods=['GET'])
+# def test_signature():
+#     output = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link rel="stylesheet" href="' + url_for('static', filename='app/signature.css') + '"><title>' + word('Signature') + '</title></head><body onresize="resizeCanvas()"><div id="page"><div class="header" id="header"><a id="new" class="navbtn nav-left">Clear</a><a id="save" class="navbtn nav-right">Save</a><div class="title">' + word('Your Signature') + '</div></div><div class="toppart" id="toppart">' + word('I am a citizen of the United States.') + '</div><div id="content"><p style="text-align:center"></p></div><div class="bottompart" id="bottompart">' + word('Jonathan Pyle') + '</div></div><form id="daform" action="' + url_for('upload_draw') + '" method="post"><input type="hidden" name="variable" value="' + word('Jonathan Pyle') + '"><input type="hidden" id="theImage" name="_the_image" value=""><input type="hidden" id="success" name="_success" value="0"></form></body></html>'
+#     status = '200 OK'
+#     response = make_response(output.encode('utf8'), status)
+#     response.headers['Content-type'] = 'text/html; charset=utf-8'
+#     return response
         
 @app.route('/uploadedpagescreen/<number>/<page>', methods=['GET'])
 def serve_uploaded_pagescreen(number, page):

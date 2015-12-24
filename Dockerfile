@@ -17,8 +17,7 @@ COPY Docker/docassemble.key /etc/ssl/docassemble/
 COPY Docker/docassemble.crt /etc/ssl/docassemble/
 COPY Docker/docassemble.ca.pem /etc/ssl/docassemble/
 COPY . /tmp/docassemble/
-RUN chown -R www-data.www-data /usr/share/docassemble /tmp/docassemble && chmod ogu+r /usr/share/docassemble/config.yml && chmod -R og-rwx /etc/ssl/docassemble
-RUN bash -c "cd /tmp && wget https://bootstrap.pypa.io/get-pip.py && python get-pip.py && pip install virtualenv"
+RUN bash -c "chown -R www-data.www-data /usr/share/docassemble /tmp/docassemble && chmod ogu+r /usr/share/docassemble/config.yml && chmod -R og-rwx /etc/ssl/docassemble && cd /tmp && wget https://bootstrap.pypa.io/get-pip.py && python get-pip.py && pip install virtualenv"
 
 USER www-data
 RUN bash -c "cd /tmp && virtualenv /usr/share/docassemble/local && source /usr/share/docassemble/local/bin/activate && pip install 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' /tmp/docassemble/docassemble /tmp/docassemble/docassemble_base /tmp/docassemble/docassemble_demo /tmp/docassemble/docassemble_webapp && wget https://www.nodebox.net/code/data/media/linguistics.zip && unzip linguistics.zip -d /usr/share/docassemble/local/lib/python2.7/site-packages/ && rm linguistics.zip"

@@ -74,7 +74,7 @@ db:
 secretkey: 28asflwjeifwlfjsd2fejfiefw3g4o87
 appname: docassemble
 brandname: demo
-packagecache: /tmp/docassemble-cache
+packagecache: /var/www/.cache
 uploads: /usr/share/docassemble/files
 packages: /usr/share/docassemble/local
 webapp: /usr/share/docassemble/webapp/docassemble.wsgi

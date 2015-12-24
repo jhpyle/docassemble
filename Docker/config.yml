@@ -60,3 +60,4 @@ s3:
   secret_access_key: {{S3SECRETACCESSKEY}}
   bucket: {{S3BUCKET}}
 ec2: {{EC2}}
+log server: {{LOGSERVER}}

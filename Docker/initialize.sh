@@ -21,6 +21,7 @@ if [ "${CONTAINERROLE-all}" == "all" ]; then
       -e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
       -e 's/{{S3BUCKET}}/'"${S3BUCKET-null}"'/' \
       -e 's/{{EC2}}/'"${EC2-false}"'/' \
+      -e 's/{{LOGSERVER}}/'"${LOGSERVER-null}"'/' \
       $CONFIG_FILE || exit 1
 else
   sed -i'' \
@@ -34,6 +35,7 @@ else
       -e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
       -e 's/{{S3BUCKET}}/'"${S3BUCKET-null}"'/' \
       -e 's/{{EC2}}/'"${EC2-false}"'/' \
+      -e 's/{{LOGSERVER}}/'"${LOGSERVER-null}"'/' \
       $CONFIG_FILE || exit 1
 fi
 python -m docassemble.webapp.update_config $CONFIG_FILE || exit 1
