@@ -125,7 +125,8 @@ S3SECRETACCESSKEY=RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
 S3BUCKET=yourbucketname
 EC2=false
 USEHTTPS=false
-log server=192.168.0.57
+TIMEZONE=America/New_York
+LOGSERVER=192.168.0.57
 {% endhighlight %}
 
 Then start the server:

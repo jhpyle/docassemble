@@ -84,6 +84,10 @@ Here is the task definition for `docassemble-sql`:
         {
           "name": "DBPASSWORD",
           "value": "abc123"
+        },
+        {
+          "name": "TIMEZONE",
+          "value": "America/New_York"
         }
       ]
     }
@@ -112,7 +116,13 @@ Here is the task definition for `docassemble-log`:
           "hostPort": 8080
         }
       ],
-      "essential": true
+      "essential": true,
+      "environment": [
+        {
+          "name": "TIMEZONE",
+          "value": "America/New_York"
+        }
+      ]
     }
   ]
 }
@@ -192,6 +202,10 @@ Here is the task definition for `docassemble-app`:
         {
           "name": "LOGSERVER",
           "value": "log.docassemble.local"
+        },
+        {
+          "name": "TIMEZONE",
+          "value": "America/New_York"
         }
       ]
     }
