@@ -40,6 +40,18 @@ else
 fi
 python -m docassemble.webapp.update_config $CONFIG_FILE || exit 1
 
+if [ "${LOCALE-undefined}" != "undefined" ]; then
+    set -- $LOCALE
+    DA_LANGUAGE=$1
+    grep -q "^$LOCALE" /etc/locale.gen || { echo $LOCALE >> /etc/locale.gen && locale-gen ; }
+    update-locale LANG=$DA_LANGUAGE
+fi
+
+if [ "${TIMEZONE-undefined}" != "undefined" ]; then
+    echo $TIMEZONE > /etc/timezone
+    dpkg-reconfigure -f noninteractive tzdata
+fi
+
 if [ "${CONTAINERROLE-all}" == "all" ]; then
     supervisorctl --serverurl http://localhost:9001 start postgres || exit 1
     dbexists=`su -c "psql -tAc \"SELECT 1 FROM pg_database WHERE datname='docassemble'\"" postgres`

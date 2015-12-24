@@ -1847,7 +1847,7 @@ def install_zip_package(packagename, file_number):
     return
 
 def install_git_package(packagename, giturl):
-    logmessage("install_git_package: " + packagename + " " + str(file_number))
+    logmessage("install_git_package: " + packagename + " " + str(giturl))
     if Package.query.filter_by(name=packagename, active=True).first() is None and Package.query.filter_by(giturl=giturl, active=True).first() is None:
         package_auth = PackageAuth(user_id=current_user.id)
         package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth, version=1, active=True, type='git')
