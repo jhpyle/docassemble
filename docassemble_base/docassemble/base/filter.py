@@ -259,7 +259,7 @@ def clean_markdown_to_latex(string):
     string = re.sub(r'\n{2,}', '[NEWLINE]', string)
     string = re.sub(r'\*\*([^\*]+?)\*\*', r'\\textbf{\1}', string)
     string = re.sub(r'\*([^\*]+?)\*', r'\\emph{\1}', string)
-    string = re.sub(r'_([^_]+?)_', r'\\textbf{\1}', string)
+    string = re.sub(r'(?<!\\)_([^_]+?)_', r'\\textbf{\1}', string)
     string = re.sub(r'\[([^\]]+?)\]\(([^\)]+?)\)', r'\\href{\2}{\1}', string)
     return string;
 
