@@ -5,6 +5,7 @@ papersize: letterpaper
 documentclass: article
 numbersections: true
 graphics: true
+subparagraph: true
 geometry: left=1in,right=1in,top=1in,heightrounded,includeheadfoot
 header-includes:
   - \usepackage{setspace}
