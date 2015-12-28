@@ -172,10 +172,41 @@ $endif$
 %\setlength{\headsep}{0pt}
 \setlength{\parskip}{6pt plus 2pt minus 1pt}
 \setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 $if(numbersections)$
 \setcounter{secnumdepth}{5}
 $else$
 \setcounter{secnumdepth}{0}
+$endif$
+$if(subparagraph)$
+$else$
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+$endif$
+$if(dir)$
+\ifxetex
+% load bidi as late as possible as it modifies e.g. graphicx
+$if(latex-dir-rtl)$
+\usepackage[RTLdocument]{bidi}
+$else$
+\usepackage{bidi}
+$endif$
+\fi
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+\TeXXeTstate=1
+\newcommand{\RL}[1]{\beginR #1\endR}
+\newcommand{\LR}[1]{\beginL #1\endL}
+\newenvironment{RTL}{\beginR}{\endR}
+\newenvironment{LTR}{\beginL}{\endL}
+\fi
 $endif$
 $if(verbatim-in-note)$
 \VerbatimFootnotes % allows verbatim text in footnotes
