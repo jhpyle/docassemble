@@ -55,7 +55,7 @@ class Pandoc(object):
                     yaml_to_use.append(yaml_file)
             #print "Before: " + repr(self.input_content)
             self.input_content = docassemble.base.filter.pdf_filter(self.input_content, metadata=metadata_as_dict)
-            logmessage("After: " + repr(self.input_content))
+            #logmessage("After: " + repr(self.input_content))
         temp_file = tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False)
         temp_file.write(self.input_content.encode('UTF-8'))
         temp_file.close()
