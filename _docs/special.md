@@ -126,10 +126,10 @@ of the person logged in and other information.
   * `subdivisionsecond` - in the U.S., the county.
   * `subdivisionthird` - in the U.S., the municipality.
   * `organization` - the user's organization.
-  * `location` - if `track_location` is set to true, and the user's
-    location is successfully obtained, this will contain a dictionary
-    with the keys `latitude` and `longitude`, indicating the user's
-    location.
+  * `location` - if `track_location` (see below) is set to true, and
+    the user's location is successfully obtained, this entry will
+    contain a dictionary with the keys `latitude` and `longitude`,
+    indicating the user's location.
 * `yaml_filename` - the filename of the current interview, in the
   package:path form (e.g., `docassemble.demo:data/questions/questions.yml`)
 
@@ -168,7 +168,8 @@ reuses them whenever possible.
 
 If set to `True`, the web app will attempt to obtain the user's
 position, based on GPS or any other geolocation feature enabled in the
-browser.  The result is stored in 
+browser.  The result is stored in the `current_info` dictionary (see
+above).
 
 The most common way to use this feature is as follows:
 
