@@ -126,6 +126,10 @@ of the person logged in and other information.
   * `subdivisionsecond` - in the U.S., the county.
   * `subdivisionthird` - in the U.S., the municipality.
   * `organization` - the user's organization.
+  * `location` - if `track_location` is set to true, and the user's
+    location is successfully obtained, this will contain a dictionary
+    with the keys `latitude` and `longitude`, indicating the user's
+    location.
 * `yaml_filename` - the filename of the current interview, in the
   package:path form (e.g., `docassemble.demo:data/questions/questions.yml`)
 
@@ -153,7 +157,7 @@ present the user with an HTML5 audio control at the top of the page.
 When the user clicks it, **docassemble** will access the [VoiceRSS]
 web service to convert the text of the question to an audio file and
 then play that audio back for the user.  This requires enabling the
-`voicerss` setting in the [configuration.
+`voicerss` setting in the [configuration].
 
 Since the [VoiceRSS] service costs money above the free usage tier,
 **docassemble** does not send the request to [VoiceRSS] until the user
@@ -161,6 +165,28 @@ presses "Play" on the audio control.  It also caches the results and
 reuses them whenever possible.
 
 ## track_location
+
+If set to `True`, the web app will attempt to obtain the user's
+position, based on GPS or any other geolocation feature enabled in the
+browser.  The result is stored in 
+
+The most common way to use this feature is as follows:
+
+{% highlight yaml %}
+---
+include:
+  - basic-questions.yml
+---
+initial: true
+code: |
+  track_location = user.location.status()
+---
+{% endhighlight %}
+
+This will cause `track_location` to be true initially, but once an
+attempt has been made to gather the location, it will be set to false.
+The user's location can subsequently be obtained by accessing the
+`user.location` object.
 
 [VoiceRSS]: http://www.voicerss.org/
 [get]: https://docs.python.org/2/library/stdtypes.html#dict.get
