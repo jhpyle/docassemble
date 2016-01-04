@@ -1,0 +1,32 @@
+---
+question: What form do you want to prepare?
+decoration: document
+field: complaint_to_prepare
+buttons:
+  - Custody Complaint: custody
+    image: parentchild
+  - Support Complaint: support
+    image: coins
+---
+
+% if client_has_standing and jurisdiction_is_proper:
+Congratulations, you have a valid claim.
+% else:
+Sorry, you do not have a valid claim.
+% endif
+
+---
+code: |
+  if client_was_injured and defendant_caused_injury:
+     client_has_standing = True
+  else:
+     client_has_standing = False
+---
+
+---
+question: Were you injured?
+yesno: client_was_injured
+---
+question: Did ${ defendant } cause your injury?
+yesno: defendant_caused_injury
+---
