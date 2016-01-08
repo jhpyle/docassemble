@@ -1,0 +1,19 @@
+{% extends 'flask_user/public_base.html' %}
+
+{% block content %}
+{% from "base_templates/form_macros.html" import render_submit_field %}
+
+<h1>Request Developer Account</h1>
+
+<p>To request that your account be upgraded so that you have the
+privileges of a developer, submit this form.</p>
+
+<form action="" method="POST" role="form" class="form">
+    {{ form.hidden_tag() }}
+    <div class="form-group"><label for="{{ form.reason.id }}" class="control-label">{{ form.reason.label.text }}</label><textarea class="form-control" rows="4" name="{{ form.reason.id }}" id="{{ form.reason.id }}"></textarea></div>
+    <div class="form-actions">
+      {{ render_submit_field(form.submit, tabindex=310) }}
+    </div>
+</form>
+
+{% endblock %}

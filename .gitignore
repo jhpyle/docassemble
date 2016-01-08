@@ -14,4 +14,5 @@ site
 compile.sh
 reset.sh
 requirements.txt
+taskdefinition.json
 docassemble_webapp/docassemble/webapp/templates/pages/twiliotest.html

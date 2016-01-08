@@ -2509,3 +2509,33 @@ def call_sync():
             time.sleep(1)
         counter -= 1
     return
+
+
+@app.route('/reqdev', methods=['GET', 'POST'])
+@login_required
+def request_developer():
+    from docassemble.webapp.users.forms import RequestDeveloperForm
+    form = RequestDeveloperForm(request.form, current_user)
+    recipients = list()
+    if request.method == 'POST':
+        for user in User.query.filter_by(active=True).all():
+            for role in user.roles:
+                if role.name == 'admin':
+                    recipients.append(user.email)
+        url = request.base_url
+        body = "User " + str(current_user.email) + " (" + str(current_user.id) + ") has requested developer privileges.\n\n"
+        if form.reason.data:
+            body += "Reason given: " + str(form.reason.data) + "\n\n"
+        body += "Go to " + str(url) + url_for('edit_user_profile_page', id=current_user.id) + " to change the user's privileges."
+        from flask_mail import Message
+        msg = Message("Request for developer account from " + str(current_user.email), recipients=recipients, body=body)
+        if not len(recipients):
+            flash(word('No administrators could be found.'), 'error')
+        else:
+            try:
+                mail.send(msg)
+                flash(word('Your request was submitted.'), 'success')
+            except:
+                flash(word('We were unable to submit your request.'), 'error')
+        return redirect(url_for('index'))
+    return render_template('users/request_developer.html', form=form)

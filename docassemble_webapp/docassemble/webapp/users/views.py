@@ -117,8 +117,7 @@ def add_privilege():
         flash(word('The privilege was added.'), 'success')
         return redirect(url_for('privilege_list'))
 
-    return render_template('users/new_role_page.html',
-        form=form)
+    return render_template('users/new_role_page.html', form=form)
 
 @app.route('/user/profile', methods=['GET', 'POST'])
 @login_required
@@ -134,6 +133,4 @@ def user_profile_page():
         flash(word('Your information was saved.'), 'success')
         return redirect(url_for('index'))
 
-    return render_template('users/user_profile_page.html',
-        form=form)
-
+    return render_template('users/user_profile_page.html', form=form)

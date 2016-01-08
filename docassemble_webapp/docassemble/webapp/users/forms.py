@@ -42,3 +42,6 @@ class EditUserProfileForm(UserProfileForm):
     active = BooleanField(word('Active'), validators=[
         DataRequired(word('Active is required'))])
 
+class RequestDeveloperForm(Form):
+    reason = StringField(word('Reason for needing developer account (optional)'))
+    submit = SubmitField(word('Submit'))

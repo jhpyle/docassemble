@@ -193,8 +193,8 @@ def get_installed_distributions():
         a = line.split("==")
         if len(a) == 2:
             results.append(Object(key=a[0].lower(), version=a[1]))
-        else:
-            logmessage("Did not understand line: " + str(line))
+        #else:
+            #logmessage("Did not understand line: " + str(line))
     return results
 
 if __name__ == "__main__":

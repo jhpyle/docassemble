@@ -5,12 +5,9 @@
 
 <h1>User Profile</h1>
 
-<ul class="nav nav-pills"><li><a href="{{ url_for('user.change_password') }}">Change password</a></li></ul>
+<ul class="nav nav-pills"><li><a href="{{ url_for('user.change_password') }}">Change password</a></li>{% if (not current_user.is_anonymous) and (not current_user.has_roles(['admin', 'developer'])) %}<li><a href="{{ url_for('request_developer') }}">Request Developer Account</a></li>{% endif %}</ul>
 
-<!--{% from "base_templates/form_macros.html" import render_field, render_submit_field %}-->
 <form action="" method="POST" role="form" class="form">
-  <!--<div class="row">
-    <div class="col-sm-6 col-md-5 col-lg-4">-->
     {{ form.hidden_tag() }}
 
     {{ render_field(form.first_name, tabindex=240) }}
