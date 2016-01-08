@@ -298,7 +298,7 @@ subquestion: |
 ---
 {% endhighlight %}
 
-([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/cooking.yml){:target="_blank"}.)
+([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/testcooking.yml){:target="_blank"}.)
 
 By the way, there is way to write the `summary()` method that is more
 friendly to other interview authors:
