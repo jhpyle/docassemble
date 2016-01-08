@@ -2525,6 +2525,7 @@ def request_developer():
                 if role.name == 'admin':
                     recipients.append(user.email)
         url = request.base_url
+        url = re.sub(r'^(https?://[^/]+)/.*', r'\1', url)
         body = "User " + str(current_user.email) + " (" + str(current_user.id) + ") has requested developer privileges.\n\n"
         if form.reason.data:
             body += "Reason given: " + str(form.reason.data) + "\n\n"
