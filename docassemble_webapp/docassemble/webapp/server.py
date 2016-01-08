@@ -64,6 +64,8 @@ import yaml
 from subprocess import call, Popen, PIPE
 DEBUG = daconfig.get('debug', False)
 docassemble.base.parse.debug = DEBUG
+import docassemble.base.util
+docassemble.base.util.set_debug_status(DEBUG)
 if DEBUG:
     from pygments import highlight
     from pygments.lexers import YamlLexer

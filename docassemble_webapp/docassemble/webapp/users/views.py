@@ -3,7 +3,7 @@ from flask_user import current_user, login_required, roles_required
 from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, MyRegisterForm, NewPrivilegeForm
 from docassemble.webapp.users.models import UserAuth, User, Role
-from docassemble.base.util import word
+from docassemble.base.util import word, debug_status
 from docassemble.base.logger import logmessage
 import random
 import string
@@ -133,4 +133,4 @@ def user_profile_page():
         flash(word('Your information was saved.'), 'success')
         return redirect(url_for('index'))
 
-    return render_template('users/user_profile_page.html', form=form)
+    return render_template('users/user_profile_page.html', form=form, debug=debug_status())
