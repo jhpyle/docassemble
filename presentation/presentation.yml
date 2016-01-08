@@ -25,8 +25,12 @@ code: |
 
 ---
 question: Were you injured?
+decoration: injury
 yesno: client_was_injured
 ---
+
+
+
 question: Did ${ defendant } cause your injury?
 yesno: defendant_caused_injury
 ---
