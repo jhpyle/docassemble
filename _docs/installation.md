@@ -37,9 +37,9 @@ sudo apt-get install python python-dev pandoc texlive texlive-latex-extra \
   libparallel-forkmanager-perl
 {% endhighlight %}
 
-**docassemble** depends on the [Perl Audio Converter] to convert
-uploaded sound files into other formats.  The version in [Debian] is
-not recent enough, so you will have to install it by hand:
+**docassemble** depends on the most recent version of the
+[Perl Audio Converter] to convert uploaded sound files into other
+formats, so you will need to install it from the source:
 
 {% highlight bash %}
 git clone git://git.code.sf.net/p/pacpl/code pacpl-code 
@@ -84,7 +84,7 @@ sudo mkdir -p /var/www/.pip /var/www/.cache /usr/share/docassemble/local
 sudo chown -R www-data.www-data /var/www/.pip /var/www/.cache /usr/share/docassemble
 {% endhighlight %}
 
-In order to run commands as `www-data`, may probably need to run the
+In order to run commands as `www-data`, you probably need to run the
 following:
 
 {% highlight bash %}
@@ -123,9 +123,11 @@ To install **docassemble** and its [Python] dependencies into the
 
 {% highlight bash %}
 wget https://bootstrap.pypa.io/get-pip.py
-sudo python get-pip.py
-sudo pip install virtualenv
+sudo -H python get-pip.py
+sudo -H pip install virtualenv
 {% endhighlight %}
+
+(If you get an "InsecurePlatformWarning," you can ignore it.)
 
 Then, become the user `www-data`:
 
@@ -133,13 +135,13 @@ Then, become the user `www-data`:
 sudo su www-data
 {% endhighlight %}
 
-and do the following as `www-data`:
+and run the following as `www-data`:
 
 {% highlight bash %}
 virtualenv /usr/share/docassemble/local
 source /usr/share/docassemble/local/bin/activate
 pip install --upgrade ndg-httpsclient
-pip install --upgrade 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
+pip install 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
 ./docassemble/docassemble \
 ./docassemble/docassemble_base \
 ./docassemble/docassemble_demo \
@@ -147,7 +149,7 @@ pip install --upgrade 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
 {% endhighlight %}
 
 Finally, to install the [Nodebox English Linguistics library], do the
-following, also as `www-data`:
+following as `www-data`:
 
 {% highlight bash %}
 cd /tmp
@@ -292,7 +294,7 @@ sudo -H -u www-data bash -c "source /usr/share/docassemble/local/bin/activate &&
 {% endhighlight %}
 
 (If you store your [configuration] file in a non-standard location,
-the `docassemble.webapp.create_tables` module will take the
+note that the `docassemble.webapp.create_tables` module will take the
 configuration file path as an argument.)
 
 # Connecting to other external services
@@ -343,19 +345,33 @@ problem.  Any backend used must support column definitions with
 
 # Upgrading docassemble
 
-To upgrade docassemble and its dependencies, do the following as
-`www-data`.  (This assumes that in the past you cloned **docassemble**
-into the directory `docassemble` in the current directory.)
+To upgrade docassemble and its dependencies, do the following.  (This
+assumes that in the past you cloned **docassemble** into the directory
+`docassemble` in the current directory.)
 
 {% highlight bash %}
 cd docassemble
 git pull
+sudo su www-data
+source /usr/share/docassemble/local/bin/activate
 pip install --upgrade \
 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
 ./docassemble \
 ./docassemble_base \
 ./docassemble_demo \
-./docassemble_webapp \
+./docassemble_webapp
+exit
+{% endhighlight %}
+
+If you get any errors while upgrading, try doing the following first:
+
+{% highlight bash %}
+sudo su www-data
+source /usr/share/docassemble/local/bin/activate
+pip uninstall docassemble
+pip uninstall docassemble.base
+pip uninstall docassemble.demo
+pip uninstall docassemble.webapp
 {% endhighlight %}
 
 Note that after making changes to docassemble interviews and Python
@@ -364,7 +380,7 @@ modification time of `/usr/share/docassemble/docassemble.wsgi` will
 trigger Apache to restart the WSGI processes.
 
 {% highlight bash %}
-touch /usr/share/docassemble/docassemble.wsgi
+sudo touch /usr/share/docassemble/docassemble.wsgi
 {% endhighlight %}
 
 # Debugging the web app
