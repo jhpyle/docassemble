@@ -42,7 +42,6 @@ uploaded sound files into other formats.  The version in [Debian] is
 not recent enough, so you will have to install it by hand:
 
 {% highlight bash %}
-sudo apt-get install 
 git clone git://git.code.sf.net/p/pacpl/code pacpl-code 
 cd pacpl-code
 ./configure
@@ -77,19 +76,20 @@ the latest version; the versions that are packaged with Linux
 distributions are not always current.
 
 Before setting up the [Python virtual environment], we need to create
-a directory needed by [pip] for temporary files, and a directory in
+directories needed by [pip] for temporary files, and a directory in
 which to install [Python] and its packages:
 
 {% highlight bash %}
-mkdir -p /var/www/.pip /usr/share/docassemble/local
-chown www-data.www-data /var/www/.pip /usr/share/docassemble
+sudo mkdir -p /var/www/.pip /var/www/.cache /usr/share/docassemble/local
+sudo chown -R www-data.www-data /var/www/.pip /var/www/.cache /usr/share/docassemble
 {% endhighlight %}
 
 In order to run commands as `www-data`, may probably need to run the
 following:
 
 {% highlight bash %}
-chsh -s /bin/bash www-data
+sudo chsh -s /bin/bash www-data
+sudo chown -R www-data.www-data /var/www
 {% endhighlight %}
 
 The **docassemble** application itself is on [GitHub].  Clone the
@@ -118,23 +118,32 @@ the standard docassemble web application, and the `docassemble.demo`
 package contains a demonstration interview.
 
 To install **docassemble** and its [Python] dependencies into the
-[Python virtual environment], first transfer ownership of the
-`docassemble` directory to `www-data`:
+[Python virtual environment], first install the latest version of
+`pip`:
 
 {% highlight bash %}
-chown -R www-data.www-data docassemble
+wget https://bootstrap.pypa.io/get-pip.py
+sudo python get-pip.py
+sudo pip install virtualenv
 {% endhighlight %}
 
-Then do the following as `www-data`:
+Then, become the user `www-data`:
+
+{% highlight bash %}
+sudo su www-data
+{% endhighlight %}
+
+and do the following as `www-data`:
 
 {% highlight bash %}
 virtualenv /usr/share/docassemble/local
 source /usr/share/docassemble/local/bin/activate
-pip install 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
+pip install --upgrade ndg-httpsclient
+pip install --upgrade 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
 ./docassemble/docassemble \
 ./docassemble/docassemble_base \
 ./docassemble/docassemble_demo \
-./docassemble/docassemble_webapp \
+./docassemble/docassemble_webapp
 {% endhighlight %}
 
 Finally, to install the [Nodebox English Linguistics library], do the
@@ -147,13 +156,21 @@ unzip linguistics.zip -d /usr/share/docassemble/local/lib/python2.7/site-package
 rm linguistics.zip
 {% endhighlight %}
 
+Now that you have finished installing the Python dependencies into the
+virtual environment, you can stop being `www-data`:
+
+{% highlight bash %}
+exit
+{% endhighlight %}
+
 # Setting up the web server
 
 The following instructions assume a Debian/Ubuntu system on which you
 have cloned the `docassemble` git repository into your home directory.
 You may have to make some changes to adapt this to your server.
 
-Enable the Apache wsgi and xsendfile modules if they are not already enabled:
+Enable the Apache wsgi and xsendfile modules if they are not already
+enabled by running the following:
 
 {% highlight bash %}
 sudo a2enmod wsgi
@@ -270,10 +287,8 @@ be readable by the `postgres` user.)
 
 {% highlight bash %}
 sudo chmod og+r /usr/share/docassemble/config.yml
-echo 'create role "www-data" login; create database docassemble;' | sudo -u postgres psql
-sudo -u postgres -s -- "source /usr/share/docassemble/local/bin/activate && 
-python -m docassemble.webapp.create_tables"
-echo 'grant all on all tables in schema public to "www-data"; grant all on all sequences in schema public to "www-data";' | sudo -u postgres psql docassemble
+echo 'create role "www-data" login; create database docassemble owner "www-data";' | sudo -u postgres psql
+sudo -H -u www-data bash -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.create_tables"
 {% endhighlight %}
 
 (If you store your [configuration] file in a non-standard location,
