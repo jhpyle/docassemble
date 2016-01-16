@@ -1273,7 +1273,7 @@ class Question:
                     the_markdown += "---\n" + yaml.safe_dump(metadata, default_flow_style=False, default_style = '|') + "...\n"
                 the_markdown += attachment['content'].text(user_dict)
                 if emoji_match.search(the_markdown) and len(self.interview.images) > 0:
-                    the_markdown = emoji_match.sub((lambda x: docassemble.base.filter.emoji_insert(x.group(1), images=self.interview.images)), the_markdown)
+                    the_markdown = emoji_match.sub(emoji_matcher(self), the_markdown)
                 result['markdown'][doc_format] = the_markdown
                 converter = Pandoc()
                 converter.output_format = doc_format
@@ -1324,6 +1324,9 @@ class Question:
             docassemble.base.util.set_language(old_language)
         return(result)
 
+def emoji_matcher(obj):
+    return (lambda x: docassemble.base.filter.emoji_insert(x.group(1), images=obj.interview.images))
+    
 def interview_source_from_string(path, **kwargs):
     if path is None:
         raise DAError("Passed None to interview_source_from_string")
