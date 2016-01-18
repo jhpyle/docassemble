@@ -34,7 +34,7 @@ sudo apt-get install python python-dev pandoc texlive texlive-latex-extra \
   libogg-vorbis-header-pureperl-perl perl make libvorbis-dev \
   libcddb-perl libinline-perl libcddb-get-perl libmp3-tag-perl \
   libaudio-scan-perl libaudio-flac-header-perl \
-  libparallel-forkmanager-perl
+  libparallel-forkmanager-perl pdftk
 {% endhighlight %}
 
 **docassemble** depends on the most recent version of the

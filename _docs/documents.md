@@ -10,6 +10,8 @@ The `attachments` statement (which can also be written `attachment`)
 provides documents to the user.  Users can preview, download, and/or
 e-mail the documents.
 
+## Creating PDF and Word files from Markdown
+
 {% highlight yaml %}
 ---
 question: Your document is ready.
@@ -90,6 +92,50 @@ content file:
 {% endhighlight %}
 
 The content of multiple `content file` files will be concatenated.
+
+## Filling PDF forms
+
+If you have a PDF file that contains fillable fields, you can create a
+PDF file from that template.  To do so, provide a `pdf template file`
+and a dictionary of `fields`, as in the following example:
+
+{% highlight yaml %}
+---
+sets: final_screen
+question: |
+  Here is your PDF form
+attachments:
+  - name: A filled-in form
+    filename: filled-form
+    pdf template file: sample-form.pdf
+    fields:
+      Your Name: |
+        ${ user }
+      Your Organization: |
+        ${ user.organization }
+      Apple Checkbox: |
+        ${ likes_apples }
+      Orange Checkbox: |
+        ${ likes_oranges }
+      Pear Checkbox: |
+        ${ likes_pears }
+      Toast Checkbox: |
+        ${ likes_toast }
+---
+{% endhighlight %}
+
+([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/testfill.yml){:target="_blank"}.)
+
+The `pdf template file` is assumed to reside in the `data/templates`
+directory of your package, unless a specific package name is specified
+(e.g., `pdf template file:
+docassemble.missouri-family-law:data/templates/form.pdf`).  The fields
+must be in the form of a dictionary.  Checkbox fields will be checked
+if the value evaluates to "True" or "Yes."
+
+When logged in as a developer, you can go to "Utilities" from the menu
+and upload a PDF file in order to see the list of field names that
+exist in the file.
 
 ## Saving documents as variables
 
