@@ -38,7 +38,7 @@ comment: |
   is.  The update_info function communicates that information to the
   docassemble.base.legal module.  Since the code is paired with the
   "default role" declaration, this code is run as "initial" code,
-  meaning that it is run every time **docassemble** processes the
+  meaning that it is run every time docassemble processes the
   interview (i.e., every time the screen loads).
 ---
 event: role_event
@@ -60,11 +60,11 @@ decoration: exit
 buttons:
   - Exit: leave
 comment: |
-  The "event" declaration acts like "sets."  When **docassemble**
+  The "event" declaration acts like "sets."  When docassemble
   needs to ask a question that requires a role other than the user's
   role, it displays a special message for the user.  You need to
   configure this message by defining a question tagged with "event:
-  role_event."  **docassemble** will search for this question just as
+  role_event."  docassemble will search for this question just as
   it searches for a question to define a variable.
 ---
 objects:
@@ -405,7 +405,6 @@ question: |
   Is there another ${ x.as_singular_noun() }?
 yesno: x.there_is_another
 comment: |
-
   It is possible to write highly generalized "generic" questions that
   use functions that ask questions of users based on variable names
   and linguistic variations of variable names.  For that reason, it is

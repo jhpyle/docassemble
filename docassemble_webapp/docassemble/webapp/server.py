@@ -475,7 +475,14 @@ def syslog_message(message):
     else:
         the_user = "anonymous"
     sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': request.remote_addr, 'yamlfile': session.get('i', 'na'), 'user': the_user, 'session': session.get('uid', 'na')})
-docassemble.base.logger.set_logmessage(syslog_message)
+
+def syslog_message_with_timestamp(message):
+    syslog_message(time.strftime("%Y-%m-%d %H:%M:%S") + " " + message)
+    
+if LOGSERVER is None:
+    docassemble.base.logger.set_logmessage(syslog_message_with_timestamp)
+else:
+    docassemble.base.logger.set_logmessage(syslog_message)
 
 @lm.user_loader
 def load_user(id):
@@ -1140,6 +1147,9 @@ def index():
           });
           $("#sourcetoggle").on("click", function(){
             $(this).toggleClass("sourceactive");
+          });
+          $('#backToQuestion').click(function(){
+            $('.navbar-left li').first().find('a').trigger('click');
           });
         });
       });

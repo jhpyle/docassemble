@@ -499,7 +499,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     master_output += output
     master_output += '        </section>\n'
     master_output += '        <section id="help" class="tab-pane col-md-6">\n'
-    output = ""
+    output = '<div><a id="backToQuestion" href="#question" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back to question") + '</a></div>'
     if status.using_screen_reader and 'help' in status.screen_reader_links:
         output += '          <div>\n' + indent_by(audio_control(status.screen_reader_links['help'], preload="none"), 12) + '          </div>\n'
     for help_section in status.helpText:
