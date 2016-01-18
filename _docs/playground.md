@@ -64,3 +64,4 @@ Notes:
 [Python package]: {{ site.baseurl }}/docs/packages.html
 [Python modules]: https://docs.python.org/2/tutorial/modules.html
 [tutorial]: {{ site.baseurl }}/docs/helloworld.html
+[YAML]: https://en.wikipedia.org/wiki/YAML
