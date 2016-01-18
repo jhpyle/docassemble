@@ -95,9 +95,10 @@ The content of multiple `content file` files will be concatenated.
 
 ## Filling PDF forms
 
-If you have a PDF file that contains fillable fields, you can create a
-PDF file from that template.  To do so, provide a `pdf template file`
-and a dictionary of `fields`, as in the following example:
+If you have a PDF file that contains fillable fields, **docassemble**
+can assemble a PDF file by filling in fields in that template.  To do
+this, provide a `pdf template file` and a dictionary of `fields`.  For
+example:
 
 {% highlight yaml %}
 ---
