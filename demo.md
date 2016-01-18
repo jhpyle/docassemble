@@ -6,7 +6,11 @@ short_title: Demo
 
 # The demonstration
 
-[Run a simple demonstration](https://docassemble.org/demo?i=docassemble.demo:data/questions/questions.yml){:target="_blank"} to see **docassemble** in action.
+You can [run a simple demonstration](https://docassemble.org/demo?i=docassemble.demo:data/questions/questions.yml){:target="_blank"} to see **docassemble** in action.
+
+<a class="btn btn-primary btn-lg"
+href="https://docassemble.org/demo?i=docassemble.demo:data/questions/questions.yml"
+target="_blank">Run the demo</a>
 
 The interface is based on [Bootstrap], which is both mobile-friendly
 and desktop-friendly.  Try it out on a mobile device.
@@ -31,7 +35,7 @@ listed below.  Note that:
 
 * It incorporates by reference another [YAML] file,
   `basic-questions.yml`, which specifies how certain common questions
-  should be asked.
+  should be asked.  The content of this file is listed below.
 * The code is not entirely self-explanatory, but for computer code, it
   is pretty close to plain English.
 * Note that complicated processes, such as a series of questions that
@@ -40,11 +44,11 @@ listed below.  Note that:
 * The questions and logic are not specified in any particular order.
   If docassemble needs to get the value of a variable, it knows where
   to find it.  This makes things easier for the author, who can
-  organize the code however he or she wants.  Moreover, the author can
-  address the underlying legal logic in modular, bite-size pieces.
-  The logic does not have to be placed into a specific structure in an
-  interview or a document.  The bits of logic can be packaged and
-  reused in a variety of contexts.
+  organize the information however he or she wants.  Moreover, the
+  author can represent the underlying legal logic in modular,
+  bite-size pieces.  The logic does not have to be placed into a
+  specific structure in an interview or a document.  The bits of logic
+  can be packaged and reused in a variety of contexts.
 
 {% highlight yaml %}
 metadata:
@@ -60,14 +64,12 @@ comment: |
 ---
 interview help:
   heading: About this web site
-  #audio: schumann-clip-2.mp3
-  #video: "[YOUTUBE wqBYHrw9_ys]"
   content: |
     Answer each question.  At the end, you may be given a document
     that you can save.
 
     If you see a word written in green text, you can click on it to
-    see more information about the word.  You can try this out by here
+    see more information about the word.  You can try this out here 
     to find out more about rhododendron plants.
 comment: |
   An "interview help" block adds text to the "Help" page of every
@@ -205,9 +207,13 @@ content: |
 
   Thank you for your patience.
 ---
+mandatory: true
+code: |
+  speak_text = False
+---
 initial: true
 code: |
-  track_location = user.location.status()
+  #track_location = user.location.status()
   set_language(user.language)
 ---
 mandatory: true
@@ -1014,12 +1020,12 @@ fields:
 ...
 {% endhighlight %}
 
-# The basic-questions.yml file
+# The basic-questions.yml file, incorporated by reference into the demo
 
 Many of the questions asked in the demonstration interview do not need
 to be defined in the [YAML] source file because they are already
-defined in the `basic-questions.yaml` file.  Here is an annotated
-guide to how this file works.
+defined in the `basic-questions.yml` file.  Here is an annotated
+guide to this file.
 
 {% highlight yaml %}
 ---
@@ -1062,7 +1068,7 @@ comment: |
   is.  The update_info function communicates that information to the
   docassemble.base.legal module.  Since the code is paired with the
   "default role" declaration, this code is run as "initial" code,
-  meaning that it is run every time **docassemble** processes the
+  meaning that it is run every time docassemble processes the
   interview (i.e., every time the screen loads).
 ---
 event: role_event
@@ -1084,11 +1090,11 @@ decoration: exit
 buttons:
   - Exit: leave
 comment: |
-  The "event" declaration acts like "sets."  When **docassemble**
+  The "event" declaration acts like "sets."  When docassemble
   needs to ask a question that requires a role other than the user's
   role, it displays a special message for the user.  You need to
   configure this message by defining a question tagged with "event:
-  role_event."  **docassemble** will search for this question just as
+  role_event."  docassemble will search for this question just as
   it searches for a question to define a variable.
 ---
 objects:
@@ -1429,7 +1435,6 @@ question: |
   Is there another ${ x.as_singular_noun() }?
 yesno: x.there_is_another
 comment: |
-
   It is possible to write highly generalized "generic" questions that
   use functions that ask questions of users based on variable names
   and linguistic variations of variable names.  For that reason, it is

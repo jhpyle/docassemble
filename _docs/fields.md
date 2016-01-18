@@ -174,9 +174,9 @@ On the screen, the `question` text appears first, then the
 `subquestion` text, then the signature area appears, and then the
 `under` text appears.
 
-In this example, the `user_signature` will be set to an object of type
-`DAFile`.  This variable can be included in the same way that a
-document upload can be included.  For example:
+In this example, the `user_signature` variable will be set to an
+object of type `DAFile`.  This variable can be included in the same
+way that a document upload can be included.  For example:
 
 {% highlight yaml %}
 ---

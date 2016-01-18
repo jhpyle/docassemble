@@ -17,7 +17,9 @@ installation instructions.
 
 For instructions on installing **docassemble** in a multi-server
 arrangement, for example on [Amazon EC2], see the [scalability]
-section.
+section.  In some ways, it is less work to install **docassemble** on
+[Amazon ECS] than it is to install it without [Docker] on a single
+machine.
 
 # Installing dependencies
 
@@ -61,7 +63,7 @@ sudo dpkg-reconfigure locales
 
 (On Ubuntu, you may need to do `sudo apt-get install language-pack-en`.)
 
-## Installing docassemble itself
+## Installing **docassemble** itself
 
 The recommended way to install **docassemble** is to create a
 [Python virtual environment] that belongs to the web server user
@@ -114,7 +116,7 @@ package.  (This facilitates the use of user-created add-on packages.)
 The core functionality of parsing interviews is in the
 `docassemble.base` package.  With these two packages only, you can use
 **docassemble** as an API.  The `docassemble.webapp` package contains
-the standard docassemble web application, and the `docassemble.demo`
+the standard **docassemble** web application, and the `docassemble.demo`
 package contains a demonstration interview.
 
 To install **docassemble** and its [Python] dependencies into the
@@ -171,7 +173,7 @@ The following instructions assume a Debian/Ubuntu system on which you
 have cloned the `docassemble` git repository into your home directory.
 You may have to make some changes to adapt this to your server.
 
-Enable the Apache wsgi and xsendfile modules if they are not already
+Enable the [Apache] [wsgi] and [xsendfile] modules if they are not already
 enabled by running the following:
 
 {% highlight bash %}
@@ -179,13 +181,13 @@ sudo a2enmod wsgi
 sudo a2enmod xsendfile
 {% endhighlight %}
 
-Create a directory for the WSGI file:
+Create a directory for the [WSGI] file:
 
 {% highlight bash %}
 sudo mkdir -p /usr/share/docassemble/webapp
 {% endhighlight %}
 
-Copy the WSGI file to this directory:
+Copy the [WSGI] file to this directory:
 
 {% highlight bash %}
 sudo cp ~/docassemble/docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp
@@ -256,8 +258,8 @@ Set `/etc/apache2/conf-available/docassemble.conf` to:
 WSGIPythonHome /usr/share/docassemble/local
 {% endhighlight %}
 
-This instructs Apache to use your [Python virtual environment] when
-running the WSGI application.  Enable this by running:
+This instructs [Apache] to use your [Python virtual environment] when
+running the [WSGI] application.  Enable this by running:
 
 {% highlight text %}
 sudo a2enconf docassemble
@@ -270,11 +272,11 @@ confidential, it is a good idea to run **docassemble** on HTTPS.  If
 you want to run **docassemble** on HTTP, copy the `XSendFile` lines,
 the `WSGIDaemonProcess` line, the `WSGIScriptAlias` line, and the
 `Directory` section into the `<VirtualHost *:80>` section of your
-Apache configuration file.
+[Apache] configuration file.
 
 If your **docassemble** interviews are not thread-safe, for example
 because different interviews use different locales, change `threads=5`
-to `processes=5 threads=1`.  This will cause Apache to run WSGI in a
+to `processes=5 threads=1`.  This will cause [Apache] to run [WSGI] in a
 "prefork" configuration.  This is slower than the multi-thread
 configuration.  See [functions] for more information about
 **docassemble** and thread safety.
@@ -282,7 +284,7 @@ configuration.  See [functions] for more information about
 # Setting up the SQL server
 
 `docassemble` uses a SQL database.  These instructions assume you are
-using PostgreSQL.  Set up the database by running the following
+using [PostgreSQL].  Set up the database by running the following
 commands.  (You may wish to make changes to the database information
 in the [configuration] file first.  Note that this file will need to
 be readable by the `postgres` user.)
@@ -316,7 +318,7 @@ mail server.
 
 # Start the server
 
-Finally, restart Apache:
+Finally, restart [Apache]:
 
 {% highlight bash %}
 sudo /etc/init.d/apache2 restart
@@ -332,9 +334,9 @@ You will find **docassemble** running at http://example.com/da.
 
 ## Using different web servers and/or SQL database backends
 
-**docassemble** is not dependent on Apache or PostgreSQL.  Other web
-servers that can host Python WSGI applications (e.g., nginx with
-uWSGI) could be used.
+**docassemble** is not dependent on [Apache] or [PostgreSQL].  Other web
+servers that can host Python [WSGI] applications (e.g., [nginx] with
+[uWSGI]) could be used.
 
 **docassemble** uses [SQLAlchemy] to communicate with the SQL back
 end, so you can edit the [configuration] to point to another type of
@@ -343,9 +345,9 @@ not do fancy things with SQL, so most backends should work without a
 problem.  Any backend used must support column definitions with
 `server_default=db.func.now()`.
 
-# Upgrading docassemble
+# Upgrading **docassemble**
 
-To upgrade docassemble and its dependencies, do the following.  (This
+To upgrade **docassemble** and its dependencies, do the following.  (This
 assumes that in the past you cloned **docassemble** into the directory
 `docassemble` in the current directory.)
 
@@ -374,10 +376,10 @@ pip uninstall docassemble.demo
 pip uninstall docassemble.webapp
 {% endhighlight %}
 
-Note that after making changes to docassemble interviews and Python
-code, it is not necessary to restart Apache.  Changing the
+Note that after making changes to **docassemble** interviews and Python
+code, it is not necessary to restart [Apache].  Changing the
 modification time of `/usr/share/docassemble/docassemble.wsgi` will
-trigger Apache to restart the WSGI processes.
+trigger [Apache] to restart the [WSGI] processes.
 
 {% highlight bash %}
 sudo touch /usr/share/docassemble/docassemble.wsgi
@@ -385,7 +387,7 @@ sudo touch /usr/share/docassemble/docassemble.wsgi
 
 # Debugging the web app
 
-If you get a standard Apache error message, look in
+If you get a standard [Apache] error message, look in
 `/var/log/apache2/error.log`.  If you get an abbreviated message, the
 error message could be in `/tmp/flask.log`.  Usually, however, the error
 message will appear in the web browser.  To get the context of an
@@ -395,6 +397,7 @@ The main **docassemble** log file is in
 
 [dependencies]: {{ site.baseurl }}/docs/requirements.html
 [run it using Docker]: {{ site.baseurl }}/docs/docker.html
+[Docker]: {{ site.baseurl }}/docs/docker.html
 [MacTex]: https://tug.org/mactex/
 [MiKTeX]: http://miktex.org/download
 [Nodebox English Linguistics library]: https://www.nodebox.net/code/index.php/Linguistics
@@ -414,3 +417,11 @@ The main **docassemble** log file is in
 [functions]: {{ site.baseurl }}/docs/functions.html
 [VoiceRSS]: http://www.voicerss.org/
 [Google Maps Geocoding API]: https://developers.google.com/maps/documentation/geocoding/intro
+[wsgi]: https://modwsgi.readthedocs.org/en/develop/
+[xsendfile]: https://tn123.org/mod_xsendfile/
+[WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
+[nginx]: https://www.nginx.com/
+[uWSGI]: http://uwsgi-docs.readthedocs.org/en/latest/index.html
+[Apache]: https://en.wikipedia.org/wiki/Apache_HTTP_Server
+[PostgreSQL]: http://www.postgresql.org/
+[Amazon ECS]: https://aws.amazon.com/ecs/

@@ -7,7 +7,7 @@ short_title: Configuration
 # Location of the configuration file
 
 To run the **docassemble** web application, you tell your web browser
-to launch a WSGI file.  The standard WSGI file, `docassemble.wsgi`,
+to launch a [WSGI] file.  The standard [WSGI] file, `docassemble.wsgi`,
 looks like this:
 
 {% highlight python %}
@@ -23,10 +23,10 @@ from docassemble.webapp.server import app as application
 The second and third lines load the **docassemble** configuration, and
 the last line imports the [Flask] application server.  The
 configuration is stored in a [YAML] file, which by default is located
-in `/usr/share/docassemble/config.yaml`.  If you wish, you can edit
-the WSGI file and tell it to load the configuration from a file in a
+in `/usr/share/docassemble/config.yml`.  If you wish, you can edit
+the [WSGI] file and tell it to load the configuration from a file in a
 different location.  You might want to do this if you have multiple
-virtual hosts, each running a different WSGI application on a single
+virtual hosts, each running a different [WSGI] application on a single
 server.
 
 The configuration file needs to be readable and writable by the web
@@ -114,7 +114,7 @@ features:
 ## root
 
 This depends on how you configured your web server during [installation]
-Set this to `/` if the WSGI application runs from the root of the
+Set this to `/` if the [WSGI] application runs from the root of the
 domain.  If your server runs from url path `/da/`, set `root` to
 `/da/`.  Always use a trailing slash.
 
@@ -223,7 +223,7 @@ This is a convenience feature.  Otherwise, you would have to manually
 install the SSL certificates on every new **docassemble** web server
 you create.
 
-The value of `certs` can be a file path or an S3 URL (e.g.,
+The value of `certs` can be a file path or an [Amazon S3] URL (e.g.,
 `s3://exampledotcom/certs`).  The directory is copied to
 `/etc/ssl/docassemble` (or another directory specified by
 `cert_install_directory`.
@@ -231,7 +231,7 @@ The value of `certs` can be a file path or an S3 URL (e.g.,
 If you leave the `certs` setting undefined (which is recommended),
 **docassemble** will look in `/usr/share/docassemble/certs` if the
 `s3` setting is not enabled, and if `s3` is defined, it will look for
-S3 keys with the prefix `certs/` in the `bucket` defined in the `s3`
+[S3] keys with the prefix `certs/` in the `bucket` defined in the `s3`
 configuration.
 
 Here is an example.  Install `s3cmd` if you have not done so already:
@@ -398,7 +398,7 @@ pdftoppm: pdftoppm
 
 ## Sound file conversion
 
-If you have pacpl (the [Perl Audio Converter]) and/or avconv installed
+If you have pacpl (the [Perl Audio Converter]) and/or [avconv] installed
 on your system, you need to tell **docassemble** the name of the
 commands to use.  If the applications are not installed on your
 system, do not include these lines.
@@ -408,7 +408,7 @@ pacpl: pacpl
 avconv: avconv
 {% endhighlight %}
 
-If you have ffmpeg instead of avconv, you can do:
+If you have [ffmpeg] instead of [avconv], you can do:
 
 {% highlight yaml %}
 avconv: ffmpeg
@@ -526,8 +526,8 @@ server is not certain.
 
 ## google
 
-If you have a Google API key, for example for using the Google
-Geocoder, you can include it as follows:
+If you have a Google API key, for example for using the [Google
+Maps Geocoding API], you can include it as follows:
 
 {% highlight yaml %}
 google:
@@ -555,6 +555,9 @@ voicerss:
 
 ## s3
 
+If you are using [Amazon S3] to store shared files, enter your access
+keys and bucket name as follows:
+
 {% highlight yaml %}
 s3:
   enable: true
@@ -562,6 +565,9 @@ s3:
   secret_access_key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
   bucket: yourbucketname
 {% endhighlight %}
+
+You will need to create the bucket before using it; **docassemble**
+will not create it for you.
 
 ## ec2
 
@@ -573,15 +579,15 @@ true:
 ec2: true
 {% endhighlight %}
 
-This is necessary because when **docassemble** runs in a [multi-server
-arrangement], each **docassemble** web server instance needs to allow
-other **docassemble** web instances to send messages to it through
-[supervisor].  Each web server instance advertises the hostname or IP
-address through which its [supervisor] can be accessed.  Normally,
-this can be obtained using the computer's hostname, but within an EC2
-instance or Docker container, this hostname is not one that other web
-servers can resolve.  If `ec2` is set to `true`, then **docassemble**
-will determine the hostname by calling
+This is necessary because when **docassemble** runs in a
+[multi-server arrangement], each **docassemble** web server instance
+needs to allow other **docassemble** web instances to send messages to
+it through [supervisor].  Each web server instance advertises the
+hostname or IP address through which its [supervisor] can be accessed.
+Normally, this can be obtained using the computer's hostname, but
+within an [EC2] instance or [Docker] container, this hostname is not
+one that other web servers can resolve.  If `ec2` is set to `true`,
+then **docassemble** will determine the hostname by calling
 `http://169.254.169.254/latest/meta-data/local-ipv4`.
 
 ## ec2_ip_url
@@ -663,3 +669,12 @@ first.
 [Perl Audio Converter]: http://vorzox.wix.com/pacpl
 [pip]: https://en.wikipedia.org/wiki/Pip_%28package_manager%29
 [list of language codes]: http://www.voicerss.org/api/documentation.aspx
+[supervisor]: http://supervisord.org/
+[S3]: https://aws.amazon.com/s3/
+[Amazon S3]: https://aws.amazon.com/s3/
+[avconv]: https://libav.org/avconv.html
+[ffmpeg]: https://www.ffmpeg.org/
+[Google Maps Geocoding API]: https://developers.google.com/maps/documentation/geocoding/intro
+[Amazon EC2]: https://aws.amazon.com/ec2/
+[EC2]: https://aws.amazon.com/ec2/
+[Docker]: https://www.docker.com/

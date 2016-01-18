@@ -4,7 +4,7 @@ title: Requirements
 short_title: Requirements
 ---
 
-The docassemble module depends on:
+The core **docassemble** module (`docassemble.base`) depends on:
 
 * [Mako Templates for Python](http://www.makotemplates.org/) - for
   embedding data and logic in templates for questions and documents
@@ -21,16 +21,18 @@ The docassemble module depends on:
 * [Pandoc](http://johnmacfarlane.net/pandoc/) - for converting
   documents from Markdown to PDF, RTF, and HTML; depends on
   [LaTeX](http://www.latex-project.org/) for PDF conversion
+* [PDFtk](https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/) for
+  filling form fields in PDF files
 * [httplib2](https://pypi.python.org/pypi/httplib2) - for retrieving
   interviews through HTTP
 * [us](https://pypi.python.org/pypi/us) - for utility functions that
   provide a list of U.S. states
 * [SmartyPants](https://pypi.python.org/pypi/mdx_smartypants) - for
   converting straight quotes to curly quotes
-* [html2text](https://pypi.python.org/pypi/html2text) for converting
+* [html2text](https://pypi.python.org/pypi/html2text) - for converting
   HTML to text for the plain text part of an e-mail.
 
-The web application depends on:
+The web application (`docassemble.webapp`) depends on:
 
 * [Bootstrap](http://getbootstrap.com) (hotlinked) - for the user
   interface
@@ -61,8 +63,13 @@ The web application depends on:
 * [ImageMagick](http://http://www.imagemagick.org/) - needed for
   adjusting the rotation of user-supplied JPEGs; the web app will not
   fail if it is missing
-* [Perl Audio Converter](http://vorzox.wix.com/pacpl)
-* [pygeocoder](https://bitbucket.org/xster/pygeocoder/wiki/Home)
+* [Perl Audio Converter](http://vorzox.wix.com/pacpl) - for converting
+  audio files into the various formats needed for using HTML5 audio
+  tag
+* [avconv](https://libav.org/avconv.html) - for converting video files
+  into the various formats needed for using the HTML video tag
+* [pygeocoder](https://bitbucket.org/xster/pygeocoder/wiki/Home) - for
+  accessing the Google Geocoder API
 * [PostgreSQL](http://www.postgresql.org/) and
   [psycopg2](http://initd.org/psycopg/) - for storing user data; other
   databases compatible with [SQLAlchemy] will also work
@@ -70,7 +77,7 @@ The web application depends on:
 * An SMTP server - for allowing users to e-mail documents to themselves
   and to facilitate the username/password system
 
-To run the demo question file you will need:
+To run the demo question file (`docassemble.demo`) you will need:
 
 * [DateUtil](https://moin.conectiva.com.br/DateUtil) - used in the
   demo file to calculate whether an injury took place within the
