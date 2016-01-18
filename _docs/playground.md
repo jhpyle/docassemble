@@ -60,6 +60,7 @@ Notes:
   authoring functionality, see the [tutorial] and the [packages]
   sections.
 
+[package]: {{ site.baseurl }}/docs/packages.html
 [packages]: {{ site.baseurl }}/docs/packages.html
 [Python package]: {{ site.baseurl }}/docs/packages.html
 [Python modules]: https://docs.python.org/2/tutorial/modules.html
