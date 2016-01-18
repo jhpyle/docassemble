@@ -79,9 +79,10 @@ box-shadow: $shadow;
   background-image: url("/img/background.jpg");
   background-repeat: no-repeat;
   background-size: 100% auto;
+  background-color: black;
   text-align: center;
-  -webkit-box-shadow: inset 0 0 100px rgba(0,0,0,.5);
-          box-shadow: inset 0 0 100px rgba(0,0,0,.5);
+  /* -webkit-box-shadow: inset 0 0 100px rgba(255,255,255,.5);
+          box-shadow: inset 0 0 100px rgba(255,255,255,.5); */
 }
 .site-wrapper-inner {
   display: table-cell;
@@ -94,6 +95,10 @@ box-shadow: $shadow;
 }
 
 /* Padding for spacing */
+.over-image {
+  text-shadow: black 0.1em 0.1em 0.2em;
+}
+
 .inner {
   padding: 30px;
 }
@@ -158,10 +163,14 @@ box-shadow: $shadow;
 }
 
 .mastfoot {
-  color: #000; /* IE8 proofing */
+  color: #fff; /* IE8 proofing */
+  text-shadow: black 0.1em 0.1em 0.2em;
   /* color: rgba(255,255,255,.5); */
 }
 
+.mastfoot a {
+  color: #ccc;
+}
 
 /*
  * Affix and center
