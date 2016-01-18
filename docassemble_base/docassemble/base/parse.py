@@ -10,6 +10,7 @@ import operator
 import pprint
 import codecs
 import docassemble.base.filter
+import docassemble.base.pdftk
 from docassemble.base.error import DAError, MandatoryQuestion
 from docassemble.base.util import pickleable_objects, word, get_language
 from docassemble.base.logger import logmessage
@@ -926,7 +927,7 @@ class Question:
                         raise DAError("Each individual field in a list of fields must be expressed as a dictionary item, e.g., ' - Fruit: user.favorite_fruit'." + self.idebug(data))
                     field_number += 1
         if not hasattr(self, 'question_type'):
-            if len(self.attachments) and len(self.fields_used):
+            if len(self.attachments) and len(self.fields_used) and not hasattr(self, 'content'):
                 self.question_type = 'attachments'
             elif hasattr(self, 'content'):
                 self.question_type = 'deadend'
@@ -1055,6 +1056,20 @@ class Question:
                             target['content'] += the_file.read()
                     else:
                         raise DAError('Unable to read content file ' + str(target['content file']) + ' after trying to find it at ' + str(file_to_read) + self.idebug(target))
+            if 'fields' in target:
+                if 'pdf template file' not in target:
+                    raise DAError('Fields supplied to attachment but no pdf template file supplied' + self.idebug(target))
+                if type(target['pdf template file']) is not str:
+                    raise DAError('pdf template file supplied to attachment must be a string' + self.idebug(target))
+                if type(target['fields']) is not dict:
+                    raise DAError('fields supplied to attachment must be a dictionary' + self.idebug(target))
+                target['content'] = ''
+                target['valid_formats'] = ['pdf']
+                options['pdf_template_file'] = docassemble.base.util.package_template_filename(target['pdf template file'], package=self.package)
+                options['fields'] = dict()
+                for key, val in target['fields'].iteritems():
+                    logmessage("Set " + str(key) + " to " + str(val))
+                    options['fields'][key] = TextObject(val)
             if 'content' not in target:
                 raise DAError("No content provided in attachment")
             return({'name': TextObject(target['name']), 'filename': TextObject(target['filename']), 'description': TextObject(target['description']), 'content': TextObject("\n".join(defs) + "\n" + target['content']), 'valid_formats': target['valid_formats'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
@@ -1259,48 +1274,62 @@ class Question:
             formats_to_use = attachment['valid_formats']
         for doc_format in formats_to_use:
             if doc_format in ['pdf', 'rtf', 'tex']:
-                the_markdown = ""
-                metadata = dict()
-                if len(attachment['metadata']) > 0:
-                    for key in attachment['metadata']:
-                        data = attachment['metadata'][key]
-                        if type(data) is bool:
-                            metadata[key] = data
-                        elif type(data) is list:
-                            metadata[key] = textify(data)
-                        else:
-                            metadata[key] = data.text(user_dict)
-                    the_markdown += "---\n" + yaml.safe_dump(metadata, default_flow_style=False, default_style = '|') + "...\n"
-                the_markdown += attachment['content'].text(user_dict)
-                if emoji_match.search(the_markdown) and len(self.interview.images) > 0:
-                    the_markdown = emoji_match.sub(emoji_matcher_insert(self), the_markdown)
-                result['markdown'][doc_format] = the_markdown
-                converter = Pandoc()
-                converter.output_format = doc_format
-                converter.input_content = the_markdown
-                #logmessage("Markdown is:\n" + repr(the_markdown) + "END")
-                if 'initial_yaml' in attachment['options']:
-                    converter.initial_yaml = attachment['options']['initial_yaml']
-                elif 'initial_yaml' in self.interview.attachment_options:
-                    converter.initial_yaml = self.interview.attachment_options['initial_yaml']
-                if 'additional_yaml' in attachment['options']:
-                    converter.additional_yaml = attachment['options']['additional_yaml']
-                elif 'additional_yaml' in self.interview.attachment_options:
-                    converter.additional_yaml = self.interview.attachment_options['additional_yaml']
-                if doc_format == 'rtf':
-                    if 'rtf_template_file' in attachment['options']:
-                        converter.template_file = attachment['options']['rtf_template_file']
-                    elif 'rtf_template_file' in self.interview.attachment_options:
-                        converter.template_file = self.interview.attachment_options['rtf_template_file']
+                if 'fields' in attachment['options']:
+                    data_strings = []
+                    for key, val in attachment['options']['fields'].iteritems():
+                        answer = val.text(user_dict).rstrip()
+                        if answer == 'True':
+                            answer = 'Yes'
+                        elif answer == 'False':
+                            answer = 'No'
+                        elif answer == 'None':
+                            answer = ''
+                        #logmessage("Found a " + str(key) + " with a |" + str(answer) + '|')
+                        data_strings.append((key, answer))
+                    result['file'][doc_format] = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'], data_strings=data_strings)
                 else:
-                    if 'template_file' in attachment['options']:
-                        converter.template_file = attachment['options']['template_file']
-                    elif 'template_file' in self.interview.attachment_options:
-                        converter.template_file = self.interview.attachment_options['template_file']
-                converter.metadata = metadata
-                converter.convert()
-                result['file'][doc_format] = converter.output_filename
-                result['content'][doc_format] = result['markdown'][doc_format]
+                    the_markdown = ""
+                    metadata = dict()
+                    if len(attachment['metadata']) > 0:
+                        for key in attachment['metadata']:
+                            data = attachment['metadata'][key]
+                            if type(data) is bool:
+                                metadata[key] = data
+                            elif type(data) is list:
+                                metadata[key] = textify(data)
+                            else:
+                                metadata[key] = data.text(user_dict)
+                        the_markdown += "---\n" + yaml.safe_dump(metadata, default_flow_style=False, default_style = '|') + "...\n"
+                    the_markdown += attachment['content'].text(user_dict)
+                    if emoji_match.search(the_markdown) and len(self.interview.images) > 0:
+                        the_markdown = emoji_match.sub(emoji_matcher_insert(self), the_markdown)
+                    result['markdown'][doc_format] = the_markdown
+                    converter = Pandoc()
+                    converter.output_format = doc_format
+                    converter.input_content = the_markdown
+                    #logmessage("Markdown is:\n" + repr(the_markdown) + "END")
+                    if 'initial_yaml' in attachment['options']:
+                        converter.initial_yaml = attachment['options']['initial_yaml']
+                    elif 'initial_yaml' in self.interview.attachment_options:
+                        converter.initial_yaml = self.interview.attachment_options['initial_yaml']
+                    if 'additional_yaml' in attachment['options']:
+                        converter.additional_yaml = attachment['options']['additional_yaml']
+                    elif 'additional_yaml' in self.interview.attachment_options:
+                        converter.additional_yaml = self.interview.attachment_options['additional_yaml']
+                    if doc_format == 'rtf':
+                        if 'rtf_template_file' in attachment['options']:
+                            converter.template_file = attachment['options']['rtf_template_file']
+                        elif 'rtf_template_file' in self.interview.attachment_options:
+                            converter.template_file = self.interview.attachment_options['rtf_template_file']
+                    else:
+                        if 'template_file' in attachment['options']:
+                            converter.template_file = attachment['options']['template_file']
+                        elif 'template_file' in self.interview.attachment_options:
+                            converter.template_file = self.interview.attachment_options['template_file']
+                    converter.metadata = metadata
+                    converter.convert()
+                    result['file'][doc_format] = converter.output_filename
+                    result['content'][doc_format] = result['markdown'][doc_format]
             elif doc_format in ['html']:
                 result['markdown'][doc_format] = attachment['content'].text(user_dict)
                 if emoji_match.search(result['markdown'][doc_format]) and len(self.interview.images) > 0:

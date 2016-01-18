@@ -15,6 +15,7 @@ import shutil
 import codecs
 import weakref
 import docassemble.base.parse
+import docassemble.base.pdftk
 import docassemble.base.interview_cache
 import docassemble.webapp.update
 from docassemble.base.standardformatter import as_html, signature_html
@@ -43,7 +44,7 @@ from flask import make_response, abort, render_template, request, session, send_
 from flask.ext.login import LoginManager, UserMixin, login_user, logout_user, current_user
 from flask.ext.user import login_required, roles_required, UserManager, SQLAlchemyAdapter
 from flask.ext.user.forms import LoginForm
-from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm
+from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm, Utilities
 from flask_mail import Mail, Message
 import flask.ext.user.signals
 import httplib2
@@ -1497,6 +1498,7 @@ def make_navbar(status, page_title, steps, show_login):
                 navbar +='<li><a href="' + url_for('package_page') + '">' + word('Package Management') + '</a></li>'
                 navbar +='<li><a href="' + url_for('logs') + '">' + word('Logs') + '</a></li>'
                 navbar +='<li><a href="' + url_for('playground_page') + '">' + word('Playground') + '</a></li>'
+                navbar +='<li><a href="' + url_for('utilities') + '">' + word('Utilities') + '</a></li>'
                 if current_user.has_role('admin'):
                     navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
                     navbar +='<li><a href="' + url_for('privilege_list') + '">' + word('Privileges List') + '</a></li>'
@@ -2542,3 +2544,24 @@ def request_developer():
                 flash(word('We were unable to submit your request.'), 'error')
         return redirect(url_for('index'))
     return render_template('users/request_developer.html', form=form)
+
+@app.route('/utilities', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def utilities():
+    form = Utilities(request.form)
+    fields_output = None
+    if request.method == 'POST':
+        if 'pdffile' in request.files and request.files['pdffile'].filename:
+            pdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".pdf", delete=True)
+            the_file = request.files['pdffile']
+            the_file.save(pdf_file.name)
+            fields = docassemble.base.pdftk.read_fields(pdf_file.name)
+            if fields is None:
+                fields_output = word("Error: no fields could be found in the file")
+            else:
+                fields_output = "---\nquestion: " + word("something") + "\nsets: " + word('some_variable') + "\nattachment:" + "\n  - name: " + os.path.splitext(the_file.filename)[0] + "\n    filename: " + os.path.splitext(the_file.filename)[0] + "\n    pdf template file: " + the_file.filename + "\n    fields:\n"
+                for field, default in fields:
+                    fields_output += '      "' + field + '": ' + default + "\n"
+                fields_output += "---"
+    return render_template('pages/utilities.html', form=form, fields=fields_output)

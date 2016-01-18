@@ -405,7 +405,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         for attachment in status.attachments:
             if 'rtf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
                 rtfs_included = True
-            if debug:
+            if debug and len(attachment['markdown']):
                 show_markdown = True
             else:
                 show_markdown = False

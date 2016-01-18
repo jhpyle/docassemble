@@ -38,3 +38,8 @@ class LogForm(Form):
     file_name = StringField(word('File Name'))
     submit = SubmitField(word('Apply'))
     clear = SubmitField(word('Clear'))
+
+class Utilities(Form):
+    pdffile = FileField(word('PDF File'))
+    scan = SubmitField(word('Scan'))
+    
