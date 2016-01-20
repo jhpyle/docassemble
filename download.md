@@ -10,7 +10,7 @@ You can download **docassemble** from its [GitHub repository]({{ site.github.rep
 
     git clone {{ site.github.clone_url }}
 
-You can also download the package as a [tarball]({{ site.github.tar_url }}) or a [ZIP file]({{ site.github.zip_url }}).
+You can also download the package as a [tarball](https://github.com/jhpyle/docassemble/archive/master.tar.gz) or a [ZIP file](https://github.com/jhpyle/docassemble/archive/master.zip).
 
 See the [installation page]({{site.baseurl}}/docs/installation.html)
 for instructions about how to install **docassemble** and its
