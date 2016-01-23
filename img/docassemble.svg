@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="114.1013mm"
+   height="53.877522mm"
+   viewBox="0 0 404.29596 190.90461"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="docassemble.svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.4"
+     inkscape:cx="166.52624"
+     inkscape:cy="64.529455"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     fit-margin-top="2"
+     fit-margin-left="2"
+     fit-margin-right="2"
+     fit-margin-bottom="2"
+     inkscape:window-width="1366"
+     inkscape:window-height="715"
+     inkscape:window-x="0"
+     inkscape:window-y="31"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-117.87053,-411.70138)">
+    <path
+       id="path4186"
+       d="m 415.44024,458.90398 c -1.17659,-1.3524 -6.25001,-4.14607 -7.28556,-7.40147 -2.83038,-10.24925 -14.83774,-14.00892 -14.83774,-14.00892 l 1.28864,-18.7056 c -5.32651,1.62482 -12.71447,7.75311 -20.44052,15.51394 -1.20363,-0.15649 -2.43819,-0.26854 -3.69012,-0.26854 -8.87173,0 -16.77553,4.13254 -21.92043,10.55449 -11.19013,-9.18084 -23.37717,-15.57768 -43.1666,-14.87444 -41.89343,1.50116 -64.85908,29.80298 -72.39386,68.95104 -9.63486,7.67388 -10.07536,16.22104 -9.33735,20.93511 2.24113,14.37406 19.26202,24.8165 30.62989,27.63528 34.12293,8.46988 69.19446,-5.65108 89.34133,-35.95446 2.70286,-4.06105 1.59775,-9.54599 -2.47103,-12.25079 -4.05719,-2.70093 -9.5402,-1.59583 -12.24693,2.4633 -15.96215,24.00892 -43.58198,35.23382 -70.36911,28.58582 -7.44398,-1.84892 -15.96023,-8.15688 -17.27785,-12.62946 l 2.23918,0.56607 60.89848,0 c 7.77049,-4.72952 14.67158,-11.27706 20.10436,-19.4494 4.31221,-6.49732 13.11246,-8.25929 19.60203,-3.94708 6.48764,4.31608 8.26315,13.1086 3.94707,19.60204 -0.86553,1.29251 -1.76198,2.55024 -2.67388,3.79444 l 36.75237,0 c -0.14296,-0.29753 0.15843,-0.12557 0.15843,-0.12557 -0.30526,-0.45788 -3.73069,-5.77474 -4.11129,-11.81802 -0.7245,-11.44129 6.94939,-20.91001 6.94939,-20.91001 l 0.0793,-0.11397 c 23.97221,4.18858 29.16156,-10.86168 30.48884,-18.18395 0.6163,-3.38485 1.84505,-6.54175 -0.25696,-7.95983 z m -20.16619,-2.62944 c -1.82573,0 -3.30758,-1.48378 -3.30758,-3.30952 0,-1.82767 1.48185,-3.3095 3.30758,-3.3095 1.8296,0 3.30952,1.48376 3.30952,3.3095 0,1.82574 -1.47992,3.30952 -3.30952,3.30952 z"
+       inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-stretch:normal;font-size:60px;line-height:125%;font-family:Lato;-inkscape-font-specification:'Lato Semi-Light';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="122.85715"
+       y="595.21936"
+       id="text4195"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4197"
+         x="122.85715"
+         y="595.21936"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Montserrat;-inkscape-font-specification:Montserrat">docassemble</tspan></text>
+  </g>
+</svg>
