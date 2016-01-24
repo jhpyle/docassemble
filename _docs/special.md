@@ -109,7 +109,7 @@ of the person logged in and other information.
   passed as the `session` parameter of a URL, the interview will load
   using the variable store for that session key.
 * `url` - the base URL of the docassemble application (e.g.,
-  `http://docassemble.org/demo`).
+  `http://demo.docassemble.org`).
 * `user` - a [Python dictionary] containing the following keys:
   * `is_authenticated` - whether the user is logged in (True or False)
   * `is_anonymous` - whether the user is not logged in (True or False)
