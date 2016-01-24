@@ -66,8 +66,8 @@ question: You came from the ${ url_args.get('from', 'unknown') }.
 
 You can test this out by trying the following links:
 
-* [https://docassemble.org/demo?i=docassemble.demo:data/questions/testurlarg.yml&from=web](https://docassemble.org/demo?i=docassemble.demo:data/questions/testurlarg.yml&from=web){:target="_blank"}
-* [https://docassemble.org/demo?i=docassemble.demo:data/questions/testurlarg.yml&from=moon](https://docassemble.org/demo?i=docassemble.demo:data/questions/testurlarg.yml&from=moon){:target="_blank"}
+* [https://demo.docassemble.org?i=docassemble.demo:data/questions/testurlarg.yml&from=web](https://demo.docassemble.org?i=docassemble.demo:data/questions/testurlarg.yml&from=web){:target="_blank"}
+* [https://demo.docassemble.org?i=docassemble.demo:data/questions/testurlarg.yml&from=moon](https://demo.docassemble.org?i=docassemble.demo:data/questions/testurlarg.yml&from=moon){:target="_blank"}
 
 As soon as the interview loads, the parameters will no longer appear
 in the browser's location bar.  Nevertheless, the parameters remain
@@ -91,7 +91,7 @@ subquestion: |
 {% endhighlight %}
 
 You can test this out by trying the following link:
-[https://docassemble.org/demo?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder](https://docassemble.org/demo?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder){:target="_blank"}.
+[https://demo.docassemble.org?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder](https://demo.docassemble.org?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder){:target="_blank"}.
 
 ## current_info
 

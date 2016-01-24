@@ -130,7 +130,7 @@ The logic of the interview was as follows:
 * For that, I need to ask `favorite_animal`
 
 You can
-[try out this interview](https://docassemble.org/demo?i=docassemble.demo:data/questions/animal.yml){:target="_blank"}
+[try out this interview](https://demo.docassemble.org?i=docassemble.demo:data/questions/animal.yml){:target="_blank"}
 to see how it looks from the user's perspective.
 
 This is a very simple interview; there are more types of blocks that
@@ -172,7 +172,7 @@ You start the interview by going to its URL.  In the case of the
 interview linked from the [demonstration page], you can get to the
 interview by doing:
 
-[https://docassemble.org/demo](https://docassemble.org/demo){:target="_blank"}
+[https://demo.docassemble.org](https://demo.docassemble.org){:target="_blank"}
 
 This URL is simple-looking because it uses the default interview file
 that was set in the [configuration].
@@ -180,7 +180,7 @@ that was set in the [configuration].
 If you want to link to an interview file by its specific filename,
 just set an `i` parameter in the URL:
 
-[https://docassemble.org/demo?i=docassemble.demo:data/questions/questions.yml](https://docassemble.org/demo?i=docassemble.demo:data/questions/questions.yml){:target="_blank"}
+[https://demo.docassemble.org?i=docassemble.demo:data/questions/questions.yml](https://demo.docassemble.org?i=docassemble.demo:data/questions/questions.yml){:target="_blank"}
 
 Here, the interview file name is
 `docassemble.demo:data/questions/questions.yml`.  This tells

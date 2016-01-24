@@ -54,7 +54,7 @@ instructions.)
     [configuration] file.
 13. You should see "Hello, world!" with an exit button.
 
-(If you do not have a server yet, you can [try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello.yml){:target="_blank"}.)
+(If you do not have a server yet, you can [try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/hello.yml){:target="_blank"}.)
 
 # Adding a question
 
@@ -76,7 +76,7 @@ fields:
 ---
 {% endhighlight %}
 
-Then repeat steps 8 through 12, above.  (If you do not have your own server yet, you can [try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello2.yml){:target="_blank"}.)
+Then repeat steps 8 through 12, above.  (If you do not have your own server yet, you can [try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/hello2.yml){:target="_blank"}.)
 
 It should now ask you "What is your planet's name?" and then greet
 your world by its name.
@@ -114,7 +114,7 @@ fields:
 ---
 {% endhighlight %}
 
-([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello3.yml){:target="_blank"}.)
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/hello3.yml){:target="_blank"}.)
 
 # Creating a document
 
@@ -161,7 +161,7 @@ fields:
 ---
 {% endhighlight %}
 
-([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/hello4.yml){:target="_blank"}.)
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/hello4.yml){:target="_blank"}.)
 
 This illustrates the complete workflow for producing final
 **docassemble** interviews.  If you are trying to work out a problem

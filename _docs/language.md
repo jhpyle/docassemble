@@ -203,7 +203,7 @@ include:
 ---
 {% endhighlight %}
 
-([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/bestnumber/interview.yml){:target="_blank"}.)
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/bestnumber/interview.yml){:target="_blank"}.)
 
 # Creating documents in languages other than English
 

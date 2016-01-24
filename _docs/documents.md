@@ -125,7 +125,7 @@ attachments:
 ---
 {% endhighlight %}
 
-([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/testfill.yml){:target="_blank"}.)
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testfill.yml){:target="_blank"}.)
 
 The `pdf template file` is assumed to reside in the `data/templates`
 directory of your package, unless a specific package name is specified

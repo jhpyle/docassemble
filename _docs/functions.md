@@ -236,7 +236,7 @@ code: |
 ---
 {% endhighlight %}
 
-([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/testaction.yml){:target="_blank"}.)
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testaction.yml){:target="_blank"}.)
 
 When the user clicks one of the links, the interview will load as
 usual (much as if the user refreshed the web browser page).  The only
@@ -649,7 +649,7 @@ fields:
 ---
 {% endhighlight %}
 
-([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/income.yml){:target="_blank"}.)
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/income.yml){:target="_blank"}.)
 
 The text in the default `period_list()` function can be translated to
 different languages using the

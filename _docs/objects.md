@@ -96,7 +96,7 @@ question: |
 ---
 {% endhighlight %}
 
-([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/testage.yml){:target="_blank"}.)
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testage.yml){:target="_blank"}.)
 
 Using objects in your interviews has a number of advantages over
 using plain variables.
@@ -190,7 +190,7 @@ question: |
 ---
 {% endhighlight %}
 
-([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/testage2.yml){:target="_blank"}.)
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testage2.yml){:target="_blank"}.)
 
 Although objects are a fairly complicated concept, as you can see,
 they allow you to write code that looks much like plain English.
@@ -298,7 +298,7 @@ subquestion: |
 ---
 {% endhighlight %}
 
-([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/testcooking.yml){:target="_blank"}.)
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testcooking.yml){:target="_blank"}.)
 
 By the way, there is way to write the `summary()` method that is more
 friendly to other interview authors:
@@ -657,7 +657,7 @@ fields:
 ---
 {% endhighlight %}
 
-([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/testdaobject.yml){:target="_blank"}.)
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testdaobject.yml){:target="_blank"}.)
 
 Although there is only one question for `x.color`, this question
 generates both "What is the color of the turnip?" and "What is the
@@ -734,7 +734,7 @@ fields:
 ---
 {% endhighlight %}
 
-([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/testdalist.yml){:target="_blank"}.)
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testdalist.yml){:target="_blank"}.)
 
 This will result in the following five questions being asked:
 
@@ -872,7 +872,7 @@ fields:
 ---
 {% endhighlight %}
 
-([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/testdadict.yml){:target="_blank"}.)
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testdadict.yml){:target="_blank"}.)
 
 The `DADict` uses the following attributes:
 
@@ -995,7 +995,7 @@ fields:
 ---
 {% endhighlight %}
 
-([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/testattorney.yml){:target="_blank"}.)
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testattorney.yml){:target="_blank"}.)
 
 Note that the `lawyer` object works just like an `Individual` object.
 The `is_are_you()` method, which is defined in

@@ -311,7 +311,7 @@ subquestion: |
 ---
 {% endhighlight %}
 
-([Try it out here](https://docassemble.org/demo?i=docassemble.demo:data/questions/testperson.yml){:target="_blank"}.)
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testperson.yml){:target="_blank"}.)
 
 Note that `${ opponent.name.full() }`, `${ opponent.name }`, and `${
 opponent }` all return the same thing.  This is because a `Person` in
