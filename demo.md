@@ -6,10 +6,10 @@ short_title: Demo
 
 # The demonstration
 
-You can [run a simple demonstration](https://docassemble.org/demo?i=docassemble.demo:data/questions/questions.yml){:target="_blank"} to see **docassemble** in action.
+You can [run a simple demonstration](https://demo.docassemble.org?i=docassemble.demo:data/questions/questions.yml){:target="_blank"} to see **docassemble** in action.
 
 <a class="btn btn-primary btn-lg"
-href="https://docassemble.org/demo?i=docassemble.demo:data/questions/questions.yml"
+href="https://demo.docassemble.org?i=docassemble.demo:data/questions/questions.yml"
 target="_blank">Run the demo</a>
 
 The interface is based on [Bootstrap], which is both mobile-friendly
