@@ -99,6 +99,10 @@ box-shadow: $shadow;
   text-shadow: black 0.1em 0.1em 0.2em;
 }
 
+.box-over-image {
+  box-shadow: 0.05em 0.05em 0.2em black;
+}
+
 .inner {
   padding: 30px;
 }
