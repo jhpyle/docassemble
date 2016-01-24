@@ -88,10 +88,30 @@ box-shadow: $shadow;
   display: table-cell;
   vertical-align: top;
 }
+
 .cover-container {
   padding-top: 50px;
   margin-right: auto;
   margin-left: auto;
+}
+
+.cover-heading {
+  display: inherit;
+}
+
+.logo-image {
+  display: none;
+}
+
+@media (min-width: 768px) and (min-height: 400px) {
+  .logo-image {
+    display: inline;
+    width: 90%;
+    max-width: 400px;
+  }
+  .cover-heading {
+    display: none;
+  }
 }
 
 /* Padding for spacing */
