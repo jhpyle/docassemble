@@ -170,22 +170,23 @@ being able to create the document template in Microsoft Word is
 important so as to have fine-grained control over document formatting,
 then the [A2J]/[HotDocs] platform may be preferable.
 
-Many of **docassemble**'s features are not available yet in the
-[A2J]/[HotDocs] platform, such as electronic signatures, document
+However, many of **docassemble**'s features are not available yet in
+the [A2J]/[HotDocs] platform, such as electronic signatures, document
 uploads, text-to-speech, ability to generate documents in the middle
-of interviews as opposed to the end, and multi-user interviews.
+of interviews as opposed to only at the end, and multi-user
+interviews.
 
 In addition, **docassemble** does many things that [A2J] and [HotDocs]
 can do, but does them better.  For example, **docassemble** has
 superior features for incorporating "libraries" of questions (which
 might reference other "libraries," which in turn reference other
-"libraries," etc.).  [HotDocs] allows one component file to be
-imported, but does not allow such files to be chained.  Since all the
-authoring is done within a [YAML] file, content can easily be reused
-through incorporation by reference (using the [include] function) or
-copy-and-paste.  By contrast, all of the content of an [A2J] or
-[HotDocs] interview is effectively locked inside the graphical user
-interface.
+"libraries," etc.).  Since all the authoring is done within a [YAML]
+file, content can easily be reused through incorporation by reference
+(using the [include] function) or copy-and-paste.  By contrast,
+[HotDocs] allows one component file to be imported, but does not allow
+such inclusions to be nested.  All of the content of an [A2J] or
+[HotDocs] interview is effectively locked inside the
+graphical user interface.
 
 For some people, **docassemble** may have a steeper learning curve
 than [A2J] and [HotDocs].  [A2J] is optimized for legal professionals
@@ -195,23 +196,25 @@ efficiently as possible.
 
 While [A2J] and [HotDocs] may be easier for the uninitiated, authors
 who try to go beyond the specific use cases that the developers of
-[A2J] and [HotDocs] had in mind will find themselves having to devise
+[A2J] and [HotDocs] had in mind will find themselves devising
 complicated workarounds in order to achieve their goals.  In
 **docassemble**, it will never be necessary to create such
 workarounds.  Most features that an author might want to add can be
 implemented in a simple and straightforward fashion by writing a
 [Python] class or inserting [Javascript] into a question, all of which
-can be done in a standard [YAML] interview.  And if that is not
-enough, authors can modify the **docassemble** code and submit a
-[pull request] to include it in the latest version of **docassemble**.
+can be done without changing **docassemble**'s code.  And if that is
+not enough, authors can modify the **docassemble** code and submit a
+[pull request] to include the changes in the latest version of
+**docassemble**.
 
 In general, tools that offer users the ability to develop software
 "without writing code" actually do make users write code, just in an
 indirect way using a graphical user interface.  This makes the
-learning curve less steep, at the expense of limiting the user's
+learning curve less steep at the expense of limiting the user's
 freedom once they have climbed the learning curve.  **docassemble**
-takes a different approach.  It does not hide the code from the user,
-but tries to make writing the code as easy as possible.
+takes a different approach.  It does not hide the code from the
+author.  It tries to make writing code as easy as possible, but it
+does not limit what the author can do.
 
 In the long term, creating forms and interviews in **docassemble** is
 more efficient than creating them in [A2J] and [HotDocs] because:
@@ -220,28 +223,31 @@ more efficient than creating them in [A2J] and [HotDocs] because:
 flow;
 2. Authors have the power of "copy and paste" and "search and
 replace" at their fingertips;
-3. The ability to share common
-questions across multiple interviews and incorporate libraries of
-questions means that authors can easily re-use their own past work and
-the work of other authors in the community; and
+3. The ability to share common questions across multiple interviews
+and incorporate libraries of questions means that authors can easily
+re-use their own past work and the work of other authors in the
+community; and
 4. **docassemble** uses objects as variables, not just boolean and
 text values.  The features of object-oriented programming, including
 object methods and inheritance, save the developer a great deal of
 time and greatly simplify the appearance of code.
 
-In addition, **docassemble** gives authors all the power and
-convenience of a general-purpose, object-orientated programming
-language.  While the programming language within [HotDocs] is fixed,
-[Python] is fully extensible.  **docassemble** authors can include any
-of the more than 70,000 [Python] packages available on [PyPI],
-[Github], and other sites, and code written by **docassemble** authors
-can easily be shared and re-used by others in the authoring community.
+Perhaps most importantly, **docassemble** gives authors all the power
+and convenience of a general-purpose, object-orientated programming
+language.  While the programming language within [HotDocs] is
+proprietary and fixed, [Python] is fully extensible.  **docassemble**
+authors can include any of the more than 70,000 [Python] packages
+available on [PyPI], [Github], and other sites.  Code written by
+**docassemble** authors can easily be shared and re-used by others in
+the authoring community.
 
 **docassemble** is also a superior system because it is free and
 open-source.  [HotDocs] is a proprietary system, and its usefulness in
 a web server environment is limited by licensing requirements.  By
 contrast, **docassemble** is free and open source, and can easily be
 [set up in a multi-server environment] by anyone.
+
+#### **docassemble** vs. rules engines
 
 In addition to [A2J] and [HotDocs], there are other existing expert
 systems.  Many of these, like [Drools], are based on "rules engines."
@@ -250,16 +256,16 @@ application, **docassemble** may not be the best system.
 
 However, **docassemble**'s approach, which is to express logic using
 code, is likely to be better suited for legal applications.
-Developers of legal expert systems in the past have observed that when
-they ask lawyers to express their expertise in the form of rules, the
-lawyers first express the knowledge in the form of sequential logical
-statements (i.e., computer code) and then attempt to translate that
-"code" into "rules."  **docassemble** cuts out this extra step by
+Developers of legal expert systems have observed that when they ask
+lawyers to express their expertise in the form of rules, the lawyers
+first express the knowledge in the form of sequential logical
+statements (i.e., [pseudocode]) and then attempt to translate that
+"code" into "rules."  **docassemble** cuts out the extra step by
 allowing legal experts to express legal knowledge in the form that
 comes naturally.  Among general purpose programming languages,
-[Python] is very close to plain English, so that the code that
-embodies legal knowledge will look similar to the language of statutes
-and regulations, which are familiar to legal professionals.
+[Python] is very close to plain English.  As a result, **docassemble**
+code that embodies legal knowledge will look similar to the language
+of statutes and regulations, which is familiar to legal professionals.
 
 While **docassemble** is different from a "rules engine" because it
 allows authors to express knowledge as code, it also has some of the
@@ -381,3 +387,5 @@ the same interview on a single server.
 [set up in a multi-server environment]: {{ site.baseurl }}/docs/scalability.html
 [pull request]: https://help.github.com/articles/using-pull-requests/
 [Drools]: http://www.drools.org/
+[Javascript]: https://en.wikipedia.org/wiki/JavaScript
+[pseudocode]: https://en.wikipedia.org/wiki/Pseudocode
