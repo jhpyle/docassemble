@@ -26,7 +26,10 @@ Also, when you are using the demonstration, you can click "Source" to
 see the [YAML] source code that generated the question, along with a
 review of the conditions that led to the question being asked.  You
 can learn a lot about how to do things in **docassemble** by clicking
-"Source" and comparing the [YAML] source to the end result.
+"Source" and comparing the [YAML] source to the end result.  The
+"Source" tab is only available because the demo server is configured
+as a development server (by setting `debug: true` in the
+[configuration file]).  End users will not see a "Source" tab.
 
 # The YAML file that generates the demonstration interview
 
@@ -38,9 +41,9 @@ listed below.  Note that:
   should be asked.  The content of this file is listed below.
 * The code is not entirely self-explanatory, but for computer code, it
   is pretty close to plain English.
-* Note that complicated processes, such as a series of questions that
-  gather the names of the user's children, can be specified in just a
-  few lines of code.
+* Note that complicated processes, such as asking a series of
+  questions that gather the names of the user's children, can be
+  specified in just a few lines of code.
 * The questions and logic are not specified in any particular order.
   If docassemble needs to get the value of a variable, it knows where
   to find it.  This makes things easier for the author, who can
@@ -1576,3 +1579,4 @@ fields:
 
 [Bootstrap]: https://en.wikipedia.org/wiki/Bootstrap_%28front-end_framework%29
 [YAML]: https://en.wikipedia.org/wiki/YAML
+[configuration file]: {{ site.baseurl }}/docs/config.html

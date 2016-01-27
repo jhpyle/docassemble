@@ -4,16 +4,23 @@ title: How to install docassemble
 short_title: Installation
 ---
 
-These installation instructions assume you are installing into a
-Debian/Ubuntu environment, but **docassemble** has been developed to
-be operating-system-independent.  If you can install the dependencies,
-you should be able to get **docassemble** to run.  It has not been
-tested on Mac or Windows, but all the dependencies are likely to be
-available for installation on those platforms (see [MacTex] for LaTeX
-on Mac, and [MiKTeX] for LaTeX on Windows).
+If you just want to try out **docassemble**, it is strongly
+recommended that you [run it using Docker] rather than follow all of
+these installation instructions.  If you do not already have [Docker],
+you can install [Docker] on your machine whether you have a Mac, a PC,
+or a Linux machine.  And if you are only interested in seeing how
+**docassemble** works, you can run a [demonstration] on-line instead
+of installing **docassemble**.
 
-You may wish to [run it using Docker] rather than follow all of these
-installation instructions.
+The installation instructions in this section assume you are
+installing **docassemble** into a [Debian]/[Ubuntu] environment.
+However, **docassemble** has been developed to be
+operating-system-independent.  If you can install the dependencies,
+and you know what you're doing, you should be able to get
+**docassemble** to run.  It has not been tested on Mac or Windows, but
+all the dependencies are likely to be available for installation on
+those platforms (see [MacTex] for LaTeX on Mac, and [MiKTeX] for LaTeX
+on Windows).
 
 For instructions on installing **docassemble** in a multi-server
 arrangement, for example on [Amazon EC2], see the [scalability]
@@ -25,7 +32,8 @@ machine.
 
 ## Underlying packages
 
-The following [dependencies] can be installed from [Debian] packages:
+The following [dependencies] can be installed from [Debian] or
+[Ubuntu] packages:
 
 {% highlight bash %}
 sudo apt-get install python python-dev pandoc texlive texlive-latex-extra \
@@ -61,13 +69,13 @@ set up an appropriate locale for your region:
 sudo dpkg-reconfigure locales
 {% endhighlight %}
 
-(On Ubuntu, you may need to do `sudo apt-get install language-pack-en`.)
+(On [Ubuntu], you may need to do `sudo apt-get install language-pack-en`.)
 
 ## Installing **docassemble** itself
 
 The recommended way to install **docassemble** is to create a
 [Python virtual environment] that belongs to the web server user
-(`www-data` on Debian/Ubuntu), and to install **docassemble** and its
+(`www-data` on [Debian]/[Ubuntu]), and to install **docassemble** and its
 dependencies into this virtual environment using [pip].
 
 There are two reasons for this.  First, changing ownership of the
@@ -117,7 +125,7 @@ The core functionality of parsing interviews is in the
 `docassemble.base` package.  With these two packages only, you can use
 **docassemble** as an API.  The `docassemble.webapp` package contains
 the standard **docassemble** web application, and the `docassemble.demo`
-package contains a demonstration interview.
+package contains a [demonstration] interview.
 
 To install **docassemble** and its [Python] dependencies into the
 [Python virtual environment], first install the latest version of
@@ -169,7 +177,7 @@ exit
 
 # Setting up the web server
 
-The following instructions assume a Debian/Ubuntu system on which you
+The following instructions assume a [Debian]/[Ubuntu] system on which you
 have cloned the `docassemble` git repository into your home directory.
 You may have to make some changes to adapt this to your server.
 
@@ -411,6 +419,7 @@ The main **docassemble** log file is in
 [Python virtual environment]: http://docs.python-guide.org/en/latest/dev/virtualenvs/
 [pip]: https://pip.pypa.io/en/stable/
 [Debian]: https://www.debian.org/
+[Ubuntu]: http://www.ubuntu.com/
 [Amazon EC2]: https://aws.amazon.com/ec2/
 [Python]: https://www.python.org/
 [GitHub]: https://github.com/jhpyle/docassemble
@@ -425,3 +434,4 @@ The main **docassemble** log file is in
 [Apache]: https://en.wikipedia.org/wiki/Apache_HTTP_Server
 [PostgreSQL]: http://www.postgresql.org/
 [Amazon ECS]: https://aws.amazon.com/ecs/
+[demonstration]: {{ site.baseurl }}/demo.html

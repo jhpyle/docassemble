@@ -4,9 +4,6 @@ title: Installing on Docker
 short_title: Docker
 ---
 
-If you want to avoid having to install all of **docassemble**'s
-dependencies on your server, you can run it as a [Docker] image.
-
 [Docker] is a good platform for trying out **docassemble** for the
 first time.  It can also be used as a production environment; Amazon's
 [EC2 Container Service] can be used to maintain a cluster of
@@ -23,6 +20,10 @@ about 4GB will be taken up, but the installation process requires more
 storage than that to be available.
 
 # Installing Docker
+
+If you have a Mac, follow the [Docker installation instructions for OS X].
+
+If you have a Windows PC, follow the [Docker installation instructions for Windows].
 
 On [Amazon Linux] (assuming the username ec2-user):
 
@@ -233,3 +234,5 @@ docker push yourdockerhubusername/mydocassemble
 [Docker Hub]: https://hub.docker.com/
 [scalability]: {{ site.baseurl }}/docs/scalability.html
 [docassemble repository]: {{ site.github.repository_url }}
+[Docker installation instructions for Windows]: https://docs.docker.com/engine/installation/windows/
+[Docker installation instructions for OS X]: https://docs.docker.com/engine/installation/mac/

@@ -132,7 +132,9 @@ assigns names to icon files, so that you can refer to icons by a name
 of your choosing rather than by the name of the image file.
 
 For information on how to use the icons you have defined in an `image
-sets` block, see `decoration` and `buttons`.
+sets` block, see `decoration` in the [modifiers] section, `buttons`
+in the [setting variables] section, and "Inserting inline icons" in
+the [markup] section.
 
 # `images`
 
@@ -343,3 +345,5 @@ multi-lingual interviews.  See [modifiers] for information about the
 [Mako]: http://www.makotemplates.org/
 [language support]: {{ site.baseurl }}/docs/language.html
 [modifiers]: {{ site.baseurl }}/docs/modifiers.html
+[markup]: {{ site.baseurl }}/docs/markup.html
+[setting variables]: {{ site.baseurl }}/docs/fields.html

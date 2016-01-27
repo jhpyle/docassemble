@@ -138,6 +138,27 @@ yesno: user_is_cute
 In the above example, the picture will be shrunk or expanded so that
 its width is 250 pixels.
 
+# Inserting inline icons
+
+If you have defined "decorations" in an `image sets` block (see
+[initial blocks]), you can include these decorations as icons (having
+the same size as the text) by referencing them "emoji-style," putting
+colons around the decoration name.  This works not only in `question`
+and `subquestion` areas, but also in question choices.
+
+{% highlight yaml %}
+---
+generic object: Individual
+question: |
+  What is ${ x.possessive('gender') }?
+field: x.gender
+choices:
+  - "Male :male:": male
+  - "Female :female:": female
+  - "Other": other
+---
+{% endhighlight %}
+
 # Inserting audio and video
 
 In addition to using the `audio` and `video` [modifiers], you can
@@ -211,3 +232,4 @@ See [modifiers] for more information about including audio and video.
 [Pandoc]: http://johnmacfarlane.net/pandoc/
 [YouTube]: https://www.youtube.com/
 [Vimeo]: https://vimeo.com/
+[initial blocks]: {{ site.baseurl }}/docs/initial.html
