@@ -776,6 +776,9 @@ def oauth_callback(provider):
         db.session.add(user)
         db.session.commit()
     login_user(user, remember=False)
+    if 'i' in session and 'uid' in session:
+        save_user_dict_key(session['uid'], session['i'])
+        session['key_logged'] = True 
     secret = request.cookies.get('secret', None)
     newsecret = substitute_secret(secret, pad_to_16(MD5.MD5Hash(data=social_id).hexdigest()))
     if not current_user.is_anonymous:
