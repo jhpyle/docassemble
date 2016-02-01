@@ -8,6 +8,7 @@ import os
 import tailer
 import sys
 import datetime
+from dateutil import tz
 import time
 import pip.utils.logging
 import pip
@@ -28,6 +29,8 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError
 from docassemble.base.util import pickleable_objects, word, comma_and_list
 from docassemble.base.logger import logmessage
+from Crypto.Cipher import AES
+from Crypto.Hash import MD5
 import mimetypes
 import logging
 import pickle
@@ -44,6 +47,7 @@ from flask import make_response, abort, render_template, request, session, send_
 from flask.ext.login import LoginManager, UserMixin, login_user, logout_user, current_user
 from flask.ext.user import login_required, roles_required, UserManager, SQLAlchemyAdapter
 from flask.ext.user.forms import LoginForm
+from flask.ext.user import signals
 from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm, Utilities
 from flask_mail import Mail, Message
 import flask.ext.user.signals
@@ -52,7 +56,7 @@ from werkzeug import secure_filename, FileStorage
 from rauth import OAuth1Service, OAuth2Service
 from flask_kvsession import KVSessionExtension
 from simplekv.db.sql import SQLAlchemyStore
-from sqlalchemy import create_engine, MetaData, Sequence
+from sqlalchemy import create_engine, MetaData, Sequence, or_, and_
 from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Messages, Supervisors
 from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock
@@ -108,8 +112,8 @@ app.config['USER_AFTER_CHANGE_PASSWORD_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_CHANGE_USERNAME_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_CONFIRM_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_FORGOT_PASSWORD_ENDPOINT'] = 'user.login'
-app.config['USER_AFTER_LOGIN_ENDPOINT'] = 'index'
-app.config['USER_AFTER_LOGOUT_ENDPOINT'] = 'index'
+app.config['USER_AFTER_LOGIN_ENDPOINT'] = 'interview_list'
+app.config['USER_AFTER_LOGOUT_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_REGISTER_ENDPOINT'] = 'index'
 app.config['USER_AFTER_RESEND_CONFIRM_EMAIL_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_RESET_PASSWORD_ENDPOINT'] = 'user.login' 
@@ -195,7 +199,7 @@ SHOW_LOGIN = daconfig.get('show_login', True)
 #USER_PACKAGES = daconfig.get('user_packages', '/var/lib/docassemble/dist-packages')
 #sys.path.append(USER_PACKAGES)
 #if USE_PROGRESS_BAR:
-initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
+initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None), url_args=dict())
 #else:
 #    initial_dict = dict(_internal=dict(tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
 if 'initial_dict' in daconfig:
@@ -423,13 +427,154 @@ for word_file in word_file_list:
         logmessage("Error reading " + str(word_file) + ": yaml file not found.")
 
 def logout():
+    secret = request.cookies.get('secret', None)
+    if secret is None:
+        secret = ''.join(random.choice(string.ascii_letters) for i in range(16))
+        set_cookie = True
+    else:
+        set_cookie = False
     user_manager = current_app.user_manager
     flask.ext.user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
     logout_user()
-    reset_session(session.get('i', default_yaml_filename))
+    delete_session()
     flash(word('You have signed out successfully.'), 'success')
     next = request.args.get('next', _endpoint_url(user_manager.after_logout_endpoint))
-    return redirect(next)
+    response = redirect(next)
+    if set_cookie:
+        response.set_cookie('secret', secret)
+    return response
+
+def _call_or_get(function_or_property):
+    return function_or_property() if callable(function_or_property) else function_or_property
+
+def pad_to_16(the_string):
+    if len(the_string) >= 16:
+        return the_string[:16]
+    return str(the_string) + (16 - len(the_string)) * '0'
+
+def substitute_secret(oldsecret, newsecret):
+    if oldsecret == None or oldsecret == newsecret:
+        return newsecret
+    user_code = session.get('uid', None)
+    filename = session.get('i', None)
+    the_secret = newsecret
+    changed = False
+    for record in Attachments.query.filter_by(key=user_code, filename=filename).all():
+        if record.dictionary:
+            the_dict = decrypt_dictionary(record.dictionary, oldsecret)
+            if the_dict['_internal']['secret'] is not None:
+                the_secret = the_dict['_internal']['secret']
+            else:
+                record.dictionary = encrypt_dictionary(the_dict, newsecret)
+                changed = True
+    if changed:
+        db.session.commit()
+    changed = False
+    for record in UserDict.query.filter_by(key=user_code, filename=filename).order_by(UserDict.indexno).all():
+        the_dict = decrypt_dictionary(record.dictionary, oldsecret)
+        if the_dict['_internal']['secret'] is not None:
+            the_secret = the_dict['_internal']['secret']
+        else:
+            record.dictionary = encrypt_dictionary(the_dict, newsecret)
+            changed = True
+    if changed:
+        db.session.commit()
+    return the_secret
+
+def _do_login_user(user, password, secret, next, remember_me=False):
+    # User must have been authenticated
+    if not user: return unauthenticated()
+
+    # Check if user account has been disabled
+    if not _call_or_get(user.is_active):
+        flash(word('Your account has not been enabled.'), 'error')
+        return redirect(url_for('user.login'))
+
+    # Check if user has a confirmed email address
+    user_manager = current_app.user_manager
+    if user_manager.enable_email and user_manager.enable_confirm_email \
+            and not current_app.user_manager.enable_login_without_confirm_email \
+            and not user.has_confirmed_email():
+        url = url_for('user.resend_confirm_email')
+        flash('Your email address has not yet been confirmed. Check your email Inbox and Spam folders for the confirmation email or <a href="' + str(url) + '">Re-send confirmation email</a>.', 'error')
+        return redirect(url_for('user.login'))
+
+    # Use Flask-Login to sign in user
+    #print('login_user: remember_me=', remember_me)
+    login_user(user, remember=remember_me)
+
+    if 'i' in session and 'uid' in session:
+        save_user_dict_key(session['uid'], session['i'])
+        session['key_logged'] = True 
+
+    # Send user_logged_in signal
+    signals.user_logged_in.send(current_app._get_current_object(), user=user)
+
+    # Prepare one-time system message
+    flash(word('You have signed in successfully.'), 'success')
+
+    newsecret = substitute_secret(secret, pad_to_16(MD5.MD5Hash(data=password).hexdigest()))
+    # Redirect to 'next' URL
+    response = redirect(next)
+    response.set_cookie('secret', newsecret)
+    return response
+
+def _endpoint_url(endpoint):
+    url = '/'
+    if endpoint:
+        url = url_for(endpoint)
+    return url
+
+def custom_login():
+    #logmessage("Got to login page")
+    user_manager =  current_app.user_manager
+    db_adapter = user_manager.db_adapter
+    secret = request.cookies.get('secret', None)
+    next = request.args.get('next', _endpoint_url(user_manager.after_login_endpoint))
+    reg_next = request.args.get('reg_next', _endpoint_url(user_manager.after_register_endpoint))
+
+    # Immediately redirect already logged in users
+    if _call_or_get(current_user.is_authenticated) and user_manager.auto_login_at_login:
+        return redirect(next)
+
+    # Initialize form
+    login_form = user_manager.login_form(request.form)          # for login.html
+    register_form = user_manager.register_form()                # for login_or_register.html
+    if request.method != 'POST':
+        login_form.next.data     = register_form.next.data = next
+        login_form.reg_next.data = register_form.reg_next.data = reg_next
+
+    # Process valid POST
+    if request.method == 'POST' and login_form.validate():
+        # Retrieve User
+        user = None
+        user_email = None
+        if user_manager.enable_username:
+            # Find user record by username
+            user = user_manager.find_user_by_username(login_form.username.data)
+            user_email = None
+            # Find primary user_email record
+            if user and db_adapter.UserEmailClass:
+                user_email = db_adapter.find_first_object(db_adapter.UserEmailClass,
+                        user_id=int(user.get_id()),
+                        is_primary=True,
+                        )
+            # Find user record by email (with form.username)
+            if not user and user_manager.enable_email:
+                user, user_email = user_manager.find_user_by_email(login_form.username.data)
+        else:
+            # Find user by email (with form.email)
+            user, user_email = user_manager.find_user_by_email(login_form.email.data)
+
+        if user:
+            # Log user in
+            return _do_login_user(user, login_form.password.data, secret, login_form.next.data, login_form.remember_me.data)
+
+    # Process GET or invalid POST
+    return render_template(user_manager.login_template,
+            form=login_form,
+            login_form=login_form,
+            register_form=register_form)
 
 def setup_app(app, db):
     from docassemble.webapp.users.forms import MyRegisterForm
@@ -438,12 +583,12 @@ def setup_app(app, db):
     #from docassemble.webapp.pages import views
     #from docassemble.webapp.users import views
     db_adapter = SQLAlchemyAdapter(db, User, UserAuthClass=UserAuth)
-    user_manager = UserManager(db_adapter, app, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout)
+    user_manager = UserManager(db_adapter, app, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, login_view_function=custom_login)
     return(app)
 
 setup_app(app, db)
 lm = LoginManager(app)
-lm.login_view = 'login'
+lm.login_view = 'user.login'
 
 supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
 if supervisor_url:
@@ -610,19 +755,19 @@ class FacebookSignIn(OAuthSignIn):
 @app.route('/authorize/<provider>', methods=['POST', 'GET'])
 def oauth_authorize(provider):
     if not current_user.is_anonymous:
-        return redirect(url_for('index'))
+        return redirect(url_for('interview_list'))
     oauth = OAuthSignIn.get_provider(provider)
     return oauth.authorize()
 
 @app.route('/callback/<provider>')
 def oauth_callback(provider):
     if not current_user.is_anonymous:
-        return redirect(url_for('index'))
+        return redirect(url_for('interview_list'))
     oauth = OAuthSignIn.get_provider(provider)
     social_id, username, email = oauth.callback()
     if social_id is None:
         flash(word('Authentication failed.'), 'error')
-        return redirect(url_for('index'))
+        return redirect(url_for('interview_list'))
     user = User.query.filter_by(social_id=social_id).first()
     if not user:
         user = User.query.filter_by(email=email).first()
@@ -631,10 +776,14 @@ def oauth_callback(provider):
         db.session.add(user)
         db.session.commit()
     login_user(user, remember=False)
+    secret = request.cookies.get('secret', None)
+    newsecret = substitute_secret(secret, pad_to_16(MD5.MD5Hash(data=social_id).hexdigest()))
     if not current_user.is_anonymous:
         #update_user_id(session['uid'])
         flash(word('Welcome!  You are logged in as ') + email, 'success')
-    return redirect(url_for('index'))
+    response = redirect(url_for('interview_list'))
+    response.set_cookie('secret', newsecret)
+    return response
 
 # @app.route('/login')
 # def login():
@@ -654,12 +803,14 @@ def google_page():
 @app.route("/user/post-sign-in", methods=['GET'])
 def post_sign_in():
     session_id = session.get('uid', None)
-    return redirect(url_for('index'))
+    return redirect(url_for('interview_list'))
 
 @app.route("/exit", methods=['POST', 'GET'])
 def exit():
     session_id = session.get('uid', None)
     yaml_filename = session.get('i', None)
+    if 'key_logged' in session:
+        del session['key_logged']
     if session_id is not None and yaml_filename is not None:
         reset_user_dict(session_id, yaml_filename)
     return redirect(exit_page)
@@ -669,34 +820,54 @@ def cleanup_sessions():
     kv_session.cleanup_sessions()
     return render_template('base_templates/blank.html')
 
+def add_timestamps(the_dict):
+    the_dict['_internal']['starttime'] = datetime.datetime.utcnow()
+    the_dict['_internal']['modtime'] = datetime.datetime.utcnow()
+    return
+
+def fresh_dictionary():
+    the_dict = copy.deepcopy(initial_dict)
+    add_timestamps(the_dict)
+    return the_dict    
+
 @app.route("/", methods=['POST', 'GET'])
 def index():
     #seq = Sequence(message_sequence)
     #nextid = connection.execute(seq)
     session_id = session.get('uid', None)
+    secret = request.cookies.get('secret', None)
+    if secret is None:
+        secret = ''.join(random.choice(string.ascii_letters) for i in range(16))
+        set_cookie = True
+    else:
+        set_cookie = False
     yaml_filename = session.get('i', default_yaml_filename)
     steps = 0
     need_to_reset = False
+    secret_parameter = request.args.get('sid', None)
     yaml_parameter = request.args.get('i', None)
     session_parameter = request.args.get('session', None)
+    if secret_parameter is not None:
+        if secret != secret_parameter:
+            secret = secret_parameter
+            set_cookie = True
     if yaml_parameter is not None:
         yaml_filename = yaml_parameter
-        user_code, user_dict = reset_session(yaml_filename)
-        session_id = session.get('uid', None)
-        if 'key_logged' in session:
-            del session['key_logged']
-        need_to_reset = True
+        if session_parameter is None:
+            user_code, user_dict = reset_session(yaml_filename, secret)
+            session_id = session.get('uid', None)
+            if 'key_logged' in session:
+                del session['key_logged']
+            need_to_reset = True
     if session_parameter is not None:
         session_id = session_parameter
         session['uid'] = session_id
-        user_code = session_id
-        steps, user_dict = fetch_user_dict(user_code, yaml_filename)
         if 'key_logged' in session:
             del session['key_logged']
         need_to_reset = True
     if session_id:
         user_code = session_id
-        steps, user_dict = fetch_user_dict(user_code, yaml_filename)
+        steps, user_dict = fetch_user_dict(user_code, yaml_filename, secret)
         if user_dict is None:
             del user_code
             del user_dict
@@ -704,11 +875,16 @@ def index():
         user_dict
         user_code
     except:
-        user_code, user_dict = reset_session(yaml_filename)
+        user_code, user_dict = reset_session(yaml_filename, secret)
         if 'key_logged' in session:
             del session['key_logged']
         steps = 0
     action = None
+    if 'multi_user' in user_dict and user_dict['multi_user'] and user_dict['_internal']['secret'] != secret:
+        user_dict['_internal']['secret'] = secret
+    elif user_dict['_internal']['secret'] is not None and secret != user_dict['_internal']['secret']:
+        secret = user_dict['_internal']['secret']
+        set_cookie = True
     if current_user.is_authenticated and 'key_logged' not in session:
         save_user_dict_key(user_code, yaml_filename)
         session['key_logged'] = True 
@@ -722,7 +898,7 @@ def index():
                 exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)
             need_to_reset = True
     if need_to_reset:
-        save_user_dict(user_code, user_dict, yaml_filename)
+        save_user_dict(user_code, user_dict, yaml_filename, secret)
         return redirect(url_for('index'))
     post_data = request.form.copy()
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data and '_question_number' in post_data:
@@ -741,7 +917,7 @@ def index():
         del post_data['_email_attachments']
         del post_data['_attachment_email_address']
         logmessage("Got e-mail request for " + str(question_number) + " with e-mail " + str(attachment_email_address) + " and rtf inclusion of " + str(include_rtfs) + " and using yaml file " + yaml_filename)
-        the_user_dict = get_attachment_info(user_code, question_number, yaml_filename)
+        the_user_dict = get_attachment_info(user_code, question_number, yaml_filename, secret)
         if the_user_dict is not None:
             logmessage("the_user_dict is not none!")
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
@@ -797,7 +973,7 @@ def index():
         #logmessage("Went back")
     elif 'filename' in request.args:
         #logmessage("Got a GET statement with filename!")
-        the_user_dict = get_attachment_info(user_code, request.args.get('question'), request.args.get('filename'))
+        the_user_dict = get_attachment_info(user_code, request.args.get('question'), request.args.get('filename'), secret)
         if the_user_dict is not None:
             #logmessage("the_user_dict is not none!")
             interview = docassemble.base.interview_cache.get_interview(request.args.get('filename'))
@@ -870,12 +1046,12 @@ def index():
                 new_file.write_content(theImage)
                 new_file.finalize()
                 #sys.stderr.write("Saved theImage\n")
-                string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ", filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
+                the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ", filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
             else:
-                string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ")"
-            #sys.stderr.write(string + "\n")
+                the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ")"
+            #sys.stderr.write(the_string + "\n")
             try:
-                exec(string, user_dict)
+                exec(the_string, user_dict)
                 changed = True
                 steps += 1
             except Exception as errMess:
@@ -968,12 +1144,12 @@ def index():
                             for (filename, file_number, mimetype, extension) in files_to_process:
                                 elements.append("docassemble.base.core.DAFile('" + file_field + "[" + str(indexno) + "]', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')")
                                 indexno += 1
-                            string = file_field + " = docassemble.base.core.DAFileList('" + file_field + "', elements=[" + ", ".join(elements) + "])"
+                            the_string = file_field + " = docassemble.base.core.DAFileList('" + file_field + "', elements=[" + ", ".join(elements) + "])"
                         else:
-                            string = file_field + " = None"
-                        logmessage("Doing " + string)
+                            the_string = file_field + " = None"
+                        logmessage("Doing " + the_string)
                         try:
-                            exec(string, user_dict)
+                            exec(the_string, user_dict)
                             changed = True
                             steps += 1
                         except Exception as errMess:
@@ -1008,9 +1184,9 @@ def index():
                     eval(key, user_dict)
                 except:
                     #logmessage("setting key " + str(key) + " to empty dict")
-                    string = key + ' = dict()'
+                    the_string = key + ' = dict()'
                     try:
-                        exec(string, user_dict)
+                        exec(the_string, user_dict)
                         known_variables[key] = True
                     except:
                         raise DAError("cannot initialize " + key)
@@ -1055,10 +1231,10 @@ def index():
             #else:
                 #continue
                 #error_messages.append(("error", "Error: multiple choice values were supplied, but docassemble was not waiting for an answer to a multiple choice question."))
-        string = key + ' = ' + data
-        logmessage("Doing " + str(string))
+        the_string = key + ' = ' + data
+        logmessage("Doing " + str(the_string))
         try:
-            exec(string, user_dict)
+            exec(the_string, user_dict)
             changed = True
             steps += 1
         except Exception as errMess:
@@ -1078,23 +1254,23 @@ def index():
         user_dict['_internal']['steps_offset'] = steps
     if len(interview_status.attachments) > 0:
         #logmessage("Updating attachment info")
-        update_attachment_info(user_code, user_dict, interview_status)
+        update_attachment_info(user_code, user_dict, interview_status, secret)
     if interview_status.question.question_type == "restart":
         url_args = user_dict['url_args']
-        user_dict = copy.deepcopy(initial_dict)
+        user_dict = fresh_dictionary()
         user_dict['url_args'] = url_args
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
         reset_user_dict(user_code, yaml_filename)
-        save_user_dict(user_code, user_dict, yaml_filename)
+        save_user_dict(user_code, user_dict, yaml_filename, secret)
         steps = 0
         changed = False
         interview.assemble(user_dict, interview_status)
     if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
         user_dict['_internal']['progress'] = interview_status.question.progress
     if interview_status.question.question_type == "exit":
-        user_dict = copy.deepcopy(initial_dict)
+        user_dict = fresh_dictionary()
         reset_user_dict(user_code, yaml_filename)
-        save_user_dict(user_code, user_dict, yaml_filename)
+        save_user_dict(user_code, user_dict, yaml_filename, secret)
         if interview_status.questionText != '':
             return redirect(interview_status.questionText)
         else:
@@ -1111,7 +1287,7 @@ def index():
     user_dict['_internal']['answers'] = dict()
     if changed and interview_status.question.interview.use_progress_bar:
         advance_progress(user_dict)
-    save_user_dict(user_code, user_dict, yaml_filename, changed=changed)
+    save_user_dict(user_code, user_dict, yaml_filename, secret, changed=changed)
     flash_content = ""
     messages = get_flashed_messages(with_categories=True) + error_messages
     if messages:
@@ -1143,7 +1319,9 @@ def index():
           var navMain = $("#navbar-collapse");
           navMain.on("click", "a", null, function () {
             $(this).css('color', '')
-            navMain.collapse('hide');
+            if (!($(this).hasClass("dropdown-toggle"))){
+              navMain.collapse('hide');
+            }
           });
           $("#sourcetoggle").on("click", function(){
             $(this).toggleClass("sourceactive");
@@ -1188,16 +1366,19 @@ def index():
         content = as_html(interview_status, extra_scripts, extra_css, url_for, DEBUG, ROOT)
         if interview_status.using_screen_reader:
             for question_type in ['question', 'help']:
-                phrase = codecs.encode(to_text(interview_status.screen_reader_text[question_type]).encode('utf-8'), 'base64').decode().replace('\n', '')
+                #phrase = codecs.encode(to_text(interview_status.screen_reader_text[question_type]).encode('utf-8'), 'base64').decode().replace('\n', '')
+                phrase = to_text(interview_status.screen_reader_text[question_type])
+                encrypted_phrase = encrypt_phrase(phrase, secret)
                 existing_entry = SpeakList.query.filter_by(filename=yaml_filename, key=user_code, question=interview_status.question.number, type=question_type, language=the_language, dialect=the_dialect).first()
                 if existing_entry:
-                    if phrase != existing_entry.phrase:
+                    existing_phrase = decrypt_phrase(existing_entry.phrase, secret)
+                    if phrase != existing_phrase:
                         logmessage("The phrase changed; updating it")
-                        existing_entry.phrase = phrase
+                        existing_entry.phrase = encrypted_phrase
                         existing_entry.upload = None
                         db.session.commit()
                 else:
-                    new_entry = SpeakList(filename=yaml_filename, key=user_code, phrase=phrase, question=interview_status.question.number, type=question_type, language=the_language, dialect=the_dialect)
+                    new_entry = SpeakList(filename=yaml_filename, key=user_code, phrase=encrypted_phrase, question=interview_status.question.number, type=question_type, language=the_language, dialect=the_dialect)
                     db.session.add(new_entry)
                     db.session.commit()
         output = '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet">\n    <link href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
@@ -1252,6 +1433,8 @@ def index():
     #logmessage(output.encode('utf8'))
     response = make_response(output.encode('utf8'), '200 OK')
     response.headers['Content-type'] = 'text/html; charset=utf-8'
+    if set_cookie:
+        response.set_cookie('secret', secret)
     return response
 
 if __name__ == "__main__":
@@ -1261,15 +1444,39 @@ def process_bracket_expression(match):
     #return("[" + repr(urllib.unquote(match.group(1)).encode('unicode_escape')) + "]")
     return("[" + repr(codecs.decode(match.group(1), 'base64').decode('utf-8')) + "]")
 
-def myb64unquote(string):
-    return(codecs.decode(string, 'base64').decode('utf-8'))
+def myb64unquote(the_string):
+    return(codecs.decode(the_string, 'base64').decode('utf-8'))
     
 def progress_bar(progress):
     if progress == 0:
         return('');
     return('<div class="progress"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;"></div></div>\n')
 
-def get_unique_name(filename):
+def pad(the_string):
+    return the_string + (16 - len(the_string) % 16) * chr(16 - len(the_string) % 16)
+
+def unpad(the_string):
+    return the_string[0:-ord(the_string[-1])]
+
+def encrypt_phrase(phrase, secret):
+    iv = app.secret_key[:16]
+    encrypter = AES.new(secret, AES.MODE_CBC, iv)
+    return iv + codecs.encode(encrypter.encrypt(pad(phrase)), 'base64').decode()
+
+def decrypt_phrase(phrase_string, secret):
+    decrypter = AES.new(secret, AES.MODE_CBC, phrase_string[:16])
+    return unpad(decrypter.decrypt(codecs.decode(phrase_string[16:], 'base64')))
+
+def encrypt_dictionary(the_dict, secret):
+    iv = ''.join(random.choice(string.ascii_letters) for i in range(16))
+    encrypter = AES.new(secret, AES.MODE_CBC, iv)
+    return iv + codecs.encode(encrypter.encrypt(pad(pickle.dumps(pickleable_objects(the_dict)))), 'base64').decode()
+
+def decrypt_dictionary(dict_string, secret):
+    decrypter = AES.new(secret, AES.MODE_CBC, dict_string[:16])
+    return pickle.loads(unpad(decrypter.decrypt(codecs.decode(dict_string[16:], 'base64'))))
+
+def get_unique_name(filename, secret):
     while True:
         newname = ''.join(random.choice(string.ascii_letters) for i in range(32))
         existing_key = UserDict.query.filter_by(key=newname).first()
@@ -1280,7 +1487,7 @@ def get_unique_name(filename):
         # if cur.fetchone():
         #     #logmessage("Key already exists in database")
         #     continue
-        new_user_dict = UserDict(key=newname, filename=filename, dictionary=codecs.encode(pickle.dumps(copy.deepcopy(initial_dict)), 'base64').decode())
+        new_user_dict = UserDict(key=newname, filename=filename, dictionary=encrypt_dictionary(fresh_dictionary(), secret))
         db.session.add(new_user_dict)
         db.session.commit()
         # cur.execute("INSERT INTO userdict (key, filename, dictionary) values (%s, %s, %s);", [newname, filename, codecs.encode(pickle.dumps(initial_dict.copy()), 'base64').decode()])
@@ -1294,11 +1501,12 @@ def get_unique_name(filename):
 #         conn.commit()
 #     return
     
-def get_attachment_info(the_user_code, question_number, filename):
+def get_attachment_info(the_user_code, question_number, filename, secret):
     the_user_dict = None
     existing_entry = Attachments.query.filter_by(key=the_user_code, question=question_number, filename=filename).first()
     if existing_entry and existing_entry.dictionary:
-        the_user_dict = pickle.loads(codecs.decode(existing_entry.dictionary, 'base64'))
+        #the_user_dict = pickle.loads(codecs.decode(existing_entry.dictionary, 'base64'))
+        the_user_dict = decrypt_dictionary(existing_entry.dictionary, secret)
     # cur = conn.cursor()
     # cur.execute("select dictionary from attachments where key=%s and question=%s and filename=%s", [the_user_code, question_number, filename])
     # for d in cur:
@@ -1308,11 +1516,11 @@ def get_attachment_info(the_user_code, question_number, filename):
     # conn.commit()
     return the_user_dict
 
-def update_attachment_info(the_user_code, the_user_dict, the_interview_status):
+def update_attachment_info(the_user_code, the_user_dict, the_interview_status, secret):
     #logmessage("Got to update_attachment_info")
     Attachments.query.filter_by(key=the_user_code, question=the_interview_status.question.number, filename=the_interview_status.question.interview.source.path).delete()
     db.session.commit()
-    new_attachment = Attachments(key=the_user_code, dictionary=codecs.encode(pickle.dumps(pickleable_objects(the_user_dict)), 'base64').decode(), question = the_interview_status.question.number, filename=the_interview_status.question.interview.source.path)
+    new_attachment = Attachments(key=the_user_code, dictionary=encrypt_dictionary(the_user_dict, secret), question = the_interview_status.question.number, filename=the_interview_status.question.interview.source.path)
     db.session.add(new_attachment)
     db.session.commit()
     # cur = conn.cursor()
@@ -1324,14 +1532,15 @@ def update_attachment_info(the_user_code, the_user_dict, the_interview_status):
     #logmessage("Insert into attachments (key, dictionary, question, filename) values (" + the_user_code + ", saved_user_dict, " + str(the_interview_status.question.number) + ", " + the_interview_status.question.interview.source.path + ")")
     return
 
-def fetch_user_dict(user_code, filename):
+def fetch_user_dict(user_code, filename, secret):
     user_dict = None
     steps = 0
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).filter(UserDict.key == user_code and UserDict.filename == filename).subquery()
     results = db.session.query(UserDict.dictionary, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno)
     for d in results:
         if d.dictionary:
-            user_dict = pickle.loads(codecs.decode(d.dictionary, 'base64'))
+            #user_dict = pickle.loads(codecs.decode(d.dictionary, 'base64'))
+            user_dict = decrypt_dictionary(d.dictionary, secret)
         if d.count:
             steps = d.count
         break
@@ -1346,7 +1555,7 @@ def fetch_user_dict(user_code, filename):
     # conn.commit()
     return steps, user_dict
 
-def fetch_previous_user_dict(user_code, filename):
+def fetch_previous_user_dict(user_code, filename, secret):
     user_dict = None
     max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(UserDict.key == user_code and UserDict.filename == filename).scalar()
     # cur = conn.cursor()
@@ -1359,7 +1568,7 @@ def fetch_previous_user_dict(user_code, filename):
         db.session.commit()
         #cur.execute("delete from userdict where indexno=%s", [max_indexno])
     #conn.commit()
-    return fetch_user_dict(user_code, filename)
+    return fetch_user_dict(user_code, filename, secret)
 
 def advance_progress(user_dict):
     user_dict['_internal']['progress'] += 0.05*(100-user_dict['_internal']['progress'])
@@ -1389,15 +1598,16 @@ def save_user_dict_key(user_code, filename):
     # conn.commit()
     return
 
-def save_user_dict(user_code, user_dict, filename, changed=False):
+def save_user_dict(user_code, user_dict, filename, secret, changed=False):
     #cur = conn.cursor()
     #logmessage(repr(pickle.dumps(pickleable_objects(user_dict))))
+    user_dict['_internal']['modtime'] = datetime.datetime.utcnow()
     if current_user.is_authenticated and not current_user.is_anonymous:
         the_user_id = current_user.id
     else:
         the_user_id = None
     if changed is True:
-        new_record = UserDict(key=user_code, dictionary=codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), filename=filename, user_id=the_user_id)
+        new_record = UserDict(key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id)
         db.session.add(new_record)
         db.session.commit()
         #cur.execute("INSERT INTO userdict (key, dictionary, filename, user_id) values (%s, %s, %s, %s)", [user_code, codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), filename, the_user_id])
@@ -1408,13 +1618,13 @@ def save_user_dict(user_code, user_dict, filename, changed=False):
         # for d in cur:
         #     max_indexno = d[0]
         if max_indexno is None:
-            new_record = UserDict(key=user_code, dictionary=codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), filename=filename, user_id=the_user_id)
+            new_record = UserDict(key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id)
             db.session.add(new_record)
             db.session.commit()
             #cur.execute("INSERT INTO userdict (key, dictionary, filename, user_id) values (%s, %s, %s, %s)", [user_code, codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), filename, the_user_id])
         else:
             for record in UserDict.query.filter_by(key=user_code, filename=filename, indexno=max_indexno).all():
-                record.dictionary = codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode()
+                record.dictionary = encrypt_dictionary(user_dict, secret)
             db.session.commit()
             #cur.execute("UPDATE userdict SET dictionary=%s where key=%s and filename=%s and indexno=%s", [codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), user_code, filename, max_indexno])
     #conn.commit()
@@ -1501,9 +1711,9 @@ def make_navbar(status, page_title, steps, show_login):
     if show_login:
         if current_user.is_anonymous:
             #logmessage("is_anonymous is " + str(current_user.is_anonymous))
-            navbar += '            <li><a href="' + url_for('user.login', next=url_for('index')) + '">' + word('Sign in') + '</a></li>' + "\n"
+            navbar += '            <li><a href="' + url_for('user.login', next=url_for('interview_list')) + '">' + word('Sign in') + '</a></li>' + "\n"
         else:
-            navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">' + current_user.email + '<b class="caret"></b></a><ul class="dropdown-menu">'
+            navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + current_user.email + '<span class="caret"></span></a><ul class="dropdown-menu">'
             if current_user.has_role('admin', 'developer'):
                 navbar +='<li><a href="' + url_for('package_page') + '">' + word('Package Management') + '</a></li>'
                 navbar +='<li><a href="' + url_for('logs') + '">' + word('Logs') + '</a></li>'
@@ -1513,7 +1723,7 @@ def make_navbar(status, page_title, steps, show_login):
                     navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
                     navbar +='<li><a href="' + url_for('privilege_list') + '">' + word('Privileges List') + '</a></li>'
                     navbar +='<li><a href="' + url_for('config_page') + '">' + word('Configuration') + '</a></li>'
-            navbar += '<li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li><li><a href="' + url_for('user.logout') + '">' + word('Sign out') + '</a></li></ul></li>'
+            navbar += '<li><a href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a></li><li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li><li><a href="' + url_for('user.logout') + '">' + word('Sign out') + '</a></li></ul></li>'
     else:
         navbar += '            <li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li>'
     navbar += """\
@@ -1532,11 +1742,19 @@ def utility_processor():
         return 'local$' + ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
     return dict(random_social=random_social, word=word)
 
-def reset_session(yaml_filename):
+def delete_session():
+    for key in ['i', 'uid', 'key_logged']:
+        if key in session:
+            del session[key]
+    return
+
+def reset_session(yaml_filename, secret):
     session['i'] = yaml_filename
-    session['uid'] = get_unique_name(yaml_filename)
+    session['uid'] = get_unique_name(yaml_filename, secret)
+    if 'key_logged' in session:
+        del session['key_logged']
     user_code = session['uid']
-    user_dict = copy.deepcopy(initial_dict)
+    user_dict = fresh_dictionary()
     return(user_code, user_dict)
 
 def _endpoint_url(endpoint):
@@ -1555,6 +1773,7 @@ def speak_file():
     file_format = request.args.get('format', None)
     the_language = request.args.get('language', None)
     the_dialect = request.args.get('dialect', None)
+    secret = request.cookies.get('secret', None)
     if file_format not in ['mp3', 'ogg'] or not (filename and key and question and question_type and file_format and the_language and the_dialect):
         logmessage("Could not serve speak file because invalid or missing data was provided: filename " + str(filename) + " and key " + str(key) + " and question number " + str(question) + " and question type " + str(question_type) + " and language " + str(the_language) + " and dialect " + str(the_dialect))
         abort(404)
@@ -1573,7 +1792,8 @@ def speak_file():
                 logmessage("Could not serve speak file because voicerss not enabled")
                 abort(404)
             new_file_number = get_new_file_number(key, 'speak.mp3', yaml_file_name=filename)
-            phrase = codecs.decode(entry.phrase, 'base64')
+            #phrase = codecs.decode(entry.phrase, 'base64')
+            phrase = decrypt_phrase(entry.phrase)
             url = "https://api.voicerss.org/?" + urllib.urlencode({'key': voicerss_config['key'], 'src': phrase, 'hl': str(entry.language) + '-' + str(entry.dialect)})
             logmessage("Retrieving " + url)
             audio_file = SavedFile(new_file_number, extension='mp3', fix=True)
@@ -2389,7 +2609,6 @@ def test_post():
     logtext = url_for('test_post', **newargs)
     #return render_template('pages/testpost.html', error=errmess, logtext=logtext), 200
     return redirect(logtext, code=307)
-    #PPP
 
 @app.route('/packagestatic/<package>/<filename>', methods=['GET'])
 def package_static(package, filename):
@@ -2575,3 +2794,27 @@ def utilities():
                     fields_output += '      "' + field + '": ' + default + "\n"
                 fields_output += "---"
     return render_template('pages/utilities.html', form=form, fields=fields_output)
+
+def nice_date_from_utc(timestamp):
+    return timestamp.replace(tzinfo=tz.tzutc()).astimezone(tz.tzlocal()).strftime('%c')
+
+@app.route('/interviews', methods=['GET', 'POST'])
+@login_required
+def interview_list():
+    secret = request.cookies.get('secret', None)
+    subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key).subquery()
+    interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary).filter(UserDictKeys.user_id == current_user.id).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).group_by(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary)
+    logmessage(str(interview_query))
+    interviews = list()
+    for interview_info in interview_query:
+        interview = docassemble.base.interview_cache.get_interview(interview_info.filename)
+        if len(interview.metadata):
+            metadata = interview.metadata[0]
+            interview_title = metadata.get('title', word('Untitled')).rstrip()
+        else:
+            interview_title = word('Untitled')
+        dictionary = decrypt_dictionary(interview_info.dictionary, secret)
+        starttime = nice_date_from_utc(dictionary['_internal']['starttime'])
+        modtime = nice_date_from_utc(dictionary['_internal']['modtime'])
+        interviews.append({'interview_info': interview_info, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'title': interview_title})
+    return render_template('pages/interviews.html', interviews=sorted(interviews, key=lambda x: x['dict']['_internal']['starttime']))

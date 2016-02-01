@@ -1,0 +1,13 @@
+{% extends 'flask_user/public_base.html' %}
+
+{% block content %}
+
+<h3 class="page-header">{{ word('Resume an interview') }}</h3>
+<p>{{ word('Click to resume an interview you already started.') }}</p>
+
+<ul>
+  {% for interview in interviews %}
+  <li><a href="{{ url_for('index', i=interview['interview_info'].filename, session=interview['interview_info'].key) }}">{{ interview['title'] }}</a> {{ word('started') }} {{ interview['starttime'] }}</li>
+  {% endfor %}
+</ul>
+{% endblock %}
