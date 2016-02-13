@@ -316,7 +316,7 @@ you supply to **docassemble** by editing the
 for the "Sign in with Google" and "Sign in with Facebook" buttons to
 work, you will need to register your site on
 [Google Developers Console](https://console.developers.google.com/)
-and on [Facebook Developers](https://developers.facebook.com/) and .
+and on [Facebook Developers](https://developers.facebook.com/).
 You may also wish to obtain developer keys for the
 [Google Maps Geocoding API] and for [VoiceRSS] text-to-speech
 conversion.

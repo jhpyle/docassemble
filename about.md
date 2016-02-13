@@ -142,6 +142,24 @@ modules by reference.  The web interface allows [Python packages] to
 be installed either as .zip files, through the cloning of [GitHub]
 repositories, or through installation from [PyPI].
 
+### Secure
+
+User answers are stored on a server in an encrypted format, so that
+even if someone were to gain access to the server, they would need to
+somehow figure out a user's password in order to decrypt the user's
+answers.  (Users who are not logged in yet are given a random key,
+which is stored as a cookie.)  User passwords are stored in hashed
+format, not in plain text, so that they cannot be discovered.
+
+**docassemble** deletes user information whenever possible.  For
+example, if a user finishes an interview and exits, the user's answers
+and any uploaded documents are deleted from the database.
+
+**docassemble** can easily be [set up] to run on [HTTPS] rather than
+[HTTP] in order to encrypt the traffic between the browser and the
+server.  SSL certificates are available at no cost from companies like
+[StartCom].
+
 ### Multilingual
 
 All of the text presented to the user of the **docassemble** web
@@ -389,3 +407,7 @@ the same interview on a single server.
 [Drools]: http://www.drools.org/
 [Javascript]: https://en.wikipedia.org/wiki/JavaScript
 [pseudocode]: https://en.wikipedia.org/wiki/Pseudocode
+[HTTP]: https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol
+[HTTPS]: https://en.wikipedia.org/wiki/HTTPS
+[set up]: {{ site.baseurl }}/docs/config.html
+[StartCom]: https://www.startssl.com/
