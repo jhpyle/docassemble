@@ -678,7 +678,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None
                     if ('path' in file_info):
                         failed = True
                         with open(file_info['path'], 'r') as fp:
-                            msg.attach(file_info['filename'], file_info['mimetype'], fp.read())
+                            msg.attach(the_attachment.filename, file_info['mimetype'], fp.read())
                             failed = False
                         if failed:
                             success = False

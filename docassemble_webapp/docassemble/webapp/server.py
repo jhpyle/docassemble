@@ -47,7 +47,7 @@ from flask import make_response, abort, render_template, request, session, send_
 from flask.ext.login import LoginManager, UserMixin, login_user, logout_user, current_user
 from flask.ext.user import login_required, roles_required, UserManager, SQLAlchemyAdapter
 from flask.ext.user.forms import LoginForm
-from flask.ext.user import signals
+from flask.ext.user import signals, user_logged_in, user_changed_password, user_registered, user_registered, user_reset_password
 from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm, Utilities
 from flask_mail import Mail, Message
 import flask.ext.user.signals
@@ -114,7 +114,7 @@ app.config['USER_AFTER_CONFIRM_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_FORGOT_PASSWORD_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_LOGIN_ENDPOINT'] = 'interview_list'
 app.config['USER_AFTER_LOGOUT_ENDPOINT'] = 'user.login'
-app.config['USER_AFTER_REGISTER_ENDPOINT'] = 'index'
+app.config['USER_AFTER_REGISTER_ENDPOINT'] = 'interview_list'
 app.config['USER_AFTER_RESEND_CONFIRM_EMAIL_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_RESET_PASSWORD_ENDPOINT'] = 'user.login' 
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
@@ -2821,3 +2821,15 @@ def interview_list():
         modtime = nice_date_from_utc(dictionary['_internal']['modtime'])
         interviews.append({'interview_info': interview_info, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'title': interview_title})
     return render_template('pages/interviews.html', interviews=sorted(interviews, key=lambda x: x['dict']['_internal']['starttime']))
+
+@user_logged_in.connect_via(app)
+def _after_login_hook(sender, user, **extra):
+    if 'i' in session and 'uid' in session:
+        save_user_dict_key(session['uid'], session['i'])
+        session['key_logged'] = True 
+r
+    newsecret = substitute_secret(secret, pad_to_16(MD5.MD5Hash(data=password).hexdigest()))
+    # Redirect to 'next' URL
+    response = redirect(next)
+    response.set_cookie('secret', newsecret)
+    return response
