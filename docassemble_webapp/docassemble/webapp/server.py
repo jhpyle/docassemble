@@ -2827,7 +2827,6 @@ def _after_login_hook(sender, user, **extra):
     if 'i' in session and 'uid' in session:
         save_user_dict_key(session['uid'], session['i'])
         session['key_logged'] = True 
-r
     newsecret = substitute_secret(secret, pad_to_16(MD5.MD5Hash(data=password).hexdigest()))
     # Redirect to 'next' URL
     response = redirect(next)
