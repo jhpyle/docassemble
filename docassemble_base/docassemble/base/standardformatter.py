@@ -13,8 +13,6 @@ import sys
 import codecs
 import html2text
 
-#noquote_match = re.compile(r'"')
-
 def tracker_tag(status):
     output = ''
     if status.question.name:
@@ -28,11 +26,6 @@ def datatype_tag(datatypes):
     if len(datatypes):
         return('              <input type="hidden" name="_datatypes" value=' + myb64doublequote(json.dumps(datatypes)) + '/>\n')
     return ('')
-
-# def question_name_tag(question):
-#     if question.name:
-#         return('<input type="hidden" name="_question_name" value="' + question.name + '">')
-#     return('')
 
 def icon_html(status, name, width_value=1.0, width_units='em'):
     the_image = status.question.interview.images.get(name, None)
@@ -59,7 +52,6 @@ def signature_html(status, debug, root):
     if (status.underText):
         output += markdown_to_html(status.underText, trim=True)
     output += '</div></div><form action="' + root + '" id="daform" method="POST"><input type="hidden" name="_save_as" value="' + status.question.fields[0].saveas + '"/><input type="hidden" id="_the_image" name="_the_image" value=""/><input type="hidden" id="_success" name="_success" value="0"/>'
-    #output += question_name_tag(status.question)
     output += tracker_tag(status)
     output += '</form>\n'
     return output
@@ -135,7 +127,6 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
             output += '              <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=16) + '              </div>\n'
         output += '              <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
         output += '              <div class="btn-toolbar">\n                <button class="btn btn-primary btn-lg" name="' + status.question.fields[0].saveas + '" type="submit" value="False">Yes</button>\n                <button class="btn btn-lg btn-info" name="' + status.question.fields[0].saveas + '" type="submit" value="True">No</button>\n              </div>\n'
-        #output += question_name_tag(status.question)
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
         output += '            </fieldset>\n          </form>\n'
@@ -494,12 +485,11 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     for attribution in sorted(status.attributions):
         output += '          <div><attribution><small>' + markdown_to_html(attribution, strip_newlines=True) + '</small></attribution></div>\n'
     if status.using_screen_reader:
-        #status.screen_reader_text['question'] = html2text.html2text(output)
         status.screen_reader_text['question'] = unicode(output)
     master_output += output
     master_output += '        </section>\n'
     master_output += '        <section id="help" class="tab-pane col-md-6">\n'
-    output = '<div><a id="backToQuestion" href="#question" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back to question") + '</a></div>'
+    output = '<div><a id="backToQuestion" data-toggle="tab" href="#question" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back to question") + '</a></div>'
     if status.using_screen_reader and 'help' in status.screen_reader_links:
         output += '          <div>\n' + indent_by(audio_control(status.screen_reader_links['help'], preload="none"), 12) + '          </div>\n'
     for help_section in status.helpText:

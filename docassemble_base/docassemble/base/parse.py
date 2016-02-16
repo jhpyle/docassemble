@@ -1397,10 +1397,26 @@ class Interview:
         self.terms = dict()
         self.question_index = 0
         self.default_role = None
+        self.title = None
         self.use_progress_bar = False
         self.attachment_options = dict()
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
+    def get_title(self):
+        if self.title is not None:
+            return self.title
+        title = dict()
+        for metadata in self.metadata:
+            if 'title' in metadata:
+                title['full'] = metadata['title'].rstrip()
+                if 'short title' in metadata:
+                    title['short'] = metadata['short title'].rstrip()
+                else:
+                    title['short'] = metadata['title'].rstrip()
+                break
+        self.title = title
+        return self.title
+                
     def next_number(self):
         self.question_index += 1
         return(self.question_index - 1)

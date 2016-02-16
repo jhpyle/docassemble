@@ -1,6 +1,8 @@
 metadata:
   title: |
     Demonstration interview
+  short title:
+    Demo
   description: |
     This is a demonstration of the docassemble system.
   authors:

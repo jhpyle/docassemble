@@ -36,6 +36,10 @@ button.btn-da-custom {
     display: none;
 }
 
+.invisible {
+    display: none;
+}
+
 .checkbox_count_number {
 }
 
@@ -135,4 +139,16 @@ a.sourceactive {
 
 .vspace {
     margin-top: 10px;
+}
+.mynavbar-text {
+  float: right;
+  height: 50px;
+  padding: 15px 15px;
+  color: #9d9d9d;
+}
+.mynavbar-text:hover,
+.mynavbar-text:focus {
+  text-decoration: none;
+  color: #fff;
+  background-color: transparent;
 }

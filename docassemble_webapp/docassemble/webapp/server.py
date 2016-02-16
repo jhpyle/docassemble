@@ -870,6 +870,7 @@ def index():
         need_to_reset = True
     if session_id:
         user_code = session_id
+        logmessage("session id is " + str(session_id))
         steps, user_dict = fetch_user_dict(user_code, yaml_filename, secret)
         if user_dict is None:
             del user_code
@@ -902,7 +903,11 @@ def index():
             need_to_reset = True
     if need_to_reset:
         save_user_dict(user_code, user_dict, yaml_filename, secret)
-        return redirect(url_for('index'))
+        response = redirect(url_for('index'))
+        if set_cookie:
+            response.set_cookie('secret', secret)
+        return response
+
     post_data = request.form.copy()
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data and '_question_number' in post_data:
         success = False
@@ -1301,9 +1306,9 @@ def index():
             flash_content += '<div class="row"><div class="col-md-6"><div class="alert alert-' + classname + '"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div></div></div>'
             #flash_content += '</div>'
     scripts = """
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-    <script src="//ajax.aspnetcdn.com/ajax/jquery.validate/1.13.1/jquery.validate.min.js"></script>
-    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script src="//ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/js/jasny-bootstrap.min.js"></script>
 """
     scripts += '    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>' + """
@@ -1329,14 +1334,15 @@ def index():
           $("#sourcetoggle").on("click", function(){
             $(this).toggleClass("sourceactive");
           });
-          $('#backToQuestion').click(function(){
-            $('.navbar-left li').first().find('a').trigger('click');
+          $('#backToQuestion').click(function(event){
+            event.preventDefault();
+            $('#questionlabel').trigger('click');
           });
         });
       });
     </script>"""
     if interview_status.question.question_type == "signature":
-        output = '<!doctype html>\n<html lang="en">\n  <head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet"><title>' + word('Sign Your Name') + '</title></head>\n  <body onresize="resizeCanvas()">'
+        output = '<!doctype html>\n<html lang="en">\n  <head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet"><title>' + word('Sign Your Name') + '</title></head>\n  <body onresize="resizeCanvas()">'
         output += signature_html(interview_status, DEBUG, ROOT)
         output += """\n  </body>\n</html>"""
     else:
@@ -1384,7 +1390,7 @@ def index():
                     new_entry = SpeakList(filename=yaml_filename, key=user_code, phrase=encrypted_phrase, question=interview_status.question.number, type=question_type, language=the_language, dialect=the_dialect)
                     db.session.add(new_entry)
                     db.session.commit()
-        output = '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet">\n    <link href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
+        output = '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" rel="stylesheet">\n    <link href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
         if DEBUG:
             output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
         output += "".join(extra_css)
@@ -1671,6 +1677,8 @@ def make_navbar(status, page_title, steps, show_login):
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="container-fluid">
         <div class="navbar-header">
+"""
+    navbar += """\
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
             <span class="sr-only">Toggle navigation</span>
 """
@@ -1694,15 +1702,22 @@ def make_navbar(status, page_title, steps, show_login):
           <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="_back_one" value="1"><button class="dabackicon" type="submit"><i class="glyphicon glyphicon-chevron-left dalarge"></i></button></form></span>
 """
     navbar += """\
-          <span class="navbar-brand">""" + page_title + """</span>
+          <a href="#question" data-toggle="tab" class="navbar-brand"><span class="hidden-xs">""" + status.question.interview.get_title().get('full', page_title) + """</span><span class="visible-xs-block">""" + status.question.interview.get_title().get('short', page_title) + """</span></a>
+          <a class="invisible" id="questionlabel" href="#question" data-toggle="tab">""" + word('Question') + """</a>
+"""
+    if status.question.helptext is None:
+        navbar += '          <a class="mynavbar-text" href="#help" data-toggle="tab">' + word('Help') + '</a>'
+    else:
+        navbar += '          <a class="mynavbar-text daactivetext" href="#help" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i></a>'
+    navbar += """
         </div>
         <div class="collapse navbar-collapse" id="navbar-collapse">
           <ul class="nav navbar-nav navbar-left">
-            <li class="active"><a href="#question" data-toggle="tab">""" + word('Question') + """</a></li>"""
-    if status.question.helptext is None:
-        navbar += '<li><a href="#help" data-toggle="tab">' + word('Help') + "</a></li>\n"
-    else:
-        navbar += '<li><a class="daactivetext" href="#help" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i>' + "</a></li>\n"
+"""
+    # if status.question.helptext is None:
+    #     navbar += '<li><a href="#help" data-toggle="tab">' + word('Help') + "</a></li>\n"
+    # else:
+    #     navbar += '<li><a class="daactivetext" href="#help" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i>' + "</a></li>\n"
     if DEBUG:
         navbar += """\
             <li><a id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">""" + word('Source') + """</a></li>
@@ -1757,6 +1772,7 @@ def reset_session(yaml_filename, secret):
     if 'key_logged' in session:
         del session['key_logged']
     user_code = session['uid']
+    logmessage("User code is now " + str(user_code))
     user_dict = fresh_dictionary()
     return(user_code, user_dict)
 
@@ -1862,36 +1878,12 @@ def serve_uploaded_page(number, page):
     if 'path' not in file_info:
         abort(404)
     else:
-    # file_info = get_info_from_file_reference(number)
-    # block_size = 4096
-    # status = '200 OK'
         filename = file_info['path'] + 'page-' + str(page) + '.png'
         if os.path.isfile(filename):
             return(send_file(filename, mimetype='image/png'))
         else:
             abort(404)
 
-# @app.route('/uploadsignature', methods=['POST'])
-# def upload_draw():
-#     post_data = request.form.copy()
-#     #sys.stderr.write("Got to upload_draw\n")
-#     if '_success' in post_data and post_data['_success'] and '_the_image' in post_data:
-#         theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['_the_image']).group(1) + '==')
-#         #sys.stderr.write("Got theImage and it is " + str(len(theImage)) + " bytes long\n")
-#         with open('/tmp/testme.png', 'w') as ifile:
-#             ifile.write(theImage)
-#         #sys.stderr.write("Saved theImage\n")
-#     #sys.stderr.write("Done with upload_draw\n")
-#     return redirect(url_for('index'))
-        
-# @app.route('/testsignature', methods=['GET'])
-# def test_signature():
-#     output = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link rel="stylesheet" href="' + url_for('static', filename='app/signature.css') + '"><title>' + word('Signature') + '</title></head><body onresize="resizeCanvas()"><div id="page"><div class="header" id="header"><a id="new" class="navbtn nav-left">Clear</a><a id="save" class="navbtn nav-right">Save</a><div class="title">' + word('Your Signature') + '</div></div><div class="toppart" id="toppart">' + word('I am a citizen of the United States.') + '</div><div id="content"><p style="text-align:center"></p></div><div class="bottompart" id="bottompart">' + word('Jonathan Pyle') + '</div></div><form id="daform" action="' + url_for('upload_draw') + '" method="post"><input type="hidden" name="variable" value="' + word('Jonathan Pyle') + '"><input type="hidden" id="theImage" name="_the_image" value=""><input type="hidden" id="success" name="_success" value="0"></form></body></html>'
-#     status = '200 OK'
-#     response = make_response(output.encode('utf8'), status)
-#     response.headers['Content-type'] = 'text/html; charset=utf-8'
-#     return response
-        
 @app.route('/uploadedpagescreen/<number>/<page>', methods=['GET'])
 def serve_uploaded_pagescreen(number, page):
     number = re.sub(r'[^0-9]', '', str(number))
@@ -1901,8 +1893,6 @@ def serve_uploaded_pagescreen(number, page):
         logmessage('no access to file number ' + str(number))
         abort(404)
     else:
-    # block_size = 4096
-    # status = '200 OK'
         filename = file_info['path'] + 'screen-' + str(page) + '.png'
         if os.path.isfile(filename):
             return(send_file(filename, mimetype='image/png'))
@@ -1911,22 +1901,13 @@ def serve_uploaded_pagescreen(number, page):
             abort(404)
 
 def user_can_edit_package(pkgname=None, giturl=None):
-    #cur = conn.cursor()
-    #sys.stderr.write("Got to user_can_edit_package\n")
     if pkgname is not None:
-        #sys.stderr.write("Testing for:" + pkgname + ":\n")
         results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(Package.name == pkgname)
         if results.count() == 0:
             return(True)
         for d in results:
             if d.user_id == current_user.id:
                 return True
-        # cur.execute("select a.id, b.user_id, b.authtype from package as a left outer join package_auth as b on (a.id=b.package_id) where a.name=%s", [pkgname])
-        # if cur.rowcount <= 0:
-        #     return(True)
-        # for d in cur:
-        #     if d[1] == current_user.id:
-        #         return(True)
     if giturl is not None:
         results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(Package.giturl == giturl)
         if results.count() == 0:
@@ -1934,12 +1915,6 @@ def user_can_edit_package(pkgname=None, giturl=None):
         for d in results:
             if d.user_id == current_user.id:
                 return True
-        # cur.execute("select a.id, b.user_id, b.authtype from package as a left outer join package_auth as b on (a.id=b.package_id) where a.giturl=%s", [giturl])
-        # if cur.rowcount <= 0:
-        #     return(True)
-        # for d in cur:
-        #     if d[1] == current_user.id:
-        #         return(True)
     return(False)
 
 class Object(object):
