@@ -977,7 +977,7 @@ def index():
         else:
             flash(word("Unable to e-mail your documents to") + " " + str(attachment_email_address) + ".", 'error')
     if '_back_one' in post_data and steps > 1:
-        steps, user_dict = fetch_previous_user_dict(user_code, yaml_filename)
+        steps, user_dict = fetch_previous_user_dict(user_code, yaml_filename, secret)
         #logmessage("Went back")
     elif 'filename' in request.args:
         #logmessage("Got a GET statement with filename!")
