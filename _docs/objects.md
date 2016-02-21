@@ -894,7 +894,7 @@ the following attributes:
 
 `DAFileCollection` objects are created internally by **docassemble**
 in order to refer to a document assembled using the `attachments`
-[modifier] in combination with a `variable_name`.  It has attributes
+[modifier] in combination with a `variable name`.  It has attributes
 for each file type generated (e.g., `pdf` or `rtf`), where the
 attributes are objects of type `DAFile`.
 

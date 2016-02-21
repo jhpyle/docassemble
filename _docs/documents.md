@@ -148,7 +148,7 @@ Sometimes, you might want to do other things with the document, like
 e-mail it, or post it to a web site.
 
 You can save an assembled document to a variable by adding
-a `variable_name` key to an attachment.  For example:
+a `variable name` key to an attachment.  For example:
 
 {% highlight yaml %}
 ---
@@ -165,7 +165,7 @@ yesno: submit_to_authority
 attachment:
   - name: A *hello world* document
     filename: Hello_World_Document
-    variable_name: hello_file
+    variable name: hello_file
     content: |
       Hello, world!
 ---
@@ -220,14 +220,14 @@ question: |
   I have posted a Hello World file to Slack!
 ---
 attachments:
-  - variable_name: my_file
+  - variable name: my_file
     filename: hello_world
     content: |
       Hello, world!
 ---
 {% endhighlight %}
 
-Note that the varible indicated by `variable_name` will be defined as
+Note that the varible indicated by `variable name` will be defined as
 an object of class `DAFileCollection`.  An object of this type will
 have attributes for each file type generated, where the attributes are
 objects of type `DAFile`.  So `my_file.pdf` is the PDF `DAFile`, and
@@ -253,7 +253,7 @@ sets: provide_user_with_document
 attachment:
   - name: A *hello world* document
     filename: Hello_World_Document
-    valid_formats:
+    valid formats:
       - pdf
     description: A document with a **classic** message
     content: |
