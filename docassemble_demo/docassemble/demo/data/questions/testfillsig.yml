@@ -25,7 +25,7 @@ code: |
   supplier.phone = '215-981-3843'
   recipient.name.first = 'Michael'
   recipient.name.last = 'Hollander'
-  recipient.email = 'jpyle@philalegal.org'
+  recipient.email = 'jhpyle@gmail.com'
   recipient.organization = 'Community Legal Services'
   recipient.address.address = '1424 Chestnut Street'
   recipient.address.city = 'Philadelphia'
@@ -44,7 +44,7 @@ code: |
   need(user.name.first, user.birthdate, user.ssn, hospitals, final_screen)
 ---
 code: |
-  success_sending_email = send_email(to=[recipient], template=recipient_email, attachments=[abington_release, bryn_mawr_release])
+  success_sending_email = send_email(to=[recipient], bcc=[supplier], template=recipient_email, attachments=[abington_release, bryn_mawr_release])
 ---
 question: |
   From which facilities have you received healthcare services?
