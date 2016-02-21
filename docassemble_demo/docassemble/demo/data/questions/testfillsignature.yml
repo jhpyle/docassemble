@@ -1,0 +1,49 @@
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - user: Individual
+  - friend: Individual
+---
+mandatory: true
+code: |
+  need(user.name.first, friend.name.first, prized_collection, final_screen)
+---
+question: |
+  What is your name?
+fields:
+  - First Name: user.name.first
+  - Last Name: user.name.last
+---
+question: |
+  What is your best friend's name?
+fields:
+  - First Name: friend.name.first
+  - Last Name: friend.name.last
+---
+question: What objects do you collect?
+fields:
+  - Collection: prized_collection
+    hint: baseball cards, fine china
+---
+question: |
+  Please sign your name below.
+signature: user.signature
+under: |
+  ${ user }
+---
+question: Congratulations!
+subquestion: |
+  You have now transferred everything you own to ${ friend }.
+sets: final_screen
+attachment:
+  - name: Transfer of Ownership
+    filename: Transfer-of-Ownership
+    pdf template file: Transfer-of-Ownership.pdf
+    fields:
+      "grantor": ${ user }
+      "grantee": ${ friend }
+      "collection": ${ prized_collection }
+      "signature": ${ user.signature }
+---

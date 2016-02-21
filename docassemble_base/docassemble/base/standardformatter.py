@@ -416,7 +416,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
             if attachment['description']:
                 output += '          <div>' + markdown_to_html(attachment['description'], status=status, strip_newlines=True) + '</div>\n'
             output += '          <div class="tabbable">\n'
-            if show_preview or show_markdown:
+            if True or show_preview or show_markdown:
                 output += '            <ul class="nav nav-tabs">\n'
                 if show_download:
                     output += '              <li class="active"><a href="#download' + str(attachment_index) + '" data-toggle="tab">' + word('Download') + '</a></li>\n'
