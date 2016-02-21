@@ -304,6 +304,14 @@ class Address(DAObject):
             output += str(self.unit) + " [NEWLINE] "
         output += str(self.city) + ", " + str(self.state) + " " + str(self.zip)
         return(output)
+    def line_one(self):
+        output = str(self.address)
+        if hasattr(self, 'unit') and self.unit:
+            output += ", " + str(self.unit)
+        return(output)
+    def line_two(self):
+        output = str(self.city) + ", " + str(self.state) + " " + str(self.zip)
+        return(output)
 
 class Person(DAObject):
     def init(self, **kwargs):

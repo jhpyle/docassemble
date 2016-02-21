@@ -10,8 +10,19 @@ include:
 ---
 objects:
   - recipient: Individual
+  - supplier: Individual
 ---
 code: |
+  supplier.name.first = 'Jonathan'
+  supplier.name.last = 'Pyle'
+  supplier.email = 'jpyle@philalegal.org'
+  supplier.organization = 'Philadelphia Legal Assistance'
+  supplier.address.address = '718 Arch Street'
+  supplier.address.unit = 'Suite 300N'
+  supplier.address.city = 'Philadelphia'
+  supplier.address.state = 'PA'
+  supplier.address.zip = '19106'
+  supplier.phone = '215-981-3843'
   recipient.name.first = 'Michael'
   recipient.name.last = 'Hollander'
   recipient.email = 'jpyle@philalegal.org'
@@ -21,6 +32,12 @@ code: |
   recipient.address.state = 'PA'
   recipient.address.zip = '19102'
   recipient.phone = '215-981-3700'
+---
+code: |
+  from datetime import datetime
+  from dateutil.relativedelta import relativedelta
+  future_time = datetime.now() + relativedelta(months=6)
+  six_months_in_the_future = future_time.strftime("%x")
 ---
 mandatory: true
 code: |
@@ -96,20 +113,20 @@ attachments:
       "patient_phone_area_code": 215
       "patient_phone_first": 545
       "patient_phone_second": 3283
-      "from_name": "Jonathan Pyle"
+      "from_name": ${ supplier }
       "to_name": ${ recipient }
-      "to_address_one": ${ recipient.address.address }
-      "to_address_two": ${ recipient.address.city }, ${ recipient.address.state } ${ recipient.address.zip}
-      "from_address_one": "718 Arch Street, Suite 300N"
-      "from_address_two": "Philadelphia, PA 19106"
+      "to_address_one": ${ recipient.address.line_one() }
+      "to_address_two": ${ recipient.address.line_two() }
+      "from_address_one": ${ supplier.address.line_one() }
+      "from_address_two": ${ supplier.address.line_two() }
       "description_health_information": "anything and everything"
-      "purposes": "nefarious ones"
-      "auth_date_start_month": 1
-      "auth_date_start_day": 1
-      "auth_date_start_year": 2016
-      "auth_date_end_month": 12
-      "auth_date_end_day": 31
-      "auth_date_end_year": 2017
+      "purposes": "nefarious purposes"
+      "auth_date_start_month": ${ month_of(today()) }
+      "auth_date_start_day": ${ day_of(today()) }
+      "auth_date_start_year": ${ year_of(today()) }
+      "auth_date_end_month": ${ month_of(six_months_in_the_future) }
+      "auth_date_end_day": ${ day_of(six_months_in_the_future) }
+      "auth_date_end_year": ${ year_of(six_months_in_the_future) }
       "limitations": ""
       "patient_signature_date_month": |
         ${ month_of(today()) }
@@ -147,7 +164,7 @@ attachments:
       "disclosee_address_2": ${ recipient.address.city }, ${ recipient.address.state } ${ recipient.address.zip}
       "disclosee_phone": ${ recipient.phone }
       "disclosure_purpose": helping ${ user } obtain SSI benefits
-      "expiration_date": 6/30/2016
+      "expiration_date": ${ six_months_in_the_future }
       "patient_signature": ${ user.signature }
       "relationship_to_patient": patient
       "patient_signature_date": ${ today() }
