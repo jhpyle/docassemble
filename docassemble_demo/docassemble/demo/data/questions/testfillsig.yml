@@ -2,6 +2,8 @@
 metadata:
   title: CLS Release Forms Demo
   short title: Release
+  url: https://demo.docassemble.org?i=docassemble.demo:data/questions/testfillsig.yml
+  short_url: http://bit.ly/1QRw4xr
 ---
 include:
   - basic-questions.yml
@@ -41,6 +43,11 @@ fields:
 question: |
   Do you agree to allow your healthcare providers to share your records
   with ${ recipient.organization }?
+subquestion: |
+  If you agree, you will be asked to sign your name.  Your signature will
+  be placed on release forms that will be sent to your healthcare providers.
+
+  This is necessary so that ${ recipient.organization } can represent you.
 yesno: user_agrees_to_release
 ---
 sets: final_screen
