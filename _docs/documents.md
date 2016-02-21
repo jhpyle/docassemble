@@ -95,10 +95,13 @@ The content of multiple `content file` files will be concatenated.
 
 ## Filling PDF forms
 
-If you have a PDF file that contains fillable fields, **docassemble**
-can assemble a PDF file by filling in fields in that template.  To do
-this, provide a `pdf template file` and a dictionary of `fields`.  For
-example:
+If you have a PDF file that contains fillable fields (e.g. fields
+added using Adobe Acrobat Pro), **docassemble** can assemble a PDF
+file by filling in fields in that template.  To do this, provide a
+`pdf template file` and a dictionary of `fields`.
+
+For example, here is an interview that populates fields in a file
+called [sample-form.pdf](https://demo.docassemble.org/packagestatic/docassemble.demo/sample-form.pdf):
 
 {% highlight yaml %}
 ---
@@ -128,15 +131,106 @@ attachments:
 ([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testfill.yml){:target="_blank"}.)
 
 The `pdf template file` is assumed to reside in the `data/templates`
-directory of your package, unless a specific package name is specified
-(e.g., `pdf template file:
-docassemble.missouri-family-law:data/templates/form.pdf`).  The fields
-must be in the form of a dictionary.  Checkbox fields will be checked
-if the value evaluates to "True" or "Yes."
+directory of your package, unless a specific package name is
+specified.  E.g.:
 
-When logged in as a developer, you can go to "Utilities" from the menu
-and upload a PDF file in order to see the list of field names that
-exist in the file.
+{% highlight yaml %}
+    pdf template file: docassemble.missouri-family-law:data/templates/form.pdf
+{% endhighlight %}
+
+The `fields` must be in the form of a [YAML] dictionary.  Checkbox
+fields will be checked if the value evaluates to "True" or "Yes."
+
+### How to get a list of field names in a PDF file
+
+When logged in to **docassemble** as a developer, you can go to
+"Utilities" from the menu and, under "Get list of fields from fillable
+PDF," you can upload a PDF file that has fillable fields in it.
+**docassemble** will scan the PDF file, identify its fields, and
+present you with the [YAML] text of a question that uses that PDF file
+as a `pdf template file`.
+
+### How to insert signatures or other images into fillable PDF files
+
+To add a signature or other image to a fillable PDF file, use Adobe
+Acrobat Pro to insert a "Digital Signature" into the document where
+you want the signature to appear.  Give the field a unique name.
+
+Then, you can use a **docassemble** `attachment` to populate the field
+with `${ user.signature }` or another reference to an image.
+**docassemble** will trim whitespace from the edges of the image and
+fit the image into the "Digital Signature" box.
+
+For example, here is an interview that populates text fields and a
+signature into the template [Transfer-of-Ownership.pdf](https://demo.docassemble.org/packagestatic/docassemble.demo/Transfer-of-Ownership.pdf):
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - user: Individual
+  - friend: Individual
+---
+mandatory: true
+code: |
+  need(user.name.first, friend.name.first, prized_collection, final_screen)
+---
+question: |
+  What is your name?
+fields:
+  - First Name: user.name.first
+  - Last Name: user.name.last
+---
+question: |
+  What is your best friend's name?
+fields:
+  - First Name: friend.name.first
+  - Last Name: friend.name.last
+---
+question: What objects do you collect?
+fields:
+  - Collection: prized_collection
+    hint: baseball cards, fine china
+---
+question: |
+  Please sign your name below.
+signature: user.signature
+under: |
+  ${ user }
+---
+question: Congratulations!
+subquestion: |
+  You have now transferred everything you own to ${ friend }.
+sets: final_screen
+attachment:
+  - name: Transfer of Ownership
+    filename: Transfer-of-Ownership
+    pdf template file: Transfer-of-Ownership.pdf
+    fields:
+      "grantor": ${ user }
+      "grantee": ${ friend }
+      "collection": ${ prized_collection }
+      "signature": ${ user.signature }
+---
+{% endhighlight %}
+
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testfillsignature.yml){:target="_blank"}.)
+
+It is important that each "Digital Signature" field have a unique
+name.  If there is more than one field in the PDF template with the
+same name, **docassemble** will not be able to locate it.  If you want
+to insert the same signature in more than one spot in a document, you
+can do so as long as each "Digital Signature" field has a different
+name.  For example:
+
+{% highlight yaml %}
+    fields:
+      first signature: ${ user.signature }
+      second signature: ${ user.signature }
+      third signature: ${ user.signature }
+{% endhighlight %}
 
 ## Saving documents as variables
 
