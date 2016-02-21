@@ -1681,20 +1681,9 @@ def make_navbar(status, page_title, steps, show_login):
     navbar += """\
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
             <span class="sr-only">Toggle navigation</span>
-"""
-    if status.question.helptext is not None:
-        navbar += """\
-            <span class="icon-bar daactive"></span>
-            <span class="icon-bar daactive"></span>
-            <span class="icon-bar daactive"></span>
-"""
-    else:
-        navbar += """\
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
-"""
-    navbar += """\
           </button>
 """
     if status.question.can_go_back and steps > 1:
@@ -1708,7 +1697,7 @@ def make_navbar(status, page_title, steps, show_login):
     if status.question.helptext is None:
         navbar += '          <a class="mynavbar-text" href="#help" data-toggle="tab">' + word('Help') + '</a>'
     else:
-        navbar += '          <a class="mynavbar-text daactivetext" href="#help" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i></a>'
+        navbar += '          <a class="mynavbar-text" href="#help" data-toggle="tab"><span class="daactivetext">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i></span></a>'
     navbar += """
         </div>
         <div class="collapse navbar-collapse" id="navbar-collapse">
@@ -2768,13 +2757,19 @@ def utilities():
                 fields_output = word("Error: no fields could be found in the file")
             else:
                 fields_output = "---\nquestion: " + word("something") + "\nsets: " + word('some_variable') + "\nattachment:" + "\n  - name: " + os.path.splitext(the_file.filename)[0] + "\n    filename: " + os.path.splitext(the_file.filename)[0] + "\n    pdf template file: " + the_file.filename + "\n    fields:\n"
-                for field, default in fields:
+                for field, default, pageno, rect, field_type in fields:
                     fields_output += '      "' + field + '": ' + default + "\n"
                 fields_output += "---"
     return render_template('pages/utilities.html', form=form, fields=fields_output)
 
 def nice_date_from_utc(timestamp):
     return timestamp.replace(tzinfo=tz.tzutc()).astimezone(tz.tzlocal()).strftime('%c')
+
+@app.route('/save', methods=['GET', 'POST'])
+def save_for_later():
+    if current_user.is_authenticated and not current_user.is_anonymous:
+        return render_template('pages/save_for_later.html', interview=sdf)
+    secret = request.cookies.get('secret', None)
 
 @app.route('/interviews', methods=['GET', 'POST'])
 @login_required
@@ -2797,13 +2792,13 @@ def interview_list():
         interviews.append({'interview_info': interview_info, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'title': interview_title})
     return render_template('pages/interviews.html', interviews=sorted(interviews, key=lambda x: x['dict']['_internal']['starttime']))
 
-@user_logged_in.connect_via(app)
-def _after_login_hook(sender, user, **extra):
-    if 'i' in session and 'uid' in session:
-        save_user_dict_key(session['uid'], session['i'])
-        session['key_logged'] = True 
-    newsecret = substitute_secret(secret, pad_to_16(MD5.MD5Hash(data=password).hexdigest()))
-    # Redirect to 'next' URL
-    response = redirect(next)
-    response.set_cookie('secret', newsecret)
-    return response
+# @user_logged_in.connect_via(app)
+# def _after_login_hook(sender, user, **extra):
+#     if 'i' in session and 'uid' in session:
+#         save_user_dict_key(session['uid'], session['i'])
+#         session['key_logged'] = True 
+#     newsecret = substitute_secret(secret, pad_to_16(MD5.MD5Hash(data=password).hexdigest()))
+#     # Redirect to 'next' URL
+#     response = redirect(next)
+#     response.set_cookie('secret', newsecret)
+#     return response

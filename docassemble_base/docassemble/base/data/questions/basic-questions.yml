@@ -1,7 +1,5 @@
 ---
 metadata:
-  title: |
-    Basic questions
   description: |
     These are basic questions common to a variety of scenarios
   authors:
@@ -125,6 +123,12 @@ comment: |
 ---
 generic object: Individual
 question: |
+  What is ${ x.possessive('Social Security Number') }?
+fields:
+  - Social Security Number: x.ssn
+---
+generic object: Individual
+question: |
   What is ${ x.possessive('date of birth') }?
 fields:
   - Date of Birth: x.birthdate
@@ -189,7 +193,9 @@ generic object: Individual
 question: |
   Please sign your name below.
 signature: x.signature
-need: user_understands_how_to_use_signature_feature
+need:
+  - x.name.first
+  - user_understands_how_to_use_signature_feature
 under: |
   ${ x.name }
 comment: |

@@ -415,20 +415,23 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
             output += '          <div><h3>' + markdown_to_html(attachment['name'], trim=True, status=status, strip_newlines=True) + '</h3></div>\n'
             if attachment['description']:
                 output += '          <div>' + markdown_to_html(attachment['description'], status=status, strip_newlines=True) + '</div>\n'
-            output += '          <div class="tabbable">\n            <ul class="nav nav-tabs">\n'
-            if show_download:
-                output += '              <li class="active"><a href="#download' + str(attachment_index) + '" data-toggle="tab">' + word('Download') + '</a></li>\n'
-            if show_preview:
-                output += '              <li><a href="#preview' + str(attachment_index) + '" data-toggle="tab">' + word('Preview') + '</a></li>\n'
-            if show_markdown:
-                output += '              <li><a href="#markdown' + str(attachment_index) + '" data-toggle="tab">' + word('Markdown') + '</a></li>\n'
-            output += '            </ul>\n            <div class="tab-content">\n'
+            output += '          <div class="tabbable">\n'
+            if show_preview or show_markdown:
+                output += '            <ul class="nav nav-tabs">\n'
+                if show_download:
+                    output += '              <li class="active"><a href="#download' + str(attachment_index) + '" data-toggle="tab">' + word('Download') + '</a></li>\n'
+                if show_preview:
+                    output += '              <li><a href="#preview' + str(attachment_index) + '" data-toggle="tab">' + word('Preview') + '</a></li>\n'
+                if show_markdown:
+                    output += '              <li><a href="#markdown' + str(attachment_index) + '" data-toggle="tab">' + word('Markdown') + '</a></li>\n'
+                output += '            </ul>\n'
+            output += '            <div class="tab-content">\n'
             if show_download:
                 output += '              <div class="tab-pane active" id="download' + str(attachment_index) + '">\n'
                 if multiple_formats:
                     output += '                <p>' + word('save_as_multiple') + '</p>\n'
-                else:
-                    output += '                <p>' + word('save_as_singular') + '</p>\n'
+                #else:
+                    #output += '                <p>' + word('save_as_singular') + '</p>\n'
                 if 'pdf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
                     output += '                <p><a href="?filename=' + urllib.quote(status.question.interview.source.path, '') + '&question=' + str(status.question.number) + '&index=' + str(attachment_index) + '&format=pdf"><i class="glyphicon glyphicon-print"></i> PDF</a> (' + word('pdf_message') + ')</p>\n'
                 if 'rtf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:

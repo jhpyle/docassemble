@@ -1,0 +1,176 @@
+---
+metadata:
+  title: CLS Release Forms Demo
+  short title: Release
+---
+include:
+  - basic-questions.yml
+---
+objects:
+  - recipient: Individual
+---
+code: |
+  recipient.name.first = 'Michael'
+  recipient.name.last = 'Hollander'
+  recipient.email = 'jpyle@philalegal.org'
+  recipient.organization = 'Community Legal Services'
+  recipient.address.address = '1424 Chestnut Street'
+  recipient.address.city = 'Philadelphia'
+  recipient.address.state = 'PA'
+  recipient.address.zip = '19102'
+  recipient.phone = '215-981-3700'
+---
+mandatory: true
+code: |
+  need(user.name.first, user.birthdate, user.ssn, hospitals, final_screen)
+---
+code: |
+  success_sending_email = send_email(to=[recipient], template=recipient_email, attachments=[abington_release, bryn_mawr_release])
+---
+question: |
+  From which facilities have you received healthcare services?
+fields:
+  - no label: hospitals
+    datatype: checkboxes
+    choices:
+      - bryn_mawr: Bryn Mawr Hospital
+      - bryn_mawr_rehab: Bryn Mawr Rehab
+      - lankenau: Lankenau Hospital
+      - paoli_hospital: Paoli Memorial Hospital
+---
+question: |
+  Do you agree to allow your healthcare providers to share your records
+  with ${ recipient.organization }?
+yesno: user_agrees_to_release
+---
+sets: final_screen
+question: Thank you
+prevent_going_back: true
+subquestion: |
+  % if user_agrees_to_release and user_agrees_to_submit:
+  % if success_sending_email:
+  The releases you signed have been sent to ${ recipient.organization }.
+  % else:
+  There was a problem sending your releases to ${ recipient.organization }.
+  % endif
+  % else:
+  Ok, release forms will not be submitted to Community Legal Services.
+  % endif
+buttons:
+  - Exit: exit
+    url: http://clsphila.org
+---
+question: |
+  The following forms are ready to be submitted to Community Legal Services.
+subquestion: |
+  When you are ready to submit your release forms, please press "Submit."
+field: user_agrees_to_submit
+datatype: boolean
+buttons:
+  - Submit: True
+attachments:
+  - name: Abington Hospital Release Form
+    filename: Abington_Hospital_Release
+    pdf template file: sample-sig-form.pdf
+    variable name: abington_release
+    fields:
+      "patient_name": |
+        ${ user }
+      "patient_signature": |
+        ${ user.signature }
+      "patient_address": |
+        5406 Kensington Ave, Philadelphia, PA 19133
+      "patient_dob_month": |
+        ${ month_of(user.birthdate) }
+      "patient_dob_day": |
+        ${ day_of(user.birthdate) }
+      "patient_dob_year": |
+        ${ year_of(user.birthdate) }
+      "patient_phone_area_code": 215
+      "patient_phone_first": 545
+      "patient_phone_second": 3283
+      "from_name": "Jonathan Pyle"
+      "to_name": ${ recipient }
+      "to_address_one": ${ recipient.address.address }
+      "to_address_two": ${ recipient.address.city }, ${ recipient.address.state } ${ recipient.address.zip}
+      "from_address_one": "718 Arch Street, Suite 300N"
+      "from_address_two": "Philadelphia, PA 19106"
+      "description_health_information": "anything and everything"
+      "purposes": "nefarious ones"
+      "auth_date_start_month": 1
+      "auth_date_start_day": 1
+      "auth_date_start_year": 2016
+      "auth_date_end_month": 12
+      "auth_date_end_day": 31
+      "auth_date_end_year": 2017
+      "limitations": ""
+      "patient_signature_date_month": |
+        ${ month_of(today()) }
+      "patient_signature_date_day": |
+        ${ day_of(today()) }
+      "patient_signature_date_year": |
+        ${ year_of(today()) }
+      "personal_representative_name": ""
+      "personal_representative_relationship_to_patient": ""
+      "reason_patient_unable_to_sign": ""
+      "second_signature_date_month": ""
+      "second_signature_date_day": ""
+      "second_signature_date_year": ""
+      "witness_signature_2": ""
+      "witness_name": ""
+      "witness_name_2": ""
+      "witness_signature": ""
+  - name: Main Line Health Release Form
+    filename: Main_Line_Health_Release
+    pdf template file: sample-sig-form-2.pdf
+    variable name: bryn_mawr_release
+    fields:
+      "bryn_mawr": ${ hospitals['bryn_mawr'] }
+      "bryn_mawr_rehab": ${ hospitals['bryn_mawr_rehab'] }
+      "lankenau": ${ hospitals['lankenau'] }
+      "paoli_hospital": ${ hospitals['paoli_hospital'] }
+      "name_of_institution": Main Line Health
+      "patient_name": ${ user }
+      "patient_dob": ${ user.birthdate }
+      "patient_ssn": ${ user.ssn }
+      "periods_of_care": "since the beginning of time"
+      "other_information_description": ""
+      "disclosee_name": ${ recipient }, ${ recipient.organization }
+      "disclosee_address": ${ recipient.address.address }
+      "disclosee_address_2": ${ recipient.address.city }, ${ recipient.address.state } ${ recipient.address.zip}
+      "disclosee_phone": ${ recipient.phone }
+      "disclosure_purpose": helping ${ user } obtain SSI benefits
+      "expiration_date": 6/30/2016
+      "patient_signature": ${ user.signature }
+      "relationship_to_patient": patient
+      "patient_signature_date": ${ today() }
+      "witness_signature": ""
+      "witness_signature_date": ""
+      "patient_name_unable_to_sign": ""
+      "witness_signature_unable_to_sign": ""
+      "witness_signature_unable_to_sign_date": ""
+      "witness_signature_unable_to_sign_2_date": ""
+      "witness_signature_unable_to_sign_2": ""
+      "discharge_summary": Yes
+      "ER_record": Yes
+      "progress_notes": Yes
+      "discharge_instructions": Yes
+      "xray_reports": Yes
+      "medication_records": Yes
+      "history_and_physical_consultations": Yes
+      "lab_reports_rkg": Yes
+      "doctors_orders": Yes
+      "nurses_notes": Yes
+      "therapy_notes": Yes
+      "operative_report": Yes
+      "information_other": Yes
+      "aids_hiv": Yes
+      "psychiatric_care_treatment": Yes
+      "treatment_drug_alcohol": Yes
+---
+template: recipient_email
+subject: |
+  Releases for ${ user }
+content: |
+  These are the releases for ${ user }.
+---

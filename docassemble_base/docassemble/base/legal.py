@@ -4,6 +4,9 @@ from docassemble.base.filter import file_finder, url_finder, mail_variable, mark
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
 from datetime import date
+import datetime
+import dateutil.relativedelta
+import dateutil.parser
 import json
 import inspect
 import codecs
@@ -16,7 +19,7 @@ import yaml
 import us
 from decimal import Decimal
 
-__all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'LatitudeLongitude', 'RoleChangeTracker', 'DATemplate', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'get_dialect', 'set_language', 'word', 'comma_list', 'ordinal', 'ordinal_number', 'need', 'nice_number', 'verb_past', 'verb_present', 'noun_plural', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'indefinite_article', 'today', 'capitalize', 'title_case', 'url_of', 'get_locale', 'set_locale', 'process_action', 'url_action', 'selections', 'get_info', 'set_info', 'user_lat_lon', 'location_known', 'location_returned', 'get_config', 'map_of', 'objects_from_file', 'us', 'prevent_going_back']
+__all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'LatitudeLongitude', 'RoleChangeTracker', 'DATemplate', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'get_dialect', 'set_language', 'word', 'comma_list', 'ordinal', 'ordinal_number', 'need', 'nice_number', 'verb_past', 'verb_present', 'noun_plural', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'indefinite_article', 'today', 'capitalize', 'title_case', 'url_of', 'get_locale', 'set_locale', 'process_action', 'url_action', 'selections', 'get_info', 'set_info', 'user_lat_lon', 'location_known', 'location_returned', 'get_config', 'map_of', 'objects_from_file', 'us', 'prevent_going_back', 'month_of', 'day_of', 'year_of']
 
 class ThreadVariables(threading.local):
     user = None
@@ -413,9 +416,6 @@ class Individual(Person):
                 return float(self.age)
             else:
                 return int(self.age)
-        import datetime
-        import dateutil.relativedelta
-        import dateutil.parser
         rd = dateutil.relativedelta.relativedelta(datetime.datetime.now(), dateutil.parser.parse(self.birthdate))
         if decimals:
             return float(rd.years)
@@ -694,7 +694,30 @@ def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None
             logmessage("Sending mail failed: " + str(errmess))
             success = False
     return(success)
-    
+
+def month_of(the_date, as_word=False):
+    date = dateutil.parser.parse(the_date)
+    try:
+        if as_word:
+            return(date.strftime('%B'))
+        return(date.strftime('%m'))
+    except:
+        return word("Bad date")
+
+def day_of(the_date):
+    date = dateutil.parser.parse(the_date)
+    try:
+        return(date.strftime('%d'))
+    except:
+        return word("Bad date")
+
+def year_of(the_date):
+    date = dateutil.parser.parse(the_date)
+    try:
+        return(date.strftime('%Y'))
+    except:
+        return word("Bad date")
+
 def email_string(persons, include_name=None):
     if persons is None:
         return None

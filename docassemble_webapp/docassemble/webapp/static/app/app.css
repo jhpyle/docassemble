@@ -94,10 +94,6 @@ a.sourceactive {
     clear:both;
 }
 
-.daactivetext {
-    color: yellow;
-}
-
 .daactive {
     background-color: yellow;
 }
@@ -152,3 +148,8 @@ a.sourceactive {
   color: #fff;
   background-color: transparent;
 }
+
+.daactivetext {
+    color: yellow;
+}
+

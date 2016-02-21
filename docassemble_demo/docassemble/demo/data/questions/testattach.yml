@@ -27,10 +27,10 @@ code: |
   success_sending_email = send_email(to=[user], template=hello_email, attachments=[the_file])
 ---
 attachment:
-  - variable_name: the_file
+  - variable name: the_file
     name: A summary
     filename: summary
-    valid_formats:
+    valid formats:
       - pdf
     content: |
       Hello, ${ user }!

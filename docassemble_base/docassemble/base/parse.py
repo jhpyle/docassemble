@@ -1016,16 +1016,16 @@ class Question:
                     if def_key not in self.interview.defs:
                         raise DAError('Referred to a non-existent def "' + def_key + '."  All defs must be defined before they are used.' + self.idebug(target))
                     defs.extend(self.interview.defs[def_key])
-            if 'valid_formats' in target:
-                if type(target['valid_formats']) is str:
-                    target['valid_formats'] = [target['valid_formats']]
-                elif type(target['valid_formats']) is not list:
-                    raise DAError('Unknown data type in attachment valid_formats.' + self.idebug(target))
+            if 'valid formats' in target:
+                if type(target['valid formats']) is str:
+                    target['valid formats'] = [target['valid formats']]
+                elif type(target['valid formats']) is not list:
+                    raise DAError('Unknown data type in attachment valid formats.' + self.idebug(target))
             else:
-                target['valid_formats'] = ['*']
-            if 'variable_name' in target:
-                variable_name = target['variable_name']
-                self.fields_used.add(target['variable_name'])
+                target['valid formats'] = ['*']
+            if 'variable name' in target:
+                variable_name = target['variable name']
+                self.fields_used.add(target['variable name'])
             if 'metadata' in target:
                 if type(target['metadata']) is not dict:
                     raise DAError('Unknown data type ' + str(type(target['metadata'])) + ' in attachment metadata.' + self.idebug(target))
@@ -1064,15 +1064,15 @@ class Question:
                 if type(target['fields']) is not dict:
                     raise DAError('fields supplied to attachment must be a dictionary' + self.idebug(target))
                 target['content'] = ''
-                target['valid_formats'] = ['pdf']
+                target['valid formats'] = ['pdf']
                 options['pdf_template_file'] = docassemble.base.util.package_template_filename(target['pdf template file'], package=self.package)
                 options['fields'] = dict()
                 for key, val in target['fields'].iteritems():
                     logmessage("Set " + str(key) + " to " + str(val))
-                    options['fields'][key] = TextObject(val)
+                    options['fields'][key] = TextObject(str(val))
             if 'content' not in target:
                 raise DAError("No content provided in attachment")
-            return({'name': TextObject(target['name']), 'filename': TextObject(target['filename']), 'description': TextObject(target['description']), 'content': TextObject("\n".join(defs) + "\n" + target['content']), 'valid_formats': target['valid_formats'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
+            return({'name': TextObject(target['name']), 'filename': TextObject(target['filename']), 'description': TextObject(target['description']), 'content': TextObject("\n".join(defs) + "\n" + target['content']), 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
         elif type(target) is str:
             return({'name': TextObject('Document'), 'filename': TextObject('document'), 'content': TextObject(target), 'valid_formats': ['*'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
         else:
@@ -1217,7 +1217,7 @@ class Question:
                         result_dict[key] = Question({'command': value, 'url': the_dict['url']}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                     elif value in ["continue", "restart", "refresh", "signin", "exit", "leave"]:
                         result_dict[key] = Question({'command': value}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
-                    elif key == 'url' and 'link' in the_dict.values():
+                    elif key == 'url':
                         pass
                     else:
                         result_dict[key] = value
@@ -1276,6 +1276,7 @@ class Question:
             if doc_format in ['pdf', 'rtf', 'tex']:
                 if 'fields' in attachment['options']:
                     data_strings = []
+                    images = []
                     for key, val in attachment['options']['fields'].iteritems():
                         answer = val.text(user_dict).rstrip()
                         if answer == 'True':
@@ -1285,8 +1286,14 @@ class Question:
                         elif answer == 'None':
                             answer = ''
                         #logmessage("Found a " + str(key) + " with a |" + str(answer) + '|')
-                        data_strings.append((key, answer))
-                    result['file'][doc_format] = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'], data_strings=data_strings)
+                        m = re.search(r'\[FILE ([^\]]+)\]', answer)
+                        if m:
+                            file_reference = re.sub(r'[ ,].*', '', m.group(1))
+                            file_info = docassemble.base.filter.file_finder(file_reference, convert={'svg': 'png'})
+                            images.append((key, file_info))
+                        else:
+                            data_strings.append((key, answer))
+                    result['file'][doc_format] = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'], data_strings=data_strings, images=images)
                 else:
                     the_markdown = ""
                     metadata = dict()
