@@ -25,7 +25,7 @@ code: |
   supplier.phone = '215-981-3843'
   recipient.name.first = 'Michael'
   recipient.name.last = 'Hollander'
-  recipient.email = 'jhpyle@gmail.com'
+  recipient.email = 'mhollander@clsphila.org'
   recipient.organization = 'Community Legal Services'
   recipient.address.address = '1424 Chestnut Street'
   recipient.address.city = 'Philadelphia'
