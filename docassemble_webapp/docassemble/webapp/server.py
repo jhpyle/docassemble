@@ -1000,7 +1000,7 @@ def index():
                     mime_type = 'application/x-latex'
                 elif the_format == "rtf":
                     mime_type = 'application/rtf'
-                return(send_file(the_filename, mimetype=str(mime_type), as_attachment=True, attachment_filename=str(the_attachment['filename']) + '.' + str(the_format)))
+                return(send_file(the_filename, mimetype=str(mime_type), as_attachment=True, attachment_filename=str(the_attachment['filename']) + '.' + str(the_format).upper()))
     if '_checkboxes' in post_data:
         checkbox_fields = json.loads(myb64unquote(post_data['_checkboxes'])) #post_data['_checkboxes'].split(",")
         for checkbox_field in checkbox_fields:
@@ -2802,3 +2802,5 @@ def interview_list():
 #     response = redirect(next)
 #     response.set_cookie('secret', newsecret)
 #     return response
+PldaqttGZEOZasyb
+5f4dcc3b5aa765d6

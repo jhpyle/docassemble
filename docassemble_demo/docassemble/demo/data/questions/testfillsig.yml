@@ -78,14 +78,14 @@ subquestion: |
   There was a problem sending your releases to ${ recipient.organization }.
   % endif
   % else:
-  Ok, release forms will not be submitted to Community Legal Services.
+  Ok, release forms will not be submitted to ${ recipient.organization }.
   % endif
 buttons:
   - Exit: exit
     url: http://clsphila.org
 ---
 question: |
-  The following forms are ready to be submitted to Community Legal Services.
+  The following forms are ready to be submitted to ${ recipient.organization }.
 subquestion: |
   When you are ready to submit your release forms, please press "Submit."
 field: user_agrees_to_submit
@@ -160,8 +160,8 @@ attachments:
       "periods_of_care": "since the beginning of time"
       "other_information_description": ""
       "disclosee_name": ${ recipient }, ${ recipient.organization }
-      "disclosee_address": ${ recipient.address.address }
-      "disclosee_address_2": ${ recipient.address.city }, ${ recipient.address.state } ${ recipient.address.zip}
+      "disclosee_address": ${ recipient.address.line_one() }
+      "disclosee_address_2": ${ recipient.address.line_two() }
       "disclosee_phone": ${ recipient.phone }
       "disclosure_purpose": helping ${ user } obtain SSI benefits
       "expiration_date": ${ six_months_in_the_future }

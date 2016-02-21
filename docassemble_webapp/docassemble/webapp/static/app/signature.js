@@ -42,27 +42,27 @@ function resizeCanvas(){
   newCanvas();
   //console.log("I resized");
   return;
-  var cheight = $(window).width()*aspectRatio;
-  if (cheight > $(window).height()-theTop){
-    cheight = $(window).height()-theTop;
-  }
-  if (cheight > 350){
-    cheight = 350;
-  }
-  var cwidth = $(window).width() - theBorders;
+  // var cheight = $(window).width()*aspectRatio;
+  // if (cheight > $(window).height()-theTop){
+  //   cheight = $(window).height()-theTop;
+  // }
+  // if (cheight > 350){
+  //   cheight = 350;
+  // }
+  // var cwidth = $(window).width() - theBorders;
   
-  $("#content").height(cheight);
-  //$("#content").css('top', ($("#header").height() + $("#toppart").height()) + "px");
-  //$("#bottompart").css('top', (cheight) + "px");
-  $("#canvas").width(cwidth);
-  $("#canvas").height(cheight);
-  theTop = $("#canvas").offset().top;
-  theLeft = $("#canvas").offset().left;
-  theWidth = cwidth/100.0;
-  if (theWidth < 1){
-    theWidth = 1;
-  }
-  return;
+  // $("#content").height(cheight);
+  // //$("#content").css('top', ($("#header").height() + $("#toppart").height()) + "px");
+  // //$("#bottompart").css('top', (cheight) + "px");
+  // $("#canvas").width(cwidth);
+  // $("#canvas").height(cheight);
+  // theTop = $("#canvas").offset().top;
+  // theLeft = $("#canvas").offset().left;
+  // theWidth = cwidth/100.0;
+  // if (theWidth < 1){
+  //   theWidth = 1;
+  // }
+  // return;
 }
 
 
