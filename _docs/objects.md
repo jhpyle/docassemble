@@ -237,13 +237,11 @@ You would go into the package and edit the file
 following:
 
 {% highlight python %}
----
 from docassemble.base.core import DAObject
 
 class Recipe(DAObject):
     def summary(self):
         return "#### Ingredients\n\n" + self.ingredients + "\n\n#### Instructions\n\n" + self.instructions
----
 {% endhighlight %}
 
 Your class `Recipe` needs to "inherit" from the basic **docassemble**
@@ -304,16 +302,14 @@ By the way, there is way to write the `summary()` method that is more
 friendly to other interview authors:
 
 {% highlight python %}
----
 return "#### " + word('Ingredients') + "\n\n" + self.ingredients + "\n\n#### " + word('Instructions') + "\n\n" + self.instructions
----
 {% endhighlight %}
 
-This way, other people will be able to use
-`docassemble.cooking.objects` in non-English interviews without having
-to edit your code.  All they would have to do is include the words
-`Ingredients` and `Instructions` in a translation [YAML] file
-referenced in a `words` directive in the **docassemble**
+If you use the `word()` function in this way, other people will be
+able to use `docassemble.cooking.objects` in non-English interviews
+without having to edit your code.  All they would have to do is
+include the words `Ingredients` and `Instructions` in a translation
+[YAML] file referenced in a `words` directive in the **docassemble**
 [configuration].
 
 ## Using global variables in your classes
