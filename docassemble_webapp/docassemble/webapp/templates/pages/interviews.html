@@ -3,11 +3,24 @@
 {% block content %}
 
 <h3 class="page-header">{{ word('Resume an interview') }}</h3>
-<p>{{ word('Click to resume an interview you already started.') }}</p>
+<p>{{ word('Click interview title to resume an interview you already started.') }}</p>
 
-<ul>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Started</th>
+      <th>Delete</th>
+    </tr>
+  </thead>
+  <tbody>
   {% for interview in interviews %}
-  <li><a href="{{ url_for('index', i=interview['interview_info'].filename, session=interview['interview_info'].key) }}">{{ interview['title'] }}</a> {{ word('started') }} {{ interview['starttime'] }}</li>
+    <tr>
+      <td><a href="{{ url_for('index', i=interview['interview_info'].filename, session=interview['interview_info'].key) }}">{{ interview['title'] }}</a></td>
+      <td>{{ interview['starttime'] }}</td>
+      <td><a class="label label-warning" href="{{ url_for('interview_list', action='delete', filename=interview['interview_info'].filename, session=interview['interview_info'].key) }}">{{ word('Delete') }}</a></td>
+    </tr>
   {% endfor %}
-</ul>
+  </tbody>
+</table>
 {% endblock %}

@@ -461,23 +461,30 @@ def substitute_secret(oldsecret, newsecret):
     changed = False
     for record in Attachments.query.filter_by(key=user_code, filename=filename).all():
         if record.dictionary:
+            logmessage("Found old dictionary in attachments")
             the_dict = decrypt_dictionary(record.dictionary, oldsecret)
+            logmessage("Decrypted it with old secret " + oldsecret)
             if the_dict['_internal']['secret'] is not None:
                 the_secret = the_dict['_internal']['secret']
             else:
+                logmessage("re-encrypted with secret " + newsecret)
                 record.dictionary = encrypt_dictionary(the_dict, newsecret)
                 changed = True
     if changed:
         db.session.commit()
     changed = False
     for record in UserDict.query.filter_by(key=user_code, filename=filename).order_by(UserDict.indexno).all():
+        logmessage("Found old dictionary in userdict")
         the_dict = decrypt_dictionary(record.dictionary, oldsecret)
+        logmessage("Decrypted it with old secret " + oldsecret)
         if the_dict['_internal']['secret'] is not None:
             the_secret = the_dict['_internal']['secret']
         else:
             record.dictionary = encrypt_dictionary(the_dict, newsecret)
+            logmessage("re-encrypted with secret " + newsecret)
             changed = True
     if changed:
+        logmessage("committed changes")
         db.session.commit()
     return the_secret
 
@@ -530,6 +537,7 @@ def custom_login():
     user_manager =  current_app.user_manager
     db_adapter = user_manager.db_adapter
     secret = request.cookies.get('secret', None)
+    logmessage("custom_login: secret is " + secret)
     next = request.args.get('next', _endpoint_url(user_manager.after_login_endpoint))
     reg_next = request.args.get('reg_next', _endpoint_url(user_manager.after_register_endpoint))
 
@@ -857,14 +865,18 @@ def index():
     if yaml_parameter is not None:
         yaml_filename = yaml_parameter
         if session_parameter is None:
+            logmessage("session parameter is none")
             user_code, user_dict = reset_session(yaml_filename, secret)
             session_id = session.get('uid', None)
             if 'key_logged' in session:
                 del session['key_logged']
             need_to_reset = True
     if session_parameter is not None:
+        logmessage("session parameter is " + str(session_parameter))
         session_id = session_parameter
         session['uid'] = session_id
+        if yaml_parameter is not None:
+            session['i'] = yaml_filename
         if 'key_logged' in session:
             del session['key_logged']
         need_to_reset = True
@@ -873,12 +885,14 @@ def index():
         logmessage("session id is " + str(session_id))
         steps, user_dict = fetch_user_dict(user_code, yaml_filename, secret)
         if user_dict is None:
+            logmessage("user_dict was none")
             del user_code
             del user_dict
     try:
         user_dict
         user_code
     except:
+        logmessage("resetting session")
         user_code, user_dict = reset_session(yaml_filename, secret)
         if 'key_logged' in session:
             del session['key_logged']
@@ -890,6 +904,7 @@ def index():
         secret = user_dict['_internal']['secret']
         set_cookie = True
     if current_user.is_authenticated and 'key_logged' not in session:
+        logmessage("save_user_dict_key called with " + user_code + " and " + yaml_filename)
         save_user_dict_key(user_code, yaml_filename)
         session['key_logged'] = True 
     if len(request.args):
@@ -1000,7 +1015,7 @@ def index():
                     mime_type = 'application/x-latex'
                 elif the_format == "rtf":
                     mime_type = 'application/rtf'
-                return(send_file(the_filename, mimetype=str(mime_type), as_attachment=True, attachment_filename=str(the_attachment['filename']) + '.' + str(the_format).upper()))
+                return(send_file(the_filename, mimetype=str(mime_type), as_attachment=True, attachment_filename=str(the_attachment['filename']) + '.' + str(the_format)))
     if '_checkboxes' in post_data:
         checkbox_fields = json.loads(myb64unquote(post_data['_checkboxes'])) #post_data['_checkboxes'].split(",")
         for checkbox_field in checkbox_fields:
@@ -2763,7 +2778,7 @@ def utilities():
     return render_template('pages/utilities.html', form=form, fields=fields_output)
 
 def nice_date_from_utc(timestamp):
-    return timestamp.replace(tzinfo=tz.tzutc()).astimezone(tz.tzlocal()).strftime('%c')
+    return timestamp.replace(tzinfo=tz.tzutc()).astimezone(tz.tzlocal()).strftime('%x %X')
 
 @app.route('/save', methods=['GET', 'POST'])
 def save_for_later():
@@ -2775,6 +2790,13 @@ def save_for_later():
 @login_required
 def interview_list():
     secret = request.cookies.get('secret', None)
+    logmessage("interview_list: secret is " + secret)
+    if 'action' in request.args and request.args.get('action') == 'delete':
+        yaml_file = request.args.get('filename', None)
+        session_id = request.args.get('session', None)
+        if yaml_file is not None and session_id is not None:
+            reset_user_dict(session_id, yaml_file)
+            return redirect(url_for('interview_list'))
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key).subquery()
     interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary).filter(UserDictKeys.user_id == current_user.id).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).group_by(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary)
     logmessage(str(interview_query))
@@ -2786,7 +2808,12 @@ def interview_list():
             interview_title = metadata.get('title', word('Untitled')).rstrip()
         else:
             interview_title = word('Untitled')
-        dictionary = decrypt_dictionary(interview_info.dictionary, secret)
+        logmessage("Found old interview with title " + interview_title)
+        try:
+            dictionary = decrypt_dictionary(interview_info.dictionary, secret)
+        except:
+            logmessage("Unable to decrypt dictionary with secret " + secret)
+            continue
         starttime = nice_date_from_utc(dictionary['_internal']['starttime'])
         modtime = nice_date_from_utc(dictionary['_internal']['modtime'])
         interviews.append({'interview_info': interview_info, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'title': interview_title})
