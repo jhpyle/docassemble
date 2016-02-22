@@ -5,6 +5,8 @@ var theLeft;
 var theWidth;
 var aspectRatio = 0.30;
 var theBorders = 50;
+var waiter = 0;
+var waitlimit = 2;
 
 $(document).ready(function () {
   setTimeout(function(){
@@ -126,20 +128,27 @@ $.fn.drawTouch = function() {
   };
   var move = function(e) {
     e.preventDefault();
-    e = e.originalEvent;
-    x = e.changedTouches[0].pageX-$("#canvas").offset().left;
-    y = e.changedTouches[0].pageY-$("#canvas").offset().top;
-    ctx.lineTo(x,y);
-    ctx.stroke();
+    if (waiter % waitlimit == 0){
+      e = e.originalEvent;
+      x = e.changedTouches[0].pageX-$("#canvas").offset().left;
+      y = e.changedTouches[0].pageY-$("#canvas").offset().top;
+      ctx.lineTo(x,y);
+      ctx.stroke();
+    }
+    waiter++;
     //ctx.fillRect(x-0.5*theWidth,y-0.5*theWidth,theWidth,theWidth);
     //ctx.beginPath();
     //ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
     //ctx.fill();
   };
+  var moveline = function(e) {
+    waiter = 0;
+    move(e);
+  }
   var dot = function(e) {
     e.preventDefault();
     e = e.originalEvent;
-    //ctx.lineJoin="round";
+    ctx.lineJoin="round";
     x = e.pageX-$("#canvas").offset().left;
     y = e.pageY-$("#canvas").offset().top;
     ctx.beginPath();
@@ -150,8 +159,8 @@ $.fn.drawTouch = function() {
     //console.log("Got click");
   };
   $(this).on("click", dot);
-  $(this).on("touchend", move);
-  $(this).on("touchcancel", move);
+  $(this).on("touchend", moveline);
+  $(this).on("touchcancel", moveline);
   $(this).on("touchstart", start);
   $(this).on("touchmove", move);	
 }; 
@@ -170,20 +179,27 @@ $.fn.drawPointer = function() {
   };
   var move = function(e) {
     e.preventDefault();
-    e = e.originalEvent;
-    x = e.pageX-$("#canvas").offset().left;
-    y = e.pageY-$("#canvas").offset().top;
-    ctx.lineTo(x,y);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(x,y);
+    if (waiter % waitlimit == 0){
+      e = e.originalEvent;
+      x = e.pageX-$("#canvas").offset().left;
+      y = e.pageY-$("#canvas").offset().top;
+      ctx.lineTo(x,y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(x,y);
+    }
+    //waiter++;
+  };
+  var moveline = function(e) {
+    waiter = 0;
+    move(e)
   };
   $(this).on("MSPointerDown", start);
   $(this).on("MSPointerMove", move);
-  $(this).on("MSPointerUp", move);
+  $(this).on("MSPointerUp", moveline);
 };        
 
 // prototype to	start drawing on mouse using canvas moveTo and lineTo
@@ -201,7 +217,7 @@ $.fn.drawMouse = function() {
     ctx.moveTo(x,y);
   };
   var move = function(e) {
-    if(clicked){
+    if(clicked && waiter % waitlimit == 0){
       x = e.pageX-$("#canvas").offset().left;
       y = e.pageY-$("#canvas").offset().top;
       ctx.lineTo(x,y);
@@ -212,8 +228,11 @@ $.fn.drawMouse = function() {
       ctx.beginPath();
       ctx.moveTo(x,y);
     }
+    //waiter++;
   };
   var stop = function(e) {
+    waiter = 0;
+    move(e);
     clicked = 0;
   };
   $(this).on("mousedown", start);
