@@ -403,6 +403,7 @@ if 'oauth' in daconfig:
         app.config['USE_FACEBOOK_LOGIN'] = True
 
 app.secret_key = daconfig.get('secretkey', '38ihfiFehfoU34mcq_4clirglw3g4o87')
+password_secret_key = daconfig.get('password_secretkey', app.secret_key)
 #app.secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits)
 #                         for x in xrange(32))
 
@@ -788,7 +789,7 @@ def oauth_callback(provider):
         save_user_dict_key(session['uid'], session['i'])
         session['key_logged'] = True 
     secret = request.cookies.get('secret', None)
-    newsecret = substitute_secret(secret, pad_to_16(MD5.MD5Hash(data=social_id).hexdigest()))
+    newsecret = substitute_secret(secret, pad_to_16(MD5.MD5Hash(data=social_id+password_secret_key).hexdigest()))
     if not current_user.is_anonymous:
         #update_user_id(session['uid'])
         flash(word('Welcome!  You are logged in as ') + email, 'success')

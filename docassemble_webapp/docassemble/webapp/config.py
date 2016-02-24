@@ -72,6 +72,7 @@ db:
   host: null
   port: null
 secretkey: 28asflwjeifwlfjsd2fejfiefw3g4o87
+password_secretkey: 2f928j3rwjf82498rje9t
 appname: docassemble
 brandname: demo
 packagecache: /var/www/.cache
