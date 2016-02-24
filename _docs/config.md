@@ -347,6 +347,14 @@ session information and provide [protection] against
 [cross-site request forgery].  Set the `secretkey` to a random value
 that cannot be guessed.
 
+## password_secretkey
+
+The `password_secretkey` is used in the process of encrypting
+interview answers for users who log in using Google or Facebook.  It
+defaults to `secretkey`.  If the value changes, users who log in
+through Google or Facebook will not be able to resume stored
+interviews.
+
 ## png_resolution and png_screen_resolution
 
 When users supply PDF files and **docassemble** includes those files
