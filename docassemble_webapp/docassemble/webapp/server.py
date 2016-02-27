@@ -538,7 +538,7 @@ def custom_login():
     user_manager =  current_app.user_manager
     db_adapter = user_manager.db_adapter
     secret = request.cookies.get('secret', None)
-    logmessage("custom_login: secret is " + secret)
+    logmessage("custom_login: secret is " + str(secret))
     next = request.args.get('next', _endpoint_url(user_manager.after_login_endpoint))
     reg_next = request.args.get('reg_next', _endpoint_url(user_manager.after_register_endpoint))
 
@@ -2791,7 +2791,7 @@ def save_for_later():
 @login_required
 def interview_list():
     secret = request.cookies.get('secret', None)
-    logmessage("interview_list: secret is " + secret)
+    logmessage("interview_list: secret is " + str(secret))
     if 'action' in request.args and request.args.get('action') == 'delete':
         yaml_file = request.args.get('filename', None)
         session_id = request.args.get('session', None)
@@ -2817,7 +2817,7 @@ def interview_list():
         try:
             dictionary = decrypt_dictionary(interview_info.dictionary, secret)
         except:
-            logmessage("Unable to decrypt dictionary with secret " + secret)
+            logmessage("Unable to decrypt dictionary with secret " + str(secret))
             continue
         starttime = nice_date_from_utc(dictionary['_internal']['starttime'])
         modtime = nice_date_from_utc(dictionary['_internal']['modtime'])
