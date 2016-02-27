@@ -228,14 +228,20 @@ To write and test your own interviews, you will need:
    where the privileges of the account have been upgraded to
    "developer" or "admin."
 
-There are two ways to run your own interviews:
+There are three ways to author your own interviews:
 
 1. When logged in, go to the "Playground" from the menu in the upper
    right hand corner.  The [playground] allows you to quickly edit and
-   run interview [YAML].
-2. Create a [package] on your local computer and then push your
-   changes to the server either through [GitHub] or by uploading a ZIP
+   run interview [YAML].  This is a testing environment with limited
+   features.
+2. Create a [package] on your local computer and then install it on
+   the **docassemble** server either through [GitHub] or by uploading a ZIP
    file.
+3. Create a [package], push it to [GitHub], and then edit your
+   interviews using [GitHub]'s web interface.  (You can also upload
+   static files using [GitHub].)  To run your interview, update your
+   [package] on **docassemble** (which will retrieve your code from
+   [GitHub]).
 
 [GitHub]: https://github.com/
 [package]: {{ site.baseurl }}/packages.html
