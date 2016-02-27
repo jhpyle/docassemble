@@ -2803,7 +2803,11 @@ def interview_list():
     logmessage(str(interview_query))
     interviews = list()
     for interview_info in interview_query:
-        interview = docassemble.base.interview_cache.get_interview(interview_info.filename)
+        try:
+            interview = docassemble.base.interview_cache.get_interview(interview_info.filename)
+        except:
+            logmessage("Unable to load interview file " + interview_info.filename)
+            continue
         if len(interview.metadata):
             metadata = interview.metadata[0]
             interview_title = metadata.get('title', word('Untitled')).rstrip()
