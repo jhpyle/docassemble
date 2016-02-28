@@ -55,6 +55,10 @@ listed below.  Note that:
 
 {% highlight yaml %}
 metadata:
+  title: |
+    Demonstration interview
+  short title:
+    Demo
   description: |
     This is a demonstration of the docassemble system.
   authors:
@@ -212,11 +216,12 @@ content: |
 ---
 mandatory: true
 code: |
+  multi_user = False
   speak_text = False
 ---
 initial: true
 code: |
-  #track_location = user.location.status()
+  # track_location = user.location.status()
   set_language(user.language)
 ---
 mandatory: true
@@ -283,7 +288,9 @@ subquestion: |
   question is available.
 
   Click "Source" to toggle the display of the [YAML] code used to
-  generate the question.
+  generate the question.  (Note: the "Source" tab is available because
+  this server is configured as a development server; end users would
+  not see a "Source" tab.)
 
   % if user.location.known:
   Your current location is ${ user.location }.
@@ -693,6 +700,10 @@ question: |
 decoration: finishline
 subquestion: |
   Here is an advice letter and a pleading you can file.
+
+  (Note: the options to see documents in Markdown and LaTeX format are
+  hidden when **docassemble** is configured as a production server.
+  End users will not see these options.)
 help: |
   This is the end of the interview, ${ client }.  You can exit or
   restart.
@@ -1156,6 +1167,12 @@ comment: |
 ---
 generic object: Individual
 question: |
+  What is ${ x.possessive('Social Security Number') }?
+fields:
+  - Social Security Number: x.ssn
+---
+generic object: Individual
+question: |
   What is ${ x.possessive('date of birth') }?
 fields:
   - Date of Birth: x.birthdate
@@ -1220,7 +1237,9 @@ generic object: Individual
 question: |
   Please sign your name below.
 signature: x.signature
-need: user_understands_how_to_use_signature_feature
+need:
+  - x.name.first
+  - user_understands_how_to_use_signature_feature
 under: |
   ${ x.name }
 comment: |
