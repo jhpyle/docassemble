@@ -999,7 +999,7 @@ def index():
             del session['key_logged']
         steps = 0
     action = None
-    if user_dict.get('multi_user', False) and encrypted is True:
+    if user_dict.get('multi_user', False) is True and encrypted is True:
         encrypted = False
         session['encrypted'] = encrypted
         decrypt_session(secret)
@@ -1007,7 +1007,7 @@ def index():
         # currentsecret, temptwo = substitute_secret(secret, user_dict['_internal']['secret'])
         # session['currentsecret'] = currentsecret
         # secret_in_use = currentsecret
-    if encrypted is False and user_dict.get('multi_user', False) is False:
+    if user_dict.get('multi_user', False) is False and encrypted is False:
         encrypt_session(secret)
         encrypted = True
         session['encrypted'] = encrypted

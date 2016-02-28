@@ -28,6 +28,7 @@ buttons:
 ---
 mandatory: true
 code: |
+  multi_user = True
   if role == 'first_person':
     first_person_bid
   if role == 'second_person':

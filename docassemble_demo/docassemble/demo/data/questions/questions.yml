@@ -160,12 +160,12 @@ content: |
 ---
 mandatory: true
 code: |
+  multi_user = False
   speak_text = False
 ---
 initial: true
 code: |
-  #track_location = user.location.status()
-  #multi_user = True
+  # track_location = user.location.status()
   set_language(user.language)
 ---
 mandatory: true

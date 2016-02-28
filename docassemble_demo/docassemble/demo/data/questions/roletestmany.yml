@@ -9,6 +9,7 @@ comment: |
         respondents.addObject(DAObject, current_info['user']['email'])
 initial: true
 code: |
+  multi_user = True
   if current_info['user']['is_authenticated']:
     if current_info['user']['email'] not in respondents:
       respondents.setObject(current_info['user']['email'], DAObject)
