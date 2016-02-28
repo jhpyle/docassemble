@@ -48,6 +48,7 @@ class UserDict(db.Model):
     key = db.Column(db.String(250))
     dictionary = db.Column(db.Text())
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
+    encrypted = db.Column(db.Boolean(), nullable=False, server_default='1')
 
 class UserDictKeys(db.Model):
     __tablename__ = dbtableprefix + "userdictkeys"

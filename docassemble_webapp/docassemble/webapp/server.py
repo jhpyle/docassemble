@@ -453,41 +453,120 @@ def pad_to_16(the_string):
         return the_string[:16]
     return str(the_string) + (16 - len(the_string)) * '0'
 
+def decrypt_session(secret):
+    user_code = session.get('uid', None)
+    filename = session.get('i', None)
+    if user_code == None or filename == None or secret is None:
+        return
+    changed = False
+    for record in SpeakList.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
+        phrase = decrypt_phrase(record.phrase, secret)
+        record.phrase = pack_phrase(the_dict)
+        record.encrypted = False
+        changed = True
+    if changed:
+        db.session.commit()
+    changed = False
+    for record in Attachments.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
+        if record.dictionary:
+            the_dict = decrypt_dictionary(record.dictionary, secret)
+            record.dictionary = pack_dictionary(the_dict)
+            record.encrypted = False
+            changed = True
+    if changed:
+        db.session.commit()
+    changed = False
+    for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=True).order_by(UserDict.indexno).all():
+        the_dict = decrypt_dictionary(record.dictionary, secret)
+        record.dictionary = pack_dictionary(the_dict)
+        record.encrypted = False
+        changed = True
+    if changed:
+        db.session.commit()
+    return
+
+def encrypt_session(secret):
+    user_code = session.get('uid', None)
+    filename = session.get('i', None)
+    if user_code == None or filename == None or secret is None:
+        return
+    changed = False
+    for record in SpeakList.query.filter_by(key=user_code, filename=filename, encrypted=False).all():
+        phrase = unpack_phrase(record.phrase)
+        record.phrase = encrypt_phrase(phrase, secret)
+        record.encrypted = True
+        changed = True
+    if changed:
+        db.session.commit()
+    changed = False
+    for record in Attachments.query.filter_by(key=user_code, filename=filename, encrypted=False).all():
+        if record.dictionary:
+            the_dict = unpack_dictionary(record.dictionary)
+            record.dictionary = encrypt_dictionary(the_dict, secret)
+            record.encrypted = True
+            changed = True
+    if changed:
+        db.session.commit()
+    changed = False
+    for record in UserDict.query.filter_by(key=user_code, filename=filename, encrypted=False).order_by(UserDict.indexno).all():
+        the_dict = unpack_dictionary(record.dictionary)
+        record.dictionary = encrypt_dictionary(the_dict, secret)
+        record.encrypted = True
+        changed = True
+    if changed:
+        db.session.commit()
+    return
+
 def substitute_secret(oldsecret, newsecret):
     if oldsecret == None or oldsecret == newsecret:
         return newsecret
     user_code = session.get('uid', None)
     filename = session.get('i', None)
-    the_secret = newsecret
+    if user_code == None or filename == None:
+        return newsecret
+    # currentsecret = None
+    changed = False
+    for record in SpeakList.query.filter_by(key=user_code, filename=filename).all():
+        if record.encrypted:
+            phrase = decrypt_phrase(record.phrase, oldsecret)
+        else:
+            phrase = unpack_phrase(record.phrase)
+            record.encrypted = True
+        record.phrase = encrypt_phrase(phrase, newsecret)
+        changed = True
+    if changed:
+        db.session.commit()
     changed = False
     for record in Attachments.query.filter_by(key=user_code, filename=filename).all():
         if record.dictionary:
             logmessage("Found old dictionary in attachments")
-            the_dict = decrypt_dictionary(record.dictionary, oldsecret)
-            logmessage("Decrypted it with old secret " + oldsecret)
-            if the_dict['_internal']['secret'] is not None:
-                the_secret = the_dict['_internal']['secret']
+            if record.encrypted:
+                the_dict = decrypt_dictionary(record.dictionary, oldsecret)
+                logmessage("Decrypted it with old secret " + oldsecret)
             else:
-                logmessage("re-encrypted with secret " + newsecret)
-                record.dictionary = encrypt_dictionary(the_dict, newsecret)
-                changed = True
+                the_dict = unpack_dictionary(record.dictionary)
+                record.encrypted = True
+            logmessage("re-encrypted with secret " + newsecret)
+            record.dictionary = encrypt_dictionary(the_dict, newsecret)
+            changed = True
     if changed:
         db.session.commit()
     changed = False
     for record in UserDict.query.filter_by(key=user_code, filename=filename).order_by(UserDict.indexno).all():
         logmessage("Found old dictionary in userdict")
-        the_dict = decrypt_dictionary(record.dictionary, oldsecret)
-        logmessage("Decrypted it with old secret " + oldsecret)
-        if the_dict['_internal']['secret'] is not None:
-            the_secret = the_dict['_internal']['secret']
+        if record.encrypted:
+            the_dict = decrypt_dictionary(record.dictionary, oldsecret)
+            logmessage("Decrypted it with old secret " + oldsecret)
         else:
-            record.dictionary = encrypt_dictionary(the_dict, newsecret)
-            logmessage("re-encrypted with secret " + newsecret)
-            changed = True
+            the_dict = unpack_dictionary(record.dictionary)
+            record.encrypted = True
+        record.dictionary = encrypt_dictionary(the_dict, newsecret)
+        logmessage("re-encrypted with secret " + newsecret)
+        changed = True
     if changed:
         logmessage("committed changes")
         db.session.commit()
-    return the_secret
+    return newsecret
 
 def _do_login_user(user, password, secret, next, remember_me=False):
     # User must have been authenticated
@@ -848,6 +927,7 @@ def index():
     #nextid = connection.execute(seq)
     session_id = session.get('uid', None)
     secret = request.cookies.get('secret', None)
+    encrypted = session.get('encrypted', True)
     if secret is None:
         secret = ''.join(random.choice(string.ascii_letters) for i in range(16))
         set_cookie = True
@@ -856,13 +936,13 @@ def index():
     yaml_filename = session.get('i', default_yaml_filename)
     steps = 0
     need_to_reset = False
-    secret_parameter = request.args.get('sid', None)
+    # secret_parameter = request.args.get('sid', None)
     yaml_parameter = request.args.get('i', None)
     session_parameter = request.args.get('session', None)
-    if secret_parameter is not None:
-        if secret != secret_parameter:
-            secret = secret_parameter
-            set_cookie = True
+    # if secret_parameter is not None:
+    #     if currentsecret != secret_parameter:
+    #         currentsecret = secret_parameter
+    #         session['currentsecret'] = currentsecret
     if yaml_parameter is not None:
         yaml_filename = yaml_parameter
         if session_parameter is None:
@@ -884,7 +964,25 @@ def index():
     if session_id:
         user_code = session_id
         logmessage("session id is " + str(session_id))
-        steps, user_dict = fetch_user_dict(user_code, yaml_filename, secret)
+        steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret)
+        if encrypted != is_encrypted:
+            encrypted = is_encrypted
+            session['encrypted'] = encrypted
+        # if currentsecret is not None:
+        #     try:
+        #         steps, user_dict = fetch_user_dict(user_code, yaml_filename, currentsecret)
+        #         secret_to_use = currentsecret
+        #     except:
+        #         del session['currentsecret']
+        #         currentsecret = None
+        #         try:
+        #             steps, user_dict = fetch_user_dict(user_code, yaml_filename, secret)
+        #             secret_to_use = secret
+        #         except:
+        #             logmessage("Error: could not get user dict")
+        # else:
+        #     steps, user_dict = fetch_user_dict(user_code, yaml_filename, secret)
+        #     secret_to_use = secret
         if user_dict is None:
             logmessage("user_dict was none")
             del user_code
@@ -895,15 +993,24 @@ def index():
     except:
         logmessage("resetting session")
         user_code, user_dict = reset_session(yaml_filename, secret)
+        encrypted = False
+        session['encrypted'] = encrypted
         if 'key_logged' in session:
             del session['key_logged']
         steps = 0
     action = None
-    if 'multi_user' in user_dict and user_dict['multi_user'] and user_dict['_internal']['secret'] != secret:
-        user_dict['_internal']['secret'] = secret
-    elif user_dict['_internal']['secret'] is not None and secret != user_dict['_internal']['secret']:
-        secret = user_dict['_internal']['secret']
-        set_cookie = True
+    if user_dict.get('multi_user', False) and encrypted is True:
+        encrypted = False
+        session['encrypted'] = encrypted
+        decrypt_session(secret)
+        # user_dict['_internal']['secret'] = ''.join(random.choice(string.ascii_letters) for i in range(16))
+        # currentsecret, temptwo = substitute_secret(secret, user_dict['_internal']['secret'])
+        # session['currentsecret'] = currentsecret
+        # secret_in_use = currentsecret
+    if encrypted is False and user_dict.get('multi_user', False) is False:
+        encrypt_session(secret)
+        encrypted = True
+        session['encrypted'] = encrypted
     if current_user.is_authenticated and 'key_logged' not in session:
         logmessage("save_user_dict_key called with " + user_code + " and " + yaml_filename)
         save_user_dict_key(user_code, yaml_filename)
@@ -918,7 +1025,10 @@ def index():
                 exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)
             need_to_reset = True
     if need_to_reset:
-        save_user_dict(user_code, user_dict, yaml_filename, secret)
+        save_user_dict(user_code, user_dict, yaml_filename, secret, encrypt=encrypted)
+        # if current_user.is_authenticated:
+        #     save_user_dict_key(user_code, yaml_filename)
+        #     session['key_logged'] = True
         response = redirect(url_for('index'))
         if set_cookie:
             response.set_cookie('secret', secret)
@@ -993,7 +1103,10 @@ def index():
         else:
             flash(word("Unable to e-mail your documents to") + " " + str(attachment_email_address) + ".", 'error')
     if '_back_one' in post_data and steps > 1:
-        steps, user_dict = fetch_previous_user_dict(user_code, yaml_filename, secret)
+        steps, user_dict, is_encrypted = fetch_previous_user_dict(user_code, yaml_filename, secret)
+        if encrypted != is_encrypted:
+            encrypted = is_encrypted
+            session['encrypted'] = encrypted
         #logmessage("Went back")
     elif 'filename' in request.args:
         #logmessage("Got a GET statement with filename!")
@@ -1286,6 +1399,9 @@ def index():
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
         reset_user_dict(user_code, yaml_filename)
         save_user_dict(user_code, user_dict, yaml_filename, secret)
+        if current_user.is_authenticated:
+            save_user_dict_key(user_code, yaml_filename)
+            session['key_logged'] = True
         steps = 0
         changed = False
         interview.assemble(user_dict, interview_status)
@@ -1295,6 +1411,9 @@ def index():
         user_dict = fresh_dictionary()
         reset_user_dict(user_code, yaml_filename)
         save_user_dict(user_code, user_dict, yaml_filename, secret)
+        if current_user.is_authenticated:
+            save_user_dict_key(user_code, yaml_filename)
+            session['key_logged'] = True
         if interview_status.questionText != '':
             return redirect(interview_status.questionText)
         else:
@@ -1311,7 +1430,7 @@ def index():
     user_dict['_internal']['answers'] = dict()
     if changed and interview_status.question.interview.use_progress_bar:
         advance_progress(user_dict)
-    save_user_dict(user_code, user_dict, yaml_filename, secret, changed=changed)
+    save_user_dict(user_code, user_dict, yaml_filename, secret, changed=changed, encrypt=encrypted)
     flash_content = ""
     messages = get_flashed_messages(with_categories=True) + error_messages
     if messages:
@@ -1393,17 +1512,24 @@ def index():
             for question_type in ['question', 'help']:
                 #phrase = codecs.encode(to_text(interview_status.screen_reader_text[question_type]).encode('utf-8'), 'base64').decode().replace('\n', '')
                 phrase = to_text(interview_status.screen_reader_text[question_type])
-                encrypted_phrase = encrypt_phrase(phrase, secret)
+                if encrypted:
+                    the_phrase = encrypt_phrase(phrase, secret)
+                else:
+                    the_phrase = pack_phrase(phrase, secret)
                 existing_entry = SpeakList.query.filter_by(filename=yaml_filename, key=user_code, question=interview_status.question.number, type=question_type, language=the_language, dialect=the_dialect).first()
                 if existing_entry:
-                    existing_phrase = decrypt_phrase(existing_entry.phrase, secret)
+                    if existing_entry.encrypted:
+                        existing_phrase = decrypt_phrase(existing_entry.phrase, secret)
+                    else:
+                        existing_phrase = unpack_phrase(existing_entry.phrase)
                     if phrase != existing_phrase:
                         logmessage("The phrase changed; updating it")
-                        existing_entry.phrase = encrypted_phrase
+                        existing_entry.phrase = the_phrase
                         existing_entry.upload = None
+                        existing_entry.encrypted = encrypted
                         db.session.commit()
                 else:
-                    new_entry = SpeakList(filename=yaml_filename, key=user_code, phrase=encrypted_phrase, question=interview_status.question.number, type=question_type, language=the_language, dialect=the_dialect)
+                    new_entry = SpeakList(filename=yaml_filename, key=user_code, phrase=the_phrase, question=interview_status.question.number, type=question_type, language=the_language, dialect=the_dialect, encrypted=encrypted)
                     db.session.add(new_entry)
                     db.session.commit()
         output = '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" rel="stylesheet">\n    <link href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
@@ -1450,7 +1576,6 @@ def index():
                             output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter())
                     elif 'variable' in stage:
                         output += "        <h5>" + word('Needed definition of') + " <code>" + str(stage['variable']) + "</code></h5>\n"
-                #output += '        <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(user_dict)]) + '</p>' + "\n"
                 output += '        <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.util.pickleable_objects(user_dict))]) + '</p>' + "\n"
             output += '      </div>' + "\n"
         output += '    </div>'
@@ -1488,18 +1613,30 @@ def encrypt_phrase(phrase, secret):
     encrypter = AES.new(secret, AES.MODE_CBC, iv)
     return iv + codecs.encode(encrypter.encrypt(pad(phrase)), 'base64').decode()
 
+def pack_phrase(phrase):
+    return codecs.encode(phrase, 'base64').decode()
+
 def decrypt_phrase(phrase_string, secret):
     decrypter = AES.new(secret, AES.MODE_CBC, phrase_string[:16])
     return unpad(decrypter.decrypt(codecs.decode(phrase_string[16:], 'base64')))
+
+def unpack_phrase(phrase_string):
+    return codecs.decode(phrase_string, 'base64')
 
 def encrypt_dictionary(the_dict, secret):
     iv = ''.join(random.choice(string.ascii_letters) for i in range(16))
     encrypter = AES.new(secret, AES.MODE_CBC, iv)
     return iv + codecs.encode(encrypter.encrypt(pad(pickle.dumps(pickleable_objects(the_dict)))), 'base64').decode()
 
+def pack_dictionary(the_dict):
+    return codecs.encode(pickle.dumps(pickleable_objects(the_dict)), 'base64').decode()
+
 def decrypt_dictionary(dict_string, secret):
     decrypter = AES.new(secret, AES.MODE_CBC, dict_string[:16])
     return pickle.loads(unpad(decrypter.decrypt(codecs.decode(dict_string[16:], 'base64'))))
+
+def unpack_dictionary(dict_string):
+    return pickle.loads(codecs.decode(dict_string, 'base64'))
 
 def get_unique_name(filename, secret):
     while True:
@@ -1531,7 +1668,10 @@ def get_attachment_info(the_user_code, question_number, filename, secret):
     existing_entry = Attachments.query.filter_by(key=the_user_code, question=question_number, filename=filename).first()
     if existing_entry and existing_entry.dictionary:
         #the_user_dict = pickle.loads(codecs.decode(existing_entry.dictionary, 'base64'))
-        the_user_dict = decrypt_dictionary(existing_entry.dictionary, secret)
+        if existing_entry.encrypted:
+            the_user_dict = decrypt_dictionary(existing_entry.dictionary, secret)
+        else:
+            the_user_dict = unpack_dictionary(existing_entry.dictionary)
     # cur = conn.cursor()
     # cur.execute("select dictionary from attachments where key=%s and question=%s and filename=%s", [the_user_code, question_number, filename])
     # for d in cur:
@@ -1541,67 +1681,47 @@ def get_attachment_info(the_user_code, question_number, filename, secret):
     # conn.commit()
     return the_user_dict
 
-def update_attachment_info(the_user_code, the_user_dict, the_interview_status, secret):
+def update_attachment_info(the_user_code, the_user_dict, the_interview_status, secret, encrypt=True):
     #logmessage("Got to update_attachment_info")
     Attachments.query.filter_by(key=the_user_code, question=the_interview_status.question.number, filename=the_interview_status.question.interview.source.path).delete()
     db.session.commit()
-    new_attachment = Attachments(key=the_user_code, dictionary=encrypt_dictionary(the_user_dict, secret), question = the_interview_status.question.number, filename=the_interview_status.question.interview.source.path)
+    if encrypt:
+        new_attachment = Attachments(key=the_user_code, dictionary=encrypt_dictionary(the_user_dict, secret), question = the_interview_status.question.number, filename=the_interview_status.question.interview.source.path, encrypted=True)
+    else:
+        new_attachment = Attachments(key=the_user_code, dictionary=pack_dictionary(the_user_dict), question = the_interview_status.question.number, filename=the_interview_status.question.interview.source.path, encrypted=False)
     db.session.add(new_attachment)
     db.session.commit()
-    # cur = conn.cursor()
-    # cur.execute("delete from attachments where key=%s and question=%s and filename=%s", [the_user_code, the_interview_status.question.number, the_interview_status.question.interview.source.path])
-    # conn.commit()
-    # cur.execute("insert into attachments (key, dictionary, question, filename) values (%s, %s, %s, %s)", [the_user_code, codecs.encode(pickle.dumps(pickleable_objects(the_user_dict)), 'base64').decode(), the_interview_status.question.number, the_interview_status.question.interview.source.path])
-    # conn.commit()
-    #logmessage("Delete from attachments where key = " + the_user_code + " and question is " + str(the_interview_status.question.number) + " and filename is " + the_interview_status.question.interview.source.path)
-    #logmessage("Insert into attachments (key, dictionary, question, filename) values (" + the_user_code + ", saved_user_dict, " + str(the_interview_status.question.number) + ", " + the_interview_status.question.interview.source.path + ")")
     return
 
 def fetch_user_dict(user_code, filename, secret):
     user_dict = None
     steps = 0
+    encrypted = True
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).filter(UserDict.key == user_code and UserDict.filename == filename).subquery()
-    results = db.session.query(UserDict.dictionary, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno)
+    results = db.session.query(UserDict.dictionary, UserDict.encrypted, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno)
     for d in results:
         if d.dictionary:
-            #user_dict = pickle.loads(codecs.decode(d.dictionary, 'base64'))
-            user_dict = decrypt_dictionary(d.dictionary, secret)
+            if d.encrypted:
+                user_dict = decrypt_dictionary(d.dictionary, secret)
+            else:
+                user_dict = unpack_dictionary(d.dictionary)
+                encrypted = False
         if d.count:
             steps = d.count
         break
-    # cur = conn.cursor()
-    # cur.execute("SELECT a.dictionary, b.count from userdict as a inner join (select max(indexno) as indexno, count(indexno) as count from userdict where key=%s and filename=%s and dictionary is not null) as b on (a.indexno=b.indexno)", [user_code, filename])
-    # for d in cur:
-    #     if d[0]:
-    #         user_dict = pickle.loads(codecs.decode(d[0], 'base64'))
-    #     if d[1]:
-    #         steps = d[1]
-    #     break
-    # conn.commit()
-    return steps, user_dict
+    return steps, user_dict, encrypted
 
 def fetch_previous_user_dict(user_code, filename, secret):
     user_dict = None
     max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(UserDict.key == user_code and UserDict.filename == filename).scalar()
-    # cur = conn.cursor()
-    # cur.execute("select max(indexno) as indexno from userdict where key=%s and filename=%s and dictionary is not null", [user_code, filename])
-    # max_indexno = None
-    # for d in cur:
-    #     max_indexno = d[0]
     if max_indexno is not None:
         UserDict.query.filter_by(indexno=max_indexno).delete()
         db.session.commit()
-        #cur.execute("delete from userdict where indexno=%s", [max_indexno])
-    #conn.commit()
     return fetch_user_dict(user_code, filename, secret)
 
 def advance_progress(user_dict):
     user_dict['_internal']['progress'] += 0.05*(100-user_dict['_internal']['progress'])
     return
-
-# def advance_tracker(user_dict):
-#     user_dict['_internal']['tracker'] += 1
-#     return
 
 def save_user_dict_key(user_code, filename):
     the_record = UserDictKeys.query.filter_by(key=user_code, filename=filename, user_id=current_user.id).first()
@@ -1613,46 +1733,39 @@ def save_user_dict_key(user_code, filename):
         new_record = UserDictKeys(key=user_code, filename=filename, user_id=current_user.id)
         db.session.add(new_record)
         db.session.commit()
-    # cur = conn.cursor()
-    # cur.execute("select indexno from userdictkeys where key=%s and filename=%s and user_id=%s", [user_code, filename, current_user.id])
-    # found = False
-    # for d in cur:
-    #     found = True
-    # if not found:
-    #     cur.execute("INSERT INTO userdictkeys (key, filename, user_id) values (%s, %s, %s)", [user_code, filename, current_user.id])
-    # conn.commit()
     return
 
-def save_user_dict(user_code, user_dict, filename, secret, changed=False):
-    #cur = conn.cursor()
-    #logmessage(repr(pickle.dumps(pickleable_objects(user_dict))))
+def save_user_dict(user_code, user_dict, filename, secret, changed=False, encrypt=True):
     user_dict['_internal']['modtime'] = datetime.datetime.utcnow()
     if current_user.is_authenticated and not current_user.is_anonymous:
         the_user_id = current_user.id
     else:
         the_user_id = None
     if changed is True:
-        new_record = UserDict(key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id)
+        if encrypt:
+            new_record = UserDict(key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
+        else:
+            new_record = UserDict(key=user_code, dictionary=pack_dictionary(user_dict), filename=filename, user_id=the_user_id, encrypted=False)
         db.session.add(new_record)
         db.session.commit()
-        #cur.execute("INSERT INTO userdict (key, dictionary, filename, user_id) values (%s, %s, %s, %s)", [user_code, codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), filename, the_user_id])
     else:
         max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(UserDict.key == user_code and UserDict.filename == filename).scalar()
-        # cur.execute("select max(indexno) as indexno from userdict where key=%s and filename=%s", [user_code, filename])
-        # max_indexno = None
-        # for d in cur:
-        #     max_indexno = d[0]
         if max_indexno is None:
-            new_record = UserDict(key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id)
+            if encrypt:
+                new_record = UserDict(key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
+            else:
+                new_record = UserDict(key=user_code, dictionary=pack_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=False)
             db.session.add(new_record)
             db.session.commit()
-            #cur.execute("INSERT INTO userdict (key, dictionary, filename, user_id) values (%s, %s, %s, %s)", [user_code, codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), filename, the_user_id])
         else:
             for record in UserDict.query.filter_by(key=user_code, filename=filename, indexno=max_indexno).all():
-                record.dictionary = encrypt_dictionary(user_dict, secret)
+                if encrypt:
+                    record.dictionary = encrypt_dictionary(user_dict, secret)
+                    record.encrypted = True
+                else:
+                    record.dictionary = pack_dictionary(user_dict)
+                    record.encrypted = False                   
             db.session.commit()
-            #cur.execute("UPDATE userdict SET dictionary=%s where key=%s and filename=%s and indexno=%s", [codecs.encode(pickle.dumps(pickleable_objects(user_dict)), 'base64').decode(), user_code, filename, max_indexno])
-    #conn.commit()
     return
 
 def reset_user_dict(user_code, filename):
@@ -1669,10 +1782,6 @@ def reset_user_dict(user_code, filename):
     db.session.commit()
     SpeakList.query.filter_by(key=user_code, filename=filename).delete()
     db.session.commit()
-    #cur = conn.cursor()
-    #cur.execute("DELETE FROM userdict where key=%s and filename=%s", [user_code, filename])
-    #cur.execute("DELETE FROM userdictkeys where key=%s and filename=%s", [user_code, filename])
-    #conn.commit()
     return
 
 def get_new_file_number(user_code, file_name, yaml_file_name=None):
@@ -1792,6 +1901,7 @@ def speak_file():
     audio_file = None
     filename = session['i']
     key = session['uid']
+    encrypted = session.get('encrypted', False)
     question = request.args.get('question', None)
     question_type = request.args.get('type', None)
     file_format = request.args.get('format', None)
@@ -1806,7 +1916,7 @@ def speak_file():
         logmessage("Could not serve speak file because no entry could be found in speaklist for filename " + str(filename) + " and key " + str(key) + " and question number " + str(question) + " and question type " + str(question_type) + " and language " + str(the_language) + " and dialect " + str(the_dialect))
         abort(404)
     if not entry.upload:
-        existing_entry = SpeakList.query.filter(SpeakList.phrase == entry.phrase, SpeakList.language == entry.language, SpeakList.dialect == entry.dialect, SpeakList.upload != None).first()
+        existing_entry = SpeakList.query.filter(SpeakList.phrase == entry.phrase, SpeakList.language == entry.language, SpeakList.dialect == entry.dialect, SpeakList.upload != None, SpeakList.encrypted == entry.encrypted).first()
         if existing_entry:
             logmessage("Found existing entry: " + str(existing_entry.id) + ".  Setting to " + str(existing_entry.upload))
             entry.upload = existing_entry.upload
@@ -1817,7 +1927,10 @@ def speak_file():
                 abort(404)
             new_file_number = get_new_file_number(key, 'speak.mp3', yaml_file_name=filename)
             #phrase = codecs.decode(entry.phrase, 'base64')
-            phrase = decrypt_phrase(entry.phrase)
+            if entry.encrypted:
+                phrase = decrypt_phrase(entry.phrase, secret)
+            else:
+                phrase = unpack_phrase(entry.phrase)
             url = "https://api.voicerss.org/?" + urllib.urlencode({'key': voicerss_config['key'], 'src': phrase, 'hl': str(entry.language) + '-' + str(entry.dialect)})
             logmessage("Retrieving " + url)
             audio_file = SavedFile(new_file_number, extension='mp3', fix=True)
@@ -2799,7 +2912,7 @@ def interview_list():
             reset_user_dict(session_id, yaml_file)
             return redirect(url_for('interview_list'))
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key).subquery()
-    interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary).filter(UserDictKeys.user_id == current_user.id).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).group_by(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary)
+    interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted).filter(UserDictKeys.user_id == current_user.id).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).group_by(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
     logmessage(str(interview_query))
     interviews = list()
     for interview_info in interview_query:
@@ -2814,11 +2927,14 @@ def interview_list():
         else:
             interview_title = word('Untitled')
         logmessage("Found old interview with title " + interview_title)
-        try:
-            dictionary = decrypt_dictionary(interview_info.dictionary, secret)
-        except:
-            logmessage("Unable to decrypt dictionary with secret " + str(secret))
-            continue
+        if interview_info.encrypted:
+            try:
+                dictionary = decrypt_dictionary(interview_info.dictionary, secret)
+            except:
+                logmessage("Unable to decrypt dictionary with secret " + str(secret))
+                continue
+        else:
+            dictionary = unpack_dictionary(interview_info.dictionary)
         starttime = nice_date_from_utc(dictionary['_internal']['starttime'])
         modtime = nice_date_from_utc(dictionary['_internal']['modtime'])
         interviews.append({'interview_info': interview_info, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'title': interview_title})

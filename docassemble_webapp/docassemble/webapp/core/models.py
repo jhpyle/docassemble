@@ -8,6 +8,7 @@ class Attachments(db.Model):
     dictionary = db.Column(db.Text())
     question = db.Column(db.Integer())
     filename = db.Column(db.Text())
+    encrypted = db.Column(db.Boolean(), nullable=False, server_default='1')
 
 class Uploads(db.Model):
     __tablename__ = dbtableprefix + "uploads"
@@ -55,6 +56,7 @@ class SpeakList(db.Model):
     language = db.Column(db.String(10))
     dialect = db.Column(db.String(10))
     upload = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'uploads.indexno', ondelete='CASCADE'))
+    encrypted = db.Column(db.Boolean(), nullable=False, server_default='1')
 
 class Messages(db.Model):
     __tablename__ = dbtableprefix + "messages"
