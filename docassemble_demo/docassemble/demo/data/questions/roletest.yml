@@ -1,6 +1,7 @@
 ---
 default role: organizer
 code: |
+  multi_user = True
   role = 'organizer'
   if introduction_made and participants_invited:
     if current_info['user']['is_authenticated']:
@@ -28,7 +29,6 @@ buttons:
 ---
 mandatory: true
 code: |
-  multi_user = True
   if role == 'first_person':
     first_person_bid
   if role == 'second_person':
