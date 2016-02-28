@@ -43,8 +43,8 @@ sudo apt-get install python python-dev pandoc texlive texlive-latex-extra \
   libaudio-flac-header-perl libaudio-musepack-perl libmp3-tag-perl \
   libogg-vorbis-header-pureperl-perl perl make libvorbis-dev \
   libcddb-perl libinline-perl libcddb-get-perl libmp3-tag-perl \
-  libaudio-scan-perl libaudio-flac-header-perl \
-  libparallel-forkmanager-perl pdftk fail2ban
+  libaudio-scan-perl libaudio-flac-header-perl libxml2 libxslt1.1 \
+  libxml2-dev libxslt1-dev libparallel-forkmanager-perl pdftk fail2ban
 {% endhighlight %}
 
 **docassemble** depends on the most recent version of the

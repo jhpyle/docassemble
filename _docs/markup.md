@@ -223,6 +223,41 @@ video: |
 
 See [modifiers] for more information about including audio and video.
 
+# Inserting QR codes
+
+You can also display or insert QR codes using `[QR ...]`, where `...`
+is the text you want to encode.  This works like `[FILE ...]` in that
+you can give the image a width.  The QR code images can be displayed
+on the screen or inserted into a document.
+
+For example, this interview provides a QR code that directs the user to
+[Google News](http://news.google.com):
+
+{% highlight yaml %}
+---
+mandatory: true
+code: |
+  final_screen
+---
+sets: final_screen
+question: Here is a URL for you in a QR code
+subquestion: |
+  [QR http://news.google.com, 200px]
+attachment:
+  name: Your QR code
+  filename: your_code
+  content: |
+    Use the QR reader on your smartphone to take a picture of this:
+    
+    [QR http://news.google.com]
+---
+{% endhighlight %}
+
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testqr.yml){:target="_blank"}.)
+
+See also the `qr_code()` [function], which allows you to insert the
+`[QR ...]` markup using [Python].
+
 [documents]: {{ site.baseurl }}/docs/documents.html
 [modifiers]: {{ site.baseurl }}/docs/modifiers.html
 [Mako]: http://www.makotemplates.org/
@@ -233,3 +268,5 @@ See [modifiers] for more information about including audio and video.
 [YouTube]: https://www.youtube.com/
 [Vimeo]: https://vimeo.com/
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
+[function]: {{ site.baseurl }}/docs/functions.html
+[Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29

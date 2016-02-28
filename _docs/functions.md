@@ -155,6 +155,45 @@ attachment:
 ---
 {% endhighlight %}
 
+## qr_code
+
+The `qr_code()` function allows you to include the `[QR ...]` [markup] statement
+using [Python].
+
+These two questions are equivalent:
+
+{% highlight yaml %}
+---
+question: |
+  Here is a QR code.
+subquestion: |
+  Go to Google:
+
+  ${ qr_code('http://google.com', width='200px') }
+
+  Or go to Yahoo:
+
+  ${ qr_code('http://yahoo.com') }
+sets: qr_example
+---
+{% endhighlight %}
+
+{% highlight yaml %}
+---
+question: |
+  Here is a QR code.
+subquestion: |
+  Go to Google:
+
+  [QR http://google.com, 200px]
+
+  Or go to Yahoo:
+
+  [QR http://yahoo.com]
+sets: qr_example
+---
+{% endhighlight %}
+
 ## url_of
 
 This function returns a URL to a file within a **docassemble**
@@ -769,3 +808,4 @@ docassemble.base.util.update_language_function('fr', 'her', docassemble.base.uti
 [keyword arguments]: https://docs.python.org/2/glossary.html#term-argument
 [keyword argument]: https://docs.python.org/2/glossary.html#term-argument
 [modifier]: {{ site.baseurl}}/docs/modifiers.html
+[markup]: {{ site.baseurl}}/docs/markup.html
