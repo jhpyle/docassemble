@@ -189,6 +189,21 @@ attempt has been made to gather the location, it will be set to false.
 The user's location can subsequently be obtained by accessing the
 `user.location` object.
 
+## multi_user
+
+If you want to use the [multi-user interview feature], you need to set
+`multi_user` to `True`.  This is usually done in a "mandatory" or
+"initial" code block.
+
+When `multi_user` is set to `True`, **docassemble** will not encrypt
+the interview answers on the server.  This is necessary so that
+different people can access the same interview.  When interview
+answers are encrypted, only the user who started the interview can
+access the interview answers.
+
+Setting `multi_user` to `True` will reduce [security] somewhat, but it
+is necessary for allowing the [multi-user interview feature].
+
 [VoiceRSS]: http://www.voicerss.org/
 [get]: https://docs.python.org/2/library/stdtypes.html#dict.get
 [Python list]: https://docs.python.org/2/tutorial/datastructures.html
@@ -197,3 +212,4 @@ The user's location can subsequently be obtained by accessing the
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [multi-user interview feature]: {{ site.baseurl }}/docs/roles.html
+[security]: {{ site.baseurl }}/docs/security.html

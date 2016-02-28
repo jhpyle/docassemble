@@ -87,6 +87,7 @@ buttons:
 ---
 mandatory: true
 code: |
+  multi_user = True
   if role == 'first_person':
     first_person_bid
   if role == 'second_person':
@@ -192,9 +193,9 @@ Here, we set the `default role` to `organizer`.  This simply means that
 questions in the interview that do not have a `role` specified will
 require the `organizer` role.
 
-The `code` is `initial` code, the purpose of which is to set the
-`role` variable, which is the role of whichever user is currently in
-the interview.  This code runs every single time the page loads for
+The `code` is `initial` code, the primary purpose of which is to set
+the `role` variable, which is the role of whichever user is currently
+in the interview.  This code runs every single time the page loads for
 any user.
 
 First, note that the `role` for all users will remain `organizer`
@@ -230,6 +231,7 @@ block:
 ---
 mandatory: true
 code: |
+  multi_user = True
   if role == 'first_person':
     first_person_bid
   if role == 'second_person':
@@ -238,16 +240,24 @@ code: |
 ---
 {% endhighlight %}
 
-We could simply shorten the code to `announce_winner`, and the
-interview could still get done, because `announce_winner` implicitly
-asks for both `firth_person_bid` and `second_person_bid`.  The problem
-with that (or the inconvenience) is that `announce_winner` looks for
-the value of `first_person_bid` before it looks for the value of
-`second_person_bid`.  This means that the second participant would
-have to wait to enter his bid until the first participant had done so.
-This would be arbitrary and could cause unnecessary delay.  The
-additional code here will ask each participant for his bid regardless
-of which one is first to log in.
+This code block sets the [special variable] `multi_user` to `True`,
+which tells **docassemble** that multiple users will be using this
+interview.  When `multi_user` is `True`, **docassemble** will not
+encrypt the answers on the server.  This reduces [security] somewhat,
+but is necessary in order for multiple users to participate in the
+same interview.
+
+This code block also sets a goal for the interview: finding the value
+of `announce_winner`.  Note that if we took out the two `if`
+statements, the interview could still get done, because
+`announce_winner` implicitly asks for both `firth_person_bid` and
+`second_person_bid`.  The problem with that (or the inconvenience) is
+that `announce_winner` looks for the value of `first_person_bid`
+before it looks for the value of `second_person_bid`.  This means that
+the second participant would have to wait to enter his bid until the
+first participant had done so.  This would be arbitrary and could
+cause unnecessary delay.  The additional code here will ask each
+participant for his bid regardless of which one is first to log in.
 
 The `interview_url` text looks very complicated, because it is.
 
@@ -269,9 +279,11 @@ interview-specific information in the URL will not be forgotten
 web browser).
 
 It isn't a good practice to include complicated computer code like
-this `interview_url` block in your interview [YAML].  We included it
-here so that we could give you a complete example with no hidden
-detail.
+this `interview_url` block in your interview [YAML].  (You will see in
+the section on [legal applications] that there is a function available
+for retrieving the interview URL in a clean way.)  We included the
+details here so that we could give you a complete example with no
+hidden detail.
 
 In practice, it's a good idea to `include` a question file, such as
 `basic-questions.yml` from `docassemble.base`, which provides you with
@@ -317,6 +329,7 @@ objects:
 ---
 initial: true
 code: |
+  multi_user = True
   if current_info['user']['is_authenticated']:
     if current_info['user']['email'] not in respondents:
       respondents.setObject(current_info['user']['email'], DAObject)
@@ -460,3 +473,6 @@ cases.
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [user login]: {{ site.baseurl }}/docs/users.html
 [variables]: {{ site.baseurl }}/docs/fields.html
+[special variable]: {{ site.baseurl }}/docs/special.html
+[security]: {{ site.baseurl }}/docs/security.html
+[legal applications]: {{ site.baseurl }}/docs/legal.html

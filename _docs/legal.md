@@ -122,8 +122,9 @@ For more information about `get_info()` and `set_info()`, see
 
 The `interview_url()` function returns a URL to the interview that
 provides a direct link to the interview and the current variable
-store.  This is used in multi-user interviews to invite additional
-users to participate.
+store.  This is used in [multi-user interviews] to invite additional
+users to participate.  This function depends on `update_info()` having
+been run in "initial" code.
 
 ## send_email
 
@@ -673,8 +674,8 @@ fields:
 
 ## RoleChangeTracker
 
-The `RoleChangeTracker` class is provided to facilitate multi-user
-interviews with **docassemble**'s [roles] system.  It facilitates
+The `RoleChangeTracker` class is provided to facilitate [multi-user
+interviews] with **docassemble**'s [roles] system.  It facilitates
 sending e-mails to the participants to let them know when the
 interview needs their attention.  It keeps track of when these e-mails
 have been sent to make sure that duplicative e-mails are not sent.
@@ -790,3 +791,4 @@ explanation of `DATemplate`.
 [list]: https://docs.python.org/2/tutorial/datastructures.html
 [objects]: {{ site.baseurl }}/docs/objects.html
 [Markdown]: https://daringfireball.net/projects/markdown/
+[multi-user interviews]: {{ site.baseurl }}/docs/roles.html
