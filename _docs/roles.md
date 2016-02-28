@@ -60,6 +60,7 @@ for their bids).
 ---
 default role: organizer
 code: |
+  multi_user = True
   role = 'organizer'
   if introduction_made and participants_invited:
     if current_info['user']['is_authenticated']:
@@ -87,7 +88,6 @@ buttons:
 ---
 mandatory: true
 code: |
-  multi_user = True
   if role == 'first_person':
     first_person_bid
   if role == 'second_person':
@@ -179,6 +179,7 @@ Consider the first block:
 ---
 default role: organizer
 code: |
+  multi_user = True
   role = 'organizer'
   if introduction_made and participants_invited:
     if current_info['user']['is_authenticated']:
@@ -197,6 +198,13 @@ The `code` is `initial` code, the primary purpose of which is to set
 the `role` variable, which is the role of whichever user is currently
 in the interview.  This code runs every single time the page loads for
 any user.
+
+This code block also sets the [special variable] `multi_user` to
+`True`, which tells **docassemble** that multiple users will be using
+this interview.  When `multi_user` is `True`, **docassemble** will not
+encrypt the answers on the server.  This reduces [security] somewhat,
+but is necessary in order for multiple users to participate in the
+same interview.
 
 First, note that the `role` for all users will remain `organizer`
 until the organizer has seen the introductory page and the
@@ -231,7 +239,6 @@ block:
 ---
 mandatory: true
 code: |
-  multi_user = True
   if role == 'first_person':
     first_person_bid
   if role == 'second_person':
@@ -239,13 +246,6 @@ code: |
   announce_winner
 ---
 {% endhighlight %}
-
-This code block sets the [special variable] `multi_user` to `True`,
-which tells **docassemble** that multiple users will be using this
-interview.  When `multi_user` is `True`, **docassemble** will not
-encrypt the answers on the server.  This reduces [security] somewhat,
-but is necessary in order for multiple users to participate in the
-same interview.
 
 This code block also sets a goal for the interview: finding the value
 of `announce_winner`.  Note that if we took out the two `if`
