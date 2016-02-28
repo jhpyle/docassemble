@@ -1116,8 +1116,8 @@ def index():
                             extension, mimetype = get_ext_and_mimetype(filename)
                             saved_file = SavedFile(file_number, extension=extension, fix=True)
                             if extension == "jpg" and 'imagemagick' in daconfig:
-                                unrotated = tempfile.NamedTemporaryFile(suffix="jpg")
-                                rotated = tempfile.NamedTemporaryFile(suffix="jpg")
+                                unrotated = tempfile.NamedTemporaryFile(suffix=".jpg")
+                                rotated = tempfile.NamedTemporaryFile(suffix=".jpg")
                                 the_file.save(unrotated.name)
                                 call_array = [daconfig['imagemagick'], str(unrotated.name), '-auto-orient', '-density', '300', 'jpeg:' + rotated.name]
                                 result = call(call_array)

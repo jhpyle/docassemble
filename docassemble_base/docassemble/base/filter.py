@@ -5,6 +5,10 @@ import markdown
 import mimetypes
 import codecs
 import json
+import qrcode
+import qrcode.image.svg
+import StringIO
+import tempfile
 import docassemble.base.util
 from docassemble.base.pandoc import Pandoc
 from mdx_smartypants import SmartypantsExt
@@ -134,6 +138,8 @@ def rtf_filter(text, metadata=dict()):
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
     text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
     text = re.sub(r'\[FILE ([^,\]]+)\]', image_as_rtf, text)
+    text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_as_rtf, text)
+    text = re.sub(r'\[QR ([^\]]+)\]', qr_as_rtf, text)
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
     text = re.sub(r'\[YOUTUBE ([^\]]+)\]', '', text)
     text = re.sub(r'\[VIMEO ([^\]]+)\]', '', text)
@@ -191,6 +197,8 @@ def pdf_filter(text, metadata=dict()):
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', emoji_include_string, text)
     text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_include_string, text)
     text = re.sub(r'\[FILE ([^,\]]+)\]', image_include_string, text)
+    text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_include_string, text)
+    text = re.sub(r'\[QR ([^\]]+)\]', qr_include_string, text)
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
     text = re.sub(r'\[YOUTUBE ([^\]]+)\]', '', text)
     text = re.sub(r'\[VIMEO ([^\]]+)\]', '', text)
@@ -224,6 +232,8 @@ def html_filter(text, status=None):
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', emoji_url_string, text)
     text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_url_string, text)
     text = re.sub(r'\[FILE ([^,\]]+)\]', image_url_string, text)
+    text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_url_string, text)
+    text = re.sub(r'\[QR ([^,\]]+)\]', qr_url_string, text)
     if map_match.search(text):
         text = map_match.sub((lambda x: map_string(x.group(1), status)), text)
     text = re.sub(r'\[YOUTUBE ([^\]]+)\]', r'<iframe width="420" height="315" src="https://www.youtube.com/embed/\1" frameborder="0" allowfullscreen></iframe>', text)
@@ -345,6 +355,37 @@ def image_as_rtf(match):
     else:
         return('')
 
+def qr_as_rtf(match):
+    width_supplied = False
+    try:
+        width = match.group(2)
+        width_supplied = True
+    except:
+        width = DEFAULT_IMAGE_WIDTH
+    if width == 'full':
+        width_supplied = False
+    string = match.group(1)
+    output = ''
+    if not width_supplied:
+        #logmessage("Adding page break\n")
+        width = DEFAULT_PAGE_WIDTH
+        output += '\\page '
+    im = qrcode.make(string)
+    the_image = tempfile.NamedTemporaryFile(suffix=".png")
+    im.save(the_image.name)
+    page_file = dict()
+    page_file['extension'] = 'png'
+    page_file['fullpath'] = the_image.name    
+    page_file['width'], page_file['height'] = im.size
+    output += rtf_image(page_file, width, False)
+    if not width_supplied:
+        #logmessage("Adding page break\n")
+        output += '\\page '
+    else:
+        output += ' '
+    #logmessage("Returning output\n")
+    return(output)
+
 def rtf_image(file_info, width, insert_page_breaks):
     pixels = pixels_in(width)
     if pixels > 0 and file_info['width'] > 0:
@@ -436,6 +477,29 @@ def image_url_string(match, emoji=False):
     else:
         return('[Invalid image reference; reference=' + str(file_reference) + ', width=' + str(width) + ', filename=' + file_info.get('filename', 'unknown') + ']')
 
+def qr_url_string(match):
+    string = match.group(1)
+    try:
+        width = match.group(2)
+    except:
+        width = "300px"
+    if width == "full":
+        width = "300px"    
+    width_string = "width:" + width
+    im = qrcode.make(string, image_factory=qrcode.image.svg.SvgPathImage)
+    output = StringIO.StringIO()
+    im.save(output)
+    the_image = output.getvalue()
+    the_image = re.sub("<\?xml version='1.0' encoding='UTF-8'\?>\n", '', the_image)
+    the_image = re.sub(r'height="[0-9]+mm" ', '', the_image)
+    the_image = re.sub(r'width="[0-9]+mm" ', '', the_image)
+    m = re.search(r'(viewBox="[^"]+")', the_image)
+    if m:
+        viewbox = m.group(1)
+    else:
+        viewbox = ""
+    return('<svg style="' + width_string + '" ' + viewbox + '><g transform="scale(1.0)">' + the_image + '</g></svg>')
+
 def emoji_url_string(match):
     return(image_url_string(match, emoji=True))
     
@@ -470,6 +534,24 @@ def image_include_string(match, emoji=False):
                         output = '\\clearpage ' + output + '\\clearpage '
                 return(output)
     return('[invalid graphics reference]')
+
+def qr_include_string(match):
+    string = match.group(1)
+    try:
+        width = match.group(2)
+        width = re.sub(r'^(.*)px', convert_pixels, width)
+        if width == "full":
+            width = '\\textwidth'
+    except:
+        width = DEFAULT_IMAGE_WIDTH
+    im = qrcode.make(string)
+    the_image = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+    im.save(the_image.name)
+    output = '\\mbox{\\includegraphics[width=' + width + ']{' + the_image.name + '}}'
+    if width == '\\textwidth':
+        output = '\\clearpage ' + output + '\\clearpage '
+    logmessage("Output is " + output)
+    return(output)
 
 def emoji_include_string(match):
     return image_include_string(match, emoji=True)

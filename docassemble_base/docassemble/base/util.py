@@ -17,7 +17,7 @@ import urllib
 import codecs
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code']
 
 debug = False
 default_dialect = 'us'
@@ -555,6 +555,13 @@ def static_image(filereference, **kwargs):
         return('[FILE ' + filename + ']')
     else:
         return('[FILE ' + filename + ', ' + width + ']')
+
+def qr_code(string, **kwargs):
+    width = kwargs.get('width', None)
+    if width is None:
+        return('[QR ' + string + ']')
+    else:
+        return('[QR ' + string + ', ' + width + ']')
 
 def standard_template_filename(the_file):
     try:
