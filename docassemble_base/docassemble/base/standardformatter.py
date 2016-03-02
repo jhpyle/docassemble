@@ -47,7 +47,7 @@ def signature_html(status, debug, root):
         output += markdown_to_html(status.questionText, trim=True)
     output += '</div>'
     if status.subquestionText:
-        output += '<div>' + markdown_to_html(status.subquestionText) + '</div>'
+        output += '<div class="midpart">' + markdown_to_html(status.subquestionText) + '</div>'
     output += '<div id="content"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div><div class="bottompart" id="bottompart">'
     if (status.underText):
         output += markdown_to_html(status.underText, trim=True)

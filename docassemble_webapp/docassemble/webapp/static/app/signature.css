@@ -134,6 +134,15 @@ body {
     padding-top: 50px;
     padding-bottom: 6px;
 }
+.midpart {
+    /* position: absolute; */
+    text-align: center;
+    /*top: 44px;
+    left: 0px;
+    right: 0px; */
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
 .bottompart {
     /* position: absolute; */
     text-align: center;

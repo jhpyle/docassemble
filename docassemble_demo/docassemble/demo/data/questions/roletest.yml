@@ -60,6 +60,8 @@ subquestion: |
   Tell them to go to the following URL:
 
   [${ interview_url }](${ interview_url })
+
+  Press Continue before inviting the recipients.
 ---
 code: |
   interview_url = current_info['url'] + '?i=' + current_info['yaml_filename'] + '&session=' + current_info['session']
