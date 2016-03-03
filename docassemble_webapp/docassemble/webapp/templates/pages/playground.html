@@ -14,7 +14,8 @@
   </div>
   <div class="form-actions">
     {{ render_submit_field(form.submit, tabindex=100, class="btn btn-primary btn-lg") }}
-    {{ render_submit_field(form.run, tabindex=110, class="btn btn-warning btn-lg") }}
+    {{ render_submit_field(form.run, id='daRun', tabindex=110, class="btn btn-warning btn-lg") }}
+    <!--<button id="run-button" class="btn btn-warning btn-lg" value="Save and Run" tabindex="110">Save and Run</button>-->
     {{ render_submit_field(form.delete, id='daDelete', tabindex=120, class="btn btn-default btn-lg") }}
   </div>
 </form>
