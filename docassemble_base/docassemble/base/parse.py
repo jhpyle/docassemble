@@ -1439,7 +1439,10 @@ class Interview:
         #for document in yaml.load_all(source.content):
         for source_code in document_match.split(source.content):
             source_code = remove_trailing_dots.sub('', source_code)
-            document = yaml.load(source_code)
+            try:
+                document = yaml.load(source_code)
+            except Exception as errMess:
+                raise DAError('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
             if document is not None:
                 question = Question(document, self, source=source, package=source_package, source_code=source_code)
     def processed_helptext(self, user_dict, language):

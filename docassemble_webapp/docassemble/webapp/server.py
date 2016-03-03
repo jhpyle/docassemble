@@ -964,7 +964,16 @@ def index():
     if session_id:
         user_code = session_id
         logmessage("session id is " + str(session_id))
-        steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret)
+        try:
+            steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret)
+        except:
+            user_code, user_dict = reset_session(yaml_filename, secret)
+            encrypted = False
+            session['encrypted'] = encrypted
+            is_encrypted = encrypted
+            if 'key_logged' in session:
+                del session['key_logged']
+            need_to_reset = True
         if encrypted != is_encrypted:
             encrypted = is_encrypted
             session['encrypted'] = encrypted
@@ -2657,6 +2666,7 @@ def server_error(the_error):
     #         if re.search('configured -- resuming normal operations', line):
     #             apache_logtext = []
     #         apache_logtext.append(line)
+    # errmess = re.sub(r'\n', '<br>', errmess)
     return render_template('pages/501.html', error=errmess, logtext=str(the_trace)), 501
 
 def trigger_update(except_for=None):
