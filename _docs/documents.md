@@ -390,6 +390,27 @@ attachment:
 ---
 {% endhighlight %}
 
+## Preventing the user from e-mailing documents
+
+When `attachments` are included in a `question`, the user will be
+given an option to e-mail the documents to an e-mail address.  If you
+would like to disable this feature, set `allow emailing` to `false`,
+as in this example:
+
+{% highlight yaml %}
+---
+question: Your document is ready.
+sets: provide_user_with_document
+allow emailing: false
+attachment:
+  - name: A *hello world* document
+    filename: Hello_World_Document
+    description: A document with a **classic** message
+    content: |
+      Hello, world!
+---
+{% endhighlight %}
+
 # Formatting documents with special markup tags
 
 In addition to using [Markdown] syntax, you can use
