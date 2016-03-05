@@ -57,6 +57,12 @@ or, on systemd,
 systemctl start docker
 {% endhighlight %}
 
+or, on upstart,
+
+{% highlight bash %}
+service docker start
+{% endhighlight %}
+
 # Single-server arrangement
 
 **docassemble** is [available on Docker Hub].  You can download and
@@ -219,6 +225,17 @@ Or push it to [Docker Hub]:
 {% highlight bash %}
 docker push yourdockerhubusername/mydocassemble
 {% endhighlight %}
+
+# Upgrading a docker image
+
+As new versions of **docassemble** become available, you can obtain
+the latest version by running:
+
+{% highlight bash %}
+docker pull jhpyle/docassemble
+{% endhighlight %}
+
+Then, subsequent commands will use the latest **docassemble** image.
 
 [Docker]: https://www.docker.com/
 [Amazon AWS]: http://aws.amazon.com

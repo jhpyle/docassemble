@@ -393,6 +393,33 @@ trigger [Apache] to restart the [WSGI] processes.
 sudo touch /usr/share/docassemble/docassemble.wsgi
 {% endhighlight %}
 
+Sometimes, new versions of docassemble require additional database
+tables or additional columns in tables.  Normally, the installation
+script will take care of these issues, but if there are problems, you
+can refresh your database by following these steps.
+
+First, if you are running the web server on the same machine that is
+running the database server, stop the web server.  E.g., if you are using [Docker]:
+
+{% highlight bash %}
+supervisorctl stop apache2
+{% endhighlight %}
+
+Then run the following commands as root:
+
+{% highlight bash %}
+su -c "dropdb docassemble" postgres
+su -c "createdb -O www-data docassemble" postgres
+su -c "/usr/share/docassemble/local/bin/python -m docassemble.webapp.create_tables" www-data
+rm -rf /usr/share/docassemble/files/0*
+{% endhighlight %}
+
+Then, restart the web server again.  E.g., if you are using [Docker]:
+
+{% highlight bash %}
+supervisorctl start apache2
+{% endhighlight %}
+
 # Debugging the web app
 
 If you get a standard [Apache] error message, look in
