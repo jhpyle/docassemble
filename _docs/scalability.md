@@ -23,36 +23,41 @@ recommended method:
 key.  Create a bucket.
 3. Go to [EC2 Container Service].
 4. Create a Task Definition called `docassemble-sql` using the JSON
-configuration below.
-4. Create a Task Definition called `docassemble-log` using the JSON
-configuration below.
+configuration below.  Edit the `TIMEZONE`.
+5. Create a Task Definition called `docassemble-log` using the JSON
+configuration below.  Edit the `TIMEZONE`.
 6. Create a Service called `sql-service` that uses the task definition
-`docassemble-sql`.  Set the number of tasks to 1.  Do not
-choose an Elastic Load Balancer.  Deploy `sql-service` on an [EC2]
-instance.  Make note of the "Private IP" of the instance.
-6. Create a Service called `log-service` that uses the task definition
+`docassemble-sql`.  Edit the `TIMEZONE`.  Set the number of tasks
+to 1.  Do not choose an Elastic Load Balancer.  Deploy `sql-service`
+on an [EC2] instance.  Make note of the "Private IP" of the instance.
+7. Create a Service called `log-service` that uses the task definition
 `docassemble-log`.  Set the number of tasks to 1.  Do not
 choose an Elastic Load Balancer.  Deploy `log-service` on an [EC2]
 instance.  Make note of the "Private IP" of the instance.
-7. Create a Task Definition called `docassemble-app` using the JSON
+8. Create a Task Definition called `docassemble-app` using the JSON
 configuration below.  Substitute the "Private IP" of the instance
 running `docassemble-sql` for `DBHOST`.  Substitute the "Private IP"
 of the instance running `docassemble-log` for `LOGSERVER`.  (Or, use
-[Amazon Route 53] to create a Private Hosted Zone for the VPC with
+[Amazon Route 53] to create a Private Hosted Zone for the [VPC] with
 CNAME entries mapping the "Private IP"s of the instances running
 `docassemble-sql` and `docassemble-log` to names.)  Substitute your
-[Amazon S3] credentials.
-8. Create an Elastic Load Balancer in [EC2].
-9. Create a Service called `app-service` that uses the task definition
-`docassemble-app`.  Set the number of tasks to 1 and use the Elastic Load
-Balancer you just created.
-10. Set up the security groups on the Elastic Load Balancer and the
-VPC so that the instances within the VPC can send any traffic among
-eachother, but that only HTTP (or HTTPS) is open to the outside world.
-11. Decide what URL you want users to use, and edit your DNS to add a
+[Amazon S3] credentials and bucket name (`S3ACCESSKEY`, `S3SECRETACCESSKEY`,
+`S3SECRETACCESSKEY`, and `S3BUCKET`).
+9. Create an [Elastic Load Balancer] in [EC2].
+10. Create a Service called `app-service` that uses the task definition
+`docassemble-app`.  Set the number of tasks to 1 and use the [Elastic Load
+Balancer] you just created.
+11. Set up the security groups on the [Elastic Load Balancer] and the
+[VPC] so that the instances within the [VPC] can send any traffic among
+each other, but that only HTTP (or HTTPS) is open to the outside world.
+12. Decide what URL you want users to use, and edit your DNS to add a
 CNAME pointing from that URL to the URL of the load balancer.
-12. Create a sufficient number of [EC2] instances so that the
-`docassemble-sql` and `docassemble-app` tasks both have room to run.
+13. Create a sufficient number of [EC2] instances so that the
+`docassemble-sql`, `docassemble-log`, and `docassemble-app` tasks all
+have room to run.
+14. Create an [Auto Scaling Group] for the `docassemble-app` task so
+that any number of instances (up to a limit) can support the
+`docassemble-app` task.
 
 Here is the task definition for `docassemble-sql`:
 
@@ -218,18 +223,21 @@ Here is the task definition for `docassemble-app`:
 1. Get an [Amazon Web Services] account.
 2. Go to [Amazon S3] and obtain an access key and a secret access
 key.  Create a bucket.
-3. Go to [Amazon EC2] and launch two [Amazon Linux] instances in the
-same [Virtual Private Cloud] (VPC).
-4. Edit your VPC so that "DNS Resolution" Yes and "DNS Hostnames" is
+3. Go to [Amazon EC2] and launch three [Amazon Linux] instances in the
+same [Virtual Private Cloud] ([VPC]).
+4. Edit your [VPC] so that "DNS Resolution" Yes and "DNS Hostnames" is
    Yes.
-5. Install [Docker] in both instances: `sudo yum -y update && sudo yum
+5. Install [Docker] in all three instances: `sudo yum -y update && sudo yum
 -y install docker && sudo usermod -a -G docker ec2-user`.  Then log
 out and log back in again.  See [Amazon's Docker instructions] for
 more information.
 6. In the first [EC2] instance, start a PostgreSQL container using the
 official **docassemble** [Docker] image: `docker run -d -p 5432:5432
 jhpyle/docassemble-sql`.
-7. Note the "Private DNS" hostname of this instance.  Then go to
+7. In the second [EC2] instance, start a log container using the
+official **docassemble** [Docker] image: `docker run -d -p 514:514 -p
+8080:80 jhpyle/docassemble-log`.
+7. Note the "Private DNS" hostname of these instances.  Then go to
 [Amazon Route 53] and create a Hosted Zone with the type "Private
 Hosted Zone for Amazon VPC."  Use a domain like `docassemble.local` or
 whatever you want (this is purely internal).  Create a CNAME that maps
@@ -240,9 +248,10 @@ is so that the application servers can locate the SQL server by
 [Amazon Route 53] and just use the "Private IP" address of the SQL
 instance in place of the hostname, but it is nicer to be able to use
 DNS, in case the underlying IP address ever changes.
-8. Go to the other [EC2] instance and create a file called `env.list`
+8. Do the same for the log server (`log.docassemble.local`).
+8. Go to the third [EC2] instance and create a file called `env.list`
 similar to the example below.  Substitute your own values for
-`DBHOST`, `S3ACCESSKEY`, `S3SECRETACCESSKEY`, and `S3BUCKET`.
+`DBHOST`, `LOGSERVER`, `S3ACCESSKEY`, `S3SECRETACCESSKEY`, and `S3BUCKET`.
 9. Run `docker run --env-file=env.list -d -p 80:80 -p 443:443 -p
 9001:9001 jhpyle/docassemble`
 10. Edit the [security group] on the second instance to allow HTTP
@@ -253,7 +262,7 @@ traffic from anywhere.
 **docassemble** on them by repeating steps 8-9.  Make sure these new
 instances use the same security group, so you don't have to repeat
 step 10.
-13. Add the instances (other than the SQL instance) to a load
+13. Add the instances (other than the SQL and log server instances) to a load
 balancer.
 
 Here is an example `env.list` file:
@@ -264,6 +273,7 @@ DBNAME=docassemble
 DBUSER=docassemble
 DBPASSWORD=abc123
 DBHOST=sql.docassemble.local
+LOGSERVER=log.docassemble.local
 S3ENABLE=true
 S3ACCESSKEY=FWIEJFIJIDGISEJFWOEF
 S3SECRETACCESSKEY=RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
@@ -467,7 +477,10 @@ the [configuration] variables `certs` and `cert_install_directory`.
 [Docker]: https://www.docker.com/
 [Amazon's Docker instructions]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/docker-basics.html
 [Virtual Private Cloud]: https://aws.amazon.com/vpc/
+[VPC]: https://aws.amazon.com/vpc/
 [Amazon Route 53]: https://aws.amazon.com/route53/
 [security group]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html
 [supervisor]: http://supervisord.org/
 [EC2 Container Service]: https://aws.amazon.com/ecs/
+[Elastic Load Balancer]: https://aws.amazon.com/elasticloadbalancing/
+[Auto Scaling Group]: http://docs.aws.amazon.com/AutoScaling/latest/DeveloperGuide/AutoScalingGroup.html
