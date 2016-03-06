@@ -382,12 +382,14 @@ def save_numbered_file(filename, orig_path, yaml_file_name=None):
     new_file.save(finalize=True)
     return(file_number, extension, mimetype)
 
-def async_mail(message):
-    @copy_current_request_context
+def async_mail(the_message):
+    # @copy_current_request_context
+    @app.teardown_request
     def send_message(message):
         mail.send(message)
-    sender = threading.Thread(name='mail_sender', target=send_message, args=(message,))
-    sender.start()
+    #sender = threading.Thread(name='mail_sender', target=send_message, args=(the_message,))
+    #sender.start()
+    send_message(the_message)
 
 docassemble.base.parse.set_mail_variable(get_mail_variable)
 docassemble.base.parse.set_async_mail(async_mail)
