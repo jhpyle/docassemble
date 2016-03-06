@@ -360,6 +360,37 @@ preview and will only be able to download the PDF file:
 
 ![document screenshot]({{ site.baseurl }}/img/document-example-pdf-only.png)
 
+## Assembling documents in DOCX format
+
+**docassemble** can use [Pandoc] to convert [Markdown] into a
+Microsoft Word .docx file.  These .docx files are not created by
+default because they do not support insertion of images and other
+features that are supported by RTF and PDF formats.  To generate .docx
+files, specify `docx` as one of the `valid formats`:
+
+{% highlight yaml %}
+---
+question: Your document is ready.
+sets: provide_user_with_document
+attachment:
+  - name: A *hello world* document
+    filename: Hello_World_Document
+    valid formats:
+      - docx
+      - pdf
+    description: A document with a **classic** message
+    content: |
+      # Hey there
+      
+      Hello, world!
+---
+{% endhighlight %}
+
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testdocx.yml){:target="_blank"}.)
+
+To customize document styles, headers, and footers, see the `docx
+reference file` setting, discussed below.
+
 ## Assembling documents in a different language than the current language
 
 If you need to produce a document in a different language than the
@@ -582,7 +613,9 @@ located in the `docassemble.base` package in the
   through `metadata` items within an `attachment` will append or
   overwrite these default options.
 * `Legal-Template.rtf`: this is the template that [Pandoc] uses to
-  generate RTF files.  You can edit this file to change default
+  generate RTF files.
+* `Legal-Template.docx`: this is the reference file that [Pandoc] uses
+  to generate DOCX files.  You can edit this file to change default
   styles, headers, and footers.
 
 To use your own template files, specify them using the following
@@ -601,6 +634,8 @@ options to `attachment`:
   template for converting [Markdown] to PDF.
 * `rtf template file`: a single `.rtf` file to be used as the [Pandoc]
   template for converting [Markdown] to RTF.
+* `docx reference file`: a single `.docx` file to be used as the
+  [Pandoc] docx reference file for converting [Markdown] to DOCX.
 
 Filenames are assumed to reside in the `data/templates` directory
 within the package in which the interview [YAML] file is located.  You

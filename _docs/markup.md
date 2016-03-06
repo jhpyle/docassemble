@@ -159,10 +159,12 @@ choices:
 ---
 {% endhighlight %}
 
+This works within PDF and RTF documents as well as within questions.
+  
 # Inserting audio and video
 
 In addition to using the `audio` and `video` [modifiers], you can
-insert audio and video into your [Mako] text.
+insert audio and video into your [Mako] text in questions.
 
 {% highlight yaml %}
 ---
@@ -229,6 +231,8 @@ You can also display or insert QR codes using `[QR ...]`, where `...`
 is the text you want to encode.  This works like `[FILE ...]` in that
 you can give the image a width.  The QR code images can be displayed
 on the screen or inserted into a document.
+
+This works within PDF and RTF documents as well as within questions.
 
 For example, this interview provides a QR code that directs the user to
 [Google News](http://news.google.com):
