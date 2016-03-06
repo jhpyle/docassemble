@@ -78,6 +78,16 @@ def set_mail_variable(func):
     mail_variable = func
     return
 
+def blank_async_mail(*args, **kwargs):
+    return(None)
+
+async_mail = blank_async_mail
+
+def set_async_mail(func):
+    global async_mail
+    async_mail = func
+    return
+
 def blank_file_finder(*args, **kwargs):
     return(dict(filename="invalid"))
 
