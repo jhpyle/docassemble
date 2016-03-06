@@ -2545,24 +2545,39 @@ def name_of_user(user, include_email=False):
 @roles_required(['admin'])
 def config_page():
     form = ConfigForm(request.form, current_user)
+    content = None
+    ok = True
     if request.method == 'POST':
         if form.submit.data and form.config_content.data:
-            if S3_ENABLED:
-                key = s3.get_key('config.yml')
-                key.set_contents_from_string(form.config_content.data)
-            with open(daconfig['config_file'], 'w') as fp:
-                fp.write(form.config_content.data)
-                flash(word('The configuration file was saved.'), 'success')
-            restart_wsgi()
+            try:
+                yaml.load(form.config_content.data)
+            except Exception as errMess:
+                ok = False
+                content = form.config_content.data
+                errMess = word("Configuration not updated.  There was a syntax error in the configuration YAML.") + '<pre>' + str(errMess) + '</pre>'
+                flash(str(errMess), 'error')
+                logmessage(str(errMess))
+            if ok:
+                if S3_ENABLED:
+                    key = s3.get_key('config.yml')
+                    key.set_contents_from_string(form.config_content.data)
+                with open(daconfig['config_file'], 'w') as fp:
+                    fp.write(form.config_content.data)
+                    flash(word('The configuration file was saved.'), 'success')
+                restart_wsgi()
+                return redirect(url_for('interview_list'))
         elif form.cancel.data:
             flash(word('Configuration not updated.'), 'info')
+            return redirect(url_for('index'))
         else:
             flash(word('Configuration not updated.  There was an error.'), 'error')
-        return redirect(url_for('index'))
-    with open(daconfig['config_file'], 'r') as fp:
-        content = fp.read()
-        return render_template('pages/config.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = ' + json.dumps(content) + ';\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n    </script>'), form=form), 200
-    abort(404)
+            return redirect(url_for('index'))
+    if ok:
+        with open(daconfig['config_file'], 'r') as fp:
+            content = fp.read()
+    if content is None:
+        abort(404)
+    return render_template('pages/config.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = ' + json.dumps(content) + ';\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n    </script>'), form=form), 200
 
 def flash_as_html(message, message_type="info"):
     output = """
@@ -2713,6 +2728,10 @@ def server_error(the_error):
     #             apache_logtext = []
     #         apache_logtext.append(line)
     # errmess = re.sub(r'\n', '<br>', errmess)
+    if re.search(r'\n', errmess):
+        errmess = '<pre>' + errmess + '</pre>'
+    else:
+        errmess = '<blockquote>' + errmess + '</blockquote>'
     return render_template('pages/501.html', error=errmess, logtext=str(the_trace)), 501
 
 def trigger_update(except_for=None):

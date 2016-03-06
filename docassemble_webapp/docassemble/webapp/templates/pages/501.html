@@ -3,7 +3,7 @@
 {% block main %}
 <h1>{{ word('Error') }}</h1>
 
-<pre>{{ error }}</pre>
+{{ error|safe }}
 
 {% if logtext != 'None' %}
 
