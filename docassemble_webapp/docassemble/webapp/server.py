@@ -1115,7 +1115,10 @@ def index():
                         with open(attach_info['path'], 'r') as fp:
                             msg.attach(attach_info['filename'], attach_info['mimetype'], fp.read())
                     try:
-                        mail.send(msg)
+                        # mail.send(msg)
+                        logmessage("Starting to send")
+                        async_mail(msg)
+                        logmessage("Finished sending")
                         success = True
                     except Exception as errmess:
                         logmessage(str(errmess))
@@ -2920,7 +2923,8 @@ def request_developer():
             flash(word('No administrators could be found.'), 'error')
         else:
             try:
-                mail.send(msg)
+                #mail.send(msg)
+                async_mail(msg)
                 flash(word('Your request was submitted.'), 'success')
             except:
                 flash(word('We were unable to submit your request.'), 'error')
