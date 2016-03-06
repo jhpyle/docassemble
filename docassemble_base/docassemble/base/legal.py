@@ -698,7 +698,9 @@ def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None
     if success:
         try:
             # appmail.send(msg)
+            logmessage("Starting to send")
             async_mail(msg)
+            logmessage("Finished sending")
         except Exception as errmess:
             logmessage("Sending mail failed: " + str(errmess))
             success = False
