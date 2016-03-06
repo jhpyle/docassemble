@@ -43,7 +43,7 @@ import urlparse
 import json
 import base64
 import requests
-from flask import make_response, abort, render_template, request, session, send_file, redirect, url_for, current_app, get_flashed_messages, flash, Markup, jsonify, copy_current_request_context
+from flask import make_response, abort, render_template, request, session, send_file, redirect, url_for, current_app, get_flashed_messages, flash, Markup, jsonify
 from flask.ext.login import LoginManager, UserMixin, login_user, logout_user, current_user
 from flask.ext.user import login_required, roles_required, UserManager, SQLAlchemyAdapter
 from flask.ext.user.forms import LoginForm
@@ -383,16 +383,7 @@ def save_numbered_file(filename, orig_path, yaml_file_name=None):
     return(file_number, extension, mimetype)
 
 def async_mail(the_message):
-    # @copy_current_request_context
-    @app.teardown_request
-    def send_message(the_array):
-        if the_array is not None:
-            the_mail = the_array[0]
-            message = the_array[1]
-            the_mail.send(message)
-    # sender = threading.Thread(name='mail_sender', target=send_message, args=(the_message,))
-    # sender.start()
-    send_message([mail, the_message])
+    mail.send(the_message)
 
 docassemble.base.parse.set_mail_variable(get_mail_variable)
 docassemble.base.parse.set_async_mail(async_mail)

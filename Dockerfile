@@ -1,7 +1,7 @@
 FROM debian:latest
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get clean && apt-get update
-RUN until apt-get -q -y install tzdata python python-dev wget unzip git locales pandoc texlive texlive-latex-extra apache2 postgresql libapache2-mod-wsgi libapache2-mod-xsendfile poppler-utils libffi-dev libffi6 imagemagick gcc supervisor libaudio-flac-header-perl libaudio-musepack-perl libmp3-tag-perl libogg-vorbis-header-pureperl-perl perl make libvorbis-dev libcddb-perl libinline-perl libcddb-get-perl libmp3-tag-perl libaudio-scan-perl libaudio-flac-header-perl libparallel-forkmanager-perl libav-tools autoconf automake libjpeg-dev zlib1g-dev libpq-dev logrotate tmpreaper cron pdftk fail2ban libxml2 libxslt1.1 libxml2-dev libxslt1-dev; do sleep 1; done
+RUN until apt-get -q -y install tzdata python python-dev wget unzip git locales pandoc texlive texlive-latex-extra apache2 postgresql libapache2-mod-wsgi libapache2-mod-xsendfile poppler-utils libffi-dev libffi6 imagemagick gcc supervisor libaudio-flac-header-perl libaudio-musepack-perl libmp3-tag-perl libogg-vorbis-header-pureperl-perl perl make libvorbis-dev libcddb-perl libinline-perl libcddb-get-perl libmp3-tag-perl libaudio-scan-perl libaudio-flac-header-perl libparallel-forkmanager-perl libav-tools autoconf automake libjpeg-dev zlib1g-dev libpq-dev logrotate tmpreaper cron pdftk fail2ban libxml2 libxslt1.1 libxml2-dev libxslt1-dev redis-server; do sleep 1; done
 RUN cd /tmp && git clone git://git.code.sf.net/p/pacpl/code pacpl-code && cd pacpl-code && ./configure; make && make install && cd ..
 RUN mkdir -p /etc/ssl/docassemble /usr/share/docassemble/local /usr/share/docassemble/webapp /usr/share/docassemble/files /var/www/.pip /var/www/.cache /usr/share/docassemble/log /tmp/docassemble && chown www-data.www-data /var/www/.pip /var/www/.cache && chsh -s /bin/bash www-data
 COPY docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/
@@ -23,6 +23,7 @@ USER www-data
 RUN bash -c "cd /tmp && virtualenv /usr/share/docassemble/local && source /usr/share/docassemble/local/bin/activate && pip install 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' /tmp/docassemble/docassemble /tmp/docassemble/docassemble_base /tmp/docassemble/docassemble_demo /tmp/docassemble/docassemble_webapp && wget https://www.nodebox.net/code/data/media/linguistics.zip && unzip linguistics.zip -d /usr/share/docassemble/local/lib/python2.7/site-packages/ && rm linguistics.zip"
 
 USER root
+RUN sed -i 's/^\(daemonize\s*\)yes\s*$/\1no/g' /etc/redis/redis.conf
 RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 RUN locale-gen
 RUN update-locale LANG=en_US.UTF-8
