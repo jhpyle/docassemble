@@ -56,6 +56,7 @@ word_collection = {
         'save_as_singular': 'The document is available in the following format:',
         'pdf_message': 'for printing; requires Adobe Reader or similar application',
         'rtf_message': 'for editing; requires Microsoft Word, Wordpad, or similar application',
+        'docx_message': 'for editing; requires Microsoft Word or compatible application',
         'tex_message': 'for debugging PDF output',
         'attachment_message_plural': 'The following documents have been created for you.',
         'attachment_message_singular': 'The following document has been created for you.'
@@ -81,6 +82,7 @@ word_collection = {
         'save_as_singular': 'The document is available in the following format:',
         'pdf_message': 'for printing; requires Adobe Reader or similar application',
         'rtf_message': 'for editing; requires Microsoft Word, Wordpad, or similar application',
+        'docx_message': 'for editing; requires Microsoft Word or compatible application',
         'tex_message': 'for debugging PDF output',
         'vs.': 'vs.',
         'v.': 'v.',

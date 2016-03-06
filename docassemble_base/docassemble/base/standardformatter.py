@@ -392,15 +392,28 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         else:
             output += '          <div class="alert alert-success" role="alert">' + word('attachment_message_singular') + '</div>\n'
         attachment_index = 0
-        rtfs_included = False
+        editable_included = False
+        if len(status.attachments) > 1:
+            file_word = 'files'
+        else:
+            file_word = 'file'
+        editable_name = ''
         for attachment in status.attachments:
-            if 'rtf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                rtfs_included = True
+            if 'rtf' in attachment['valid_formats'] or 'docx' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
+                if 'pdf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
+                    editable_included = True
+                    if 'rtf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
+                        if 'docx' in attachment['valid_formats']:
+                            editable_name = 'RTF and DOCX files'
+                        else:
+                            editable_name = 'RTF ' + file_word
+                    elif 'docx' in attachment['valid_formats']:
+                        editable_name = 'DOCX ' + file_word
             if debug and len(attachment['markdown']):
                 show_markdown = True
             else:
                 show_markdown = False
-            if 'pdf' in attachment['valid_formats'] or 'rtf' in attachment['valid_formats'] or (debug and 'tex' in attachment['valid_formats']) or '*' in attachment['valid_formats']:
+            if 'pdf' in attachment['valid_formats'] or 'rtf' in attachment['valid_formats'] or 'docx' in attachment['valid_formats'] or (debug and 'tex' in attachment['valid_formats']) or '*' in attachment['valid_formats']:
                 show_download = True
             else:
                 show_download = False                
@@ -436,6 +449,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                     output += '                <p><a href="?filename=' + urllib.quote(status.question.interview.source.path, '') + '&question=' + str(status.question.number) + '&index=' + str(attachment_index) + '&format=pdf"><i class="glyphicon glyphicon-print"></i> PDF</a> (' + word('pdf_message') + ')</p>\n'
                 if 'rtf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
                     output += '                <p><a href="?filename=' + urllib.quote(status.question.interview.source.path, '') + '&question=' + str(status.question.number) + '&index=' + str(attachment_index) + '&format=rtf"><i class="glyphicon glyphicon-pencil"></i> RTF</a> (' + word('rtf_message') + ')</p>\n'
+                if 'docx' in attachment['valid_formats']:
+                    output += '                <p><a href="?filename=' + urllib.quote(status.question.interview.source.path, '') + '&question=' + str(status.question.number) + '&index=' + str(attachment_index) + '&format=docx"><i class="glyphicon glyphicon-pencil"></i> DOCX</a> (' + word('docx_message') + ')</p>\n'
                 if debug and ('tex' in attachment['valid_formats'] or '*' in attachment['valid_formats']):
                     output += '                <p><a href="?filename=' + urllib.quote(status.question.interview.source.path, '') + '&question=' + str(status.question.number) + '&index=' + str(attachment_index) + '&format=tex"><i class="glyphicon glyphicon-pencil"></i> LaTeX</a> (' + word('tex_message') + ')</p>\n'
                 output += '              </div>\n'
@@ -444,8 +459,14 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                 output += '                <blockquote>' + unicode(attachment['content']['html']) + '</blockquote>\n'
                 output += '              </div>\n'
             if show_markdown:
+                if 'html' in attachment['valid_formats']:
+                    md_format = 'html'
+                else:
+                    for format_type in attachment['valid_formats']:
+                        md_format = format_type
+                        break
                 output += '              <div class="tab-pane" id="markdown' + str(attachment_index) + '">\n'
-                output += '                <pre>' + unicode(attachment['markdown']['html']) + '</pre>\n'
+                output += '                <pre>' + unicode(attachment['markdown'][md_format]) + '</pre>\n'
                 output += '              </div>\n'
             output += '            </div>\n          </div>\n'
             attachment_index += 1
@@ -469,9 +490,9 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                   <form action=\"""" + root + """\" id="emailform" class="form-horizontal" method="POST">
                     <fieldset>
                       <div class="form-group"><label for="_attachment_email_address" class="control-label col-sm-4">""" + word('E-mail address') + """</label><div class="col-sm-8"><input alt=""" + '"' + word ("Input box") + '"' + """ class="form-control" type="email" name="_attachment_email_address" id="_attachment_email_address"/></div></div>"""
-            if rtfs_included:
+            if editable_included:
                 output += """
-                      <div class="form-group"><label for="_attachment_include_rtf" class="control-label col-sm-4">""" + '&nbsp;</label><div class="col-sm-8"><input alt="' + word ("Check box") + ", " + word('Include RTF files for editing') + '" type="checkbox" value="True" name="_attachment_include_rtf" id="_attachment_include_rtf"/> ' + word('Include RTF files for editing') + '</div></div>\n'
+                      <div class="form-group"><label for="_attachment_include_editable" class="control-label col-sm-4">""" + '&nbsp;</label><div class="col-sm-8"><input alt="' + word ("Check box") + ", " + word('Include ' + editable_name + ' for editing') + '" type="checkbox" value="True" name="_attachment_include_editable" id="_attachment_include_editable"/> ' + word('Include ' + editable_name + ' for editing') + '</div></div>\n'
             output += """
                       <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Send') + '</button></div><input type="hidden" name="_email_attachments" value="1"/><input type="hidden" name="_question_number" value="' + str(status.question.number) + '"/>'
             output += """

@@ -27,6 +27,7 @@ class Pandoc(object):
         self.output_format = 'rtf'
         self.output_filename = None
         self.template_file = None
+        self.reference_file = None
         self.metadata = list()
         self.initial_yaml = list()
         self.additional_yaml = list()
@@ -39,6 +40,8 @@ class Pandoc(object):
                     metadata_as_dict[key] = data[key]
         if self.output_format == 'rtf' and self.template_file is None:
             self.template_file = docassemble.base.util.standard_template_filename('Legal-Template.rtf')
+        if self.output_format == 'docx' and self.reference_file is None:
+            self.reference_file = docassemble.base.util.standard_template_filename('Legal-Template.docx')
         if (self.output_format == 'pdf' or self.output_format == 'tex') and self.template_file is None:
             self.template_file = docassemble.base.util.standard_template_filename('Legal-Template.tex')
         yaml_to_use = list()
@@ -67,6 +70,8 @@ class Pandoc(object):
         subprocess_arguments.extend([temp_file.name])
         if self.template_file is not None:
             subprocess_arguments.extend(['--template=%s' % self.template_file])
+        if self.reference_file is not None:
+            subprocess_arguments.extend(['--reference-docx=%s' % self.reference_file])
         subprocess_arguments.extend(['-s -o %s' % temp_outfile.name])
         subprocess_arguments.extend(self.arguments)
         #for argum in subprocess_arguments:
@@ -92,7 +97,7 @@ class Pandoc(object):
             raise IOError("Failed creating file: %s" % output_filename)
         return
     def convert(self):
-        if (self.output_format == "pdf" or self.output_format == "tex" or self.output_format == "rtf" or self.output_format == "epub"):
+        if (self.output_format == "pdf" or self.output_format == "tex" or self.output_format == "rtf" or self.output_format == "epub" or self.output_format == "docx"):
             self.convert_to_file()
         else:
             subprocess_arguments = [PANDOC_PATH, '--from=%s' % self.input_format, '--to=%s' % self.output_format]

@@ -1048,18 +1048,18 @@ def index():
         success = False
         question_number = post_data['_question_number']
         attachment_email_address = post_data['_attachment_email_address']
-        if '_attachment_include_rtf' in post_data:
-            if post_data['_attachment_include_rtf'] == 'True':
-                include_rtfs = True
+        if '_attachment_include_editable' in post_data:
+            if post_data['_attachment_include_editable'] == 'True':
+                include_editable = True
             else:
-                include_rtfs = False
-            del post_data['_attachment_include_rtf']
+                include_editable = False
+            del post_data['_attachment_include_editable']
         else:
-            include_rtfs = False
+            include_editable = False
         del post_data['_question_number']
         del post_data['_email_attachments']
         del post_data['_attachment_email_address']
-        logmessage("Got e-mail request for " + str(question_number) + " with e-mail " + str(attachment_email_address) + " and rtf inclusion of " + str(include_rtfs) + " and using yaml file " + yaml_filename)
+        logmessage("Got e-mail request for " + str(question_number) + " with e-mail " + str(attachment_email_address) + " and rtf inclusion of " + str(include_editable) + " and using yaml file " + yaml_filename)
         the_user_dict = get_attachment_info(user_code, question_number, yaml_filename, secret)
         if the_user_dict is not None:
             logmessage("the_user_dict is not none!")
@@ -1074,14 +1074,19 @@ def index():
                     file_formats = list()
                     if 'pdf' in the_attachment['valid_formats'] or '*' in the_attachment['valid_formats']:
                         file_formats.append('pdf')
-                    if include_rtfs and ('rtf' in the_attachment['valid_formats'] or '*' in the_attachment['valid_formats']):
-                        file_formats.append('rtf')
+                    if include_editable or 'pdf' not in file_formats:
+                        if 'rtf' in the_attachment['valid_formats'] or '*' in the_attachment['valid_formats']:
+                            file_formats.append('rtf')
+                        if 'docx' in the_attachment['valid_formats']:
+                            file_formats.append('docx')
                     for the_format in file_formats:
                         the_filename = the_attachment['file'][the_format]
                         if the_format == "pdf":
                             mime_type = 'application/pdf'
                         elif the_format == "rtf":
                             mime_type = 'application/rtf'
+                        elif the_format == "docx":
+                            mime_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                         attachment_info.append({'filename': str(the_attachment['filename']) + '.' + str(the_format), 'path': str(the_filename), 'mimetype': str(mime_type), 'attachment': the_attachment})
                         logmessage("Need to attach to the e-mail a file called " + str(the_attachment['filename']) + '.' + str(the_format) + ", which is located on the server at " + str(the_filename) + ", with mime type " + str(mime_type))
                         attached_file_count += 1
@@ -1138,6 +1143,8 @@ def index():
                     mime_type = 'application/x-latex'
                 elif the_format == "rtf":
                     mime_type = 'application/rtf'
+                elif the_format == "docx":
+                    mime_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                 return(send_file(the_filename, mimetype=str(mime_type), as_attachment=True, attachment_filename=str(the_attachment['filename']) + '.' + str(the_format)))
     if '_checkboxes' in post_data:
         checkbox_fields = json.loads(myb64unquote(post_data['_checkboxes'])) #post_data['_checkboxes'].split(",")
@@ -2586,7 +2593,6 @@ def playground_page():
                     with open(filename, 'a'):
                         os.utime(filename, None)    
     the_file = re.sub(r'[^A-Za-z0-9]', '', the_file)
-    javascript = ''
     files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f))])
     if request.method == 'GET' and not the_file and not is_new:
         if len(files):
@@ -2619,10 +2625,9 @@ def playground_page():
             if form.submit.data:
                 flash(word('The playground was saved at') + ' ' + the_time + '.', 'success')
             else:
-                flash_message = flash_as_html(word('The playground was saved at') + ' ' + the_time + '.  ' + word('Running in other tab.'), message_type='info')
-                url = url_for('index', i='/playground/' + the_file)
-                return jsonify(url=url, flash_message=flash_message)
-                # javascript = "\n    window.open(" + repr(url_for('index', i='/playground/' + the_file)) + ", '_blank' );"
+                playground.finalize()
+                flash_message = flash_as_html(word('The playground was saved at') + ' ' + the_time + '.  ' + word('Running in other tab.'), message_type='success')
+                return jsonify(url=url_for('index', i='/playground/' + the_file), flash_message=flash_message)
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
     content = ''
@@ -2638,6 +2643,7 @@ def playground_page():
         content = form.playground_content.data
     ajax = """
 $("#daRun").click(function(event){
+  daCodeMirror.save();
   $.ajax({
     type: "POST",
     url: """ + '"' + url_for('playground_page') + '"' + """,
@@ -2650,13 +2656,14 @@ $("#daRun").click(function(event){
         $("#main").prepend('<div class="container" id="flash">' + data.flash_message + '</div>')
       }
       window.open(data.url, '_blank');
+      $("#form").trigger("reinitialize.areYouSure")
     },
     dataType: 'json'
   });
   event.preventDefault();
 });
 """
-    return render_template('pages/playground.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});' + javascript + '\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + ajax + '    </script>'), form=form, files=files, current_file=the_file, content=content), 200
+    return render_template('pages/playground.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + ajax + '    </script>'), form=form, files=files, current_file=the_file, content=content), 200
 
 @app.route('/packages', methods=['GET', 'POST'])
 @login_required

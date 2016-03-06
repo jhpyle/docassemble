@@ -413,6 +413,10 @@ class Question:
                         if type(value) is not str:
                             raise DAError('The rtf template file must be a string.' + self.idebug(data))
                         self.interview.attachment_options['rtf_template_file'] = docassemble.base.util.package_template_filename(value, package=self.package)
+                    elif key == 'docx reference file':
+                        if type(value) is not str:
+                            raise DAError('The docx reference file must be a string.' + self.idebug(data))
+                        self.interview.attachment_options['docx_reference_file'] = docassemble.base.util.package_template_filename(value, package=self.package)
         if 'script' in data:
             if type(data) is not str:
                 raise DAError("A script section must be plain text." + self.idebug(data))
@@ -1003,6 +1007,10 @@ class Question:
                 if type(target['rtf template file']) is not str:
                     raise DAError('The rtf template file must be a string.' + self.idebug(target))
                 options['rtf_template_file'] = docassemble.base.util.package_template_filename(target['rtf template file'], package=self.package)
+            if 'docx reference file' in target:
+                if type(target['docx reference file']) is not str:
+                    raise DAError('The docx reference file must be a string.' + self.idebug(target))
+                options['docx_reference_file'] = docassemble.base.util.package_template_filename(target['docx reference file'], package=self.package)
             if 'usedefs' in target:
                 if type(target['usedefs']) is str:
                     the_list = [target['usedefs']]
@@ -1273,7 +1281,7 @@ class Question:
         else:
             formats_to_use = attachment['valid_formats']
         for doc_format in formats_to_use:
-            if doc_format in ['pdf', 'rtf', 'tex']:
+            if doc_format in ['pdf', 'rtf', 'tex', 'docx']:
                 if 'fields' in attachment['options']:
                     data_strings = []
                     images = []
@@ -1328,6 +1336,11 @@ class Question:
                             converter.template_file = attachment['options']['rtf_template_file']
                         elif 'rtf_template_file' in self.interview.attachment_options:
                             converter.template_file = self.interview.attachment_options['rtf_template_file']
+                    elif doc_format == 'docx':
+                        if 'docx_reference_file' in attachment['options']:
+                            converter.reference_file = attachment['options']['docx_reference_file']
+                        elif 'docx_reference_file' in self.interview.attachment_options:
+                            converter.reference_file = self.interview.attachment_options['docx_reference_file']
                     else:
                         if 'template_file' in attachment['options']:
                             converter.template_file = attachment['options']['template_file']
