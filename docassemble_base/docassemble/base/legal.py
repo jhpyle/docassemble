@@ -19,7 +19,7 @@ import yaml
 import us
 from decimal import Decimal
 
-__all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'LatitudeLongitude', 'RoleChangeTracker', 'DATemplate', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'get_dialect', 'set_language', 'word', 'comma_list', 'ordinal', 'ordinal_number', 'need', 'nice_number', 'verb_past', 'verb_present', 'noun_plural', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'indefinite_article', 'today', 'capitalize', 'title_case', 'url_of', 'get_locale', 'set_locale', 'process_action', 'url_action', 'selections', 'get_info', 'set_info', 'user_lat_lon', 'location_known', 'location_returned', 'get_config', 'map_of', 'objects_from_file', 'us', 'prevent_going_back', 'month_of', 'day_of', 'year_of', 'qr_code']
+__all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'LatitudeLongitude', 'RoleChangeTracker', 'DATemplate', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'get_dialect', 'set_language', 'word', 'comma_list', 'ordinal', 'ordinal_number', 'need', 'nice_number', 'verb_past', 'verb_present', 'noun_plural', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'indefinite_article', 'today', 'capitalize', 'title_case', 'url_of', 'get_locale', 'set_locale', 'process_action', 'url_action', 'selections', 'get_info', 'set_info', 'user_lat_lon', 'location_known', 'location_returned', 'get_config', 'map_of', 'objects_from_file', 'us', 'prevent_going_back', 'month_of', 'day_of', 'year_of', 'qr_code', 'interview_url_as_qr']
 
 class ThreadVariables(threading.local):
     user = None
@@ -108,8 +108,14 @@ def user_lat_lon():
             return this_thread.current_info['user']['location']['error'], this_thread.current_info['user']['location']['error']
     return None, None
 
-def interview_url():
-    return str(this_thread.current_info['url']) + '?i=' + urllib.quote(this_thread.current_info['yaml_filename']) + '&session=' + urllib.quote(this_thread.current_info['session'])
+def interview_url(**kwargs):
+    args = kwargs
+    args['i'] = this_thread.current_info['yaml_filename']
+    args['session'] = this_thread.current_info['session']
+    return str(this_thread.current_info['url']) + '?' + '&'.join(map((lambda (k, v): str(k) + '=' + urllib.quote(str(v))), args.iteritems()))
+
+def interview_url_as_qr(**kwargs):
+    return qr_code(interview_url(**kwargs))
 
 class Court(DAObject):
     def __str__(self):
