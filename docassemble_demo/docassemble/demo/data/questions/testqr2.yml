@@ -5,6 +5,8 @@ include:
 mandatory: true
 code: |
   multi_user = True
+  if 'resume_interview_screen' in url_args:
+    resume_interview_screen = url_args['resume_interview_screen']
   need(resume_interview_screen, final_screen)
 ---
 sets: resume_interview_screen
