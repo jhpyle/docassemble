@@ -290,6 +290,23 @@ mail:
   use_tls: false
 {% endhighlight %}
 
+Note that any machine that connects to an SMTP server will need to
+identify itself to the SMTP server using a
+[fully qualified domain name].  E-mail sending will be slow if your
+**docassemble** application servers have trouble finding their fully
+qualified domain names.  To test this, do:
+
+{% highlight text %}
+$ python
+>>> import socket
+>>> print socket.getfqdn()
+{% endhighlight %}
+
+The `socket.getfqdn()` function should run instantaneously.  If it
+does not, you should configure your system so that it can find its
+fully qualified domain name faster.  On Linux, you can do this by
+editing `/etc/hosts`.
+
 ## use_progress_bar
 
 This controls whether the web app will show a progress bar at the top
@@ -686,3 +703,4 @@ first.
 [Amazon EC2]: https://aws.amazon.com/ec2/
 [EC2]: https://aws.amazon.com/ec2/
 [Docker]: https://www.docker.com/
+[fully qualified domain name]: https://en.wikipedia.org/wiki/Fully_qualified_domain_name

@@ -7,10 +7,10 @@ short_title: Docker
 [Docker] is a good platform for trying out **docassemble** for the
 first time.  It can also be used as a production environment; Amazon's
 [EC2 Container Service] can be used to maintain a cluster of
-**docassemble** web server instances that communicate with a central
-SQL server.  For information about how to install **docassemble** in a
-multi-server arrangement on [EC2 Container Service], see the
-[scalability] section.
+**docassemble** web server instances, created from [Docker] images,
+that communicate with a central SQL server.  For information about how
+to install **docassemble** in a multi-server arrangement on
+[EC2 Container Service], see the [scalability] section.
 
 # Prerequisites
 
@@ -21,9 +21,9 @@ storage than that to be available.
 
 # Installing Docker
 
-If you have a Mac, follow the [Docker installation instructions for OS X].
+If you have a Mac, follow the [Docker installation instructions for OS X]{:target="_blank"}.
 
-If you have a Windows PC, follow the [Docker installation instructions for Windows].
+If you have a Windows PC, follow the [Docker installation instructions for Windows]{:target="_blank"}.
 
 On [Amazon Linux] (assuming the username ec2-user):
 
@@ -45,7 +45,7 @@ The last line allows the non-root user to run [Docker].  You may need to
 log out and log back in again for the new user permission to take
 effect.
 
-To start docker, do:
+To start Docker, do:
 
 {% highlight bash %}
 sudo /etc/init.d/docker start
@@ -78,14 +78,30 @@ like `-p 8080:80` instead.
 The image, which is about 2GB in size, is an [automated build] based
 on the "master" branch of the [docassemble repository].
 
-To make changes to the configuration, you can gain access to the
-running container by running:
+You can then connect to the container by pointing your web browser to
+the IP address or hostname of the machine that is running [Docker].
+You can log in using the default username ("admin@admin.com") and
+password ("password"), and make changes to the configuration from the
+menu.
+
+You should not need to connect to the running container in order to
+get it to work.  However, you might want to gain access to the running
+container for some reason.  To do so, you can run:
 
 {% highlight bash %}
 docker exec -t -i <containerid> /bin/bash
 {% endhighlight %}
 
 You can find out the ID of the running container by doing `docker ps`.
+
+Make sure to cleanly shut down the container by running:
+
+{% highlight bash %}
+docker stop <containerid>
+{% endhighlight %}
+
+The container runs a PostgreSQL server, and the data files of the
+server may become corrupted if PostgreSQL is not gracefully shut down.
 
 # Multi-server arrangement
 
@@ -94,8 +110,15 @@ you need to:
 
 1. Start a container that will provide the SQL server;
 2. Start a container that will provide the log server;
-3. Start one or more other machines that will handle the
-   **docassemble** application and web server.
+3. Start one or more other containers that will handle the
+**docassemble** application and web server.
+
+These containers can be on separate hosts.
+
+The containers need to have a way to share files with one another.
+The best way to do this is with [Amazon S3].  Before proceeding, go to
+[Amazon S3] and obtain an access key and a secret access key.  Then
+create a bucket and remember the name of the bucket.
 
 To start the SQL server, do:
 
@@ -103,22 +126,23 @@ To start the SQL server, do:
 docker run -d -p 5432:5432 jhpyle/docassemble-sql
 {% endhighlight %}
 
-Note the IP address of the [Docker] host on the local network.  You will
-need to feed this address, and other information, to the [Docker]
-container that responds to web requests.
+Note the IP address or hostname of the [Docker] host on the local
+network.  You will need to feed this address, and other information,
+to the [Docker] container that responds to web requests.
 
-Create a file `env.list` containing the access keys for SQL and [S3]:
-
+Now go to the machine that will run your log server (if different).
 To start the log server, do:
 
 {% highlight bash %}
-docker run -d -p 514:514 -p 8080:8080 jhpyle/docassemble-log
+docker run -d -p 514:514 -p 8080:80 jhpyle/docassemble-log
 {% endhighlight %}
 
-Note the IP address of this server as well.
+Note the IP address or hostname of this server as well.
 
-Plug these the IP addresses into a file called `env.list`, along with
-any other special variables you need to define:
+Now go to the machine that will run your application server (if different).
+
+Plug these IP addresses into a file called `env.list`, along with your
+[S3] information:
 
 {% highlight text %}
 CONTAINERROLE=webserver
@@ -147,7 +171,13 @@ See [scalability of docassemble] for information about running
 
 # Creating your own Docker image
 
-To create your own [Docker] image of docassemble, first make sure you
+You will want to create your own [Docker] image of **docassemble** if
+you want to:
+
+* Run **docassemble** over HTTPS with your own certificates
+* 
+
+To create your own [Docker] image, first make sure you
 have git installed:
 
 {% highlight bash %}
@@ -237,10 +267,12 @@ docker pull jhpyle/docassemble
 
 Then, subsequent commands will use the latest **docassemble** image.
 
+[Docker installation instructions for Windows]: https://docs.docker.com/engine/installation/windows/
+[Docker installation instructions for OS X]: https://docs.docker.com/engine/installation/mac/
 [Docker]: https://www.docker.com/
 [Amazon AWS]: http://aws.amazon.com
 [automated build]: https://docs.docker.com/docker-hub/builds/
-[scalability of docassemble]: {{ site.baseurl }}/docs/scalability.html)
+[scalability of docassemble]: {{ site.baseurl }}/docs/scalability.html
 [Amazon Linux]: https://aws.amazon.com/amazon-linux-ami/
 [EC2]: https://aws.amazon.com/ec2/
 [multi-server arrangement]: {{ site.baseurl }}/docs/scalability.html
@@ -251,5 +283,4 @@ Then, subsequent commands will use the latest **docassemble** image.
 [Docker Hub]: https://hub.docker.com/
 [scalability]: {{ site.baseurl }}/docs/scalability.html
 [docassemble repository]: {{ site.github.repository_url }}
-[Docker installation instructions for Windows]: https://docs.docker.com/engine/installation/windows/
-[Docker installation instructions for OS X]: https://docs.docker.com/engine/installation/mac/
+[Amazon S3]: https://aws.amazon.com/s3/

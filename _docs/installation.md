@@ -13,9 +13,9 @@ or a Linux machine.  And if you are only interested in seeing how
 of installing **docassemble**.
 
 The installation instructions in this section assume you are
-installing **docassemble** into a [Debian]/[Ubuntu] environment.
-However, **docassemble** has been developed to be
-operating-system-independent.  If you can install the dependencies,
+installing **docassemble** into a native [Debian]/[Ubuntu] environment
+(not using [Docker]).  However, **docassemble** has been developed to
+be operating-system-independent.  If you can install the dependencies,
 and you know what you're doing, you should be able to get
 **docassemble** to run.  It has not been tested on Mac or Windows, but
 all the dependencies are likely to be available for installation on
@@ -44,7 +44,8 @@ sudo apt-get install python python-dev pandoc texlive texlive-latex-extra \
   libogg-vorbis-header-pureperl-perl perl make libvorbis-dev \
   libcddb-perl libinline-perl libcddb-get-perl libmp3-tag-perl \
   libaudio-scan-perl libaudio-flac-header-perl libxml2 libxslt1.1 \
-  libxml2-dev libxslt1-dev libparallel-forkmanager-perl pdftk fail2ban
+  libxml2-dev libxslt1-dev libparallel-forkmanager-perl pdftk \
+  fail2ban redis \
 {% endhighlight %}
 
 **docassemble** depends on the most recent version of the
