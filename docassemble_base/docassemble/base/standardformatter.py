@@ -459,7 +459,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                 output += '                <blockquote>' + unicode(attachment['content']['html']) + '</blockquote>\n'
                 output += '              </div>\n'
             if show_markdown:
-                if 'html' in attachment['valid_formats']:
+                if 'html' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
                     md_format = 'html'
                 else:
                     for format_type in attachment['valid_formats']:
