@@ -41,7 +41,7 @@ objects:
 {% endhighlight %}
 
 An `objects` block creates objects that may be referenced in your
-interview.  See [objects]({{ site.baseurl }}/docs/objects.md) for more
+interview.  See [objects]({{ site.baseurl }}/docs/objects.html) for more
 information about objects in **docassemble**.
 
 If your interview references the variable `spouse`, **docassemble**
