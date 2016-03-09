@@ -63,8 +63,8 @@ which does not work within PDF and RTF documents.
 # Inserting images
 
 To insert an image that is located in the `static` folder of a custom
-Python package, use the `IMAGE` command.  This works within PDF and
-RTF documents as well as within questions.
+Python package, use the `FILE` command.  This works within PDF, RTF,
+and DOCX documents as well as within questions.
 
 For example:
 

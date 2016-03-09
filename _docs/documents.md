@@ -364,9 +364,10 @@ preview and will only be able to download the PDF file:
 
 **docassemble** can use [Pandoc] to convert [Markdown] into a
 Microsoft Word .docx file.  These .docx files are not created by
-default because they do not support insertion of images and other
-features that are supported by RTF and PDF formats.  To generate .docx
-files, specify `docx` as one of the `valid formats`:
+default because they do not support all of the features that are
+supported by RTF and PDF formats, such as tables (which are necessary
+for case captions).  To generate .docx files, specify `docx` as one of
+the `valid formats`:
 
 {% highlight yaml %}
 ---
