@@ -201,6 +201,41 @@ def rtf_filter(text, metadata=dict()):
             text += line + '\n'
     return(text)
 
+def docx_filter(text, metadata=dict()):
+    text = text + "\n\n"
+    text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
+    text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_include_docx, text)
+    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_include_docx, text)
+    text = re.sub(r'\[FILE ([^,\]]+)\]', image_include_docx, text)
+    text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_include_docx, text)
+    text = re.sub(r'\[QR ([^\]]+)\]', qr_include_docx, text)
+    text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
+    text = re.sub(r'\[YOUTUBE ([^\]]+)\]', '', text)
+    text = re.sub(r'\[VIMEO ([^\]]+)\]', '', text)
+    text = re.sub(r'\\clearpage *\\clearpage', '', text)
+    text = re.sub(r'\[INDENTATION\]', '', text)
+    text = re.sub(r'\[NOINDENTATION\]', '', text)    
+    text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', '', text, flags=re.DOTALL)
+    text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', '', text, flags=re.DOTALL)
+    text = re.sub(r'\[SINGLESPACING\] *', '', text)
+    text = re.sub(r'\[DOUBLESPACING\] *', '', text)
+    text = re.sub(r'\[NBSP\]', '', text)
+    text = re.sub(r'\[ENDASH\]', '', text)
+    text = re.sub(r'\[EMDASH\]', '', text)
+    text = re.sub(r'\[HYPHEN\]', '', text)
+    text = re.sub(r'\[PAGEBREAK\] *', '', text)
+    text = re.sub(r'\[PAGENUM\] *', '', text)
+    text = re.sub(r'\[SECTIONNUM\] *', '', text)
+    text = re.sub(r'\[SKIPLINE\] *', '', text)
+    text = re.sub(r'\[VERTICALSPACE\] *', '', text)
+    text = re.sub(r'\[NEWLINE\] *', '', text)
+    text = re.sub(r'\[BR\] *', '', text)
+    text = re.sub(r'\[TAB\] *', '', text)
+    text = re.sub(r'\[FLUSHLEFT\] *(.+?)\n\n', '', text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[CENTER\] *(.+?)\n\n', '', text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[BOLDCENTER\] *(.+?)\n\n', '', text, flags=re.MULTILINE | re.DOTALL)
+    return(text)
+
 def pdf_filter(text, metadata=dict()):
     text = text + "\n\n"
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
@@ -545,6 +580,26 @@ def image_include_string(match, emoji=False):
                 return(output)
     return('[invalid graphics reference]')
 
+def image_include_docx(match):
+    file_reference = match.group(1)
+    try:
+        width = match.group(2)
+        width = re.sub(r'^(.*)px', convert_pixels, width)
+        if width == "full":
+            width = '100%'
+    except:
+        width = DEFAULT_IMAGE_WIDTH
+    file_info = file_finder(file_reference, convert={'svg': 'eps'})
+    if 'mimetype' in file_info:
+        if re.search(r'^(audio|video)', file_info['mimetype']):
+            return '[reference to file type that cannot be displayed]'
+    if 'path' in file_info:
+        if 'extension' in file_info:
+            if file_info['extension'] in ['png', 'jpg', 'gif', 'pdf', 'eps']:
+                output = '![](' + file_info['path'] + '){width=' + width + '}'
+                return(output)
+    return('[invalid graphics reference]')
+
 def qr_include_string(match):
     string = match.group(1)
     try:
@@ -561,6 +616,21 @@ def qr_include_string(match):
     if width == '\\textwidth':
         output = '\\clearpage ' + output + '\\clearpage '
     logmessage("Output is " + output)
+    return(output)
+
+def qr_include_docx(match):
+    string = match.group(1)
+    try:
+        width = match.group(2)
+        width = re.sub(r'^(.*)px', convert_pixels, width)
+        if width == "full":
+            width = '100%'
+    except:
+        width = DEFAULT_IMAGE_WIDTH
+    im = qrcode.make(string)
+    the_image = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+    im.save(the_image.name)
+    output = '![](' + the_image.name + '){width=' + width + '}'
     return(output)
 
 def emoji_include_string(match):

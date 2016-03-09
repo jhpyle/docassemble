@@ -1,0 +1,35 @@
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - user: Individual
+---
+generic object: Individual
+question: |
+  Please upload one or more pictures.
+decoration: picture
+fields:
+  - A test file: picture
+    datatype: files
+---
+sets: final_screen
+question: |
+  Here is your document.
+attachment:
+  - name: Your document
+    filename: document
+    valid formats:
+      - docx
+      - pdf
+    content: |
+      Here is an award-winning picture.
+
+      ${ picture }
+
+      Is it not a thing of beauty?
+---
+mandatory: true
+code: |
+  need(final_screen)
+---

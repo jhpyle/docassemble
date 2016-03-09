@@ -45,6 +45,8 @@ class Pandoc(object):
         if (self.output_format == 'pdf' or self.output_format == 'tex') and self.template_file is None:
             self.template_file = docassemble.base.util.standard_template_filename('Legal-Template.tex')
         yaml_to_use = list()
+        if self.output_format == 'docx':
+            self.input_content = docassemble.base.filter.docx_filter(self.input_content, metadata=metadata_as_dict)
         if self.output_format == 'pdf' or self.output_format == 'tex':
             if len(self.initial_yaml) == 0:
                 standard_file = docassemble.base.util.standard_template_filename('Legal-Template.yml')
