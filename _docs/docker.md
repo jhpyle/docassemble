@@ -141,8 +141,8 @@ Note the IP address or hostname of this server as well.
 
 Now go to the machine that will run your application server (if different).
 
-Plug these IP addresses into a file called `env.list`, along with your
-[S3] information:
+Plug the IP addresses or hostnames for the SQL server and log server
+into a file called `env.list`, along with your [S3] information:
 
 {% highlight text %}
 CONTAINERROLE=webserver
@@ -160,22 +160,24 @@ TIMEZONE=America/New_York
 LOGSERVER=192.168.0.57
 {% endhighlight %}
 
-Then start the server:
+The address for the SQL server is `DBHOST`.  The address for the log
+server is `LOGSERVER`.
+
+Then start the application server:
 
 {% highlight bash %}
 docker run --env-file=env.list -d -p 80:80 -p 443:443 -p 9001:9001 jhpyle/docassemble
 {% endhighlight %}
 
-See [scalability of docassemble] for information about running
+See [scalability of docassemble] for more information about running
 **docassemble** in a multi-server arrangement.
 
 # Creating your own Docker image
 
 You will want to create your own [Docker] image of **docassemble** if
-you want to:
-
-* Run **docassemble** over HTTPS with your own certificates
-* 
+you want to run **docassemble** over HTTPS with your own certificates,
+and have those certificates automatically install when a container is
+created.
 
 To create your own [Docker] image, first make sure you
 have git installed:
@@ -207,16 +209,16 @@ files:
 * `docassemble/Docker/config.yml`: you probably do not need to change
   this; it is a template that is updated based on the contents of the
   `--env-file` passed to `docker run`.  Once your server is up and
-  running you can change the rest of the configuration in the web application.
-* `docassemble/Docker/initialize.sh`: this script: updates
-  `config.yml` based on the environment variables; retrieves a new
-  version of `config.yml` from [S3], if available; if `CONTAINERROLE`
-  is not set to `webserver`, starts the PostgreSQL server and
-  initializes the database if it does not exist; creates the tables in
-  the database if they do not already exist; copies SSL certificates
-  from [S3] or `/usr/share/docassemble/certs`; enables the Apache
-  `mod_ssl` if `USEHTTPS` is `true` and otherwise disables it; and
-  starts Apache.
+  running you can change the rest of the configuration in the web
+  application.
+* `docassemble/Docker/initialize.sh`: this script updates `config.yml`
+  based on the environment variables; retrieves a new version of
+  `config.yml` from [S3], if available; if `CONTAINERROLE` is not set
+  to `webserver`, starts the PostgreSQL server and initializes the
+  database if it does not exist; creates the tables in the database if
+  they do not already exist; copies SSL certificates from [S3] or
+  `/usr/share/docassemble/certs`; enables the Apache `mod_ssl` if
+  `USEHTTPS` is `true` and otherwise disables it; and starts Apache.
 * `docassemble/Docker/apache.conf`: note that if `mod_ssl` is enabled,
   HTTP will merely redirect to HTTPS.
 * `docassemble/Docker/docassemble.crt`: SSL certificate for HTTPS.
@@ -282,5 +284,5 @@ Then, subsequent commands will use the latest **docassemble** image.
 [available on Docker Hub]: https://hub.docker.com/r/jhpyle/docassemble/
 [Docker Hub]: https://hub.docker.com/
 [scalability]: {{ site.baseurl }}/docs/scalability.html
-[docassemble repository]: {{ site.github.repository_url }}
 [Amazon S3]: https://aws.amazon.com/s3/
+[docassemble repository]: {{ site.github.repository_url }}

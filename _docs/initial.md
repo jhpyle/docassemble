@@ -41,8 +41,8 @@ objects:
 {% endhighlight %}
 
 An `objects` block creates objects that may be referenced in your
-interview.  See [objects]({{ site.baseurl }}/docs/objects.html) for more
-information about objects in **docassemble**.
+interview.  See [objects] for more information about objects in
+**docassemble**.
 
 If your interview references the variable `spouse`, **docassemble**
 will find the above `objects` block and process it.  It will define
@@ -269,10 +269,9 @@ mako: |
   </%def>
 {% endhighlight %}
 
-A `def` block allows you to define [Mako]
-"[def](http://docs.makotemplates.org/en/latest/defs.html)" functions
-that you can re-use later in your question or document templates.  You
-can use the above function by doing:
+A `def` block allows you to define [Mako] "[def]" functions that you
+can re-use later in your question or document templates.  You can use
+the above function by doing:
 
 {% highlight yaml %}
 ---
@@ -303,10 +302,10 @@ code: |
 ---
 {% endhighlight %}
 
-If your interview uses the [roles]({{ site.baseurl}}/docs/roles.html)
-feature for multi-user interviews, the `default role` statement will
-define what role or roles will be required for any question that does
-not contain an explicit `role` statement.
+If your interview uses the [roles] feature for multi-user interviews,
+the `default role` statement will define what role or roles will be
+required for any question that does not contain an explicit `role`
+statement.
 
 When you use the roles feature, you need to have some way of telling
 your interview logic what the role of the interviewee is.
@@ -355,3 +354,6 @@ multi-lingual interviews.  See [modifiers] for information about the
 [modifiers]: {{ site.baseurl }}/docs/modifiers.html
 [markup]: {{ site.baseurl }}/docs/markup.html
 [setting variables]: {{ site.baseurl }}/docs/fields.html
+[objects]: {{ site.baseurl }}/docs/objects.html
+[def]: http://docs.makotemplates.org/en/latest/defs.html
+[roles]: {{ site.baseurl}}/docs/roles.html

@@ -366,6 +366,51 @@ fields:
 By comparing the screenshot to the [YAML] code, you can see how each
 of the features works.
 
+Note that adding `code` to a field makes it a multiple-choice
+question.  If you have a multiple-choice question and you want to
+reuse the same selections several times, you do not need to type in
+the whole list every time.  You can define a variable to contain the
+list and a `code` block that defines the variable.  For example:
+
+{% highlight yaml %}
+---
+mandatory: true
+code: |
+  final_screen
+---
+sets: final_screen
+question: |
+  Your favorite fruit is the ${ favorite_fruit }, which is the king of
+  all fruits.
+subquestion: |
+  Your brother, who is not so wise, is partial to the
+  ${ favorite_fruit_of_brother }.
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+    code: |
+      myoptions
+---
+question: |
+  What is your brother's favorite fruit?
+fields:
+  - Fruit: favorite_fruit_of_brother
+    code: |
+      myoptions
+---
+code: |
+  myoptions = [
+                {'apple': "Apples"},
+                {'orange': "Oranges"},
+                {'pear': "Pears"}
+              ]
+---
+{% endhighlight %}
+
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testpulldown.yml){:target="_blank"}.)
+
 ## `sets`
 
 {% highlight yaml %}
