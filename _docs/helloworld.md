@@ -29,17 +29,17 @@ instructions.)
    Developer.
 2. On the menu in the upper right hand corner, select Package Management.
 3. Click "Create a package."
-4. Enter `hello_world` as the package name and click "Get template."
+4. Enter `hello-world` as the package name and click "Get template."
 5. Save the resulting .zip file to your computer.
 6. Unpack the .zip file somewhere.  (On Windows, right-click the .zip
    file and there will be an option to unpack it.)
 7. Open your favorite text editor.  (On Windows, use [WordPad] unless
    you have installed a more advanced editor like [Notepad++].)  Open
    the file
-   `docassemble_hello_world/docassemble/hello_world/data/questions.yml`
+   `docassemble-hello-world/docassemble/hello-world/data/questions.yml`
    and replace its contents with the above [YAML] text.
-8. Create a new .zip file containing the `docassemble_hello_world`
-   folder.  (On Windows, right-click the `docassemble_hello_world`
+8. Create a new .zip file containing the `docassemble-hello-world`
+   folder.  (On Windows, right-click the `docassemble-hello-world`
    folder, select "Send To," then select "Compressed (zipped)
    Folder.")
 9. In the **docassemble** web app, go back to Package Management.
@@ -47,11 +47,12 @@ instructions.)
 11. Upload the .zip file you just created.  You should see a message
     that the package was installed successfully.
 12. Point your browser to
-    `http://localhost/demo?i=docassemble.hello_world:data/questions/questions.yml`
-    (substituting the actual domain and base URL of your
-    **docassemble** site).  The base url is set during the
-    [installation] of the WSGI server and in the **docassemble**
-    [configuration] file.
+    `http://localhost?i=docassemble.hello-world:data/questions/questions.yml`
+    (substitute the actual domain and base URL of your **docassemble**
+    site).  The base url is set during [installation] using the `root`
+    value in the **docassemble** [configuration] file.  If `root` is
+    `/`, you just use `localhost?i=...` or, e.g., `192.168.1.5?i=...`.
+    If `root` is `/demo/`, you would use `localhost/demo?i=...`.
 13. You should see "Hello, world!" with an exit button.
 
 (If you do not have a server yet, you can [try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/hello.yml){:target="_blank"}.)
