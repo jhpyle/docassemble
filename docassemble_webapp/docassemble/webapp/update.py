@@ -46,7 +46,7 @@ def check_for_updates():
         package_owner[auth.package_id] = auth.user_id
     for package in packages.itervalues():
         if package.id not in installs and package.name in here_already:
-            #logmessage("Package " + package.name + " here already")
+            logmessage("Package " + package.name + " here already")
             install = Install(hostname=hostname, packageversion=here_already[package.name], version=package.version, package_id=package.id)
             db.session.add(install)
             installs[package.id] = install
@@ -54,13 +54,18 @@ def check_for_updates():
     if changed:
         db.session.commit()
     for package in packages.itervalues():
-        if (package.packageversion is not None and installs[package.id].packageversion is None) or (package.packageversion is not None and installs[package.id].packageversion is not None and LooseVersion(package.packageversion) > LooseVersion(installs[package.id].packageversion)):
+        #logmessage("Processing package id " + str(package.id))
+        #logmessage("1: " + str(installs[package.id].packageversion) + " 2: " + str(package.packageversion))
+        if (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is None) or (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is not None and LooseVersion(package.packageversion) > LooseVersion(installs[package.id].packageversion)):
             new_version_needed = True
         else:
-            new_version_needed = False            
+            new_version_needed = False
+        #logmessage("got here and new version is " + str(new_version_needed))
         if package.id not in installs or package.version > installs[package.id].version or new_version_needed:
             to_install.append(package)
+    #logmessage("done with that")
     for package in to_uninstall:
+        #logmessage("Going to uninstall a package")
         returnval, newlog = uninstall_package(package)
         logmessages += newlog
         if returnval == 0:
@@ -68,6 +73,7 @@ def check_for_updates():
         else:
             ok = False
     for package in to_install:
+        #logmessage("Going to install a package")
         returnval, newlog = install_package(package)
         logmessages += newlog
         if returnval == 0:
@@ -84,10 +90,11 @@ def check_for_updates():
         else:
             ok = False
     db.session.commit()
-    logmessage("check_for_update: finished uninstalling and installing")
+    #logmessage("check_for_update: finished uninstalling and installing")
     return ok, logmessages
 
 def update_versions():
+    logmessage("update_versions")
     install_by_id = dict()
     from docassemble.webapp.config import hostname
     for install in Install.query.filter_by(hostname=hostname).all():

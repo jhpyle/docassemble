@@ -2110,7 +2110,7 @@ def update_package():
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
             except Exception as errMess:
-                flash("Error processing upload: " + str(errMess), "error")
+                flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
         else:
             if form.giturl.data:
                 giturl = form.giturl.data.strip()
@@ -2182,7 +2182,10 @@ def install_zip_package(packagename, file_number):
         existing_package.type = 'zip'
         existing_package.version += 1
     db.session.commit()
+    #logmessage("Going into check for updates now")
     ok, logmessages = docassemble.webapp.update.check_for_updates()
+    #logmessage("Returned from check for updates")
+    #logmessage('pip log: ' + str(logmessages), 'info')
     if ok:
         trigger_update(except_for=hostname)
         restart_wsgi()
