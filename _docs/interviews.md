@@ -11,7 +11,7 @@ An "interview" in **docassemble** is a [YAML] file that
 questions of a user.
 
 **docassemble** stores the user's answers in "variables."  The values
-of these variables may be incorporated into the the text of questions,
+of these variables may be incorporated into the the text of [questions],
 or into the text of [documents].
 
 The interview can ask different questions of the user depending on
@@ -254,6 +254,7 @@ There are three ways to author your own interviews:
 [Python]: https://www.python.org/
 [Initial Blocks]: {{ site.baseurl }}/docs/initial.html
 [Question Blocks]: {{ site.baseurl }}/docs/questions.html
+[questions]: {{ site.baseurl }}/docs/questions.html
 [Setting Variables]: {{ site.baseurl }}/docs/fields.html
 [Question Modifiers]: {{ site.baseurl }}/docs/modifiers.html
 [Templates]: {{ site.baseurl }}/docs/template.html

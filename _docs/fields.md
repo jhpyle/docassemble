@@ -5,42 +5,9 @@ short_title: Setting Variables
 ---
 
 To instruct **docassemble** to store user input in a variable in
-response to a question, you need to include in your `question` a
-variable name as well as some indication about how you would like
+response to a [question], you need to include in your `question` a
+variable name within a directive that indicates how you would like
 **docassemble** to ask for the value of the variable.
-
-# A note about variable names
-
-Variable names are [Python identifiers], which means they can be any
-sequence of uppercase or lowercase letters, digits, and underscores,
-except the first character cannot be a digit.  No spaces are allowed
-and no punctuation is allowed except for the underscore, `_`.
-
-The following are valid variable names:
-
-* `fried_fish1`
-* `NyanCat`
-* `nyancat` (variables are case-sensitive, so this is not the same as
-  the above)
-* `__f645456DG_greij_43` (but why would you use something so ugly?)
-* `USER_PHONE_NUMBER` (ok, but why are you yelling?)
-
-The following are **not** valid variable names, and if you try to use
-such variable names you will may get an error or unexpected results:
-
-* `8th_plaintiff` (you can't begin a variable name with a number;
-  [Python] will say "invalid syntax")
-* `fried.fish1` (this is valid code, but [Python] will think you are
-referring to the attribute `fish1` of the object `fried`)
-* `user's_phone_number` (apostrophes are not allowed; [Python]
-  recognizes them as single quotes)
-* `favorite animal` (spaces are not allowed)
-* `beneficiary#1` (punctuation marks other than `_` are not allowed)
-* `applicant_résumé` (only plain alphabet characters can be used)
-
-See [reserved variable names] for a list of variable names that you
-cannot use because they conflict with built-in names that [Python] and
-**docassemble** use.
 
 # Directives
 
@@ -70,7 +37,7 @@ noyes: user_has_injury
 ---
 {% endhighlight %}
 
-## `buttons`
+## `field` with `buttons`
 
 {% highlight yaml %}
 ---
@@ -94,13 +61,13 @@ buttons the user presses.
 The `buttons` statement must always refer to a [YAML] list, so that
 **docassemble** knows the order of the buttons.
 
-Each item under `buttons` can either be a [YAML] key-value pair
-(written in the form of `- key: value`), where the key is the button
-label that the user sees and the value is what the variable identified
-in `field` will be set to if the user presses that button.
+If an item under `buttons` is a [YAML] key-value pair (written in the
+form of `- key: value`), then the key will be the button label that the
+user sees, and the value will be what the variable identified in `field`
+will be set to if the user presses that button.
 
 An item under `buttons` can also be plain text; in that case
-**docassemble** uses the text for both the label and the variable
+**docassemble** uses this text for both the label and the variable
 value.  For example, this:
 
 {% highlight yaml %}
@@ -152,6 +119,118 @@ Note that the Python code needs to return key-value pairs (Python
 dictionaries) where the key is what the variable should be set to and
 the value is the button label.  This is different from the [YAML]
 syntax.
+
+## `field` with `choices`
+
+{% highlight yaml %}
+---
+question: |
+  What is your favorite color?
+field: favorite_color
+choices:
+  - Red: red
+  - Blue: blue
+  - Green: green
+---
+{% endhighlight %}
+
+This provides "radio buttons" with a "Continue" button.
+
+## Adding images to `buttons` or `choices`
+
+To add a decorative icon to a choice, use a key/value pair and add
+`image` as an additional key.
+
+{% highlight yaml %}
+---
+field: gender
+question: |
+  Are you a man or a woman?
+buttons:
+  - Man: masculine
+    image: male
+  - Woman: feminine
+    image: female
+---
+{% endhighlight %}
+
+This works with both `buttons` and `choices`.
+
+## buttons/choices that embed `question` and `code` blocks
+
+Multiple choice questions can embed `question` blocks and `code`
+blocks.  These questions are just like ordinary questions, except they
+can only be asked by way of the questions in which they are embedded.
+
+You embed a question by providing a [YAML] key-value list (a
+dictionary) (as opposed to text) as the value of a label in a
+`buttons` or `choices` list.
+
+{% highlight yaml %}
+---
+question: What is your favorite color?
+buttons:
+  - Red:
+      question: Dark red or light red?
+      field: favorite_color
+      buttons:
+        - Dark Red
+        - Light Red
+  - Green:
+      question: Dark green or light green?
+      field: favorite_color
+      buttons:
+        - Dark Green
+        - Light Green
+---
+{% endhighlight %}
+
+While embedding `question` blocks can be useful sometimes, it is
+generally not a good idea to structure interviews with a lot of
+embedded questions.  You will have more flexibility if your questions
+stand on their own.
+
+It is also possible for multiple-choice questions to embed `code`
+blocks that execute Python code.  (If you do not know what `code`
+blocks are yet, read the section on [code blocks] first.)  This can be
+useful when you want to set the values of multiple variables with one
+button.
+
+{% highlight yaml %}
+---
+question: What kind of car do you want?
+buttons:
+  - Ford Focus:
+    code: |
+      car_model = "Focus"
+      car_make = "Ford"
+  - Toyota Camry:
+    code: |
+      car_model = "Camry"
+      car_make = "Toyota"
+---
+{% endhighlight %}
+
+The question above tells **docassemble** that if the interview logic
+calls for either `car_model` or `car_make`, the question should be
+tried.  When the user clicks on one of the buttons, the code will be
+executed and the variables will be set.
+
+## `field` without `buttons` or `choices`
+
+{% highlight yaml %}
+---
+question: |
+  Welcome to the interview!
+subquestion: |
+  Your participation means a lot to us.
+field: user_saw_intro
+---
+{% endhighlight %}
+
+A `question` with a `field` and no `buttons` will offer the user a
+"Continue" button.  When the user presses "Continue," the variable
+indicated by `field` will be set to `True`.
 
 ## `signature`
 
@@ -296,7 +375,7 @@ Compare this screenshot . . .
 
 ![Screenshot of fields]({{ site.baseurl }}/img/fields-example.png)
 
-. . . with this `question` block:
+. . . with the `question` block below:
 
 {% highlight yaml %}
 ---
@@ -305,6 +384,15 @@ imports:
 ---
 modules:
   - docassemble.base.util
+---
+mandatory: true
+code: |
+  need(final_screen)
+---
+sets: final_screen
+question: All done
+subquestion: |
+  Your income is ${ user_annual_income }.
 ---
 question: Tell me more about yourself
 fields:
@@ -327,7 +415,7 @@ fields:
       - Innie
       - Outie
   - html: |
-      The date and time is <span id="today_time"></span>.
+      The date and time is <span class="mytime" id="today_time"></span>.
   - script: |
       <script>document.getElementById("today_time").innerHTML = Date();</script>
   - css: |
@@ -351,7 +439,7 @@ fields:
       #### Politics
 
       Tell me about your political views.
-  - no label: political views
+  - no label: political_views
     default: I have no political views
   - Political preference: political_party
     datatype: radio
@@ -363,8 +451,18 @@ fields:
 ---
 {% endhighlight %}
 
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testfields.yml){:target="_blank"}.)
+
 By comparing the screenshot to the [YAML] code, you can see how each
 of the features works.
+
+The referenced [CSS file] contains the following:
+
+{% highlight css %}
+.mytime {
+    color: green;
+}
+{% endhighlight %}
 
 Note that adding `code` to a field makes it a multiple-choice
 question.  If you have a multiple-choice question and you want to
@@ -526,66 +624,6 @@ choices:
 
 The functionality is the same.
 
-## buttons/choices that embed `question` and `code` blocks
-
-Multiple choice questions can embed `question` blocks and `code`
-blocks.  These questions are just like ordinary questions, except they
-can only be asked by way of the questions in which they are embedded.
-
-You embed a question by providing a [YAML] key-value list (a
-dictionary) (as opposed to text) as the value of a label in a
-`buttons` or `choices` list.
-
-{% highlight yaml %}
----
-question: What is your favorite color?
-buttons:
-  - Red:
-      question: Dark red or light red?
-      field: favorite_color
-      buttons:
-        - Dark Red
-        - Light Red
-  - Green:
-      question: Dark green or light green?
-      field: favorite_color
-      buttons:
-        - Dark Green
-        - Light Green
----
-{% endhighlight %}
-
-While embedding `question` blocks can be useful sometimes, it is
-generally not a good idea to structure interviews with a lot of
-embedded questions.  You will have more flexibility if your questions
-stand on their own.
-
-It is also possible for multiple-choice questions to embed `code`
-blocks that execute Python code.  (If you do not know what `code`
-blocks are yet, read the section on [code blocks] first.)  This can be
-useful when you want to set the values of multiple variables with one
-button.
-
-{% highlight yaml %}
----
-question: What kind of car do you want?
-buttons:
-  - Ford Focus:
-    code: |
-      car_model = "Focus"
-      car_make = "Ford"
-  - Toyota Camry:
-    code: |
-      car_model = "Camry"
-      car_make = "Toyota"
----
-{% endhighlight %}
-
-The question above tells **docassemble** that if the interview logic
-calls for either `car_model` or `car_make`, the question should be
-tried.  When the user clicks on one of the buttons, the code will be
-executed and the variables will be set.
-
 ## `event`
 
 {% highlight yaml %}
@@ -617,6 +655,39 @@ answers.  In this scenario, a `role_event` will be triggered.  When this happens
 defines the variable `role_event`, and it will find the example
 question above.
 
+# A note about variable names
+
+Variable names are [Python identifiers], which means they can be any
+sequence of uppercase or lowercase letters, digits, and underscores,
+except the first character cannot be a digit.  No spaces are allowed
+and no punctuation is allowed except for the underscore, `_`.
+
+The following are valid variable names:
+
+* `fried_fish1`
+* `NyanCat`
+* `nyancat` (variables are case-sensitive, so this is not the same as
+  the above)
+* `__f645456DG_greij_43` (but why would you use something so ugly?)
+* `USER_PHONE_NUMBER` (ok, but why are you yelling?)
+
+The following are **not** valid variable names, and if you try to use
+such variable names you will may get an error or unexpected results:
+
+* `8th_plaintiff` (you can't begin a variable name with a number;
+  [Python] will say "invalid syntax")
+* `fried.fish1` (this is valid code, but [Python] will think you are
+referring to the attribute `fish1` of the object `fried`)
+* `user's_phone_number` (apostrophes are not allowed; [Python]
+  recognizes them as single quotes)
+* `favorite animal` (spaces are not allowed)
+* `beneficiary#1` (punctuation marks other than `_` are not allowed)
+* `applicant_résumé` (only plain alphabet characters can be used)
+
+See [reserved variable names] for a list of variable names that you
+cannot use because they conflict with built-in names that [Python] and
+**docassemble** use.
+
 [configuration]: {{ site.baseurl }}/docs/configuration.html
 [select]: http://www.w3schools.com/tags/tag_select.asp
 [placeholder]: http://www.w3schools.com/tags/att_input_placeholder.asp
@@ -629,3 +700,5 @@ question above.
 [Python identifiers]: https://docs.python.org/2/reference/lexical_analysis.html#identifiers
 [reserved variable names]: {{ site.baseurl }}/docs/reserved.html
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
+[question]: {{ site.baseurl }}/docs/questions.html
+[CSS file]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/static/my.css

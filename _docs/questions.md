@@ -29,7 +29,7 @@ input box labeled "Velocity" in which the user can type the answer.
 
 In the web app, the text of the `question` will appear in a large font
 at the top of the screen.  You can place an icon to the right of the
-question using `decoration`.
+question using a `decoration` [modifier].
 
 Like most things in **docassemble**, the `question` statement can
 contain [Mako] and [Markdown].  For example:
@@ -75,7 +75,9 @@ following extra statements:
 * `field`: will set a variable when a button is pressed in response to
   a multiple-choice question.
 * `fields`: the question will set one or more variables when
-  "Continue" is pressed.
+"Continue" is pressed.
+* `signature`: the user will be asked to sign his or her name, and the
+  image will be saved as a variable.
 * `sets`: advertises to the interview logic that a variable could
   potentially be set by asking the question.
 * `event`: advertises to the interview logic that the question should
@@ -90,3 +92,4 @@ These statements are explained in the next section.
 [YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [code blocks]: {{ site.baseurl }}/docs/code.html
+[modifier]: {{ site.baseurl }}/docs/modifiers.html
