@@ -15,52 +15,62 @@ mandatory: true
 ---
 {% endhighlight %}
 
-To run this on your own **docassemble** server, follow these steps.
-(This assumes you have already followed the [installation]
-instructions.)
+To run this on your own **docassemble** server, there are two methods:
+1) use the [Playground]; or 2) install the code as a [package].
 
-1. Click "Log in" in the upper right hand corner and log in as:
+Both methods assume you have installed **docassemble** by following
+the [installation] instructions.  Also, both methods require that you
+log in by clicking "Log in" in the upper right hand corner.  The
+default username and password are:
  
    * **E-mail**: admin@admin.com
    * **Password**: password
 
-   Or, if you have already [reconfigured user roles] on your system,
-   log in as any user with the privileges of an Administrator or a
-   Developer.
-2. On the menu in the upper right hand corner, select Package Management.
-3. Click "Create a package."
-4. Enter `hello-world` as the package name and click "Get template."
-5. Save the resulting .zip file to your computer.
-6. Unpack the .zip file somewhere.  (On Windows, right-click the .zip
+(Or, if you have already [reconfigured user roles] on your system, log
+in as any user with the privileges of an Administrator or a
+Developer.)
+
+The first method of running the above "Hello World" code is very
+simple: you log ingo to the [Playground] and copy and paste the code
+into a tab, and then click the "Save and Run" button.
+
+The second method is longer but more educational.  It involves these
+steps:
+
+1. On the menu in the upper right hand corner, select Package Management.
+2. Click "Create a package."
+3. Enter `hello-world` as the package name and click "Get template."
+4. Save the resulting .zip file to your computer.
+5. Unpack the .zip file somewhere.  (On Windows, right-click the .zip
    file and there will be an option to unpack it.)
-7. Open your favorite text editor.  (On Windows, use [WordPad] unless
+6. Open your favorite text editor.  (On Windows, use [WordPad] unless
    you have installed a more advanced editor like [Notepad++].)  Open
    the file
    `docassemble-hello-world/docassemble/hello-world/data/questions.yml`
    and replace its contents with the above [YAML] text.
-8. Create a new .zip file containing the `docassemble-hello-world`
+7. Create a new .zip file containing the `docassemble-hello-world`
    folder.  (On Windows, right-click the `docassemble-hello-world`
    folder, select "Send To," then select "Compressed (zipped)
    Folder.")
-9. In the **docassemble** web app, go back to Package Management.
-10. Click "Update a package."
-11. Upload the .zip file you just created.  You should see a message
+8. In the **docassemble** web app, go back to Package Management.
+9. Click "Update a package."
+10. Upload the .zip file you just created.  You should see a message
     that the package was installed successfully.
-12. Point your browser to
+11. Point your browser to
     `http://localhost?i=docassemble.hello-world:data/questions/questions.yml`
     (substitute the actual domain and base URL of your **docassemble**
     site).  The base url is set during [installation] using the `root`
     value in the **docassemble** [configuration] file.  If `root` is
     `/`, you just use `localhost?i=...` or, e.g., `192.168.1.5?i=...`.
     If `root` is `/demo/`, you would use `localhost/demo?i=...`.
-13. You should see "Hello, world!" with an exit button.
+12. You should see "Hello, world!" with an exit button.
 
 (If you do not have a server yet, you can [try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/hello.yml){:target="_blank"}.)
 
 # Adding a question
 
 Now let's change the interview so that it asks the user a [question].  Edit
-`docassemble_hello_world/docassemble/hello_world/data/questions.yml`
+`docassemble-hello-world/docassemble/hello-world/data/questions/questions.yml`
 again and change the contents to:
 
 {% highlight yaml %}
@@ -181,3 +191,4 @@ the [Playground] area.
 [document]: {{ site.baseurl }}/docs/documents.html
 [code]: {{ site.baseurl }}/docs/code.html
 [question]: {{ site.baseurl }}/docs/questions.html
+[package]: {{ site.baseurl }}/docs/packages.html
