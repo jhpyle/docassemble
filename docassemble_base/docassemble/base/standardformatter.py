@@ -164,14 +164,15 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
             else:
                 helptext_start = ''
                 helptext_end = ''
-            if hasattr(field, 'disableothers') and field.disableothers:
+            if hasattr(field, 'disableothers') and field.disableothers and hasattr(field, 'saveas'):
                 onchange.append(field.saveas)
-            if field.required:
-                #sys.stderr.write(field.datatype + "\n")
-                validation_rules['rules'][field.saveas] = {'required': True}
-                validation_rules['messages'][field.saveas] = {'required': word("This field is required.")}
-            else:
-                validation_rules['rules'][field.saveas] = {'required': False}
+            if hasattr(field, 'saveas'):
+                if field.required:
+                    #sys.stderr.write(field.datatype + "\n")
+                    validation_rules['rules'][field.saveas] = {'required': True}
+                    validation_rules['messages'][field.saveas] = {'required': word("This field is required.")}
+                else:
+                    validation_rules['rules'][field.saveas] = {'required': False}
             if hasattr(field, 'datatype'):
                 if field.datatype == 'date':
                     validation_rules['rules'][field.saveas]['date'] = True
@@ -281,14 +282,14 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                         random.shuffle(choicelist)
                     for choice in choicelist:
                         if 'image' in choice:
-                            the_icon = icon_html(status, choice['image'])
+                            the_icon = icon_html(status, choice['image']) + ' '
                         else:
                             the_icon = ''
                         for key in choice:
                             if key == 'image':
                                 continue
                             formatted_key = markdown_to_html(key, status=status, trim=True, escape=True)
-                            output += '              <div class="row"><div class="col-md-6"><input alt="' + formatted_key + '" data-labelauty="' + formatted_key + '|' + formatted_key + '" class="to-labelauty radio-icon" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + unicode(choice[key]) + '"/></div></div>\n'
+                            output += '              <div class="row"><div class="col-md-6"><input alt="' + formatted_key + '" data-labelauty="' + docassemble.base.filter.my_escape(the_icon) + formatted_key + '|' + docassemble.base.filter.my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + unicode(choice[key]) + '"/></div></div>\n'
                         id_index += 1
                 validation_rules['ignore'] = None
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
@@ -297,7 +298,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                 indexno = 0
                 for choice in status.question.fields[0].choices:
                     if 'image' in choice:
-                        the_icon = icon_html(status, choice['image'])
+                        the_icon = icon_html(status, choice['image']) + ' '
                     else:
                         the_icon = ''
                     id_index = 0
@@ -305,7 +306,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                         if key == 'image':
                             continue
                         formatted_key = markdown_to_html(key, status=status, trim=True, escape=True)
-                        output += '              <div class="row"><div class="col-md-6"><input alt="' + formatted_key + '" data-labelauty="' + the_icon + formatted_key + '|' + the_icon + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="_multiple_choice" type="radio" value="' + str(indexno) + '"/></div></div>\n'
+                        output += '              <div class="row"><div class="col-md-6"><input alt="' + formatted_key + '" data-labelauty="' + docassemble.base.filter.my_escape(the_icon) + formatted_key + '|' + docassemble.base.filter.my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="_multiple_choice" type="radio" value="' + str(indexno) + '"/></div></div>\n'
                         id_index += 1
                     indexno += 1
                     validation_rules['rules']['_multiple_choice'] = {'required': True}
@@ -333,8 +334,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                         random.shuffle(choicelist)
                     for choice in choicelist:
                         if 'image' in choice:
-                            the_icon = icon_html(status, choice['image'])
-                            btn_class = ' btn-default'
+                            the_icon = '<div>' + icon_html(status, choice['image'], width_value=4.0) + '</div>';
+                            btn_class = ' btn-default btn-da-custom'
                         else:
                             the_icon = ''
                         for key in choice:

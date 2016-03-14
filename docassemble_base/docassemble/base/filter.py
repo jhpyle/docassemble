@@ -714,6 +714,13 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, use_pandoc=False, 
             return (" " * indent) + re.sub(r'\n', "\n" + (" " * indent), result).rstrip() + "\n"
     return(result)
 
+def my_escape(result):
+    result = noquote_match.sub('&quot;', result)
+    result = lt_match.sub('&lt;', result)
+    result = gt_match.sub('&gt;', result)
+    result = amp_match.sub('&amp;', result)
+    return(result)
+
 def noquote(string):
     return json.dumps(string.replace('\n', ' ').rstrip())
 

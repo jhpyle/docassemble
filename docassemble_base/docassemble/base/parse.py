@@ -24,6 +24,7 @@ emoji_match = re.compile(r':([^ ]+):')
 nameerror_match = re.compile(r'\'(.*)\' (is not defined|referenced before assignment)')
 document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
 remove_trailing_dots = re.compile(r'\.\.\.$')
+fix_tabs = re.compile(r'\t')
 dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
 match_brackets_at_end = re.compile(r'^(.*)(\[.+?\])$')
 match_inside_brackets = re.compile(r'\[(.+?)\]')
@@ -1455,6 +1456,7 @@ class Interview:
         #for document in yaml.load_all(source.content):
         for source_code in document_match.split(source.content):
             source_code = remove_trailing_dots.sub('', source_code)
+            source_code = fix_tabs.sub('  ', source_code)
             try:
                 document = yaml.load(source_code)
             except Exception as errMess:

@@ -1,0 +1,71 @@
+---
+imports:
+  - us
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+code: |
+  need(final_screen)
+---
+sets: final_screen
+question: All done
+subquestion: |
+  Your income is ${ user_annual_income }.
+---
+question: Tell me more about yourself
+fields:
+  - Description: user_description
+    datatype: area
+    hint: |
+      E.g., you can describe your hair color, eye color, 
+      favorite movies, etc.
+  - Annual income: user_annual_income
+    datatype: currency
+  - E-mail address: user_email_address
+    datatype: email
+  - Been vaccinated: user_vaccinated
+    datatype: yesno
+  - Seen Mount Rushmore: mount_rushmore_visited
+    datatype: yesnowide
+  - Belly button type: belly_button_type
+    datatype: radio
+    choices:
+      - Innie
+      - Outie
+  - html: |
+      The date and time is <span class="mytime" id="today_time"></span>.
+  - script: |
+      <script>document.getElementById("today_time").innerHTML = Date();</script>
+  - css: |
+      <link rel="stylesheet" href="${ url_of('docassemble.demo:data/static/my.css') }">
+  - Number of friends: number_of_friends
+    datatype: radio
+    choices:
+      - One: 1
+      - Two: 2
+      - Three: 3
+  - Degrees obtained: degrees
+    datatype: checkboxes
+    choices:
+      - High school
+      - College
+      - Graduate school
+  - State you grew up in: home_state
+    code: |
+      us.states.mapping('abbr', 'name')
+  - note: |
+      #### Politics
+
+      Tell me about your political views.
+  - no label: political_views
+    default: I have no political views
+  - Political preference: political_party
+    datatype: radio
+    shuffle: true 
+    choices:
+      - Republican
+      - Democrat
+      - Independent
+---
