@@ -12,7 +12,7 @@ help` text, the content of [documents], and other text elements.
 # Markdown
 
 The syntax of [Markdown] is explained well
-[elsewhere](http://www.makotemplates.org/).
+[elsewhere](https://daringfireball.net/projects/markdown/).
 
 When generating [documents], **docassemble** uses [Pandoc] to convert
 your [Markdown] to PDF, RTF, and HTML.
