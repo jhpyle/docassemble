@@ -842,7 +842,7 @@ class Question:
                     raise DAError('A content file must be specified as text or a list of text filenames' + self.idebug(data))
                 file_to_read = docassemble.base.util.package_template_filename(content_file, package=self.package)
                 if os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
-                    with open(file_to_read, 'r') as the_file:
+                    with open(file_to_read, 'rU') as the_file:
                         data['content'] += the_file.read()
                 else:
                     raise DAError('Unable to read content file ' + str(target['content file']) + ' after trying to find it at ' + str(file_to_read) + self.idebug(data))
@@ -1064,7 +1064,7 @@ class Question:
                         raise DAError('A content file must be specified as text or a list of text filenames' + self.idebug(target))
                     file_to_read = docassemble.base.util.package_template_filename(content_file, package=self.package)
                     if os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
-                        with open(file_to_read, 'r') as the_file:
+                        with open(file_to_read, 'rU') as the_file:
                             target['content'] += the_file.read()
                     else:
                         raise DAError('Unable to read content file ' + str(target['content file']) + ' after trying to find it at ' + str(file_to_read) + self.idebug(target))
