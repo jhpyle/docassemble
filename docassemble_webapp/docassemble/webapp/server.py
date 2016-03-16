@@ -2690,6 +2690,8 @@ def playground_page():
     elif form.playground_content.data:
         content = form.playground_content.data
         interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path=os.path.join(playground.directory, 'test'), testing=True)
+    else:
+        interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path=os.path.join(playground.directory, 'test'), testing=True)
     interview = interview_source.get_interview()
     ajax = """
 $("#daRun").click(function(event){

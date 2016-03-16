@@ -1,0 +1,24 @@
+metadata:
+  title: |
+    Text box
+  short title: |
+    Text box
+  yaml:
+    question: |
+      Question
+    subquestion: |
+      Subquestion
+    fields:
+      - Label: target_variable
+---
+question: |
+  This is a question
+subquestion: |
+  This is a subquestion
+fields:
+  - First Label: target_variable
+  - Second Label: other_target_variable
+---
+mandatory: true
+code: |
+  target_variable
