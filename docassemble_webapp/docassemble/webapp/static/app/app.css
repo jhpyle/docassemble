@@ -153,3 +153,13 @@ a.sourceactive {
     color: yellow;
 }
 
+div.playgroundbox div.panel-body {
+    height: 30em;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+div.playgroundbox table td {
+    padding-bottom: 5px;
+    font-size: 16px;
+}

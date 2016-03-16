@@ -2597,6 +2597,7 @@ def flash_as_html(message, message_type="info"):
 @roles_required(['developer', 'admin'])
 def playground_page():
     form = PlaygroundForm(request.form, current_user)
+    interview = None
     the_file = request.args.get('file', '')
     if request.method == 'GET':
         is_new = request.args.get('new', False)
@@ -2628,7 +2629,7 @@ def playground_page():
         filename = os.path.join(playground.directory, the_file)
         if not os.path.isfile(filename):
             with open(filename, 'a'):
-                os.utime(filename, None)    
+                os.utime(filename, None)
     if request.method == 'POST' and form.validate():
         if form.delete.data:
             if os.path.isfile(filename):
@@ -2664,8 +2665,12 @@ def playground_page():
             content = fp.read()
             #if not form.playground_content.data:
                 #form.playground_content.data = content
+        interview_source = docassemble.base.parse.interview_source_from_string('/playground/' + the_file)
+        interview_source.set_testing(True)
     elif form.playground_content.data:
         content = form.playground_content.data
+        interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path=os.path.join(playground.directory, 'test'), testing=True)
+    interview = interview_source.get_interview()
     ajax = """
 $("#daRun").click(function(event){
   daCodeMirror.save();
@@ -2687,8 +2692,12 @@ $("#daRun").click(function(event){
   });
   event.preventDefault();
 });
+$(".playground-variable").on("click", function(){
+  daCodeMirror.replaceSelection($(this).text());
+  daCodeMirror.focus();
+});
 """
-    return render_template('pages/playground.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + ajax + '    </script>'), form=form, files=files, current_file=the_file, content=content), 200
+    return render_template('pages/playground.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + ajax + '    </script>'), form=form, files=files, current_file=the_file, content=content, names=sorted(interview.names_used)), 200
 
 @app.route('/packages', methods=['GET', 'POST'])
 @login_required

@@ -81,6 +81,7 @@ class InterviewSource(object):
     def __init__(self, **kwargs):
         self.language = '*'
         self.dialect = None
+        self.testing = False
         pass
     def set_path(self, path):
         self.path = path
@@ -97,6 +98,9 @@ class InterviewSource(object):
     def set_dialect(self, dialect):
         self.dialect = dialect
         return
+    def set_testing(self, testing):
+        self.testing = testing
+        return
     def update(self):
         return True
     def get_modtime(self):
@@ -105,6 +109,8 @@ class InterviewSource(object):
         return self.language
     def get_dialect(self):
         return self.dialect
+    def get_testing(self):
+        return self.testing
     def get_interview(self):
         return Interview(source=self)
     def append(self, path):
@@ -115,6 +121,7 @@ class InterviewSourceString(InterviewSource):
         self.set_path(kwargs.get('path', None))
         self.set_directory(kwargs.get('directory', None))
         self.set_content(kwargs.get('content', None))
+        self.set_testing(kwargs.get('testing', False))
         return super(InterviewSourceString, self).__init__(**kwargs)
 
 class InterviewSourceFile(InterviewSource):
@@ -1397,7 +1404,7 @@ def interview_source_from_string(path, **kwargs):
             return new_source
     #sys.stderr.write("Trying to find it\n")
     for the_filename in [docassemble.base.util.package_question_filename(path), docassemble.base.util.standard_question_filename(path), docassemble.base.util.absolute_filename(path)]:
-        #sys.stderr.write("Trying " + str(the_filename) + " with path " + str(path) + "\n")
+        sys.stderr.write("Trying " + str(the_filename) + " with path " + str(path) + "\n")
         if the_filename is not None:
             new_source = InterviewSourceFile(filepath=the_filename, path=path)
             if new_source.update():
@@ -1423,6 +1430,7 @@ class Interview:
         self.default_role = None
         self.title = None
         self.use_progress_bar = False
+        self.names_used = set()
         self.attachment_options = dict()
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
@@ -1457,12 +1465,22 @@ class Interview:
         for source_code in document_match.split(source.content):
             source_code = remove_trailing_dots.sub('', source_code)
             source_code = fix_tabs.sub('  ', source_code)
-            try:
-                document = yaml.load(source_code)
-            except Exception as errMess:
-                raise DAError('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
-            if document is not None:
-                question = Question(document, self, source=source, package=source_package, source_code=source_code)
+            if source.testing:
+                try:
+                    document = yaml.load(source_code)
+                    if document is not None:
+                        question = Question(document, self, source=source, package=source_package, source_code=source_code)
+                        self.names_used.update(question.fields_used)
+                except:
+                    pass
+            else:
+                try:
+                    document = yaml.load(source_code)
+                except Exception as errMess:
+                    raise DAError('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
+                if document is not None:
+                    question = Question(document, self, source=source, package=source_package, source_code=source_code)
+                    self.names_used.update(question.fields_used)
     def processed_helptext(self, user_dict, language):
         result = list()
         if language in self.helptext:
