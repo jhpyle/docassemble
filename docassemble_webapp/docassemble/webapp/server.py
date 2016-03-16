@@ -948,14 +948,34 @@ def index():
     #         currentsecret = secret_parameter
     #         session['currentsecret'] = currentsecret
     if yaml_parameter is not None:
+        show_flash = False
         yaml_filename = yaml_parameter
+        old_yaml_filename = session.get('i', None)
+        if old_yaml_filename is not None:
+            if old_yaml_filename != yaml_filename:
+                session['i'] = yaml_filename
+                if request.args.get('from_list', None) is None and not yaml_filename.startswith("/playground"):
+                    show_flash = True
         if session_parameter is None:
+            if show_flash:
+                if current_user.is_authenticated:
+                    message = "Starting a new interview.  To go back to your previous interview, go to My Interviews on the menu."
+                else:
+                    message = "Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews."
             logmessage("session parameter is none")
             user_code, user_dict = reset_session(yaml_filename, secret)
             session_id = session.get('uid', None)
             if 'key_logged' in session:
                 del session['key_logged']
             need_to_reset = True
+        else:
+            if show_flash:
+                if current_user.is_authenticated:
+                    message = "Entering a different interview.  To go back to your previous interview, go to My Interviews on the menu."
+                else:
+                    message = "Entering a different interview.  To go back to your previous interview, log in to see a list of your interviews."
+        if show_flash:
+            flash(word(message), 'info')
     if session_parameter is not None:
         logmessage("session parameter is " + str(session_parameter))
         session_id = session_parameter
@@ -1032,7 +1052,7 @@ def index():
         if 'action' in request.args:
             action = json.loads(myb64unquote(request.args['action']))
         for argname in request.args:
-            if argname in ('filename', 'question', 'format', 'index', 'i', 'action'):
+            if argname in ('filename', 'question', 'format', 'index', 'i', 'action', 'from_list', 'session'):
                 continue
             if re.match('[A-Za-z_]+', argname):
                 exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)

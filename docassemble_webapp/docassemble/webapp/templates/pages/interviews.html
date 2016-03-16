@@ -16,7 +16,7 @@
   <tbody>
   {% for interview in interviews %}
     <tr>
-      <td><a href="{{ url_for('index', i=interview['interview_info'].filename, session=interview['interview_info'].key) }}">{{ interview['title'] }}</a></td>
+      <td><a href="{{ url_for('index', i=interview['interview_info'].filename, session=interview['interview_info'].key, from_list=1) }}">{{ interview['title'] }}</a></td>
       <td>{{ interview['starttime'] }}</td>
       <td><a class="label label-warning" href="{{ url_for('interview_list', action='delete', filename=interview['interview_info'].filename, session=interview['interview_info'].key) }}">{{ word('Delete') }}</a></td>
     </tr>
