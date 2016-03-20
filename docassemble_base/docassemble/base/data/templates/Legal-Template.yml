@@ -55,7 +55,7 @@ header-includes:
   - \setlist[enumerate,3]{leftmargin=0.5in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
   - \setlist[enumerate,4]{leftmargin=0.5in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
   - \setlist[enumerate,5]{leftmargin=0.5in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
-  - \setlist[itemize,1]{leftmargin=0.5in,itemindent=0in,align=left,labelwidth=0.25in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[itemize,1]{leftmargin=0.75in,itemindent=0in,align=left,labelwidth=0.25in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
   - \setlist[itemize,2]{leftmargin=0.5in,itemindent=0in,align=left,labelwidth=0.25in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
   - \setlist[itemize,3]{leftmargin=0.5in,itemindent=0in,align=left,labelwidth=0.25in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
   - \setlist[itemize,4]{leftmargin=0.5in,itemindent=0in,align=left,labelwidth=0.25in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
