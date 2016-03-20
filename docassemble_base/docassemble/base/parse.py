@@ -352,6 +352,12 @@ class Question:
         self.can_go_back = True
         self.fields_used = set()
         self.names_used = set()
+        num_directives = 0
+        for directive in ['yesno', 'noyes', 'fields', 'buttons', 'choices', 'signature']:
+            if directive in data:
+                num_directives += 1
+        if num_directives > 1:
+            raise DAError("There can only be one directive in a question.  You had more than one.\nThe directives are yesno, noyes, fields, buttons, choices, and signature." + self.idebug(data))
         if 'features' in data:
             if type(usedef) is not dict:
                 raise DAError("A features section must be a dictionary." + self.idebug(data))
@@ -1091,6 +1097,7 @@ class Question:
                     options['fields'][key] = TextObject(str(val))
             if 'content' not in target:
                 raise DAError("No content provided in attachment")
+            #logmessage("The content is " + str(target['content']))
             return({'name': TextObject(target['name']), 'filename': TextObject(target['filename']), 'description': TextObject(target['description']), 'content': TextObject("\n".join(defs) + "\n" + target['content']), 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
         elif type(target) is str:
             return({'name': TextObject('Document'), 'filename': TextObject('document'), 'content': TextObject(target), 'valid_formats': ['*'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
@@ -1327,13 +1334,13 @@ class Question:
                                 metadata[key] = data.text(user_dict)
                         the_markdown += "---\n" + yaml.safe_dump(metadata, default_flow_style=False, default_style = '|') + "...\n"
                     the_markdown += attachment['content'].text(user_dict)
+                    #logmessage("Markdown is:\n" + repr(the_markdown) + "END")
                     if emoji_match.search(the_markdown) and len(self.interview.images) > 0:
                         the_markdown = emoji_match.sub(emoji_matcher_insert(self), the_markdown)
                     result['markdown'][doc_format] = the_markdown
                     converter = Pandoc()
                     converter.output_format = doc_format
                     converter.input_content = the_markdown
-                    #logmessage("Markdown is:\n" + repr(the_markdown) + "END")
                     if 'initial_yaml' in attachment['options']:
                         converter.initial_yaml = attachment['options']['initial_yaml']
                     elif 'initial_yaml' in self.interview.attachment_options:

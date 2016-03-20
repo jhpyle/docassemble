@@ -28,11 +28,11 @@ header-includes:
   - \titleformat{\subsubsection}{\bfseries}{\thesubsubsection}{1em}{}
   - \titleformat{\paragraph}{\bfseries}{\theparagraph}{1em}{}
   - \titleformat{\subparagraph}{\bfseries}{\thesubparagraph}{1em}{}
-  - \titlespacing*{\section}{0pt}{12pt}{12pt}
-  - \titlespacing*{\subsection}{3em}{12pt}{12pt}
-  - \titlespacing*{\subsubsection}{6em}{12pt}{12pt}
-  - \titlespacing*{\paragraph}{9em}{12pt}{12pt}
-  - \titlespacing*{\subparagraph}{12em}{12pt}{12pt}
+  - \titlespacing*{\section}{0pt}{0pt}{0pt}
+  - \titlespacing*{\subsection}{3em}{0pt}{0pt}
+  - \titlespacing*{\subsubsection}{6em}{0pt}{0pt}
+  - \titlespacing*{\paragraph}{9em}{0pt}{0pt}
+  - \titlespacing*{\subparagraph}{12em}{0pt}{0pt}
   - \newcommand{\myfontfamily}{\rmfamily}
   - \newcommand{\myfontsize}{12pt}
   - \newcommand{\verytopskip}{0in}
@@ -50,17 +50,22 @@ header-includes:
   - \setlength{\parindent}{0in}
   - \setlength{\RaggedRightParindent}{\parindent}
   - \setlength{\parskip}{0pt}
-  - \setlist[enumerate,1]{leftmargin=0.0in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[enumerate,1]{leftmargin=0in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
   - \setlist[enumerate,2]{leftmargin=0.5in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
-  - \setlist[enumerate,3]{leftmargin=1.0in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
-  - \setlist[enumerate,4]{leftmargin=1.5in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
-  - \setlist[enumerate,5]{leftmargin=2.0in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
-  - \setlist[itemize,1]{leftmargin=0.0in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
-  - \setlist[itemize,2]{leftmargin=0.5in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
-  - \setlist[itemize,3]{leftmargin=1.0in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
-  - \setlist[itemize,4]{leftmargin=1.5in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
-  - \setlist[itemize,5]{leftmargin=2.0in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[enumerate,3]{leftmargin=0.5in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[enumerate,4]{leftmargin=0.5in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[enumerate,5]{leftmargin=0.5in,itemindent=1in,align=left,labelwidth=0.5in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[itemize,1]{leftmargin=0.5in,itemindent=0in,align=left,labelwidth=0.25in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[itemize,2]{leftmargin=0.5in,itemindent=0in,align=left,labelwidth=0.25in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[itemize,3]{leftmargin=0.5in,itemindent=0in,align=left,labelwidth=0.25in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[itemize,4]{leftmargin=0.5in,itemindent=0in,align=left,labelwidth=0.25in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
+  - \setlist[itemize,5]{leftmargin=0.5in,itemindent=0in,align=left,labelwidth=0.25in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
   - \setlist[trivlist]{topsep=0pt,partopsep=0pt}
+  - \newcommand*\smallblacksquare{\mathbin{\vcenter{\hbox{\rule{.8ex}{.8ex}}}}}
+  - \renewcommand{\labelitemi}{\textbullet}
+  - \renewcommand{\labelitemii}{--}
+  - \renewcommand{\labelitemiii}{\textbullet}
+  - \renewcommand{\labelitemiv}{--}
 include-before:
   - \RaggedRight
   - \myfontfamily

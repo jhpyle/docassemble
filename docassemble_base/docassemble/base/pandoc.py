@@ -5,8 +5,10 @@ import docassemble.base.filter
 import docassemble.base.util
 import tempfile
 import shutil
+import re
 from docassemble.base.logger import logmessage
 
+style_find = re.compile(r'{\s*(\\s([1-9])[^\}]+)\\sbasedon[^\}]+heading ([0-9])', flags=re.DOTALL)
 PANDOC_PATH = 'pandoc'
 
 def set_pandoc_path(path):
@@ -28,16 +30,19 @@ class Pandoc(object):
         self.output_filename = None
         self.template_file = None
         self.reference_file = None
-        self.metadata = list()
+        self.metadata = dict()
         self.initial_yaml = list()
         self.additional_yaml = list()
         self.arguments = []
     def convert_to_file(self):
         metadata_as_dict = dict()
-        for data in self.metadata:
-            if type(data) is dict:
-                for key in data:
-                    metadata_as_dict[key] = data[key]
+        if type(self.metadata) is dict:
+            metadata_as_dict = self.metadata
+        elif type(self.metadata) is list:
+            for data in self.metadata:
+                if type(data) is dict:
+                    for key in data:
+                        metadata_as_dict[key] = data[key]
         if self.output_format == 'rtf' and self.template_file is None:
             self.template_file = docassemble.base.util.standard_template_filename('Legal-Template.rtf')
         if self.output_format == 'docx' and self.reference_file is None:
@@ -45,6 +50,10 @@ class Pandoc(object):
         if (self.output_format == 'pdf' or self.output_format == 'tex') and self.template_file is None:
             self.template_file = docassemble.base.util.standard_template_filename('Legal-Template.tex')
         yaml_to_use = list()
+        if self.output_format == 'rtf':
+            #logmessage("pre input content is " + str(self.input_content))
+            self.input_content = docassemble.base.filter.rtf_prefilter(self.input_content, metadata=metadata_as_dict)
+            #logmessage("post input content is " + str(self.input_content))
         if self.output_format == 'docx':
             self.input_content = docassemble.base.filter.docx_filter(self.input_content, metadata=metadata_as_dict)
         if self.output_format == 'pdf' or self.output_format == 'tex':
@@ -61,10 +70,10 @@ class Pandoc(object):
             #print "Before: " + repr(self.input_content)
             self.input_content = docassemble.base.filter.pdf_filter(self.input_content, metadata=metadata_as_dict)
             #logmessage("After: " + repr(self.input_content))
-        temp_file = tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False)
+        temp_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md", delete=False)
         temp_file.write(self.input_content.encode('UTF-8'))
         temp_file.close()
-        temp_outfile = tempfile.NamedTemporaryFile(mode="w", suffix="." + str(self.output_format), delete=False)
+        temp_outfile = tempfile.NamedTemporaryFile(mode="wb", suffix="." + str(self.output_format), delete=False)
         temp_outfile.close()
         subprocess_arguments = [PANDOC_PATH]
         if len(yaml_to_use) > 0:
@@ -88,8 +97,8 @@ class Pandoc(object):
         if os.path.exists(temp_outfile.name):
             if self.output_format == 'rtf':
                 with open(temp_outfile.name) as the_file: file_contents = the_file.read()
-                file_contents = docassemble.base.filter.rtf_filter(file_contents, metadata=metadata_as_dict)
-                with open(temp_outfile.name, "w") as the_file: the_file.write(file_contents)
+                file_contents = docassemble.base.filter.rtf_filter(file_contents, metadata=metadata_as_dict, styles=get_rtf_styles(self.template_file))
+                with open(temp_outfile.name, "wb") as the_file: the_file.write(file_contents)
             if self.output_filename is not None:
                 shutil.copyfile(temp_outfile.name, self.output_filename)
             else:
@@ -113,3 +122,15 @@ class Pandoc(object):
             
             self.output_content = p.communicate(self.input_content.encode('utf-8'))[0]
         return
+
+def get_rtf_styles(filename):
+    file_contents = ''
+    styles = dict()
+    with open(filename) as the_file:
+        file_contents = the_file.read()
+        for (style_string, style_number, heading_number) in re.findall(style_find, file_contents):
+            style_string = re.sub(r'\s+', ' ', style_string, flags=re.DOTALL)
+            #logmessage("heading " + str(heading_number) + " is style " + str(style_number))
+            styles[heading_number] = style_string
+    return styles
+    

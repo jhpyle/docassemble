@@ -342,9 +342,9 @@ class Lexer(object):
         match = self.match(r"""
                 (.*?)         # anything, followed by:
                 (
-                 (?<=\n)(?=[ \t]*(?=%|\#\#)) # an eval or line-based
-                                             # comment preceded by a
-                                             # consumed newline and whitespace
+                 (?<=\n)(?=[ \t]*(?=%)) # an eval or line-based
+                                        # comment preceded by a
+                                        # consumed newline and whitespace
                  |
                  (?=\${)      # an expression
                  |
@@ -400,7 +400,7 @@ class Lexer(object):
 
     def match_control_line(self):
         match = self.match(
-            r"(?<=^)[\t ]*(%(?!%)|##)[\t ]*((?:(?:\\r?\n)|[^\r\n])*)"
+            r"(?<=^)[\t ]*(%(?!%))[\t ]*((?:(?:\\r?\n)|[^\r\n])*)"
             r"(?:\r?\n|\Z)", re.M)
         if match:
             operator = match.group(1)

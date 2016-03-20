@@ -109,11 +109,23 @@ def set_url_finder(func):
     url_finder = func
     return
 
-rtf_spacing = {'single': '', 'oneandahalf': '\\sl360\\slmult1', 'double': '\\sl480\\slmult1', 'triple': '\\sl720\\slmult1'}
+rtf_spacing = {'single': '\\sl0 ', 'oneandahalf': '\\sl360\\slmult1 ', 'double': '\\sl480\\slmult1 ', 'triple': '\\sl720\\slmult1 '}
 
 rtf_after_space = {'single': 1, 'oneandahalf': 0, 'double': 0, 'triplespacing': 0}
 
-def rtf_filter(text, metadata=dict()):
+def rtf_prefilter(text, metadata=dict()):
+    text = re.sub(r'^# ', '[HEADING1] ', text, flags=re.MULTILINE)
+    text = re.sub(r'^## ', '[HEADING2] ', text, flags=re.MULTILINE)
+    text = re.sub(r'^### ', '[HEADING3] ', text, flags=re.MULTILINE)
+    text = re.sub(r'^#### ', '[HEADING4] ', text, flags=re.MULTILINE)
+    text = re.sub(r'^##### ', '[HEADING5] ', text, flags=re.MULTILINE)
+    text = re.sub(r'^###### ', '[HEADING6] ', text, flags=re.MULTILINE)
+    text = re.sub(r'^####### ', '[HEADING7] ', text, flags=re.MULTILINE)
+    text = re.sub(r'^######## ', '[HEADING8] ', text, flags=re.MULTILINE)
+    text = re.sub(r'^######### ', '[HEADING9] ', text, flags=re.MULTILINE)
+    return(text)
+
+def rtf_filter(text, metadata=dict(), styles=dict()):
     if 'fontsize' in metadata:
         text = re.sub(r'{\\pard', '\\fs' + str(convert_length(metadata['fontsize'], 'hp')) + ' {\\pard', text, count=1)
         after_space_multiplier = str(convert_length(metadata['fontsize'], 'twips'))
@@ -131,7 +143,10 @@ def rtf_filter(text, metadata=dict()):
     else:
         default_indentation = True
     if 'SingleSpacing' in metadata and metadata['SingleSpacing']:
+        #logmessage("Gi there!")
         default_spacing = 'single'
+        if 'Indentation' not in metadata:
+            default_indentation = False
     elif 'OneAndAHalfSpacing' in metadata and metadata['OneAndAHalfSpacing']:
         default_spacing = 'oneandahalf'
     elif 'DoubleSpacing' in metadata and metadata['DoubleSpacing']:
@@ -141,6 +156,7 @@ def rtf_filter(text, metadata=dict()):
     else:
         default_spacing = 'double'
     after_space = after_space_multiplier * rtf_after_space[default_spacing]
+    text = re.sub(r'{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 \[HEADING([0-9]+)\] *', (lambda x: '{\\pard ' + styles.get(x.group(1), '\\ql \\f0 \\sa180 \\li0 \\fi0 ')), text)
     text = re.sub(r'{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 \[(BEGIN_TWOCOL|BREAK|END_TWOCOL|BEGIN_CAPTION|VERTICAL_LINE|END_CAPTION|SINGLESPACING|DOUBLESPACING|INDENTATION|NOINDENTATION|PAGEBREAK|SKIPLINE)\] *', r'[\1]{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 ', text)
     text = re.sub(r'{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 *\\par}', r'', text)
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
@@ -168,37 +184,46 @@ def rtf_filter(text, metadata=dict()):
     text = re.sub(r'\[FLUSHLEFT\] *', r'\\ql ', text)
     text = re.sub(r'\[CENTER\] *', r'\\qc ', text)
     text = re.sub(r'\[BOLDCENTER\] *', r'\\qc \\b ', text)
-    text = re.sub(r'\\sa180', '\sa0', text)
-    if re.search(r'\[(SINGLESPACING|DOUBLESPACING|TRIPLESPACING|ONEANDAHALFSPACING|INDENTATION|NOINDENTATION)\]', text):
-        text = re.sub(r'[\n ]*\[(SINGLESPACING|DOUBLESPACING|TRIPLESPACING|ONEANDAHALFSPACING|INDENTATION|NOINDENTATION)\][\n ]*', r'\n[\1]\n', text)
-        lines = text.split('\n')
-        spacing_command = rtf_spacing[default_spacing]
-        if default_indentation:
-            indentation_command = '\\fi' + indentation_amount
-        else:
-            indentation_command = ''
-        text = ''
-        for line in lines:
-            if re.search(r'\[SINGLESPACING\]', line):
-                spacing_command = rtf_spacing['single']
-                after_space = after_space_multiplier * rtf_after_space[default_spacing]
-            elif re.search(r'\[ONEANDAHALFSPACING\]', line):
-                spacing_command = rtf_spacing['oneandahalf']
-                after_space = after_space_multiplier * rtf_after_space[default_spacing]
-            elif re.search(r'\[DOUBLESPACING\]', line):
-                spacing_command = rtf_spacing['double']
-                after_space = after_space_multiplier * rtf_after_space[default_spacing]
-            elif re.search(r'\[TRIPLESPACING\]', line):
-                spacing_command = rtf_spacing['triple']
-                after_space = after_space_multiplier * rtf_after_space[default_spacing]
-            if re.search(r'\[INDENTATION\]', line):
-                indentation_command = '\\fi' + indentation_amount
-            elif re.search(r'\[NOINDENTATION\]', line):
-                indentation_command = ''
-            line = re.sub(r'\\pard ', '\\pard ' + spacing_command + indentation_command + ' ', line)
-            if after_space > 0:
-                line = re.sub(r'\\sa[0-9]+ ', '\\sa' + str(after_space) + ' ', line)
+    text = re.sub(r'\\sa180\\sa180\\par', r'\\par', text)
+    text = re.sub(r'\\sa180', r'\\sa0', text)
+    text = re.sub(r'\s*\[(SINGLESPACING|DOUBLESPACING|TRIPLESPACING|ONEANDAHALFSPACING|INDENTATION|NOINDENTATION)\]\s*', r'\n[\1]\n', text)
+    lines = text.split('\n')
+    spacing_command = rtf_spacing[default_spacing]
+    if default_indentation:
+        indentation_command = r'\\fi' + str(indentation_amount) + " "
+    else:
+        indentation_command = r'\\fi0'
+    text = ''
+    for line in lines:
+        if re.search(r'\[SINGLESPACING\]', line):
+            spacing_command = rtf_spacing['single']
+            after_space = after_space_multiplier * rtf_after_space[default_spacing]
+            default_indentation = False
+        elif re.search(r'\[ONEANDAHALFSPACING\]', line):
+            spacing_command = rtf_spacing['oneandahalf']
+            after_space = after_space_multiplier * rtf_after_space[default_spacing]
+        elif re.search(r'\[DOUBLESPACING\]', line):
+            spacing_command = rtf_spacing['double']
+            after_space = after_space_multiplier * rtf_after_space[default_spacing]
+        elif re.search(r'\[TRIPLESPACING\]', line):
+            spacing_command = rtf_spacing['triple']
+            after_space = after_space_multiplier * rtf_after_space[default_spacing]
+        elif re.search(r'\[INDENTATION\]', line):
+            indentation_command = r'\\fi' + str(indentation_amount) + " "
+        elif re.search(r'\[NOINDENTATION\]', line):
+            indentation_command = '\\fi0'
+        elif line != '':
+            if indentation_command != '':
+                line = re.sub(r'\\fi-?[0-9]+ ', indentation_command, line)
+            if not re.search(r'\\s[0-9]', line):
+                line = re.sub(r'\\pard ', '\\pard ' + str(spacing_command), line)
+            if not (re.search(r'\\fi0\\(endash|bullet)', line) or re.search(r'\\s[0-9]', line)):
+                if after_space > 0:
+                    line = re.sub(r'\\sa[0-9]+ ', '\\sa' + str(after_space), line)
+                else:
+                    line = re.sub(r'\\sa[0-9]+ ', '\\sa0', line)
             text += line + '\n'
+    text = re.sub(r'{\\pard \\sl[0-9]+\\slmult[0-9]+ \\ql \\f[0-9]+ \\sa[0-9]+ \\li[0-9]+ \\fi-?[0-9]*\s*\\par}', r'', text)
     return(text)
 
 def docx_filter(text, metadata=dict()):
