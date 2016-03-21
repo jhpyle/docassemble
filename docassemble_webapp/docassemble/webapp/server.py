@@ -71,14 +71,16 @@ DEBUG = daconfig.get('debug', False)
 docassemble.base.parse.debug = DEBUG
 import docassemble.base.util
 docassemble.base.util.set_debug_status(DEBUG)
-if DEBUG:
-    from pygments import highlight
-    from pygments.lexers import YamlLexer
-    from pygments.formatters import HtmlFormatter
+from pygments import highlight
+from pygments.lexers import YamlLexer
+from pygments.formatters import HtmlFormatter
 
 app.debug = False
 
 default_yaml_filename = daconfig.get('default_interview', 'docassemble.demo:data/questions/questions.yml')
+
+document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
+fix_tabs = re.compile(r'\t')
 
 if 'mail' not in daconfig:
     daconfig['mail'] = dict()
@@ -165,7 +167,7 @@ else:
 ROOT = daconfig.get('root', '/')
 if 'currency symbol' in daconfig:
     docassemble.base.util.update_language_function('*', 'currency_symbol', lambda: daconfig['currency symbol'])
-app.logger.warning("default sender is " + app.config['MAIL_DEFAULT_SENDER'] + "\n")
+#app.logger.warning("default sender is " + app.config['MAIL_DEFAULT_SENDER'] + "\n")
 exit_page = daconfig.get('exitpage', '/')
 
 if S3_ENABLED:
@@ -430,7 +432,7 @@ for word_file in word_file_list:
                     logmessage("Error reading " + str(word_file) + ": yaml file not in dictionary form.")
     else:
         logmessage("Error reading " + str(word_file) + ": yaml file not found.")
-
+        
 def logout():
     secret = request.cookies.get('secret', None)
     if secret is None:
@@ -721,6 +723,53 @@ if LOGSERVER is None:
 else:
     docassemble.base.logger.set_logmessage(syslog_message)
 
+def proc_example_list(example_list, examples):
+    for example in example_list:
+        if type(example) is dict:
+            for key, value in example.iteritems():
+                sublist = list()
+                proc_example_list(value, sublist)
+                examples.append({'title': str(key), 'list': sublist})
+                break
+            continue
+        result = dict()
+        result['id'] = example
+        result['interview'] = url_for('index', i="docassemble.base:data/questions/examples/" + example + ".yml")
+        example_file = 'docassemble.base:data/questions/examples/' + example + '.yml'
+        result['image'] = url_for('static', filename='examples/' + example + ".png")
+        file_info = get_info_from_file_reference(example_file)
+        if 'fullpath' not in file_info:
+            continue
+        with open(file_info['fullpath'], 'rU') as fp:
+            content = fp.read()
+            content = fix_tabs.sub('  ', content)
+            blocks = document_match.split(content)
+            if len(blocks):
+                result['source'] = blocks[0]
+                result['html'] = highlight(blocks[0], YamlLexer(), HtmlFormatter())
+        try:
+            interview = docassemble.base.interview_cache.get_interview(example_file)
+            if len(interview.metadata):
+                metadata = interview.metadata[0]
+                result['title'] = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
+            else:
+                continue
+        except:
+            continue
+        examples.append(result)
+    
+def get_examples():
+    examples = list()
+    example_list_file = get_info_from_file_reference('docassemble.base:data/questions/example-list.yml')
+    if 'fullpath' in example_list_file:
+        example_list = list()
+        with open(example_list_file['fullpath'], 'rU') as fp:
+            content = fp.read()
+            content = fix_tabs.sub('  ', content)
+            proc_example_list(yaml.load(content), examples)
+    #logmessage("Examples: " + str(examples))
+    return(examples)
+
 @lm.user_loader
 def load_user(id):
     return User.query.get(int(id))
@@ -962,7 +1011,7 @@ def index():
                     message = "Starting a new interview.  To go back to your previous interview, go to My Interviews on the menu."
                 else:
                     message = "Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews."
-            logmessage("session parameter is none")
+            #logmessage("session parameter is none")
             user_code, user_dict = reset_session(yaml_filename, secret)
             session_id = session.get('uid', None)
             if 'key_logged' in session:
@@ -977,7 +1026,7 @@ def index():
         if show_flash:
             flash(word(message), 'info')
     if session_parameter is not None:
-        logmessage("session parameter is " + str(session_parameter))
+        #logmessage("session parameter is " + str(session_parameter))
         session_id = session_parameter
         session['uid'] = session_id
         if yaml_parameter is not None:
@@ -987,7 +1036,7 @@ def index():
         need_to_reset = True
     if session_id:
         user_code = session_id
-        logmessage("session id is " + str(session_id))
+        #logmessage("session id is " + str(session_id))
         try:
             steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret)
         except:
@@ -1045,7 +1094,7 @@ def index():
         encrypted = True
         session['encrypted'] = encrypted
     if current_user.is_authenticated and 'key_logged' not in session:
-        logmessage("save_user_dict_key called with " + user_code + " and " + yaml_filename)
+        #logmessage("save_user_dict_key called with " + user_code + " and " + yaml_filename)
         save_user_dict_key(user_code, yaml_filename)
         session['key_logged'] = True 
     if len(request.args):
@@ -1128,7 +1177,7 @@ def index():
                     logmessage("Need to send an e-mail with subject " + subject + " to " + str(attachment_email_address) + " with " + str(attached_file_count) + " attachment(s)")
                     msg = Message(subject, recipients=[attachment_email_address], body=body, html=html)
                     for attach_info in attachment_info:
-                        with open(attach_info['path'], 'r') as fp:
+                        with open(attach_info['path'], 'rU') as fp:
                             msg.attach(attach_info['filename'], attach_info['mimetype'], fp.read())
                     try:
                         # mail.send(msg)
@@ -2596,7 +2645,7 @@ def config_page():
             flash(word('Configuration not updated.  There was an error.'), 'error')
             return redirect(url_for('index'))
     if ok:
-        with open(daconfig['config_file'], 'r') as fp:
+        with open(daconfig['config_file'], 'rU') as fp:
             content = fp.read()
     if content is None:
         abort(404)
@@ -2611,6 +2660,21 @@ def flash_as_html(message, message_type="info"):
         </div>
 """
     return output
+
+def make_example_html(examples, first_id, example_html, data_dict):
+    example_html.append('          <ul class="example-list example-hidden">\n')
+    for example in examples:
+        if 'list' in example:
+            example_html.append('            <li><a class="example-heading">' + example['title'] + '</a>')
+            make_example_html(example['list'], first_id, example_html, data_dict)
+            example_html.append('</li>')
+            continue
+        #logmessage("Doing example with id " + str(example['id']))
+        if len(first_id) == 0:
+            first_id.append(example['id'])
+        example_html.append('            <li><a class="example-link" data-example="' + example['id'] + '">' + example['title'] + '</a></li>')
+        data_dict[example['id']] = example
+    example_html.append('          </ul>')
 
 @app.route('/playground', methods=['GET', 'POST'])
 @login_required
@@ -2679,7 +2743,7 @@ def playground_page():
     content = ''
     if the_file:
         playground.finalize()
-        with open(filename, 'r') as fp:
+        with open(filename, 'rU') as fp:
             form.original_playground_name.data = the_file
             form.playground_name.data = the_file
             content = fp.read()
@@ -2718,8 +2782,79 @@ $(".playground-variable").on("click", function(){
   daCodeMirror.replaceSelection($(this).text());
   daCodeMirror.focus();
 });
+
+var exampleData;
+
+function activateExample(id){
+  var info = exampleData[id];
+  $("#example-source").html(info['html']);
+  $("#example-image-link").attr("href", info['interview']);
+  $("#example-image").attr("src", info['image']);
+  $(".example-list").addClass("example-hidden");
+  $(".example-link").removeClass("example-active");
+  $(".example-link").each(function(){
+    if ($(this).data("example") == id){
+      $(this).addClass("example-active");
+      $(this).parents(".example-list").removeClass("example-hidden");
+    }
+  });
+}
+
+//function scrollBottom(){
+//  $("html, body").animate({ scrollTop: $(document).height() }, "slow");
+//}
+
+$(".example-link").on("click", function(){
+  var id = $(this).data("example");
+  activateExample(id);
+});
+
+$(".example-copy").on("click", function(){
+  if (daCodeMirror.somethingSelected()){
+    daCodeMirror.replaceSelection("");
+  }
+  var curPos = daCodeMirror.getCursor();
+  var notFound = 1;
+  var insertLine = daCodeMirror.lastLine();
+  daCodeMirror.eachLine(curPos.line, insertLine, function(line){
+    if (notFound){
+      if (line.text.substring(0, 3) == "---" || line.text.substring(0, 3) == "..."){
+        insertLine = daCodeMirror.getLineNumber(line)
+        //console.log("Found break at line number " + insertLine)
+        notFound = 0;
+      }
+    }
+  });
+  var id = $(".example-active").data("example");
+  daCodeMirror.setSelection({'line': insertLine, 'ch': 0});
+  daCodeMirror.replaceSelection("---\\n" + exampleData[id]['source'], "around");
+  daCodeMirror.focus();
+});
+
+$(".example-heading").on("click", function(){
+  var list = $(this).parent().children("ul").first();
+  if (list != null){
+    if (!list.hasClass("example-hidden")){
+      return;
+    }
+    $(".example-list").addClass("example-hidden");
+    var new_link = $(this).parent().find("a.example-link").first();
+    if (new_link.length){
+      var id = new_link.data("example");
+      activateExample(id);  
+    }
+  }
+});
 """
-    return render_template('pages/playground.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + ajax + '    </script>'), form=form, files=files, current_file=the_file, content=content, names=sorted(interview.names_used)), 200
+    example_html = list()
+    example_html.append('        <div class="col-md-2 example-list-col">\n          <h4>' + word("Example") +'</h4>')
+    first_id = list()
+    data_dict = dict()
+    make_example_html(get_examples(), first_id, example_html, data_dict)
+    example_html.append('        </div>')
+    example_html.append('        <div class="col-md-6"><h4>' + word("Preview") + '</h4><a href="#" target="_blank" id="example-image-link"><img class="example_screenshot" id="example-image"></a></div>')
+    example_html.append('        <div class="col-md-4"><h4>' + word('Source') + ' <a class="label label-success example-copy">' + word('Insert') + '</a></h4><div id="example-source"></div></div>')
+    return render_template('pages/playground.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, current_file=the_file, content=content, names=sorted(interview.names_used), example_html="\n".join(example_html)), 200
 
 @app.route('/packages', methods=['GET', 'POST'])
 @login_required
@@ -2848,6 +2983,11 @@ def html_escape(text):
     text = re.sub('>', '&gt;', text)
     return text;
 
+def indent_by(text, num):
+    if not text:
+        return ""
+    return (" " * num) + re.sub(r'\n', "\n" + (" " * num), text).rstrip() + "\n"
+
 # def indent_by(text, num):
 #     return (" " * num) + re.sub(r'\n', "\n" + (" " * num), text).rstrip() + "\n"
     
@@ -2914,7 +3054,7 @@ def logs():
             default_filter_string = form.filter_string.data
             reg_exp = re.compile(form.filter_string.data)
             temp_file = tempfile.NamedTemporaryFile()
-            with open(filename, 'r') as fp:
+            with open(filename, 'rU') as fp:
                 for line in fp:
                     if reg_exp.search(line):
                         temp_file.write(line)
@@ -3033,7 +3173,7 @@ def interview_list():
             continue
         if len(interview.metadata):
             metadata = interview.metadata[0]
-            interview_title = metadata.get('title', word('Untitled')).rstrip()
+            interview_title = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
         else:
             interview_title = word('Untitled')
         logmessage("Found old interview with title " + interview_title)

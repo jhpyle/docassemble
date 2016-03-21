@@ -1,0 +1,21 @@
+question: |
+  What are your favorite things to eat?
+subquestion: |
+  You may not like any vegetables, but at least
+  tell me your favorite fruit.
+fields:
+  - Vegetable: target_variable
+    required: false
+  - Fruit: other_target_variable
+---
+metadata:
+  title: Optional Field
+---
+mandatory: true
+code: |
+  all_done
+---
+sets: all_done
+question: Result of question
+subquestion: |
+  other_target_variable is: "${ other_target_variable }"

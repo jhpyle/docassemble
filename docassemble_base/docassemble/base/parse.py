@@ -129,7 +129,7 @@ class InterviewSourceFile(InterviewSource):
         self.playground = None
         if 'filepath' in kwargs:
             if re.search(r'SavedFile', str(type(kwargs['filepath']))):
-                logmessage("We have a saved file on our hands")
+                #logmessage("We have a saved file on our hands")
                 self.playground = kwargs['filepath']
                 if os.path.isfile(self.playground.path) and os.access(self.playground.path, os.R_OK):
                     self.set_filepath(self.playground.path)
@@ -1453,6 +1453,9 @@ class Interview:
                 else:
                     title['short'] = metadata['title'].rstrip()
                 break
+            elif 'short title' in metadata:
+                title['full'] = metadata['short title'].rstrip()
+                title['short'] = metadata['short title'].rstrip()
         self.title = title
         return self.title
                 

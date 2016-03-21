@@ -1,0 +1,24 @@
+question: |
+  Please sign your name below.
+subquestion: |
+  By signing your name, you agree to our terms and conditions.
+signature: target_variable
+under: |
+  ${ user }
+---
+metadata:
+  title: Signature
+---
+code: |
+  user = "John Doe"
+---
+mandatory: true
+code: |
+  all_done
+---
+sets: all_done
+question: Result of question
+subquestion: |
+  target_variable is:
+
+  ${ target_variable }

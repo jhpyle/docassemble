@@ -1,0 +1,15 @@
+question: |
+  Are you at least 18 years of age?
+noyes: user_is_minor
+---
+metadata:
+  title: Yes means false
+---
+mandatory: true
+code: |
+  all_done
+---
+sets: all_done
+question: Result of question
+subquestion: |
+  user_is_minor is: "${ user_is_minor }"

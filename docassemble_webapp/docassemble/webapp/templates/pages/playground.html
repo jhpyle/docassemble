@@ -21,18 +21,19 @@
 </form>
 {%- endblock %}
 {% block rightside %}
-<!--<h3>{{ word('Variables') }}</h3>-->
-<div id="playgroundbox" class="panel panel-info playgroundbox">
-  <div class="panel-heading">
-    <h3 class="panel-title">{{ word('Variables') }}</h3>
-  </div>
-  <div class="panel-body">
-    <table>
-      {%- for varname in names %}
-      <tr><td><a class="label label-primary playground-variable">{{ varname }}</a></td></tr>
-      {% endfor %}
-    </table>
-  </div>
-</div>
+            <div id="playgroundbox" class="panel panel-info playgroundbox">
+              <div class="panel-heading">
+                <h3 class="panel-title">{{ word('Variables') }}</h3>
+              </div>
+              <div class="panel-body">
+                <table>
+                  {%- for varname in names %}
+                  <tr><td><a class="label label-primary playground-variable">{{ varname }}</a></td></tr>
+                  {% endfor %}
+                </table>
+              </div>
+            </div>
 {%- endblock %}
-
+{% block bottom %}
+{{ example_html|safe }}
+{%- endblock %}

@@ -1,0 +1,18 @@
+question: |
+  Are you satisfied?
+field: user_is_satisfied
+buttons:
+  - "You bet": True
+  - "No way": False
+---
+metadata:
+  title: Custom yes/no
+---
+mandatory: true
+code: |
+  all_done
+---
+sets: all_done
+question: Result of question
+subquestion: |
+  user_is_satisfied is: "${ user_is_satisfied }"

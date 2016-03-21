@@ -1,0 +1,20 @@
+question: |
+  Tell me the story of your life.
+fields:
+  - Life Story: target_variable
+    datatype: area
+---
+metadata:
+  title: Text box
+---
+mandatory: true
+code: |
+  all_done
+---
+sets: all_done
+question: Result of question
+subquestion: |
+  target_variable is:
+
+  ${ target_variable }
+

@@ -12,6 +12,7 @@ oauth.wsgi
 trash
 site
 compile.sh
+www-compile.sh
 reset.sh
 requirements.txt
 taskdefinition.json

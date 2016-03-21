@@ -544,7 +544,7 @@ def static_filename(filereference):
         parts = ['docassemble.base', filereference]
     if re.search(r'\.\./', parts[1]):
         return(None)
-    if not re.match(r'data/.*', parts[1]):
+    if not re.match(r'(data|static)/.*', parts[1]):
         parts[1] = 'data/static/' + parts[1]
     return(parts[0] + ':' + parts[1])
 

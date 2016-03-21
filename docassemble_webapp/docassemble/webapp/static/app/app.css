@@ -163,3 +163,58 @@ div.playgroundbox table td {
     padding-bottom: 5px;
     font-size: 16px;
 }
+
+/*table.example_table {
+    border-collapse: separate;
+    border-spacing: 2px 2px;
+}*/
+
+/*table.example_table tr td {
+    vertical-align: top;
+}*/
+
+pre {
+    margin: 0;
+}
+
+img.example_screenshot {
+    border-style: solid;
+    border-color: #cccccc;
+    border-width: 1px;
+    border-radius: 4px;
+    padding-bottom: 20px;
+}
+
+.example-link {
+    cursor: pointer;
+}
+
+.example-active {
+    font-weight: bold;
+}
+
+.example-heading {
+    cursor: pointer;
+}
+
+ul.example-list {
+    list-style-type: none;
+    list-style-position: outside;
+    padding-left: 0px;
+}
+
+ul.example-list ul {
+    margin-left: 20px;
+}
+
+ul.example-hidden {
+    display: none;
+}
+
+div.example-list-col {
+    min-height: 600px;
+}
+
+a.example-copy {
+    font-size: 12px;
+}
