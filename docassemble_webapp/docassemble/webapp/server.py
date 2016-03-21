@@ -2779,7 +2779,7 @@ $("#daRun").click(function(event){
   event.preventDefault();
 });
 $(".playground-variable").on("click", function(){
-  daCodeMirror.replaceSelection($(this).text());
+  daCodeMirror.replaceSelection($(this).text(), "around");
   daCodeMirror.focus();
 });
 
