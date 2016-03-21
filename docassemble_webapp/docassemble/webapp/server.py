@@ -2847,13 +2847,13 @@ $(".example-heading").on("click", function(){
 });
 """
     example_html = list()
-    example_html.append('        <div class="col-md-2 example-list-col">\n          <h4>' + word("Example") +'</h4>')
+    example_html.append('        <div class="col-md-2">\n          <h4>' + word("Example") +'</h4>')
     first_id = list()
     data_dict = dict()
     make_example_html(get_examples(), first_id, example_html, data_dict)
     example_html.append('        </div>')
     example_html.append('        <div class="col-md-6"><h4>' + word("Preview") + '</h4><a href="#" target="_blank" id="example-image-link"><img class="example_screenshot" id="example-image"></a></div>')
-    example_html.append('        <div class="col-md-4"><h4>' + word('Source') + ' <a class="label label-success example-copy">' + word('Insert') + '</a></h4><div id="example-source"></div></div>')
+    example_html.append('        <div class="col-md-4" example-source-col><h4>' + word('Source') + ' <a class="label label-success example-copy">' + word('Insert') + '</a></h4><div id="example-source"></div></div>')
     return render_template('pages/playground.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, current_file=the_file, content=content, names=sorted(interview.names_used), example_html="\n".join(example_html)), 200
 
 @app.route('/packages', methods=['GET', 'POST'])
