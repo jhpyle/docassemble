@@ -534,7 +534,13 @@ def force_ask(variable_name):
     raise NameError("name '" + variable_name + "' is not defined")
 
 def static_filename_path(filereference):
-    return(package_data_filename(static_filename(filereference)))
+    logmessage("Got this far with " + filereference)
+    result = package_data_filename(static_filename(filereference))
+    logmessage("Got this result " + result)
+    if result is None or not os.path.isfile(result):
+        logmessage("Got here with " + filereference)
+        result = absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\.]', '', filereference)).path
+    return(result)
 
 def static_filename(filereference):
     if re.search(r',', filereference):
@@ -576,8 +582,13 @@ def package_template_filename(the_file, **kwargs):
     parts = the_file.split(":")
     if len(parts) == 1:
         package = kwargs.get('package', None)
+        #logmessage("package_template_filename: the_file is " + str(the_file) + " and package is " + str(package))
         if package is not None:
             parts = [package, the_file]
+        else:
+            retval = absolute_filename('/playgroundtemplate/' + the_file).path
+            logmessage("package_template_filename: retval is " + str(retval))
+            return(retval)
     if len(parts) == 2:
         if not re.match(r'data/.*', parts[1]):
             parts[1] = 'data/templates/' + parts[1]

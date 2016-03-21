@@ -1,0 +1,42 @@
+{%- extends 'base_templates/page_base_half.html' %}
+{%- block content %}
+{%- from "base_templates/form_macros.html" import render_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
+<div><a href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></div>
+<div class="page-header">
+  <h1>{{ header }}</h1>
+</div>
+
+{%- if files %}
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>{{ word("File name") }}</th>
+      <th style="text-align:right;">{{ word("Action") }}</th>
+    </tr>
+  </thead>
+  <tbody>
+  {%- for file in files %}
+    <tr>
+      <td><a href="{{ url_for('playgroundstatic', filename=file) }}">{{ file }}</a></td>
+      <td style="text-align:right;"><a class="label label-warning" href="?delete={{ file }}">{{ word('Delete') }}</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{%- else %}
+<p><em>{{ word("No files have been uploaded yet.") }}</em></p>
+{%- endif %}
+
+<div class="page-header">
+  <h3>{{ upload_header }}</h3>
+</div>
+
+<form action="" method="POST" class="form" role="form" enctype="multipart/form-data">
+  {{ form.hidden_tag() }}
+  {{ myrender_hidden_field(form.section, value=section) }}
+  {{ render_file_field(form.uploadfile, tabindex=80) }}
+  <div class="form-actions">
+    {{ render_submit_field(form.submit, tabindex=100) }}
+  </div>
+</form>
+{%- endblock %}

@@ -48,7 +48,7 @@ from flask.ext.login import LoginManager, UserMixin, login_user, logout_user, cu
 from flask.ext.user import login_required, roles_required, UserManager, SQLAlchemyAdapter
 from flask.ext.user.forms import LoginForm
 from flask.ext.user import signals, user_logged_in, user_changed_password, user_registered, user_registered, user_reset_password
-from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm, Utilities
+from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm, Utilities, PlaygroundFilesForm
 from flask_mail import Mail, Message
 import flask.ext.user.signals
 import httplib2
@@ -256,6 +256,10 @@ def get_url_from_file_reference(file_reference, **kwargs):
         parts = file_reference.split(':')
         if len(parts) < 2:
             parts = ['docassemble.base', file_reference]
+            try:
+                pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
+            except:
+                return(fileroot + "playgroundstatic/" + file_reference)
         parts[1] = re.sub(r'^data/static/', '', parts[1])
         url = fileroot + 'packagestatic/' + parts[0] + '/' + parts[1] + extn
     return(url)
@@ -269,6 +273,16 @@ def absolute_filename(the_file):
         if match:
             filename = re.sub(r'[^A-Za-z0-9]', '', match.group(1))
             playground = SavedFile(current_user.id, section='playground', fix=True, filename=filename)
+            return playground
+        match = re.match(r'^/playgroundtemplate/(.*)', the_file)
+        if match:
+            filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(1))
+            playground = SavedFile(current_user.id, section='playgroundtemplate', fix=True, filename=filename)
+            return playground
+        match = re.match(r'^/playgroundstatic/(.*)', the_file)
+        if match:
+            filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(1))
+            playground = SavedFile(current_user.id, section='playgroundstatic', fix=True, filename=filename)
             return playground
     return(None)
 
@@ -1003,7 +1017,7 @@ def index():
         if old_yaml_filename is not None:
             if old_yaml_filename != yaml_filename:
                 session['i'] = yaml_filename
-                if request.args.get('from_list', None) is None and not yaml_filename.startswith("/playground"):
+                if request.args.get('from_list', None) is None and not yaml_filename.startswith("/playground") and not yaml_filename.startswith("docassemble.base"):
                     show_flash = True
         if session_parameter is None:
             if show_flash:
@@ -2676,6 +2690,59 @@ def make_example_html(examples, first_id, example_html, data_dict):
         data_dict[example['id']] = example
     example_html.append('          </ul>')
 
+@app.route('/playgroundstatic/<filename>', methods=['GET'])
+@login_required
+@roles_required(['developer', 'admin'])
+def playground_static(filename):
+    filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', filename)
+    area = SavedFile(current_user.id, fix=True, section='playgroundstatic')
+    filename = os.path.join(area.directory, filename)
+    if os.path.isfile(filename):
+        extension, mimetype = get_ext_and_mimetype(filename)
+        return(send_file(filename, mimetype=str(mimetype)))
+    abort(404)
+
+@app.route('/playgroundfiles', methods=['GET', 'POST'])
+@login_required
+@roles_required(['developer', 'admin'])
+def playground_files():
+    form = PlaygroundFilesForm(request.form, current_user)
+    section = request.args.get('section', 'templates')
+    if request.method == 'POST':
+        if (form.section.data):
+            section = form.section.data
+    if section not in ("template", "static"):
+        section = "template"
+    area = SavedFile(current_user.id, fix=True, section='playground' + section)
+    if request.args.get('delete', False):
+        argument = re.sub(r'[^A-Za-z0-9\-\_\.]', '', request.args.get('delete'))
+        if argument:
+            filename = os.path.join(area.directory, argument)
+            if os.path.exists(filename):
+                os.remove(filename)
+                area.finalize()
+                flash(word("Deleted file: ") + argument, "success")
+                return redirect(url_for('playground_files', section=section))
+    if request.method == 'POST':
+        if 'uploadfile' in request.files and request.files['uploadfile'].filename:
+            try:
+                the_file = request.files['uploadfile']
+                filename = secure_filename(the_file.filename)
+                filename = re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', filename)
+                filename = os.path.join(area.directory, filename)
+                the_file.save(filename)
+                area.finalize()
+            except Exception as errMess:
+                flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")        
+    files = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
+    if (section == "template"):
+        header = word("Templates")
+        upload_header = word("Upload a template file")
+    elif (section == "static"):
+        header = word("Static")
+        upload_header = word("Upload a static file")
+    return render_template('pages/playgroundfiles.html', header=header, upload_header=upload_header, form=form, files=files, section=section), 200
+
 @app.route('/playground', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])
@@ -2697,11 +2764,15 @@ def playground_page():
         if (form.playground_name.data):
             the_file = form.playground_name.data
             the_file = re.sub(r'[^A-Za-z0-9]', '', the_file)
-            if the_file:
+            if the_file != '':
                 filename = os.path.join(playground.directory, the_file)
                 if not os.path.isfile(filename):
                     with open(filename, 'a'):
-                        os.utime(filename, None)    
+                        os.utime(filename, None)
+            else:
+                flash(word('You need to type in a name for the interview'), 'error')
+        else:
+            flash(word('You need to type in a name for the interview'), 'error')
     the_file = re.sub(r'[^A-Za-z0-9]', '', the_file)
     files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f))])
     if request.method == 'GET' and not the_file and not is_new:
@@ -2709,12 +2780,12 @@ def playground_page():
             the_file = files[0]
         else:
             the_file = 'test'
-    if the_file:
+    if the_file != '':
         filename = os.path.join(playground.directory, the_file)
         if not os.path.isfile(filename):
             with open(filename, 'a'):
                 os.utime(filename, None)
-    if request.method == 'POST' and form.validate():
+    if request.method == 'POST' and the_file != '' and form.validate():
         if form.delete.data:
             if os.path.isfile(filename):
                 os.remove(filename)
@@ -2741,7 +2812,7 @@ def playground_page():
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
     content = ''
-    if the_file:
+    if the_file != '':
         playground.finalize()
         with open(filename, 'rU') as fp:
             form.original_playground_name.data = the_file
@@ -2756,6 +2827,7 @@ def playground_page():
         interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path=os.path.join(playground.directory, 'test'), testing=True)
     else:
         interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path=os.path.join(playground.directory, 'test'), testing=True)
+    interview_source.set_testing(True)
     interview = interview_source.get_interview()
     ajax = """
 $("#daRun").click(function(event){

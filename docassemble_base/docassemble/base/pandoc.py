@@ -85,9 +85,8 @@ class Pandoc(object):
             subprocess_arguments.extend(['--reference-docx=%s' % self.reference_file])
         subprocess_arguments.extend(['-s -o %s' % temp_outfile.name])
         subprocess_arguments.extend(self.arguments)
-        #for argum in subprocess_arguments:
-        #    logmessage(str(argum) + "\n")
         cmd = " ".join(subprocess_arguments)
+        logmessage(cmd)
         fin = os.popen(cmd)
         msg = fin.read()
         fin.close()

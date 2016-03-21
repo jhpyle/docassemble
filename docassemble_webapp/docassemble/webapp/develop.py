@@ -43,3 +43,7 @@ class Utilities(Form):
     pdffile = FileField(word('PDF File'))
     scan = SubmitField(word('Scan'))
     
+class PlaygroundFilesForm(Form):
+    section = StringField(word('Section'))
+    uploadfile = FileField(word('File to upload'))
+    submit = SubmitField(word('Upload'))
