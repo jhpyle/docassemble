@@ -31,7 +31,7 @@ in as any user with the privileges of an Administrator or a
 Developer.)
 
 The first method of running the above "Hello World" code is very
-simple: you log ingo to the [Playground] and copy and paste the code
+simple: you log in, go to the [Playground], copy and paste the code
 into a tab, and then click the "Save and Run" button.
 
 The second method is longer but more educational.  It involves these

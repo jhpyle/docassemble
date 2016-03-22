@@ -72,10 +72,11 @@ following extra statements:
 
 * `yesno` (or its opposite, `noyes`): will set a variable when a Yes
   or No button is pressed.
-* `field`: will set a variable when a button is pressed in response to
-  a multiple-choice question.
+* `field`: will set a variable when the user answers the question.
+* `buttons` or `choices`: when used without `field`, will ask another
+  question or run code.
 * `fields`: the question will set one or more variables when
-"Continue" is pressed.
+  "Continue" is pressed.
 * `signature`: the user will be asked to sign his or her name, and the
   image will be saved as a variable.
 * `sets`: advertises to the interview logic that a variable could

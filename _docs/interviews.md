@@ -232,8 +232,7 @@ There are three ways to author your own interviews:
 
 1. When logged in, go to the "Playground" from the menu in the upper
    right hand corner.  The [playground] allows you to quickly edit and
-   run interview [YAML].  This is a testing environment with limited
-   features.
+   run interview [YAML].
 2. Create a [package] on your local computer and then install it on
    the **docassemble** server either through [GitHub] or by uploading a ZIP
    file.

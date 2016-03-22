@@ -9,15 +9,15 @@ testing ground for interviews.  It allows you to write [YAML] in one
 or more "files" and then run an interview with one click.
 
 Each "tab" on the Playground page is a [YAML] file.  If you have a tab
-called "test" and a tab called "questions," you can incorporate one
+called "test.yml" and a tab called "questions.yml," you can incorporate one
 into the other by reference.
 
-For example, suppose your "test" tab contains:
+For example, suppose your "test.yml" tab contains:
 
 {% highlight yaml %}
 ---
 include:
-  - questions
+  - questions.yml
 ---
 mandatory: true
 code:
@@ -25,7 +25,7 @@ code:
 ---
 {% endhighlight %}
 
-and suppose your "questions" tab contains:
+and suppose your "questions.yml" tab contains:
 
 {% highlight yaml %}
 ---
@@ -35,9 +35,9 @@ question: |
 ---
 {% endhighlight %}
 
-If you run the "test" tab, you will go to an interview that says
-"Hello, world!"  The "test" interview knew how to ask `say_hello`
-because it incorporated the "questions" tab by reference.
+If you run the "test.yml" tab, you will go to an interview that says
+"Hello, world!"  The "test.yml" interview knew how to ask `say_hello`
+because it incorporated the "questions.yml" tab by reference.
 
 Notes:
 
@@ -53,12 +53,10 @@ Notes:
   the general public or by other developers; to share an interview
   with others, you need to prepare a [package].
 * The "Playground" does not offer a full range of authoring
-  functionality.  For example, it does not allow you to upload images,
-  templates, or static documents.  It does not allow you to edit
-  [Python modules].  It is a place to test interview code quickly, not
-  a development platform.  To learn how to access the full range of
-  authoring functionality, see the [tutorial] and the [packages]
-  sections.
+  functionality.  It does not allow you to edit [Python modules].  It
+  is a place to test interview code quickly, not a development
+  platform.  To learn how to access the full range of authoring
+  functionality, see the [packages] section.
 
 [package]: {{ site.baseurl }}/docs/packages.html
 [packages]: {{ site.baseurl }}/docs/packages.html
