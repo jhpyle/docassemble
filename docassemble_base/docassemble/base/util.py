@@ -534,17 +534,19 @@ def force_ask(variable_name):
     raise NameError("name '" + variable_name + "' is not defined")
 
 def static_filename_path(filereference):
-    logmessage("Got this far with " + filereference)
+    logmessage("Got this far with " + str(filereference))
     result = package_data_filename(static_filename(filereference))
-    logmessage("Got this result " + result)
+    logmessage("Got this result " + str(result))
     if result is None or not os.path.isfile(result):
-        logmessage("Got here with " + filereference)
+        logmessage("Got here with " + str(filereference))
         result = absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\.]', '', filereference)).path
     return(result)
 
 def static_filename(filereference):
     if re.search(r',', filereference):
         return(None)
+    #filereference = re.sub(r'^None:data/static/', '', filereference)
+    #filereference = re.sub(r'^None:', '', filereference)
     parts = filereference.split(':')
     if len(parts) < 2:
         parts = ['docassemble.base', filereference]
@@ -605,13 +607,18 @@ def standard_question_filename(the_file):
 def package_data_filename(the_file):
     if the_file is None:
         return(None)
+    the_file = re.sub(r'^None:data/static/', '', the_file)
+    the_file = re.sub(r'^None:', '', the_file)
     parts = the_file.split(":")
+    result = None
     if len(parts) == 2:
         try:
-            return(pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1]))
+            result = pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
         except:
-            return(None)
-    return(None)
+            result = None
+    if result is None or not os.path.isfile(result):
+        result = absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\.]', '', the_file)).path
+    return(result)
 
 def package_question_filename(the_file):
     parts = the_file.split(":")

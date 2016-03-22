@@ -47,3 +47,10 @@ class PlaygroundFilesForm(Form):
     section = StringField(word('Section'))
     uploadfile = FileField(word('File to upload'))
     submit = SubmitField(word('Upload'))
+
+class PlaygroundFilesEditForm(Form):
+    section = StringField(word('Section'))
+    original_file_name = StringField(word('Original Name'))
+    file_name = StringField(word('Name'), [validators.Length(min=1, max=255)])
+    file_content = TextAreaField(word('File Text'))
+    submit = SubmitField(word('Save'))

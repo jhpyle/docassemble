@@ -48,7 +48,7 @@ from flask.ext.login import LoginManager, UserMixin, login_user, logout_user, cu
 from flask.ext.user import login_required, roles_required, UserManager, SQLAlchemyAdapter
 from flask.ext.user.forms import LoginForm
 from flask.ext.user import signals, user_logged_in, user_changed_password, user_registered, user_registered, user_reset_password
-from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm, Utilities, PlaygroundFilesForm
+from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm
 from flask_mail import Mail, Message
 import flask.ext.user.signals
 import httplib2
@@ -76,6 +76,9 @@ from pygments.lexers import YamlLexer
 from pygments.formatters import HtmlFormatter
 
 app.debug = False
+
+ok_mimetypes = {"application/javascript": "javascript"}
+ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown"}
 
 default_yaml_filename = daconfig.get('default_interview', 'docassemble.demo:data/questions/questions.yml')
 
@@ -253,12 +256,17 @@ def get_url_from_file_reference(file_reference, **kwargs):
             extn = '.' + extn
         else:
             extn = ''
+        file_reference = re.sub(r'^None:data/static/', '', file_reference)
+        file_reference = re.sub(r'^None:', '', file_reference)
         parts = file_reference.split(':')
         if len(parts) < 2:
             parts = ['docassemble.base', file_reference]
+            the_file = None
             try:
-                pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
+                the_file = pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
             except:
+                return(fileroot + "playgroundstatic/" + file_reference)
+            if not os.path.isfile(the_file):
                 return(fileroot + "playgroundstatic/" + file_reference)
         parts[1] = re.sub(r'^data/static/', '', parts[1])
         url = fileroot + 'packagestatic/' + parts[0] + '/' + parts[1] + extn
@@ -271,7 +279,7 @@ def absolute_filename(the_file):
     if current_user.is_authenticated and not current_user.is_anonymous:
         match = re.match(r'^/playground/(.*)', the_file)
         if match:
-            filename = re.sub(r'[^A-Za-z0-9]', '', match.group(1))
+            filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(1))
             playground = SavedFile(current_user.id, section='playground', fix=True, filename=filename)
             return playground
         match = re.match(r'^/playgroundtemplate/(.*)', the_file)
@@ -2707,10 +2715,25 @@ def playground_static(filename):
 @roles_required(['developer', 'admin'])
 def playground_files():
     form = PlaygroundFilesForm(request.form, current_user)
+    formtwo = PlaygroundFilesEditForm(request.form, current_user)
     section = request.args.get('section', 'templates')
+    the_file = request.args.get('file', '')
+    scroll = False
+    if the_file:
+        scroll = True
+    if request.method == 'GET':
+        is_new = request.args.get('new', False)
+    else:
+        is_new = False
+    if is_new:
+        scroll = True
+        the_file = ''
     if request.method == 'POST':
         if (form.section.data):
             section = form.section.data
+        if (formtwo.file_name.data):
+            the_file = formtwo.file_name.data
+            the_file = re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', the_file)
     if section not in ("template", "static"):
         section = "template"
     area = SavedFile(current_user.id, fix=True, section='playground' + section)
@@ -2733,15 +2756,65 @@ def playground_files():
                 the_file.save(filename)
                 area.finalize()
             except Exception as errMess:
-                flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")        
+                flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
+        if formtwo.submit.data and formtwo.file_content.data:
+            if the_file != '':
+                if formtwo.original_file_name.data and formtwo.original_file_name.data != the_file:
+                    old_filename = os.path.join(area.directory, formtwo.original_file_name.data)
+                    if os.path.isfile(old_filename):
+                        os.remove(old_filename)
+                filename = os.path.join(area.directory, the_file)
+                with open(filename, 'w') as fp:
+                    fp.write(formtwo.file_content.data)
+                the_time = time.strftime('%H:%M:%S %Z', time.localtime())
+                flash(word('The file was saved at') + ' ' + the_time + '.', 'success')
+            else:
+                flash(word('You need to type in a name for the file'), 'error')                
     files = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
+    editable_files = list()
+    mode = "yaml"
+    for a_file in files:
+        extension, mimetype = get_ext_and_mimetype(a_file)
+        if (mimetype and mimetype in ok_mimetypes) or (extension and extension in ok_extensions):
+            editable_files.append(a_file)
+    if request.method == 'GET' and not the_file and not is_new:
+        if len(editable_files):
+            the_file = editable_files[0]
+        else:
+            the_file = 'test.md'
+    if the_file != '':
+        extension, mimetype = get_ext_and_mimetype(the_file)
+        if (mimetype and mimetype in ok_mimetypes):
+            mode = ok_mimetypes[mimetype]
+        elif (extension and extension in ok_extensions):
+            mode = ok_extensions[extension]
+    formtwo.original_file_name.data = the_file
+    formtwo.file_name.data = the_file
+    if the_file != '' and os.path.isfile(os.path.join(area.directory, the_file)):
+        filename = os.path.join(area.directory, the_file)
+    else:
+        filename = None
+    if filename is not None:
+        area.finalize()
+        with open(filename, 'rU') as fp:
+            content = fp.read()
+    elif formtwo.file_content.data:
+        content = formtwo.file_content.data
+    else:
+        content = ''
     if (section == "template"):
         header = word("Templates")
+        description = 'Add files here that you want want to include in your interviews using "content file," "initial yaml," "additional yaml," "template file," "rtf template file," "pdf template file," or "docx reference file."'
         upload_header = word("Upload a template file")
     elif (section == "static"):
-        header = word("Static")
+        header = word("Static files")
+        description = 'Add files here that you want to include in your interviews with "images," "image sets," "[FILE]" or "url_of()."'
         upload_header = word("Upload a static file")
-    return render_template('pages/playgroundfiles.html', header=header, upload_header=upload_header, form=form, files=files, section=section), 200
+    if scroll:
+        extra_command = "      scrollBottom();\n"
+    else:
+        extra_command = ""
+    return render_template('pages/playgroundfiles.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("file_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "' + mode + '", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#formtwo").trigger("checkform.areYouSure");});\n      $("#formtwo").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#formtwo").bind("submit", function(){daCodeMirror.save(); $("#formtwo").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, description=description, form=form, files=files, section=section, editable_files=editable_files, formtwo=formtwo, current_file=the_file, content=content), 200
 
 @app.route('/playground', methods=['GET', 'POST'])
 @login_required
@@ -2763,7 +2836,9 @@ def playground_page():
     if request.method == 'POST':
         if (form.playground_name.data):
             the_file = form.playground_name.data
-            the_file = re.sub(r'[^A-Za-z0-9]', '', the_file)
+            the_file = re.sub(r'[^A-Za-z0-9\_\-\.]', '', the_file)
+            if not re.search(r'\.ya?ml$', the_file):
+                the_file = re.sub(r'\..*', '', the_file) + '.yml'
             if the_file != '':
                 filename = os.path.join(playground.directory, the_file)
                 if not os.path.isfile(filename):
@@ -2773,13 +2848,13 @@ def playground_page():
                 flash(word('You need to type in a name for the interview'), 'error')
         else:
             flash(word('You need to type in a name for the interview'), 'error')
-    the_file = re.sub(r'[^A-Za-z0-9]', '', the_file)
+    the_file = re.sub(r'[^A-Za-z0-9\_\-\.]', '', the_file)
     files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f))])
     if request.method == 'GET' and not the_file and not is_new:
         if len(files):
             the_file = files[0]
         else:
-            the_file = 'test'
+            the_file = 'test.yml'
     if the_file != '':
         filename = os.path.join(playground.directory, the_file)
         if not os.path.isfile(filename):
@@ -2871,10 +2946,6 @@ function activateExample(id){
     }
   });
 }
-
-//function scrollBottom(){
-//  $("html, body").animate({ scrollTop: $(document).height() }, "slow");
-//}
 
 $(".example-link").on("click", function(){
   var id = $(this).data("example");

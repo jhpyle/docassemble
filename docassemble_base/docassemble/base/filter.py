@@ -848,7 +848,7 @@ def get_audio_urls(the_audio):
             if len(parts) < 2:
                 parts = [attempt['package'], attempt['filename']]
             if parts[0] is None:
-                parts[0] = 'docassemble.base'
+                parts[0] = 'None'
             parts[1] = re.sub(r'^data/static/', '', parts[1])
             full_file = parts[0] + ':data/static/' + parts[1]
             file_info = file_finder(full_file)
@@ -919,7 +919,7 @@ def get_video_urls(the_video):
             if len(parts) < 2:
                 parts = [attempt['package'], attempt['filename']]
             if parts[0] is None:
-                parts[0] = 'docassemble.base'
+                parts[0] = 'None'
             parts[1] = re.sub(r'^data/static/', '', parts[1])
             full_file = parts[0] + ':data/static/' + parts[1]
             file_info = file_finder(full_file)
