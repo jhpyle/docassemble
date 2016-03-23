@@ -15,6 +15,7 @@ import pip
 import shutil
 import codecs
 import weakref
+import types
 import docassemble.base.parse
 import docassemble.base.pdftk
 import docassemble.base.interview_cache
@@ -66,6 +67,7 @@ from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from PIL import Image
 import pyPdf
 import yaml
+import inspect
 from subprocess import call, Popen, PIPE
 DEBUG = daconfig.get('debug', False)
 docassemble.base.parse.debug = DEBUG
@@ -2816,6 +2818,12 @@ def playground_files():
         extra_command = ""
     return render_template('pages/playgroundfiles.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("file_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "' + mode + '", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#formtwo").trigger("checkform.areYouSure");});\n      $("#formtwo").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#formtwo").bind("submit", function(){daCodeMirror.save(); $("#formtwo").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, description=description, form=form, files=files, section=section, editable_files=editable_files, formtwo=formtwo, current_file=the_file, content=content), 200
 
+def noquote(string):
+    if string is None:
+        return None
+    newstring = json.dumps(string.replace('\n', ' ').rstrip())
+    return newstring[1:-1]
+
 @app.route('/playground', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])
@@ -2904,6 +2912,34 @@ def playground_page():
         interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path=os.path.join(playground.directory, 'test'), testing=True)
     interview_source.set_testing(True)
     interview = interview_source.get_interview()
+    user_dict = fresh_dictionary()
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='/playground/' + the_file, req=request, action=None))
+    try:
+        interview.assemble(user_dict, interview_status)
+    except:
+        pass
+    names_used = copy.copy(interview.names_used)
+    functions = set()
+    modules = set()
+    classes = set()
+    name_info = dict()
+    for val in user_dict:
+        if type(user_dict[val]) is types.FunctionType:
+            functions.add(val)
+            name_info[val] = {'doc': inspect.getdoc(user_dict[val]), 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + str(inspect.formatargspec(*inspect.getargspec(user_dict[val])))}
+        elif type(user_dict[val]) is types.ModuleType:
+            modules.add(val)
+            name_info[val] = {'doc': inspect.getdoc(user_dict[val]), 'name': str(val), 'insert': str(val)}
+        elif type(user_dict[val]) is types.TypeType:
+            classes.add(val)
+            bases = list()
+            for x in list(user_dict[val].__bases__):
+                if x.__name__ != 'DAObject':
+                    bases.append(x.__name__)
+            name_info[val] = {'doc': inspect.getdoc(user_dict[val]), 'name': str(val), 'insert': str(val), 'bases': bases}
+    for val in docassemble.base.util.pickleable_objects(user_dict):
+        names_used.add(val)
+        name_info[val] = {'type': type(user_dict[val]).__name__}
     ajax = """
 $("#daRun").click(function(event){
   daCodeMirror.save();
@@ -2926,7 +2962,7 @@ $("#daRun").click(function(event){
   event.preventDefault();
 });
 $(".playground-variable").on("click", function(){
-  daCodeMirror.replaceSelection($(this).text(), "around");
+  daCodeMirror.replaceSelection($(this).data("insert"), "around");
   daCodeMirror.focus();
 });
 
@@ -2988,6 +3024,10 @@ $(".example-heading").on("click", function(){
     }
   }
 });
+
+$(function () {
+  $('[data-toggle="popover"]').popover({trigger: 'focus'})
+})
 """
     example_html = list()
     example_html.append('        <div class="col-md-2">\n          <h4>' + word("Example") +'</h4>')
@@ -2997,7 +3037,7 @@ $(".example-heading").on("click", function(){
     example_html.append('        </div>')
     example_html.append('        <div class="col-md-6"><h4>' + word("Preview") + '</h4><a href="#" target="_blank" id="example-image-link"><img class="example_screenshot" id="example-image"></a></div>')
     example_html.append('        <div class="col-md-4 example-source-col"><h4>' + word('Source') + ' <a class="label label-success example-copy">' + word('Insert') + '</a></h4><div id="example-source"></div></div>')
-    return render_template('pages/playground.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, current_file=the_file, content=content, names=sorted(interview.names_used), example_html="\n".join(example_html)), 200
+    return render_template('pages/playground.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      nameInfo = ' + str(json.dumps(name_info)) + ';      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, current_file=the_file, content=content, names=sorted(names_used), functions=sorted(functions), modules=sorted(modules), classes=sorted(classes), name_info=name_info, example_html="\n".join(example_html)), 200
 
 @app.route('/packages', methods=['GET', 'POST'])
 @login_required

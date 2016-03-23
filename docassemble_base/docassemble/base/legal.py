@@ -320,6 +320,7 @@ class Address(DAObject):
         return(output)
 
 class Person(DAObject):
+    """Represents a legal or natural person"""
     def init(self, **kwargs):
         self.initializeAttribute('name', Name)
         self.initializeAttribute('address', Address)
@@ -413,6 +414,7 @@ class Person(DAObject):
         return verb_past(the_verb, person=tense)
 
 class Individual(Person):
+    """Represents a natural person"""
     def init(self, **kwargs):
         self.initializeAttribute('name', IndividualName)
         self.initializeAttribute('child', ChildList)
@@ -649,6 +651,7 @@ def objects_from_file(file_ref):
     return objects
 
 def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None, html=None, subject="", attachments=[]):
+    """Sends an e-mail"""
     from flask_mail import Message
     if type(to) is not list:
         to = [to]
@@ -749,6 +752,7 @@ def email_string(persons, include_name=None):
     return result
 
 def map_of(*pargs, **kwargs):
+    """Shows a Google Map"""
     the_map = {'markers': list()}
     all_args = list()
     for arg in pargs:

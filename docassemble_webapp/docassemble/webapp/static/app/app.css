@@ -156,7 +156,7 @@ a.sourceactive {
 div.playgroundbox div.panel-body {
     height: 30em;
     overflow-y: scroll;
-    overflow-x: hidden;
+    overflow-x: scroll;
 }
 
 div.playgroundbox table td {
@@ -217,4 +217,20 @@ div.example-source-col {
 
 a.example-copy {
     font-size: 12px;
+}
+
+i.dainfosign {
+    color: rgb(49, 112, 143);
+    vertical-align: -2px;
+    cursor: pointer;
+    text-decoration: none !important;
+}
+
+table.daplaygroundtable td {
+    vertical-align: middle;
+}
+
+span.daparenthetical {
+    color: #777777;
+    font-size: 14px;
 }

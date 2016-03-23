@@ -23,13 +23,34 @@
 {% block rightside %}
             <div id="playgroundbox" class="panel panel-info playgroundbox">
               <div class="panel-heading">
-                <h3 class="panel-title">{{ word('Variables') }}</h3>
+                <h3 class="panel-title">{{ word('Variables, etc.') }}</h3>
               </div>
               <div class="panel-body">
-                <table>
-                  {%- for varname in names %}
-                  <tr><td><a class="label label-primary playground-variable">{{ varname }}</a></td></tr>
+                <table class="daplaygroundtable">
+                  {%- if names %}
+                  <tr><td><h4>Variables</h4></td></tr>
+                  {%- for var in names %}
+                  <tr><td><a data-insert="{{ var }}" class="label label-primary playground-variable">{{ var }}</a>{% if var in name_info and name_info[var]['type'] %} <span class="daparenthetical">({{ name_info[var]['type'] }})</span>{% endif %}</td></tr>
                   {% endfor %}
+                  {% endif %}
+                  {%- if functions %}
+                  <tr><td><h4>Functions</h4></td></tr>
+                  {%- for var in functions %}
+                  <tr><td><a data-insert="{{ name_info[var]['insert'] }}" class="label label-warning playground-variable">{{ name_info[var]['tag'] }}</a>{% if name_info[var]['doc'] %}&nbsp;<a tabindex="0" role="button" data-toggle="popover" data-placement="auto" data-content="{{ name_info[var]['doc'] }}" title="{{ var }}"><i class="glyphicon glyphicon-info-sign dainfosign"</i></a>{% endif %}</td></tr>
+                  {% endfor %}
+                  {% endif %}
+                  {%- if classes %}
+                  <tr><td><h4>Classes</h4></td></tr>
+                  {%- for var in classes %}
+                  <tr><td><a data-insert="{{ name_info[var]['insert'] }}" class="label label-info playground-variable">{{ name_info[var]['name'] }}</a>{% if name_info[var]['bases'] %} <span class="daparenthetical">({{ name_info[var]['bases'][0] }})</span>{% endif %}{% if name_info[var]['doc'] %}&nbsp;<a tabindex="0" role="button" data-toggle="popover" data-placement="auto" data-content="{{ name_info[var]['doc'] }}" title="{{ var }}"><i class="glyphicon glyphicon-info-sign dainfosign"</i></a>{% endif %}</td></tr>
+                  {% endfor %}
+                  {% endif %}
+                  {%- if modules %}
+                  <tr><td><h4>Modules</h4></td></tr>
+                  {%- for var in modules %}
+                  <tr><td><a data-insert="{{ name_info[var]['insert'] }}" class="label label-success playground-variable">{{ name_info[var]['name'] }}</a>{% if name_info[var]['doc'] %}&nbsp;<a tabindex="0" role="button" data-toggle="popover" data-placement="auto" data-content="{{ name_info[var]['doc'] }}" title="{{ var }}"><i class="glyphicon glyphicon-info-sign dainfosign"</i></a>{% endif %}</td></tr>
+                  {% endfor %}
+                  {% endif %}
                 </table>
               </div>
             </div>
