@@ -2940,6 +2940,7 @@ def playground_page():
     for val in docassemble.base.util.pickleable_objects(user_dict):
         names_used.add(val)
         name_info[val] = {'type': type(user_dict[val]).__name__}
+    names_used.discard('x')
     ajax = """
 $("#daRun").click(function(event){
   daCodeMirror.save();
