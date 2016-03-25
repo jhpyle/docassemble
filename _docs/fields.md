@@ -201,13 +201,13 @@ button.
 question: What kind of car do you want?
 buttons:
   - Ford Focus:
-    code: |
-      car_model = "Focus"
-      car_make = "Ford"
+      code: |
+        car_model = "Focus"
+        car_make = "Ford"
   - Toyota Camry:
-    code: |
-      car_model = "Camry"
-      car_make = "Toyota"
+      code: |
+        car_model = "Camry"
+        car_make = "Toyota"
 ---
 {% endhighlight %}
 

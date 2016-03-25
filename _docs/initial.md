@@ -278,13 +278,17 @@ the above function by doing:
 question: |
   ${ describe_as_adorable(spouse) } Am I right?
 yesno: user_agrees_spouse_is_adorable
-usedef:
+usedefs:
  - adorability
 ---
 {% endhighlight %}
 
 Due to the way **docassemble** parses interviews, the `def` block
 needs to be defined before it is used.
+
+Note the `\` marks at the end of the lines in the `mako` definition.
+Without these marks, there would be an extra newline inserted.  You
+may or may not want this extra newline.
 
 # `default role`
 
