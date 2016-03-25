@@ -1,0 +1,19 @@
+metadata:
+  title: Buttons
+---
+question: |
+  What type of belly button do you have?
+field: target_variable
+buttons:
+  - Innie
+  - Outie
+  - No belly button
+---
+sets: all_done
+question: Result of question
+subquestion: |
+  target_variable is: "${ target_variable }"
+---
+mandatory: true
+code: |
+  all_done

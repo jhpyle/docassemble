@@ -1,0 +1,16 @@
+metadata:
+  title: Labels ≠ values
+---
+question: |
+  How would you like to pay for your car?
+field: target_variable
+buttons:
+  - Buy it: purchaser
+  - Lease it: borrower
+---
+sets: all_done
+question: You are a ${ target_variable }.
+---
+mandatory: true
+code: |
+  all_done

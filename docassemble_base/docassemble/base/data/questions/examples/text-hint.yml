@@ -1,0 +1,22 @@
+metadata:
+  title: Hints
+---
+question: |
+  What are your favorite things to eat?
+subquestion: |
+  Please be specific.
+fields:
+  - Vegetable: target_variable
+    hint: e.g., eggplant, turnips
+  - Fruit: other_target_variable
+    hint: e.g., apples, oranges
+---
+sets: all_done
+question: Result of question
+subquestion: |
+  target_variable is: "${ target_variable }"
+---
+mandatory: true
+code: |
+  all_done
+

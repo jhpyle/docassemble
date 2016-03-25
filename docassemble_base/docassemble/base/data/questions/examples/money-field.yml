@@ -1,17 +1,17 @@
-question: |
-  How much is your house worth?
-fields:
-  - Birthdate: target_variable
-    datatype: currency
----
 metadata:
   title: Money
 ---
-mandatory: true
-code: |
-  all_done
+question: |
+  How much is your house worth?
+fields:
+  - Value: target_variable
+    datatype: currency
 ---
 sets: all_done
 question: Result of question
 subquestion: |
   target_variable is: "${ target_variable }"
+---
+mandatory: true
+code: |
+  all_done

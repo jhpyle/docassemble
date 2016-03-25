@@ -10,14 +10,16 @@ var casper = require('casper').create(
 
 var interview = casper.cli.get(0);
 
-var wait_amount = 500;
+var wait_amount = 100;
 
-if (interview == 'signature.yml'){
-  wait_amount = 2000;
-  casper.options.viewportSize = {width: 640, height: 1136};
+if (interview == 'signature.yml' || interview == 'metadata.yml' || interview == 'help.yml'){
+    casper.options.viewportSize = {width: 640, height: 1136};
+    if (interview == 'signature.yml'){
+	wait_amount = 2000;
+    }
 }
 else{
-  casper.options.viewportSize = {width: 1136, height: 640};
+    casper.options.viewportSize = {width: 1136, height: 640};
 }
 
 var url = "http://localhost?i=docassemble.base:data/questions/examples/" + interview
@@ -25,10 +27,10 @@ var url = "http://localhost?i=docassemble.base:data/questions/examples/" + inter
 casper.start();
 
 casper.thenOpen(url, function() {
-  this.wait(wait_amount, function(){
-    this.capture(casper.cli.get(1));
-  });
+    this.wait(wait_amount, function(){
+	this.capture(casper.cli.get(1));
+    });
 });
 
 casper.run();
-//496x520+86+78
+

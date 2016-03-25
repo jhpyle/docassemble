@@ -1,11 +1,47 @@
-- Multiple choice:
-    - yesno
-    - noyes
-    - yesno-custom
+- Markup:
+    - markdown
 - Fields:
     - text-field
     - optional-field
     - text-box-field
     - date-field
     - money-field
+    - number-field
+    - radio-list
+    - pull-down
+    - pull-down-with-code
+    - yes-or-no
     - signature
+    - continue
+    - text-hint
+    - text-help
+    - note
+- Multiple choice:
+    - yesno
+    - noyes
+    - yesno-custom
+    - buttons
+    - choices
+    - buttons-labels
+    - buttons-icons
+    - buttons-code
+- Modifiers:
+    - help
+    - decoration
+    - prevent-going-back
+    - language
+    - generic-object
+    - comment
+    - audio
+    - video
+- Initial blocks:
+    - metadata
+    - objects
+    - include
+    - image-sets
+    - images
+    - imports
+    - modules
+    - terms
+    - interview-help
+    - def

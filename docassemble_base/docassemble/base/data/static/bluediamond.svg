@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   id="svg4157"
+   viewBox="0 0 461.66595 735.90654"
+   height="207.68918mm"
+   width="130.29239mm"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="bluediamond.svg">
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1366"
+     inkscape:window-height="715"
+     id="namedview13"
+     showgrid="false"
+     fit-margin-left="1"
+     fit-margin-top="1"
+     fit-margin-right="1"
+     fit-margin-bottom="1"
+     inkscape:zoom="0.32381115"
+     inkscape:cx="232.57715"
+     inkscape:cy="366.52367"
+     inkscape:window-x="0"
+     inkscape:window-y="31"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg4157" />
+  <defs
+     id="defs4159" />
+  <metadata
+     id="metadata4162">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(-607.12386,103.3501)"
+     id="layer1">
+    <g
+       style="fill:#68a4cc;fill-opacity:1;stroke:#008690;stroke-width:13.92000008;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="g4707">
+      <path
+         points="1065.2465,403.79188 1065.2465,575.73586 842.31352,629.01314 842.31352,521.40426 "
+         d="m 842.31352,521.40426 222.93298,-117.61238 0,171.94398 -222.93298,53.27728 z"
+         style="fill:#e9e9ff;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1"
+         id="path4719"
+         inkscape:connector-curvature="0" />
+      <path
+         points="610.66717,582.30386 842.31352,629.01314 842.31352,521.40426 610.66717,404.85606 "
+         d="m 610.66717,404.85606 0,177.4478 231.64635,46.70928 0,-107.60888 z"
+         style="fill:#353564;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1"
+         id="path4709"
+         inkscape:connector-curvature="0" />
+      <path
+         points="838.19492,-99.806795 1065.2465,403.79188 842.31352,521.40426 610.66717,404.85606 "
+         d="M 610.66717,404.85606 838.19492,-99.806795 1065.2465,403.79188 842.31352,521.40426 Z"
+         style="fill:#4d4d9f;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1"
+         id="path4711"
+         inkscape:connector-curvature="0" />
+      <path
+         points="838.19492,363.50059 1065.2465,575.73586 842.31352,629.01314 610.66717,582.30386 "
+         d="M 610.66717,582.30386 838.19492,363.50059 1065.2465,575.73586 842.31352,629.01314 Z"
+         style="fill:#afafde;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1"
+         id="path4717"
+         inkscape:connector-curvature="0" />
+      <path
+         points="838.19492,363.50059 1065.2465,575.73586 1065.2465,403.79188 838.19492,-99.806795 "
+         d="m 838.19492,-99.806795 0,463.307385 227.05158,212.23527 0,-171.94398 z"
+         style="fill:#d7d7ff;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1"
+         id="path4715"
+         inkscape:connector-curvature="0" />
+      <path
+         points="838.19492,-99.806795 838.19492,363.50059 610.66717,582.30386 610.66717,404.85606 "
+         d="m 610.66717,404.85606 227.52775,-504.662855 0,463.307385 -227.52775,218.80327 z"
+         style="fill:#8686bf;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1"
+         id="path4713"
+         inkscape:connector-curvature="0" />
+    </g>
+  </g>
+</svg>

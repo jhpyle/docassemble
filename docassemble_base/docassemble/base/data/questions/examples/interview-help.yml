@@ -1,0 +1,24 @@
+metadata:
+  title: Interview help
+---
+interview help:
+  heading: About this interview
+  content: |
+    Answer each question to the best of your
+    ability.  If you do not know the answer
+    to any question, panic.
+---
+question: |
+  Are you ready to start the interview?
+subquestion: |
+  Press "Help" to learn more about
+  this interview.
+yesno: ready_to_start
+---
+sets: all_done
+need: ready_to_start
+question: This is the end of the interview.
+---
+mandatory: true
+code: |
+  all_done

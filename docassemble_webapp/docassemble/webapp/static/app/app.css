@@ -81,6 +81,12 @@ a.sourceactive {
     color: #408E30
 }
 
+.daterm:hover {
+    cursor: pointer;
+    color: #408E30;
+    text-decoration: none;
+}
+
 .daiconfloat {
     image-orientation: from-image;
     float: right;
@@ -164,15 +170,6 @@ div.playgroundbox table td {
     font-size: 16px;
 }
 
-/*table.example_table {
-    border-collapse: separate;
-    border-spacing: 2px 2px;
-}*/
-
-/*table.example_table tr td {
-    vertical-align: top;
-}*/
-
 pre {
     margin: 0;
 }
@@ -189,22 +186,21 @@ img.example_screenshot {
     cursor: pointer;
 }
 
-.example-active {
-    font-weight: bold;
-}
-
 .example-heading {
     cursor: pointer;
-}
-
-ul.example-list {
-    list-style-type: none;
-    list-style-position: outside;
-    padding-left: 0px;
+    font-weight: bold;
 }
 
 ul.example-list ul {
     margin-left: 20px;
+}
+
+ul.example-list > li > a{
+    padding: 5px 15px;
+}
+
+ul.example-list > li {
+    margin-top: 0px;
 }
 
 ul.example-hidden {
@@ -215,8 +211,13 @@ div.example-source-col {
     min-height: 600px;
 }
 
+div.example-source-col div.highlight {
+    max-height: none;
+}
+
 a.example-copy {
-    font-size: 12px;
+    font-size: 14px;
+    float: right;
 }
 
 i.dainfosign {
@@ -233,4 +234,19 @@ table.daplaygroundtable td {
 span.daparenthetical {
     color: #777777;
     font-size: 14px;
+}
+
+.example-hider {
+    float: right;
+    cursor: pointer;
+}
+
+#example-source-before pre {
+    margin-bottom: 5px;
+    background-color: #e7e7e7;
+}
+
+#example-source-after pre {
+    margin-top: 5px;
+    background-color: #e7e7e7;
 }

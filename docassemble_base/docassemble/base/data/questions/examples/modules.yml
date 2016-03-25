@@ -1,0 +1,24 @@
+metadata:
+  title: Import names from module
+  comment: |
+    The json module provides the function
+    "dumps()"
+---
+modules:
+  - json
+---
+code: |
+  my_list = list()
+  my_list.append("apple")
+  my_list.append("orange")
+  my_list.append(["peach", "pear"])
+---
+sets: all_done
+question: All done
+subquestion: |
+  Your list in JSON format looks like
+  `${ dumps(my_list) }`
+---
+mandatory: true
+code: |
+  all_done

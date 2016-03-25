@@ -1,0 +1,19 @@
+metadata:
+  title: Continue button
+---
+field: target_variable
+question: |
+  Welcome to the interview.
+subquestion: |
+  When you are ready to begin, press
+  Continue.
+---
+sets: all_done
+question: Result of question
+subquestion: |
+  target_variable is:
+  "${ target_variable }"
+---
+mandatory: true
+code: |
+  all_done

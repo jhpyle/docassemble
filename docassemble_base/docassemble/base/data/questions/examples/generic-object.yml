@@ -1,0 +1,34 @@
+metadata:
+  title: Generic objects
+---
+generic object: Individual
+question: |
+  Does ${ x } like cats?
+yesno: x.likes_cats
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - person_one: Individual
+  - person_two: Individual
+---
+code: |
+  person_one.name.first = "John"
+  person_one.name.last = "Smith"
+  person_two.name.first = "Randy"
+  person_two.name.last = "Jones"
+---
+sets: all_done
+question: |
+  Cat report
+subquestion: |
+  % if person_one.likes_cats and person_two.likes_cats:
+  ${ person_one } and ${ person_two } both like cats.
+  % else:
+  Cats are not universally liked, it seems.
+  % endif
+---
+mandatory: true
+code: |
+  all_done

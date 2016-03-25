@@ -1,0 +1,26 @@
+metadata:
+  title: Note among fields
+---
+question: |
+  Tell me more about you.
+fields:
+  - Favorite fruit: fruit
+  - Favorite vegetable: veggie
+  - note: |
+      I understand that this next
+      question is particularly
+      difficult to answer, but please
+      bear with me.  We are almost
+      done.
+  - Favorite tree: tree
+---
+sets: all_done
+question: Result of question
+subquestion: |
+  If a ${ tree } falls in the forest,
+  and there is no ${ fruit } to hear
+  it, would you eat ${ veggie }?
+---
+mandatory: true
+code: |
+  all_done

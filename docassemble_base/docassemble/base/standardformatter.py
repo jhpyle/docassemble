@@ -29,6 +29,8 @@ def datatype_tag(datatypes):
 
 def icon_html(status, name, width_value=1.0, width_units='em'):
     the_image = status.question.interview.images.get(name, None)
+    if the_image.attribution is not None:
+        status.attributions.add(the_image.attribution)
     if the_image is None:
         return('')
     url = docassemble.base.filter.url_finder(str(the_image.package) + ':' + str(the_image.filename))
@@ -59,7 +61,8 @@ def signature_html(status, debug, root):
 def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     decorations = list()
     uses_audio_video = False
-    audio_video_text = ''
+    audio_text = ''
+    video_text = ''
     datatypes = dict()
     onchange = list()
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'help-inline'}
@@ -69,12 +72,12 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         uses_audio_video = True
         audio_urls = get_audio_urls(status.audiovideo)
         if len(audio_urls):
-            audio_video_text += '<div>\n' + audio_control(audio_urls) + '</div>\n'
+            audio_text += '<div>\n' + audio_control(audio_urls) + '</div>\n'
         video_urls = get_video_urls(status.audiovideo)
         if len(video_urls):
-            audio_video_text += '<div>\n' + video_control(video_urls) + '</div>\n'
+            video_text += '<div>\n' + video_control(video_urls) + '</div>\n'
     if status.using_screen_reader and 'question' in status.screen_reader_links:
-        audio_video_text += '<div>\n' + audio_control(status.screen_reader_links['question'], preload="none") + '</div>\n'
+        audio_text += '<div>\n' + audio_control(status.screen_reader_links['question'], preload="none") + '</div>\n'
     if status.decorations is not None:
         #sys.stderr.write("yoo1\n")
         for decoration in status.decorations:
@@ -109,10 +112,12 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     output = ""
     if status.question.question_type == "yesno":
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
-        output += indent_by(audio_video_text, 10) + '          <form action="' + root + '" id="daform" method="POST">\n            <fieldset>\n'
+        output += indent_by(audio_text, 10) + '          <form action="' + root + '" id="daform" method="POST">\n            <fieldset>\n'
         output += '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
             output += '              <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=16) + '              </div>\n'
+        if video_text:
+            output += indent_by(video_text, 10)
         output += '              <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
         output += '              <div class="btn-toolbar">\n                <button class="btn btn-primary btn-lg " name="' + status.question.fields[0].saveas + '" type="submit" value="True">Yes</button>\n                <button class="btn btn-lg btn-info" name="' + status.question.fields[0].saveas + '" type="submit" value="False">No</button>\n              </div>\n'
         #output += question_name_tag(status.question)
@@ -121,10 +126,12 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         output += '            </fieldset>\n          </form>\n'
     elif status.question.question_type == "noyes":
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
-        output += indent_by(audio_video_text, 10) + '          <form action="' + root + '" id="daform" method="POST">\n            <fieldset>\n'
+        output += indent_by(audio_text, 10) + '          <form action="' + root + '" id="daform" method="POST">\n            <fieldset>\n'
         output += '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
             output += '              <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=16) + '              </div>\n'
+        if video_text:
+            output += indent_by(video_text, 10)
         output += '              <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
         output += '              <div class="btn-toolbar">\n                <button class="btn btn-primary btn-lg" name="' + status.question.fields[0].saveas + '" type="submit" value="False">Yes</button>\n                <button class="btn btn-lg btn-info" name="' + status.question.fields[0].saveas + '" type="submit" value="True">No</button>\n              </div>\n'
         output += tracker_tag(status)
@@ -212,11 +219,13 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                     fieldlist.append('              <div class="form-group' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>\n')
                 else:
                     fieldlist.append('              <div class="form-group' + req_tag +'"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + field.label + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>\n')
-        output += indent_by(audio_video_text, 10) + '          <form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '>\n            <fieldset>\n'
+        output += indent_by(audio_text, 10) + '          <form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '>\n            <fieldset>\n'
         output += '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
             output += '              <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=16) + '              </div>\n'
         #output += '<div class="row">'
+        if video_text:
+            output += indent_by(video_text, 10)
         if (len(fieldlist)):
             output += "".join(fieldlist)
         else:
@@ -240,10 +249,12 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         output += '            </fieldset>\n          </form>\n'
     elif status.question.question_type == "settrue":
         datatypes[status.question.fields[0].saveas] = "boolean"
-        output += indent_by(audio_video_text, 10) + '          <form action="' + root + '" id="daform" method="POST">\n            <fieldset>\n'
+        output += indent_by(audio_text, 10) + '          <form action="' + root + '" id="daform" method="POST">\n            <fieldset>\n'
         output += '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
             output += '              <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=16) + '              </div>\n'
+        if video_text:
+            output += indent_by(video_text, 10)
         output += '              <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
         output += '              <div class="form-actions"><button type="submit" class="btn btn-lg btn-primary" name="' + status.question.fields[0].saveas + '" value="True"> ' + word('Continue') + '</button></div>\n'
         #output += question_name_tag(status.question)
@@ -253,10 +264,12 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     elif status.question.question_type == "multiple_choice":
         if hasattr(status.question.fields[0], 'datatype'):
             datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
-        output += indent_by(audio_video_text, 10) + '          <form action="' + root + '" id="daform" method="POST">\n            <fieldset>\n'
+        output += indent_by(audio_text, 10) + '          <form action="' + root + '" id="daform" method="POST">\n            <fieldset>\n'
         output += '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
             output += '              <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=16) + '              </div>\n'
+        if video_text:
+            output += indent_by(video_text, 10)
         output += '              <div id="errorcontainer" class="alert alert-danger" role="alert" style="display:none"></div>\n'
         output += '              <p class="sr-only">' + word('Your choices are:') + '</p>\n'
         validation_rules['errorElement'] = "span"
@@ -373,14 +386,18 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         output += datatype_tag(datatypes)
         output += '            </fieldset>\n          </form>\n'
     elif status.question.question_type == 'deadend':
-        output += indent_by(audio_video_text, 10) + '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
+        output += indent_by(audio_text, 10) + '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
             output += '              <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=16) + '              </div>\n'
+        if video_text:
+            output += indent_by(video_text, 10)
     else:
-        output += indent_by(audio_video_text, 10) + '          <form action="' + root + '" id="daform" class="form-horizontal" method="POST">\n            <fieldset>\n'
+        output += indent_by(audio_text, 10) + '          <form action="' + root + '" id="daform" class="form-horizontal" method="POST">\n            <fieldset>\n'
         output += '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
             output += '              <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=16) + '              </div>\n'
+        if video_text:
+            output += indent_by(video_text, 10)
         output += '              <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
         output += '              <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button></div>\n'
         #output += question_name_tag(status.question)
@@ -755,15 +772,15 @@ def input_for(status, field, wide=False):
                 defaultstring = ''
             input_type = field.datatype
             step_string = ''
-            if field.datatype in ['integer', 'float', 'currency']:
+            if field.datatype in ['integer', 'float', 'currency', 'number']:
                 input_type = 'number'
                 if field.datatype == 'integer':
                     step_string = ' step="1"'
-                if field.datatype == 'float':
+                if field.datatype == 'float' or field.datatype == 'number':
                     step_string = ' step="0.01"'
                 if field.datatype == 'currency':
                     step_string = ' step="0.01"'
-                output += '<div class="input-group"><span class="input-group-addon" id="addon-' + field.saveas + '">' + currency_symbol() + '</span>'
+                    output += '<div class="input-group"><span class="input-group-addon" id="addon-' + field.saveas + '">' + currency_symbol() + '</span>'
             output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control" type="' + input_type + '"' + step_string + ' name="' + field.saveas + '" id="' + field.saveas + '"'
             if field.datatype == 'currency':
                 output += ' aria-describedby="addon-' + field.saveas + '"/></div>'

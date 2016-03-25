@@ -1,0 +1,27 @@
+question: |
+  What is your docket number?
+fields:
+  - Docket Number: docket_number
+---
+metadata:
+  title: |
+    Interview title
+  short title: |
+    The title
+  description: |
+    This interview produces a Petition To
+    Postpone Sheriff Sale.
+  authors:
+    - name: John Doe
+      organization: Example, Inc.
+  revision_date: 2016-03-22
+---
+sets: all_done
+question: End of interview
+subquestion: |
+  Your docket number is
+  "${ docket_number }."
+---
+mandatory: true
+code: |
+  all_done

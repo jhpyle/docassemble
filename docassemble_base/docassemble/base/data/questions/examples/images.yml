@@ -1,0 +1,19 @@
+metadata:
+  title: Images without attribution
+---
+images:
+  star: star.svg
+  diamond: bluediamond.svg
+---
+sets: all_done
+decoration: diamond
+question: |
+  Welcome to Example, Inc.
+subquestion: |
+  We are the rock :star:s of the on-line
+  interviewing industry.
+---
+mandatory: true
+code: |
+  all_done
+  

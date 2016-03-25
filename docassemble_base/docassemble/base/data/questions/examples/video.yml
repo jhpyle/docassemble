@@ -1,0 +1,19 @@
+metadata:
+  title: Video
+---
+field: ready_to_proceed
+question: |
+  Welcome to the interview.
+subquestion: |
+  Please watch this introductory video
+  before proceeding with the interview.
+video: |
+  [YOUTUBE 9bZkp7q19f0]
+---
+sets: all_done
+need: ready_to_proceed
+question: This concludes the interview.
+---
+mandatory: true
+code: |
+  all_done

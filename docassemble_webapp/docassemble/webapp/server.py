@@ -86,6 +86,7 @@ default_yaml_filename = daconfig.get('default_interview', 'docassemble.demo:data
 
 document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
 fix_tabs = re.compile(r'\t')
+fix_initial = re.compile(r'^---\n')
 
 if 'mail' not in daconfig:
     daconfig['mail'] = dict()
@@ -762,24 +763,31 @@ def proc_example_list(example_list, examples):
         example_file = 'docassemble.base:data/questions/examples/' + example + '.yml'
         result['image'] = url_for('static', filename='examples/' + example + ".png")
         file_info = get_info_from_file_reference(example_file)
+        start_block = 1
+        end_block = 2
         if 'fullpath' not in file_info:
             continue
-        with open(file_info['fullpath'], 'rU') as fp:
-            content = fp.read()
-            content = fix_tabs.sub('  ', content)
-            blocks = document_match.split(content)
-            if len(blocks):
-                result['source'] = blocks[0]
-                result['html'] = highlight(blocks[0], YamlLexer(), HtmlFormatter())
         try:
             interview = docassemble.base.interview_cache.get_interview(example_file)
             if len(interview.metadata):
                 metadata = interview.metadata[0]
                 result['title'] = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
+                start_block = int(metadata.get('example start', 1))
+                end_block = int(metadata.get('example end', start_block)) + 1
             else:
                 continue
         except:
             continue
+        with open(file_info['fullpath'], 'rU') as fp:
+            content = fp.read().decode('utf8')
+            content = fix_tabs.sub('  ', content)
+            content = fix_initial.sub('', content)
+            blocks = map(lambda x: x.strip(), document_match.split(content))
+            if len(blocks):
+                result['before_html'] = highlight("\n---\n".join(blocks[0:start_block]) + "\n---", YamlLexer(), HtmlFormatter())
+                result['after_html'] = highlight("---\n" + "\n---\n".join(blocks[end_block:len(blocks)]), YamlLexer(), HtmlFormatter())
+                result['source'] = "\n---\n".join(blocks[start_block:end_block])
+                result['html'] = highlight(result['source'], YamlLexer(), HtmlFormatter())
         examples.append(result)
     
 def get_examples():
@@ -788,7 +796,7 @@ def get_examples():
     if 'fullpath' in example_list_file:
         example_list = list()
         with open(example_list_file['fullpath'], 'rU') as fp:
-            content = fp.read()
+            content = fp.read().decode('utf8')
             content = fix_tabs.sub('  ', content)
             proc_example_list(yaml.load(content), examples)
     #logmessage("Examples: " + str(examples))
@@ -1569,7 +1577,7 @@ def index():
           $('.tabs a:last').tab('show')
         })
         $(function () {
-          $('[data-toggle="popover"]').popover()
+          $('[data-toggle="popover"]').popover({trigger: 'click focus'})
         })
         $("#daform input, #daform textarea, #daform select").first().focus();
         $(".to-labelauty").labelauty({ width: "100%" });
@@ -2658,7 +2666,7 @@ def config_page():
                     key = s3.get_key('config.yml')
                     key.set_contents_from_string(form.config_content.data)
                 with open(daconfig['config_file'], 'w') as fp:
-                    fp.write(form.config_content.data)
+                    fp.write(form.config_content.data.encode('utf8'))
                     flash(word('The configuration file was saved.'), 'success')
                 restart_wsgi()
                 return redirect(url_for('interview_list'))
@@ -2670,7 +2678,7 @@ def config_page():
             return redirect(url_for('index'))
     if ok:
         with open(daconfig['config_file'], 'rU') as fp:
-            content = fp.read()
+            content = fp.read().decode('utf8')
     if content is None:
         abort(404)
     return render_template('pages/config.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = ' + json.dumps(content) + ';\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n    </script>'), form=form), 200
@@ -2686,7 +2694,7 @@ def flash_as_html(message, message_type="info"):
     return output
 
 def make_example_html(examples, first_id, example_html, data_dict):
-    example_html.append('          <ul class="example-list example-hidden">\n')
+    example_html.append('          <ul class="nav nav-pills nav-stacked example-list example-hidden">\n')
     for example in examples:
         if 'list' in example:
             example_html.append('            <li><a class="example-heading">' + example['title'] + '</a>')
@@ -2767,7 +2775,7 @@ def playground_files():
                         os.remove(old_filename)
                 filename = os.path.join(area.directory, the_file)
                 with open(filename, 'w') as fp:
-                    fp.write(formtwo.file_content.data)
+                    fp.write(formtwo.file_content.data.encode('utf8'))
                 the_time = time.strftime('%H:%M:%S %Z', time.localtime())
                 flash(word('The file was saved at') + ' ' + the_time + '.', 'success')
             else:
@@ -2799,7 +2807,7 @@ def playground_files():
     if filename is not None:
         area.finalize()
         with open(filename, 'rU') as fp:
-            content = fp.read()
+            content = fp.read().decode('utf8')
     elif formtwo.file_content.data:
         content = formtwo.file_content.data
     else:
@@ -2885,12 +2893,12 @@ def playground_page():
                     files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f))])
             the_time = time.strftime('%H:%M:%S %Z', time.localtime())
             with open(filename, 'w') as fp:
-                fp.write(form.playground_content.data)
+                fp.write(form.playground_content.data.encode('utf8'))
             if form.submit.data:
-                flash(word('The playground was saved at') + ' ' + the_time + '.', 'success')
+                flash(word('Saved at') + ' ' + the_time + '.', 'success')
             else:
                 playground.finalize()
-                flash_message = flash_as_html(word('The playground was saved at') + ' ' + the_time + '.  ' + word('Running in other tab.'), message_type='success')
+                flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Running in other tab.'), message_type='success')
                 return jsonify(url=url_for('index', i='/playground/' + the_file), flash_message=flash_message)
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
@@ -2900,7 +2908,7 @@ def playground_page():
         with open(filename, 'rU') as fp:
             form.original_playground_name.data = the_file
             form.playground_name.data = the_file
-            content = fp.read()
+            content = fp.read().decode('utf8')
             #if not form.playground_content.data:
                 #form.playground_content.data = content
         interview_source = docassemble.base.parse.interview_source_from_string('/playground/' + the_file)
@@ -2941,6 +2949,7 @@ def playground_page():
         names_used.add(val)
         name_info[val] = {'type': type(user_dict[val]).__name__}
     names_used.discard('x')
+    names_used.discard('_internal')
     ajax = """
 $("#daRun").click(function(event){
   daCodeMirror.save();
@@ -2972,16 +2981,24 @@ var exampleData;
 function activateExample(id){
   var info = exampleData[id];
   $("#example-source").html(info['html']);
+  $("#example-source-before").html(info['before_html']);
+  $("#example-source-after").html(info['after_html']);
   $("#example-image-link").attr("href", info['interview']);
   $("#example-image").attr("src", info['image']);
   $(".example-list").addClass("example-hidden");
   $(".example-link").removeClass("example-active");
+  $(".example-link").parent().removeClass("active");
   $(".example-link").each(function(){
     if ($(this).data("example") == id){
       $(this).addClass("example-active");
+      $(this).parent().addClass("active");
       $(this).parents(".example-list").removeClass("example-hidden");
     }
   });
+  $("#hide-full-example").addClass("invisible");
+  $("#show-full-example").removeClass("invisible");
+  $("#example-source-before").addClass("invisible");
+  $("#example-source-after").addClass("invisible");
 }
 
 $(".example-link").on("click", function(){
@@ -2993,6 +3010,7 @@ $(".example-copy").on("click", function(){
   if (daCodeMirror.somethingSelected()){
     daCodeMirror.replaceSelection("");
   }
+  var id = $(".example-active").data("example");
   var curPos = daCodeMirror.getCursor();
   var notFound = 1;
   var insertLine = daCodeMirror.lastLine();
@@ -3005,9 +3023,14 @@ $(".example-copy").on("click", function(){
       }
     }
   });
-  var id = $(".example-active").data("example");
-  daCodeMirror.setSelection({'line': insertLine, 'ch': 0});
-  daCodeMirror.replaceSelection("---\\n" + exampleData[id]['source'], "around");
+  if (notFound){
+    daCodeMirror.setSelection({'line': insertLine, 'ch': null});
+    daCodeMirror.replaceSelection("\\n---\\n" + exampleData[id]['source'] + "\\n", "around");
+  }
+  else{
+    daCodeMirror.setSelection({'line': insertLine, 'ch': 0});
+    daCodeMirror.replaceSelection("---\\n" + exampleData[id]['source'] + "\\n", "around");
+  }
   daCodeMirror.focus();
 });
 
@@ -3029,16 +3052,34 @@ $(".example-heading").on("click", function(){
 $(function () {
   $('[data-toggle="popover"]').popover({trigger: 'focus'})
 })
+
+$("#show-full-example").on("click", function(){
+  var id = $(".example-active").data("example");
+  var info = exampleData[id];
+  $(this).addClass("invisible");
+  $("#hide-full-example").removeClass("invisible");
+  $("#example-source-before").removeClass("invisible");
+  $("#example-source-after").removeClass("invisible");
+});
+
+$("#hide-full-example").on("click", function(){
+  var id = $(".example-active").data("example");
+  var info = exampleData[id];
+  $(this).addClass("invisible");
+  $("#show-full-example").removeClass("invisible");
+  $("#example-source-before").addClass("invisible");
+  $("#example-source-after").addClass("invisible");
+});
 """
     example_html = list()
-    example_html.append('        <div class="col-md-2">\n          <h4>' + word("Example") +'</h4>')
+    example_html.append('        <div class="col-md-2">\n          <h4>' + word("Example blocks") +'</h4>')
     first_id = list()
     data_dict = dict()
     make_example_html(get_examples(), first_id, example_html, data_dict)
     example_html.append('        </div>')
     example_html.append('        <div class="col-md-6"><h4>' + word("Preview") + '</h4><a href="#" target="_blank" id="example-image-link"><img class="example_screenshot" id="example-image"></a></div>')
-    example_html.append('        <div class="col-md-4 example-source-col"><h4>' + word('Source') + ' <a class="label label-success example-copy">' + word('Insert') + '</a></h4><div id="example-source"></div></div>')
-    return render_template('pages/playground.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      nameInfo = ' + str(json.dumps(name_info)) + ';      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, current_file=the_file, content=content, names=sorted(names_used), functions=sorted(functions), modules=sorted(modules), classes=sorted(classes), name_info=name_info, example_html="\n".join(example_html)), 200
+    example_html.append('        <div class="col-md-4 example-source-col"><h4>' + word('Source') + ' <a class="label label-success example-copy">' + word('Insert') + '</a></h4><div id="example-source-before" class="invisible"></div><div id="example-source"></div><div id="example-source-after" class="invisible"></div><div><a class="example-hider" id="show-full-example">' + word("Show context of example") + '</a><a class="example-hider invisible" id="hide-full-example">' + word("Hide context of example") + '</a></div></div>')
+    return render_template('pages/playground.html', page_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      nameInfo = ' + str(json.dumps(name_info)) + ';      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, current_file=the_file, content=content, names=sorted(names_used), functions=sorted(functions), modules=sorted(modules), classes=sorted(classes), name_info=name_info, example_html="\n".join(example_html)), 200
 
 @app.route('/packages', methods=['GET', 'POST'])
 @login_required

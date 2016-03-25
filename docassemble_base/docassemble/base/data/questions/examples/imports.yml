@@ -1,0 +1,27 @@
+metadata:
+  title: Import Python module
+---
+imports:
+  - pygeocoder
+---
+code: |
+  user_address = "123 S. Broad St, Philadelphia, PA"
+---
+code: |
+  results = pygeocoder.Geocoder().geocode(user_address)
+  if len(results):
+    user_county = results[0].county
+  else:
+    user_county = "unknown"
+  del results
+---
+sets: all_done
+question: Located address
+subquestion: |
+  The address "${ user_address }" is
+  located in ${ user_county }.
+---
+mandatory: true
+code:
+  all_done
+  

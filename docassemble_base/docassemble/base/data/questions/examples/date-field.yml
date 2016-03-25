@@ -1,17 +1,17 @@
+metadata:
+  title: Date
+---
 question: |
   What is your date of birth?
 fields:
   - Birthdate: target_variable
     datatype: date
 ---
-metadata:
-  title: Date
----
-mandatory: true
-code: |
-  all_done
----
 sets: all_done
 question: Result of question
 subquestion: |
   target_variable is: "${ target_variable }"
+---
+mandatory: true
+code: |
+  all_done

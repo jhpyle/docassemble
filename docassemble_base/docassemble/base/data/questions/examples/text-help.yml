@@ -1,0 +1,27 @@
+metadata:
+  title: Help on label
+---
+question: |
+  What are your favorite things to eat?
+subquestion: |
+  If you don't know what a vegetable
+  or fruit is, click the green text.
+fields:
+  - Vegetable: target_variable
+    help: |
+      A plant.
+  - Fruit: other_target_variable
+    help: |
+      The pulpy, edible seed vessels
+      of certain plants.
+---
+sets: all_done
+question: Result of question
+subquestion: |
+  target_variable is:
+  "${ target_variable }"
+---
+mandatory: true
+code: |
+  all_done
+

@@ -1,0 +1,24 @@
+metadata:
+  title: Buttons that run code
+---
+question: What kind of car do you want?
+buttons:
+  - Ford Focus:
+      code: |
+        car_model = "Focus"
+        car_make = "Ford"
+  - Toyota Camry:
+      code: |
+        car_model = "Camry"
+        car_make = "Toyota"
+---
+sets: all_done
+question: How to buy a car
+subquestion: |
+  You need to go to a ${ car_make }
+  dealership and ask if they have a
+  ${ car_model } for sale.
+---
+mandatory: true
+code: |
+  all_done

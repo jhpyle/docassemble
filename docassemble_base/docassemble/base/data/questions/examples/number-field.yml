@@ -1,0 +1,25 @@
+metadata:
+  title: Numbers
+---
+question: |
+  Describe your possessions.
+fields:
+  - Number of cars: number_cars
+    datatype: integer
+  - Ounces of gold: gold_ounces
+    datatype: number
+---
+sets: all_done
+question: Result of question
+subquestion: |
+  % if int(number_cars) == 1:
+  You have only one car.
+  % else:
+  You have ${ number_cars } cars.
+  % endif
+  You also have ${ gold_ounces }
+  ounces of gold.
+---
+mandatory: true
+code: |
+  all_done

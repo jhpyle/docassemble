@@ -1,0 +1,20 @@
+metadata:
+  title: Comments
+---
+question: Do you like turnips?
+yesno: likes_turnips
+comment: |
+  This question may be the most important
+  question of the interview!
+---
+sets: all_done
+question: |
+  You
+  % if not likes_turnips:
+  do not
+  % endif
+  like turnips.
+---
+mandatory: true
+code: |
+  all_done

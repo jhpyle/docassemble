@@ -1,0 +1,45 @@
+metadata:
+  title: Markdown
+---
+question: |
+  Introduction to Markdown
+subquestion: |
+  Markdown allows you to express
+  formatting in plain text.
+  
+  # I am a heading
+
+  Write in *italic text* or even
+  **bold text**.
+
+  ## I am a subheading
+
+  ### I am a smaller subheading
+
+  To block quote,
+
+  > you can do this.
+
+  Insert an image:
+
+  ![Markdown logo](https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Markdown-mark.svg/208px-Markdown-mark.svg.png)
+
+  Here is a bullet list:
+
+  * Larry;
+  * Curly; and
+  * Moe
+
+  Here is a numbered list:
+
+  1. Buy groceries.
+  2. Get the car inspected.
+  3. Take over the world!
+  
+  You can [Google](http://google.com)
+  "markdown" to learn more.
+sets: all_done
+---
+mandatory: true
+code: |
+  all_done

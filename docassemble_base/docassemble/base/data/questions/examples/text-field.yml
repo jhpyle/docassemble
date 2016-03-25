@@ -1,3 +1,6 @@
+metadata:
+  title: Text
+---
 question: |
   What are your favorite things to eat?
 subquestion: |
@@ -6,15 +9,12 @@ fields:
   - Vegetable: target_variable
   - Fruit: other_target_variable
 ---
-metadata:
-  title: Text
----
-mandatory: true
-code: |
-  all_done
----
 sets: all_done
 question: Result of question
 subquestion: |
   target_variable is: "${ target_variable }"
+---
+mandatory: true
+code: |
+  all_done
 

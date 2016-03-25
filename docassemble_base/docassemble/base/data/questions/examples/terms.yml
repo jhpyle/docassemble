@@ -1,0 +1,29 @@
+metadata:
+  title: Vocabulary
+---
+terms:
+  creeper: |
+    A tall green creature that explodes if
+    you get too close.
+  zombie pigman: |
+    A harmless creature who carries a gold
+    sword.
+---
+question: Have you ever met a creeper?
+subquestion: |
+  If you have met a zombie pigman, you
+  have almost certainly met a creeper.
+yesno: met_a_creeper
+---
+sets: all_done
+question: Thank you!
+subquestion: |
+  % if met_a_creeper:
+  You are not a noob!
+  % else:
+  You clearly need to play more Minecraft.
+  % endif
+---
+mandatory: true
+code: |
+  all_done

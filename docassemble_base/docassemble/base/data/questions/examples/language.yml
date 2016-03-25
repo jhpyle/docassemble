@@ -1,0 +1,40 @@
+metadata:
+  title: Language
+---
+language: es
+question: |
+  ¿Cuál es el significado de la vida?
+fields:
+  - Significado de la Vida: meaning_life
+---
+question: |
+  What is the meaning of life?
+fields:
+  - Meaning of life: meaning_life
+---
+question: |
+  What language do you speak?
+field: language
+choices:
+  - English: en
+  - Español: es
+---
+modules:
+  - docassemble.base.util
+---
+sets: all_done
+question: |
+  The meaning of life
+subquestion: |
+  The interviewee said the meaning of life
+  is:
+
+  ${ meaning_life }
+---
+initial: true
+code: |
+  set_language(language)
+---
+mandatory: true
+code: |
+  all_done

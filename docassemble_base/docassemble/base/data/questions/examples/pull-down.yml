@@ -1,0 +1,28 @@
+metadata:
+  title: Pulldown
+---
+question: |
+  Describe yourself.
+fields:
+  - Level of education: education
+    choices:
+      - High School
+      - College
+      - Graduate School
+  - Favorite fruit: favorite_fruit
+    choices:
+      - Apple: apples
+      - Pear: pears
+      - Strawberry: strawberries
+---
+sets: all_done
+question: Result of question
+subquestion: |
+  Your favorite fruit is
+  ${ favorite_fruit }, which is not
+  surprising given that you have only
+  a ${ education} education.
+---
+mandatory: true
+code: |
+  all_done

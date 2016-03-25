@@ -1,0 +1,34 @@
+metadata:
+  title: Buttons with icons
+---
+question: |
+  What is the most important question
+  to ask?
+field: interrogatory
+buttons:
+  - "When?": when
+    image: calendar
+  - "Where?": where
+    image: map
+---    
+image sets:
+  freepik:
+    attribution: |
+      Icon made by [Freepik](http://www.flaticon.com/authors/freepik)
+    images:
+      calendar: calendar146.svg
+      map: map32.svg
+---
+question: |
+  In that case, ${ interrogatory }
+  were you born?
+fields:
+  - no label: target_variable
+---
+sets: all_done
+question: |
+  You were born in ${ target_variable }.
+---
+mandatory: true
+code: |
+  all_done

@@ -1,0 +1,37 @@
+metadata:
+  title: Pulldown with code
+---
+question: |
+  Describe yourself.
+fields:
+  - Level of education: education
+    choices:
+      - High School
+      - College
+      - Graduate School
+  - State of birth: birth_state
+    code: |
+      us.states.mapping('abbr', 'name')
+  - Gender: gender
+    code: |
+      {'m': 'Male', 'f': 'Female', 'o': 'Other'}
+---
+imports:
+  - us
+---
+sets: all_done
+question: Result of question
+subquestion: |
+  % if gender == 'm':
+  Dear Sir,
+  % elif gender == 'f':
+  Dear Madam,
+  % endif
+  
+  You have a ${ education} education
+  and you were born in
+  ${ birth_state }.
+---
+mandatory: true
+code: |
+  all_done

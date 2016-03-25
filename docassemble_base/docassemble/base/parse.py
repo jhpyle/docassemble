@@ -359,7 +359,7 @@ class Question:
         if num_directives > 1:
             raise DAError("There can only be one directive in a question.  You had more than one.\nThe directives are yesno, noyes, fields, buttons, choices, and signature." + self.idebug(data))
         if 'features' in data:
-            if type(usedef) is not dict:
+            if type(data['features']) is not dict:
                 raise DAError("A features section must be a dictionary." + self.idebug(data))
             if 'progress bar' in data['features'] and data['features']['progress bar']:
                 self.interview.use_progress_bar = True
@@ -915,7 +915,7 @@ class Question:
                                 field_info['selections'] = {'compute': compile(field[key], '', 'eval'), 'sourcecode': field[key]}
                             elif key == 'choices':
                                 field_info['choicetype'] = 'manual'
-                                field_info['selections'] = process_selections(field[key])
+                                field_info['selections'] = process_selections_manual(field[key])
                             elif key == 'note':
                                 field_info['type'] = 'note'
                                 if 'extras' not in field_info:
@@ -1221,8 +1221,8 @@ class Question:
         if type(the_list) is not list:
             raise DAError("Multiple choices need to be provided in list form, not dictionary form.  " + self.idebug(the_list))
         for the_dict in the_list:
-            if type(the_dict) is str:
-                the_dict = {the_dict: the_dict}
+            if type(the_dict) not in [dict, list]:
+                the_dict = {str(the_dict): the_dict}
             elif type(the_dict) is not dict:
                 raise DAError("Unknown data type for the_dict in parse_fields.  " + self.idebug(the_list))
             result_dict = dict()
@@ -1840,7 +1840,7 @@ def find_fields_in(code, fields_used, names_used):
         if item not in definables:
             names_used.add(item)
 
-def process_selections(data):
+def process_selections(data, manual=False):
     result = []
     if type(data) is list:
         for entry in data:
@@ -1854,6 +1854,24 @@ def process_selections(data):
     elif type(data) is dict:
         for key, value in sorted(data.items(), key=operator.itemgetter(1)):
             result.append([key, value])
+    else:
+        raise DAError("Unknown data type in choices selection")
+    return(result)
+
+def process_selections_manual(data):
+    result = []
+    if type(data) is list:
+        for entry in data:
+            if type(entry) is dict:
+                for key in entry:
+                    result.append([entry[key], key])
+            if type(entry) is list:
+                result.append([entry[0], entry[1]])
+            elif type(entry) is str or type(entry) is unicode:
+                result.append([entry, entry])
+    elif type(data) is dict:
+        for key, value in sorted(data.items(), key=operator.itemgetter(1)):
+            result.append([value, key])
     else:
         raise DAError("Unknown data type in choices selection")
     return(result)

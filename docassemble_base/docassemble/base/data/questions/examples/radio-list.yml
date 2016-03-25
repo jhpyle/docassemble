@@ -1,0 +1,32 @@
+metadata:
+  title: Radio buttons
+---
+question: |
+  Describe your car.
+fields:
+  - Number of wheels: wheels_on_car
+    datatype: integer
+  - Type: car_type
+    datatype: radio
+    choices:
+      - Convertible
+      - Hatchback
+      - Sedan
+  - Model: car_country
+    datatype: radio
+    choices:
+      - BMW: Germany
+      - Buick: United States
+      - Honda: Japan
+      - Toyota: Japan
+---
+sets: all_done
+question: Result of question
+subquestion: |
+  Your ${ car_type }, which is from
+  ${ car_country }, has
+  ${ wheels_on_car } wheels.
+---
+mandatory: true
+code: |
+  all_done

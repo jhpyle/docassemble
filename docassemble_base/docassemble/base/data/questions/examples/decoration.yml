@@ -1,0 +1,29 @@
+metadata:
+  title: Icon in corner
+---
+decoration: kids
+question:
+  Do you have children?
+yesno: has_children
+---
+image sets:
+  freepik:
+    attribution: |
+      Icon made by [Freepik](http://www.flaticon.com/authors/freepik)
+    images:
+      kids: children2.svg
+      money: commerce.svg
+---
+sets: all_done
+question: |
+  All done
+subquestion: |
+  % if has_children:
+  You said you have children.
+  % else:
+  You said you did not have children.
+  % endif
+---
+mandatory: true
+code: |
+  all_done
