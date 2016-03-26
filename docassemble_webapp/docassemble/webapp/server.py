@@ -2720,13 +2720,25 @@ def playground_static(filename):
         return(send_file(filename, mimetype=str(mimetype)))
     abort(404)
 
+@app.route('/playgroundtemplate/<filename>', methods=['GET'])
+@login_required
+@roles_required(['developer', 'admin'])
+def playground_template(filename):
+    filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', filename)
+    area = SavedFile(current_user.id, fix=True, section='playgroundtemplate')
+    filename = os.path.join(area.directory, filename)
+    if os.path.isfile(filename):
+        extension, mimetype = get_ext_and_mimetype(filename)
+        return(send_file(filename, mimetype=str(mimetype)))
+    abort(404)
+
 @app.route('/playgroundfiles', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_files():
     form = PlaygroundFilesForm(request.form, current_user)
     formtwo = PlaygroundFilesEditForm(request.form, current_user)
-    section = request.args.get('section', 'templates')
+    section = request.args.get('section', 'template')
     the_file = request.args.get('file', '')
     scroll = False
     if the_file:
