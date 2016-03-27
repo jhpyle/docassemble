@@ -1,0 +1,41 @@
+metadata:
+  title: Action
+  example start: 2
+  example end: 4
+---
+mandatory: true
+code: |
+  color = 'blue'
+---
+modules:
+  - docassemble.base.util
+---
+initial: true
+code: |
+  process_action(current_info)
+---
+question: |
+  Review your information.
+subquestion: |
+  Your favorite color is
+  ${ color }.
+  [Change this]( ${ url_action('color') } )
+field: info_is_verified
+---
+question: |
+  What is your favorite color?
+fields:
+  - Favorite Color: color
+---
+question: |
+  Information submitted.
+subquestion: |
+  % if info_is_verified:
+  You have submitted the fact that
+  your favorite color is ${ color }.
+  % endif
+sets: all_done
+---
+mandatory: true
+code: |
+  all_done

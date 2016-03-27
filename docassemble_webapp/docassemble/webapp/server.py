@@ -387,7 +387,7 @@ def get_info_from_file_reference(file_reference, **kwargs):
                 result['fullpath'] = result['path'] + '.' + result['extension']
                 ext_type, result['mimetype'] = get_ext_and_mimetype(result['fullpath'])
             else:
-                #logmessage("Did not find file " + result['path'] + '.' + convert[result['extension']])
+                logmessage("Did not find file " + result['path'] + '.' + convert[result['extension']])
                 return dict()
         #logmessage("Full path is " + result['fullpath'])
         if os.path.isfile(result['fullpath']):
@@ -1167,7 +1167,7 @@ def index():
         logmessage("Got e-mail request for " + str(question_number) + " with e-mail " + str(attachment_email_address) + " and rtf inclusion of " + str(include_editable) + " and using yaml file " + yaml_filename)
         the_user_dict = get_attachment_info(user_code, question_number, yaml_filename, secret)
         if the_user_dict is not None:
-            logmessage("the_user_dict is not none!")
+            #logmessage("the_user_dict is not none!")
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action))
             interview.assemble(the_user_dict, interview_status)
@@ -2771,11 +2771,11 @@ def playground_files():
     if request.method == 'POST':
         if 'uploadfile' in request.files and request.files['uploadfile'].filename:
             try:
-                the_file = request.files['uploadfile']
-                filename = secure_filename(the_file.filename)
+                up_file = request.files['uploadfile']
+                filename = secure_filename(up_file.filename)
                 filename = re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', filename)
                 filename = os.path.join(area.directory, filename)
-                the_file.save(filename)
+                up_file.save(filename)
                 area.finalize()
             except Exception as errMess:
                 flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")

@@ -1,5 +1,11 @@
-- Markup:
+- Formatting:
     - markdown
+- Documents:
+    - document
+    - page-numbers
+    - alignment
+    - single-spacing
+    - formatting
 - Fields:
     - text-field
     - optional-field
@@ -45,3 +51,10 @@
     - terms
     - interview-help
     - def
+- Linguistic:
+    - capitalize
+    - lists
+    - currency
+- Advanced:
+    - actions
+    - actions-parameters

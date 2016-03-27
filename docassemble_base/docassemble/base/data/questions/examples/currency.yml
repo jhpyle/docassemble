@@ -1,0 +1,18 @@
+metadata:
+  title: Currency
+  example start: 1
+  examble end: 2
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  If you sold ${ number } fish for
+  a dollar each, you would get
+  ${ currency(number) }.
+sets: all_done
+---
+mandatory: true
+code: |
+  number = 3.5
+  all_done

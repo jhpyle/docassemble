@@ -1,0 +1,25 @@
+metadata:
+  title: Adding page numbers
+---
+question: Here is your document.
+subquestion: It has page numbers.
+attachments:
+  - name: Summary of Benefits
+    filename: benefits_summary
+    metadata:
+      FirstFooterRight: Page [PAGENUM]
+      FooterRight: Page [PAGENUM]
+    content: |
+      [BOLDCENTER] Summary of Benefits
+
+      ${ client } is entitled to
+      benefits plan ${ benefits }.
+sets: all_done
+---
+code: |
+  client = "Jane Doe"
+  benefits = "G-432"
+---
+mandatory: true
+code: |
+  all_done

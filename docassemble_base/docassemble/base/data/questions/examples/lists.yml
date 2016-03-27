@@ -1,0 +1,25 @@
+metadata:
+  title: Lists
+  example start: 3
+  example end: 4
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  fears: DAList
+---
+modules:
+  - docassemble.base.util  
+---
+question: Your fears
+subquestion: |
+  You are afraid of
+  ${ comma_and_list(fears) }.
+sets: all_done
+---
+mandatory: true
+code: |
+  fears.extend(['spiders', 'snakes', 'fish'])
+  fears.gathered = True
+  all_done

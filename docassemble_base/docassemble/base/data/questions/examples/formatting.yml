@@ -1,0 +1,132 @@
+metadata:
+  title: Miscellaneous formatting
+---
+question: Here is your document.
+subquestion: |
+  It illustrates some document-related
+  features.
+allow emailing: false
+attachments:
+  - name: A test document
+    filename: test_document
+    valid formats:
+      - pdf
+    metadata:
+      FooterCenter: |
+        [HYPHEN] [PAGENUM] [HYPHEN]
+    content: |
+      [BOLDCENTER] A Test Document [BR]
+      by John Doe
+      
+      ${ client } is entitled to
+      benefits plan ${ benefits }.
+
+      Four score and seven years ago
+      our fathers brought forth on
+      this continent, a new nation,
+      conceived in Liberty, and
+      dedicated to the proposition
+      that all men are created equal.
+
+      [FILE bluediamond.svg, 0.5in]
+
+      Now we are engaged in a great
+      civil war, testing whether that
+      nation, or any nation so
+      conceived and so dedicated,
+      can long endure.
+
+      [PAGEBREAK]
+
+      Now we begin a new[EMDASH]and
+      very exciting[EMDASH]page.
+
+      We dare not forget today that
+      we are the heirs of that first
+      revolution. Let the word go
+      forth from this time and place,
+      to friend and foe alike, that
+      the torch has been passed to
+      a new generation of
+      Americans [ENDASH] born in this
+      century, tempered by war,
+      disciplined by a hard and
+      bitter peace, proud of our
+      ancient heritage, and unwilling
+      to witness or permit the slow
+      undoing of those human rights
+      to which this nation has
+      always been committed, and to
+      which we are committed today
+      at home and around the world.
+
+      And yet our distress comes from
+      no failure of substance. We are
+      stricken by no plague of locusts.
+      Compared with the perils which
+      our forefathers conquered,
+      because they believed and were
+      not afraid, we have still much
+      to be thankful for. Nature still
+      offers her bounty and human
+      efforts have multiplied it.
+      Plenty is at our doorstep, but
+      a generous use of it languishes
+      in the very sight of the supply.
+
+      # A new section
+
+      [ONEANDAHALFSPACING]
+
+      [NOINDENTATION]
+
+      My Fellow Americans,
+
+      [INDENTATION]
+
+      I come before you tonight as a
+      candidate for the Vice Presidency
+      and as a man whose honesty
+      and -- and integrity has been
+      questioned.
+
+      Now, the usual political thing
+      to do when charges are made
+      against you is to either ignore
+      them or to deny them without
+      giving details. I believe we've
+      had enough of that in the
+      United States, particularly with
+      the present Administration in
+      Washington, D.C. To me the
+      office of the Vice Presidency
+      of the United States is a great
+      office, and I feel that the
+      people have got to have
+      confidence in the integrity
+      of the men who run for that
+      office and who might obtain it.
+      
+      # A newer section
+
+      [SINGLESPACING]
+
+      Over a century ago Washington
+      laid the corner stone of the
+      Capitol in what was then
+      little more than a tract of
+      wooded wilderness here beside
+      the Potomac. We now find it
+      necessary to provide by great
+      additional buildings for the
+      business of the government.
+
+sets: all_done
+---
+code: |
+  client = "Jane Doe"
+  benefits = "G-432"
+---
+mandatory: true
+code: |
+  all_done

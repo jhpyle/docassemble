@@ -1,0 +1,18 @@
+metadata:
+  title: Capitalize
+  example start: 1
+  example end: 2
+---
+modules:
+  - docassemble.base.util  
+---
+question: |
+  ${ capitalize(color) } is your
+  favorite color, but ${ color } is
+  not your favorite color of eggs.
+sets: all_done
+---
+mandatory: true
+code: |
+  color = 'green'
+  all_done
