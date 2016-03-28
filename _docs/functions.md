@@ -268,7 +268,7 @@ buttons:
 ---
 event: set_number_event
 code: |
-  lucky_number += current_info['arguments']['increment']
+lucky_number += current_info['arguments']['increment']
 ---
 code: |
   lucky_number = 2

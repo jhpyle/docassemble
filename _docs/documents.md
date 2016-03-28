@@ -459,6 +459,7 @@ documents.
   the paragraph should be centered.
 * `[BOLDCENTER]` - Like `[CENTER]` except that text is bolded.
 * `[SINGLESPACING]` - From now on, paragraphs should be single-spaced.
+* `[ONEANDAHALFSPACING]` - From now on, paragraphs should be one-and-a-half-spaced.
 * `[DOUBLESPACING]` - From now on, paragraphs should be double-spaced.
 * `[NBSP]` - Insert a non-breaking space.
 * `[ENDASH]` - Insert an en dash.
