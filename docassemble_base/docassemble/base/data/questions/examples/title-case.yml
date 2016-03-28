@@ -1,0 +1,21 @@
+metadata:
+  title: Title case
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  Title of your book
+subquestion: |
+  If your book is about
+  ${ title },
+  its title should be
+  "${ title_case(title) }."
+sets: all_done
+---
+mandatory: true
+code: |
+  title = "the politics of turtles"
+  all_done

@@ -9,14 +9,13 @@ image sets:
       baby: crawling.svg
       money: commerce.svg
 ---
-sets: all_done
 decoration: money 
 question: |
   Money is important.
 subquestion: |
   And if you have a :baby: you will need
   a lot of it.
+sets: all_done
 ---
 mandatory: true
-code: |
-  all_done  
+code: all_done  

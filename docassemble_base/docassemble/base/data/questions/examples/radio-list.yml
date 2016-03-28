@@ -20,13 +20,12 @@ fields:
       - Honda: Japan
       - Toyota: Japan
 ---
-sets: all_done
 question: Result of question
 subquestion: |
   Your ${ car_type }, which is from
   ${ car_country }, has
   ${ wheels_on_car } wheels.
+sets: all_done
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

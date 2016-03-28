@@ -25,12 +25,11 @@ fields:
     code: |
       name_suffix()
 ---
-sets: all_done
 question: End of interview
 subquestion: |
   The hero is ${ hero } and the villain
   is ${ villain }.
+sets: all_done
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

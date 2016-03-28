@@ -13,12 +13,11 @@ code: |
   my_list.append("orange")
   my_list.append(["peach", "pear"])
 ---
-sets: all_done
 question: All done
 subquestion: |
   Your list in JSON format looks like
   `${ dumps(my_list) }`
+sets: all_done
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

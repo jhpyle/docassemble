@@ -77,6 +77,48 @@ from pygments import highlight
 from pygments.lexers import YamlLexer
 from pygments.formatters import HtmlFormatter
 
+default_playground_yaml = """metadata:
+  title: Default playground interview
+  short title: Test
+  comment: This is a learning tool.  Feel free to delete it.
+---
+include:
+  - basic-questions.yml
+---
+mandatory: true
+code: |
+  need(all_done)
+---
+sets: all_done
+question: |
+  Here is your document, ${ client }.
+subquestion: |
+  In order ${ quest }, you will need this.
+attachments:
+  - name: Information Sheet
+    filename: info_sheet
+    content: |
+      Your name is ${ client }.
+      
+      % if user.age_in_years() > 60:
+      You are a senior.
+      % endif
+      Your quest is ${ quest }.  You
+      are eligible for ${ benefits }.
+---
+question: |
+  What is your quest?
+fields:
+  - Your quest: quest
+    hint: to find the Loch Ness Monster
+---
+code: |
+  if user.age_in_years() < 18:
+    benefits = "CHIP"
+  else:
+    benefits = "Medicaid"
+"""
+
 app.debug = False
 
 ok_mimetypes = {"application/javascript": "javascript"}
@@ -263,7 +305,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
         file_reference = re.sub(r'^None:', '', file_reference)
         parts = file_reference.split(':')
         if len(parts) < 2:
-            parts = ['docassemble.base', file_reference]
+            parts = ['docassemble.base', 'data/static/' + file_reference]
             the_file = None
             try:
                 the_file = pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
@@ -784,8 +826,18 @@ def proc_example_list(example_list, examples):
             content = fix_initial.sub('', content)
             blocks = map(lambda x: x.strip(), document_match.split(content))
             if len(blocks):
-                result['before_html'] = highlight("\n---\n".join(blocks[0:start_block]) + "\n---", YamlLexer(), HtmlFormatter())
-                result['after_html'] = highlight("---\n" + "\n---\n".join(blocks[end_block:len(blocks)]), YamlLexer(), HtmlFormatter())
+                if re.search(r'metadata:', blocks[0]) and start_block > 0:
+                    initial_block = 1
+                else:
+                    initial_block = 0
+                if start_block > initial_block:
+                    result['before_html'] = highlight("\n---\n".join(blocks[initial_block:start_block]) + "\n---", YamlLexer(), HtmlFormatter())
+                else:
+                    result['before_html'] = ''
+                if len(blocks) > end_block:
+                    result['after_html'] = highlight("---\n" + "\n---\n".join(blocks[end_block:len(blocks)]), YamlLexer(), HtmlFormatter())
+                else:
+                    result['after_html'] = ''
                 result['source'] = "\n---\n".join(blocks[start_block:end_block])
                 result['html'] = highlight(result['source'], YamlLexer(), HtmlFormatter())
         examples.append(result)
@@ -1600,8 +1652,12 @@ def index():
         });
       });
     </script>"""
+    if interview_status.question.language != '*':
+        interview_language = interview_status.question.language
+    else:
+        interview_language = DEFAULT_LANGUAGE
     if interview_status.question.question_type == "signature":
-        output = '<!doctype html>\n<html lang="en">\n  <head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet"><title>' + word('Sign Your Name') + '</title></head>\n  <body onresize="resizeCanvas()">'
+        output = '<!doctype html>\n<html lang="' + interview_language + '">\n  <head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + word('Signature') + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet"><title>' + word('Sign Your Name') + '</title></head>\n  <body onresize="resizeCanvas()">'
         output += signature_html(interview_status, DEBUG, ROOT)
         output += """\n  </body>\n</html>"""
     else:
@@ -1656,7 +1712,11 @@ def index():
                     new_entry = SpeakList(filename=yaml_filename, key=user_code, phrase=the_phrase, question=interview_status.question.number, type=question_type, language=the_language, dialect=the_dialect, encrypted=encrypted)
                     db.session.add(new_entry)
                     db.session.commit()
-        output = '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" rel="stylesheet">\n    <link href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
+        if interview_status.question.language != '*':
+            interview_language = interview_status.question.language
+        else:
+            interview_language = DEFAULT_LANGUAGE
+        output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" rel="stylesheet">\n    <link href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
         if DEBUG:
             output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
         output += "".join(extra_css)
@@ -2878,16 +2938,18 @@ def playground_page():
             flash(word('You need to type in a name for the interview'), 'error')
     the_file = re.sub(r'[^A-Za-z0-9\_\-\.]', '', the_file)
     files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f))])
+    content = ''
     if request.method == 'GET' and not the_file and not is_new:
         if len(files):
             the_file = files[0]
         else:
             the_file = 'test.yml'
+            content = default_playground_yaml
     if the_file != '':
         filename = os.path.join(playground.directory, the_file)
         if not os.path.isfile(filename):
-            with open(filename, 'a'):
-                os.utime(filename, None)
+            with open(filename, 'w') as fp:
+                fp.write(content.encode('utf8'))
     if request.method == 'POST' and the_file != '' and form.validate():
         if form.delete.data:
             if os.path.isfile(filename):
@@ -2914,7 +2976,6 @@ def playground_page():
                 return jsonify(url=url_for('index', i='/playground/' + the_file), flash_message=flash_message)
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
-    content = ''
     if the_file != '':
         playground.finalize()
         with open(filename, 'rU') as fp:
@@ -2929,7 +2990,7 @@ def playground_page():
         content = form.playground_content.data
         interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path=os.path.join(playground.directory, 'test'), testing=True)
     else:
-        interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path=os.path.join(playground.directory, 'test'), testing=True)
+        interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path=os.path.join(playground.directory, 'test'), testing=True)        
     interview_source.set_testing(True)
     interview = interview_source.get_interview()
     user_dict = fresh_dictionary()

@@ -9,7 +9,6 @@ fields:
   - Ounces of gold: gold_ounces
     datatype: number
 ---
-sets: all_done
 question: Result of question
 subquestion: |
   % if int(number_cars) == 1:
@@ -19,7 +18,7 @@ subquestion: |
   % endif
   You also have ${ gold_ounces }
   ounces of gold.
+sets: all_done
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

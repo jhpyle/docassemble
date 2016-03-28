@@ -1,0 +1,32 @@
+metadata:
+  title: Pluralizing
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+  - random
+---
+question: |
+  There
+  % if the_number > 1:
+  are
+  ${ nice_number(the_number) }
+  ${ noun_plural(the_noun) }
+  % else:
+  is one ${ the_noun }
+  % endif
+  in the pond.
+fields:
+  - Singular noun: the_noun
+sets: all_done
+---
+mandatory: true
+code: |
+  seed(30)
+  the_noun = "toad"
+---
+initial: true
+code: |
+  the_number = int(1 + random()*4)
+  need(all_done)

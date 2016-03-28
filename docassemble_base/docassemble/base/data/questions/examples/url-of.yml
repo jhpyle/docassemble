@@ -1,0 +1,24 @@
+metadata:
+  title: Link to static file
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  Read more about this interview.
+subquestion: |
+  Feel free to
+  [read more](${ url_of('docassemble.base:hello.pdf') })
+  about this interview before
+  proceeding.
+field: ready_to_proceed
+---
+question: |
+  All done with the interview
+need: ready_to_proceed
+sets: all_done
+---
+mandatory: true
+code: all_done

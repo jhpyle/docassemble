@@ -1,0 +1,15 @@
+metadata:
+  title: Need
+  example start: 3
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  Done with the interview
+sets: all_done
+---
+mandatory: true
+code: |
+  need(all_done)

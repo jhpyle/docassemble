@@ -22,7 +22,6 @@ choices:
 modules:
   - docassemble.base.util
 ---
-sets: all_done
 question: |
   The meaning of life
 subquestion: |
@@ -30,11 +29,11 @@ subquestion: |
   is:
 
   ${ meaning_life }
+sets: all_done
 ---
 initial: true
 code: |
   set_language(language)
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

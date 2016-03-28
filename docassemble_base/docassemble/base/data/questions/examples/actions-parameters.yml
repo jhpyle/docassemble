@@ -1,21 +1,16 @@
 metadata:
   title: Action with arguments
-  example start: 4
-  example end: 7
----
-modules:
-  - docassemble.base.core
----
-objects:
-  fishes: DADict
----
-mandatory: true
-code: |
-  fishes['blue'] = 2
-  fishes['red'] = 3
+  example start: 3
+  example end: 5
 ---
 modules:
   - docassemble.base.util
+---
+mandatory: true
+code: |
+  fishes = dict()
+  fishes['blue'] = 2
+  fishes['red'] = 3
 ---
 initial: true
 code: |
@@ -50,5 +45,4 @@ subquestion: |
 sets: all_done
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

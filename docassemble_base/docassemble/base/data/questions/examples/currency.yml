@@ -1,7 +1,7 @@
 metadata:
   title: Currency
-  example start: 1
-  examble end: 2
+  example start: 2
+  example end: 2
 ---
 modules:
   - docassemble.base.util

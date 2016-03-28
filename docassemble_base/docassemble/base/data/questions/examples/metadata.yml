@@ -16,12 +16,11 @@ metadata:
       organization: Example, Inc.
   revision_date: 2016-03-22
 ---
-sets: all_done
 question: End of interview
 subquestion: |
   Your docket number is
   "${ docket_number }."
+sets: all_done
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

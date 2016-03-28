@@ -1,0 +1,21 @@
+metadata:
+  title: Loading
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  Using utility functions
+subquestion: |
+  In order to use the utility
+  functions, you need to bring
+  in the `docassemble.base.util`
+  functions.
+
+  Note: this is done for you
+  automatically when you load
+  `docassemble.base.legal`
+sets: all_done
+---
+mandatory: true
+code: all_done

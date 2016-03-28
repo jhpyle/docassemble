@@ -1,0 +1,27 @@
+metadata:
+  title: Periodic amount
+  example start: 1
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  What is your salary?
+fields:
+  - Amount: user_salary
+    datatype: currency
+  - Period: period
+    code: |
+      period_list()
+---
+question: Result of question
+subquestion: |
+  user_salary is
+  ${ user_salary }
+  and period is
+  ${ period }.
+sets: all_done
+---
+mandatory: true
+code: all_done

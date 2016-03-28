@@ -14,7 +14,6 @@ mako: |
   are basically inedible.
   </%def>
 ---
-sets: all_done
 question: The world of fruit
 subquestion: |
   There are many types of fruit in the
@@ -25,7 +24,7 @@ subquestion: |
   ${ deride("Strawberries") }
 usedefs:
  - my_explanation
+sets: all_done
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

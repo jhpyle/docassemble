@@ -1,0 +1,20 @@
+metadata:
+  title: QR code
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  Read the news on your mobile
+  phone
+subquestion: |
+  If you have a QR code reader on
+  your phone, point it here:
+
+  ${ qr_code('http://wsj.com') }
+sets: all_done
+---
+mandatory: true
+code: all_done

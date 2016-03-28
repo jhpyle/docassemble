@@ -1,0 +1,24 @@
+metadata:
+  title: Number as word
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+  - random
+---
+question: |
+  There are ${ nice_number(toads) }
+  toads and ${ nice_number(frogs) }
+  frogs in the pond.
+buttons:
+  - Restart: restart
+sets: all_done
+---
+initial: true
+code: |
+  toads, frogs = 15, 15
+  while toads > 10 and frogs > 10:
+    toads = int(2 + random()*18)
+    frogs = int(2 + random()*18)
+  need(all_done)

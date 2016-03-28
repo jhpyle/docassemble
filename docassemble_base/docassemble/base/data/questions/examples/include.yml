@@ -4,12 +4,11 @@ metadata:
 include:
   - docassemble.demo:data/questions/some-questions.yml
 ---
-sets: all_done
 question: |
   Your favorite fruit is ${ favorite_fruit }
   and your favorite vegetable is
   ${ favorite_vegetable }.
+sets: all_done
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

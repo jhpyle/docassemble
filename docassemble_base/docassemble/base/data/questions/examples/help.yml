@@ -14,7 +14,6 @@ choices:
 help: |
   Hint: 2 + 2 = 4.
 ---
-sets: all_done
 question: |
   Thank you.
 subquestion: |
@@ -23,7 +22,7 @@ subquestion: |
   % else:
   You should have pressed "Help."
   % endif
+sets: all_done
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

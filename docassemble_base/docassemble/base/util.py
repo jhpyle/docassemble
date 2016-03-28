@@ -304,7 +304,7 @@ def need(*pargs):
 def pickleable_objects(input_dict):
     output_dict = dict()
     for key in input_dict:
-        if type(input_dict[key]) in [types.ModuleType, types.FunctionType, types.TypeType]:
+        if type(input_dict[key]) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType]:
             continue
         if key == "__builtins__":
             continue

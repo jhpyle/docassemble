@@ -1,6 +1,6 @@
 metadata:
   title: Action
-  example start: 2
+  example start: 3
   example end: 4
 ---
 mandatory: true
@@ -37,5 +37,4 @@ subquestion: |
 sets: all_done
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

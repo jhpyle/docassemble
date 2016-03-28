@@ -15,13 +15,12 @@ code: |
     user_county = "unknown"
   del results
 ---
-sets: all_done
 question: Located address
 subquestion: |
   The address "${ user_address }" is
   located in ${ user_county }.
+sets: all_done
 ---
 mandatory: true
-code:
-  all_done
+code: all_done
   

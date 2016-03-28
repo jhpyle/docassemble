@@ -2,19 +2,19 @@ metadata:
   title: Disable back button
 ---
 prevent_going_back: true
-sets: all_done
 question: |
   Your application for ${ service }
   has been submitted.
+sets: all_done
 ---
 question: |
-  For what service would you like to apply?
+  For what service would you like
+  to apply?
 field: service
 choices:
   - Tutoring
   - Resume writing assistance
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done
 

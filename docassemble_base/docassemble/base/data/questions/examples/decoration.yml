@@ -14,7 +14,6 @@ image sets:
       kids: children2.svg
       money: commerce.svg
 ---
-sets: all_done
 question: |
   All done
 subquestion: |
@@ -23,7 +22,7 @@ subquestion: |
   % else:
   You said you did not have children.
   % endif
+sets: all_done
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

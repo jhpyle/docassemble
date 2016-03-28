@@ -15,7 +15,6 @@ subquestion: |
   have almost certainly met a creeper.
 yesno: met_a_creeper
 ---
-sets: all_done
 question: Thank you!
 subquestion: |
   % if met_a_creeper:
@@ -23,7 +22,7 @@ subquestion: |
   % else:
   You clearly need to play more Minecraft.
   % endif
+sets: all_done
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

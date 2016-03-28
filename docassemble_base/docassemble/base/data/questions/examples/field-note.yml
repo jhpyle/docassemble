@@ -14,13 +14,12 @@ fields:
       done.
   - Favorite tree: tree
 ---
-sets: all_done
 question: Result of question
 subquestion: |
   If a ${ tree } falls in the forest,
   and there is no ${ fruit } to hear
   it, would you eat ${ veggie }?
+sets: all_done
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

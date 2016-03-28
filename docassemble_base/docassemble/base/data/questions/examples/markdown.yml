@@ -41,5 +41,4 @@ subquestion: |
 sets: all_done
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

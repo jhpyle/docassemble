@@ -1,5 +1,5 @@
 metadata:
-  title: Generic objects
+  title: Generic object
 ---
 generic object: Individual
 question: |
@@ -19,7 +19,6 @@ code: |
   person_two.name.first = "Randy"
   person_two.name.last = "Jones"
 ---
-sets: all_done
 question: |
   Cat report
 subquestion: |
@@ -28,7 +27,7 @@ subquestion: |
   % else:
   Cats are not universally liked, it seems.
   % endif
+sets: all_done
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

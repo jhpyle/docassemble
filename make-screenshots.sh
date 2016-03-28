@@ -9,6 +9,10 @@ do
     then
 	continue
     fi
+    if [ -f docassemble_webapp/docassemble/webapp/static/examples/$file.png -a docassemble_webapp/docassemble/webapp/static/examples/$file.png -nt $path ]
+    then
+	continue
+    fi
     casperjs screenshot.js $file.yml $tempfile
     if [ "$file" = "signature" -o "$file" = "metadata" -o "$file" = "help" ]
     then

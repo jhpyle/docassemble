@@ -5,11 +5,10 @@ question: |
   Are you at least 18 years of age?
 yesno: over_eighteen
 ---
-sets: all_done
 question: Result of question
 subquestion: |
   over_eighteen is: "${ over_eighteen }"
+sets: all_done
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

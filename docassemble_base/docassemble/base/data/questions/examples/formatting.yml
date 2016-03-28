@@ -120,7 +120,6 @@ attachments:
       necessary to provide by great
       additional buildings for the
       business of the government.
-
 sets: all_done
 ---
 code: |
@@ -128,5 +127,4 @@ code: |
   benefits = "G-432"
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

@@ -8,9 +8,8 @@ buttons:
   - Buy it: purchaser
   - Lease it: borrower
 ---
-sets: all_done
 question: You are a ${ target_variable }.
+sets: all_done
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

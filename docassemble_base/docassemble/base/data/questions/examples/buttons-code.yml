@@ -12,13 +12,12 @@ buttons:
         car_model = "Camry"
         car_make = "Toyota"
 ---
-sets: all_done
 question: How to buy a car
 subquestion: |
   You need to go to a ${ car_make }
   dealership and ask if they have a
   ${ car_model } for sale.
+sets: all_done
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

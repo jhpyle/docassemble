@@ -19,7 +19,6 @@ fields:
 imports:
   - us
 ---
-sets: all_done
 question: Result of question
 subquestion: |
   % if gender == 'm':
@@ -31,7 +30,7 @@ subquestion: |
   You have a ${ education} education
   and you were born in
   ${ birth_state }.
+sets: all_done
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

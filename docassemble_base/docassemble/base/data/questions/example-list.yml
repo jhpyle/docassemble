@@ -10,9 +10,11 @@
     - text-field
     - optional-field
     - text-box-field
+    - no-label-field
     - date-field
     - money-field
     - number-field
+    - periodic-amount
     - radio-list
     - pull-down
     - pull-down-with-code
@@ -55,6 +57,20 @@
     - capitalize
     - lists
     - currency
-- Advanced:
+    - indefinite-article
+    - nice-number
+    - noun-plural
+    - ordinal-number
+    - title-case
+    - past-tense
+- Utility functions:
+    - loading-util
     - actions
     - actions-parameters
+    - need
+    - force-ask
+    - space-underscore
+    - qr-code
+    - url-of
+    - prevent-back
+    - set-language

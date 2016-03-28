@@ -21,5 +21,4 @@ code: |
   benefits = "G-432"
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done

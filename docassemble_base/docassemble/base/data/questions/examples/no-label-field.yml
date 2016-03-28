@@ -1,0 +1,17 @@
+metadata:
+  title: No label
+---
+question: |
+  What is your Zodiac sign?
+fields:
+  - no label: target_variable
+---
+question: Result of question
+subquestion: |
+  target_variable is:
+  "${ target_variable }"
+sets: all_done
+---
+mandatory: true
+code: all_done
+

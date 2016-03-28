@@ -1,0 +1,25 @@
+metadata:
+  title: Loading
+---
+modules:
+  - docassemble.base.legal
+---
+question: |
+  Using legal functions
+subquestion: |
+  In order to use the
+  functions for legal
+  applications, you need to
+  bring in the
+  `docassemble.base.legal`
+  functions.
+
+  Note: this has the
+  effect of loading the
+  functions in
+  `docassemble.base.util`
+  as well.
+sets: all_done
+---
+mandatory: true
+code: all_done
