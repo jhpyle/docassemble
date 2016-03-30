@@ -534,11 +534,11 @@ def force_ask(variable_name):
     raise NameError("name '" + variable_name + "' is not defined")
 
 def static_filename_path(filereference):
-    logmessage("Got this far with " + str(filereference))
+    #logmessage("Got this far with " + str(filereference))
     result = package_data_filename(static_filename(filereference))
-    logmessage("Got this result " + str(result))
+    #logmessage("Got this result " + str(result))
     if result is None or not os.path.isfile(result):
-        logmessage("Got here with " + str(filereference))
+        #logmessage("Got here with " + str(filereference))
         result = absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\.]', '', filereference)).path
     return(result)
 

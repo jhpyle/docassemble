@@ -129,6 +129,10 @@ default_yaml_filename = daconfig.get('default_interview', 'docassemble.demo:data
 document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
 fix_tabs = re.compile(r'\t')
 fix_initial = re.compile(r'^---\n')
+noquote_match = re.compile(r'"')
+lt_match = re.compile(r'<')
+gt_match = re.compile(r'>')
+amp_match = re.compile(r'&')
 
 if 'mail' not in daconfig:
     daconfig['mail'] = dict()
@@ -2899,10 +2903,79 @@ def playground_files():
     return render_template('pages/playgroundfiles.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("file_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "' + mode + '", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#formtwo").trigger("checkform.areYouSure");});\n      $("#formtwo").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#formtwo").bind("submit", function(){daCodeMirror.save(); $("#formtwo").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, description=description, form=form, files=files, section=section, editable_files=editable_files, formtwo=formtwo, current_file=the_file, content=content), 200
 
 def noquote(string):
-    if string is None:
-        return None
-    newstring = json.dumps(string.replace('\n', ' ').rstrip())
-    return newstring[1:-1]
+    string = noquote_match.sub('&quot;', string)
+    string = lt_match.sub('&lt;', string)
+    string = gt_match.sub('&gt;', string)
+    string = amp_match.sub('&amp;', string)
+    return string
+    # if string is None:
+    #     return None
+    # newstring = json.dumps(string.replace('\n', ' ').rstrip())
+    # return newstring[1:-1]
+
+def get_vars_in_use(interview, interview_status):
+    user_dict = fresh_dictionary()
+    try:
+        interview.assemble(user_dict, interview_status)
+    except Exception as errmess:
+        logmessage("Failed assembly " + str(errmess))
+        pass
+    names_used = copy.copy(interview.names_used)
+    functions = set()
+    modules = set()
+    classes = set()
+    name_info = dict()
+    for val in user_dict:
+        if type(user_dict[val]) is types.FunctionType:
+            functions.add(val)
+            name_info[val] = {'doc': inspect.getdoc(user_dict[val]), 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + str(inspect.formatargspec(*inspect.getargspec(user_dict[val])))}
+        elif type(user_dict[val]) is types.ModuleType:
+            modules.add(val)
+            name_info[val] = {'doc': inspect.getdoc(user_dict[val]), 'name': str(val), 'insert': str(val)}
+        elif type(user_dict[val]) is types.TypeType:
+            classes.add(val)
+            bases = list()
+            for x in list(user_dict[val].__bases__):
+                if x.__name__ != 'DAObject':
+                    bases.append(x.__name__)
+            name_info[val] = {'doc': inspect.getdoc(user_dict[val]), 'name': str(val), 'insert': str(val), 'bases': bases}
+    for val in docassemble.base.util.pickleable_objects(user_dict):
+        names_used.add(val)
+        name_info[val] = {'type': type(user_dict[val]).__name__}
+    names_used.discard('x')
+    names_used.discard('_internal')
+    content = ''
+    if len(names_used):
+        content += '\n                  <tr><td><h4>Variables</h4></td></tr>'
+        for var in sorted(names_used):
+            content += '\n                  <tr><td><a data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + var + '</a>'
+            if var in name_info and name_info[var]['type']:
+                content +=' <span class="daparenthetical">(' + name_info[var]['type'] + ')</span>'
+            content += '</td></tr>'
+    if len(functions):
+        content += '\n                  <tr><td><h4>Functions</h4></td></tr>'
+        for var in sorted(functions):
+            content += '\n                  <tr><td><a data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-warning playground-variable">' + name_info[var]['tag'] + '</a>'
+            if name_info[var]['doc']:
+                content += '&nbsp;<a tabindex="0" role="button" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + var + '"><i class="glyphicon glyphicon-info-sign dainfosign"</i></a>'
+            content += '</td></tr>'
+    if len(classes):
+        content += '\n                  <tr><td><h4>Classes</h4></td></tr>'
+        for var in sorted(classes):
+            content += '\n                  <tr><td><a data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-info playground-variable">' + name_info[var]['name'] + '</a>'
+            if name_info[var]['bases']:
+                content += '<span class="daparenthetical">(' + name_info[var]['bases'][0] + ')</span>'
+            if name_info[var]['doc']:
+                content += '&nbsp;<a tabindex="0" role="button" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + var + '"><i class="glyphicon glyphicon-info-sign dainfosign"</i></a>'
+            content += '</td></tr>'
+    if len(modules):
+        content += '\n                  <tr><td><h4>Modules</h4></td></tr>'
+        for var in sorted(modules):
+            content += '\n                  <tr><td><a data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-success playground-variable">' + name_info[var]['name'] + '</a>'
+            if name_info[var]['doc']:
+                content += '&nbsp;<a tabindex="0" role="button" data-toggle="popover" data-placement="auto" data-content="' + noquote(name_info[var]['doc']) + '" title="' + noquote(var) + '"><i class="glyphicon glyphicon-info-sign dainfosign"</i></a>'
+            content += '</td></tr>'
+    return content
 
 @app.route('/playground', methods=['GET', 'POST'])
 @login_required
@@ -2973,7 +3046,12 @@ def playground_page():
             else:
                 playground.finalize()
                 flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Running in other tab.'), message_type='success')
-                return jsonify(url=url_for('index', i='/playground/' + the_file), flash_message=flash_message)
+                interview_source = docassemble.base.parse.interview_source_from_string('/playground/' + the_file)
+                interview_source.set_testing(True)
+                interview = interview_source.get_interview()
+                interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='/playground/' + the_file, req=request, action=None))
+                variables_html = get_vars_in_use(interview, interview_status)
+                return jsonify(url=url_for('index', i='/playground/' + the_file), variables_html=variables_html, flash_message=flash_message)
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
     if the_file != '':
@@ -2987,42 +3065,13 @@ def playground_page():
         interview_source = docassemble.base.parse.interview_source_from_string('/playground/' + the_file)
         interview_source.set_testing(True)
     elif form.playground_content.data:
-        content = form.playground_content.data
-        interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path=os.path.join(playground.directory, 'test'), testing=True)
+        content = re.sub(r'\r', '', form.playground_content.data)
+        interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="None:test.yml", testing=True)
     else:
-        interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path=os.path.join(playground.directory, 'test'), testing=True)        
-    interview_source.set_testing(True)
+        interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path="None:test.yml", testing=True)
     interview = interview_source.get_interview()
-    user_dict = fresh_dictionary()
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='/playground/' + the_file, req=request, action=None))
-    try:
-        interview.assemble(user_dict, interview_status)
-    except:
-        pass
-    names_used = copy.copy(interview.names_used)
-    functions = set()
-    modules = set()
-    classes = set()
-    name_info = dict()
-    for val in user_dict:
-        if type(user_dict[val]) is types.FunctionType:
-            functions.add(val)
-            name_info[val] = {'doc': inspect.getdoc(user_dict[val]), 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + str(inspect.formatargspec(*inspect.getargspec(user_dict[val])))}
-        elif type(user_dict[val]) is types.ModuleType:
-            modules.add(val)
-            name_info[val] = {'doc': inspect.getdoc(user_dict[val]), 'name': str(val), 'insert': str(val)}
-        elif type(user_dict[val]) is types.TypeType:
-            classes.add(val)
-            bases = list()
-            for x in list(user_dict[val].__bases__):
-                if x.__name__ != 'DAObject':
-                    bases.append(x.__name__)
-            name_info[val] = {'doc': inspect.getdoc(user_dict[val]), 'name': str(val), 'insert': str(val), 'bases': bases}
-    for val in docassemble.base.util.pickleable_objects(user_dict):
-        names_used.add(val)
-        name_info[val] = {'type': type(user_dict[val]).__name__}
-    names_used.discard('x')
-    names_used.discard('_internal')
+    variables_html = get_vars_in_use(interview, interview_status)
     ajax = """
 $("#daRun").click(function(event){
   daCodeMirror.save();
@@ -3037,6 +3086,7 @@ $("#daRun").click(function(event){
       else{
         $("#main").prepend('<div class="container" id="flash">' + data.flash_message + '</div>')
       }
+      $("#daplaygroundtable").html(data.variables_html)
       window.open(data.url, '_blank');
       $("#form").trigger("reinitialize.areYouSure")
     },
@@ -3152,7 +3202,9 @@ $("#hide-full-example").on("click", function(){
     example_html.append('        </div>')
     example_html.append('        <div class="col-md-6"><h4>' + word("Preview") + '</h4><a href="#" target="_blank" id="example-image-link"><img class="example_screenshot" id="example-image"></a></div>')
     example_html.append('        <div class="col-md-4 example-source-col"><h4>' + word('Source') + ' <a class="label label-success example-copy">' + word('Insert') + '</a></h4><div id="example-source-before" class="invisible"></div><div id="example-source"></div><div id="example-source-after" class="invisible"></div><div><a class="example-hider" id="show-full-example">' + word("Show context of example") + '</a><a class="example-hider invisible" id="hide-full-example">' + word("Hide context of example") + '</a></div></div>')
-    return render_template('pages/playground.html', page_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      nameInfo = ' + str(json.dumps(name_info)) + ';      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, current_file=the_file, content=content, names=sorted(names_used), functions=sorted(functions), modules=sorted(modules), classes=sorted(classes), name_info=name_info, example_html="\n".join(example_html)), 200
+    return render_template('pages/playground.html', page_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, current_file=the_file, content=content, variables_html=Markup(variables_html), example_html=Markup("\n".join(example_html))), 200
+
+# nameInfo = ' + str(json.dumps(vars_in_use['name_info'])) + ';      
 
 @app.route('/packages', methods=['GET', 'POST'])
 @login_required
@@ -3458,6 +3510,7 @@ def interview_list():
         session_id = request.args.get('session', None)
         if yaml_file is not None and session_id is not None:
             reset_user_dict(session_id, yaml_file)
+            flash(word("Deleted interview"), 'success')
             return redirect(url_for('interview_list'))
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key).subquery()
     interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted).filter(UserDictKeys.user_id == current_user.id).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).group_by(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)

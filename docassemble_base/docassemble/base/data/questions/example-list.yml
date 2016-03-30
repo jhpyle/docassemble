@@ -3,7 +3,6 @@
 - Documents:
     - document
     - page-numbers
-    - alignment
     - single-spacing
     - formatting
 - Fields:
@@ -18,12 +17,12 @@
     - radio-list
     - pull-down
     - pull-down-with-code
-    - yes-or-no
+#    - yes-or-no
     - signature
     - continue
     - text-hint
     - text-help
-    - note
+#    - note
 - Multiple choice:
     - yesno
     - noyes

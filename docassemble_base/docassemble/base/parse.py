@@ -79,12 +79,15 @@ class PackageImage(object):
 
 class InterviewSource(object):
     def __init__(self, **kwargs):
-        self.language = '*'
-        self.dialect = None
-        self.testing = False
+        self.language = kwargs.get('language', '*')
+        self.dialect = kwargs.get('dialect', None)
+        self.testing = kwargs.get('testing', False)
         pass
     def set_path(self, path):
         self.path = path
+        return
+    def set_filepath(self, filepath):
+        self.filepath = filepath
         return
     def set_directory(self, directory):
         self.directory = directory
@@ -118,10 +121,13 @@ class InterviewSource(object):
 
 class InterviewSourceString(InterviewSource):
     def __init__(self, **kwargs):
+        #self.playground = None
+        #self.package = None
+        #self.set_filepath(kwargs.get('filepath', None))
         self.set_path(kwargs.get('path', None))
         self.set_directory(kwargs.get('directory', None))
         self.set_content(kwargs.get('content', None))
-        self.set_testing(kwargs.get('testing', False))
+        self._modtime = datetime.datetime.now()
         return super(InterviewSourceString, self).__init__(**kwargs)
 
 class InterviewSourceFile(InterviewSource):
@@ -1481,7 +1487,8 @@ class Interview:
                     if document is not None:
                         question = Question(document, self, source=source, package=source_package, source_code=source_code)
                         self.names_used.update(question.fields_used)
-                except:
+                except Exception as errMess:
+                    logmessage('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
                     pass
             else:
                 try:
