@@ -34,7 +34,8 @@ The first method of running the above "Hello World" code is very
 simple: you log in, go to the [Playground], copy and paste the code
 into a tab, and then click the "Save and Run" button.
 
-The second method is longer but more educational.  It involves these
+The second method is longer but also demonstrates **docassemble**'s
+system for packaging and distributing interviews.  It involves these
 steps:
 
 1. On the menu in the upper right hand corner, select Package Management.
@@ -69,9 +70,10 @@ steps:
 
 # Adding a question
 
-Now let's change the interview so that it asks the user a [question].  Edit
-`docassemble-hello-world/docassemble/hello-world/data/questions/questions.yml`
-again and change the contents to:
+Now let's change the interview so that it asks the user a [question].
+Edit the interview
+(`docassemble-hello-world/docassemble/hello-world/data/questions/questions.yml`
+if you downloaded the package) and change the contents to:
 
 {% highlight yaml %}
 ---
@@ -173,13 +175,6 @@ fields:
 {% endhighlight %}
 
 ([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/hello4.yml){:target="_blank"}.)
-
-This illustrates the complete workflow for producing final
-**docassemble** interviews.  If you are trying to work out a problem
-with an interview, it may be cumbersome to go through the process of
-uploading a new package and then updating the package within
-**docassemble**.  To test out interview [YAML] on-the-fly, you can use
-the [Playground] area.
 
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [installation]: {{ site.baseurl }}/docs/installation.html
