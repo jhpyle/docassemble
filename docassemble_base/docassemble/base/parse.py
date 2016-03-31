@@ -289,6 +289,10 @@ class Field:
             self.number = 0
         if 'saveas' in data:
             self.saveas = data['saveas']
+        if 'saveas_code' in data:
+            self.saveas_code = data['saveas_code']
+        if 'action' in data:
+            self.action = data['action']
         if 'label' in data:
             self.label = data['label']
         if 'type' in data:
@@ -359,7 +363,7 @@ class Question:
         self.fields_used = set()
         self.names_used = set()
         num_directives = 0
-        for directive in ['yesno', 'noyes', 'fields', 'buttons', 'choices', 'signature']:
+        for directive in ['yesno', 'noyes', 'fields', 'buttons', 'choices', 'signature', 'review']:
             if directive in data:
                 num_directives += 1
         if num_directives > 1:
@@ -953,6 +957,50 @@ class Question:
                     else:
                         raise DAError("Each individual field in a list of fields must be expressed as a dictionary item, e.g., ' - Fruit: user.favorite_fruit'." + self.idebug(data))
                     field_number += 1
+        if 'review' in data:
+            self.question_type = 'review'
+            if type(data['review']) is not list:
+                raise DAError("The review must be written in the form of a list." + self.idebug(data))
+            field_number = 0
+            for field in data['review']:
+                if type(field) is not dict:
+                    raise DAError("Each individual field in a list of fields must be expressed as a dictionary item, e.g., ' - Fruit: user.favorite_fruit'." + self.idebug(data))
+                field_info = {'number': field_number}
+                for key in field:
+                    if key == 'action':
+                        continue
+                    elif key == 'note':
+                        field_info['type'] = 'note'
+                        if 'extras' not in field_info:
+                            field_info['extras'] = dict()
+                        field_info['extras']['note'] = TextObject(definitions + unicode(field[key]))
+                    elif key == 'html':
+                        if 'extras' not in field_info:
+                            field_info['extras'] = dict()
+                        field_info['type'] = 'html'
+                        field_info['extras'][key] = TextObject(definitions + unicode(field[key]))
+                    elif key in ['css', 'script']:
+                        if 'extras' not in field_info:
+                            field_info['extras'] = dict()
+                        if field_info['type'] == 'text':
+                            field_info['type'] = key
+                        field_info['extras'][key] = TextObject(definitions + unicode(field[key]))
+                    elif key == 'show if':
+                        field_info['saveas_code'] = compile(field[key], '', 'eval')
+                        field_info['saveas'] = field[key]
+                    else:
+                        field_info['label'] = key
+                        field_info['saveas'] = field[key]
+                        if 'action' in field:
+                            field_info['action'] = field['action']
+                        else:
+                            field_info['action'] = field[key]
+                        field_info['saveas_code'] = compile(field[key], '', 'eval')
+                if 'saveas' in field_info or ('type' in field_info and field_info['type'] in ['note', 'html', 'script', 'css']):
+                    self.fields.append(Field(field_info))
+                else:
+                    raise DAError("A field in a review list was listed without indicating a label or a variable name, and the field was not a note or raw HTML." + self.idebug(field_info))
+                field_number += 1
         if not hasattr(self, 'question_type'):
             if len(self.attachments) and len(self.fields_used) and not hasattr(self, 'content'):
                 self.question_type = 'attachments'
@@ -1203,6 +1251,8 @@ class Question:
                 if hasattr(field, 'hint'):
                     hints[field.number] = field.hint.text(user_dict)
         attachment_text = self.processed_attachments(user_dict, the_x=the_x, the_i=the_i)
+        if 'menu_items' in user_dict:
+            extras['menu_items'] = user_dict['menu_items']
         if 'track_location' in user_dict:
             extras['track_location'] = user_dict['track_location']
         if 'speak_text' in user_dict:

@@ -1,0 +1,46 @@
+metadata:
+  title: Review
+---
+include:
+  - basic-questions.yml
+---
+initial: true
+code: |
+  process_action(current_info)
+---
+mandatory: true
+code: |
+  menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
+---
+event: review_answers
+question: |
+  Review your answers
+review:
+  - note: |
+      #### Naming section
+    show if: user.name.first
+  - Name: user.name.first
+  - note: |
+      #### Fruity section
+  - Favorite Fruit: fruit
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - no label: fruit
+---
+question: |
+  You like ${ fruit }.
+subquestion: |
+  You can [revisit your answers](${ url_action('review_answers') }).
+field: ready_to_go
+---
+sets: all_done
+need: ready_to_go
+question: |
+  Ok, ${ user }, you like ${ fruit }.
+subquestion:
+  You can [revisit your answers](${ url_action('review_answers') }).  
+---
+mandatory: true
+code: all_done

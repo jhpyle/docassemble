@@ -2,7 +2,7 @@ metadata:
   title: Spacing
 ---
 question: Here is your document.
-subquestion: It has aligned text.
+subquestion: It demonstrates types of spacing.
 attachments:
   - name: A test document
     filename: test_document

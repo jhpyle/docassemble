@@ -182,7 +182,8 @@ def rtf_filter(text, metadata=dict(), styles=dict()):
     text = re.sub(r'\[NEWLINE\] *', r'\\line ', text)
     text = re.sub(r'\[BR\] *', r'\\line ', text)
     text = re.sub(r'\[TAB\] *', r'\\tab ', text)
-    text = re.sub(r'\[FLUSHLEFT\] *', r'\\ql ', text)
+    #text = re.sub(r'\[FLUSHLEFT\] *(.+?)\n\n', flushleft_rtf, text, flags=re.MULTILINE | re.DOTALL)
+    #text = re.sub(r'\[FLUSHLEFT\] *', r'\\ql \\fi0 \\sl0', text)
     text = re.sub(r'\[CENTER\] *', r'\\qc ', text)
     text = re.sub(r'\[BOLDCENTER\] *', r'\\qc \\b ', text)
     text = re.sub(r'\\sa180\\sa180\\par', r'\\par', text)
@@ -225,6 +226,7 @@ def rtf_filter(text, metadata=dict(), styles=dict()):
                     line = re.sub(r'\\sa[0-9]+ ', '\\sa0', line)
             text += line + '\n'
     text = re.sub(r'{\\pard \\sl[0-9]+\\slmult[0-9]+ \\ql \\f[0-9]+ \\sa[0-9]+ \\li[0-9]+ \\fi-?[0-9]*\s*\\par}', r'', text)
+    text = re.sub(r'{\\pard \\sl[0-9]+\\slmult[0-9]+ \\ql \\f[0-9]+ \\sa[0-9]+ \\li[0-9]+ \\fi-?[0-9]*\s*\[FLUSHLEFT\]}', r'', text)
     return(text)
 
 def docx_filter(text, metadata=dict()):
@@ -377,7 +379,7 @@ def add_newlines(string):
 def flushleft_pdf(match):
     string = match.group(1)
     string = re.sub(r'\[NEWLINE\] *', r'\\newline ', string)
-    return('\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\noindent ' + unicode(string) + '\\par\\endgroup' + "\n\n")
+    return('\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\setlength{\\parindent}{0pt}\\noindent ' + unicode(string) + '\\par\\endgroup' + "\n\n")
 
 def center_pdf(match):
     string = match.group(1)

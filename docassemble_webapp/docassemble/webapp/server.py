@@ -1184,10 +1184,17 @@ def index():
     if current_user.is_authenticated and 'key_logged' not in session:
         #logmessage("save_user_dict_key called with " + user_code + " and " + yaml_filename)
         save_user_dict_key(user_code, yaml_filename)
-        session['key_logged'] = True 
+        session['key_logged'] = True
+    if 'action' in session:
+        action = json.loads(myb64unquote(session['action']))
+        del session['action']
     if len(request.args):
         if 'action' in request.args:
-            action = json.loads(myb64unquote(request.args['action']))
+            session['action'] = request.args['action']
+            response = redirect(url_for('index'))
+            if set_cookie:
+                response.set_cookie('secret', secret)
+            return response
         for argname in request.args:
             if argname in ('filename', 'question', 'format', 'index', 'i', 'action', 'from_list', 'session'):
                 continue
@@ -1203,7 +1210,6 @@ def index():
         if set_cookie:
             response.set_cookie('secret', secret)
         return response
-
     post_data = request.form.copy()
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data and '_question_number' in post_data:
         success = False
@@ -1691,6 +1697,15 @@ def index():
                     interview_status.screen_reader_links[question_type].append([url_for('speak_file', question=interview_status.question.number, type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
         # else:
         #     logmessage("speak_text was not here")
+        if interview_status.question.question_type == "review":
+            interview_status.extras['ok_fields'] = set()
+            for field in interview_status.question.fields:
+                if hasattr(field, 'saveas_code'):
+                    try:
+                        eval(field.saveas_code, user_dict)
+                    except:
+                        continue
+                    interview_status.extras['ok_fields'].add(field.saveas)
         content = as_html(interview_status, extra_scripts, extra_css, url_for, DEBUG, ROOT)
         if interview_status.using_screen_reader:
             for question_type in ['question', 'help']:
@@ -2028,12 +2043,31 @@ def make_navbar(status, page_title, steps, show_login):
           </ul>
           <ul class="nav navbar-nav navbar-right">
 """
+    if 'menu_items' in status.extras:
+        if type(status.extras['menu_items']) is not list:
+            custom_menu += '<li>' + word("Error: menu_items is not a Python list") + '</li>'
+        elif len(status.extras['menu_items']):
+            custom_menu = ""
+            for menu_item in status.extras['menu_items']:
+                if not (type(menu_item) is dict and 'url' in menu_item and 'label' in menu_item):
+                    custom_menu += '<li>' + word("Error: menu item is not a Python dict with keys of url and label") + '</li>'
+                else:
+                    custom_menu += '<li><a href="' + menu_item['url'] + '">' + menu_item['label'] + '</a></li>'
+        else:
+            custom_menu = False
+    else:
+        custom_menu = False
     if show_login:
         if current_user.is_anonymous:
             #logmessage("is_anonymous is " + str(current_user.is_anonymous))
-            navbar += '            <li><a href="' + url_for('user.login', next=url_for('interview_list')) + '">' + word('Sign in') + '</a></li>' + "\n"
+            if custom_menu:
+                navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('user.login', next=url_for('interview_list')) + '">' + word('Sign in') + '</a></li></ul></li>' + "\n"
+            else:
+                navbar += '            <li><a href="' + url_for('user.login', next=url_for('interview_list')) + '">' + word('Sign in') + '</a></li>' + "\n"
         else:
             navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + current_user.email + '<span class="caret"></span></a><ul class="dropdown-menu">'
+            if custom_menu:
+                navbar += custom_menu
             if current_user.has_role('admin', 'developer'):
                 navbar +='<li><a href="' + url_for('package_page') + '">' + word('Package Management') + '</a></li>'
                 navbar +='<li><a href="' + url_for('logs') + '">' + word('Logs') + '</a></li>'
@@ -2045,7 +2079,10 @@ def make_navbar(status, page_title, steps, show_login):
                     navbar +='<li><a href="' + url_for('config_page') + '">' + word('Configuration') + '</a></li>'
             navbar += '<li><a href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a></li><li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li><li><a href="' + url_for('user.logout') + '">' + word('Sign out') + '</a></li></ul></li>'
     else:
-        navbar += '            <li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li>'
+        if custom_menu:
+            navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li></ul></li>' + "\n"
+        else:
+            navbar += '            <li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li>'
     navbar += """\
           </ul>
         </div>
@@ -2063,7 +2100,7 @@ def utility_processor():
     return dict(random_social=random_social, word=word)
 
 def delete_session():
-    for key in ['i', 'uid', 'key_logged']:
+    for key in ['i', 'uid', 'key_logged', 'action']:
         if key in session:
             del session[key]
     return

@@ -1,4 +1,4 @@
-from docassemble.base.util import word, currency_symbol
+from docassemble.base.util import word, currency_symbol, url_action
 import docassemble.base.filter
 from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote
 from docassemble.base.parse import Question, debug
@@ -136,6 +136,40 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         output += '              <div class="btn-toolbar">\n                <button class="btn btn-primary btn-lg" name="' + status.question.fields[0].saveas + '" type="submit" value="False">Yes</button>\n                <button class="btn btn-lg btn-info" name="' + status.question.fields[0].saveas + '" type="submit" value="True">No</button>\n              </div>\n'
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
+        output += '            </fieldset>\n          </form>\n'
+    elif status.question.question_type == "review":
+        fieldlist = list()
+        for field in status.question.fields:
+            if hasattr(field, 'saveas') and field.saveas not in status.extras['ok_fields']:
+                continue
+            if hasattr(field, 'extras'):
+                if 'script' in field.extras and 'script' in status.extras:
+                    extra_scripts.append(status.extras['script'][field.number])
+                if 'css' in field.extras and 'css' in status.extras:
+                    extra_css.append(status.extras['css'][field.number])
+            if hasattr(field, 'datatype'):
+                if field.datatype == 'html':
+                    fieldlist.append('              <div class="form-group' + req_tag +'"><div class="col-md-12"><note>' + status.extras['html'][field.number].rstrip() + '</note></div></div>\n')
+                    continue
+                elif field.datatype == 'note':
+                    fieldlist.append('              <div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status, strip_newlines=True) + '</div></div>\n')
+                    continue
+                elif field.datatype in ['script', 'css']:
+                    continue
+            if hasattr(field, 'label'):
+                fieldlist.append('              <div class="form-group"><div class="col-md-12"><a href="' + url_action(field.action) + '">' + field.label + '</a></div></div>\n')
+        output += indent_by(audio_text, 10) + '          <form action="' + root + '" id="daform" class="form-horizontal" method="POST">\n            <fieldset>\n'
+        output += '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
+        if status.subquestionText:
+            output += '              <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=16) + '              </div>\n'
+        if video_text:
+            output += indent_by(video_text, 10)
+        if (len(fieldlist)):
+            output += "".join(fieldlist)
+        else:
+            output += "              <p>Error: no fields</p>\n"
+        output += '              <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Resume') + '</button></div>\n'
+        output += tracker_tag(status)
         output += '            </fieldset>\n          </form>\n'
     elif status.question.question_type == "fields":
         enctype_string = ""
