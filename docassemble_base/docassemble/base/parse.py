@@ -969,6 +969,9 @@ class Question:
                 for key in field:
                     if key == 'action':
                         continue
+                    elif key == 'help':
+                        if type(field[key]) is not dict and type(field[key]) is not list:
+                            field_info[key] = TextObject(definitions + unicode(field[key]))
                     elif key == 'note':
                         field_info['type'] = 'note'
                         if 'extras' not in field_info:
@@ -1205,51 +1208,68 @@ class Question:
         hints = dict()
         helptexts = dict()
         extras = dict()
-        for field in self.fields:
-            if hasattr(field, 'has_code') and field.has_code:
-                selections = list()
-                for choice in field.choices:
-                    for key in choice:
-                        value = choice[key]
-                        if key == 'compute' and type(value) is CodeType:
-                            selections.extend(process_selections(eval(value, user_dict)))
-                        else:
-                            selections.append([value, key])
-                selectcompute[field.number] = selections
-            if hasattr(field, 'choicetype') and field.choicetype == 'compute':
-                selectcompute[field.number] = process_selections(eval(field.selections['compute'], user_dict))
-            if hasattr(field, 'datatype') and field.datatype == 'object':
-                if field.number not in selectcompute:
-                    raise DAError("datatype was set to object but no code was provided")
-                string = "_internal['objselections'][" + repr(field.saveas) + "] = dict()"
-                logmessage("Doing " + string)
-                try:
-                    exec(string, user_dict)
-                    for selection in selectcompute[field.number]:
-                        key = selection[0]
-                        #logmessage("key is " + str(key))
-                        real_key = codecs.decode(key, 'base64').decode('utf-8')
-                        string = "_internal['objselections'][" + repr(field.saveas) + "][" + repr(key) + "] = " + real_key
-                        logmessage("Doing " + string)
+        if self.question_type == 'review':
+            for field in self.fields:
+                if hasattr(field, 'saveas'):
+                    try:
+                        eval(field.saveas, user_dict)
+                    except:
+                        continue
+                if hasattr(field, 'extras'):
+                    for key in ['note', 'html', 'script', 'css']:
+                        if key in field.extras:
+                            if key not in extras:
+                                extras[key] = dict()
+                            extras[key][field.number] = field.extras[key].text(user_dict)
+                if hasattr(field, 'saveas'):
+                    if hasattr(field, 'helptext'):
+                        helptexts[field.number] = field.helptext.text(user_dict)
+        else:
+            for field in self.fields:
+                if hasattr(field, 'has_code') and field.has_code:
+                    selections = list()
+                    for choice in field.choices:
+                        for key in choice:
+                            value = choice[key]
+                            if key == 'compute' and type(value) is CodeType:
+                                selections.extend(process_selections(eval(value, user_dict)))
+                            else:
+                                selections.append([value, key])
+                    selectcompute[field.number] = selections
+                if hasattr(field, 'choicetype') and field.choicetype == 'compute':
+                    selectcompute[field.number] = process_selections(eval(field.selections['compute'], user_dict))
+                if hasattr(field, 'datatype') and field.datatype == 'object':
+                    if field.number not in selectcompute:
+                        raise DAError("datatype was set to object but no code was provided")
+                    string = "_internal['objselections'][" + repr(field.saveas) + "] = dict()"
+                    logmessage("Doing " + string)
+                    try:
                         exec(string, user_dict)
-                except:
-                    raise DAError("Failure while processing field with datatype of object")
-            if hasattr(field, 'extras'):
-                for key in ['note', 'html', 'script', 'css']:
-                    if key in field.extras:
-                        if key not in extras:
-                            extras[key] = dict()
-                        extras[key][field.number] = field.extras[key].text(user_dict)
-            if hasattr(field, 'saveas'):
-                try:
-                    defaults[field.number] = eval(field.saveas, user_dict)
-                except:
-                    if hasattr(field, 'default'):
-                        defaults[field.number] = field.default.text(user_dict)
-                if hasattr(field, 'helptext'):
-                    helptexts[field.number] = field.helptext.text(user_dict)
-                if hasattr(field, 'hint'):
-                    hints[field.number] = field.hint.text(user_dict)
+                        for selection in selectcompute[field.number]:
+                            key = selection[0]
+                            #logmessage("key is " + str(key))
+                            real_key = codecs.decode(key, 'base64').decode('utf-8')
+                            string = "_internal['objselections'][" + repr(field.saveas) + "][" + repr(key) + "] = " + real_key
+                            logmessage("Doing " + string)
+                            exec(string, user_dict)
+                    except:
+                        raise DAError("Failure while processing field with datatype of object")
+                if hasattr(field, 'extras'):
+                    for key in ['note', 'html', 'script', 'css']:
+                        if key in field.extras:
+                            if key not in extras:
+                                extras[key] = dict()
+                            extras[key][field.number] = field.extras[key].text(user_dict)
+                if hasattr(field, 'saveas'):
+                    try:
+                        defaults[field.number] = eval(field.saveas, user_dict)
+                    except:
+                        if hasattr(field, 'default'):
+                            defaults[field.number] = field.default.text(user_dict)
+                    if hasattr(field, 'helptext'):
+                        helptexts[field.number] = field.helptext.text(user_dict)
+                    if hasattr(field, 'hint'):
+                        hints[field.number] = field.hint.text(user_dict)
         attachment_text = self.processed_attachments(user_dict, the_x=the_x, the_i=the_i)
         if 'menu_items' in user_dict:
             extras['menu_items'] = user_dict['menu_items']

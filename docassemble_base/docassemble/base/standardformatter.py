@@ -158,6 +158,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                     continue
             if hasattr(field, 'label'):
                 fieldlist.append('              <div class="form-group"><div class="col-md-12"><a href="' + url_action(field.action) + '">' + field.label + '</a></div></div>\n')
+                if field.number in status.helptexts:
+                    fieldlist.append('              <div class="row"><div class="col-md-12">' + markdown_to_html(status.helptexts[field.number], trim=True, status=status, strip_newlines=True) + '</div></div>\n')
         output += indent_by(audio_text, 10) + '          <form action="' + root + '" id="daform" class="form-horizontal" method="POST">\n            <fieldset>\n'
         output += '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:

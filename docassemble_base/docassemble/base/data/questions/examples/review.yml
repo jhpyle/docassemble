@@ -20,6 +20,8 @@ review:
       #### Naming section
     show if: user.name.first
   - Name: user.name.first
+    help: |
+      You said your name was **${ user.name }**.
   - note: |
       #### Fruity section
   - Favorite Fruit: fruit
