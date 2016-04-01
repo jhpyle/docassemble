@@ -972,6 +972,10 @@ class Question:
                     elif key == 'help':
                         if type(field[key]) is not dict and type(field[key]) is not list:
                             field_info[key] = TextObject(definitions + unicode(field[key]))
+                    elif key == 'button':
+                        if type(field[key]) is not dict and type(field[key]) is not list:
+                            field_info['help'] = TextObject(definitions + unicode(field[key]))
+                            field_info['type'] = 'button'
                     elif key == 'note':
                         field_info['type'] = 'note'
                         if 'extras' not in field_info:
@@ -1209,10 +1213,12 @@ class Question:
         helptexts = dict()
         extras = dict()
         if self.question_type == 'review':
+            extras['ok'] = dict()
             for field in self.fields:
-                if hasattr(field, 'saveas'):
+                extras['ok'][field.number] = False
+                if hasattr(field, 'saveas_code'):
                     try:
-                        eval(field.saveas, user_dict)
+                        eval(field.saveas_code, user_dict)
                     except:
                         continue
                 if hasattr(field, 'extras'):
@@ -1220,10 +1226,16 @@ class Question:
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()
-                            extras[key][field.number] = field.extras[key].text(user_dict)
-                if hasattr(field, 'saveas'):
-                    if hasattr(field, 'helptext'):
+                            try:
+                                extras[key][field.number] = field.extras[key].text(user_dict)
+                            except:
+                                continue
+                if hasattr(field, 'helptext'):
+                    try:
                         helptexts[field.number] = field.helptext.text(user_dict)
+                    except:
+                        continue
+                extras['ok'][field.number] = True
         else:
             for field in self.fields:
                 if hasattr(field, 'has_code') and field.has_code:

@@ -1697,15 +1697,6 @@ def index():
                     interview_status.screen_reader_links[question_type].append([url_for('speak_file', question=interview_status.question.number, type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
         # else:
         #     logmessage("speak_text was not here")
-        if interview_status.question.question_type == "review":
-            interview_status.extras['ok_fields'] = set()
-            for field in interview_status.question.fields:
-                if hasattr(field, 'saveas_code'):
-                    try:
-                        eval(field.saveas_code, user_dict)
-                    except:
-                        continue
-                    interview_status.extras['ok_fields'].add(field.saveas)
         content = as_html(interview_status, extra_scripts, extra_css, url_for, DEBUG, ROOT)
         if interview_status.using_screen_reader:
             for question_type in ['question', 'help']:

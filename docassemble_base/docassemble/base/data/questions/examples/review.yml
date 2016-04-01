@@ -17,14 +17,27 @@ question: |
   Review your answers
 review:
   - note: |
-      #### Naming section
+      Welcome to the review of answers.
+  - note: |
+      #### Your identity
     show if: user.name.first
   - Name: user.name.first
     help: |
       You said your name was **${ user.name }**.
   - note: |
-      #### Fruity section
-  - Favorite Fruit: fruit
+      #### Your favorite foods
+    show if: fruit
+  - Revisit Fruit: fruit
+    button: |
+      You said you liked ${ fruit }.
+  - Revisit Vegetable: vegetable
+    button: |
+      You said you liked ${ vegetable }.
+  - Revisit Fungus: fungi
+    button: |
+      You said you liked ${ fungi }.
+  - note: |
+      We suspect you prefer ${ fruit } to ${ vegetable }.
 ---
 question: |
   What is your favorite fruit?
@@ -32,13 +45,32 @@ fields:
   - no label: fruit
 ---
 question: |
+  What is your favorite vegetable?
+fields:
+  - no label: vegetable
+---
+question: |
+  What is your favorite fungi?
+fields:
+  - no label: fungi
+---
+question: |
   You like ${ fruit }.
-subquestion: |
-  You can [revisit your answers](${ url_action('review_answers') }).
-field: ready_to_go
+field: ready_to_go_one
+---
+question: |
+  You like ${ vegetable }.
+field: ready_to_go_two
+---
+question: |
+  You like ${ fungi }.
+field: ready_to_go_three
 ---
 sets: all_done
-need: ready_to_go
+need:
+  - ready_to_go_one
+  - ready_to_go_two
+  - ready_to_go_three
 question: |
   Ok, ${ user }, you like ${ fruit }.
 subquestion:

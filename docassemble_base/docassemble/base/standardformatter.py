@@ -140,21 +140,24 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     elif status.question.question_type == "review":
         fieldlist = list()
         for field in status.question.fields:
-            if hasattr(field, 'saveas') and field.saveas not in status.extras['ok_fields']:
+            if not status.extras['ok'][field.number]:
                 continue
             if hasattr(field, 'extras'):
-                if 'script' in field.extras and 'script' in status.extras:
+                if 'script' in field.extras and 'script' in status.extras and field.number in status.extras['script']:
                     extra_scripts.append(status.extras['script'][field.number])
-                if 'css' in field.extras and 'css' in status.extras:
+                if 'css' in field.extras and 'css' in status.extras and field.number in status.extras['css']:
                     extra_css.append(status.extras['css'][field.number])
             if hasattr(field, 'datatype'):
-                if field.datatype == 'html':
+                if field.datatype == 'html' and 'html' in status.extras and field.number in status.extras['html']:
                     fieldlist.append('              <div class="form-group' + req_tag +'"><div class="col-md-12"><note>' + status.extras['html'][field.number].rstrip() + '</note></div></div>\n')
                     continue
-                elif field.datatype == 'note':
+                elif field.datatype == 'note' and 'note' in status.extras and field.number in status.extras['note']:
                     fieldlist.append('              <div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status, strip_newlines=True) + '</div></div>\n')
                     continue
                 elif field.datatype in ['script', 'css']:
+                    continue
+                elif field.datatype == 'button' and hasattr(field, 'label') and field.number in status.helptexts:
+                    fieldlist.append('              <div class="row"><div class="col-md-12"><a class="label label-success review-action" href="' + url_action(field.action) + '">' + field.label + '</a>' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
                     continue
             if hasattr(field, 'label'):
                 fieldlist.append('              <div class="form-group"><div class="col-md-12"><a href="' + url_action(field.action) + '">' + field.label + '</a></div></div>\n')

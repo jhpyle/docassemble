@@ -250,3 +250,8 @@ span.daparenthetical {
     margin-top: 5px;
     background-color: #e7e7e7;
 }
+
+a.review-action {
+    font-size: 14px;
+    float: right;
+}
