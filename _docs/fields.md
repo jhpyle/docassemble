@@ -655,6 +655,126 @@ answers.  In this scenario, a `role_event` will be triggered.  When this happens
 defines the variable `role_event`, and it will find the example
 question above.
 
+## review
+
+A `review` block allows the user to revisit questions that have already
+been answered, at any point in the interview.  This allows interview
+authors to give interviewees the chance to take a step back and see
+what has already been answered.
+
+It is difficult to create such screens with ordinary question blocks
+because typically within **docassemble**, any reference to a variable
+that may or may not have been defined will cause a question to be
+asked that will define the question.
+
+The `review` block gets around this problem.  Only those entries that
+refer to variables already defined will be shown.  In other words, any
+entries that refer to variables not already defined will be excluded
+from the display.
+
+The list of variables to display to the user needs to be specified by
+the interview author.  There are several reasons why this cannot be
+automatically generated:
+
+1. Variables in your interview may be interdependent.  You do not
+   necessarily want to allow the interviewee to edit any past answer
+   at will because this may result in internal inconsistencies or
+   violations of the logic of your interview.  For example, if your
+   interview has a variable called `eligible_for_medicare`, which is
+   set after the user answers a series of questions, you would not
+   want the user to be able to go back and set his or her age to 30,
+   at least not without a reconsideration of the definition of
+   `eligible_for_medicare`.  Therefore, it is important that the
+   interview author control what the user can edit.
+2. A list of answers already provided might not be user-friendly
+   unless the interview author presents it in a logically organized
+   fashion.  The order in which the questions were asked is not
+   necessarily the most logical way to present the information for
+   editing.
+
+{% highlight yaml %}
+---
+include:
+  - basic-questions.yml
+---
+initial: true
+code: |
+  process_action(current_info)
+---
+mandatory: true
+code: |
+  menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
+---
+event: review_answers
+question: |
+  Review your answers
+review:
+  - note: |
+      Welcome to the review of answers.
+  - note: |
+      #### Your identity
+    show if: user.name.first
+  - Name: user.name.first
+    help: |
+      You said your name was **${ user.name }**.
+  - note: |
+      #### Your favorite foods
+    show if: fruit
+  - Revisit Fruit: fruit
+    button: |
+      You said you liked ${ fruit }.
+  - Revisit Vegetable: vegetable
+    button: |
+      You said you liked ${ vegetable }.
+  - Revisit Fungus: fungi
+    button: |
+      You said you liked ${ fungi }.
+  - note: |
+      We suspect you prefer ${ fruit } to ${ vegetable }.
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - no label: fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - no label: vegetable
+---
+question: |
+  What is your favorite fungi?
+fields:
+  - no label: fungi
+---
+question: |
+  You like ${ fruit }.
+field: ready_to_go_one
+---
+question: |
+  You like ${ vegetable }.
+field: ready_to_go_two
+---
+question: |
+  You like ${ fungi }.
+field: ready_to_go_three
+---
+sets: all_done
+need:
+  - ready_to_go_one
+  - ready_to_go_two
+  - ready_to_go_three
+question: |
+  Ok, ${ user }, you like ${ fruit }.
+subquestion:
+  You can [revisit your answers](${ url_action('review_answers') }).
+---
+mandatory: true
+code: all_done
+---
+{% endhighlight %}
+
+
 # A note about variable names
 
 Variable names are [Python identifiers], which means they can be any

@@ -342,6 +342,28 @@ code: |
 ---
 {% endhighlight %}
 
+## action_menu_item
+
+One way to let the user trigger "actions" is to provide a selection in
+the web app menu.  You can do this by setting the `menu_items` list.
+See [special variables] section for more information about setting
+menu items.
+
+{% highlight yaml %}
+---
+mandatory: true
+code: |
+  menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
+---
+{% endhighlight %}
+
+In this example, a menu item labeled "Review Answers" is added, which
+when run triggers the action "review_answers."
+
+`action_menu_item(a, b)` function returns a [Python dictionary] with
+keys `label` and `url`, where `label` is set to the value of `a` and
+`url` is set to the value of `url_action(b)`.
+
 ## prevent_going_back
 
 **docassemble**'s back button helps users when they make a mistake and

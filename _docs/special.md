@@ -204,6 +204,42 @@ access the interview answers.
 Setting `multi_user` to `True` will reduce [security] somewhat, but it
 is necessary for allowing the [multi-user interview feature].
 
+## menu_items
+
+Interviews can add entries to the menu within the web app.
+
+When `menu_items` is set to a [Python list], **docassemble** will add
+entries to the menu based on the items in the list.
+
+Each item in the list is expected to be a [Python dictionary] with
+keys `label` and `url`.  Typically, these entries are generated using
+the `action_menu_item()` [function], which creates a menu item that
+runs an "action."  (See the "url_action and process_action" section of
+the [functions] page for more information about what "actions" are in
+**docassemble**, and for documentation for the `action_menu_item()`
+function.)
+
+{% highlight yaml %}
+---
+mandatory: true
+code: |
+  menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
+---
+{% endhighlight %}
+
+Alternatively, you can set items manually:
+
+{% highlight yaml %}
+---
+mandatory: true
+code: |
+  menu_items = [ {'url': 'http://google.com', 'label': 'Go to Google!'} ]
+---
+{% endhighlight %}
+
+Since menu items are controlled with `code` blocks, you can turn them
+on and off during the course of the interview as necessary.
+
 [VoiceRSS]: http://www.voicerss.org/
 [get]: https://docs.python.org/2/library/stdtypes.html#dict.get
 [Python list]: https://docs.python.org/2/tutorial/datastructures.html

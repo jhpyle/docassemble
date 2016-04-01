@@ -18,6 +18,7 @@ experience errors or unexpected results.
 * `i`: used as an iterator when [generic objects] are defined.
 * `role`: used to store the role of the current user for purposes of
   the [roles] system.
+* `menu_items`: used to add items to the menu.
 * `track_location`: used to indicate whether the web app should
   attempt to determine the user's latitude and longitude and make it
   available in `current_info`.
