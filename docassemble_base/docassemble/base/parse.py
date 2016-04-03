@@ -75,6 +75,7 @@ class PackageImage(object):
     def get_filename(self):
         return(docassemble.base.util.static_filename_path(str(self.package) + ':' + str(self.filename)))
     def get_reference(self):
+        logmessage("get_reference is considering " + str(self.package) + ':' + str(self.filename))
         return str(self.package) + ':' + str(self.filename)
 
 class InterviewSource(object):
@@ -135,7 +136,7 @@ class InterviewSourceFile(InterviewSource):
         self.playground = None
         if 'filepath' in kwargs:
             if re.search(r'SavedFile', str(type(kwargs['filepath']))):
-                #logmessage("We have a saved file on our hands")
+                logmessage("We have a saved file on our hands")
                 self.playground = kwargs['filepath']
                 if os.path.isfile(self.playground.path) and os.access(self.playground.path, os.R_OK):
                     self.set_filepath(self.playground.path)
@@ -153,8 +154,13 @@ class InterviewSourceFile(InterviewSource):
         parts = path.split(":")
         if len(parts) == 2:
             self.package = parts[0]
+            self.basename = parts[1]
         else:
             self.package = None
+        # if self.package is None:
+        #     m = re.search(r'^/(playground\.[0-9]+)/', path)
+        #     if m:
+        #         self.package = m.group(1)
         if self.filepath is None:
             self.set_filepath(interview_source_from_string(self.path))
         if self.package is None and re.search(r'docassemble.base.data.', self.filepath):
@@ -179,7 +185,7 @@ class InterviewSourceFile(InterviewSource):
     def get_modtime(self):
         #logmessage("get_modtime called in parse where path is " + str(self.path))
         if self.playground is not None:
-            return self.playground.get_modtime(filename=os.path.basename(self.path))
+            return self.playground.get_modtime(filename=self.basename)
         self._modtime = os.path.getmtime(self.filepath)
         return(self._modtime)
     def append(self, path):
@@ -187,6 +193,7 @@ class InterviewSourceFile(InterviewSource):
         if os.path.isfile(new_file) and os.access(new_file, os.R_OK):
             new_source = InterviewSourceFile()
             new_source.path = path
+            new_source.basename = path
             new_source.filepath = new_file
             new_source.playground = self.playground
             if new_source.update():

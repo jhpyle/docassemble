@@ -534,12 +534,9 @@ def force_ask(variable_name):
     raise NameError("name '" + variable_name + "' is not defined")
 
 def static_filename_path(filereference):
-    #logmessage("Got this far with " + str(filereference))
     result = package_data_filename(static_filename(filereference))
-    #logmessage("Got this result " + str(result))
-    if result is None or not os.path.isfile(result):
-        #logmessage("Got here with " + str(filereference))
-        result = absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\.]', '', filereference)).path
+    #if result is None or not os.path.isfile(result):
+    #    result = absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\.]', '', filereference)).path
     return(result)
 
 def static_filename(filereference):
@@ -584,14 +581,17 @@ def package_template_filename(the_file, **kwargs):
     parts = the_file.split(":")
     if len(parts) == 1:
         package = kwargs.get('package', None)
-        #logmessage("package_template_filename: the_file is " + str(the_file) + " and package is " + str(package))
         if package is not None:
             parts = [package, the_file]
-        else:
-            retval = absolute_filename('/playgroundtemplate/' + the_file).path
-            logmessage("package_template_filename: retval is " + str(retval))
-            return(retval)
+        #else:
+        #    retval = absolute_filename('/playgroundtemplate/' + the_file).path
+        #    logmessage("package_template_filename: retval is " + str(retval))
+        #    return(retval)
     if len(parts) == 2:
+        m = re.search(r'^playground\.([0-9]+)$', parts[0])
+        if m:
+            parts[1] = re.sub(r'^data/templates/', '', parts[1])
+            return(absolute_filename("/playgroundtemplate/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\.]', '', parts[1])).path)
         if not re.match(r'data/.*', parts[1]):
             parts[1] = 'data/templates/' + parts[1]
         try:
@@ -605,19 +605,24 @@ def standard_question_filename(the_file):
     return(None)
 
 def package_data_filename(the_file):
+    logmessage("package_data_filename with: " + str(the_file))
     if the_file is None:
         return(None)
-    the_file = re.sub(r'^None:data/static/', '', the_file)
-    the_file = re.sub(r'^None:', '', the_file)
+    #the_file = re.sub(r'^None:data/static/', '', the_file)
+    #the_file = re.sub(r'^None:', '', the_file)
     parts = the_file.split(":")
     result = None
     if len(parts) == 2:
+        m = re.search(r'^playground\.([0-9]+)$', parts[0])
+        if m:
+            parts[1] = re.sub(r'^data/static/', '', parts[1])
+            return(absolute_filename("/playgroundstatic/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\.]', '', parts[1])).path)
         try:
             result = pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
         except:
             result = None
-    if result is None or not os.path.isfile(result):
-        result = absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\.]', '', the_file)).path
+    #if result is None or not os.path.isfile(result):
+    #    result = absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\.]', '', the_file)).path
     return(result)
 
 def package_question_filename(the_file):

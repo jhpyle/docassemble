@@ -163,6 +163,7 @@ div.playgroundbox div.panel-body {
     height: 30em;
     overflow-y: scroll;
     overflow-x: scroll;
+    position: relative;
 }
 
 div.playgroundbox table td {
@@ -220,7 +221,14 @@ a.example-copy {
     float: right;
 }
 
-i.dainfosign {
+.dainfosign {
+    color: rgb(49, 112, 143);
+    vertical-align: -2px;
+    cursor: pointer;
+    text-decoration: none !important;
+}
+
+.dashowmethods {
     color: rgb(49, 112, 143);
     vertical-align: -2px;
     cursor: pointer;
@@ -231,9 +239,15 @@ table.daplaygroundtable td {
     vertical-align: middle;
 }
 
+table.daplaygroundtable td table {
+    margin-left: 10px;
+    margin-top: 5px;
+}
+
 span.daparenthetical {
     color: #777777;
     font-size: 14px;
+    cursor: pointer;
 }
 
 .example-hider {
@@ -254,4 +268,17 @@ span.daparenthetical {
 a.review-action {
     font-size: 14px;
     float: right;
+}
+
+a.example-share {
+    font-size: 14px;
+    float: right;
+}
+
+a.example-share:focus {
+    outline: none;
+}
+
+a.dashowmethods:focus {
+    outline: none;
 }

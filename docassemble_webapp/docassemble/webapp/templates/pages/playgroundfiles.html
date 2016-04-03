@@ -17,7 +17,7 @@
   <tbody>
   {%- for file in files %}
     <tr>
-      <td><a href="{{ url_for('playground_' + section, filename=file) }}">{{ file }}</a></td>
+      <td><a target="_blank" href="{{ url_for('playground_' + section, userid=userid, filename=file) }}">{{ file }}</a></td>
       <td style="text-align:right;"><a class="label label-warning" href="?section={{ section }}&delete={{ file }}">{{ word('Delete') }}</a></td>
     </tr>
   {% endfor %}

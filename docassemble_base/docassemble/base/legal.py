@@ -427,6 +427,7 @@ class Individual(Person):
             return True
         return False
     def age_in_years(self, decimals=False):
+        """Returns the individual's age in years, based on self.birthdate."""
         if hasattr(self, 'age'):
             if decimals:
                 return float(self.age)

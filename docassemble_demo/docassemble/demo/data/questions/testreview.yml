@@ -1,0 +1,49 @@
+modules:
+  - docassemble.base.util
+---
+initial: true
+code: |
+  process_action(current_info)
+---
+code: |
+  fruit = "apples"
+  vegetable = "potatoes"
+---
+event: review_answers
+question: |
+  Revisit questions
+subquestion: |
+  These are the questions you have answered so far.  Click to revisit.
+review:
+  - Favorite fruit: fruit
+  - Favorite vegetable: vegetable
+  - Favorite fungus: fungi
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - no label: fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - no label: vegetable
+---
+question: |
+  What is your favorite fungi?
+fields:
+  - no label: fungi
+---
+sets: final_screen
+question: All done
+subquestion: |
+  You like ${ fruit }, ${ vegetable }, and ${ fungi }.
+---
+mandatory: true
+code: |
+  menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
+---
+mandatory: true
+code: |
+  need(final_screen)
+---

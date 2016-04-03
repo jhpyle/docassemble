@@ -305,18 +305,19 @@ def get_url_from_file_reference(file_reference, **kwargs):
             extn = '.' + extn
         else:
             extn = ''
-        file_reference = re.sub(r'^None:data/static/', '', file_reference)
-        file_reference = re.sub(r'^None:', '', file_reference)
+        #file_reference = re.sub(r'^None:data/static/', '', file_reference)
+        #file_reference = re.sub(r'^None:', '', file_reference)
         parts = file_reference.split(':')
         if len(parts) < 2:
             parts = ['docassemble.base', 'data/static/' + file_reference]
             the_file = None
-            try:
-                the_file = pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
-            except:
-                return(fileroot + "playgroundstatic/" + file_reference)
-            if not os.path.isfile(the_file):
-                return(fileroot + "playgroundstatic/" + file_reference)
+            #try:
+            the_file = pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
+            #except:
+            #    if current_user.is_authenticated and not current_user.is_anonymous:
+            #        return(fileroot + "playgroundstatic/" + file_reference)
+            #if not os.path.isfile(the_file) and current_user.is_authenticated and not current_user.is_anonymous:
+            #    return(fileroot + "playgroundstatic/" + file_reference)
         parts[1] = re.sub(r'^data/static/', '', parts[1])
         url = fileroot + 'packagestatic/' + parts[0] + '/' + parts[1] + extn
     return(url)
@@ -324,23 +325,23 @@ def get_url_from_file_reference(file_reference, **kwargs):
 docassemble.base.parse.set_url_finder(get_url_from_file_reference)
 
 def absolute_filename(the_file):
-    #logmessage("Running absolute filename")
-    if current_user.is_authenticated and not current_user.is_anonymous:
-        match = re.match(r'^/playground/(.*)', the_file)
-        if match:
-            filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(1))
-            playground = SavedFile(current_user.id, section='playground', fix=True, filename=filename)
-            return playground
-        match = re.match(r'^/playgroundtemplate/(.*)', the_file)
-        if match:
-            filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(1))
-            playground = SavedFile(current_user.id, section='playgroundtemplate', fix=True, filename=filename)
-            return playground
-        match = re.match(r'^/playgroundstatic/(.*)', the_file)
-        if match:
-            filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(1))
-            playground = SavedFile(current_user.id, section='playgroundstatic', fix=True, filename=filename)
-            return playground
+    match = re.match(r'^playground\.([0-9]+):(.*)', the_file)
+    logmessage("absolute_filename call: " + the_file)
+    if match:
+        filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(2))
+        logmessage("absolute_filename: filename is " + filename)
+        playground = SavedFile(match.group(1), section='playground', fix=True, filename=filename)
+        return playground
+    match = re.match(r'^/playgroundtemplate/([0-9]+)/(.*)', the_file)
+    if match:
+        filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(2))
+        playground = SavedFile(match.group(1), section='playgroundtemplate', fix=True, filename=filename)
+        return playground
+    match = re.match(r'^/playgroundstatic/([0-9]+)/(.*)', the_file)
+    if match:
+        filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(2))
+        playground = SavedFile(match.group(1), section='playgroundstatic', fix=True, filename=filename)
+        return playground
     return(None)
 
 # def absolute_validator(the_file):
@@ -1088,10 +1089,13 @@ def index():
         show_flash = False
         yaml_filename = yaml_parameter
         old_yaml_filename = session.get('i', None)
+        # if yaml_filename.startswith("/playground") and not current_user.is_authenticated:
+        #     flash(word("You must be logged in as a developer to continue"), 'error')
+        #     return redirect(url_for('user.login', next=url_for('index', **request.args)))
         if old_yaml_filename is not None:
             if old_yaml_filename != yaml_filename:
                 session['i'] = yaml_filename
-                if request.args.get('from_list', None) is None and not yaml_filename.startswith("/playground") and not yaml_filename.startswith("docassemble.base"):
+                if request.args.get('from_list', None) is None and not yaml_filename.startswith("playground") and not yaml_filename.startswith("docassemble.base"):
                     show_flash = True
         if session_parameter is None:
             if show_flash:
@@ -2800,24 +2804,20 @@ def make_example_html(examples, first_id, example_html, data_dict):
         data_dict[example['id']] = example
     example_html.append('          </ul>')
 
-@app.route('/playgroundstatic/<filename>', methods=['GET'])
-@login_required
-@roles_required(['developer', 'admin'])
-def playground_static(filename):
+@app.route('/playgroundstatic/<userid>/<filename>', methods=['GET'])
+def playground_static(userid, filename):
     filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', filename)
-    area = SavedFile(current_user.id, fix=True, section='playgroundstatic')
+    area = SavedFile(userid, fix=True, section='playgroundstatic')
     filename = os.path.join(area.directory, filename)
     if os.path.isfile(filename):
         extension, mimetype = get_ext_and_mimetype(filename)
         return(send_file(filename, mimetype=str(mimetype)))
     abort(404)
 
-@app.route('/playgroundtemplate/<filename>', methods=['GET'])
-@login_required
-@roles_required(['developer', 'admin'])
-def playground_template(filename):
+@app.route('/playgroundtemplate/<userid>/<filename>', methods=['GET'])
+def playground_template(userid, filename):
     filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', filename)
-    area = SavedFile(current_user.id, fix=True, section='playgroundtemplate')
+    area = SavedFile(userid, fix=True, section='playgroundtemplate')
     filename = os.path.join(area.directory, filename)
     if os.path.isfile(filename):
         extension, mimetype = get_ext_and_mimetype(filename)
@@ -2928,7 +2928,12 @@ def playground_files():
         extra_command = "      scrollBottom();\n"
     else:
         extra_command = ""
-    return render_template('pages/playgroundfiles.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("file_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "' + mode + '", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#formtwo").trigger("checkform.areYouSure");});\n      $("#formtwo").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#formtwo").bind("submit", function(){daCodeMirror.save(); $("#formtwo").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, description=description, form=form, files=files, section=section, editable_files=editable_files, formtwo=formtwo, current_file=the_file, content=content), 200
+    return render_template('pages/playgroundfiles.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("file_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "' + mode + '", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#formtwo").trigger("checkform.areYouSure");});\n      $("#formtwo").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#formtwo").bind("submit", function(){daCodeMirror.save(); $("#formtwo").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, description=description, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, formtwo=formtwo, current_file=the_file, content=content), 200
+
+def public_method(method, the_class):
+    if isinstance(method, types.MethodType) and method.__name__ != 'init' and not method.__name__.startswith('_') and method.__name__ in the_class.__dict__:
+        return True
+    return False
 
 def noquote(string):
     string = noquote_match.sub('&quot;', string)
@@ -2948,7 +2953,11 @@ def get_vars_in_use(interview, interview_status):
     except Exception as errmess:
         logmessage("Failed assembly " + str(errmess))
         pass
-    names_used = copy.copy(interview.names_used)
+    names_used = set()
+    for val in interview.names_used:
+        if val.startswith('x.') or val.startswith('x[') or val == 'x' or val == '_internal':
+            continue
+        names_used.add(val)
     functions = set()
     modules = set()
     classes = set()
@@ -2966,7 +2975,11 @@ def get_vars_in_use(interview, interview_status):
             for x in list(user_dict[val].__bases__):
                 if x.__name__ != 'DAObject':
                     bases.append(x.__name__)
-            name_info[val] = {'doc': inspect.getdoc(user_dict[val]), 'name': str(val), 'insert': str(val), 'bases': bases}
+            methods = inspect.getmembers(user_dict[val], predicate=lambda x: public_method(x, user_dict[val]))
+            method_list = list()
+            for name, value in methods:
+                method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': inspect.getdoc(value), 'tag': '.' + str(name) + str(inspect.formatargspec(*inspect.getargspec(value)))})
+            name_info[val] = {'doc': inspect.getdoc(user_dict[val]), 'name': str(val), 'insert': str(val), 'bases': bases, 'methods': method_list}
     for val in docassemble.base.util.pickleable_objects(user_dict):
         names_used.add(val)
         name_info[val] = {'type': type(user_dict[val]).__name__}
@@ -2976,32 +2989,41 @@ def get_vars_in_use(interview, interview_status):
     if len(names_used):
         content += '\n                  <tr><td><h4>Variables</h4></td></tr>'
         for var in sorted(names_used):
-            content += '\n                  <tr><td><a data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + var + '</a>'
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + var + '</a>'
             if var in name_info and name_info[var]['type']:
-                content +=' <span class="daparenthetical">(' + name_info[var]['type'] + ')</span>'
+                content +='&nbsp;<span data-ref="' + noquote(name_info[var]['type']) + '" class="daparenthetical">(' + name_info[var]['type'] + ')</span>'
             content += '</td></tr>'
     if len(functions):
         content += '\n                  <tr><td><h4>Functions</h4></td></tr>'
         for var in sorted(functions):
-            content += '\n                  <tr><td><a data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-warning playground-variable">' + name_info[var]['tag'] + '</a>'
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-warning playground-variable">' + name_info[var]['tag'] + '</a>'
             if name_info[var]['doc']:
-                content += '&nbsp;<a tabindex="0" role="button" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + var + '"><i class="glyphicon glyphicon-info-sign dainfosign"</i></a>'
+                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
             content += '</td></tr>'
     if len(classes):
         content += '\n                  <tr><td><h4>Classes</h4></td></tr>'
         for var in sorted(classes):
-            content += '\n                  <tr><td><a data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-info playground-variable">' + name_info[var]['name'] + '</a>'
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-info playground-variable">' + name_info[var]['name'] + '</a>'
             if name_info[var]['bases']:
-                content += '<span class="daparenthetical">(' + name_info[var]['bases'][0] + ')</span>'
+                content += '&nbsp;<span data-ref="' + noquote(name_info[var]['bases'][0]) + '" class="daparenthetical">(' + name_info[var]['bases'][0] + ')</span>'
             if name_info[var]['doc']:
-                content += '&nbsp;<a tabindex="0" role="button" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + var + '"><i class="glyphicon glyphicon-info-sign dainfosign"</i></a>'
+                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
+            if len(name_info[var]['methods']):
+                content += '&nbsp;<a class="dashowmethods" role="button" data-showhide="XMETHODX' + var + '" title="' + word('Methods') + '"><i class="glyphicon glyphicon-cog"</i></a>'
+                content += '<table class="invisible" id="XMETHODX' + var + '"><tbody>'
+                for method_info in name_info[var]['methods']:
+                    content += '<tr><td><a data-name="' + noquote(method_info['name']) + '" data-insert="' + noquote(method_info['insert']) + '" class="label label-warning playground-variable">' + method_info['tag'] + '</a>'
+                    if method_info['doc']:
+                        content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + noquote(method_info['doc']) + '" title="' + noquote(method_info['name']) + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
+                    content += '</td></tr>'
+                content += '</tbody></table>'
             content += '</td></tr>'
     if len(modules):
         content += '\n                  <tr><td><h4>Modules</h4></td></tr>'
         for var in sorted(modules):
-            content += '\n                  <tr><td><a data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-success playground-variable">' + name_info[var]['name'] + '</a>'
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-success playground-variable">' + name_info[var]['name'] + '</a>'
             if name_info[var]['doc']:
-                content += '&nbsp;<a tabindex="0" role="button" data-toggle="popover" data-placement="auto" data-content="' + noquote(name_info[var]['doc']) + '" title="' + noquote(var) + '"><i class="glyphicon glyphicon-info-sign dainfosign"</i></a>'
+                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + noquote(name_info[var]['doc']) + '" title="' + noquote(var) + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
             content += '</td></tr>'
     return content
 
@@ -3074,14 +3096,15 @@ def playground_page():
             else:
                 playground.finalize()
                 flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Running in other tab.'), message_type='success')
-                interview_source = docassemble.base.parse.interview_source_from_string('/playground/' + the_file)
+                interview_source = docassemble.base.parse.interview_source_from_string('playground.' + str(current_user.id) + ':' + the_file)
                 interview_source.set_testing(True)
                 interview = interview_source.get_interview()
-                interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='/playground/' + the_file, req=request, action=None))
+                interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='playground.' + str(current_user.id) + ':' + the_file, req=request, action=None))
                 variables_html = get_vars_in_use(interview, interview_status)
-                return jsonify(url=url_for('index', i='/playground/' + the_file), variables_html=variables_html, flash_message=flash_message)
+                return jsonify(url=url_for('index', i='playground.' + str(current_user.id) + ':' + the_file), variables_html=variables_html, flash_message=flash_message)
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
+    interview_path = None
     if the_file != '':
         playground.finalize()
         with open(filename, 'rU') as fp:
@@ -3090,15 +3113,16 @@ def playground_page():
             content = fp.read().decode('utf8')
             #if not form.playground_content.data:
                 #form.playground_content.data = content
-        interview_source = docassemble.base.parse.interview_source_from_string('/playground/' + the_file)
+        interview_path = 'playground.' + str(current_user.id) + ':' + the_file
+        interview_source = docassemble.base.parse.interview_source_from_string(interview_path)
         interview_source.set_testing(True)
     elif form.playground_content.data:
         content = re.sub(r'\r', '', form.playground_content.data)
-        interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="None:test.yml", testing=True)
+        interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="playground." + str(current_user.id) + ":test.yml", testing=True)
     else:
-        interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path="None:test.yml", testing=True)
+        interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path="playground." + str(current_user.id) + ":test.yml", testing=True)
     interview = interview_source.get_interview()
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='/playground/' + the_file, req=request, action=None))
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='playground.' + str(current_user.id) + ':' + the_file, req=request, action=None))
     variables_html = get_vars_in_use(interview, interview_status)
     ajax = """
 $("#daRun").click(function(event){
@@ -3125,6 +3149,25 @@ $("#daRun").click(function(event){
 $(".playground-variable").on("click", function(){
   daCodeMirror.replaceSelection($(this).data("insert"), "around");
   daCodeMirror.focus();
+});
+
+$(".daparenthetical").on("click", function(event){
+  var reference = $(this).data("ref");
+  //console.log("reference is " + reference)
+  var target = $('[data-name="' + reference + '"]').first();
+  if (target != null){
+    //console.log("scrolltop is now " + $('#daplaygroundpanel').scrollTop());
+    //console.log("Scrolling to " + target.position().top);
+    $('#daplaygroundpanel').animate({
+        scrollTop: target.position().top
+    }, 1000);
+  }
+  event.preventDefault();
+});
+
+$(".dashowmethods").on("click", function(event){
+  var target_id = $(this).data("showhide");
+  $("#" + target_id).toggleClass("invisible");
 });
 
 var exampleData;
@@ -3201,8 +3244,8 @@ $(".example-heading").on("click", function(){
 });
 
 $(function () {
-  $('[data-toggle="popover"]').popover({trigger: 'focus'})
-})
+  $('[data-toggle="popover"]').popover({trigger: 'click focus'})
+});
 
 $("#show-full-example").on("click", function(){
   var id = $(".example-active").data("example");
@@ -3230,7 +3273,7 @@ $("#hide-full-example").on("click", function(){
     example_html.append('        </div>')
     example_html.append('        <div class="col-md-6"><h4>' + word("Preview") + '</h4><a href="#" target="_blank" id="example-image-link"><img class="example_screenshot" id="example-image"></a></div>')
     example_html.append('        <div class="col-md-4 example-source-col"><h4>' + word('Source') + ' <a class="label label-success example-copy">' + word('Insert') + '</a></h4><div id="example-source-before" class="invisible"></div><div id="example-source"></div><div id="example-source-after" class="invisible"></div><div><a class="example-hider" id="show-full-example">' + word("Show context of example") + '</a><a class="example-hider invisible" id="hide-full-example">' + word("Hide context of example") + '</a></div></div>')
-    return render_template('pages/playground.html', page_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, current_file=the_file, content=content, variables_html=Markup(variables_html), example_html=Markup("\n".join(example_html))), 200
+    return render_template('pages/playground.html', page_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, current_file=the_file, content=content, variables_html=Markup(variables_html), example_html=Markup("\n".join(example_html)), interview_path=interview_path), 200
 
 # nameInfo = ' + str(json.dumps(vars_in_use['name_info'])) + ';      
 

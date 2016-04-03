@@ -13,10 +13,12 @@
     <textarea rows="24" cols="80" id="playground_content" name="playground_content" tabindex="70">{{ content }}</textarea>
   </div>
   <div class="form-actions">
-    {{ render_submit_field(form.submit, tabindex=100, class="btn btn-primary btn-lg") }}
-    {{ render_submit_field(form.run, id='daRun', tabindex=110, class="btn btn-warning btn-lg") }}
-    <!--<button id="run-button" class="btn btn-warning btn-lg" value="Save and Run" tabindex="110">Save and Run</button>-->
-    {{ render_submit_field(form.delete, id='daDelete', tabindex=120, class="btn btn-default btn-lg") }}
+    {{ render_submit_field(form.submit, class="btn btn-primary btn-lg") }}
+    {{ render_submit_field(form.run, id='daRun', class="btn btn-warning btn-lg") }}
+    {{ render_submit_field(form.delete, id='daDelete', class="btn btn-default btn-lg") }}
+    {% if interview_path %}
+    <a title="Right-click to copy link" class="label label-default example-share" target="_blank" href="{{ url_for('index', i=interview_path) }}"><i class="glyphicon glyphicon-link"></i> {{ word('Share') }}</a>
+    {% endif %}
   </div>
 </form>
 {%- endblock %}
@@ -25,7 +27,7 @@
               <div class="panel-heading">
                 <h3 class="panel-title">{{ word('Variables, etc.') }}</h3>
               </div>
-              <div class="panel-body">
+              <div class="panel-body" id="daplaygroundpanel">
                 <table id="daplaygroundtable" class="daplaygroundtable">{{ variables_html }}
                 </table>
               </div>
