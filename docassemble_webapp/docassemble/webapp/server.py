@@ -2979,6 +2979,10 @@ def get_vars_in_use(interview, interview_status):
     modules = set()
     classes = set()
     name_info = dict()
+    area = SavedFile(current_user.id, fix=True, section='playgroundtemplate')
+    templates = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
+    area = SavedFile(current_user.id, fix=True, section='playgroundstatic')
+    static = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
     for val in user_dict:
         if type(user_dict[val]) is types.FunctionType:
             functions.add(val)
@@ -3041,6 +3045,16 @@ def get_vars_in_use(interview, interview_status):
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-success playground-variable">' + name_info[var]['name'] + '</a>'
             if name_info[var]['doc']:
                 content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + noquote(name_info[var]['doc']) + '" title="' + noquote(var) + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
+            content += '</td></tr>'
+    if len(templates):
+        content += '\n                  <tr><td><h4>Templates</h4></td></tr>'
+        for var in templates:
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-default playground-variable">' + noquote(var) + '</a>'
+            content += '</td></tr>'
+    if len(static):
+        content += '\n                  <tr><td><h4>Static files</h4></td></tr>'
+        for var in static:
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-default playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
     return content
 
