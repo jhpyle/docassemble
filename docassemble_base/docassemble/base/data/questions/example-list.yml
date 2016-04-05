@@ -53,6 +53,20 @@
     - terms
     - interview-help
     - def
+- Utility functions:
+    - loading-util
+    - space-underscore
+    - qr-code
+    - url-of
+    - set-language
+- Interview flow:
+    - need
+    - actions
+    - actions-parameters
+    - menu-item
+    - review
+    - prevent-back
+    - force-ask
 - Linguistic:
     - capitalize
     - lists
@@ -63,14 +77,3 @@
     - ordinal-number
     - title-case
     - past-tense
-- Utility functions:
-    - loading-util
-    - actions
-    - actions-parameters
-    - need
-    - force-ask
-    - space-underscore
-    - qr-code
-    - url-of
-    - prevent-back
-    - set-language

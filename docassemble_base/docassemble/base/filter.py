@@ -125,7 +125,7 @@ def rtf_prefilter(text, metadata=dict()):
     text = re.sub(r'^######### ', '[HEADING9] ', text, flags=re.MULTILINE)
     return(text)
 
-def rtf_filter(text, metadata=dict(), styles=dict()):
+def rtf_filter(text, metadata=dict(), styles=dict(), question=None):
     if 'fontsize' in metadata:
         text = re.sub(r'{\\pard', '\\fs' + str(convert_length(metadata['fontsize'], 'hp')) + ' {\\pard', text, count=1)
         after_space_multiplier = str(convert_length(metadata['fontsize'], 'twips'))
@@ -161,9 +161,9 @@ def rtf_filter(text, metadata=dict(), styles=dict()):
     text = re.sub(r'{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 *\\par}', r'', text)
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
     text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', rtf_caption_table, text, flags=re.DOTALL)
-    text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
-    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_as_rtf, text)
-    text = re.sub(r'\[FILE ([^,\]]+)\]', image_as_rtf, text)
+    text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_as_rtf(x, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_as_rtf(x, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_as_rtf(x, question=question), text)
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_as_rtf, text)
     text = re.sub(r'\[QR ([^\]]+)\]', qr_as_rtf, text)
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
@@ -229,12 +229,12 @@ def rtf_filter(text, metadata=dict(), styles=dict()):
     text = re.sub(r'{\\pard \\sl[0-9]+\\slmult[0-9]+ \\ql \\f[0-9]+ \\sa[0-9]+ \\li[0-9]+ \\fi-?[0-9]*\s*\[FLUSHLEFT\]}', r'', text)
     return(text)
 
-def docx_filter(text, metadata=dict()):
+def docx_filter(text, metadata=dict(), question=None):
     text = text + "\n\n"
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
-    text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_include_docx, text)
-    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_include_docx, text)
-    text = re.sub(r'\[FILE ([^,\]]+)\]', image_include_docx, text)
+    text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_docx(x, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_docx(x, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_include_docx(x, question=question), text)
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_include_docx, text)
     text = re.sub(r'\[QR ([^\]]+)\]', qr_include_docx, text)
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
@@ -267,12 +267,12 @@ def docx_filter(text, metadata=dict()):
     text = re.sub(r'\[BOLDCENTER\] *(.+?)\n\n', '', text, flags=re.MULTILINE | re.DOTALL)
     return(text)
 
-def pdf_filter(text, metadata=dict()):
+def pdf_filter(text, metadata=dict(), question=None):
     text = text + "\n\n"
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
-    text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', emoji_include_string, text)
-    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_include_string, text)
-    text = re.sub(r'\[FILE ([^,\]]+)\]', image_include_string, text)
+    text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_string(x, emoji=True, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_string(x, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_include_string(x, question=question), text)
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_include_string, text)
     text = re.sub(r'\[QR ([^\]]+)\]', qr_include_string, text)
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
@@ -305,12 +305,14 @@ def pdf_filter(text, metadata=dict()):
     text = re.sub(r'\[BOLDCENTER\] *(.+?)\n\n', boldcenter_pdf, text, flags=re.MULTILINE | re.DOTALL)
     return(text)
 
-def html_filter(text, status=None):
+def html_filter(text, status=None, question=None):
+    if question is None and status is not None:
+        question = status.question
     text = text + "\n\n"
     text = re.sub(r'^[|] (.*)$', r'\1<br>', text, flags=re.MULTILINE)
-    text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', emoji_url_string, text)
-    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', image_url_string, text)
-    text = re.sub(r'\[FILE ([^,\]]+)\]', image_url_string, text)
+    text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, emoji=True, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, question=question), text)
+    text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_url_string(x, question=question), text)
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_url_string, text)
     text = re.sub(r'\[QR ([^,\]]+)\]', qr_url_string, text)
     if map_match.search(text):
@@ -355,6 +357,8 @@ def clean_markdown_to_latex(string):
     return string;
 
 def map_string(encoded_text, status):
+    if status is None:
+        return ''
     map_number = len(status.maps)
     status.maps.append(codecs.decode(encoded_text, 'base64').decode('utf-8'))
     return '<div id="map' + str(map_number) + '" class="googleMap"></div>'
@@ -391,7 +395,7 @@ def boldcenter_pdf(match):
     string = re.sub(r'\[NEWLINE\] *', r'\\newline ', string)
     return('\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\Centering\\bfseries\\noindent ' + unicode(string) + '\\par\\endgroup' + "\n\n")
 
-def image_as_rtf(match):
+def image_as_rtf(match, question=None):
     width_supplied = False
     try:
         width = match.group(2)
@@ -401,7 +405,7 @@ def image_as_rtf(match):
     if width == 'full':
         width_supplied = False
     file_reference = match.group(1)
-    file_info = file_finder(file_reference, convert={'svg': 'png'})
+    file_info = file_finder(file_reference, convert={'svg': 'png'}, question=question)
     if 'path' not in file_info:
         return ''
     logmessage('image_as_rtf: path is ' + file_info['path'])
@@ -519,7 +523,7 @@ def pixels_in(length):
     logmessage("Could not read " + str(length) + "\n")
     return(300)
 
-def image_url_string(match, emoji=False, status=None):
+def image_url_string(match, emoji=False, question=None):
     file_reference = match.group(1)
     try:
         width = match.group(2)
@@ -527,15 +531,15 @@ def image_url_string(match, emoji=False, status=None):
         width = "300px"
     if width == "full":
         width = "300px"    
-    file_info = file_finder(file_reference)
+    file_info = file_finder(file_reference, question=question)
     if 'mimetype' in file_info:
         if re.search(r'^audio', file_info['mimetype']):
-            urls = get_audio_urls([{'text': "[FILE " + file_reference + "]", 'package': None, 'type': 'audio'}])
+            urls = get_audio_urls([{'text': "[FILE " + file_reference + "]", 'package': None, 'type': 'audio'}], question=question)
             if len(urls):
                 return audio_control(urls)
             return ''
         if re.search(r'^video', file_info['mimetype']):
-            urls = get_video_urls([{'text': "[FILE " + file_reference + "]", 'package': None, 'type': 'video'}])
+            urls = get_video_urls([{'text': "[FILE " + file_reference + "]", 'package': None, 'type': 'video'}], question=question)
             if len(urls):
                 return video_control(urls)
             return ''
@@ -547,14 +551,14 @@ def image_url_string(match, emoji=False, status=None):
         if emoji:
             width_string += ';vertical-align: middle'
         if file_info['extension'] in ['png', 'jpg', 'gif', 'svg']:
-            return('<img class="daicon" style="' + width_string + '" src="' + url_finder(file_reference) + '"/>')
+            return('<img class="daicon" style="' + width_string + '" src="' + url_finder(file_reference, question=question) + '"/>')
         elif file_info['extension'] == 'pdf':
-            output = '<img class="daicon" style="' + width_string + '" src="' + url_finder(file_reference, size="screen", page=1) + '"/>'
+            output = '<img class="daicon" style="' + width_string + '" src="' + url_finder(file_reference, size="screen", page=1, question=question) + '"/>'
             if 'pages' in file_info and file_info['pages'] > 1:
                 output += " (" + str(file_info['pages']) + " " + docassemble.base.util.word('pages') + ")"
             return(output)
         else:
-            return('<a href="' + url_finder(file_reference) + '">' + file_info['filename'] + '</a>')
+            return('<a href="' + url_finder(file_reference, question=question) + '">' + file_info['filename'] + '</a>')
     else:
         return('[Invalid image reference; reference=' + str(file_reference) + ', width=' + str(width) + ', filename=' + file_info.get('filename', 'unknown') + ']')
 
@@ -581,14 +585,11 @@ def qr_url_string(match):
         viewbox = ""
     return('<svg style="' + width_string + '" ' + viewbox + '><g transform="scale(1.0)">' + the_image + '</g></svg>')
 
-def emoji_url_string(match):
-    return(image_url_string(match, emoji=True))
-    
 def convert_pixels(match):
     pixels = match.group(1)
     return (str(int(pixels)/72.0) + "in")
 
-def image_include_string(match, emoji=False):
+def image_include_string(match, emoji=False, question=None):
     file_reference = match.group(1)
     try:
         width = match.group(2)
@@ -597,7 +598,7 @@ def image_include_string(match, emoji=False):
             width = '\\textwidth'
     except:
         width = DEFAULT_IMAGE_WIDTH
-    file_info = file_finder(file_reference, convert={'svg': 'eps'})
+    file_info = file_finder(file_reference, convert={'svg': 'eps'}, question=question)
     if 'mimetype' in file_info:
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
@@ -616,7 +617,7 @@ def image_include_string(match, emoji=False):
                 return(output)
     return('[invalid graphics reference]')
 
-def image_include_docx(match):
+def image_include_docx(match, question=None):
     file_reference = match.group(1)
     try:
         width = match.group(2)
@@ -625,7 +626,7 @@ def image_include_docx(match):
             width = '100%'
     except:
         width = DEFAULT_IMAGE_WIDTH
-    file_info = file_finder(file_reference, convert={'svg': 'eps'})
+    file_info = file_finder(file_reference, convert={'svg': 'eps'}, question=question)
     if 'mimetype' in file_info:
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
@@ -669,9 +670,6 @@ def qr_include_docx(match):
     output = '![](' + the_image.name + '){width=' + width + '}'
     return(output)
 
-def emoji_include_string(match):
-    return image_include_string(match, emoji=True)
-
 def rtf_caption_table(match):
     table_text = """\\trowd \\irow0\\irowband0\\lastrow \\ltrrow\\ts24\\trgaph108\\trleft0\\trbrdrt\\brdrs\\brdrw10 \\trbrdrl\\brdrs\\brdrw10 \\trbrdrb\\brdrs\\brdrw10 \\trbrdrr\\brdrs\\brdrw10 \\trbrdrh\\brdrs\\brdrw10 \\trbrdrv\\brdrs\\brdrw10 
 \\trftsWidth1\\trftsWidthB3\\trftsWidthA3\\trautofit1\\trpaddl108\\trpaddr108\\trpaddfl3\\trpaddft3\\trpaddfb3\\trpaddfr3\\trcbpat1\\trcfpat1\\tblrsid1508006\\tbllkhdrrows\\tbllkhdrcols\\tbllknocolband\\tblind0\\tblindtype3 \\clvertalc\\clbrdrt\\brdrnone \\clbrdrl\\brdrnone 
@@ -707,31 +705,34 @@ def emoji_insert(text, status=None, images=None):
     else:
         return(":" + str(text) + ":")
 
-def markdown_to_html(a, trim=False, pclass=None, status=None, use_pandoc=False, escape=False, do_terms=True, indent=None, strip_newlines=None):
-    if status is not None:
+def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use_pandoc=False, escape=False, do_terms=True, indent=None, strip_newlines=None):
+    if question is None and status is not None:
+        question = status.question
+    if question is not None:
         if do_terms:
-            if status.question.language in status.question.interview.terms and len(status.question.interview.terms[status.question.language]) > 0:
-                for term in status.question.interview.terms[status.question.language]:
+            if question.language in question.interview.terms and len(question.interview.terms[question.language]) > 0:
+                for term in question.interview.terms[question.language]:
                     #logmessage("Searching for term " + term + "\n")
-                    a = status.question.interview.terms[status.question.language][term]['re'].sub(r'[[\1]]', a)
+                    a = question.interview.terms[question.language][term]['re'].sub(r'[[\1]]', a)
                     #logmessage("string is now " + str(a) + "\n")
-        if len(status.question.interview.images) > 0:
-            a = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status)), a)
-    a = html_filter(unicode(a), status=status)
+    if status is not None and len(question.interview.images) > 0:
+        a = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status)), a)
+    a = html_filter(unicode(a), status=status, question=question)
     #logmessage("before: " + a)
     if use_pandoc:
         converter = Pandoc()
         converter.output_format = 'html'
         #logmessage("input was:\n" + repr(a))
         converter.input_content = a
-        converter.convert()
+        converter.convert(question)
         result = converter.output_content.decode('utf-8')
     else:
         result = markdown.markdown(a, extensions=[SmartypantsExt(configs=dict())], output_format='html5')
     result = re.sub('<a href="(?!\?)', '<a target="_blank" href="', result)
-    if do_terms and status is not None and status.question.language in status.question.interview.terms and len(status.question.interview.terms[status.question.language]) > 0 is not None and term_start.search(result):
+    if do_terms and question is not None and question.language in question.interview.terms and len(question.interview.terms[question.language]) > 0 is not None and term_start.search(result):
         #logmessage("Found a term\n")
-        result = term_match.sub((lambda x: add_terms(x.group(1), status.question.interview.terms[status.question.language])), result)
+        result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.terms[question.language])), result)
+    #logmessage("Trim is " + str(trim) + " for " + str(result))
     if trim:
         result = result[3:-4]
     elif pclass:
@@ -800,7 +801,7 @@ def video_control(files):
     output += "</video>\n"
     return output
 
-def get_audio_urls(the_audio):
+def get_audio_urls(the_audio, question=None):
     output = list()
     the_list = list()
     to_try = dict()
@@ -813,18 +814,18 @@ def get_audio_urls(the_audio):
             found_upload = True
             m = re.match(r'[0-9]+', file_ref)
             if m:
-                file_info = file_finder(file_ref)
+                file_info = file_finder(file_ref, question=question)
                 if 'path' in file_info:
                     if file_info['mimetype'] == 'audio/ogg':
-                        output.append([url_finder(file_ref), file_info['mimetype']])
+                        output.append([url_finder(file_ref, question=question), file_info['mimetype']])
                     elif os.path.isfile(file_info['path'] + '.ogg'):
-                        output.append([url_finder(file_ref, ext='ogg'), 'audio/ogg'])
+                        output.append([url_finder(file_ref, ext='ogg', question=question), 'audio/ogg'])
                     if file_info['mimetype'] == 'audio/mpeg':
-                        output.append([url_finder(file_ref), file_info['mimetype']])
+                        output.append([url_finder(file_ref, question=question), file_info['mimetype']])
                     elif os.path.isfile(file_info['path'] + '.mp3'):
-                        output.append([url_finder(file_ref, ext='mp3'), 'audio/mpeg'])
+                        output.append([url_finder(file_ref, ext='mp3', question=question), 'audio/mpeg'])
                     if file_info['mimetype'] not in ['audio/mpeg', 'audio/ogg']:
-                        output.append([url_finder(file_ref), file_info['mimetype']])
+                        output.append([url_finder(file_ref, question=question), file_info['mimetype']])
             else:
                 the_list.append({'text': file_ref, 'package': audio_item['package']})
         if not found_upload:
@@ -862,13 +863,13 @@ def get_audio_urls(the_audio):
                 parts[0] = 'None'
             parts[1] = re.sub(r'^data/static/', '', parts[1])
             full_file = parts[0] + ':data/static/' + parts[1]
-            file_info = file_finder(full_file)
+            file_info = file_finder(full_file, question=question)
             if 'fullpath' in file_info:
-                url = url_finder(full_file)
+                url = url_finder(full_file, question=question)
                 output.append([url, mimetype])
     return output
 
-def get_video_urls(the_video):
+def get_video_urls(the_video, question=None):
     output = list()
     the_list = list()
     to_try = dict()
@@ -884,18 +885,18 @@ def get_video_urls(the_video):
             found_upload = True
             m = re.match(r'[0-9]+', file_ref)
             if m:
-                file_info = file_finder(file_ref)
+                file_info = file_finder(file_ref, question=question)
                 if 'path' in file_info:
                     if file_info['mimetype'] == 'video/ogg':
-                        output.append([url_finder(file_ref), file_info['mimetype']])
+                        output.append([url_finder(file_ref, question=question), file_info['mimetype']])
                     elif os.path.isfile(file_info['path'] + '.ogv'):
-                        output.append([url_finder(file_ref, ext='ogv'), 'video/ogg'])
+                        output.append([url_finder(file_ref, ext='ogv', question=question), 'video/ogg'])
                     if file_info['mimetype'] == 'video/mp4':
-                        output.append([url_finder(file_ref), file_info['mimetype']])
+                        output.append([url_finder(file_ref, question=question), file_info['mimetype']])
                     elif os.path.isfile(file_info['path'] + '.mp4'):
-                        output.append([url_finder(file_ref, ext='mp4'), 'video/mp4'])
+                        output.append([url_finder(file_ref, ext='mp4', question=question), 'video/mp4'])
                     if file_info['mimetype'] not in ['video/mp4', 'video/ogg']:
-                        output.append([url_finder(file_ref), file_info['mimetype']])
+                        output.append([url_finder(file_ref, question=question), file_info['mimetype']])
             else:
                 the_list.append({'text': file_ref, 'package': video_item['package']})
         if not found_upload:
@@ -933,8 +934,8 @@ def get_video_urls(the_video):
                 parts[0] = 'None'
             parts[1] = re.sub(r'^data/static/', '', parts[1])
             full_file = parts[0] + ':data/static/' + parts[1]
-            file_info = file_finder(full_file)
+            file_info = file_finder(full_file, question=question)
             if 'fullpath' in file_info:
-                url = url_finder(full_file)
+                url = url_finder(full_file, question=question)
                 output.append([url, mimetype])
     return output

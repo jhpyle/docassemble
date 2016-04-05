@@ -1,0 +1,36 @@
+metadata:
+  title: Menu item
+  example start: 1
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+initial: true
+code: |
+  process_action(current_info)
+---
+mandatory: true
+code: |
+  menu_items = [ action_menu_item('Visit Cow', 'see_cow') ]
+---
+sets: see_cow
+question: |
+  Moo!
+subquestion: |
+  [FILE cow.jpg]
+  
+  Cow illustration designed by
+  [Freepik](http://www.freepik.com/free-photos-vectors/animal)
+buttons:
+  - Continue: continue
+---
+sets: all_done
+question: Welcome to the interview
+subquestion: |
+  Check out the menu in the
+  upper-right corner.
+---
+mandatory: true
+code: all_done
+

@@ -1,5 +1,7 @@
 metadata:
-  title: Review
+  title: Review answers
+  example start: 3
+  example end: 3
 ---
 include:
   - basic-questions.yml
@@ -7,10 +9,6 @@ include:
 initial: true
 code: |
   process_action(current_info)
----
-mandatory: true
-code: |
-  menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
 ---
 event: review_answers
 question: |
@@ -21,9 +19,10 @@ review:
   - note: |
       #### Your identity
     show if: user.name.first
-  - Name: user.name.first
+  - Change your name: user.name.first
     help: |
-      You said your name was **${ user.name }**.
+      You said your name was
+      **${ user.name }**.
   - note: |
       #### Your favorite foods
     show if: fruit
@@ -37,7 +36,8 @@ review:
     button: |
       You said you liked ${ fungi }.
   - note: |
-      We suspect you prefer ${ fruit } to ${ vegetable }.
+      We suspect you prefer
+      ${ fruit } to ${ vegetable }.
 ---
 question: |
   What is your favorite fruit?
@@ -54,27 +54,39 @@ question: |
 fields:
   - no label: fungi
 ---
-question: |
-  You like ${ fruit }.
-field: ready_to_go_one
+mandatory: true
+code: |
+  menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
+  do_initial_review = True
 ---
-question: |
-  You like ${ vegetable }.
-field: ready_to_go_two
----
-question: |
-  You like ${ fungi }.
-field: ready_to_go_three
+mandatory: true
+code: |
+  if do_initial_review:
+    fruit = "apples"
+    vegetable = "turnips"
+    user.name.first = "John"
+    user.name.last = "Doe"
+    do_initial_review = False
+    force_ask(review_answers)
+comment: |
+  This is just a trick to get the
+  review page to show as the first
+  screen of the interview, with some
+  of the answers already filled out.
+
+  Normally, the user would find the
+  review page from the web app menu
+  after answering some of the
+  questions.
 ---
 sets: all_done
-need:
-  - ready_to_go_one
-  - ready_to_go_two
-  - ready_to_go_three
 question: |
-  Ok, ${ user }, you like ${ fruit }.
-subquestion:
-  You can [revisit your answers](${ url_action('review_answers') }).  
+  Ok, ${ user }, you like ${ fruit },
+  ${ vegetable }, and ${ fungi }.
+subquestion: |
+  You can revisit your answers by
+  selecting "Review Answers" from the
+  menu.
 ---
 mandatory: true
 code: all_done

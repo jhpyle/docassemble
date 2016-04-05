@@ -581,8 +581,13 @@ def package_template_filename(the_file, **kwargs):
     parts = the_file.split(":")
     if len(parts) == 1:
         package = kwargs.get('package', None)
+        #logmessage("my package is " + str(package))
         if package is not None:
             parts = [package, the_file]
+            #logmessage("my package is " + str(package))
+        #else:
+            #parts = ['docassemble.base', the_file]
+            #logmessage("my package is docassemble.base and the_file is " + str(the_file))
         #else:
         #    retval = absolute_filename('/playgroundtemplate/' + the_file).path
         #    logmessage("package_template_filename: retval is " + str(retval))
@@ -595,6 +600,7 @@ def package_template_filename(the_file, **kwargs):
         if not re.match(r'data/.*', parts[1]):
             parts[1] = 'data/templates/' + parts[1]
         try:
+            #logmessage("Trying with " + str(parts[0]) + " and " + str(parts[1]))
             return(pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1]))
         except:
             return(None)
@@ -605,13 +611,15 @@ def standard_question_filename(the_file):
     return(None)
 
 def package_data_filename(the_file):
-    logmessage("package_data_filename with: " + str(the_file))
+    #logmessage("package_data_filename with: " + str(the_file))
     if the_file is None:
         return(None)
     #the_file = re.sub(r'^None:data/static/', '', the_file)
     #the_file = re.sub(r'^None:', '', the_file)
     parts = the_file.split(":")
     result = None
+    #if len(parts) == 1:
+    #    parts = ['docassemble.base', the_file]
     if len(parts) == 2:
         m = re.search(r'^playground\.([0-9]+)$', parts[0])
         if m:
@@ -627,6 +635,8 @@ def package_data_filename(the_file):
 
 def package_question_filename(the_file):
     parts = the_file.split(":")
+    #if len(parts) == 1:
+    #    parts = ['docassemble.base', the_file]
     if len(parts) == 2:
         if not re.match(r'data/.*', parts[1]):
             parts[1] = 'data/question/' + parts[1]

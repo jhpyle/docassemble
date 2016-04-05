@@ -16,6 +16,7 @@ import shutil
 import codecs
 import weakref
 import types
+import pkg_resources
 import docassemble.base.parse
 import docassemble.base.pdftk
 import docassemble.base.interview_cache
@@ -297,6 +298,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
         else:
             url = 'about:blank'
     else:
+        question = kwargs.get('question', None)
         root = daconfig.get('root', '/')
         fileroot = daconfig.get('fileserver', root)
         if 'ext' in kwargs:
@@ -305,14 +307,18 @@ def get_url_from_file_reference(file_reference, **kwargs):
             extn = '.' + extn
         else:
             extn = ''
-        #file_reference = re.sub(r'^None:data/static/', '', file_reference)
-        #file_reference = re.sub(r'^None:', '', file_reference)
         parts = file_reference.split(':')
         if len(parts) < 2:
-            parts = ['docassemble.base', 'data/static/' + file_reference]
-            the_file = None
+            file_reference = re.sub(r'^data/static/', '', file_reference)
+            the_package = None
+            if question is not None:
+                the_package = question.from_source.package
+            if the_package is None:
+                the_package = 'docassemble.base'
+            parts = [the_package, file_reference]
+            #the_file = None
             #try:
-            the_file = pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
+            #the_file = pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
             #except:
             #    if current_user.is_authenticated and not current_user.is_anonymous:
             #        return(fileroot + "playgroundstatic/" + file_reference)
@@ -326,10 +332,10 @@ docassemble.base.parse.set_url_finder(get_url_from_file_reference)
 
 def absolute_filename(the_file):
     match = re.match(r'^playground\.([0-9]+):(.*)', the_file)
-    logmessage("absolute_filename call: " + the_file)
+    #logmessage("absolute_filename call: " + the_file)
     if match:
         filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(2))
-        logmessage("absolute_filename: filename is " + filename)
+        #logmessage("absolute_filename: filename is " + filename)
         playground = SavedFile(match.group(1), section='playground', fix=True, filename=filename)
         return playground
     match = re.match(r'^/playgroundtemplate/([0-9]+)/(.*)', the_file)
@@ -416,6 +422,17 @@ def get_info_from_file_reference(file_reference, **kwargs):
         result = get_info_from_file_number(file_reference)
     else:
         result = dict()
+        question = kwargs.get('question', None)
+        the_package = None
+        parts = file_reference.split(':')
+        if len(parts) == 1:
+            the_package = None
+            if question is not None:
+                the_package = question.from_source.package
+            if the_package is not None:
+                file_reference = the_package + ':' + file_reference
+            else:
+                file_reference = 'docassemble.base:' + file_reference
         result['fullpath'] = docassemble.base.util.static_filename_path(file_reference)
     #logmessage("path is " + str(result['fullpath']))
     if result['fullpath'] is not None and os.path.isfile(result['fullpath']):
@@ -2106,7 +2123,7 @@ def reset_session(yaml_filename, secret):
     if 'key_logged' in session:
         del session['key_logged']
     user_code = session['uid']
-    logmessage("User code is now " + str(user_code))
+    #logmessage("User code is now " + str(user_code))
     user_dict = fresh_dictionary()
     return(user_code, user_dict)
 

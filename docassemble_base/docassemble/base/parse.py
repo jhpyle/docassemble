@@ -75,15 +75,16 @@ class PackageImage(object):
     def get_filename(self):
         return(docassemble.base.util.static_filename_path(str(self.package) + ':' + str(self.filename)))
     def get_reference(self):
-        logmessage("get_reference is considering " + str(self.package) + ':' + str(self.filename))
+        #logmessage("get_reference is considering " + str(self.package) + ':' + str(self.filename))
         return str(self.package) + ':' + str(self.filename)
 
 class InterviewSource(object):
     def __init__(self, **kwargs):
+        if not hasattr(self, 'package'):
+            self.package = kwargs.get('package', None)
         self.language = kwargs.get('language', '*')
         self.dialect = kwargs.get('dialect', None)
         self.testing = kwargs.get('testing', False)
-        pass
     def set_path(self, path):
         self.path = path
         return
@@ -105,6 +106,9 @@ class InterviewSource(object):
     def set_testing(self, testing):
         self.testing = testing
         return
+    def set_package(self, package):
+        self.package = package
+        return
     def update(self):
         return True
     def get_modtime(self):
@@ -112,6 +116,8 @@ class InterviewSource(object):
     def get_language(self):
         return self.language
     def get_dialect(self):
+        return self.dialect
+    def get_package(self):
         return self.dialect
     def get_testing(self):
         return self.testing
@@ -136,7 +142,7 @@ class InterviewSourceFile(InterviewSource):
         self.playground = None
         if 'filepath' in kwargs:
             if re.search(r'SavedFile', str(type(kwargs['filepath']))):
-                logmessage("We have a saved file on our hands")
+                #logmessage("We have a saved file on our hands")
                 self.playground = kwargs['filepath']
                 if os.path.isfile(self.playground.path) and os.access(self.playground.path, os.R_OK):
                     self.set_filepath(self.playground.path)
@@ -167,6 +173,7 @@ class InterviewSourceFile(InterviewSource):
             self.package = 'docassemble.base'
         return
     def set_filepath(self, filepath):
+        #logmessage("Called set_filepath with " + str(filepath))
         self.filepath = filepath
         if self.filepath is None:
             self.directory = None
@@ -174,13 +181,15 @@ class InterviewSourceFile(InterviewSource):
             self.set_directory(os.path.dirname(self.filepath))
         return
     def update(self):
+        #logmessage("Update: " + str(self.filepath))
         try:
             with open(self.filepath, 'rU') as the_file:
                 self.set_content(the_file.read())
+                #sys.stderr.write("Returning true\n")
                 return True
         except Exception as errmess:
-            pass
             #sys.stderr.write("Error: " + str(errmess) + "\n")
+            pass
         return False
     def get_modtime(self):
         #logmessage("get_modtime called in parse where path is " + str(self.path))
@@ -979,6 +988,8 @@ class Question:
                     elif key == 'help':
                         if type(field[key]) is not dict and type(field[key]) is not list:
                             field_info[key] = TextObject(definitions + unicode(field[key]))
+                        if 'button' in field or 'note' in field or 'html' in field or 'css' in field or 'script' in field:
+                            raise DAError("In a review block, you cannot mix help text with note, html, css, or script items." + self.idebug(data))
                     elif key == 'button':
                         if type(field[key]) is not dict and type(field[key]) is not list:
                             field_info['help'] = TextObject(definitions + unicode(field[key]))
@@ -1144,11 +1155,11 @@ class Question:
                     if type(content_file) is not str:
                         raise DAError('A content file must be specified as text or a list of text filenames' + self.idebug(target))
                     file_to_read = docassemble.base.util.package_template_filename(content_file, package=self.package)
-                    if os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
+                    if file_to_read is not None and os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
                         with open(file_to_read, 'rU') as the_file:
                             target['content'] += the_file.read()
                     else:
-                        raise DAError('Unable to read content file ' + str(target['content file']) + ' after trying to find it at ' + str(file_to_read) + self.idebug(target))
+                        raise DAError('Unable to read content file ' + str(content_file) + ' after trying to find it at ' + str(file_to_read) + self.idebug(target))
             if 'fields' in target:
                 if 'pdf template file' not in target:
                     raise DAError('Fields supplied to attachment but no pdf template file supplied' + self.idebug(target))
@@ -1460,14 +1471,14 @@ class Question:
                         elif 'template_file' in self.interview.attachment_options:
                             converter.template_file = self.interview.attachment_options['template_file']
                     converter.metadata = metadata
-                    converter.convert()
+                    converter.convert(self)
                     result['file'][doc_format] = converter.output_filename
                     result['content'][doc_format] = result['markdown'][doc_format]
             elif doc_format in ['html']:
                 result['markdown'][doc_format] = attachment['content'].text(user_dict)
                 if emoji_match.search(result['markdown'][doc_format]) and len(self.interview.images) > 0:
                     result['markdown'][doc_format] = emoji_match.sub(emoji_matcher_html(self), result['markdown'][doc_format])
-                result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True)
+                result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True, question=self)
                 #logmessage("output was:\n" + repr(result['content'][doc_format]))
         if attachment['variable_name']:
             string = attachment['variable_name'] + " = DAFileCollection('" + attachment['variable_name'] + "')"
@@ -1789,6 +1800,7 @@ class Interview:
                             #logmessage("I should be looping around now")
                         except:
                             logmessage("variable did not exist in user_dict: " + str(sys.exc_info()[0]))
+                #logmessage("Pleased to report that found_generic is " + str(found_generic) + " and generic_needed is " + str(generic_needed))
                 if generic_needed and not found_generic: # or is_iterator
                     #logmessage("There is no question for " + missingVariable)
                     continue
@@ -1838,14 +1850,14 @@ class Interview:
                         if question.question_type == 'attachments':
                             attachment_text = question.processed_attachments(user_dict)
                             if missing_var in variable_stack:
-                                logmessage("Removing missing variable " + missing_var)
+                                logmessage("1 Removing missing variable " + missing_var)
                                 variable_stack.remove(missing_var)
                             try:
                                 eval(missing_var, user_dict)
                                 question.mark_as_answered(user_dict)
                                 return({'type': 'continue'})
                             except:
-                                #logmessage("Try another method of setting the variable")
+                                logmessage("1 Try another method of setting the variable")
                                 continue
                         if question.question_type in ["code", "event_code"]:
                             #logmessage("Running some code:\n\n" + question.sourcecode)
@@ -1856,10 +1868,18 @@ class Interview:
                                 if the_i != 'None':
                                     exec("i = " + the_i, user_dict)
                                     #logmessage("Set i")
+                            was_defined = False
+                            try:
+                                orig_value = eval(missing_var, user_dict)
+                                exec("__oldvariable__ = " + str(missing_var), user_dict)
+                                exec("del " + str(missing_var), user_dict)
+                                was_defined = True
+                            except:
+                                pass
                             exec(question.compute, user_dict)
                             #logmessage("the missing variable is " + str(missing_var))
                             if missing_var in variable_stack:
-                                logmessage("Removing missing variable " + missing_var)
+                                logmessage("2 Removing missing variable " + missing_var)
                                 variable_stack.remove(missing_var)
                             if question.question_type == 'event_code':
                                 return({'type': 'continue'})
@@ -1868,7 +1888,14 @@ class Interview:
                                 question.mark_as_answered(user_dict)
                                 return({'type': 'continue'})
                             except:
-                                #logmessage("Try another method of setting the variable")
+                                if was_defined:
+                                    try:
+                                        exec(str(missing_var) + " = __oldvariable__", user_dict)
+                                        exec("__oldvariable__ = " + str(missing_var), user_dict)
+                                        exec("del __oldvariable__", user_dict)
+                                    except:
+                                        pass
+                                logmessage("2 Try another method of setting the variable")
                                 continue
                         else:
                             #logmessage("Question type is " + question.question_type)

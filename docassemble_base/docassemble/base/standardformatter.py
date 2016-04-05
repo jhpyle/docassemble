@@ -162,7 +162,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
             if hasattr(field, 'label'):
                 fieldlist.append('              <div class="form-group"><div class="col-md-12"><a href="' + url_action(field.action) + '">' + field.label + '</a></div></div>\n')
                 if field.number in status.helptexts:
-                    fieldlist.append('              <div class="row"><div class="col-md-12">' + markdown_to_html(status.helptexts[field.number], trim=True, status=status, strip_newlines=True) + '</div></div>\n')
+                    fieldlist.append('              <div class="row"><div class="col-md-12">' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
         output += indent_by(audio_text, 10) + '          <form action="' + root + '" id="daform" class="form-horizontal" method="POST">\n            <fieldset>\n'
         output += '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
@@ -171,8 +171,6 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
             output += indent_by(video_text, 10)
         if (len(fieldlist)):
             output += "".join(fieldlist)
-        else:
-            output += "              <p>Error: no fields</p>\n"
         output += '              <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Resume') + '</button></div>\n'
         output += tracker_tag(status)
         output += '            </fieldset>\n          </form>\n'

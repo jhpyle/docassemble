@@ -34,7 +34,7 @@ class Pandoc(object):
         self.initial_yaml = list()
         self.additional_yaml = list()
         self.arguments = []
-    def convert_to_file(self):
+    def convert_to_file(self, question):
         metadata_as_dict = dict()
         if type(self.metadata) is dict:
             metadata_as_dict = self.metadata
@@ -55,7 +55,7 @@ class Pandoc(object):
             self.input_content = docassemble.base.filter.rtf_prefilter(self.input_content, metadata=metadata_as_dict)
             #logmessage("post input content is " + str(self.input_content))
         if self.output_format == 'docx':
-            self.input_content = docassemble.base.filter.docx_filter(self.input_content, metadata=metadata_as_dict)
+            self.input_content = docassemble.base.filter.docx_filter(self.input_content, metadata=metadata_as_dict, question=question)
         if self.output_format == 'pdf' or self.output_format == 'tex':
             if len(self.initial_yaml) == 0:
                 standard_file = docassemble.base.util.standard_template_filename('Legal-Template.yml')
@@ -68,7 +68,7 @@ class Pandoc(object):
                 if yaml_file is not None:
                     yaml_to_use.append(yaml_file)
             #print "Before: " + repr(self.input_content)
-            self.input_content = docassemble.base.filter.pdf_filter(self.input_content, metadata=metadata_as_dict)
+            self.input_content = docassemble.base.filter.pdf_filter(self.input_content, metadata=metadata_as_dict, question=question)
             #logmessage("After: " + repr(self.input_content))
         temp_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md", delete=False)
         temp_file.write(self.input_content.encode('UTF-8'))
@@ -96,7 +96,7 @@ class Pandoc(object):
         if os.path.exists(temp_outfile.name):
             if self.output_format == 'rtf':
                 with open(temp_outfile.name) as the_file: file_contents = the_file.read()
-                file_contents = docassemble.base.filter.rtf_filter(file_contents, metadata=metadata_as_dict, styles=get_rtf_styles(self.template_file))
+                file_contents = docassemble.base.filter.rtf_filter(file_contents, metadata=metadata_as_dict, styles=get_rtf_styles(self.template_file), question=question)
                 with open(temp_outfile.name, "wb") as the_file: the_file.write(file_contents)
             if self.output_filename is not None:
                 shutil.copyfile(temp_outfile.name, self.output_filename)
@@ -106,9 +106,9 @@ class Pandoc(object):
         else:
             raise IOError("Failed creating file: %s" % output_filename)
         return
-    def convert(self):
+    def convert(self, question):
         if (self.output_format == "pdf" or self.output_format == "tex" or self.output_format == "rtf" or self.output_format == "epub" or self.output_format == "docx"):
-            self.convert_to_file()
+            self.convert_to_file(question)
         else:
             subprocess_arguments = [PANDOC_PATH, '--from=%s' % self.input_format, '--to=%s' % self.output_format]
             subprocess_arguments.extend(self.arguments)

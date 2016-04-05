@@ -254,7 +254,7 @@ subquestion: |
   looks something like this.  If this document is signed by the judge,
   then you have a support order.
     
-  [FILE docassemble.demo:sample-support-order.jpg, 100%]
+  [FILE sample-support-order.jpg, 100%]
 yesno: x.has_support_order
 comment: |
   This question illustrates how you can include images in your
