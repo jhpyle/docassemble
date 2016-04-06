@@ -1127,6 +1127,7 @@ def index():
                 del session['key_logged']
             need_to_reset = True
         else:
+            logmessage("Both i and session provided")
             if show_flash:
                 if current_user.is_authenticated:
                     message = "Entering a different interview.  To go back to your previous interview, go to My Interviews on the menu."
@@ -1135,7 +1136,7 @@ def index():
         if show_flash:
             flash(word(message), 'info')
     if session_parameter is not None:
-        #logmessage("session parameter is " + str(session_parameter))
+        logmessage("session parameter is " + str(session_parameter))
         session_id = session_parameter
         session['uid'] = session_id
         if yaml_parameter is not None:
@@ -1638,6 +1639,14 @@ def index():
     if changed and interview_status.question.interview.use_progress_bar:
         advance_progress(user_dict)
     save_user_dict(user_code, user_dict, yaml_filename, secret, changed=changed, encrypt=encrypted)
+    if user_dict.get('multi_user', False) is True and encrypted is True:
+        encrypted = False
+        session['encrypted'] = encrypted
+        decrypt_session(secret)
+    if user_dict.get('multi_user', False) is False and encrypted is False:
+        encrypt_session(secret)
+        encrypted = True
+        session['encrypted'] = encrypted
     flash_content = ""
     messages = get_flashed_messages(with_categories=True) + error_messages
     if messages:
