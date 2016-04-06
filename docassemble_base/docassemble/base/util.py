@@ -687,4 +687,6 @@ def action_menu_item(label, action):
     return dict(label=label, url=url_action(action))
 
 def from_b64_json(string):
+    if string is None:
+        return None
     return json.loads(base64.b64decode(string))

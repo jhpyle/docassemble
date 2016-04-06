@@ -85,6 +85,9 @@ function newCanvas(){
     cheight = 350;
   }
   var cwidth = $(window).width() - theBorders;
+  if (cwidth > 800 ){
+    cwidth = 800;
+  }
   $("#content").height(cheight);
   //$("#bottompart").css('top', (cheight) + "px");
   //$("#content").css('top', ($("#header").height() + $("#toppart").height()) + "px");

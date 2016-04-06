@@ -59,10 +59,10 @@ body {
     text-shadow: 0px -1px #000;
     border: solid 1px #111;
     border-radius: 4px;
-    background-color: #404040;
+    background-color: #606060;
     box-shadow: 0 0 1px 1px #555,inset 0 1px 0 0 #666;     
 }
-.navbtn-hover, .navbtn:active {
+.navbtn:hover, .navbtn:active {
     color: #222;
     text-shadow: 0px 1px #aaa;
     background-color: #aaa;
@@ -139,7 +139,16 @@ body {
     text-align: center;
     padding-top:6px;
 }
-@media (min-width: 768px) {
+.page {
+    width: 100%;
+}
+@media (min-width: 850px) {
+    .page{
+	width: 850px;
+    }
+    .innerheader{
+	width: 850px;
+    }
     .toppart {
 	text-align: left;
 	padding-top: 70px;
