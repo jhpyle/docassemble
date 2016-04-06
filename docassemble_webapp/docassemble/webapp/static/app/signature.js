@@ -75,23 +75,19 @@ function saveCanvas(){
 }
 
 function newCanvas(){
-  //define and resize canvas
-  //var cheight = $(window).height()-($("#header").height() + $("#toppart").height() + $("#bottompart").height());
-  var cheight = $(window).width()*aspectRatio;
-  if (cheight > $(window).height()-44){
-    cheight = $(window).height()-44;
-  }
-  if (cheight > 350){
-    cheight = 350;
-  }
   var cwidth = $(window).width() - theBorders;
   if (cwidth > 800 ){
     cwidth = 800;
   }
+  var cheight = cwidth*aspectRatio;
+  var otherHeights = $("#toppart").outerHeight(true) + $("#bottompart").outerHeight(true);
+  if (cheight > $(window).height()-otherHeights){
+    cheight = $(window).height()-otherHeights;
+  }
+  if (cheight > 350){
+    cheight = 350;
+  }
   $("#content").height(cheight);
-  //$("#bottompart").css('top', (cheight) + "px");
-  //$("#content").css('top', ($("#header").height() + $("#toppart").height()) + "px");
-  //$("#content").css('bottom', ($("#bottompart").height()) + "px");
   var canvas = '<canvas id="canvas" width="'+(cwidth)+'px" height="'+(cheight)+'px"></canvas>';
   $("#content").html(canvas);
   theTop = $("#canvas").offset().top;
