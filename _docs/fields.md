@@ -647,34 +647,153 @@ encounters the `role_event`, which is a special "event" that can
 happen in multi-user interviews (see
 [roles]({{site.baseurl}}/docs/roles.html)).  The event is triggered
 when the interview reaches a point when a person other than the
-current user needs to answer a question.  For example, while a client is
-filling out an interview, the interview logic might call for a
+current user needs to answer a question.  For example, while a client
+is filling out an interview, the interview logic might call for a
 variable that can only be set by an advocate who reviews the client's
-answers.  In this scenario, a `role_event` will be triggered.  When this happens,
-**docassemble** will look for a `question` or `code` block that
-defines the variable `role_event`, and it will find the example
-question above.
+answers.  In this scenario, a `role_event` will be triggered.  When
+this happens, **docassemble** will look for a `question` or `code`
+block that defines the variable `role_event`, and it will find the
+example question above.
 
 ## review
 
-A `review` block allows the user to revisit questions that have already
-been answered, at any point in the interview.  This allows interview
-authors to give interviewees the chance to take a step back and see
-what has already been answered.
+A `review` block allows interview authors to provide a screen where
+users can review and edit their answers.  Typically, the user will get
+to this screen by selecting an option from the web app menu (e.g.,
+"Review Answers"), or by clicking on a hyperlink within `subquestion`
+text (e.g., "to review the answers you have provided so far, click
+here").
 
-It is difficult to create such screens with ordinary question blocks
-because typically within **docassemble**, any reference to a variable
-that may or may not have been defined will cause a question to be
-asked that will define the question.
+Here is an example of a `review` block that is launched from the menu:
 
-The `review` block gets around this problem.  Only those entries that
-refer to variables already defined will be shown.  In other words, any
-entries that refer to variables not already defined will be excluded
-from the display.
+{% highlight yaml %}
+---
+event: review_answers
+question: |
+  Revisit questions
+subquestion: |
+  These are the questions you have answered so far.  Click to revisit.
+review:
+  - Favorite fruit: fruit
+  - Favorite vegetable: vegetable
+  - Favorite fungus: fungi
+---
+mandatory: true
+code: |
+  menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
+---
+{% endhighlight %}
 
-The list of variables to display to the user needs to be specified by
-the interview author.  There are several reasons why this cannot be
-automatically generated:
+If `fruit` and `vegetable` have been defined, and the user selects
+"Review Answers" from the menu, he or see will see this:
+
+![Screenshot of review]({{ site.baseurl }}/img/review-block.png)
+
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testreview.yml){:target="_blank"}.)
+
+Note that the `review` block does not show a link for "Favorite
+fungus" because the variable `fungi` has not been defined yet.
+However, once `fungi` is defined, the `review` block would show it.
+
+This behavior is different from the typical behavior of
+**docassemble** blocks.  Normally, referring to a variable that has
+not yet been defined will trigger the asking of a question that will
+define that variable.  In the `review` block, however, the presence of
+an undefined variable simply causes the item to be omitted from the
+display.
+
+For more information about adding menu items, see the sections on
+[special variables] and [functions].
+
+### Customizing the display of `review` options
+
+You can provide the user with a review of answers and buttons that the
+user can press to revisit an answer:
+
+{% highlight yaml %}
+---
+event: review_answers
+question: |
+  Revisit your answers
+review:
+  - Revisit fruit: fruit
+    button: |
+      You said your favorite fruit was ${ fruit }.
+  - Revisit vegetable: vegetable
+    button: |
+      You said your favorite vegetable was ${ vegetable }.
+  - Revisit fungus: fungi
+    button: |
+      You said your favorite fungus was ${ fungi }.
+---
+{% endhighlight %}
+
+This results in a screen that looks like this:
+
+![Screenshot of review with buttons]({{ site.baseurl }}/img/review-block-buttons.png)
+
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testreview2.yml){:target="_blank"}.)
+
+In addition, the `review` block, like the `fields` block, allows you
+to use `note`, `html`, `script`, and `css` entries.
+
+If these are modified with the optional `show if` modifier, they will
+only be displayed if the variable referenced by the `show if` modifier
+has been defined.  In addition, if any of these entries refer to a
+variable that has not been defined yet, they will be omitted.
+
+{% highlight yaml %}
+---
+event: review_answers
+question: |
+  Review your answers
+review:
+  - note: |
+      Revisit your food preferences.
+    show if: fruit
+  - Favorite fruit: fruit
+  - Favorite vegetable: vegetable
+  - Favorite fungus: fungi
+---
+{% endhighlight %}
+
+![Screenshot of review with note]({{ site.baseurl }}/img/review-block-note.png)
+
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testreview3.yml){:target="_blank"}.)
+
+The `review` block allows you to add `help` text to an entry, in
+which case the text is shown underneath the hyperlink.  If this text
+expects a variable to be defined that has not actually been defined,
+the item will not be shown.  Note: this is not available with the
+`button` display format.
+
+{% highlight yaml %}
+---
+event: review_answers
+question: |
+  Review your answers
+review:
+  - Favorite fruit: fruit
+    help: |
+      You indicated you liked ${ fruit }.
+  - Favorite vegetable: vegetable
+    help: |
+      You indicated you liked ${ vegetable }.
+  - Favorite fungus: fungi
+    help: |
+      You indicated you liked ${ fungi }.
+---
+{% endhighlight %}
+
+![Screenshot of review with help]({{ site.baseurl }}/img/review-block-help.png)
+
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testreview4.yml){:target="_blank"}.)
+
+### Why can't `review` blocks be automatically generated?
+
+The list of variables to display to the user in a `review` block needs
+to be specified by the interview author.  There are several reasons
+why this needs to be done manually as opposed to automatically:
 
 1. Variables in your interview may be interdependent.  You do not
    necessarily want to allow the interviewee to edit any past answer
@@ -691,89 +810,6 @@ automatically generated:
    fashion.  The order in which the questions were asked is not
    necessarily the most logical way to present the information for
    editing.
-
-{% highlight yaml %}
----
-include:
-  - basic-questions.yml
----
-initial: true
-code: |
-  process_action(current_info)
----
-mandatory: true
-code: |
-  menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
----
-event: review_answers
-question: |
-  Review your answers
-review:
-  - note: |
-      Welcome to the review of answers.
-  - note: |
-      #### Your identity
-    show if: user.name.first
-  - Name: user.name.first
-    help: |
-      You said your name was **${ user.name }**.
-  - note: |
-      #### Your favorite foods
-    show if: fruit
-  - Revisit Fruit: fruit
-    button: |
-      You said you liked ${ fruit }.
-  - Revisit Vegetable: vegetable
-    button: |
-      You said you liked ${ vegetable }.
-  - Revisit Fungus: fungi
-    button: |
-      You said you liked ${ fungi }.
-  - note: |
-      We suspect you prefer ${ fruit } to ${ vegetable }.
----
-question: |
-  What is your favorite fruit?
-fields:
-  - no label: fruit
----
-question: |
-  What is your favorite vegetable?
-fields:
-  - no label: vegetable
----
-question: |
-  What is your favorite fungi?
-fields:
-  - no label: fungi
----
-question: |
-  You like ${ fruit }.
-field: ready_to_go_one
----
-question: |
-  You like ${ vegetable }.
-field: ready_to_go_two
----
-question: |
-  You like ${ fungi }.
-field: ready_to_go_three
----
-sets: all_done
-need:
-  - ready_to_go_one
-  - ready_to_go_two
-  - ready_to_go_three
-question: |
-  Ok, ${ user }, you like ${ fruit }.
-subquestion:
-  You can [revisit your answers](${ url_action('review_answers') }).
----
-mandatory: true
-code: all_done
----
-{% endhighlight %}
-
 
 # A note about variable names
 
@@ -822,3 +858,5 @@ cannot use because they conflict with built-in names that [Python] and
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [question]: {{ site.baseurl }}/docs/questions.html
 [CSS file]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/static/my.css
+[functions]: {{ site.baseurl }}/docs/functions.html
+[special variables]: {{ site.baseurl }}/docs/special.html

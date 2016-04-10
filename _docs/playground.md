@@ -116,6 +116,8 @@ The area lists the following types of names (which are color-coded):
   included in the Python namespace through a `modules` statement
 * Modules: modules that are available because they have been included
   in the Python namespace through a `import` statement
+* Templates: template files available in the Templates folder of the Playground
+* Static files: static files available in the Static folder of the Playground
 
 ## Example blocks
 
@@ -148,17 +150,16 @@ screenshot.
   tell your browser to allow pop-ups from **docassemble**.
 * Once you are running the interview in another tab, changes that you
   make to the interview you ran will be visible if you refresh the
-  screen.  However, these changes will only re-appear if you changed
-  the same file that you ran; you will not see changes to files
-  included by reference unless you re-save the file you ran.
-* Interviews you create in the "Playground" cannot directly be run by
-  the general public or by other developers; to share an interview
-  with others, you need to prepare a [package].
-* The "Playground" does not offer a full range of authoring
-  functionality.  It does not allow you to edit [Python modules].  It
-  is a place to test interview code quickly, not a complete
-  development platform.  To learn how to access the full range of
-  authoring functionality, see the [packages] section.
+  screen on the interview you are running.  However, these changes
+  will only re-appear if you changed the same file for which you
+  pressed "Save and Run"; you will not see changes to files included
+  by reference unless you re-save the file you ran.
+* To give a link to the interview to someone else, right-click on the
+  "<i class="glyphicon glyphicon-link" aria-hidden="true"></i> Link"
+  button and copy the URL to your clipboard.
+* Note that the "Playground" is a development platform.  If you are
+  going to put an interview into production, put it into a package by
+  following the instructions in the [packages] section.
 
 [package]: {{ site.baseurl }}/docs/packages.html
 [packages]: {{ site.baseurl }}/docs/packages.html

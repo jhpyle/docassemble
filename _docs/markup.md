@@ -84,6 +84,10 @@ This example presumes that there is a Python package called
 `mugshot.jpg` located within the `static` directory inside that
 package.
 
+If you omit the package name (e.g., `[FILE mugshot.jpg]`),
+**docassemble** will assume you are referring to a file located in the
+`static` directory of the package in which the question appears.
+
 Optionally, you can set the width of the image:
 
     [FILE docassemble.crimesolver:mugshot.jpg, 100%]
