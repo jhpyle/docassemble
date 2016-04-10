@@ -122,8 +122,8 @@ code: |
 
 app.debug = False
 
-ok_mimetypes = {"application/javascript": "javascript"}
-ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown"}
+ok_mimetypes = {"application/javascript": "javascript", "text/x-python": "python"}
+ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown", 'py': "python"}
 
 default_yaml_filename = daconfig.get('default_interview', 'docassemble.demo:data/questions/questions.yml')
 
@@ -234,8 +234,9 @@ PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
 UPLOAD_DIRECTORY = daconfig.get('uploads', '/usr/share/docassemble/files')
 FULL_PACKAGE_DIRECTORY = os.path.join(PACKAGE_DIRECTORY, 'lib', 'python2.7', 'site-packages')
 LOG_DIRECTORY = daconfig.get('log', '/usr/share/docassemble/log')
+#PLAYGROUND_MODULES_DIRECTORY = daconfig.get('playground_modules', )
 
-for path in [FULL_PACKAGE_DIRECTORY, PACKAGE_CACHE, UPLOAD_DIRECTORY, LOG_DIRECTORY]:
+for path in [FULL_PACKAGE_DIRECTORY, PACKAGE_CACHE, UPLOAD_DIRECTORY, LOG_DIRECTORY]: #, os.path.join(PLAYGROUND_MODULES_DIRECTORY, 'docassemble')
     if not os.path.isdir(path):
         try:
             os.makedirs(path)
@@ -248,6 +249,16 @@ for path in [FULL_PACKAGE_DIRECTORY, PACKAGE_CACHE, UPLOAD_DIRECTORY, LOG_DIRECT
 if not os.access(WEBAPP_PATH, os.W_OK):
     print "Unable to modify the timestamp of the WSGI file: " + WEBAPP_PATH
     sys.exit(1)
+
+init_py_file = """try:
+    __import__('pkg_resources').declare_namespace(__name__)
+except ImportError:
+    __path__ = __import__('pkgutil').extend_path(__path__, __name__)
+"""
+    
+#if not os.path.isfile(os.path.join(PLAYGROUND_MODULES_DIRECTORY, 'docassemble', '__init__.py')):
+#    with open(os.path.join(PLAYGROUND_MODULES_DIRECTORY, 'docassemble', '__init__.py'), 'a') as the_file:
+#        the_file.write(init_py_file)
 
 #USE_PROGRESS_BAR = daconfig.get('use_progress_bar', True)
 SHOW_LOGIN = daconfig.get('show_login', True)
@@ -281,6 +292,8 @@ kv_session = KVSessionExtension(store, app)
 error_file_handler = logging.FileHandler(filename=LOGFILE)
 error_file_handler.setLevel(logging.DEBUG)
 app.logger.addHandler(error_file_handler)
+
+sys.stderr.write("__name__ is " + str(__name__) + " and __package__ is " + str(__package__) + "\n")
 
 def flask_logger(message):
     #app.logger.warning(message)
@@ -331,7 +344,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
 docassemble.base.parse.set_url_finder(get_url_from_file_reference)
 
 def absolute_filename(the_file):
-    match = re.match(r'^playground\.([0-9]+):(.*)', the_file)
+    match = re.match(r'^docassemble.playground([0-9]+):(.*)', the_file)
     #logmessage("absolute_filename call: " + the_file)
     if match:
         filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(2))
@@ -811,6 +824,27 @@ if LOGSERVER is None:
     docassemble.base.logger.set_logmessage(syslog_message_with_timestamp)
 else:
     docassemble.base.logger.set_logmessage(syslog_message)
+
+def copy_playground_modules():
+    devs = list()
+    for user in User.query.filter_by(active=True).all():
+        for role in user.roles:
+            if role.name == 'admin' or role.name == 'developer':
+                devs.append(user.id)
+    for user_id in devs:
+        mod_dir = SavedFile(user_id, fix=True, section='playgroundmodules')
+        local_dir = os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble', 'playground' + str(user_id))
+        if os.path.isdir(local_dir):
+            shutil.rmtree(local_dir)
+        sys.stderr.write("Copying " + str(mod_dir.directory) + " to " + str(local_dir) + "\n")
+        shutil.copytree(mod_dir.directory, local_dir)
+        with open(os.path.join(local_dir, '__init__.py'), 'a') as the_file:
+            the_file.write(init_py_file)
+
+copy_playground_modules()
+#sys.path.append(PLAYGROUND_MODULES_DIRECTORY)
+
+# END OF INITIALIZATION
 
 def proc_example_list(example_list, examples):
     for example in example_list:
@@ -2874,7 +2908,7 @@ def playground_files():
         if (formtwo.file_name.data):
             the_file = formtwo.file_name.data
             the_file = re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', the_file)
-    if section not in ("template", "static"):
+    if section not in ("template", "static", "modules"):
         section = "template"
     area = SavedFile(current_user.id, fix=True, section='playground' + section)
     if request.args.get('delete', False):
@@ -2908,6 +2942,8 @@ def playground_files():
                     fp.write(formtwo.file_content.data.encode('utf8'))
                 the_time = time.strftime('%H:%M:%S %Z', time.localtime())
                 flash(word('The file was saved at') + ' ' + the_time + '.', 'success')
+                if section == 'modules':
+                    restart_wsgi()
             else:
                 flash(word('You need to type in a name for the file'), 'error')                
     files = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
@@ -2921,7 +2957,10 @@ def playground_files():
         if len(editable_files):
             the_file = editable_files[0]
         else:
-            the_file = 'test.md'
+            if section == 'modules':
+                the_file = 'test.py'
+            else:
+                the_file = 'test.md'
     if the_file != '':
         extension, mimetype = get_ext_and_mimetype(the_file)
         if (mimetype and mimetype in ok_mimetypes):
@@ -2946,15 +2985,25 @@ def playground_files():
         header = word("Templates")
         description = 'Add files here that you want want to include in your interviews using "content file," "initial yaml," "additional yaml," "template file," "rtf template file," "pdf template file," or "docx reference file."'
         upload_header = word("Upload a template file")
+        edit_header = word('Edit text files')
+        after_text = None
     elif (section == "static"):
         header = word("Static files")
         description = 'Add files here that you want to include in your interviews with "images," "image sets," "[FILE]" or "url_of()."'
         upload_header = word("Upload a static file")
+        edit_header = word('Edit text files')
+        after_text = None
+    elif (section == "modules"):
+        header = word("Modules")
+        upload_header = None
+        edit_header = None
+        description = Markup("""To use this in an interview, write a <code>modules</code> block that refers to this module using Python's syntax for specifying a "relative import" of a module (i.e., prefix the module name with a period).""" + highlight('---\nmodules:\n  - .' + re.sub(r'\.py$', '', the_file) + '\n---', YamlLexer(), HtmlFormatter()))
+        after_text = None
     if scroll:
         extra_command = "      scrollBottom();\n"
     else:
         extra_command = ""
-    return render_template('pages/playgroundfiles.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("file_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "' + mode + '", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#formtwo").trigger("checkform.areYouSure");});\n      $("#formtwo").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#formtwo").bind("submit", function(){daCodeMirror.save(); $("#formtwo").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, description=description, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, formtwo=formtwo, current_file=the_file, content=content), 200
+    return render_template('pages/playgroundfiles.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("file_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "' + mode + '", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#formtwo").trigger("checkform.areYouSure");});\n      $("#formtwo").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#formtwo").bind("submit", function(){daCodeMirror.save(); $("#formtwo").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text), 200
 
 def public_method(method, the_class):
     if isinstance(method, types.MethodType) and method.__name__ != 'init' and not method.__name__.startswith('_') and method.__name__ in the_class.__dict__:
@@ -2992,6 +3041,8 @@ def get_vars_in_use(interview, interview_status):
     templates = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
     area = SavedFile(current_user.id, fix=True, section='playgroundstatic')
     static = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
+    area = SavedFile(current_user.id, fix=True, section='playgroundmodules')
+    avail_modules = sorted([re.sub(r'.py$', '', f) for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
     for val in user_dict:
         if type(user_dict[val]) is types.FunctionType:
             functions.add(val)
@@ -3049,11 +3100,16 @@ def get_vars_in_use(interview, interview_status):
                 content += '</tbody></table>'
             content += '</td></tr>'
     if len(modules):
-        content += '\n                  <tr><td><h4>Modules</h4></td></tr>'
+        content += '\n                  <tr><td><h4>Modules defined</h4></td></tr>'
         for var in sorted(modules):
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-success playground-variable">' + name_info[var]['name'] + '</a>'
             if name_info[var]['doc']:
                 content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + noquote(name_info[var]['doc']) + '" title="' + noquote(var) + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
+            content += '</td></tr>'
+    if len(avail_modules):
+        content += '\n                  <tr><td><h4>Modules available in playground</h4></td></tr>'
+        for var in avail_modules:
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert=".' + noquote(var) + '" class="label label-success playground-variable">.' + noquote(var) + '</a>'
             content += '</td></tr>'
     if len(templates):
         content += '\n                  <tr><td><h4>Templates</h4></td></tr>'
@@ -3136,12 +3192,12 @@ def playground_page():
             else:
                 playground.finalize()
                 flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Running in other tab.'), message_type='success')
-                interview_source = docassemble.base.parse.interview_source_from_string('playground.' + str(current_user.id) + ':' + the_file)
+                interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + the_file)
                 interview_source.set_testing(True)
                 interview = interview_source.get_interview()
-                interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='playground.' + str(current_user.id) + ':' + the_file, req=request, action=None))
+                interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + the_file, req=request, action=None))
                 variables_html = get_vars_in_use(interview, interview_status)
-                return jsonify(url=url_for('index', i='playground.' + str(current_user.id) + ':' + the_file), variables_html=variables_html, flash_message=flash_message)
+                return jsonify(url=url_for('index', i='docassemble.playground' + str(current_user.id) + ':' + the_file), variables_html=variables_html, flash_message=flash_message)
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
     interview_path = None
@@ -3153,16 +3209,16 @@ def playground_page():
             content = fp.read().decode('utf8')
             #if not form.playground_content.data:
                 #form.playground_content.data = content
-        interview_path = 'playground.' + str(current_user.id) + ':' + the_file
+        interview_path = 'docassemble.playground' + str(current_user.id) + ':' + the_file
         interview_source = docassemble.base.parse.interview_source_from_string(interview_path)
         interview_source.set_testing(True)
     elif form.playground_content.data:
         content = re.sub(r'\r', '', form.playground_content.data)
-        interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="playground." + str(current_user.id) + ":test.yml", testing=True)
+        interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":test.yml", testing=True)
     else:
-        interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path="playground." + str(current_user.id) + ":test.yml", testing=True)
+        interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":test.yml", testing=True)
     interview = interview_source.get_interview()
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='playground.' + str(current_user.id) + ':' + the_file, req=request, action=None))
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + the_file, req=request, action=None))
     variables_html = get_vars_in_use(interview, interview_status)
     ajax = """
 $("#daRun").click(function(event){

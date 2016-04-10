@@ -54,24 +54,25 @@
       </div>
     </div>
     <div class="container" id="main">
-      {%- block flash_messages %}
-        {%- with messages = get_flashed_messages(with_categories=true) -%}
-          {%- if messages %}
+    {%- block top %}{% endblock %}
+    {%- block flash_messages %}
+      {%- with messages = get_flashed_messages(with_categories=true) -%}
+        {%- if messages %}
       <div class="container" id="flash">
         <div class="row">
           <div class="col-sm-7 col-md-6 col-lg-5 col-centered">
-            {%- for category, message in messages %}
-              {%- if category=='error' %}
-                {%- set category='danger' %}
-              {%- endif %}
+          {%- for category, message in messages %}
+            {%- if category=='error' %}
+              {%- set category='danger' %}
+            {%- endif %}
             <div class="alert alert-{{category}}"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>{{ message|safe }}</div>
-            {%- endfor %}
+          {%- endfor %}
           </div>
         </div>
       </div>
-          {%- endif %}
-        {%- endwith %}
-      {%- endblock %}
+        {%- endif %}
+      {%- endwith %}
+    {%- endblock %}
     {%- block main %}{% endblock %}
     </div>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>

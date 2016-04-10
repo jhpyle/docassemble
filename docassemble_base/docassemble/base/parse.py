@@ -1517,7 +1517,7 @@ def interview_source_from_string(path, **kwargs):
             return new_source
     #sys.stderr.write("Trying to find it\n")
     for the_filename in [docassemble.base.util.package_question_filename(path), docassemble.base.util.standard_question_filename(path), docassemble.base.util.absolute_filename(path)]:
-        sys.stderr.write("Trying " + str(the_filename) + " with path " + str(path) + "\n")
+        #sys.stderr.write("Trying " + str(the_filename) + " with path " + str(path) + "\n")
         if the_filename is not None:
             new_source = InterviewSourceFile(filepath=the_filename, path=path)
             if new_source.update():
@@ -1629,11 +1629,18 @@ class Interview:
                 #logmessage("Found imports")
                 for module_name in question.module_list:
                     #logmessage("Imported a module " + module_name)
-                    exec('import ' + module_name, user_dict)
+                    if module_name.startswith('.'):
+                        #logmessage("Importing " + str(self.source.package) + module_name + " where sys.path is " + str(sys.path))
+                        exec('import ' + str(self.source.package) + module_name, user_dict)
+                    else:
+                        exec('import ' + module_name, user_dict)
             if question.question_type == 'modules':
                 for module_name in question.module_list:
                     #logmessage("Imported from module " + module_name)
-                    exec('from ' + module_name + ' import *', user_dict)
+                    if module_name.startswith('.'):
+                        exec('from ' + str(self.source.package) + module_name + ' import *', user_dict)
+                    else:
+                        exec('from ' + module_name + ' import *', user_dict)
         while True:
             try:
                 for question in self.questions_list:
