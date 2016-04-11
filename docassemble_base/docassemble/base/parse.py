@@ -947,6 +947,10 @@ class Question:
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
                                 field_info['extras']['note'] = TextObject(definitions + unicode(field[key]))
+                            elif key in ['min', 'max', 'minlength', 'maxlength']:
+                                if 'extras' not in field_info:
+                                    field_info['extras'] = dict()
+                                field_info['extras'][key] = TextObject(definitions + unicode(field[key]))
                             elif key == 'html':
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
@@ -1184,7 +1188,7 @@ class Question:
             raise DAError("Unknown data type in process_attachment")
 
     def ask(self, user_dict, the_x, the_i):
-        #logmessage("asking: " + str(self.content.original_text))
+        #logmessage("ask: " + str(the_x) + " " + str(the_i))
         if the_x != 'None':
             exec("x = " + the_x, user_dict)
         if the_i != 'None':
@@ -1240,7 +1244,7 @@ class Question:
                     except:
                         continue
                 if hasattr(field, 'extras'):
-                    for key in ['note', 'html', 'script', 'css']:
+                    for key in ['note', 'html', 'script', 'css', 'min', 'max', 'minlength', 'maxlength']:
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()
@@ -1285,7 +1289,7 @@ class Question:
                     except:
                         raise DAError("Failure while processing field with datatype of object")
                 if hasattr(field, 'extras'):
-                    for key in ['note', 'html', 'script', 'css']:
+                    for key in ['note', 'html', 'script', 'css', 'min', 'max', 'minlength', 'maxlength']:
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()
@@ -1653,6 +1657,7 @@ class Interview:
                         #logmessage("Skipping " + question.name + " because answered")
                         continue
                     if question.question_type == "objects":
+                        #logmessage("Going into objects")
                         for keyvalue in question.objects:
                             for variable in keyvalue:
                                 object_type = keyvalue[variable]
@@ -1665,6 +1670,7 @@ class Interview:
                                     exec(command, user_dict)
                                 else:
                                     command = variable + ' = ' + object_type + '("' + variable + '")'
+                                    #logmessage("Running " + command)
                                     exec(command, user_dict)
                         question.mark_as_answered(user_dict)
                     if question.question_type == 'code' and question.is_mandatory:
@@ -1721,14 +1727,16 @@ class Interview:
             seeking.append({'variable': missingVariable})
         #logmessage("I don't have " + missingVariable)
         if missingVariable in variable_stack:
-            raise DAError("Infinite loop: " + missingVariable + " already looked for")
+            raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
         variable_stack.add(missingVariable)
         found_generic = False
+        bracketPart = 'None'
         realMissingVariable = missingVariable
         totry = [{'real': missingVariable, 'vari': missingVariable}]
         #logmessage("moo1")
         m = match_inside_brackets.search(missingVariable)
         if m:
+            bracketPart = m.group(1)
             newMissingVariable = re.sub('\[.+?\]', '[i]', missingVariable)
             #logmessage("newMissingVariable is " + newMissingVariable)
             totry.insert(0, {'real': missingVariable, 'vari': newMissingVariable})
@@ -1739,11 +1747,17 @@ class Interview:
             #logmessage("Trying missingVariable " + missingVariable)
             questions_to_try = list()
             generic_needed = True;
-            if missingVariable in self.questions:
+            if realMissingVariable in self.questions:
+                for lang in [language, '*']:
+                    if lang in self.questions[realMissingVariable]:
+                        for the_question in reversed(self.questions[realMissingVariable][lang]):
+                            questions_to_try.append((the_question, False, 'None', 'None', realMissingVariable))
+                        generic_needed = False
+            if generic_needed and bracketPart != 'None' and missingVariable in self.questions:
                 for lang in [language, '*']:
                     if lang in self.questions[missingVariable]:
                         for the_question in reversed(self.questions[missingVariable][lang]):
-                            questions_to_try.append((the_question, False, 'None', 'None', missingVariable))
+                            questions_to_try.append((the_question, False, 'None', bracketPart, missingVariable))
                         generic_needed = False
             #components = missingVariable.split(".")
             #realComponents = realMissingVariable.split(".")
@@ -1757,7 +1771,58 @@ class Interview:
             #         logmessage("There is no question for " + missingVariable)
             #     else:
             #         logmessage("There are no generic options for " + missingVariable)
-            if n != 1:
+            if n == 1:
+                found_x = 0;
+                #sub_totry = [{'var': "x", 'realvar': "x", 'root': realComponents[0], 'root_for_object': realComponents[0]}]
+                sub_totry = []
+                m = match_brackets_at_end.search(realComponents[0])
+                if m:
+                    before_brackets = m.group(1)
+                    brackets_part = m.group(2)
+                    sub_totry.insert(0, {'var': "x[i]", 'realvar': "x" + brackets_part, 'root': before_brackets, 'root_for_object': before_brackets})
+                for d in sub_totry:
+                    the_i_to_use = 'None'
+                    if found_x:
+                        break;
+                    var = d['var']
+                    realVar = d['realvar']
+                    #logmessage("Searching for brackets in " + str(realVar))
+                    mm = match_inside_brackets.findall(realVar)
+                    if (mm):
+                        #logmessage("Found stuff inside brackets")
+                        if len(mm) > 1:
+                            #logmessage("Variable " + str(var) + " is no good because it has more than one iterator")
+                            continue;
+                        the_i_to_use = mm[0];
+                        #logmessage("The i to use is " + str(the_i_to_use))
+                    #else:
+                        #logmessage("Did not find stuff inside brackets")
+                    root = d['root']
+                    root_for_object = d['root_for_object']
+                    #logmessage("testing variable " + str(var) + " and root " + str(root) + " and root for object " + str(root_for_object))
+                    try:
+                        root_evaluated = eval(root_for_object, user_dict)
+                        generic_object = type(root_evaluated).__name__
+                        if generic_object in self.generic_questions and var in self.questions and var in self.generic_questions[generic_object] and (language in self.generic_questions[generic_object][var] or '*' in self.generic_questions[generic_object][var]) and (language in self.questions[var] or '*' in self.questions[var]):
+                            #logmessage("foo1" + var)
+                            for lang in [language, '*']:
+                                #logmessage("foo2" + lang)
+                                if lang in self.questions[var]:
+                                    #logmessage("foo3" + var + lang)
+                                    for the_question_to_use in reversed(self.questions[var][lang]):
+                                        #logmessage("foo4 " + var + lang)
+                                        questions_to_try.append((the_question_to_use, True, root, the_i_to_use, var))
+                            missingVariable = var
+                            found_generic = True
+                            break
+                        #logmessage("I should be looping around now")
+                    except:
+                        logmessage("variable did not exist in user_dict: " + str(sys.exc_info()[0]))
+            #logmessage("Pleased to report that found_generic is " + str(found_generic) + " and generic_needed is " + str(generic_needed))
+                if generic_needed and not found_generic: # or is_iterator
+                    #logmessage("There is no question for " + missingVariable)
+                    continue
+            elif n != 1:
                 found_x = 0;
                 for i in range(1, n):
                     if found_x:
@@ -1779,12 +1844,12 @@ class Interview:
                         if (mm):
                             #logmessage("Found stuff inside brackets")
                             if len(mm) > 1:
-                                #logmessage("Variable " + var + " is no good because it has more than one iterator")
+                                #logmessage("Variable " + str(var) + " is no good because it has more than one iterator")
                                 continue;
                             the_i_to_use = mm[0];
                             #logmessage("The i to use is " + str(the_i_to_use))
                         #else:
-                            #logmessage("Did not find stuff inside brackets")
+                        #    logmessage("Did not find stuff inside brackets")
                         root = d['root']
                         root_for_object = d['root_for_object']
                         #logmessage("testing variable " + var + " and root " + root + " and root for object " + root_for_object)
@@ -1820,7 +1885,7 @@ class Interview:
                         #logmessage("Trying question of type " + str(the_question.question_type))
                         question = the_question.follow_multiple_choice(user_dict)
                         #logmessage("Back from follow_multiple_choice")
-                        #logmessage("Trying a question of type " + str(question.question_type))
+                        #logmessage("Trying a question of type " + str(the_question.question_type))
                         if is_generic:
                             #logmessage("Yes it's generic")
                             if question.is_generic:
@@ -1835,6 +1900,7 @@ class Interview:
                         if debug:
                             seeking.append({'question': question, 'reason': 'asking'})
                         if question.question_type == "objects":
+                            #logmessage("Going into objects")
                             for keyvalue in question.objects:
                                 for variable in keyvalue:
                                     object_type = keyvalue[variable]
@@ -1847,8 +1913,13 @@ class Interview:
                                         exec(command, user_dict)
                                     else:
                                         command = variable + ' = ' + object_type + '("' + variable + '")'
+                                        #logmessage("Running " + command)
                                         exec(command, user_dict)
+                            # if missing_var in variable_stack:
+                            #     logmessage("3 Removing missing variable " + missing_var)
+                            #     variable_stack.remove(missing_var)
                             question.mark_as_answered(user_dict)
+                            #logmessage("Returning after defining objects")
                             return({'type': 'continue'})
                         if question.question_type == "template":
                             exec(question.fields[0].saveas + ' = DATemplate(' + "'" + question.fields[0].saveas + "', content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ')', user_dict)
@@ -1876,14 +1947,16 @@ class Interview:
                                     exec("i = " + the_i, user_dict)
                                     #logmessage("Set i")
                             was_defined = False
+                            #logmessage("Deleting " + str(missing_var))
                             try:
-                                orig_value = eval(missing_var, user_dict)
                                 exec("__oldvariable__ = " + str(missing_var), user_dict)
                                 exec("del " + str(missing_var), user_dict)
                                 was_defined = True
                             except:
                                 pass
+                            #logmessage("snoo1: " + ", ".join(list(user_dict.keys())))
                             exec(question.compute, user_dict)
+                            #logmessage("snoo2")
                             #logmessage("the missing variable is " + str(missing_var))
                             if missing_var in variable_stack:
                                 logmessage("2 Removing missing variable " + missing_var)
@@ -1916,7 +1989,7 @@ class Interview:
                 except NameError as errMess:
                     newMissingVariable = extract_missing_name(errMess)
                     #newMissingVariable = str(errMess).split("'")[1]
-                    #logmessage(str(errMess))
+                    #logmessage("got this error: " + str(errMess))
                     question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking)
                     if question_result['type'] == 'continue':
                         continue

@@ -285,12 +285,12 @@ def comma_and_list_en(*pargs, **kargs):
     else:
         after_and = " "
     if (len(pargs) == 0):
-        return
+        return unicode('')
     elif (len(pargs) == 1):
         if type(pargs[0]) == list:
             pargs = pargs[0]
     if (len(pargs) == 0):
-        return
+        return unicode('')
     elif (len(pargs) == 1):
         return(unicode(pargs[0]))
     elif (len(pargs) == 2):

@@ -53,6 +53,9 @@
     - terms
     - interview-help
     - def
+- Objects:
+    - dalist
+    - dadict
 - Utility functions:
     - loading-util
     - space-underscore

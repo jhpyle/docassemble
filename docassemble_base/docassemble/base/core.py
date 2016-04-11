@@ -3,7 +3,7 @@ import random
 from docassemble.base.logger import logmessage
 import re
 import codecs
-from docassemble.base.util import possessify, possessify_long, a_preposition_b, a_in_the_b, your, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word
+from docassemble.base.util import possessify, possessify_long, a_preposition_b, a_in_the_b, your, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DAFile', 'DAFileCollection', 'DAFileList']
 
@@ -82,6 +82,8 @@ class DAObject(object):
     def attr(self, name):
         return getattr(self, name, None)
     def __str__(self):
+        if hasattr(self, 'name'):
+            return self.name
         return self.object_name()
     def __dir__(self):
         return self.attrList
@@ -95,8 +97,19 @@ class DAList(DAObject):
                 self.append(element)
             self.gathered = True
             del kwargs['elements']
+        if 'object_type' in kwargs:
+            self.object_type = kwargs['object_type']
+            del kwargs['object_type']
+        if not hasattr(self, 'object_type'):
+            self.object_type = None
         return super(DAList, self).init(**kwargs)
-    def appendObject(self, objectFunction, **kwargs):
+    def appendObject(self, *pargs, **kwargs):
+        if len(pargs) > 0:
+            objectFunction = pargs[0]
+        elif self.object_type is not None:
+            objectFunction = self.object_type
+        else:
+            objectFunction = DAObject
         newobject = objectFunction(self.instanceName + '[' + str(len(self.elements)) + ']', **kwargs)
         self.elements.append(newobject)
         return newobject
@@ -105,9 +118,11 @@ class DAList(DAObject):
     def extend(self, the_list):
         self.elements.extend(the_list)
     def first(self):
-        return self.elements[0]
+        return self.__getitem__(0)
     def last(self):
-        return self.elements[-1]
+        if len(self.elements) == 0:
+            return self.__getitem__(0)
+        return self.__getitem__(len(self.elements)-1)
     def does_verb(self, the_verb, **kwargs):
         if not self.gathering:
             self.gathered
@@ -151,14 +166,52 @@ class DAList(DAObject):
         return nice_number(self.number_gathered())
     def number_as_word(self):
         return nice_number(self.number())
+    def gather(self, number=None, item_object_type=None, minimum=1):
+        if item_object_type is None and self.object_type is not None:
+            item_object_type = self.object_type
+        self.gathering = True
+        while len(self.elements) < minimum:
+            the_length = len(self.elements)
+            if item_object_type is not None:
+                self.appendObject(item_object_type)
+            str(self.__getitem__(the_length))
+        for elem in self.elements:
+            str(elem)
+        the_length = len(self.elements)
+        if number is not None:
+            while the_length < int(number):
+                if item_object_type is not None:
+                    self.appendObject(item_object_type)
+                str(self.__getitem__(the_length))
+        else:
+            while self.there_is_another:
+                del self.there_is_another
+                if item_object_type is not None:
+                    self.appendObject(item_object_type)
+                str(self.__getitem__(the_length))
+        self.gathering = False
+        return True
     def comma_and_list(self):
         if not self.gathering:
             self.gathered
         return comma_and_list(self.elements)        
+    def __iter__(self):
+        return self.elements.__iter__()
     def __setitem__(self, index, value):
+        if index < 0 and len(self.elements) + index < 0:
+            num_to_add = (-1 * index) - len(self.elements)
+            for i in range(0, num_to_add):
+                self.elements.append(None)
+        elif len(self.elements) <= index:
+            num_to_add = 1 + index - len(self.elements)
+            for i in range(0, num_to_add):
+                self.elements.append(None)
         return self.elements.__setitem__(index, value)
     def __getitem__(self, index):
-        return self.elements[index]
+        try:
+            return self.elements[index]
+        except:
+            raise NameError("name '" + object.__getattribute__(self, 'instanceName') + '[' + str(index) + ']' + "' is not defined")
     def __str__(self):
         return self.comma_and_list()
     def __unicode__(self):

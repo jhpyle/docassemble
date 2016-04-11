@@ -507,10 +507,14 @@ class Individual(Person):
             return(output)
 
 class PartyList(DAList):
-    pass
+    def init(self, **kwargs):
+        self.object_type = Individual
+        return super(PartyList, self).init(**kwargs)
 
 class ChildList(DAList):
-    pass
+    def init(self, **kwargs):
+        self.object_type = Individual
+        return super(ChildList, self).init(**kwargs)
 
 class FinancialList(DAObject):
     def init(self, **kwargs):
@@ -583,9 +587,14 @@ class Value(DAObject):
 class PeriodicValue(Value):
     pass
 
+class OfficeList(DAList):
+    def init(self, **kwargs):
+        self.object_type = Address
+        return super(OfficeList, self).init(**kwargs)
+
 class Organization(Person):
     def init(self, **kwargs):
-        self.initializeAttribute('office', DAList)
+        self.initializeAttribute('office', OfficeList)
         if 'offices' in kwargs:
             if type(kwargs['offices']) is list:
                 for office in kwargs['offices']:

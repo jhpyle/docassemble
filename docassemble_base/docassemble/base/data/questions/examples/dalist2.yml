@@ -1,0 +1,35 @@
+metadata:
+  title: Basic lists
+---
+modules:
+  - docassemble.base.core
+  - docassemble.base.util
+---
+objects:
+  - thing: DAList
+---
+code: |
+  thing.gather(number=number_of_things)
+  thing.gathered = True
+---
+question: |
+  How many things are there?
+fields:
+  - Number of things: number_of_things
+    datatype: integer
+    min: 1
+---
+question: |
+  What is the ${ ordinal(i) } thing?
+fields:
+  - no label: thing[i]
+---
+sets: all_done
+need: thing.gathered
+question: |
+  The things are: ${ thing }.
+buttons:
+  - Restart: restart
+---
+mandatory: true
+code: all_done

@@ -293,7 +293,7 @@ error_file_handler = logging.FileHandler(filename=LOGFILE)
 error_file_handler.setLevel(logging.DEBUG)
 app.logger.addHandler(error_file_handler)
 
-sys.stderr.write("__name__ is " + str(__name__) + " and __package__ is " + str(__package__) + "\n")
+#sys.stderr.write("__name__ is " + str(__name__) + " and __package__ is " + str(__package__) + "\n")
 
 def flask_logger(message):
     #app.logger.warning(message)
@@ -836,7 +836,7 @@ def copy_playground_modules():
         local_dir = os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble', 'playground' + str(user_id))
         if os.path.isdir(local_dir):
             shutil.rmtree(local_dir)
-        sys.stderr.write("Copying " + str(mod_dir.directory) + " to " + str(local_dir) + "\n")
+        #sys.stderr.write("Copying " + str(mod_dir.directory) + " to " + str(local_dir) + "\n")
         shutil.copytree(mod_dir.directory, local_dir)
         with open(os.path.join(local_dir, '__init__.py'), 'a') as the_file:
             the_file.write(init_py_file)

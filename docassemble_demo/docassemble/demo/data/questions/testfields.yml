@@ -23,6 +23,7 @@ fields:
       favorite movies, etc.
   - Annual income: user_annual_income
     datatype: currency
+    min: 100
   - E-mail address: user_email_address
     datatype: email
   - Been vaccinated: user_vaccinated
@@ -61,6 +62,7 @@ fields:
       Tell me about your political views.
   - no label: political_views
     default: I have no political views
+    maxlength: 30
   - Political preference: political_party
     datatype: radio
     shuffle: true 

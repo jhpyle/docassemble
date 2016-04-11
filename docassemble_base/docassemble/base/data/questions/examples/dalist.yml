@@ -1,0 +1,33 @@
+metadata:
+  title: List of objects
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - people: PartyList
+---
+code: |
+  people.gathered = people.gather()
+---
+question: |
+  What is the person's name?
+fields:
+  - First: people[i].name.first
+  - Last: people[i].name.last
+---
+question: |
+  Do you have more people for me?
+subquestion: |
+  So far you have told me about ${ people }.
+yesno: people.there_is_another
+---
+sets: all_done
+question: |
+  Here is your list of people.
+subquestion: |
+  ${ people }
+---
+mandatory: true
+code: |
+  need(people.gathered, all_done)

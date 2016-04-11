@@ -217,6 +217,10 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                     validation_rules['messages'][field.saveas] = {'required': word("This field is required.")}
                 else:
                     validation_rules['rules'][field.saveas] = {'required': False}
+                for key in ['minlength', 'maxlength']:
+                    if hasattr(field, 'extras') and key in field.extras and key in status.extras:
+                        #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
+                        validation_rules['rules'][field.saveas][key] = int(status.extras[key][field.number])
             if hasattr(field, 'datatype'):
                 if field.datatype == 'date':
                     validation_rules['rules'][field.saveas]['date'] = True
@@ -230,6 +234,11 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                 if field.datatype in ['number', 'currency', 'float', 'integer']:
                     validation_rules['rules'][field.saveas]['number'] = True
                     validation_rules['messages'][field.saveas]['number'] = word("You need to enter a number.")
+                    #sys.stderr.write("Considering adding validation rule\n")
+                    for key in ['min', 'max']:
+                        if hasattr(field, 'extras') and key in field.extras and key in status.extras:
+                            #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
+                            validation_rules['rules'][field.saveas][key] = int(status.extras[key][field.number])
                 if (field.datatype in ['files', 'file', 'camera', 'camcorder', 'microphone']):
                     enctype_string = ' enctype="multipart/form-data"'
                     files.append(field.saveas)
@@ -255,7 +264,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                 elif hasattr(field, 'datatype') and field.datatype == 'yesno':
                     fieldlist.append('              <div class="form-group' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>\n')
                 else:
-                    fieldlist.append('              <div class="form-group' + req_tag +'"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + field.label + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>\n')
+                    fieldlist.append('              <div class="form-group' + req_tag + '"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + field.label + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>\n')
         output += indent_by(audio_text, 10) + '          <form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '>\n            <fieldset>\n'
         output += '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
@@ -820,7 +829,7 @@ def input_for(status, field, wide=False):
                     output += '<div class="input-group"><span class="input-group-addon" id="addon-' + field.saveas + '">' + currency_symbol() + '</span>'
             output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control" type="' + input_type + '"' + step_string + ' name="' + field.saveas + '" id="' + field.saveas + '"'
             if field.datatype == 'currency':
-                output += ' aria-describedby="addon-' + field.saveas + '"/></div>'
+                output += ' aria-describedby="addon-' + field.saveas + '"/></div><label style="display: none;" for="' + field.saveas + '" class="help-inline" id="' + field.saveas + '-error"></label>'
             else:
                 output += '/>'
     return output
