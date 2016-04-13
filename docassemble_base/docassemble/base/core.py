@@ -197,21 +197,33 @@ class DAList(DAObject):
         return comma_and_list(self.elements)        
     def __iter__(self):
         return self.elements.__iter__()
-    def __setitem__(self, index, value):
+    def _fill_up_to(self, index):
         if index < 0 and len(self.elements) + index < 0:
             num_to_add = (-1 * index) - len(self.elements)
             for i in range(0, num_to_add):
-                self.elements.append(None)
+                if self.object_type is None:
+                    self.elements.append(None)
+                else:
+                    self.appendObject(self.object_type)
         elif len(self.elements) <= index:
             num_to_add = 1 + index - len(self.elements)
             for i in range(0, num_to_add):
-                self.elements.append(None)
+                if self.object_type is None:
+                    self.elements.append(None)
+                else:
+                    self.appendObject(self.object_type)        
+    def __setitem__(self, index, value):
+        self._fill_up_to(index)
         return self.elements.__setitem__(index, value)
     def __getitem__(self, index):
         try:
             return self.elements[index]
         except:
-            raise NameError("name '" + object.__getattribute__(self, 'instanceName') + '[' + str(index) + ']' + "' is not defined")
+            if self.object_type is None:
+                raise NameError("name '" + object.__getattribute__(self, 'instanceName') + '[' + str(index) + ']' + "' is not defined")
+            else:
+                self._fill_up_to(index)
+            return self.elements[index]
     def __str__(self):
         return self.comma_and_list()
     def __unicode__(self):

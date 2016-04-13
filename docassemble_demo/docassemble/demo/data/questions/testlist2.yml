@@ -1,0 +1,24 @@
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - person: PartyList
+---
+question: |
+  What is the ${ ordinal(i) } person's name?
+fields:
+  - First Name: person[i].name.first
+  - Last Name: person[i].name.last
+---
+sets: all_done
+question: |
+  We are done.
+subquestion: |
+  The people include:
+
+  % for j in [0, 1, 2]:
+  * ${ person[j] }
+  % endfor
+---
+mandatory: true
+code: all_done
