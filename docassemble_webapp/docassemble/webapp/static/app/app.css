@@ -282,3 +282,7 @@ a.example-share:focus {
 a.dashowmethods:focus {
     outline: none;
 }
+
+img.daimageicon {
+    height: 14px;
+}

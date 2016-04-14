@@ -583,7 +583,7 @@ def package_template_filename(the_file, **kwargs):
     parts = the_file.split(":")
     if len(parts) == 1:
         package = kwargs.get('package', None)
-        #logmessage("my package is " + str(package))
+        logmessage("my package is " + str(package))
         if package is not None:
             parts = [package, the_file]
             #logmessage("my package is " + str(package))
@@ -595,7 +595,7 @@ def package_template_filename(the_file, **kwargs):
         #    logmessage("package_template_filename: retval is " + str(retval))
         #    return(retval)
     if len(parts) == 2:
-        m = re.search(r'^playground\.([0-9]+)$', parts[0])
+        m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
         if m:
             parts[1] = re.sub(r'^data/templates/', '', parts[1])
             return(absolute_filename("/playgroundtemplate/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\.]', '', parts[1])).path)
@@ -623,7 +623,7 @@ def package_data_filename(the_file):
     #if len(parts) == 1:
     #    parts = ['docassemble.base', the_file]
     if len(parts) == 2:
-        m = re.search(r'^playground\.([0-9]+)$', parts[0])
+        m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
         if m:
             parts[1] = re.sub(r'^data/static/', '', parts[1])
             return(absolute_filename("/playgroundstatic/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\.]', '', parts[1])).path)

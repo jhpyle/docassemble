@@ -3121,6 +3121,12 @@ def get_vars_in_use(interview, interview_status):
         for var in static:
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-default playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
+    if len(interview.images):
+        content += '\n                  <tr><td><h4>Decorations</h4></td></tr>'
+        for var in sorted(interview.images):
+            content += '\n                  <tr><td><img class="daimageicon" src="' + get_url_from_file_reference(interview.images[var].get_reference()) + '"></img>&nbsp;<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + noquote(var) + '</a>'
+            content += '</td></tr>'
+        
     return content
 
 @app.route('/playground', methods=['GET', 'POST'])
