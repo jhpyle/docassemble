@@ -55,7 +55,7 @@
     - def
 - Objects:
     - dalist
-    - dadict
+#    - dadict
 - Utility functions:
     - loading-util
     - space-underscore

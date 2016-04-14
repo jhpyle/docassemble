@@ -725,7 +725,7 @@ def custom_login():
     user_manager =  current_app.user_manager
     db_adapter = user_manager.db_adapter
     secret = request.cookies.get('secret', None)
-    logmessage("custom_login: secret is " + str(secret))
+    #logmessage("custom_login: secret is " + str(secret))
     next = request.args.get('next', _endpoint_url(user_manager.after_login_endpoint))
     reg_next = request.args.get('reg_next', _endpoint_url(user_manager.after_register_endpoint))
 
