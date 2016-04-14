@@ -369,6 +369,22 @@ device's camera to take a picture;
   [select] tag (which is the default).  Variable will be set to the
   value of the choice.
 
+For some field types, you can require input validation by adding the
+following to the definition of a field:
+
+* `min`: for `currency` and `number` data types, require a minimum
+  value.
+  [See here for more information](http://jqueryvalidation.org/min-method).
+* `max`: for `currency` and `number` data types, require a maximum
+  value.
+  [See here for more information](http://jqueryvalidation.org/max-method).
+* `minlength`: require a minimum number of characters in a textbox,
+  number of checkboxes checked, etc.
+  [See here for more information](http://jqueryvalidation.org/minlength-method).
+* `maxlength`: require a maximum number of characters in a textbox,
+  number of checkboxes checked, etc.
+  [See here for more information](http://jqueryvalidation.org/maxlength-method).
+
 Here is a long example that illustrates many of these features.
 
 Compare this screenshot . . .
@@ -403,6 +419,7 @@ fields:
       favorite movies, etc.
   - Annual income: user_annual_income
     datatype: currency
+    min: 100
   - E-mail address: user_email_address
     datatype: email
   - Been vaccinated: user_vaccinated
@@ -441,6 +458,7 @@ fields:
       Tell me about your political views.
   - no label: political_views
     default: I have no political views
+    maxlength: 30
   - Political preference: political_party
     datatype: radio
     shuffle: true 
