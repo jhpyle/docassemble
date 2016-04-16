@@ -62,7 +62,6 @@ header-includes:
   - \setlist[itemize,4]{leftmargin=0.5in,itemindent=0in,align=left,labelwidth=0.25in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
   - \setlist[itemize,5]{leftmargin=0.5in,itemindent=0in,align=left,labelwidth=0.25in,labelsep=0in,topsep=0pt,partopsep=0pt,parsep=0pt,itemsep=0pt}
   - \setlist[trivlist]{topsep=0pt,partopsep=0pt}
-  - \newcommand*\smallblacksquare{\mathbin{\vcenter{\hbox{\rule{.8ex}{.8ex}}}}}
   - \renewcommand{\labelitemi}{\textbullet}
   - \renewcommand{\labelitemii}{--}
   - \renewcommand{\labelitemiii}{\textbullet}
