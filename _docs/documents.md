@@ -4,7 +4,7 @@ title: Attaching documents to questions
 short_title: Documents
 ---
 
-# The `attachments` statement
+# <a name="attachments"></a>The `attachments` statement
 
 The `attachments` statement (which can also be written `attachment`)
 provides documents to the user.  Users can preview, download, and/or
@@ -53,7 +53,7 @@ will be visible:
 
 ![document screenshot]({{ site.baseurl }}/img/document-example-preview.png)
 
-## Storing document text in separate files
+## <a name="content file"></a>Storing document text in separate files
 
 If the `content` is lengthy and you would rather not type it into the
 interview [YAML] file, you can import the content from a separate file
@@ -93,7 +93,7 @@ content file:
 
 The content of multiple `content file` files will be concatenated.
 
-## Filling PDF forms
+## <a name="pdf template file"></a>Filling PDF forms
 
 If you have a PDF file that contains fillable fields (e.g. fields
 added using Adobe Acrobat Pro), **docassemble** can assemble a PDF
@@ -141,7 +141,7 @@ specified.  E.g.:
 The `fields` must be in the form of a [YAML] dictionary.  Checkbox
 fields will be checked if the value evaluates to "True" or "Yes."
 
-### How to get a list of field names in a PDF file
+### <a name="list field names"></a>How to get a list of field names in a PDF file
 
 When logged in to **docassemble** as a developer, you can go to
 "Utilities" from the menu and, under "Get list of fields from fillable
@@ -150,7 +150,7 @@ PDF," you can upload a PDF file that has fillable fields in it.
 present you with the [YAML] text of a question that uses that PDF file
 as a `pdf template file`.
 
-### How to insert signatures or other images into fillable PDF files
+### <a name="signature"></a>How to insert signatures or other images into fillable PDF files
 
 To add a signature or other image to a fillable PDF file, use Adobe
 Acrobat Pro to insert a "Digital Signature" into the document where
@@ -232,7 +232,7 @@ name.  For example:
       third signature: ${ user.signature }
 {% endhighlight %}
 
-## Saving documents as variables
+## <a name="variable name"></a>Saving documents as variables
 
 Including an `attachments` section in a `question` block will offer
 the user a chance to download an assembled document and e-mail it to
@@ -337,7 +337,7 @@ attributes:
 See [objects] for an explanation of the `DAFile` and
 `DAFileCollection` classes.
 
-## Limiting availability of formats
+## <a name="valid formats"></a>Limiting availability of formats
 
 You can also limit the file formats available:
 {% highlight yaml %}
@@ -360,7 +360,7 @@ preview and will only be able to download the PDF file:
 
 ![document screenshot]({{ site.baseurl }}/img/document-example-pdf-only.png)
 
-## Assembling documents in DOCX format
+## <a name="docx"></a>Assembling documents in DOCX format
 
 **docassemble** can use [Pandoc] to convert [Markdown] into a
 Microsoft Word .docx file.  These .docx files are not created by
@@ -392,7 +392,7 @@ attachment:
 To customize document styles, headers, and footers, see the `docx
 reference file` setting, discussed below.
 
-## Assembling documents in a different language than the current language
+## <a name="language"></a>Assembling documents in a different language than the current language
 
 If you need to produce a document in a different language than the
 user's language, then the `word()` [function] may operate in a way you
@@ -422,7 +422,7 @@ attachment:
 ---
 {% endhighlight %}
 
-## Preventing the user from e-mailing documents
+## <a name="allow emailing"></a>Preventing the user from e-mailing documents
 
 When `attachments` are included in a `question`, the user will be
 given an option to e-mail the documents to an e-mail address.  If you
@@ -443,7 +443,7 @@ attachment:
 ---
 {% endhighlight %}
 
-# Formatting documents with special markup tags
+# <a name="markup"></a>Formatting documents with special markup tags
 
 In addition to using [Markdown] syntax, you can use
 **docassemble**-specific markup tags to control the appearance of
@@ -478,7 +478,7 @@ documents.
 * `[TAB]` - Insert a tab (horizontal space), e.g., to indent the first
   line of a paragraph when it otherwise would not be indented.
 
-# Formatting documents with Pandoc templates and metadata
+# <a name="pandoc"></a>Formatting documents with Pandoc templates and metadata
 
 You can also control global formatting options by setting `metadata`
 for the document.  These options are passed through to [Pandoc], where
@@ -508,7 +508,7 @@ attachment:
 
 Metadata values can contain [Mako] template commands.
 
-## Metadata applicable to RTF and PDF files
+## <a name="metadata rtf pdf"></a>Metadata applicable to RTF and PDF files
 
 * If you wish to use a standard document title, set the following:
   * `title`
@@ -565,7 +565,7 @@ In this case, the `HeaderLines: "3"` metadata will ensure that [LaTeX]
 formats the headers correctly.  Otherwise the header may overlap the
 document text.
 
-## Metadata applicable to PDF only
+## <a name="metadata pdf"></a>Metadata applicable to PDF only
 
 The following metadata tags only apply to PDF file generation.  To
 change analogous formatting in RTF files, you will need to create your
@@ -601,7 +601,7 @@ options for the the [geometry] package that set the page margins.
 * `abstract` - default is not defined.  If defined, it will include an
   article abstract in the standard [LaTeX] format.
 
-# Additional customization of document formatting
+# <a name="customization"></a>Additional customization of document formatting
 
 You can exercise greater control over document formatting by creating
 your own template files for [Pandoc].  The default template files are
@@ -689,7 +689,7 @@ If you use an interview-wide `attachment options` block to set
 defaults, you can override those defaults for a particular attachment
 by providing specific options within the question block.
 
-# A note about customization of document formatting
+# <a name="customization note"></a>A note about customization of document formatting
 
 If exercising fine-grained control over document formatting is
 important to you, and you are not prepared to learn how [Pandoc] and

@@ -11,7 +11,7 @@ variable name within a directive that indicates how you would like
 
 # Directives
 
-## `yesno` or `noyes`
+## <a name="yesno"></a><a name="noyes"></a>`yesno` or `noyes`
 
 {% highlight yaml %}
 ---
@@ -37,7 +37,7 @@ noyes: user_has_injury
 ---
 {% endhighlight %}
 
-## `field` with `buttons`
+## <a name="field with buttons"></a>`field` with `buttons`
 
 {% highlight yaml %}
 ---
@@ -120,7 +120,7 @@ dictionaries) where the key is what the variable should be set to and
 the value is the button label.  This is different from the [YAML]
 syntax.
 
-## `field` with `choices`
+## <a name="field with choices"></a>`field` with `choices`
 
 {% highlight yaml %}
 ---
@@ -136,7 +136,7 @@ choices:
 
 This provides "radio buttons" with a "Continue" button.
 
-## Adding images to `buttons` or `choices`
+## <a name="image button"></a>Adding images to `buttons` or `choices`
 
 To add a decorative icon to a choice, use a key/value pair and add
 `image` as an additional key.
@@ -156,7 +156,7 @@ buttons:
 
 This works with both `buttons` and `choices`.
 
-## buttons/choices that embed `question` and `code` blocks
+## <a name="code button"></a>buttons/choices that embed `question` and `code` blocks
 
 Multiple choice questions can embed `question` blocks and `code`
 blocks.  These questions are just like ordinary questions, except they
@@ -216,7 +216,7 @@ calls for either `car_model` or `car_make`, the question should be
 tried.  When the user clicks on one of the buttons, the code will be
 executed and the variables will be set.
 
-## `field` without `buttons` or `choices`
+## <a name="field"></a>`field` without `buttons` or `choices`
 
 {% highlight yaml %}
 ---
@@ -232,7 +232,7 @@ A `question` with a `field` and no `buttons` will offer the user a
 "Continue" button.  When the user presses "Continue," the variable
 indicated by `field` will be set to `True`.
 
-## `signature`
+## <a name="signature"></a>`signature`
 
 The `signature` directive presents a special screen in which the user
 can sign his or her name with the trackpad or other pointing device.
@@ -279,7 +279,7 @@ yesno: user_signature_verified
 ---
 {% endhighlight %}
 
-## `fields`
+## <a name="fields"></a>`fields`
 
 The `fields` statement is used to present the user with a list of
 fields.
@@ -527,7 +527,7 @@ code: |
 
 ([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testpulldown.yml){:target="_blank"}.)
 
-## `sets`
+## <a name="sets"></a>`sets`
 
 {% highlight yaml %}
 ---
@@ -558,7 +558,7 @@ The `user_done` variable will never be set to any value, but that is
 ok, because you don't want the user to be able to "get past" the final
 screen.
 
-## `sets` with special buttons/choices 
+## <a name="sets special"></a>`sets` with special buttons/choices 
 
 The `sets` statement is also used in conjunction with `buttons` in
 multiple choice questions where there is no `field` to be set.
@@ -642,7 +642,7 @@ choices:
 
 The functionality is the same.
 
-## `event`
+## <a name="event"></a>`event`
 
 {% highlight yaml %}
 ---
@@ -673,7 +673,7 @@ this happens, **docassemble** will look for a `question` or `code`
 block that defines the variable `role_event`, and it will find the
 example question above.
 
-## review
+## <a name="review"></a>review
 
 A `review` block allows interview authors to provide a screen where
 users can review and edit their answers.  Typically, the user will get
@@ -723,7 +723,7 @@ display.
 For more information about adding menu items, see the sections on
 [special variables] and [functions].
 
-### Customizing the display of `review` options
+### <a name="review customization"></a>Customizing the display of `review` options
 
 You can provide the user with a review of answers and buttons that the
 user can press to revisit an answer:
@@ -807,7 +807,7 @@ review:
 
 ([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testreview4.yml){:target="_blank"}.)
 
-### Why can't `review` blocks be automatically generated?
+### <a name="review auto"></a>Why can't `review` blocks be automatically generated?
 
 The list of variables to display to the user in a `review` block needs
 to be specified by the interview author.  There are several reasons
@@ -829,7 +829,7 @@ why this needs to be done manually as opposed to automatically:
    necessarily the most logical way to present the information for
    editing.
 
-# A note about variable names
+# <a name="variable names"></a>A note about variable names
 
 Variable names are [Python identifiers], which means they can be any
 sequence of uppercase or lowercase letters, digits, and underscores,

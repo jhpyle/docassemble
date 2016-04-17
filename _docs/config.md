@@ -102,7 +102,7 @@ function `docassemble.webapp.config.load` sets it.)
 
 # Standard configuration directives
 
-## debug
+## <a name="debug"></a>debug
 
 Set this to `true` on development servers.  It enables the following
 features:
@@ -111,14 +111,14 @@ features:
   to generate the current question.
 * Viewing [LaTeX] and [Markdown] source in document attachments.
 
-## root
+## <a name="root"></a>root
 
 This depends on how you configured your web server during [installation]
 Set this to `/` if the [WSGI] application runs from the root of the
 domain.  If your server runs from url path `/da/`, set `root` to
 `/da/`.  Always use a trailing slash.
 
-## exitpage
+## <a name="exitpage"></a>exitpage
 
 This is the default URL to which the user should be directed after
 clicking a button that runs an `exit` or `leave` command.  (See
@@ -130,7 +130,7 @@ For example:
 exitpage: http://example.com/pages/thankyou.html
 {% endhighlight %}
 
-## db
+## <a name="db"></a>db
 
 This tells the **docassemble** web app where to find the database in
 which to store users' answers, login information, and other information.
@@ -152,7 +152,7 @@ will want to set this to the central database server.
 If you want separatte **docassemble** systems to share the same
 database, you can set a `table_prefix`.
 
-## appname and brandname
+## <a name="appname"></a><a name="brandname"></a>appname and brandname
 
 These are branding names.
 
@@ -162,13 +162,13 @@ in the navigation bar.
 The `brandname` will default to the `appname` if `brandname` is not
 specified.
 
-## uploads
+## <a name="uploads"></a>uploads
 
 This is the directory in which uploaded files are stored.  If you are
 using a [multi-server arrangement], this needs to point to a central
 network drive.
 
-## packages
+## <a name="packages"></a>packages
 
 This is the directory in which **docassemble** extension packages are
 installed.  The PYTHONUSERBASE environment variable is set to this
@@ -177,7 +177,7 @@ looks for packages, it will look here.  This is normally `~/.local`,
 but it is a good practice to avoid using the web server user's home
 directory.
 
-## packagecache
+## <a name="packagecache"></a>packagecache
 
 When [pip] runs, it needs a directory in which to cache files.  The
 XDG_CACHE_HOME environment variable is set to this value.  This is
@@ -187,7 +187,7 @@ server user's home directory.
 On Mac and Windows, make sure that the web server user has a home
 directory to which [pip] can write.  (See pip/utils/appdirs.py.)
 
-## webapp
+## <a name="webapp"></a>webapp
 
 This is the path to the [WSGI] file loaded by the web server.
 
@@ -200,7 +200,7 @@ stored on a central network drive.  When a package is updated, all
 servers need to reset, not just the server that happened to process
 the package update.
 
-## certs
+## <a name="certs"></a>certs
 
 This is a path to a directory containing SSL certificates for the web
 application.  This is only necessary if you are using a [multi-server
@@ -261,7 +261,7 @@ If you want to use a location other than `/etc/ssl/docassemble`, you
 can change the `cert_install_directory` setting (see below).  You will
 also, of course, need to change the web server configuration file.
 
-## mail
+## <a name="mail"></a>mail
 
 **docassemble** needs to send e-mail, for example to reset people's
 passwords, or to let users of a multi-user interview know that it is
@@ -307,13 +307,13 @@ does not, you should configure your system so that it can find its
 fully qualified domain name faster.  On Linux, you can do this by
 editing `/etc/hosts`.
 
-## use_progress_bar
+## <a name="use_progress_bar"></a>use_progress_bar
 
 This controls whether the web app will show a progress bar at the top
 of the screen.  The progress of the bar can be controlled by setting
 the `progress` [modifier] on questions.
 
-## default_interview
+## <a name="default_interview"></a>default_interview
 
 If no [interview] is specified in the URL when the web browser first
 connects to the **docassemble** server, this interview will be used.
@@ -324,13 +324,13 @@ format.  For example:
 default_interview: docassemble.demo:data/questions/questions.yml
 {% endhighlight %}
 
-## flask_log
+## <a name="flask_log"></a>flask_log
 
 **docassemble** uses the [Flask] web framework.  This is the path to the
 [Flask] log file.  Most errors write to the standard web server error
 logs, but there are some that will only write to this log file.
 
-## language and locale
+## <a name="language"></a><a name="locale"></a>language and locale
 
 These directives set the default [language and locale settings] for **docassemble**.
 
@@ -339,7 +339,7 @@ language: en
 locale: US.utf8
 {% endhighlight %}
 
-## default_admin_account
+## <a name="default_admin_account"></a>default_admin_account
 
 These settings are only used by the setup script `create_tables.py` in
 the `docassemble.webapp` as part of the [installation] of
@@ -357,14 +357,14 @@ default_admin_account:
 After `create_tables.py` runs, you can delete the
 `default_admin_account` information from the configuration file.
 
-## secretkey
+## <a name="secretkey"></a>secretkey
 
 The [Flask] web framework needs a secret key in order to manage
 session information and provide [protection] against
 [cross-site request forgery].  Set the `secretkey` to a random value
 that cannot be guessed.
 
-## password_secretkey
+## <a name="password_secretkey"></a>password_secretkey
 
 The `password_secretkey` is used in the process of encrypting
 interview answers for users who log in using Google or Facebook.  It
@@ -372,7 +372,7 @@ defaults to `secretkey`.  If the value changes, users who log in
 through Google or Facebook will not be able to resume stored
 interviews.
 
-## png_resolution and png_screen_resolution
+## <a name="png_resolution"></a><a name="png_screen_resolution"></a>png_resolution and png_screen_resolution
 
 When users supply PDF files and **docassemble** includes those files
 within a [document], the PDF pages are converted to PNG images in
@@ -384,12 +384,12 @@ but at a lower resolution.  `png_screen_resolution` defines the dots
 per inch to be used for conversion of PDF pages to PNG files for
 display in the web browser.
 
-## show_login
+## <a name="show_login"></a>show_login
 
 If set to false, users will not see a "Sign in" link in the
 upper-right-hand corner of the web app.
 
-## xsendfile
+## <a name="xsendfile"></a>xsendfile
 
 If your web server is not configured to support X-SENDFILE headers,
 set this to False.  Use of X-SENDFILE is recommended because it allows
@@ -399,7 +399,7 @@ browser typically asks for only a range of bytes from the sound file
 at a time, and the [WSGI] server does not support the HTTP Range
 header.
 
-## log
+## <a name="log"></a>log
 
 **docassemble** writes messages to a log file (`docassemble.log`)
 stored in this directory, which defaults to

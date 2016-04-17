@@ -38,7 +38,7 @@ source code of [legal.py] and [basic-questions.yml].
 
 # Functions
 
-## update_info
+## <a name="update_info"></a>update_info
 
 Some of the [functions] and [methods] of `docassemble.base.legal` will
 behave differently depending on background information about the
@@ -118,7 +118,7 @@ code: |
 For more information about `get_info()` and `set_info()`, see
 [functions].
 
-## interview_url
+## <a name="interview_url"></a>interview_url
 
 The `interview_url()` function returns a URL to the interview that
 provides a direct link to the interview and the current variable
