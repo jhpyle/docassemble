@@ -9,12 +9,12 @@ short_title: Special Variables
 There are some special variables that **docassemble** sets in every
 interview's variable store.
 
-## _internal
+## <a name="_internal"></a>_internal
 
 `_internal` is a [Python dictionary] that is used by **docassemble**
 but that is not intended to be used in interviews.
 
-## url_args
+## <a name="url_args"></a>url_args
 
 `url_args` is a [Python dictionary] that is used to access parameters
 passed via URL.
@@ -93,7 +93,7 @@ subquestion: |
 You can test this out by trying the following link:
 [https://demo.docassemble.org?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder](https://demo.docassemble.org?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder){:target="_blank"}.
 
-## current_info
+## <a name="current_info"></a>current_info
 
 `current_info` is a [Python dictionary] that is defined by
 **docassemble** every time a screen loads.  It allows interviews to
@@ -133,7 +133,7 @@ of the person logged in and other information.
 * `yaml_filename` - the filename of the current interview, in the
   package:path form (e.g., `docassemble.demo:data/questions/questions.yml`)
 
-## role_needed
+## <a name="role_needed"></a>role_needed
 
 If you use the [multi-user interview feature] and the user reaches a
 point in the interview where input is needed from a different user
@@ -144,13 +144,13 @@ answering the next question in the interview.
 
 # Variables that interviews can set
 
-## role
+## <a name="role"></a>role
 
 If you use the [multi-user interview feature], your interview will
 need to have a `default role` [initial block] containing code that
 sets the variable `role` to the user's role.
 
-## speak_text
+## <a name="speak_text"></a>speak_text
 
 If this special variable is set to `True`, **docassemble** will
 present the user with an HTML5 audio control at the top of the page.
@@ -164,7 +164,7 @@ Since the [VoiceRSS] service costs money above the free usage tier,
 presses "Play" on the audio control.  It also caches the results and
 reuses them whenever possible.
 
-## track_location
+## <a name="track_location"></a>track_location
 
 If set to `True`, the web app will attempt to obtain the user's
 position, based on GPS or any other geolocation feature enabled in the
@@ -189,7 +189,7 @@ attempt has been made to gather the location, it will be set to false.
 The user's location can subsequently be obtained by accessing the
 `user.location` object.
 
-## multi_user
+## <a name="multi_user"></a>multi_user
 
 If you want to use the [multi-user interview feature], you need to set
 `multi_user` to `True`.  This is usually done in a "mandatory" or
@@ -204,7 +204,7 @@ access the interview answers.
 Setting `multi_user` to `True` will reduce [security] somewhat, but it
 is necessary for allowing the [multi-user interview feature].
 
-## menu_items
+## <a name="menu_items"></a>menu_items
 
 Interviews can add entries to the menu within the web app.
 

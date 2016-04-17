@@ -523,7 +523,7 @@ and let it warm up.
     
 # Standard docassemble classes
 
-## DAObject
+## <a name="DAObject"></a>DAObject
 
 All **docassemble** objects are instances of the `DAObject` class.
 `DAObject`s are different from normal [Python objects] because they
@@ -688,7 +688,7 @@ will not return `friend.object_name()`; rather, it will return
 `friend.full_name()`, which may require asking the user for the
 `friend`'s name.
 
-## DAList
+## <a name="DAList"></a>DAList
 
 A `DAList` acts like an ordinary [Python list], except that
 **docassemble** can ask questions to define elements of the list.  For
@@ -775,37 +775,37 @@ in order for it to be chosen.
 
 Other methods available on a DAList are:
 
-* `append(item_to_append)` - adds `item_to_append` to the end of the
+* <a name="DAList.append"></a>`append(item_to_append)` - adds `item_to_append` to the end of the
   list.  Just like the [Python list] method of the same name.
-* `extend(extension_list)` - adds the items in the `extension_list` to
+* <a name="DAList.extend"></a>`extend(extension_list)` - adds the items in the `extension_list` to
   the end of the list.  Just like the [Python list] method of the same name.
-* `first()` - returns the first element of the list; error triggered
+* <a name="DAList.first"></a>`first()` - returns the first element of the list; error triggered
   if list is empty 
-* `last()` - returns the last element of the list; error triggered if list is empty
-* `does_verb(verb)` - like the `verb_present()` function from
+* <a name="DAList.last"></a>`last()` - returns the last element of the list; error triggered if list is empty
+* <a name="DAList.does_verb"></a>`does_verb(verb)` - like the `verb_present()` function from
   `docassemble.base.util`, except that it uses the singular or plural
   form depending on whether the list has more than one element or not.
-* `did_verb(verb)` - like the `verb_past()` function from
+* <a name="DAList.did_verb"></a>`did_verb(verb)` - like the `verb_past()` function from
   `docassemble.base.util`, except that it uses the singular or plural
   form depending on whether the list has more than one element or not.
-* `as_singular_noun()` - if the variable name is `case.plaintiff`,
+* <a name="DAList.as_singular_noun"></a>`as_singular_noun()` - if the variable name is `case.plaintiff`,
   returns `plaintiff`; if the variable name is `applicant`, returns `applicant`.
-* `as_noun()` - if the variable name is `case.plaintiff`, returns
+* <a name="DAList.as_noun"></a>`as_noun()` - if the variable name is `case.plaintiff`, returns
   `plaintiffs` or `plaintiff` depending on the number of elements in
   the list; if the variable name is `applicant`, returns `applicants`
   or `applicant` depending on the number of elements in the list.
-* `number()` - returns the total number of elements in the list, with
+* <a name="DAList.number"></a>`number()` - returns the total number of elements in the list, with
   the side effect of checking on the value of the `gathered`
   attribute, which might trigger questions that ask for all of the
   elements of the list to be populated.
-* `number_as_word()` - same as `number()`, except that the
+* <a name="DAList.number_as_word"></a>`number_as_word()` - same as `number()`, except that the
   `nice_number()` [function] is applied to the result.
-* `number_gathered()` - like `number()` except that it does not have
+* <a name="DAList.number_gathered"></a>`number_gathered()` - like `number()` except that it does not have
   the side effect of checking on the value of the `gathered`
   attribute.
-* `number_gathered_as_word()` - same as `number_gathered()`, except that the
+* <a name="DAList.number_gathered_as_word"></a>`number_gathered_as_word()` - same as `number_gathered()`, except that the
   `nice_number()` [function] is applied to the result.
-* `comma_and_list()` - returns the elements of the list run through
+* <a name="DAList.comma_and_list"></a>`comma_and_list()` - returns the elements of the list run through
   the `comma_and_list()` [function].
 
 If you refer to a list in a [Mako] template (e.g., `The applicants
@@ -828,7 +828,7 @@ list.  The methods of `DAList` behave differently depending on whether
 or not the interview is in the process of gathering the elements of
 the list.
 
-## DADict
+## <a name="DADict"></a>DADict
 
 A `DADict` acts like a [Python dictionary] except that dictionary
 elements can be defined through **docassemble** questions.  To add an
@@ -874,7 +874,7 @@ The `DADict` uses the following attributes:
 
 * `elements`: a [Python dictionary] containing the items of the dictionary.
 
-## DAFile
+## <a name="DAFile"></a>DAFile
 
 A `DAFile` object is used to refer to a file, which might be an
 uploaded file, an assembled document, or a static document.  It has
@@ -886,7 +886,7 @@ the following attributes:
 * `number`: the internal integer number used by **docassemble** to
   keep track of documents stored in the system
 
-## DAFileCollection
+## <a name="DAFileCollection"></a>DAFileCollection
 
 `DAFileCollection` objects are created internally by **docassemble**
 in order to refer to a document assembled using the `attachments`
@@ -898,7 +898,7 @@ For example, if the variable `my_file` is a `DAFileCollection`,
 `my_file.pdf` will be a `DAFile` containing the PDF version, and
 `my_file.rtf` will be a `DAFile` containing the RTF version.
 
-## DAFileList
+## <a name="DAFileList"></a>DAFileList
 
 A `DAFileList` is a `DAList`, the elements of which are expected to be
 `DAFile` objects.
@@ -910,7 +910,7 @@ containing the file or files uploaded.
 When included in a template, a `DAFileList` object will effectively
 call `show()` on each `DAFile` element in order.
 
-## DATemplate
+## <a name="DATemplate"></a>DATemplate
 
 The `template` block allows you to store some text to a variable.  See
 [template].  The variable will be defined as an object of the

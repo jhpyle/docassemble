@@ -126,7 +126,7 @@ store.  This is used in [multi-user interviews] to invite additional
 users to participate.  This function depends on `update_info()` having
 been run in "initial" code.
 
-## send_email
+## <a name="send_email"></a>send_email
 
 The `send_email()` function sends an e-mail using [Flask-Mail].  All
 of its arguments are [keyword arguments], the defaults of which are:
@@ -224,7 +224,7 @@ content: |
 
 # Classes for information about persons
 
-## Person
+## <a name="Person"></a>Person
 
 The `Person` class encompasses `Individual`s as well as legal persons,
 like companies, government agencies, etc.  If you create an object of
@@ -250,7 +250,7 @@ The following attributes are also used, but undefined by default:
 
 * `email`
 
-### Individual
+### <a name="Individual"></a>Individual
 
 The `Individual` is a subclass of `Person`.  This class should be used
 for persons who you know are human beings.
@@ -278,7 +278,7 @@ In addition, the following attributes will be defined by virtue of an
 * `president.address` (object of class `Address`)
 * `president.location` (object of class `LatitudeLongitude`)
 
-## Name
+## <a name="Name"></a>Name
 
 The `Name` is a general class for names of persons and other things.
 Its only expected attribute is `text`, and its only method is
@@ -319,7 +319,7 @@ opponent }` all return the same thing.  This is because a `Person` in
 the context of a template returns `.name.full()`, and a `Name` returns
 `.full()`.
 
-### IndividualName
+### <a name="IndividualName"></a>IndividualName
 
 The `Individual` class is a subclass of `Person`, but it defines the
 `name` attribute as an `IndividualName` rather than a `Name`.  An
@@ -349,7 +349,7 @@ Here is how `full()` and other methods of the `IndividualName` work:
 * `applicant.firstlast()`: "John Adams"
 * `applicant.lastfirst()`: "Adams, John"
 
-## Address
+## <a name="Address"></a>Address
 
 An `Address` has the following text attributes:
 
@@ -364,13 +364,13 @@ If you refer to an address in a template, it returns `.block()`.
 The `.block()` method returns a formatted address.  All attributes
 except `unit` are required.
 
-## LatitudeLongitude
+## <a name="LatitudeLongitude"></a>LatitudeLongitude
 
 TBD
 
 # Classes for information about things in a court case
 
-## Court
+## <a name="Court"></a>Court
 
 A `Court` has one attribute:
 
@@ -378,7 +378,7 @@ A `Court` has one attribute:
 
 If you refer to an address in a template, it returns `.name`.
 
-## Case
+## <a name="Case"></a>Case
 
 If you create an object of type `Case` by doing:
 
@@ -443,20 +443,20 @@ attributes of the case and returns the attribute name of the
 `defendant`, etc.), or `third party` if `party` was not found in any
 of the lists.
 
-## Jurisdiction
+## <a name="Jurisdiction"></a>Jurisdiction
 
 A `Jurisdiction` has the following attributes:
 
 * `state`
 * `county`
 
-## Document
+## <a name="Document"></a>Document
 
 A `Document` has the following attributes:
 
 * `title`
 
-### LegalFiling
+### <a name="LegalFiling"></a>LegalFiling
 
 `LegalFiling` is a subclass of `Document`.
 
@@ -476,7 +476,7 @@ including `pleading.caption()` will require the following:
 * pleading.case.court.name
 * pleading.title
 
-## Value
+## <a name="Value"></a>Value
 
 A `Value` is a subclass of `DAObject` that is intended to represent a
 currency value.  It has two attributes, both of which are initially
@@ -485,7 +485,7 @@ undefined:
 * `value`: intended to be a number
 * `exists`: a boolean value representing whether the value is applicable
 
-### PeriodicValue
+### <a name="PeriodicValue"></a>PeriodicValue
 
 A `PeriodicValue` is a `Value` that has an additional attribute,
 `period`, a number representing the number of times per year that the
@@ -493,21 +493,21 @@ period value is applicable.
 
 # Classes for lists of things
 
-## PartyList
+## <a name="PartyList"></a>PartyList
 
 This is a subclass of `DAList`.  (See [objects] for an explanation of the
 `DAList` class.)
 
 It is indended to contain a list of `Person`s who are parties.
 
-## ChildList
+## <a name="ChildList"></a>ChildList
 
 This is a subclass of `DAList`.  (See [objects] for an explanation of the
 `DAList` class.)
 
 It is indended to contain a list of `Individuals`s who are children.
 
-## FinancialList
+## <a name="FinancialList"></a>FinancialList
 
 This is a class intended to collect a set of financial items, such as
 an individual's assets.
@@ -537,7 +537,7 @@ Note that a `FinancialList` is a `DAObject` but not a `DAList`.  It
 tracks the items in the list using the attribute `elements`, which is
 a [Python set].
 
-### Asset
+### <a name="Asset"></a>Asset
 
 This is a subclass of `FinancialList` that is intended to be used to
 track assets.
@@ -602,7 +602,7 @@ Note that in this example, we did not have to worry about setting
 `user.asset.gathering` because the process of populating the elements
 of the asset list did not span multiple questions.
 
-## PeriodicFinancialList
+## <a name="PeriodicFinancialList"></a>PeriodicFinancialList
 
 This is a class intended to collect a set of financial items that have
 a periodic nature, such as an individual's income.
@@ -626,7 +626,7 @@ The `PeriodicFinancialList` has two methods:
 
 In the context of a template, a `PeriodicFinancialList` returns `.total()`.
 
-### Income
+### <a name="Income"></a>Income
 
 This is a subclass of `PeriodicFinancialList`.
 
@@ -672,7 +672,7 @@ fields:
 
 # Classes for special purposes
 
-## RoleChangeTracker
+## <a name="RoleChangeTracker"></a>RoleChangeTracker
 
 The `RoleChangeTracker` class is provided to facilitate [multi-user
 interviews] with **docassemble**'s [roles] system.  It facilitates
