@@ -63,7 +63,7 @@ from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Messages, Supervisors
 from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
-from docassemble.webapp.config import daconfig, s3_config, S3_ENABLED, dbtableprefix, hostname
+from docassemble.webapp.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, dbtableprefix, hostname
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from PIL import Image
 import pyPdf
@@ -475,6 +475,17 @@ def get_info_from_file_reference(file_reference, **kwargs):
 
 docassemble.base.parse.set_file_finder(get_info_from_file_reference)
 
+def get_documentation_dict():
+    documentation = get_info_from_file_reference('docassemble.base:data/questions/documentation.yml')
+    if 'fullpath' in documentation:
+        with open(documentation['fullpath'], 'rU') as fp:
+            content = fp.read().decode('utf8')
+            content = fix_tabs.sub('  ', content)
+            return(yaml.load(content))
+    return(None)
+
+documentation_dict = get_documentation_dict()
+            
 def get_mail_variable(*args, **kwargs):
     return mail
 
@@ -870,6 +881,7 @@ def proc_example_list(example_list, examples):
             if len(interview.metadata):
                 metadata = interview.metadata[0]
                 result['title'] = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
+                result['documentation'] = metadata.get('documentation', None)
                 start_block = int(metadata.get('example start', 1))
                 end_block = int(metadata.get('example end', start_block)) + 1
             else:
@@ -1146,7 +1158,7 @@ def index():
         if old_yaml_filename is not None:
             if old_yaml_filename != yaml_filename:
                 session['i'] = yaml_filename
-                if request.args.get('from_list', None) is None and not yaml_filename.startswith("playground") and not yaml_filename.startswith("docassemble.base"):
+                if request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base"):
                     show_flash = True
         if session_parameter is None:
             if show_flash:
@@ -1703,7 +1715,7 @@ def index():
           $('.tabs a:last').tab('show')
         })
         $(function () {
-          $('[data-toggle="popover"]').popover({trigger: 'click focus'})
+          $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
         })
         $("#daform input, #daform textarea, #daform select").first().focus();
         $(".to-labelauty").labelauty({ width: "100%" });
@@ -3011,6 +3023,8 @@ def public_method(method, the_class):
     return False
 
 def noquote(string):
+    if string is None:
+        return string
     string = noquote_match.sub('&quot;', string)
     string = lt_match.sub('&lt;', string)
     string = gt_match.sub('&gt;', string)
@@ -3046,10 +3060,10 @@ def get_vars_in_use(interview, interview_status):
     for val in user_dict:
         if type(user_dict[val]) is types.FunctionType:
             functions.add(val)
-            name_info[val] = {'doc': inspect.getdoc(user_dict[val]), 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + str(inspect.formatargspec(*inspect.getargspec(user_dict[val])))}
+            name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + str(inspect.formatargspec(*inspect.getargspec(user_dict[val])))}
         elif type(user_dict[val]) is types.ModuleType:
             modules.add(val)
-            name_info[val] = {'doc': inspect.getdoc(user_dict[val]), 'name': str(val), 'insert': str(val)}
+            name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val)}
         elif type(user_dict[val]) is types.TypeType:
             classes.add(val)
             bases = list()
@@ -3059,13 +3073,30 @@ def get_vars_in_use(interview, interview_status):
             methods = inspect.getmembers(user_dict[val], predicate=lambda x: public_method(x, user_dict[val]))
             method_list = list()
             for name, value in methods:
-                method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': inspect.getdoc(value), 'tag': '.' + str(name) + str(inspect.formatargspec(*inspect.getargspec(value)))})
-            name_info[val] = {'doc': inspect.getdoc(user_dict[val]), 'name': str(val), 'insert': str(val), 'bases': bases, 'methods': method_list}
+                method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': noquote(inspect.getdoc(value)), 'tag': '.' + str(name) + str(inspect.formatargspec(*inspect.getargspec(value)))})
+            name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'bases': bases, 'methods': method_list}
     for val in docassemble.base.util.pickleable_objects(user_dict):
         names_used.add(val)
         name_info[val] = {'type': type(user_dict[val]).__name__}
     names_used.discard('x')
     names_used.discard('_internal')
+    view_doc_text = word("View documentation")
+    word_documentation = word("Documentation")
+    for var in name_info:
+        if var in documentation_dict:
+            if 'doc' in name_info[var] and name_info[var]['doc'] is not None:
+                name_info[var]['doc'] += '<br>'
+            else:
+                name_info[var]['doc'] = ''
+            name_info[var]['doc'] += "<a target='_blank' href='" + documentation_dict[var] + "'>" + view_doc_text + "</a>"
+        if 'methods' in name_info[var]:
+            for method in name_info[var]['methods']:
+                if var + '.' + method['name'] in documentation_dict:
+                    if method['doc'] is None:
+                        method['doc'] = ''
+                    else:
+                        method['doc'] += '<br>'
+                    method['doc'] += "<a target='_blank' href='" + documentation_dict[var + '.' + method['name']] + "'>" + view_doc_text + "</a>"                
     content = ''
     if len(names_used):
         content += '\n                  <tr><td><h4>Variables</h4></td></tr>'
@@ -3073,13 +3104,15 @@ def get_vars_in_use(interview, interview_status):
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + var + '</a>'
             if var in name_info and name_info[var]['type']:
                 content +='&nbsp;<span data-ref="' + noquote(name_info[var]['type']) + '" class="daparenthetical">(' + name_info[var]['type'] + ')</span>'
+            if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
+                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
             content += '</td></tr>'
     if len(functions):
         content += '\n                  <tr><td><h4>Functions</h4></td></tr>'
         for var in sorted(functions):
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-warning playground-variable">' + name_info[var]['tag'] + '</a>'
-            if name_info[var]['doc']:
-                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
+            if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
+                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
             content += '</td></tr>'
     if len(classes):
         content += '\n                  <tr><td><h4>Classes</h4></td></tr>'
@@ -3088,14 +3121,14 @@ def get_vars_in_use(interview, interview_status):
             if name_info[var]['bases']:
                 content += '&nbsp;<span data-ref="' + noquote(name_info[var]['bases'][0]) + '" class="daparenthetical">(' + name_info[var]['bases'][0] + ')</span>'
             if name_info[var]['doc']:
-                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
+                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
             if len(name_info[var]['methods']):
-                content += '&nbsp;<a class="dashowmethods" role="button" data-showhide="XMETHODX' + var + '" title="' + word('Methods') + '"><i class="glyphicon glyphicon-cog"</i></a>'
+                content += '&nbsp;<a class="dashowmethods" role="button" data-showhide="XMETHODX' + var + '" title="' + word('Methods') + '"><i class="glyphicon glyphicon-cog"></i></a>'
                 content += '<table class="invisible" id="XMETHODX' + var + '"><tbody>'
                 for method_info in name_info[var]['methods']:
                     content += '<tr><td><a data-name="' + noquote(method_info['name']) + '" data-insert="' + noquote(method_info['insert']) + '" class="label label-warning playground-variable">' + method_info['tag'] + '</a>'
                     if method_info['doc']:
-                        content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + noquote(method_info['doc']) + '" title="' + noquote(method_info['name']) + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
+                        content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + method_info['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + noquote(method_info['name']) + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
                     content += '</td></tr>'
                 content += '</tbody></table>'
             content += '</td></tr>'
@@ -3104,7 +3137,7 @@ def get_vars_in_use(interview, interview_status):
         for var in sorted(modules):
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-success playground-variable">' + name_info[var]['name'] + '</a>'
             if name_info[var]['doc']:
-                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + noquote(name_info[var]['doc']) + '" title="' + noquote(var) + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
+                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + noquote(var) + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
             content += '</td></tr>'
     if len(avail_modules):
         content += '\n                  <tr><td><h4>Modules available in playground</h4></td></tr>'
@@ -3124,9 +3157,9 @@ def get_vars_in_use(interview, interview_status):
     if len(interview.images):
         content += '\n                  <tr><td><h4>Decorations</h4></td></tr>'
         for var in sorted(interview.images):
-            content += '\n                  <tr><td><img class="daimageicon" src="' + get_url_from_file_reference(interview.images[var].get_reference()) + '"></img>&nbsp;<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + noquote(var) + '</a>'
+            content += '\n                  <tr><td><img class="daimageicon" src="' + get_url_from_file_reference(interview.images[var].get_reference()) + '">&nbsp;<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
-        
+    view_doc_text = word("View documentation")
     return content
 
 @app.route('/playground', methods=['GET', 'POST'])
@@ -3281,6 +3314,13 @@ function activateExample(id){
   $("#example-source-after").html(info['after_html']);
   $("#example-image-link").attr("href", info['interview']);
   $("#example-image").attr("src", info['image']);
+  if (info['documentation'] != null){
+    $("#example-documentation-link").attr("href", info['documentation']);
+    $("#example-documentation-link").removeClass("example-hidden");
+  }
+  else{
+    $("#example-documentation-link").addClass("example-hidden");
+  }
   $(".example-list").addClass("example-hidden");
   $(".example-link").removeClass("example-active");
   $(".example-link").parent().removeClass("active");
@@ -3346,7 +3386,7 @@ $(".example-heading").on("click", function(){
 });
 
 $(function () {
-  $('[data-toggle="popover"]').popover({trigger: 'click focus'})
+  $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
 });
 
 $("#show-full-example").on("click", function(){
@@ -3373,7 +3413,7 @@ $("#hide-full-example").on("click", function(){
     data_dict = dict()
     make_example_html(get_examples(), first_id, example_html, data_dict)
     example_html.append('        </div>')
-    example_html.append('        <div class="col-md-6"><h4>' + word("Preview") + '</h4><a href="#" target="_blank" id="example-image-link"><img class="example_screenshot" id="example-image"></a></div>')
+    example_html.append('        <div class="col-md-6"><h4>' + word("Preview") + '<a target="_blank" class="label label-primary example-documentation example-hidden" id="example-documentation-link">' + word('View documentation') + '</a></h4><a href="#" target="_blank" id="example-image-link"><img class="example_screenshot" id="example-image"></a></div>')
     example_html.append('        <div class="col-md-4 example-source-col"><h4>' + word('Source') + ' <a class="label label-success example-copy">' + word('Insert') + '</a></h4><div id="example-source-before" class="invisible"></div><div id="example-source"></div><div id="example-source-after" class="invisible"></div><div><a class="example-hider" id="show-full-example">' + word("Show context of example") + '</a><a class="example-hider invisible" id="hide-full-example">' + word("Hide context of example") + '</a></div></div>')
     return render_template('pages/playground.html', page_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, current_file=the_file, content=content, variables_html=Markup(variables_html), example_html=Markup("\n".join(example_html)), interview_path=interview_path), 200
 

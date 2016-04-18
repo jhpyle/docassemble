@@ -35,6 +35,10 @@ class ThreadVariables(threading.local):
 this_thread = ThreadVariables()
 
 def update_info(new_user, new_role, new_current_info, **kwargs):
+    """Transmits information to docassemble about who the current user is,
+    what the current user's role is, and other information, such as whether
+    the user is logged in and the user's latitude and longitude as 
+    determined from GPS.  Always called within an initial block."""
     #logmessage("Updating info!")
     this_thread.user = new_user
     this_thread.role = new_role
@@ -61,6 +65,7 @@ def location_known():
     return False
 
 class LatitudeLongitude(DAObject):
+    """Represents a GPS location."""
     def init(self, **kwargs):
         self.gathered = False
         self.known = False
@@ -109,6 +114,10 @@ def user_lat_lon():
     return None, None
 
 def interview_url(**kwargs):
+    """Returns a URL that is direct link to the interview and the current
+    variable store.  This is used in multi-user interviews to invite
+    additional users to participate. This function depends on
+    update_info() having been run in "initial" code."""
     args = kwargs
     args['i'] = this_thread.current_info['yaml_filename']
     args['session'] = this_thread.current_info['session']
@@ -118,12 +127,14 @@ def interview_url_as_qr(**kwargs):
     return qr_code(interview_url(**kwargs))
 
 class Court(DAObject):
+    """Represents a court of law."""
     def __str__(self):
         return(self.name)
     def __repr__(self):
         return(repr(self.name))
 
 class Case(DAObject):
+    """Represents a case in court."""
     def init(self, **kwargs):
         self.initializeAttribute('defendant', PartyList)
         self.initializeAttribute('plaintiff', PartyList)
@@ -165,14 +176,18 @@ class Case(DAObject):
         return(output_list)
 
 class Jurisdiction(DAObject):
+    """Represents a jurisdiction, e.g. of a Court.  No functionality 
+    implemented yet."""
     pass
 
 class Document(DAObject):
+    """This is a base class for different types of documents."""
     def init(self, **kwargs):
         self.title = None
         return super(Document, self).init(**kwargs)
 
 class LegalFiling(Document):
+    """Represents a document filed in court."""
     def caption(self):
         self.case.firstParty.gathered
         self.case.secondParty.gathered
@@ -192,6 +207,9 @@ class LegalFiling(Document):
         return(output)
 
 class RoleChangeTracker(DAObject):
+    """Used within an interview to facilitate changes in the active role
+    required for filling in interview information.  Ensures that participants
+    do not receive multiple e-mails needlessly."""
     def init(self):
         self.last_role = None
         return
@@ -320,7 +338,7 @@ class Address(DAObject):
         return(output)
 
 class Person(DAObject):
-    """Represents a legal or natural person"""
+    """Represents a legal or natural person."""
     def init(self, **kwargs):
         self.initializeAttribute('name', Name)
         self.initializeAttribute('address', Address)
@@ -414,7 +432,7 @@ class Person(DAObject):
         return verb_past(the_verb, person=tense)
 
 class Individual(Person):
-    """Represents a natural person"""
+    """Represents a natural person."""
     def init(self, **kwargs):
         self.initializeAttribute('name', IndividualName)
         self.initializeAttribute('child', ChildList)
@@ -507,6 +525,8 @@ class Individual(Person):
             return(output)
 
 class PartyList(DAList):
+    """Represents a list of parties to a case.  The default object
+    type for items in the list is Individual."""
     def init(self, **kwargs):
         self.object_type = Individual
         return super(PartyList, self).init(**kwargs)
@@ -726,6 +746,8 @@ def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None
     return(success)
 
 def month_of(the_date, as_word=False):
+    """Interprets the_date as a date and returns the month.  
+    Set as_word to True if you want the month as a word."""
     date = dateutil.parser.parse(the_date)
     try:
         if as_word:
@@ -735,6 +757,7 @@ def month_of(the_date, as_word=False):
         return word("Bad date")
 
 def day_of(the_date):
+    """Interprets the_date as a date and returns the day of month."""
     date = dateutil.parser.parse(the_date)
     try:
         return(date.strftime('%d'))
@@ -742,6 +765,7 @@ def day_of(the_date):
         return word("Bad date")
 
 def year_of(the_date):
+    """Interprets the_date as a date and returns the year."""
     date = dateutil.parser.parse(the_date)
     try:
         return(date.strftime('%Y'))

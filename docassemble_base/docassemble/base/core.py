@@ -35,6 +35,7 @@ def get_unique_name():
         return newname
 
 class DAObject(object):
+    """The base class for all docassemble objects."""
     def init(self, **kwargs):
         for key, value in kwargs.iteritems():
             #logmessage("Found key " + str(key) + " with value " + str(value))
@@ -89,6 +90,12 @@ class DAObject(object):
         return self.attrList
             
 class DAList(DAObject):
+    """The base class for lists of things.  A DAList object
+    has the attributes "gathered" and "gathering."  The "gathering"
+    attribute should be True while the interview is in the midst of 
+    determining the items in the list.  When there are no more items
+    to be gathered, "gathering" should be set to False and "gathered"
+    should be set to True."""
     def init(self, **kwargs):
         self.elements = list()
         self.gathering = False
@@ -230,6 +237,7 @@ class DAList(DAObject):
         return self.comma_and_list()
 
 class DADict(DAObject):
+    """A base class for objects that behave like Python dictionaries."""
     def init(self, **kwargs):
         self.elements = dict()
         return super(DADict, self).init(**kwargs)
@@ -260,6 +268,7 @@ class DADict(DAObject):
         return self.elements.__missing__(key)
 
 class DAFile(DAObject):
+    """Used internally by docassemble to represent a file."""
     def init(self, **kwargs):
         if 'filename' in kwargs:
             self.filename = kwargs['filename']
@@ -286,9 +295,15 @@ class DAFile(DAObject):
             return('[FILE ' + str(self.number) + ']')
 
 class DAFileCollection(DAObject):
+    """Used internally by docassemble to refer to a collection of
+    DAFile objects, usually representing the same document in different
+    formats.  Attributes represent file types.  The attachments feature
+    generates objects of this type."""
     pass
 
 class DAFileList(DAList):
+    """Used internally by docassemble to refer to a list of files,
+    such as a list of files uploaded to a single variable."""
     def __str__(self):
         return self.show()
     def __unicode__(self):
@@ -301,6 +316,9 @@ class DAFileList(DAList):
         return output
 
 class DATemplate(DAObject):
+    """The class used for Markdown templates.  A template block saves to
+    an object of this type.  The two attributes are "subject" and 
+    "content." """
     def init(self, **kwargs):
         if 'content' in kwargs:
             self.content = kwargs['content']

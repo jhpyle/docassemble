@@ -41,10 +41,12 @@ class ThreadVariables(threading.local):
 this_thread = ThreadVariables()
 
 def get_info(att):
+    """Used to retrieve the values of global variables set through set_info()."""
     if hasattr(this_thread, att):
         return getattr(this_thread, att)
 
 def set_info(**kwargs):
+    """Used to set the values of global variables you wish to retrieve through get_info()."""
     for att, value in kwargs.iteritems():
         setattr(this_thread, att, value)
     
@@ -168,11 +170,13 @@ ordinal_functions = {
 def words():
     return word_collection[this_thread.language]
 
-def word(theword):
+def word(the_word):
+    """Returns the word translated into the current language.  If a translation is not known,
+    the input is returned."""
     try:
-        return word_collection[this_thread.language][theword].decode('utf-8')
+        return word_collection[this_thread.language][the_word].decode('utf-8')
     except:
-        return unicode(theword)
+        return unicode(the_word)
 
 def update_language_function(lang, term, func):
     if term not in language_functions:
@@ -210,6 +214,7 @@ def set_da_config(config):
     daconfig = config
 
 def get_config(key):
+    """Returns a value from the docassemble configuration.  If not defined, returns None."""
     return daconfig.get(key, None)
     
 def set_default_language(lang):
@@ -229,10 +234,15 @@ def reset_local_variables():
     return
 
 def prevent_going_back():
+    """Instructs docassemble to disable the user's back button, so that the user cannot
+    go back and change any answers before this point in the interview."""
     this_thread.prevent_going_back = True
     return
 
 def set_language(lang, dialect=None):
+    """Sets the language to use for linguistic functions.
+    E.g., set_language('es') to set the language to Spanish.
+    Use the keyword argument "dialect" to set a dialect."""
     if dialect:
         this_thread.dialect = dialect
     elif lang != this_thread.language:
@@ -241,9 +251,11 @@ def set_language(lang, dialect=None):
     return
 
 def get_language():
+    """Returns the current language (e.g., "en")."""
     return this_thread.language
 
 def get_dialect():
+    """Returns the current dialect."""
     return this_thread.dialect
 
 def set_default_locale(loc):
@@ -252,18 +264,45 @@ def set_default_locale(loc):
     return
 
 def set_locale(loc):
+    """Sets the current locale.  See also update_locale()."""
     this_thread.locale = loc
     return
 
 def get_locale():
+    """Returns the current locale setting."""
     return this_thread.locale
 
 def update_locale():
+    """Updates the system locale based on the value set by set_locale()."""
     #logmessage("Using " + str(language) + '_' + str(this_locale) + "\n")
     locale.setlocale(locale.LC_ALL, str(this_thread.language) + '_' + str(this_thread.locale))
     return
 
+def comma_list_en(*pargs, **kargs):
+    """Returns the arguments separated by commas.  If the first argument is a list, 
+    that list is used.  Otherwise, the arguments are treated as individual items.
+    See also comma_and_list()."""
+    if 'comma_string' in kargs:
+        comma_string = kargs['comma_string']
+    else:
+        comma_string = ", "
+    if (len(pargs) == 0):
+        return unicode('')
+    elif (len(pargs) == 1):
+        if type(pargs[0]) == list:
+            pargs = pargs[0]
+    if (len(pargs) == 0):
+        return unicode('')
+    elif (len(pargs) == 1):
+        return(unicode(pargs[0]))
+    else:
+        return(comma_string.join(pargs))
+
 def comma_and_list_en(*pargs, **kargs):
+    """Returns an English-language listing of the arguments.  If the first argument is a list, 
+    that list is used.  Otherwise, the arguments are treated as individual items in the list.
+    Use the optional argument oxford=False if you do not want a comma before the "and."
+    See also comma_list()."""
     if 'oxford' in kargs and kargs['oxford'] == False:
         extracomma = ""
     else:
@@ -299,6 +338,8 @@ def comma_and_list_en(*pargs, **kargs):
         return(comma_string.join(map(unicode, pargs[:-1])) + extracomma + before_and + and_string + after_and + unicode(pargs[-1]))
 
 def need(*pargs):
+    """Given one or more variables, this function instructs docassemble 
+    to do what is necessary to define the variables."""
     for argument in pargs:
         argument
     return True
@@ -314,6 +355,9 @@ def pickleable_objects(input_dict):
     return(output_dict)
 
 def ordinal_number_default(i):
+    """Returns the "first," "second," "third," etc. for a given number.
+    ordinal_number(1) returns "first."  For a function that can be used
+    on index numbers that start with zero, see ordinal()."""
     num = unicode(i)
     if this_thread.language in ordinal_numbers and num in ordinal_numbers[this_thread.language]:
         return ordinal_numbers[this_thread.language][num]
@@ -323,9 +367,13 @@ def ordinal_number_default(i):
         return default_ordinal_function(i)
 
 def ordinal_default(j):
+    """Returns the "first," "second," "third," etc. for a given number, which is expected to
+    be an index starting with zero.  ordinal(0) returns "first."  For a more literal ordinal 
+    number function, see ordinal_number()."""
     return ordinal_number(int(j) + 1)
 
 def nice_number_default(num):
+    """Returns the number as a word in the current language."""
     if this_thread.language in nice_numbers and unicode(num) in nice_numbers[this_thread.language]:
         return nice_numbers[this_thread.language][unicode(num)]
     return unicode(num)
@@ -337,9 +385,13 @@ def capitalize_default(a):
         return(unicode(a))
 
 def currency_symbol_default():
+    """Returns the currency symbol for the current locale."""
     return locale.localeconv()['currency_symbol'].decode('utf8')
 
 def currency_default(value, decimals=True):
+    """Returns the value as a currency, according to the conventions of the current locale.
+    Use the optional keyword argument decimals=False if you do not want to see decimal places
+    in the number."""
     if decimals:
         return locale.currency(value, symbol=True, grouping=True).decode('utf8')
     else:
@@ -457,7 +509,7 @@ language_functions = {
         'en': comma_and_list_en
     },
     'comma_list': {
-        'en': lambda *argv: ", ".join(map(str, argv))
+        'en': comma_list_en
     },
     'nice_number': {
         '*': nice_number_default
@@ -519,10 +571,30 @@ title_case = language_function_constructor('title_case')
 ordinal_number = language_function_constructor('ordinal_number')
 ordinal = language_function_constructor('ordinal')
 
+if verb_past.__doc__ is None:
+    verb_past.__doc__ = """Given a verb, returns the past tense of the verb."""
+if verb_present.__doc__ is None:
+    verb_present.__doc__ = """Given a verb, returns the present tense of the verb."""
+if noun_plural.__doc__ is None:
+    noun_plural.__doc__ = """Given a noun, returns the plural version of the noun."""
+if indefinite_article.__doc__ is None:
+    indefinite_article.__doc__ = """Given a noun, returns the noun with an indefinite article attached
+                                 (e.g., indefinite_article("fish") returns "a fish")."""
+if capitalize.__doc__ is None:
+    capitalize.__doc__ = """Capitalizes the first letter of the word or phrase."""
+if period_list.__doc__ is None:
+    period_list.__doc__ = """Returns an array of arrays where the first element of each array is a number, 
+                          and the second element is a word expressing what that numbers means as a per-year
+                          period.  This is meant to be used in code for a multiple-choice field."""
+if name_suffix.__doc__ is None:
+    name_suffix.__doc__ = """Returns an array of choices for the suffix of a name.
+                          This is meant to be used in code for a multiple-choice field."""
+
 def underscore_to_space(a):
     return(re.sub('_', ' ', unicode(a)))
 
 def space_to_underscore(a):
+    """Converts spaces in the input to underscores in the output.  Useful for making filenames without spaces."""
     return(re.sub(' +', '_', unicode(a).encode('ascii', errors='ignore')))
 
 def remove(variable_name):
@@ -533,6 +605,8 @@ def remove(variable_name):
         pass
 
 def force_ask(variable_name):
+    """Given a variable, instructs docassemble to do what is necessary to define the variable,
+    even if the variable has already been defined."""
     raise NameError("name '" + variable_name + "' is not defined")
 
 def static_filename_path(filereference):
@@ -556,6 +630,11 @@ def static_filename(filereference):
     return(parts[0] + ':' + parts[1])
 
 def static_image(filereference, **kwargs):
+    """Inserts appropriate markup to include a static image.  If you know
+    the image path, you can just use the "[FILE ...]" markup.  This function is
+    useful when you want to assemble the image path programmatically.
+    Takes an optional keyword argument "width"
+    (e.g., static_image('docassemble.demo:crawling.png', width='2in'))."""
     filename = static_filename(filereference)
     if filename is None:
         return('ERROR: invalid image reference')
@@ -566,6 +645,11 @@ def static_image(filereference, **kwargs):
         return('[FILE ' + filename + ', ' + width + ']')
 
 def qr_code(string, **kwargs):
+    """Inserts appropriate markup to include a QR code image.  If you know
+    the string you want to encode, you can just use the "[QR ...]" markup.  
+    This function is useful when you want to assemble the string programmatically.
+    Takes an optional keyword argument "width"
+    (e.g., qr_code('http://google.com', width='2in'))."""
     width = kwargs.get('width', None)
     if width is None:
         return('[QR ' + string + ']')
@@ -670,6 +754,7 @@ def process_action(current_info):
     force_ask(the_action)
 
 def url_action(action, **kwargs):
+    """Returns a URL to run an action in the interview."""
     return '?action=' + urllib.quote(myb64quote(json.dumps({'action': action, 'arguments': kwargs})))
 
 def myb64quote(text):
@@ -684,9 +769,17 @@ def debug_status():
 # grep -E -R -o -h "word\(['\"][^\)]+\)" * | sed "s/^[^'\"]+['\"]//g"
 
 def action_menu_item(label, action):
+    """Takes two arguments: a label and an action.
+    The label is what the user will see and the action is the action that will be
+    performed when the user clicks on the item in the menu.  This is only used 
+    when setting the special variable menu_items.
+    E.g., menu_items = [ action_menu_item('Ask for my favorite food', 'favorite_food') ]"""
     return dict(label=label, url=url_action(action))
 
 def from_b64_json(string):
+    """Converts the string from base-64, then parses the string as JSON, and returns the object.
+    This is an advanced function that is used by software developers to integrate other systems 
+    with docassemble."""
     if string is None:
         return None
     return json.loads(base64.b64decode(string))

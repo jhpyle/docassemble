@@ -8,12 +8,16 @@ dbtableprefix = None
 daconfig = dict()
 s3_config = dict()
 S3_ENABLED = False
+gc_config = dict()
+GC_ENABLED = False
 hostname = None
 
 def load(**kwargs):
     global daconfig
     global s3_config
     global S3_ENABLED
+    global gc_config
+    global GC_ENABLED
     global dbtableprefix
     global hostname
     if 'arguments' in kwargs and kwargs['arguments'] and len(kwargs['arguments']) > 1:
@@ -43,6 +47,11 @@ def load(**kwargs):
         S3_ENABLED = False
     else:
         S3_ENABLED = True
+    gc_config = daconfig.get('google_cloud', None)
+    if not gc_config or ('enable' in gc_config and not gc_config['enable']) or not ('access_key_id' in gc_config and gc_config['access_key_id']) or not ('secret_access_key' in gc_config and gc_config['secret_access_key']):
+        GC_ENABLED = False
+    else:
+        GC_ENABLED = True
     dbtableprefix = daconfig['db'].get('table_prefix', None)
     if not dbtableprefix:
         dbtableprefix = ''

@@ -162,8 +162,9 @@ a.sourceactive {
 div.playgroundbox div.panel-body {
     height: 30em;
     overflow-y: scroll;
-    overflow-x: scroll;
+    overflow-x: hidden;
     position: relative;
+    padding-right: 0px;
 }
 
 div.playgroundbox table td {
@@ -204,7 +205,7 @@ ul.example-list > li {
     margin-top: 0px;
 }
 
-ul.example-hidden {
+.example-hidden {
     display: none;
 }
 
@@ -221,33 +222,41 @@ a.example-copy {
     float: right;
 }
 
-.dainfosign {
-    color: rgb(49, 112, 143);
-    vertical-align: -2px;
-    cursor: pointer;
-    text-decoration: none !important;
+a.example-documentation {
+    font-size: 14px;
+    float: right;
 }
 
-.dashowmethods {
-    color: rgb(49, 112, 143);
-    vertical-align: -2px;
-    cursor: pointer;
-    text-decoration: none !important;
+table.daplaygroundtable {
+    table-layout:fixed;
+    width: 100%;
 }
+
+/* table.daplaygroundtable tbody { */
+/*     max-width: 100%; */
+/* } */
+
+/* table.daplaygroundtable tr { */
+/*     max-width: 100%; */
+/* } */
 
 table.daplaygroundtable td {
-    vertical-align: middle;
+    /* vertical-align: middle; */
+    /*max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;*/
+    line-height: 20px;
 }
 
 table.daplaygroundtable td table {
-    margin-left: 10px;
     margin-top: 5px;
+    table-layout:fixed;
+    width: 100%;
 }
 
-span.daparenthetical {
-    color: #777777;
-    font-size: 14px;
-    cursor: pointer;
+table.daplaygroundtable td table td {
+    padding-left: 10px;
 }
 
 .example-hider {
@@ -285,4 +294,51 @@ a.dashowmethods:focus {
 
 img.daimageicon {
     height: 14px;
+    display: inline-block;
+    line-height: normal;
 }
+
+.playground-variable {
+    vertical-align: middle;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    display: inline-block;
+    padding-left: 7.2px;
+    padding-right: 7.2px;
+    padding-bottom: 3.6px;
+    padding-top: 3.6px;
+    line-height: normal;
+    max-width: 90%;
+}
+
+span.daparenthetical {
+    color: #777777;
+    font-size: 14px;
+    cursor: pointer;
+    /* vertical-align: middle; */
+    display: inline-block;
+    line-height: normal;
+}
+
+.dainfosign {
+    color: rgb(49, 112, 143);
+    vertical-align: middle;
+    /* vertical-align: -2px; */
+    cursor: pointer;
+    text-decoration: none !important;
+    line-height: normal;
+    float: right;
+    margin-right: 3px;
+}
+
+.dashowmethods {
+    color: rgb(49, 112, 143);
+    vertical-align: middle;
+    /* vertical-align: -2px; */
+    cursor: pointer;
+    text-decoration: none !important;
+    line-height: normal;
+    float: right;
+    margin-right: 3px;
+}
+

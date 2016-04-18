@@ -1,5 +1,6 @@
 metadata:
   title: Text
+  documentation: "http://docassemble.org/docs/fields.html#fields"
 ---
 question: |
   What are your favorite things to eat?
