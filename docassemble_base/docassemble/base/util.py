@@ -589,7 +589,9 @@ if period_list.__doc__ is None:
 if name_suffix.__doc__ is None:
     name_suffix.__doc__ = """Returns an array of choices for the suffix of a name.
                           This is meant to be used in code for a multiple-choice field."""
-
+if today.__doc__ is None:
+    today.__doc__ = """Returns today's date in long form according to the current locale."""    
+    
 def underscore_to_space(a):
     return(re.sub('_', ' ', unicode(a)))
 

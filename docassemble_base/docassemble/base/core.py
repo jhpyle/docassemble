@@ -334,6 +334,8 @@ class DATemplate(DAObject):
         return(self.content)
 
 def selections(*pargs, **kwargs):
+    """Packs a list of objects in the appropriate format for including
+    as code in a multiple-choice field."""
     to_exclude = set()
     if 'exclude' in kwargs:
         setify(kwargs['exclude'], to_exclude)
