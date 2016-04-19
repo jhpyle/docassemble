@@ -48,6 +48,9 @@ def update_info(new_user, new_role, new_current_info, **kwargs):
     return
 
 def location_returned():
+    """Returns True or False depending on whether an attempt has yet been made to transmit
+    the user's GPS location from the browser to docassemble.  Will return true even
+    if the attempt was not successful or the user refused to consent to the transfer."""
     #logmessage("Location returned")
     if 'user' in this_thread.current_info:
         #logmessage("user exists")
@@ -60,6 +63,8 @@ def location_returned():
     return False
 
 def location_known():
+    """Returns True or False depending on whether docassemble was able to learn the user's
+    GPS location through the web browser."""
     if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and type(this_thread.current_info['user']['location']) is dict and 'latitude' in this_thread.current_info['user']['location']:
         return True
     return False
@@ -106,6 +111,9 @@ class LatitudeLongitude(DAObject):
         return 'Unknown'
 
 def user_lat_lon():
+    """Returns the user's latitude and longitude as a tuple.
+    Requires that the information about the user's location has already 
+    been passed to docassemble using update_info()."""
     if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and type(this_thread.current_info['user']['location']) is dict:
         if 'latitude' in this_thread.current_info['user']['location'] and 'longitude' in this_thread.current_info['user']['location']:
             return this_thread.current_info['user']['location']['latitude'], this_thread.current_info['user']['location']['longitude']
@@ -124,6 +132,9 @@ def interview_url(**kwargs):
     return str(this_thread.current_info['url']) + '?' + '&'.join(map((lambda (k, v): str(k) + '=' + urllib.quote(str(v))), args.iteritems()))
 
 def interview_url_as_qr(**kwargs):
+    """Inserts into the markup a QR code linking to the interview.
+    This can be used to pass control from a web browser or a paper 
+    handout to a mobile device."""
     return qr_code(interview_url(**kwargs))
 
 class Court(DAObject):
@@ -243,6 +254,7 @@ class RoleChangeTracker(DAObject):
         return False
 
 class Name(DAObject):
+    """Base class for an object's name."""
     def full(self):
         return(self.text)
     def defined(self):
@@ -253,6 +265,7 @@ class Name(DAObject):
         return(repr(self.full()))
 
 class IndividualName(Name):
+    """The name of an Individual."""
     def defined(self):
         return hasattr(self, 'first')
     def full(self, middle='initial', use_suffix=True):
@@ -278,6 +291,7 @@ class IndividualName(Name):
         return output
 
 class Address(DAObject):
+    """A geographic address."""
     def init(self, **kwargs):
         self.initializeAttribute('location', LatitudeLongitude)
         self.geolocated = False
@@ -532,11 +546,13 @@ class PartyList(DAList):
         return super(PartyList, self).init(**kwargs)
 
 class ChildList(DAList):
+    """Represents a list of children."""
     def init(self, **kwargs):
         self.object_type = Individual
         return super(ChildList, self).init(**kwargs)
 
 class FinancialList(DAObject):
+    """Represents a set of currency amounts."""
     def init(self, **kwargs):
         self.elements = set()
         self.gathering = False
@@ -565,6 +581,7 @@ class FinancialList(DAObject):
         return self.total()
     
 class PeriodicFinancialList(DAObject):
+    """Represents a set of currency items, each of which has an associated period."""
     def init(self, **kwargs):
         self.elements = set()
         self.gathering = False
@@ -593,26 +610,33 @@ class PeriodicFinancialList(DAObject):
         return self.total()
 
 class Income(PeriodicFinancialList):
+    """A PeriodicFinancialList representing a person's income."""
     pass
 
 class Asset(FinancialList):
+    """A FinancialList representing a person's assets"""
     pass
 
 class Expense(PeriodicFinancialList):
+    """A PeriodicFinancialList representing a person's expenses"""
     pass
 
 class Value(DAObject):
+    """Represents a value in a FinancialList."""
     pass
 
 class PeriodicValue(Value):
+    """Represents a value in a PeriodicFinancialList."""
     pass
 
 class OfficeList(DAList):
+    """Represents a list of offices of a company or organization."""
     def init(self, **kwargs):
         self.object_type = Address
         return super(OfficeList, self).init(**kwargs)
 
 class Organization(Person):
+    """Represents a company or organization."""
     def init(self, **kwargs):
         self.initializeAttribute('office', OfficeList)
         if 'offices' in kwargs:
@@ -650,6 +674,7 @@ class Organization(Person):
         return None
 
 def objects_from_file(file_ref):
+    """A utility function for initializing a group of objects from a YAML file written in a certain format."""
     file_info = file_finder(file_ref)
     if 'path' not in file_info:
         raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' not found')
@@ -681,7 +706,7 @@ def objects_from_file(file_ref):
     return objects
 
 def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None, html=None, subject="", attachments=[]):
-    """Sends an e-mail"""
+    """Sends an e-mail and returns whether sending the e-mail was successful."""
     from flask_mail import Message
     if type(to) is not list:
         to = [to]
@@ -786,7 +811,7 @@ def email_string(persons, include_name=None):
     return result
 
 def map_of(*pargs, **kwargs):
-    """Shows a Google Map"""
+    """Inserts into markup a Google Map representing the objects passed as arguments."""
     the_map = {'markers': list()}
     all_args = list()
     for arg in pargs:
