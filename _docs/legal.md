@@ -222,6 +222,74 @@ content: |
 ---
 {% endhighlight %}
 
+## <a name="map_of"></a>map_of
+
+The `map_of()` function inserts a Google Map into question text.  (It
+does not work within documents.)  The arguments are expected to be
+**docassemble** [objects].  Different objects are mapped differently:
+
+* `Address` objects: if an `Address` object is provided as an argument
+  to `map_of()`, a map marker will be placed at the geolocated
+  coordinates of the address.  The description of the address will be
+  the address itself.
+  * _Technical details_: if the object is called `address`, the marker
+    will be placed at the coordinates `address.location.latitude` and
+    `address.location.longitude`.  (The attribute `address.location`
+    is a `LatitudeLongitude` object.)  The description of the marker
+    will be set to `address.location.description`.  These fields are
+    set automatically during the geolocation process, which will take
+    place the first time **docassemble** runs `map_of()`, if it has
+    not taken place already.  The marker icon can be customized by
+    setting `address.icon`.
+* `Organization` objects: map markers will be placed at the locations
+  of each of the organization's offices.  For example, if the object
+  name is `company`, markers will be placed on the map for each
+  address in `company.office` (which is a list of `Address`es).  The
+  icon for the `i`th office will be `company.office[i].icon`, or, if
+  that is not defined, it will be `company.icon` if that is defined.
+  The description of each marker will be the organization's name
+  (`company.name.full()`) followed by
+  `company.office[i].location.description`.
+* `Person` objects: a map marker will be placed at the person's
+  address.  The description will be the person's name, followed by the
+  address.  The marker icon can be customized by setting `person.icon`
+  (for a `Person` object called `person`).  If the `Person` object is
+  the user, the default icon is a blue circle.
+
+## <a name="month_of"></a><a name="day_of"></a><a name="year_of"></a>month_of, day_of, and year_of
+
+These functions read a date and provide the parts of the date.
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.legal
+---
+question: The date, explained.
+subquestion: |
+  The year is ${ year_of(some_date) }.
+
+  The month is ${ month_of(some_date) }.
+
+  The day of month is ${ day_of(some_date) }.
+sets: all_done
+---
+question: |
+  Give me a date.
+fields:
+  - Date: some_date
+    datatype: date
+---
+mandatory: true
+code: all_done
+---
+{% endhighlight %}
+
+The `month_of` function has an optional setting: if called as, e.g.,
+`month_of(some_date, as_word=True)`, it will retur
+
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testdate.yml){:target="_blank"}.)
+
 # Classes for information about persons
 
 ## <a name="Person"></a>Person
@@ -277,6 +345,103 @@ In addition, the following attributes will be defined by virtue of an
 
 * `president.address` (object of class `Address`)
 * `president.location` (object of class `LatitudeLongitude`)
+
+The following attributes are also used, but undefined by default:
+
+* `birthdate`
+
+### <a name="Individual.identified"></a>`.identified()`
+
+Returns `True` if the individual's name has been defined yet,
+otherwise it returns `False`.
+
+### <a name="Individual.age_in_years"></a>`.age_in_years()`
+
+`user.age_in_years()` the `user`'s age in years as a whole number.
+
+There are two optional arguments that modify the method's behavior:
+
+* `user.age_in_years(decimals=True)` returns the user's age in years
+  with the fractional part included.
+* `user.age_in_years(as_of="5/1/2015")` returns the user's age as of a
+  particular date.
+
+### <a name="Individual.first_name_hint"></a><a name="Individual.last_name_hint"></a>`.first_name_hint()` and `.last_name_hint()`
+
+When you are writing questions in an interview, you may find yourself
+in this position:
+
+* You are asking for the name of a person;
+* That person whose name you need may the the user;
+* The user may be logged in;
+* The user, if logged in, may have already provided his or her name on
+the user profile page; and
+* It would be repetitive for the user to retype his or her
+name.
+
+In this situation, it would be convenient for the user if the user's
+name was auto-filled on the page.  The `.first_name_hint()` and
+`.last_name_hint()` methods accomplish this for you.  You can ask for
+an individual's name as follows:
+
+{% highlight yaml %}
+---
+initial: true
+code: |
+  update_info(user, 'user_role', current_info)
+---
+generic object: Individual
+question: |
+  What is ${ x.object_possessive('name') }?
+fields:
+  - First Name: x.name.first
+    default: ${ x.first_name_hint() }
+  - Middle Name: x.name.middle
+    required: False
+  - Last Name: x.name.last
+    default: ${ x.last_name_hint() }
+  - Suffix: x.name.suffix
+    required: False
+    code: |
+      name_suffix()
+---
+{% endhighlight %}
+
+It is necessary to include a call to `update_info()` in "initial" code
+so that **docassemble** knows who the user is.  For an explanation of
+how `.object_possessive()` works, see the `Person` class.
+
+### <a name="Individual.possessive"></a>`.possessive()`
+
+TBD
+
+### <a name="Individual.do_verb"></a>`.do_verb()`
+
+TBD
+
+### <a name="Individual.salutation"></a>`.salutation()`
+
+TBD
+
+### <a name="Individual.pronoun_possessive"></a>`.pronoun_possessive()`
+
+TBD
+
+### <a name="Individual.pronoun"></a>`.pronoun()`
+
+TBD
+
+### <a name="Individual.pronoun_objective"></a>`.pronoun_objective()`
+
+TBD
+
+### <a name="Individual.pronoun_subjective"></a>`.pronoun_subjective()`
+
+TBD
+
+### <a name="Individual.yourself_or_name"></a>`.yourself_or_name()`
+
+TBD
 
 ## <a name="Name"></a>Name
 
@@ -359,14 +524,115 @@ An `Address` has the following text attributes:
 * `state`: e.g., "MA"
 * `zip`: e.g. "01199"
 
+It also has an attribute `location`, which is a `LatitudeLongitude`
+object representing the GPS coordinates of the address.
+
 If you refer to an address in a template, it returns `.block()`.
 
 The `.block()` method returns a formatted address.  All attributes
 except `unit` are required.
 
+The `.geolocate()` method determines the latitude and longitude of the
+address and stores it in the attribute `location`, which is a
+`LatitudeLongitude` object.
+
 ## <a name="LatitudeLongitude"></a>LatitudeLongitude
 
-TBD
+A `LatitudeLongitude` object represents the GPS coordinates of an
+address or location.  `LatitudeLongitude` objects have the following
+attributes:
+
+* `latitude`: the latitude of the location.
+* `longitude`: the longitude of the location.
+* `description`: a textual description of the location.
+* `known`: whether the GPS location is known yet.
+* `gathered`: whether a determination of the GPS location has been
+attempted yet.
+
+One use for the `LatitudeLongitude` object is for mapping the
+coordinates of an address.  The `Address` object has a method
+`.geolocate()` for this purpose.
+
+Another use for the `LatitudeLongitude` object is storing the GPS
+location of the user's device.  Many web browsers, particularly those
+on mobile devices, have a feature for determining the user's GPS
+coordinates.  Usually the browser asks the user to consent to the
+sharing of the location information.  To support this feature, the
+`LatitudeLongitude` object offers the method `.status()`.
+
+The following example shows how to gather the user's latitude and
+longitude from the web browser.
+
+{% highlight yaml %}
+---
+include:
+  - basic-questions.yml
+---
+initial: true
+code: |
+  track_location = user.location.status()
+---
+{% endhighlight %}
+
+Alternatively, if you do not want to include all of the questions and
+code blocks of the `basic-questions.yml` file in your interview, you
+can do:
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - user: Individual
+---
+initial: true
+code: |
+  update_info(user, 'user_role', current_info)
+  track_location = user.location.status()
+---
+{% endhighlight %}
+
+If all goes well, the user's latitude and longitude will be gathered
+and stored in `user.location.latitude` and `user.location.longitude`.
+You can control when this happens in the interview by controlling when
+`track_location` is set.  For example, you may wish to prepare the
+user for this:
+
+{% highlight yaml %}
+---
+initial: true
+code: |
+  update_info(user, 'user_role', current_info)
+  if user_ok_with_sharing_location:
+    track_location = user.location.status()
+---
+question: |
+  We would like to gather information about your current location
+  from your mobile device.  Is that ok with you?
+yesno: user_ok_with_sharing_location
+---
+{% endhighlight %}
+
+`track_location` is a [special variable] that tells **docassemble**
+whether or not it should ask the browser for the user's GPS
+coordinates the next time a question is posed to the user.  If
+`track_location` is `True`, **docassemble** will ask the browser to
+provide the information, and if it receives it, it will store it in
+the [special variable] `current_info`.
+
+<a name="LatitudeLongitude.status"></a>The `.status()` method looks in
+`current_info` to see if a latitude and longitude were provided by the
+browser, or in the alternative that an error message was provided,
+such as "the user refused to share the information," or "this device
+cannot determine the user's location."  If the latitude and longitude
+information is conveyed, `.status()` stores the information in
+`user.location.latitude` and `user.location.longitude`.  The
+`.status()` method returns `False` in these situations, which means
+"we already asked for the latitude and longitude and got a response,
+so there is no longer any need for the browser to keep asking for it."
+Otherwise, it returns `True`, which means "the browser has not yet
+been asked for the location information, so let's ask it."
 
 # Classes for information about things in a court case
 
@@ -792,3 +1058,4 @@ explanation of `DATemplate`.
 [objects]: {{ site.baseurl }}/docs/objects.html
 [Markdown]: https://daringfireball.net/projects/markdown/
 [multi-user interviews]: {{ site.baseurl }}/docs/roles.html
+[special variable]: {{ site.baseurl }}/docs/special.html
