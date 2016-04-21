@@ -1543,6 +1543,7 @@ class Interview:
         self.helptext = dict()
         self.defs = dict()
         self.terms = dict()
+        self.includes = set()
         self.question_index = 0
         self.default_role = None
         self.title = None
@@ -1581,6 +1582,11 @@ class Interview:
             source_package = source.package
         else:
             source_package = None
+        if hasattr(source, 'path'):
+            if source.path in self.includes:
+                logmessage("Source " + str(source.path) + " has already been included.  Skipping.")
+                return
+            self.includes.add(source.path)
         #for document in yaml.load_all(source.content):
         for source_code in document_match.split(source.content):
             source_code = remove_trailing_dots.sub('', source_code)

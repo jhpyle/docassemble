@@ -84,11 +84,11 @@ class LatitudeLongitude(DAObject):
         else:
             if location_returned():
                 #logmessage("returned is true")
-                self.set_to_current()
+                self._set_to_current()
                 return False
             else:
                 return True
-    def set_to_current(self):
+    def _set_to_current(self):
         logmessage("set to current")
         if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and type(this_thread.current_info['user']['location']) is dict:
             if 'latitude' in this_thread.current_info['user']['location'] and 'longitude' in this_thread.current_info['user']['location']:
@@ -303,6 +303,14 @@ class Address(DAObject):
         if hasattr(self, 'zip'):
             output += " " + str(self.zip)
         return output
+    def _map_info(self):
+        if (self.location.gathered and self.location.known) or self.address.geolocate():
+            the_info = self.location.description
+            result = {'latitude': self.location.latitude, 'longitude': self.location.longitude, 'info': the_info}
+            if hasattr(self, 'icon'):
+                result['icon'] = self.icon
+            return [result]
+        return None
     def geolocate(self):
         if self.geolocated:
             return self.geolocate_success    
@@ -362,7 +370,7 @@ class Person(DAObject):
             del kwargs['name']
         self.roles = set()
         return super(Person, self).init(**kwargs)
-    def map_info(self):
+    def _map_info(self):
         if not self.location.known:
             if (self.address.location.gathered and self.address.location.known) or self.address.geolocate():
                 self.location = self.address.location
@@ -458,14 +466,18 @@ class Individual(Person):
         if hasattr(self.name, 'first'):
             return True
         return False
-    def age_in_years(self, decimals=False):
+    def age_in_years(self, decimals=False, as_of=None):
         """Returns the individual's age in years, based on self.birthdate."""
         if hasattr(self, 'age'):
             if decimals:
                 return float(self.age)
             else:
                 return int(self.age)
-        rd = dateutil.relativedelta.relativedelta(datetime.datetime.now(), dateutil.parser.parse(self.birthdate))
+        if as_of is None:
+            comparator = datetime.datetime.now()
+        else:
+            comparator = dateutil.parser.parse(as_of)
+        rd = dateutil.relativedelta.relativedelta(comparator, dateutil.parser.parse(self.birthdate))
         if decimals:
             return float(rd.years)
         else:
@@ -656,7 +668,7 @@ class Organization(Person):
             if not (hasattr(self, 'serves') and county in self.serves):
                 return False
         return True
-    def map_info(self):
+    def _map_info(self):
         response = list()
         for office in self.office:
             if (office.location.gathered and office.location.known) or office.geolocate():
@@ -666,7 +678,9 @@ class Organization(Person):
                     the_info = capitalize(self.object_name())
                 the_info += ' [NEWLINE] ' + office.location.description
                 this_response = {'latitude': office.location.latitude, 'longitude': office.location.longitude, 'info': the_info}
-                if hasattr(self, 'icon'):
+                if hasattr(office, 'icon'):
+                    this_response['icon'] = office.icon
+                elif hasattr(self, 'icon'):
                     this_response['icon'] = self.icon
                 response.append(this_response)
         if len(response):
@@ -821,7 +835,7 @@ def map_of(*pargs, **kwargs):
             all_args.append(arg)
     for arg in all_args:
         if isinstance(arg, DAObject):
-            markers = arg.map_info()
+            markers = arg._map_info()
             if markers:
                 for marker in markers:
                     if 'icon' in marker and type(marker['icon']) is not dict:
@@ -831,8 +845,8 @@ def map_of(*pargs, **kwargs):
                     the_map['markers'].append(marker)
     if 'center' in kwargs:
         the_center = kwargs['center']
-        if callable(getattr(the_center, 'map_info', None)):
-            markers = the_center.map_info()
+        if callable(getattr(the_center, '_map_info', None)):
+            markers = the_center._map_info()
             if markers:
                 the_map['center'] = markers[0]
     if 'center' not in the_map and len(the_map['markers']):

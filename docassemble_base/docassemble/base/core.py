@@ -58,7 +58,7 @@ class DAObject(object):
         else:
             logmessage("Not resetting name of " + self.instanceName)
         return
-    def map_info(self):
+    def _map_info(self):
         return None
     def __getattr__(self, thename):
         if hasattr(self, thename) or thename == "__getstate__" or thename == "__slots__":
