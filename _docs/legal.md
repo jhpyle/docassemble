@@ -349,6 +349,21 @@ In addition, the following attributes will be defined by virtue of an
 The following attributes are also used, but undefined by default:
 
 * `birthdate`
+* `gender`
+
+A number of useful methods can be applied to objects of class
+`Individual`.  Many of them will respond differently depending on
+whether the `Individual` is the user or not.  If you use these
+methods, be sure to inform **docassemble** who the user is by
+inserting the following [initial block]:
+
+---
+initial: true
+code: |
+  update_info(user, 'user_role', current_info)
+---
+
+(If you include the `basic-questions.yml` file, this is done for you.)
 
 ### <a name="Individual.identified"></a>`.identified()`
 
@@ -386,10 +401,6 @@ an individual's name as follows:
 
 {% highlight yaml %}
 ---
-initial: true
-code: |
-  update_info(user, 'user_role', current_info)
----
 generic object: Individual
 question: |
   What is ${ x.object_possessive('name') }?
@@ -407,50 +418,113 @@ fields:
 ---
 {% endhighlight %}
 
-It is necessary to include a call to `update_info()` in "initial" code
-so that **docassemble** knows who the user is.  For an explanation of
-how `.object_possessive()` works, see the `Person` class.
+For an explanation of how `.object_possessive()` works, see the
+`Person` class.
 
 ### <a name="Individual.possessive"></a>`.possessive()`
 
-TBD
-
-### <a name="Individual.do_verb"></a>`.do_verb()`
-
-TBD
+If the individual's name is "Adam Smith," this returns "Adam Smith's."
+ But if the individual is the current user, this returns "your."
 
 ### <a name="Individual.salutation"></a>`.salutation()`
 
-TBD
+Depending on the `gender` attribute, returns "Mr." or "Ms."
+
+{% highlight yaml %}
+---
+template: letter_to_client
+content: |
+  Dear ${ client.salutation() } ${ client.name.last }:
+
+  I hope this letter finds you well.
+
+  Blah, blah, blah.
+---
+{% endhighlight %}
+
 
 ### <a name="Individual.pronoun_possessive"></a>`.pronoun_possessive()`
 
-TBD
+If the individual is `client`, then
+`client.pronoun_possessive('fish')` returns "your fish," "his fish,"
+or "her fish," depending on whether `client` is the user and depending
+on the value of `client.gender`.  `client.pronoun_possessive('fish',
+capitalize=True)` returns "Your fish," "His fish," or "Her fish."
+
+If you want to refer to the individual in the third person even if the
+individual is the user, write `client.pronoun_possessive('fish',
+third_person=True)`.
+
+For portability to different languages, this method requires you to
+provide the noun you are modifying.  In some languages, the possessive
+pronoun may be different depending on what the noun is.
 
 ### <a name="Individual.pronoun"></a>`.pronoun()`
 
-TBD
+Returns "you," "him," or "her," depending on whether the individual is
+the user and depending on the value of the `gender` attribute.  If
+called with `capitalize=True`, the word will be capitalized (for use
+at the beginning of a sentence).
 
 ### <a name="Individual.pronoun_objective"></a>`.pronoun_objective()`
 
-TBD
+For the `Individual` class, `pronoun_objective()` does the same thing
+as `pronoun`.  (Other classes returns "it.")  If called with
+`capitalize=True`, the output will be capitalized.
 
 ### <a name="Individual.pronoun_subjective"></a>`.pronoun_subjective()`
 
-TBD
+Returns "you," "he," or "she," depending on whether the individual is
+the user and depending on the value of the `gender` attribute.
+
+You can call this method with the following optional keyword arguments:
+
+* `third_person=True`: will use "he" or "she" even if the individual
+is the user.
+* `capitalize=True`: the output will be capitalized (for use at the
+  beginning of a sentence)
 
 ### <a name="Individual.yourself_or_name"></a>`.yourself_or_name()`
 
-TBD
+Returns "yourself" if the individual is the user, but otherwise
+returns the person's name.  If called with the optional keyword
+argument `capitalize=True`, the output will be capitalized.
 
 ## <a name="Name"></a>Name
 
-The `Name` is a general class for names of persons and other things.
-Its only expected attribute is `text`, and its only method is
-`full()`, which simply returns the value of the `text` attribute.  In
-the context of a template, a `Name` object returns the value of `.full()`.
+The `Name` is the base class for names of things, such as `Person`.
+For example, if `plaintiff` is a `Person`, `plaintiff.name` is an
+object of type `Name`.  If `plaintiff` is an `Individual`,
+`plaintiff.name` is an object of type `IndividualName`, which is a
+subtype of `Name`.  (The `IndividualName` is defined in the next
+section.)
 
-For example, this interview sets the name of a `Person`:
+Objects of the basic `Name` class have just one attribute, `text`.  To
+set the name of a `Person` called `company`, for example, you can do
+something like this:
+
+{% highlight yaml %}
+---
+question: |
+  What is the name of the company?
+fields:
+  - Company name: company.name.text
+---
+{% endhighlight %}
+
+There are multiple ways to refer to the name of an object, but the
+best way is to write something like this:
+
+{% highlight yaml %}
+---
+question: |
+  Do you wish to sue ${ company }?
+yesno: user_wants_to_sue
+---
+{% endhighlight %}
+
+Multiple ways of referring to the name of a `Person` are illustrated
+in the following interview:
 
 {% highlight yaml %}
 ---
@@ -484,9 +558,58 @@ opponent }` all return the same thing.  This is because a `Person` in
 the context of a template returns `.name.full()`, and a `Name` returns
 `.full()`.
 
+The reason a name is not just a piece of text, but rather an object
+with attributes like `text` and methods like `.full()`, is that some
+objects have names with multiple parts that you will want to express
+in multiple ways.  You might have a list of parties in a case, where
+the parties can be companies or individuals.  It helps to have a
+common way of referring to the names of these objects.
+
+<a name="Name.full"></a>
+<a name="Name.firstlast"></a>
+<a name="Name.lastfirst"></a>
+The `Name` and `IndividualName` objects support the following methods:
+
+* `.full()`
+* `.firstlast()`
+* `.lastfirst()`
+
+Applied to an `IndividualName` object, these methods return different
+useful expressions of the name.  Applied to a `Name` object, these
+methods all return the same thing -- the `.text` attribute.  This is
+useful because you can write things like this, which lists the names
+of the parties in a bullet-point list:
+
+{% highlight yaml %}
+---
+template: client_letter
+content: |
+  We need to be prepared to bring a lawsuit against the following:
+
+  % for party in enemy:
+  * ${ party.lastfirst() }
+  % endfor
+---
+{% endhighlight %}
+
+In this template, the author does not need to worry about which
+parties are companies and which parties are individuals; the name will
+be listed in the bullet-point list in an appropriate way.  For
+individuals, the last name will come first, but for non-individuals,
+the regular name will be printed.
+
+<a name="Name.defined"></a>
+The `Name` and `IndividualName` objects also support the method:
+
+* `.defined()`
+
+This returns `True` if the necessary component of the name (`.text`
+for a `Name`, `first` for an `IndividualName`) has been defined yet.
+Otherwise it returns `False`.
+
 ### <a name="IndividualName"></a>IndividualName
 
-The `Individual` class is a subclass of `Person`, but it defines the
+The `Individual` class is a subclass of `Person`.  It defines the
 `name` attribute as an `IndividualName` rather than a `Name`.  An
 `IndividualName` uses the following attributes, which are expected to
 be text:
@@ -501,18 +624,18 @@ its own will return `.full()`
 
 The `full()` method attempts to form a full name from these
 components.  Only `first` is required, however.  This means that if
-you refer to an `IndividualName` in a template, e.g., by writing
-`${ applicant.name }`, **docassemble** will attempt to return
-`applicant.name.full()`, and if `applicant.name.first` is not defined,
-**docassemble** will look for a question that defines
+you refer to an `IndividualName` in a template, e.g., by writing `${
+applicant.name }`, **docassemble** will attempt to return
+`applicant.name.full()`, and if `applicant.name.first` has not been
+defined yet, **docassemble** will look for a question that defines
 `applicant.name.first`.
 
 Here is how `full()` and other methods of the `IndividualName` work:
 
-* `applicant.full()`: "John Q. Adams"
+* <a name="IndividualName.full"></a>`applicant.full()`: "John Q. Adams"
 * `applicant.full(middle="full")`: "John Quincy Adams"
-* `applicant.firstlast()`: "John Adams"
-* `applicant.lastfirst()`: "Adams, John"
+* <a name="IndividualName.firstlast"></a>`applicant.firstlast()`: "John Adams"
+* <a name="IndividualName.lastfirst"></a>`applicant.lastfirst()`: "Adams, John"
 
 ## <a name="Address"></a>Address
 
@@ -529,9 +652,11 @@ object representing the GPS coordinates of the address.
 
 If you refer to an address in a template, it returns `.block()`.
 
+<a name="Address.block"></a>
 The `.block()` method returns a formatted address.  All attributes
 except `unit` are required.
 
+<a name="Address.geolocate"></a>
 The `.geolocate()` method determines the latitude and longitude of the
 address and stores it in the attribute `location`, which is a
 `LatitudeLongitude` object.
@@ -553,6 +678,7 @@ One use for the `LatitudeLongitude` object is for mapping the
 coordinates of an address.  The `Address` object has a method
 `.geolocate()` for this purpose.
 
+<a name="LatitudeLongitude.status"></a>
 Another use for the `LatitudeLongitude` object is storing the GPS
 location of the user's device.  Many web browsers, particularly those
 on mobile devices, have a feature for determining the user's GPS
@@ -621,18 +747,18 @@ coordinates the next time a question is posed to the user.  If
 provide the information, and if it receives it, it will store it in
 the [special variable] `current_info`.
 
-<a name="LatitudeLongitude.status"></a>The `.status()` method looks in
-`current_info` to see if a latitude and longitude were provided by the
-browser, or in the alternative that an error message was provided,
-such as "the user refused to share the information," or "this device
-cannot determine the user's location."  If the latitude and longitude
-information is conveyed, `.status()` stores the information in
-`user.location.latitude` and `user.location.longitude`.  The
-`.status()` method returns `False` in these situations, which means
-"we already asked for the latitude and longitude and got a response,
-so there is no longer any need for the browser to keep asking for it."
-Otherwise, it returns `True`, which means "the browser has not yet
-been asked for the location information, so let's ask it."
+The `.status()` method looks in `current_info` to see if a latitude
+and longitude were provided by the browser, or in the alternative that
+an error message was provided, such as "the user refused to share the
+information," or "this device cannot determine the user's location."
+If the latitude and longitude information is conveyed, `.status()`
+stores the information in `user.location.latitude` and
+`user.location.longitude`.  The `.status()` method returns `False` in
+these situations, which means "we already asked for the latitude and
+longitude and got a response, so there is no longer any need for the
+browser to keep asking for it."  Otherwise, it returns `True`, which
+means "the browser has not yet been asked for the location
+information, so let's ask it."
 
 # Classes for information about things in a court case
 
@@ -666,7 +792,7 @@ In addition, the following attributes will be created:
 * `case.firstParty`: set equal to `case.plaintiff`
 * `case.secondParty`: set equal to `case.defendant`
 
-The idea is that `plaintiff` and `defendant` are the default
+The idea here is that `plaintiff` and `defendant` are the default
 parties to the case, but you can change this if you want.  For
 example, you could do:
 
@@ -696,6 +822,9 @@ at first:
 
 The `Case` class has the following methods:
 
+<a name="Case.parties"></a>
+<a name="Case.all_known_people"></a>
+<a name="Case.role_of"></a>
 * `parties()`: returns a list of all parties to the case (namely, all
 elements of any attributes of the `Case` that are `PartyList`s.
 Calling this method will trigger "gathering" the elements of each
@@ -732,15 +861,16 @@ It has the following attributes (in addition to `title`):
 
 It has one method:
 
+<a name="LegalFiling.caption"></a>
 * `caption()`: returns a case caption suitable for inclusion in a
 **docassemble** document.  If `pleading` is a `LegalFiling`, then
 including `pleading.caption()` will require the following:
 
-* pleading.case
-* pleading.case.firstParty.gathered
-* pleading.case.secondParty.gathered
-* pleading.case.court.name
-* pleading.title
+* `pleading.case`
+* `pleading.case.firstParty.gathered`
+* `pleading.case.secondParty.gathered`
+* `pleading.case.court.name`
+* `pleading.title`
 
 ## <a name="Value"></a>Value
 
@@ -748,8 +878,17 @@ A `Value` is a subclass of `DAObject` that is intended to represent a
 currency value.  It has two attributes, both of which are initially
 undefined:
 
-* `value`: intended to be a number
-* `exists`: a boolean value representing whether the value is applicable
+* `.value`: intended to be a number
+* `.exists`: a boolean value representing whether the value is applicable
+
+For example, you may have a variable that represents the value of the
+user's real estate holdings.  But before you ask the value of the
+user's real estate holdings, you will want to ask if the user has real
+estate holdings at all.  The `FinancialList` object, explained below,
+contains a list of `Value`s and when computing a total of the values,
+it expects the `.exists` attributes of each `Value` to be defined.
+This can be used to cause questions to be asked about whether the
+`Value` is applicable to the user's situation.
 
 ### <a name="PeriodicValue"></a>PeriodicValue
 
@@ -784,12 +923,15 @@ The `FinancialList` uses the following attributes:
 this to `True` when your process of collecting the elements of the
 list is ongoing and will span multiple questions.
 * `gathered`: a boolean value that is initially undefined.  Set this
-to `True` when you have finished gathering all of the elements.
+to `True` when you have finished determining what the elements of the
+list are going to be.
 * `elements`: a [Python set] containing the names of the financial
   items.
 
 The `FinancialList` has two methods:
 
+<a name="FinancialList.new"></a>
+<a name="FinancialList.total"></a>
 * `.new(item_name)`: gives the `FinancialList` a new attribute with
   the name `item_name` and the object type `Value`.
 * `.total()`: tallies up the total value of all `Value`s in the list
@@ -1044,6 +1186,7 @@ explanation of `DATemplate`.
 [methods]: https://docs.python.org/2/tutorial/classes.html
 [roles]: {{ site.baseurl }}/docs/roles.html
 [functions]: {{ site.baseurl }}/docs/functions.html
+[initial block]: {{ site.baseurl }}/docs/initial.html
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [user login system]: {{ site.baseurl }}/docs/users.html
 [configuration]: {{ site.baseurl }}/docs/config.html
