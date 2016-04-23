@@ -159,6 +159,10 @@ a.sourceactive {
     color: yellow;
 }
 
+.daactivetext:hover {
+    color: #ffff99;
+}
+
 div.playgroundbox div.panel-body {
     height: 30em;
     overflow-y: scroll;

@@ -240,12 +240,28 @@ class DADict(DAObject):
     """A base class for objects that behave like Python dictionaries."""
     def init(self, **kwargs):
         self.elements = dict()
+        self.gathering = False
+        if 'elements' in kwargs:
+            self.elements.update(kwargs['elements'])
+            self.gathered = True
+            del kwargs['elements']
+        if 'object_type' in kwargs:
+            self.object_type = kwargs['object_type']
+            del kwargs['object_type']
+        if not hasattr(self, 'object_type'):
+            self.object_type = None
         return super(DADict, self).init(**kwargs)
     def initializeObject(self, entry, objectFunction, **kwargs):
         newobject = objectFunction(self.instanceName + '[' + repr(entry) + ']', **kwargs)
         self.elements[entry] = newobject
         return newobject
     def __getitem__(self, index):
+        if index not in self.elements:
+            if self.object_type is None:
+                raise NameError("name '" + object.__getattribute__(self, 'instanceName') + "[" + repr(index) + "] is not defined")
+            else:
+                self.initializeObject(index, self.object_type)
+            return self.elements[index]
         return self.elements[index]
     def __setitem__(self, key, value):
         self.elements[key] = value

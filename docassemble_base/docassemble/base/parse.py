@@ -35,7 +35,7 @@ def process_audio_video_list(the_list, user_dict):
         output.append({'text': the_item['text'].text(user_dict), 'package': the_item['package'], 'type': the_item['type']})
     return output
 
-def textify(data):
+def textify(data, user_dict):
     return list(map((lambda x: x.text(user_dict)), data))
 
 def set_absolute_filename(func):
@@ -296,7 +296,14 @@ class TextObject(object):
             return(self.template.render(**user_dict))
         else:
             return(self.original_text)
-            
+
+
+def safeid(text):
+    return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
+
+def from_safeid(text):
+    return(codecs.decode(text, 'base64').decode('utf-8'))
+
 class Field:
     def __init__(self, data):
         if 'number' in data:
@@ -304,7 +311,7 @@ class Field:
         else:
             self.number = 0
         if 'saveas' in data:
-            self.saveas = data['saveas']
+            self.saveas = safeid(data['saveas'])
         if 'saveas_code' in data:
             self.saveas_code = data['saveas_code']
         if 'action' in data:
@@ -930,6 +937,8 @@ class Question:
                             elif key == 'default' or key == 'hint' or key == 'help':
                                 if type(field[key]) is not dict and type(field[key]) is not list:
                                     field_info[key] = TextObject(definitions + unicode(field[key]))
+                                if key == 'default' and 'datatype' not in field and 'code' not in field and 'choices' not in field:
+                                    auto_determine_type(field_info, the_value=field[key])
                             elif key == 'disable others':
                                 field_info['disable others'] = True
                             elif key == 'datatype':
@@ -942,6 +951,8 @@ class Question:
                             elif key == 'choices':
                                 field_info['choicetype'] = 'manual'
                                 field_info['selections'] = process_selections_manual(field[key])
+                                if 'datatype' not in field:
+                                    auto_determine_type(field_info)
                             elif key == 'note':
                                 field_info['type'] = 'note'
                                 if 'extras' not in field_info:
@@ -1275,7 +1286,7 @@ class Question:
                 if hasattr(field, 'datatype') and field.datatype == 'object':
                     if field.number not in selectcompute:
                         raise DAError("datatype was set to object but no code was provided")
-                    string = "_internal['objselections'][" + repr(field.saveas) + "] = dict()"
+                    string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "] = dict()"
                     logmessage("Doing " + string)
                     try:
                         exec(string, user_dict)
@@ -1283,7 +1294,7 @@ class Question:
                             key = selection[0]
                             #logmessage("key is " + str(key))
                             real_key = codecs.decode(key, 'base64').decode('utf-8')
-                            string = "_internal['objselections'][" + repr(field.saveas) + "][" + repr(key) + "] = " + real_key
+                            string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "][" + repr(key) + "] = " + real_key
                             logmessage("Doing " + string)
                             exec(string, user_dict)
                     except:
@@ -1296,7 +1307,7 @@ class Question:
                             extras[key][field.number] = field.extras[key].text(user_dict)
                 if hasattr(field, 'saveas'):
                     try:
-                        defaults[field.number] = eval(field.saveas, user_dict)
+                        defaults[field.number] = eval(from_safeid(field.saveas), user_dict)
                     except:
                         if hasattr(field, 'default'):
                             defaults[field.number] = field.default.text(user_dict)
@@ -1324,7 +1335,14 @@ class Question:
                 raise NameError("name 'role_event' is not defined")
         return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras})
     def processed_attachments(self, user_dict, **kwargs):
-        return(list(map((lambda x: self.make_attachment(x, user_dict, **kwargs)), self.attachments)))
+        result_list = list()
+        items = list()
+        for x in self.attachments:
+            items.append([x, self.prepare_attachment(x, user_dict, **kwargs)])
+        for item in items:
+            result_list.append(self.finalize_attachment(item[0], item[1], user_dict))
+        return result_list
+        #return(list(map((lambda x: self.make_attachment(x, user_dict, **kwargs)), self.attachments)))
     def parse_fields(self, the_list, register_target, uses_field):
         result_list = list()
         has_code = False
@@ -1394,63 +1412,15 @@ class Question:
                     # self.mark_as_answered(user_dict)
                     return(target.follow_multiple_choice(user_dict))
         return(self)
-    def make_attachment(self, attachment, user_dict, **kwargs):
-        if 'language' in attachment['options']:
-            old_language = docassemble.base.util.get_language()
-            docassemble.base.util.set_language(attachment['options']['language'])
-        else:
-            old_language = None
-        result = {'name': attachment['name'].text(user_dict), 'filename': attachment['filename'].text(user_dict), 'description': attachment['description'].text(user_dict), 'valid_formats': attachment['valid_formats']}
-        result['markdown'] = dict();
-        result['content'] = dict();
-        result['file'] = dict();
-        if '*' in attachment['valid_formats']:
-            formats_to_use = ['html', 'rtf', 'pdf', 'tex']
-        else:
-            formats_to_use = attachment['valid_formats']
-        for doc_format in formats_to_use:
+    def finalize_attachment(self, attachment, result, user_dict):
+        for doc_format in result['formats_to_use']:
             if doc_format in ['pdf', 'rtf', 'tex', 'docx']:
                 if 'fields' in attachment['options']:
-                    data_strings = []
-                    images = []
-                    for key, val in attachment['options']['fields'].iteritems():
-                        answer = val.text(user_dict).rstrip()
-                        if answer == 'True':
-                            answer = 'Yes'
-                        elif answer == 'False':
-                            answer = 'No'
-                        elif answer == 'None':
-                            answer = ''
-                        #logmessage("Found a " + str(key) + " with a |" + str(answer) + '|')
-                        m = re.search(r'\[FILE ([^\]]+)\]', answer)
-                        if m:
-                            file_reference = re.sub(r'[ ,].*', '', m.group(1))
-                            file_info = docassemble.base.filter.file_finder(file_reference, convert={'svg': 'png'})
-                            images.append((key, file_info))
-                        else:
-                            data_strings.append((key, answer))
-                    result['file'][doc_format] = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'], data_strings=data_strings, images=images)
+                    result['file'][doc_format] = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'], data_strings=result['data_strings'], images=result['images'])
                 else:
-                    the_markdown = ""
-                    metadata = dict()
-                    if len(attachment['metadata']) > 0:
-                        for key in attachment['metadata']:
-                            data = attachment['metadata'][key]
-                            if type(data) is bool:
-                                metadata[key] = data
-                            elif type(data) is list:
-                                metadata[key] = textify(data)
-                            else:
-                                metadata[key] = data.text(user_dict)
-                        the_markdown += "---\n" + yaml.safe_dump(metadata, default_flow_style=False, default_style = '|') + "...\n"
-                    the_markdown += attachment['content'].text(user_dict)
-                    #logmessage("Markdown is:\n" + repr(the_markdown) + "END")
-                    if emoji_match.search(the_markdown) and len(self.interview.images) > 0:
-                        the_markdown = emoji_match.sub(emoji_matcher_insert(self), the_markdown)
-                    result['markdown'][doc_format] = the_markdown
                     converter = Pandoc()
                     converter.output_format = doc_format
-                    converter.input_content = the_markdown
+                    converter.input_content = result['markdown'][doc_format]
                     if 'initial_yaml' in attachment['options']:
                         converter.initial_yaml = attachment['options']['initial_yaml']
                     elif 'initial_yaml' in self.interview.attachment_options:
@@ -1474,16 +1444,12 @@ class Question:
                             converter.template_file = attachment['options']['template_file']
                         elif 'template_file' in self.interview.attachment_options:
                             converter.template_file = self.interview.attachment_options['template_file']
-                    converter.metadata = metadata
+                    converter.metadata = result['metadata']
                     converter.convert(self)
                     result['file'][doc_format] = converter.output_filename
                     result['content'][doc_format] = result['markdown'][doc_format]
             elif doc_format in ['html']:
-                result['markdown'][doc_format] = attachment['content'].text(user_dict)
-                if emoji_match.search(result['markdown'][doc_format]) and len(self.interview.images) > 0:
-                    result['markdown'][doc_format] = emoji_match.sub(emoji_matcher_html(self), result['markdown'][doc_format])
                 result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True, question=self)
-                #logmessage("output was:\n" + repr(result['content'][doc_format]))
         if attachment['variable_name']:
             string = attachment['variable_name'] + " = DAFileCollection('" + attachment['variable_name'] + "')"
             #logmessage("Executing " + string + "\n")
@@ -1497,6 +1463,66 @@ class Question:
                 string = variable_string + " = DAFile('" + variable_string + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
                 #logmessage("Executing " + string + "\n")
                 exec(string, user_dict)
+        return(result)
+    def prepare_attachment(self, attachment, user_dict, **kwargs):
+        if 'language' in attachment['options']:
+            old_language = docassemble.base.util.get_language()
+            docassemble.base.util.set_language(attachment['options']['language'])
+        else:
+            old_language = None
+        result = {'name': attachment['name'].text(user_dict), 'filename': attachment['filename'].text(user_dict), 'description': attachment['description'].text(user_dict), 'valid_formats': attachment['valid_formats']}
+        result['markdown'] = dict();
+        result['content'] = dict();
+        result['file'] = dict();
+        if '*' in attachment['valid_formats']:
+            result['formats_to_use'] = ['html', 'rtf', 'pdf', 'tex']
+        else:
+            result['formats_to_use'] = attachment['valid_formats']
+        result['metadata'] = dict()
+        if len(attachment['metadata']) > 0:
+            for key in attachment['metadata']:
+                data = attachment['metadata'][key]
+                if type(data) is bool:
+                    result['metadata'][key] = data
+                elif type(data) is list:
+                    result['metadata'][key] = textify(data, user_dict)
+                else:
+                    result['metadata'][key] = data.text(user_dict)
+        for doc_format in result['formats_to_use']:
+            if doc_format in ['pdf', 'rtf', 'tex', 'docx']:
+                if 'fields' in attachment['options']:
+                    result['data_strings'] = []
+                    result['images'] = []
+                    for key, val in attachment['options']['fields'].iteritems():
+                        answer = val.text(user_dict).rstrip()
+                        if answer == 'True':
+                            answer = 'Yes'
+                        elif answer == 'False':
+                            answer = 'No'
+                        elif answer == 'None':
+                            answer = ''
+                        #logmessage("Found a " + str(key) + " with a |" + str(answer) + '|')
+                        m = re.search(r'\[FILE ([^\]]+)\]', answer)
+                        if m:
+                            file_reference = re.sub(r'[ ,].*', '', m.group(1))
+                            file_info = docassemble.base.filter.file_finder(file_reference, convert={'svg': 'png'})
+                            result['images'].append((key, file_info))
+                        else:
+                            result['data_strings'].append((key, answer))
+                else:
+                    the_markdown = ""
+                    if len(result['metadata']):
+                        the_markdown += "---\n" + yaml.safe_dump(result['metadata'], default_flow_style=False, default_style = '|') + "...\n"
+                    the_markdown += attachment['content'].text(user_dict)
+                    #logmessage("Markdown is:\n" + repr(the_markdown) + "END")
+                    if emoji_match.search(the_markdown) and len(self.interview.images) > 0:
+                        the_markdown = emoji_match.sub(emoji_matcher_insert(self), the_markdown)
+                    result['markdown'][doc_format] = the_markdown
+            elif doc_format in ['html']:
+                result['markdown'][doc_format] = attachment['content'].text(user_dict)
+                if emoji_match.search(result['markdown'][doc_format]) and len(self.interview.images) > 0:
+                    result['markdown'][doc_format] = emoji_match.sub(emoji_matcher_html(self), result['markdown'][doc_format])
+                #logmessage("output was:\n" + repr(result['content'][doc_format]))
         if old_language is not None:
             docassemble.base.util.set_language(old_language)
         return(result)
@@ -1731,7 +1757,7 @@ class Interview:
         seeking = kwargs.get('seeking', list())
         if debug:
             seeking.append({'variable': missingVariable})
-        #logmessage("I don't have " + missingVariable)
+        logmessage("I don't have " + missingVariable)
         if missingVariable in variable_stack:
             raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
         variable_stack.add(missingVariable)
@@ -1750,27 +1776,29 @@ class Interview:
         for mv in totry:
             realMissingVariable = mv['real']
             missingVariable = mv['vari']
-            #logmessage("Trying missingVariable " + missingVariable)
+            logmessage("Trying missingVariable " + missingVariable + " and realMissingVariable " + realMissingVariable)
             questions_to_try = list()
             generic_needed = True;
             if realMissingVariable in self.questions:
+                logmessage("Found realMissingVariable in question")
                 for lang in [language, '*']:
                     if lang in self.questions[realMissingVariable]:
                         for the_question in reversed(self.questions[realMissingVariable][lang]):
-                            questions_to_try.append((the_question, False, 'None', 'None', realMissingVariable))
+                            questions_to_try.append((the_question, False, 'None', 'None', realMissingVariable, None))
                         generic_needed = False
             if generic_needed and bracketPart != 'None' and missingVariable in self.questions:
+                logmessage("got in here")
                 for lang in [language, '*']:
                     if lang in self.questions[missingVariable]:
                         for the_question in reversed(self.questions[missingVariable][lang]):
-                            questions_to_try.append((the_question, False, 'None', bracketPart, missingVariable))
+                            questions_to_try.append((the_question, False, 'None', bracketPart, missingVariable, None))
                         generic_needed = False
             #components = missingVariable.split(".")
             #realComponents = realMissingVariable.split(".")
             components = dot_split.split(missingVariable)[1::2]
             realComponents = dot_split.split(realMissingVariable)[1::2]
-            #logmessage("Vari Components are " + str(components))
-            #logmessage("Real Components are " + str(realComponents))
+            logmessage("Vari Components are " + str(components))
+            logmessage("Real Components are " + str(realComponents))
             n = len(components)
             # if n == 1:
             #     if generic_needed:
@@ -1817,7 +1845,7 @@ class Interview:
                                     #logmessage("foo3" + var + lang)
                                     for the_question_to_use in reversed(self.questions[var][lang]):
                                         #logmessage("foo4 " + var + lang)
-                                        questions_to_try.append((the_question_to_use, True, root, the_i_to_use, var))
+                                        questions_to_try.append((the_question_to_use, True, root, the_i_to_use, var, generic_object))
                             missingVariable = var
                             found_generic = True
                             break
@@ -1831,8 +1859,8 @@ class Interview:
             elif n != 1:
                 found_x = 0;
                 for i in range(1, n):
-                    if found_x:
-                        break;
+                    #if found_x:
+                    #    break;
                     sub_totry = [{'var': "x." + ".".join(components[i:n]), 'realvar': "x." + ".".join(realComponents[i:n]), 'root': ".".join(realComponents[0:i]), 'root_for_object': ".".join(realComponents[0:i])}]
                     m = match_brackets_at_end.search(sub_totry[0]['root'])
                     if m:
@@ -1841,24 +1869,43 @@ class Interview:
                         sub_totry.insert(0, {'var': "x[i]." + ".".join(components[i:n]), 'realvar': "x" + brackets_part + "." + ".".join(realComponents[i:n]), 'root': before_brackets, 'root_for_object': before_brackets + brackets_part})
                     for d in sub_totry:
                         the_i_to_use = 'None'
-                        if found_x:
-                            break;
+                        #if found_x:
+                        #    break;
                         var = d['var']
                         realVar = d['realvar']
-                        #logmessage("Searching for brackets in " + str(realVar))
+                        logmessage("Looking for " + str(realVar) + " where var is " + var + " and root is " + str(d['root']) + " and root_for_object is " + str(d['root_for_object']))
                         mm = match_inside_brackets.findall(realVar)
                         if (mm):
-                            #logmessage("Found stuff inside brackets")
+                            logmessage("Found stuff inside brackets")
                             if len(mm) > 1:
-                                #logmessage("Variable " + str(var) + " is no good because it has more than one iterator")
+                                logmessage("Variable " + str(var) + " is no good because it has more than one iterator")
                                 continue;
                             the_i_to_use = mm[0];
-                            #logmessage("The i to use is " + str(the_i_to_use))
-                        #else:
-                        #    logmessage("Did not find stuff inside brackets")
+                            logmessage("The i to use is " + str(the_i_to_use))
+                        else:
+                            logmessage("Did not find stuff inside brackets")
                         root = d['root']
                         root_for_object = d['root_for_object']
-                        #logmessage("testing variable " + var + " and root " + root + " and root for object " + root_for_object)
+                        if var != realVar:
+                            logmessage("testing variable " + realVar + " and root " + root + " and root for object " + root_for_object)
+                            try:
+                                root_evaluated = eval(root_for_object, user_dict)
+                                generic_object = type(root_evaluated).__name__
+                                if generic_object in self.generic_questions and realVar in self.questions and realVar in self.generic_questions[generic_object] and (language in self.generic_questions[generic_object][realVar] or '*' in self.generic_questions[generic_object][realVar]) and (language in self.questions[realVar] or '*' in self.questions[realVar]):
+                                    #logmessage("foo1" + var)
+                                    for lang in [language, '*']:
+                                        #logmessage("foo2" + lang)
+                                        if lang in self.questions[realVar]:
+                                            #logmessage("foo3" + realVar + lang)
+                                            for the_question_to_use in reversed(self.questions[realVar][lang]):
+                                                #logmessage("foo4 " + realVar + lang)
+                                                questions_to_try.append((the_question_to_use, True, root, 'None', realVar, generic_object))
+                                    missingVariable = realVar
+                                    found_generic = True
+                                    found_x = 1
+                            except:
+                                pass
+                        logmessage("testing variable " + var + " and root " + root + " and root for object " + root_for_object)
                         try:
                             root_evaluated = eval(root_for_object, user_dict)
                             generic_object = type(root_evaluated).__name__
@@ -1870,11 +1917,11 @@ class Interview:
                                         #logmessage("foo3" + var + lang)
                                         for the_question_to_use in reversed(self.questions[var][lang]):
                                             #logmessage("foo4 " + var + lang)
-                                            questions_to_try.append((the_question_to_use, True, root, the_i_to_use, var))
+                                            questions_to_try.append((the_question_to_use, True, root, the_i_to_use, var, generic_object))
                                 missingVariable = var
                                 found_generic = True
                                 found_x = 1
-                                break
+                                #break
                             #logmessage("I should be looping around now")
                         except:
                             logmessage("variable did not exist in user_dict: " + str(sys.exc_info()[0]))
@@ -1884,24 +1931,27 @@ class Interview:
                     continue
             while True:
                 try:
-                    for the_question, is_generic, the_x, the_i, missing_var in questions_to_try:
-                        #logmessage("missing_var is " + str(missing_var))
-                        #logmessage("x is " + str(the_x))
-                        #logmessage("i is " + str(the_i))
-                        #logmessage("Trying question of type " + str(the_question.question_type))
+                    for the_question, is_generic, the_x, the_i, missing_var, generic_object in questions_to_try:
+                        logmessage("Will try question where is_generic is " + str(is_generic) + " and the_x is " + str(the_x) + " and the_i is " + str(the_i) + " and missing_var is " + missing_var + " and generic object is " + str(generic_object))
+                    for the_question, is_generic, the_x, the_i, missing_var, generic_object in questions_to_try:
+                        logmessage("missing_var is " + str(missing_var))
+                        logmessage("x is " + str(the_x))
+                        logmessage("i is " + str(the_i))
+                        logmessage("is_generic is " + str(is_generic))
+                        logmessage("Trying question of type " + str(the_question.question_type))
                         question = the_question.follow_multiple_choice(user_dict)
-                        #logmessage("Back from follow_multiple_choice")
-                        #logmessage("Trying a question of type " + str(the_question.question_type))
+                        logmessage("Back from follow_multiple_choice")
+                        logmessage("Trying a question of type " + str(the_question.question_type))
                         if is_generic:
-                            #logmessage("Yes it's generic")
+                            logmessage("Yes it's generic")
                             if question.is_generic:
-                                #logmessage("Yes question is generic")
+                                logmessage("Yes question is generic")
                                 if question.generic_object != generic_object:
-                                    #logmessage("Object mismatch")
+                                    logmessage("Object mismatch")
                                     continue
-                                #logmessage("ok")
+                                logmessage("ok")
                             else:
-                                #logmessage("No question is not generic")
+                                logmessage("No question is not generic")
                                 continue
                         if debug:
                             seeking.append({'question': question, 'reason': 'asking'})
@@ -1928,7 +1978,7 @@ class Interview:
                             #logmessage("Returning after defining objects")
                             return({'type': 'continue'})
                         if question.question_type == "template":
-                            exec(question.fields[0].saveas + ' = DATemplate(' + "'" + question.fields[0].saveas + "', content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ')', user_dict)
+                            exec(from_safeid(question.fields[0].saveas) + ' = DATemplate(' + "'" + from_safeid(question.fields[0].saveas) + "', content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ')', user_dict)
                             #question.mark_as_answered(user_dict)
                             return({'type': 'continue'})
                         if question.question_type == 'attachments':
@@ -1984,10 +2034,10 @@ class Interview:
                                 logmessage("2 Try another method of setting the variable")
                                 continue
                         else:
-                            #logmessage("Question type is " + question.question_type)
-                            #logmessage("Ask:\n" + question.content.original_text)
-                            #logmessage("the_x is " + str(the_x))
-                            #logmessage("the_i is " + str(the_i))
+                            logmessage("Question type is " + question.question_type)
+                            logmessage("Ask:\n" + question.content.original_text)
+                            logmessage("the_x is " + str(the_x))
+                            logmessage("the_i is " + str(the_i))
                             if question.question_type == 'continue':
                                 continue
                             return question.ask(user_dict, the_x, the_i)
@@ -2092,3 +2142,35 @@ def extract_missing_name(string):
         return m.group(1)
     else:
         return None
+
+def auto_determine_type(field_info, the_value=None):
+    types = dict()
+    if 'selections' in field_info:
+        for item in field_info['selections']:
+            the_type = type(item[0]).__name__
+            if the_type not in types:
+                types[the_type] = 0
+            types[the_type] += 1
+    if the_value is not None:
+        the_type = type(the_value).__name__
+        if the_type not in types:
+            types[the_type] = 0
+        types[the_type] += 1
+    if 'str' in types or 'unicode' in types:
+        return
+    if len(types) == 2:
+        if 'int' in types and 'float' in types:
+            field_info['type'] = 'float'
+            return
+    if len(types) > 1:
+        return
+    if 'bool' in types:
+        field_info['type'] = 'boolean'
+        return
+    if 'int' in types:
+        field_info['type'] = 'integer'
+        return
+    if 'float' in types:
+        field_info['type'] = 'float'
+        return
+    return

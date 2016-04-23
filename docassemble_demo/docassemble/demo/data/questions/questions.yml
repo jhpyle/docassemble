@@ -391,8 +391,8 @@ generic object: Individual
 code: |
   x.asset.gathering = True
   x.income.gathering = True
-  assets_to_ask_about = ['checking', 'savings', 'stocksbonds']
-  income_to_ask_about = ['employment', 'selfemployment', 'ssi', 'tanf']
+  assets_to_ask_about = ['checking account', 'savings account', 'stocks and bonds', 'automobiles']
+  income_to_ask_about = ['employment', 'self employment', 'SSI', 'TANF', 'rent']
   for asset_item in assets_to_ask_about:
     x.asset.new(asset_item)
   for income_item in income_to_ask_about:

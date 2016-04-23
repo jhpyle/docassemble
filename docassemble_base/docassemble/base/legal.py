@@ -1,4 +1,4 @@
-from docassemble.base.core import DAObject, DAList, DAFile, DAFileCollection, DAFileList, DATemplate, selections
+from docassemble.base.core import DAObject, DAList, DADict, DAFile, DAFileCollection, DAFileList, DATemplate, selections
 from docassemble.base.util import comma_and_list, get_language, set_language, get_dialect, word, comma_list, ordinal, ordinal_number, need, nice_number, possessify, verb_past, verb_present, noun_plural, space_to_underscore, force_ask, period_list, name_suffix, currency, indefinite_article, today, nodoublequote, capitalize, title_case, url_of, do_you, does_a_b, your, her, his, the, in_the, a_in_the_b, of_the, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json
 from docassemble.base.filter import file_finder, url_finder, mail_variable, markdown_to_html, async_mail
 from docassemble.base.logger import logmessage
@@ -257,6 +257,10 @@ class Name(DAObject):
     """Base class for an object's name."""
     def full(self):
         return(self.text)
+    def firstlast(self):
+        return(self.text)
+    def lastfirst(self):
+        return(self.text)
     def defined(self):
         return hasattr(self, 'text')
     def __str__(self):
@@ -398,6 +402,12 @@ class Person(DAObject):
             self.__dict__[attrname] = value
     def __str__(self):
         return self.name.full()
+    def pronoun_objective(self, **kwargs):
+        output = word('it')
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)            
     def object_possessive(self, target):
         if self is this_thread.user:
             return your(target)
@@ -495,11 +505,6 @@ class Individual(Person):
             return your(target)
         else:
             return possessify(self.name, target)
-    def do_verb(self, verb):
-        if self is this_thread.user:
-            return ""
-        else:
-            return possessify(self.name, target)
     def salutation(self):
         if self.gender == 'female':
             return('Ms.')
@@ -554,7 +559,7 @@ class PartyList(DAList):
     """Represents a list of parties to a case.  The default object
     type for items in the list is Individual."""
     def init(self, **kwargs):
-        self.object_type = Individual
+        self.object_type = Person
         return super(PartyList, self).init(**kwargs)
 
 class ChildList(DAList):
@@ -563,28 +568,25 @@ class ChildList(DAList):
         self.object_type = Individual
         return super(ChildList, self).init(**kwargs)
 
-class FinancialList(DAObject):
+class FinancialList(DADict):
     """Represents a set of currency amounts."""
     def init(self, **kwargs):
-        self.elements = set()
+        self.object_type = Value
         self.gathering = False
         return super(FinancialList, self).init(**kwargs)
     def new(self, item, **kwargs):
-        self.initializeAttribute(item, Value)
-        self.elements.add(item)
-        for arg in kwargs:
-            setattr(getattr(self, item), arg, kwargs[arg])
+        self.initializeObject(item, Value, **kwargs)
     def total(self):
         if self.gathered:
             result = 0
             for item in self.elements:
-                if getattr(self, item).exists:
-                    result += Decimal(getattr(self, item).value)
+                if self[item].exists:
+                    result += Decimal(self[item].value)
             return(result)
     def total_gathered(self):
         result = 0
         for item in self.elements:
-            elem = getattr(self, item)
+            elem = self.elements[item]
             if hasattr(elem, 'exists') and hasattr(elem, 'value'):
                 if elem.exists:
                     result += Decimal(elem.value)
@@ -592,23 +594,18 @@ class FinancialList(DAObject):
     def __str__(self):
         return self.total()
     
-class PeriodicFinancialList(DAObject):
+class PeriodicFinancialList(FinancialList):
     """Represents a set of currency items, each of which has an associated period."""
     def init(self, **kwargs):
-        self.elements = set()
+        self.object_type = PeriodicValue
         self.gathering = False
-        return super(PeriodicFinancialList, self).init(**kwargs)
-    def new(self, item, **kwargs):
-        self.initializeAttribute(item, PeriodicValue)
-        self.elements.add(item)
-        for arg in kwargs:
-            setattr(getattr(self, item), arg, kwargs[arg])
+        return super(FinancialList, self).init(**kwargs)
     def total(self):
         if self.gathered:
             result = 0
             for item in self.elements:
-                if getattr(self, item).exists:
-                    result += Decimal(getattr(self, item).value) * Decimal(getattr(self, item).period)
+                if self.elements[item].exists:
+                    result += Decimal(self.elements[item].value) * Decimal(self.elements[item].period)
             return(result)
     def total_gathered(self):
         result = 0
@@ -618,8 +615,6 @@ class PeriodicFinancialList(DAObject):
                 if elem.exists:
                     result += Decimal(elem.value * Decimal(elem.period))
         return(result)
-    def __str__(self):
-        return self.total()
 
 class Income(PeriodicFinancialList):
     """A PeriodicFinancialList representing a person's income."""
@@ -635,11 +630,20 @@ class Expense(PeriodicFinancialList):
 
 class Value(DAObject):
     """Represents a value in a FinancialList."""
-    pass
+    def amount(self):
+        if not self.exists:
+            return 0
+        return (Decimal(self.value))
+    def __str__(self):
+        return self.amount()
 
 class PeriodicValue(Value):
     """Represents a value in a PeriodicFinancialList."""
-    pass
+    def amount(self, period_to_use=1):
+        if not self.exists:
+            return 0
+        logmessage("period is a " + str(type(self.period).__name__))
+        return (Decimal(self.value) * Decimal(self.period)) / Decimal(period_to_use)
 
 class OfficeList(DAList):
     """Represents a list of offices of a company or organization."""

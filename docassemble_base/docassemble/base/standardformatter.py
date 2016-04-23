@@ -255,7 +255,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                         random.shuffle(pairlist)
                     for pair in pairlist:
                         if pair[0] is not None:
-                            checkboxes.append(field.saveas + "[" + myb64quote(pair[0]) + "]")
+                            checkboxes.append(safeid(from_safeid(field.saveas) + "[" + myb64quote(pair[0]) + "]"))
             if hasattr(field, 'label'):
                 if field.label == 'no label':
                     fieldlist.append('              <div class="form-group' + req_tag +'"><div class="col-md-12">' + input_for(status, field, wide=True) + '</div></div>\n')
@@ -330,7 +330,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                     for pair in pairlist:
                         formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
                         if pair[0] is not None:
-                            output += '              <div class="row"><div class="col-md-6"><input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + str(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + str(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(pair[0]) + '"/></div></div>\n'
+                            output += '              <div class="row"><div class="col-md-6"><input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + str(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + unicode(pair[0]) + '"/></div></div>\n'
                         else:
                             output += '              <div class="form-group"><div class="col-md-12">' + markdown_to_html(pair[1], status=status) + '</div></div>\n'
                         id_index += 1
@@ -365,11 +365,11 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                         if key == 'image':
                             continue
                         formatted_key = markdown_to_html(key, status=status, trim=True, escape=True)
-                        output += '              <div class="row"><div class="col-md-6"><input alt="' + formatted_key + '" data-labelauty="' + docassemble.base.filter.my_escape(the_icon) + formatted_key + '|' + docassemble.base.filter.my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="_multiple_choice" type="radio" value="' + str(indexno) + '"/></div></div>\n'
+                        output += '              <div class="row"><div class="col-md-6"><input alt="' + formatted_key + '" data-labelauty="' + docassemble.base.filter.my_escape(the_icon) + formatted_key + '|' + docassemble.base.filter.my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="X211bHRpcGxlX2Nob2ljZQ==" type="radio" value="' + str(indexno) + '"/></div></div>\n'
                         id_index += 1
                     indexno += 1
-                    validation_rules['rules']['_multiple_choice'] = {'required': True}
-                    validation_rules['messages']['_multiple_choice'] = {'required': word("You need to select one.")}
+                    validation_rules['rules']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': True}
+                    validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': word("You need to select one.")}
             output += '              <br/>\n'
             output += '              <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
             output += '              <button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button>\n'
@@ -384,7 +384,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                         random.shuffle(pairlist)
                     for pair in pairlist:
                         if pair[0] is not None:
-                            output += '                <button type="submit" class="btn btn-lg' + btn_class + '" name="' + str(status.question.fields[0].saveas) + '" value="' + unicode(pair[0]) + '"> ' + markdown_to_html(pair[1], status=status, trim=True, do_terms=False) + '</button>\n'
+                            output += '                <button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + unicode(pair[0]) + '"> ' + markdown_to_html(pair[1], status=status, trim=True, do_terms=False) + '</button>\n'
                         else:
                             output += markdown_to_html(pair[1], status=status)
                 else:
@@ -424,7 +424,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                                 btn_class = ' btn-info'
                             elif choice[key].question_type == "exit":
                                 btn_class = ' btn-danger'
-                        output += '                <button type="submit" class="btn btn-lg' + btn_class + '" name="_multiple_choice" value="' + str(indexno) + '">' + the_icon + markdown_to_html(key, status=status, trim=True, do_terms=False, strip_newlines=True) + '</button>\n'
+                        output += '                <button type="submit" class="btn btn-lg' + btn_class + '" name="X211bHRpcGxlX2Nob2ljZQ==" value="' + str(indexno) + '">' + the_icon + markdown_to_html(key, status=status, trim=True, do_terms=False, strip_newlines=True) + '</button>\n'
                     indexno += 1
             output += '              </div>\n'
         #output += question_name_tag(status.question)
@@ -605,7 +605,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     master_output += '        </section>\n'
     extra_scripts.append('<script>\n      $("#daform").validate(' + json.dumps(validation_rules) + ');\n    </script>')
     for element_id_unescaped in onchange:
-        element_id = re.sub(r'(:|\.|\[|\]|,)', r'\\\\\1', element_id_unescaped)
+        element_id = re.sub(r'(:|\.|\[|\]|,|=)', r'\\\\\1', element_id_unescaped)
         the_script = """\
     <script>
       $("#""" + element_id + """").change(function(){
@@ -753,7 +753,7 @@ def input_for(status, field, wide=False):
             id_index = 0
             for pair in pairlist:
                 if pair[0] is not None:
-                    inner_field = str(field.saveas) + "[" + myb64quote(pair[0]) + "]"
+                    inner_field = safeid(from_safeid(field.saveas) + "[" + myb64quote(pair[0]) + "]")
                     #sys.stderr.write("I've got a " + repr(pair[1]) + "\n")
                     formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
                     inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty checkbox-icon" id="' + str(field.saveas) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"/>')
@@ -768,7 +768,7 @@ def input_for(status, field, wide=False):
                 if pair[0] is not None:
                     #sys.stderr.write(str(field.saveas) + "\n")
                     formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
-                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + str(field.saveas) + '_' + str(id_index) + '" name="' + str(field.saveas) + '" type="radio" value="' + unicode(pair[0]) + '"/>')
+                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + str(field.saveas) + '_' + str(id_index) + '" name="' + field.saveas + '" type="radio" value="' + unicode(pair[0]) + '"/>')
                 else:
                     inner_fieldlist.append('<div>' + markdown_to_html(unicode(pair[1]), status=status) + '</div>')
                 id_index += 1
@@ -776,7 +776,7 @@ def input_for(status, field, wide=False):
         else:
             output += '<p class="sr-only">' + word('Select box') + '</p>'
             output += '<select class="daselect" name="' + field.saveas + '" id="' + field.saveas + '" >'
-            output += '<option name="' + field.saveas + '" id="' + field.saveas + '" value="">' + word('Select...') + '</option>'
+            output += '<option value="">' + word('Select...') + '</option>'
             for pair in pairlist:
                 if pair[0] is not None:
                     formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, do_terms=False)
@@ -844,4 +844,9 @@ def indent_by(text, num):
     if not text:
         return ""
     return (" " * num) + re.sub(r'\n', "\n" + (" " * num), text).rstrip() + "\n"
-    
+
+def safeid(text):
+    return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
+
+def from_safeid(text):
+    return(codecs.decode(text, 'base64').decode('utf-8'))

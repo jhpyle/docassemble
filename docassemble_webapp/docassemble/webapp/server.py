@@ -506,6 +506,7 @@ docassemble.base.parse.set_save_numbered_file(save_numbered_file)
 
 key_requires_preassembly = re.compile('^(x\.|x\[|_multiple_choice)')
 match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
+match_invalid_key = re.compile('[^A-Za-z0-9_\[\].\'\%\- =]')
 match_brackets = re.compile('\[\'.*\'\]$')
 match_inside_and_outside_brackets = re.compile('(.*)(\[\'[^\]]+\'\])$')
 match_inside_brackets = re.compile('\[\'([^\]]+)\'\]')
@@ -1402,7 +1403,7 @@ def index():
     should_assemble = False
     if something_changed:
         for key in post_data:
-            if key_requires_preassembly.search(key):
+            if key_requires_preassembly.search(from_safeid(key)):
                 should_assemble = True
                 break
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
@@ -1416,7 +1417,7 @@ def index():
     error_messages = list()
     if '_the_image' in post_data:
         #interview.assemble(user_dict, interview_status)
-        file_field = post_data['_save_as'];
+        file_field = from_safeid(post_data['_save_as']);
         if match_invalid.search(file_field):
             error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
         else:
@@ -1454,7 +1455,12 @@ def index():
         file_fields = json.loads(myb64unquote(post_data['_files'])) #post_data['_files'].split(",")
         has_invalid_fields = False
         should_assemble_now = False
-        for file_field in file_fields:
+        for orig_file_field in file_fields:
+            try:
+                file_field = from_safeid(orig_file_field)
+            except:
+                error_messages.append(("error", "Error: Invalid file_field: " + orig_file_field))
+                break
             if match_invalid.search(file_field):
                 has_invalid_fields = True
                 error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
@@ -1469,11 +1475,11 @@ def index():
                 error_messages.append(("error", "Error: " + str(errMess)))
             if something_changed and should_assemble_now and not should_assemble:
                 interview.assemble(user_dict, interview_status)
-            for file_field in file_fields:
+            for orig_file_field in file_fields:
                 #logmessage("There is a file_field")
-                if file_field in request.files:
+                if orig_file_field in request.files:
                     #logmessage("There is a file_field in request.files")
-                    the_files = request.files.getlist(file_field)
+                    the_files = request.files.getlist(orig_file_field)
                     if the_files:
                         files_to_process = list()
                         for the_file in the_files:
@@ -1526,6 +1532,11 @@ def index():
                                 make_image_files(saved_file.path)
                             saved_file.finalize()
                             files_to_process.append((filename, file_number, mimetype, extension))
+                        try:
+                            file_field = from_safeid(orig_file_field)
+                        except:
+                            error_messages.append(("error", "Error: Invalid file_field: " + orig_file_field))
+                            break
                         if match_invalid.search(file_field):
                             error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
                             break
@@ -1538,7 +1549,7 @@ def index():
                             the_string = file_field + " = docassemble.base.core.DAFileList('" + file_field + "', elements=[" + ", ".join(elements) + "])"
                         else:
                             the_string = file_field + " = None"
-                        logmessage("Doing " + the_string)
+                        logmessage("2Doing " + the_string)
                         try:
                             exec(the_string, user_dict)
                             changed = True
@@ -1552,20 +1563,27 @@ def index():
         #logmessage(myb64unquote(post_data['_datatypes']))
         known_datatypes = json.loads(myb64unquote(post_data['_datatypes']))
     known_variables = dict()
-    for key in post_data:
-        if key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location']:
+    for orig_key in post_data:
+        if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location']:
             continue
         #logmessage("Got a key: " + key)
-        data = post_data[key]
-        if match_invalid.search(key):
-            error_messages.append(("error", "Error: Invalid character in key: " + key))
-            break
+        data = post_data[orig_key]
+        try:
+            key = myb64unquote(orig_key)
+        except:
+            raise DAError("invalid name " + str(orig_key))
         #data = re.sub(r'"""', '', data)
         if match_brackets.search(key):
             #logmessage("Searching key " + str(key))
             match = match_inside_and_outside_brackets.search(key)
-            key = match.group(1)
-            real_key = key
+            try:
+                key = match.group(1)
+            except:
+                raise DAError("invalid name " + str(match.group(1)))
+            real_key = safeid(key)
+            if match_invalid.search(key):
+                error_messages.append(("error", "Error: Invalid character in key: " + key))
+                break
             bracket = match_inside_brackets.sub(process_bracket_expression, match.group(2))
             #logmessage("key is " + str(key) + " and bracket is " + str(bracket))
             if key in user_dict:
@@ -1583,7 +1601,10 @@ def index():
                         raise DAError("cannot initialize " + key)
             key = key + bracket
         else:
-            real_key = key
+            real_key = orig_key
+            if match_invalid_key.search(key):
+                error_messages.append(("error", "Error: Invalid character in key: " + key))
+                break
         #logmessage("Real key is " + real_key + " and key is " + key)
         if real_key in known_datatypes:
             #logmessage("key " + real_key + "is in datatypes: " + known_datatypes[key])
@@ -1592,15 +1613,15 @@ def index():
                     data = "True"
                 else:
                     data = "False"
-            elif known_datatypes[key] == 'integer':
+            elif known_datatypes[real_key] == 'integer':
                 if data == '':
                     data = 0
                 data = "int(" + repr(data) + ")"
-            elif known_datatypes[key] in ['number', 'float', 'currency']:
+            elif known_datatypes[real_key] in ['number', 'float', 'currency']:
                 if data == '':
                     data = 0
                 data = "float(" + repr(data) + ")"
-            elif known_datatypes[key] in ['object']:
+            elif known_datatypes[real_key] in ['object']:
                 if data == '':
                     continue
                 #logmessage("Got to here")
@@ -1623,7 +1644,7 @@ def index():
                 #continue
                 #error_messages.append(("error", "Error: multiple choice values were supplied, but docassemble was not waiting for an answer to a multiple choice question."))
         the_string = key + ' = ' + data
-        logmessage("Doing " + str(the_string))
+        logmessage("1Doing " + str(the_string))
         try:
             exec(the_string, user_dict)
             changed = True
@@ -1723,10 +1744,13 @@ def index():
         $(function(){ 
           var navMain = $("#navbar-collapse");
           navMain.on("click", "a", null, function () {
-            $(this).css('color', '')
             if (!($(this).hasClass("dropdown-toggle"))){
               navMain.collapse('hide');
             }
+          });
+          $("#helptoggle").on("click", function(){
+            window.scrollTo(0, 0);
+            $(this).removeClass('daactivetext')
           });
           $("#sourcetoggle").on("click", function(){
             $(this).toggleClass("sourceactive");
@@ -1866,7 +1890,13 @@ def process_bracket_expression(match):
 
 def myb64unquote(the_string):
     return(codecs.decode(the_string, 'base64').decode('utf-8'))
-    
+
+def safeid(text):
+    return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
+
+def from_safeid(text):
+    return(codecs.decode(text, 'base64').decode('utf-8'))
+
 def progress_bar(progress):
     if progress == 0:
         return('');
@@ -2090,9 +2120,9 @@ def make_navbar(status, page_title, steps, show_login):
           <a class="invisible" id="questionlabel" href="#question" data-toggle="tab">""" + word('Question') + """</a>
 """
     if status.question.helptext is None:
-        navbar += '          <a class="mynavbar-text" href="#help" data-toggle="tab">' + word('Help') + '</a>'
+        navbar += '          <a class="mynavbar-text" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + '</a>'
     else:
-        navbar += '          <a class="mynavbar-text" href="#help" data-toggle="tab"><span class="daactivetext">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i></span></a>'
+        navbar += '          <a class="mynavbar-text daactivetext" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i></a>'
     navbar += """
         </div>
         <div class="collapse navbar-collapse" id="navbar-collapse">

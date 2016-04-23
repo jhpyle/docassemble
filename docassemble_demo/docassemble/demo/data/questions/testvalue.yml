@@ -1,0 +1,23 @@
+---
+objects:
+  - real_estate_holdings: Value
+---
+question: Do you have real estate holdings?
+yesno: real_estate_holdings.exists
+---
+question: How much real estate do you own?
+fields:
+  - Value: real_estate_holdings.value
+    datatype: currency
+---
+sets: all_done
+question: |
+  % if real_estate_holdings.exists:
+  The value of your real estate holdings is ${ currency(real_estate_holdings.value) }.
+  % else:
+  You do not have real estate.
+  % endif
+---
+mandatory: true
+code: all_done
+---

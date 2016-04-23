@@ -1,0 +1,34 @@
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - user_salary: PeriodicValue
+---
+question: |
+  Do you make money from working?
+yesno: user_salary.exists
+---
+question: |
+  What is your salary?
+fields:
+  - Amount: user_salary.value
+    datatype: currency
+  - Period: user_salary.period
+    default: 1
+    choices:
+      - Annually: 1
+      - Monthly: 12
+      - Per week: 54
+---
+question: |
+  % if user_salary.exists:
+  You make ${ currency(user_salary) } per year.
+  % else:
+  Get a job!
+  % endif
+sets: all_done
+---
+mandatory: true
+code: all_done
+---

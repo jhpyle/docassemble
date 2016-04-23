@@ -392,6 +392,11 @@ def currency_default(value, decimals=True):
     """Returns the value as a currency, according to the conventions of the current locale.
     Use the optional keyword argument decimals=False if you do not want to see decimal places
     in the number."""
+    if re.search(r'Value', str(type(value))):
+        if value.exists:
+            value = value.amount()
+        else:
+            value = 0
     if decimals:
         return locale.currency(value, symbol=True, grouping=True).decode('utf8')
     else:
@@ -669,7 +674,7 @@ def package_template_filename(the_file, **kwargs):
     parts = the_file.split(":")
     if len(parts) == 1:
         package = kwargs.get('package', None)
-        logmessage("my package is " + str(package))
+        #logmessage("my package is " + str(package))
         if package is not None:
             parts = [package, the_file]
             #logmessage("my package is " + str(package))
