@@ -1757,7 +1757,7 @@ class Interview:
         seeking = kwargs.get('seeking', list())
         if debug:
             seeking.append({'variable': missingVariable})
-        logmessage("I don't have " + missingVariable)
+        #logmessage("I don't have " + missingVariable)
         if missingVariable in variable_stack:
             raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
         variable_stack.add(missingVariable)
@@ -1776,18 +1776,18 @@ class Interview:
         for mv in totry:
             realMissingVariable = mv['real']
             missingVariable = mv['vari']
-            logmessage("Trying missingVariable " + missingVariable + " and realMissingVariable " + realMissingVariable)
+            #logmessage("Trying missingVariable " + missingVariable + " and realMissingVariable " + realMissingVariable)
             questions_to_try = list()
             generic_needed = True;
             if realMissingVariable in self.questions:
-                logmessage("Found realMissingVariable in question")
+                #logmessage("Found realMissingVariable in question")
                 for lang in [language, '*']:
                     if lang in self.questions[realMissingVariable]:
                         for the_question in reversed(self.questions[realMissingVariable][lang]):
                             questions_to_try.append((the_question, False, 'None', 'None', realMissingVariable, None))
                         generic_needed = False
             if generic_needed and bracketPart != 'None' and missingVariable in self.questions:
-                logmessage("got in here")
+                #logmessage("got in here")
                 for lang in [language, '*']:
                     if lang in self.questions[missingVariable]:
                         for the_question in reversed(self.questions[missingVariable][lang]):
@@ -1797,8 +1797,8 @@ class Interview:
             #realComponents = realMissingVariable.split(".")
             components = dot_split.split(missingVariable)[1::2]
             realComponents = dot_split.split(realMissingVariable)[1::2]
-            logmessage("Vari Components are " + str(components))
-            logmessage("Real Components are " + str(realComponents))
+            #logmessage("Vari Components are " + str(components))
+            #logmessage("Real Components are " + str(realComponents))
             n = len(components)
             # if n == 1:
             #     if generic_needed:
@@ -1873,21 +1873,21 @@ class Interview:
                         #    break;
                         var = d['var']
                         realVar = d['realvar']
-                        logmessage("Looking for " + str(realVar) + " where var is " + var + " and root is " + str(d['root']) + " and root_for_object is " + str(d['root_for_object']))
+                        #logmessage("Looking for " + str(realVar) + " where var is " + var + " and root is " + str(d['root']) + " and root_for_object is " + str(d['root_for_object']))
                         mm = match_inside_brackets.findall(realVar)
                         if (mm):
-                            logmessage("Found stuff inside brackets")
+                            #logmessage("Found stuff inside brackets")
                             if len(mm) > 1:
-                                logmessage("Variable " + str(var) + " is no good because it has more than one iterator")
+                                #logmessage("Variable " + str(var) + " is no good because it has more than one iterator")
                                 continue;
                             the_i_to_use = mm[0];
-                            logmessage("The i to use is " + str(the_i_to_use))
-                        else:
-                            logmessage("Did not find stuff inside brackets")
+                            #logmessage("The i to use is " + str(the_i_to_use))
+                        #else:
+                        #    logmessage("Did not find stuff inside brackets")
                         root = d['root']
                         root_for_object = d['root_for_object']
                         if var != realVar:
-                            logmessage("testing variable " + realVar + " and root " + root + " and root for object " + root_for_object)
+                            #logmessage("testing variable " + realVar + " and root " + root + " and root for object " + root_for_object)
                             try:
                                 root_evaluated = eval(root_for_object, user_dict)
                                 generic_object = type(root_evaluated).__name__
@@ -1905,7 +1905,7 @@ class Interview:
                                     found_x = 1
                             except:
                                 pass
-                        logmessage("testing variable " + var + " and root " + root + " and root for object " + root_for_object)
+                        #logmessage("testing variable " + var + " and root " + root + " and root for object " + root_for_object)
                         try:
                             root_evaluated = eval(root_for_object, user_dict)
                             generic_object = type(root_evaluated).__name__
@@ -1931,27 +1931,27 @@ class Interview:
                     continue
             while True:
                 try:
+                    #for the_question, is_generic, the_x, the_i, missing_var, generic_object in questions_to_try:
+                        #logmessage("Will try question where is_generic is " + str(is_generic) + " and the_x is " + str(the_x) + " and the_i is " + str(the_i) + " and missing_var is " + missing_var + " and generic object is " + str(generic_object))
                     for the_question, is_generic, the_x, the_i, missing_var, generic_object in questions_to_try:
-                        logmessage("Will try question where is_generic is " + str(is_generic) + " and the_x is " + str(the_x) + " and the_i is " + str(the_i) + " and missing_var is " + missing_var + " and generic object is " + str(generic_object))
-                    for the_question, is_generic, the_x, the_i, missing_var, generic_object in questions_to_try:
-                        logmessage("missing_var is " + str(missing_var))
-                        logmessage("x is " + str(the_x))
-                        logmessage("i is " + str(the_i))
-                        logmessage("is_generic is " + str(is_generic))
-                        logmessage("Trying question of type " + str(the_question.question_type))
+                        #logmessage("missing_var is " + str(missing_var))
+                        #logmessage("x is " + str(the_x))
+                        #logmessage("i is " + str(the_i))
+                        #logmessage("is_generic is " + str(is_generic))
+                        #logmessage("Trying question of type " + str(the_question.question_type))
                         question = the_question.follow_multiple_choice(user_dict)
-                        logmessage("Back from follow_multiple_choice")
-                        logmessage("Trying a question of type " + str(the_question.question_type))
+                        #logmessage("Back from follow_multiple_choice")
+                        #logmessage("Trying a question of type " + str(the_question.question_type))
                         if is_generic:
-                            logmessage("Yes it's generic")
+                            #logmessage("Yes it's generic")
                             if question.is_generic:
-                                logmessage("Yes question is generic")
+                                #logmessage("Yes question is generic")
                                 if question.generic_object != generic_object:
-                                    logmessage("Object mismatch")
+                                    #logmessage("Object mismatch")
                                     continue
-                                logmessage("ok")
+                                #logmessage("ok")
                             else:
-                                logmessage("No question is not generic")
+                                #logmessage("No question is not generic")
                                 continue
                         if debug:
                             seeking.append({'question': question, 'reason': 'asking'})
@@ -2015,7 +2015,7 @@ class Interview:
                             #logmessage("snoo2")
                             #logmessage("the missing variable is " + str(missing_var))
                             if missing_var in variable_stack:
-                                logmessage("2 Removing missing variable " + missing_var)
+                                #logmessage("2 Removing missing variable " + missing_var)
                                 variable_stack.remove(missing_var)
                             if question.question_type == 'event_code':
                                 return({'type': 'continue'})
@@ -2034,10 +2034,10 @@ class Interview:
                                 logmessage("2 Try another method of setting the variable")
                                 continue
                         else:
-                            logmessage("Question type is " + question.question_type)
-                            logmessage("Ask:\n" + question.content.original_text)
-                            logmessage("the_x is " + str(the_x))
-                            logmessage("the_i is " + str(the_i))
+                            #logmessage("Question type is " + question.question_type)
+                            #logmessage("Ask:\n" + question.content.original_text)
+                            #logmessage("the_x is " + str(the_x))
+                            #logmessage("the_i is " + str(the_i))
                             if question.question_type == 'continue':
                                 continue
                             return question.ask(user_dict, the_x, the_i)

@@ -389,21 +389,12 @@ comment: |
 ---
 generic object: Individual
 code: |
-  x.asset.gathering = True
-  x.income.gathering = True
-  assets_to_ask_about = ['checking account', 'savings account', 'stocks and bonds', 'automobiles']
-  income_to_ask_about = ['employment', 'self employment', 'SSI', 'TANF', 'rent']
-  for asset_item in assets_to_ask_about:
-    x.asset.new(asset_item)
-  for income_item in income_to_ask_about:
-    x.income.new(income_item, period=12)
-  x.asset.gathering = False
-  x.income.gathering = False
+  x.asset.new('checking account', 'savings account', 'stocks and bonds', 'automobiles')
   x.asset.gathered = True
+  x.income.new('employment', 'self employment', 'SSI', 'TANF', 'rent', period=12)
   x.income.gathered = True
 comment: |
-  This code gathers information about a person's income and assets if
-  necessary.
+  This code indicates which income and asset items to ask about.
 ---
 question: |
   Why do you think you deserve to win this case?

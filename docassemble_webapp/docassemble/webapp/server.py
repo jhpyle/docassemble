@@ -1549,7 +1549,7 @@ def index():
                             the_string = file_field + " = docassemble.base.core.DAFileList('" + file_field + "', elements=[" + ", ".join(elements) + "])"
                         else:
                             the_string = file_field + " = None"
-                        logmessage("2Doing " + the_string)
+                        logmessage("Doing " + the_string)
                         try:
                             exec(the_string, user_dict)
                             changed = True
@@ -1644,7 +1644,7 @@ def index():
                 #continue
                 #error_messages.append(("error", "Error: multiple choice values were supplied, but docassemble was not waiting for an answer to a multiple choice question."))
         the_string = key + ' = ' + data
-        logmessage("1Doing " + str(the_string))
+        logmessage("Doing " + str(the_string))
         try:
             exec(the_string, user_dict)
             changed = True

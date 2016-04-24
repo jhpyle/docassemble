@@ -572,10 +572,7 @@ class FinancialList(DADict):
     """Represents a set of currency amounts."""
     def init(self, **kwargs):
         self.object_type = Value
-        self.gathering = False
         return super(FinancialList, self).init(**kwargs)
-    def new(self, item, **kwargs):
-        self.initializeObject(item, Value, **kwargs)
     def total(self):
         if self.gathered:
             result = 0
@@ -591,30 +588,44 @@ class FinancialList(DADict):
                 if elem.exists:
                     result += Decimal(elem.value)
         return(result)
+    def _new_item_init_callback(self):
+        self.elements[self.new_item_name].exists = True
+        if hasattr(self, 'new_item_value'):
+            self.elements[self.new_item_name].value = self.new_item_value
+            del self.new_item_value
+        return super(FinancialList, self)._new_item_init_callback()
     def __str__(self):
-        return self.total()
+        return str(self.total())
     
 class PeriodicFinancialList(FinancialList):
     """Represents a set of currency items, each of which has an associated period."""
     def init(self, **kwargs):
         self.object_type = PeriodicValue
-        self.gathering = False
         return super(FinancialList, self).init(**kwargs)
-    def total(self):
+    def total(self, period_to_use=1):
         if self.gathered:
             result = 0
+            if period_to_use == 0:
+                return(result)
             for item in self.elements:
                 if self.elements[item].exists:
                     result += Decimal(self.elements[item].value) * Decimal(self.elements[item].period)
-            return(result)
-    def total_gathered(self):
+            return(result/Decimal(period_to_use))
+    def total_gathered(self, period_to_use=1):
         result = 0
+        if period_to_use == 0:
+            return(result)
         for item in self.elements:
             elem = getattr(self, item)
             if hasattr(elem, 'exists') and hasattr(elem, 'value') and hasattr(elem, 'period'):
                 if elem.exists:
                     result += Decimal(elem.value * Decimal(elem.period))
-        return(result)
+        return(result/Decimal(period_to_use))
+    def _new_item_init_callback(self):
+        if hasattr(self, 'new_item_period'):
+            self.elements[self.new_item_name].period = self.new_item_period
+            del self.new_item_period
+        return super(PeriodicFinancialList, self)._new_item_init_callback()
 
 class Income(PeriodicFinancialList):
     """A PeriodicFinancialList representing a person's income."""
@@ -635,7 +646,7 @@ class Value(DAObject):
             return 0
         return (Decimal(self.value))
     def __str__(self):
-        return self.amount()
+        return str(self.amount())
 
 class PeriodicValue(Value):
     """Represents a value in a PeriodicFinancialList."""

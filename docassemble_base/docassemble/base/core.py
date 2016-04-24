@@ -255,6 +255,81 @@ class DADict(DAObject):
         newobject = objectFunction(self.instanceName + '[' + repr(entry) + ']', **kwargs)
         self.elements[entry] = newobject
         return newobject
+    def new(self, *pargs, **kwargs):
+        for parg in pargs:
+            if type(parg) is list:
+                for item in parg:
+                    self.new(item, **kwargs)
+            else:
+                if hasattr(self, 'object_type'):
+                    if parg not in self.elements:
+                        self.initializeObject(parg, self.object_type, **kwargs)
+    def does_verb(self, the_verb, **kwargs):
+        if not self.gathering:
+            self.gathered
+        if len(self.elements) > 1:
+            tense = 'plural'
+        else:
+            tense = 3
+        if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
+            return verb_past(the_verb, person=tense)
+        else:
+            return verb_present(the_verb, person=tense)
+    def did_verb(self, the_verb, **kwargs):
+        if not self.gathering:
+            self.gathered
+        if len(self.elements) > 1:
+            tense = 'plural'
+        else:
+            tense = 3
+        return verb_past(the_verb, person=tense)
+    def as_singular_noun(self):
+        the_noun = self.instanceName
+        the_noun = re.sub(r'.*\.', '', the_noun)
+        return the_noun        
+    def as_noun(self, *pargs):
+        the_noun = self.instanceName
+        if not self.gathering:
+            self.gathered
+            if len(pargs) > 0:
+                the_noun = pargs[0]
+        the_noun = re.sub(r'.*\.', '', the_noun)
+        if len(self.elements) > 1 or len(self.elements) == 0:
+            return noun_plural(the_noun)
+        else:
+            return the_noun
+    def number(self):
+        self.gathered
+        return len(self.elements)
+    def number_gathered(self):
+        return len(self.elements)
+    def number_gathered_as_word(self):
+        return nice_number(self.number_gathered())
+    def number_as_word(self):
+        return nice_number(self.number())
+    def gather(self, item_object_type=None):
+        if item_object_type is None and self.object_type is not None:
+            item_object_type = self.object_type
+        self.gathering = True
+        for elem in self.elements.values():
+            str(elem)
+        while self.there_is_another:
+            if item_object_type is not None:
+                self.initializeObject(self.new_item_name, item_object_type)
+                self._new_item_init_callback()
+            else:
+                self.elements[self.new_item_name] = self.new_item_value
+                del self.new_item_value
+            del self.new_item_name
+            del self.there_is_another
+        self.gathering = False
+        return True
+    def _new_item_init_callback(self):
+        return
+    def comma_and_list(self):
+        if not self.gathering:
+            self.gathered
+        return comma_and_list(sorted(self.elements.keys()))
     def __getitem__(self, index):
         if index not in self.elements:
             if self.object_type is None:

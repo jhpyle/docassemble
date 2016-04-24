@@ -392,7 +392,10 @@ def currency_default(value, decimals=True):
     """Returns the value as a currency, according to the conventions of the current locale.
     Use the optional keyword argument decimals=False if you do not want to see decimal places
     in the number."""
-    if re.search(r'Value', str(type(value))):
+    obj_type = type(value).__name__
+    if obj_type in ['FinancialList', 'PeriodicFinancialList']:
+        value = value.total()
+    elif obj_type in ['Value', 'PeriodicValue']:
         if value.exists:
             value = value.amount()
         else:
