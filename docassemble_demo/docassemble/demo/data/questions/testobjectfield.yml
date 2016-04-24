@@ -1,0 +1,17 @@
+---
+include: basic-questions.yml
+---
+question: Who is the villain?
+fields:
+  no label: villain
+  datatype: object_radio
+  selections:
+    - client
+    - advocate
+---
+question: |
+  The villain is ${ villain }.
+sets: all_done
+---
+mandatory: true
+code: all_done

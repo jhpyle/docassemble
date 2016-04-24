@@ -674,6 +674,8 @@ class Question:
             self.role = list()
         if 'include' in data:
             should_append = False
+            if type(data['include']) is str:
+                data['include'] = [data['include']]
             if type(data['include']) is list:
                 for questionPath in data['include']:
                     self.interview.read_from(interview_source_from_string(questionPath, context_interview=self.interview))
@@ -925,6 +927,8 @@ class Question:
                 raise DAError("A code section must be text, not a list or a dictionary." + self.idebug(data))
         if 'fields' in data:
             self.question_type = 'fields'
+            if type(data['fields']) is dict:
+                data['fields'] = [data['fields']]
             if type(data['fields']) is not list:
                 raise DAError("The fields must be written in the form of a list." + self.idebug(data))
             else:
@@ -942,6 +946,7 @@ class Question:
                                     auto_determine_type(field_info, the_value=field[key])
                             elif key == 'disable others':
                                 field_info['disable others'] = True
+                                field_info['required'] = False
                             elif key == 'datatype':
                                 field_info['type'] = field[key]
                                 if field[key] in ['yesno', 'yesnowide'] and 'required' not in field_info:
@@ -949,6 +954,16 @@ class Question:
                             elif key == 'code':
                                 field_info['choicetype'] = 'compute'
                                 field_info['selections'] = {'compute': compile(field[key], '', 'eval'), 'sourcecode': field[key]}
+                            elif key == 'selections':
+                                field_info['choicetype'] = 'compute'
+                                if type(field[key]) not in [list, str]:
+                                    raise DAError("selections is not in appropriate format" + self.idebug(data))
+                                if type(field[key]) is not list:
+                                    select_list = [str(field[key])]
+                                else:
+                                    select_list = field[key]
+                                source_code = "docassemble.base.core.selections(" + ", ".join(select_list) + ")"
+                                field_info['selections'] = {'compute': compile(source_code, '', 'eval'), 'sourcecode': source_code}
                             elif key == 'choices':
                                 field_info['choicetype'] = 'manual'
                                 field_info['selections'] = process_selections_manual(field[key])
@@ -999,6 +1014,8 @@ class Question:
                     field_number += 1
         if 'review' in data:
             self.question_type = 'review'
+            if type(data['review']) is dict:
+                data['review'] = [data['review']]
             if type(data['review']) is not list:
                 raise DAError("The review must be written in the form of a list." + self.idebug(data))
             field_number = 0
@@ -1305,10 +1322,15 @@ class Question:
                                 selections.append([value, key])
                     selectcompute[field.number] = selections
                 if hasattr(field, 'choicetype') and field.choicetype == 'compute':
+                    if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio']:
+                        string = "import docassemble.base.core"
+                        logmessage("Doing " + string)
+                        exec(string, user_dict)                        
+                    logmessage("Doing " + field.selections['sourcecode'])
                     selectcompute[field.number] = process_selections(eval(field.selections['compute'], user_dict))
-                if hasattr(field, 'datatype') and field.datatype == 'object':
+                if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio']:
                     if field.number not in selectcompute:
-                        raise DAError("datatype was set to object but no code was provided")
+                        raise DAError("datatype was set to object but no code or selections was provided")
                     string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "] = dict()"
                     logmessage("Doing " + string)
                     try:

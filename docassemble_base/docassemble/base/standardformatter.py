@@ -761,7 +761,7 @@ def input_for(status, field, wide=False):
                     inner_fieldlist.append('<div>' + markdown_to_html(pair[1], status=status) + '</div>')
                 id_index += 1
             output += u''.join(inner_fieldlist)
-        elif field.datatype == 'radio':
+        elif field.datatype in ['radio', 'object_radio']:
             inner_fieldlist = list()
             id_index = 0
             for pair in pairlist:

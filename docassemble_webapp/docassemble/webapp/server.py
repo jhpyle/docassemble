@@ -1621,7 +1621,7 @@ def index():
                 if data == '':
                     data = 0
                 data = "float(" + repr(data) + ")"
-            elif known_datatypes[real_key] in ['object']:
+            elif known_datatypes[real_key] in ['object', 'object_radio']:
                 if data == '':
                     continue
                 #logmessage("Got to here")

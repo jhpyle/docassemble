@@ -949,10 +949,12 @@ question: |
 fields:
   - Somebody already mentioned: village_idiot
     datatype: object
-    required: False
     disable others: true
-    code: |
-      selections(case.plaintiff, case.defendant)
+    selections:
+      - case.plaintiff
+      - case.defendant
+#    code: |
+#      selections(case.plaintiff, case.defendant)
   - First Name: village_idiot.name.first
   - Middle Name: village_idiot.name.middle
     required: False
