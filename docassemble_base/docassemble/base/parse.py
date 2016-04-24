@@ -270,6 +270,7 @@ class InterviewStatus(object):
         self.hints = question_result['hints']
         self.helptexts = question_result['helptexts']
         self.extras = question_result['extras']
+        self.labels = question_result['labels']
     def set_tracker(self, tracker):
         self.tracker = tracker
 
@@ -975,8 +976,16 @@ class Question:
                                 field_info['extras'][key] = TextObject(definitions + unicode(field[key]))
                             elif key == 'shuffle':
                                 field_info['shuffle'] = field[key]
+                            elif key == 'field':
+                                if 'label' not in field:
+                                    raise DAError("If you use 'field' to indicate a variable in a 'fields' section, you must also include a 'label.'" + self.idebug(data))
+                                field_info['saveas'] = field[key]                                
+                            elif key == 'label':
+                                if 'field' not in field:
+                                    raise DAError("If you use 'label' to label a field in a 'fields' section, you must also include a 'field.'" + self.idebug(data))                                    
+                                field_info['label'] = TextObject(definitions + unicode(field[key]))
                             else:
-                                field_info['label'] = key
+                                field_info['label'] = TextObject(definitions + unicode(key))
                                 field_info['saveas'] = field[key]
                         if 'saveas' in field_info:
                             self.fields.append(Field(field_info))
@@ -1028,8 +1037,16 @@ class Question:
                     elif key == 'show if':
                         field_info['saveas_code'] = compile(field[key], '', 'eval')
                         field_info['saveas'] = field[key]
+                    elif key == 'field':
+                        if 'label' not in field:
+                            raise DAError("If you use 'field' to indicate a variable in a 'review' section, you must also include a 'label.'" + self.idebug(data))
+                        field_info['saveas'] = field[key]
+                    elif key == 'label':
+                        if 'field' not in field:
+                            raise DAError("If you use 'label' to label a field in a 'fields' section, you must also include a 'field.'" + self.idebug(data))                                    
+                        field_info['label'] = TextObject(definitions + unicode(field[key]))
                     else:
-                        field_info['label'] = key
+                        field_info['label'] = TextObject(definitions + unicode(key))
                         field_info['saveas'] = field[key]
                         if 'action' in field:
                             field_info['action'] = field['action']
@@ -1245,6 +1262,7 @@ class Question:
         hints = dict()
         helptexts = dict()
         extras = dict()
+        labels = dict()
         if self.question_type == 'review':
             extras['ok'] = dict()
             for field in self.fields:
@@ -1266,6 +1284,11 @@ class Question:
                 if hasattr(field, 'helptext'):
                     try:
                         helptexts[field.number] = field.helptext.text(user_dict)
+                    except:
+                        continue
+                if hasattr(field, 'label'):
+                    try:
+                        labels[field.number] = field.label.text(user_dict)
                     except:
                         continue
                 extras['ok'][field.number] = True
@@ -1299,6 +1322,8 @@ class Question:
                             exec(string, user_dict)
                     except:
                         raise DAError("Failure while processing field with datatype of object")
+                if hasattr(field, 'label'):
+                    labels[field.number] = field.label.text(user_dict)
                 if hasattr(field, 'extras'):
                     for key in ['note', 'html', 'script', 'css', 'min', 'max', 'minlength', 'maxlength']:
                         if key in field.extras:
@@ -1333,7 +1358,7 @@ class Question:
                 #logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("name 'role_event' is not defined")
-        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras})
+        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels})
     def processed_attachments(self, user_dict, **kwargs):
         result_list = list()
         items = list()

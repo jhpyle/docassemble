@@ -157,10 +157,10 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                 elif field.datatype in ['script', 'css']:
                     continue
                 elif field.datatype == 'button' and hasattr(field, 'label') and field.number in status.helptexts:
-                    fieldlist.append('              <div class="row"><div class="col-md-12"><a class="label label-success review-action" href="' + url_action(field.action) + '">' + field.label + '</a>' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
+                    fieldlist.append('              <div class="row"><div class="col-md-12"><a class="label label-success review-action" href="' + url_action(field.action) + '">' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a>' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
                     continue
             if hasattr(field, 'label'):
-                fieldlist.append('              <div class="form-group"><div class="col-md-12"><a href="' + url_action(field.action) + '">' + field.label + '</a></div></div>\n')
+                fieldlist.append('              <div class="form-group"><div class="col-md-12"><a href="' + url_action(field.action) + '">' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a></div></div>\n')
                 if field.number in status.helptexts:
                     fieldlist.append('              <div class="row"><div class="col-md-12">' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
         output += indent_by(audio_text, 10) + '          <form action="' + root + '" id="daform" class="form-horizontal" method="POST">\n            <fieldset>\n'
@@ -257,14 +257,14 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                         if pair[0] is not None:
                             checkboxes.append(safeid(from_safeid(field.saveas) + "[" + myb64quote(pair[0]) + "]"))
             if hasattr(field, 'label'):
-                if field.label == 'no label':
+                if status.labels[field.number] == 'no label':
                     fieldlist.append('              <div class="form-group' + req_tag +'"><div class="col-md-12">' + input_for(status, field, wide=True) + '</div></div>\n')
                 elif hasattr(field, 'datatype') and field.datatype == 'yesnowide':
                     fieldlist.append('              <div class="row"><div class="col-md-12">' + input_for(status, field) + '</div></div>\n')
                 elif hasattr(field, 'datatype') and field.datatype == 'yesno':
                     fieldlist.append('              <div class="form-group' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>\n')
                 else:
-                    fieldlist.append('              <div class="form-group' + req_tag + '"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + field.label + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>\n')
+                    fieldlist.append('              <div class="form-group' + req_tag + '"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>\n')
         output += indent_by(audio_text, 10) + '          <form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '>\n            <fieldset>\n'
         output += '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
@@ -787,7 +787,8 @@ def input_for(status, field, wide=False):
             output += '</select> '
     elif hasattr(field, 'datatype'):
         if field.datatype in ['yesno', 'yesnowide']:
-            output += '<input alt="' + field.label + '" class="to-labelauty checkbox-icon" type="checkbox" value="True" data-labelauty="' + field.label + '|' + field.label + '" name="' + field.saveas + '" id="' + field.saveas + '"'
+            label_text = markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True, escape=True)
+            output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon" type="checkbox" value="True" data-labelauty="' + label_text + '|' + label_text + '" name="' + field.saveas + '" id="' + field.saveas + '"'
             if defaultvalue:
                 output += ' checked'
             output += '/> '
