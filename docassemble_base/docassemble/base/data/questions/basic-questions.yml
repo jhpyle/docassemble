@@ -340,10 +340,11 @@ question: |
 fields:
   - Somebody already mentioned: x.child[i]
     datatype: object
-    required: False
     disable others: true
-    code: |
-      selections(case.all_known_people(), exclude=[x, x.child])
+    choices: case.all_known_people()
+    exclude:
+      - x
+      - x.child
   - First Name: x.child[i].name.first
   - Middle Name: x.child[i].name.middle
     required: False

@@ -122,6 +122,9 @@ class DAList(DAObject):
         return newobject
     def append(self, value):
         self.elements.append(value)
+    def remove(self, value):
+        if value in self.elements:
+            self.elements.remove(value)
     def extend(self, the_list):
         self.elements.extend(the_list)
     def first(self):
@@ -430,6 +433,9 @@ def selections(*pargs, **kwargs):
     to_exclude = set()
     if 'exclude' in kwargs:
         setify(kwargs['exclude'], to_exclude)
+    defaults = set()
+    if 'default' in kwargs:
+        setify(kwargs['default'], defaults)
     output = list()
     seen = set()
     for arg in pargs:
@@ -442,7 +448,11 @@ def selections(*pargs, **kwargs):
             the_list = [arg]
         for subarg in the_list:
             if isinstance(subarg, DAObject) and subarg not in to_exclude and subarg not in seen:
-                output.append({myb64quote(subarg.instanceName): str(subarg)})
+                if subarg in defaults:
+                    default_value = True
+                else:
+                    default_value = False
+                output.append({myb64quote(subarg.instanceName): str(subarg), 'default': default_value})
                 seen.add(subarg)
     return output
 

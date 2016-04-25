@@ -1573,6 +1573,7 @@ def index():
         except:
             raise DAError("invalid name " + str(orig_key))
         #data = re.sub(r'"""', '', data)
+        bracket_expression = None
         if match_brackets.search(key):
             #logmessage("Searching key " + str(key))
             match = match_inside_and_outside_brackets.search(key)
@@ -1584,6 +1585,9 @@ def index():
             if match_invalid.search(key):
                 error_messages.append(("error", "Error: Invalid character in key: " + key))
                 break
+            b_match = match_inside_brackets.search(match.group(2))
+            if b_match:
+                bracket_expression = from_safeid(b_match.group(1))
             bracket = match_inside_brackets.sub(process_bracket_expression, match.group(2))
             #logmessage("key is " + str(key) + " and bracket is " + str(bracket))
             if key in user_dict:
@@ -1606,6 +1610,8 @@ def index():
                 error_messages.append(("error", "Error: Invalid character in key: " + key))
                 break
         #logmessage("Real key is " + real_key + " and key is " + key)
+        do_append = False
+        do_opposite = False
         if real_key in known_datatypes:
             #logmessage("key " + real_key + "is in datatypes: " + known_datatypes[key])
             if known_datatypes[real_key] in ['boolean', 'checkboxes', 'yesno', 'noyes', 'yesnowide', 'noyeswide']:
@@ -1626,8 +1632,17 @@ def index():
                     continue
                 #logmessage("Got to here")
                 data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
+            elif known_datatypes[real_key] in ['object_checkboxes'] and bracket_expression is not None:
+                if data not in ['True', 'False']:
+                    continue
+                do_append = True
+                if data == 'False':
+                    do_opposite = True
+                data = "_internal['objselections'][" + repr(from_safeid(real_key)) + "][" + repr(bracket_expression) + "]"
             else:
                 data = repr(data)
+            if known_datatypes[real_key] in ['object_checkboxes']:
+                do_append = True
         elif key == "_multiple_choice":
             #logmessage("key is multiple choice")
             data = "int(" + repr(data) + ")"
@@ -1643,7 +1658,14 @@ def index():
             #else:
                 #continue
                 #error_messages.append(("error", "Error: multiple choice values were supplied, but docassemble was not waiting for an answer to a multiple choice question."))
-        the_string = key + ' = ' + data
+        if do_append:
+            key_to_use = from_safeid(real_key)
+            if do_opposite:
+                the_string = 'if ' + data + ' in ' + key_to_use + ':\n    ' + key_to_use + '.remove(' + data + ')'
+            else:
+                the_string = 'if ' + data + ' not in ' + key_to_use + ':\n    ' + key_to_use + '.append(' + data + ')'
+        else:
+            the_string = key + ' = ' + data
         logmessage("Doing " + str(the_string))
         try:
             exec(the_string, user_dict)

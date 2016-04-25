@@ -5,7 +5,8 @@ question: Who is the villain?
 fields:
   no label: villain
   datatype: object_radio
-  selections:
+  default: client
+  choices:
     - client
     - advocate
 ---

@@ -622,12 +622,16 @@ class Question:
             else:
                 raise DAError("A metadata section must be organized as a dictionary." + self.idebug(data))
         if 'modules' in data:
+            if type(data['modules']) is str:
+                data['modules'] = [data['modules']]
             if type(data['modules']) is list:
                 self.question_type = 'modules'
                 self.module_list = data['modules']
             else:
                 raise DAError("A modules section must be organized as a list." + self.idebug(data))
         if 'imports' in data:
+            if type(data['imports']) is str:
+                data['imports'] = [data['imports']]
             if type(data['imports']) is list:
                 self.question_type = 'imports'
                 self.module_list = data['imports']
@@ -937,6 +941,8 @@ class Question:
                     if type(field) is dict:
                         field_info = {'type': 'text', 'number': field_number}
                         for key in field:
+                            if key == 'default' and 'datatype' in field and field['datatype'] in ['object', 'object_radio', 'object_checkboxes']:
+                                continue
                             if key == 'required':
                                 field_info['required'] = field[key]
                             elif key == 'default' or key == 'hint' or key == 'help':
@@ -954,21 +960,18 @@ class Question:
                             elif key == 'code':
                                 field_info['choicetype'] = 'compute'
                                 field_info['selections'] = {'compute': compile(field[key], '', 'eval'), 'sourcecode': field[key]}
-                            elif key == 'selections':
-                                field_info['choicetype'] = 'compute'
-                                if type(field[key]) not in [list, str]:
-                                    raise DAError("selections is not in appropriate format" + self.idebug(data))
-                                if type(field[key]) is not list:
-                                    select_list = [str(field[key])]
-                                else:
-                                    select_list = field[key]
-                                source_code = "docassemble.base.core.selections(" + ", ".join(select_list) + ")"
-                                field_info['selections'] = {'compute': compile(source_code, '', 'eval'), 'sourcecode': source_code}
+                            elif key == 'exclude':
+                                pass
                             elif key == 'choices':
-                                field_info['choicetype'] = 'manual'
-                                field_info['selections'] = process_selections_manual(field[key])
-                                if 'datatype' not in field:
-                                    auto_determine_type(field_info)
+                                if 'datatype' in field and field['datatype'] in ['object', 'object_radio', 'object_checkboxes']:
+                                    field_info['choicetype'] = 'compute'
+                                    if type(field[key]) not in [list, str]:
+                                        raise DAError("choices is not in appropriate format" + self.idebug(data))
+                                else:
+                                    field_info['choicetype'] = 'manual'
+                                    field_info['selections'] = process_selections_manual(field[key])
+                                    if 'datatype' not in field:
+                                        auto_determine_type(field_info)
                             elif key == 'note':
                                 field_info['type'] = 'note'
                                 if 'extras' not in field_info:
@@ -1002,9 +1005,41 @@ class Question:
                             else:
                                 field_info['label'] = TextObject(definitions + unicode(key))
                                 field_info['saveas'] = field[key]
+                        if 'choicetype' in field_info and field_info['choicetype'] == 'compute' and 'type' in field_info and field_info['type'] in ['object', 'object_radio', 'object_checkboxes']:
+                            if type(field['choices']) is not list:
+                                select_list = [str(field['choices'])]
+                            else:
+                                select_list = field['choices']
+                            if 'exclude' in field:
+                                if type(field['exclude']) not in [list, str]:
+                                    raise DAError("choices exclude list is not in appropriate format" + self.idebug(data))
+                                if type(field['exclude']) is not list:
+                                    exclude_list = [str(field['exclude'])]
+                                else:
+                                    exclude_list = field['exclude']
+                                if len(exclude_list):
+                                    select_list.append('exclude=[' + ", ".join(exclude_list) + ']')
+                            if 'default' in field:
+                                if type(field['default']) not in [list, str]:
+                                    raise DAError("default list is not in appropriate format" + self.idebug(data))
+                                if type(field['default']) is not list:
+                                    default_list = [str(field['default'])]
+                                else:
+                                    default_list = field['default']
+                            else:
+                                default_list = list()
+                            if field_info['type'] == 'object_checkboxes':
+                                default_list.append(field_info['saveas'])
+                            if len(default_list):
+                                select_list.append('default=[' + ", ".join(default_list) + ']')
+                            source_code = "docassemble.base.core.selections(" + ", ".join(select_list) + ")"
+                            field_info['selections'] = {'compute': compile(source_code, '', 'eval'), 'sourcecode': source_code}
                         if 'saveas' in field_info:
                             self.fields.append(Field(field_info))
-                            self.fields_used.add(field_info['saveas'])
+                            if 'type' in field_info and field_info['type'] == 'object_checkboxes':
+                                self.fields_used.add(field_info['saveas'] + '.gathered')
+                            else:
+                                self.fields_used.add(field_info['saveas'])
                         elif 'type' in field_info and field_info['type'] in ['note', 'html', 'script', 'css']:
                             self.fields.append(Field(field_info))
                         else:
@@ -1322,13 +1357,13 @@ class Question:
                                 selections.append([value, key])
                     selectcompute[field.number] = selections
                 if hasattr(field, 'choicetype') and field.choicetype == 'compute':
-                    if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio']:
+                    if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio', 'object_checkboxes']:
                         string = "import docassemble.base.core"
                         logmessage("Doing " + string)
                         exec(string, user_dict)                        
                     logmessage("Doing " + field.selections['sourcecode'])
                     selectcompute[field.number] = process_selections(eval(field.selections['compute'], user_dict))
-                if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio']:
+                if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio', 'object_checkboxes']:
                     if field.number not in selectcompute:
                         raise DAError("datatype was set to object but no code or selections was provided")
                     string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "] = dict()"
@@ -2152,7 +2187,12 @@ def process_selections(data, manual=False):
         for entry in data:
             if type(entry) is dict:
                 for key in entry:
-                    result.append([key, entry[key]])
+                    if key == 'default':
+                        continue
+                    if 'default' in entry:
+                        result.append([key, entry[key], entry['default']])
+                    else:
+                        result.append([key, entry[key]])
             if type(entry) is list:
                 result.append([entry[0], entry[1]])
             elif type(entry) is str or type(entry) is unicode:

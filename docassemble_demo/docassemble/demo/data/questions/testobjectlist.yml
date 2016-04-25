@@ -1,0 +1,31 @@
+---
+include:
+  - basic-questions.yml
+---
+objects:
+  - villain: PartyList
+---
+mandatory: true
+code: |
+  villain.append(client)
+---
+question: Who are the villains?
+fields:
+  - no label: villain
+    datatype: object_checkboxes
+    choices:
+      - client
+      - advocate
+---
+question: |
+  % if villain.number() == 0:
+  There are no villains here.
+  % else:
+  The ${ villain.as_noun() }
+  ${ villain.does_verb("include") }
+  ${ villain }.
+  % endif
+sets: all_done
+---
+mandatory: true
+code: all_done

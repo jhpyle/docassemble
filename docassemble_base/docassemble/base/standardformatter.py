@@ -53,7 +53,7 @@ def signature_html(status, debug, root):
     output += '<div id="content"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div><div class="bottompart" id="bottompart">'
     if (status.underText):
         output += markdown_to_html(status.underText, trim=True)
-    output += '</div></div><form action="' + root + '" id="daform" method="POST"><input type="hidden" name="_save_as" value="' + status.question.fields[0].saveas + '"/><input type="hidden" id="_the_image" name="_the_image" value=""/><input type="hidden" id="_success" name="_success" value="0"/>'
+    output += '</div></div><form action="' + root + '" id="daform" method="POST"><input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/><input type="hidden" id="_the_image" name="_the_image" value=""/><input type="hidden" id="_success" name="_success" value="0"/>'
     output += tracker_tag(status)
     output += '</form>\n'
     return output
@@ -119,7 +119,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         if video_text:
             output += indent_by(video_text, 10)
         output += '              <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
-        output += '              <div class="btn-toolbar">\n                <button class="btn btn-primary btn-lg " name="' + status.question.fields[0].saveas + '" type="submit" value="True">Yes</button>\n                <button class="btn btn-lg btn-info" name="' + status.question.fields[0].saveas + '" type="submit" value="False">No</button>\n              </div>\n'
+        output += '              <div class="btn-toolbar">\n                <button class="btn btn-primary btn-lg " name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">Yes</button>\n                <button class="btn btn-lg btn-info" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">No</button>\n              </div>\n'
         #output += question_name_tag(status.question)
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
@@ -133,7 +133,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         if video_text:
             output += indent_by(video_text, 10)
         output += '              <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
-        output += '              <div class="btn-toolbar">\n                <button class="btn btn-primary btn-lg" name="' + status.question.fields[0].saveas + '" type="submit" value="False">Yes</button>\n                <button class="btn btn-lg btn-info" name="' + status.question.fields[0].saveas + '" type="submit" value="True">No</button>\n              </div>\n'
+        output += '              <div class="btn-toolbar">\n                <button class="btn btn-primary btn-lg" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">Yes</button>\n                <button class="btn btn-lg btn-info" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">No</button>\n              </div>\n'
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
         output += '            </fieldset>\n          </form>\n'
@@ -244,7 +244,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                     files.append(field.saveas)
                 if field.datatype in ['yesno', 'yesnowide']:
                     checkboxes.append(field.saveas)
-                elif field.datatype == 'checkboxes':
+                elif field.datatype in ['checkboxes', 'object_checkboxes']:
                     if field.choicetype == 'compute':
                         pairlist = list(status.selectcompute[field.number])
                     elif field.choicetype == 'manual':
@@ -264,7 +264,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                 elif hasattr(field, 'datatype') and field.datatype == 'yesno':
                     fieldlist.append('              <div class="form-group' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>\n')
                 else:
-                    fieldlist.append('              <div class="form-group' + req_tag + '"><label for="' + field.saveas + '" class="control-label col-sm-4">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>\n')
+                    fieldlist.append('              <div class="form-group' + req_tag + '"><label for="' + escape_id(field.saveas) + '" class="control-label col-sm-4">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>\n')
         output += indent_by(audio_text, 10) + '          <form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '>\n            <fieldset>\n'
         output += '              <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
@@ -302,12 +302,16 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         if video_text:
             output += indent_by(video_text, 10)
         output += '              <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-        output += '              <div class="form-actions"><button type="submit" class="btn btn-lg btn-primary" name="' + status.question.fields[0].saveas + '" value="True"> ' + word('Continue') + '</button></div>\n'
+        output += '              <div class="form-actions"><button type="submit" class="btn btn-lg btn-primary" name="' + escape_id(status.question.fields[0].saveas) + '" value="True"> ' + word('Continue') + '</button></div>\n'
         #output += question_name_tag(status.question)
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
         output += '            </fieldset>\n          </form>\n'
     elif status.question.question_type == "multiple_choice":
+        if status.question.fields[0].number in status.defaults and type(status.defaults[status.question.fields[0].number]) in [str, unicode, int, float]:
+            defaultvalue = unicode(status.defaults[status.question.fields[0].number])
+        else:
+            defaultvalue = None
         if hasattr(status.question.fields[0], 'datatype'):
             datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
         output += indent_by(audio_text, 10) + '          <form action="' + root + '" id="daform" method="POST">\n            <fieldset>\n'
@@ -329,8 +333,12 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                         random.shuffle(pairlist)
                     for pair in pairlist:
                         formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
+                        if defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue):
+                            ischecked = ' checked="checked"'
+                        else:
+                            ischecked = ''
                         if pair[0] is not None:
-                            output += '              <div class="row"><div class="col-md-6"><input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + str(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + unicode(pair[0]) + '"/></div></div>\n'
+                            output += '              <div class="row"><div class="col-md-6"><input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/></div></div>\n'
                         else:
                             output += '              <div class="form-group"><div class="col-md-12">' + markdown_to_html(pair[1], status=status) + '</div></div>\n'
                         id_index += 1
@@ -348,7 +356,11 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                             if key == 'image':
                                 continue
                             formatted_key = markdown_to_html(key, status=status, trim=True, escape=True)
-                            output += '              <div class="row"><div class="col-md-6"><input alt="' + formatted_key + '" data-labelauty="' + docassemble.base.filter.my_escape(the_icon) + formatted_key + '|' + docassemble.base.filter.my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="' + status.question.fields[0].saveas + '_' + str(id_index) + '" name="' + status.question.fields[0].saveas + '" type="radio" value="' + unicode(choice[key]) + '"/></div></div>\n'
+                            if defaultvalue is not None and unicode(choice[key]) == unicode(defaultvalue):
+                                ischecked = ' checked="checked"'
+                            else:
+                                ischecked = ''
+                            output += '              <div class="row"><div class="col-md-6"><input alt="' + formatted_key + '" data-labelauty="' + docassemble.base.filter.my_escape(the_icon) + formatted_key + '|' + docassemble.base.filter.my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(choice[key]) + '"' + ischecked + '/></div></div>\n'
                         id_index += 1
                 validation_rules['ignore'] = None
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
@@ -384,7 +396,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                         random.shuffle(pairlist)
                     for pair in pairlist:
                         if pair[0] is not None:
-                            output += '                <button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + unicode(pair[0]) + '"> ' + markdown_to_html(pair[1], status=status, trim=True, do_terms=False) + '</button>\n'
+                            output += '                <button type="submit" class="btn btn-lg' + btn_class + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="' + unicode(pair[0]) + '"> ' + markdown_to_html(pair[1], status=status, trim=True, do_terms=False) + '</button>\n'
                         else:
                             output += markdown_to_html(pair[1], status=status)
                 else:
@@ -400,7 +412,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                         for key in choice:
                             if key == 'image':
                                 continue
-                            output += '                <button type="submit" class="btn btn-lg' + btn_class + '" name="' + status.question.fields[0].saveas + '" value="' + unicode(choice[key]) + '"> ' + the_icon + markdown_to_html(key, status=status, trim=True, do_terms=False) + '</button>\n'
+                            output += '                <button type="submit" class="btn btn-lg' + btn_class + '" name="' + escape_id(status.question.fields[0].saveas) + '" value="' + unicode(choice[key]) + '"> ' + the_icon + markdown_to_html(key, status=status, trim=True, do_terms=False) + '</button>\n'
             else:
                 indexno = 0
                 for choice in status.question.fields[0].choices:
@@ -603,7 +615,29 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         status.screen_reader_text['help'] = unicode(output)
     master_output += output
     master_output += '        </section>\n'
-    extra_scripts.append('<script>\n      $("#daform").validate(' + json.dumps(validation_rules) + ');\n    </script>')
+    extra_scripts.append("""\
+    <script>
+      var validation_rules = """ + json.dumps(validation_rules) + """;
+      validation_rules.submitHandler = function(form){
+        form.submit();
+        $("#daform").find('button[type="submit"]').prop("disabled", true);
+      };
+      $("#daform").validate(validation_rules);
+    </script>""")
+    # if status.question.question_type == "fields":
+    #     extra_scripts.append("""\
+    # <script>
+    #   $("#daform").find('button[type="submit"]').prop("disabled", true);
+    #   daform = $("#daform");
+    #   $("#daform input, #daform select, #daform textarea").on('change input propertychange paste', function(){
+    #     if (daform.valid()){
+    #       $("#daform").find('button[type="submit"]').prop("disabled", false);
+    #     }
+    #     else{
+    #       $("#daform").find('button[type="submit"]').prop("disabled", true);
+    #     }
+    #   });
+    # </script>""")
     for element_id_unescaped in onchange:
         element_id = re.sub(r'(:|\.|\[|\]|,|=)', r'\\\\\1', element_id_unescaped)
         the_script = """\
@@ -748,7 +782,7 @@ def input_for(status, field, wide=False):
             pairlist = list(field.selections)
         if hasattr(field, 'shuffle') and field.shuffle:
             random.shuffle(pairlist)
-        if field.datatype == 'checkboxes':
+        if field.datatype in ['checkboxes', 'object_checkboxes']:
             inner_fieldlist = list()
             id_index = 0
             for pair in pairlist:
@@ -756,11 +790,17 @@ def input_for(status, field, wide=False):
                     inner_field = safeid(from_safeid(field.saveas) + "[" + myb64quote(pair[0]) + "]")
                     #sys.stderr.write("I've got a " + repr(pair[1]) + "\n")
                     formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
-                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty checkbox-icon" id="' + str(field.saveas) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"/>')
+                    if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue)):
+                        ischecked = ' checked'
+                    else:
+                        ischecked = ''
+                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty checkbox-icon" id="' + escape_id(field.saveas) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + '/>')
                 else:
                     inner_fieldlist.append('<div>' + markdown_to_html(pair[1], status=status) + '</div>')
                 id_index += 1
             output += u''.join(inner_fieldlist)
+            if field.datatype in ['object_checkboxes']:
+                output += '<input type="hidden" name="' + safeid(from_safeid(field.saveas) + ".gathered")+ '" value="True"/>'
         elif field.datatype in ['radio', 'object_radio']:
             inner_fieldlist = list()
             id_index = 0
@@ -768,14 +808,18 @@ def input_for(status, field, wide=False):
                 if pair[0] is not None:
                     #sys.stderr.write(str(field.saveas) + "\n")
                     formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
-                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + str(field.saveas) + '_' + str(id_index) + '" name="' + field.saveas + '" type="radio" value="' + unicode(pair[0]) + '"/>')
+                    if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue)):
+                        ischecked = ' checked="checked"'
+                    else:
+                        ischecked = ''
+                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(field.saveas) + '_' + str(id_index) + '" name="' + escape_id(field.saveas) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
                 else:
                     inner_fieldlist.append('<div>' + markdown_to_html(unicode(pair[1]), status=status) + '</div>')
                 id_index += 1
             output += "".join(inner_fieldlist)
         else:
             output += '<p class="sr-only">' + word('Select box') + '</p>'
-            output += '<select class="daselect" name="' + field.saveas + '" id="' + field.saveas + '" >'
+            output += '<select class="daselect" name="' + escape_id(field.saveas) + '" id="' + escape_id(field.saveas) + '" >'
             output += '<option value="">' + word('Select...') + '</option>'
             for pair in pairlist:
                 if pair[0] is not None:
@@ -788,7 +832,7 @@ def input_for(status, field, wide=False):
     elif hasattr(field, 'datatype'):
         if field.datatype in ['yesno', 'yesnowide']:
             label_text = markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True, escape=True)
-            output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon" type="checkbox" value="True" data-labelauty="' + label_text + '|' + label_text + '" name="' + field.saveas + '" id="' + field.saveas + '"'
+            output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon" type="checkbox" value="True" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(field.saveas) + '" id="' + escape_id(field.saveas) + '"'
             if defaultvalue:
                 output += ' checked'
             output += '/> '
@@ -805,10 +849,10 @@ def input_for(status, field, wide=False):
                 accept = ' accept="audio/*;capture=microphone"'
             else:
                 accept = ''
-            output += '<input alt="' + word("You can upload a file here") + '" type="file" class="file" data-show-upload="false" data-preview-file-type="text" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + accept + '/>'
-            #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + field.saveas + '" id="' + field.saveas + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>\n'
+            output += '<input alt="' + word("You can upload a file here") + '" type="file" class="file" data-show-upload="false" data-preview-file-type="text" name="' + escape_id(field.saveas) + '" id="' + escape_id(field.saveas) + '"' + multipleflag + accept + '/>'
+            #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + escape_id(field.saveas) + '" id="' + escape_id(field.saveas) + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>\n'
         elif field.datatype == 'area':
-            output += '<textarea alt="' + word("Input box") + '" class="form-control" rows="4" name="' + field.saveas + '" id="' + field.saveas + '"' + placeholdertext + '>'
+            output += '<textarea alt="' + word("Input box") + '" class="form-control" rows="4" name="' + escape_id(field.saveas) + '" id="' + escape_id(field.saveas) + '"' + placeholdertext + '>'
             if defaultvalue is not None:
                 output += defaultvalue
             output += '</textarea>'
@@ -827,10 +871,10 @@ def input_for(status, field, wide=False):
                     step_string = ' step="0.01"'
                 if field.datatype == 'currency':
                     step_string = ' step="0.01"'
-                    output += '<div class="input-group"><span class="input-group-addon" id="addon-' + field.saveas + '">' + currency_symbol() + '</span>'
-            output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control" type="' + input_type + '"' + step_string + ' name="' + field.saveas + '" id="' + field.saveas + '"'
+                    output += '<div class="input-group"><span class="input-group-addon" id="addon-' + do_escape_id(field.saveas) + '">' + currency_symbol() + '</span>'
+            output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control" type="' + input_type + '"' + step_string + ' name="' + escape_id(field.saveas) + '" id="' + escape_id(field.saveas) + '"'
             if field.datatype == 'currency':
-                output += ' aria-describedby="addon-' + field.saveas + '"/></div><label style="display: none;" for="' + field.saveas + '" class="help-inline" id="' + field.saveas + '-error"></label>'
+                output += ' aria-describedby="addon-' + do_escape_id(field.saveas) + '"/></div><label style="display: none;" for="' + escape_id(field.saveas) + '" class="help-inline" id="' + escape_id(field.saveas) + '-error"></label>'
             else:
                 output += '/>'
     return output
@@ -851,3 +895,10 @@ def safeid(text):
 
 def from_safeid(text):
     return(codecs.decode(text, 'base64').decode('utf-8'))
+
+def escape_id(text):
+    return text
+    #return re.sub(r'(:|\.|\[|\]|,|=)', r'\\\\\1', text)
+
+def do_escape_id(text):
+    return re.sub(r'(:|\.|\[|\]|,|=)', r'\\\1', text)

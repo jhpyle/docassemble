@@ -8,7 +8,7 @@ metadata:
   authors:
     - name: Jonathan Pyle
       organization: none
-  revision_date: 2015-10-25
+  revision_date: 2016-04-22
 comment: |
   A "metadata" block contains information about the YAML file, such as
   the name of the author.
@@ -950,19 +950,16 @@ fields:
   - Somebody already mentioned: village_idiot
     datatype: object
     disable others: true
-    selections:
+    choices:
       - case.plaintiff
       - case.defendant
-#    code: |
-#      selections(case.plaintiff, case.defendant)
   - First Name: village_idiot.name.first
   - Middle Name: village_idiot.name.middle
     required: False
   - Last Name: village_idiot.name.last
   - Suffix: village_idiot.name.suffix
     required: False
-    code: |
-      name_suffix()
+    code: name_suffix()
 ---
 question: Take something!
 fields:
