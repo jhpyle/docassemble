@@ -549,7 +549,70 @@ code: |
 ### Assigning existing objects to variables
 
 You might want to ask the user a multiple-choice question like "which
-of the people you have told me about do you want to sue?
+of the people you have told me about do you want to sue?"  That is,
+you want to define a new variable and you want it to be set to the
+value of an existing variable, but you want the user to select which
+one.
+
+You can accomplish this using a `fields` entry with `datatype` set to
+`object`.
+
+For example:
+
+{% highlight yaml %}
+---
+include: basic-questions.yml
+---
+question: Who is the villain?
+fields:
+  no label: villain
+  datatype: object
+  default: client
+  choices:
+    - client
+    - advocate
+---
+question: |
+  The villain is ${ villain }.
+sets: all_done
+---
+mandatory: true
+code: all_done
+---
+{% endhighlight %}
+
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testobjectfield.yml){:target="_blank"}.)
+
+Note that this interview incorporates the
+[`basic-questions.yml` file](https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml),
+which defines objects that are commonly used in [legal applications],
+including `client` and `advocate`.  It also contains questions for
+asking for the names of these people.
+
+The interview above presents the names of the `client` and the
+`advocate` and asks which of these people is the villain.
+
+If the user clicks the name of the advocate, then **docassemble** will
+define the variable `villain` and set it equal to `advocate`.
+
+Note that because `advocate` is an [object], `villain` will be an
+_alias_ for `advocate`, not a _copy_ of `advocate`.  If you
+subsequently set `advocate.birthdate`, you will immediately be able
+retrieve that value by looking at `villain.birthdate`, and vice-versa.
+
+Also, if you refer to `villain.favorite_food` and it is not yet
+defined, **docassemble** will go searching for a question that offers
+to define `advocate.favorite_food`.  This is because **docassemble**
+objects have an intrinsic identity, a name given to them "at birth."
+You can inspect this by referring to `villain.instanceName` in a
+question and will see that it returns `advocate`.  For more
+information about this, see the discussion in the documenation for
+[DAObject].  All **docassemble** objects are subtypes of [DAObject].
+
+
+### Populating a list of objects
+
+
 
 ## <a name="sets"></a>`sets`
 
@@ -903,3 +966,5 @@ cannot use because they conflict with built-in names that [Python] and
 [function]: {{ site.baseurl }}/docs/functions.html
 [functions]: {{ site.baseurl }}/docs/functions.html
 [special variables]: {{ site.baseurl }}/docs/special.html
+[legal applications]: {{ site.baseurl }}/docs/legal.html
+[DAObject]: {{ site.baseurl }}/docs/objects.html#DAObject
