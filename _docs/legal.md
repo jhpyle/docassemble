@@ -875,26 +875,130 @@ including `pleading.caption()` will require the following:
 ## <a name="Value"></a>Value
 
 A `Value` is a subclass of `DAObject` that is intended to represent a
-currency value.  It has two attributes, both of which are initially
-undefined:
+currency value that may or may not need to be asked for in an interview.
+
+For example, suppose you want to have a variable that represents the
+value of the user's real estate holdings.  But before you ask the
+value of the user's real estate holdings, you will want to ask if the
+user has real estate holdings at all.
+
+A `Value` has two attributes, both of which are initially undefined:
 
 * `.value`: intended to be a number
 * `.exists`: a boolean value representing whether the value is applicable
 
-For example, you may have a variable that represents the value of the
-user's real estate holdings.  But before you ask the value of the
-user's real estate holdings, you will want to ask if the user has real
-estate holdings at all.  The `FinancialList` object, explained below,
-contains a list of `Value`s and when computing a total of the values,
-it expects the `.exists` attributes of each `Value` to be defined.
-This can be used to cause questions to be asked about whether the
-`Value` is applicable to the user's situation.
+The `.exists` attribute facilitates asking questions about values
+using two screens: first, ask whether the value exists at all, then
+ask for the value.  For example:
+
+{% highlight yaml %}
+---
+objects:
+  - real_estate_holdings: Value
+---
+question: Do you have real estate holdings?
+yesno: real_estate_holdings.exists
+---
+question: How much real estate do you own?
+fields:
+  - Value: real_estate_holdings.value
+    datatype: currency
+---
+sets: all_done
+question: |
+  % if real_estate_holdings.exists:
+  The value of your real estate holdings is ${ currency(real_estate_holdings.value) }.
+  % else:
+  You do not have real estate.
+  % endif
+---
+mandatory: true
+code: all_done
+---
+{% endhighlight %}
+
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testvalue.yml){:target="_blank"}.)
+
+The `FinancialList` object, explained below, represents a list of
+`Value`s.  When computing a total of the values (with `.total()`), it
+checks the `.exists` attributes of each `Value` to be defined.  This
+causes questions to be asked about whether the `Value` is applicable
+to the user's situation before the value itself is requested.
+
+<a name="Value.amount"></a>To access the value of a `Value` object,
+you can use the `.amount()` method.  If the `.exists` attribute is
+`False`, it will return zero without asking for the `.value`.
+
+Referring to a `Value` in a template will show the `.amount()`.  The
+value of `.amount()` is also returned when you pass a `Value` to the
+`currency()` [function].  For example:
+
+{% highlight yaml %}
+---
+question: |
+  The value of your real estate holdings is
+  ${ currency(real_estate_holdings) }.
+  
+  An identical way of writing this number is 
+  ${ currency(real_estate_holdings.amount()) }.
+---
+{% endhighlight %}
 
 ### <a name="PeriodicValue"></a>PeriodicValue
 
 A `PeriodicValue` is a `Value` that has an additional attribute,
-`period`, a number representing the number of times per year that the
-period value is applicable.
+`period`, which is a number representing the number of times per year
+the value applies.
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - user_salary: PeriodicValue
+---
+question: |
+  Do you make money from working?
+yesno: user_salary.exists
+---
+question: |
+  What is your salary?
+fields:
+  - Amount: user_salary.value
+    datatype: currency
+  - Period: user_salary.period
+    default: 1
+    choices:
+      - Annually: 1
+      - Monthly: 12
+      - Per week: 54
+---
+question: |
+  % if user_salary.exists:
+  You make ${ currency(user_salary) } per year.
+  % else:
+  Get a job!
+  % endif
+sets: all_done
+---
+mandatory: true
+code: all_done
+---
+{% endhighlight %}
+
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testperiodicvalue.yml){:target="_blank"}.)
+
+<a name="PeriodicValue.amount"></a>To access the value of a
+`PeriodicValue` object, you can use the `.amount()` method.  If the
+`.exists` attribute is `False`, it will return zero without asking for
+the `.value`.  By default, it returns the value for the period 1
+(e.g., in the example above, period of 1 represents a year).  That is,
+it will return the `.value` multiplied by the `.period`.
+
+Referring to a `PeriodicValue` in a template will show the
+`.amount()`.  The value of `.amount()` is also returned when you pass
+a `PeriodicValue` to the `currency()` [function].
 
 # Classes for lists of things
 
@@ -903,7 +1007,8 @@ period value is applicable.
 This is a subclass of `DAList`.  (See [objects] for an explanation of the
 `DAList` class.)
 
-It is indended to contain a list of `Person`s who are parties.
+It is indended to contain a list of `Person`s (or `Individuals`s,
+which are a type of `Person`) who are parties to a case.
 
 ## <a name="ChildList"></a>ChildList
 
@@ -920,23 +1025,30 @@ an individual's assets.
 The `FinancialList` uses the following attributes:
 
 * `gathering`: a boolean value that is initialized to `False`.  Set
-this to `True` when your process of collecting the elements of the
+this to `True` when your process of initializing the elements of the
 list is ongoing and will span multiple questions.
 * `gathered`: a boolean value that is initially undefined.  Set this
 to `True` when you have finished determining what the elements of the
 list are going to be.
-* `elements`: a [Python set] containing the names of the financial
-  items.
 
-The `FinancialList` has two methods:
+The `FinancialList` has three methods:
 
 <a name="FinancialList.new"></a>
 <a name="FinancialList.total"></a>
+<a name="FinancialList.total_gathered"></a>
 * `.new(item_name)`: gives the `FinancialList` a new attribute with
   the name `item_name` and the object type `Value`.
 * `.total()`: tallies up the total value of all `Value`s in the list
   for which the `exists` attribute is `True`.  It requires `.gathered`
-  to be True.
+  to be `True`, which means that a reference to `.total()` will cause
+  **docassemble** to ask the questions necessary to gather the full
+  list of items.
+* `.total_gathered()`: does what `.total()` does, except it does not
+  require `.gathered` to be `True`, which means that a reference to
+  `.total_gathered()` can be used in the midst of the process of
+  gathering the list of items.  For example, you may want to use this
+  to say something like "So far, you have told me about assets
+  totaling $45,000."
 
 In the context of a template, a `FinancialList` returns the result of
 `.total()`.
@@ -1018,19 +1130,23 @@ a periodic nature, such as an individual's income.
 The `PeriodicFinancialList` uses the following attributes:
 
 * `gathering`: a boolean value that is initialized to `False`.  Set
-this to `True` when your process of collecting the elements of the
+this to `True` when your process of initializing the elements of the
 list is ongoing and will span multiple questions.
 * `gathered`: a boolean value that is initially undefined.  Set this
 to `True` when you have finished gathering all of the elements.
-* `elements`: a [Python set] containing the names of the periodic financial
-  items.
 
-The `PeriodicFinancialList` has two methods:
+The `PeriodicFinancialList` has three methods:
 
 * `.new(item_name)`: gives the `PeriodicFinancialList` a new attribute with
   the name `item_name` and the object type `PeriodicValue`.
 * `.total()`: tallies up the total annual value of all `PeriodicValue`s in the list
   for which the `exists` attribute is `True`.
+* `.total_gathered()`: does what `.total()` does, except it does not
+  require `.gathered` to be `True`, which means that a reference to
+  `.total_gathered()` can be used in the midst of the process of
+  gathering the list of items.  For example, you may want to use this
+  to say something like "So far, you have told me about income
+  totaling $56,000 per year."
 
 In the context of a template, a `PeriodicFinancialList` returns `.total()`.
 
@@ -1175,7 +1291,6 @@ defined.
 body of the e-mail that will be sent.  See [objects] for an
 explanation of `DATemplate`.
 
-[Python set]: https://docs.python.org/2/library/stdtypes.html#set
 [Python list]: https://docs.python.org/2/tutorial/datastructures.html
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [legal.py]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py

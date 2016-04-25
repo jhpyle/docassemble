@@ -307,7 +307,8 @@ The following are the keys that have special meaning:
 
 * `datatype`: affects how the data will be collected, validated and
   stored; see below.
-* `required`: the value is either `true` or `false`.  By default, all fields are required.
+* `required`: the value is either `true` or `false`.  By default, all
+  fields are required.
 * `hint`: in text inputs, the value is provided as a [placeholder].
 * `help`: the value is explanatory help text that appears when user
   clicks on the label.
@@ -317,26 +318,38 @@ The following are the keys that have special meaning:
   Can be a list of key/value pairs (key is what the variable will be
   set to; value is the label seen by the user) or a list of plain text
   items (in which case the label and the variable value are the same).
-* `code`: code that generates a list of possible options for a multiple choice field
-* `shuffle`: the value is either `true` or `false`.  When used with `code`
-  or `choices`, it randomizes the list of choices.
+  When the `datatype` is `object`, `object_radio`, or
+  `object_checkboxes`, `choices` indicates list of objects from which
+  the user will choose.
+* `exclude`: this is used in combination with `choices` when the
+  `datatype` is `object`, `object_radio`, or `object_checkboxes`.  Any
+  object in `exclude` will be omitted from the list of choices if it
+  is present in `choices`.
+* `code`: code that generates a list of possible options for a
+  multiple choice field.
+* `shuffle`: the value is either `true` or `false`.  When used with
+  `code` or `choices`, it randomizes the list of choices.
 * `disable others`: if set to true, then when the user changes the
   value of the field to something, all the other fields in the
   question will be disabled.
 * `note`: the value is [Markdown] text that will appear on the screen;
-  useful for providing guidance to the user on how to enter information.
+  useful for providing guidance to the user on how to enter
+  information.
+* `label`: Instead of expressing your labels and variable names in the
+  form of `- Label: variable_name`, you can specify a label using the
+  `label` key and the variable name using the `field` key.
+* `field`: See the explanation of `label` above.
 * `html`: like `note`, except raw HTML.
 * `script`: raw HTML to be appended to the bottom of the page; usually
   used for Javascript code that interacts with HTML specified in
   `html` entries.
 * `css`: raw HTML to be appended to the HTML head; usually used to
   provide css classes for HTML specified in `html` entries.
-
-In addition, if you use `no label` as the label for your variable, the
-label will be omitted.  On wide screens, the field will fill more of
-the width of the screen if the label is set to `no label`.  To keep
-the width of the field normal, but have a blank label, use `""` as the
-label.
+* `no label`: if you use `no label` as the label for your variable,
+  the label will be omitted.  On wide screens, the field will fill
+  more of the width of the screen if the label is set to `no label`.
+  To keep the width of the field normal, but have a blank label, use
+  `""` as the label.
 
 The possible `datatype` values are:
 
@@ -349,9 +362,9 @@ The possible `datatype` values are:
   based on locale defined in the [configuration].
 * `file`: a single file upload (a `DAFileList` [object] results).
 * `files`: single or multiple file upload (a `DAFileList` [object]
-results).
+  results).
 * `camera`: like `file`, except with HTML5 that suggests using the
-device's camera to take a picture;
+  device's camera to take a picture;
 * `camcorder`: like `camera`, except for recording a video;
 * `microphone`: like `camera`, except for recording an audio clip;
 * `yesno`: checkbox with label, aligned with labeled fields.
@@ -360,11 +373,19 @@ device's camera to take a picture;
   dictionary with items set to true or false depending on whether the
   option was checked.  No validation is done to see if the user
   selected at least one, regardless of the value of `required`.
-* `object`: this is used in combination with `code` that calls
-  `selections()` (a function from `docassemble.base.util`) with a list
-  of **docassemble** [objects].  This gives you a pull-down selector
-  that allows you to define a variable as an object that has already
-  been defined.
+* `object`: this is used when you would like to use a variable to
+  refer to an existing object.  You can provide the list of objects to
+  choose from in one of two ways.  The first way is to list the object
+  names under `selections`.  The second way is to provide `code` that
+  calls the `selections()` [function].  The user will be presented
+  with a pull-down selector.
+* `object_radio`: like `object`, except the user interface uses radio
+  buttons rather than a pull-down list.
+* `object_checkboxes`: this is used when you would like to use a
+  question to set the elements of an object of type `DAList`.  The
+  choices in `choices` (optionally modified by `exclude`) will be
+  presented to the user as checkboxes.  The `.gathered` attribute of
+  the variable will be set to `True` after the elements are set.
 * `radio`: show `choices` list as radio buttons instead of a dropdown
   [select] tag (which is the default).  Variable will be set to the
   value of the choice.
@@ -387,11 +408,10 @@ following to the definition of a field:
 
 Here is a long example that illustrates many of these features.
 
-Compare this screenshot . . .
-
 ![Screenshot of fields]({{ site.baseurl }}/img/fields-example.png)
 
-. . . with the `question` block below:
+The following `question` block generates the question above.  Compare
+the screenshot to the `question` to see how it works.
 
 {% highlight yaml %}
 ---
@@ -471,9 +491,6 @@ fields:
 
 ([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testfields.yml){:target="_blank"}.)
 
-By comparing the screenshot to the [YAML] code, you can see how each
-of the features works.
-
 The referenced [CSS file] contains the following:
 
 {% highlight css %}
@@ -481,6 +498,8 @@ The referenced [CSS file] contains the following:
     color: green;
 }
 {% endhighlight %}
+
+### Multiple-choice questions in `fields`
 
 Note that adding `code` to a field makes it a multiple-choice
 question.  If you have a multiple-choice question and you want to
@@ -526,6 +545,11 @@ code: |
 {% endhighlight %}
 
 ([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testpulldown.yml){:target="_blank"}.)
+
+### Assigning existing objects to variables
+
+You might want to ask the user a multiple-choice question like "which
+of the people you have told me about do you want to sue?
 
 ## <a name="sets"></a>`sets`
 
@@ -876,5 +900,6 @@ cannot use because they conflict with built-in names that [Python] and
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [question]: {{ site.baseurl }}/docs/questions.html
 [CSS file]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/static/my.css
+[function]: {{ site.baseurl }}/docs/functions.html
 [functions]: {{ site.baseurl }}/docs/functions.html
 [special variables]: {{ site.baseurl }}/docs/special.html

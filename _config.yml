@@ -1,11 +1,12 @@
 # Site settings
-title: Docassemble
-email: jhpyle@gmail.com
+title: "Docassemble"
+email: "jhpyle@gmail.com"
 description: >
   A free, open-source expert system for guided interviews and document assembly, based on Python, YAML, and Markdown.
 baseurl: ""
-url: "http://docs.docassemble.org" # the base hostname & protocol for your site
-github_username:  jhpyle
+url: "http://docassemble.org"
+demo_url: "http://demo.docassemble.org"
+github_username: jhpyle
 collections:
   docs:
     output: true

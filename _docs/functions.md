@@ -23,7 +23,7 @@ this `modules` block.
 
 # Miscellaneous functions
 
-## <a name="need"></a>need
+## <a name="need"></a>need()
 
 The `need()` function takes one or more variables as arguments and
 causes **docassemble** to ask questions to define each of the
@@ -57,7 +57,7 @@ So the `need()` function does not "do" anything.  However, writing
 because it helps you convey in "natural language" that your interview
 "needs" these variables to be defined.
 
-## <a name="force_ask"></a>force_ask 
+## <a name="force_ask"></a>force_ask()
 
 Usually, **docassemble** only asks a question when it encounters a
 variable that is not defined.  However, with the `force_ask` function
@@ -136,7 +136,7 @@ second mandatory code block would cause the question to be asked
 again.  But you make your intentions more clear to readers of your
 code by calling `need()`.)
 
-## <a name="space_to_underscore"></a>space_to_underscore
+## <a name="space_to_underscore"></a>space_to_underscore()
 
 If `user_name` is `John Wilkes Booth`,
 `space_to_underscore(user_name)` will return `John_Wilkes_Booth`.
@@ -155,7 +155,7 @@ attachment:
 ---
 {% endhighlight %}
 
-## <a name="qr_code"></a>qr_code
+## <a name="qr_code"></a>qr_code()
 
 The `qr_code()` function allows you to include the `[QR ...]` [markup] statement
 using [Python].
@@ -194,7 +194,7 @@ sets: qr_example
 ---
 {% endhighlight %}
 
-## <a name="url_of"></a>url_of
+## <a name="url_of"></a>url_of()
 
 This function returns a URL to a file within a **docassemble**
 package.
@@ -213,7 +213,7 @@ subquestion: |
 ---
 {% endhighlight %}
 
-## <a name="url_action"></a><a name="process_action"></a>url_action and process_action
+## <a name="url_action"></a><a name="process_action"></a>url_action() and process_action()
 
 The `url_action()` and `process_action()` functions allow users to
 interact with **docassemble** using hyperlinks embedded in questions.
@@ -342,7 +342,7 @@ code: |
 ---
 {% endhighlight %}
 
-## <a name="action_menu_item"></a>action_menu_item
+## <a name="action_menu_item"></a>action_menu_item()
 
 One way to let the user trigger "actions" is to provide a selection in
 the web app menu.  You can do this by setting the `menu_items` list.
@@ -364,7 +364,7 @@ when run triggers the action "review_answers."
 keys `label` and `url`, where `label` is set to the value of `a` and
 `url` is set to the value of `url_action(b)`.
 
-## <a name="prevent_going_back"></a>prevent_going_back
+## <a name="prevent_going_back"></a>prevent_going_back()
 
 **docassemble**'s back button helps users when they make a mistake and
 want to go back and correct it.  But sometimes, we want to prevent
@@ -393,7 +393,7 @@ the screen loads, so you will have to make sure they are set by
 setting them in `initial` code, which runs every time the screen
 loads.
 
-## <a name="set_info"></a>set_info
+## <a name="set_info"></a>set_info()
 
 This function is used to store information for later retrieval by
 `get_info()`.  You pass it one or more [keyword arguments]:
@@ -406,7 +406,7 @@ code: |
 ---
 {% endhighlight %}
 
-## <a name="get_info"></a>get_info
+## <a name="get_info"></a>get_info()
 
 This function is used to retrieve information passed to
 `set_info()`.
@@ -426,17 +426,17 @@ class Recipe(DAObject):
 
 If the item was never set, `get_info()` will return `None`.
 
-# Language and locale functions
+# Language and locale functions()
 
 These functions access and change the active language and locale.  See
 [language support] for more information about these features of
 **docassemble**.
 
-## <a name="get_language"></a>get_language
+## <a name="get_language"></a>get_language()
 
 If the language is set to English, `get_language()` returns `en`.
 
-## <a name="set_language"></a>set_language
+## <a name="set_language"></a>set_language()
 
 This sets the language that will be used in the web application and in
 language-specific functions of **docassemble**.  It does not change
@@ -465,17 +465,17 @@ choices:
 ---
 {% endhighlight %}
 
-## <a name="get_locale"></a>get_locale
+## <a name="get_locale"></a>get_locale()
 
 If the locale is set to `US.utf8`, `get_locale()` returns `US.utf8`.
 
-## <a name="set_locale"></a>set_locale
+## <a name="set_locale"></a>set_locale()
 
 If you run `set_locale('FR.utf8')`, then `get_locale()` will return
 `FR.utf8`, but the actual [Python locale] will not change
 unless you run `update_locale()`.
 
-## <a name="update_locale"></a>update_locale
+## <a name="update_locale"></a>update_locale()
 
 Running `update_locale` will change the [Python locale] based on the
 current language and locale settings.
@@ -521,7 +521,7 @@ code: |
 
 # Simple translation of words
 
-## <a name="word"></a>word
+## <a name="word"></a>word()
 
 `word()` is a general-purpose translation function that is used in the
 code of the web application to ensure that the text the user sees is
@@ -572,7 +572,7 @@ locale.  You can write functions for different languages, or reprogram
 the default functions, by calling
 `docassemble.base.util.update_language_function()`.
 
-## <a name="capitalize"></a>capitalize
+## <a name="capitalize"></a>capitalize()
 
 If `favorite_food` is defined as "spaghetti marinara," then
 `capitalize(favorite_food)` will return `Spaghetti marinara`.
@@ -587,7 +587,7 @@ yesno: user_will_eat_dinner
 
 There is also the `title_case()` function, which is described below.
 
-## <a name="comma_and_list"></a>comma_and_list
+## <a name="comma_and_list"></a>comma_and_list()
 
 If `things` is a [Python list] with the elements
 `['lions', 'tigers', 'bears']`, then:
@@ -599,13 +599,13 @@ toads, and frogs`.
 * `comma_and_list('fish', 'toads')` returns `fish and toads`
 * `comma_and_list('fish')` returns `fish`.
 
-## <a name="comma_list"></a>comma_list
+## <a name="comma_list"></a>comma_list()
 
 If `things` is a [Python list] with the elements
 `['lions', 'tigers', 'bears']`, then `comma_list(things)` will return
 `lions, tigers, bears`.
 
-## <a name="currency"></a>currency
+## <a name="currency"></a>currency()
 
 If the locale is `US.utf8`, `currency(45.2)` returns `$45.20`.
 
@@ -620,7 +620,7 @@ locale.  This is due to a limitation in the [locale module].  If the
 `currency` function does not meet your currency formatting needs, you
 may want to define your own.
 
-## <a name="currency_symbol"></a>currency_symbol
+## <a name="currency_symbol"></a>currency_symbol()
 
 If the locale is `US.utf8`, `currency_symbol()` returns `$`.
 
@@ -631,7 +631,7 @@ If you set `currency symbol` in the [configuration], then
 `currency_symbol()` returns the symbol specified there, and does not
 use the locale to determine the symbol.
 
-## <a name="indefinite_article"></a>indefinite_article
+## <a name="indefinite_article"></a>indefinite_article()
 
 `indefinite_article('bean')` returns `a bean` and
 `indefinite_article('apple')` returns `an apple`.
@@ -640,7 +640,7 @@ The English language version of this function passes through all
 arguments to the `en.noun.article()` function of the
 [NodeBox English Linguistics Library].
 
-## <a name="nice_number"></a>nice_number
+## <a name="nice_number"></a>nice_number()
 
 * `nice_number(4)` returns `four`
 * `nice_number(10)` returns `ten`
@@ -650,7 +650,7 @@ arguments to the `en.noun.article()` function of the
 This function can be customized by calling
 `docassemble.base.util.update_nice_numbers()`.
 
-## <a name="noun_plural"></a>noun_plural
+## <a name="noun_plural"></a>noun_plural()
 
 * `noun_plural('friend')` returns `friends`
 * `noun_plural('fish')` returns `fish`
@@ -660,7 +660,7 @@ The English language version of
 this function passes through all arguments to the `en.noun.plural()`
 function of the [NodeBox English Linguistics Library].
 
-## <a name="ordinal_number"></a>ordinal_number
+## <a name="ordinal_number"></a>ordinal_number()
 
 * `ordinal_number(8)` returns `eighth`.
 * `ordinal_number(11)` returns `11th`.
@@ -669,12 +669,12 @@ This function can be customized with
 `docassemble.base.util.update_ordinal_numbers()` and
 `docassemble.base.util.update_ordinal_function()`.
 
-## <a name="ordinal"></a>ordinal
+## <a name="ordinal"></a>ordinal()
 
 `ordinal(x)` returns `ordinal_number(x + 1)`.  This is useful when
 working with indexes that start at zero.
 
-## <a name="period_list"></a>period_list
+## <a name="period_list"></a>period_list()
 
 `period_list` returns a list within a list:
 
@@ -726,7 +726,7 @@ def my_period_list():
 docassemble.base.util.update_language_function('*', 'period_list', my_period_list)
 {% endhighlight %}
 
-## <a name="title_case"></a>title_case
+## <a name="title_case"></a>title_case()
 
 `title_case("the importance of being ernest")` returns `The Importance
 of Being Ernest`.
@@ -736,13 +736,13 @@ the `titlecase()` function of the [titlecase] module.
 
 There is also the `capitalize()` function, which is described above.
 
-## <a name="verb_past"></a>verb_past
+## <a name="verb_past"></a>verb_past()
 
 `verb_past('help')` returns `helped`.  The English language version of
 this function passes through all arguments to the `en.verb.past()`
 function of the [NodeBox English Linguistics Library].
 
-## <a name="verb_present"></a>verb_present 
+## <a name="verb_present"></a>verb_present()
 
 * `verb_present('helped')` returns `help`.
 * `verb_present('help', person=3)` returns `helps`.
