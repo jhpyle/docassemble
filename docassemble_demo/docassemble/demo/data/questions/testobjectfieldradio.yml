@@ -4,17 +4,15 @@ include: basic-questions.yml
 question: Who is the villain?
 fields:
   no label: villain
-  datatype: object
+  datatype: object_radio
   default: client
   choices:
     - client
     - advocate
 ---
 question: |
-  The villain, ${ villain }, was born on
-  ${ format_date(villain.birthdate) }.
+  The villain is ${ villain }.
 sets: all_done
 ---
 mandatory: true
 code: all_done
----

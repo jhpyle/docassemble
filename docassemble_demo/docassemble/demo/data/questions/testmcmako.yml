@@ -1,0 +1,18 @@
+---
+include: basic-questions.yml
+---
+question: |
+  What is your favorite date?
+fields:
+  - Greatest Date Ever: favorite_date
+    datatype: date
+    choices:
+      - ${ client.birthdate }
+      - ${ advocate.birthdate }
+---
+question: |
+  ${ formal_date(favorite_date) } was the best day in the history of the world.
+sets: all_done
+---
+mandatory: true
+code: all_done

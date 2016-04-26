@@ -1,5 +1,5 @@
 from docassemble.base.core import DAObject, DAList, DADict, DAFile, DAFileCollection, DAFileList, DATemplate, selections
-from docassemble.base.util import comma_and_list, get_language, set_language, get_dialect, word, comma_list, ordinal, ordinal_number, need, nice_number, possessify, verb_past, verb_present, noun_plural, space_to_underscore, force_ask, period_list, name_suffix, currency, indefinite_article, today, nodoublequote, capitalize, title_case, url_of, do_you, does_a_b, your, her, his, the, in_the, a_in_the_b, of_the, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json
+from docassemble.base.util import comma_and_list, get_language, set_language, get_dialect, word, comma_list, ordinal, ordinal_number, need, nice_number, possessify, verb_past, verb_present, noun_plural, space_to_underscore, force_ask, period_list, name_suffix, currency, indefinite_article, today, nodoublequote, capitalize, title_case, url_of, do_you, does_a_b, your, her, his, the, in_the, a_in_the_b, of_the, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, month_of, day_of, year_of, format_date
 from docassemble.base.filter import file_finder, url_finder, mail_variable, markdown_to_html, async_mail
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
@@ -19,7 +19,7 @@ import yaml
 import us
 from decimal import Decimal
 
-__all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'LatitudeLongitude', 'RoleChangeTracker', 'DATemplate', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'get_dialect', 'set_language', 'word', 'comma_list', 'ordinal', 'ordinal_number', 'need', 'nice_number', 'verb_past', 'verb_present', 'noun_plural', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'indefinite_article', 'today', 'capitalize', 'title_case', 'url_of', 'get_locale', 'set_locale', 'process_action', 'url_action', 'selections', 'get_info', 'set_info', 'user_lat_lon', 'location_known', 'location_returned', 'get_config', 'map_of', 'objects_from_file', 'us', 'prevent_going_back', 'month_of', 'day_of', 'year_of', 'qr_code', 'interview_url_as_qr', 'action_menu_item', 'from_b64_json']
+__all__ = ['update_info', 'interview_url', 'Court', 'Case', 'Jurisdiction', 'Document', 'LegalFiling', 'Person', 'Individual', 'DAList', 'PartyList', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'LatitudeLongitude', 'RoleChangeTracker', 'DATemplate', 'Expense', 'Value', 'PeriodicValue', 'DAFile', 'DAFileCollection', 'DAFileList', 'send_email', 'comma_and_list', 'get_language', 'get_dialect', 'set_language', 'word', 'comma_list', 'ordinal', 'ordinal_number', 'need', 'nice_number', 'verb_past', 'verb_present', 'noun_plural', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'indefinite_article', 'capitalize', 'title_case', 'url_of', 'get_locale', 'set_locale', 'process_action', 'url_action', 'selections', 'get_info', 'set_info', 'user_lat_lon', 'location_known', 'location_returned', 'get_config', 'map_of', 'objects_from_file', 'us', 'prevent_going_back', 'month_of', 'day_of', 'year_of', 'format_date', 'today', 'qr_code', 'interview_url_as_qr', 'action_menu_item', 'from_b64_json']
 
 class ThreadVariables(threading.local):
     user = None
@@ -77,6 +77,8 @@ class LatitudeLongitude(DAObject):
         self.description = ""
         return super(LatitudeLongitude, self).init(**kwargs)
     def status(self):
+        """Returns True or False depending on whether an attempt has yet been made
+        to gather the latitude and longitude."""
         #logmessage("got to status")
         if self.gathered:
             #logmessage("gathered is true")
@@ -144,6 +146,13 @@ class Court(DAObject):
     def __repr__(self):
         return(repr(self.name))
 
+def _add_person_and_children_of(target, output_list):
+    if target not in output_list and target.identified():
+        output_list.append(target)
+        if hasattr(target, 'child'):
+            for child in target.child.elements:
+                _add_person_and_children_of(child, output_list)
+
 class Case(DAObject):
     """Represents a case in court."""
     def init(self, **kwargs):
@@ -154,6 +163,9 @@ class Case(DAObject):
         self.case_id = ""
         return super(Case, self).init(**kwargs)
     def role_of(self, party):
+        """Given a person object, it looks through the parties to the 
+        case and returns the name of the party to which the person belongs.
+        Returns "third party" if the person is not found among the parties."""
         for partyname in dir(self):
             if not isinstance(getattr(self, partyname), PartyList):
                 continue
@@ -163,19 +175,19 @@ class Case(DAObject):
                         return partyname
         return 'third party'
     def all_known_people(self):
+        """Returns a list of all parties and their children, 
+        children's children, etc.  Does not force the gathering of the
+        parties."""
         output_list = list()
         for partyname in dir(self):
             if not isinstance(getattr(self, partyname), PartyList):
                 continue
             for party in getattr(self, partyname).elements:
-                if party not in output_list and party.identified():
-                    output_list.append(party)
-                    if hasattr(party, 'child'):
-                        for child in party.child.elements:
-                            if child not in output_list and child.identified():
-                                output_list.append(child)
+                _add_person_and_children_of(party, output_list)
         return(output_list)
     def parties(self):
+        """Returns a list of all parties.  Gathers the parties if
+        they have not been gathered yet."""
         output_list = list()
         for partyname in dir(self):
             if not isinstance(getattr(self, partyname), PartyList):
@@ -200,6 +212,7 @@ class Document(DAObject):
 class LegalFiling(Document):
     """Represents a document filed in court."""
     def caption(self):
+        """Returns a case caption for the case, for inclusion in documents."""
         self.case.firstParty.gathered
         self.case.secondParty.gathered
         output = ""
@@ -224,12 +237,22 @@ class RoleChangeTracker(DAObject):
     def init(self):
         self.last_role = None
         return
-    def should_send_email(self):
-        return True
-    def update(self, target_role):
+    # def should_send_email(self):
+    #     """Returns True or False depending on whether an e-mail will be sent on
+    #     role change"""
+    #     return True
+    def _update(self, target_role):
+        """When a notification is delivered about a necessary change in the
+        active role of the interviewee, this function is called with
+        the name of the new role.  This prevents the send_email()
+        function from sending duplicative notifications."""
         self.last_role = target_role
         return
     def send_email(self, roles_needed, **kwargs):
+        """Sends a notification e-mail if necessary because of a change in the
+        active of the interviewee.  Returns True if an e-mail was
+        successfully sent.  Otherwise, returns False.  False could
+        mean that it was not necessary to send an e-mail."""
         #logmessage("Current role is " + str(this_thread.role))
         for role_option in kwargs:
             if 'to' in kwargs[role_option]:
@@ -249,19 +272,23 @@ class RoleChangeTracker(DAObject):
                     except DAError:
                         result = False
                     if result:
-                        self.update(role_needed)
+                        self._update(role_needed)
                     return result
         return False
 
 class Name(DAObject):
     """Base class for an object's name."""
     def full(self):
+        """Returns the full name."""
         return(self.text)
     def firstlast(self):
+        """This method is included for compatibility with other types of names."""
         return(self.text)
     def lastfirst(self):
+        """This method is included for compatibility with other types of names."""
         return(self.text)
     def defined(self):
+        """Returns True if the name has been defined.  Otherwise, returns False."""
         return hasattr(self, 'text')
     def __str__(self):
         return(self.full())
@@ -271,8 +298,11 @@ class Name(DAObject):
 class IndividualName(Name):
     """The name of an Individual."""
     def defined(self):
+        """Returns True if the name has been defined.  Otherwise, returns False."""
         return hasattr(self, 'first')
     def full(self, middle='initial', use_suffix=True):
+        """Returns the full name.  Has optional keyword arguments middle 
+        and use_suffix."""
         names = [self.first]
         if hasattr(self, 'middle') and len(self.middle):
             if middle is False or middle is None:
@@ -287,8 +317,11 @@ class IndividualName(Name):
             names.append(self.suffix)
         return(" ".join(names))
     def firstlast(self):
+        """Returns the first name followed by the last name."""
         return(self.first + " " + self.last)
     def lastfirst(self):
+        """Returns the last name followed by a comma, followed by the 
+        last name, followed by the suffix (if a suffix exists)."""
         output = self.last + ", " + self.first
         if hasattr(self, 'suffix'):
             output += " " + self.suffix
@@ -303,6 +336,7 @@ class Address(DAObject):
     def __str__(self):
         return(self.block())
     def address_for_geolocation(self):
+        """Returns a one-line address.  Primarily used internally for geolocation."""
         output = str(self.address) + ", " + str(self.city) + ", " + str(self.state)
         if hasattr(self, 'zip'):
             output += " " + str(self.zip)
@@ -316,6 +350,7 @@ class Address(DAObject):
             return [result]
         return None
     def geolocate(self):
+        """Determines the latitude and longitude of the location."""
         if self.geolocated:
             return self.geolocate_success    
         the_address = self.address_for_geolocation()
@@ -349,17 +384,22 @@ class Address(DAObject):
             self.geolocate_success = False
         return self.geolocate_success
     def block(self):
+        """Returns the address formatted as a block, as in a mailing."""
         output = str(self.address) + " [NEWLINE] "
         if hasattr(self, 'unit') and self.unit:
             output += str(self.unit) + " [NEWLINE] "
         output += str(self.city) + ", " + str(self.state) + " " + str(self.zip)
         return(output)
     def line_one(self):
+        """Returns the first line of the address, including the unit 
+        number if there is one."""
         output = str(self.address)
         if hasattr(self, 'unit') and self.unit:
             output += ", " + str(self.unit)
         return(output)
     def line_two(self):
+        """Returns the second line of the address, including the city,
+        state and zip code."""
         output = str(self.city) + ", " + str(self.state) + " " + str(self.zip)
         return(output)
 
@@ -392,6 +432,7 @@ class Person(DAObject):
             return [result]
         return None
     def identified(self):
+        """Returns True if the person's name has been set.  Otherwise, returns False."""
         if hasattr(self.name, 'text'):
             return True
         return False
@@ -403,30 +444,46 @@ class Person(DAObject):
     def __str__(self):
         return self.name.full()
     def pronoun_objective(self, **kwargs):
+        """Returns "it" or "It" depending on the value of the optional
+        keyword argument "capitalize." """
         output = word('it')
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
             return(output)            
+    def possessive(self, target):
+        """Given a word like "fish," returns "your fish" or 
+        "John Smith's fish," depending on whether the person is the user."""
+        if self is this_thread.user:
+            return your(target)
+        else:
+            return possessify(self.name, target)
     def object_possessive(self, target):
+        """Given a word, returns a phrase indicating possession, but
+        uses the variable name rather than the object's actual name."""
         if self is this_thread.user:
             return your(target)
         return super(Person, self).object_possessive(target)
     def is_are_you(self, **kwargs):
+        """Returns "are you" if the object is the user, otherwise returns
+        "is" followed by the object name."""
         if self is this_thread.user:
             output = 'are you'
         else:
-            output = 'is ' + str(self.name)
+            output = 'is ' + str(self.full())
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
             return(output)
     def is_user(self):
+        """Returns True if the person is the user, otherwise False."""
         return self is this_thread.user
     def address_block(self):
+        """Return's the person name address as a block, for use in mailings."""
         return("[FLUSHLEFT] " + self.name.full() + " [NEWLINE] " + self.address.block())
     def email_address(self, include_name=None):
-        if include_name is True or (hasattr(self.name, 'first') and include_name is not False):
+        """Returns an e-mail address for the person"""
+        if include_name is True or (include_name is not False and self.name.defined()):
             return('"' + nodoublequote(self.name) + '" <' + str(self.email) + '>')
         return(str(self.email))
     # def age(self):
@@ -443,11 +500,15 @@ class Person(DAObject):
     #     else:
     #         return today.year - born.year
     def do_question(self, the_verb, **kwargs):
+        """Given a verb like "eat," returns "do you eat" or "does John Smith eat,"
+        depending on whether the person is the user."""
         if self == this_thread.user:
             return(do_you(the_verb, **kwargs))
         else:
             return(does_a_b(self.name, the_verb, **kwargs))
     def does_verb(self, the_verb, **kwargs):
+        """Given a verb like "eat," returns "eat" or "eats"
+        depending on whether the person is the user."""
         if self == this_thread.user:
             tense = 1
         else:
@@ -457,6 +518,7 @@ class Person(DAObject):
         else:
             return verb_present(the_verb, person=tense)
     def did_verb(self, the_verb, **kwargs):
+        """Like does_verb(), except uses the past tense of the verb."""
         if self == this_thread.user:
             tense = 1
         else:
@@ -473,6 +535,7 @@ class Individual(Person):
         self.initializeAttribute('expense', Expense)
         return super(Individual, self).init(**kwargs)
     def identified(self):
+        """Returns True if the individual's name has been set.  Otherwise, returns False."""
         if hasattr(self.name, 'first'):
             return True
         return False
@@ -493,24 +556,27 @@ class Individual(Person):
         else:
             return int(rd.years)
     def first_name_hint(self):
+        """If the individual is the user and the user is logged in and 
+        the user has set up a name in the user profile, this returns 
+        the user's first name.  Otherwise, returns a blank string."""
         if self is this_thread.user and this_thread.current_info['user']['is_authenticated'] and 'firstname' in this_thread.current_info['user'] and this_thread.current_info['user']['firstname']:
             return this_thread.current_info['user']['firstname'];
         return ''
     def last_name_hint(self):
+        """If the individual is the user and the user is logged in and 
+        the user has set up a name in the user profile, this returns 
+        the user's last name.  Otherwise, returns a blank string."""
         if self is this_thread.user and this_thread.current_info['user']['is_authenticated'] and 'lastname' in this_thread.current_info['user'] and this_thread.current_info['user']['lastname']:
             return this_thread.current_info['user']['lastname'];
         return ''
-    def possessive(self, target):
-        if self is this_thread.user:
-            return your(target)
-        else:
-            return possessify(self.name, target)
     def salutation(self):
+        """Depending on the gender attribute, returns "Mr." or "Ms." """
         if self.gender == 'female':
             return('Ms.')
         else:
             return('Mr.')
     def pronoun_possessive(self, target, **kwargs):
+        """Given a word like "fish," returns "her fish" or "his fish," as appropriate."""
         if self == this_thread.user and ('thirdperson' not in kwargs or not kwargs['thirdperson']):
             output = your(target)
         elif self.gender == 'female':
@@ -522,6 +588,7 @@ class Individual(Person):
         else:
             return(output)            
     def pronoun(self, **kwargs):
+        """Returns a pronoun like "you," "her," or "him," as appropriate."""
         if self == this_thread.user:
             output = word('you')
         if self.gender == 'female':
@@ -533,8 +600,10 @@ class Individual(Person):
         else:
             return(output)
     def pronoun_objective(self, **kwargs):
+        """Same as pronoun()."""
         return self.pronoun(**kwargs)
     def pronoun_subjective(self, **kwargs):
+        """Returns a pronoun like "you," "she," or "he," as appropriate."""
         if self == this_thread.user and ('thirdperson' not in kwargs or not kwargs['thirdperson']):
             output = word('you')
         elif self.gender == 'female':
@@ -546,6 +615,8 @@ class Individual(Person):
         else:
             return(output)
     def yourself_or_name(self, **kwargs):
+        """Returns a "yourself" if the individual is the user, otherwise 
+        returns the individual's name."""
         if self == this_thread.user:
             output = word('yourself')
         else:
@@ -574,6 +645,7 @@ class FinancialList(DADict):
         self.object_type = Value
         return super(FinancialList, self).init(**kwargs)
     def total(self):
+        """Returns the total value in the list, gathering the list items if necessary."""
         if self.gathered:
             result = 0
             for item in self.elements:
@@ -581,6 +653,7 @@ class FinancialList(DADict):
                     result += Decimal(self[item].value)
             return(result)
     def total_gathered(self):
+        """Returns the total value in the list, for items gathered so far."""
         result = 0
         for item in self.elements:
             elem = self.elements[item]
@@ -603,6 +676,7 @@ class PeriodicFinancialList(FinancialList):
         self.object_type = PeriodicValue
         return super(FinancialList, self).init(**kwargs)
     def total(self, period_to_use=1):
+        """Returns the total periodic value in the list, gathering the list items if necessary."""
         if self.gathered:
             result = 0
             if period_to_use == 0:
@@ -612,6 +686,7 @@ class PeriodicFinancialList(FinancialList):
                     result += Decimal(self.elements[item].value) * Decimal(self.elements[item].period)
             return(result/Decimal(period_to_use))
     def total_gathered(self, period_to_use=1):
+        """Returns the total periodic value in the list, for items gathered so far."""
         result = 0
         if period_to_use == 0:
             return(result)
@@ -642,6 +717,7 @@ class Expense(PeriodicFinancialList):
 class Value(DAObject):
     """Represents a value in a FinancialList."""
     def amount(self):
+        """Returns the value's amount, or 0 if the value does not exist."""
         if not self.exists:
             return 0
         return (Decimal(self.value))
@@ -651,6 +727,8 @@ class Value(DAObject):
 class PeriodicValue(Value):
     """Represents a value in a PeriodicFinancialList."""
     def amount(self, period_to_use=1):
+        """Returns the periodic value's amount for a full period, 
+        or 0 if the value does not exist."""
         if not self.exists:
             return 0
         logmessage("period is a " + str(type(self.period).__name__))
@@ -675,6 +753,8 @@ class Organization(Person):
             del kwargs['offices']
         return super(Organization, self).init(**kwargs)
     def will_handle(self, problem=None, county=None):
+        """Returns True or False depending on whether the organization 
+        serves the given county and/or handles the given problem."""
         logmessage("Testing " + str(problem) + " against " + str(self.handles))
         if problem:
             if not (hasattr(self, 'handles') and problem in self.handles):
@@ -798,33 +878,6 @@ def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None
             logmessage("Sending mail failed: " + str(errmess))
             success = False
     return(success)
-
-def month_of(the_date, as_word=False):
-    """Interprets the_date as a date and returns the month.  
-    Set as_word to True if you want the month as a word."""
-    date = dateutil.parser.parse(the_date)
-    try:
-        if as_word:
-            return(date.strftime('%B'))
-        return(date.strftime('%m'))
-    except:
-        return word("Bad date")
-
-def day_of(the_date):
-    """Interprets the_date as a date and returns the day of month."""
-    date = dateutil.parser.parse(the_date)
-    try:
-        return(date.strftime('%d'))
-    except:
-        return word("Bad date")
-
-def year_of(the_date):
-    """Interprets the_date as a date and returns the year."""
-    date = dateutil.parser.parse(the_date)
-    try:
-        return(date.strftime('%Y'))
-    except:
-        return word("Bad date")
 
 def email_string(persons, include_name=None):
     if persons is None:

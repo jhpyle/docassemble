@@ -10,6 +10,7 @@ import pkg_resources
 import titlecase
 from docassemble.base.logger import logmessage
 import babel.dates
+import dateutil.parser
 import locale
 import json
 import threading
@@ -384,6 +385,9 @@ def capitalize_default(a):
     else:
         return(unicode(a))
 
+def today_default(format='long'):
+    return babel.dates.format_date(datetime.date.today(), format=format, locale=this_thread.language)
+
 def currency_symbol_default():
     """Returns the currency symbol for the current locale."""
     return locale.localeconv()['currency_symbol'].decode('utf8')
@@ -496,7 +500,7 @@ language_functions = {
         '*': currency_symbol_default
     },
     'today': {
-        '*': lambda: babel.dates.format_date(datetime.date.today(), format='long', locale=this_thread.language)
+        '*': today_default
     },
     'period_list': {
         '*': lambda: [[12, word("Per Month")], [1, word("Per Year")], [52, word("Per Week")], [24, word("Twice Per Month")], [26, word("Every Two Weeks")]]
@@ -599,7 +603,69 @@ if name_suffix.__doc__ is None:
                           This is meant to be used in code for a multiple-choice field."""
 if today.__doc__ is None:
     today.__doc__ = """Returns today's date in long form according to the current locale."""    
-    
+if period_list.__doc__ is None:
+    period_list.__doc__ = """Returns a list of periods of a year, for inclusion in dropdown items."""
+if name_suffix.__doc__ is None:
+    name_suffix.__doc__ = """Returns a list of name suffixes, for inclusion in dropdown items."""
+if currency.__doc__ is None:
+    currency.__doc__ = """Formats the argument as a currency value, according to language and locale."""
+if currency_symbol.__doc__ is None:
+    currency_symbol.__doc__ = """Returns the symbol for currency, according to the locale."""
+if possessify.__doc__ is None:
+    possessify.__doc__ = """Given two arguments, a and b, returns "a's b." """
+if possessify_long.__doc__ is None:
+    possessify_long.__doc__ = """Given two arguments, a and b, returns "the b of a." """
+if comma_list.__doc__ is None:
+    comma_list.__doc__ = """Returns the arguments separated by commas."""
+if comma_and_list.__doc__ is None:
+    comma_and_list.__doc__ = """Returns the arguments separated by commas with "and" before the last one."""
+if nice_number.__doc__ is None:
+    nice_number.__doc__ = """Takes a number as an argument and returns the number as a word if ten or below."""
+if capitalize.__doc__ is None:
+    capitalize.__doc__ = """Returns the argument with the first letter capitalized."""
+if title_case.__doc__ is None:
+    title_case.__doc__ = """Returns the argument with the first letter of each word capitalized, as in a title."""
+if ordinal_number.__doc__ is None:
+    ordinal_number.__doc__ = """Given a number, returns "first" or "23rd" for 1 or 23, respectively."""
+if ordinal.__doc__ is None:
+    ordinal.__doc__ = """Given a number that is expected to be an index, returns "first" or "23rd" for 0 or 22, respectively."""
+if url_of.__doc__ is None:
+    url_of.__doc__ = """Returns a URL to a file within a docassemble package."""
+
+def month_of(the_date, as_word=False):
+    """Interprets the_date as a date and returns the month.  
+    Set as_word to True if you want the month as a word."""
+    try:
+        date = dateutil.parser.parse(the_date)
+        if as_word:
+            return(date.strftime('%B'))
+        return(date.strftime('%m'))
+    except:
+        return word("Bad date")
+
+def day_of(the_date):
+    """Interprets the_date as a date and returns the day of month."""
+    try:
+        date = dateutil.parser.parse(the_date)
+        return(date.strftime('%d'))
+    except:
+        return word("Bad date")
+
+def year_of(the_date):
+    """Interprets the_date as a date and returns the year."""
+    try:
+        date = dateutil.parser.parse(the_date)
+        return(date.strftime('%Y'))
+    except:
+        return word("Bad date")
+
+def format_date(the_date, format='long'):
+    """Interprets the_date as a date and returns the date formatted in long form."""
+    try:
+        return(babel.dates.format_date(dateutil.parser.parse(the_date), format=format, locale=get_language()))
+    except:
+        return word("Bad date")
+
 def underscore_to_space(a):
     return(re.sub('_', ' ', unicode(a)))
 
@@ -607,12 +673,12 @@ def space_to_underscore(a):
     """Converts spaces in the input to underscores in the output.  Useful for making filenames without spaces."""
     return(re.sub(' +', '_', unicode(a).encode('ascii', errors='ignore')))
 
-def remove(variable_name):
-    logmessage("Calling remove in util")
-    try:
-        exec('del ' + variable_name)
-    except:
-        pass
+# def remove(variable_name):
+#     logmessage("Calling remove in util")
+#     try:
+#         exec('del ' + variable_name)
+#     except:
+#         pass
 
 def force_ask(variable_name):
     """Given a variable, instructs docassemble to do what is necessary to define the variable,
@@ -757,6 +823,7 @@ def nodoublequote(text):
     return re.sub(r'"', '', unicode(text))
 
 def process_action(current_info):
+    """If an action is waiting to be processed, it processes the action."""
     if 'action' not in current_info:
         return
     the_action = current_info['action']
