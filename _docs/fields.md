@@ -499,7 +499,7 @@ The referenced [CSS file] contains the following:
 }
 {% endhighlight %}
 
-### Multiple-choice questions in `fields`
+## Multiple-choice questions in `fields`
 
 Note that adding `code` to a field makes it a multiple-choice
 question.  If you have a multiple-choice question and you want to
@@ -546,16 +546,62 @@ code: |
 
 ([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testpulldown.yml){:target="_blank"}.)
 
-### Assigning existing objects to variables
+## Assigning existing objects to variables
 
-You might want to ask the user a multiple-choice question like "which
-of the people you have told me about do you want to sue?"  That is,
-you want to define a new variable and you want it to be set to the
-value of an existing variable, but you want the user to select which
-one.
+Using template expressions (Python code enclosed in `${ }`), you can
+present users with multiple-choice questions for which choices are
+based on information gathered from the user.  For example:
 
-You can accomplish this using a `fields` entry with `datatype` set to
-`object`.
+{% highlight yaml %}
+---
+include: basic-questions.yml
+---
+question: |
+  What is your favorite date?
+fields:
+  - Greatest Date Ever: favorite_date
+    datatype: date
+    choices:
+      - ${ client.birthdate }
+      - ${ advocate.birthdate }
+---
+question: |
+  The best day in the history of the world was ${ favorite_date }.
+sets: all_done
+---
+mandatory: true
+code: all_done
+---
+{% endhighlight %}
+
+But what if you wanted to use a variable to refer to an object, such
+as a person?  You could try something like this:
+
+{% highlight yaml %}
+---
+question: |
+  Who is the tallest?
+fields:
+  - Tallest person: tallest_person
+    choices:
+      - ${ client }
+      - ${ advocate }
+---
+{% endhighlight %}
+
+In this case, `tallest_person` would be set to the _name_ of the
+`client` or the _name_ of the `advocate`.  But what if you wanted to
+then look at the birthdate of the tallest person, or some other
+attribute of the person?  If all you had was the person's name, you
+would not be able to do that.  Instead, you would want
+`tallest_person` to be defined as the object `client` or the object
+`advocate`, so that you can refer to `tallest_person.birthdate` just
+as you would refer to `client.birthdate`.
+
+You can accomplish this by setting `datatype` to `object` within a
+`fields` list, where the `choices` are the names of the objects from
+which to choose.  (Optionally, you can set a `default` value, which is
+also the name of a variable.)
 
 For example:
 
@@ -573,7 +619,8 @@ fields:
     - advocate
 ---
 question: |
-  The villain is ${ villain }.
+  The villain, ${ villain }, was born on
+  ${ format_date(villain.birthdate) }.
 sets: all_done
 ---
 mandatory: true
@@ -600,17 +647,29 @@ _alias_ for `advocate`, not a _copy_ of `advocate`.  If you
 subsequently set `advocate.birthdate`, you will immediately be able
 retrieve that value by looking at `villain.birthdate`, and vice-versa.
 
-Also, if you refer to `villain.favorite_food` and it is not yet
-defined, **docassemble** will go searching for a question that offers
-to define `advocate.favorite_food`.  This is because **docassemble**
-objects have an intrinsic identity, a name given to them "at birth."
-You can inspect this by referring to `villain.instanceName` in a
-question and will see that it returns `advocate`.  For more
-information about this, see the discussion in the documenation for
-[DAObject].  All **docassemble** objects are subtypes of [DAObject].
+Also because `villain` is an alias, if you refer to
+`villain.favorite_food` and it is not yet defined, **docassemble**
+will go searching for a question that offers to define
+`advocate.favorite_food`.  This is because **docassemble** objects
+have an intrinsic identity, a unique name given to them at the time
+they are created.  (You can inspect this by referring to
+`villain.instanceName` in a question and will see that it returns
+`advocate`.)  For more information about this, see the discussion in
+the documenation for [DAObject].  (All **docassemble** objects are
+subtypes of [DAObject].)
 
+If any of the objects listed under `choices` represent lists of
+objects, such as `case.defendant` or `client.child` (objects of type
+`PartyList`, those lists will be expanded and every item will be
+included.  You can also include under `choices` [Python] code, such as
+`case.parties()` or `case.all_known_people()`.
 
-### Populating a list of objects
+The `datatype` of `object` presents the list of choices as a
+pull-down.  If you prefer to present the user with radio buttons, set
+the `datatype` to `object_radio`.
+
+## Populating a list of objects
+
 
 
 

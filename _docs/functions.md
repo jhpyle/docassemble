@@ -136,6 +136,15 @@ second mandatory code block would cause the question to be asked
 again.  But you make your intentions more clear to readers of your
 code by calling `need()`.)
 
+## <a name="selections"></a>selections()
+
+This is used in multiple choice questions in `fields` lists where the
+`datatype` is `object`, `object_radio`, or `object_list` and the list
+of selections is created by embedded `code`.  The function takes one
+or more arguments and outputs an appropriately formatted list of
+objects.  If any of the arguments is a list, the list is unpacked and
+its elements are added to the list of selections.
+
 ## <a name="space_to_underscore"></a>space_to_underscore()
 
 If `user_name` is `John Wilkes Booth`,
@@ -376,6 +385,24 @@ You can call `prevent_going_back()` to instruct the web application to
 prevent the user from going back past that point.  See also the
 [modifier] of the same name.
 
+## <a name="from_b64_json"></a>from_b64_json()
+
+Takes a string as input, converts the string from base-64, then parses
+the string as [JSON], and returns the object represented by the
+[JSON].
+
+This is an advanced function that is used by software developers to
+integrate other systems with docassemble.
+
+## <a name="get_config"></a>get_config()
+
+Returns a value from the **docassemble** configuration file.  If the
+value is defined, returns None.
+
+See the explanation of this function in the
+[configuration section]({{ site.baseurl }}/docs/config.html#get_config")
+for more information.
+
 # Functions for managing global variables
 
 If you try writing your own functions, you will learn that functions
@@ -464,6 +491,26 @@ choices:
   - Español: es
 ---
 {% endhighlight %}
+
+Using the optional `dialect` keyword argument, you can also set the
+dialect of the language.  The dialect is relevant only for the
+text-to-speech engine.  For example:
+
+{% highlight yaml %}
+---
+initial: true
+code: |
+  set_language('en', dialect='au')
+---
+{% endhighlight %}
+
+This will set the language to English, and will instruct the
+text-to-speech engine to use an Australian dialect.
+
+## <a name="get_dialect"></a>get_dialect()
+
+Returns the current dialect, as set by the `dialect` keyword argument
+to the `set_language()` function.
 
 ## <a name="get_locale"></a>get_locale()
 
@@ -726,6 +773,100 @@ def my_period_list():
 docassemble.base.util.update_language_function('*', 'period_list', my_period_list)
 {% endhighlight %}
 
+## <a name="name_suffix"></a>name_suffix()
+
+Like `period_list()`, except it represents common suffixes of
+individual names.
+
+Returns the following list:
+{% highlight python %}
+['Jr', 'Sr', 'II', 'III', 'IV', 'V', 'VI']
+{% endhighlight %}
+
+Here is a question that asks for the user's name with an optional
+suffix:
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.legal
+---
+question: |
+  What is your name?
+fields:
+  - First Name: user.name.first
+  - Middle Name: user.name.middle
+    required: False
+  - Last Name: user.name.last
+  - Suffix: user.name.suffix
+    required: False
+    code: |
+      name_suffix()
+---
+{% endhighlight %}
+
+## <a name="month_of"></a><a name="day_of"></a><a name="year_of"></a>month_of(), day_of(), and year_of()
+
+These functions read a date and provide the parts of the date.
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.legal
+---
+question: The date, explained.
+subquestion: |
+  The year is ${ year_of(some_date) }.
+
+  The month is ${ month_of(some_date) }.
+
+  The day of month is ${ day_of(some_date) }.
+sets: all_done
+---
+question: |
+  Give me a date.
+fields:
+  - Date: some_date
+    datatype: date
+---
+mandatory: true
+code: all_done
+---
+{% endhighlight %}
+
+([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testdate.yml){:target="_blank"}.)
+
+The `month_of` function has an optional setting: if called as, e.g.,
+`month_of(some_date, as_word=True)`, it will return the month as a
+word (according to the current language and locale).
+
+## <a name="format_date">format_date()
+
+The `format_date()` function takes as input a date, which could be
+written in any format, and returns the date formatted appropriately
+for the current language.
+
+For example:
+
+* `format_date("10/31/2016")` returns `October 31, 2016`.
+* `format_date("2016-04-01")` returns `April 1, 2016`.
+* `format_date("March 3, 2016")` returns `March 3, 2016`.
+* `format_date('April 5, 2014', format='full')` returns `Saturday, April 5, 2014`.
+* `format_date('April 5, 2014', format='short')` returns `4/5/14`.
+* `format_date('April 5, 2014', format='M/d/yyyy')` returns `4/5/2014`.
+* `format_date('April 5, 2014', format='MM/dd/yyyy')` returns
+  `04/05/2014`.
+
+For more information about how to specify date formats, see the
+documentation for
+[babel.dates](http://babel.pocoo.org/en/latest/api/dates.html).
+
+## <a name="today"></a>today()
+
+Returns today's date in long form according to the current locale
+(e.g., `March 31, 2016`).  It is like `format_date()` in that it
+accepts an optional keyword argument `format`.
+
 ## <a name="title_case"></a>title_case()
 
 `title_case("the importance of being ernest")` returns `The Importance
@@ -831,3 +972,4 @@ docassemble.base.util.update_language_function('fr', 'her', docassemble.base.uti
 [keyword argument]: https://docs.python.org/2/glossary.html#term-argument
 [modifier]: {{ site.baseurl}}/docs/modifiers.html
 [markup]: {{ site.baseurl}}/docs/markup.html
+[JSON]: https://en.wikipedia.org/wiki/JSON

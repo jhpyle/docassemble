@@ -643,7 +643,7 @@ this host instead of writing them to
 `/usr/share/docassemble/log/docassemble.log` (or whatever other
 directory is set in `log`).
 
-# Using your own configuration variables
+# <a name="get_config"></a>Using your own configuration variables
 
 Feel free to use the configuration file to pass your own variables to
 your code.  To retrieve their values, use the `get_config()` function from

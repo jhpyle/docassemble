@@ -38,7 +38,7 @@ source code of [legal.py] and [basic-questions.yml].
 
 # Functions
 
-## <a name="update_info"></a>update_info
+## <a name="update_info"></a>update_info()
 
 Some of the [functions] and [methods] of `docassemble.base.legal` will
 behave differently depending on background information about the
@@ -118,7 +118,7 @@ code: |
 For more information about `get_info()` and `set_info()`, see
 [functions].
 
-## <a name="interview_url"></a>interview_url
+## <a name="interview_url"></a>interview_url()
 
 The `interview_url()` function returns a URL to the interview that
 provides a direct link to the interview and the current variable
@@ -126,7 +126,13 @@ store.  This is used in [multi-user interviews] to invite additional
 users to participate.  This function depends on `update_info()` having
 been run in "initial" code.
 
-## <a name="send_email"></a>send_email
+## <a name="interview_url_as_qr"></a>interview_url_as_qr()
+
+Like `interview_url()`, except it inserts into the markup a QR code
+linking to the interview.  This can be used to pass control from a web
+browser or a paper handout to a mobile device.
+    
+## <a name="send_email"></a>send_email()
 
 The `send_email()` function sends an e-mail using [Flask-Mail].  All
 of its arguments are [keyword arguments], the defaults of which are:
@@ -222,7 +228,7 @@ content: |
 ---
 {% endhighlight %}
 
-## <a name="map_of"></a>map_of
+## <a name="map_of"></a>map_of()
 
 The `map_of()` function inserts a Google Map into question text.  (It
 does not work within documents.)  The arguments are expected to be
@@ -256,39 +262,40 @@ does not work within documents.)  The arguments are expected to be
   (for a `Person` object called `person`).  If the `Person` object is
   the user, the default icon is a blue circle.
 
-## <a name="month_of"></a><a name="day_of"></a><a name="year_of"></a>month_of, day_of, and year_of
+## <a name="location_known"></a>location_known()
 
-These functions read a date and provide the parts of the date.
+Returns `True` or `False` depending on whether **docassemble** was
+able to learn the user's GPS location through the web browser.
 
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.legal
----
-question: The date, explained.
-subquestion: |
-  The year is ${ year_of(some_date) }.
+See [track_location] and [LatitudeLongitude](#LatitudeLongitude) for
+more information about how **docassemble** collects information about
+the user's location.
 
-  The month is ${ month_of(some_date) }.
+## <a name="location_returned"></a>location_returned()
 
-  The day of month is ${ day_of(some_date) }.
-sets: all_done
----
-question: |
-  Give me a date.
-fields:
-  - Date: some_date
-    datatype: date
----
-mandatory: true
-code: all_done
----
-{% endhighlight %}
+Returns `True` or `False` depending on whether an attempt has yet been
+made to transmit the user's GPS location from the browser to
+docassemble.  Will return true even if the attempt was not successful
+or the user refused to consent to the transfer.
 
-The `month_of` function has an optional setting: if called as, e.g.,
-`month_of(some_date, as_word=True)`, it will retur
+See [track_location] and [LatitudeLongitude](#LatitudeLongitude) for
+more information about how **docassemble** collects information about
+the user's location.
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testdate.yml){:target="_blank"}.)
+## <a name="user_lat_lon"></a>user_lat_lon()
+
+Returns the user's latitude and longitude as a tuple.  It assumes that
+the information about the user's location has already been passed to
+**docassemble** using `update_info()`.
+
+See [track_location] and [LatitudeLongitude](#LatitudeLongitude) for
+more information about how **docassemble** collects information about
+the user's location.
+
+## <a name="objects_from_file"></a>objects_from_file()
+
+`objects_from_file()` is a utility function for initializing a group
+of objects from a [YAML] file written in a certain format.
 
 # Classes for information about persons
 
@@ -1192,7 +1199,11 @@ fields:
 ---
 {% endhighlight %}
 
-(Not all necessary questions shown.)
+(Not all necessary questions are shown.)
+
+### <a name="Expense"></a>Expense
+
+`Expense` is a `PeriodicFinancialList` representing a person's expenses.
 
 # Classes for special purposes
 
@@ -1206,6 +1217,7 @@ have been sent to make sure that duplicative e-mails are not sent.
 
 It has one method:
 
+<a name="RoleChangeTracker.send_email"></a>
 * `role_change.send_email()` (not to be confused with the `send_email()`
   function)
 
@@ -1317,3 +1329,5 @@ explanation of `DATemplate`.
 [Markdown]: https://daringfireball.net/projects/markdown/
 [multi-user interviews]: {{ site.baseurl }}/docs/roles.html
 [special variable]: {{ site.baseurl }}/docs/special.html
+[track_location]:  {{ site.baseurl }}/docs/special.html#track_location
+[YAML]: https://en.wikipedia.org/wiki/YAML
