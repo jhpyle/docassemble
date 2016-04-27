@@ -364,11 +364,13 @@ whether the `Individual` is the user or not.  If you use these
 methods, be sure to inform **docassemble** who the user is by
 inserting the following [initial block]:
 
+{% highlight yaml %}
 ---
 initial: true
 code: |
   update_info(user, 'user_role', current_info)
 ---
+{% endhighlight %}
 
 (If you include the `basic-questions.yml` file, this is done for you.)
 
@@ -829,21 +831,18 @@ at first:
 
 The `Case` class has the following methods:
 
-<a name="Case.parties"></a>
-<a name="Case.all_known_people"></a>
-<a name="Case.role_of"></a>
-* `parties()`: returns a list of all parties to the case (namely, all
-elements of any attributes of the `Case` that are `PartyList`s.
-Calling this method will trigger "gathering" the elements of each
-`PartyList`.
-* `all_known_people()`: this is like `parties()`, except that it
-includes children of each individual, and does not trigger the
-gathering of the `PartyList`s.
-* `role_of(party)`: Looks for `party` within the `PartyList`
-attributes of the case and returns the attribute name of the
-`PartyList` in which `party` was found (e.g., `plaintiff`,
-`defendant`, etc.), or `third party` if `party` was not found in any
-of the lists.
+* <a name="Case.parties"></a>`parties()`: returns a list of all
+  parties to the case (namely, all elements of any attributes of the
+  `Case` that are `PartyList`s.  Calling this method will trigger
+  "gathering" the elements of each `PartyList`.
+* <a name="Case.all_known_people"></a>`all_known_people()`: this is
+  like `parties()`, except that it includes children of each
+  individual, and does not trigger the gathering of the `PartyList`s.
+* <a name="Case.role_of"></a>`role_of(party)`: Looks for `party`
+  within the `PartyList` attributes of the case and returns the
+  attribute name of the `PartyList` in which `party` was found (e.g.,
+  `plaintiff`, `defendant`, etc.), or `third party` if `party` was not
+  found in any of the lists.
 
 ## <a name="Jurisdiction"></a>Jurisdiction
 
@@ -869,6 +868,7 @@ It has the following attributes (in addition to `title`):
 It has one method:
 
 <a name="LegalFiling.caption"></a>
+
 * `caption()`: returns a case caption suitable for inclusion in a
 **docassemble** document.  If `pleading` is a `LegalFiling`, then
 including `pleading.caption()` will require the following:
@@ -1040,22 +1040,20 @@ list are going to be.
 
 The `FinancialList` has three methods:
 
-<a name="FinancialList.new"></a>
-<a name="FinancialList.total"></a>
-<a name="FinancialList.total_gathered"></a>
-* `.new(item_name)`: gives the `FinancialList` a new attribute with
-  the name `item_name` and the object type `Value`.
-* `.total()`: tallies up the total value of all `Value`s in the list
-  for which the `exists` attribute is `True`.  It requires `.gathered`
-  to be `True`, which means that a reference to `.total()` will cause
-  **docassemble** to ask the questions necessary to gather the full
-  list of items.
-* `.total_gathered()`: does what `.total()` does, except it does not
-  require `.gathered` to be `True`, which means that a reference to
-  `.total_gathered()` can be used in the midst of the process of
-  gathering the list of items.  For example, you may want to use this
-  to say something like "So far, you have told me about assets
-  totaling $45,000."
+* <a name="FinancialList.new"></a>`.new(item_name)`: gives the
+  `FinancialList` a new attribute with the name `item_name` and the
+  object type `Value`.
+* <a name="FinancialList.total"></a>`.total()`: tallies up the total
+  value of all `Value`s in the list for which the `exists` attribute
+  is `True`.  It requires `.gathered` to be `True`, which means that a
+  reference to `.total()` will cause **docassemble** to ask the
+  questions necessary to gather the full list of items.
+* <a name="FinancialList.total_gathered"></a>`.total_gathered()`: does
+  what `.total()` does, except it does not require `.gathered` to be
+  `True`, which means that a reference to `.total_gathered()` can be
+  used in the midst of the process of gathering the list of items.
+  For example, you may want to use this to say something like "So far,
+  you have told me about assets totaling $45,000."
 
 In the context of a template, a `FinancialList` returns the result of
 `.total()`.
@@ -1217,9 +1215,8 @@ have been sent to make sure that duplicative e-mails are not sent.
 
 It has one method:
 
-<a name="RoleChangeTracker.send_email"></a>
-* `role_change.send_email()` (not to be confused with the `send_email()`
-  function)
+* <a name="RoleChangeTracker.send_email"></a>`role_change.send_email()`
+  (not to be confused with the `send_email()` function)
 
 Here is an example that demonstrates its use:
 

@@ -64,7 +64,7 @@ metadata:
   authors:
     - name: Jonathan Pyle
       organization: none
-  revision_date: 2015-10-25
+  revision_date: 2016-04-22
 comment: |
   A "metadata" block contains information about the YAML file, such as
   the name of the author.
@@ -310,7 +310,7 @@ subquestion: |
   looks something like this.  If this document is signed by the judge,
   then you have a support order.
     
-  [FILE docassemble.demo:sample-support-order.jpg, 100%]
+  [FILE sample-support-order.jpg, 100%]
 yesno: x.has_support_order
 comment: |
   This question illustrates how you can include images in your
@@ -445,21 +445,12 @@ comment: |
 ---
 generic object: Individual
 code: |
-  x.asset.gathering = True
-  x.income.gathering = True
-  assets_to_ask_about = ['checking', 'savings', 'stocksbonds']
-  income_to_ask_about = ['employment', 'selfemployment', 'ssi', 'tanf']
-  for asset_item in assets_to_ask_about:
-    x.asset.new(asset_item)
-  for income_item in income_to_ask_about:
-    x.income.new(income_item, period=12)
-  x.asset.gathering = False
-  x.income.gathering = False
+  x.asset.new('checking account', 'savings account', 'stocks and bonds', 'automobiles')
   x.asset.gathered = True
+  x.income.new('employment', 'self employment', 'SSI', 'TANF', 'rent', period=12)
   x.income.gathered = True
 comment: |
-  This code gathers information about a person's income and assets if
-  necessary.
+  This code indicates which income and asset items to ask about.
 ---
 question: |
   Why do you think you deserve to win this case?
@@ -1014,18 +1005,17 @@ question: |
 fields:
   - Somebody already mentioned: village_idiot
     datatype: object
-    required: False
     disable others: true
-    code: |
-      selections(case.plaintiff, case.defendant)
+    choices:
+      - case.plaintiff
+      - case.defendant
   - First Name: village_idiot.name.first
   - Middle Name: village_idiot.name.middle
     required: False
   - Last Name: village_idiot.name.last
   - Suffix: village_idiot.name.suffix
     required: False
-    code: |
-      name_suffix()
+    code: name_suffix()
 ---
 question: Take something!
 fields:
@@ -1384,10 +1374,11 @@ question: |
 fields:
   - Somebody already mentioned: x.child[i]
     datatype: object
-    required: False
     disable others: true
-    code: |
-      selections(case.all_known_people(), exclude=[x, x.child])
+    choices: case.all_known_people()
+    exclude:
+      - x
+      - x.child
   - First Name: x.child[i].name.first
   - Middle Name: x.child[i].name.middle
     required: False
@@ -1481,12 +1472,23 @@ yesno: x.is_plaintiff
 ---
 generic object: Individual
 question: |
+  How much ${ x.do_question("make") } from ${ i }?
+fields:
+  - Amount: x.income[i].value
+    datatype: currency
+  - "": x.income[i].period
+    datatype: number
+    code: |
+      period_list()
+---
+generic object: Individual
+question: |
   How much ${ x.do_question("make") } from employment?
 decoration: bills
 fields:
-  - Employment Income: x.income.employment.value
+  - Employment Income: x.income['employment'].value
     datatype: currency
-  - "": x.income.employment.period
+  - "": x.income['employment'].period
     datatype: number
     code: |
       period_list()
@@ -1506,9 +1508,9 @@ question: |
   How much ${ x.do_question("make") } from self-employment?
 decoration: bills
 fields:
-  - Self-employment Income: x.income.selfemployment.value
+  - Self-employment Income: x.income['self employment'].value
     datatype: currency
-  - "": x.income.selfemployment.period
+  - "": x.income['self employment'].period
     datatype: number
     code: |
       period_list()
@@ -1518,9 +1520,9 @@ question: |
   How much ${ x.do_question("make") } from SSI?
 decoration: bills
 fields:
-  - SSI Income: x.income.ssi.value
+  - SSI Income: x.income['SSI'].value
     datatype: currency
-  - "": x.income.ssi.period
+  - "": x.income['SSI'].period
     datatype: number
     code: |
       period_list()
@@ -1531,9 +1533,9 @@ question: |
   (Temporary Assistance to Needy Families or TANF)?
 decoration: bills
 fields:
-  - TANF Income: x.income.tanf.value
+  - TANF Income: x.income['TANF'].value
     datatype: currency
-  - "": x.income.tanf.period
+  - "": x.income['TANF'].period
     datatype: number
     code: |
       period_list()
@@ -1541,10 +1543,18 @@ fields:
 generic object: Individual
 question: |
   How much ${ x.do_question("have") } in 
+  ${ i }?
+fields:
+  - Amount: x.asset[i].value
+    datatype: currency
+---
+generic object: Individual
+question: |
+  How much ${ x.do_question("have") } in 
   ${ x.pronoun_possessive("checking account") }?
 decoration: piggybank
 fields:
-  - Amount in Checking Account: x.asset.checking.value
+  - Amount in Checking Account: x.asset['checking account'].value
     datatype: currency
 ---
 generic object: Individual
@@ -1553,7 +1563,7 @@ question: |
   ${ x.pronoun_possessive("savings account") }?
 decoration: piggybank
 fields:
-  - Amount in Savings Account: x.asset.savings.value
+  - Amount in Savings Account: x.asset['savings account'].value
     datatype: currency
 ---
 generic object: Individual
@@ -1561,7 +1571,7 @@ question: |
   How much ${ x.do_question("have") } in stocks and bonds?
 decoration: stocks
 fields:
-  - Amount in Stocks and Bonds: x.asset.stocksbonds.value
+  - Amount in Stocks and Bonds: x.asset['stocks and bonds'].value
     datatype: currency
 ---
 generic object: Individual
@@ -1569,13 +1579,13 @@ question: |
   What kinds of income ${ x.do_question("have") }?
 decoration: bills
 fields:
-  - Employment: x.income.employment.exists
+  - Employment: x.income['employment'].exists
     datatype: yesnowide
-  - Self-employment: x.income.selfemployment.exists
+  - Self-employment: x.income['self employment'].exists
     datatype: yesnowide
-  - SSI: x.income.ssi.exists
+  - SSI: x.income['SSI'].exists
     datatype: yesnowide
-  - Cash assistance: x.income.tanf.exists
+  - Cash assistance: x.income['TANF'].exists
     datatype: yesnowide
 comment: |
   The datatype "yesnowide" is just like the data type "yesno" except
@@ -1584,14 +1594,24 @@ comment: |
 ---
 generic object: Individual
 question: |
+  ${ x.do_question("have", capitalize=True) } income from ${ i }?
+yesno: x.income[i].exists
+---
+generic object: Individual
+question: |
+  ${ x.do_question("own", capitalize=True) } any ${ i }?
+yesno: x.asset[i].exists
+---
+generic object: Individual
+question: |
   What kinds of assets ${ x.do_question("own") }?
 decoration: piggybank
 fields:
-  - Checking Account: x.asset.checking.exists
+  - Checking Account: x.asset['checking account'].exists
     datatype: yesnowide
-  - Savings Account: x.asset.savings.exists
+  - Savings Account: x.asset['savings account'].exists
     datatype: yesnowide
-  - Stocks and Bonds: x.asset.stocksbonds.exists
+  - Stocks and Bonds: x.asset['stocks and bonds'].exists
     datatype: yesnowide
 ...
 {% endhighlight %}

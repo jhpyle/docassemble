@@ -840,7 +840,7 @@ The `month_of` function has an optional setting: if called as, e.g.,
 `month_of(some_date, as_word=True)`, it will return the month as a
 word (according to the current language and locale).
 
-## <a name="format_date">format_date()
+## <a name="format_date"></a>format_date()
 
 The `format_date()` function takes as input a date, which could be
 written in any format, and returns the date formatted appropriately
