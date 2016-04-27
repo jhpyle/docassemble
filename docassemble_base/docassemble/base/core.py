@@ -5,7 +5,7 @@ import re
 import codecs
 from docassemble.base.util import possessify, possessify_long, a_preposition_b, a_in_the_b, your, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need
 
-__all__ = ['DAObject', 'DAList', 'DADict', 'DAFile', 'DAFileCollection', 'DAFileList']
+__all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList']
 
 unique_names = set()
 
@@ -247,12 +247,12 @@ class DAList(DAObject):
                 str(self.__getitem__(the_length))
         self.gathering = False
         return True
-    def comma_and_list(self):
+    def comma_and_list(self, **kwargs):
         """Returns the elements of the list, separated by commas, with 
         "and" before the last element."""
         if not self.gathering:
             self.gathered
-        return comma_and_list(self.elements)        
+        return comma_and_list(self.elements, **kwargs)
     def __iter__(self):
         return self.elements.__iter__()
     def _fill_up_to(self, index):
@@ -326,7 +326,7 @@ class DADict(DAObject):
         the object positions['file clerk'].  The type of object is given by
         the object_type attribute, or DAObject if object_type is not set."""
         for parg in pargs:
-            if type(parg) is list:
+            if hasattr(parg, '__iter__'):
                 for item in parg:
                     self.new(item, **kwargs)
             else:
@@ -420,12 +420,12 @@ class DADict(DAObject):
         return True
     def _new_item_init_callback(self):
         return
-    def comma_and_list(self):
+    def comma_and_list(self, **kwargs):
         """Returns the keys of the list, separated by commas, with 
         "and" before the last key."""
         if not self.gathering:
             self.gathered
-        return comma_and_list(sorted(self.elements.keys()))
+        return comma_and_list(sorted(self.elements.keys()), **kwargs)
     def __getitem__(self, index):
         if index not in self.elements:
             if self.object_type is None:
@@ -455,6 +455,150 @@ class DADict(DAObject):
         return self.elements.__delitem__(key)
     def __missing__(self, key):
         return self.elements.__missing__(key)
+    def __hash__(self, the_object):
+        return self.elements.__hash__(the_object)
+    def __str__(self):
+        return self.comma_and_list()
+
+class DASet(DAObject):
+    """A base class for objects that behave like Python sets."""
+    def init(self, **kwargs):
+        self.elements = set()
+        self.gathering = False
+        if 'elements' in kwargs:
+            self.elements.add(kwargs['elements'])
+            self.gathered = True
+            del kwargs['elements']
+        return super(DASet, self).init(**kwargs)
+    def add(self, *pargs, **kwargs):
+        """Adds the arguments to the set."""
+        for parg in pargs:
+            if hasattr(parg, '__iter__'):
+                for item in parg:
+                    self.add(item, **kwargs)
+            else:
+                self.elements.add(parg)
+    def does_verb(self, the_verb, **kwargs):
+        """Returns the appropriate conjugation of the given verb depending on
+        whether there is only one item in the list or multiple items.
+        E.g., player.does_verb('finish') will return "finishes" if
+        there is one player and "finish" if there is more than one
+        player.
+
+        """
+        if not self.gathering:
+            self.gathered
+        if len(self.elements) > 1:
+            tense = 'plural'
+        else:
+            tense = 3
+        if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
+            return verb_past(the_verb, person=tense)
+        else:
+            return verb_present(the_verb, person=tense)
+    def did_verb(self, the_verb, **kwargs):
+        """Like does_verb(), except it returns the past tense of the verb."""        
+        if not self.gathering:
+            self.gathered
+        if len(self.elements) > 1:
+            tense = 'plural'
+        else:
+            tense = 3
+        return verb_past(the_verb, person=tense)
+    def as_singular_noun(self):
+        """Returns a human-readable expression of the object based on its
+        instanceName, without making it plural.  E.g.,
+        player.as_singular_noun() returns "player" even if there are
+        multiple players.
+
+        """
+        the_noun = self.instanceName
+        the_noun = re.sub(r'.*\.', '', the_noun)
+        return the_noun        
+    def as_noun(self, *pargs):
+        """Returns a human-readable expression of the object based on its
+        instanceName, using singular or plural depending on whether
+        the set has one item in it or multiple items.  E.g.,
+        player.as_noun() returns "player" or "players," as
+        appropriate.  If an argument is supplied, the argument is used
+        instead of the instanceName.
+
+        """
+        the_noun = self.instanceName
+        if not self.gathering:
+            self.gathered
+            if len(pargs) > 0:
+                the_noun = pargs[0]
+        the_noun = re.sub(r'.*\.', '', the_noun)
+        if len(self.elements) > 1 or len(self.elements) == 0:
+            return noun_plural(the_noun)
+        else:
+            return the_noun
+    def number(self):
+        """Returns the number of items in the set.  Forces the gathering of
+        the items if necessary.
+
+        """
+        self.gathered
+        return len(self.elements)
+    def number_gathered(self):
+        """Returns the number of items in the set without forcing the
+        gathering of the items.
+
+        """
+        return len(self.elements)
+    def number_gathered_as_word(self):
+        """Returns the number of items in the set, spelling out the number if
+        ten or below.  Does not force the gathering of the items.
+
+        """
+        return nice_number(self.number_gathered())
+    def number_as_word(self):
+        """Returns the number of items in the set, spelling out the number if
+        ten or below.  Forces the gathering of the items if necessary.
+
+        """
+        return nice_number(self.number())
+    def gather(self, item_object_type=None):
+        """Causes the items in the set to be gathered and named.  Returns
+        True.
+
+        """
+        self.gathering = True
+        for elem in self.elements.values():
+            str(elem)
+        while self.there_is_another:
+            self.add(self.new_item)
+            del self.new_item
+            del self.there_is_another
+        self.gathering = False
+        return True
+    def comma_and_list(self, **kwargs):
+        """Returns the items in the set, separated by commas, with 
+        "and" before the last item."""
+        if not self.gathering:
+            self.gathered
+        return comma_and_list(sorted(map(str, self.elements)), **kwargs)
+    def __contains__(self, index):
+        return self.elements.__contains__(index)
+    def __iter__(self):
+        return self.elements.__iter__()
+    def __len__(self):
+        return self.elements.__len__()
+    def __reversed__(self):
+        return self.elements.__reversed__()
+    def __and__(self, operand):
+        return self.elements.__and__(operand)
+    def __or__(self, operand):
+        return self.elements.__or__(operand)
+    def __rand__(self, operand):
+        return self.elements.__rand__(operand)
+    def __ror__(self, operand):
+        return self.elements.__ror__(operand)
+    def __hash__(self, the_object):
+        return self.elements.__hash__(the_object)
+    def __str__(self):
+        return self.comma_and_list()
 
 class DAFile(DAObject):
     """Used internally by docassemble to represent a file."""
@@ -569,7 +713,7 @@ def myb64quote(text):
 def setify(item, output=set()):
     if isinstance(item, DAList):
         setify(item.elements, output)
-    elif type(item) is list:
+    elif hasattr(item, '__iter__'):
         for subitem in item:
             setify(subitem, output)
     else:
