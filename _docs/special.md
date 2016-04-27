@@ -249,3 +249,5 @@ on and off during the course of the interview as necessary.
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [multi-user interview feature]: {{ site.baseurl }}/docs/roles.html
 [security]: {{ site.baseurl }}/docs/security.html
+[function]: {{ site.baseurl }}/docs/functions.html
+[functions]: {{ site.baseurl }}/docs/functions.html

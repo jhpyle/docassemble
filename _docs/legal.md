@@ -1331,3 +1331,4 @@ explanation of `DATemplate`.
 [special variable]: {{ site.baseurl }}/docs/special.html
 [track_location]:  {{ site.baseurl }}/docs/special.html#track_location
 [YAML]: https://en.wikipedia.org/wiki/YAML
+[Python set]: https://docs.python.org/2/library/stdtypes.html#set

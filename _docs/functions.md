@@ -277,7 +277,7 @@ buttons:
 ---
 event: set_number_event
 code: |
-lucky_number += current_info['arguments']['increment']
+  lucky_number += current_info['arguments']['increment']
 ---
 code: |
   lucky_number = 2
@@ -945,31 +945,32 @@ from `docassemble.base.util`:
 docassemble.base.util.update_language_function('fr', 'her', docassemble.base.util.prefix_constructor('sa '))
 {% endhighlight %}
 
-[interview logic]: {{ site.baseurl}}/docs/logic.html
+[interview logic]: {{ site.baseurl }}/docs/logic.html
 [Python list]: https://docs.python.org/2/tutorial/datastructures.html
 [Python module]: https://docs.python.org/2/tutorial/modules.html
 [Python modules]: https://docs.python.org/2/tutorial/modules.html
-[configuration]: {{ site.baseurl}}/docs/config.html
-[installation]: {{ site.baseurl}}/docs/installation.html
+[configuration]: {{ site.baseurl }}/docs/config.html
+[installation]: {{ site.baseurl }}/docs/installation.html
 [Python interpreter]: https://docs.python.org/2/tutorial/interpreter.html
-[attachments]: {{ site.baseurl}}/docs/documents.html
-[language support]: {{ site.baseurl}}/docs/language.html
+[attachments]: {{ site.baseurl }}/docs/documents.html
+[language support]: {{ site.baseurl }}/docs/language.html
 [Python locale]: https://docs.python.org/2/library/locale.html
 [locale module]: https://docs.python.org/2/library/locale.html
 [NodeBox English Linguistics Library]: https://www.nodebox.net/code/index.php/Linguistics
 [titlecase]: https://pypi.python.org/pypi/titlecase
 [Markdown]: https://daringfireball.net/projects/markdown/
-[fields]: {{ site.baseurl}}/docs/fields.html
-[question]: {{ site.baseurl}}/docs/questions.html
-[roles]: {{ site.baseurl}}/docs/roles.html
+[fields]: {{ site.baseurl }}/docs/fields.html
+[question]: {{ site.baseurl }}/docs/questions.html
+[roles]: {{ site.baseurl }}/docs/roles.html
 [dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
-[Setting Variables]: {{ site.baseurl}}/docs/fields.html
+[Setting Variables]: {{ site.baseurl }}/docs/fields.html
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [keyword arguments]: https://docs.python.org/2/glossary.html#term-argument
 [keyword argument]: https://docs.python.org/2/glossary.html#term-argument
-[modifier]: {{ site.baseurl}}/docs/modifiers.html
-[markup]: {{ site.baseurl}}/docs/markup.html
+[modifier]: {{ site.baseurl }}/docs/modifiers.html
+[markup]: {{ site.baseurl }}/docs/markup.html
 [JSON]: https://en.wikipedia.org/wiki/JSON
+[special variables]: {{ site.baseurl }}/docs/special.html

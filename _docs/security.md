@@ -4,7 +4,7 @@ title: Security
 short_title: Security
 ---
 
-**docassemble** is designed with user privacy in mind.  User passwords 
+**docassemble** is designed with user privacy in mind.
 
 # Importance of using HTTPS
 
