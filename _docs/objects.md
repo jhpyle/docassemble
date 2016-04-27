@@ -740,12 +740,19 @@ This will result in the following five questions being asked:
 * What is the name of the fourth recipient?
 * What is the name of the fifth recipient?
 
+<a name="DAList.appendObject"></a>
 The `appendObject()` method is similar to the `initializeAttribute()`
 method we discussed earlier.  Running
 `recipient.appendObject(Individual)` creates a new object of the class
 `Individual` and adds it to the list.  In the example above, the first
 such object is the fourth element in the list, which means that the
 intrinsic name of the new object is `recipient[3]`.
+
+A `DAList` can be given a default object type, so that
+`appendObject()` can be called without an argument.  This default
+object type is controlled by the `.objectFunction` attribute.  For
+example, when a `PartyList` object is created, the `.objectFunction`
+attribute is set to `Person`.
 
 If you want greater control over the way the questions are asked, you
 could add a `generic object` question that is specific to the
@@ -805,6 +812,8 @@ Other methods available on a DAList are:
   attribute.
 * <a name="DAList.number_gathered_as_word"></a>`number_gathered_as_word()` - same as `number_gathered()`, except that the
   `nice_number()` [function] is applied to the result.
+* <a name="DAList.remove"></a>`remove()` - removes the given elements
+  from the list, if they are in the list.
 * <a name="DAList.comma_and_list"></a>`comma_and_list()` - returns the elements of the list run through
   the `comma_and_list()` [function].
 
@@ -886,6 +895,13 @@ the following attributes:
 * `number`: the internal integer number used by **docassemble** to
   keep track of documents stored in the system
 
+<a name="DAFile.show"></a>It has one method, `.show()`, which inserts
+markup that displays the file as an image.  This method takes an
+optional keyword argument, `width`.
+
+When included in a template, a `DAFile` object will effectively
+call `show()` on itself.
+
 ## <a name="DAFileCollection"></a>DAFileCollection
 
 `DAFileCollection` objects are created internally by **docassemble**
@@ -907,8 +923,12 @@ When a question has a field with a `datatype` for a file upload (see
 [fields]), the variable will be defined as a `DAFileList` object
 containing the file or files uploaded.
 
+<a name="DAFileList.show"></a>It has one method, `.show()`, which
+inserts markup that displays each file as an image.  This method takes
+an optional keyword argument, `width`.
+
 When included in a template, a `DAFileList` object will effectively
-call `show()` on each `DAFile` element in order.
+call `show()` on itself.
 
 ## <a name="DATemplate"></a>DATemplate
 
