@@ -52,6 +52,7 @@ class DAObject(object):
         self.attrList = list()
         self.init(**kwargs)
     def set_instance_name(self, thename):
+        """Sets the instanceName attribute, if it is not already set."""
         if not self.has_nonrandom_instance_name:
             self.instanceName = thename
             self.has_nonrandom_instance_name = True
@@ -66,21 +67,32 @@ class DAObject(object):
         else:
             raise NameError("name '" + object.__getattribute__(self, 'instanceName') + "." + thename + "' is not defined")
     def object_name(self):
+        """Returns the instanceName attribute, or, if the instanceName contains attributes, returns a
+        phrase.  E.g., case.plaintiff becomes "plaintiff in the case." """
         return (reduce(a_in_the_b, map(object_name_convert, reversed(self.instanceName.split(".")))))
     def object_possessive(self, target):
+        """Returns a possessive phrase based on the instanceName.  E.g., client.object_possessive('fish') returns
+        "client's fish." """
         if len(self.instanceName.split(".")) > 1:
             return(possessify_long(self.object_name(), target))
         else:
             return(possessify(the(self.object_name()), target))
     def initializeAttribute(self, name, objectType, **kwargs):
+        """Defines an attribute for the object, setting it to a newly initialized object.
+        The first argument is the name of the attribute and the second argument is type
+        of the new object that will be initialized.  E.g., 
+        client.initializeAttribute('mother', Individual) initializes client.mother as an
+        Individual with instanceName "client.mother"."""
         if name in self.__dict__:
             return
         else:
             object.__setattr__(self, name, objectType(self.instanceName + "." + name, **kwargs))
             self.attrList.append(name)
     def attribute_defined(self, name):
+        """Returns True or False depending on whether the given attribute is defined."""
         return hasattr(self, name)
     def attr(self, name):
+        """Returns the value of the given attribute, or None if the attribute is not defined"""
         return getattr(self, name, None)
     def __str__(self):
         if hasattr(self, 'name'):
@@ -111,6 +123,11 @@ class DAList(DAObject):
             self.object_type = None
         return super(DAList, self).init(**kwargs)
     def appendObject(self, *pargs, **kwargs):
+        """Creates a new object and adds it to the list.
+        Takes an optional argument, which is the type of object
+        the new object should be.  If no object type is provided,
+        the object type given by .objectFunction is used, and if 
+        that is not set, DAObject is used."""
         if len(pargs) > 0:
             objectFunction = pargs[0]
         elif self.object_type is not None:
@@ -120,20 +137,31 @@ class DAList(DAObject):
         newobject = objectFunction(self.instanceName + '[' + str(len(self.elements)) + ']', **kwargs)
         self.elements.append(newobject)
         return newobject
-    def append(self, value):
-        self.elements.append(value)
-    def remove(self, value):
-        if value in self.elements:
-            self.elements.remove(value)
+    def append(self, *pargs):
+        """Adds the arguments to the end of the list."""
+        for parg in pargs:
+            self.elements.append(parg)
+    def remove(self, *pargs):
+        """Removes the given arguments from the list, if they are in the list"""
+        for value in pargs:
+            if value in self.elements:
+                self.elements.remove(value)
     def extend(self, the_list):
+        """Adds each of the elements of the given list to the end of the list."""
         self.elements.extend(the_list)
     def first(self):
+        """Returns the first element of the list"""
         return self.__getitem__(0)
     def last(self):
+        """Returns the last element of the list"""
         if len(self.elements) == 0:
             return self.__getitem__(0)
         return self.__getitem__(len(self.elements)-1)
     def does_verb(self, the_verb, **kwargs):
+        """Returns the appropriate conjugation of the given verb depending on whether
+        there is only one element in the list or multiple elements.  E.g.,
+        case.plaintiff.does_verb('sue') will return "sues" if there is one plaintiff
+        and "sue" if there is more than one plaintiff."""
         if not self.gathering:
             self.gathered
         if len(self.elements) > 1:
@@ -145,6 +173,7 @@ class DAList(DAObject):
         else:
             return verb_present(the_verb, person=tense)
     def did_verb(self, the_verb, **kwargs):
+        """Like does_verb(), except it returns the past tense of the verb."""        
         if not self.gathering:
             self.gathered
         if len(self.elements) > 1:
@@ -153,10 +182,18 @@ class DAList(DAObject):
             tense = 3
         return verb_past(the_verb, person=tense)
     def as_singular_noun(self):
+        """Returns a human-readable expression of the object based on its instanceName,
+        without making it plural.  E.g., case.plaintiff.child.as_singular_noun() 
+        returns "child" even if there are multiple children."""
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
         return the_noun        
     def as_noun(self, *pargs):
+        """Returns a human-readable expression of the object based on its instanceName,
+        using singular or plural depending on whether the list has one element or more
+        than one element.  E.g., case.plaintiff.child.as_noun() returns "child" or
+        "children," as appropriate.  If an argument is supplied, the argument is used
+        instead of the instanceName."""
         the_noun = self.instanceName
         if not self.gathering:
             self.gathered
@@ -168,15 +205,24 @@ class DAList(DAObject):
         else:
             return the_noun
     def number(self):
+        """Returns the number of elements in the list.  Forces the gathering of the
+        elements if necessary."""
         self.gathered
         return len(self.elements)
     def number_gathered(self):
+        """Returns the number of elements in the list without forcing the gathering
+        of the elements."""
         return len(self.elements)
-    def number_gathered_as_word(self):
-        return nice_number(self.number_gathered())
     def number_as_word(self):
+        """Returns the number of elements in the list, spelling out the number if ten 
+        or below.  Forces the gathering of the elements if necessary."""
         return nice_number(self.number())
+    def number_gathered_as_word(self):
+        """Returns the number of elements in the list, spelling out the number if ten 
+        or below.  Does not force the gathering of the elements."""
+        return nice_number(self.number_gathered())
     def gather(self, number=None, item_object_type=None, minimum=1):
+        """Causes the elements of the list to be gathered and named.  Returns True."""
         if item_object_type is None and self.object_type is not None:
             item_object_type = self.object_type
         self.gathering = True
@@ -202,6 +248,8 @@ class DAList(DAObject):
         self.gathering = False
         return True
     def comma_and_list(self):
+        """Returns the elements of the list, separated by commas, with 
+        "and" before the last element."""
         if not self.gathering:
             self.gathered
         return comma_and_list(self.elements)        
@@ -254,11 +302,29 @@ class DADict(DAObject):
         if not hasattr(self, 'object_type'):
             self.object_type = None
         return super(DADict, self).init(**kwargs)
-    def initializeObject(self, entry, objectFunction, **kwargs):
+    def initializeObject(self, *pargs, **kwargs):
+        """Creates a new object and creates an entry in the dictionary for it.
+        The first argument is the name of the dictionary key to set.
+        Takes an optional second argument, which is the type of object
+        the new object should be.  If no object type is provided,
+        the object type given by .objectFunction is used, and if 
+        that is not set, DAObject is used."""
+        entry = pargs[0]
+        if len(pargs) > 1:
+            objectFunction = pargs[1]
+        elif self.object_type is not None:
+            objectFunction = self.object_type
+        else:
+            objectFunction = DAObject
         newobject = objectFunction(self.instanceName + '[' + repr(entry) + ']', **kwargs)
         self.elements[entry] = newobject
         return newobject
     def new(self, *pargs, **kwargs):
+        """Initializes new dictionary entries.  Each entry is set to a
+        new object.  For example, if the dictionary is called positions,
+        calling positions.new('file clerk') will result in the creation of
+        the object positions['file clerk'].  The type of object is given by
+        the object_type attribute, or DAObject if object_type is not set."""
         for parg in pargs:
             if type(parg) is list:
                 for item in parg:
@@ -268,6 +334,11 @@ class DADict(DAObject):
                     if parg not in self.elements:
                         self.initializeObject(parg, self.object_type, **kwargs)
     def does_verb(self, the_verb, **kwargs):
+        """Returns the appropriate conjugation of the given verb depending on
+        whether there is only one key in the dictionary or multiple
+        keys.  E.g., player.does_verb('finish') will return "finishes" if there
+        is one player and "finish" if there is more than one
+        player."""
         if not self.gathering:
             self.gathered
         if len(self.elements) > 1:
@@ -279,6 +350,7 @@ class DADict(DAObject):
         else:
             return verb_present(the_verb, person=tense)
     def did_verb(self, the_verb, **kwargs):
+        """Like does_verb(), except it returns the past tense of the verb."""        
         if not self.gathering:
             self.gathered
         if len(self.elements) > 1:
@@ -287,10 +359,20 @@ class DADict(DAObject):
             tense = 3
         return verb_past(the_verb, person=tense)
     def as_singular_noun(self):
+        """Returns a human-readable expression of the object based on its
+        instanceName, without making it plural.  E.g.,
+        player.as_singular_noun() returns "player" even if there are
+        multiple players."""
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
         return the_noun        
     def as_noun(self, *pargs):
+        """Returns a human-readable expression of the object based on its
+        instanceName, using singular or plural depending on whether
+        the dictionary has one key or more than one key.  E.g.,
+        player.as_noun() returns "player" or "players," as
+        appropriate.  If an argument is supplied, the argument is used
+        instead of the instanceName."""
         the_noun = self.instanceName
         if not self.gathering:
             self.gathered
@@ -302,15 +384,24 @@ class DADict(DAObject):
         else:
             return the_noun
     def number(self):
+        """Returns the number of keys in the dictionary.  Forces the gathering of the
+        dictionary items if necessary."""
         self.gathered
         return len(self.elements)
     def number_gathered(self):
+        """Returns the number of keys in the dictionary without forcing the gathering
+        of the dictionary items."""
         return len(self.elements)
     def number_gathered_as_word(self):
+        """Returns the number of keys in the dictionary, spelling out the number if ten 
+        or below.  Does not force the gathering of the dictionary items."""
         return nice_number(self.number_gathered())
     def number_as_word(self):
+        """Returns the number of keys in the dictionary, spelling out the number if ten 
+        or below.  Forces the gathering of the dictionary items if necessary."""
         return nice_number(self.number())
     def gather(self, item_object_type=None):
+        """Causes the dictionary items to be gathered and named.  Returns True."""
         if item_object_type is None and self.object_type is not None:
             item_object_type = self.object_type
         self.gathering = True
@@ -330,6 +421,8 @@ class DADict(DAObject):
     def _new_item_init_callback(self):
         return
     def comma_and_list(self):
+        """Returns the keys of the list, separated by commas, with 
+        "and" before the last key."""
         if not self.gathering:
             self.gathered
         return comma_and_list(sorted(self.elements.keys()))
@@ -347,8 +440,10 @@ class DADict(DAObject):
     def __contains__(self, index):
         return self.elements.__contains__(index)
     def keys(self):
+        """Returns the keys of the dictionary as a Python list."""
         return self.elements.keys()
     def values(self):
+        """Returns the values of the dictionary as a Python list."""
         return self.elements.values()
     def __iter__(self):
         return self.elements.__iter__()
@@ -381,6 +476,10 @@ class DAFile(DAObject):
     def __unicode__(self):
         return self.show()
     def show(self, width=None):
+        """Inserts markup that displays the file as an image.  Takes an
+        optional keyword argument width.
+
+        """
         if not self.ok:
             return('')
         if width is not None:
@@ -389,20 +488,28 @@ class DAFile(DAObject):
             return('[FILE ' + str(self.number) + ']')
 
 class DAFileCollection(DAObject):
-    """Used internally by docassemble to refer to a collection of
-    DAFile objects, usually representing the same document in different
-    formats.  Attributes represent file types.  The attachments feature
-    generates objects of this type."""
+    """Used internally by docassemble to refer to a collection of DAFile
+    objects, usually representing the same document in different
+    formats.  Attributes represent file types.  The attachments
+    feature generates objects of this type.
+
+    """
     pass
 
 class DAFileList(DAList):
-    """Used internally by docassemble to refer to a list of files,
-    such as a list of files uploaded to a single variable."""
+    """Used internally by docassemble to refer to a list of files, such as
+    a list of files uploaded to a single variable.
+
+    """
     def __str__(self):
         return self.show()
     def __unicode__(self):
         return self.show()
     def show(self, width=None):
+        """Inserts markup that displays each element in the list as an image.
+        Takes an optional keyword argument width.
+
+        """
         output = ''
         for element in self.elements:
             if element.ok:
