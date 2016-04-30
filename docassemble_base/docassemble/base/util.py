@@ -171,9 +171,12 @@ ordinal_functions = {
 def words():
     return word_collection[this_thread.language]
 
-def word(the_word):
+def word(the_word, **kwargs):
     """Returns the word translated into the current language.  If a translation is not known,
     the input is returned."""
+    # Currently, no kwargs are used, but in the future, this function could be
+    # expanded to use kwargs.  For example, for languages with gendered words,
+    # the gender could be passed as a keyword argument.
     try:
         return word_collection[this_thread.language][the_word].decode('utf-8')
     except:
@@ -469,11 +472,20 @@ language_functions = {
     'his': {
         'en': prefix_constructor('his ')
     },
+    'is_word': {
+        'en': prefix_constructor('is ')
+    },
+    'their': {
+        'en': prefix_constructor('their ')
+    },
     'of_the': {
         'en': prefix_constructor('of the ')
     },
     'your': {
         'en': prefix_constructor('your ')
+    },
+    'its': {
+        'en': prefix_constructor('its ')
     },
     'the': {
         'en': prefix_constructor('the ')
@@ -559,7 +571,10 @@ a_preposition_b = language_function_constructor('a_preposition_b')
 a_in_the_b = language_function_constructor('a_in_the_b')
 her = language_function_constructor('her')
 his = language_function_constructor('his')
-your  = language_function_constructor('your')
+is_word = language_function_constructor('is_word')
+their = language_function_constructor('their')
+your = language_function_constructor('your')
+its = language_function_constructor('its')
 of_the = language_function_constructor('of_the')
 the = language_function_constructor('the')
 do_you = language_function_constructor('do_you')

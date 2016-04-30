@@ -3,7 +3,7 @@ import random
 from docassemble.base.logger import logmessage
 import re
 import codecs
-from docassemble.base.util import possessify, possessify_long, a_preposition_b, a_in_the_b, your, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need
+from docassemble.base.util import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList']
 
@@ -98,9 +98,26 @@ class DAObject(object):
         if hasattr(self, 'name'):
             return self.name
         return self.object_name()
+    def __unicode__(self):
+        return unicode(self.__str__())
     def __dir__(self):
         return self.attrList
-            
+    def pronoun_possessive(self, target, **kwargs):
+        """Returns "its <target>." """
+        output = its(target, **kwargs)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)            
+    def pronoun(self, **kwargs):
+        return word('it', **kwargs)
+    def pronoun_objective(self, **kwargs):
+        """Same as pronoun()."""
+        return self.pronoun(**kwargs)
+    def pronoun_subjective(self, **kwargs):        
+        """Same as pronoun()."""
+        return self.pronoun(**kwargs)
+
 class DAList(DAObject):
     """The base class for lists of things.  A DAList object
     has the attributes "gathered" and "gathering."  The "gathering"
@@ -285,7 +302,49 @@ class DAList(DAObject):
     def __str__(self):
         return self.comma_and_list()
     def __unicode__(self):
-        return self.comma_and_list()
+        return unicode(self.__str__())
+    def union(other_set):
+        return set(self.elements).union(setify(other_set))
+    def intersection(other_set):
+        return set(self.elements).intersection(setify(other_set))
+    def difference(other_set):
+        return set(self.elements).difference(setify(other_set))
+    def isdisjoint(other_set):
+        return set(self.elements).isdisjoint(setify(other_set))
+    def issubset(other_set):
+        return set(self.elements).issubset(setify(other_set))
+    def issuperset(other_set):
+        return set(self.elements).issuperset(setify(other_set))
+    def pronoun_possessive(self, target, **kwargs):
+        """Given a word like "fish," returns "her fish," "his fish," or "their fish," as appropriate."""
+        if len(self.elements) == 1:
+            return self.elements[0].pronoun_possessive(target, **kwargs)
+        output = their(target, **kwargs)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)            
+    def pronoun(self, **kwargs):
+        """Returns a pronoun like "you," "her," or "him," "it", or "them," as appropriate."""
+        if len(self.elements) == 1:
+            return self.elements[0].pronoun(**kwargs)
+        output = word('them', **kwargs)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)
+    def pronoun_objective(self, **kwargs):
+        """Same as pronoun()."""
+        return self.pronoun(**kwargs)
+    def pronoun_subjective(self, **kwargs):
+        """Returns a pronoun like "you," "she," "he," or "they" as appropriate."""
+        if len(self.elements) == 1:
+            return self.elements[0].pronoun_subjective(**kwargs)
+        output = word('they', **kwargs)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)
 
 class DADict(DAObject):
     """A base class for objects that behave like Python dictionaries."""
@@ -459,6 +518,39 @@ class DADict(DAObject):
         return self.elements.__hash__(the_object)
     def __str__(self):
         return self.comma_and_list()
+    def __unicode__(self):
+        return unicode(self.__str__())
+    def union(other_set):
+        return set(self.elements.values()).union(setify(other_set))
+    def intersection(other_set):
+        return set(self.elements.values()).intersection(setify(other_set))
+    def difference(other_set):
+        return set(self.elements.values()).difference(setify(other_set))
+    def isdisjoint(other_set):
+        return set(self.elements.values()).isdisjoint(setify(other_set))
+    def issubset(other_set):
+        return set(self.elements.values()).issubset(setify(other_set))
+    def issuperset(other_set):
+        return set(self.elements.values()).issuperset(setify(other_set))
+    def pronoun_possessive(self, target, **kwargs):
+        """Returns "their <target>." """
+        output = their(target, **kwargs)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)            
+    def pronoun(self, **kwargs):
+        output = word('them', **kwargs)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)            
+    def pronoun_objective(self, **kwargs):
+        """Same as pronoun()."""
+        return self.pronoun(**kwargs)
+    def pronoun_subjective(self, **kwargs):        
+        """Same as pronoun()."""
+        return self.pronoun(**kwargs)
 
 class DASet(DAObject):
     """A base class for objects that behave like Python sets."""
@@ -466,24 +558,25 @@ class DASet(DAObject):
         self.elements = set()
         self.gathering = False
         if 'elements' in kwargs:
-            self.elements.add(kwargs['elements'])
+            self.add(kwargs['elements'])
             self.gathered = True
             del kwargs['elements']
         return super(DASet, self).init(**kwargs)
-    def add(self, *pargs, **kwargs):
-        """Adds the arguments to the set."""
+    def add(self, *pargs):
+        """Adds the arguments to the set, unpacking each argument if it is a
+        group of some sort (i.e. it is iterable)."""
         for parg in pargs:
             if hasattr(parg, '__iter__'):
                 for item in parg:
-                    self.add(item, **kwargs)
+                    self.add(item)
             else:
                 self.elements.add(parg)
     def does_verb(self, the_verb, **kwargs):
         """Returns the appropriate conjugation of the given verb depending on
-        whether there is only one item in the list or multiple items.
-        E.g., player.does_verb('finish') will return "finishes" if
-        there is one player and "finish" if there is more than one
-        player.
+        whether there is only one element in the set or multiple
+        items.  E.g., player.does_verb('finish') will return
+        "finishes" if there is one player and "finish" if there is
+        more than one player.
 
         """
         if not self.gathering:
@@ -599,6 +692,61 @@ class DASet(DAObject):
         return self.elements.__hash__(the_object)
     def __str__(self):
         return self.comma_and_list()
+    def __unicode__(self):
+        return unicode(self.__str__())
+    def union(other_set):
+        """Returns a Python set consisting of the elements of current set
+        combined with the elements of the other_set.
+
+        """
+        return self.elements.union(setify(other_set))
+    def intersection(other_set):
+        """Returns a Python set consisting of the elements of the current set
+        that also exist in the other_set.
+
+        """
+        return self.elements.intersection(setify(other_set))
+    def difference(other_set):
+        """Returns a Python set consisting of the elements of the current set
+        that do not exist in the other_set.
+
+        """
+        return self.elements.difference(setify(other_set))
+    def isdisjoint(other_set):
+        """Returns True if no elements overlap between the current set and the
+        other_set.  Otherwise, returns False."""
+        return self.elements.isdisjoint(setify(other_set))
+    def issubset(other_set):
+        """Returns True if the current set is a subset of the other_set.
+        Otherwise, returns False.
+
+        """
+        return self.elements.issubset(setify(other_set))
+    def issuperset(other_set):
+        """Returns True if the other_set is a subset of the current set.
+        Otherwise, returns False.
+
+        """
+        return self.elements.issuperset(setify(other_set))
+    def pronoun_possessive(self, target, **kwargs):
+        """Returns "their <target>." """
+        output = their(target, **kwargs)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)            
+    def pronoun(self, **kwargs):
+        output = word('them', **kwargs)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)            
+    def pronoun_objective(self, **kwargs):
+        """Same as pronoun()."""
+        return self.pronoun(**kwargs)
+    def pronoun_subjective(self, **kwargs):        
+        """Same as pronoun()."""
+        return self.pronoun(**kwargs)
 
 class DAFile(DAObject):
     """Used internally by docassemble to represent a file."""
@@ -618,7 +766,7 @@ class DAFile(DAObject):
     def __str__(self):
         return self.show()
     def __unicode__(self):
-        return self.show()
+        return unicode(self.__str__())
     def show(self, width=None):
         """Inserts markup that displays the file as an image.  Takes an
         optional keyword argument width.
@@ -648,7 +796,7 @@ class DAFileList(DAList):
     def __str__(self):
         return self.show()
     def __unicode__(self):
-        return self.show()
+        return unicode(self.__str__())
     def show(self, width=None):
         """Inserts markup that displays each element in the list as an image.
         Takes an optional keyword argument width.
@@ -675,6 +823,8 @@ class DATemplate(DAObject):
             self.subject = ""
     def __str__(self):
         return(self.content)
+    def __unicode__(self):
+        return unicode(self.__str__())
     def __repr__(self):
         return(self.content)
 
@@ -711,7 +861,7 @@ def myb64quote(text):
     return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
 
 def setify(item, output=set()):
-    if isinstance(item, DAList):
+    if isinstance(item, DAObject) and hasattr(item, 'elements'):
         setify(item.elements, output)
     elif hasattr(item, '__iter__'):
         for subitem in item:

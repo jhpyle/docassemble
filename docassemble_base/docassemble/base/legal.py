@@ -1,5 +1,5 @@
 from docassemble.base.core import DAObject, DAList, DADict, DAFile, DAFileCollection, DAFileList, DATemplate, selections
-from docassemble.base.util import comma_and_list, get_language, set_language, get_dialect, word, comma_list, ordinal, ordinal_number, need, nice_number, possessify, verb_past, verb_present, noun_plural, space_to_underscore, force_ask, period_list, name_suffix, currency, indefinite_article, today, nodoublequote, capitalize, title_case, url_of, do_you, does_a_b, your, her, his, the, in_the, a_in_the_b, of_the, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, month_of, day_of, year_of, format_date
+from docassemble.base.util import comma_and_list, get_language, set_language, get_dialect, word, comma_list, ordinal, ordinal_number, need, nice_number, possessify, verb_past, verb_present, noun_plural, space_to_underscore, force_ask, period_list, name_suffix, currency, indefinite_article, today, nodoublequote, capitalize, title_case, url_of, do_you, does_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, month_of, day_of, year_of, format_date
 from docassemble.base.filter import file_finder, url_finder, mail_variable, markdown_to_html, async_mail
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
@@ -446,31 +446,31 @@ class Person(DAObject):
     def pronoun_objective(self, **kwargs):
         """Returns "it" or "It" depending on the value of the optional
         keyword argument "capitalize." """
-        output = word('it')
+        output = word('it', **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
             return(output)            
-    def possessive(self, target):
+    def possessive(self, target, **kwargs):
         """Given a word like "fish," returns "your fish" or 
         "John Smith's fish," depending on whether the person is the user."""
         if self is this_thread.user:
-            return your(target)
+            return your(target, **kwargs)
         else:
             return possessify(self.name, target)
-    def object_possessive(self, target):
+    def object_possessive(self, target, **kwargs):
         """Given a word, returns a phrase indicating possession, but
         uses the variable name rather than the object's actual name."""
         if self is this_thread.user:
-            return your(target)
-        return super(Person, self).object_possessive(target)
+            return your(target, **kwargs)
+        return super(Person, self).object_possessive(target, **kwargs)
     def is_are_you(self, **kwargs):
         """Returns "are you" if the object is the user, otherwise returns
         "is" followed by the object name."""
         if self is this_thread.user:
-            output = 'are you'
+            output = word('are you', **kwargs)
         else:
-            output = 'is ' + str(self.full())
+            output = is_word(self.full(), **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
@@ -578,11 +578,11 @@ class Individual(Person):
     def pronoun_possessive(self, target, **kwargs):
         """Given a word like "fish," returns "her fish" or "his fish," as appropriate."""
         if self == this_thread.user and ('thirdperson' not in kwargs or not kwargs['thirdperson']):
-            output = your(target)
+            output = your(target, **kwargs)
         elif self.gender == 'female':
-            output = her(target)
+            output = her(target, **kwargs)
         else:
-            output = his(target)
+            output = his(target, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
@@ -590,11 +590,11 @@ class Individual(Person):
     def pronoun(self, **kwargs):
         """Returns a pronoun like "you," "her," or "him," as appropriate."""
         if self == this_thread.user:
-            output = word('you')
+            output = word('you', **kwargs)
         if self.gender == 'female':
-            output = word('her')
+            output = word('her', **kwargs)
         else:
-            output = word('him')
+            output = word('him', **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
@@ -605,11 +605,11 @@ class Individual(Person):
     def pronoun_subjective(self, **kwargs):
         """Returns a pronoun like "you," "she," or "he," as appropriate."""
         if self == this_thread.user and ('thirdperson' not in kwargs or not kwargs['thirdperson']):
-            output = word('you')
+            output = word('you', **kwargs)
         elif self.gender == 'female':
-            output = word('she')
+            output = word('she', **kwargs)
         else:
-            output = word('he')
+            output = word('he', **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
@@ -618,7 +618,7 @@ class Individual(Person):
         """Returns a "yourself" if the individual is the user, otherwise 
         returns the individual's name."""
         if self == this_thread.user:
-            output = word('yourself')
+            output = word('yourself', **kwargs)
         else:
             output = self.name.full()
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -630,7 +630,7 @@ class PartyList(DAList):
     """Represents a list of parties to a case.  The default object
     type for items in the list is Individual."""
     def init(self, **kwargs):
-        self.object_type = Person
+        self.object_type = Individual
         return super(PartyList, self).init(**kwargs)
 
 class ChildList(DAList):
