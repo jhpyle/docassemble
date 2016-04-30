@@ -620,7 +620,10 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
       var validation_rules = """ + json.dumps(validation_rules) + """;
       validation_rules.submitHandler = function(form){
         form.submit();
-        $("#daform").find('button[type="submit"]').prop("disabled", true);
+        setTimeout(function(){
+          $("#daform").find('button[type="submit"]').prop("disabled", true);
+        }, 1);
+        return(false);
       };
       $("#daform").validate(validation_rules);
     </script>""")
