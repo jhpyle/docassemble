@@ -13,46 +13,21 @@ variable name within a directive that indicates how you would like
 
 ## <a name="yesno"></a><a name="noyes"></a>`yesno` or `noyes`
 
-{% highlight yaml %}
----
-question: Were you injured?
-yesno: user_has_injury
----
-{% endhighlight %}
-
 The `yesno` statement causes a question to set a boolean (true/false)
 variable when answered.
 
+{% include side-by-side.html demo="yesno" %}
+
 In the example above, the web app will present "Yes" and "No" buttons
-and will set `user_has_injury` to `True` if "Yes" is pressed, and
+and will set `over_eighteen` to `True` if "Yes" is pressed, and
 `False` if "No" is pressed.
 
 The `noyes` statement is just like `yesno`, except that "Yes" means
 `False` and "No" means `True`.
 
-{% highlight yaml %}
----
-question: Were you not injured?
-noyes: user_has_injury
----
-{% endhighlight %}
+{% include side-by-side.html demo="noyes" %}
 
 ## <a name="field with buttons"></a>`field` with `buttons`
-
-{% highlight yaml %}
----
-question: Do you understand what I have explained to you?
-field: user_understands
-buttons:
-  - I understand: understands
-  - I do not understand: does not understand
-  - "I'm not sure": I'm not sure
----
-{% endhighlight %}
-
-(Note that in the example above, quotation marks are used because the
-apostrophe in "I'm not sure" would otherwise confuse the [YAML]
-parser.)
 
 A `question` block with a `buttons` statement will set the variable
 identified in `field` to a particular value depending on which of the
@@ -66,9 +41,15 @@ form of `- key: value`), then the key will be the button label that the
 user sees, and the value will be what the variable identified in `field`
 will be set to if the user presses that button.
 
+{% include side-by-side.html demo="buttons-labels" %}
+
 An item under `buttons` can also be plain text; in that case
 **docassemble** uses this text for both the label and the variable
-value.  For example, this:
+value.
+
+{% include side-by-side.html demo="buttons" %}
+
+In other words, this:
 
 {% highlight yaml %}
 ---
@@ -80,7 +61,7 @@ buttons:
 ---
 {% endhighlight %}
 
-is equivalent to:
+is equivalent to this:
 
 {% highlight yaml %}
 ---
@@ -95,66 +76,40 @@ buttons:
 A powerful feature of `buttons` is the ability to use Python code to
 generate button choices.  If an item under `buttons` is a key-value
 pair in which the key is the word `code`, then **docassemble**
-executes the value as Python code, which it expects to return a list.
+executes the value as Python code, which is expected to return a list.
 This code is executed at the time the question is asked, and the code
 can include variables from the interview.  **docassemble** will
 process the resulting list and create additional buttons for each
-item.  To illustrate this, the first example above could alternatively
-have been written as:
+item.
 
-{% highlight yaml %}
----
-field: user_understands_no_attorney_client_relationship
-question: |
-  Your use of this system does not mean that you have a lawyer.  Do
-  you understand this?
-buttons:
-  - "I understand": understands
-  - code: |
-      [{'does not understand':"I do not understand"}, {'unsure':"I'm not sure"}]
----
-{% endhighlight %}
+{% include side-by-side.html demo="buttons-code-list" %}
 
 Note that the Python code needs to return key-value pairs (Python
 dictionaries) where the key is what the variable should be set to and
 the value is the button label.  This is different from the [YAML]
 syntax.
 
+This is equivalent to:
+
+{% include side-by-side.html demo="buttons-code-list-equivalent" %}
+
 ## <a name="field with choices"></a>`field` with `choices`
 
-{% highlight yaml %}
----
-question: |
-  What is your favorite color?
-field: favorite_color
-choices:
-  - Red: red
-  - Blue: blue
-  - Green: green
----
-{% endhighlight %}
+To provide a multiple choice question with "radio buttons" and a
+"Continue" button, use `field` with a `choices` list:
 
-This provides "radio buttons" with a "Continue" button.
+{% include side-by-side.html demo="choices" %}
 
 ## <a name="image button"></a>Adding images to `buttons` or `choices`
 
 To add a decorative icon to a choice, use a key/value pair and add
 `image` as an additional key.
 
-{% highlight yaml %}
----
-field: gender
-question: |
-  Are you a man or a woman?
-buttons:
-  - Man: masculine
-    image: male
-  - Woman: feminine
-    image: female
----
-{% endhighlight %}
+{% include side-by-side.html demo="buttons-icons" %}
 
-This works with both `buttons` and `choices`.
+This works with `choices` as well:
+
+{% include side-by-side.html demo="choices-icons" %}
 
 ## <a name="code button"></a>buttons/choices that embed `question` and `code` blocks
 
@@ -166,24 +121,7 @@ You embed a question by providing a [YAML] key-value list (a
 dictionary) (as opposed to text) as the value of a label in a
 `buttons` or `choices` list.
 
-{% highlight yaml %}
----
-question: What is your favorite color?
-buttons:
-  - Red:
-      question: Dark red or light red?
-      field: favorite_color
-      buttons:
-        - Dark Red
-        - Light Red
-  - Green:
-      question: Dark green or light green?
-      field: favorite_color
-      buttons:
-        - Dark Green
-        - Light Green
----
-{% endhighlight %}
+{% include side-by-side.html demo="buttons-code-color" %}
 
 While embedding `question` blocks can be useful sometimes, it is
 generally not a good idea to structure interviews with a lot of
@@ -196,37 +134,16 @@ blocks are yet, read the section on [code blocks] first.)  This can be
 useful when you want to set the values of multiple variables with one
 button.
 
-{% highlight yaml %}
----
-question: What kind of car do you want?
-buttons:
-  - Ford Focus:
-      code: |
-        car_model = "Focus"
-        car_make = "Ford"
-  - Toyota Camry:
-      code: |
-        car_model = "Camry"
-        car_make = "Toyota"
----
-{% endhighlight %}
+{% include side-by-side.html demo="buttons-code" %}
 
-The question above tells **docassemble** that if the interview logic
+The question above tells **docassemble** that if the [interview logic]
 calls for either `car_model` or `car_make`, the question should be
 tried.  When the user clicks on one of the buttons, the code will be
 executed and the variables will be set.
 
 ## <a name="field"></a>`field` without `buttons` or `choices`
 
-{% highlight yaml %}
----
-question: |
-  Welcome to the interview!
-subquestion: |
-  Your participation means a lot to us.
-field: user_saw_intro
----
-{% endhighlight %}
+{% include side-by-side.html demo="continue-participation" %}
 
 A `question` with a `field` and no `buttons` will offer the user a
 "Continue" button.  When the user presses "Continue," the variable
@@ -237,17 +154,7 @@ indicated by `field` will be set to `True`.
 The `signature` directive presents a special screen in which the user
 can sign his or her name with the trackpad or other pointing device.
 
-For example:
-
-{% highlight yaml %}
----
-question: |
-  Please sign your name below.
-signature: user_signature
-under: |
-  ${ user_first_name } ${ user_last_name } 
----
-{% endhighlight %}
+{% include side-by-side.html demo="signature" %}
 
 On the screen, the `question` text appears first, then the
 `subquestion` text, then the signature area appears, and then the
@@ -284,16 +191,7 @@ yesno: user_signature_verified
 The `fields` statement is used to present the user with a list of
 fields.
 
-{% highlight yaml %}
----
-question: Tell me about yourself
-fields:
-  - Favorite color: user_favorite_color
-  - Description of your ideal vacation: user_ideal_vacation
-    datatype: area
-    required: false
----
-{% endhighlight %}
+{% include side-by-side.html demo="text-field-example" %}
 
 The `fields` must consist of a list in which each list item is one or
 more key/value pairs.
@@ -408,88 +306,7 @@ following to the definition of a field:
 
 Here is a long example that illustrates many of these features.
 
-![Screenshot of fields]({{ site.baseurl }}/img/fields-example.png)
-
-The following `question` block generates the question above.  Compare
-the screenshot to the `question` to see how it works.
-
-{% highlight yaml %}
----
-imports:
-  - us
----
-modules:
-  - docassemble.base.util
----
-mandatory: true
-code: |
-  need(final_screen)
----
-sets: final_screen
-question: All done
-subquestion: |
-  Your income is ${ user_annual_income }.
----
-question: Tell me more about yourself
-fields:
-  - Description: user_description
-    datatype: area
-    hint: |
-      E.g., you can describe your hair color, eye color, 
-      favorite movies, etc.
-  - Annual income: user_annual_income
-    datatype: currency
-    min: 100
-  - E-mail address: user_email_address
-    datatype: email
-  - Been vaccinated: user_vaccinated
-    datatype: yesno
-  - Seen Mount Rushmore: mount_rushmore_visited
-    datatype: yesnowide
-  - Belly button type: belly_button_type
-    datatype: radio
-    choices:
-      - Innie
-      - Outie
-  - html: |
-      The date and time is <span class="mytime" id="today_time"></span>.
-  - script: |
-      <script>document.getElementById("today_time").innerHTML = Date();</script>
-  - css: |
-      <link rel="stylesheet" href="${ url_of('docassemble.demo:data/static/my.css') }">
-  - Number of friends: number_of_friends
-    datatype: radio
-    choices:
-      - One: 1
-      - Two: 2
-      - Three: 3
-  - Degrees obtained: degrees
-    datatype: checkboxes
-    choices:
-      - High school
-      - College
-      - Graduate school
-  - State you grew up in: home_state
-    code: |
-      us.states.mapping('abbr', 'name')
-  - note: |
-      #### Politics
-
-      Tell me about your political views.
-  - no label: political_views
-    default: I have no political views
-    maxlength: 30
-  - Political preference: political_party
-    datatype: radio
-    shuffle: true 
-    choices:
-      - Republican
-      - Democrat
-      - Independent
----
-{% endhighlight %}
-
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testfields.yml){:target="_blank"}.)
+{% include side-by-side.html demo="fields" %}
 
 The referenced [CSS file] contains the following:
 
@@ -499,7 +316,7 @@ The referenced [CSS file] contains the following:
 }
 {% endhighlight %}
 
-## Multiple-choice questions in `fields`
+## Multiple-choice questions in `fields` with choices from code
 
 Note that adding `code` to a field makes it a multiple-choice
 question.  If you have a multiple-choice question and you want to
@@ -507,48 +324,11 @@ reuse the same selections several times, you do not need to type in
 the whole list every time.  You can define a variable to contain the
 list and a `code` block that defines the variable.  For example:
 
-{% highlight yaml %}
----
-mandatory: true
-code: |
-  final_screen
----
-sets: final_screen
-question: |
-  Your favorite fruit is the ${ favorite_fruit }, which is the king of
-  all fruits.
-subquestion: |
-  Your brother, who is not so wise, is partial to the
-  ${ favorite_fruit_of_brother }.
----
-question: |
-  What is your favorite fruit?
-fields:
-  - Fruit: favorite_fruit
-    code: |
-      myoptions
----
-question: |
-  What is your brother's favorite fruit?
-fields:
-  - Fruit: favorite_fruit_of_brother
-    code: |
-      myoptions
----
-code: |
-  myoptions = [
-                {'apple': "Apples"},
-                {'orange': "Oranges"},
-                {'pear': "Pears"}
-              ]
----
-{% endhighlight %}
-
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testpulldown.yml){:target="_blank"}.)
+{% include side-by-side.html demo="fields-mc" %}
 
 ## Assigning existing objects to variables
 
-Using template expressions (Python code enclosed in `${ }`), you can
+Using [Mako] template expressions ([Python] code enclosed in `${ }`), you can
 present users with multiple-choice questions for which choices are
 based on information gathered from the user.  For example:
 
@@ -668,23 +448,13 @@ The `datatype` of `object` presents the list of choices as a
 pull-down.  If you prefer to present the user with radio buttons, set
 the `datatype` to `object_radio`.
 
-## Populating a list of objects
-
-
-
-
 ## <a name="sets"></a>`sets`
-
-{% highlight yaml %}
----
-question: We are all done.
-sets: user_done
----
-{% endhighlight %}
 
 A `sets` line tells **docassemble** that if it is looking for the
 value of a particular variable, it should try asking the question in
 the question block containing the `sets` statement.
+
+{% include side-by-side.html demo="sets" %}
 
 This does not necessarily mean that the variable identified in `sets`
 will actually be set.  For example, the question above does not allow
@@ -692,7 +462,7 @@ the user to do anything.
 
 When used as an "empty promise" of setting a variable, the `sets`
 statement is useful for creating the final screen that the user sees
-before exiting the interview.  For example, the interview logic can
+before exiting the interview.  For example, the [interview logic] can
 cause the "question" above to appear by including a final line of code
 such as:
 
@@ -702,22 +472,14 @@ need(user_done)
 
 The `user_done` variable will never be set to any value, but that is
 ok, because you don't want the user to be able to "get past" the final
-screen.
+screen.  See [functions] for an explanation of `need()`.
 
 ## <a name="sets special"></a>`sets` with special buttons/choices 
 
 The `sets` statement is also used in conjunction with `buttons` in
 multiple choice questions where there is no `field` to be set.
 
-{% highlight yaml %}
----
-question: We are all done.
-sets: user_done
-buttons:
-  - Exit: exit
-  - Restart: restart
----
-{% endhighlight %}
+{% include side-by-side.html demo="sets-exit" %}
 
 The above example allows the user to "exit" the interview (be redirected
 to a specific web site that is pre-set in the **docassemble**
@@ -744,17 +506,7 @@ started.  Original URL parameters will be lost.
 
 For example:
 
-{% highlight yaml %}
----
-question: |
-  Congratulations, you found Nemo!
-sets: user_done
-choices:
-  - Try again: restart
-  - Learn More: exit
-    url: https://en.wikipedia.org/wiki/Amphiprioninae
----
-{% endhighlight %}
+{% include side-by-side.html demo="sets-exit-url" %}
 
 [Mako] can be used in the `url` text.
 
@@ -765,7 +517,7 @@ again, he will pick up where he left off.
 `continue` means that **docassemble** will look for another question
 in the interview that might define the necessary variable.
 
-`refresh` re-runs the interview logic.  It has much the same effect as
+`refresh` re-runs the [interview logic].  It has much the same effect as
 refreshing the page in the browser.  It is useful in multi-user
 interviews when the user is waiting for another user to finish
 entering information.  It can also be useful in interviews that use
@@ -776,34 +528,16 @@ external data sources.
 Instead of using `buttons`, you can use `choices` to get a radio list
 instead of a selection of buttons.
 
-{% highlight yaml %}
----
-question: We are all done.
-sets: user_done
-choices:
-  - Exit: exit
-  - Restart: restart
----
-{% endhighlight %}
+{% include side-by-side.html demo="sets-exit-choices" %}
 
 The functionality is the same.
 
 ## <a name="event"></a>`event`
 
-{% highlight yaml %}
----
-event: role_event
-question: All done for now.
-subquestion: |
-  Someone else needs to answer questions now.  You will be notified
-  when you can resume the interview.
-buttons:
-  - Exit: leave
----
-{% endhighlight %}
-
 The `event` line acts just like `sets`: it advertises to
 **docassemble** that the question will potentially define a variable.
+
+{% include side-by-side.html demo="event-role-event" %}
 
 In the example above, the `event` line tells **docassemble** that this
 `question` should be displayed to the user if **docassemble**
@@ -812,12 +546,17 @@ happen in multi-user interviews (see
 [roles]({{site.baseurl}}/docs/roles.html)).  The event is triggered
 when the interview reaches a point when a person other than the
 current user needs to answer a question.  For example, while a client
-is filling out an interview, the interview logic might call for a
+is filling out an interview, the [interview logic] might call for a
 variable that can only be set by an advocate who reviews the client's
 answers.  In this scenario, a `role_event` will be triggered.  When
 this happens, **docassemble** will look for a `question` or `code`
 block that defines the variable `role_event`, and it will find the
 example question above.
+
+This directive can also be used to create screens that the user can
+reach from the menu or from hyperlinks embedded in question text.  For
+more information, see [url_action()], [process_action()],
+[action_menu_item()], and [menu_items].
 
 ## <a name="review"></a>review
 
@@ -1021,9 +760,10 @@ cannot use because they conflict with built-in names that [Python] and
 [reserved variable names]: {{ site.baseurl }}/docs/reserved.html
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [question]: {{ site.baseurl }}/docs/questions.html
-[CSS file]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/data/static/my.css
+[CSS file]: {{ site.demourl }}/packagestatic/docassemble.demo/my.css
 [function]: {{ site.baseurl }}/docs/functions.html
 [functions]: {{ site.baseurl }}/docs/functions.html
 [special variables]: {{ site.baseurl }}/docs/special.html
 [legal applications]: {{ site.baseurl }}/docs/legal.html
+[interview logic]: {{ site.baseurl }}/docs/logic.html
 [DAObject]: {{ site.baseurl }}/docs/objects.html#DAObject

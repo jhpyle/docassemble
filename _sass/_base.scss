@@ -286,8 +286,14 @@ box-shadow: $shadow;
     }
 }
 p img {
-    @include box-shadow(2px 2px 4px rgba(0,0,0,.3), inset 0px 0px 0px rgba(255,255,255,.5));
+    @include box-shadow(0px 0px 6px rgba(0,0,0,.3), inset 0px 0px 0px rgba(255,255,255,.8));
     }
+
+img.example {
+    padding-bottom: 20px;
+    margin-bottom: 10px;
+    @include box-shadow(0px 0px 6px rgba(0,0,0,.3), inset 0px 0px 0px rgba(255,255,255,.8));
+}
 
 img.full-width {
     width: 100%;

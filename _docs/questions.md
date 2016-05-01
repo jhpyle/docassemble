@@ -13,13 +13,7 @@ All blocks in an interview file must either be [initial blocks],
 
 # The `question` statement
 
-{% highlight yaml %}
----
-question: What is the airspeed velocity of an unladen swallow?
-fields:
-  - Velocity: swallow_velocity
----
-{% endhighlight %}
+{% include side-by-side.html demo="question" %}
 
 By including the above [YAML] block in your interview file, you are
 telling **docassemble** that if it ever needs to know the value of
@@ -27,70 +21,138 @@ telling **docassemble** that if it ever needs to know the value of
 airspeed velocity of an unladen swallow?" and provide the user with an
 input box labeled "Velocity" in which the user can type the answer.
 
-In the web app, the text of the `question` will appear in a large font
-at the top of the screen.  You can place an icon to the right of the
-question using a `decoration` [modifier].
-
 Like most things in **docassemble**, the `question` statement can
-contain [Mako] and [Markdown].  For example:
+contain [Markdown] and [Mako].  For example:
 
-{% highlight yaml %}
----
-question: |
-  What is the *airspeed* velocity of an unladen ${ african_or_european }
-  swallow?
-fields:
-  - Velocity: swallow_velocity
----
-{% endhighlight %}
+{% include side-by-side.html demo="question-markup" %}
 
-In the example above, the question will end up looking like:
-
-> What is the *airspeed* velocity of an unladen African swallow?
+In this example, the word "airspeed" is italicized, using the
+[Markdown] syntax for italics.  The type of swallow is given by a
+variable (`african_or_european`), the value of which (`"African"`) is
+incorporated using [Mako].  (One of the features of [Mako] is that
+anything enclosed in `${ ... }` is evaluated as [Python] code.)
 
 # The `subquestion` statement
-
-{% highlight yaml %}
----
-question: What is the airspeed velocity of an unladen swallow?
-subquestion: Be careful how you answer.
-fields:
-  - Velocity: swallow_velocity
----
-{% endhighlight %}
 
 The optional `subquestion` adds text underneath the `question`.  It is
 typically used to explain the question in more detail, if such an
 explanation is necessary.
 
+{% include side-by-side.html demo="subquestion" %}
+
 # Using questions to set variables
 
 Every `question` block in a **docassemble** interview must have a
 purpose.  Otherwise, **docassemble** would never have a reason for
-asking the question.  Questions are given a purpose with one of the
-following extra statements:
+asking the question.  Questions are given a purpose by adding an extra
+statement, like `fields` in the example above.
 
-* `yesno` (or its opposite, `noyes`): will set a variable when a Yes
-  or No button is pressed.
-* `field`: will set a variable when the user answers the question.
-* `buttons` or `choices`: when used without `field`, will ask another
-  question or run code.
-* `fields`: the question will set one or more variables when
-  "Continue" is pressed.
-* `signature`: the user will be asked to sign his or her name, and the
-  image will be saved as a variable.
-* `sets`: advertises to the interview logic that a variable could
-  potentially be set by asking the question.
-* `event`: advertises to the interview logic that the question should
-  be asked if an special event occurs, such as a user not being able
-  to proceed with an interview because the interview logic requires
-  information from a person in a different role.
+Here is a brief summary of the types of questions that can be asked.
+More detail about how these question types work is provided in the
+[next section].
 
-These statements are explained in the next section.
+## True or false: `yesno` and `noyes`
 
+A [yesno] question will set a variable to `True` or `False` when a Yes
+or No button is pressed.  [noyes] does the opposite.
+
+{% include side-by-side.html demo="yesno" %}
+
+## Multiple choice: `choices` or `buttons`
+
+You can ask a multiple-choice question by providing a list of [choices]:
+
+{% include side-by-side.html demo="choices" %}
+
+Or, if you would prefer to use one-click buttons instead of "radio
+buttons" in combination with a "Continue" button, use can use
+[buttons] instead of [choices].
+
+{% include side-by-side.html demo="buttons" %}
+
+The variable indicated by `field` will be set to the value supplied in
+the `choices`/`buttons` list.
+
+## Acknowledgement button: `field`
+
+If you simply want the user to acknowledge something by clicking
+"Continue," provide a [field] without `buttons` or `choices`.
+
+The variable indicated by `field` will be set to `True` when the user
+clicks "Continue."
+
+{% include side-by-side.html demo="continue" %}
+
+## One or more fill-in fields: `fields`
+
+You can ask the user to fill in multiple fields using [fields]({{
+site.baseurl }}/docs/fields.html#fields):
+
+{% include side-by-side.html demo="text-field" %}
+
+There are many other types of input that you can gather with `fields`,
+including large text areas, file uploads, radio buttons, and
+checkboxes.
+
+There are a variety of ways you can insert text into the list of
+fields to help guide the user.  If you know [HTML], you can insert
+arbitrary [HTML], [CSS], and [Javascript].
+
+## User's signature: `signature`
+
+You can ask the user to write his or her signature using [signature]:
+
+{% include side-by-side.html demo="signature" %}
+
+The signature will be stored as an image file in the variable
+indicated by `signature`.
+
+## Ending screens: `sets`
+
+If the purpose of your `question` is not to ask a question but to
+present an end screen to the user, use [sets].
+
+{% include side-by-side.html demo="sets" %}
+
+If **docassemble** needs the variable `all_done`, it will present this
+"question" to the user.  See the [interview logic] section for more
+information about how to tell **docassemble** which ending screens the
+interview should endeavor to reach.
+
+## Special screens: `event` (advanced)
+
+The [event] directive advertises to the interview logic that the
+question should be asked if an special event occurs, such as a user
+not being able to proceed with an interview because the interview
+logic requires information from a person in a different [role].
+
+This directive is also used to create screens that the user can reach
+from the menu or from hyperlinks embedded in question text.  For more
+information, see [event], [url_action()], [process_action()],
+[action_menu_item()], and [menu_items].
+
+[role]: {{ site.baseurl }}/docs/roles.html
 [Mako]: http://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
 [YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [code blocks]: {{ site.baseurl }}/docs/code.html
+[interview logic]: {{ site.baseurl }}/docs/logic.html
 [modifier]: {{ site.baseurl }}/docs/modifiers.html
+[HTML]: https://en.wikipedia.org/wiki/HTML
+[CSS]: https://en.wikipedia.org/wiki/CSS
+[Javascript]: https://en.wikipedia.org/wiki/Javascript
+[next section]: {{ site.baseurl }}/docs/fields.html
+[url_action()]: {{ site.baseurl }}/docs/functions.html#url_action
+[process_action()]: {{ site.baseurl }}/docs/functions.html#process_action
+[action_menu_item()]: {{ site.baseurl }}/docs/functions.html#action_menu_item
+[menu_items]: {{ site.baseurl }}/docs/special.html#menu_items
+[yesno]: {{ site.baseurl }}/docs/fields.html#yesno
+[noyes]: {{ site.baseurl }}/docs/fields.html#noyes
+[choices]: {{ site.baseurl }}/docs/fields.html#field with choices
+[buttons]: {{ site.baseurl }}/docs/fields.html#field with buttons
+[sets]: {{ site.baseurl }}/docs/fields.html#sets
+[field]: {{ site.baseurl }}/docs/fields.html#field
+[signature]: {{ site.baseurl }}/docs/fields.html#signature
+[event]: {{ site.baseurl }}/docs/fields.html#event
+[Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29

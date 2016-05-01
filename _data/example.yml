@@ -1,0 +1,1034 @@
+"actions": |-
+  ---
+  initial: true
+  code: |
+    process_action(current_info)
+  ---
+  question: |
+    Review your information.
+  subquestion: |
+    Your favorite color is
+    ${ color }.
+    [Change this]( ${ url_action('color') } )
+  field: info_is_verified
+  ---
+"actions-parameters": |-
+  ---
+  initial: true
+  code: |
+    process_action(current_info)
+  ---
+  question: |
+    Review your information.
+  subquestion: |
+    You have ${ fishes['blue'] } blue
+    fishes.
+    [Add]( ${ url_action('add',
+      color='blue') } )
+
+    You have ${ fishes['red'] } blue
+    fishes.
+    [Add]( ${ url_action('add',
+      color='red') } )
+  field: info_is_verified
+  ---
+  event: add
+  code: |
+    fishes[current_info['arguments']['color']] += 1
+  ---
+"alignment": |-
+  ---
+  question: Here is your document.
+  subquestion: It has aligned text.
+  attachments:
+    - name: A test document
+      filename: test_document
+      content: |
+        [BOLDCENTER] A Document That
+        Explains Things To You
+
+        This is a big important document.
+        It addresses all of the concerns
+        that you might have with the
+        benefits to which you may be
+        entitled, now, in the future,
+        or in the past, whichever comes
+        first.
+
+        [CENTER] Benefits Summary
+
+        ${ client } is entitled to
+        benefits plan ${ benefits }.
+
+        For more information about the
+        benefits to which you may or may
+        not be entitled, whether on this
+        planet or another planet in the
+        solar system, contact:
+
+        [FLUSHLEFT] Andrea Advocate [BR]
+        123 Riverside Drive [BR]
+        Fort Franklin, AR 92302
+
+        By comparison, this uses the
+        standard Markdown flushleft
+        environment:
+
+        | Andrea Advocate
+        | 123 Riverside Drive
+        | Fort Franklin, AR 92302
+  sets: all_done
+  ---
+"audio": |-
+  ---
+  audio: schumann-clip-1.mp3
+  question: You need to relax.
+  subquestion: |
+    Listen to some Schumann, and then
+    proceed.
+  field: user_is_relaxed
+  ---
+"buttons": |-
+  ---
+  question: |
+    What type of belly button do you
+    have?
+  field: target_variable
+  buttons:
+    - Innie
+    - Outie
+    - No belly button
+  ---
+"buttons-code": |-
+  ---
+  question: What kind of car do you want?
+  buttons:
+    - Ford Focus:
+        code: |
+          car_model = "Focus"
+          car_make = "Ford"
+    - Toyota Camry:
+        code: |
+          car_model = "Camry"
+          car_make = "Toyota"
+  ---
+"buttons-code-color": |-
+  ---
+  question: What is your favorite color?
+  buttons:
+    - Red:
+        question: Dark red or light red?
+        field: favorite_color
+        buttons:
+          - Dark Red
+          - Light Red
+    - Green:
+        question: Dark green or light green?
+        field: favorite_color
+        buttons:
+          - Dark Green
+          - Light Green
+  ---
+"buttons-code-list": |-
+  ---
+  field: target_variable
+  question: |
+    Your use of this system does not
+    mean that you have a lawyer.  Do
+    you understand this?
+  buttons:
+    - "I understand": understands
+    - code: |
+        [{'does not understand':"I do not understand"}, {'unsure':"I'm not sure"}]
+  ---
+"buttons-code-list-equivalent": |-
+  ---
+  field: target_variable
+  question: |
+    Your use of this system does not
+    mean that you have a lawyer.  Do
+    you understand this?
+  buttons:
+    - "I understand": understands
+    - "I do not understand": does not understand
+    - "I'm not sure": unsure
+  ---
+"buttons-icons": |-
+  ---
+  question: |
+    What is the most important question
+    to ask?
+  field: interrogatory
+  buttons:
+    - "When?": when
+      image: calendar
+    - "Where?": where
+      image: map
+  ---
+"buttons-labels": |-
+  ---
+  question: |
+    How would you like to pay for your
+    car?
+  field: target_variable
+  buttons:
+    - Buy it: purchaser
+    - Lease it: borrower
+  ---
+"capitalize": |-
+  ---
+  question: |
+    ${ capitalize(color) } is your
+    favorite color, but ${ color } is
+    not your favorite color of eggs.
+  sets: all_done
+  ---
+"choices": |-
+  ---
+  question: |
+    What type of shoes do you wear?
+  field: target_variable
+  choices:
+    - Sneakers
+    - Sandals
+    - Clogs
+    - Other
+  ---
+"choices-icons": |-
+  ---
+  question: |
+    What is the most important question
+    to ask?
+  field: interrogatory
+  choices:
+    - "When?": when
+      image: calendar
+    - "Where?": where
+      image: map
+  ---
+"comment": |-
+  ---
+  question: Do you like turnips?
+  yesno: likes_turnips
+  comment: |
+    This question may be the most important
+    question of the interview!
+  ---
+"continue": |-
+  ---
+  field: target_variable
+  question: |
+    Welcome to the interview.
+  subquestion: |
+    When you are ready to begin, press
+    Continue.
+  ---
+"continue-participation": |-
+  ---
+  question: |
+    Welcome to the interview!
+  subquestion: |
+    Your participation means a lot to us.
+  field: user_saw_intro
+  ---
+"currency": |-
+  ---
+  question: |
+    If you sold ${ number } fish for
+    a dollar each, you would get
+    ${ currency(number) }.
+  sets: all_done
+  ---
+"dalist": |-
+  ---
+  modules:
+    - docassemble.base.legal
+  ---
+"dalist2": |-
+  ---
+  modules:
+    - docassemble.base.core
+    - docassemble.base.util
+  ---
+"date-field": |-
+  ---
+  question: |
+    What is your date of birth?
+  fields:
+    - Birthdate: target_variable
+      datatype: date
+  ---
+"decoration": |-
+  ---
+  decoration: kids
+  question:
+    Do you have children?
+  yesno: has_children
+  ---
+"def": "---\ndef: my_explanation\nmako: |\n  <%def name=\"explain(fruit)\">\n  ${\
+  \ fruit } are a type of fruit, and\n  they are delicious.\n  </%def>\n  <%def name=\"\
+  deride(fruit)\">\n  ${ fruit } are disgusting, and they\n  are basically inedible.\n\
+  \  </%def>\n---\nquestion: The world of fruit\nsubquestion: |\n  There are many\
+  \ types of fruit in the\n  world.\n  \n  ${ explain(\"Peaches\") }\n  ${ explain(\"\
+  Oranges\") }\n  ${ deride(\"Strawberries\") }\nusedefs:\n - my_explanation\nsets:\
+  \ all_done\n---"
+"document": |-
+  ---
+  question: Here is your document.
+  attachments:
+    - name: Summary of Benefits
+      filename: benefits_summary
+      content: |
+        [BOLDCENTER] Summary of Benefits
+
+        ${ client } is entitled to
+        benefits plan ${ benefits }.
+  sets: all_done
+  ---
+"event-role-event": |-
+  ---
+  event: role_event
+  question: All done for now.
+  subquestion: |
+    Someone else needs to answer
+    questions now.  You will be notified
+    when you can resume the interview.
+  buttons:
+    - Exit: leave
+  ---
+"field-note": |-
+  ---
+  question: |
+    Tell me more about you.
+  fields:
+    - Favorite fruit: fruit
+    - Favorite vegetable: veggie
+    - note: |
+        I understand that this next
+        question is particularly
+        difficult to answer, but please
+        bear with me.  We are almost
+        done.
+    - Favorite tree: tree
+  ---
+"fields": "---\nquestion: Tell me more about yourself\nfields:\n  - Description: user_description\n\
+  \    datatype: area\n    hint: |\n      E.g., you can describe your\n      hair\
+  \ color, eye color, \n      favorite movies, etc.\n  - Annual income: user_annual_income\n\
+  \    datatype: currency\n    min: 100\n  - E-mail address: user_email_address\n\
+  \    datatype: email\n  - Been vaccinated: user_vaccinated\n    datatype: yesno\n\
+  \  - Seen Mount Rushmore: mount_rushmore_visited\n    datatype: yesnowide\n  - Belly\
+  \ button type: belly_button\n    datatype: radio\n    choices:\n      - Innie\n\
+  \      - Outie\n  - html: |\n      The date and time is\n      <span class=\"mytime\"\
+  \n      id=\"today_time\"></span>.\n  - script: |\n      <script>\n        document.getElementById(\"\
+  today_time\").innerHTML = Date();\n      </script>\n  - css: |\n      <link rel=\"\
+  stylesheet\" \n      href=\"${ url_of('docassemble.demo:data/static/my.css') }\"\
+  >\n  - Number of friends: num_friends\n    datatype: radio\n    choices:\n     \
+  \ - One: 1\n      - Two: 2\n      - Three: 3\n  - Degrees obtained: degrees\n  \
+  \  datatype: checkboxes\n    choices:\n      - High school\n      - College\n  \
+  \    - Graduate school\n  - State you grew up in: home_state\n    code: |\n    \
+  \  us.states.mapping('abbr', 'name')\n  - note: |\n      #### Politics\n\n     \
+  \ Tell me about your political\n      views.\n  - no label: political_views\n  \
+  \  default: I have no political views\n    maxlength: 30\n  - Party: political_party\n\
+  \    datatype: radio\n    shuffle: true \n    choices:\n      - Republican\n   \
+  \   - Democrat\n      - Independent\n---"
+"fields-mc": |-
+  ---
+  question: |
+    What is your brother's favorite fruit?
+  fields:
+    - Fruit: favorite_fruit_of_brother
+      code: |
+        myoptions
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+      code: |
+        myoptions
+  ---
+  code: |
+    myoptions = [
+                  {'apple': "Apples"},
+                  {'orange': "Oranges"},
+                  {'pear': "Pears"}
+                ]
+  ---
+"force-ask": |-
+  ---
+  mandatory: true
+  code: |
+    if user_is_communist and user_reconsidering_communism:
+      user_reconsidering_communism = False
+      force_ask('user_is_communist')
+  ---
+"formatting": "---\nquestion: Here is your document.\nsubquestion: |\n  It illustrates\
+  \ some document-related\n  features.\nallow emailing: false\nattachments:\n  - name:\
+  \ A test document\n    filename: test_document\n    valid formats:\n      - pdf\n\
+  \    metadata:\n      FooterCenter: |\n        [HYPHEN] [PAGENUM] [HYPHEN]\n   \
+  \ content: |\n      [BOLDCENTER] A Test Document [BR]\n      by John Doe\n     \
+  \ \n      ${ client } is entitled to\n      benefits plan ${ benefits }.\n\n   \
+  \   Four score and seven years ago\n      our fathers brought forth on\n      this\
+  \ continent, a new nation,\n      conceived in Liberty, and\n      dedicated to\
+  \ the proposition\n      that all men are created equal.\n\n      [FILE bluediamond.svg,\
+  \ 0.5in]\n\n      Now we are engaged in a great\n      civil war, testing whether\
+  \ that\n      nation, or any nation so\n      conceived and so dedicated,\n    \
+  \  can long endure.\n\n      [PAGEBREAK]\n\n      Now we begin a new[EMDASH]and\n\
+  \      very exciting[EMDASH]page.\n\n      We dare not forget today that\n     \
+  \ we are the heirs of that first\n      revolution. Let the word go\n      forth\
+  \ from this time and place,\n      to friend and foe alike, that\n      the torch\
+  \ has been passed to\n      a new generation of\n      Americans [ENDASH] born in\
+  \ this\n      century, tempered by war,\n      disciplined by a hard and\n     \
+  \ bitter peace, proud of our\n      ancient heritage, and unwilling\n      to witness\
+  \ or permit the slow\n      undoing of those human rights\n      to which this nation\
+  \ has\n      always been committed, and to\n      which we are committed today\n\
+  \      at home and around the world.\n\n      And yet our distress comes from\n\
+  \      no failure of substance. We are\n      stricken by no plague of locusts.\n\
+  \      Compared with the perils which\n      our forefathers conquered,\n      because\
+  \ they believed and were\n      not afraid, we have still much\n      to be thankful\
+  \ for. Nature still\n      offers her bounty and human\n      efforts have multiplied\
+  \ it.\n      Plenty is at our doorstep, but\n      a generous use of it languishes\n\
+  \      in the very sight of the supply.\n\n      # A new section\n\n      [ONEANDAHALFSPACING]\n\
+  \n      [NOINDENTATION]\n\n      My Fellow Americans,\n\n      [INDENTATION]\n\n\
+  \      I come before you tonight as a\n      candidate for the Vice Presidency\n\
+  \      and as a man whose honesty\n      and -- and integrity has been\n      questioned.\n\
+  \n      Now, the usual political thing\n      to do when charges are made\n    \
+  \  against you is to either ignore\n      them or to deny them without\n      giving\
+  \ details. I believe we've\n      had enough of that in the\n      United States,\
+  \ particularly with\n      the present Administration in\n      Washington, D.C.\
+  \ To me the\n      office of the Vice Presidency\n      of the United States is\
+  \ a great\n      office, and I feel that the\n      people have got to have\n  \
+  \    confidence in the integrity\n      of the men who run for that\n      office\
+  \ and who might obtain it.\n      \n      # A newer section\n\n      [SINGLESPACING]\n\
+  \n      Over a century ago Washington\n      laid the corner stone of the\n    \
+  \  Capitol in what was then\n      little more than a tract of\n      wooded wilderness\
+  \ here beside\n      the Potomac. We now find it\n      necessary to provide by\
+  \ great\n      additional buildings for the\n      business of the government.\n\
+  sets: all_done\n---"
+"generic-object": |-
+  ---
+  generic object: Individual
+  question: |
+    Does ${ x } like cats?
+  yesno: x.likes_cats
+  ---
+"help": |-
+  ---
+  question: |
+    What is 2+2?
+  subquestion:
+    If you need help answering this question,
+    press "Help."
+  field: answer
+  choices:
+    - 3
+    - 4
+    - 5
+  help: |
+    Hint: 2 + 2 = 4.
+  ---
+"image-sets": |-
+  ---
+  image sets:
+    freepik:
+      attribution: |
+        Icon made by [Freepik](http://www.flaticon.com/authors/freepik)
+      images:
+        baby: crawling.svg
+        money: commerce.svg
+  ---
+"images": |-
+  ---
+  images:
+    star: star.svg
+    diamond: bluediamond.svg
+  ---
+"imports": |-
+  ---
+  imports:
+    - pygeocoder
+  ---
+"include": |-
+  ---
+  include:
+    - docassemble.demo:data/questions/some-questions.yml
+  ---
+"indefinite-article": |-
+  ---
+  question: |
+    Would you prefer to have
+    ${ indefinite_article(fruit) }
+    as opposed to
+    ${ indefinite_article(vegetable) }?
+  yesno: prefer_fruit
+  ---
+"interview-help": |-
+  ---
+  interview help:
+    heading: About this interview
+    content: |
+      Answer each question to the best of your
+      ability.  If you do not know the answer
+      to any question, panic.
+  ---
+"language": "---\nlanguage: es\nquestion: |\n  \xBFCu\xE1l es el significado de la\
+  \ vida?\nfields:\n  - Significado de la Vida: meaning_life\n---"
+"lists": |-
+  ---
+  question: Your fears
+  subquestion: |
+    You are afraid of
+    ${ comma_and_list(fears) }.
+  sets: all_done
+  ---
+"loading-legal": |-
+  ---
+  modules:
+    - docassemble.base.legal
+  ---
+"loading-util": |-
+  ---
+  modules:
+    - docassemble.base.util
+  ---
+"madlibs": |-
+  ---
+  modules:
+    - docassemble.base.core
+    - docassemble.base.util
+  ---
+"markdown": "---\nquestion: |\n  Introduction to Markdown\nsubquestion: |\n  Markdown\
+  \ allows you to express\n  formatting in plain text.\n  \n  # I am a heading\n\n\
+  \  Write in *italic text* or even\n  **bold text**.\n\n  ## I am a subheading\n\n\
+  \  ### I am a smaller subheading\n\n  To block quote,\n\n  > you can do this.\n\n\
+  \  Insert an image:\n\n  ![Markdown logo](https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Markdown-mark.svg/208px-Markdown-mark.svg.png)\n\
+  \n  Here is a bullet list:\n\n  * Larry;\n  * Curly; and\n  * Moe\n\n  Here is a\
+  \ numbered list:\n\n  1. Buy groceries.\n  2. Get the car inspected.\n  3. Take\
+  \ over the world!\n  \n  You can [Google](http://google.com)\n  \"markdown\" to\
+  \ learn more.\nsets: all_done\n---"
+"menu-item": |-
+  ---
+  modules:
+    - docassemble.base.util
+  ---
+  initial: true
+  code: |
+    process_action(current_info)
+  ---
+  mandatory: true
+  code: |
+    menu_items = [ action_menu_item('Visit Cow', 'see_cow') ]
+  ---
+"metadata": |-
+  ---
+  metadata:
+    title: |
+      Interview title
+    short title: |
+      The title
+    description: |
+      This interview produces a Petition To
+      Postpone Sheriff Sale.
+    authors:
+      - name: John Doe
+        organization: Example, Inc.
+    revision_date: 2016-03-22
+  ---
+"modules": |-
+  ---
+  modules:
+    - json
+  ---
+"money-field": |-
+  ---
+  question: |
+    How much is your house worth?
+  fields:
+    - Value: target_variable
+      datatype: currency
+  ---
+"need": |-
+  ---
+  mandatory: true
+  code: |
+    need(fruit, all_done)
+  ---
+"nested-for-loop": |-
+  ---
+  modules:
+    - docassemble.base.core
+    - docassemble.base.legal
+  ---
+"nice-number": |-
+  ---
+  question: |
+    There are ${ nice_number(toads) }
+    toads and ${ nice_number(frogs) }
+    frogs in the pond.
+  buttons:
+    - Restart: restart
+  sets: all_done
+  ---
+"no-label-field": |-
+  ---
+  question: |
+    What is your Zodiac sign?
+  fields:
+    - no label: target_variable
+  ---
+"noun-plural": |-
+  ---
+  question: |
+    There
+    % if the_number > 1:
+    are
+    ${ nice_number(the_number) }
+    ${ noun_plural(the_noun) }
+    % else:
+    is one ${ the_noun }
+    % endif
+    in the pond.
+  fields:
+    - Singular noun: the_noun
+  sets: all_done
+  ---
+"noyes": |-
+  ---
+  question: |
+    Are you at least 18 years of age?
+  noyes: user_is_minor
+  ---
+"number-field": |-
+  ---
+  question: |
+    Describe your possessions.
+  fields:
+    - Number of cars: number_cars
+      datatype: integer
+    - Ounces of gold: gold_ounces
+      datatype: number
+  ---
+"objects": |-
+  ---
+  objects:
+    - hero: Individual
+    - villain: Individual
+  ---
+  modules:
+    - docassemble.base.legal
+  ---
+"optional-field": |-
+  ---
+  question: |
+    What are your favorite things to eat?
+  subquestion: |
+    You may not like any vegetables,
+    but at least tell me your favorite
+    fruit.
+  fields:
+    - Vegetable: target_variable
+      required: false
+    - Fruit: other_target_variable
+  ---
+"ordinal-number": |-
+  ---
+  question: |
+    The ${ ordinal_number(toads) }
+    toad is here to see you.
+  buttons:
+    - Restart: restart
+  sets: all_done
+  ---
+"page-numbers": |-
+  ---
+  question: Here is your document.
+  subquestion: It has page numbers.
+  attachments:
+    - name: Summary of Benefits
+      filename: benefits_summary
+      metadata:
+        FirstFooterRight: Page [PAGENUM]
+        FooterRight: Page [PAGENUM]
+      content: |
+        [BOLDCENTER] Summary of Benefits
+
+        ${ client } is entitled to
+        benefits plan ${ benefits }.
+  sets: all_done
+  ---
+"past-tense": |-
+  ---
+  question: |
+    I ${ verb_past(the_verb) }
+    the apple.
+  fields:
+    - Present tense verb: the_verb
+  sets: all_done
+  ---
+"periodic-amount": |-
+  ---
+  modules:
+    - docassemble.base.util
+  ---
+  question: |
+    What is your salary?
+  fields:
+    - Amount: user_salary
+      datatype: currency
+    - Period: period
+      code: |
+        period_list()
+  ---
+"prevent-back": |-
+  ---
+  code: |
+    app_submitted = True
+    prevent_going_back()
+  ---
+"prevent-going-back": |-
+  ---
+  prevent_going_back: true
+  question: |
+    Your application for ${ service }
+    has been submitted.
+  sets: all_done
+  ---
+"pull-down": |-
+  ---
+  question: |
+    Describe yourself.
+  fields:
+    - Level of education: education
+      choices:
+        - High School
+        - College
+        - Graduate School
+    - Favorite fruit: favorite_fruit
+      choices:
+        - Apple: apples
+        - Pear: pears
+        - Strawberry: strawberries
+  ---
+"pull-down-with-code": |-
+  ---
+  question: |
+    Describe yourself.
+  fields:
+    - Level of education: education
+      choices:
+        - High School
+        - College
+        - Graduate School
+    - State of birth: birth_state
+      code: |
+        us.states.mapping('abbr', 'name')
+    - Gender: gender
+      code: |
+        {'m': 'Male', 'f': 'Female', 'o': 'Other'}
+  ---
+"qr-code": |-
+  ---
+  question: |
+    Read the news on your mobile
+    phone
+  subquestion: |
+    If you have a QR code reader on
+    your phone, point it here:
+
+    ${ qr_code('http://wsj.com') }
+  sets: all_done
+  ---
+"question": |-
+  ---
+  question: |
+    What is the airspeed velocity of an unladen swallow?
+  fields:
+    - Velocity: swallow_velocity
+  ---
+"question-markup": |-
+  ---
+  question: |
+    What is the *airspeed* velocity of an unladen ${ african_or_european }
+    swallow?
+  fields:
+    - Velocity: swallow_velocity
+  ---
+"radio-list": |-
+  ---
+  question: |
+    Describe your car.
+  fields:
+    - Number of wheels: wheels_on_car
+      datatype: integer
+    - Type: car_type
+      datatype: radio
+      choices:
+        - Convertible
+        - Hatchback
+        - Sedan
+    - Model: car_country
+      datatype: radio
+      choices:
+        - BMW: Germany
+        - Buick: United States
+        - Honda: Japan
+        - Toyota: Japan
+  ---
+"review": |-
+  ---
+  event: review_answers
+  question: |
+    Review your answers
+  review:
+    - note: |
+        Welcome to the review of answers.
+    - note: |
+        #### Your identity
+      show if: user.name.first
+    - Change your name: user.name.first
+      help: |
+        You said your name was
+        **${ user.name }**.
+    - note: |
+        #### Your favorite foods
+      show if: fruit
+    - Revisit Fruit: fruit
+      button: |
+        You said you liked ${ fruit }.
+    - Revisit Vegetable: vegetable
+      button: |
+        You said you liked ${ vegetable }.
+    - Revisit Fungus: fungi
+      button: |
+        You said you liked ${ fungi }.
+    - note: |
+        We suspect you prefer
+        ${ fruit } to ${ vegetable }.
+  ---
+"set-language": "---\ninitial: true\ncode: |\n  set_language(language)\n---\nquestion:\
+  \ |\n  What language do you speak?\nfield: language\nchoices:\n  - English: en\n\
+  \  - Espa\xF1ol: es\n---"
+"sets": |-
+  ---
+  question: |
+    Congratulations!
+  subquestion: |
+    You are all done with the interview.
+  sets: all_done
+  ---
+"sets-exit": |-
+  ---
+  question: We are all done.
+  buttons:
+    - Exit: exit
+    - Restart: restart
+  sets: all_done
+  ---
+"sets-exit-choices": |-
+  ---
+  question: We are all done.
+  choices:
+    - Exit: exit
+    - Restart: restart
+  sets: all_done
+  ---
+"sets-exit-url": |-
+  ---
+  question: |
+    Congratulations, you found Nemo!
+  buttons:
+    - Try again: restart
+    - Learn More: exit
+      url: https://en.wikipedia.org/wiki/Amphiprioninae
+  sets: all_done
+  ---
+"signature": |-
+  ---
+  question: |
+    Please sign your name below.
+  subquestion: |
+    By signing your name, you agree to
+    our terms and conditions.
+  signature: target_variable
+  under: |
+    ${ user }
+  ---
+"single-spacing": |-
+  ---
+  question: Here is your document.
+  subquestion: It demonstrates types of spacing.
+  attachments:
+    - name: A test document
+      filename: test_document
+      metadata:
+        SingleSpacing: true
+      content: |
+        ${ client } is entitled to
+        benefits plan ${ benefits }.
+
+        Four score and seven years ago
+        our fathers brought forth on
+        this continent, a new nation,
+        conceived in Liberty, and
+        dedicated to the proposition
+        that all men are created equal.
+
+        Now we are engaged in a great
+        civil war, testing whether that
+        nation, or any nation so
+        conceived and so dedicated,
+        can long endure.
+
+        # What about double-spacing?
+
+        Let's try this with double
+        spacing.
+
+        [DOUBLESPACING]
+
+        Four score and seven years ago
+        our fathers brought forth on
+        this continent, a new nation,
+        conceived in Liberty, and
+        dedicated to the proposition
+        that all men are created equal.
+
+        Now we are engaged in a great
+        civil war, testing whether that
+        nation, or any nation so
+        conceived and so dedicated,
+        can long endure.
+  sets: all_done
+  ---
+"space-underscore": |-
+  ---
+  question: |
+    Removing spaces
+  subquestion: |
+    Your book is *${ book }* and
+    without underscores, it is
+    ${ space_to_underscore(book) }.
+  sets: all_done
+  ---
+"subquestion": |-
+  ---
+  question: |
+    What is the airspeed velocity of an unladen swallow?
+  subquestion: Be careful how you answer.
+  fields:
+    - Velocity: swallow_velocity
+  ---
+"terms": |-
+  ---
+  terms:
+    creeper: |
+      A tall green creature that explodes if
+      you get too close.
+    zombie pigman: |
+      A harmless creature who carries a gold
+      sword.
+  ---
+"text-box-field": |-
+  ---
+  question: |
+    Tell me the story of your life.
+  fields:
+    - Life Story: target_variable
+      datatype: area
+  ---
+"text-field": |-
+  ---
+  question: |
+    What are your favorite things to eat?
+  subquestion: |
+    Please be specific.
+  fields:
+    - Vegetable: target_variable
+    - Fruit: other_target_variable
+  ---
+"text-field-example": |-
+  ---
+  question: Tell me about yourself
+  fields:
+    - Favorite color: user_favorite_color
+    - Description of your ideal vacation: user_ideal_vacation
+      datatype: area
+      required: false
+  ---
+"text-help": |-
+  ---
+  question: |
+    What are your favorite things to eat?
+  subquestion: |
+    If you don't know what a vegetable
+    or fruit is, click the green text.
+  fields:
+    - Vegetable: target_variable
+      help: |
+        A plant.
+    - Fruit: other_target_variable
+      help: |
+        The pulpy, edible seed vessels
+        of certain plants.
+  ---
+"text-hint": |-
+  ---
+  question: |
+    What are your favorite things to eat?
+  subquestion: |
+    Please be specific.
+  fields:
+    - Vegetable: target_variable
+      hint: e.g., eggplant, turnips
+    - Fruit: other_target_variable
+      hint: e.g., apples, oranges
+  ---
+"title-case": |-
+  ---
+  question: |
+    Title of your book
+  subquestion: |
+    If your book is about
+    ${ title },
+    its title should be
+    "${ title_case(title) }."
+  sets: all_done
+  ---
+"url-of": |-
+  ---
+  question: |
+    Read more about this interview.
+  subquestion: |
+    Feel free to
+    [read more](${ url_of('docassemble.base:hello.pdf') })
+    about this interview before
+    proceeding.
+  field: ready_to_proceed
+  ---
+"video": |-
+  ---
+  field: ready_to_proceed
+  question: |
+    Welcome to the interview.
+  subquestion: |
+    Please watch this introductory video
+    before proceeding with the interview.
+  video: |
+    [YOUTUBE 9bZkp7q19f0]
+  ---
+"yesno": |-
+  ---
+  question: |
+    Are you at least 18 years of age?
+  yesno: over_eighteen
+  ---
+"yesno-custom": |-
+  ---
+  question: |
+    Are you satisfied?
+  field: user_is_satisfied
+  buttons:
+    - "You bet": True
+    - "No way": False
+  ---
+
