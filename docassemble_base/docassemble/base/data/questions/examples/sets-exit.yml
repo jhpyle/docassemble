@@ -1,0 +1,11 @@
+metadata:
+  title: Exit or restart
+---
+question: We are all done.
+buttons:
+  - Exit: exit
+  - Restart: restart
+sets: all_done
+---
+mandatory: true
+code: all_done

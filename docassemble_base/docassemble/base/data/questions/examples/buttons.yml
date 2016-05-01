@@ -2,7 +2,8 @@ metadata:
   title: Buttons
 ---
 question: |
-  What type of belly button do you have?
+  What type of belly button do you
+  have?
 field: target_variable
 buttons:
   - Innie

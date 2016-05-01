@@ -2,7 +2,8 @@ metadata:
   title: Labels ≠ values
 ---
 question: |
-  How would you like to pay for your car?
+  How would you like to pay for your
+  car?
 field: target_variable
 buttons:
   - Buy it: purchaser

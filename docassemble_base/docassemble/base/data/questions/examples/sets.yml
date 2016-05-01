@@ -1,0 +1,11 @@
+metadata:
+  title: Final screen
+---
+question: |
+  Congratulations!
+subquestion: |
+  You are all done with the interview.
+sets: all_done
+---
+mandatory: true
+code: all_done

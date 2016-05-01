@@ -1,0 +1,13 @@
+metadata:
+  title: Exit or restart with url
+---
+question: |
+  Congratulations, you found Nemo!
+buttons:
+  - Try again: restart
+  - Learn More: exit
+    url: https://en.wikipedia.org/wiki/Amphiprioninae
+sets: all_done
+---
+mandatory: true
+code: all_done

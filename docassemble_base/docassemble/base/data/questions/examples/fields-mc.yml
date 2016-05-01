@@ -1,0 +1,37 @@
+metadata:
+  title: Fields example
+  example start: 3
+  example end: 5
+  documentation: "http://docassemble.org/docs/fields.html#fields"
+---
+mandatory: true
+code: final_screen
+---
+sets: final_screen
+question: |
+  Your favorite fruit is the ${ favorite_fruit }, which is the king of
+  all fruits.
+subquestion: |
+  Your brother, who is not so wise, is partial to the
+  ${ favorite_fruit_of_brother }.
+---
+question: |
+  What is your brother's favorite fruit?
+fields:
+  - Fruit: favorite_fruit_of_brother
+    code: |
+      myoptions
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+    code: |
+      myoptions
+---
+code: |
+  myoptions = [
+                {'apple': "Apples"},
+                {'orange': "Oranges"},
+                {'pear': "Pears"}
+              ]

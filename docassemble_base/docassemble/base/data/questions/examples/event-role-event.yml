@@ -1,0 +1,14 @@
+metadata:
+  title: Event
+---
+event: role_event
+question: All done for now.
+subquestion: |
+  Someone else needs to answer
+  questions now.  You will be notified
+  when you can resume the interview.
+buttons:
+  - Exit: leave
+---
+mandatory: true
+code: role_event

@@ -20,8 +20,16 @@ do
     elif [ "$file" = "markdown" ]
     then
 	convert $tempfile -crop 496x999+86+78 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
+    elif [ "$file" = "fields" ]
+    then
+	convert $tempfile -crop 496x1999+86+78 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     else
 	convert $tempfile -crop 496x630+86+78 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     fi
 done
+if [ -d ~/gh-page-da ]
+then
+    ./get_yaml_from_example.py docassemble_base/docassemble/base/data/questions/examples > ~/gh-page-da/_data/example.yml
+    rsync -auv docassemble_webapp/docassemble/webapp/static/examples ~/gh-page-da/img/
+fi
 rm $tempfile
