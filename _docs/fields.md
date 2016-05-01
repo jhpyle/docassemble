@@ -767,3 +767,7 @@ cannot use because they conflict with built-in names that [Python] and
 [legal applications]: {{ site.baseurl }}/docs/legal.html
 [interview logic]: {{ site.baseurl }}/docs/logic.html
 [DAObject]: {{ site.baseurl }}/docs/objects.html#DAObject
+[url_action()]: {{ site.baseurl }}/docs/functions.html#url_action
+[process_action()]: {{ site.baseurl }}/docs/functions.html#process_action
+[action_menu_item()]: {{ site.baseurl }}/docs/functions.html#action_menu_item
+[menu_items]: {{ site.baseurl }}/docs/special.html#menu_items
