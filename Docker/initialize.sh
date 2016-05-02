@@ -9,6 +9,15 @@ function deregister {
 
 trap deregister SIGINT SIGTERM
 
+if [ "${HOSTNAME-none}" != "none" ]; then
+  sed -i'' \
+      -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
+      /etc/apache2/sites-available/default-ssl.conf || exit 1
+  sed -i'' \
+      -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
+      /etc/apache2/sites-available/000-default.conf || exit 1
+fi
+
 if [ "${CONTAINERROLE-all}" == "all" ]; then
   sed -i'' \
       -e 's@{{DBPREFIX}}@'"${DBPREFIX-postgresql+psycopg2://}"'@' \
@@ -65,15 +74,20 @@ fi
 python -m docassemble.webapp.install_certs $CONFIG_FILE || exit 1
 if [ "${USEHTTPS-false}" == "true" ]; then
     a2enmod ssl
+    a2ensite default-ssl
     if [ "${USELETSENCRYPT-false}" == "true" ]; then
-	if [ ! -f /usr/share/docassemble/using_lets_encrypt ]; then
-	    cd /usr/share/docassemble/letsencrypt 
+	cd /usr/share/docassemble/letsencrypt 
+	if [ -f /usr/share/docassemble/using_lets_encrypt ]; then
+	    ./letsencrypt-auto renew
+	else
 	    ./letsencrypt-auto --apache --quiet --email ${LETSENCRYPTEMAIL} --agree-tos -d ${HOSTNAME} && touch /usr/share/docassemble/using_lets_encrypt
-	    cd ~-
 	fi
+	cd ~-
+	/etc/init.d/apache2 stop
     fi
 else
     a2dismod ssl
+    a2dissite default-ssl
 fi
 
 if [ "${LOGSERVER-none}" != "none" ]; then
