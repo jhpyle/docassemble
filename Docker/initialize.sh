@@ -65,6 +65,13 @@ fi
 python -m docassemble.webapp.install_certs $CONFIG_FILE || exit 1
 if [ "${USEHTTPS-false}" == "true" ]; then
     a2enmod ssl
+    if [ "${USELETSENCRYPT-false}" == "true" ]; then
+	if [ ! -f /usr/share/docassemble/using_lets_encrypt ]; then
+	    cd /usr/share/docassemble/letsencrypt 
+	    ./letsencrypt-auto --apache --quiet --email ${LETSENCRYPTEMAIL} --agree-tos -d ${HOSTNAME} && touch /usr/share/docassemble/using_lets_encrypt
+	    cd ~-
+	fi
+    fi
 else
     a2dismod ssl
 fi

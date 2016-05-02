@@ -63,8 +63,24 @@
           "value": "true"
         },
         {
+          "name": "TIMEZONE",
+          "value": "America/New_York"
+        },
+        {
           "name": "USEHTTPS",
           "value": "false"
+        },
+        {
+          "name": "USELETSENCRYPT",
+          "value": "false"
+        },
+        {
+          "name": "LETSENCRYPTEMAIL",
+          "value": "admin@admin.com"
+        },
+        {
+          "name": "HOSTNAME",
+          "value": "host.example.com"
         }
       ]
     }
