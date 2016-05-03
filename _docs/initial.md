@@ -103,7 +103,7 @@ referring to their package names.  E.g.,
 `questions.yml` in the `docassemble/helloworld/data/questions`
 directory of that package.
 
-# <a name="image sets"></a>"`image sets`
+# <a name="image sets"></a>`image sets`
 
 {% highlight yaml %}
 ---
@@ -355,6 +355,12 @@ multi-lingual interviews.  See [modifiers] for information about the
 
 # <a name="features"></a>`features`
 
+The `features` block sets some optional features of the interview.
+Currently the only feature that can be set using this block is
+`progress bar`, which controls whether a progress bar is shown during
+the interview.  The setting of the progress bar is controlled by the
+[progress] modifier.
+
 {% include side-by-side.html demo="progress-features" %}
 
 [Mako]: http://www.makotemplates.org/
@@ -365,3 +371,4 @@ multi-lingual interviews.  See [modifiers] for information about the
 [objects]: {{ site.baseurl }}/docs/objects.html
 [def]: http://docs.makotemplates.org/en/latest/defs.html
 [roles]: {{ site.baseurl}}/docs/roles.html
+[progress]: {{ site.baseurl}}/docs/modifiers.html#progress

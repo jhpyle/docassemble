@@ -175,16 +175,14 @@ defined in an [image sets] or [images] block.
 
 # <a name="progress"></a>`progress`
 
-{% highlight yaml %}
----
-question: Are you doing well?
-yesno: user_is_well
-progress: 50
----
-{% endhighlight %}
+A **docassemble** interview can be configured to show a
+[progress bar].  This will show the user a progress indicator to give
+the user a sense of how much longer the interview will take.
 
-If **docassemble** is configured to show a progress bar, the progress
-bar will be set to 50% when this question is asked.
+The progress along the bar at any question needs to be set with the
+`progress` modifier.  For example:
+
+{% include side-by-side.html demo="progress" %}
 
 # <a name="prevent_going_back"></a>`prevent_going_back`
 
@@ -303,19 +301,11 @@ look for a question in the interview in which `event` has been set to
 
 # <a name="comment"></a>`comment`
 
-{% highlight yaml %}
----
-question: Do you agree the weather is nice today? 
-yesno: day_is_nice
-comment: |
-  We might wish to consider taking out this question.  It does not
-  seem necessary.
----
-{% endhighlight %}
-
 To make a note to yourself about a question, which will not be seen by
 the end user, you can use a `comment` statement.  It will be ignored
 by **docassemble**, so it can contain any valid [YAML].
+
+{% include side-by-side.html demo="comment-weather" %}
 
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
@@ -333,3 +323,4 @@ by **docassemble**, so it can contain any valid [YAML].
 [image sets]: {{ site.baseurl }}/docs/initial.html#image sets
 [images]: {{ site.baseurl }}/docs/initial.html#images
 [default language]: {{ site.baseurl }}/docs/initial.html#default language
+[progress bar]: {{ site.baseurl }}/docs/initial.html#features

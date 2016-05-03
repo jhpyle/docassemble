@@ -214,6 +214,9 @@
     This question may be the most important
     question of the interview!
   ---
+"comment-weather": "---\nquestion: |\n  Do you agree the weather\n  is nice today?\
+  \ \nyesno: day_is_nice\ncomment: |\n  We might wish to consider\n  taking out this\
+  \ question.\n  It does not seem necessary.\n---"
 "continue": |-
   ---
   field: target_variable
@@ -741,7 +744,7 @@
   ---
   question: Are you doing well?
   yesno: user_is_well
-  progress: 50
+  progress: 20
   ---
 "progress-features": |-
   ---
