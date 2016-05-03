@@ -214,7 +214,7 @@ box-shadow: $shadow;
     bottom: 0;
   }
   /* Start the vertical centering */
-  @media (max-height: 1365px) {
+  @media (orientation: landscape) {
     .site-wrapper-inner {
       vertical-align: middle;
     }
