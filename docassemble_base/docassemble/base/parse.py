@@ -393,6 +393,7 @@ class Question:
         if num_directives > 1:
             raise DAError("There can only be one directive in a question.  You had more than one.\nThe directives are yesno, noyes, fields, buttons, choices, and signature." + self.idebug(data))
         if 'features' in data:
+            should_append = False
             if type(data['features']) is not dict:
                 raise DAError("A features section must be a dictionary." + self.idebug(data))
             if 'progress bar' in data['features'] and data['features']['progress bar']:

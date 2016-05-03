@@ -1,0 +1,34 @@
+metadata:
+  title: Audio help with question
+---
+question: |
+  How much money do you wish
+  to seek in damages?
+fields:
+  - Money: damages_sought
+    datatype: currency
+help:
+  content: |
+    If you are not sure how much
+    money to seek in damages, just ask
+    for a million dollars, since you
+    want ${ defendant } to suffer.
+  audio: |
+    message_re_damages.mp3
+---
+question: |
+  Thank you.
+subquestion: |
+  You are seeking
+  ${ currency(damages_sought) }
+  in damages
+sets: all_done
+---
+code: |
+  defendant = "Dastardly Defendant"
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+code: all_done

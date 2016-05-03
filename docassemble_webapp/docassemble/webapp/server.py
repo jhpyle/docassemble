@@ -1403,9 +1403,12 @@ def index():
     should_assemble = False
     if something_changed:
         for key in post_data:
-            if key_requires_preassembly.search(from_safeid(key)):
-                should_assemble = True
-                break
+            try:
+                if key_requires_preassembly.search(from_safeid(key)):
+                    should_assemble = True
+                    break
+            except:
+                logmessage("Bad key: " + str(key))
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location), tracker=user_dict['_internal']['tracker'])
     if should_assemble:
@@ -1640,6 +1643,8 @@ def index():
                     do_opposite = True
                 data = "_internal['objselections'][" + repr(from_safeid(real_key)) + "][" + repr(bracket_expression) + "]"
             else:
+                if type(data) in [str, unicode]:
+                    data = data.strip()
                 data = repr(data)
             if known_datatypes[real_key] in ['object_checkboxes']:
                 do_append = True
@@ -1922,7 +1927,7 @@ def from_safeid(text):
 def progress_bar(progress):
     if progress == 0:
         return('');
-    return('<div class="progress"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;"></div></div>\n')
+    return('<div class="row"><div class="col-lg-6 col-md-8 col-sm-10"><div class="progress"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;"></div></div></div></div>\n')
 
 def pad(the_string):
     return the_string + (16 - len(the_string) % 16) * chr(16 - len(the_string) % 16)

@@ -1,0 +1,23 @@
+metadata:
+  title: Progress meter
+  example start: 2
+---
+features:
+  progress bar: true
+---
+question: Are you doing well?
+yesno: user_is_well
+progress: 20
+---
+question: Done with the interview.
+subquestion: |
+  % if user_is_well:
+  I am glad you are doing well.
+  % else:
+  I am sorry to hear that!
+  % endif
+sets: all_done
+progress: 100
+---
+mandatory: true
+code: all_done

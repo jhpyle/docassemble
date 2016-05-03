@@ -1,5 +1,5 @@
 metadata:
-  title: Video with YouTube
+  title: Video with Vimeo
 ---
 field: ready_to_proceed
 question: |
@@ -8,7 +8,7 @@ subquestion: |
   Please watch this introductory video
   before proceeding with the interview.
 video: |
-  [YOUTUBE 9bZkp7q19f0]
+  [VIMEO 96044910]
 ---
 question: This concludes the interview.
 need: ready_to_proceed

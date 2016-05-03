@@ -5,7 +5,7 @@ for path in docassemble_base/docassemble/base/data/questions/examples/*.yml
 do
     file=${path##*/}
     file=${file%.*}
-    if [ "$file" = "audio" -o "$file" = "video" ]
+    if [ "$file" = "audio" -o "$file" = "video" -o "$file" = "vimeo" -o "$file" = "video-nyc" ]
     then
 	continue
     fi
@@ -14,7 +14,7 @@ do
 	continue
     fi
     casperjs screenshot.js $file.yml $tempfile
-    if [ "$file" = "signature" -o "$file" = "metadata" -o "$file" = "help" ]
+    if [ "$file" = "signature" -o "$file" = "metadata" -o "$file" = "help" -o "$file" = "help-damages" -o "$file" = "help-damages-audio" -o "$file" = "progress" -o "$file" = "progress-features" ]
     then
 	convert $tempfile -resize 496x9999 -trim docassemble_webapp/docassemble/webapp/static/examples/$file.png
     elif [ "$file" = "markdown" ]

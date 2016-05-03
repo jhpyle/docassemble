@@ -1,0 +1,17 @@
+metadata:
+  title: Audio from static file
+---
+question: |
+  Are you traveling to New York City?
+yesno: going_to_nyc
+video: nyc_tourism.mp4
+---
+question: |
+  % if going_to_nyc:
+  You are going to New York City.
+  % else:
+  You are not going to New York City.
+sets: all_done
+---
+mandatory: true
+code: all_done

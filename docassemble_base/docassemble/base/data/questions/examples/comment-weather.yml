@@ -1,0 +1,19 @@
+metadata:
+  title: Comments
+---
+question: |
+  Do you agree the weather
+  is nice today? 
+yesno: day_is_nice
+comment: |
+  We might wish to consider
+  taking out this question.
+  It does not seem necessary.
+---
+question: |
+  All done with the interview.
+need: day_is_nice
+sets: all_done
+---
+mandatory: true
+code: all_done

@@ -1,0 +1,18 @@
+metadata:
+  title: Simple for loop
+  example start: 1
+  example end: 2
+---
+code: |
+  fruit_list = ['peaches', 'pears', 'apricots']
+---
+question: |
+  Summary of fruit
+subquestion: |
+  % for fruit in fruit_list:
+  I assume you like ${ fruit }.
+  % endfor
+sets: all_done
+---
+mandatory: true
+code: all_done

@@ -1,0 +1,17 @@
+metadata:
+  title: Upload and listen to audio
+  example start: 1
+  example end: 2
+---
+question: Please upload an MP3
+fields:
+  - MP3 file: user_mp3_file
+    datatype: file
+---
+question: |
+  Let's listen to what you uploaded.
+audio: ${ user_mp3_file }
+sets: all_done
+---
+mandatory: true
+code: all_done

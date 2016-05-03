@@ -108,7 +108,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     else:
         decoration_text = ''
     master_output = ""
-    master_output += '        <section id="question" class="tab-pane active col-md-6">\n'
+    master_output += '        <section id="question" class="tab-pane active col-lg-6 col-md-8 col-sm-10">\n'
     output = ""
     if status.question.question_type == "yesno":
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
