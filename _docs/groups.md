@@ -67,8 +67,28 @@ which is a subtype of `DAList`.  The first plaintiff is
 In computer programming, a "for loop" allows you to do something
 repeatedly, such as iterating through each item in a list.
 
-These can be including in **docassemble** templates using the
+For example, here is an example in [Python]:
+
+{% highlight python %}
+---
+numbers = [5, 7, 2]
+total = 0
+for n in numbers:
+    total = total + n
+print total
+---
+{% endhighlight %}
+
+This code "loops" through the elements of `numbers` and computes the
+total amount.  At the end, `14` is printed.
+
+For loops can be included in **docassemble** templates using the
 `for`/`endfor` [Mako] statement:
+
+{% include side-by-side.html demo="for_fruit" %}
+
+[Mako] "for" loops work just like [Python] for loops, except that they
+need to be ended with "endfor."
 
 {% highlight yaml %}
 ---

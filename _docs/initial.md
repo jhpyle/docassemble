@@ -4,7 +4,7 @@ title: Initial Blocks
 short_title: Initial Blocks
 ---
 
-# `metadata`
+# <a name="metadata"></a>`metadata`
 
 {% highlight yaml %}
 ---
@@ -30,7 +30,7 @@ If a "title" is defined, it will be displayed in the navigation bar in
 the web app.  If a "short title" is provided, it will be displayed
 in place of the "title" when the size of the screen is small.
 
-# `objects`
+# <a name="objects"></a>`objects`
 
 {% highlight yaml %}
 ---
@@ -75,7 +75,7 @@ base class `DAObject` keeps track of variable names.
 Whenever possible, you should use `objects` blocks rather than code to
 initialize your objects.  `objects` blocks are clean and readable.
 
-# `include`
+# <a name="include"></a>`include`
 
 {% highlight yaml %}
 ---
@@ -103,7 +103,7 @@ referring to their package names.  E.g.,
 `questions.yml` in the `docassemble/helloworld/data/questions`
 directory of that package.
 
-# `image sets`
+# <a name="image sets"></a>"`image sets`
 
 {% highlight yaml %}
 ---
@@ -144,7 +144,7 @@ sets` block, see `decoration` in the [modifiers] section, `buttons`
 in the [setting variables] section, and "Inserting inline icons" in
 the [markup] section.
 
-# `images`
+# <a name="images"></a>`images`
 
 {% highlight yaml %}
 ---
@@ -170,7 +170,7 @@ image sets:
 ---
 {% endhighlight %}
 
-# `imports`
+# <a name="imports"></a>`imports`
 
 {% highlight yaml %}
 ---
@@ -189,7 +189,7 @@ import datetime
 import us
 {% endhighlight %}
 
-# `modules`
+# <a name="modules"></a>`modules`
 
 {% highlight yaml %}
 ---
@@ -207,7 +207,7 @@ is equivalent to running the following Python code:
 from datetime import *
 {% endhighlight %}
 
-# `terms`
+# <a name="terms"></a>`terms`
 
 {% highlight yaml %}
 ---
@@ -226,7 +226,7 @@ term, you can define certain vocabulary words, and **docassemble**
 will turn them into hyperlinks wherever they appear.  When the user
 clicks on the hyperlink, a popup appears with the word's definition.
 
-# `interview help`
+# <a name="interview help"></a>`interview help`
 
 {% highlight yaml %}
 ---
@@ -259,7 +259,7 @@ You can also add video to help text using the `video` declaration.
 See the [modifiers] section for an explanation of how audio and video
 file references work.
 
-# `def`
+# <a name="def"></a>`def`
 
 {% highlight yaml %}
 def: adorability
@@ -290,7 +290,7 @@ Note the `\` marks at the end of the lines in the `mako` definition.
 Without these marks, there would be an extra newline inserted.  You
 may or may not want this extra newline.
 
-# `default role`
+# <a name="default role"></a>`default role`
 
 {% highlight yaml %}
 ---
@@ -332,7 +332,7 @@ questions can ask "What is your date of birth?" or "What is John
 Smith's date of birth" depending on whether the current user is John
 Smith or not.
 
-# `default language`
+# <a name="default language"></a>`default language`
 
 {% highlight yaml %}
 ---
@@ -352,6 +352,10 @@ If your interview only supports one language, it is not necessary to
 See [language support] for more information about how to create
 multi-lingual interviews.  See [modifiers] for information about the
 `language` setting of a question.
+
+# <a name="features"></a>`features`
+
+{% include side-by-side.html demo="progress-features" %}
 
 [Mako]: http://www.makotemplates.org/
 [language support]: {{ site.baseurl }}/docs/language.html

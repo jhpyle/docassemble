@@ -261,10 +261,10 @@ The possible `datatype` values are:
 * `file`: a single file upload (a `DAFileList` [object] results).
 * `files`: single or multiple file upload (a `DAFileList` [object]
   results).
-* `camera`: like `file`, except with HTML5 that suggests using the
+* <a name="camera"></a>`camera`: like `file`, except with HTML5 that suggests using the
   device's camera to take a picture;
-* `camcorder`: like `camera`, except for recording a video;
-* `microphone`: like `camera`, except for recording an audio clip;
+* <a name="camcorder"></a>`camcorder`: like `camera`, except for recording a video;
+* <a name="microphone"></a>`microphone`: like `camera`, except for recording an audio clip;
 * `yesno`: checkbox with label, aligned with labeled fields.
 * `yesnowide`: checkbox with label, full width of area.
 * `checkboxes`: show `choices` list as checkboxes; variable will be a

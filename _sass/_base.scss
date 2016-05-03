@@ -76,17 +76,19 @@ box-shadow: $shadow;
   width: 100%;
   height: 100%; /* For at least Firefox */
   min-height: 100%;
+  background-color: black;
+  text-align: center;
   background-image: url("/img/background.jpg");
   background-repeat: no-repeat;
   background-size: 100% auto;
-  background-color: black;
-  text-align: center;
   /* -webkit-box-shadow: inset 0 0 100px rgba(255,255,255,.5);
           box-shadow: inset 0 0 100px rgba(255,255,255,.5); */
 }
 .site-wrapper-inner {
   display: table-cell;
   vertical-align: top;
+  /* position: absolute;
+  top: 0; bottom: 0; left: 0; right: 0; */
 }
 
 .cover-container {
@@ -212,8 +214,10 @@ box-shadow: $shadow;
     bottom: 0;
   }
   /* Start the vertical centering */
-  .site-wrapper-inner {
-    vertical-align: middle;
+  @media (max-height: 1365px) {
+    .site-wrapper-inner {
+      vertical-align: middle;
+    }
   }
   /* Handle the widths */
   .masthead,

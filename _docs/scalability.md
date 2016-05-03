@@ -205,12 +205,24 @@ Here is the task definition for `docassemble-app`:
           "value": "true"
         },
         {
-          "name": "LOGSERVER",
-          "value": "log.docassemble.local"
-        },
-        {
           "name": "TIMEZONE",
           "value": "America/New_York"
+        },
+        {
+          "name": "USEHTTPS",
+          "value": "false"
+        },
+        {
+          "name": "USELETSENCRYPT",
+          "value": "false"
+        },
+        {
+          "name": "LETSENCRYPTEMAIL",
+          "value": "admin@admin.com"
+        },
+        {
+          "name": "HOSTNAME",
+          "value": "host.example.com"
         }
       ]
     }
@@ -410,11 +422,14 @@ the outside world, you will need to explain to Amazon what your
 purposes for sending e-mail are, and explain your policy of dealing
 with replies and bounce-backs.
 
-# Using SSL certificates
+# <a name="ssl"></a>Using HTTPS
 
-If you want to use HTTPS, you will need SSL certificates.  The default
-Apache configuration file expects these certificates to be located in
-the following files:
+Note: using Let's Encrypt for HTTPS does not currently work in a
+multi-server arrangement, though it does work for a single-server
+arrangement.
+
+The default Apache configuration file expects SSL certificates to be
+located in the following files:
 
 {% highlight text %}
 SSLCertificateFile /etc/ssl/docassemble/docassemble.crt
@@ -431,7 +446,9 @@ If you are using S3, this module will copy the files from the `certs/`
 prefix in your bucket to `/etc/ssl/docassemble`.
 
 If you are not using S3, this module will copy the files from
-`/usr/share/docassemble/certs` to `/etc/ssl/docassemble`.
+`/usr/share/docassemble/certs` to `/etc/ssl/docassemble`.  You will
+want to [create your own Docker image] of **docassemble** if you want
+to install certificates this way.
 
 The files need to be called `docassemble.crt`, `docassemble.key`, and
 `docassemble.ca.pem`, or whatever the web server configuration
@@ -484,3 +501,4 @@ the [configuration] variables `certs` and `cert_install_directory`.
 [EC2 Container Service]: https://aws.amazon.com/ecs/
 [Elastic Load Balancer]: https://aws.amazon.com/elasticloadbalancing/
 [Auto Scaling Group]: http://docs.aws.amazon.com/AutoScaling/latest/DeveloperGuide/AutoScalingGroup.html
+[create your own Docker image]: {{ site.baseurl }}/docs/docker.html#build

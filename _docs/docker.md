@@ -150,12 +150,15 @@ DBNAME=docassemble
 DBUSER=docassemble
 DBPASSWORD=abc123
 DBHOST=192.168.0.56
+USEHTTPS=false
+HOSTNAME=host.example.com
+USELETSENCRYPT=false
+LETSENCRYPTEMAIL=admin@admin.com
 S3ENABLE=true
 S3ACCESSKEY=FWIEJFIJIDGISEJFWOEF
 S3SECRETACCESSKEY=RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
 S3BUCKET=yourbucketname
 EC2=false
-USEHTTPS=false
 TIMEZONE=America/New_York
 LOGSERVER=192.168.0.57
 {% endhighlight %}
@@ -172,24 +175,62 @@ docker run --env-file=env.list -d -p 80:80 -p 443:443 -p 9001:9001 jhpyle/docass
 See [scalability of docassemble] for more information about running
 **docassemble** in a multi-server arrangement.
 
-# Creating your own Docker image
+# Using HTTPS
 
-You will want to create your own [Docker] image of **docassemble** if
-you want to run **docassemble** over HTTPS with your own certificates,
-and have those certificates automatically install when a container is
-created.
+### With Let's Encrypt
 
-To create your own [Docker] image, first make sure you
-have git installed:
+Note: using Let's Encrypt to enable HTTPS only works in a
+single-server arrangement.
+
+In your task definition or `env.list` file, set the following
+environment variables:
+
+* `USELETSENCRYPT`: set this to `true`.
+* `LETSENCRYPTEMAIL`: Let's Encrypt requires an e-mail address, which
+  it will use to get in touch with you about renewing the SSL certificates.
+* `HOSTNAME`: set this to the hostname that users will use to get to
+  the web application.  Let's Encrypt needs this in order to verify
+  that you have access to the host.
+* `USEHTTPS`: set this to `true`.
+
+For example, your `env.list` may look like:
+
+{% highlight text %}
+CONTAINERROLE=all
+DBNAME=docassemble
+USEHTTPS=true
+HOSTNAME=host.example.com
+USELETSENCRYPT=true
+LETSENCRYPTEMAIL=admin@admin.com
+TIMEZONE=America/New_York
+{% endhighlight %}
+
+The first time the server is started, the `letsencrypt` utility will
+be run, which will change the Apache configuration in order to use the
+appropriate SSL certificates.  When the server is later restarted,
+the `letsencrypt renew` command will be run, which will refresh the
+certificates if they are within 30 days of expiring.
+
+In addition, a script will run on a weekly basis to attempt to renew
+the certificates.
+
+### Without Let's Encrypt
+
+See [using HTTPS] for instructions on setting up HTTPS without using
+Let's Encrypt.
+
+# <a name="build"></a>Creating your own Docker image
+
+To create your own [Docker] image, first make sure git is installed:
 
 {% highlight bash %}
-apt-get -y install git
+sudo apt-get -y install git
 {% endhighlight %}
 
 or
 
 {% highlight bash %}
-yum -y install git
+sudo yum -y install git
 {% endhighlight %}
 
 Then download docassemble:
@@ -217,8 +258,10 @@ files:
   to `webserver`, starts the PostgreSQL server and initializes the
   database if it does not exist; creates the tables in the database if
   they do not already exist; copies SSL certificates from [S3] or
-  `/usr/share/docassemble/certs`; enables the Apache `mod_ssl` if
-  `USEHTTPS` is `true` and otherwise disables it; and starts Apache.
+  `/usr/share/docassemble/certs` if [S3] is enabled; enables the
+  Apache `mod_ssl` if `USEHTTPS` is `true` and otherwise disables it;
+  runs the Let's Encrypt utility if `USELETSENCRYPT` is `true` and the
+  utility has not been run yet; and starts Apache.
 * `docassemble/Docker/apache.conf`: note that if `mod_ssl` is enabled,
   HTTP will merely redirect to HTTPS.
 * `docassemble/Docker/docassemble.crt`: SSL certificate for HTTPS.
@@ -229,13 +272,16 @@ files:
 * `docassemble/Docker/docassemble-supervisor.conf`: [supervisor]
   configuration file.
 * `docassemble/Docker/docassemble.wsgi`: WSGI server file called by
-Apache.
+  Apache.
 * `docassemble/Docker/docassemble.logrotate`: This file will be copied
   into `/etc/logrotate.d` and will control the rotation of the
   **docassemble** log file in `/usr/share/docassemble/log`.
 * `docassemble/Docker/apache.logrotate`: This replaces the standard
   apache logrotate configuration.  It does not compress old log files,
   so that it is easier to view them in the web application.
+* `docassemble/Docker/run-postgresql.sh`: This is a script that is
+  run by [supervisor] to start the PostgreSQL server in a
+  single-server configuration.
 * `docassemble/Docker/docassemble-syslogng.conf`: The configuration
   for sending Apache and supervisor logs to the central log server.
 
@@ -249,7 +295,7 @@ docker build -t yourdockerhubusername/mydocassemble .
 You can then run your image:
 
 {% highlight bash %}
-docker run -d -p 80:80 yourdockerhubusername/mydocassemble
+docker run -d -p 80:80 -p 443:443 -p 9001:9001 yourdockerhubusername/mydocassemble
 {% endhighlight %}
 
 Or push it to [Docker Hub]:
@@ -286,3 +332,4 @@ Then, subsequent commands will use the latest **docassemble** image.
 [scalability]: {{ site.baseurl }}/docs/scalability.html
 [Amazon S3]: https://aws.amazon.com/s3/
 [docassemble repository]: {{ site.github.repository_url }}
+[using HTTPS]: {{ site.baseurl }}/docs/scalability.html#ssl

@@ -8,20 +8,13 @@ There are a number of optional modifiers that can be included in
 `question` blocks to control the appearance or behavior of the
 question.
 
-# `audio`
+# <a name="audio"></a>`audio`
 
-{% highlight yaml %}
----
-question: Are you traveling to New York City?
-yesno: going_to_nyc
-audio: nyc_question.mp3
----
-{% endhighlight %}
+{% include side-by-side.html demo="audio" %}
 
 The `audio` modifier allows you to add audio to your questions.  An
 audio player will appear above the question, and the user can press
-play to hear the sound.  Uses [audio.js], which means that for maximum
-portability you should always use mp3 audio files.
+play to hear the sound.
 
 The filename can be constructed with [Mako].  A plain file path will
 be assumed to point to a file in the `static` directory of the package
@@ -31,26 +24,23 @@ A URL beginning with `http` or `https` may also be provided.
 
 You can also play uploaded files:
 
-{% highlight yaml %}
----
-question: Please upload an MP3
-fields:
-  - MP3 file: user_mp3_file
-    datatype: file
----
-question: Let's listen to what you uploaded.
-field: heard_music
-audio: ${ user_mp3_file }
----
-{% endhighlight %}
+{% include side-by-side.html demo="upload_audio" %}
+
+Note that in this example, we use `file` as the `datatype`, which is
+the standard way to upload files.  You can also use the `datatype` of
+[microphone], which in some browsers (mostly on mobile platforms) will
+launch an audio recording app to create the file to upload.
+
+{% include side-by-side.html demo="upload_audio_microphone" %}
 
 **docassemble** uses the [HTML5 audio tag] to allow users to play the
 audio.  Not all browsers support every type of audio file.  In order
 to make your audio files accessible to the greatest number of users,
-you should include files in both `mp3` and `ogg` format.
+then if you provide static audio files, you should include files in
+both `mp3` and `ogg` format.
 
 For example, if your `audio` declaration points to a file, such as
-`nyc_question.mp3`, then your interview package will contain a file
+`nyc_question.mp3`, then your interview package should contain a file
 called `nyc_question.mp3` in the `data/static` directory.  If you also
 include an OGG version of this audio file, called `nyc_question.ogg`,
 in the same directory, then **docassemble** will make both files
@@ -100,7 +90,7 @@ through https, but will play the same audio retrieved through http.
 See [special variables] for information about **docassemble**'s
 automatic text-to-speech features.
 
-# `video`
+# <a name="video"></a>`video`
 
 The `video` declaration is just like the `audio` declaration except that it displays a
 video instead of an audio file.
@@ -131,49 +121,37 @@ modified to support that video type.
 You can also use the `video` declaration to embed [YouTube] and
 [Vimeo] videos.  For example, if you want to embed a [YouTube] video
 and the URL for the video is
-`https://www.youtube.com/watch?v=RpgYyuLt7Dx` or
-`https://youtu.be/RpgYyuLt7Dx`, you would write this:
+`https://www.youtube.com/watch?v=9bZkp7q19f0` or
+`https://youtu.be/9bZkp7q19f0`, you would write something like this:
 
-{% highlight yaml %}
----
-question: Are you traveling to New York City?
-yesno: going_to_nyc
-video: |
-  [YOUTUBE RpgYyuLt7Dx]
----
-{% endhighlight %}
+{% include side-by-side.html demo="video" %}
 
 If you want to embed a [Vimeo] video, the URL of which is
 `https://vimeo.com/96044910`, you would write:
 
-{% highlight yaml %}
----
-question: Are you traveling to New York City?
-yesno: going_to_nyc
-video: |
-  [VIMEO 96044910]
----
-{% endhighlight %}
+{% include side-by-side.html demo="vimeo" %}
 
-Note that you could not have written the above as `video:
-[VIMEO 96044910]` -- that would have generated an error because [YAML]
-thinks square brackets indicate a list of items, not plain text.  If
-you want to write the declaration on one line, write `video:
-"[VIMEO 96044910]"`.
-
-# `help`
+Note that you could not have written the above as this:
 
 {% highlight yaml %}
 ---
-question: How much money do you wish to seek in damages?
-fields:
-  - Money: damages_sought
-    datatype: currency
-help: |
-  If you are not sure how much money to seek in damages, just ask
-  for a million dollars, since you want ${ defendant } to suffer.
+field: ready_to_proceed
+question: |
+  Welcome to the interview.
+subquestion: |
+  Please watch this introductory video
+  before proceeding with the interview.
+video: [VIMEO 96044910]
 ---
 {% endhighlight %}
+
+This would generate an error because [YAML] thinks square brackets
+indicate a list of items, not plain text.  If you want to write the
+declaration on one line, write `video: "[VIMEO 96044910]"`.
+
+# <a name="help"></a>`help`
+
+{% include side-by-side.html demo="help-damages" %}
 
 In the web app, users can use the navigation bar to toggle between the
 "Question" tab and the "Help" tab.  The contents of the "Help" tab
@@ -183,37 +161,19 @@ contained within the interview.
 
 You can add audio to your help text:
 
-{% highlight yaml %}
----
-question: How much money do you wish to seek in damages?
-fields:
-  - Money: damages_sought
-    datatype: currency
-help: |
-  content: |
-    If you are not sure how much money to seek in damages, just ask
-    for a million dollars, since you want the defendant to suffer.
-  audio: message_re_damages.mp3
----
-{% endhighlight %}
+{% include side-by-side.html demo="help-damages-audio" %}
 
 You can also add video to help text using the `video` declaration.
 
-# `decoration`
+# <a name="decoration"></a>`decoration`
 
-{% highlight yaml %}
----
-question: Have you been saving your money?
-yesno: user_has_saved_money
-decoration: piggybank
----
-{% endhighlight %}
+{% include side-by-side.html demo="decoration" %}
 
 The `decoration` modifier adds an icon to the right of the `question`
 text.  In the example above, `piggybank` will need to have been
-defined in an `image sets` or `images` block.
+defined in an [image sets] or [images] block.
 
-# `progress`
+# <a name="progress"></a>`progress`
 
 {% highlight yaml %}
 ---
@@ -226,7 +186,7 @@ progress: 50
 If **docassemble** is configured to show a progress bar, the progress
 bar will be set to 50% when this question is asked.
 
-# `prevent_going_back`
+# <a name="prevent_going_back"></a>`prevent_going_back`
 
 Normally, **docassemble** allows the user to click the back button to
 get back to earlier steps in the interview.  Sometimes, it is
@@ -247,7 +207,7 @@ question: |
 There is also a `prevent_going_back()` [function] that accomplishes
 the same thing from [Python] code.
 
-# `language`
+# <a name="language"></a>`language`
 
 {% highlight yaml %}
 ---
@@ -277,10 +237,10 @@ For more information about how to set the active language, see
 [language support].
 
 Instead of explicitly setting a `language` for every question, you can
-use `default language` to apply a particular language to the remaining
+use [default language] to apply a particular language to the remaining
 questions in the file (see [initial blocks]).
 
-# `generic object`
+# <a name="generic object"></a>`generic object`
 
 {% highlight yaml %}
 ---
@@ -306,7 +266,7 @@ questions.  This question definition tells **docassemble** that if it
 ever needs an `is_defendant` attribute for any object of type
 `Individual`, it can get an answer by asking this question.
 
-# `role`
+# <a name="role"></a>`role`
 
 {% highlight yaml %}
 ---
@@ -341,7 +301,7 @@ If the user does not have an appropriate role, **docassemble** will
 look for a question in the interview in which `event` has been set to
 `role_event`.
 
-# `comment`
+# <a name="comment"></a>`comment`
 
 {% highlight yaml %}
 ---
@@ -370,3 +330,6 @@ by **docassemble**, so it can contain any valid [YAML].
 [function]: {{ site.baseurl }}/docs/function.html
 [special variables]: {{ site.baseurl }}/docs/special.html
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
+[image sets]: {{ site.baseurl }}/docs/initial.html#image sets
+[images]: {{ site.baseurl }}/docs/initial.html#images
+[default language]: {{ site.baseurl }}/docs/initial.html#default language

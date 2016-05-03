@@ -354,6 +354,19 @@
                   {'pear': "Pears"}
                 ]
   ---
+"for_fruit": |-
+  ---
+  code: |
+    fruit_list = ['peaches', 'pears', 'apricots']
+  ---
+  question: |
+    Summary of fruit
+  subquestion: |
+    % for fruit in fruit_list:
+    I assume you like ${ fruit }.
+    % endfor
+  sets: all_done
+  ---
 "force-ask": |-
   ---
   mandatory: true
@@ -426,6 +439,37 @@
     - 5
   help: |
     Hint: 2 + 2 = 4.
+  ---
+"help-damages": |-
+  ---
+  question: |
+    How much money do you wish
+    to seek in damages?
+  fields:
+    - Money: damages_sought
+      datatype: currency
+  help: |
+    If you are not sure how much
+    money to seek in damages, just ask
+    for a million dollars, since you
+    want ${ defendant } to suffer.
+  ---
+"help-damages-audio": |-
+  ---
+  question: |
+    How much money do you wish
+    to seek in damages?
+  fields:
+    - Money: damages_sought
+      datatype: currency
+  help:
+    content: |
+      If you are not sure how much
+      money to seek in damages, just ask
+      for a million dollars, since you
+      want ${ defendant } to suffer.
+    audio: |
+      message_re_damages.mp3
   ---
 "image-sets": |-
   ---
@@ -692,6 +736,17 @@
     Your application for ${ service }
     has been submitted.
   sets: all_done
+  ---
+"progress": |-
+  ---
+  question: Are you doing well?
+  yesno: user_is_well
+  progress: 50
+  ---
+"progress-features": |-
+  ---
+  features:
+    progress bar: true
   ---
 "pull-down": |-
   ---
@@ -994,6 +1049,30 @@
     "${ title_case(title) }."
   sets: all_done
   ---
+"upload_audio": |-
+  ---
+  question: Please upload an MP3
+  fields:
+    - MP3 file: user_mp3_file
+      datatype: file
+  ---
+  question: |
+    Let's listen to what you uploaded.
+  audio: ${ user_mp3_file }
+  sets: all_done
+  ---
+"upload_audio_microphone": |-
+  ---
+  question: Please record some audio.
+  fields:
+    - MP3 file: user_audio_file
+      datatype: file
+  ---
+  question: |
+    Let's listen to what you recorded.
+  audio: ${ user_audio_file }
+  sets: all_done
+  ---
 "url-of": |-
   ---
   question: |
@@ -1015,6 +1094,24 @@
     before proceeding with the interview.
   video: |
     [YOUTUBE 9bZkp7q19f0]
+  ---
+"video-nyc": |-
+  ---
+  question: |
+    Are you traveling to New York City?
+  yesno: going_to_nyc
+  video: nyc_tourism.mp4
+  ---
+"vimeo": |-
+  ---
+  field: ready_to_proceed
+  question: |
+    Welcome to the interview.
+  subquestion: |
+    Please watch this introductory video
+    before proceeding with the interview.
+  video: |
+    [VIMEO 96044910]
   ---
 "yesno": |-
   ---
