@@ -86,9 +86,8 @@ box-shadow: $shadow;
 }
 .site-wrapper-inner {
   display: table-cell;
+  padding-top: 60px;
   vertical-align: top;
-  /* position: absolute;
-  top: 0; bottom: 0; left: 0; right: 0; */
 }
 
 .cover-container {
@@ -216,6 +215,7 @@ box-shadow: $shadow;
   /* Start the vertical centering */
   @media (orientation: landscape) {
     .site-wrapper-inner {
+      padding-top: 0px;
       vertical-align: middle;
     }
   }
