@@ -6,7 +6,7 @@ metadata:
 question: Please record some audio.
 fields:
   - MP3 file: user_audio_file
-    datatype: file
+    datatype: microphone
 ---
 question: |
   Let's listen to what you recorded.
