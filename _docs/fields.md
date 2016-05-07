@@ -5,7 +5,7 @@ short_title: Setting Variables
 ---
 
 To instruct **docassemble** to store user input in a variable in
-response to a [question], you need to include in your `question` a
+response to a [question], you need to include in your [`question`] a
 variable name within a directive that indicates how you would like
 **docassemble** to ask for the value of the variable.
 
@@ -29,7 +29,7 @@ The `noyes` statement is just like `yesno`, except that "Yes" means
 
 ## <a name="field with buttons"></a>`field` with `buttons`
 
-A `question` block with a `buttons` statement will set the variable
+A [`question`] block with a `buttons` statement will set the variable
 identified in `field` to a particular value depending on which of the
 buttons the user presses.
 
@@ -111,9 +111,9 @@ This works with `choices` as well:
 
 {% include side-by-side.html demo="choices-icons" %}
 
-## <a name="code button"></a>buttons/choices that embed `question` and `code` blocks
+## <a name="code button"></a>buttons/choices that embed [`question`] and [`code`] blocks
 
-Multiple choice questions can embed `question` blocks and `code`
+Multiple choice questions can embed [`question`] blocks and [`code`]
 blocks.  These questions are just like ordinary questions, except they
 can only be asked by way of the questions in which they are embedded.
 
@@ -123,13 +123,13 @@ dictionary) (as opposed to text) as the value of a label in a
 
 {% include side-by-side.html demo="buttons-code-color" %}
 
-While embedding `question` blocks can be useful sometimes, it is
+While embedding [`question`] blocks can be useful sometimes, it is
 generally not a good idea to structure interviews with a lot of
 embedded questions.  You will have more flexibility if your questions
 stand on their own.
 
-It is also possible for multiple-choice questions to embed `code`
-blocks that execute Python code.  (If you do not know what `code`
+It is also possible for multiple-choice questions to embed [`code`]
+blocks that execute Python code.  (If you do not know what [`code`]
 blocks are yet, read the section on [code blocks] first.)  This can be
 useful when you want to set the values of multiple variables with one
 button.
@@ -145,7 +145,7 @@ executed and the variables will be set.
 
 {% include side-by-side.html demo="continue-participation" %}
 
-A `question` with a `field` and no `buttons` will offer the user a
+A [`question`] with a `field` and no `buttons` will offer the user a
 "Continue" button.  When the user presses "Continue," the variable
 indicated by `field` will be set to `True`.
 
@@ -156,12 +156,12 @@ can sign his or her name with the trackpad or other pointing device.
 
 {% include side-by-side.html demo="signature" %}
 
-On the screen, the `question` text appears first, then the
-`subquestion` text, then the signature area appears, and then the
+On the screen, the [`question`] text appears first, then the
+[`subquestion`] text, then the signature area appears, and then the
 `under` text appears.
 
 In this example, the `user_signature` variable will be set to an
-object of type `DAFile`.  This variable can be included in the same
+object of type [`DAFile`].  This variable can be included in the same
 way that a document upload can be included.  For example:
 
 {% highlight yaml %}
@@ -223,10 +223,10 @@ The following are the keys that have special meaning:
   `datatype` is `object`, `object_radio`, or `object_checkboxes`.  Any
   object in `exclude` will be omitted from the list of choices if it
   is present in `choices`.
-* `code`: code that generates a list of possible options for a
+* [`code`]: code that generates a list of possible options for a
   multiple choice field.
 * `shuffle`: the value is either `true` or `false`.  When used with
-  `code` or `choices`, it randomizes the list of choices.
+  [`code`] or `choices`, it randomizes the list of choices.
 * `disable others`: if set to true, then when the user changes the
   value of the field to something, all the other fields in the
   question will be disabled.
@@ -256,10 +256,10 @@ The possible `datatype` values are:
 * `date`: a valid date.
 * `email`: a valid e-mail address.
 * `number`: a valid numeric value.
-* `currency`: a valid numeric value; input box shows a currency symbol
+* <a name="currency"></a>`currency`: a valid numeric value; input box shows a currency symbol
   based on locale defined in the [configuration].
-* `file`: a single file upload (a `DAFileList` [object] results).
-* `files`: single or multiple file upload (a `DAFileList` [object]
+* `file`: a single file upload (a [`DAFileList`] object results).
+* `files`: single or multiple file upload (a [`DAFileList`] object
   results).
 * <a name="camera"></a>`camera`: like `file`, except with HTML5 that suggests using the
   device's camera to take a picture;
@@ -274,13 +274,13 @@ The possible `datatype` values are:
 * `object`: this is used when you would like to use a variable to
   refer to an existing object.  You can provide the list of objects to
   choose from in one of two ways.  The first way is to list the object
-  names under `selections`.  The second way is to provide `code` that
+  names under `selections`.  The second way is to provide [`code`] that
   calls the `selections()` [function].  The user will be presented
   with a pull-down selector.
 * `object_radio`: like `object`, except the user interface uses radio
   buttons rather than a pull-down list.
 * `object_checkboxes`: this is used when you would like to use a
-  question to set the elements of an object of type `DAList`.  The
+  question to set the elements of an object of type [`DAList`].  The
   choices in `choices` (optionally modified by `exclude`) will be
   presented to the user as checkboxes.  The `.gathered` attribute of
   the variable will be set to `True` after the elements are set.
@@ -318,11 +318,11 @@ The referenced [CSS file] contains the following:
 
 ## Multiple-choice questions in `fields` with choices from code
 
-Note that adding `code` to a field makes it a multiple-choice
+Note that adding [`code`] to a field makes it a multiple-choice
 question.  If you have a multiple-choice question and you want to
 reuse the same selections several times, you do not need to type in
 the whole list every time.  You can define a variable to contain the
-list and a `code` block that defines the variable.  For example:
+list and a [`code`] block that defines the variable.  For example:
 
 {% include side-by-side.html demo="fields-mc" %}
 
@@ -408,10 +408,9 @@ code: all_done
 ---
 {% endhighlight %}
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testobjectfield.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testobjectfield.yml){:target="_blank"}.)
 
-Note that this interview incorporates the
-[`basic-questions.yml` file](https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml),
+Note that this interview incorporates the [`basic-questions.yml`] file
 which defines objects that are commonly used in [legal applications],
 including `client` and `advocate`.  It also contains questions for
 asking for the names of these people.
@@ -472,7 +471,7 @@ need(user_done)
 
 The `user_done` variable will never be set to any value, but that is
 ok, because you don't want the user to be able to "get past" the final
-screen.  See [functions] for an explanation of `need()`.
+screen.  See [functions] for an explanation of [`need()`].
 
 ## <a name="sets special"></a>`sets` with special buttons/choices 
 
@@ -540,7 +539,7 @@ The `event` line acts just like `sets`: it advertises to
 {% include side-by-side.html demo="event-role-event" %}
 
 In the example above, the `event` line tells **docassemble** that this
-`question` should be displayed to the user if **docassemble**
+[`question`] should be displayed to the user if **docassemble**
 encounters the `role_event`, which is a special "event" that can
 happen in multi-user interviews (see
 [roles]({{site.baseurl}}/docs/roles.html)).  The event is triggered
@@ -549,7 +548,7 @@ current user needs to answer a question.  For example, while a client
 is filling out an interview, the [interview logic] might call for a
 variable that can only be set by an advocate who reviews the client's
 answers.  In this scenario, a `role_event` will be triggered.  When
-this happens, **docassemble** will look for a `question` or `code`
+this happens, **docassemble** will look for a [`question`] or [`code`]
 block that defines the variable `role_event`, and it will find the
 example question above.
 
@@ -592,7 +591,7 @@ If `fruit` and `vegetable` have been defined, and the user selects
 
 ![Screenshot of review]({{ site.baseurl }}/img/review-block.png)
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testreview.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testreview.yml){:target="_blank"}.)
 
 Note that the `review` block does not show a link for "Favorite
 fungus" because the variable `fungi` has not been defined yet.
@@ -635,7 +634,7 @@ This results in a screen that looks like this:
 
 ![Screenshot of review with buttons]({{ site.baseurl }}/img/review-block-buttons.png)
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testreview2.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testreview2.yml){:target="_blank"}.)
 
 In addition, the `review` block, like the `fields` block, allows you
 to use `note`, `html`, `script`, and `css` entries.
@@ -662,7 +661,7 @@ review:
 
 ![Screenshot of review with note]({{ site.baseurl }}/img/review-block-note.png)
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testreview3.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testreview3.yml){:target="_blank"}.)
 
 The `review` block allows you to add `help` text to an entry, in
 which case the text is shown underneath the hyperlink.  If this text
@@ -690,7 +689,7 @@ review:
 
 ![Screenshot of review with help]({{ site.baseurl }}/img/review-block-help.png)
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testreview4.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testreview4.yml){:target="_blank"}.)
 
 ### <a name="review auto"></a>Why can't `review` blocks be automatically generated?
 
@@ -771,3 +770,11 @@ cannot use because they conflict with built-in names that [Python] and
 [process_action()]: {{ site.baseurl }}/docs/functions.html#process_action
 [action_menu_item()]: {{ site.baseurl }}/docs/functions.html#action_menu_item
 [menu_items]: {{ site.baseurl }}/docs/special.html#menu_items
+[`question`]: {{ site.baseurl }}/docs/questions.html#question
+[`subquestion`]: {{ site.baseurl }}/docs/questions.html#subquestion
+[`code`]: {{ site.baseurl }}/docs/code.html
+[`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
+[`DAFileList`]: {{ site.baseurl }}/docs/objects.html#DAFileList
+[`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
+[`need()`]: {{ site.baseurl }}/docs/functions.html#need
+[`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml

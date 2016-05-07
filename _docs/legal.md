@@ -7,13 +7,13 @@ short_title: Legal applications
 # Using **docassemble** in legal applications
 
 One "use case" for **docassemble** is the creation of web applications
-that help people with legal problems.  The `docassemble.base` package
-contains a [Python module] `docassemble.base.legal` that defines some
+that help people with legal problems.  The [`docassemble.base`] package
+contains a [Python module] [`docassemble.base.legal`] that defines some
 helpful Python [classes] and [function]s.  It also contains a helpful
-set of `question`s and `code` blocks,
+set of [`question`]s and [`code`] blocks,
 `docassemble.base:data/questions/basic-questions.yml`.
 
-To gain access to the functionality of `docassemble.base.legal`,
+To gain access to the functionality of [`docassemble.base.legal`],
 include the following in your interview file:
 
 {% highlight yaml %}
@@ -23,8 +23,8 @@ modules:
 ---
 {% endhighlight %}
 
-Or, if you want the functionality of `docassemble.base.legal` as well
-as access to the `basic-questions.yml` questions, do this instead:
+Or, if you want the functionality of [`docassemble.base.legal`] as well
+as access to the [`basic-questions.yml`] questions, do this instead:
 
 {% highlight yaml %}
 ---
@@ -34,31 +34,31 @@ include:
 {% endhighlight %}
 
 The best way to understand what these resources offer is to read the
-source code of [legal.py] and [basic-questions.yml].
+source code of [`legal.py`] and [`basic-questions.yml`].
 
 # Functions
 
 ## <a name="update_info"></a>update_info()
 
-Some of the [functions] and [methods] of `docassemble.base.legal` will
+Some of the [functions] and [methods] of [`docassemble.base.legal`] will
 behave differently depending on background information about the
 interview, such as who the interviewee is and what the interviewee's
 role is.  For example, if `trustee` is an object of the class
-`Individual`, and you call `trustee.do_question('have')`, the result
+[`Individual`], and you call `trustee.do_question('have')`, the result
 will be "do you have" if if the interviewee is the trustee, but
 otherwise the result will be "does Fred Jones have" (or whatever the
 trustee's name is).
 
-In order for the `docassemble.base.legal` module to know this
-background information, you need to include an `initial` code block
-(or a `default role` block containing `code`) that:
+In order for the [`docassemble.base.legal`] module to know this
+background information, you need to include an [`initial`] code block
+(or a [`default role`] block containing [`code`]) that:
 
-1. Defines `user` as an object of the class `Individual`;
+1. Defines `user` as an object of the class [`Individual`];
 2. Defines `role` as a text value (e.g., `'advocate'`); and
-3. Calls `update_info(user, role, current_info)`.  (The `current_info`
+3. Calls `update_info(user, role, current_info)`.  (The [`current_info`]
 dictionary is already defined by **docassemble**.)
 
-For example, this is how [basic-questions.yml] does it:
+For example, this is how [`basic-questions.yml`] does it:
 
 {% highlight yaml %}
 ---
@@ -80,8 +80,8 @@ code: |
 ---
 {% endhighlight %}
 
-(See [initial blocks] for an explanation of `objects` and `default
-role`.  See the [roles] section for an explanation of how user roles
+(See [initial blocks] for an explanation of [`objects`] and [`default
+role`].  See the [roles] section for an explanation of how user roles
 work in **docassemble**.)
 
 If you wish to retrieve the values that were passed to
@@ -92,8 +92,8 @@ If you wish to retrieve the values that were passed to
 * `get_info('current_info')`
 
 Also, you can add [keyword arguments] to `update_info()` to set your
-own variables and retrieve the values later with `get_info()`.  For
-example, your `initial` block could be:
+own variables and retrieve the values later with [`get_info()`].  For
+example, your [`initial`] block could be:
 
 {% highlight yaml %}
 ---
@@ -115,7 +115,7 @@ code: |
 ---
 {% endhighlight %}
 
-For more information about `get_info()` and `set_info()`, see
+For more information about [`get_info()`] and [`set_info()`], see
 [functions].
 
 ## <a name="interview_url"></a>interview_url()
@@ -123,7 +123,7 @@ For more information about `get_info()` and `set_info()`, see
 The `interview_url()` function returns a URL to the interview that
 provides a direct link to the interview and the current variable
 store.  This is used in [multi-user interviews] to invite additional
-users to participate.  This function depends on `update_info()` having
+users to participate.  This function depends on [`update_info()`] having
 been run in "initial" code.
 
 ## <a name="interview_url_as_qr"></a>interview_url_as_qr()
@@ -142,19 +142,19 @@ send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subjec
 {% endhighlight %}
 
 This function is integrated with other classes in
-`docassemble.base.legal`.
+[`docassemble.base.legal`].
 
-* `to` expects a [list] of `Individual`s.
-* `sender` expects a single `Individual`.  If not set, the
+* `to` expects a [list] of [`Individual`]s.
+* `sender` expects a single [`Individual`].  If not set, the
   `default_sender` information from the [configuration] is used.
-* `cc` expects a [list] of `Individual`s, or `None`.
-* `bcc` expects a [list] of `Individual`s, or `None`.
+* `cc` expects a [list] of [`Individual`]s, or `None`.
+* `bcc` expects a [list] of [`Individual`]s, or `None`.
 * `body` expects text, or `None`.  Will set the plain text content of
   the e-mail.
 * `html` expects text, or `None`.  Will set the (optional) [HTML]
   content of the e-mail.
 * `subject` expects text, or `None`.  Will set the subject of the e-mail.
-* `template` expects a `DATemplate` object, or `None`.  These
+* `template` expects a [`DATemplate`] object, or `None`.  These
   templates can be created in an interview file using the `template`
   directive.  If this [keyword argument] is supplied, both the plain
   text and [HTML] contents of the e-mail will be set by converting the
@@ -163,16 +163,16 @@ This function is integrated with other classes in
   of the e-mail will be set to the subject of the template.  You can
   override any of these behaviors by manually specifying `body`,
   `html`, or `subject`.
-* `attachments` expects a [list] of `DAFile`, `DAFileList`, or
-`DAFileCollection` objects.  You can include:
+* `attachments` expects a [list] of [`DAFile`], [`DAFileList`], or
+  [`DAFileCollection`] objects.  You can include:
   * Images generated by `signature` blocks (objects of class
-  `DAFile`);
+  [`DAFile`]);
   * File uploads generated by including [fields] of `datatype: file` or
-  `datatype: files` in a `question` (objects of class `DAFileList`);
-  * [Documents] generated by `attachments` to a `question` for which a
-  `variable` was provided (objects of class `DAFileCollection`).
+  `datatype: files` in a [`question`] (objects of class [`DAFileList`]);
+  * [Documents] generated by [`attachments`] to a [`question`] for which a
+  `variable` was provided (objects of class [`DAFileCollection`]).
 
-It uses the `name` and `email` attributes of the listed `Individuals`
+It uses the `name` and `email` attributes of the listed [`Individual`]s
 to form e-mail addresses.
 
 `send_email()` returns `False` if an error prevented the e-mail from
@@ -234,42 +234,42 @@ The `map_of()` function inserts a Google Map into question text.  (It
 does not work within documents.)  The arguments are expected to be
 **docassemble** [objects].  Different objects are mapped differently:
 
-* `Address` objects: if an `Address` object is provided as an argument
+* [`Address`] objects: if an [`Address`] object is provided as an argument
   to `map_of()`, a map marker will be placed at the geolocated
   coordinates of the address.  The description of the address will be
   the address itself.
   * _Technical details_: if the object is called `address`, the marker
     will be placed at the coordinates `address.location.latitude` and
     `address.location.longitude`.  (The attribute `address.location`
-    is a `LatitudeLongitude` object.)  The description of the marker
+    is a [`LatitudeLongitude`] object.)  The description of the marker
     will be set to `address.location.description`.  These fields are
     set automatically during the geolocation process, which will take
     place the first time **docassemble** runs `map_of()`, if it has
     not taken place already.  The marker icon can be customized by
     setting `address.icon`.
-* `Organization` objects: map markers will be placed at the locations
-  of each of the organization's offices.  For example, if the object
-  name is `company`, markers will be placed on the map for each
-  address in `company.office` (which is a list of `Address`es).  The
-  icon for the `i`th office will be `company.office[i].icon`, or, if
-  that is not defined, it will be `company.icon` if that is defined.
-  The description of each marker will be the organization's name
-  (`company.name.full()`) followed by
+* [`Organization`] objects: map markers will be placed at the
+  locations of each of the organization's offices.  For example, if
+  the object name is `company`, markers will be placed on the map for
+  each address in `company.office` (which is a list of [`Address`]es).
+  The icon for the `i`th office will be `company.office[i].icon`, or,
+  if that is not defined, it will be `company.icon` if that is
+  defined.  The description of each marker will be the organization's
+  name (`company.name.full()`) followed by
   `company.office[i].location.description`.
-* `Person` objects: a map marker will be placed at the person's
+* [`Person`] objects: a map marker will be placed at the person's
   address.  The description will be the person's name, followed by the
   address.  The marker icon can be customized by setting `person.icon`
-  (for a `Person` object called `person`).  If the `Person` object is
-  the user, the default icon is a blue circle.
+  (for a [`Person`] object called `person`).  If the [`Person`] object
+  is the user, the default icon is a blue circle.
 
 ## <a name="location_known"></a>location_known()
 
 Returns `True` or `False` depending on whether **docassemble** was
 able to learn the user's GPS location through the web browser.
 
-See [track_location] and [LatitudeLongitude](#LatitudeLongitude) for
-more information about how **docassemble** collects information about
-the user's location.
+See [`track_location`] and [`LatitudeLongitude`] for more information
+about how **docassemble** collects information about the user's
+location.
 
 ## <a name="location_returned"></a>location_returned()
 
@@ -278,7 +278,7 @@ made to transmit the user's GPS location from the browser to
 docassemble.  Will return true even if the attempt was not successful
 or the user refused to consent to the transfer.
 
-See [track_location] and [LatitudeLongitude](#LatitudeLongitude) for
+See [`track_location`] and [`LatitudeLongitude`] for
 more information about how **docassemble** collects information about
 the user's location.
 
@@ -288,9 +288,9 @@ Returns the user's latitude and longitude as a tuple.  It assumes that
 the information about the user's location has already been passed to
 **docassemble** using `update_info()`.
 
-See [track_location] and [LatitudeLongitude](#LatitudeLongitude) for
-more information about how **docassemble** collects information about
-the user's location.
+See [`track_location`] and [`LatitudeLongitude`] for more information
+about how **docassemble** collects information about the user's
+location.
 
 ## <a name="objects_from_file"></a>objects_from_file()
 
@@ -301,7 +301,7 @@ of objects from a [YAML] file written in a certain format.
 
 ## <a name="Person"></a>Person
 
-The `Person` class encompasses `Individual`s as well as legal persons,
+The `Person` class encompasses [`Individual`]s as well as legal persons,
 like companies, government agencies, etc.  If you create an object of
 type `Person` by doing:
 
@@ -314,9 +314,9 @@ objects:
 
 then you will create an object with the following built-in attributes:
 
-* `opponent.name` (object of class `Name`)
-* `opponent.address` (object of class `Address`)
-* `opponent.location` (object of class `LatitudeLongitude`)
+* `opponent.name` (object of class [`Name`])
+* `opponent.address` (object of class [`Address`])
+* `opponent.location` (object of class [`LatitudeLongitude`])
 
 Referring to a `Person` in the context of a template will return the
 output of `.name.full()`.
@@ -327,7 +327,7 @@ The following attributes are also used, but undefined by default:
 
 ### <a name="Individual"></a>Individual
 
-The `Individual` is a subclass of `Person`.  This class should be used
+The `Individual` is a subclass of [`Person`].  This class should be used
 for persons who you know are human beings.
 
 If you create an object of type `Individual` by doing:
@@ -341,17 +341,17 @@ objects:
 
 then you will create an object with the following built-in attributes:
 
-* `president.name` (object of class `IndividualName`)
-* `president.child` (object of class `ChildList`)
-* `president.income` (object of class `Income`)
-* `president.asset` (object of class `Asset`)
-* `president.expense` (object of class `Expense`)
+* `president.name` (object of class [`IndividualName`])
+* `president.child` (object of class [`ChildList`])
+* `president.income` (object of class [`Income`])
+* `president.asset` (object of class [`Asset`])
+* `president.expense` (object of class [`Expense`])
 
 In addition, the following attributes will be defined by virtue of an
-`Individual` being a kind of `Person`:
+`Individual` being a kind of [`Person`]:
 
-* `president.address` (object of class `Address`)
-* `president.location` (object of class `LatitudeLongitude`)
+* `president.address` (object of class [`Address`])
+* `president.location` (object of class [`LatitudeLongitude`])
 
 The following attributes are also used, but undefined by default:
 
@@ -372,7 +372,7 @@ code: |
 ---
 {% endhighlight %}
 
-(If you include the `basic-questions.yml` file, this is done for you.)
+(If you include the [`basic-questions.yml`] file, this is done for you.)
 
 ### <a name="Individual.identified"></a>`.identified()`
 
@@ -428,7 +428,7 @@ fields:
 {% endhighlight %}
 
 For an explanation of how `.object_possessive()` works, see the
-`Person` class.
+[`Person`] class.
 
 ### <a name="Individual.possessive"></a>`.possessive()`
 
@@ -501,16 +501,16 @@ argument `capitalize=True`, the output will be capitalized.
 
 ## <a name="Name"></a>Name
 
-The `Name` is the base class for names of things, such as `Person`.
-For example, if `plaintiff` is a `Person`, `plaintiff.name` is an
-object of type `Name`.  If `plaintiff` is an `Individual`,
-`plaintiff.name` is an object of type `IndividualName`, which is a
-subtype of `Name`.  (The `IndividualName` is defined in the next
+The `Name` is the base class for names of things, such as [`Person`].
+For example, if `plaintiff` is a [`Person`], `plaintiff.name` is an
+object of type `Name`.  If `plaintiff` is an [`Individual`],
+`plaintiff.name` is an object of type [`IndividualName`], which is a
+subtype of `Name`.  (The [`IndividualName`] is defined in the next
 section.)
 
-Objects of the basic `Name` class have just one attribute, `text`.  To
-set the name of a `Person` called `company`, for example, you can do
-something like this:
+Objects of the basic [`Name`] class have just one attribute, `text`.
+To set the name of a [`Person`] called `company`, for example, you can
+do something like this:
 
 {% highlight yaml %}
 ---
@@ -532,7 +532,7 @@ yesno: user_wants_to_sue
 ---
 {% endhighlight %}
 
-Multiple ways of referring to the name of a `Person` are illustrated
+Multiple ways of referring to the name of a [`Person`] are illustrated
 in the following interview:
 
 {% highlight yaml %}
@@ -560,11 +560,11 @@ subquestion: |
 ---
 {% endhighlight %}
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testperson.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testperson.yml){:target="_blank"}.)
 
 Note that `${ opponent.name.full() }`, `${ opponent.name }`, and `${
-opponent }` all return the same thing.  This is because a `Person` in
-the context of a template returns `.name.full()`, and a `Name` returns
+opponent }` all return the same thing.  This is because a [`Person`] in
+the context of a template returns `.name.full()`, and a [`Name`] returns
 `.full()`.
 
 The reason a name is not just a piece of text, but rather an object
@@ -577,14 +577,14 @@ common way of referring to the names of these objects.
 <a name="Name.full"></a>
 <a name="Name.firstlast"></a>
 <a name="Name.lastfirst"></a>
-The `Name` and `IndividualName` objects support the following methods:
+The [`Name`] and [`IndividualName`] objects support the following methods:
 
 * `.full()`
 * `.firstlast()`
 * `.lastfirst()`
 
-Applied to an `IndividualName` object, these methods return different
-useful expressions of the name.  Applied to a `Name` object, these
+Applied to an [`IndividualName`] object, these methods return different
+useful expressions of the name.  Applied to a [`Name`] object, these
 methods all return the same thing -- the `.text` attribute.  This is
 useful because you can write things like this, which lists the names
 of the parties in a bullet-point list:
@@ -608,18 +608,18 @@ individuals, the last name will come first, but for non-individuals,
 the regular name will be printed.
 
 <a name="Name.defined"></a>
-The `Name` and `IndividualName` objects also support the method:
+The [`Name`] and [`IndividualName`] objects also support the method:
 
 * `.defined()`
 
 This returns `True` if the necessary component of the name (`.text`
-for a `Name`, `first` for an `IndividualName`) has been defined yet.
+for a [`Name`], `first` for an [`IndividualName`]) has been defined yet.
 Otherwise it returns `False`.
 
 ### <a name="IndividualName"></a>IndividualName
 
-The `Individual` class is a subclass of `Person`.  It defines the
-`name` attribute as an `IndividualName` rather than a `Name`.  An
+The [`Individual`] class is a subclass of [`Person`].  It defines the
+`name` attribute as an `IndividualName` rather than a [`Name`].  An
 `IndividualName` uses the following attributes, which are expected to
 be text:
 
@@ -656,7 +656,7 @@ An `Address` has the following text attributes:
 * `state`: e.g., "MA"
 * `zip`: e.g. "01199"
 
-It also has an attribute `location`, which is a `LatitudeLongitude`
+It also has an attribute `location`, which is a [`LatitudeLongitude`]
 object representing the GPS coordinates of the address.
 
 If you refer to an address in a template, it returns `.block()`.
@@ -668,7 +668,7 @@ except `unit` are required.
 <a name="Address.geolocate"></a>
 The `.geolocate()` method determines the latitude and longitude of the
 address and stores it in the attribute `location`, which is a
-`LatitudeLongitude` object.
+[`LatitudeLongitude`] object.
 
 ## <a name="LatitudeLongitude"></a>LatitudeLongitude
 
@@ -684,7 +684,7 @@ attributes:
 attempted yet.
 
 One use for the `LatitudeLongitude` object is for mapping the
-coordinates of an address.  The `Address` object has a method
+coordinates of an address.  The [`Address`] object has a method
 `.geolocate()` for this purpose.
 
 <a name="LatitudeLongitude.status"></a>
@@ -710,7 +710,7 @@ code: |
 {% endhighlight %}
 
 Alternatively, if you do not want to include all of the questions and
-code blocks of the `basic-questions.yml` file in your interview, you
+code blocks of the [`basic-questions.yml`] file in your interview, you
 can do:
 
 {% highlight yaml %}
@@ -749,14 +749,14 @@ yesno: user_ok_with_sharing_location
 ---
 {% endhighlight %}
 
-`track_location` is a [special variable] that tells **docassemble**
+[`track_location`] is a [special variable] that tells **docassemble**
 whether or not it should ask the browser for the user's GPS
 coordinates the next time a question is posed to the user.  If
-`track_location` is `True`, **docassemble** will ask the browser to
+[`track_location`] is `True`, **docassemble** will ask the browser to
 provide the information, and if it receives it, it will store it in
-the [special variable] `current_info`.
+the [special variable] [`current_info`].
 
-The `.status()` method looks in `current_info` to see if a latitude
+The `.status()` method looks in [`current_info`] to see if a latitude
 and longitude were provided by the browser, or in the alternative that
 an error message was provided, such as "the user refused to share the
 information," or "this device cannot determine the user's location."
@@ -881,7 +881,7 @@ including `pleading.caption()` will require the following:
 
 ## <a name="Value"></a>Value
 
-A `Value` is a subclass of `DAObject` that is intended to represent a
+A `Value` is a subclass of [`DAObject`] that is intended to represent a
 currency value that may or may not need to be asked for in an interview.
 
 For example, suppose you want to have a variable that represents the
@@ -924,9 +924,9 @@ code: all_done
 ---
 {% endhighlight %}
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testvalue.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testvalue.yml){:target="_blank"}.)
 
-The `FinancialList` object, explained below, represents a list of
+The [`FinancialList`] object, explained below, represents a list of
 `Value`s.  When computing a total of the values (with `.total()`), it
 checks the `.exists` attributes of each `Value` to be defined.  This
 causes questions to be asked about whether the `Value` is applicable
@@ -938,7 +938,7 @@ you can use the `.amount()` method.  If the `.exists` attribute is
 
 Referring to a `Value` in a template will show the `.amount()`.  The
 value of `.amount()` is also returned when you pass a `Value` to the
-`currency()` [function].  For example:
+[`currency()`] function.  For example:
 
 {% highlight yaml %}
 ---
@@ -953,7 +953,7 @@ question: |
 
 ### <a name="PeriodicValue"></a>PeriodicValue
 
-A `PeriodicValue` is a `Value` that has an additional attribute,
+A `PeriodicValue` is a [`Value`] that has an additional attribute,
 `period`, which is a number representing the number of times per year
 the value applies.
 
@@ -994,7 +994,7 @@ code: all_done
 ---
 {% endhighlight %}
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testperiodicvalue.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testperiodicvalue.yml){:target="_blank"}.)
 
 <a name="PeriodicValue.amount"></a>To access the value of a
 `PeriodicValue` object, you can use the `.amount()` method.  If the
@@ -1005,24 +1005,24 @@ it will return the `.value` multiplied by the `.period`.
 
 Referring to a `PeriodicValue` in a template will show the
 `.amount()`.  The value of `.amount()` is also returned when you pass
-a `PeriodicValue` to the `currency()` [function].
+a `PeriodicValue` to the [`currency()`] function.
 
 # Classes for lists of things
 
 ## <a name="PartyList"></a>PartyList
 
-This is a subclass of `DAList`.  (See [objects] for an explanation of the
-`DAList` class.)
+This is a subclass of [`DAList`].  (See [objects] for an explanation of the
+[`DAList`] class.)
 
-It is indended to contain a list of `Person`s (or `Individuals`s,
-which are a type of `Person`) who are parties to a case.
+It is indended to contain a list of [`Person`]s (or [`Individual`]s,
+which are a type of [`Person`]) who are parties to a case.
 
 ## <a name="ChildList"></a>ChildList
 
-This is a subclass of `DAList`.  (See [objects] for an explanation of the
-`DAList` class.)
+This is a subclass of [`DAList`].  (See [objects] for an explanation of the
+[`DAList`] class.)
 
-It is indended to contain a list of `Individuals`s who are children.
+It is indended to contain a list of [`Individual`]s who are children.
 
 ## <a name="FinancialList"></a>FinancialList
 
@@ -1058,17 +1058,17 @@ The `FinancialList` has three methods:
 In the context of a template, a `FinancialList` returns the result of
 `.total()`.
 
-Note that a `FinancialList` is a `DAObject` but not a `DAList`.  It
+Note that a `FinancialList` is a [`DAObject`] but not a [`DAList`].  It
 tracks the items in the list using the attribute `elements`, which is
 a [Python set].
 
 ### <a name="Asset"></a>Asset
 
-This is a subclass of `FinancialList` that is intended to be used to
+This is a subclass of [`FinancialList`] that is intended to be used to
 track assets.
 
 Here is some example code that triggers questions that ask about asset
-items.  Note that every `Individual` is initialized with an attribute
+items.  Note that every [`Individual`] is initialized with an attribute
 called `asset` that is an object of type `Asset`.
 
 {% highlight yaml %}
@@ -1157,10 +1157,10 @@ In the context of a template, a `PeriodicFinancialList` returns `.total()`.
 
 ### <a name="Income"></a>Income
 
-This is a subclass of `PeriodicFinancialList`.
+This is a subclass of [`PeriodicFinancialList`].
 
 Here is some example code that triggers questions that ask about
-income items.  Note that ever `Individual` has an attribute `income`
+income items.  Note that ever [`Individual`] has an attribute `income`
 that is an object of type `Income`.
 
 {% highlight yaml %}
@@ -1201,7 +1201,7 @@ fields:
 
 ### <a name="Expense"></a>Expense
 
-`Expense` is a `PeriodicFinancialList` representing a person's expenses.
+`Expense` is a [`PeriodicFinancialList`] representing a person's expenses.
 
 # Classes for special purposes
 
@@ -1293,17 +1293,17 @@ where each keyword is the name of a possible role.  Each
 [keyword argument] must be a [Python dictionary] containing the
 following keys:
 
-* `to`: this needs to be a `Person` (or a subclass, like
-`Individual`).  The person's `email` attribute is expected to be
+* `to`: this needs to be a [`Person`] (or a subclass, like
+[`Individual`]).  The person's `email` attribute is expected to be
 defined.
-* `email`: this needs to a `DATemplate` containing the subject and
+* `email`: this needs to a [`DATemplate`] containing the subject and
 body of the e-mail that will be sent.  See [objects] for an
-explanation of `DATemplate`.
+explanation of [`DATemplate`].
 
 [Python list]: https://docs.python.org/2/tutorial/datastructures.html
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
-[legal.py]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
-[basic-questions.yml]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
+[`legal.py`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
+[`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
 [Python module]: https://docs.python.org/2/tutorial/modules.html
 [classes]: https://docs.python.org/2/tutorial/classes.html
 [function]: https://docs.python.org/2/tutorial/controlflow.html#defining-functions
@@ -1326,6 +1326,40 @@ explanation of `DATemplate`.
 [Markdown]: https://daringfireball.net/projects/markdown/
 [multi-user interviews]: {{ site.baseurl }}/docs/roles.html
 [special variable]: {{ site.baseurl }}/docs/special.html
-[track_location]:  {{ site.baseurl }}/docs/special.html#track_location
+[`track_location`]:  {{ site.baseurl }}/docs/special.html#track_location
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [Python set]: https://docs.python.org/2/library/stdtypes.html#set
+[`object_possessive`]: {{ site.baseurl }}/docs/objects.html#DAObject.object_possessive
+[`question`]: {{ site.baseurl }}/docs/questions.html#question
+[`code`]: {{ site.baseurl }}/docs/code.html
+[`current_info`]: {{ site.baseurl }}/docs/special.html#current_info
+[`initial`]: {{ site.baseurl }}/docs/logic.html#initial
+[`DATemplate`]: {{ site.baseurl }}/docs/objects.html#DATemplate
+[`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
+[`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
+[`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
+[`DAFileList`]: {{ site.baseurl }}/docs/objects.html#DAFileList
+[`DAFileCollection`]: {{ site.baseurl }}/docs/objects.html#DAFileCollection
+[`attachments`]: {{ site.baseurl }}/docs/document.html#attachments
+[`get_info()`]: {{ site.baseurl }}/docs/functions.html#get_info
+[`set_info()`]: {{ site.baseurl }}/docs/functions.html#set_info
+[`objects`]: {{ site.baseurl }}/docs/initial.html#objects
+[`default role`]: {{ site.baseurl }}/docs/initial.html#default role
+[`update_info()`]: #update_info
+[`Individual`]: #Individual
+[`Person`]: #Person
+[`LatitudeLongitude`]: #LatitudeLongitude
+[`Address`]: #Address
+[`Name`]: #Name
+[`IndividualName`]: #IndividualName
+[`ChildList`]: #ChildList
+[`Income`]: #Income
+[`Asset`]: #Asset
+[`Expense`]: #Expense
+[`PeriodicFinancialList`]: #PeriodicFinancialList
+[`Value`]: #Value
+[`FinancialList`]: #FinancialList
+[`currency()`]: {{ site.baseurl }}/docs/functions.html#currency
+[`Organization`]: #Organization
+[`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
+[`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py

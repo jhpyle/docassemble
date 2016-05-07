@@ -66,8 +66,8 @@ question: You came from the ${ url_args.get('from', 'unknown') }.
 
 You can test this out by trying the following links:
 
-* [https://demo.docassemble.org?i=docassemble.demo:data/questions/testurlarg.yml&from=web](https://demo.docassemble.org?i=docassemble.demo:data/questions/testurlarg.yml&from=web){:target="_blank"}
-* [https://demo.docassemble.org?i=docassemble.demo:data/questions/testurlarg.yml&from=moon](https://demo.docassemble.org?i=docassemble.demo:data/questions/testurlarg.yml&from=moon){:target="_blank"}
+* [{{ site.demourl }}?i=docassemble.demo:data/questions/testurlarg.yml&from=web]({{ site.demourl }}?i=docassemble.demo:data/questions/testurlarg.yml&from=web){:target="_blank"}
+* [{{ site.demourl }}?i=docassemble.demo:data/questions/testurlarg.yml&from=moon]({{ site.demourl }}?i=docassemble.demo:data/questions/testurlarg.yml&from=moon){:target="_blank"}
 
 As soon as the interview loads, the parameters will no longer appear
 in the browser's location bar.  Nevertheless, the parameters remain
@@ -91,7 +91,7 @@ subquestion: |
 {% endhighlight %}
 
 You can test this out by trying the following link:
-[https://demo.docassemble.org?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder](https://demo.docassemble.org?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder){:target="_blank"}.
+[{{ site.demourl }}?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder]({{ site.demourl }}?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder){:target="_blank"}.
 
 ## <a name="current_info"></a>current_info
 
@@ -103,7 +103,7 @@ of the person logged in and other information.
 `current_info` contains the following keys:
 
 * `default_role` - the default role for the interview, as defined by
-  the `default role` [initial block];
+  the [`default role` initial block];
 * `session` - the session key, which is a secret identifier that
   unlocks access to the variable store of the user's interview.  If
   passed as the `session` parameter of a URL, the interview will load
@@ -126,7 +126,7 @@ of the person logged in and other information.
   * `subdivisionsecond` - in the U.S., the county.
   * `subdivisionthird` - in the U.S., the municipality.
   * `organization` - the user's organization.
-  * `location` - if `track_location` (see below) is set to true, and
+  * `location` - if [`track_location`] (see below) is set to true, and
     the user's location is successfully obtained, this entry will
     contain a dictionary with the keys `latitude` and `longitude`,
     indicating the user's location.
@@ -137,8 +137,8 @@ of the person logged in and other information.
 
 If you use the [multi-user interview feature] and the user reaches a
 point in the interview where input is needed from a different user
-before proceeding, **docassemble** will look for a `question` that
-offers to sets `role_event`, and ask that question.  **docassemble**
+before proceeding, **docassemble** will look for a [`question`] that
+offers to sets [`role_event`], and ask that question.  **docassemble**
 will set the variable `role_needed` to a list of roles capable of
 answering the next question in the interview.
 
@@ -147,7 +147,7 @@ answering the next question in the interview.
 ## <a name="role"></a>role
 
 If you use the [multi-user interview feature], your interview will
-need to have a `default role` [initial block] containing code that
+need to have a [`default role` initial block] containing code that
 sets the variable `role` to the user's role.
 
 ## <a name="speak_text"></a>speak_text
@@ -157,7 +157,7 @@ present the user with an HTML5 audio control at the top of the page.
 When the user clicks it, **docassemble** will access the [VoiceRSS]
 web service to convert the text of the question to an audio file and
 then play that audio back for the user.  This requires enabling the
-`voicerss` setting in the [configuration].
+[`voicerss`] setting in the [configuration].
 
 Since the [VoiceRSS] service costs money above the free usage tier,
 **docassemble** does not send the request to [VoiceRSS] until the user
@@ -168,7 +168,7 @@ reuses them whenever possible.
 
 If set to `True`, the web app will attempt to obtain the user's
 position, based on GPS or any other geolocation feature enabled in the
-browser.  The result is stored in the `current_info` dictionary (see
+browser.  The result is stored in the [`current_info`] dictionary (see
 above).
 
 The most common way to use this feature is as follows:
@@ -213,11 +213,11 @@ entries to the menu based on the items in the list.
 
 Each item in the list is expected to be a [Python dictionary] with
 keys `label` and `url`.  Typically, these entries are generated using
-the `action_menu_item()` [function], which creates a menu item that
-runs an "action."  (See the "url_action and process_action" section of
-the [functions] page for more information about what "actions" are in
-**docassemble**, and for documentation for the `action_menu_item()`
-function.)
+the [`action_menu_item()` function], which creates a menu item that
+runs an "action."  (See the [`url_action()`] and [`process_action()`]
+sections of the [functions] page for more information about what
+"actions" are in **docassemble**, and for documentation for the
+[`action_menu_item()` function].)
 
 {% highlight yaml %}
 ---
@@ -237,17 +237,25 @@ code: |
 ---
 {% endhighlight %}
 
-Since menu items are controlled with `code` blocks, you can turn them
+Since menu items are controlled with [`code`] blocks, you can turn them
 on and off during the course of the interview as necessary.
 
 [VoiceRSS]: http://www.voicerss.org/
 [get]: https://docs.python.org/2/library/stdtypes.html#dict.get
 [Python list]: https://docs.python.org/2/tutorial/datastructures.html
-[initial block]: {{ site.baseurl }}/docs/initial.html
+[`default role` initial block]: {{ site.baseurl }}/docs/initial.html#default_role
 [configuration]: {{ site.baseurl }}/docs/config.html
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [multi-user interview feature]: {{ site.baseurl }}/docs/roles.html
 [security]: {{ site.baseurl }}/docs/security.html
-[function]: {{ site.baseurl }}/docs/functions.html
+[`action_menu_item()` function]: {{ site.baseurl }}/docs/functions.html#action_menu_item
 [functions]: {{ site.baseurl }}/docs/functions.html
+[`url_action()`]: {{ site.baseurl }}/docs/functions.html#url_action
+[`process_action()`]: {{ site.baseurl }}/docs/functions.html#process_action
+[`question`]: {{ site.baseurl }}/docs/questionss.html#question
+[`role_event`]: {{ site.baseurl }}/docs/roles.html
+[`voicerss`]: {{ site.baseurl }}/docs/config.html#voicerss
+[`code`]: {{ site.baseurl }}/docs/code.html
+[`current_info`]: #current_info
+[`track_location`]: #track_location

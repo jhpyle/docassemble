@@ -17,7 +17,7 @@ numbered with an index that starts from zero.  In Python, if a list is
 defined as `fruit = ['apple', 'orange', 'pear']`, then `fruit[0]` will
 return `apple`, `fruit[1]` will return `orange`, and `fruit[2]` will
 return `pear`.  Adding a new element to the list is called "appending"
-to the list.  In **docassemble**, lists are objects of type `DAList`,
+to the list.  In **docassemble**, lists are objects of type [`DAList`],
 but they behave much like Python lists.
 
 ## Dictionary
@@ -47,18 +47,18 @@ element is already in the set, this will have no effect on the set.
 # Lists, dictionaries, and sets in **docassemble**
 
 In **docassemble**, you can track groups of things using objects of
-types `DAList`, `DADict`, or `DASet`.  These are defined in the
-`docassemble.base.core` module, but are also available if you use
-`docassemble.base.util` or `docassemble.base.legal`.
+types [`DAList`], [`DADict`], or [`DASet`].  These are defined in the
+[`docassemble.base.core`] module, but are also available if you use
+[`docassemble.base.util`] or [`docassemble.base.legal`].
 
 In your **docassemble** interviews, you will typically not use these
 object types directly, but rather subtypes of these basic objects.
-For example, if you include the `basic-questions.yml` file (see
-[legal applications]), an object of type `Case` will be created
+For example, if you include the [`basic-questions.yml`] file (see
+[legal applications]), an object of type [`Case`] will be created
 (called `case`), which allows you to refer to the plaintiffs and
 defendants in the case as `case.plaintiff` or `case.defendant`,
-respectively.  Both of these objects are objects of type `PartyList`,
-which is a subtype of `DAList`.  The first plaintiff is
+respectively.  Both of these objects are objects of type [`PartyList`],
+which is a subtype of [`DAList`].  The first plaintiff is
 `case.plaintiff[0]` and the second plaintiff, if there is one, will be
 `case.plaintiff[1]`.
 
@@ -106,7 +106,7 @@ This results in a sentence like:
 > John Smith is a plaintiff. Jane Doe is a plaintiff. Robert Jones is
 > a plaintiff.
 
-If the list might be empty, you can check its `.number()` first using
+If the list might be empty, you can check its [`.number()`] first using
 an `if`/`else`/`endif` [Mako] statement:
 
 {% highlight yaml %}
@@ -151,8 +151,8 @@ yesno: case.plaintiff[i].agrees_to_accept_service
 ---
 {% endhighlight %}
 
-The special variable `i` will stand in for the index of whichever list
-member your interview asks about.
+<a name="i"></a>The special variable `i` will stand in for the index
+of whichever list member your interview asks about.
 
 You can also make use of the special variable `i`:
 
@@ -165,7 +165,16 @@ yesno: case.plaintiff[i].agrees_to_accept_service
 ---
 {% endhighlight %}
 
-
-
 [legal applications]: {{ site.baseurl }}/docs/legal.html
 [Mako]: http://www.makotemplates.org/
+[Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
+[`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
+[`docassemble.base.core`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/core.py
+[`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
+[`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
+[`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
+[`DASet`]: {{ site.baseurl }}/docs/objects.html#DASet
+[`Case`]: {{ site.baseurl }}/docs/legal.html#Case
+[`PartyList`]: {{ site.baseurl }}/docs/legal.html#PartyList
+[`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
+[`.number()`]: {{ site.baseurl }}/docs/objects.html#DAList.number

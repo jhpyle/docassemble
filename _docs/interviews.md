@@ -86,7 +86,7 @@ fields:
 ---
 {% endhighlight %}
 
-The first block is a bit of [Python] code that is marked `mandatory`.
+The first block is a bit of [Python] code that is marked [`mandatory`].
 This is very simple code; is simply refers to a variable, `exit_page`.
 This tells **docassemble** that the goal of the interview is to get a
 definition for the `exit_page` variable.
@@ -101,9 +101,9 @@ The fourth block is a "question" that defines the variable `favorite_vegetable`.
 When **docassemble** presents this interview to the user, it follows
 these steps:
 
-1. It scans the file and processes everything that is "mandatory."  It
+1. It scans the file and processes everything that is "[`mandatory`]."  It
   treats everything else as optional.
-2. It finds `mandatory` [Python] code in the first block and tries to
+2. It finds [`mandatory`] [Python] code in the first block and tries to
    run it.
 3. It can't run the code because `exit_page` is not defined,
 so it looks for a question that defines `exit_page`.
@@ -130,7 +130,7 @@ The logic of the interview was as follows:
 * For that, I need to ask `favorite_animal`
 
 You can
-[try out this interview](https://demo.docassemble.org?i=docassemble.demo:data/questions/animal.yml){:target="_blank"}
+[try out this interview]({{ site.demourl }}?i=docassemble.demo:data/questions/animal.yml){:target="_blank"}
 to see how it looks from the user's perspective.
 
 This is a very simple interview; there are more types of blocks that
@@ -138,7 +138,7 @@ you can write.  These blocks are explained in the following sections:
 
 * [Initial Blocks] - Explains special blocks you can write that have
   an effect on whole interview.
-* [Question Blocks] - Explains the basics of the `question` block, which presents a
+* [Question Blocks] - Explains the basics of the [`question`] block, which presents a
   screen to the user (which usually asks a question but does not need to).
 * [Setting Variables] - Explains how to use collect information from users
   using `question` blocks.
@@ -151,7 +151,7 @@ special features, for example by adding help text or icons.
   that instead of presenting something to the user, they run [Python]
   code that defines variables or does other things that computer code
   can do.
-* [Interview Logic] - Explains `mandatory` and `initial` blocks and how
+* [Interview Logic] - Explains [`mandatory`] and [`initial`] blocks and how
   **docassemble** processes your interview.
 * [Objects] - Explains the use of Python objects to simplify the way
   information is organized.
@@ -172,7 +172,7 @@ You start the interview by going to its URL.  In the case of the
 interview linked from the [demonstration page], you can get to the
 interview by doing:
 
-[https://demo.docassemble.org](https://demo.docassemble.org){:target="_blank"}
+[{{ site.demourl }}]({{ site.demourl }}){:target="_blank"}
 
 This URL is simple-looking because it uses the default interview file
 that was set in the [configuration].
@@ -180,7 +180,7 @@ that was set in the [configuration].
 If you want to link to an interview file by its specific filename,
 just set an `i` parameter in the URL:
 
-[https://demo.docassemble.org?i=docassemble.demo:data/questions/questions.yml](https://demo.docassemble.org?i=docassemble.demo:data/questions/questions.yml){:target="_blank"}
+[{{ site.demourl }}?i=docassemble.demo:data/questions/questions.yml]({{ site.demourl }}?i=docassemble.demo:data/questions/questions.yml){:target="_blank"}
 
 Here, the interview file name is
 `docassemble.demo:data/questions/questions.yml`.  This tells
@@ -254,6 +254,7 @@ There are three ways to author your own interviews:
 [Initial Blocks]: {{ site.baseurl }}/docs/initial.html
 [Question Blocks]: {{ site.baseurl }}/docs/questions.html
 [questions]: {{ site.baseurl }}/docs/questions.html
+[`question`]: {{ site.baseurl }}/docs/questions.html#question
 [Setting Variables]: {{ site.baseurl }}/docs/fields.html
 [Question Modifiers]: {{ site.baseurl }}/docs/modifiers.html
 [Templates]: {{ site.baseurl }}/docs/template.html
@@ -268,3 +269,5 @@ There are three ways to author your own interviews:
 [Errors]: {{ site.baseurl }}/docs/errors.html
 [username and password system]: {{ site.baseurl }}/docs/users.html
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
+[`initial`]: {{ site.baseurl }}/docs/logic.html#initial

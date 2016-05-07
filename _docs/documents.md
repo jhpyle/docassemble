@@ -55,9 +55,9 @@ will be visible:
 
 ## <a name="content file"></a>Storing document text in separate files
 
-If the `content` is lengthy and you would rather not type it into the
-interview [YAML] file, you can import the content from a separate file
-using `content file`:
+If the content of your document is lengthy and you would rather not
+type it into the interview [YAML] file as `content`, you can import
+the content from a separate file using `content file`:
 
 {% highlight yaml %}
 ---
@@ -101,7 +101,7 @@ file by filling in fields in that template.  To do this, provide a
 `pdf template file` and a dictionary of `fields`.
 
 For example, here is an interview that populates fields in a file
-called [sample-form.pdf](https://demo.docassemble.org/packagestatic/docassemble.demo/sample-form.pdf):
+called [sample-form.pdf]({{ site.demourl }}/packagestatic/docassemble.demo/sample-form.pdf):
 
 {% highlight yaml %}
 ---
@@ -128,7 +128,7 @@ attachments:
 ---
 {% endhighlight %}
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testfill.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testfill.yml){:target="_blank"}.)
 
 The `pdf template file` is assumed to reside in the `data/templates`
 directory of your package, unless a specific package name is
@@ -156,13 +156,14 @@ To add a signature or other image to a fillable PDF file, use Adobe
 Acrobat Pro to insert a "Digital Signature" into the document where
 you want the signature to appear.  Give the field a unique name.
 
-Then, you can use a **docassemble** `attachment` to populate the field
-with `${ user.signature }` or another reference to an image.
-**docassemble** will trim whitespace from the edges of the image and
-fit the image into the "Digital Signature" box.
+Then, the signature will be a field, just like a checkbox or a text
+box is a fill-in field.  In your `pdf template file`, set the field to
+`${ user.signature }` or another reference to an image.  **docassemble**
+will trim whitespace from the edges of the image and fit the image
+into the "Digital Signature" box.
 
 For example, here is an interview that populates text fields and a
-signature into the template [Transfer-of-Ownership.pdf](https://demo.docassemble.org/packagestatic/docassemble.demo/Transfer-of-Ownership.pdf):
+signature into the template [Transfer-of-Ownership.pdf]({{ site.demourl }}/packagestatic/docassemble.demo/Transfer-of-Ownership.pdf):
 
 {% highlight yaml %}
 ---
@@ -216,7 +217,7 @@ attachment:
 ---
 {% endhighlight %}
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testfillsignature.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testfillsignature.yml){:target="_blank"}.)
 
 It is important that each "Digital Signature" field have a unique
 name.  If there is more than one field in the PDF template with the
@@ -234,7 +235,7 @@ name.  For example:
 
 ## <a name="variable name"></a>Saving documents as variables
 
-Including an `attachments` section in a `question` block will offer
+Including an `attachments` section in a [`question`] block will offer
 the user a chance to download an assembled document and e-mail it to
 themselves.
 
@@ -387,7 +388,7 @@ attachment:
 ---
 {% endhighlight %}
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testdocx.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testdocx.yml){:target="_blank"}.)
 
 To customize document styles, headers, and footers, see the `docx
 reference file` setting, discussed below.
@@ -395,14 +396,14 @@ reference file` setting, discussed below.
 ## <a name="language"></a>Assembling documents in a different language than the current language
 
 If you need to produce a document in a different language than the
-user's language, then the `word()` [function] may operate in a way you
+user's language, then the [`word()`] function may operate in a way you
 do not want it to operate.
 
 For example, if your user is Spanish-speaking, but you need to produce
 an English language document, you may find that a word or two in the
 English language document has been translated into Spanish.  (E.g.,
 this can happen if your document template uses linguistic [functions]
-from `docassemble.base.util`).  You can remedy this by defining a
+from [`docassemble.base.util`]).  You can remedy this by defining a
 `language` for the document.
 
 For example:
@@ -424,24 +425,17 @@ attachment:
 
 ## <a name="allow emailing"></a>Preventing the user from e-mailing documents
 
-When `attachments` are included in a `question`, the user will be
+When [`attachments`] are included in a [`question`], the user will be
 given an option to e-mail the documents to an e-mail address.  If you
-would like to disable this feature, set `allow emailing` to `false`,
-as in this example:
+would like to disable this feature, set `allow emailing` to `false`.
 
-{% highlight yaml %}
----
-question: Your document is ready.
-sets: provide_user_with_document
-allow emailing: false
-attachment:
-  - name: A *hello world* document
-    filename: Hello_World_Document
-    description: A document with a **classic** message
-    content: |
-      Hello, world!
----
-{% endhighlight %}
+By default, the user can e-mail documents:
+
+{% include side-by-side.html demo="allow-emailing-true" %}
+
+Including `allow emailing: false` will disable this:
+
+{% include side-by-side.html demo="allow-emailing-false" %}
 
 # <a name="markup"></a>Formatting documents with special markup tags
 
@@ -605,7 +599,7 @@ options for the the [geometry] package that set the page margins.
 
 You can exercise greater control over document formatting by creating
 your own template files for [Pandoc].  The default template files are
-located in the `docassemble.base` package in the
+located in the [`docassemble.base`] package in the
 `docassemble/base/data/templates` directory.  The files include:
 
 * `Legal-Template.tex`: this is the [LaTeX] template that [Pandoc]
@@ -730,3 +724,13 @@ substantive content.
 [objects]: {{ site.baseurl }}/docs/objects.html
 [function]: {{ site.baseurl }}/docs/functions.html
 [functions]: {{ site.baseurl }}/docs/functions.html
+[`question`]: {{ site.baseurl }}/docs/questions.html#question
+[`attachments`]: #attachments
+[`IndividualName`]: #IndividualName
+[`ChildList`]: #ChildList
+[`Income`]: #Income
+[`Asset`]: #Asset
+[`Expense`]: #Expense
+[`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
+[`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
+[`word()`]: {{ site.baseurl }}/docs/functions.html#word

@@ -389,7 +389,7 @@ db:
 {% endhighlight %}
 
 If you installed the web servers before installing the SQL server,
-note that the `create_tables` module will need to be run in order to
+note that the [`create_tables`] module will need to be run in order to
 create the database tables that **docassemble** expects.
 
 # Mail server
@@ -502,3 +502,4 @@ the [configuration] variables `certs` and `cert_install_directory`.
 [Elastic Load Balancer]: https://aws.amazon.com/elasticloadbalancing/
 [Auto Scaling Group]: http://docs.aws.amazon.com/AutoScaling/latest/DeveloperGuide/AutoScalingGroup.html
 [create your own Docker image]: {{ site.baseurl }}/docs/docker.html#build
+[`create_tables`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/create_tables.py

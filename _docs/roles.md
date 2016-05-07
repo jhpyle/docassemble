@@ -25,16 +25,16 @@ For example:
 Multi-user interviews are implemented through the [user login] feature
 and three authoring features that were introduced in other sections:
 
-* `role` [modifier]: designates certain questions as being answerable
+* <span></span>[`role` modifier]: designates certain questions as being answerable
   only by a particular user (or group of users).
-* `default role` [initial block]: sets the `role` modifier for
-  questions that do not have a `role` explicitly set.  The `code`
-  within this block is run as `initial` code.  The responsibility of
-  this `code` is to set the variable `role` depending on the
+* <span></span>[`default role` initial block]: sets the `role` modifier for
+  questions that do not have a `role` explicitly set.  The [`code`]
+  within this block is run as [`initial`] code.  The responsibility of
+  this [`code`] is to set the [special variable `role`] depending on the
   circumstances, which can include the identity and privileges of the
   person logged in (which can be determined from the
-  `current_info['user']` [dictionary]).
-* `event` [variables]: when the current user cannot proceed further
+  `current_info['user']` dictionary).
+* <span></span>[`event` variables]: when the current user cannot proceed further
   with the interview because the interview needs input from a
   different user, **docassemble** will display a message for the
   current user.  It finds this message by looking for a question
@@ -190,12 +190,12 @@ code: |
 ---
 {% endhighlight %}
 
-Here, we set the `default role` to `organizer`.  This simply means that
+Here, we set the [`default role`] to `organizer`.  This simply means that
 questions in the interview that do not have a `role` specified will
 require the `organizer` role.
 
-The `code` is `initial` code, the primary purpose of which is to set
-the `role` variable, which is the role of whichever user is currently
+The [`code`] is [`initial`] code, the primary purpose of which is to set
+the [`role`] variable, which is the role of whichever user is currently
 in the interview.  This code runs every single time the page loads for
 any user.
 
@@ -206,7 +206,7 @@ encrypt the answers on the server.  This reduces [security] somewhat,
 but is necessary in order for multiple users to participate in the
 same interview.
 
-First, note that the `role` for all users will remain `organizer`
+First, note that the [`role`] for all users will remain `organizer`
 until the organizer has seen the introductory page and the
 participants have been invited.
 
@@ -214,7 +214,7 @@ Second, note that the flow of the interview is being controlled here.
 The references to `introduction_made` and `participants invited` mean
 that questions will be asked to define those variables if they are
 undefined.  This is the code that causes those questions to appear for
-the organizer.  After the role is set, the `mandatory` `code` block
+the organizer.  After the role is set, the [`mandatory`] [`code`] block
 controls the flow of the interview.
 
 Third, note that by requiring `participants invited` to be set before
@@ -285,11 +285,11 @@ for retrieving the interview URL in a clean way.)  We included the
 details here so that we could give you a complete example with no
 hidden detail.
 
-In practice, it's a good idea to `include` a question file, such as
-`basic-questions.yml` from `docassemble.base`, which provides you with
+In practice, it's a good idea to [`include`] a question file, such as
+[`basic-questions.yml`] from [`docassemble.base`], which provides you with
 functions that handle complicated computer code for you.  One of the
-functions that `basic-questions.yml` gives you is `interview_url()`,
-from the `docassemble.base.legal` module.
+functions that [`basic-questions.yml`] gives you is [`interview_url()`],
+from the [`docassemble.base.legal`] module.
 
 If we had included:
 
@@ -332,7 +332,7 @@ code: |
   multi_user = True
   if current_info['user']['is_authenticated']:
     if current_info['user']['email'] not in respondents:
-      respondents.setObject(current_info['user']['email'], DAObject)
+      respondents.initializeObject(current_info['user']['email'])
     user = respondents[current_info['user']['email']]
     final_page
   else:
@@ -386,59 +386,61 @@ tells the user the total number of cats of all of the interview
 respondents.
 
 Note that this interview allows multiple users but does not make use
-of the `role` and `default role` features.  The purpose of those
+of the [`role`] and [`default role`] features.  The purpose of those
 features is to put one user on hold while waiting for input from
 another user.  There are some situations, like the above interview,
 that do not require one user to wait for another user.  In that case,
 it is not necessary to set user roles.
 
-The `initial` code block makes sure that the user is logged in, and
-sets the `user` variable to a `DAObject`.
+The [`initial`] code block makes sure that the user is logged in, and
+sets the `user` variable to a [`DAObject`].
 
-A `DAObject` is the most basic type of **docassemble** object.  Its
-definition is in `docassemble.base.core`.  The fact that the `user` is
-a `DAObject` means that the `user` can have [attributes] and those
-[attributes] can be gathered with [generic object] questions.
+A [`DAObject`] is the most basic type of **docassemble** object.  Its
+definition is in [`docassemble.base.core`].  The fact that the `user`
+is a [`DAObject`] means that the `user` can have [attributes] and
+those [attributes] can be gathered with [generic object] questions.
 
-The `initial` code block also keeps track of all the users that have
+The [`initial`] code block also keeps track of all the users that have
 used the interview (i.e. by either starting the interview from scratch
 or clicking on the link given by `interview_url`) so that the [Mako]
 code in the `final_page` question can loop over all of the users and
 tally up the number of cats.
 
-These lines in the `initial` block define the `user` variable and keep
+These lines in the [`initial`] block define the `user` variable and keep
 track of each user:
 
-{% highlight yaml %}
+{% highlight python %}
 if current_info['user']['email'] not in respondents:
-  respondents.setObject(current_info['user']['email'], DAObject)
+  respondents.initializeObject(current_info['user']['email'])
 user = respondents[current_info['user']['email']]
 {% endhighlight %}
 
-`current_info['user']` is a Python [dictionary] containing information
-about the logged-in user.  If the user was not logged in, the `email`
-would not be known.  The `email` is a unique identifier for each user
-in the login system.
+`current_info['user']` is a [Python dictionary] containing information
+about the logged-in user.  (See [special variables] for more
+information.)  If the user was not logged in, the `email` would not be
+known.  The `email` is a unique identifier for each user in the login
+system.
 
-The `objects` block defines `respondents` as an object of type DADict.
-A DADict acts much like an ordinary Python [dictionary], except that it
+The [`objects`] block defines `respondents` as an object of type [`DADict`].
+A [`DADict`] acts much like an ordinary [Python dictionary], except that it
 has special properties that allow **docassemble** to set its
-attributes using `generic object` questions.
+attributes using [`generic object`] questions.
 
 The second line in the excerpt above defines an entry in this
-[dictionary], `respondents[current_info['user']['email']]` as a new
-object of type DAObject.  The `setObject` method effectively does this:
+[Python dictionary], `respondents[current_info['user']['email']]` as a new
+object of type DAObject.  The [`initializeObject()`] method effectively
+does this:
 
 {% highlight python %}
 respondents[current_info['user']['email']] = DAObject()
 {% endhighlight %}
 
-However, it does not work to actually write that; the `setObject`
+However, it does not work to actually write that; the [`initializeObject()`]
 method takes care of the **docassemble** internals that allow
 **docassemble** to set undefined attributes.
 
-Note that the `modules` block is necessary in this interview;
-otherwise we could not refer to names like `DAObject` and `DADict`.
+Note that the [`modules`] block is necessary in this interview;
+otherwise we could not refer to names like [`DAObject`] and [`DADict`].
 
 The [Mako] code contains this line:
 
@@ -460,8 +462,8 @@ respondent logged in and the time the respondent entered his number of
 his cats -- but it is important to anticipate and control for rare
 cases.
 
-[initial block]: {{ site.baseurl }}/docs/initial.html
-[modifier]: {{ site.baseurl }}/docs/modifiers.html
+[`default role` initial block]: {{ site.baseurl }}/docs/initial.html#default role
+[`role` modifier]: {{ site.baseurl }}/docs/modifiers.html#role
 [fields]: {{ site.baseurl }}/docs/fields.html
 [Mako]: http://www.makotemplates.org/
 [generic object]: {{ site.baseurl }}/docs/objects.html
@@ -469,10 +471,29 @@ cases.
 [attributes]: https://docs.python.org/2/tutorial/classes.html#python-scopes-and-namespaces
 [attribute]: https://docs.python.org/2/tutorial/classes.html#python-scopes-and-namespaces
 [built-in Python function]: https://docs.python.org/2/library/functions.html#hasattr
-[dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [user login]: {{ site.baseurl }}/docs/users.html
-[variables]: {{ site.baseurl }}/docs/fields.html
+[`event` variables]: {{ site.baseurl }}/docs/fields.html#event
 [special variable]: {{ site.baseurl }}/docs/special.html
+[special variables]: {{ site.baseurl }}/docs/special.html#current_info
 [security]: {{ site.baseurl }}/docs/security.html
 [legal applications]: {{ site.baseurl }}/docs/legal.html
+[special variable `role`]: {{ site.baseurl }}/docs/special.html#role
+[`default role`]: {{ site.baseurl }}/docs/initial.html#default role
+[`initial`]: {{ site.baseurl }}/docs/logic.html#initial
+[`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
+[`code`]: {{ site.baseurl }}/docs/code.html
+[`role`]: {{ site.baseurl }}/docs/special.html#role
+[`include`]: {{ site.baseurl }}/docs/initial.html#include
+[`interview_url()`]: {{ site.baseurl }}/docs/legal.html#interview_url
+[`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
+[`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
+[`generic object`]: {{ site.baseurl }}/docs/modifiers.html#generic object
+[`objects`]: {{ site.baseurl }}/docs/initial.html#objects
+[`modules`]: {{ site.baseurl }}/docs/initial.html#modules
+[`initializeObject()`]: {{ site.baseurl }}/docs/objects.html#DAObject.initializeObject
+[`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
+[`docassemble.base.core`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/core.py
+[`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
+[`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml

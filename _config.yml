@@ -6,6 +6,7 @@ description: >
 baseurl: ""
 url: "http://docassemble.org"
 demourl: "https://demo.docassemble.org"
+repository: jhpyle/docassemble
 github_username: jhpyle
 collections:
   docs:

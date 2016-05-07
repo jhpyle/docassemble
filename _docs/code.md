@@ -4,14 +4,14 @@ title: Code Questions
 short_title: Code
 ---
 
-In a **docassemble** interview, a `question` block tells
+In a **docassemble** interview, a [`question`] block tells
 **docassemble** that if the interview logic wants to know the value of
 a particular variable, such as `best_fruit_ever`, and that variable
 has not been defined yet, **docassemble** can pose the question to the
 user and the user's answer to the question may provide a definition
 for that variable.
 
-For example, this `question` block:
+For example, this [`question`] block:
 
 {% highlight yaml %}
 ---
@@ -34,15 +34,15 @@ code: |
 {% endhighlight %}
 
 This `code` "question" is "asked" in much the same way that the
-previous `question` question is asked: if and when it needs to be
+previous [`question`] question is asked: if and when it needs to be
 asked.  **docassemble** "asks" `code` questions not by asking for the
 user's input and then processing the user's input, but by running the
 Python code contained in the `code` statement.
 
-As with user `question`s, **docassemble** might find that "asking" the
+As with user [`question`]s, **docassemble** might find that "asking" the
 `code` question did not actually define the needed variable.  In that
 case, it goes looking for another question (which could be of the
-`question` or `code` variety) that will provide a definition.
+[`question`] or `code` variety) that will provide a definition.
 
 Once `best_fruit_ever` is defined, **docassemble** will not need to
 run the `code` again if the interview logic calls for
@@ -76,12 +76,12 @@ code:
 ---
 {% endhighlight %}
 
-(If you don't remember what an `import` block does, see
+(If you don't remember what an [`import`] block does, see
 [initial blocks].)
 
-All of the variables you set with `question` blocks are available to
+All of the variables you set with [`question`] blocks are available to
 your Python code.  If your code uses a variable that is not defined
-yet, **docassemble** will "ask" `question` blocks and `code` blocks in
+yet, **docassemble** will "ask" [`question`] blocks and `code` blocks in
 order to define the variables.
 
 Consider the following example:
@@ -114,3 +114,5 @@ It is not necessary to have any `code` blocks in your interviews, but
 they are the most elegant way of expressing your interview logic.
 
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
+[`question`]: {{ site.baseurl }}/docs/questions.html#question
+[`import`]: {{ site.baseurl }}/docs/initial.html#import

@@ -4,11 +4,11 @@ title: Requirements
 short_title: Requirements
 ---
 
-The core **docassemble** module (`docassemble.base`) depends on:
+The core **docassemble** module ([`docassemble.base`]) depends on:
 
 * [Mako Templates for Python](http://www.makotemplates.org/) - for
   embedding data and logic in templates for questions and documents
-* [PyYAML](http://pyyaml.org/) - for processing YAML interview files
+* [PyYAML](http://pyyaml.org/) - for processing [YAML] interview files
 * [Python-Markdown](https://pythonhosted.org/Markdown) - for
   converting Markdown to HTML
 * [Pillow](https://pypi.python.org/pypi/Pillow/) - for inserting
@@ -32,7 +32,7 @@ The core **docassemble** module (`docassemble.base`) depends on:
 * [html2text](https://pypi.python.org/pypi/html2text) - for converting
   HTML to text for the plain text part of an e-mail.
 
-The web application (`docassemble.webapp`) depends on:
+The web application ([`docassemble.webapp`]) depends on:
 
 * [Bootstrap](http://getbootstrap.com) (hotlinked) - for the user
   interface
@@ -83,5 +83,7 @@ To run the demo question file (`docassemble.demo`) you will need:
   demo file to calculate whether an injury took place within the
   statute of limitations period
 
-[YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
+[YAML]: https://en.wikipedia.org/wiki/YAML
 [SQLAlchemy]: http://www.sqlalchemy.org/
+[`docassemble.base`]: {{ site.baseurl }}/docs/installation#docassemble.base
+[`docassemble.webapp`]: {{ site.baseurl }}/docs/installation.html#docassemble.webapp

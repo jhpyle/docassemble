@@ -24,7 +24,7 @@ mandatory: true
 {% endhighlight %}
 
 A better way is to define `user` as a **docassemble** object,
-`Individual`.
+[`Individual`].
 
 {% highlight yaml %}
 ---
@@ -54,18 +54,18 @@ of "objects."
 
 An object is a special type of variable.  Rather than being a piece of
 text, like `user_first_name` is, the variable `user` is an "object"
-that is an "instance" of the "class" known as `Individual`.
+that is an "instance" of the "class" known as [`Individual`].
 
 Using objects in **docassemble** requires a little bit of setup in
-[initial blocks].  `Individual` is defined in the
-`docassemble.base.legal` [Python module], so it was necessary to bring
-that module into the interview with a `modules` block.  It was also
-necessary to use an `objects` block to declare that `user` is an
-instance of the class `Individual`.
+[initial blocks].  [`Individual`] is defined in the
+[`docassemble.base.legal`] [Python module], so it was necessary to bring
+that module into the interview with a [`modules`] block.  It was also
+necessary to use an [`objects`] block to declare that `user` is an
+instance of the class [`Individual`].
 
 Objects have "attributes."  In the above example, `name` is an
 attribute of the object `user`.  And `name` is itself an object (it is
-an instance of the class `IndividualName`, though you would need to
+an instance of the class [`IndividualName`], though you would need to
 look at the [source code] to know that) with attributes `first` and
 `last`.  The attributes `first` and `last` are not objects, but rather
 pieces of text.  Anything before a `.` is an object, and anything
@@ -96,13 +96,13 @@ question: |
 ---
 {% endhighlight %}
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testage.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testage.yml){:target="_blank"}.)
 
 Using objects in your interviews has a number of advantages over
 using plain variables.
 
-The first advantage is that you can write `generic object` questions.
-(See [modifiers] for documentation of the `generic object` feature.)
+The first advantage is that you can write [`generic object`] questions.
+(See [modifiers] for documentation of the [`generic object`] feature.)
 For example, if you need to collect the phone numbers of three people,
 the `grantor`, the `grantee`, and the `trustee`, you don't have to
 write separate questions for `grantor.phone_number`,
@@ -120,10 +120,10 @@ fields:
 {% endhighlight %}
 
 Any time **docassemble** needs to know the phone number of an
-`Individual` object, it will ask this question.
+[`Individual`] object, it will ask this question.
 
-In the question text above, `possessive()` is a "method" that you can
-use on any instance of the `Individual` class.  If `trustee`'s name is
+In the question text above, [`possessive()`] is a "method" that you can
+use on any instance of the [`Individual`] class.  If `trustee`'s name is
 Fred Smith, `trustee.possessive('phone number')` returns "Fred Smith's
 phone number."  The method is pretty smart; `user.possessive('phone
 number')` will return "your phone number."
@@ -162,7 +162,7 @@ question: |
 Object methods allow you to have a standard way of expressing
 information even though the methods used to gather the information may
 vary depending on the circumstances.  For example, the
-`age_in_years()` function, discussed above, first looks to see if the
+[`age_in_years()`] function, discussed above, first looks to see if the
 attribute `age` is defined, and if so will return that instead of
 asking for the `birthdate` attribute:
 
@@ -190,7 +190,7 @@ question: |
 ---
 {% endhighlight %}
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testage2.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testage2.yml){:target="_blank"}.)
 
 Although objects are a fairly complicated concept, as you can see,
 they allow you to write code that looks much like plain English.
@@ -296,7 +296,7 @@ subquestion: |
 ---
 {% endhighlight %}
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testcooking.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testcooking.yml){:target="_blank"}.)
 
 By the way, there is way to write the `summary()` method that is more
 friendly to other interview authors:
@@ -305,7 +305,7 @@ friendly to other interview authors:
 return "#### " + word('Ingredients') + "\n\n" + self.ingredients + "\n\n#### " + word('Instructions') + "\n\n" + self.instructions
 {% endhighlight %}
 
-If you use the `word()` function in this way, other people will be
+If you use the [`word()`] function in this way, other people will be
 able to use `docassemble.cooking.objects` in non-English interviews
 without having to edit your code.  All they would have to do is
 include the words `Ingredients` and `Instructions` in a translation
@@ -372,8 +372,8 @@ the process).  Between the time one thread sets `temperature_type` to
 `Fahrenheit` and tries to use it, another user inside the same process
 might set `temperature_type` to `Celsius`.
 
-The simplest way to get around this problem is to use the `set_info()`
-and `get_info()` functions from `docassemble.base.util`:
+The simplest way to get around this problem is to use the [`set_info()`]
+and [`get_info()`] functions from [`docassemble.base.util`]:
 
 {% highlight python %}
 from docassemble.base.core import DAObject
@@ -391,7 +391,7 @@ class Recipe(DAObject):
             return str(self.oven_temperature) + ' K'
 {% endhighlight %}
 
-Then from your interview you can bring in `docassemble.base.util` and run `set_info()`:
+Then from your interview you can bring in [`docassemble.base.util`] and run [`set_info()`]:
 
 {% highlight yaml %}
 ---
@@ -410,7 +410,7 @@ code: |
 ...
 {% endhighlight %}
 
-Alternatively, you can do what `docassemble.base.util` does and use
+Alternatively, you can do what [`docassemble.base.util`] does and use
 Python's [threading module] to store global variables.
 
 {% highlight python %}
@@ -653,7 +653,7 @@ fields:
 ---
 {% endhighlight %}
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testdaobject.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testdaobject.yml){:target="_blank"}.)
 
 Although there is only one question for `x.color`, this question
 generates both "What is the color of the turnip?" and "What is the
@@ -675,15 +675,16 @@ parque."  (The Spanish version of `a_in_the_b()` will be more
 complicated than the English version because it will need to determine
 the gender of the second argument.)
 
-A related method of `DAObject` is `object_possessive()`.  Calling
+<a name="DAObject.object_possessive()"></a>A related method of
+`DAObject` is `object_possessive()`.  Calling
 `turnip.object_possessive('leaves')` will return `the turnip's
 leaves`.  Calling `park.front_gate.object_possessive('latch')` will
 return `the latch of the front gate in the park`.
 
 The `DAObject` is the most basic object, and all other **docassemble**
 objects inherit from it.  These objects will have different methods
-and behaviors.  For example, if `friend` is an `Individual` (from
-`docassemble.base.legal`), calling `${ friend }` in a [Mako] template
+and behaviors.  For example, if `friend` is an [`Individual`] (from
+[`docassemble.base.legal`]), calling `${ friend }` in a [Mako] template
 will not return `friend.object_name()`; rather, it will return
 `friend.full_name()`, which may require asking the user for the
 `friend`'s name.
@@ -693,7 +694,7 @@ will not return `friend.object_name()`; rather, it will return
 A `DAList` acts like an ordinary [Python list], except that
 **docassemble** can ask questions to define elements of the list.  For
 example, you could define `recipient` as a `DAList` containing five
-`Individual`s:
+[`Individual`]s:
 
 {% highlight yaml %}
 ---
@@ -730,7 +731,7 @@ fields:
 ---
 {% endhighlight %}
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testdalist.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testdalist.yml){:target="_blank"}.)
 
 This will result in the following five questions being asked:
 
@@ -744,7 +745,7 @@ This will result in the following five questions being asked:
 The `appendObject()` method is similar to the `initializeAttribute()`
 method we discussed earlier.  Running
 `recipient.appendObject(Individual)` creates a new object of the class
-`Individual` and adds it to the list.  In the example above, the first
+[`Individual`] and adds it to the list.  In the example above, the first
 such object is the fourth element in the list, which means that the
 intrinsic name of the new object is `recipient[3]`.
 
@@ -771,9 +772,9 @@ fields:
 
 The names of the fourth and fifth recipients are capable of being
 asked by this question, since the pattern `x[i]` (where `x[i]` is an
-`Individual`) matches the intrinsic names `recipient[3]` and
+[`Individual`]) matches the intrinsic names `recipient[3]` and
 `recipient[4]`.  Since the other `generic object` question, which
-matches `x` (where `x` is an `Individual`) also matches `recipient[3]`
+matches `x` (where `x` is an [`Individual`]) also matches `recipient[3]`
 and `recipient[4]`, the order in which you list the questions in the
 [YAML] file will determine which one is chosen.  Later-appearing questions
 take precedence, so you would need to place the second `generic
@@ -782,40 +783,50 @@ in order for it to be chosen.
 
 Other methods available on a DAList are:
 
-* <a name="DAList.append"></a>`append(item_to_append)` - adds `item_to_append` to the end of the
-  list.  Just like the [Python list] method of the same name.
-* <a name="DAList.extend"></a>`extend(extension_list)` - adds the items in the `extension_list` to
-  the end of the list.  Just like the [Python list] method of the same name.
-* <a name="DAList.first"></a>`first()` - returns the first element of the list; error triggered
-  if list is empty 
-* <a name="DAList.last"></a>`last()` - returns the last element of the list; error triggered if list is empty
-* <a name="DAList.does_verb"></a>`does_verb(verb)` - like the `verb_present()` function from
-  `docassemble.base.util`, except that it uses the singular or plural
-  form depending on whether the list has more than one element or not.
-* <a name="DAList.did_verb"></a>`did_verb(verb)` - like the `verb_past()` function from
-  `docassemble.base.util`, except that it uses the singular or plural
-  form depending on whether the list has more than one element or not.
-* <a name="DAList.as_singular_noun"></a>`as_singular_noun()` - if the variable name is `case.plaintiff`,
-  returns `plaintiff`; if the variable name is `applicant`, returns `applicant`.
-* <a name="DAList.as_noun"></a>`as_noun()` - if the variable name is `case.plaintiff`, returns
-  `plaintiffs` or `plaintiff` depending on the number of elements in
-  the list; if the variable name is `applicant`, returns `applicants`
-  or `applicant` depending on the number of elements in the list.
-* <a name="DAList.number"></a>`number()` - returns the total number of elements in the list, with
-  the side effect of checking on the value of the `gathered`
-  attribute, which might trigger questions that ask for all of the
-  elements of the list to be populated.
-* <a name="DAList.number_as_word"></a>`number_as_word()` - same as `number()`, except that the
-  `nice_number()` [function] is applied to the result.
-* <a name="DAList.number_gathered"></a>`number_gathered()` - like `number()` except that it does not have
-  the side effect of checking on the value of the `gathered`
-  attribute.
-* <a name="DAList.number_gathered_as_word"></a>`number_gathered_as_word()` - same as `number_gathered()`, except that the
-  `nice_number()` [function] is applied to the result.
+* <a name="DAList.append"></a>`append(item_to_append)` - adds
+  `item_to_append` to the end of the list.  Just like the
+  [Python list] method of the same name.
+* <a name="DAList.extend"></a>`extend(extension_list)` - adds the
+  items in the `extension_list` to the end of the list.  Just like the
+  [Python list] method of the same name.
+* <a name="DAList.first"></a>`first()` - returns the first element of
+  the list; error triggered if list is empty
+* <a name="DAList.last"></a>`last()` - returns the last element of the
+  list; error triggered if list is empty
+* <a name="DAList.does_verb"></a>`does_verb(verb)` - like the
+  `verb_present()` function from [`docassemble.base.util`], except
+  that it uses the singular or plural form depending on whether the
+  list has more than one element or not.
+* <a name="DAList.did_verb"></a>`did_verb(verb)` - like the
+  `verb_past()` function from [`docassemble.base.util`], except that
+  it uses the singular or plural form depending on whether the list
+  has more than one element or not.
+* <a name="DAList.as_singular_noun"></a>`as_singular_noun()` - if the
+  variable name is `case.plaintiff`, returns `plaintiff`; if the
+  variable name is `applicant`, returns `applicant`.
+* <a name="DAList.as_noun"></a>`as_noun()` - if the variable name is
+  `case.plaintiff`, returns `plaintiffs` or `plaintiff` depending on
+  the number of elements in the list; if the variable name is
+  `applicant`, returns `applicants` or `applicant` depending on the
+  number of elements in the list.
+* <a name="DAList.number"></a>`number()` - returns the total number of
+  elements in the list, with the side effect of checking on the value
+  of the `gathered` attribute, which might trigger questions that ask
+  for all of the elements of the list to be populated.
+* <a name="DAList.number_as_word"></a>`number_as_word()` - same as
+  `number()`, except that the `nice_number()` [function] is applied to
+  the result.
+* <a name="DAList.number_gathered"></a>`number_gathered()` - like
+  `number()` except that it does not have the side effect of checking
+  on the value of the `gathered` attribute.
+* <a
+  name="DAList.number_gathered_as_word"></a>`number_gathered_as_word()` -
+  same as `number_gathered()`, except that the `nice_number()`
+  [function] is applied to the result.
 * <a name="DAList.remove"></a>`remove()` - removes the given elements
   from the list, if they are in the list.
-* <a name="DAList.comma_and_list"></a>`comma_and_list()` - returns the elements of the list run through
-  the `comma_and_list()` [function].
+* <a name="DAList.comma_and_list"></a>`comma_and_list()` - returns the
+  elements of the list run through the `comma_and_list()` [function].
 
 If you refer to a list in a [Mako] template (e.g., `The applicants
 include: ${ applicant }`) or convert it to text with the
@@ -837,7 +848,7 @@ list.  The methods of `DAList` behave differently depending on whether
 or not the interview is in the process of gathering the elements of
 the list.
 
-## <a name="DADict"></a>DADict
+## <a name="DADict"></a><a name="DADict.initializeObject"></a>DADict
 
 A `DADict` acts like a [Python dictionary] except that dictionary
 elements can be defined through **docassemble** questions.  To add an
@@ -877,7 +888,7 @@ fields:
 ---
 {% endhighlight %}
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testdadict.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testdadict.yml){:target="_blank"}.)
 
 The `DADict` uses the following attributes:
 
@@ -949,7 +960,7 @@ in it.
 # Extending existing classes
 
 If you want to add a method to an existing **docassemble** class, such
-as `Individual`, you do not need to reinvent the wheel or copy and
+as [`Individual`], you do not need to reinvent the wheel or copy and
 paste code from anywhere.  Just take advantage of [inheritance].
 
 For example, if your package is `docassemble.missouri_family_law`, you
@@ -967,10 +978,11 @@ class Attorney(Individual):
 {% endhighlight %}
 
 Here you are defining the class `Attorney` as a subclass of
-`Individual`.  An object that is an instance of the `Attorney` class
-will also be an instance of the `Individual` class.  The `Attorney`
-class is said to "inherit" from the `Individual` class.  All of the
-methods that can be used on an `Individual` can be used on an `Attorney`.
+[`Individual`].  An object that is an instance of the `Attorney` class
+will also be an instance of the [`Individual`] class.  The `Attorney`
+class is said to "inherit" from the [`Individual`] class.  All of the
+methods that can be used on an [`Individual`] can be used on an
+`Attorney`.
 
 This allows you to write an interview like the following:
 
@@ -1011,15 +1023,15 @@ fields:
 ---
 {% endhighlight %}
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testattorney.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testattorney.yml){:target="_blank"}.)
 
-Note that the `lawyer` object works just like an `Individual` object.
+Note that the `lawyer` object works just like an [`Individual`] object.
 The `is_are_you()` method, which is defined in
-`docassemble.base.legal`, works on the `Attorney` object, despite the
+[`docassemble.base.legal`], works on the `Attorney` object, despite the
 fact that the interview does not explicitly refer to
-`docassemble.base.legal` anywhere.  (The module
+[`docassemble.base.legal`] anywhere.  (The module
 `docassemble.missouri_family_law.objects` imports
-`docassemble.base.legal`.)
+[`docassemble.base.legal`].)
 
 Note that the `can_practice_in()` method is only available for
 `Attorney` objects.  If you added the following to the above
@@ -1041,7 +1053,7 @@ question: |
 {% endhighlight %}
 
 then you would get an error because `can_practice_in()` is not a valid
-method for `user`, which is only an instance of the `Individual` class
+method for `user`, which is only an instance of the [`Individual`] class
 and not an instance of the `Attorney` class.
 
 [YAML]: https://en.wikipedia.org/wiki/YAML
@@ -1070,3 +1082,15 @@ and not an instance of the `Attorney` class.
 [markup]: {{ site.baseurl }}/docs/markup.html
 [Python list]: https://docs.python.org/2/tutorial/datastructures.html
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[`modules`]: {{ site.baseurl }}/docs/initial.html#modules
+[`objects`]: {{ site.baseurl }}/docs/initial.html#objects
+[`Individual`]: {{ site.baseurl }}/docs/legal.html#Individual
+[`IndividualName`]: {{ site.baseurl }}/docs/legal.html#IndividualName
+[`generic object`]: {{ site.baseurl }}/docs/modifiers.html#generic object
+[`possessive()`]: {{ site.baseurl }}/docs/legal.html#Individual.possessive
+[`age_in_years()`]: {{ site.baseurl }}/docs/legal.html#Individual.age_in_years
+[`Person`]: {{ site.baseurl }}/docs/legal.html#Person
+[`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
+[`word()`]: {{ site.baseurl }}/docs/functions.html#word
+[`set_info()`]: {{ site.baseurl }}/docs/functions.html#set_info
+[`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py

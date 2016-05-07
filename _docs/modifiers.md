@@ -5,7 +5,7 @@ short_title: Question Modifiers
 ---
 
 There are a number of optional modifiers that can be included in
-`question` blocks to control the appearance or behavior of the
+[`question`] blocks to control the appearance or behavior of the
 question.
 
 # <a name="audio"></a>`audio`
@@ -28,7 +28,7 @@ You can also play uploaded files:
 
 Note that in this example, we use `file` as the `datatype`, which is
 the standard way to upload files.  You can also use the `datatype` of
-[microphone], which in some browsers (mostly on mobile platforms) will
+[`microphone`], which in some browsers (mostly on mobile platforms) will
 launch an audio recording app to create the file to upload.
 
 {% include side-by-side.html demo="upload_audio_microphone" %}
@@ -92,8 +92,8 @@ automatic text-to-speech features.
 
 # <a name="video"></a>`video`
 
-The `video` declaration is just like the `audio` declaration except that it displays a
-video instead of an audio file.
+The `video` declaration is just like the [`audio`](#audio) declaration
+except that it displays a video instead of an audio file.
 
 {% highlight yaml %}
 ---
@@ -169,7 +169,7 @@ You can also add video to help text using the `video` declaration.
 
 {% include side-by-side.html demo="decoration" %}
 
-The `decoration` modifier adds an icon to the right of the `question`
+The `decoration` modifier adds an icon to the right of the [`question`]
 text.  In the example above, `piggybank` will need to have been
 defined in an [image sets] or [images] block.
 
@@ -190,20 +190,15 @@ Normally, **docassemble** allows the user to click the back button to
 get back to earlier steps in the interview.  Sometimes, it is
 necessary to prevent the user from doing so.
 
-If you add a `prevent_going_back` directive to a `question`, the web
+If you add a `prevent_going_back` directive to a [`question`], the web
 app will not offer the user a back button while showing the question.
 
-{% highlight yaml %}
----
-prevent_going_back: true
-sets: final_screen
-question: |
-  Congratulations, you have filed your application!
----
-{% endhighlight %}
+{% include side-by-side.html demo="prevent-going-back" %}
 
-There is also a `prevent_going_back()` [function] that accomplishes
-the same thing from [Python] code.
+There is also a [`prevent_going_back()` function] that accomplishes
+the same thing from [Python] code.  This may be more useful than the
+`prevent_going_back` modifier if the need to prevent the user from
+clicking the back button depends on the outcome of a process.
 
 # <a name="language"></a>`language`
 
@@ -255,14 +250,15 @@ allows authors to express questions in general terms.
 The above example will cause **docassemble** to ask "So, is John Smith
 a defendant in this case?" if the interview logic calls for
 `neighbor.is_defendant` and `neighbor` is an object of type
-`Individual` whose name has been set to "John Smith."  Or, if the
+[`Individual`] whose name has been set to "John Smith."  Or, if the
 interview logic calls for `user.is_defendant`, **docassemble** will
 ask, "So, are you a defendant in this case?"
 
-`x` is a special variable that should only be used in `generic object`
-questions.  This question definition tells **docassemble** that if it
-ever needs an `is_defendant` attribute for any object of type
-`Individual`, it can get an answer by asking this question.
+<a name="x"></a>`x` is a special variable that should only be used in
+`generic object` questions.  This question definition tells
+**docassemble** that if it ever needs an `is_defendant` attribute for
+any object of type [`Individual`], it can get an answer by asking this
+question.
 
 # <a name="role"></a>`role`
 
@@ -281,7 +277,7 @@ yesno: explanation_is_sound
 {% endhighlight %}
 
 If your interview uses the [roles]({{ site.baseurl}}/docs/roles.html)
-feature for multi-user interviews, the `role` modifier in a `question`
+feature for multi-user interviews, the `role` modifier in a [`question`]
 block will tell **docassemble** that if it ever tries to ask this
 question, the user will need to have a particular role in order to
 proceed.
@@ -317,10 +313,13 @@ by **docassemble**, so it can contain any valid [YAML].
 [HTML5 video tag]: http://www.w3schools.com/html/html5_video.asp
 [YouTube]: https://www.youtube.com/
 [Vimeo]: https://vimeo.com/
-[function]: {{ site.baseurl }}/docs/function.html
+[`prevent_going_back()` function]: {{ site.baseurl }}/docs/function.html#prevent_going_back
 [special variables]: {{ site.baseurl }}/docs/special.html
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [image sets]: {{ site.baseurl }}/docs/initial.html#image sets
 [images]: {{ site.baseurl }}/docs/initial.html#images
 [default language]: {{ site.baseurl }}/docs/initial.html#default language
 [progress bar]: {{ site.baseurl }}/docs/initial.html#features
+[`Individual`]: {{ site.baseurl }}/docs/legal.html#Individual
+[`question`]: {{ site.baseurl }}/docs/questions.html#question
+[`microphone`]: {{ site.baseurl }}/docs/fields.html#microphone

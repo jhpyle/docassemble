@@ -102,7 +102,7 @@ Point your browser to
 (substituting the actual domain and base URL of your **docassemble**
 site).  The base url is set during the [installation] of the [WSGI]
 server and in the **docassemble** [configuration] file (where it is
-called `root`).
+called [`root`]).
 
 Note that you can also test interview [YAML] using the **docassemble**
 [Playground].
@@ -134,3 +134,4 @@ packages on their system and make use of your [questions] and [code].
 [Windows application]: https://desktop.github.com/
 [Python modules]: https://docs.python.org/2/tutorial/modules.html
 [classes]: https://docs.python.org/2/tutorial/classes.html
+[`root`]: {{ site.baseurl }}/docs/config.html#root

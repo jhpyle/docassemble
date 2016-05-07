@@ -11,7 +11,7 @@ and how to avoid them.
 
 Interview variables are stored in a Python dictionary.  This
 dictionary is passed to [Mako] and [exec] and becomes the environment
-of global variables in which templates are assembled and `code` blocks
+of global variables in which templates are assembled and [`code`] blocks
 are executed.  The web app uses [pickle] to serialize this dictionary
 for storage in a SQL database.  Many different types of data are
 [pickleable], but not all are.
@@ -76,3 +76,4 @@ and another in `/usr/local/lib`).
 [pickle]: https://docs.python.org/2/library/pickle.html
 [pickleable]: https://docs.python.org/2/library/pickle.html#what-can-be-pickled-and-unpickled
 [import]: https://docs.python.org/2/tutorial/modules.html
+[`code`]: {{ site.baseurl }}/docs/code.html

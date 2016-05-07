@@ -18,7 +18,7 @@ User passwords and interview answers are stored in a SQL database in
 encrypted form.
 
 Uploaded and assembled documents are stored on the server (and on
-Amazon S3, if S3 is being used) without encryption.  These documents
+[Amazon S3], if [S3] is being used) without encryption.  These documents
 cannot be accessed from the internet without an appropriate security
 key in the cookie.
 
@@ -70,3 +70,5 @@ for an interview belonging to a user who logs in with Google or Facebook.
 [tmpreaper]: https://packages.debian.org/sid/admin/tmpreaper
 [eval]: https://docs.python.org/2/library/functions.html#eval
 [exec]: https://docs.python.org/2/reference/simple_stmts.html#exec
+[Amazon S3]: https://aws.amazon.com/s3/
+[S3]: https://aws.amazon.com/s3/

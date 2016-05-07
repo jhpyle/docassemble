@@ -236,23 +236,23 @@ sudo yum -y install git
 Then download docassemble:
 
 {% highlight bash %}
-git clone https://github.com/jhpyle/docassemble
+git clone {{ site.github.repository_url }}
 {% endhighlight %}
 
 To make changes to the configuration of the **docassemble**
 application that will be installed in the image, edit the following
 files:
 
-* `docassemble/Dockerfile`: you may want to change the locale and the
+* <span></span>[`docassemble/Dockerfile`]: you may want to change the locale and the
   Debian mirror; the standard "httpredir" mirror can lead to random
   packages not being downloaded, depending on which mirrors it chooses
   to use.
-* `docassemble/Docker/config.yml`: you probably do not need to change
+* <span></span>[`docassemble/Docker/config.yml`]: you probably do not need to change
   this; it is a template that is updated based on the contents of the
-  `--env-file` passed to `docker run`.  Once your server is up and
+  `--env-file` passed to [`docker run`].  Once your server is up and
   running you can change the rest of the configuration in the web
   application.
-* `docassemble/Docker/initialize.sh`: this script updates `config.yml`
+* <span></span>[`docassemble/Docker/initialize.sh`]: this script updates `config.yml`
   based on the environment variables; retrieves a new version of
   `config.yml` from [S3], if available; if `CONTAINERROLE` is not set
   to `webserver`, starts the PostgreSQL server and initializes the
@@ -262,27 +262,27 @@ files:
   Apache `mod_ssl` if `USEHTTPS` is `true` and otherwise disables it;
   runs the Let's Encrypt utility if `USELETSENCRYPT` is `true` and the
   utility has not been run yet; and starts Apache.
-* `docassemble/Docker/apache.conf`: note that if `mod_ssl` is enabled,
+* <span></span>[`docassemble/Docker/apache.conf`]: note that if `mod_ssl` is enabled,
   HTTP will merely redirect to HTTPS.
-* `docassemble/Docker/docassemble.crt`: SSL certificate for HTTPS.
-* `docassemble/Docker/docassemble.key`: SSL certificate for HTTPS.
-* `docassemble/Docker/docassemble.ca.pem`: SSL certificate for HTTPS.
-* `docassemble/Docker/docassemble.conf`: Apache configuration file
+* <span></span>[`docassemble/Docker/docassemble.crt`]: SSL certificate for HTTPS.
+* <span></span>[`docassemble/Docker/docassemble.key`]: SSL certificate for HTTPS.
+* <span></span>[`docassemble/Docker/docassemble.ca.pem`]: SSL certificate for HTTPS.
+* <span></span>[`docassemble/Docker/docassemble.conf`]: Apache configuration file
   that causes Apache to use the Python virtualenv.
-* `docassemble/Docker/docassemble-supervisor.conf`: [supervisor]
+* <span></span>[`docassemble/Docker/docassemble-supervisor.conf`]: [supervisor]
   configuration file.
-* `docassemble/Docker/docassemble.wsgi`: WSGI server file called by
+* <span></span>[`docassemble/Docker/docassemble.wsgi`]: WSGI server file called by
   Apache.
-* `docassemble/Docker/docassemble.logrotate`: This file will be copied
+* <span></span>[`docassemble/Docker/docassemble.logrotate`]: This file will be copied
   into `/etc/logrotate.d` and will control the rotation of the
   **docassemble** log file in `/usr/share/docassemble/log`.
-* `docassemble/Docker/apache.logrotate`: This replaces the standard
+* <span></span>[`docassemble/Docker/apache.logrotate`]: This replaces the standard
   apache logrotate configuration.  It does not compress old log files,
   so that it is easier to view them in the web application.
-* `docassemble/Docker/run-postgresql.sh`: This is a script that is
+* <span></span>[`docassemble/Docker/run-postgresql.sh`]: This is a script that is
   run by [supervisor] to start the PostgreSQL server in a
   single-server configuration.
-* `docassemble/Docker/docassemble-syslogng.conf`: The configuration
+* <span></span>[`docassemble/Docker/docassemble-syslogng.conf`]: The configuration
   for sending Apache and supervisor logs to the central log server.
 
 To build the image, run:
@@ -331,5 +331,20 @@ Then, subsequent commands will use the latest **docassemble** image.
 [Docker Hub]: https://hub.docker.com/
 [scalability]: {{ site.baseurl }}/docs/scalability.html
 [Amazon S3]: https://aws.amazon.com/s3/
-[docassemble repository]: {{ site.github.repository_url }}
 [using HTTPS]: {{ site.baseurl }}/docs/scalability.html#ssl
+[docassemble repository]: {{ site.github.repository_url }}
+[`docassemble/Dockerfile`]: {{ site.github.repository_url }}/blob/master/Dockerfile
+[`docassemble/Docker/config.yml`]: {{ site.github.repository_url }}/blob/master/Docker/config.yml
+[`docassemble/Docker/initialize.sh`]: {{ site.github.repository_url }}/blob/master/Docker/initialize.sh
+[`docassemble/Docker/apache.conf`]: {{ site.github.repository_url }}/blob/master/Docker/apache.conf
+[`docassemble/Docker/docassemble.crt`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble.crt
+[`docassemble/Docker/docassemble.key`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble.key
+[`docassemble/Docker/docassemble.ca.pem`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble.ca.pem
+[`docassemble/Docker/docassemble.conf`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble.conf
+[`docassemble/Docker/docassemble-supervisor.conf`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble-supervisor.conf
+[`docassemble/Docker/docassemble.wsgi`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble.wsgi
+[`docassemble/Docker/docassemble.logrotate`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble.logrotate
+[`docassemble/Docker/apache.logrotate`]: {{ site.github.repository_url }}/blob/master/Docker/apache.logrotate
+[`docassemble/Docker/run-postgresql.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-postgresql.sh
+[`docassemble/Docker/docassemble-syslogng.conf`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble-syslogng.conf
+[`docker run`]: https://docs.docker.com/engine/reference/run/

@@ -4,17 +4,17 @@ title: Interview Logic
 short_title: Interview Logic
 ---
 
-Like `question` questions, `code` questions are not "asked" unless
-they contain variables that **docassemble** needs.  All `question` and
-`code` blocks are only called when and if they are needed.
+Like [`question`] questions, [`code`] questions are not "asked" unless
+they contain variables that **docassemble** needs.  All [`question`] and
+[`code`] blocks are only called when and if they are needed.
 
 For your interview to start asking questions, you need to mark at
-least one `question` block or `code` block with the modifier
+least one [`question`] block or [`code`] block with the modifier
 `mandatory: true`.
 
 # Directives that control interview logic
 
-## `mandatory`
+## <a name="mandatory"></a>`mandatory`
 
 Consider the following as a complete interview file:
 
@@ -38,7 +38,7 @@ The interview will ask "Are you sitting down" and then it will say
 Maine?"
 
 Another way to control the logic of an interview is to have a single,
-simple `mandatory` `code` block that sets the interview in motion.
+simple `mandatory` [`code`] block that sets the interview in motion.
 
 For example:
 
@@ -67,14 +67,14 @@ sets: user_will_not_sit_down
 ---
 {% endhighlight %}
 
-Here, the `mandatory` block of `code` contains simple Python code that
+Here, the `mandatory` block of [`code`] contains simple Python code that
 contains the entire logic of the interview.
 
-## `initial`
+## <a name="initial"></a>`initial`
 
-The `initial` modifier is very similar to `mandatory`.  It causes a
-`code` block to be run every time **docassemble** processes your
-interview.  `mandatory` blocks, by contrast, are never run again if
+The `initial` modifier is very similar to [`mandatory`].  It causes a
+[`code`] block to be run every time **docassemble** processes your
+interview.  [`mandatory`] blocks, by contrast, are never run again if
 they are successfully "asked" once.
 
 {% highlight yaml %}
@@ -87,18 +87,18 @@ code: |
 
 # The logical order of an interview
 
-`mandatory` and `initial` blocks are evaluated in the order they
+[`mandatory`] and [`initial`] blocks are evaluated in the order they
 appear in the question file.  Therefore, the location in the interview
-of `mandatory` and `initial` blocks, relative to each other, is
+of [`mandatory`] and [`initial`] blocks, relative to each other, is
 important.  Ordinary questions can appear anywhere in any order.
 
 **docassemble** goes through the interview file from top to bottom,
-looking for `mandatory` and `initial` blocks.  When it encounters an
-`include` statement, it immediately goes through the included file
+looking for [`mandatory`] and [`initial`] blocks.  When it encounters an
+[`include`] statement, it immediately goes through the included file
 from top to bottom, and then picks up where it left off.
 
 The order in which questions appear will also matter if you have
-multiple `question`, `code`, or `template` blocks that each offer to
+multiple [`question`], [`code`], or `template` blocks that each offer to
 define the same variables.  In that case, the order of these blocks
 relative to each other is important.  **docassemble** will use
 later-defined blocks first.  Later definitions "supersede" the ones
@@ -107,7 +107,7 @@ that came before.
 This allows you to `import` question files that other authors have
 written and then "override" particular questions you would like to ask
 differently.  You do not have to edit those other files (unless they
-contain `mandatory` or `initial` blocks, which could affect your
+contain [`mandatory`] or [`initial`] blocks, which could affect your
 interview in unwanted ways).
 
 For example, suppose that `question_library.yml` consists of:
@@ -217,10 +217,10 @@ sets:
 {% endhighlight %}
 
 In this case, when **docassemble** tries to get a definition of
-`user_wants_to_go_to_dance`, it will first try running the `code`
+`user_wants_to_go_to_dance`, it will first try running the [`code`]
 block, and then it will seek a definition for
 `we_already_agreed_to_go`.  If the value of `we_already_agreed_to_go`
-turns out to be false, the `code` block will complete without setting
+turns out to be false, the [`code`] block will complete without setting
 a value for `user_wants_to_got_to_dance`.  Not giving up,
 **docassemble** will then seek an answer to
 `user_wants_to_got_to_dance` by asking the "Do you want to go to the
@@ -230,10 +230,10 @@ dance with me?" question, which was defined earlier in
 # How **docassemble** runs your code
 
 **docassemble** goes through your interview [YAML] file from start to
-finish, incorporating `include`d files as it goes.  It always executes
-`initial` code when it sees it, executes `mandatory` `code` blocks
+finish, incorporating [`include`]d files as it goes.  It always executes
+[`initial`] code when it sees it, executes [`mandatory`] [`code`] blocks
 that have not been successfully executed yet, and if it encounters a
-`mandatory` `question` that it has not been successfully
+[`mandatory`] [`question`] that it has not been successfully
 asked yet, it will stop and ask the question.  If at any time it
 encounters a variable that is undefined, for example while trying to
 formulate a question, it will interrupt itself in order to go find the
@@ -282,7 +282,7 @@ code actually runs like this:
 4. **docassemble** runs the code again.  The value of `user_net_worth`
  is increased (again).  If `user_car_brand` is equal to "Toyota," then
  `user_is_sensible` is set.  In that case, the code runs successfully
- to the end, and the `mandatory` code block is marked as completed, so
+ to the end, and the [`mandatory`] code block is marked as completed, so
  that it will not be run again.
 5. However, if `user_car_brand` is not equal to "Toyota," the code
  will encounter `user_car_is_convertible`, which is undefined.
@@ -307,34 +307,34 @@ code: |
 ---
 {% endhighlight %}
 
-Note that `mandatory` must be true for this to work sensibly.
+Note that [`mandatory`] must be true for this to work sensibly.
 If this were an optional code block, it would not run to completion
 because `user_net_worth` would already be defined when **docassemble**
 came back from asking whether the user has a car.
 
 # Best practices for interview logic and organization
 
-* Use only a single `mandatory` `code` block for each interview, and
+* Use only a single [`mandatory`] [`code`] block for each interview, and
   put it at the top of the file after the [initial blocks].
 
 # Best practices for sharing with others
 
-* Don't reinvent the wheel; `include` other people's questions.
-* Share your `question`s, `code`, and `template`s with others.
-* To that end, keep your `question` blocks in a separate [YAML] file
-  from your `mandatory` interview logic, so that other people can
+* Don't reinvent the wheel; [`include`] other people's questions.
+* Share your [`question`]s, [`code`], and [`template`]s with others.
+* To that end, keep your [`question`] blocks in a separate [YAML] file
+  from your [`mandatory`] interview logic, so that other people can
   incorporate your questions without having to edit your work.  Your
   main interview file would consist only of:
-    * A `metadata` statement saying who you are and what your interview
+    * A [`metadata`] statement saying who you are and what your interview
     is for;
-	* A statement to `include` your file of questions;
-	* Any `interview help` blocks;
-	* A `default role` block, if you use [roles];
-	* Any `initial` code;
-	* Your `mandatory` code or questions that set your interview in motion.
-* `include` other people's question files directly from their **docassemble**
-  packages, rather than by copying other people's files
-  into your package.  That way, when the other authors make
+	* A statement to [`include`] your file of questions;
+	* Any [`interview help`] blocks;
+	* A [`default role`] block, if you use [roles];
+	* Any [`initial`] code;
+	* Your [`mandatory`] code or questions that set your interview in motion.
+* [`include`] other people's question files directly from their
+  **docassemble** packages, rather than by copying other people's
+  files into your package.  That way, when the other authors make
   improvements to their questions, you can gain the benefit of those
   improvements automatically.
 * Don't invent your own scheme for variable names; follow conventions
@@ -343,11 +343,19 @@ came back from asking whether the user has a car.
   changing your variable names unnecessarily, or else you will "break"
   other people's interviews.  This does limit your autonomy somewhat,
   but the benefits for the community of interview authors more than
-  make up for the loss of autonomy.  
-
+  make up for the loss of autonomy.
 
 [roles]: {{ site.baseurl }}/docs/roles.html
 [Setting Variables]: {{ site.baseurl }}/docs/fields.html
 [YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
+[`question`]: {{ site.baseurl }}/docs/questions.html#question
+[`code`]: {{ site.baseurl }}/docs/code.html
+[`mandatory`]: #mandatory
+[`initial`]: #initial
+[`include`]: {{ site.baseurl }}/docs/initial.html#include
+[`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
+[`interview help`]: {{ site.baseurl }}/docs/initial.html#interview help
+[`default role`]: {{ site.baseurl }}/docs/initial.html#default role
+[`template`]: {{ site.baseurl }}/docs/templates.html
 

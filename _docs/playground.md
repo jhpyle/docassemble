@@ -12,10 +12,10 @@ or more "files" and then run an interview with one click.
 
 ![playground]({{ site.baseurl }}/img/playground.png){: .full-width }
 
-## The YAML text editor
+## The [YAML] text editor
 
 The main area of the Playground consists of an in-browser text editor
-in which you can edit YAML [interview] files.
+in which you can edit [YAML] [interview] files.
 
 ![playground]({{ site.baseurl }}/img/playground-main.png)
 
@@ -75,12 +75,12 @@ templates.  In a typical **docassemble** package, these templates are
 files in the `data/templates` subdirectory.  In the Playground, they
 are stored in the "Templates" folder.  For more information about the
 different types of template files that can be provided as options to
-the `attachments` directive, see [documents].
+the [`attachments`] directive, see [documents].
 
 For example, you can write Markdown text in a separate text file
 called `small_claims_complaint.md` in the Templates folder and then
 incorporate that text by reference by including the line `content
-file: small_claims_complaint.md` within an `attachments` directive.
+file: small_claims_complaint.md` within an [`attachments`] directive.
 
 ## The Static folder
 
@@ -109,13 +109,13 @@ The area lists the following types of names (which are color-coded):
 
 * Variables: variables that are mentioned in your questions and code
   blocks, or that have been included in the Python namespace through a
-  `modules` statement
+  [`modules`] statement
 * Functions: functions that are available because they have been
-  included in the Python namespace through a `modules` statement
+  included in the Python namespace through a [`modules`] statement
 * Classes: classes that are available because they have been
-  included in the Python namespace through a `modules` statement
+  included in the Python namespace through a [`modules`] statement
 * Modules: modules that are available because they have been included
-  in the Python namespace through a `import` statement
+  in the Python namespace through a [`import`] statement
 * Templates: template files available in the Templates folder of the Playground
 * Static files: static files available in the Static folder of the Playground
 
@@ -169,3 +169,6 @@ screenshot.
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [interview]: {{ site.baseurl }}/docs/interviews.html
 [documents]: {{ site.baseurl }}/docs/documents.html
+[`attachments`]: {{ site.baseurl }}/docs/documents.html#attachments
+[`modules`]: {{ site.baseurl }}/docs/initial.html#modules
+[`import`]: {{ site.baseurl }}/docs/initial.html#import

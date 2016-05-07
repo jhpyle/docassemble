@@ -107,7 +107,7 @@ The **docassemble** application itself is on [GitHub].  Clone the
 repository (e.g., in your home directory):
 
 {% highlight bash %}
-git clone https://github.com/jhpyle/docassemble
+git clone {{ site.github.repository_url }}
 {% endhighlight %}
 
 This creates a directory called `docassemble` in the current
@@ -115,10 +115,10 @@ directory.
 
 There are four packages in the git repository:
 
-1. docassemble: empty namespace package;
-2. docassemble.base: core functionality;
-3. docassemble.webapp: the web application framework; and
-4. docassemble.demo: demonstration interview package
+1. <a name="docassemble"></a>[`docassemble`]: empty namespace package;
+2. <a name="docassemble.base"></a>[`docassemble.base`]: core functionality;
+3. <a name="docassemble.webapp"></a>[`docassemble.webapp`]: the web application framework; and
+4. <a name="docassemble.demo"></a>[`docassemble.demo`]: demonstration interview package
 
 The `docassemble` package is empty because it is a "namespace"
 package.  (This facilitates the use of user-created add-on packages.)
@@ -450,7 +450,6 @@ The main **docassemble** log file is in
 [Ubuntu]: http://www.ubuntu.com/
 [Amazon EC2]: https://aws.amazon.com/ec2/
 [Python]: https://www.python.org/
-[GitHub]: https://github.com/jhpyle/docassemble
 [functions]: {{ site.baseurl }}/docs/functions.html
 [VoiceRSS]: http://www.voicerss.org/
 [Google Maps Geocoding API]: https://developers.google.com/maps/documentation/geocoding/intro
@@ -463,3 +462,8 @@ The main **docassemble** log file is in
 [PostgreSQL]: http://www.postgresql.org/
 [Amazon ECS]: https://aws.amazon.com/ecs/
 [demonstration]: {{ site.baseurl }}/demo.html
+[GitHub]: {{ site.github.repository_url }}
+[`docassemble`]: {{ site.github.repository_url }}/tree/master/docassemble
+[`docassemble.base`]: {{ site.github.repository_url }}/tree/master/docassemble_base
+[`docassemble.demo`]: {{ site.github.repository_url }}/tree/master/docassemble_demo
+[`docassemble.webapp`]: {{ site.github.repository_url }}/tree/master/docassemble_webapp

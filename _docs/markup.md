@@ -6,8 +6,8 @@ short_title: Markup
 
 **docassemble** allows you to format your text using [Markdown] and to
 use [Mako] to make your documents "smart."  These [mark up] methods
-are available for use in `question` text, field labels, `interview
-help` text, the content of [documents], and other text elements.
+are available for use in [`question`] text, field labels, [`interview
+help`] text, the content of [documents], and other text elements.
 
 # Markdown
 
@@ -115,7 +115,7 @@ fields:
 ---
 {% endhighlight %}
 
-Alternatively, you can call the `show()` method on the file object:
+Alternatively, you can call the [`show()`] method on the file object:
 
 {% highlight yaml %}
 ---
@@ -127,7 +127,7 @@ yesno: user_is_cute
 ---
 {% endhighlight %}
 
-The `show()` method takes an optional argument, `width`:
+The [`show()`] method takes an optional argument, `width`:
 
 {% highlight yaml %}
 ---
@@ -144,11 +144,11 @@ its width is 250 pixels.
 
 # Inserting inline icons
 
-If you have defined "decorations" in an `image sets` block (see
+If you have defined "decorations" in an [`image sets`] block (see
 [initial blocks]), you can include these decorations as icons (having
 the same size as the text) by referencing them "emoji-style," putting
 colons around the decoration name.  This works not only in `question`
-and `subquestion` areas, but also in question choices.
+and [`subquestion`] areas, but also in question choices.
 
 {% highlight yaml %}
 ---
@@ -167,7 +167,7 @@ This works within PDF and RTF documents as well as within questions.
   
 # Inserting audio and video
 
-In addition to using the `audio` and `video` [modifiers], you can
+In addition to using the [`audio`] and [`video`] [modifiers], you can
 insert audio and video into your [Mako] text in questions.
 
 {% highlight yaml %}
@@ -261,9 +261,9 @@ attachment:
 ---
 {% endhighlight %}
 
-([Try it out here](https://demo.docassemble.org?i=docassemble.demo:data/questions/testqr.yml){:target="_blank"}.)
+([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testqr.yml){:target="_blank"}.)
 
-See also the `qr_code()` [function], which allows you to insert the
+See also the [`qr_code()`] function, which allows you to insert the
 `[QR ...]` markup using [Python].
 
 [documents]: {{ site.baseurl }}/docs/documents.html
@@ -278,3 +278,11 @@ See also the `qr_code()` [function], which allows you to insert the
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [function]: {{ site.baseurl }}/docs/functions.html
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
+[`question`]: {{ site.baseurl }}/docs/questions.html#question
+[`subquestion`]: {{ site.baseurl }}/docs/questions.html#subquestion
+[`interview help`]: {{ site.baseurl }}/docs/initial.html#interview help
+[`show()`]: {{ site.baseurl }}/docs/objects.html#DAFile.show
+[`image sets`]: {{ site.baseurl }}/docs/initial.html#image sets
+[`audio`]: {{ site.baseurl }}/docs/modifier.html#audio
+[`video`]: {{ site.baseurl }}/docs/modifier.html#video
+[`qr_code()`]: {{ site.baseurl }}/docs/functions.html#qr_code

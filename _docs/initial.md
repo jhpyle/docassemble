@@ -22,9 +22,9 @@ metadata:
 ---
 {% endhighlight %}
 
-A `metadata` block contains information about the YAML file, such as
-the name of the author.  It must be a YAML dictionary, but each the
-dictionary items can contain any arbitrary YAML structure.
+A `metadata` block contains information about the [YAML] file, such as
+the name of the author.  It must be a [YAML] dictionary, but each the
+dictionary items can contain any arbitrary [YAML] structure.
 
 If a "title" is defined, it will be displayed in the navigation bar in
 the web app.  If a "short title" is provided, it will be displayed
@@ -50,7 +50,7 @@ will find the above `objects` block and process it.  It will define
 `user.case` as an instance of the object class `Case`.
 
 The use of objects in **docassemble** interviews is highly encouraged.
-However, the objects you use as variables in your interview YAML files
+However, the objects you use as variables in your interview [YAML] files
 need to inherit from the class `DAObject`.  Otherwise, **docassemble**
 might not be able to find the appopriate code blocks or questions
 necessary to define them.  This is because of the way **docassemble**
@@ -85,17 +85,17 @@ include:
 ---
 {% endhighlight %}
 
-The `include` statement incorporates the questions in another YAML
-file, almost as if the contents of the other YAML file appeared in
+The `include` statement incorporates the questions in another [YAML]
+file, almost as if the contents of the other [YAML] file appeared in
 place of the `include` statement.  When the `include`d file is parsed,
 files referenced within it will be assumed to be located in the
 `include`d file's package.
 
 When a filename is provided without a package name, **docassemble**
 will look first in the `data/questions` directory of the current
-package (i.e., the package within which the YAML file being read is
+package (i.e., the package within which the [YAML] file being read is
 located), and then in the `data/questions` directory of
-`docassemble.base`.
+[`docassemble.base`].
 
 You can include question files from other packages by explicitly
 referring to their package names.  E.g.,
@@ -122,7 +122,7 @@ An `image sets` block defines the names of icons that you can use to
 decorate your questions.
 
 The file names refer to files located in the `data/static` directory
-of the package in which the YAML file is located.
+of the package in which the [YAML] file is located.
 
 Since most free icons available on the internet require attribution,
 the `image sets` block allows you to specify what attribution text
@@ -132,7 +132,7 @@ icons.  The example above is for a collection of icons obtained from
 the web site Freepik, which offers free icons under an
 attribution-only license.
 
-The `image sets` block must be in the form of a YAML dictionary, where
+The `image sets` block must be in the form of a [YAML] dictionary, where
 the names are the names of collections of icons.  The collection
 itself is also a dictionary containing terms `images` and (optionally)
 an `attribution`.  The `images` collection is a dictionary that
@@ -325,9 +325,9 @@ In the example above, the interview has two roles: "client" and
 `code` block, which is executed every time the interview logic is
 processed.
 
-In addition, the `update_info()` function from
-`docassemble.base.legal` is called.  This lets the linguistic
-functions in `docassemble.base.legal` know who the user is, so that
+In addition, the [`update_info()`] function from
+[`docassemble.base.legal`] is called.  This lets the linguistic
+functions in [`docassemble.base.legal`] know who the user is, so that
 questions can ask "What is your date of birth?" or "What is John
 Smith's date of birth" depending on whether the current user is John
 Smith or not.
@@ -341,10 +341,10 @@ default language: es
 {% endhighlight %}
 
 This sets the language to use for all of the remaining questions in
-the file for which a `language` is not specified.  The purpose of this
-is to save typing; otherwise you would have to set a `language` for
-each question.  Note that this does not extend to questions in `include`d
-files.
+the file for which the [`language` modifier] is not specified.  The
+purpose of this is to save typing; otherwise you would have to set the
+[`language` modifier] for each question.  Note that this does not extend to
+questions in [`include`]d files.
 
 If your interview only supports one language, it is not necessary to
 (and probably not a good idea to) set a `default language`.
@@ -372,3 +372,9 @@ the interview.  The setting of the progress bar is controlled by the
 [def]: http://docs.makotemplates.org/en/latest/defs.html
 [roles]: {{ site.baseurl}}/docs/roles.html
 [progress]: {{ site.baseurl}}/docs/modifiers.html#progress
+[`language` modifier]: {{ site.baseurl}}/docs/modifiers.html#language
+[`include`]: {{ site.baseurl}}/docs/initial.html#include
+[`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
+[`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
+[`update_info()`]: {{ site.baseurl}}/docs/legal.html#update_info
+[YAML]: https://en.wikipedia.org/wiki/YAML
