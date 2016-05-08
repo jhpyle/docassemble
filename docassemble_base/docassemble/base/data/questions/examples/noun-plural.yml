@@ -2,6 +2,7 @@ metadata:
   title: Pluralizing
   example start: 2
   example end: 2
+  documentation: "http://docassemble.org/docs/functions.html#noun_plural"
 ---
 modules:
   - docassemble.base.util

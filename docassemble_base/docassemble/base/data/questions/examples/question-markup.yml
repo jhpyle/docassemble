@@ -1,5 +1,6 @@
 metadata:
   title: Question text with markup
+  documentation: "http://docassemble.org/docs/questions.html#question"
 ---
 question: |
   What is the *airspeed* velocity of an unladen ${ african_or_european }

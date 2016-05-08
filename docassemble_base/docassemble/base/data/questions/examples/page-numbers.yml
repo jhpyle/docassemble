@@ -1,5 +1,6 @@
 metadata:
   title: Adding page numbers
+  documentation: "http://docassemble.org/docs/documents.html#markup"
 ---
 question: Here is your document.
 subquestion: It has page numbers.

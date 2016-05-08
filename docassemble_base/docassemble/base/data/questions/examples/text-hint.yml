@@ -1,5 +1,6 @@
 metadata:
   title: Hints
+  documentation: "http://docassemble.org/docs/fields.html#hint"
 ---
 question: |
   What are your favorite things to eat?

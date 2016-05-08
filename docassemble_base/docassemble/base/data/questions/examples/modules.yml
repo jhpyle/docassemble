@@ -1,5 +1,6 @@
 metadata:
   title: Import names from module
+  documentation: "http://docassemble.org/docs/initial.html#modules"
   comment: |
     The json module provides the function
     "dumps()"

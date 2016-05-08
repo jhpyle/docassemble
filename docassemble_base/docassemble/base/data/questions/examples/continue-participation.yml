@@ -1,5 +1,6 @@
 metadata:
   title: Continue button
+  documentation: "http://docassemble.org/docs/modifiers.html#field"
 ---
 question: |
   Welcome to the interview!

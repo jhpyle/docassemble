@@ -1,0 +1,10 @@
+metadata:
+  title: Disable back button
+---
+prevent_going_back: true
+question: |
+  Congratulations, you have filed your application!
+sets: final_screen
+---
+mandatory: true
+code: final_screen

@@ -1,5 +1,6 @@
 metadata:
   title: Exit or restart with url
+  documentation: "http://docassemble.org/docs/fields.html#sets special"
 ---
 question: |
   Congratulations, you found Nemo!

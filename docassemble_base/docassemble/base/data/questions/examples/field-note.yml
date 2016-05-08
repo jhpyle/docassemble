@@ -1,5 +1,6 @@
 metadata:
   title: Note among fields
+  documentation: "http://docassemble.org/docs/fields.html#note"
 ---
 question: |
   Tell me more about you.

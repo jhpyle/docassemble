@@ -1,5 +1,6 @@
 metadata:
   title: Video with YouTube
+  documentation: "http://docassemble.org/docs/markup.html#audio and video"
 ---
 field: ready_to_proceed
 question: |

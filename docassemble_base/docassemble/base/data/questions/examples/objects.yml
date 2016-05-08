@@ -2,6 +2,7 @@ metadata:
   title: Define objects
   example start: 1
   example end: 2
+  documentation: "http://docassemble.org/docs/initial.html#objects"
 ---
 objects:
   - hero: Individual

@@ -1,5 +1,6 @@
 metadata:
   title: No label
+  documentation: "http://docassemble.org/docs/fields.html#no label"
 ---
 question: |
   What is your Zodiac sign?

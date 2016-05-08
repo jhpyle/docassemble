@@ -15,6 +15,7 @@ metadata:
     - name: John Doe
       organization: Example, Inc.
   revision_date: 2016-03-22
+  documentation: "http://docassemble.org/docs/initial.html#metadata"
 ---
 question: End of interview
 subquestion: |

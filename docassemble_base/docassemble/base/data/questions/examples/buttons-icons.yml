@@ -1,5 +1,6 @@
 metadata:
   title: Buttons with icons
+  documentation: "http://docassemble.org/docs/fields.html#image button"
 ---
 question: |
   What is the most important question

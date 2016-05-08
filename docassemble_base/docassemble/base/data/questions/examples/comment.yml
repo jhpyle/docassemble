@@ -1,5 +1,6 @@
 metadata:
   title: Comments
+  documentation: "http://docassemble.org/docs/modifiers.html#comment"
 ---
 question: Do you like turnips?
 yesno: likes_turnips

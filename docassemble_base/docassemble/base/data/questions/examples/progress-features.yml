@@ -1,5 +1,6 @@
 metadata:
   title: Features
+  documentation: "http://docassemble.org/docs/modifiers.html#progress"
 ---
 features:
   progress bar: true

@@ -19,7 +19,7 @@ if (interview == 'signature.yml' || interview == 'metadata.yml' || interview == 
     }
 }
 else{
-    casper.options.viewportSize = {width: 1136, height: 640};
+    casper.options.viewportSize = {width: 1005, height: 640};
 }
 
 var url = "http://localhost?i=docassemble.base:data/questions/examples/" + interview

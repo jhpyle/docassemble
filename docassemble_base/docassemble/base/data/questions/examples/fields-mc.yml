@@ -2,7 +2,7 @@ metadata:
   title: Fields example
   example start: 3
   example end: 5
-  documentation: "http://docassemble.org/docs/fields.html#fields"
+  documentation: "http://docassemble.org/docs/fields.html#mc-code"
 ---
 mandatory: true
 code: final_screen

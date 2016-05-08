@@ -2,6 +2,7 @@ metadata:
   title: Action
   example start: 3
   example end: 4
+  documentation: "http://docassemble.org/docs/functions.html#process_action"
 ---
 mandatory: true
 code: |

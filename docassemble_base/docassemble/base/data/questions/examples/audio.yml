@@ -1,5 +1,6 @@
 metadata:
   title: Audio
+  documentation: "http://docassemble.org/docs/modifiers.html#audio"
 ---
 audio: schumann-clip-1.mp3
 question: You need to relax.

@@ -2,6 +2,7 @@ metadata:
   title: Action with arguments
   example start: 3
   example end: 5
+  documentation: "http://docassemble.org/docs/functions.html#process_action"
 ---
 modules:
   - docassemble.base.util

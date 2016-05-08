@@ -1,6 +1,7 @@
 metadata:
   title: Progress meter
   example start: 2
+  documentation: "http://docassemble.org/docs/initial.html#progress bar"
 ---
 features:
   progress bar: true

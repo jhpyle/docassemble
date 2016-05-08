@@ -2,6 +2,7 @@ metadata:
   title: Title case
   example start: 2
   example end: 2
+  documentation: "http://docassemble.org/docs/functions.html#title_case"
 ---
 modules:
   - docassemble.base.util
@@ -10,12 +11,12 @@ question: |
   Title of your book
 subquestion: |
   If your book is about
-  ${ title },
+  ${ subject },
   its title should be
-  "${ title_case(title) }."
+  "${ title_case(subject) }."
 sets: all_done
 ---
 mandatory: true
 code: |
-  title = "the politics of turtles"
+  subject = "the politics of turtles"
   all_done

@@ -1,5 +1,6 @@
 metadata:
   title: Interview help
+  documentation: "http://docassemble.org/docs/initial.html#interview help"
 ---
 interview help:
   heading: About this interview

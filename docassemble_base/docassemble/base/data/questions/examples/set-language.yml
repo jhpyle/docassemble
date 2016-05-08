@@ -2,6 +2,7 @@ metadata:
   title: Set language
   example start: 2
   example end: 3
+  documentation: "http://docassemble.org/docs/functions.html#set_language"
 ---
 modules:
   - docassemble.base.util

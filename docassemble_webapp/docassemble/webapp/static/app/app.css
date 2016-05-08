@@ -186,6 +186,7 @@ img.example_screenshot {
     border-width: 1px;
     border-radius: 4px;
     padding-bottom: 20px;
+    max-width: 100%;
 }
 
 .example-link {
@@ -345,4 +346,3 @@ span.daparenthetical {
     float: right;
     margin-right: 3px;
 }
-

@@ -1,5 +1,6 @@
 metadata:
   title: Generic object
+  documentation: "http://docassemble.org/docs/modifiers.html#generic object"
 ---
 generic object: Individual
 question: |

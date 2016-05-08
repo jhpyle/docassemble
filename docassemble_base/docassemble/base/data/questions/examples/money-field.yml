@@ -1,5 +1,6 @@
 metadata:
   title: Money
+  documentation: "http://docassemble.org/docs/fields.html#currency"
 ---
 question: |
   How much is your house worth?

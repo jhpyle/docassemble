@@ -2,6 +2,7 @@ metadata:
   title: Upload and listen to audio
   example start: 1
   example end: 2
+  documentation: "http://docassemble.org/docs/modifiers.html#audio"
 ---
 question: Please upload an MP3
 fields:

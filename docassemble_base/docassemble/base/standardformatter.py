@@ -44,7 +44,11 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
     return('<img class="daicon" src="' + url + '" style="' + sizing + '"/>')
 
 def signature_html(status, debug, root):
-    output = '<div class="page" id="page"><div class="header" id="header"><div class="innerheader"><a id="new" class="navbtn nav-left">' + word('Clear') + '</a><a id="save" class="navbtn nav-right">' + word('Done') + '</a><div class="title">' + word('Sign Your Name') + '</div></div></div><div class="toppart" id="toppart">'
+    if (status.continueLabel):
+        continue_label = markdown_to_html(status.continueLabel, trim=True)
+    else:
+        continue_label = word('Done')
+    output = '<div class="page" id="page"><div class="header" id="header"><div class="innerheader"><a id="new" class="navbtn nav-left">' + word('Clear') + '</a><a id="save" class="navbtn nav-right">' + continue_label + '</a><div class="title">' + word('Sign Your Name') + '</div></div></div><div class="toppart" id="toppart">'
     if status.questionText:
         output += markdown_to_html(status.questionText, trim=True)
     output += '</div>'
@@ -65,6 +69,10 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     video_text = ''
     datatypes = dict()
     onchange = list()
+    if status.continueLabel:
+        continue_label = markdown_to_html(status.continueLabel, trim=True)
+    else:
+        continue_label = word('Continue')        
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'help-inline'}
     if status.question.script is not None:
         extra_scripts.append(status.question.script)
@@ -288,7 +296,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
             extra_scripts.append('<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + init_string)
             #extra_css.append('<link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />')
         output += '              <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-        output += '              <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button></div>\n'
+        output += '              <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + continue_label + '</button></div>\n'
         #output += question_name_tag(status.question)
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
@@ -302,7 +310,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         if video_text:
             output += indent_by(video_text, 10)
         output += '              <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-        output += '              <div class="form-actions"><button type="submit" class="btn btn-lg btn-primary" name="' + escape_id(status.question.fields[0].saveas) + '" value="True"> ' + word('Continue') + '</button></div>\n'
+        output += '              <div class="form-actions"><button type="submit" class="btn btn-lg btn-primary" name="' + escape_id(status.question.fields[0].saveas) + '" value="True"> ' + continue_label + '</button></div>\n'
         #output += question_name_tag(status.question)
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
@@ -384,7 +392,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                     validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': word("You need to select one.")}
             output += '              <br/>\n'
             output += '              <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-            output += '              <button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button>\n'
+            output += '              <button class="btn btn-lg btn-primary" type="submit">' + continue_label + '</button>\n'
         else:
             #output += '              <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
             output += '              <div class="btn-toolbar">\n'
@@ -457,7 +465,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         if video_text:
             output += indent_by(video_text, 10)
         output += '              <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
-        output += '              <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Continue') + '</button></div>\n'
+        output += '              <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + continue_label + '</button></div>\n'
         #output += question_name_tag(status.question)
         output += tracker_tag(status)
         output += '            </fieldset>\n          </form>\n'

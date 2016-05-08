@@ -261,6 +261,7 @@ class InterviewStatus(object):
         self.questionText = question_result['question_text']
         self.subquestionText = question_result['subquestion_text']
         self.underText = question_result['under_text']
+        self.continueLabel = question_result['continue_label']
         self.decorations = question_result['decorations']
         self.audiovideo = question_result['audiovideo']
         self.helpText = question_result['help_text']
@@ -378,6 +379,7 @@ class Question:
         self.helptext = None
         self.subcontent = None
         self.undertext = None
+        self.continuelabel = None
         self.progress = None
         self.script = None
         self.decorations = None
@@ -422,6 +424,10 @@ class Question:
             definitions = "\n".join(defs) + "\n";
         else:
             definitions = "";        
+        if 'continue button label' in data:
+            if 'yesno' in data or 'noyes' in data or 'buttons' in data:
+                raise DAError("You cannot set a continue button label if the type of question is yesno, noyes, or buttons." + self.idebug(data))
+            self.continuelabel = TextObject(definitions + data['continue button label'])
         if 'mandatory' in data and data['mandatory'] is True:
             self.is_mandatory = True
         else:
@@ -1286,6 +1292,10 @@ class Question:
             undertext = self.undertext.text(user_dict)
         else:
             undertext = None
+        if self.continuelabel is not None:
+            continuelabel = self.continuelabel.text(user_dict)
+        else:
+            continuelabel = None
         if self.helptext is not None:
             if self.audiovideo is not None and 'help' in self.audiovideo:
                 the_audio_video = process_audio_video_list(self.audiovideo['help'], user_dict)
@@ -1416,7 +1426,7 @@ class Question:
                 #logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("name 'role_event' is not defined")
-        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels})
+        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels})
     def processed_attachments(self, user_dict, **kwargs):
         result_list = list()
         items = list()

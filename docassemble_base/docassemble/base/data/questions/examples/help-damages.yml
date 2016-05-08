@@ -1,5 +1,6 @@
 metadata:
   title: Help with question
+  documentation: "http://docassemble.org/docs/modifiers.html#help"
 ---
 question: |
   How much money do you wish

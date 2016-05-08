@@ -2,6 +2,7 @@ metadata:
   title: Menu item
   example start: 1
   example end: 3
+  documentation: "http://docassemble.org/docs/special.html#menu_items"
 ---
 modules:
   - docassemble.base.util

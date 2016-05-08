@@ -1,5 +1,6 @@
 metadata:
   title: Event
+  documentation: "http://docassemble.org/docs/roles.html"
 ---
 event: role_event
 question: All done for now.

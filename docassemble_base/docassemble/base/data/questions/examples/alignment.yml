@@ -1,5 +1,6 @@
 metadata:
   title: Text alignment
+  documentation: "http://docassemble.org/docs/documents.html#markup"
 ---
 question: Here is your document.
 subquestion: It has aligned text.

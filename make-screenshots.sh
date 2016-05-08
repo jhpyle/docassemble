@@ -16,15 +16,15 @@ do
     casperjs screenshot.js $file.yml $tempfile
     if [ "$file" = "signature" -o "$file" = "metadata" -o "$file" = "help" -o "$file" = "help-damages" -o "$file" = "help-damages-audio" -o "$file" = "progress" -o "$file" = "progress-features" ]
     then
-	convert $tempfile -resize 496x9999 -trim docassemble_webapp/docassemble/webapp/static/examples/$file.png
-    elif [ "$file" = "markdown" ]
+	convert $tempfile -resize 640x9999 -trim docassemble_webapp/docassemble/webapp/static/examples/$file.png
+    elif [ "$file" = "markdown" -o "$file" = "allow-emailing-true" -o "$file" = "allow-emailing-false" ]
     then
-	convert $tempfile -crop 496x999+86+78 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
+	convert $tempfile -crop 640x999+23+78 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     elif [ "$file" = "fields" ]
     then
-	convert $tempfile -crop 496x1999+86+78 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
+	convert $tempfile -crop 640x1999+23+78 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     else
-	convert $tempfile -crop 496x630+86+78 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
+	convert $tempfile -crop 640x630+23+78 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     fi
 done
 if [ -d ~/gh-page-da ]

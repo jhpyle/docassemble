@@ -1,5 +1,6 @@
 metadata:
   title: Import Python module
+  documentation: "http://docassemble.org/docs/initial.html#imports"
 ---
 imports:
   - pygeocoder

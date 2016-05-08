@@ -1,5 +1,6 @@
 metadata:
   title: Include YAML file
+  documentation: "http://docassemble.org/docs/initial.html#include"
 ---
 include:
   - docassemble.demo:data/questions/some-questions.yml

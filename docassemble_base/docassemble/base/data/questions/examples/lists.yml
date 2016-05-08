@@ -2,6 +2,7 @@ metadata:
   title: Lists
   example start: 4
   example end: 4
+  documentation: "http://docassemble.org/docs/functions.html#comma_and_list"
 ---
 modules:
   - docassemble.base.core

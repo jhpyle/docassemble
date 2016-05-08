@@ -1,5 +1,6 @@
 metadata:
   title: Yes/no
+  documentation: "http://docassemble.org/docs/fields.html#yesno"
 ---
 question: |
   Are you at least 18 years of age?

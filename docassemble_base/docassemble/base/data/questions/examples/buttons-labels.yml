@@ -1,5 +1,6 @@
 metadata:
   title: Labels ≠ values
+  documentation: "http://docassemble.org/docs/fields.html#field with buttons"
 ---
 question: |
   How would you like to pay for your

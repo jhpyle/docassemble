@@ -38,6 +38,7 @@
     - decoration
     - prevent-going-back
     - language
+    - continue-button-label
     - generic-object
     - comment
     - audio

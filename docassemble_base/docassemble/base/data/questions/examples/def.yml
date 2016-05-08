@@ -2,6 +2,7 @@ metadata:
   title: Mako functions
   example start: 1
   example end: 2
+  documentation: "http://docassemble.org/docs/initial.html#def"
 ---
 def: my_explanation
 mako: |

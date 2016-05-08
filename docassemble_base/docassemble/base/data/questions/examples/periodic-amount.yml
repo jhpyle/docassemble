@@ -2,6 +2,7 @@ metadata:
   title: Periodic amount
   example start: 1
   example end: 2
+  documentation: "http://docassemble.org/docs/functions.html#period_list"
 ---
 modules:
   - docassemble.base.util
