@@ -233,6 +233,23 @@ Instead of explicitly setting a `language` for every question, you can
 use [default language] to apply a particular language to the remaining
 questions in the file (see [initial blocks]).
 
+# <a name="continue button label"></a>`continue button label`
+
+Some types of questions feature a "Continue" button.  If you want the
+label on the button to be something other than the word "Continue,"
+add a `continue button label` modifier.
+
+{% include side-by-side.html demo="continue-button-label" %}
+
+The types of questions that feature a "Continue" button include:
+
+* [`field` with `choices`]
+* [`fields`]
+* [`field` without `buttons` or `choices`]
+
+This modifier also allows you to customize the "Done" button that
+appears in [`signature`] questions.
+
 # <a name="generic object"></a>`generic object`
 
 {% highlight yaml %}
@@ -307,7 +324,6 @@ by **docassemble**, so it can contain any valid [YAML].
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [language support]: {{ site.baseurl }}/docs/language.html
 [ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
-[audio.js]: http://kolber.github.io/audiojs/
 [Mako]: http://www.makotemplates.org/
 [HTML5 audio tag]: http://www.w3schools.com/html/html5_audio.asp
 [HTML5 video tag]: http://www.w3schools.com/html/html5_video.asp
@@ -323,3 +339,7 @@ by **docassemble**, so it can contain any valid [YAML].
 [`Individual`]: {{ site.baseurl }}/docs/legal.html#Individual
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`microphone`]: {{ site.baseurl }}/docs/fields.html#microphone
+[`field` with `choices`]: {{ site.baseurl }}/docs/fields.html#field with choices
+[`fields`]: {{ site.baseurl }}/docs/fields.html#fields
+[`field` without `buttons` or `choices`]: {{ site.baseurl }}/docs/fields.html#field
+[`signature`]: {{ site.baseurl }}/docs/fields.html#signature

@@ -32,7 +32,7 @@ variable (`african_or_european`), the value of which (`"African"`) is
 incorporated using [Mako].  (One of the features of [Mako] is that
 anything enclosed in `${ ... }` is evaluated as [Python] code.)
 
-# The `subquestion` statement
+# <a name="subquestion"></a>The `subquestion` statement
 
 The optional `subquestion` adds text underneath the [`question`].  It is
 typically used to explain the question in more detail, if such an

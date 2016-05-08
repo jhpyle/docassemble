@@ -353,7 +353,7 @@ See [language support] for more information about how to create
 multi-lingual interviews.  See [modifiers] for information about the
 `language` setting of a question.
 
-# <a name="features"></a>`features`
+# <a name="features"></a><a name="progress bar"></a>`features`
 
 The `features` block sets some optional features of the interview.
 Currently the only feature that can be set using this block is

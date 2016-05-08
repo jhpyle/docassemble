@@ -93,6 +93,11 @@ This is equivalent to:
 
 {% include side-by-side.html demo="buttons-code-list-equivalent" %}
 
+You can use `buttons` as an alternative to [`yesno`] where you want
+different text in the labels.
+
+{% include side-by-side.html demo="yesno-custom" %}
+
 ## <a name="field with choices"></a>`field` with `choices`
 
 To provide a multiple choice question with "radio buttons" and a
@@ -205,10 +210,10 @@ The following are the keys that have special meaning:
 
 * `datatype`: affects how the data will be collected, validated and
   stored; see below.
-* `required`: the value is either `true` or `false`.  By default, all
-  fields are required.
-* `hint`: in text inputs, the value is provided as a [placeholder].
-* `help`: the value is explanatory help text that appears when user
+* <a name="required"></a>`required`: the value is either `true` or
+  `false`.  By default, all fields are required.
+* <a name="hint"></a>`hint`: in text inputs, the value is provided as a [placeholder].
+* <a name="help"></a>`help`: the value is explanatory help text that appears when user
   clicks on the label.
 * `default`: the value will be set as the default value of the 
   field.
@@ -230,7 +235,7 @@ The following are the keys that have special meaning:
 * `disable others`: if set to true, then when the user changes the
   value of the field to something, all the other fields in the
   question will be disabled.
-* `note`: the value is [Markdown] text that will appear on the screen;
+* <a name="note"></a>`note`: the value is [Markdown] text that will appear on the screen;
   useful for providing guidance to the user on how to enter
   information.
 * `label`: Instead of expressing your labels and variable names in the
@@ -243,19 +248,20 @@ The following are the keys that have special meaning:
   `html` entries.
 * `css`: raw HTML to be appended to the HTML head; usually used to
   provide css classes for HTML specified in `html` entries.
-* `no label`: if you use `no label` as the label for your variable,
-  the label will be omitted.  On wide screens, the field will fill
-  more of the width of the screen if the label is set to `no label`.
-  To keep the width of the field normal, but have a blank label, use
-  `""` as the label.
+* <a name="no label"></a>`no label`: if you use `no label` as the
+  label for your variable, the label will be omitted.  On wide
+  screens, the field will fill more of the width of the screen if the
+  label is set to `no label`.  To keep the width of the field normal,
+  but have a blank label, use `""` as the label.
 
 The possible `datatype` values are:
 
 * `text`: a single-line text input box (the default).
-* `area`: a multi-line text area
-* `date`: a valid date.
+* <a name="area"></a>`area`: a multi-line text area
+* <a name="date"></a>`date`: a valid date.
 * `email`: a valid e-mail address.
-* `number`: a valid numeric value.
+* <a name="integer"></a>`integer`: a valid whole number.
+* <a name="number"></a>`number`: a valid numeric value.
 * <a name="currency"></a>`currency`: a valid numeric value; input box shows a currency symbol
   based on locale defined in the [configuration].
 * `file`: a single file upload (a [`DAFileList`] object results).
@@ -316,7 +322,7 @@ The referenced [CSS file] contains the following:
 }
 {% endhighlight %}
 
-## Multiple-choice questions in `fields` with choices from code
+## <a name="mc-code"></a>Multiple-choice questions in `fields` with choices from code
 
 Note that adding [`code`] to a field makes it a multiple-choice
 question.  If you have a multiple-choice question and you want to
@@ -778,3 +784,4 @@ cannot use because they conflict with built-in names that [Python] and
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
 [`need()`]: {{ site.baseurl }}/docs/functions.html#need
 [`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
+[`yesno`]: #yesno

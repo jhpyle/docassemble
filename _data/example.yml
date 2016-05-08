@@ -79,6 +79,31 @@
         | Fort Franklin, AR 92302
   sets: all_done
   ---
+"allow-emailing-false": |-
+  ---
+  question: Your document is ready.
+  sets: provide_user_with_document
+  attachment:
+    - name: A hello world document
+      filename: Hello_World
+      description: |
+        A document with a classic message
+      content: |
+        Hello, world!
+  allow emailing: false
+  ---
+"allow-emailing-true": |-
+  ---
+  question: Your document is ready.
+  sets: provide_user_with_document
+  attachment:
+    - name: A hello world document
+      filename: Hello_World
+      description: |
+        A document with a classic message
+      content: |
+        Hello, world!
+  ---
 "audio": |-
   ---
   audio: schumann-clip-1.mp3
@@ -225,6 +250,14 @@
   subquestion: |
     When you are ready to begin, press
     Continue.
+  ---
+"continue-button-label": |-
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+  continue button label: Keep going
   ---
 "continue-participation": |-
   ---
@@ -580,6 +613,7 @@
       - name: John Doe
         organization: Example, Inc.
     revision_date: 2016-03-22
+    documentation: "http://docassemble.org/docs/initial.html#metadata"
   ---
 "modules": |-
   ---
@@ -1047,9 +1081,9 @@
     Title of your book
   subquestion: |
     If your book is about
-    ${ title },
+    ${ subject },
     its title should be
-    "${ title_case(title) }."
+    "${ title_case(subject) }."
   sets: all_done
   ---
 "upload_audio": |-
@@ -1069,7 +1103,7 @@
   question: Please record some audio.
   fields:
     - MP3 file: user_audio_file
-      datatype: file
+      datatype: microphone
   ---
   question: |
     Let's listen to what you recorded.
