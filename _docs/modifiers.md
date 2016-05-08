@@ -169,9 +169,9 @@ You can also add video to help text using the `video` declaration.
 
 {% include side-by-side.html demo="decoration" %}
 
-The `decoration` modifier adds an icon to the right of the [`question`]
-text.  In the example above, `piggybank` will need to have been
-defined in an [image sets] or [images] block.
+The `decoration` modifier adds an icon to the right of the
+[`question`] text.  In the example above, `kids` has been defined in
+an [image sets] or [images] block.
 
 # <a name="progress"></a>`progress`
 

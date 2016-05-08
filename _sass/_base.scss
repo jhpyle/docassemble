@@ -297,6 +297,7 @@ img.example {
     padding-bottom: 20px;
     margin-bottom: 10px;
     @include box-shadow(0px 0px 6px rgba(0,0,0,.3), inset 0px 0px 0px rgba(255,255,255,.8));
+    max-width: 100%;
 }
 
 img.full-width {
