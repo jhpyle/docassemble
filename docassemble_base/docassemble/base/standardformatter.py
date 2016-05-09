@@ -729,7 +729,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         var infowindow = new google.maps.InfoWindow();
         return({map: map, infowindow: infowindow});
       }
-      function daAddMarker(map, marker_info){
+      function daAddMarker(map, marker_info, show_marker){
         var marker;
         if (marker_info.icon){
           if (marker_info.icon.path){
@@ -752,6 +752,10 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
             }
           })(marker, marker_info.info));
         }
+        if(show_marker){
+          map.infowindow.setContent(marker_info.info);
+          map.infowindow.open(map.map, marker);
+        }
         return marker;
       }
       function daInitMap(){
@@ -763,11 +767,19 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
           var bounds = new google.maps.LatLngBounds();
           maps[i] = daAddMap(i, the_map.center.latitude, the_map.center.longitude);
           marker_length = the_map.markers.length;
+          if (marker_length == 1){
+            show_marker = true
+          }
+          else{
+            show_marker = false
+          }
           for (var j = 0; j < marker_length; j++){
-            var new_marker = daAddMarker(maps[i], the_map.markers[j]);
+            var new_marker = daAddMarker(maps[i], the_map.markers[j], show_marker);
             bounds.extend(new_marker.getPosition());
           }
-          maps[i].map.fitBounds(bounds);
+          if (marker_length > 1){
+            maps[i].map.fitBounds(bounds);
+          }
         }
       }
     </script>

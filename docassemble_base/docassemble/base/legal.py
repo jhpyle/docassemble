@@ -355,30 +355,26 @@ class Address(DAObject):
             return self.geolocate_success    
         the_address = self.address_for_geolocation()
         logmessage("Trying to geolocate " + str(the_address))
-        from pygeocoder import Geocoder
-        google_config = get_config('google')
-        if google_config and 'api key' in google_config:
-            my_geocoder = Geocoder(api_key=google_config['api key'])
-        else:
-            my_geocoder = Geocoder()
+        from geopy.geocoders import GoogleV3
+        my_geocoder = GoogleV3()
         results = my_geocoder.geocode(the_address)
         self.geolocated = True
-        if len(results):
+        if results:
             self.geolocate_success = True
             self.location.gathered = True
             self.location.known = True
-            self.location.latitude = results[0].coordinates[0]
-            self.location.longitude = results[0].coordinates[1]
+            self.location.latitude = results.latitude
+            self.location.longitude = results.longitude
             self.location.description = self.block()
             self.geolocate_response = results.raw
-            geo_types = {'administrative_area_level_2': 'county', 'neighborhood': 'neighborhood', 'postal_code': 'zip', 'country': 'country'}
-            for geo_type, addr_type in geo_types.iteritems():
-                if hasattr(results[0], geo_type) and not hasattr(self, addr_type):
-                    logmessage("Setting " + str(addr_type) + " to " + str(getattr(results[0], geo_type)) + " from " + str(geo_type))
-                    setattr(self, addr_type, getattr(results[0], geo_type))
-                #else:
-                    #logmessage("Not setting " + addr_type + " from " + geo_type)
-            #logmessage(json.dumps(self.geolocate_response))
+            if 'address_components' in results.raw:
+                geo_types = {'administrative_area_level_2': 'county', 'neighborhood': 'neighborhood', 'postal_code': 'zip', 'country': 'country'}
+                for component in results.raw['address_components']:
+                    if 'types' in component and 'long_name' in component:
+                        for geo_type, addr_type in geo_types.iteritems():
+                            if geo_type in component['types'] and not hasattr(self, addr_type):
+                                logmessage("Setting " + str(addr_type) + " to " + str(getattr(results[0], geo_type)) + " from " + str(geo_type))
+                                setattr(self, addr_type, component['long_name'])
         else:
             logmessage("valid not ok: result count was " + str(len(results)))
             self.geolocate_success = False

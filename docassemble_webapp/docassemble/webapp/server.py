@@ -3333,6 +3333,9 @@ $("#daRun").click(function(event){
       $("#daplaygroundtable").html(data.variables_html)
       window.open(data.url, '_blank');
       $("#form").trigger("reinitialize.areYouSure")
+      $(function () {
+        $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
+      });
     },
     dataType: 'json'
   });
