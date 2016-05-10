@@ -27,6 +27,9 @@ The `noyes` statement is just like `yesno`, except that "Yes" means
 
 {% include side-by-side.html demo="noyes" %}
 
+Note that yes/no fields can also be gathered on a screen along with
+other fields; to make screens like that, use [`fields`] below.
+
 ## <a name="field with buttons"></a>`field` with `buttons`
 
 A [`question`] block with a `buttons` statement will set the variable
@@ -198,13 +201,18 @@ fields.
 
 {% include side-by-side.html demo="text-field-example" %}
 
-The `fields` must consist of a list in which each list item is one or
-more key/value pairs.
+The `fields` must consist of a list in which each list item consists
+of one or more key/value pairs.  One of these keys (typically) is the
+label the user sees, where the value associated with the key is the
+name of the variable that will store the user-provided information for
+that field.  The other key/value pairs in the item (if any) are
+modifiers that allow you to customize how the field is displayed to
+the user.
 
-There are a number of keys that have a special meaning (and therefore
-are not available for use as a label).  If a key is not a special key,
-it will be treated as a label, the value of which will refer to a
-variable.
+These modifiers are distinguished from label/variable pairs based on
+the key; if the key is uses one of the names listed below, it will be
+treated as a modifier; if it is anything else, it will be treated as a
+label.
 
 The following are the keys that have special meaning:
 
@@ -212,32 +220,34 @@ The following are the keys that have special meaning:
   stored; see below.
 * <a name="required"></a>`required`: the value is either `true` or
   `false`.  By default, all fields are required.
-* <a name="hint"></a>`hint`: in text inputs, the value is provided as a [placeholder].
-* <a name="help"></a>`help`: the value is explanatory help text that appears when user
-  clicks on the label.
+* <a name="hint"></a>`hint`: in text inputs, the value is provided as
+  a [placeholder].
+* <a name="help"></a>`help`: the value is explanatory help text that
+  appears when user clicks on the label.
 * `default`: the value will be set as the default value of the 
   field.
-* `choices`: a list of possible options for a multiple choice field.
+* <a name="choices"></a>`choices`: a list of possible options for a multiple choice field.
   Can be a list of key/value pairs (key is what the variable will be
   set to; value is the label seen by the user) or a list of plain text
   items (in which case the label and the variable value are the same).
   When the `datatype` is `object`, `object_radio`, or
-  `object_checkboxes`, `choices` indicates list of objects from which
+  `object_checkboxes`, [`choices`](#choices) indicates list of objects from which
   the user will choose.
-* `exclude`: this is used in combination with `choices` when the
+* `exclude`: this is used in combination with [`choices`](#choices) when the
   `datatype` is `object`, `object_radio`, or `object_checkboxes`.  Any
   object in `exclude` will be omitted from the list of choices if it
-  is present in `choices`.
+  is present in [`choices`](#choices).
 * [`code`]: code that generates a list of possible options for a
   multiple choice field.
-* `shuffle`: the value is either `true` or `false`.  When used with
-  [`code`] or `choices`, it randomizes the list of choices.
-* `disable others`: if set to true, then when the user changes the
+* `shuffle`: used with [`code`] or [`choices`](#choices), when `true` it
+  randomizes the order of the list of choices; the default is not to
+  "shuffle" the list.
+* `disable others`: if set to `true`, then when the user changes the
   value of the field to something, all the other fields in the
   question will be disabled.
-* <a name="note"></a>`note`: the value is [Markdown] text that will appear on the screen;
-  useful for providing guidance to the user on how to enter
-  information.
+* <a name="note"></a>`note`: the value is [Markdown] text that will
+  appear on the screen; useful for providing guidance to the user on
+  how to enter information.
 * `label`: Instead of expressing your labels and variable names in the
   form of `- Label: variable_name`, you can specify a label using the
   `label` key and the variable name using the `field` key.
@@ -259,23 +269,27 @@ The possible `datatype` values are:
 * `text`: a single-line text input box (the default).
 * <a name="area"></a>`area`: a multi-line text area
 * <a name="date"></a>`date`: a valid date.
-* `email`: a valid e-mail address.
+* <a name="email"></a>`email`: a valid e-mail address.
 * <a name="integer"></a>`integer`: a valid whole number.
 * <a name="number"></a>`number`: a valid numeric value.
-* <a name="currency"></a>`currency`: a valid numeric value; input box shows a currency symbol
-  based on locale defined in the [configuration].
+* <a name="currency"></a>`currency`: a valid numeric value; input box
+  shows a currency symbol based on locale defined in the
+  [configuration].
 * `file`: a single file upload (a [`DAFileList`] object results).
 * `files`: single or multiple file upload (a [`DAFileList`] object
   results).
-* <a name="camera"></a>`camera`: like `file`, except with HTML5 that suggests using the
-  device's camera to take a picture;
-* <a name="camcorder"></a>`camcorder`: like `camera`, except for recording a video;
-* <a name="microphone"></a>`microphone`: like `camera`, except for recording an audio clip;
+* <a name="camera"></a>`camera`: like `file`, except with HTML5 that
+  suggests using the device's camera to take a picture;
+* <a name="camcorder"></a>`camcorder`: like `camera`, except for
+  recording a video;
+* <a name="microphone"></a>`microphone`: like `camera`, except for
+  recording an audio clip;
 * `yesno`: checkbox with label, aligned with labeled fields.
-* `yesnowide`: checkbox with label, full width of area.
-* `checkboxes`: show `choices` list as checkboxes; variable will be a
-  dictionary with items set to true or false depending on whether the
-  option was checked.  No validation is done to see if the user
+* `yesnowide`: checkbox with label, full width
+  of area.
+* `checkboxes`: show the [`choices`](#choices) list as checkboxes; variable will
+  be a dictionary with items set to true or false depending on whether
+  the option was checked.  No validation is done to see if the user
   selected at least one, regardless of the value of `required`.
 * `object`: this is used when you would like to use a variable to
   refer to an existing object.  You can provide the list of objects to
@@ -287,10 +301,10 @@ The possible `datatype` values are:
   buttons rather than a pull-down list.
 * `object_checkboxes`: this is used when you would like to use a
   question to set the elements of an object of type [`DAList`].  The
-  choices in `choices` (optionally modified by `exclude`) will be
+  choices in [`choices`](#choices) (optionally modified by `exclude`) will be
   presented to the user as checkboxes.  The `.gathered` attribute of
   the variable will be set to `True` after the elements are set.
-* `radio`: show `choices` list as radio buttons instead of a dropdown
+* `radio`: show [`choices`](#choices) list as radio buttons instead of a dropdown
   [select] tag (which is the default).  Variable will be set to the
   value of the choice.
 
@@ -385,7 +399,7 @@ would not be able to do that.  Instead, you would want
 as you would refer to `client.birthdate`.
 
 You can accomplish this by setting `datatype` to `object` within a
-`fields` list, where the `choices` are the names of the objects from
+`fields` list, where the [`choices`](#choices) are the names of the objects from
 which to choose.  (Optionally, you can set a `default` value, which is
 also the name of a variable.)
 

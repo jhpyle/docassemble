@@ -199,7 +199,7 @@ sudo mkdir -p /usr/share/docassemble/webapp
 Copy the [WSGI] file to this directory:
 
 {% highlight bash %}
-sudo cp ~/docassemble/docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp
+sudo cp ~/docassemble/docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/
 {% endhighlight %}
 
 Set up and edit the [configuration] file, the standard location of
@@ -385,13 +385,13 @@ pip uninstall docassemble.demo
 pip uninstall docassemble.webapp
 {% endhighlight %}
 
-Note that after making changes to **docassemble** interviews and Python
-code, it is not necessary to restart [Apache].  Changing the
-modification time of `/usr/share/docassemble/docassemble.wsgi` will
-trigger [Apache] to restart the [WSGI] processes.
+Note that after making changes to **docassemble** interviews and
+Python code, it is not necessary to restart [Apache].  Changing the
+modification time of `/usr/share/docassemble/webapp/docassemble.wsgi`
+will trigger [Apache] to restart the [WSGI] processes.
 
 {% highlight bash %}
-sudo touch /usr/share/docassemble/docassemble.wsgi
+sudo touch /usr/share/docassemble/webapp/docassemble.wsgi
 {% endhighlight %}
 
 Sometimes, new versions of docassemble require additional database
