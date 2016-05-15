@@ -1,0 +1,45 @@
+metadata:
+  title: Link for sharing
+  example start: 1
+  example end: 4
+  documentation: "http://docassemble.org/docs/legal.html#interview_url"
+---
+modules:
+  - docassemble.base.legal
+---
+mandatory: true
+code: |
+  multi_user = True
+---
+initial: true
+code: |
+  update_info(user, 'interviewee', current_info)
+---
+question: |
+  Ready to proceed?
+subquestion: |
+  To invite someone else to complete
+  this interview, ask them to go to
+  the following URL:
+  ${ interview_url() }
+
+  To proceed with the interview,
+  click "Yes."
+yesno: ready_to_proceed
+---
+question: All done
+subquestion: |
+  Now we are done with the interview.
+sets: final_screen
+---
+subquestion: Goodbye
+question: |
+  So long!
+sets: kick_out_screen
+---
+mandatory: true
+code: |
+  if ready_to_proceed:
+    final_screen
+  else:
+    kick_out_screen

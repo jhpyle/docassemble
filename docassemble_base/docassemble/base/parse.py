@@ -952,6 +952,20 @@ class Question:
                                 continue
                             if key == 'required':
                                 field_info['required'] = field[key]
+                            elif key == 'show if':
+                                if 'extras' not in field_info:
+                                    field_info['extras'] = dict()
+                                if type(field[key]) is dict:
+                                    if 'variable' in field[key] and 'is' in field[key]:
+                                        field_info['extras']['show_if_var'] = safeid(field[key]['variable'])
+                                        field_info['extras']['show_if_val'] = TextObject(definitions + unicode(field[key]['is']))
+                                    else:
+                                        raise DAError("The keys of 'show if' must be 'variable' and 'is.'" + self.idebug(data))
+                                elif type(field[key]) is list:
+                                    raise DAError("The keys of 'show if' cannot be a list" + self.idebug(data))
+                                else:
+                                    field_info['extras']['show_if_var'] = safeid(field[key])
+                                    field_info['extras']['show_if_val'] = TextObject('True')
                             elif key == 'default' or key == 'hint' or key == 'help':
                                 if type(field[key]) is not dict and type(field[key]) is not list:
                                     field_info[key] = TextObject(definitions + unicode(field[key]))
@@ -1393,7 +1407,7 @@ class Question:
                 if hasattr(field, 'label'):
                     labels[field.number] = field.label.text(user_dict)
                 if hasattr(field, 'extras'):
-                    for key in ['note', 'html', 'script', 'css', 'min', 'max', 'minlength', 'maxlength']:
+                    for key in ['note', 'html', 'script', 'css', 'min', 'max', 'minlength', 'maxlength', 'show_if_val']:
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()

@@ -1565,9 +1565,21 @@ def index():
     if '_datatypes' in post_data:
         #logmessage(myb64unquote(post_data['_datatypes']))
         known_datatypes = json.loads(myb64unquote(post_data['_datatypes']))
+    known_varnames = dict()
+    if '_varnames' in post_data:
+        known_varnames = json.loads(myb64unquote(post_data['_varnames']))
     known_variables = dict()
     for orig_key in post_data:
-        if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location']:
+        if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames']:
+            continue
+        try:
+            key = myb64unquote(orig_key)
+        except:
+            continue
+        if key.startswith('_field_') and orig_key in known_varnames:
+            post_data[known_varnames[orig_key]] = post_data[orig_key]
+    for orig_key in post_data:
+        if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames']:
             continue
         #logmessage("Got a key: " + key)
         data = post_data[orig_key]
@@ -1576,6 +1588,8 @@ def index():
         except:
             raise DAError("invalid name " + str(orig_key))
         #data = re.sub(r'"""', '', data)
+        if key.startswith('_field_'):
+            continue
         bracket_expression = None
         if match_brackets.search(key):
             #logmessage("Searching key " + str(key))
@@ -1786,6 +1800,35 @@ def index():
             event.preventDefault();
             $('#questionlabel').trigger('click');
           });
+        });
+        $(".showif").each(function(){
+          var showIfVar = $(this).data('showif-var');
+          var showIfVal = $(this).data('showif-val');
+          var saveAs = $(this).data('saveas');
+          var isSame = (saveAs == showIfVar);
+          var showIfDiv = this;
+          var showHideDiv = function(){
+            if($(this).parents(".showif").length !== 0){
+              return;
+            }
+            if($(this).val() == showIfVal){
+              // if (isSame){
+              //   $(this).prop("disabled", true);
+              // }
+              $(showIfDiv).removeClass("invisible");
+              $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+            }
+            else{
+              // if (isSame){
+              //   $(this).prop("disabled", false);
+              // }
+              $(showIfDiv).addClass("invisible");
+              $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+            }
+          };
+          showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/, "\\\\$1");
+          $("#" + showIfVarEscaped).each(showHideDiv);
+          $("#" + showIfVarEscaped).change(showHideDiv);
         });
       });
     </script>"""
@@ -3824,3 +3867,4 @@ def interview_list():
 #     response = redirect(next)
 #     response.set_cookie('secret', newsecret)
 #     return response
+

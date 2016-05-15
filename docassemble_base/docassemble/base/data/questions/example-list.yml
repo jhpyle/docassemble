@@ -6,6 +6,7 @@
     - alignment
     - single-spacing
     - formatting
+    - allow-emailing-false
 - Fields:
     - text-field
     - optional-field
@@ -14,6 +15,7 @@
     - date-field
     - money-field
     - number-field
+    - email-field
     - periodic-amount
     - radio-list
     - pull-down
@@ -23,16 +25,20 @@
     - continue
     - text-hint
     - text-help
+    - upload
+    - upload-multiple
 #    - note
 - Multiple choice:
     - yesno
     - noyes
     - yesno-custom
     - buttons
-    - choices
     - buttons-labels
     - buttons-icons
     - buttons-code
+    - choices
+    - choices-icons
+    - fields-mc
 - Modifiers:
     - help
     - decoration
@@ -43,6 +49,9 @@
     - comment
     - audio
     - video
+    - video-nyc
+    - help-damages-audio
+    - progress
 - Initial blocks:
     - metadata
     - objects
@@ -54,8 +63,17 @@
     - terms
     - interview-help
     - def
-- Objects:
+    - progress-feature
+- Exit questions:
+    - sets-exit
+    - sets-exit-choices
+    - sets-exit-url
+    - dead-end
+- Groups:
+    - for_fruit
     - dalist
+    - madlibs
+    - nested-for-loop
 #    - dadict
 - Utility functions:
     - loading-util
@@ -81,3 +99,7 @@
     - ordinal-number
     - title-case
     - past-tense
+- Legal applications:
+    - loading-legal
+    - interview-url
+

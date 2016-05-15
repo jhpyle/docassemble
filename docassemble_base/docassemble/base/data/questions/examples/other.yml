@@ -1,0 +1,24 @@
+metadata:
+  title: |
+    Selecting "other"
+---
+question: |
+  What kind of car do you drive?
+fields:
+  - Make: car_make
+    choices:
+      - Honda
+      - Toyota
+      - Mazda
+      - Other
+  - Other: car_make
+    show if:
+      variable: car_make
+      is: Other
+---
+question: |
+  You drive a ${ car_make }.
+sets: all_done
+---
+mandatory: true
+code: all_done
