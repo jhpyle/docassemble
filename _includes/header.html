@@ -12,6 +12,9 @@
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav ">
         {% for thepage in site.pages %}
+	  {% if thepage.url == '/search.html' %}
+	    {% continue %}
+	  {% endif %}
   	  {% if thepage.url contains '/index.html' or thepage.url == '/' %}
 	  {% else %}
             {% if thepage.short_title %}
