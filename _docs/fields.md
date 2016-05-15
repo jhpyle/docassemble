@@ -242,6 +242,11 @@ The following are the keys that have special meaning:
 * `shuffle`: used with [`code`] or [`choices`](#choices), when `true` it
   randomizes the order of the list of choices; the default is not to
   "shuffle" the list.
+* `show if`: you can use this if you want the field to be shown only
+  if the value of another field is set a particular way.  It must
+  refer to a [YAML] dictionary with two keys: `variable` and `is`,
+  where `variable` refers to the variable name of the other field, and
+  `is` refers to the value that will cause the field to be shown.
 * `disable others`: if set to `true`, then when the user changes the
   value of the field to something, all the other fields in the
   question will be disabled.
@@ -275,8 +280,8 @@ The possible `datatype` values are:
 * <a name="currency"></a>`currency`: a valid numeric value; input box
   shows a currency symbol based on locale defined in the
   [configuration].
-* `file`: a single file upload (a [`DAFileList`] object results).
-* `files`: single or multiple file upload (a [`DAFileList`] object
+* <a name="file"></a>`file`: a single file upload (a [`DAFileList`] object results).
+* <a name="files">`files`: single or multiple file upload (a [`DAFileList`] object
   results).
 * <a name="camera"></a>`camera`: like `file`, except with HTML5 that
   suggests using the device's camera to take a picture;

@@ -126,6 +126,11 @@ store.  This is used in [multi-user interviews] to invite additional
 users to participate.  This function depends on [`update_info()`] having
 been run in "initial" code.
 
+Also, people who click on the link will not be able to access the
+interview answers unless [`multi_user`] is set to `True`.  This is
+because interviews are encrypted by default and are only available to
+the user who started them.  Setting [`multi_user`] disables this encryption.
+
 ## <a name="interview_url_as_qr"></a>interview_url_as_qr()
 
 Like `interview_url()`, except it inserts into the markup a QR code
@@ -1363,3 +1368,4 @@ explanation of [`DATemplate`].
 [`Organization`]: #Organization
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
+[`multi_user`]: {{ site.baseurl }}/docs/special.html#multi_user
