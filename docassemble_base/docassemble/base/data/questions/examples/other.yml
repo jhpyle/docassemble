@@ -1,6 +1,7 @@
 metadata:
   title: |
     Selecting "other"
+  documentation: "http://docassemble.org/docs/fields.html#show if"
 ---
 question: |
   What kind of car do you drive?

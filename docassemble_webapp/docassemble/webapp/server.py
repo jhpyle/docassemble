@@ -1802,7 +1802,8 @@ def index():
           });
         });
         $(".showif").each(function(){
-          var showIfVar = $(this).data('showif-var');
+          var showIfSign = $(this).data('showif-sign');
+          var showIfVal = $(this).data('showif-val');
           var showIfVal = $(this).data('showif-val');
           var saveAs = $(this).data('saveas');
           var isSame = (saveAs == showIfVar);
@@ -1812,18 +1813,24 @@ def index():
               return;
             }
             if($(this).val() == showIfVal){
-              // if (isSame){
-              //   $(this).prop("disabled", true);
-              // }
-              $(showIfDiv).removeClass("invisible");
-              $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+              if (showIfSign){
+                $(showIfDiv).removeClass("invisible");
+                $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+              }
+              else{
+                $(showIfDiv).addClass("invisible");
+                $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+              }
             }
             else{
-              // if (isSame){
-              //   $(this).prop("disabled", false);
-              // }
-              $(showIfDiv).addClass("invisible");
-              $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+              if (showIfSign){
+                $(showIfDiv).addClass("invisible");
+                $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+              }
+              else{
+                $(showIfDiv).removeClass("invisible");
+                $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+              }
             }
           };
           showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/, "\\\\$1");

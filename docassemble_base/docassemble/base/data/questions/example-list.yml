@@ -24,9 +24,11 @@
     - signature
     - continue
     - text-hint
+    - text-default
     - text-help
     - upload
     - upload-multiple
+    - other
 #    - note
 - Multiple choice:
     - yesno

@@ -210,7 +210,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                     extra_css.append(status.extras['css'][field.number])
                 #fieldlist.append("<div>datatype is " + str(field.datatype) + "</div>")
                 if 'show_if_var' in field.extras and 'show_if_val' in status.extras and hasattr(field, 'saveas'):
-                    fieldlist.append('              <div class="showif" data-saveas="' + escape_id(field.saveas) + '" data-showif-var="' + escape_id(field.extras['show_if_var']) + '" data-showif-val=' + noquote(unicode(status.extras['show_if_val'][field.number])) + '>\n')
+                    fieldlist.append('              <div class="showif" data-saveas="' + escape_id(field.saveas) + '" data-showif-sign="' + escape_id(field.extras['show_if_sign']) + '" data-showif-var="' + escape_id(field.extras['show_if_var']) + '" data-showif-val=' + noquote(unicode(status.extras['show_if_val'][field.number])) + '>\n')
             if hasattr(field, 'datatype'):
                 if field.datatype == 'html':
                     fieldlist.append('              <div class="form-group' + req_tag +'"><div class="col-md-12"><note>' + status.extras['html'][field.number].rstrip() + '</note></div></div>\n')

@@ -952,7 +952,7 @@ class Question:
                                 continue
                             if key == 'required':
                                 field_info['required'] = field[key]
-                            elif key == 'show if':
+                            elif key == 'show if' or key == 'hide if':
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
                                 if type(field[key]) is dict:
@@ -960,12 +960,16 @@ class Question:
                                         field_info['extras']['show_if_var'] = safeid(field[key]['variable'])
                                         field_info['extras']['show_if_val'] = TextObject(definitions + unicode(field[key]['is']))
                                     else:
-                                        raise DAError("The keys of 'show if' must be 'variable' and 'is.'" + self.idebug(data))
+                                        raise DAError("The keys of '" + key + "' must be 'variable' and 'is.'" + self.idebug(data))
                                 elif type(field[key]) is list:
-                                    raise DAError("The keys of 'show if' cannot be a list" + self.idebug(data))
+                                    raise DAError("The keys of '" + key + "' cannot be a list" + self.idebug(data))
                                 else:
                                     field_info['extras']['show_if_var'] = safeid(field[key])
                                     field_info['extras']['show_if_val'] = TextObject('True')
+                                if key == 'show if':
+                                    field_info['extras']['show_if_sign'] = 1
+                                else:
+                                    field_info['extras']['show_if_sign'] = 0
                             elif key == 'default' or key == 'hint' or key == 'help':
                                 if type(field[key]) is not dict and type(field[key]) is not list:
                                     field_info[key] = TextObject(definitions + unicode(field[key]))
