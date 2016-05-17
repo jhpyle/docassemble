@@ -29,6 +29,7 @@
     - upload
     - upload-multiple
     - other
+    - required-code
 #    - note
 - Multiple choice:
     - yesno

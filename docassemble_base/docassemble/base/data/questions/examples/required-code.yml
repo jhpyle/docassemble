@@ -1,0 +1,26 @@
+metadata:
+  title: Optional field with code
+  documentation: "http://docassemble.org/docs/fields.html#required"
+---
+question: |
+  What are your favorite things to drink?
+fields:
+  - Favorite Beverage Overall: favorite_beverage
+  - Favorite Soda: favorite_soda
+    required: user_likes_soda
+---
+question: Do you like soda?
+yesno: user_likes_soda
+---
+question: Result of question
+subquestion: |
+  favorite_beverage is:
+  "${ favorite_beverage }"
+  % if user_likes_soda:
+  favorite_soda is:
+  "${ favorite_soda }"
+  % endif  
+sets: all_done
+---
+mandatory: true
+code: all_done

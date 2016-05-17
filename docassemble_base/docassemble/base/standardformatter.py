@@ -199,7 +199,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         files = list()
         checkbox_validation = False
         for field in status.question.fields:
-            if field.required:
+            if status.extras['required'][field.number]:
                 req_tag = ' required'
             else:
                 req_tag = ''
@@ -232,7 +232,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                 onchange.append(field.saveas)
             if hasattr(field, 'saveas'):
                 varnames[safeid('_field_' + str(field.number))] = field.saveas
-                if field.required:
+                if status.extras['required'][field.number]:
                     #sys.stderr.write(field.datatype + "\n")
                     validation_rules['rules'][field.saveas] = {'required': True}
                     validation_rules['messages'][field.saveas] = {'required': word("This field is required.")}
@@ -248,7 +248,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                     validation_rules['messages'][field.saveas]['date'] = word("You need to enter a valid date.")
                 if field.datatype == 'email':
                     validation_rules['rules'][field.saveas]['email'] = True
-                    if field.required:
+                    if status.extras['required'][field.number]:
                         validation_rules['rules'][field.saveas]['notEmpty'] = True
                         validation_rules['messages'][field.saveas]['notEmpty'] = word("This field is required.")
                     validation_rules['messages'][field.saveas]['email'] = word("You need to enter a complete e-mail address.")

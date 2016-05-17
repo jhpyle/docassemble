@@ -951,7 +951,10 @@ class Question:
                             if key == 'default' and 'datatype' in field and field['datatype'] in ['object', 'object_radio', 'object_checkboxes']:
                                 continue
                             if key == 'required':
-                                field_info['required'] = field[key]
+                                if type(field[key]) is bool:
+                                    field_info['required'] = field[key]
+                                else:
+                                    field_info['required'] = {'compute': compile(field[key], '', 'eval'), 'sourcecode': field[key]}
                             elif key == 'show if' or key == 'hide if':
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
@@ -1344,6 +1347,7 @@ class Question:
         helptexts = dict()
         extras = dict()
         labels = dict()
+        extras['required'] = dict()
         if self.question_type == 'review':
             extras['ok'] = dict()
             for field in self.fields:
@@ -1375,6 +1379,10 @@ class Question:
                 extras['ok'][field.number] = True
         else:
             for field in self.fields:
+                if type(field.required) is bool:
+                    extras['required'][field.number] = field.required
+                else:
+                    extras['required'][field.number] = eval(field.required['compute'], user_dict)
                 if hasattr(field, 'has_code') and field.has_code:
                     selections = list()
                     for choice in field.choices:
