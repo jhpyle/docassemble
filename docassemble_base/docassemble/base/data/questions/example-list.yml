@@ -84,6 +84,7 @@
     - qr-code
     - url-of
     - set-language
+    - defined
 - Interview flow:
     - need
     - actions

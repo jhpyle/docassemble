@@ -874,6 +874,8 @@ class Question:
                 field_data['saveas'] = data['field']
                 if 'datatype' in data and 'type' not in field_data:
                     field_data['type'] = data['datatype']
+                elif is_boolean(field_data):
+                    field_data['type'] = 'boolean'
             self.fields.append(Field(field_data))
             self.question_type = 'multiple_choice'
         elif 'field' in data:
@@ -1672,6 +1674,15 @@ def interview_source_from_string(path, **kwargs):
             if new_source.update():
                 return(new_source)
     raise DAError("YAML file " + str(path) + " not found")
+
+def is_boolean(field_data):
+    if 'choices' not in field_data:
+        return False
+    for entry in field_data['choices']:
+        for key, data in entry.iteritems():
+            if type(data) is not bool:
+                return False
+    return True
 
 class Interview:
     def __init__(self, **kwargs):

@@ -11,8 +11,13 @@ buttons:
 ---
 question: Result of question
 subquestion: |
-  user_is_satisfied is:
-  "${ user_is_satisfied }"
+  % if user_is_satisfied:
+  Glad to hear it!
+  % else:
+  I'm sorry to hear that.
+  We will strive to do better
+  next time.
+  % endif
 sets: all_done
 ---
 mandatory: true

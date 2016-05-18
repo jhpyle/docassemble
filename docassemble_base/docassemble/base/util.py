@@ -3,6 +3,7 @@ import types
 import en
 import re
 import os
+import inspect
 import mimetypes
 import datetime
 import locale
@@ -20,7 +21,7 @@ import base64
 import json
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined']
 
 debug = False
 default_dialect = 'us'
@@ -875,3 +876,13 @@ def from_b64_json(string):
     if string is None:
         return None
     return json.loads(base64.b64decode(string))
+
+def defined(variable):
+    frame = inspect.stack()[1][0]
+    while variable not in frame.f_locals:
+        frame = frame.f_back
+        if frame is None:
+            return False
+    if variable in frame.f_locals:
+        return True
+    return False

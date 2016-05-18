@@ -1,0 +1,29 @@
+metadata:
+  title: Whether variable is defined
+  documentation: "http://docassemble.org/docs/functions.html#defined"
+  example start: 2
+---
+modules:
+  - docassemble.base.util
+---
+question: Summary
+subquestion: |
+  Your favorite fruit is
+  ${ favorite_fruit }.
+
+  % if defined('favorite_vegetable'):
+  Your favorite vegetable
+  is ${ favorite_vegetable }.
+  % else:
+  I do not know your favorite
+  vegetable.
+  % endif
+sets: all_done
+---
+question: |
+  Tell me about your favorite fruit.
+fields:
+  - Favorite fruit: favorite_fruit
+---
+mandatory: true
+code: all_done
