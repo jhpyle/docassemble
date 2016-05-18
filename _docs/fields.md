@@ -218,21 +218,28 @@ The following are the keys that have special meaning:
 
 * `datatype`: affects how the data will be collected, validated and
   stored; see below.
-* <a name="required"></a>`required`: the value is either `true` or
-  `false`.  By default, all fields are required.
+* <a name="required"></a>`required`: the value can be `true` or
+  `false`.  By default, all fields are required, so you never need to
+  write `required: true` unless you want to.  Instead of writing
+  `true` or `false`, you can write [Python] code.  This code will be
+  evaluated for whether it turns out to be true or false.  For
+  example, instead of `true` or `false`, you could use the name of a
+  variable that is defined by a [`yesno`] question.
 * <a name="hint"></a>`hint`: in text inputs, the value is provided as
-  a [placeholder].
+  a [placeholder].  This can be used to suggest to the user what type
+  of value should be entered.  Can contain [Mako] text.
 * <a name="help"></a>`help`: the value is explanatory help text that
-  appears when user clicks on the label.
-* `default`: the value will be set as the default value of the 
-  field.
-* <a name="choices"></a>`choices`: a list of possible options for a multiple choice field.
-  Can be a list of key/value pairs (key is what the variable will be
-  set to; value is the label seen by the user) or a list of plain text
-  items (in which case the label and the variable value are the same).
-  When the `datatype` is `object`, `object_radio`, or
-  `object_checkboxes`, [`choices`](#choices) indicates list of objects from which
-  the user will choose.
+  appears when user clicks on the label.  The label will be green to
+  indicate that it can be clicked on.  Can contain [Mako] text.
+* <a name="default"></a>`default`: the value will be set as the
+  default value of the field.  Can contain [Mako] text.
+* <a name="choices"></a>`choices`: a list of possible options for a
+  multiple choice field.  Can be a list of key/value pairs (key is
+  what the variable will be set to; value is the label seen by the
+  user) or a list of plain text items (in which case the label and the
+  variable value are the same).  When the `datatype` is `object`,
+  `object_radio`, or `object_checkboxes`, [`choices`](#choices)
+  indicates list of objects from which the user will choose.
 * `exclude`: this is used in combination with [`choices`](#choices) when the
   `datatype` is `object`, `object_radio`, or `object_checkboxes`.  Any
   object in `exclude` will be omitted from the list of choices if it
@@ -242,11 +249,14 @@ The following are the keys that have special meaning:
 * `shuffle`: used with [`code`] or [`choices`](#choices), when `true` it
   randomizes the order of the list of choices; the default is not to
   "shuffle" the list.
-* `show if`: you can use this if you want the field to be shown only
-  if the value of another field is set a particular way.  It must
-  refer to a [YAML] dictionary with two keys: `variable` and `is`,
-  where `variable` refers to the variable name of the other field, and
-  `is` refers to the value that will cause the field to be shown.
+* <a name="show if"></a>`show if`: you can use this if you want the
+  field to be shown only if another field on the same screen is set to
+  a particular value.  It must refer to a [YAML] dictionary with two keys:
+  `variable` and `is`, where `variable` refers to the variable name of
+  the other field, and `is` refers to the value that will cause the
+  field to be shown.
+* <a name="hide if"></a>`hide if`: this works just like `show if`,
+  except that it hides the field instead of showing it.
 * `disable others`: if set to `true`, then when the user changes the
   value of the field to something, all the other fields in the
   question will be disabled.

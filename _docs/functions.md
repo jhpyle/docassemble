@@ -23,6 +23,28 @@ this [`modules`] block.
 
 # Miscellaneous functions
 
+## <a name="defined"></a>defined()
+
+As explained in the section called
+[how **docassemble** runs your code], simply referring to a variable
+will cause **docassemble** to ask a question or run code to define
+that variable, if it is not defined.
+
+Usually, this is what you want.  For times when it isn't, you can
+avoid this by testing to see if a variable is defined.
+
+{% highlight yaml %}
+---
+code: |
+  if defined('fruit'):
+    fruit_known = True
+  else:
+    fruit_known = False
+---
+{% endhighlight %}
+
+{% include side-by-side.html demo="defined" %}
+
 ## <a name="need"></a>need()
 
 The `need()` function takes one or more variables as arguments and
@@ -987,3 +1009,4 @@ docassemble.base.util.update_language_function('fr', 'her', docassemble.base.uti
 [`words`]: {{ site.baseurl }}/docs/config.html#words
 [`currency_symbol`]: {{ site.baseurl }}/docs/config.html#currency_symbol
 [`title_case()`]: #title_case
+[how **docassemble** runs your code]: {{ site.baseurl }}/docs/logic.html#howitworks

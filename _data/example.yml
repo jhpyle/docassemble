@@ -294,6 +294,14 @@
     - Birthdate: target_variable
       datatype: date
   ---
+"dead-end": |-
+  ---
+  question: |
+    You have reached the end of the interview.
+  subquestion: |
+    I hope you had a good time!
+  sets: all_done
+  ---
 "decoration": |-
   ---
   decoration: kids
@@ -308,6 +316,19 @@
   \ types of fruit in the\n  world.\n  \n  ${ explain(\"Peaches\") }\n  ${ explain(\"\
   Oranges\") }\n  ${ deride(\"Strawberries\") }\nusedefs:\n - my_explanation\nsets:\
   \ all_done\n---"
+"defined": |-
+  ---
+  question: Summary
+  subquestion: |
+    Your favorite fruit is ${ favorite_fruit }.
+
+    % if defined('favorite_vegetable'):
+    Your favorite vegetable is ${ favorite_vegetable }.
+    % else:
+    I do not know your favorite vegetable.
+    % endif
+  sets: all_done
+  ---
 "document": |-
   ---
   question: Here is your document.
@@ -320,6 +341,14 @@
         ${ client } is entitled to
         benefits plan ${ benefits }.
   sets: all_done
+  ---
+"email-field": |-
+  ---
+  question: |
+    What is your e-mail address?
+  fields:
+    - E-mail: target_variable
+      datatype: email
   ---
 "event-role-event": |-
   ---
@@ -551,6 +580,31 @@
       ability.  If you do not know the answer
       to any question, panic.
   ---
+"interview-url": |-
+  ---
+  modules:
+    - docassemble.base.legal
+  ---
+  mandatory: true
+  code: |
+    multi_user = True
+  ---
+  initial: true
+  code: |
+    update_info(user, 'interviewee', current_info)
+  ---
+  question: |
+    Ready to proceed?
+  subquestion: |
+    To invite someone else to complete
+    this interview, ask them to go to
+    the following URL:
+    ${ interview_url() }
+
+    To proceed with the interview,
+    click "Yes."
+  yesno: ready_to_proceed
+  ---
 "language": "---\nlanguage: es\nquestion: |\n  \xBFCu\xE1l es el significado de la\
   \ vida?\nfields:\n  - Significado de la Vida: meaning_life\n---"
 "lists": |-
@@ -720,6 +774,22 @@
     - Restart: restart
   sets: all_done
   ---
+"other": |-
+  ---
+  question: |
+    What kind of car do you drive?
+  fields:
+    - Make: car_make
+      choices:
+        - Honda
+        - Toyota
+        - Mazda
+        - Other
+    - Other: car_make
+      show if:
+        variable: car_make
+        is: Other
+  ---
 "page-numbers": |-
   ---
   question: Here is your document.
@@ -865,6 +935,15 @@
         - Buick: United States
         - Honda: Japan
         - Toyota: Japan
+  ---
+"required-code": |-
+  ---
+  question: |
+    What are your favorite things to drink?
+  fields:
+    - Favorite Beverage Overall: favorite_beverage
+    - Favorite Soda: favorite_soda
+      required: user_likes_soda
   ---
 "review": |-
   ---
@@ -1028,6 +1107,22 @@
     - Life Story: target_variable
       datatype: area
   ---
+"text-default": |-
+  ---
+  question: |
+    What are your favorite things to eat?
+  subquestion: |
+    Please be specific.
+  fields:
+    - Vegetable: target_variable
+      default: eggplant
+    - Fruit: other_target_variable
+      default: |
+        ${ greatest_fruit }
+  ---
+  code: |
+    greatest_fruit = "apples"
+  ---
 "text-field": |-
   ---
   question: |
@@ -1084,6 +1179,30 @@
     ${ subject },
     its title should be
     "${ title_case(subject) }."
+  sets: all_done
+  ---
+"upload": |-
+  ---
+  question: Please upload a picture of yourself.
+  fields:
+    - Picture: user_picture
+      datatype: file
+  ---
+  question: |
+    You're so adorable!
+  audio: ${ user_picture }
+  sets: all_done
+  ---
+"upload-multiple": |-
+  ---
+  question: Please upload pictures of yourself.
+  fields:
+    - Picture: user_pictures
+      datatype: files
+  ---
+  question: |
+    Look at all those adorable photos!
+  audio: ${ user_pictures }
   sets: all_done
   ---
 "upload_audio": |-

@@ -227,7 +227,7 @@ a value for `user_wants_to_got_to_dance`.  Not giving up,
 dance with me?" question, which was defined earlier in
 `question_library.yml`.
 
-# How **docassemble** runs your code
+# <a name="howitworks"></a>How **docassemble** runs your code
 
 **docassemble** goes through your interview [YAML] file from start to
 finish, incorporating [`include`]d files as it goes.  It always executes
