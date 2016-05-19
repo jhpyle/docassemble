@@ -272,6 +272,10 @@ class DAList(DAObject):
         return comma_and_list(self.elements, **kwargs)
     def __iter__(self):
         return self.elements.__iter__()
+    def __len__(self):
+        return self.elements.__len__()
+    def __reversed__(self):
+        return self.elements.__reversed__()
     def _fill_up_to(self, index):
         if index < 0 and len(self.elements) + index < 0:
             num_to_add = (-1 * index) - len(self.elements)

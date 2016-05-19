@@ -19,15 +19,31 @@ import urllib
 import codecs
 import base64
 import json
+import ast
+import astunparse
 locale.setlocale(locale.LC_ALL, '')
 
 __all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined']
+
+class lister(ast.NodeVisitor):
+    def __init__(self):
+        self.stack = []
+    def visit_Name(self, node):
+        self.stack.append(['name', node.id])
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Attribute(self, node):
+        self.stack.append(['attr', node.attr])
+        ast.NodeVisitor.generic_visit(self, node)
+    def visit_Subscript(self, node):
+        self.stack.append(['index', re.sub(r'\n', '', astunparse.unparse(node.slice))])
+        ast.NodeVisitor.generic_visit(self, node)
 
 debug = False
 default_dialect = 'us'
 default_language = 'en'
 default_locale = 'US.utf8'
 daconfig = dict()
+dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
 
 class ThreadVariables(threading.local):
     language = default_language
@@ -877,12 +893,47 @@ def from_b64_json(string):
         return None
     return json.loads(base64.b64decode(string))
 
-def defined(variable):
+def components_of(full_variable):
+    node = ast.parse(full_variable, mode='eval')
+    crawler = lister()
+    crawler.visit(node)
+    return list(reversed(crawler.stack))
+
+def defined(full_variable):
     frame = inspect.stack()[1][0]
+    components = components_of(full_variable)
+    variable = components[0][1]
     while variable not in frame.f_locals:
         frame = frame.f_back
         if frame is None:
             return False
-    if variable in frame.f_locals:
+    if variable not in frame.f_locals:
+        return False
+    if len(components) == 1:
         return True
-    return False
+    cum_variable = ''
+    for elem in components:
+        if elem[0] == 'name':
+            cum_variable += elem[1]
+            continue
+        elif elem[0] == 'attr':
+            to_eval = "hasattr(" + cum_variable + ", " + repr(elem[1]) + ")"
+            cum_variable += '.' + elem[1]
+        elif elem[0] == 'index':
+            try:
+                the_index = eval(elem[1], frame.f_locals)
+            except:
+                return False
+            if type(the_index) == int:
+                to_eval = 'len(' + cum_variable + ') > ' + str(the_index)
+            else:
+                to_eval = elem[1] + " in " + cum_variable
+            cum_variable += '[' + elem[1] + ']'
+        try:
+            result = eval(to_eval, frame.f_locals)
+        except:
+            return False
+        if result:
+            continue
+        return False
+    return True
