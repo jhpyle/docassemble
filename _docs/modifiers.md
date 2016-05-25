@@ -329,7 +329,7 @@ by **docassemble**, so it can contain any valid [YAML].
 [HTML5 video tag]: http://www.w3schools.com/html/html5_video.asp
 [YouTube]: https://www.youtube.com/
 [Vimeo]: https://vimeo.com/
-[`prevent_going_back()` function]: {{ site.baseurl }}/docs/function.html#prevent_going_back
+[`prevent_going_back()` function]: {{ site.baseurl }}/docs/functions.html#prevent_going_back
 [special variables]: {{ site.baseurl }}/docs/special.html
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [image sets]: {{ site.baseurl }}/docs/initial.html#image sets

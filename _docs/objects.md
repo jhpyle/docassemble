@@ -56,12 +56,12 @@ An object is a special type of variable.  Rather than being a piece of
 text, like `user_first_name` is, the variable `user` is an "object"
 that is an "instance" of the "class" known as [`Individual`].
 
-Using objects in **docassemble** requires a little bit of setup in
+Using objects in **docassemble** requires a little bit of setup using
 [initial blocks].  [`Individual`] is defined in the
-[`docassemble.base.legal`] [Python module], so it was necessary to bring
-that module into the interview with a [`modules`] block.  It was also
-necessary to use an [`objects`] block to declare that `user` is an
-instance of the class [`Individual`].
+[`docassemble.base.legal`] [Python module], so it was necessary to
+bring that module into the interview with a [`modules`] block.  It was
+also necessary to use an [`objects`] block to declare that `user` is
+an instance of the class [`Individual`].
 
 Objects have "attributes."  In the above example, `name` is an
 attribute of the object `user`.  And `name` is itself an object (it is
@@ -71,56 +71,34 @@ look at the [source code] to know that) with attributes `first` and
 pieces of text.  Anything before a `.` is an object, and anything
 after the `.` is an attribute of the object.
 
-Objects have "methods," which are functions that return a value based
-on the attributes of the object.  For example, `user.age_in_years()`
-will return the current age of the `user` based on the date defined in
-the attribute `user.birthdate`:
+Objects also have "methods," which are functions that return a value
+based on the attributes of the object.  For example,
+`user.age_in_years()` will return the current age of the `user` based
+on the date defined in the attribute `user.birthdate`:
 
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.legal
----
-objects:
-  - user: Individual
----
-question: |
-  What is your date of birth?
-fields:
-  - no label: user.birthdate
-    datatype: date
----
-mandatory: true
-question: |
-  You are ${ user.age_in_years() } years old.
----
-{% endhighlight %}
+{% include side-by-side.html demo="age_in_years" %}
 
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testage.yml){:target="_blank"}.)
+Methods are similar to attributes in that they are written with a `.`
+before them.  The difference is that they run code to produce a value,
+rather than simply accessing a stored value.
 
 Using objects in your interviews has a number of advantages over
 using plain variables.
 
 The first advantage is that you can write [`generic object`] questions.
 (See [modifiers] for documentation of the [`generic object`] feature.)
+
 For example, if you need to collect the phone numbers of three people,
 the `grantor`, the `grantee`, and the `trustee`, you don't have to
 write separate questions for `grantor.phone_number`,
 `grantee.phone_number`, and `trustee.phone_number`.  You can write one
-question to collect `x.phone_number`:
+question to collect `x.phone_number`, where `x` is a "generic object"
+that acts as a stand-in for any object of type `Individual`.
 
-{% highlight yaml %}
----
-generic object: Individual
-question: |
-  What is ${ x.possessive('phone number') }?
-fields:
-  Phone Number: x.phone_number
----
-{% endhighlight %}
+{% include side-by-side.html demo="generic-object-phone-number" %}
 
 Any time **docassemble** needs to know the phone number of an
-[`Individual`] object, it will ask this question.
+[`Individual`], this question will allow it to ask the appropriate question.
 
 In the question text above, [`possessive()`] is a "method" that you can
 use on any instance of the [`Individual`] class.  If `trustee`'s name is

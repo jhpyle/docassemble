@@ -25,13 +25,17 @@ this [`modules`] block.
 
 ## <a name="defined"></a>defined()
 
-As explained in the section called
-[how **docassemble** runs your code], simply referring to a variable
-will cause **docassemble** to ask a question or run code to define
-that variable, if it is not defined.
+As explained in [how **docassemble** runs your code], if your code or
+templates refer to a variable that is not yet defined, **docassemble**
+will stop what it is doing to ask a question or run code in an attempt
+to obtain a definition for that variable.
 
-Usually, this is what you want.  For times when it isn't, you can
-avoid this by testing to see if a variable is defined.
+Sometimes, this is not what you want **docassemble** to do.  For
+example, you might just want to check to see if a variable ever got
+defined.
+
+The `defined()` function checks to see if a variable has been
+defined.  You give it a name of a variable.
 
 {% highlight yaml %}
 ---
@@ -42,6 +46,9 @@ code: |
     fruit_known = False
 ---
 {% endhighlight %}
+
+It is essential that you use quotation marks around the name of the
+variable.  If you don't, it is as if you are referring to the variable.
 
 {% include side-by-side.html demo="defined" %}
 

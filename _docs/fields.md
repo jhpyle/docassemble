@@ -302,26 +302,28 @@ The possible `datatype` values are:
 * `yesno`: checkbox with label, aligned with labeled fields.
 * `yesnowide`: checkbox with label, full width
   of area.
-* `checkboxes`: show the [`choices`](#choices) list as checkboxes; variable will
-  be a dictionary with items set to true or false depending on whether
-  the option was checked.  No validation is done to see if the user
-  selected at least one, regardless of the value of `required`.
+* `checkboxes`: show the [`choices`](#choices) list as checkboxes;
+  variable will be a dictionary with items set to true or false
+  depending on whether the option was checked.  No validation is done
+  to see if the user selected at least one, regardless of the value of
+  `required`.
 * `object`: this is used when you would like to use a variable to
   refer to an existing object.  You can provide the list of objects to
   choose from in one of two ways.  The first way is to list the object
-  names under `selections`.  The second way is to provide [`code`] that
-  calls the `selections()` [function].  The user will be presented
-  with a pull-down selector.
+  names under `selections`.  The second way is to provide [`code`]
+  that calls the `selections()` [function].  The user will be
+  presented with a pull-down selector.
 * `object_radio`: like `object`, except the user interface uses radio
-  buttons rather than a pull-down list.
+  buttons rather than a pull-down list.  See [groups] for more information.
 * `object_checkboxes`: this is used when you would like to use a
   question to set the elements of an object of type [`DAList`].  The
-  choices in [`choices`](#choices) (optionally modified by `exclude`) will be
-  presented to the user as checkboxes.  The `.gathered` attribute of
-  the variable will be set to `True` after the elements are set.
-* `radio`: show [`choices`](#choices) list as radio buttons instead of a dropdown
-  [select] tag (which is the default).  Variable will be set to the
-  value of the choice.
+  choices in [`choices`](#choices) (optionally modified by `exclude`)
+  will be presented to the user as checkboxes.  The `.gathered`
+  attribute of the variable will be set to `True` after the elements
+  are set.  See [groups] for more information.
+* `radio`: show a [`choices`](#choices) list as a list of radio
+  buttons instead of as a dropdown [select] tag (which is the
+  default).  The variable will be set to the value of the choice.
 
 For some field types, you can require input validation by adding the
 following to the definition of a field:
@@ -814,3 +816,4 @@ cannot use because they conflict with built-in names that [Python] and
 [`need()`]: {{ site.baseurl }}/docs/functions.html#need
 [`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
 [`yesno`]: #yesno
+[groups]: {{ site.baseurl }}/docs/groups.html
