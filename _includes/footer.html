@@ -2,15 +2,15 @@
   {% include footer-attribution.html %}
   <p>
   {% for thepage in site.pages %}
-  {% if thepage.url contains '/index.html' %}
-  {% else %}
+  {% if thepage.url contains '/search.html' or thepage.url == '/' or thepage.url contains '/index.html'%}
+    {% continue %}
+  {% endif %}
   {% if thepage.short_title %}
   <a href="{{ thepage.url | prepend: site.baseurl }}">{{ thepage.short_title }}</a>
   &middot;
   {% elsif thepage.title %}
   <a href="{{ thepage.url | prepend: site.baseurl }}">{{ thepage.title }}</a>
   &middot;
-  {% endif %}
   {% endif %}
   {% endfor %}
   <a class="page-link" href="{{ site.github.repository_url }}">GitHub</a>
