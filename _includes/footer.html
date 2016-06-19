@@ -1,26 +1,26 @@
-<footer style="text-align:center;padding-bottom:20px">
-  {% include footer-attribution.html %}
-  <p>
-  {% for thepage in site.pages %}
-  {% if thepage.url contains '/search.html' or thepage.url == '/' or thepage.url contains '/index.html'%}
-    {% continue %}
-  {% endif %}
-  {% if thepage.short_title %}
-  <a href="{{ thepage.url | prepend: site.baseurl }}">{{ thepage.short_title }}</a>
-  &middot;
-  {% elsif thepage.title %}
-  <a href="{{ thepage.url | prepend: site.baseurl }}">{{ thepage.title }}</a>
-  &middot;
-  {% endif %}
-  {% endfor %}
-  <a class="page-link" href="{{ site.github.repository_url }}">GitHub</a>
-  </p>
-  <p><a href="https://twitter.com/docassemble" class="twitter-follow-button" data-show-count="false">Follow @docassemble</a></p>
-</footer>
-<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-<script src="{{ '/tocmd-generator/js/jquery.toc.js' | prepend: site.baseurl }}"></script>
-<script>
-  $('#main').toc({showAlways:true});
-</script>
+    <footer style="text-align:center;padding-bottom:20px">
+      {% include footer-attribution.html %}
+      <p>
+      {% for thepage in site.pages %}
+      {% if thepage.url contains '/search.html' or thepage.url == '/' or thepage.url contains '/index.html'%}
+	{% continue %}
+      {% endif %}
+      {% if thepage.short_title %}
+      <a href="{{ thepage.url | prepend: site.baseurl }}">{{ thepage.short_title }}</a>
+      &middot;
+      {% elsif thepage.title %}
+      <a href="{{ thepage.url | prepend: site.baseurl }}">{{ thepage.title }}</a>
+      &middot;
+      {% endif %}
+      {% endfor %}
+      <a class="page-link" href="{{ site.github.repository_url }}">GitHub</a>
+      </p>
+      <p><a href="https://twitter.com/docassemble" class="twitter-follow-button" data-show-count="false">Follow @docassemble</a></p>
+    </footer>
+    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="{{ '/tocmd-generator/js/jquery.toc.js' | prepend: site.baseurl }}"></script>
+    <script>
+      $('#main').toc({showAlways:true});
+    </script>
