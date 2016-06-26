@@ -110,20 +110,18 @@ do the same thing:
 
 The optional keyword arguments influence the appearance of the screen:
 
-* `message("Bye!", "See ya later", show_restart=False)`: will show the
+* `message("Bye!", "See ya later", show_restart=False)` will show the
   Exit button but not the Restart button.
-* `message("Bye!", "See ya later", show_exit=False)`: will show the
+* `message("Bye!", "See ya later", show_exit=False)` will show the
   Restart button but not the Exit button.
 * `message("Bye!", "See ya later", url="https://www.google.com")`:
   clicking the Exit button will take the user to Google.
-* `message("Bye!", "See ya later", url="https://www.google.com")`:
-  clicking the Exit button will take the user to Google.
-* `message("Bye!", "See ya later", show_leave=True)`: will show a
+* `message("Bye!", "See ya later", show_leave=True)` will show a
   Leave button instead of the Exit button.
 * `message("Bye!", "See ya later", show_leave=True, show_exit=True,
-  show_restart=False)`: will show a Leave button and an Exit button.
+  show_restart=False)` will show a Leave button and an Exit button.
 * `message("Bye!", "See ya later",
-  buttons=[{"Learn More": "exit", "url": "https://en.wikipedia.org/wiki/Spinning_wheel"}])`:
+  buttons=[{"Learn More": "exit", "url": "https://en.wikipedia.org/wiki/Spinning_wheel"}])`
   will show a "Learn More" button that exits to Wikipedia.
 
 ## <a name="force_ask"></a>force_ask()
