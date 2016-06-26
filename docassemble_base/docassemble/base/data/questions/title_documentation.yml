@@ -1,0 +1,68 @@
+undefined:
+  title: Undefined names
+  doc: >-
+    The names in this section were mentioned in the interview
+    code, but do not appear to be defined anywhere.  Your users may
+    get an error about these undefined names.
+variables:
+  title: Variables
+  doc: >-
+    These are the names of variables (and built-in names) that are
+    used in your interview or that are available to use in your
+    interview.
+functions:
+  title: Functions
+  doc: >-
+    These are functions that you can call from within code or within
+    ${ } statements in text.
+  url: "http://docassemble.org/docs/functions.html"
+classes:
+  title: Classes
+  doc: >-
+    Classes are the types of "objects" that are available to use in
+    your interview.
+  url: "http://docassemble.org/docs/objects.html"
+modules:
+  title: Modules
+  doc: >-
+    These are the modules that have been brought into the interview
+    through "import" commands.
+  url: "http://docassemble.org/docs/initial.html#imports"
+playground_modules:
+  title: Playground modules
+  doc: >-
+    These are the modules that exist in the "Modules" area
+    of the Playground and that are available to bring in using an "imports"
+    or "modules" block.
+  url: "http://docassemble.org/docs/playground.html#modules"
+templates:
+  title: Templates
+  doc: >-
+    These are the templates that exist in the "Templates" area of the
+    Playground and that are available for use in "attachment" and
+    "template" blocks.
+  url: "http://docassemble.org/docs/playground.html#templates"
+static:
+  title: Static files
+  doc: >-
+    These are the static files that exist in the "Static" area of the
+    Playground and that are available for use through the "image sets," "images,"
+    "decoration," and "[FILE]" features.
+  url: "http://docassemble.org/docs/functions.html#url_of"
+decorations:
+  title: Decorations
+  doc: >-
+    These are the images that have been made available in your
+    interview through "image sets" and "images" blocks and that can be
+    included using emoji-style markup and the "decoration" modifier.
+  url: "http://docassemble.org/docs/modifiers.html#decoration"
+incomplete:
+  doc: >-
+    This interview file does not have an endpoint.  If you intend
+    users to run this interview file directly, you need to add a
+    <a target="_blank"
+    href="http://docassemble.org/docs/logic.html#mandatory">mandatory
+    code block</a>.
+generic error:
+  doc: >-
+    Your interview has an error.  Click "Save and Run" to see the error.

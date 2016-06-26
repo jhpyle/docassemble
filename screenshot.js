@@ -13,13 +13,13 @@ var interview = casper.cli.get(0);
 var wait_amount = 100;
 
 if (interview == 'signature.yml' || interview == 'metadata.yml' || interview == 'help.yml'){
-    casper.options.viewportSize = {width: 640, height: 1136};
+    casper.options.viewportSize = {width: 650, height: 1136};
     if (interview == 'signature.yml'){
 	wait_amount = 2000;
     }
 }
 else{
-    casper.options.viewportSize = {width: 1005, height: 640};
+    casper.options.viewportSize = {width: 1005, height: 650};
 }
 
 var url = "http://localhost?i=docassemble.base:data/questions/examples/" + interview

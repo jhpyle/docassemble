@@ -10,6 +10,7 @@ import locale
 import pkg_resources
 import titlecase
 from docassemble.base.logger import logmessage
+from docassemble.base.error import QuestionError
 import babel.dates
 import dateutil.parser
 import locale
@@ -23,7 +24,7 @@ import ast
 import astunparse
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'message']
 
 class lister(ast.NodeVisitor):
     def __init__(self):
@@ -368,7 +369,7 @@ def need(*pargs):
 def pickleable_objects(input_dict):
     output_dict = dict()
     for key in input_dict:
-        if type(input_dict[key]) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType]:
+        if type(input_dict[key]) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType]:
             continue
         if key == "__builtins__":
             continue
@@ -712,6 +713,10 @@ def space_to_underscore(a):
 #     except:
 #         pass
 
+def message(*pargs, **kwargs):
+    """Presents a screen to the user with the given message"""
+    raise QuestionError(*pargs, **kwargs)
+    
 def force_ask(variable_name):
     """Given a variable, instructs docassemble to do what is necessary to define the variable,
     even if the variable has already been defined."""
@@ -899,9 +904,10 @@ def components_of(full_variable):
     crawler.visit(node)
     return list(reversed(crawler.stack))
 
-def defined(full_variable):
+def defined(var):
+    """Returns true if the variable has already been defined.  Otherwise, returns false."""
     frame = inspect.stack()[1][0]
-    components = components_of(full_variable)
+    components = components_of(var)
     variable = components[0][1]
     while variable not in frame.f_locals:
         frame = frame.f_back

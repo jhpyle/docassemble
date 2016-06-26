@@ -1,13 +1,17 @@
 from flask.ext.wtf import Form
 from flask.ext.wtf.file import FileField
 from docassemble.base.util import word
-from wtforms import validators, ValidationError, StringField, SubmitField, TextAreaField
+from wtforms import validators, ValidationError, StringField, SubmitField, TextAreaField, SelectMultipleField
 import re
 import sys
 
 def validate_name(form, field):
     if re.search('[^A-Za-z0-9\-]', field.data):
         raise ValidationError(word('Valid characters are: A-Z, a-z, 0-9, hyphen'))
+
+def validate_package_name(form, field):
+    if re.search('[^A-Za-z0-9]', field.data):
+        raise ValidationError(word('Valid characters are: A-Z, a-z, 0-9'))
 
 class CreatePackageForm(Form):
     name = StringField(word('Package name'), validators=[
@@ -53,4 +57,17 @@ class PlaygroundFilesEditForm(Form):
     original_file_name = StringField(word('Original Name'))
     file_name = StringField(word('Name'), [validators.Length(min=1, max=255)])
     file_content = TextAreaField(word('File Text'))
+    submit = SubmitField(word('Save'))
+
+class PlaygroundPackagesForm(Form):
+    original_file_name = StringField(word('Original Name'))
+    file_name = StringField(word('Package Name'), validators=[validators.Length(min=1, max=50),
+        validators.Required(word('Package Name is required')), validate_package_name])
+    license = StringField(word('License'), default='MIT', validators=[validators.Length(min=1, max=255)])
+    description = TextAreaField(word('Description'), validators=[validators.Length(min=1, max=255)], default="A docassemble extension.")
+    dependencies = SelectMultipleField(word('Dependencies'))
+    interview_files = SelectMultipleField(word('Interview Files'))
+    template_files = SelectMultipleField(word('Template Files'))
+    module_files = SelectMultipleField(word('Module Files'))
+    static_files = SelectMultipleField(word('Static Files'))
     submit = SubmitField(word('Save'))

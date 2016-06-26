@@ -1,0 +1,25 @@
+metadata:
+  title: age_in_years()
+  documentation: "http://docassemble.org/docs/legal.html#Individual.age_in_years"
+  example start: 3
+  example end: 4
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - user: Individual
+---
+question: |
+  What is your date of birth?
+fields:
+  - no label: user.birthdate
+    datatype: date
+---
+question: |
+  You are ${ user.age_in_years() }
+  years old.
+sets: all_done
+---
+mandatory: true
+code: all_done

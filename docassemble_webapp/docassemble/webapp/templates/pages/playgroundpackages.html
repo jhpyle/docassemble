@@ -1,0 +1,70 @@
+{%- extends 'base_templates/page_base_half.html' %}
+{%- from "base_templates/form_macros.html" import render_addon_field, render_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
+{%- block top %}
+<div class="container"><p><a href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></p></div>
+{%- endblock %}
+{%- block content %}
+<div class="page-header">
+  <h1>{{ header }}</h1>
+</div>
+{%- if description %}
+<p>{{ description }}</p>
+{%- endif %}
+
+<ul class="nav nav-tabs">{% for file in editable_files %}{% if file == current_file %}<li class="active"><a><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {{ file }}</a></li>{% else %}<li><a href="?file={{ file }}"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {{ file }}</a></li>{% endif %}{% endfor %}{% if current_file not in editable_files %}<li class="active"><a href="#">{{ word('New') }}</a></li>{% endif %}<li><a title="{{ word('New file') }}" href="?new=1"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span></a></li></ul>
+
+<form action="{{ url_for('playground_packages') }}" method="POST" class="form" role="form" id="form">
+  {{ form.hidden_tag() }}
+  {{ myrender_hidden_field(form.original_file_name, value=current_file) }}
+  <div class="daspacer"></div>
+  {{ render_field(form.file_name) }}
+  {{ render_field(form.license) }}
+  {{ render_field(form.description) }}
+  <h2>Dependencies</h2>
+  <div class="form-group">
+    <label for="{{ form.dependencies.id }}">{{ word("Select zero or more packages") }}</label>
+    <select multiple size="10", class="form-control" id="{{ form.dependencies.id }}">
+      {%- for package in package_names %}
+      <option value="{{ package }}"{% if form.dependencies.data and package in form.dependencies.data %} selected{% endif %}>{{ package }}</option>
+      {%- endfor %}
+    </select>
+  </div>
+  {%- for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundmodules'] %}
+  <h2>{{ section_name[sec] }}</h2>
+  <div class="form-group">
+    <label for="{{ section_field[sec].id }}">{{ word("Select zero or more files") }}</label>
+    <select multiple size="{% if file_list[sec].__len__() < 10 %}{{ file_list[sec].__len__() }}{% else %}10{% endif %}", class="form-control" id="{{ section_field[sec].id }}">
+      {%- for file in file_list[sec] %}
+      <option value="{{ file }}"{% if section_field[sec].data and file in section_field[sec].data %} selected{% endif %}>{{ file }}</option>
+      {%- endfor %}
+    </select>
+  </div>
+  <!--<table class="table table-striped">
+    <thead>
+      <tr>
+        <th style="text-align:left;">{{ word("Select") }}</th>
+        <th>{{ word("File name") }}</th>
+      </tr>
+    </thead>
+    <tbody>
+    {%- for file in file_list[sec] %}
+      <tr>
+        <td style="text-align:left;"><input type="checkbox"></td>
+        <td>{% if sec in ['playgroundtemplate', 'playgroundstatic', 'playgroundmodules'] %}<a target="_blank" href="{{ url_for('playground_' + section_sec[sec], userid=userid, filename=file) }}">{{ file }}</a>{% else %}{{ file }}{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>-->
+  {%- endfor %}
+  <div class="form-actions">
+    {{ render_submit_field(form.submit, tabindex=100, class="btn btn-primary btn-lg") }}
+  </div>
+</form>
+
+{%- endblock %}
+{%- block below %}
+{%- if after_text %}
+<p>{{ after_text }}</p>
+{%- endif %}
+
+{%- endblock %}

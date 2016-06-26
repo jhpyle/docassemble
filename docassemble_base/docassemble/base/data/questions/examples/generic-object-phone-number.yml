@@ -1,0 +1,31 @@
+metadata:
+  title: generic objects
+  documentation: "http://docassemble.org/docs/modifiers#generic object"
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - grantor: Individual
+  - grantee: Individual
+  - trustee: Individual
+---
+generic object: Individual
+question: |
+  What is ${ x.possessive('phone number') }?
+fields:
+  Phone Number: x.phone_number
+---
+question: |
+  How to reach people
+subquestion: |
+  You can reach the grantor at ${ grantor.phone_number }.
+
+  You can reach the grantee at ${ grantee.phone_number }.
+
+  You can reach the trustee at ${ trustee.phone_number }.
+sets: all_done
+---
+mandatory: true
+code: all_done
+  

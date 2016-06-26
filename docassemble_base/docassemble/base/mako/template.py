@@ -211,6 +211,8 @@ class Template(object):
      file path of the generated Python module file, if
      ``module_directory`` is specified.
 
+    :param names_used: a set of variable names used in the template
+
     """
 
     lexer_cls = Lexer
@@ -243,7 +245,9 @@ class Template(object):
                  future_imports=None,
                  enable_loop=True,
                  preprocessor=None,
-                 lexer_cls=None):
+                 lexer_cls=None,
+                 names_used=set()):
+        self.names_used = names_used
         if uri:
             self.module_id = re.sub(r'\W', "_", uri)
             self.uri = uri
@@ -667,6 +671,7 @@ def _compile(template, text, filename, generate_magic_comment):
                              disable_unicode=template.disable_unicode,
                              strict_undefined=template.strict_undefined,
                              enable_loop=template.enable_loop,
+                             names_used=template.names_used,
                              reserved_names=template.reserved_names)
     return source, lexer
 

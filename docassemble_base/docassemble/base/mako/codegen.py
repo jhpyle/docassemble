@@ -35,6 +35,7 @@ def compile(node,
             disable_unicode=False,
             strict_undefined=False,
             enable_loop=True,
+            names_used=set(),
             reserved_names=frozenset()):
     """Generate module source code given a parsetree node,
       uri, and optional source filename"""
@@ -61,6 +62,7 @@ def compile(node,
                                           disable_unicode,
                                           strict_undefined,
                                           enable_loop,
+                                          names_used,
                                           reserved_names),
                           node)
     return buf.getvalue()
@@ -80,6 +82,7 @@ class _CompileContext(object):
                  disable_unicode,
                  strict_undefined,
                  enable_loop,
+                 names_used,
                  reserved_names):
         self.uri = uri
         self.filename = filename
@@ -92,8 +95,8 @@ class _CompileContext(object):
         self.disable_unicode = disable_unicode
         self.strict_undefined = strict_undefined
         self.enable_loop = enable_loop
+        self.names_used = names_used
         self.reserved_names = reserved_names
-
 
 class _GenerateRenderMethod(object):
 
@@ -509,8 +512,9 @@ class _GenerateRenderMethod(object):
             self.printer.writeline(
                 'loop = __M_loop = runtime.LoopStack()'
             )
-
+        
         for ident in to_write:
+            self.compiler.names_used.add(ident)
             if ident in comp_idents:
                 comp = comp_idents[ident]
                 if comp.is_block:

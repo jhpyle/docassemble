@@ -28,7 +28,7 @@ import tempfile
 import zipfile
 import traceback
 from docassemble.webapp.screenreader import to_text
-from docassemble.base.error import DAError
+from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
 from docassemble.base.util import pickleable_objects, word, comma_and_list
 from docassemble.base.logger import logmessage
 from Crypto.Cipher import AES
@@ -50,7 +50,7 @@ from flask.ext.login import LoginManager, UserMixin, login_user, logout_user, cu
 from flask.ext.user import login_required, roles_required, UserManager, SQLAlchemyAdapter
 from flask.ext.user.forms import LoginForm
 from flask.ext.user import signals, user_logged_in, user_changed_password, user_registered, user_registered, user_reset_password
-from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm
+from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm
 from flask_mail import Mail, Message
 import flask.ext.user.signals
 import httplib2
@@ -134,6 +134,7 @@ noquote_match = re.compile(r'"')
 lt_match = re.compile(r'<')
 gt_match = re.compile(r'>')
 amp_match = re.compile(r'&')
+extraneous_var = re.compile(r'^x\.|^x\[')
 
 if 'mail' not in daconfig:
     daconfig['mail'] = dict()
@@ -484,7 +485,30 @@ def get_documentation_dict():
             return(yaml.load(content))
     return(None)
 
+def get_name_info():
+    docstring = get_info_from_file_reference('docassemble.base:data/questions/docstring.yml')
+    if 'fullpath' in docstring:
+        with open(docstring['fullpath'], 'rU') as fp:
+            content = fp.read().decode('utf8')
+            content = fix_tabs.sub('  ', content)
+            return(yaml.load(content))
+    return(None)
+
+def get_title_documentation():
+    documentation = get_info_from_file_reference('docassemble.base:data/questions/title_documentation.yml')
+    if 'fullpath' in documentation:
+        with open(documentation['fullpath'], 'rU') as fp:
+            content = fp.read().decode('utf8')
+            content = fix_tabs.sub('  ', content)
+            return(yaml.load(content))
+    return(None)
+
+title_documentation = get_title_documentation()
 documentation_dict = get_documentation_dict()
+base_name_info = get_name_info()
+for val in base_name_info:
+    base_name_info[val]['name'] = val
+    base_name_info[val]['insert'] = val
             
 def get_mail_variable(*args, **kwargs):
     return mail
@@ -1758,24 +1782,23 @@ def index():
     flash_content = ""
     messages = get_flashed_messages(with_categories=True) + error_messages
     if messages:
-        #flash_content += '<div class="container">'
         for classname, message in messages:
             if classname == 'error':
                 classname = 'danger'
             flash_content += '<div class="row"><div class="col-md-6"><div class="alert alert-' + classname + '"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div></div></div>'
-            #flash_content += '</div>'
-    scripts = """
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
-    <script src="//ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min.js"></script>
-    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/js/jasny-bootstrap.min.js"></script>
-"""
+#     scripts = """
+#     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+#     <script src="//ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min.js"></script>
+#     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+#     <script src="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/js/jasny-bootstrap.min.js"></script>
+# """
+        # $(function () {
+        #   $('.tabs a:last').tab('show')
+        # })
+    scripts = '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n'
     scripts += '    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>' + """
     <script>
       $( document ).ready(function() {
-        $(function () {
-          $('.tabs a:last').tab('show')
-        })
         $(function () {
           $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
         })
@@ -1844,7 +1867,7 @@ def index():
     else:
         interview_language = DEFAULT_LANGUAGE
     if interview_status.question.question_type == "signature":
-        output = '<!doctype html>\n<html lang="' + interview_language + '">\n  <head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + interview_status.question.interview.get_title().get('full', app.config['BRAND_NAME']) + '</title><script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet"><title>' + word('Sign Your Name') + '</title></head>\n  <body onresize="resizeCanvas()">'
+        output = '<!doctype html>\n<html lang="' + interview_language + '">\n  <head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + interview_status.question.interview.get_title().get('full', app.config['BRAND_NAME']) + '</title><script src="' + url_for('static', filename='app/jquery.min.js') + '"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet"><title>' + word('Sign Your Name') + '</title></head>\n  <body onresize="resizeCanvas()">'
         output += signature_html(interview_status, DEBUG, ROOT)
         output += """\n  </body>\n</html>"""
     else:
@@ -1903,28 +1926,36 @@ def index():
             interview_language = interview_status.question.language
         else:
             interview_language = DEFAULT_LANGUAGE
-        output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" rel="stylesheet">\n    <link href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
+        # output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" rel="stylesheet">\n    <link href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
+        output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
         if DEBUG:
             output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
         output += "".join(extra_css)
         output += '\n    <title>' + interview_status.question.interview.get_title().get('full', app.config['BRAND_NAME']) + '</title>\n  </head>\n  <body>\n'
-        output += make_navbar(interview_status, app.config['BRAND_NAME'], (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN) + '    <div class="container">' + "\n      " + '<div class="tab-content">\n' + flash_content
+        output += make_navbar(interview_status, app.config['BRAND_NAME'], (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN) + '    <div class="container">' + "\n      " + '<div class="row">\n        <div class="tab-content">\n' + flash_content
         if interview_status.question.interview.use_progress_bar:
             output += progress_bar(user_dict['_internal']['progress'])
-        output += content + "      </div>\n"
+        output += content + "        </div>\n      </div>\n"
         if DEBUG:
-            output += '      <div id="source" class="col-md-12 collapse">' + "\n"
+            output += '      <div class="row">' + "\n"
+            output += '        <div id="source" class="col-md-12 collapse">' + "\n"
             if interview_status.using_screen_reader:
-                output += '        <h3>' + word('Plain text of sections') + '</h3>' + "\n"
+                output += '          <h3>' + word('Plain text of sections') + '</h3>' + "\n"
                 for question_type in ['question', 'help']:
                     output += '<pre style="white-space: pre-wrap;">' + to_text(interview_status.screen_reader_text[question_type]) + '</pre>\n'
-            output += '        <h3>' + word('Source code for question') + '</h3>' + "\n"
+            output += '          <h3>' + word('Source code for question') + '</h3>' + "\n"
             if interview_status.question.source_code is None:
                 output += word('unavailable')
             else:
                 output += highlight(interview_status.question.source_code, YamlLexer(), HtmlFormatter())
+            if len(interview_status.question.fields_used):
+                output += "<p>Variables set: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview_status.question.fields_used)]) + "</p>"
+            if len(interview_status.question.names_used):
+                output += "<p>Variables in code: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview_status.question.names_used)]) + "</p>"
+            if len(interview_status.question.mako_names):
+                output += "<p>Variables in templates: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview_status.question.mako_names)]) + "</p>"
             if len(interview_status.seeking) > 1:
-                output += '        <h4>' + word('How question came to be asked') + '</h4>' + "\n"
+                output += '          <h4>' + word('How question came to be asked') + '</h4>' + "\n"
                 # output += '<ul>\n'
                 # for foo in user_dict['_internal']['answered']:
                 #     output += "<li>" + str(foo) + "</li>"
@@ -1932,22 +1963,29 @@ def index():
                 for stage in interview_status.seeking:
                     if 'question' in stage and 'reason' in stage and stage['question'] is not interview_status.question:
                         if stage['reason'] == 'initial':
-                            output += "        <h5>" + word('Ran initial code') + "</h5>\n"
+                            output += "          <h5>" + word('Ran initial code') + "</h5>\n"
                         elif stage['reason'] == 'mandatory question':
-                            output += "        <h5>" + word('Tried to ask mandatory question') + "</h5>\n"
+                            output += "          <h5>" + word('Tried to ask mandatory question') + "</h5>\n"
                         elif stage['reason'] == 'mandatory code':
-                            output += "        <h5>" + word('Tried to run mandatory code') + "</h5>\n"
+                            output += "          <h5>" + word('Tried to run mandatory code') + "</h5>\n"
                         elif stage['reason'] == 'asking':
-                            output += "        <h5>" + word('Tried to ask question') + "</h5>\n"
+                            output += "          <h5>" + word('Tried to ask question') + "</h5>\n"
                         if stage['question'].from_source.path != interview.source.path:
-                            output += '        <p style="font-weight: bold;"><small>(' + word('from') + ' ' + stage['question'].from_source.path +")</small></p>\n"
+                            output += '          <p style="font-weight: bold;"><small>(' + word('from') + ' ' + stage['question'].from_source.path +")</small></p>\n"
                         if stage['question'].source_code is None:
                             output += word('unavailable')
                         else:
                             output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter())
+                        if len(stage['question'].fields_used):
+                            output += "<p>Variables set: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].fields_used)]) + "</p>"
+                        if len(stage['question'].names_used):
+                            output += "<p>Variables in code: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].names_used)]) + "</p>"
+                        if len(stage['question'].mako_names):
+                            output += "<p>Variables in templates: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].mako_names)]) + "</p>"
                     elif 'variable' in stage:
-                        output += "        <h5>" + word('Needed definition of') + " <code>" + str(stage['variable']) + "</code></h5>\n"
-                output += '        <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.util.pickleable_objects(user_dict))]) + '</p>' + "\n"
+                        output += "          <h5>" + word('Needed definition of') + " <code>" + str(stage['variable']) + "</code></h5>\n"
+                output += '          <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.util.pickleable_objects(user_dict))]) + '</p>' + "\n"
+            output += '        </div>' + "\n"
             output += '      </div>' + "\n"
         output += '    </div>'
         output += scripts + "\n    " + "".join(extra_scripts) + """\n  </body>\n</html>"""
@@ -3027,7 +3065,7 @@ def playground_files():
         if (formtwo.file_name.data):
             the_file = formtwo.file_name.data
             the_file = re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', the_file)
-    if section not in ("template", "static", "modules"):
+    if section not in ("template", "static", "modules", "packages"):
         section = "template"
     area = SavedFile(current_user.id, fix=True, section='playground' + section)
     if request.args.get('delete', False):
@@ -3124,6 +3162,91 @@ def playground_files():
         extra_command = ""
     return render_template('pages/playgroundfiles.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("file_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "' + mode + '", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#formtwo").trigger("checkform.areYouSure");});\n      $("#formtwo").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#formtwo").bind("submit", function(){daCodeMirror.save(); $("#formtwo").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text), 200
 
+@app.route('/playgroundpackages', methods=['GET', 'POST'])
+@login_required
+@roles_required(['developer', 'admin'])
+def playground_packages():
+    form = PlaygroundPackagesForm(request.form, current_user)
+    the_file = request.args.get('file', '')
+    scroll = False
+    package_list, package_auth = get_package_info()
+    package_names = sorted([package.package.name for package in package_list])
+    for default_package in ['docassemble', 'docassemble.base', 'docassemble.webapp']:
+        if default_package in package_names:
+            package_names.remove(default_package)
+    if the_file:
+        scroll = True
+    if request.method == 'GET':
+        is_new = request.args.get('new', False)
+    else:
+        is_new = False
+    if is_new:
+        scroll = True
+        the_file = ''
+    if request.method == 'POST':
+        if (form.section.data):
+            the_file = form.file_name.data
+            the_file = re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', the_file)
+    area = dict()
+    file_list = dict()
+    section_name = {'playground': 'Interview files', 'playgroundpackages': 'Packages', 'playgroundtemplate': 'Template files', 'playgroundstatic': 'Static files', 'playgroundmodules': 'Modules'}
+    section_sec = {'playgroundtemplate': 'template', 'playgroundstatic': 'static', 'playgroundmodules': 'modules'}
+    section_field = {'playground': form.interview_files, 'playgroundtemplate': form.template_files, 'playgroundstatic': form.static_files, 'playgroundmodules': form.module_files}
+    for sec in ['playground', 'playgroundpackages', 'playgroundtemplate', 'playgroundstatic', 'playgroundmodules']:
+        area[sec] = SavedFile(current_user.id, fix=True, section=sec)
+        file_list[sec] = sorted([f for f in os.listdir(area[sec].directory) if os.path.isfile(os.path.join(area[sec].directory, f))])
+    if request.args.get('delete', False):
+        argument = re.sub(r'[^A-Za-z0-9\-\_\.]', '', request.args.get('delete'))
+        if argument:
+            filename = os.path.join(area['playgroundpackages'].directory, argument)
+            if os.path.exists(filename):
+                os.remove(filename)
+                area['playgroundpackages'].finalize()
+                flash(word("Deleted file: ") + argument, "success")
+                return redirect(url_for('playground_packages'))
+    if request.method == 'POST':
+        if form.submit.data:
+            if the_file != '':
+                if form.original_file_name.data and form.original_file_name.data != the_file:
+                    old_filename = os.path.join(area['playgroundpackages'].directory, form.original_file_name.data)
+                    if os.path.isfile(old_filename):
+                        os.remove(old_filename)
+                filename = os.path.join(area['playgroundpackages'].directory, the_file)
+                with open(filename, 'w') as fp:
+                    #write YAML
+                    pass
+                the_time = time.strftime('%H:%M:%S %Z', time.localtime())
+                flash(word('The file was saved at') + ' ' + the_time + '.', 'success')
+            else:
+                flash(word('You need to type in a name for the file'), 'error')                
+    files = sorted([f for f in os.listdir(area['playgroundpackages'].directory) if os.path.isfile(os.path.join(area['playgroundpackages'].directory, f))])
+    editable_files = list()
+    mode = "yaml"
+    for a_file in files:
+        editable_files.append(a_file)
+    if request.method == 'GET' and not the_file and not is_new:
+        if len(editable_files):
+            the_file = editable_files[0]
+        else:
+            the_file = 'docassemble-me'
+    form.original_file_name.data = the_file
+    form.file_name.data = the_file
+    if the_file != '' and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):
+        filename = os.path.join(area['playgroundpackages'].directory, the_file)
+    else:
+        filename = None
+    if filename is not None:
+        area['playgroundpackages'].finalize()
+        with open(filename, 'rU') as fp:
+            content = fp.read().decode('utf8')
+            # convert content from YAML
+    header = word("Packages")
+    upload_header = None
+    edit_header = None
+    description = Markup("""Pick the files that will go into your package.""")
+    after_text = None
+    return render_template('pages/playgroundpackages.html', header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names), 200
+
 def public_method(method, the_class):
     if isinstance(method, types.MethodType) and method.__name__ != 'init' and not method.__name__.startswith('_') and method.__name__ in the_class.__dict__:
         return True
@@ -3142,22 +3265,40 @@ def noquote(string):
     # newstring = json.dumps(string.replace('\n', ' ').rstrip())
     # return newstring[1:-1]
 
+def infobutton(title):
+    docstring = ''
+    if 'doc' in title_documentation[title]:
+        docstring += noquote(title_documentation[title]['doc']) + "<br>"
+    if 'url' in title_documentation[title]:
+        docstring += "<a target='_blank' href='" + title_documentation[title]['url'] + "'>" + word("View documentation") + "</a>"
+    return '&nbsp;<a class="daquestionsign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + docstring + '" title="' + word("Help") + '" data-selector="true" data-title="' + noquote(title_documentation[title].get('title', title)) + '"><i class="glyphicon glyphicon-question-sign"></i></a>'
+    
 def get_vars_in_use(interview, interview_status):
     user_dict = fresh_dictionary()
+    has_no_endpoint = False
     try:
         interview.assemble(user_dict, interview_status)
+        has_error = False
     except Exception as errmess:
-        logmessage("Failed assembly " + str(errmess))
-        pass
+        has_error = True
+        error_message = str(errmess)
+        error_type = type(errmess)
+        logmessage("Failed assembly with error type " + str(error_type) + " and message: " + error_message)
+    fields_used = set()
     names_used = set()
-    for val in interview.names_used:
-        if val.startswith('x.') or val.startswith('x[') or val == 'x' or val == '_internal':
-            continue
+    names_used.update(interview.names_used)
+    for question in interview.questions_list:
+        names_used.update(question.mako_names)
+        names_used.update(question.names_used)
+        names_used.update(question.fields_used)
+        fields_used.update(question.fields_used)
+    for val in interview.questions:
         names_used.add(val)
+        fields_used.add(val)
     functions = set()
     modules = set()
     classes = set()
-    name_info = dict()
+    name_info = base_name_info.copy()
     area = SavedFile(current_user.id, fix=True, section='playgroundtemplate')
     templates = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
     area = SavedFile(current_user.id, fix=True, section='playgroundstatic')
@@ -3165,13 +3306,17 @@ def get_vars_in_use(interview, interview_status):
     area = SavedFile(current_user.id, fix=True, section='playgroundmodules')
     avail_modules = sorted([re.sub(r'.py$', '', f) for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
     for val in user_dict:
+        #logmessage("Found val " + str(val) + " of type " + str(type(user_dict[val])))
         if type(user_dict[val]) is types.FunctionType:
             functions.add(val)
             name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + str(inspect.formatargspec(*inspect.getargspec(user_dict[val])))}
         elif type(user_dict[val]) is types.ModuleType:
             modules.add(val)
             name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val)}
-        elif type(user_dict[val]) is types.TypeType:
+        # elif type(user_dict[val]) is types.ClassType:
+        #     classes.add(val)
+        #     name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val)}
+        elif type(user_dict[val]) is types.TypeType or type(user_dict[val]) is types.ClassType:
             classes.add(val)
             bases = list()
             for x in list(user_dict[val].__bases__):
@@ -3181,21 +3326,29 @@ def get_vars_in_use(interview, interview_status):
             method_list = list()
             for name, value in methods:
                 method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': noquote(inspect.getdoc(value)), 'tag': '.' + str(name) + str(inspect.formatargspec(*inspect.getargspec(value)))})
+            #logmessage("Defining name_info for " + str(val))
             name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'bases': bases, 'methods': method_list}
     for val in docassemble.base.util.pickleable_objects(user_dict):
         names_used.add(val)
-        name_info[val] = {'type': type(user_dict[val]).__name__}
-    names_used.discard('x')
-    names_used.discard('_internal')
+        if val not in name_info:
+            name_info[val] = dict()
+        #name_info[val]['type'] = type(user_dict[val]).__name__
+        name_info[val]['type'] = user_dict[val].__class__.__name__
+    names_used.update(set(base_name_info.keys()))
+    names_used = set([i for i in names_used if not extraneous_var.search(i)])
+    for var in ['_internal']:
+        names_used.discard(var)
     view_doc_text = word("View documentation")
     word_documentation = word("Documentation")
+    for var in documentation_dict:
+        if var not in name_info:
+            name_info[var] = dict()
+        if 'doc' in name_info[var] and name_info[var]['doc'] is not None:
+            name_info[var]['doc'] += '<br>'
+        else:
+            name_info[var]['doc'] = ''
+        name_info[var]['doc'] += "<a target='_blank' href='" + documentation_dict[var] + "'>" + view_doc_text + "</a>"
     for var in name_info:
-        if var in documentation_dict:
-            if 'doc' in name_info[var] and name_info[var]['doc'] is not None:
-                name_info[var]['doc'] += '<br>'
-            else:
-                name_info[var]['doc'] = ''
-            name_info[var]['doc'] += "<a target='_blank' href='" + documentation_dict[var] + "'>" + view_doc_text + "</a>"
         if 'methods' in name_info[var]:
             for method in name_info[var]['methods']:
                 if var + '.' + method['name'] in documentation_dict:
@@ -3205,24 +3358,43 @@ def get_vars_in_use(interview, interview_status):
                         method['doc'] += '<br>'
                     method['doc'] += "<a target='_blank' href='" + documentation_dict[var + '.' + method['name']] + "'>" + view_doc_text + "</a>"                
     content = ''
+    if has_error:
+        error_style = 'danger'
+        if error_type is DAErrorNoEndpoint:
+            error_style = 'warning'
+            message_to_use = title_documentation['incomplete']['doc']
+        elif error_type is DAErrorMissingVariable:
+            message_to_use = error_message
+        else:
+            message_to_use = title_documentation['generic error']['doc']
+        content += '\n                  <tr><td class="playground-warning-box"><div class="alert alert-' + error_style + '">' + message_to_use + '</div></td></tr>'
+    names_used = names_used.difference( functions | classes | modules | set(avail_modules) )
+    undefined_names = names_used.difference(fields_used | set(base_name_info.keys()) )
+    for var in ['_internal']:
+        undefined_names.discard(var)
+    names_used = names_used.difference( undefined_names )
+    if len(undefined_names):
+        content += '\n                  <tr><td><h4>Undefined names' + infobutton('undefined') + '</h4></td></tr>'
+        for var in sorted(undefined_names):
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-danger playground-variable">' + var + '</a></td></tr>'
     if len(names_used):
-        content += '\n                  <tr><td><h4>Variables</h4></td></tr>'
+        content += '\n                  <tr><td><h4>Variables' + infobutton('variables') + '</h4></td></tr>'
         for var in sorted(names_used):
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + var + '</a>'
-            if var in name_info and name_info[var]['type']:
+            if var in name_info and 'type' in name_info[var] and name_info[var]['type']:
                 content +='&nbsp;<span data-ref="' + noquote(name_info[var]['type']) + '" class="daparenthetical">(' + name_info[var]['type'] + ')</span>'
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
                 content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
             content += '</td></tr>'
     if len(functions):
-        content += '\n                  <tr><td><h4>Functions</h4></td></tr>'
+        content += '\n                  <tr><td><h4>Functions' + infobutton('functions') + '</h4></td></tr>'
         for var in sorted(functions):
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-warning playground-variable">' + name_info[var]['tag'] + '</a>'
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
                 content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
             content += '</td></tr>'
     if len(classes):
-        content += '\n                  <tr><td><h4>Classes</h4></td></tr>'
+        content += '\n                  <tr><td><h4>Classes' + infobutton('classes') + '</h4></td></tr>'
         for var in sorted(classes):
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-info playground-variable">' + name_info[var]['name'] + '</a>'
             if name_info[var]['bases']:
@@ -3240,33 +3412,32 @@ def get_vars_in_use(interview, interview_status):
                 content += '</tbody></table>'
             content += '</td></tr>'
     if len(modules):
-        content += '\n                  <tr><td><h4>Modules defined</h4></td></tr>'
+        content += '\n                  <tr><td><h4>Modules defined' + infobutton('modules') + '</h4></td></tr>'
         for var in sorted(modules):
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-success playground-variable">' + name_info[var]['name'] + '</a>'
             if name_info[var]['doc']:
                 content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + noquote(var) + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
             content += '</td></tr>'
     if len(avail_modules):
-        content += '\n                  <tr><td><h4>Modules available in playground</h4></td></tr>'
+        content += '\n                  <tr><td><h4>Modules available in playground' + infobutton('playground_modules') + '</h4></td></tr>'
         for var in avail_modules:
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert=".' + noquote(var) + '" class="label label-success playground-variable">.' + noquote(var) + '</a>'
             content += '</td></tr>'
     if len(templates):
-        content += '\n                  <tr><td><h4>Templates</h4></td></tr>'
+        content += '\n                  <tr><td><h4>Templates' + infobutton('templates') + '</h4></td></tr>'
         for var in templates:
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-default playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
     if len(static):
-        content += '\n                  <tr><td><h4>Static files</h4></td></tr>'
+        content += '\n                  <tr><td><h4>Static files' + infobutton('static') + '</h4></td></tr>'
         for var in static:
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-default playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
     if len(interview.images):
-        content += '\n                  <tr><td><h4>Decorations</h4></td></tr>'
+        content += '\n                  <tr><td><h4>Decorations' + infobutton('decorations') + '</h4></td></tr>'
         for var in sorted(interview.images):
             content += '\n                  <tr><td><img class="daimageicon" src="' + get_url_from_file_reference(interview.images[var].get_reference()) + '">&nbsp;<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
-    view_doc_text = word("View documentation")
     return content
 
 @app.route('/playground', methods=['GET', 'POST'])
@@ -3874,4 +4045,3 @@ def interview_list():
 #     response = redirect(next)
 #     response.set_cookie('secret', newsecret)
 #     return response
-
