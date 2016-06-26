@@ -86,6 +86,46 @@ So the `need()` function does not "do" anything.  However, writing
 because it helps you convey in "natural language" that your interview
 "needs" these variables to be defined.
 
+## <a name="message"></a>message()
+
+{% include side-by-side.html demo="message" %}
+
+The `message()` function causes **docassemble** to stop what it is
+doing and present a screen to the user that contains a given message.
+
+By default, the user will be offered an "exit" button and a "restart"
+button, but these choices can be configured.
+
+The first argument is the title of the screen the user will see (the
+[`question`]).  The second argument, which is optional, indicates the
+text that will follow the title (the [`subquestion`]).
+
+The `message()` function also takes keyword arguments.  The following
+do the same thing:
+
+* `message("This is the big part of the question", "This is the
+  smaller part of the question")`
+* `message(question="This is the big part of the question", subquestion="This is the
+  smaller part of the question")`
+
+The optional keyword arguments influence the appearance of the screen:
+
+* `message("Bye!", "See ya later", show_restart=False)`: will show the
+  Exit button but not the Restart button.
+* `message("Bye!", "See ya later", show_exit=False)`: will show the
+  Restart button but not the Exit button.
+* `message("Bye!", "See ya later", url="https://www.google.com")`:
+  clicking the Exit button will take the user to Google.
+* `message("Bye!", "See ya later", url="https://www.google.com")`:
+  clicking the Exit button will take the user to Google.
+* `message("Bye!", "See ya later", show_leave=True)`: will show a
+  Leave button instead of the Exit button.
+* `message("Bye!", "See ya later", show_leave=True, show_exit=True,
+  show_restart=False)`: will show a Leave button and an Exit button.
+* `message("Bye!", "See ya later",
+  buttons=[{"Learn More": "exit", "url": "https://en.wikipedia.org/wiki/Spinning_wheel"}])`:
+  will show a "Learn More" button that exits to Wikipedia.
+
 ## <a name="force_ask"></a>force_ask()
 
 Usually, **docassemble** only asks a question when it encounters a
@@ -1017,3 +1057,5 @@ docassemble.base.util.update_language_function('fr', 'her', docassemble.base.uti
 [`currency_symbol`]: {{ site.baseurl }}/docs/config.html#currency_symbol
 [`title_case()`]: #title_case
 [how **docassemble** runs your code]: {{ site.baseurl }}/docs/logic.html#howitworks
+[`question`]: {{ site.baseurl }}/docs/questions.html#question
+[`subquestion`]: {{ site.baseurl }}/docs/questions.html#subquestion

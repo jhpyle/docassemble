@@ -66,7 +66,7 @@ main interview files will consist only of "mandatory" code blocks.
 Improvements you make to the questions will be available automatically
 to all interviews.
 
-## The Templates folder
+## <a name="templates"></a>The Templates folder
 
 ![Templates]({{ site.baseurl }}/img/playground-templates.png)
 
@@ -82,7 +82,7 @@ called `small_claims_complaint.md` in the Templates folder and then
 incorporate that text by reference by including the line `content
 file: small_claims_complaint.md` within an [`attachments`] directive.
 
-## The Static folder
+## <a name="static"></a>The Static folder
 
 ![Static]({{ site.baseurl }}/img/playground-static.png)
 
@@ -91,9 +91,35 @@ audio files with your interview's **docassemble** [package] by
 including them within the `data/static` subdirectory.  In the
 Playground, these files are located within the "Static" folder.  In
 this area, you can upload files or write files of your own.  For
-example, you might want to write your own Javascript files here.
+example, you might want to write your own Javascript files here, or
+upload images that you want to include in interview questions.
 
-## Variables, etc.
+## <a name="modules"></a>The Modules folder
+
+If your interviews contain any complicated Python code, or you want to
+create your own classes, you should create a Python module and import
+its names into your interview.  In a **docassemble** [package], these
+are located in the main directory (the directory that contains the
+`data` subdirectory).  In the Playground, these files are located
+within the "Modules" folder.  In this area, you can write your own
+Python classes and functions.
+
+The best way to incorporate your module into your interview is to use
+Python's notation for "relative imports."  For example, if your module
+file is called `fruit.py`, you would import the module's resources by
+writing a [`modules`] statement:
+
+{% highlight yaml %}
+---
+modules:
+  - .fruit
+---
+{% endhighlight %}
+
+This notation will work both in the Playground and when the interview
+is bundled as a Python module.
+
+## <a name="variables"></a>Variables, etc.
 
 ![variables]({{ site.baseurl }}/img/playground-variables.png)
 
@@ -119,7 +145,7 @@ The area lists the following types of names (which are color-coded):
 * Templates: template files available in the Templates folder of the Playground
 * Static files: static files available in the Static folder of the Playground
 
-## Example blocks
+## <a name="examples"></a>Example blocks
 
 ![example area]({{ site.baseurl }}/img/playground-example-area.png){: .full-width }
 

@@ -36,6 +36,19 @@
   code: |
     fishes[current_info['arguments']['color']] += 1
   ---
+"age_in_years": |-
+  ---
+  question: |
+    What is your date of birth?
+  fields:
+    - no label: user.birthdate
+      datatype: date
+  ---
+  question: |
+    You are ${ user.age_in_years() }
+    years old.
+  sets: all_done
+  ---
 "alignment": |-
   ---
   question: Here is your document.
@@ -320,12 +333,15 @@
   ---
   question: Summary
   subquestion: |
-    Your favorite fruit is ${ favorite_fruit }.
+    Your favorite fruit is
+    ${ favorite_fruit }.
 
     % if defined('favorite_vegetable'):
-    Your favorite vegetable is ${ favorite_vegetable }.
+    Your favorite vegetable
+    is ${ favorite_vegetable }.
     % else:
-    I do not know your favorite vegetable.
+    I do not know your favorite
+    vegetable.
     % endif
   sets: all_done
   ---
@@ -490,6 +506,11 @@
     Does ${ x } like cats?
   yesno: x.likes_cats
   ---
+"generic-object-phone-number": |-
+  ---
+  modules:
+    - docassemble.base.legal
+  ---
 "help": |-
   ---
   question: |
@@ -652,6 +673,12 @@
   mandatory: true
   code: |
     menu_items = [ action_menu_item('Visit Cow', 'see_cow') ]
+  ---
+"message": |-
+  ---
+  code: |
+    message("The interview is over.", "Better luck next time!")
+  mandatory: true
   ---
 "metadata": |-
   ---
@@ -939,7 +966,8 @@
 "required-code": |-
   ---
   question: |
-    What are your favorite things to drink?
+    What are your favorite
+    things to drink?
   fields:
     - Favorite Beverage Overall: favorite_beverage
     - Favorite Soda: favorite_soda
@@ -1098,6 +1126,12 @@
     zombie pigman: |
       A harmless creature who carries a gold
       sword.
+  ---
+"testmessage": |-
+  ---
+  code: |
+    message("You suck", "Immensely!!!", show_leave=True, url="https://google.com")
+  mandatory: true
   ---
 "text-box-field": |-
   ---

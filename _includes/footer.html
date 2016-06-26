@@ -18,8 +18,8 @@
       <p><a href="https://twitter.com/docassemble" class="twitter-follow-button" data-show-count="false">Follow @docassemble</a></p>
     </footer>
     <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="{{ '/jquery/jquery-2.2.4.min.js' | prepend: site.baseurl }}"></script>
+    <script src="{{ '/bootstrap/js/bootstrap.min.js' | prepend: site.baseurl }}"></script>
     <script src="{{ '/tocmd-generator/js/jquery.toc.js' | prepend: site.baseurl }}"></script>
     <script>
       $('#main').toc({showAlways:true});
