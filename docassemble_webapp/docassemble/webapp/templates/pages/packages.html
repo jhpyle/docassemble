@@ -4,9 +4,13 @@
 
 <h1>Packages</h1>
 
-<h3><a href="{{ url_for('create_package') }}">Create a package</a></h3>
+<h3><a href="{{ url_for('create_package') }}">Create a template package</a></h3>
 
-Download a zip file containing a template for a package.
+Download a zip file containing an empty template for a package.
+
+<h3><a href="{{ url_for('create_playground_package') }}">Create a package from Playground files</a></h3>
+
+Download a zip file containing a package that you <a href="{{ url_for('playground_packages') }}">defined in the Playground</a>.
 
 <h3><a href="{{ url_for('update_package') }}">Update a package</a></h3>
 

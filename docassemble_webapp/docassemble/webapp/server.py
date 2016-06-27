@@ -46,13 +46,13 @@ import json
 import base64
 import requests
 from flask import make_response, abort, render_template, request, session, send_file, redirect, url_for, current_app, get_flashed_messages, flash, Markup, jsonify
-from flask.ext.login import LoginManager, UserMixin, login_user, logout_user, current_user
-from flask.ext.user import login_required, roles_required, UserManager, SQLAlchemyAdapter
-from flask.ext.user.forms import LoginForm
-from flask.ext.user import signals, user_logged_in, user_changed_password, user_registered, user_registered, user_reset_password
-from docassemble.webapp.develop import CreatePackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm
+from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
+from flask_user import login_required, roles_required, UserManager, SQLAlchemyAdapter
+from flask_user.forms import LoginForm
+from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_registered, user_reset_password
+from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm
 from flask_mail import Mail, Message
-import flask.ext.user.signals
+import flask_user.signals
 import httplib2
 from werkzeug import secure_filename, FileStorage
 from rauth import OAuth1Service, OAuth2Service
@@ -579,7 +579,7 @@ def logout():
     else:
         set_cookie = False
     user_manager = current_app.user_manager
-    flask.ext.user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
+    flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
     logout_user()
     delete_session()
     flash(word('You have signed out successfully.'), 'success')
@@ -2588,7 +2588,7 @@ def install_zip_package(packagename, file_number):
         db.session.add(package_auth)
         db.session.add(package_entry)
     else:
-        if existing_package.type == 'zip' and existing_package.upload is not None:
+        if existing_package.type == 'zip' and existing_package.upload is not None and existing_package.upload != file_number:
             SavedFile(existing_package.upload).delete()
         existing_package.upload = file_number
         existing_package.active = True
@@ -2710,6 +2710,229 @@ def get_package_info():
                 can_update = is_admin
             package_list.append(Object(package=package, can_update=can_update, can_uninstall=can_uninstall))
     return package_list, package_auth
+
+@app.route('/createplaygroundpackage', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def create_playground_package():
+    form = CreatePlaygroundPackageForm(request.form, current_user)
+    current_package = request.args.get('package', None)
+    do_install = request.args.get('install', False)
+    if request.method == 'POST' and form.validate():
+        current_package = form.name.data
+    area = dict()
+    area['playgroundpackages'] = SavedFile(current_user.id, fix=True, section='playgroundpackages')
+    file_list = dict()
+    file_list['playgroundpackages'] = sorted([f for f in os.listdir(area['playgroundpackages'].directory) if os.path.isfile(os.path.join(area['playgroundpackages'].directory, f))])
+    if current_package is not None:
+        pkgname = re.sub(r'^docassemble-', r'', current_package)
+        if not user_can_edit_package(pkgname='docassemble.' + pkgname):
+            flash(word('Sorry, that package name is already in use by someone else'), 'error')
+            current_package = None
+        elif current_package not in file_list['playgroundpackages']:
+            flash(word('Sorry, that package name does not exist in the playground'), 'error')
+            current_package = None
+    if current_package is not None:
+        section_sec = {'playgroundtemplate': 'template', 'playgroundstatic': 'static', 'playgroundmodules': 'modules'}
+        for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundmodules']:
+            area[sec] = SavedFile(current_user.id, fix=True, section=sec)
+            file_list[sec] = sorted([f for f in os.listdir(area[sec].directory) if os.path.isfile(os.path.join(area[sec].directory, f))])
+        if os.path.isfile(os.path.join(area['playgroundpackages'].directory, current_package)):
+            filename = os.path.join(area['playgroundpackages'].directory, current_package)
+            info = dict()
+            with open(filename, 'rU') as fp:
+                content = fp.read().decode('utf8')
+                info = yaml.load(content)
+            for field in ['dependencies', 'interview_files', 'template_files', 'module_files', 'static_files']:
+                if field not in info:
+                    info[field] = list()
+            for package in ['docassemble', 'docassemble.base']:
+                if package not in info['dependencies']:
+                    info['dependencies'].append(package)
+            dependencies = ", ".join(map(lambda x: repr(x), sorted(info['dependencies'])))
+            initpy = """\
+try:
+    __import__('pkg_resources').declare_namespace(__name__)
+except ImportError:
+    __path__ = __import__('pkgutil').extend_path(__path__, __name__)
+
+"""
+            licensetext = info['license']
+            readme = '# docassemble.' + str(pkgname) + "\n\n" + info['description'] + "\n\n## Author\n\n" + name_of_user(current_user, include_email=True) + "\n"
+            setuppy = """\
+#!/usr/bin/env python
+
+import os
+import sys
+from setuptools import setup, find_packages
+from fnmatch import fnmatchcase
+from distutils.util import convert_path
+
+standard_exclude = ('*.py', '*.pyc', '*~', '.*', '*.bak', '*.swp*')
+standard_exclude_directories = ('.*', 'CVS', '_darcs', './build', './dist', 'EGG-INFO', '*.egg-info')
+def find_package_data(where='.', package='', exclude=standard_exclude, exclude_directories=standard_exclude_directories):
+    out = {}
+    stack = [(convert_path(where), '', package)]
+    while stack:
+        where, prefix, package = stack.pop(0)
+        for name in os.listdir(where):
+            fn = os.path.join(where, name)
+            if os.path.isdir(fn):
+                bad_name = False
+                for pattern in exclude_directories:
+                    if (fnmatchcase(name, pattern)
+                        or fn.lower() == pattern.lower()):
+                        bad_name = True
+                        break
+                if bad_name:
+                    continue
+                if os.path.isfile(os.path.join(fn, '__init__.py')):
+                    if not package:
+                        new_package = name
+                    else:
+                        new_package = package + '.' + name
+                        stack.append((fn, '', new_package))
+                else:
+                    stack.append((fn, prefix + name + '/', package))
+            else:
+                bad_name = False
+                for pattern in exclude:
+                    if (fnmatchcase(name, pattern)
+                        or fn.lower() == pattern.lower()):
+                        bad_name = True
+                        break
+                if bad_name:
+                    continue
+                out.setdefault(package, []).append(prefix+name)
+    return out
+
+"""
+            setuppy += "setup(name='docassemble." + str(pkgname) + "',\n" + """\
+      version=""" + repr(info['version']) + """,
+      description=(""" + repr(info['description']) + """),
+      author=""" + repr(name_of_user(current_user)) + """,
+      author_email=""" + repr(current_user.email) + """,
+      license=""" + repr(info['license']) + """,
+      url=""" + repr(info['url']) + """,
+      packages=find_packages(),
+      namespace_packages = ['docassemble'],
+      install_requires = [""" + dependencies + """],
+      zip_safe = False,
+      package_data=find_package_data(where='docassemble/""" + str(pkgname) + """/', package='docassemble.""" + str(pkgname) + """'),
+     )
+
+"""
+            templatereadme = """\
+# Template directory
+
+If you want to use non-standard document templates with pandoc,
+put template files in this directory.
+"""
+            staticreadme = """\
+# Static file directory
+
+If you want to make files available in the web app, put them in
+this directory.
+"""
+            objectfile = """\
+# This is a Python module in which you can write your own Python code,
+# if you want to.
+#
+# Include this module in a docassemble interview by writing:
+# ---
+# modules:
+#   - docassemble.""" + pkgname + """.objects
+# ---
+#
+# Then you can do things like:
+# ---
+# objects:
+#   - favorite_fruit: Fruit
+# ---
+# mandatory: true
+# question: |
+#   When I eat some ${ favorite_fruit.name }, 
+#   I think, "${ favorite_fruit.eat() }"
+# ---
+# question: What is the best fruit?
+# fields:
+#   - Fruit Name: favorite_fruit.name
+# ---
+from docassemble.base.core import DAObject
+
+class Fruit(DAObject):
+    def eat(self):
+        return "Yum, that " + self.name + " was good!"
+"""
+            directory = tempfile.mkdtemp()
+            packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
+            maindir = os.path.join(packagedir, 'docassemble', str(pkgname))
+            questionsdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'questions')
+            templatesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'templates')
+            staticdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'static')
+            os.makedirs(questionsdir)
+            os.makedirs(templatesdir)
+            os.makedirs(staticdir)
+            for the_file in info['interview_files']:
+                orig_file = os.path.join(area['playground'].directory, the_file)
+                if os.path.exists(orig_file):
+                    shutil.copyfile(orig_file, os.path.join(questionsdir, the_file))
+            for the_file in info['template_files']:
+                orig_file = os.path.join(area['playgroundtemplate'].directory, the_file)
+                if os.path.exists(orig_file):
+                    shutil.copyfile(orig_file, os.path.join(templatesdir, the_file))
+            for the_file in info['module_files']:
+                orig_file = os.path.join(area['playgroundmodules'].directory, the_file)
+                if os.path.exists(orig_file):
+                    shutil.copyfile(orig_file, os.path.join(maindir, the_file))
+            for the_file in info['static_files']:
+                orig_file = os.path.join(area['playgroundstatic'].directory, the_file)
+                if os.path.exists(orig_file):
+                    shutil.copyfile(orig_file, os.path.join(staticdir, the_file))
+            with open(os.path.join(packagedir, 'README.md'), 'a') as the_file:
+                the_file.write(readme)
+            with open(os.path.join(packagedir, 'LICENSE'), 'a') as the_file:
+                the_file.write(licensetext)
+            with open(os.path.join(packagedir, 'setup.py'), 'a') as the_file:
+                the_file.write(setuppy)
+            with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'a') as the_file:
+                the_file.write(initpy)
+            with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'a') as the_file:
+                the_file.write('')
+            with open(os.path.join(templatesdir, 'README.md'), 'a') as the_file:
+                the_file.write(templatereadme)
+            with open(os.path.join(staticdir, 'README.md'), 'a') as the_file:
+                the_file.write(staticreadme)
+            nice_name = 'docassemble-' + str(pkgname) + '.zip'
+            file_number = get_new_file_number(session.get('uid', None), nice_name)
+            saved_file = SavedFile(file_number, extension='zip', fix=True)
+            zf = zipfile.ZipFile(saved_file.path, mode='w')
+            trimlength = len(directory) + 1
+            for root, dirs, files in os.walk(packagedir):
+                for file in files:
+                    thefilename = os.path.join(root, file)
+                    zf.write(thefilename, thefilename[trimlength:])
+            zf.close()
+            saved_file.save()
+            saved_file.finalize()
+            existing_package = Package.query.filter_by(name='docassemble.' + pkgname, active=True).first()
+            if existing_package is None:
+                package_auth = PackageAuth(user_id=current_user.id)
+                package_entry = Package(name='docassemble.' + pkgname, package_auth=package_auth, upload=file_number, type='zip')
+                db.session.add(package_auth)
+                db.session.add(package_entry)
+                #sys.stderr.write("Ok, did the commit\n")
+            else:
+                existing_package.upload = file_number
+                existing_package.active = True
+                existing_package.version += 1
+            db.session.commit()
+            if do_install:
+                install_zip_package('docassemble.' + pkgname, file_number)
+            else:
+                resp = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
+                return resp
+    return render_template('pages/create_playground_package.html', form=form, current_package=current_package, package_names=file_list['playgroundpackages']), 200
 
 @app.route('/createpackage', methods=['GET', 'POST'])
 @login_required
@@ -3183,10 +3406,6 @@ def playground_packages():
     if is_new:
         scroll = True
         the_file = ''
-    if request.method == 'POST':
-        if (form.section.data):
-            the_file = form.file_name.data
-            the_file = re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', the_file)
     area = dict()
     file_list = dict()
     section_name = {'playground': 'Interview files', 'playgroundpackages': 'Packages', 'playgroundtemplate': 'Template files', 'playgroundstatic': 'Static files', 'playgroundmodules': 'Modules'}
@@ -3195,30 +3414,70 @@ def playground_packages():
     for sec in ['playground', 'playgroundpackages', 'playgroundtemplate', 'playgroundstatic', 'playgroundmodules']:
         area[sec] = SavedFile(current_user.id, fix=True, section=sec)
         file_list[sec] = sorted([f for f in os.listdir(area[sec].directory) if os.path.isfile(os.path.join(area[sec].directory, f))])
-    if request.args.get('delete', False):
-        argument = re.sub(r'[^A-Za-z0-9\-\_\.]', '', request.args.get('delete'))
-        if argument:
-            filename = os.path.join(area['playgroundpackages'].directory, argument)
-            if os.path.exists(filename):
-                os.remove(filename)
-                area['playgroundpackages'].finalize()
-                flash(word("Deleted file: ") + argument, "success")
-                return redirect(url_for('playground_packages'))
-    if request.method == 'POST':
-        if form.submit.data:
+    for sec, field in section_field.iteritems():
+        the_list = []
+        for item in file_list[sec]:
+            the_list.append((item, item))
+        field.choices = the_list
+    the_list = []
+    for item in package_names:
+        the_list.append((item, item))
+    form.dependencies.choices = the_list
+    validated = False
+    if request.method == 'POST' and form.validate():
+        the_file = form.file_name.data
+        validated = True
+    the_file = re.sub(r'[^A-Za-z0-9\-\_\.]+', '-', the_file)
+    the_file = re.sub(r'^docassemble-', r'', the_file)
+    if not user_can_edit_package(pkgname='docassemble.' + the_file):
+        flash(word('Sorry, that package name,') + the_file + word(', is already in use by someone else'), 'error')
+        the_file = ''
+    if the_file == '' and len(file_list['playgroundpackages']) and not is_new:
+        the_file = file_list['playgroundpackages'][0]
+    old_info = dict()
+    if request.method == 'GET' and the_file != '':
+        if the_file != '' and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):
+            filename = os.path.join(area['playgroundpackages'].directory, the_file)
+            with open(filename, 'rU') as fp:
+                content = fp.read().decode('utf8')
+                old_info = yaml.load(content)
+                if type(old_info) is dict:
+                    for field in ['license', 'description', 'version']:
+                        if field in old_info:
+                            form[field].data = old_info[field]
+                    for field in ['dependencies', 'interview_files', 'template_files', 'module_files', 'static_files']:
+                        if field in old_info and type(old_info[field]) is list and len(old_info[field]):
+                            form[field].data = old_info[field]
+        else:
+            filename = None
+    if request.method == 'POST' and validated:
+        if form.delete.data and the_file != '' and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):
+            os.remove(os.path.join(area['playgroundpackages'].directory, the_file))
+            area['playgroundpackages'].finalize()
+            flash(word("Deleted package"), "success")
+            return redirect(url_for('playground_packages'))
+        new_info = dict()
+        for field in ['license', 'description', 'version', 'url', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files']:
+            new_info[field] = form[field].data
+        #logmessage("found " + str(new_info))
+        if form.submit.data or form.download.data or form.install.data:
             if the_file != '':
+                area['playgroundpackages'].finalize()
                 if form.original_file_name.data and form.original_file_name.data != the_file:
                     old_filename = os.path.join(area['playgroundpackages'].directory, form.original_file_name.data)
                     if os.path.isfile(old_filename):
                         os.remove(old_filename)
                 filename = os.path.join(area['playgroundpackages'].directory, the_file)
                 with open(filename, 'w') as fp:
-                    #write YAML
-                    pass
+                    the_yaml = yaml.safe_dump(new_info, default_flow_style=False, default_style = '|')
+                    fp.write(the_yaml.encode('utf8'))
+                area['playgroundpackages'].finalize()
+                if form.download.data:
+                    return redirect(url_for('create_playground_package', package=the_file))
+                if form.install.data:
+                    return redirect(url_for('create_playground_package', package=the_file, install=True))
                 the_time = time.strftime('%H:%M:%S %Z', time.localtime())
-                flash(word('The file was saved at') + ' ' + the_time + '.', 'success')
-            else:
-                flash(word('You need to type in a name for the file'), 'error')                
+                flash(word('The package information was saved.'), 'success')
     files = sorted([f for f in os.listdir(area['playgroundpackages'].directory) if os.path.isfile(os.path.join(area['playgroundpackages'].directory, f))])
     editable_files = list()
     mode = "yaml"
@@ -3228,18 +3487,13 @@ def playground_packages():
         if len(editable_files):
             the_file = editable_files[0]
         else:
-            the_file = 'docassemble-me'
+            the_file = ''
     form.original_file_name.data = the_file
     form.file_name.data = the_file
     if the_file != '' and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):
         filename = os.path.join(area['playgroundpackages'].directory, the_file)
     else:
         filename = None
-    if filename is not None:
-        area['playgroundpackages'].finalize()
-        with open(filename, 'rU') as fp:
-            content = fp.read().decode('utf8')
-            # convert content from YAML
     header = word("Packages")
     upload_header = None
     edit_header = None

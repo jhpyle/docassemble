@@ -18,12 +18,14 @@
   {{ myrender_hidden_field(form.original_file_name, value=current_file) }}
   <div class="daspacer"></div>
   {{ render_field(form.file_name) }}
+  {{ render_field(form.version) }}
   {{ render_field(form.license) }}
   {{ render_field(form.description) }}
+  {{ render_field(form.url) }}
   <h2>Dependencies</h2>
   <div class="form-group">
     <label for="{{ form.dependencies.id }}">{{ word("Select zero or more packages") }}</label>
-    <select multiple size="10", class="form-control" id="{{ form.dependencies.id }}">
+    <select multiple size="{% if package_names.__len__() < 10 %}{{ package_names.__len__() }}{% else %}10{% endif %}" class="form-control" name="{{ form.dependencies.id }}" id="{{ form.dependencies.id }}">
       {%- for package in package_names %}
       <option value="{{ package }}"{% if form.dependencies.data and package in form.dependencies.data %} selected{% endif %}>{{ package }}</option>
       {%- endfor %}
@@ -33,7 +35,7 @@
   <h2>{{ section_name[sec] }}</h2>
   <div class="form-group">
     <label for="{{ section_field[sec].id }}">{{ word("Select zero or more files") }}</label>
-    <select multiple size="{% if file_list[sec].__len__() < 10 %}{{ file_list[sec].__len__() }}{% else %}10{% endif %}", class="form-control" id="{{ section_field[sec].id }}">
+    <select multiple size="{% if file_list[sec].__len__() < 10 %}{{ file_list[sec].__len__() }}{% else %}10{% endif %}" class="form-control" name="{{ section_field[sec].id }}" id="{{ section_field[sec].id }}">
       {%- for file in file_list[sec] %}
       <option value="{{ file }}"{% if section_field[sec].data and file in section_field[sec].data %} selected{% endif %}>{{ file }}</option>
       {%- endfor %}
@@ -58,6 +60,9 @@
   {%- endfor %}
   <div class="form-actions">
     {{ render_submit_field(form.submit, tabindex=100, class="btn btn-primary btn-lg") }}
+    {{ render_submit_field(form.download, tabindex=100, class="btn btn-primary btn-lg") }}
+    {{ render_submit_field(form.install, tabindex=100, class="btn btn-primary btn-lg") }}
+    {{ render_submit_field(form.delete, tabindex=100, class="btn btn-danger btn-lg") }}
   </div>
 </form>
 

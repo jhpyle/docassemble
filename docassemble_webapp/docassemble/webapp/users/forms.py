@@ -1,5 +1,5 @@
 from flask_user.forms import RegisterForm
-from flask.ext.wtf import Form
+from flask_wtf import Form
 from wtforms import StringField, SubmitField, ValidationError, BooleanField, SelectField
 from wtforms.validators import DataRequired, Email
 

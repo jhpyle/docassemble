@@ -16,8 +16,8 @@ import docassemble.webapp.database
 import random
 import string
 #from flask import Flask
-#from flask.ext.sqlalchemy import SQLAlchemy
-from flask.ext.user import UserManager, SQLAlchemyAdapter
+#from flask_sqlalchemy import SQLAlchemy
+from flask_user import UserManager, SQLAlchemyAdapter
 
 if __name__ == "__main__":
     app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
