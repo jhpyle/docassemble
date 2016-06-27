@@ -3,6 +3,11 @@ body {
   padding-bottom: 40px;
 }
 
+.alert {
+    max-height: 150px;
+    overflow-y: auto;
+}
+
 .daiconbox {
     font-size: 13px;
     font-family:Roboto,arial,sans-serif;

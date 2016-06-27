@@ -2718,20 +2718,32 @@ def create_playground_package():
     form = CreatePlaygroundPackageForm(request.form, current_user)
     current_package = request.args.get('package', None)
     do_install = request.args.get('install', False)
-    if request.method == 'POST' and form.validate():
-        current_package = form.name.data
+    from_playground = request.args.get('from_playground', False)
     area = dict()
     area['playgroundpackages'] = SavedFile(current_user.id, fix=True, section='playgroundpackages')
     file_list = dict()
     file_list['playgroundpackages'] = sorted([f for f in os.listdir(area['playgroundpackages'].directory) if os.path.isfile(os.path.join(area['playgroundpackages'].directory, f))])
+    the_choices = list()
+    for file_option in file_list['playgroundpackages']:
+        the_choices.append((file_option, file_option))
+    form.name.choices = the_choices
+    if request.method == 'POST':
+        if form.validate():
+            current_package = form.name.data
+            #flash("form validated", 'success')
+        else:
+            the_error = ''
+            for error in form.name.errors:
+                the_error += str(error)
+            flash("form did not validate with " + str(form.name.data) + " " + str(the_error) + " among " + str(form.name.choices), 'error')
     if current_package is not None:
         pkgname = re.sub(r'^docassemble-', r'', current_package)
         if not user_can_edit_package(pkgname='docassemble.' + pkgname):
             flash(word('Sorry, that package name is already in use by someone else'), 'error')
             current_package = None
-        elif current_package not in file_list['playgroundpackages']:
-            flash(word('Sorry, that package name does not exist in the playground'), 'error')
-            current_package = None
+    if current_package is not None and current_package not in file_list['playgroundpackages']:
+        flash(word('Sorry, that package name does not exist in the playground'), 'error')
+        current_package = None
     if current_package is not None:
         section_sec = {'playgroundtemplate': 'template', 'playgroundstatic': 'static', 'playgroundmodules': 'modules'}
         for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundmodules']:
@@ -2929,6 +2941,7 @@ class Fruit(DAObject):
             db.session.commit()
             if do_install:
                 install_zip_package('docassemble.' + pkgname, file_number)
+                return redirect(url_for('playground_packages', file=current_package))
             else:
                 resp = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
                 return resp
@@ -4002,7 +4015,7 @@ def server_error(the_error):
     return render_template('pages/501.html', error=errmess, logtext=str(the_trace)), 501
 
 def trigger_update(except_for=None):
-    logmessage("Got to trigger_update where except_for is " + str(except_for))
+    logmessage("trigger_update: except_for is " + str(except_for))
     if USING_SUPERVISOR:
         for host in Supervisors.query.all():
             if host.url and not (except_for and host.hostname == except_for):
