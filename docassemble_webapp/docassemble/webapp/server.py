@@ -2770,6 +2770,27 @@ except ImportError:
 
 """
             licensetext = info['license']
+            if re.search(r'MIT License', licensetext):
+                licensetext += '\n\nCopyright (c) ' + str(datetime.datetime.now().year) + ' ' + unicode(current_user.first_name) + " " + unicode(current_user.last_name) + """
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
             readme = '# docassemble.' + str(pkgname) + "\n\n" + info['description'] + "\n\n## Author\n\n" + name_of_user(current_user, include_email=True) + "\n"
             setuppy = """\
 #!/usr/bin/env python
@@ -3410,14 +3431,14 @@ def playground_packages():
     for default_package in ['docassemble', 'docassemble.base', 'docassemble.webapp']:
         if default_package in package_names:
             package_names.remove(default_package)
-    if the_file:
-        scroll = True
+    # if the_file:
+    #     scroll = True
     if request.method == 'GET':
         is_new = request.args.get('new', False)
     else:
         is_new = False
     if is_new:
-        scroll = True
+        # scroll = True
         the_file = ''
     area = dict()
     file_list = dict()
@@ -3455,9 +3476,11 @@ def playground_packages():
                 content = fp.read().decode('utf8')
                 old_info = yaml.load(content)
                 if type(old_info) is dict:
-                    for field in ['license', 'description', 'version']:
+                    for field in ['license', 'description', 'version', 'url', 'readme']:
                         if field in old_info:
                             form[field].data = old_info[field]
+                        else:
+                            form[field].data = ''
                     for field in ['dependencies', 'interview_files', 'template_files', 'module_files', 'static_files']:
                         if field in old_info and type(old_info[field]) is list and len(old_info[field]):
                             form[field].data = old_info[field]
@@ -3470,7 +3493,7 @@ def playground_packages():
             flash(word("Deleted package"), "success")
             return redirect(url_for('playground_packages'))
         new_info = dict()
-        for field in ['license', 'description', 'version', 'url', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files']:
+        for field in ['license', 'description', 'version', 'url', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'readme']:
             new_info[field] = form[field].data
         #logmessage("found " + str(new_info))
         if form.submit.data or form.download.data or form.install.data:
@@ -3510,9 +3533,13 @@ def playground_packages():
     header = word("Packages")
     upload_header = None
     edit_header = None
-    description = Markup("""Pick the files that will go into your package.""")
+    description = Markup("""Describe your package and choose the files from your Playground that will go into it.""")
     after_text = None
-    return render_template('pages/playgroundpackages.html', header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names), 200
+    if scroll:
+        extra_command = "      scrollBottom();\n"
+    else:
+        extra_command = ""
+    return render_template('pages/playgroundpackages.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this package?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("readme");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names), 200
 
 def public_method(method, the_class):
     if isinstance(method, types.MethodType) and method.__name__ != 'init' and not method.__name__.startswith('_') and method.__name__ in the_class.__dict__:
@@ -3686,7 +3713,7 @@ def get_vars_in_use(interview, interview_status):
                 content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + noquote(var) + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
             content += '</td></tr>'
     if len(avail_modules):
-        content += '\n                  <tr><td><h4>Modules available in playground' + infobutton('playground_modules') + '</h4></td></tr>'
+        content += '\n                  <tr><td><h4>Modules available in Playground' + infobutton('playground_modules') + '</h4></td></tr>'
         for var in avail_modules:
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert=".' + noquote(var) + '" class="label label-success playground-variable">.' + noquote(var) + '</a>'
             content += '</td></tr>'

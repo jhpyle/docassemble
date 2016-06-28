@@ -22,7 +22,7 @@
   {{ render_field(form.license) }}
   {{ render_field(form.description) }}
   {{ render_field(form.url) }}
-  <h2>Dependencies</h2>
+  <h2>{{ form.dependencies.label }}</h2>
   <div class="form-group">
     <label for="{{ form.dependencies.id }}">{{ word("Select zero or more packages") }}</label>
     <select multiple size="{% if package_names.__len__() < 10 %}{{ package_names.__len__() }}{% else %}10{% endif %}" class="form-control" name="{{ form.dependencies.id }}" id="{{ form.dependencies.id }}">
@@ -32,7 +32,7 @@
     </select>
   </div>
   {%- for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundmodules'] %}
-  <h2>{{ section_name[sec] }}</h2>
+  <h2>{{ section_field[sec].label }}</h2>
   <div class="form-group">
     <label for="{{ section_field[sec].id }}">{{ word("Select zero or more files") }}</label>
     <select multiple size="{% if file_list[sec].__len__() < 10 %}{{ file_list[sec].__len__() }}{% else %}10{% endif %}" class="form-control" name="{{ section_field[sec].id }}" id="{{ section_field[sec].id }}">
@@ -41,28 +41,17 @@
       {%- endfor %}
     </select>
   </div>
-  <!--<table class="table table-striped">
-    <thead>
-      <tr>
-        <th style="text-align:left;">{{ word("Select") }}</th>
-        <th>{{ word("File name") }}</th>
-      </tr>
-    </thead>
-    <tbody>
-    {%- for file in file_list[sec] %}
-      <tr>
-        <td style="text-align:left;"><input type="checkbox"></td>
-        <td>{% if sec in ['playgroundtemplate', 'playgroundstatic', 'playgroundmodules'] %}<a target="_blank" href="{{ url_for('playground_' + section_sec[sec], userid=userid, filename=file) }}">{{ file }}</a>{% else %}{{ file }}{% endif %}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>-->
   {%- endfor %}
+  <h2>{{ form.readme.label }}</h2>
+  <div class="form-group">
+    <label for="{{ form.readme.id }}">{{ word("The README.md file for the package") }}</label>
+    <textarea rows="24" cols="80" id="{{ form.readme.id }}" name="{{ form.readme.id }}">{{ form.readme.data }}</textarea>
+  </div>
   <div class="form-actions">
-    {{ render_submit_field(form.submit, tabindex=100, class="btn btn-primary btn-lg") }}
-    {{ render_submit_field(form.download, tabindex=100, class="btn btn-primary btn-lg") }}
-    {{ render_submit_field(form.install, tabindex=100, class="btn btn-primary btn-lg") }}
-    {{ render_submit_field(form.delete, tabindex=100, class="btn btn-danger btn-lg") }}
+    {{ render_submit_field(form.submit, class="btn btn-primary btn-lg") }}
+    {{ render_submit_field(form.download, class="btn btn-primary btn-lg") }}
+    {{ render_submit_field(form.install, class="btn btn-primary btn-lg") }}
+    {{ render_submit_field(form.delete, id="daDelete", class="btn btn-danger btn-lg") }}
   </div>
 </form>
 
