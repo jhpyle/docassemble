@@ -142,7 +142,7 @@ yesno: user_is_cute
 In the above example, the picture will be shrunk or expanded so that
 its width is 250 pixels.
 
-# Inserting inline icons
+# <a name="emoji"></a>Inserting inline icons
 
 If you have defined "decorations" in an [`image sets`] block (see
 [initial blocks]), you can include these decorations as icons (having
