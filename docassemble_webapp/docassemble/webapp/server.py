@@ -683,32 +683,32 @@ def substitute_secret(oldsecret, newsecret):
     changed = False
     for record in Attachments.query.filter_by(key=user_code, filename=filename).all():
         if record.dictionary:
-            logmessage("Found old dictionary in attachments")
+            #logmessage("Found old dictionary in attachments")
             if record.encrypted:
                 the_dict = decrypt_dictionary(record.dictionary, oldsecret)
-                logmessage("Decrypted it with old secret " + oldsecret)
+                #logmessage("Decrypted it with old secret " + oldsecret)
             else:
                 the_dict = unpack_dictionary(record.dictionary)
                 record.encrypted = True
-            logmessage("re-encrypted with secret " + newsecret)
+            #logmessage("re-encrypted with secret " + newsecret)
             record.dictionary = encrypt_dictionary(the_dict, newsecret)
             changed = True
     if changed:
         db.session.commit()
     changed = False
     for record in UserDict.query.filter_by(key=user_code, filename=filename).order_by(UserDict.indexno).all():
-        logmessage("Found old dictionary in userdict")
+        #logmessage("Found old dictionary in userdict")
         if record.encrypted:
             the_dict = decrypt_dictionary(record.dictionary, oldsecret)
-            logmessage("Decrypted it with old secret " + oldsecret)
+            #logmessage("Decrypted it with old secret " + oldsecret)
         else:
             the_dict = unpack_dictionary(record.dictionary)
             record.encrypted = True
         record.dictionary = encrypt_dictionary(the_dict, newsecret)
-        logmessage("re-encrypted with secret " + newsecret)
+        #logmessage("re-encrypted with secret " + newsecret)
         changed = True
     if changed:
-        logmessage("committed changes")
+        #logmessage("committed changes")
         db.session.commit()
     return newsecret
 
@@ -777,6 +777,12 @@ def custom_login():
         login_form.reg_next.data = register_form.reg_next.data = reg_next
 
     # Process valid POST
+    if request.method == 'POST':
+        try:
+            login_form.validate()
+        except:
+            logmessage("Got an error when validating login")
+            pass
     if request.method == 'POST' and login_form.validate():
         # Retrieve User
         user = None
@@ -4265,7 +4271,7 @@ def save_for_later():
 @login_required
 def interview_list():
     secret = request.cookies.get('secret', None)
-    logmessage("interview_list: secret is " + str(secret))
+    #logmessage("interview_list: secret is " + str(secret))
     if 'action' in request.args and request.args.get('action') == 'delete':
         yaml_file = request.args.get('filename', None)
         session_id = request.args.get('session', None)
@@ -4275,7 +4281,7 @@ def interview_list():
             return redirect(url_for('interview_list'))
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key).subquery()
     interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted).filter(UserDictKeys.user_id == current_user.id).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).group_by(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
-    logmessage(str(interview_query))
+    #logmessage(str(interview_query))
     interviews = list()
     for interview_info in interview_query:
         try:
@@ -4288,7 +4294,7 @@ def interview_list():
             interview_title = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
         else:
             interview_title = word('Untitled')
-        logmessage("Found old interview with title " + interview_title)
+        #logmessage("Found old interview with title " + interview_title)
         if interview_info.encrypted:
             try:
                 dictionary = decrypt_dictionary(interview_info.dictionary, secret)
