@@ -117,9 +117,9 @@ of the person logged in and other information.
   * `theid` - the unique ID of the user
   * `roles` - a [Python list] containing the user's roles, as defined
     by a site administrator.  (Administrators can change user roles on
-    the User List page.)
+    the [User List] page.)
   * `firstname` - the user's first name.  This and the following can
-    all be set by the user on the User Profile page.
+    all be set by the user on the [Profile] page.
   * `lastname` - the user's last name.
   * `country` - the user's country.
   * `subdivisionfirst` - in the U.S., the state.
@@ -259,3 +259,5 @@ on and off during the course of the interview as necessary.
 [`code`]: {{ site.baseurl }}/docs/code.html
 [`current_info`]: #current_info
 [`track_location`]: #track_location
+[User List]: "{{ site.baseurl }}/docs/users.html#user_list"
+[Profile]: "{{ site.baseurl }}/docs/users.html#profile"

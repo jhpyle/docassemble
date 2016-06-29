@@ -6,9 +6,8 @@ short_title: Packages
 
 # How **docassemble** uses packages
 
-**docassemble** interviews exist in a [Python package] and are
-installed on a server as part of that [Python package].  The
-[Python package] also includes:
+**docassemble** interviews can be packaged into [Python packages] that
+are installed on a server.  The [Python package] also includes:
 
 * [Python modules], which include any [classes] and other code that you might
 write to go along with your interviews;
@@ -22,10 +21,70 @@ a shell (a [namespace package]) that contains subpackages.  These
 subpackages include **docassemble**'s core components as well as
 user-created packages.
 
+# Anatomy of a docassemble package
+
+Here is the file structure of a **docassemble** package called
+`docassemble.baseball`.
+
+{% highlight text %}
+docassemble-baseball
+|-- docassemble
+|   |-- baseball
+|   |   |-- baseball-stats.py
+|   |   |-- data
+|   |   |   |-- questions
+|   |   |   |   |-- baseball-questions.yml
+|   |   |   |   `-- hitters.yml
+|   |   |   |-- static
+|   |   |   |   |-- catcher.jpg
+|   |   |   |   `-- pitcher.jpg
+|   |   |   `-- templates
+|   |   |       `-- game-summary.md
+|   |   `-- __init__.py
+|   `-- __init__.py
+|-- LICENSE
+|-- README.md
+`-- setup.py
+{% endhighlight %}
+
+When installed on the server, the interview can be run by going to a
+link like `https://example.com?i=docassemble.baseball:hitters.yml`.
+
+In your own interviews, you can include resources from this package by
+writing things like the following:
+
+{% highlight yaml %}
+---
+include:
+  - docassemble.baseball:baseball-questions.yml
+---
+yesno: person_is_a_catcher
+question: |
+  Did the person look like this?
+subquestion: |
+  [FILE docassemble.baseball:catcher.jpg]
+---
+question: |
+  Here is how the game went down.
+sets: user_given_summary
+attachment:
+  - name: Summary of ${ game }
+    filename: game_summary
+    content file: docassemble.baseball:game-summary.md
+---
+{% endhighlight %}
+
 # Creating your own packages
 
-To create your own package, start by downloading a **docassemble**
-package template from your **docassemble** server.
+## On-line
+
+You can create your own **docassemble** package on-line using the
+[Packages area] of the [Playground].
+
+## Off-line
+
+To create your own **docassemble** package off-line, start by downloading a
+**docassemble** package template from your **docassemble** server.
 
 1. Click "Log in" in the upper right hand corner and log in as:
  
@@ -43,7 +102,7 @@ package template from your **docassemble** server.
 The full name of your package will be
 `docassemble.missouri_family_law`.  You will refer to files in your
 package with names like
-`docassemble.missouri_family_law:data/questions/questions.yml`
+`docassemble.missouri_family_law:questions.yml`.
 
 There are a lot of subdirectories in the .zip file (this is the nature
 of [namespace packages]).  The `data` directory resides at 
@@ -107,12 +166,55 @@ called [`root`]).
 Note that you can also test interview [YAML] using the **docassemble**
 [Playground].
 
+# Python packages installed on the server
+
+If your **docassemble** interviews or code depend on other
+[Python packages] being installed, you can install packages from the
+**docassemble** front end:
+
+1. Make sure you are logged in as a developer or administrator.
+2. Go to "Package Management" on the menu.
+3. Go to "Update a package."
+4. Indicate the package you want to install, or click 
+
+Packages can be installed in three different ways:
+
+* **GitHub URL**: Enter the URL for the GitHub repository containing the
+  Python package you want to install.  The repository must be in a
+  format that is compatible with [pip].
+* **Zip File**: Provide a Zip file containing your Python package.
+  The Zip file must be in a format that is compatible with [pip].
+* **Package on [PyPI]**: Provide the name of a package that exists on
+  [PyPI].
+
+Packages will be installed using the [pip] package manager.  A log
+of the output of [pip] will be shown.
+
+## Updating Python packages
+
+To upgrade a package that you installed from a GitHub URL or from
+[PyPI], you can click the "Update" button next to the package name on
+the "Update a package" screen.  You will only see these Update buttons
+if you are an administrator or if you are the person who caused the
+packages to be installed.
+
 # Best practices for packaging your interviews
 
 It is a good practice to bundle related interviews in a single
 package.  Think about making it easy for other people to install your
 packages on their system and make use of your [questions] and [code].
 
+It is also a good practice to separate your interview into at least
+three files, separately containing:
+
+* [mandatory] and [initial] code
+* [initial blocks]
+* [question] and [code] blocks
+
+This way, other people can take advantage of your work product in
+interviews that might have a very different purpose.
+
+[Packages area]: {{ site.baseurl }}/docs/playground.html#packages
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [interviews]: {{ site.baseurl }}/docs/interviews.html
 [YAML]: https://en.wikipedia.org/wiki/YAML
@@ -124,6 +226,7 @@ packages on their system and make use of your [questions] and [code].
 [user login system]: {{ site.baseurl }}/docs/users.html
 [document templates]: {{ site.baseurl }}/docs/documents.html
 [questions]: {{ site.baseurl }}/docs/questions.html
+[question]: {{ site.baseurl }}/docs/questions.html#question
 [code]: {{ site.baseurl }}/docs/code.html
 [tutorial]: {{ site.baseurl }}/docs/helloworld.html
 [namespace package]: https://www.python.org/dev/peps/pep-0420/
@@ -135,3 +238,8 @@ packages on their system and make use of your [questions] and [code].
 [Python modules]: https://docs.python.org/2/tutorial/modules.html
 [classes]: https://docs.python.org/2/tutorial/classes.html
 [`root`]: {{ site.baseurl }}/docs/config.html#root
+[pip]: https://en.wikipedia.org/wiki/Pip_%28package_manager%29
+[PyPI]: https://pypi.python.org/pypi
+[mandatory]: {{ site.baseurl }}/docs/logic.html#mandatory
+[initial]: {{ site.baseurl }}/docs/logic.html#initial
+[initial blocks]: {{ site.baseurl }}/docs/logic.html#mandatory

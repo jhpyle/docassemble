@@ -24,7 +24,7 @@ four privileges defined by default in **docassemble**:
 * advocate
 
 A user who has the "admin" privilege can upgrade the privleges of any
-user by going to the User List on the menu.
+user by going to the [User List] on the menu.
 
 When **docassemble** is first installed, it creates a user with
 "admin" privileges with the following login information:
@@ -33,7 +33,7 @@ When **docassemble** is first installed, it creates a user with
 * Password: password
 
 As soon as **docassemble** is set up, you should log in as this user,
-go to User List, edit the admin@admin.com user, and change its e-mail
+go to [User List], edit the admin@admin.com user, and change its e-mail
 address and password.
 
 You can also change these defaults during [installation] by editing the
@@ -51,6 +51,24 @@ When a user is logged in, the user's information is made available to
 **docassemble** interviews through the variable [`current_info`].  See
 [special variables] for more information.
 
+# User administration
+
+# <a name="profile">Profile</a>
+
+All registered users can edit their "Profile" from the user menu.  The
+fields available include:
+
+* First name
+* Last name
+* Country Code (must be an official [country code] like `us`
+* State abbreviation
+* County
+* Municipality
+* Organization
+
+# <a name="user_list">User List</a>
+
+[country code]: http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
 [special variables]: {{ site.baseurl }}/docs/special.html
 [`current_info`]: {{ site.baseurl }}/docs/special.html#current_info
 [configuration]: {{ site.baseurl }}/docs/config.html
@@ -60,3 +78,5 @@ When a user is logged in, the user's information is made available to
 [`show_login`]: {{ site.baseurl }}/docs/config.html#show_login
 [`docassemble.webapp`]: {{ site.baseurl }}/docs/installation.html#docassemble.webapp
 [`create_tables.py`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/create_tables.py
+[User List]: "#user_list"
+[Profile]: "#profile"

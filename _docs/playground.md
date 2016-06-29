@@ -163,6 +163,10 @@ Packages are defined with the following elements:
   Playground, indicate which ones should be included in your package.
 * **Modules**: From the [modules] defined in your
   Playground, indicate which ones should be included in your package.
+* **README file**: This is a text box into which you can type the
+  contents of the `README.md` file that will be included in your
+  package.  If you leave this blank, the `README.md` file will list
+  the package name, package description, and author.
 
 At the bottom of the page, you can press one of the following buttons:
 
@@ -173,6 +177,9 @@ At the bottom of the page, you can press one of the following buttons:
   containing the package, and installs that ZIP file on the server.
 * **Delete**: Deletes the package definition.  If you installed the
   package on the system, it does not uninstall the package.
+
+To change the author information that is included in the package, edit
+your [profile].
 
 For more information on managing [Python packages] within
 **docassemble**, see [packages].
@@ -284,3 +291,4 @@ going to the [packages area].
 [packages area]: "#packages"
 [emoji]: {{ site.baseurl }}/docs/markup.html#emoji
 [`decoration`]: {{ site.baseurl }}/docs/modifiers.html#decoration
+[profile]: {{ site.baseurl }}/docs/users.html#profile
