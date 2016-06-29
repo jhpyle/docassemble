@@ -7,6 +7,7 @@ var aspectRatio = 0.30;
 var theBorders = 50;
 var waiter = 0;
 var waitlimit = 2;
+var isEmpty = 1;
 
 $(document).ready(function () {
   setTimeout(function(){
@@ -31,8 +32,14 @@ $(document).ready(function () {
     newCanvas();
   });
   $("#save").click(function() {
-    document.getElementById('save').disabled = true;
-    saveCanvas();
+    if (isEmpty){
+      $("#errormess").removeClass("notshowing");
+      setTimeout(function(){ $("#errormess").addClass("notshowing"); }, 3000);
+    }
+    else{
+      document.getElementById('save').disabled = true;
+      saveCanvas();
+    }
   });
   window.scrollTo(0,1);
 });
@@ -110,6 +117,8 @@ function newCanvas(){
   //$(document).on("touchcancel", function(event){event.preventDefault();});
   //$(document).on("touchstart", function(event){event.preventDefault();});
   $(document).on("touchmove", function(event){event.preventDefault();});	
+  isEmpty = 1;
+  //$("#save").prop("disabled", true);
 }
 
 // prototype to	start drawing on touch using canvas moveTo and lineTo
@@ -124,6 +133,10 @@ $.fn.drawTouch = function() {
     ctx.beginPath();
     ctx.lineJoin="round";
     ctx.moveTo(x,y);
+    if (isEmpty){
+      $("#save").prop("disabled", false);
+      isEmpty = 0;
+    }
   };
   var move = function(e) {
     e.preventDefault();
@@ -133,6 +146,10 @@ $.fn.drawTouch = function() {
       y = e.changedTouches[0].pageY-$("#canvas").offset().top;
       ctx.lineTo(x,y);
       ctx.stroke();
+      if (isEmpty){
+	//$("#save").prop("disabled", false);
+	isEmpty = 0;
+      }
     }
     waiter++;
     //ctx.fillRect(x-0.5*theWidth,y-0.5*theWidth,theWidth,theWidth);
@@ -154,6 +171,10 @@ $.fn.drawTouch = function() {
     ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
     ctx.fill();
     ctx.moveTo(x,y);
+    if (isEmpty){
+      //$("#save").prop("disabled", false);
+      isEmpty = 0;
+    }
     //ctx.fillRect(x-0.5*theWidth,y-0.5*theWidth,theWidth,theWidth);
     //console.log("Got click");
   };
@@ -173,6 +194,10 @@ $.fn.drawPointer = function() {
     x = e.pageX-$("#canvas").offset().left;
     y = e.pageY-$("#canvas").offset().top;
     ctx.moveTo(x,y);
+    if (isEmpty){
+      //$("#save").prop("disabled", false);
+      isEmpty = 0;
+    }
     //ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
     //ctx.fill();
   };
@@ -189,12 +214,16 @@ $.fn.drawPointer = function() {
       ctx.fill();
       ctx.beginPath();
       ctx.moveTo(x,y);
+      if (isEmpty){
+	//$("#save").prop("disabled", false);
+	isEmpty = 0;
+      }
     }
     //waiter++;
   };
   var moveline = function(e) {
     waiter = 0;
-    move(e)
+    move(e);
   };
   $(this).on("MSPointerDown", start);
   $(this).on("MSPointerMove", move);
@@ -214,6 +243,10 @@ $.fn.drawMouse = function() {
     ctx.beginPath();
     ctx.lineJoin="round";
     ctx.moveTo(x,y);
+    if (isEmpty){
+      //$("#save").prop("disabled", false);
+      isEmpty = 0;
+    }
   };
   var move = function(e) {
     if(clicked && waiter % waitlimit == 0){
@@ -226,6 +259,10 @@ $.fn.drawMouse = function() {
       ctx.fill();
       ctx.beginPath();
       ctx.moveTo(x,y);
+      if (isEmpty){
+	//$("#save").prop("disabled", false);
+	isEmpty = 0;
+      }
     }
     //waiter++;
   };
@@ -260,4 +297,3 @@ function isCanvasSupported(){
   var elem = document.createElement('canvas');
   return !!(elem.getContext && elem.getContext('2d'));
 }
-

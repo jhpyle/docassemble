@@ -2791,7 +2791,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-            readme = '# docassemble.' + str(pkgname) + "\n\n" + info['description'] + "\n\n## Author\n\n" + name_of_user(current_user, include_email=True) + "\n"
+            if info['readme'] and re.search(r'[A-Za-z]', info['readme']):
+                readme = info['readme']
+            else:
+                readme = '# docassemble.' + str(pkgname) + "\n\n" + info['description'] + "\n\n## Author\n\n" + name_of_user(current_user, include_email=True) + "\n\n"
             setuppy = """\
 #!/usr/bin/env python
 
@@ -2866,36 +2869,6 @@ put template files in this directory.
 
 If you want to make files available in the web app, put them in
 this directory.
-"""
-            objectfile = """\
-# This is a Python module in which you can write your own Python code,
-# if you want to.
-#
-# Include this module in a docassemble interview by writing:
-# ---
-# modules:
-#   - docassemble.""" + pkgname + """.objects
-# ---
-#
-# Then you can do things like:
-# ---
-# objects:
-#   - favorite_fruit: Fruit
-# ---
-# mandatory: true
-# question: |
-#   When I eat some ${ favorite_fruit.name }, 
-#   I think, "${ favorite_fruit.eat() }"
-# ---
-# question: What is the best fruit?
-# fields:
-#   - Fruit Name: favorite_fruit.name
-# ---
-from docassemble.base.core import DAObject
-
-class Fruit(DAObject):
-    def eat(self):
-        return "Yum, that " + self.name + " was good!"
 """
             directory = tempfile.mkdtemp()
             packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
@@ -3493,7 +3466,7 @@ def playground_packages():
             flash(word("Deleted package"), "success")
             return redirect(url_for('playground_packages'))
         new_info = dict()
-        for field in ['license', 'description', 'version', 'url', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'readme']:
+        for field in ['license', 'description', 'version', 'url', 'readme', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files']:
             new_info[field] = form[field].data
         #logmessage("found " + str(new_info))
         if form.submit.data or form.download.data or form.install.data:

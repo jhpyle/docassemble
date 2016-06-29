@@ -53,7 +53,7 @@ def signature_html(status, debug, root):
         continue_label = markdown_to_html(status.continueLabel, trim=True)
     else:
         continue_label = word('Done')
-    output = '<div class="page" id="page"><div class="header" id="header"><div class="innerheader"><a id="new" class="navbtn nav-left">' + word('Clear') + '</a><a id="save" class="navbtn nav-right">' + continue_label + '</a><div class="title">' + word('Sign Your Name') + '</div></div></div><div class="toppart" id="toppart">'
+    output = '<div class="page" id="page"><div class="header" id="header"><div class="innerheader"><a id="new" class="navbtn nav-left">' + word('Clear') + '</a><a id="save" class="navbtn nav-right">' + continue_label + '</a><div class="title">' + word('Sign Your Name') + '</div></div></div><div class="toppart" id="toppart"><div id="errormess" class="errormessage notshowing">' + word("You must sign your name to continue.") + '</div>'
     if status.questionText:
         output += markdown_to_html(status.questionText, trim=True)
     output += '</div>'

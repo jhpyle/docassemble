@@ -177,3 +177,13 @@ body {
 	color: #333;
     }
 }
+
+.errormessage {
+    text-align: center;
+    color: blue;
+    padding-bottom: 10px;
+}
+
+.notshowing {
+    display: none;
+}

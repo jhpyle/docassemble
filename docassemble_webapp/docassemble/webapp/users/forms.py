@@ -20,8 +20,8 @@ def length_two(form, field):
         raise ValidationError(word('Must be a two-letter code'))
 
 class NewPrivilegeForm(Form):
-    name = StringField(word('Name of New Privilege'), validators=[
-        DataRequired(word('Name of New Privilege is required'))])
+    name = StringField(word('Name of new privilege'), validators=[
+        DataRequired(word('Name of new privilege is required'))])
     submit = SubmitField(word('Add'))
 
 class UserProfileForm(Form):
@@ -29,10 +29,10 @@ class UserProfileForm(Form):
         DataRequired(word('First name is required'))])
     last_name = StringField(word('Last name'), validators=[
         DataRequired(word('Last name is required'))])
-    country = StringField(word('Country Code'))
-    subdivisionfirst = StringField(word('First Subdivision'))
-    subdivisionsecond = StringField(word('Second Subdivision'))
-    subdivisionthird = StringField(word('Third Subdivision'))
+    country = StringField(word('Country code'))
+    subdivisionfirst = StringField(word('First subdivision'))
+    subdivisionsecond = StringField(word('Second subdivision'))
+    subdivisionthird = StringField(word('Third subdivision'))
     organization = StringField(word('Organization'))
     submit = SubmitField(word('Save'))
 

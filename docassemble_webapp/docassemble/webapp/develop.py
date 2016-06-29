@@ -24,7 +24,7 @@ class CreatePlaygroundPackageForm(Form):
     submit = SubmitField(word('Get package'))
 
 class UpdatePackageForm(Form):
-    giturl = StringField(word('Git URL'))
+    giturl = StringField(word('GitHub URL'))
     zipfile = FileField(word('Zip File'))
     pippackage = StringField(word('Package on PyPI'))
     submit = SubmitField(word('Update'))
