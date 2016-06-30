@@ -1666,6 +1666,13 @@ def index():
                     data = "True"
                 else:
                     data = "False"
+            elif known_datatypes[real_key] in ['threestate']:
+                if data == "True":
+                    data = "True"
+                elif data == "None":
+                    data = "None"
+                else:
+                    data = "False"
             elif known_datatypes[real_key] == 'integer':
                 if data == '':
                     data = 0
@@ -1873,9 +1880,9 @@ def index():
     else:
         interview_language = DEFAULT_LANGUAGE
     if interview_status.question.question_type == "signature":
-        output = '<!doctype html>\n<html lang="' + interview_language + '">\n  <head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + interview_status.question.interview.get_title().get('full', app.config['BRAND_NAME']) + '</title><script src="' + url_for('static', filename='app/jquery.min.js') + '"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet"><title>' + word('Sign Your Name') + '</title></head>\n  <body onresize="resizeCanvas()">'
+        output = '<!doctype html>\n<html lang="' + interview_language + '">\n  <head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + interview_status.question.interview.get_title().get('full', app.config['BRAND_NAME']) + '</title><script src="' + url_for('static', filename='app/jquery.min.js') + '"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet"><title>' + word('Sign Your Name') + '</title></head>\n  <body onresize="resizeCanvas()"><div id="body">'
         output += signature_html(interview_status, DEBUG, ROOT)
-        output += """\n  </body>\n</html>"""
+        output += """\n  </div></body>\n</html>"""
     else:
         extra_scripts = list()
         extra_css = list()
@@ -1937,7 +1944,7 @@ def index():
         if DEBUG:
             output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
         output += "".join(extra_css)
-        output += '\n    <title>' + interview_status.question.interview.get_title().get('full', app.config['BRAND_NAME']) + '</title>\n  </head>\n  <body>\n'
+        output += '\n    <title>' + interview_status.question.interview.get_title().get('full', app.config['BRAND_NAME']) + '</title>\n  </head>\n  <body><div id="body">\n'
         output += make_navbar(interview_status, app.config['BRAND_NAME'], (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN) + '    <div class="container">' + "\n      " + '<div class="row">\n        <div class="tab-content">\n' + flash_content
         if interview_status.question.interview.use_progress_bar:
             output += progress_bar(user_dict['_internal']['progress'])
@@ -1994,7 +2001,7 @@ def index():
             output += '        </div>' + "\n"
             output += '      </div>' + "\n"
         output += '    </div>'
-        output += scripts + "\n    " + "".join(extra_scripts) + """\n  </body>\n</html>"""
+        output += scripts + "\n    " + "".join(extra_scripts) + """\n  </div></body>\n</html>"""
     #logmessage(output.encode('utf8'))
     response = make_response(output.encode('utf8'), '200 OK')
     response.headers['Content-type'] = 'text/html; charset=utf-8'

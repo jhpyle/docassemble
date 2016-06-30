@@ -16,7 +16,7 @@ from docassemble.base.util import pickleable_objects, word, get_language
 from docassemble.base.logger import logmessage
 from docassemble.base.pandoc import Pandoc
 from docassemble.base.mako.template import Template
-from types import CodeType
+from types import CodeType, NoneType
 
 debug = False
 match_mako = re.compile(r'<%|\${|% if|% for|% while')
@@ -339,6 +339,9 @@ class Field:
         if 'boolean' in data:
             self.datatype = 'boolean'
             self.sign = data['boolean']
+        if 'threestate' in data:
+            self.datatype = 'threestate'
+            self.sign = data['threestate']
         if 'choices' in data:
             self.fieldtype = 'multiple_choice'
             self.choices = data['choices']
@@ -390,11 +393,11 @@ class Question:
         self.names_used = set()
         self.mako_names = set()
         num_directives = 0
-        for directive in ['yesno', 'noyes', 'fields', 'buttons', 'choices', 'signature', 'review']:
+        for directive in ['yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'fields', 'buttons', 'choices', 'signature', 'review']:
             if directive in data:
                 num_directives += 1
         if num_directives > 1:
-            raise DAError("There can only be one directive in a question.  You had more than one.\nThe directives are yesno, noyes, fields, buttons, choices, and signature." + self.idebug(data))
+            raise DAError("There can only be one directive in a question.  You had more than one.\nThe directives are yesno, noyes, yesnomaybe, noyesmaybe, fields, buttons, choices, and signature." + self.idebug(data))
         if 'features' in data:
             should_append = False
             if type(data['features']) is not dict:
@@ -426,8 +429,8 @@ class Question:
         else:
             definitions = "";        
         if 'continue button label' in data:
-            if 'yesno' in data or 'noyes' in data or 'buttons' in data:
-                raise DAError("You cannot set a continue button label if the type of question is yesno, noyes, or buttons." + self.idebug(data))
+            if 'yesno' in data or 'noyes' in data or 'yesnomaybe' in data or 'noyesmaybe' in data or 'buttons' in data:
+                raise DAError("You cannot set a continue button label if the type of question is yesno, noyes, yesnomaybe, noyesmaybe, or buttons." + self.idebug(data))
             self.continuelabel = TextObject(definitions + data['continue button label'], names_used=self.mako_names)
         if 'mandatory' in data and data['mandatory'] is True:
             self.is_mandatory = True
@@ -833,6 +836,14 @@ class Question:
             self.fields.append(Field({'saveas': data['noyes'], 'boolean': -1}))
             self.fields_used.add(data['noyes'])
             self.question_type = 'noyes'
+        if 'yesnomaybe' in data:
+            self.fields.append(Field({'saveas': data['yesnomaybe'], 'threestate': 1}))
+            self.fields_used.add(data['yesnomaybe'])
+            self.question_type = 'yesnomaybe'
+        if 'noyesmaybe' in data:
+            self.fields.append(Field({'saveas': data['noyesmaybe'], 'threestate': -1}))
+            self.fields_used.add(data['noyesmaybe'])
+            self.question_type = 'noyesmaybe'
         if 'sets' in data:
             if type(data['sets']) is str:
                 self.fields_used.add(data['sets'])
@@ -877,6 +888,8 @@ class Question:
                     field_data['type'] = data['datatype']
                 elif is_boolean(field_data):
                     field_data['type'] = 'boolean'
+                elif is_threestate(field_data):
+                    field_data['type'] = 'threestate'
             self.fields.append(Field(field_data))
             self.question_type = 'multiple_choice'
         elif 'field' in data:
@@ -1173,7 +1186,12 @@ class Question:
                 if self.language not in self.interview.generic_questions[self.generic_object][field_name]:
                     self.interview.generic_questions[self.generic_object][field_name][self.language] = list()
                 self.interview.generic_questions[self.generic_object][field_name][self.language].append(register_target)
-
+    def yes(self):
+        return word("Yes")
+    def no(self):
+        return word("No")
+    def maybe(self):
+        return word("I don't know")
     def process_attachment_list(self, target):
         if type(target) is list:
             return(list(map((lambda x: self.process_attachment(x)), target)))
@@ -1683,6 +1701,15 @@ def is_boolean(field_data):
     for entry in field_data['choices']:
         for key, data in entry.iteritems():
             if type(data) is not bool:
+                return False
+    return True
+
+def is_threestate(field_data):
+    if 'choices' not in field_data:
+        return False
+    for entry in field_data['choices']:
+        for key, data in entry.iteritems():
+            if type(data) is not bool and type(data) is not NoneType:
                 return False
     return True
 

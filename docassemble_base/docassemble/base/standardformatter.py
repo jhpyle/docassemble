@@ -124,7 +124,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     master_output = ""
     master_output += '          <section id="question" class="tab-pane active col-lg-6 col-md-8 col-sm-10">\n'
     output = ""
-    if status.question.question_type == "yesno":
+    if status.question.question_type in ["yesno", "yesnomaybe"]:
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
         output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" method="POST">\n              <fieldset>\n'
@@ -134,13 +134,16 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         if video_text:
             output += indent_by(video_text, 12)
         output += '                <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
-        output += '                <div class="btn-toolbar">\n                  <button class="btn btn-primary btn-lg " name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">Yes</button>\n                  <button class="btn btn-lg btn-info" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">No</button>\n                </div>\n'
+        output += '                <div class="btn-toolbar">\n                  <button class="btn btn-primary btn-lg " name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">' + status.question.yes() + '</button>\n                  <button class="btn btn-lg btn-info" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">' + status.question.no() + '</button>'
+        if status.question.question_type == 'yesnomaybe':
+            output += '\n                  <button class="btn btn-lg btn-warning" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None">' + status.question.maybe() + '</button>'
+        output += '\n                </div>\n'
         #output += question_name_tag(status.question)
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
         output += varname_tag(varnames)
         output += '              </fieldset>\n            </form>\n'
-    elif status.question.question_type == "noyes":
+    elif status.question.question_type in ["noyes", "noyesmaybe"]:
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
         output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" method="POST">\n              <fieldset>\n'
@@ -150,7 +153,10 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         if video_text:
             output += indent_by(video_text, 12)
         output += '                <p class="sr-only">' + word('Press one of the following buttons:') + '</p>\n'
-        output += '                <div class="btn-toolbar">\n                  <button class="btn btn-primary btn-lg" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">Yes</button>\n                  <button class="btn btn-lg btn-info" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">No</button>\n                </div>\n'
+        output += '                <div class="btn-toolbar">\n                  <button class="btn btn-primary btn-lg" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">' + status.question.yes() + '</button>\n                  <button class="btn btn-lg btn-info" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">' + status.question.no() + '</button>'
+        if status.question.question_type == 'noyesmaybe':
+            output += '\n                  <button class="btn btn-lg btn-warning" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None">' + status.question.maybe() + '</button>'
+        output += '\n                </div>\n'
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
         output += varname_tag(varnames)
@@ -643,8 +649,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         status.screen_reader_text['help'] = unicode(output)
     master_output += output
     master_output += '          </section>\n'
-    extra_scripts.append("""\
-    <script>
+    extra_scripts.append("""<script>
       var validation_rules = """ + json.dumps(validation_rules) + """;
       validation_rules.submitHandler = function(form){
         form.submit();
