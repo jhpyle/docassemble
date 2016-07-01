@@ -1706,7 +1706,7 @@ def index():
             #logmessage("key is multiple choice")
             data = "int(" + repr(data) + ")"
         else:
-            #logmessage("key is not in datatypes where datatypes is " + str(known_datatypes))
+            logmessage("key is not in datatypes where datatypes is " + str(known_datatypes))
             data = repr(data)
         if key == "_multiple_choice":
             #interview.assemble(user_dict, interview_status)
