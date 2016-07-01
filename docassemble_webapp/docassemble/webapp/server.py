@@ -1634,7 +1634,10 @@ def index():
                 break
             b_match = match_inside_brackets.search(match.group(2))
             if b_match:
-                bracket_expression = from_safeid(b_match.group(1))
+                try:
+                    bracket_expression = from_safeid(b_match.group(1))
+                except:
+                    bracket_expression = b_match.group(1)
             bracket = match_inside_brackets.sub(process_bracket_expression, match.group(2))
             #logmessage("key is " + str(key) + " and bracket is " + str(bracket))
             if key in user_dict:
@@ -2023,7 +2026,7 @@ def safeid(text):
     return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
 
 def from_safeid(text):
-    logmessage("from_safeid: " + str(text))
+    #logmessage("from_safeid: " + str(text))
     return(codecs.decode(text, 'base64').decode('utf-8'))
 
 def progress_bar(progress):
