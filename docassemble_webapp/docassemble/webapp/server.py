@@ -1611,7 +1611,7 @@ def index():
     for orig_key in post_data:
         if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames']:
             continue
-        #logmessage("Got a key: " + key)
+        logmessage("Got a key: " + key)
         data = post_data[orig_key]
         try:
             key = myb64unquote(orig_key)
@@ -1622,7 +1622,7 @@ def index():
             continue
         bracket_expression = None
         if match_brackets.search(key):
-            #logmessage("Searching key " + str(key))
+            logmessage("Searching key " + str(key))
             match = match_inside_and_outside_brackets.search(key)
             try:
                 key = match.group(1)
@@ -1639,14 +1639,14 @@ def index():
                 except:
                     bracket_expression = b_match.group(1)
             bracket = match_inside_brackets.sub(process_bracket_expression, match.group(2))
-            #logmessage("key is " + str(key) + " and bracket is " + str(bracket))
+            logmessage("key is " + str(key) + " and bracket is " + str(bracket))
             if key in user_dict:
                 known_variables[key] = True
             if key not in known_variables:
                 try:
                     eval(key, user_dict)
                 except:
-                    #logmessage("setting key " + str(key) + " to empty dict")
+                    logmessage("setting key " + str(key) + " to empty dict")
                     the_string = key + ' = dict()'
                     try:
                         exec(the_string, user_dict)
@@ -1659,7 +1659,7 @@ def index():
             if match_invalid_key.search(key):
                 error_messages.append(("error", "Error: Invalid character in key: " + key))
                 break
-        #logmessage("Real key is " + real_key + " and key is " + key)
+        logmessage("Real key is " + real_key + " and key is " + key)
         do_append = False
         do_opposite = False
         if real_key in known_datatypes:
