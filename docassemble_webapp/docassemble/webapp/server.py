@@ -2017,7 +2017,11 @@ if __name__ == "__main__":
 
 def process_bracket_expression(match):
     #return("[" + repr(urllib.unquote(match.group(1)).encode('unicode_escape')) + "]")
-    return("[" + repr(codecs.decode(match.group(1), 'base64').decode('utf-8')) + "]")
+    try:
+        inner = codecs.decode(match.group(1), 'base64')
+    except:
+        inner = match.group(1)
+    return("[" + repr(inner.decode('utf-8')) + "]")
 
 def myb64unquote(the_string):
     return(codecs.decode(the_string, 'base64').decode('utf-8'))
