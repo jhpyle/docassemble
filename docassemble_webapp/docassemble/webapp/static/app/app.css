@@ -369,3 +369,11 @@ span.daparenthetical {
     float: right;
     margin-right: 3px;
 }
+
+div.striping:nth-child(even) {
+    background-color: #e7e7e7;
+}
+
+div.fieldpart {
+    padding-top: 7px;
+}

@@ -1,6 +1,6 @@
 from flask_user.forms import RegisterForm
 from flask_wtf import Form
-from wtforms import StringField, SubmitField, ValidationError, BooleanField, SelectField
+from wtforms import StringField, SubmitField, ValidationError, BooleanField, SelectField, validators
 from wtforms.validators import DataRequired, Email
 
 from docassemble.base.util import word
