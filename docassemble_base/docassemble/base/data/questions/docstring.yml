@@ -55,9 +55,19 @@ menu_items:
   doc: |
     This is a built-in Python variable that expresses the boolean value of false.
   type: bool
+"None":
+  doc: |
+    This is a built-in Python variable that expresses a variable that exists but that lacks a value.
+  type: NoneType
 x:
   doc: |
     This is a special variable that is used in generic object questions.
 i:
   doc: |
     This is a special variable that is used in questions that populate lists.
+list:
+  doc: |
+    This is a built-in Python data type that expresses an ordered list of things.
+dict:
+  doc: |
+    This is a built-in Python data type that expresses a dictionary or hash data structure.
