@@ -29,8 +29,8 @@ class UserProfileForm(Form):
         DataRequired(word('First name is required'))])
     last_name = StringField(word('Last name'), validators=[
         DataRequired(word('Last name is required'))])
-    country = StringField(word('Country code'))
-    subdivisionfirst = StringField(word('First subdivision'))
+    country = StringField(word('Country code'), [validators.Length(min=2, max=2)])
+    subdivisionfirst = StringField(word('First subdivision'), [validators.Length(min=2, max=3)])
     subdivisionsecond = StringField(word('Second subdivision'))
     subdivisionthird = StringField(word('Third subdivision'))
     organization = StringField(word('Organization'))

@@ -13,7 +13,7 @@ class User(UserMixin, db.Model):
     first_name = db.Column(db.String(50), nullable=False, server_default='')
     last_name = db.Column(db.String(50), nullable=False, server_default='')
     country = db.Column(db.String(2))
-    subdivisionfirst = db.Column(db.String(2))
+    subdivisionfirst = db.Column(db.String(3))
     subdivisionsecond = db.Column(db.String(50))
     subdivisionthird = db.Column(db.String(50))
     organization = db.Column(db.String(64))

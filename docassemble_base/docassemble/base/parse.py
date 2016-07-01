@@ -999,7 +999,7 @@ class Question:
                                 field_info['required'] = False
                             elif key == 'datatype':
                                 field_info['type'] = field[key]
-                                if field[key] in ['yesno', 'yesnowide'] and 'required' not in field_info:
+                                if field[key] in ['yesno', 'yesnowide', 'noyes', 'noyeswide', 'yesnomaybe', 'yesnomaybewide', 'noyesmaybe', 'noyesmaybewide'] and 'required' not in field_info:
                                     field_info['required'] = False
                             elif key == 'code':
                                 field_info['choicetype'] = 'compute'

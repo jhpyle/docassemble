@@ -1666,7 +1666,7 @@ def index():
                     data = "True"
                 else:
                     data = "False"
-            elif known_datatypes[real_key] in ['threestate']:
+            elif known_datatypes[real_key] in ['threestate', 'yesnomaybe', 'noyesmaybe', 'yesnowidemaybe', 'noyeswidemaybe']:
                 if data == "True":
                     data = "True"
                 elif data == "None":
@@ -1687,7 +1687,7 @@ def index():
                 #logmessage("Got to here")
                 data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
             elif known_datatypes[real_key] in ['object_checkboxes'] and bracket_expression is not None:
-                if data not in ['True', 'False']:
+                if data not in ['True', 'False', 'None']:
                     continue
                 do_append = True
                 if data == 'False':

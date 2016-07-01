@@ -269,7 +269,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                 if (field.datatype in ['files', 'file', 'camera', 'camcorder', 'microphone']):
                     enctype_string = ' enctype="multipart/form-data"'
                     files.append(field.saveas)
-                if field.datatype in ['yesno', 'yesnowide']:
+                if field.datatype in ['yesno', 'yesnowide', 'noyes', 'noyeswide', 'yesnomaybe', 'yesnowidemaybe', 'noyesmaybe', 'noyeswidemaybe']:
                     checkboxes.append(field.saveas)
                 elif field.datatype in ['checkboxes', 'object_checkboxes']:
                     if field.choicetype == 'compute':
@@ -286,9 +286,9 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
             if hasattr(field, 'label'):
                 if status.labels[field.number] == 'no label':
                     fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-md-12">' + input_for(status, field, wide=True) + '</div></div>\n')
-                elif hasattr(field, 'datatype') and field.datatype == 'yesnowide':
+                elif hasattr(field, 'datatype') and field.datatype in ['yesnowide', 'noyeswide', 'yesnomaybewide', 'noyesmaybewide']:
                     fieldlist.append('                <div class="row"><div class="col-md-12">' + input_for(status, field) + '</div></div>\n')
-                elif hasattr(field, 'datatype') and field.datatype == 'yesno':
+                elif hasattr(field, 'datatype') and field.datatype in ['yesno', 'noyes', 'yesnomaybe', 'noyesmaybe']:
                     fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>\n')
                 else:
                     fieldlist.append('                <div class="form-group' + req_tag + '"><label for="' + escape_id(field.saveas) + '" class="control-label col-sm-4">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-sm-8">' + input_for(status, field) + '</div></div>\n')
@@ -869,6 +869,30 @@ def input_for(status, field, wide=False):
                     inner_fieldlist.append('<div>' + markdown_to_html(unicode(pair[1]), status=status) + '</div>')
                 id_index += 1
             output += "".join(inner_fieldlist)
+        elif field.datatype in ['yesnomaybe', 'yesnomaybewide']:
+            inner_fieldlist = list()
+            id_index = 0
+            for pair in [['True', status.question.yes()], ['False', status.question.no()], ['None', status.question.maybe()]]:
+                formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
+                if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue)):
+                    ischecked = ' checked="checked"'
+                else:
+                    ischecked = ''
+                inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
+                id_index += 1
+            output += "".join(inner_fieldlist)
+        elif field.datatype in ['noyesmaybe', 'noyesmaybewide']:
+            inner_fieldlist = list()
+            id_index = 0
+            for pair in [['False', status.question.yes()], ['True', status.question.no()], ['None', status.question.maybe()]]:
+                formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
+                if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue)):
+                    ischecked = ' checked="checked"'
+                else:
+                    ischecked = ''
+                inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
+                id_index += 1
+            output += "".join(inner_fieldlist)
         else:
             output += '<p class="sr-only">' + word('Select box') + '</p>'
             output += '<select class="daselect" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '" >'
@@ -885,6 +909,12 @@ def input_for(status, field, wide=False):
         if field.datatype in ['yesno', 'yesnowide']:
             label_text = markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True, escape=True)
             output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon" type="checkbox" value="True" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
+            if defaultvalue:
+                output += ' checked'
+            output += '/> '
+        if field.datatype in ['noyes', 'noyeswide']:
+            label_text = markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True, escape=True)
+            output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon" type="checkbox" value="False" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
             if defaultvalue:
                 output += ' checked'
             output += '/> '
