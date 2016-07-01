@@ -3,6 +3,7 @@ import random
 from docassemble.base.logger import logmessage
 import re
 import codecs
+#from docassemble.base.error import DANameError
 from docassemble.base.util import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate']
@@ -65,7 +66,8 @@ class DAObject(object):
         if hasattr(self, thename) or thename == "__getstate__" or thename == "__slots__":
             return(object.__getattribute__(self, thename))
         else:
-            raise NameError("name '" + object.__getattribute__(self, 'instanceName') + "." + thename + "' is not defined")
+            var_name = object.__getattribute__(self, 'instanceName') + "." + thename
+            raise NameError("name '" + var_name + "' is not defined")
     def object_name(self):
         """Returns the instanceName attribute, or, if the instanceName contains attributes, returns a
         phrase.  E.g., case.plaintiff becomes "plaintiff in the case." """
@@ -299,7 +301,8 @@ class DAList(DAObject):
             return self.elements[index]
         except:
             if self.object_type is None:
-                raise NameError("name '" + object.__getattribute__(self, 'instanceName') + '[' + str(index) + ']' + "' is not defined")
+                var_name = object.__getattribute__(self, 'instanceName') + '[' + str(index) + ']'
+                raise NameError("name '" + var_name + "' is not defined")
             else:
                 self._fill_up_to(index)
             return self.elements[index]
@@ -492,7 +495,8 @@ class DADict(DAObject):
     def __getitem__(self, index):
         if index not in self.elements:
             if self.object_type is None:
-                raise NameError("name '" + object.__getattribute__(self, 'instanceName') + "[" + repr(index) + "] is not defined")
+                var_name = object.__getattribute__(self, 'instanceName') + "[" + repr(index) + "]"
+                raise NameError("name '" + var_name + "' is not defined")
             else:
                 self.initializeObject(index, self.object_type)
             return self.elements[index]
