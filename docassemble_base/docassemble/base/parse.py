@@ -1885,9 +1885,9 @@ class Interview:
                             interview_status.populate(question.ask(user_dict, 'None', 'None'))
                         raise MandatoryQuestion()
             except NameError as errMess:
+                logmessage("Gota this: " + str(errMess))
                 missingVariable = extract_missing_name(errMess)
                 #missingVariable = str(errMess).split("'")[1]
-                #logmessage(str(errMess))
                 question_result = self.askfor(missingVariable, user_dict, seeking=interview_status.seeking)
                 if question_result['type'] == 'continue':
                     #logmessage("Continuing after asking for " + missingVariable + "...")
@@ -1949,7 +1949,7 @@ class Interview:
         seeking = kwargs.get('seeking', list())
         if debug:
             seeking.append({'variable': missingVariable})
-        logmessage("I don't have " + missingVariable)
+        logmessage("I don't have " + str(missingVariable))
         if missingVariable in variable_stack:
             raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
         variable_stack.add(missingVariable)
@@ -2235,9 +2235,9 @@ class Interview:
                             return question.ask(user_dict, the_x, the_i)
                     raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + missingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
                 except NameError as errMess:
+                    logmessage("got this error: " + str(errMess))
                     newMissingVariable = extract_missing_name(errMess)
                     #newMissingVariable = str(errMess).split("'")[1]
-                    #logmessage("got this error: " + str(errMess))
                     question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking)
                     if question_result['type'] == 'continue':
                         continue
