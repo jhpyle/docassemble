@@ -2023,6 +2023,7 @@ def safeid(text):
     return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
 
 def from_safeid(text):
+    logmessage("from_safeid: " + str(text))
     return(codecs.decode(text, 'base64').decode('utf-8'))
 
 def progress_bar(progress):
