@@ -101,7 +101,7 @@
 .cm-negative {color: #d44;}
 .cm-positive {color: #292;}
 .cm-header, .cm-strong {font-weight: bold;}
-.cm-em {font-style: italic;}
+/* .cm-em {font-style: italic;} */
 .cm-link {text-decoration: underline;}
 .cm-strikethrough {text-decoration: line-through;}
 
