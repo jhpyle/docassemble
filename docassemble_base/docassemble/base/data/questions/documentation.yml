@@ -146,6 +146,8 @@ Individual.pronoun_objective: "http://docassemble.org/docs/legal.html#Individual
 Individual.pronoun_subjective: "http://docassemble.org/docs/legal.html#Individual.pronoun_subjective"
 Individual.yourself_or_name: "http://docassemble.org/docs/legal.html#Individual.yourself_or_name"
 defined: "http://docassemble.org/docs/functions.html#defined"
+value: "http://docassemble.org/docs/functions.html#value"
+value: "http://docassemble.org/docs/functions.html#single_paragraph"
 from_b64_json: "http://docassemble.org/docs/functions.html#from_b64_json"
 get_config: "http://docassemble.org/docs/config.html#get_config"
 location_known: "http://docassemble.org/docs/legal.html#location_known"

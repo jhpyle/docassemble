@@ -67,6 +67,7 @@
     - interview-help
     - def
     - progress-features
+    - reset
 - Exit questions:
     - sets-exit
     - sets-exit-choices
@@ -85,6 +86,12 @@
     - url-of
     - set-language
     - defined
+    - value
+- Code:
+    - code
+    - initial
+    - mandatory
+    - reconsider
 - Interview flow:
     - need
     - message

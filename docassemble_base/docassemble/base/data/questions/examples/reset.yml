@@ -1,0 +1,45 @@
+metadata:
+  title: Resetting variables
+  short title: Reset
+  documentation: "http://docassemble.org/docs/initial.html#reset"
+---
+reset:
+  - cat_food_cans_needed
+---
+code: |
+  cat_food_cans_needed = number_of_cats * 4
+---
+question: |
+  Does your neighbor's cat
+  sometimes eat at your house?
+subquestion: |
+  To feed your own cat, you will need
+  ${ cat_food_cans_needed } cans
+  of cat food, but you might
+  need more for your neighbor's cat.
+buttons:
+  - "Yes":
+      code: |
+        number_of_cats = number_of_cats + 1
+        has_neighboring_cat = True
+  - "No":
+      code: |
+        has_neighboring_cat = False
+---
+question: How many cats do you have?
+fields:
+  - Cats: number_of_cats
+    datatype: integer
+---
+question: |
+  To feed your cat
+  % if has_neighboring_cat:
+  and your neighbor's cat
+  % endif
+  you will need to buy
+  ${ cat_food_cans_needed } cans
+  of cat food.
+sets: all_done
+---
+mandatory: true
+code: all_done

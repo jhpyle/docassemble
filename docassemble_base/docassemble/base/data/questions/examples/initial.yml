@@ -1,0 +1,47 @@
+metadata:
+  title: Initial code
+  documentation: "http://docassemble.org/docs/logic.html#initial"
+  example start: 2
+---
+mandatory: true
+code: |
+  counter = 0
+---
+initial: true
+code: |
+  counter = counter + 1
+---
+code: |
+  fruits = peaches + pears
+---
+question: |
+  How many peaches do you have?
+subquestion: |
+  The value of the counter
+  is ${ counter }.
+fields:
+  - no label: peaches
+    datatype: integer
+---
+question: |
+  How many pears do you have?
+subquestion: |
+  The value of the counter
+  is ${ counter }.
+fields:
+  - no label: pears
+    datatype: integer
+---
+question: |
+  This is the end of the interview 
+sets: all_done
+---
+question: |
+  You have ${ fruits } pieces of fruit.
+subquestion: |
+  The value of the counter
+  is ${ counter }.
+sets: all_done
+---
+mandatory: true
+code: all_done

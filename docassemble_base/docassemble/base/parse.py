@@ -28,6 +28,7 @@ fix_tabs = re.compile(r'\t')
 dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
 match_brackets_at_end = re.compile(r'^(.*)(\[.+?\])$')
 match_inside_brackets = re.compile(r'\[(.+?)\]')
+complications = re.compile(r'[\.\[]')
 
 def process_audio_video_list(the_list, user_dict):
     output = list()
@@ -205,6 +206,8 @@ class InterviewSourceFile(InterviewSource):
             new_source.basename = path
             new_source.filepath = new_file
             new_source.playground = self.playground
+            if hasattr(self, 'package'):
+                new_source.package = self.package
             if new_source.update():
                 return(new_source)
         return(None)
@@ -339,9 +342,13 @@ class Field:
         if 'boolean' in data:
             self.datatype = 'boolean'
             self.sign = data['boolean']
+            if 'type' in data:
+                self.inputtype = data['type']
         if 'threestate' in data:
             self.datatype = 'threestate'
             self.sign = data['threestate']
+            if 'type' in data:
+                self.inputtype = data['type']
         if 'choices' in data:
             self.fieldtype = 'multiple_choice'
             self.choices = data['choices']
@@ -640,6 +647,15 @@ class Question:
                 self.module_list = data['modules']
             else:
                 raise DAError("A modules section must be organized as a list." + self.idebug(data))
+        if 'reset' in data:
+            logmessage("Found a reset")
+            if type(data['reset']) is str:
+                data['reset'] = [data['reset']]
+            if type(data['reset']) is list:
+                self.question_type = 'reset'
+                self.reset_list = data['reset']
+            else:
+                raise DAError("A reset section must be organized as a list." + self.idebug(data))
         if 'imports' in data:
             if type(data['imports']) is str:
                 data['imports'] = [data['imports']]
@@ -936,6 +952,7 @@ class Question:
             else:
                 self.subcontent = TextObject("")
             self.question_type = 'template'
+            self.reset_list = self.fields_used
         if 'code' in data:
             if 'event' in data:
                 self.question_type = 'event_code'
@@ -952,6 +969,11 @@ class Question:
                     find_fields_in(data['code'], self.fields_used, self.names_used)
             else:
                 raise DAError("A code section must be text, not a list or a dictionary." + self.idebug(data))
+            if 'reconsider' in data:
+                if type(data['reconsider']) is not bool:
+                    raise DAError("A reconsider designation must be true or false." + self.idebug(data))
+                if data['reconsider'] is True:
+                    self.interview.reconsider.update(self.fields_used)
         if 'fields' in data:
             self.question_type = 'fields'
             if type(data['fields']) is dict:
@@ -1001,6 +1023,14 @@ class Question:
                                 field_info['type'] = field[key]
                                 if field[key] in ['yesno', 'yesnowide', 'noyes', 'noyeswide', 'yesnomaybe', 'yesnomaybewide', 'noyesmaybe', 'noyesmaybewide'] and 'required' not in field_info:
                                     field_info['required'] = False
+                                if field[key] in ['yesno', 'yesnowide']:
+                                    field_info['boolean'] = 1
+                                elif field[key] in ['noyes', 'noyeswide']:
+                                    field_info['boolean'] = -1
+                                elif field[key] in ['yesnomaybe', 'yesnowidemaybe']:
+                                    field_info['threestate'] = 1
+                                elif field[key] in ['noyesmaybe', 'noyeswidemaybe']:
+                                    field_info['threestate'] = -1
                             elif key == 'code':
                                 field_info['choicetype'] = 'compute'
                                 field_info['selections'] = {'compute': compile(field[key], '', 'eval'), 'sourcecode': field[key]}
@@ -1729,6 +1759,7 @@ class Interview:
         self.defs = dict()
         self.terms = dict()
         self.includes = set()
+        self.reconsider = set()
         self.question_index = 0
         self.default_role = None
         self.title = None
@@ -1836,6 +1867,25 @@ class Interview:
                         exec('from ' + str(self.source.package) + module_name + ' import *', user_dict)
                     else:
                         exec('from ' + module_name + ' import *', user_dict)
+            if question.question_type == 'reset' or question.question_type == 'template':
+                for var in question.reset_list:
+                    if complications.search(var):
+                        try:
+                            exec('del ' + str(var), user_dict)
+                        except:
+                            pass
+                    elif var in user_dict:
+                        #logmessage("doing non-exec del")
+                        del user_dict[var]
+        for var in self.reconsider:
+            if complications.search(var):
+                try:
+                    exec('del ' + str(var), user_dict)
+                except:
+                    pass
+            elif var in user_dict:
+                #logmessage("doing non-exec del")
+                del user_dict[var]
         while True:
             try:
                 for question in self.questions_list:
@@ -1885,7 +1935,7 @@ class Interview:
                             interview_status.populate(question.ask(user_dict, 'None', 'None'))
                         raise MandatoryQuestion()
             except NameError as errMess:
-                logmessage("Gota this: " + str(errMess))
+                #logmessage("Gota this: " + str(errMess))
                 missingVariable = extract_missing_name(errMess)
                 #missingVariable = str(errMess).split("'")[1]
                 question_result = self.askfor(missingVariable, user_dict, seeking=interview_status.seeking)
@@ -1949,7 +1999,7 @@ class Interview:
         seeking = kwargs.get('seeking', list())
         if debug:
             seeking.append({'variable': missingVariable})
-        logmessage("I don't have " + str(missingVariable))
+        #logmessage("I don't have " + str(missingVariable))
         if missingVariable in variable_stack:
             raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
         variable_stack.add(missingVariable)
@@ -2170,7 +2220,12 @@ class Interview:
                             #logmessage("Returning after defining objects")
                             return({'type': 'continue'})
                         if question.question_type == "template":
-                            exec(from_safeid(question.fields[0].saveas) + ' = DATemplate(' + "'" + from_safeid(question.fields[0].saveas) + "', content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ')', user_dict)
+                            string = "import docassemble.base.core"
+                            logmessage("Doing " + string)
+                            exec(string, user_dict)
+                            string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + "'" + from_safeid(question.fields[0].saveas) + "', content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ')'
+                            logmessage("Doing " + string)
+                            exec(string, user_dict)
                             #question.mark_as_answered(user_dict)
                             return({'type': 'continue'})
                         if question.question_type == 'attachments':
@@ -2235,7 +2290,7 @@ class Interview:
                             return question.ask(user_dict, the_x, the_i)
                     raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + missingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
                 except NameError as errMess:
-                    logmessage("got this error: " + str(errMess))
+                    #logmessage("got this error: " + str(errMess))
                     newMissingVariable = extract_missing_name(errMess)
                     #newMissingVariable = str(errMess).split("'")[1]
                     question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking)
@@ -2275,6 +2330,9 @@ class myvisitnode(ast.NodeVisitor):
         #ast.NodeVisitor.generic_visit(self, node)
         self.generic_visit(node)
         self.depth -= 1
+    def visit_For(self, node):
+        self.targets[node.target.id] = 1
+        self.generic_visit(node)
     def visit_Name(self, node):
         self.names[node.id] = 1
         #ast.NodeVisitor.generic_visit(self, node)

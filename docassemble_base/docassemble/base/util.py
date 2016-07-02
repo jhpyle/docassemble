@@ -24,7 +24,7 @@ import ast
 import astunparse
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'message']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'single_paragraph']
 
 class lister(ast.NodeVisitor):
     def __init__(self):
@@ -45,6 +45,7 @@ default_language = 'en'
 default_locale = 'US.utf8'
 daconfig = dict()
 dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
+newlines = re.compile(r'[\r\n]+')
 
 class ThreadVariables(threading.local):
     language = default_language
@@ -195,6 +196,12 @@ def word(the_word, **kwargs):
     # Currently, no kwargs are used, but in the future, this function could be
     # expanded to use kwargs.  For example, for languages with gendered words,
     # the gender could be passed as a keyword argument.
+    if the_word is True:
+        the_word = 'yes'
+    elif the_word is False:
+        the_word = 'no'
+    elif the_word is None:
+        the_word = "I don't know"
     try:
         return word_collection[this_thread.language][the_word].decode('utf-8')
     except:
@@ -706,13 +713,6 @@ def space_to_underscore(a):
     """Converts spaces in the input to underscores in the output.  Useful for making filenames without spaces."""
     return(re.sub(' +', '_', unicode(a).encode('ascii', errors='ignore')))
 
-# def remove(variable_name):
-#     logmessage("Calling remove in util")
-#     try:
-#         exec('del ' + variable_name)
-#     except:
-#         pass
-
 def message(*pargs, **kwargs):
     """Presents a screen to the user with the given message"""
     raise QuestionError(*pargs, **kwargs)
@@ -906,14 +906,25 @@ def components_of(full_variable):
 
 def defined(var):
     """Returns true if the variable has already been defined.  Otherwise, returns false."""
+    if type(var) not in [str, unicode]:
+        raise Exception("defined() must be given a string")
     frame = inspect.stack()[1][0]
     components = components_of(var)
     variable = components[0][1]
-    while variable not in frame.f_locals:
+    the_user_dict = frame.f_locals
+    while variable not in the_user_dict:
         frame = frame.f_back
         if frame is None:
             return False
-    if variable not in frame.f_locals:
+        if 'user_dict' in frame.f_locals:
+            the_user_dict = eval('user_dict', frame.f_locals)
+            if variable in the_user_dict:
+                break
+            else:
+                return False
+        else:
+            the_user_dict = frame.f_locals
+    if variable not in the_user_dict:
         return False
     if len(components) == 1:
         return True
@@ -927,7 +938,7 @@ def defined(var):
             cum_variable += '.' + elem[1]
         elif elem[0] == 'index':
             try:
-                the_index = eval(elem[1], frame.f_locals)
+                the_index = eval(elem[1], the_user_dict)
             except:
                 return False
             if type(the_index) == int:
@@ -936,10 +947,99 @@ def defined(var):
                 to_eval = elem[1] + " in " + cum_variable
             cum_variable += '[' + elem[1] + ']'
         try:
-            result = eval(to_eval, frame.f_locals)
+            result = eval(to_eval, the_user_dict)
         except:
             return False
         if result:
             continue
         return False
     return True
+
+def value(var):
+    """Returns the value of the variable given by the string 'var'."""
+    if type(var) not in [str, unicode]:
+        raise Exception("value() must be given a string")
+    frame = inspect.stack()[1][0]
+    components = components_of(var)
+    variable = components[0][1]
+    the_user_dict = frame.f_locals
+    while variable not in the_user_dict:
+        frame = frame.f_back
+        if frame is None:
+            force_ask(var)
+        if 'user_dict' in frame.f_locals:
+            the_user_dict = eval('user_dict', frame.f_locals)
+            if variable in the_user_dict:
+                break
+            else:
+                force_ask(var)
+        else:
+            the_user_dict = frame.f_locals
+    if variable not in the_user_dict:
+        force_ask(var)
+    if len(components) == 1:
+        return eval(variable, the_user_dict)
+    cum_variable = ''
+    for elem in components:
+        if elem[0] == 'name':
+            cum_variable += elem[1]
+            continue
+        elif elem[0] == 'attr':
+            to_eval = "hasattr(" + cum_variable + ", " + repr(elem[1]) + ")"
+            cum_variable += '.' + elem[1]
+        elif elem[0] == 'index':
+            try:
+                the_index = eval(elem[1], the_user_dict)
+            except:
+                force_ask(var)
+            if type(the_index) == int:
+                to_eval = 'len(' + cum_variable + ') > ' + str(the_index)
+            else:
+                to_eval = elem[1] + " in " + cum_variable
+            cum_variable += '[' + elem[1] + ']'
+        try:
+            result = eval(to_eval, the_user_dict)
+        except:
+            force_ask(var)
+        if result:
+            continue
+        force_ask(var)
+    return eval(cum_variable, the_user_dict)
+
+# def _undefine(*pargs):
+#     logmessage("called _undefine")
+#     for var in pargs:
+#         _undefine(var)
+
+# def undefine(var):
+#     """Makes the given variable undefined."""
+#     logmessage("called undefine")
+#     if type(var) not in [str, unicode]:
+#         raise Exception("undefine() must be given one or more strings")
+#     components = components_of(var)
+#     variable = components[0][1]
+#     frame = inspect.stack()[1][0]
+#     the_user_dict = frame.f_locals
+#     while variable not in the_user_dict:
+#         frame = frame.f_back
+#         if frame is None:
+#             return
+#         if 'user_dict' in frame.f_locals:
+#             the_user_dict = eval('user_dict', frame.f_locals)
+#             if variable in the_user_dict:
+#                 break
+#             else:
+#                 return
+#         else:
+#             the_user_dict = frame.f_locals
+#     try:
+#         exec("del " + var, the_user_dict)
+#     except:
+#         logmessage("Failed to delete " + var)
+#         pass
+#     return
+
+def single_paragraph(text):
+    """Reduces the text to a single paragraph.  Useful when using Markdown 
+    to indent user-supplied text."""
+    return newlines.sub(' ', text)

@@ -74,31 +74,36 @@ def edit_user_profile_page(id):
     user = User.query.filter_by(id=id).first()
     if user is None:
         abort(404)
-    the_role_id = None
+    the_role_id = list()
     for role in user.roles:
-        the_role_id = role.id
+        logmessage("role includes " + str(role.id))
+        the_role_id.append(str(role.id))
+    if len(the_role_id) == 0:
+        the_role_id = [str(Role.query.filter_by(name='user').first().id)]
     form = EditUserProfileForm(request.form, user, role_id=the_role_id)
     form.role_id.choices = [(r.id, r.name) for r in Role.query.order_by('name')]
-    logmessage("Setting default to " + str(the_role_id))
     
     if request.method == 'POST' and form.validate():
 
         form.populate_obj(user)
         roles_to_remove = list()
+        the_role_id = list()
         for role in user.roles:
             roles_to_remove.append(role)
         for role in roles_to_remove:
             user.roles.remove(role)
         for role in Role.query.order_by('id'):
-            if role.id == form.role_id.data:
+            if role.id in form.role_id.data:
                 user.roles.append(role)
-                break
+                the_role_id.append(role.id)
 
         db.session.commit()
 
         flash(word('The information was saved.'), 'success')
         return redirect(url_for('user_list'))
 
+    form.role_id.default = the_role_id
+    logmessage("Setting default to " + str(the_role_id))
     return render_template('users/edit_user_profile_page.html', form=form)
 
 @app.route('/privilege/add', methods=['GET', 'POST'])

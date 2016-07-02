@@ -1,6 +1,6 @@
 from flask_user.forms import RegisterForm
 from flask_wtf import Form
-from wtforms import StringField, SubmitField, ValidationError, BooleanField, SelectField, validators
+from wtforms import StringField, SubmitField, ValidationError, BooleanField, SelectMultipleField, validators
 from wtforms.validators import DataRequired, Email
 
 from docassemble.base.util import word
@@ -38,7 +38,7 @@ class UserProfileForm(Form):
 
 class EditUserProfileForm(UserProfileForm):
     email = StringField(word('E-mail'), validators=[Email(word('Must be a valid e-mail address')), DataRequired(word('E-mail is required'))])
-    role_id = SelectField(word('Privileges'), coerce=int)
+    role_id = SelectMultipleField(word('Privileges'), coerce=int)
     active = BooleanField(word('Active'), validators=[
         DataRequired(word('Active is required'))])
 

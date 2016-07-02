@@ -1,7 +1,7 @@
 {% extends 'flask_user/public_base.html' %}
 
 {% block content %}
-{% from "base_templates/form_macros.html" import render_field, render_submit_field, render_checkbox_field, render_select_field %}
+{% from "base_templates/form_macros.html" import render_field, render_submit_field, render_checkbox_field, render_multiselect_field %}
 
 <h1>Edit User Profile</h1>
 
@@ -10,7 +10,7 @@
 
     {{ render_checkbox_field(form.active) }}
 
-    {{ render_select_field(form.role_id) }}
+    {{ render_multiselect_field(form.role_id) }}
 
     {{ render_field(form.email, tabindex=235) }}
 

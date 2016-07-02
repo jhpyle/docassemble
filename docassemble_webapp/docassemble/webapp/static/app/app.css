@@ -377,3 +377,17 @@ div.striping:nth-child(even) {
 div.fieldpart {
     padding-top: 7px;
 }
+
+div.topcenter {
+    position: fixed;
+    top: 5px;
+    left: 0;
+    right: 0;
+    z-index: 2000;
+}
+
+div.col-centered {
+    margin-left: auto;
+    margin-right: auto;
+    float: none;
+}

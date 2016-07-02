@@ -106,7 +106,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                     width_units = 'em'
                     sizing = 'width:' + str(width_value) + str(width_units) + ';'
                     filename = docassemble.base.filter.file_finder(str(the_image.package) + ':' + str(the_image.filename))
-                    if 'extension' in filename and filename['extension'] == 'svg':
+                    if 'extension' in filename and filename['extension'] == 'svg' and 'width' in filename:
                         if filename['width'] and filename['height']:
                             sizing += 'height:' + str(width_value * (filename['height']/filename['width'])) + str(width_units) + ';'
                     else:
@@ -269,7 +269,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                 if (field.datatype in ['files', 'file', 'camera', 'camcorder', 'microphone']):
                     enctype_string = ' enctype="multipart/form-data"'
                     files.append(field.saveas)
-                if field.datatype in ['yesno', 'yesnowide', 'noyes', 'noyeswide']:
+                if field.datatype in ['boolean', 'threestate']:
                     checkboxes.append(field.saveas)
                 elif field.datatype in ['checkboxes', 'object_checkboxes']:
                     if field.choicetype == 'compute':
@@ -286,9 +286,9 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
             if hasattr(field, 'label'):
                 if status.labels[field.number] == 'no label':
                     fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-md-12">' + input_for(status, field, wide=True) + '</div></div>\n')
-                elif hasattr(field, 'datatype') and field.datatype in ['yesnowide', 'noyeswide']:
+                elif hasattr(field, 'inputtype') and field.inputtype in ['yesnowide', 'noyeswide']:
                     fieldlist.append('                <div class="row"><div class="col-md-12">' + input_for(status, field) + '</div></div>\n')
-                elif hasattr(field, 'datatype') and field.datatype in ['yesno', 'noyes']:
+                elif hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
                     fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>\n')
                 else:
                     fieldlist.append('                <div class="form-group' + req_tag + '"><label for="' + escape_id(field.saveas) + '" class="control-label col-sm-4">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-sm-8 fieldpart">' + input_for(status, field) + '</div></div>\n')
@@ -582,9 +582,13 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
             attachment_index += 1
         if status.question.allow_emailing:
             if len(status.attachments) > 1:
-                email_header = word("E-mail these documents to yourself")
+                email_header = word("E-mail these documents")
             else:
-                email_header = word("E-mail this document to yourself")
+                email_header = word("E-mail this document")
+            if status.current_info['user']['is_authenticated'] and status.current_info['user']['email']:
+                default_email = status.current_info['user']['email']
+            else:
+                default_email = ''
             output += """\
             <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
               <div class="panel panel-default">
@@ -599,7 +603,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                   <div class="panel-body">
                     <form action=\"""" + root + """\" id="emailform" class="form-horizontal" method="POST">
                       <fieldset>
-                        <div class="form-group"><label for="_attachment_email_address" class="control-label col-sm-4">""" + word('E-mail address') + """</label><div class="col-sm-8"><input alt=""" + '"' + word ("Input box") + '"' + """ class="form-control" type="email" name="_attachment_email_address" id="_attachment_email_address"/></div></div>"""
+                        <div class="form-group"><label for="_attachment_email_address" class="control-label col-sm-4">""" + word('E-mail address') + """</label><div class="col-sm-8"><input alt=""" + '"' + word ("Input box") + '"' + """ class="form-control" type="email" name="_attachment_email_address" id="_attachment_email_address" value=""" + '"' + str(default_email) + '"' + """/></div></div>"""
             if editable_included:
                 output += """
                         <div class="form-group"><label for="_attachment_include_editable" class="control-label col-sm-4">""" + '&nbsp;</label><div class="col-sm-8"><input alt="' + word ("Check box") + ", " + word('Include ' + editable_name + ' for editing') + '" type="checkbox" value="True" name="_attachment_include_editable" id="_attachment_include_editable"/> ' + word('Include ' + editable_name + ' for editing') + '</div></div>\n'
@@ -882,41 +886,36 @@ def input_for(status, field, wide=False):
                     output += '>' + formatted_item + '</option>'
             output += '</select> '
     elif hasattr(field, 'datatype'):
-        if field.datatype in ['yesno', 'yesnowide']:
+        if field.datatype == 'boolean':
             label_text = markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True, escape=True)
-            output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon" type="checkbox" value="True" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
+            if field.sign > 0:
+                output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon" type="checkbox" value="True" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
+            else:
+                output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon" type="checkbox" value="False" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
             if defaultvalue:
                 output += ' checked'
             output += '/> '
-        if field.datatype in ['noyes', 'noyeswide']:
-            label_text = markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True, escape=True)
-            output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon" type="checkbox" value="False" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
-            if defaultvalue:
-                output += ' checked'
-            output += '/> '
-        elif field.datatype in ['yesnomaybe', 'yesnomaybewide']:
+        elif field.datatype == 'threestate':
             inner_fieldlist = list()
             id_index = 0
-            for pair in [['True', status.question.yes()], ['False', status.question.no()], ['None', status.question.maybe()]]:
-                formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
-                if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue)):
-                    ischecked = ' checked="checked"'
-                else:
-                    ischecked = ''
-                inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
-                id_index += 1
-            output += "".join(inner_fieldlist)
-        elif field.datatype in ['noyesmaybe', 'noyesmaybewide']:
-            inner_fieldlist = list()
-            id_index = 0
-            for pair in [['False', status.question.yes()], ['True', status.question.no()], ['None', status.question.maybe()]]:
-                formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
-                if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue)):
-                    ischecked = ' checked="checked"'
-                else:
-                    ischecked = ''
-                inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
-                id_index += 1
+            if field.sign > 0:
+                for pair in [['True', status.question.yes()], ['False', status.question.no()], ['None', status.question.maybe()]]:
+                    formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
+                    if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue)):
+                        ischecked = ' checked="checked"'
+                    else:
+                        ischecked = ''
+                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
+                    id_index += 1
+            else:
+                for pair in [['False', status.question.yes()], ['True', status.question.no()], ['None', status.question.maybe()]]:
+                    formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
+                    if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue)):
+                        ischecked = ' checked="checked"'
+                    else:
+                        ischecked = ''
+                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
+                    id_index += 1
             output += "".join(inner_fieldlist)
         elif field.datatype in ['file', 'files', 'camera', 'camcorder', 'microphone']:
             if field.datatype == 'files':

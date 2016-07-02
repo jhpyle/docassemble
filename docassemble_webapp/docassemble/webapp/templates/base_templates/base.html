@@ -58,7 +58,7 @@
     {%- block flash_messages %}
       {%- with messages = get_flashed_messages(with_categories=true) -%}
         {%- if messages %}
-      <div class="container" id="flash">
+      <div class="container topcenter" id="flash">
         <div class="row">
           <div class="col-sm-7 col-md-6 col-lg-5 col-centered">
           {%- for category, message in messages %}

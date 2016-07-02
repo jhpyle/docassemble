@@ -408,7 +408,7 @@ def image_as_rtf(match, question=None):
     file_info = file_finder(file_reference, convert={'svg': 'png'}, question=question)
     if 'path' not in file_info:
         return ''
-    logmessage('image_as_rtf: path is ' + file_info['path'])
+    #logmessage('image_as_rtf: path is ' + file_info['path'])
     if 'mimetype' in file_info:
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
@@ -652,7 +652,7 @@ def qr_include_string(match):
     output = '\\mbox{\\includegraphics[width=' + width + ']{' + the_image.name + '}}'
     if width == '\\textwidth':
         output = '\\clearpage ' + output + '\\clearpage '
-    logmessage("Output is " + output)
+    #logmessage("Output is " + output)
     return(output)
 
 def qr_include_docx(match):
