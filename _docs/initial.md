@@ -52,7 +52,7 @@ will find the above `objects` block and process it.  It will define
 The use of objects in **docassemble** interviews is highly encouraged.
 However, the objects you use as variables in your interview [YAML] files
 need to inherit from the class `DAObject`.  Otherwise, **docassemble**
-might not be able to find the appopriate code blocks or questions
+might not be able to find the appopriate [`code` blocks] or questions
 necessary to define them.  This is because of the way **docassemble**
 keeps track of the names of variables.
 
@@ -207,6 +207,28 @@ is equivalent to running the following Python code:
 from datetime import *
 {% endhighlight %}
 
+# <a name="reset"></a>`reset`
+
+The `reset` block will cause variables to be undefined every time a
+screen loads.
+
+This can be helpful in a situation where a variable is set by a
+[`code` block] and the value of the variable ought to be considered
+afresh based on the user's latest input.
+
+{% highlight yaml %}
+---
+reset:
+  - client_is_guilty
+  - opposing_party_is_guilty
+---
+{% endhighlight %}
+
+Effectively, this causes variables to act like functions.
+
+For information about how to cause **docassemble** to reset variables
+set by [`code` blocks], see the [`reconsider` modifier].
+
 # <a name="terms"></a>`terms`
 
 {% highlight yaml %}
@@ -318,7 +340,7 @@ If you include `code` within the same block as your `default role`
 statement, that code will be executed every time the interview logic
 is processed, as if it was marked as `initial`.  For this reason, any
 `default role` statement that contains code should be placed earlier
-in the interview file than and `mandatory` questions or code blocks.
+in the interview file than and `mandatory` questions or [`code` blocks].
 
 In the example above, the interview has two roles: "client" and
 "advocate".  The special variables `user` and `role` are set in the
@@ -378,3 +400,6 @@ the interview.  The setting of the progress bar is controlled by the
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
 [`update_info()`]: {{ site.baseurl}}/docs/legal.html#update_info
 [YAML]: https://en.wikipedia.org/wiki/YAML
+[`code` block]: {{ site.baseurl}}/docs/code.html
+[`code` blocks]: {{ site.baseurl}}/docs/code.html
+[`reconsider` modifier]: {{ site.baseurl}}/docs/logic.html#reconsider

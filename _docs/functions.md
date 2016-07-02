@@ -52,6 +52,33 @@ variable.  If you don't, it is as if you are referring to the variable.
 
 {% include side-by-side.html demo="defined" %}
 
+## <a name="value"></a>value()
+
+The `value()` function returns the value of a variable, where the name
+of the variable is given as a string.
+
+These two code blocks effectively do the exact same thing:
+
+{% highlight yaml %}
+---
+code: |
+  answer = value('meaning_of_life')
+---
+{% endhighlight %}
+
+{% highlight yaml %}
+---
+code: |
+  answer = meaning_of_life
+---
+{% endhighlight %}
+
+Note that `value(meaning_of_life)` and `value("meaning_of_life")` are
+entirely different.  The first will treat the value of the
+`meaning_of_life` variable as a variable name.  So if
+`meaning_of_life` is "chocolate," `value(meaning_of_life)` will
+attempt to find the value of the variable `chocolate`.
+
 ## <a name="need"></a>need()
 
 The `need()` function takes one or more variables as arguments and
@@ -218,6 +245,27 @@ If `user_name` is `John Wilkes Booth`,
 `space_to_underscore(user_name)` will return `John_Wilkes_Booth`.
 This is useful if you do not want spaces in the filenames of your
 [attachments]\:
+
+## <a name="single_paragraph"></a>single_paragraph()
+
+`single_paragraph(user_supplied_text)` will replace any linebreaks in
+`user_supplied_text` with spaces.  This allows you to do things like:
+
+{% highlight yaml %}
+---
+question: Summary of your answers
+subquestion: |
+  When I asked you the meaning of life, you said:
+
+  > ${ single_paragraph(meaning_of_life) }
+
+field: ok_to_proceed
+---
+{% endhighlight %}
+
+If you did not remove line breaks from the text, then if the
+`meaning_of_life` contained two consecutive line breaks, only the
+first paragraph of the answer would be indented.
 
 {% highlight yaml %}
 ---

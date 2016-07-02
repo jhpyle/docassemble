@@ -30,6 +30,13 @@ The `noyes` statement is just like `yesno`, except that "Yes" means
 Note that yes/no fields can also be gathered on a screen along with
 other fields; to make screens like that, use [`fields`] below.
 
+## <a name="yesnomaybe"></a><a name="noyesmaybe"></a>`yesnomaybe` or `noyesmaybe`
+
+These are just like `yesno` and `noyes`, except that they offer a
+third choice, "I don't know."  If the user selects "I don't know," the
+variable is set to `None`, which is a special [Python constant] that
+represents the absence of a value.
+
 ## <a name="field with buttons"></a>`field` with `buttons`
 
 A [`question`] block with a `buttons` statement will set the variable
@@ -300,8 +307,9 @@ The possible `datatype` values are:
 * <a name="microphone"></a>`microphone`: like `camera`, except for
   recording an audio clip;
 * `yesno`: checkbox with label, aligned with labeled fields.
-* `yesnowide`: checkbox with label, full width
-  of area.
+* `yesnowide`: checkbox with label, full width of area.
+* `yesnomaybe`: radio buttons offering "Yes," "No," and "I don't know."
+* `yesnomaybewide`: same as `yesnomaybe`, except full-width.
 * `checkboxes`: show the [`choices`](#choices) list as checkboxes;
   variable will be a dictionary with items set to true or false
   depending on whether the option was checked.  No validation is done
@@ -817,3 +825,4 @@ cannot use because they conflict with built-in names that [Python] and
 [`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
 [`yesno`]: #yesno
 [groups]: {{ site.baseurl }}/docs/groups.html
+[Python constant]: https://docs.python.org/2/library/constants.html

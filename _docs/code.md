@@ -4,6 +4,8 @@ title: Code Questions
 short_title: Code
 ---
 
+# <a name="code"></a> The `code` block
+
 In a **docassemble** interview, a [`question`] block tells
 **docassemble** that if the interview logic wants to know the value of
 a particular variable, such as `best_fruit_ever`, and that variable
@@ -113,6 +115,32 @@ block.
 It is not necessary to have any `code` blocks in your interviews, but
 they are the most elegant way of expressing your interview logic.
 
+# <a name="modifiers"></a>`code` block modifiers
+
+You can change the way `code` blocks work by adding modifiers:
+
+* <span></span>[`reconsider`]: If `reconsider` is set to `true`, then
+  **docassemble** will always "reconsider" the values of any of the
+  variables set by the `code` block.  That is, every time the
+  interview is assembled (every time the screen loads) **docassemble**
+  will forget about the value of any of the variables set by the
+  `code` block.
+* <span></span>[`initial`]: If `initial` is set to `true`, then **docassemble**
+  will run the code every time the interview is assembled (every time
+  the screen loads).
+* <span></span>[`mandatory`]: If `mandatory` is set to `true`, then
+  **docassemble** will run the code when the interview is assembled,
+  except that once the code runs through all the way, **docassemble**
+  will remember that the `code` block was successfully run, and it will
+  not re-run it again, as it does with `initial` code.
+
+For more information about these modifiers and how they are used, see
+the [Interview Logic] section.
+
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`import`]: {{ site.baseurl }}/docs/initial.html#import
+[`reconsider`]: {{ site.baseurl }}/docs/logic.html#reconsider
+[`initial`]: {{ site.baseurl }}/docs/logic.html#initial
+[`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
+[Interview Logic]: {{ site.baseurl }}/docs/logic.html

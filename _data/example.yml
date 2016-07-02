@@ -244,6 +244,11 @@
     - "Where?": where
       image: map
   ---
+"code": |-
+  ---
+  code: |
+    fruits = peaches + pears
+  ---
 "comment": |-
   ---
   question: Do you like turnips?
@@ -592,6 +597,12 @@
     ${ indefinite_article(vegetable) }?
   yesno: prefer_fruit
   ---
+"initial": |-
+  ---
+  initial: true
+  code: |
+    counter = counter + 1
+  ---
 "interview-help": |-
   ---
   interview help:
@@ -651,6 +662,13 @@
   modules:
     - docassemble.base.core
     - docassemble.base.util
+  ---
+"mandatory": |-
+  ---
+  mandatory: true
+  code: |
+    fruits = peaches + pears
+    all_done
   ---
 "markdown": "---\nquestion: |\n  Introduction to Markdown\nsubquestion: |\n  Markdown\
   \ allows you to express\n  formatting in plain text.\n  \n  # I am a heading\n\n\
@@ -963,6 +981,12 @@
         - Honda: Japan
         - Toyota: Japan
   ---
+"reconsider": |-
+  ---
+  code: |
+    cat_food_cans_needed = number_of_cats * 4
+  reconsider: true
+  ---
 "required-code": |-
   ---
   question: |
@@ -972,6 +996,11 @@
     - Favorite Beverage Overall: favorite_beverage
     - Favorite Soda: favorite_soda
       required: user_likes_soda
+  ---
+"reset": |-
+  ---
+  reset:
+    - cat_food_cans_needed
   ---
 "review": |-
   ---
@@ -1273,6 +1302,14 @@
     about this interview before
     proceeding.
   field: ready_to_proceed
+  ---
+"value": |-
+  ---
+  question: Summary
+  subquestion: |
+    Your favorite fruit is
+    ${ value('favorite_fruit') }.
+  sets: all_done
   ---
 "video": |-
   ---

@@ -85,6 +85,100 @@ code: |
 ---
 {% endhighlight %}
 
+## <a name="reconsider"></a>`reconsider`
+
+The `reconsider` modifier can only be used on [`code`] blocks.
+
+If `reconsider` is set to `true`, then **docassemble** will always
+"reconsider" the values of any of the variables set by the `code`
+block.
+
+That is, every time the interview is assembled (every time the screen
+loads) **docassemble** will forget about the value of any of the
+variables set by the `code` block.
+
+You will want to set `reconsider` to `true` if your interview flow is
+such that you want **docassemble** to reconsider its definition of a
+variable based on information that might be gathered in the future.
+
+For example, see if you can find the problem with the interview below.
+
+{% highlight yaml %}
+---
+code: |
+  cat_food_cans_needed = number_of_cats * 4
+---
+question: |
+  Does your neighbor's cat sometimes eat at your house?
+subquestion: |
+  To feed your own cat, you will need ${ cat_food_cans_needed } cans
+  of cat food, but you might need more for your neighbor's cat.
+buttons:
+  - "Yes":
+      code: |
+        number_of_cats = number_of_cats + 1
+        has_neighboring_cat = True
+  - "No":
+      code: |
+        has_neighboring_cat = False
+---
+question: How many cats do you have?
+fields:
+  - Cats: number_of_cats
+    datatype: integer
+---
+question: |
+  To feed your cat
+  % if has_neighboring_cat:
+  and your neighbor's cat
+  % endif
+  you will need to buy ${ cat_food_cans_needed } cans of cat food.
+sets: all_done
+---
+mandatory: true
+code: all_done
+{% endhighlight %}
+
+The problem with this interview is that it will compute the number of
+cans of cat food needed when it says "To feed your own cat, you will
+need . . . cans of cat food," but it will not increase the number of
+cans of cat food to account for later-acquired information (i.e. the
+fact that the neighbor's cat comes over).  Once `cat_food_cans_needed`
+has been defined once, **docassemble** will continue to use that
+definition whenever the interview calls for the definition of
+`cat_food_cans_needed`.
+
+This problem can be fixed by adding `reconsider: true` to the [`code`]
+block:
+
+{% highlight yaml %}
+---
+code: |
+  cat_food_cans_needed = number_of_cats * 4
+reconsider: true
+---
+{% endhighlight %}
+
+The `reconsider` modifier tells **docassemble** to always reconsider
+the variables in the [`code`] block.  When the final screen comes up,
+**docassemble** will have forgotten about the earlier-defined value of
+`cat_food_cans_needed` and will therefore re-define the value by
+re-running the [`code`] block.
+
+{% include side-by-side.html demo="reconsider" %}
+
+The `reconsider` modifier is particularly important to use when you
+allow interviewees to go back and modify past answers using a
+[`review`] block.  For more information about how to implement such
+features, see [`review`], [`event`], [`url_action()`], [`process_action()`],
+[`action_menu_item()`], and [`menu_items`].
+
+**docassemble** also offers the [`reset` initial block], which has the
+same effect as the `reconsider` modifier, but using a different way of
+specifying which variables should be reconsidered.  Whether you use
+the [`reset` initial block] or the `reconsider` modifier is a question
+of what you consider to be more convenient and/or readable.
+
 # The logical order of an interview
 
 [`mandatory`] and [`initial`] blocks are evaluated in the order they
@@ -227,6 +321,8 @@ a value for `user_wants_to_got_to_dance`.  Not giving up,
 dance with me?" question, which was defined earlier in
 `question_library.yml`.
 
+
+
 # <a name="howitworks"></a>How **docassemble** runs your code
 
 **docassemble** goes through your interview [YAML] file from start to
@@ -358,4 +454,10 @@ came back from asking whether the user has a car.
 [`interview help`]: {{ site.baseurl }}/docs/initial.html#interview help
 [`default role`]: {{ site.baseurl }}/docs/initial.html#default role
 [`template`]: {{ site.baseurl }}/docs/templates.html
-
+[`event`]: {{ site.baseurl }}/docs/fields.html#event
+[`url_action()`]: {{ site.baseurl }}/docs/functions.html#url_action
+[`process_action()`]: {{ site.baseurl }}/docs/functions.html#process_action
+[`action_menu_item()`]: {{ site.baseurl }}/docs/functions.html#action_menu_item
+[`menu_items`]: {{ site.baseurl }}/docs/special.html#menu_items
+[`review`]: {{ site.baseurl }}/docs/fields.html#menu_items
+[`reset` initial block]: {{ site.baseurl }}/docs/initial.html#reset
