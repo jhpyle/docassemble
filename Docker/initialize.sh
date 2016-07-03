@@ -11,6 +11,7 @@ function deregister {
 trap deregister SIGINT SIGTERM
 
 rm -f /etc/apache2/sites-available/000-default.conf
+a2dissite 000-default
 
 if [ "${HOSTNAME-none}" != "none" ]; then
     if [ ! -f /etc/apache2/sites-available/default-ssl.conf ]; then
@@ -20,9 +21,9 @@ if [ "${HOSTNAME-none}" != "none" ]; then
     if [ ! -f /etc/apache2/sites-available/default-http.conf ]; then
 	sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
             /usr/share/docassemble/config/default-http.conf.dist > /etc/apache2/sites-available/default-http.conf || exit 1
-	a2ensite default-http
     fi
 fi
+a2ensite default-http
 
 if [ ! -f $CONFIG_FILE ]; then
     if [ "${CONTAINERROLE-all}" == "all" ]; then
@@ -71,6 +72,7 @@ fi
 
 if [ "${CONTAINERROLE-all}" == "all" ]; then
     supervisorctl --serverurl http://localhost:9001 start postgres || exit 1
+    sleep 4
     dbexists=`su -c "psql -tAc \"SELECT 1 FROM pg_database WHERE datname='docassemble'\"" postgres`
     if [ -z "$dbexists" ]; then
 	echo "drop database if exists docassemble; drop role if exists \"www-data\"; create role \"www-data\" login; drop role if exists root; create role root login; create database docassemble owner \"www-data\";" | su -c psql postgres || exit 1
