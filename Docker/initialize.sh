@@ -104,7 +104,7 @@ fi
 
 if [ "${LOGSERVER-none}" != "none" ]; then
     supervisorctl --serverurl http://localhost:9001 start syslogng
-fi    
+fi
 
 supervisorctl --serverurl http://localhost:9001 start apache2
 
