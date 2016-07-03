@@ -9,8 +9,8 @@ COPY docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/
 COPY Docker/initialize.sh /usr/share/docassemble/webapp/
 COPY Docker/run-postgresql.sh /usr/share/docassemble/webapp/
 COPY Docker/config.yml /usr/share/docassemble/config/config.yml.dist
-COPY Docker/apache.conf /etc/apache2/sites-available/000-default.conf.dist
-COPY Docker/apache-ssl.conf /etc/apache2/sites-available/default-ssl.conf.dist
+COPY Docker/apache.conf /usr/share/docassemble/config/000-default.conf.dist
+COPY Docker/apache-ssl.conf /usr/share/docassemble/config/default-ssl.conf.dist
 COPY Docker/apache.logrotate /etc/logrotate.d/apache2
 COPY Docker/docassemble.logrotate /etc/logrotate.d/docassemble
 COPY Docker/docassemble-cron-weekly.sh /etc/cron.weekly/docassemble

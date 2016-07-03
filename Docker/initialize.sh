@@ -13,11 +13,11 @@ trap deregister SIGINT SIGTERM
 if [ "${HOSTNAME-none}" != "none" ]; then
     if [ ! -f /etc/apache2/sites-available/default-ssl.conf ]; then
 	sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
-        /etc/apache2/sites-available/default-ssl.conf.dist > /etc/apache2/sites-available/default-ssl.conf || exit 1
+        /usr/share/docassemble/config/default-ssl.conf.dist > /etc/apache2/sites-available/default-ssl.conf || exit 1
     fi
     if [ ! -f /etc/apache2/sites-available/000-default.conf ]; then
 	sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
-            /etc/apache2/sites-available/000-default.conf.dist > /etc/apache2/sites-available/000-default.conf || exit 1
+        /usr/share/docassemble/config/000-default.conf.dist > /etc/apache2/sites-available/000-default.conf || exit 1
     fi
 fi
 
@@ -49,6 +49,7 @@ if [ ! -f $CONFIG_FILE ]; then
 	    -e 's/{{LOGSERVER}}/'"${LOGSERVER-null}"'/' \
 	    $CONFIG_FILE_DIST > $CONFIG_FILE || exit 1
     fi
+    chown www-data.www-data $CONFIG_FILE
 fi
 
 python -m docassemble.webapp.update_config $CONFIG_FILE || exit 1
