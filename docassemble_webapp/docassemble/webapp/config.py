@@ -23,7 +23,7 @@ def load(**kwargs):
     if 'arguments' in kwargs and kwargs['arguments'] and len(kwargs['arguments']) > 1:
         filename = kwargs['arguments'][1]
     else:
-        filename = kwargs.get('filename', '/usr/share/docassemble/config.yml')
+        filename = kwargs.get('filename', '/usr/share/docassemble/config/config.yml')
     if not os.path.isfile(filename):
         if not os.access(os.path.dirname(filename), os.W_OK):
             sys.stderr.write("Configuration file " + str(filename) + " does not exist and cannot be created\n")

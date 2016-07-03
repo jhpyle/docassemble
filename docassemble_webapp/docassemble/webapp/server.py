@@ -4262,7 +4262,6 @@ def request_developer():
             flash(word('No administrators could be found.'), 'error')
         else:
             try:
-                #mail.send(msg)
                 async_mail(msg)
                 flash(word('Your request was submitted.'), 'success')
             except:

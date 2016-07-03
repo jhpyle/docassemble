@@ -3,17 +3,18 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get clean && apt-get update
 RUN until apt-get -q -y install tzdata python python-dev wget unzip git locales pandoc texlive texlive-latex-extra apache2 postgresql libapache2-mod-wsgi libapache2-mod-xsendfile poppler-utils libffi-dev libffi6 imagemagick gcc supervisor libaudio-flac-header-perl libaudio-musepack-perl libmp3-tag-perl libogg-vorbis-header-pureperl-perl perl make libvorbis-dev libcddb-perl libinline-perl libcddb-get-perl libmp3-tag-perl libaudio-scan-perl libaudio-flac-header-perl libparallel-forkmanager-perl libav-tools autoconf automake libjpeg-dev zlib1g-dev libpq-dev logrotate tmpreaper cron pdftk fail2ban libxml2 libxslt1.1 libxml2-dev libxslt1-dev redis-server; do sleep 1; done
 RUN cd /tmp && git clone git://git.code.sf.net/p/pacpl/code pacpl-code && cd pacpl-code && ./configure; make && make install && cd ..
-RUN mkdir -p /etc/ssl/docassemble /usr/share/docassemble/local /usr/share/docassemble/webapp /usr/share/docassemble/files /var/www/.pip /var/www/.cache /usr/share/docassemble/log /tmp/docassemble && chown www-data.www-data /var/www/.pip /var/www/.cache && chsh -s /bin/bash www-data
+RUN mkdir -p /etc/ssl/docassemble /usr/share/docassemble/local /usr/share/docassemble/backup /usr/share/docassemble/config /usr/share/docassemble/webapp /usr/share/docassemble/files /var/www/.pip /var/www/.cache /usr/share/docassemble/log /tmp/docassemble && chown www-data.www-data /var/www/.pip /var/www/.cache && chsh -s /bin/bash www-data
 RUN cd /usr/share/docassemble && git clone https://github.com/letsencrypt/letsencrypt && cd letsencrypt && ./letsencrypt-auto --help
 COPY docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/
 COPY Docker/initialize.sh /usr/share/docassemble/webapp/
 COPY Docker/run-postgresql.sh /usr/share/docassemble/webapp/
-COPY Docker/config.yml /usr/share/docassemble/
+COPY Docker/config.yml /usr/share/docassemble/config/
 COPY Docker/apache.conf /etc/apache2/sites-available/000-default.conf
 COPY Docker/apache-ssl.conf /etc/apache2/sites-available/default-ssl.conf
 COPY Docker/apache.logrotate /etc/logrotate.d/apache2
 COPY Docker/docassemble.logrotate /etc/logrotate.d/docassemble
-COPY Docker/docassemble-cron.sh /etc/cron.weekly/docassemble
+COPY Docker/docassemble-cron-weekly.sh /etc/cron.weekly/docassemble
+COPY Docker/docassemble-cron-daily.sh /etc/cron.weekly/docassemble
 COPY Docker/docassemble.conf /etc/apache2/conf-available/
 COPY Docker/docassemble-supervisor.conf /etc/supervisor/conf.d/docassemble.conf
 COPY Docker/docassemble.key /etc/ssl/docassemble/
@@ -41,5 +42,7 @@ ENV APACHE_LOG_DIR /var/log/apache2
 EXPOSE 80
 EXPOSE 443
 EXPOSE 9001
+
+VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql", "/usr/share/docassemble/log", "/usr/share/docassemble/files", "/usr/share/docassemble/config", "/usr/share/docassemble/backup"]
 
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]

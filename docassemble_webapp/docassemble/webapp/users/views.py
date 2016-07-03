@@ -136,6 +136,6 @@ def user_profile_page():
         db.session.commit()
 
         flash(word('Your information was saved.'), 'success')
-        return redirect(url_for('index'))
+        return redirect(url_for('interview_list'))
 
     return render_template('users/user_profile_page.html', form=form, debug=debug_status())

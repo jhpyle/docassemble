@@ -29,8 +29,8 @@ class UserProfileForm(Form):
         DataRequired(word('First name is required'))])
     last_name = StringField(word('Last name'), validators=[
         DataRequired(word('Last name is required'))])
-    country = StringField(word('Country code'), [validators.Length(min=2, max=2)])
-    subdivisionfirst = StringField(word('First subdivision'), [validators.Length(min=2, max=3)])
+    country = StringField(word('Country code'), [validators.Length(min=0, max=2)])
+    subdivisionfirst = StringField(word('First subdivision'), [validators.Length(min=0, max=3)])
     subdivisionsecond = StringField(word('Second subdivision'))
     subdivisionthird = StringField(word('Third subdivision'))
     organization = StringField(word('Organization'))
@@ -39,8 +39,7 @@ class UserProfileForm(Form):
 class EditUserProfileForm(UserProfileForm):
     email = StringField(word('E-mail'), validators=[Email(word('Must be a valid e-mail address')), DataRequired(word('E-mail is required'))])
     role_id = SelectMultipleField(word('Privileges'), coerce=int)
-    active = BooleanField(word('Active'), validators=[
-        DataRequired(word('Active is required'))])
+    active = BooleanField(word('Active'))
 
 class RequestDeveloperForm(Form):
     reason = StringField(word('Reason for needing developer account (optional)'))
