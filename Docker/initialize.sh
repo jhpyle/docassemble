@@ -11,19 +11,21 @@ function deregister {
 trap deregister SIGINT SIGTERM
 
 rm -f /etc/apache2/sites-available/000-default.conf
+rm -f /etc/apache2/sites-available/default-ssl.conf
 a2dissite 000-default
+a2dissite default-ssl
 
 if [ "${HOSTNAME-none}" != "none" ]; then
-    if [ ! -f /etc/apache2/sites-available/default-ssl.conf ]; then
+    if [ ! -f /etc/apache2/sites-available/docassemble-ssl.conf ]; then
 	sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
-            /usr/share/docassemble/config/default-ssl.conf.dist > /etc/apache2/sites-available/default-ssl.conf || exit 1
+            /usr/share/docassemble/config/docassemble-ssl.conf.dist > /etc/apache2/sites-available/docassemble-ssl.conf || exit 1
     fi
-    if [ ! -f /etc/apache2/sites-available/default-http.conf ]; then
+    if [ ! -f /etc/apache2/sites-available/docassemble-http.conf ]; then
 	sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
-            /usr/share/docassemble/config/default-http.conf.dist > /etc/apache2/sites-available/default-http.conf || exit 1
+            /usr/share/docassemble/config/docassemble-http.conf.dist > /etc/apache2/sites-available/docassemble-http.conf || exit 1
     fi
 fi
-a2ensite default-http
+a2ensite docassemble-http
 
 if [ ! -f $CONFIG_FILE ]; then
     if [ "${CONTAINERROLE-all}" == "all" ]; then
@@ -84,7 +86,7 @@ fi
 python -m docassemble.webapp.install_certs $CONFIG_FILE || exit 1
 if [ "${USEHTTPS-false}" == "true" ]; then
     a2enmod ssl
-    a2ensite default-ssl
+    a2ensite docassemble-ssl
     if [ "${USELETSENCRYPT-false}" == "true" ]; then
 	cd /usr/share/docassemble/letsencrypt 
 	if [ -f /usr/share/docassemble/config/using_lets_encrypt ]; then
@@ -97,7 +99,7 @@ if [ "${USEHTTPS-false}" == "true" ]; then
     fi
 else
     a2dismod ssl
-    a2dissite default-ssl
+    a2dissite docassemble-ssl
 fi
 
 if [ "${LOGSERVER-none}" != "none" ]; then

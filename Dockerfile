@@ -9,8 +9,8 @@ COPY docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/
 COPY Docker/initialize.sh /usr/share/docassemble/webapp/
 COPY Docker/run-postgresql.sh /usr/share/docassemble/webapp/
 COPY Docker/config.yml /usr/share/docassemble/config/config.yml.dist
-COPY Docker/apache.conf /usr/share/docassemble/config/default-http.conf.dist
-COPY Docker/apache-ssl.conf /usr/share/docassemble/config/default-ssl.conf.dist
+COPY Docker/apache.conf /usr/share/docassemble/config/docassemble-http.conf.dist
+COPY Docker/apache-ssl.conf /usr/share/docassemble/config/docassemble-ssl.conf.dist
 COPY Docker/apache.logrotate /etc/logrotate.d/apache2
 COPY Docker/docassemble.logrotate /etc/logrotate.d/docassemble
 COPY Docker/docassemble-cron-weekly.sh /etc/cron.weekly/docassemble
@@ -36,7 +36,6 @@ RUN a2enmod wsgi
 RUN a2enmod rewrite
 RUN a2enmod xsendfile
 RUN a2enconf docassemble
-RUN a2dissite 000-default
 ENV APACHE_RUN_USER www-data
 ENV APACHE_RUN_GROUP www-data
 ENV APACHE_LOG_DIR /var/log/apache2
