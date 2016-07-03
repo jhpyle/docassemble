@@ -43,6 +43,6 @@ EXPOSE 80
 EXPOSE 443
 EXPOSE 9001
 
-VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql", "/usr/share/docassemble/log", "/usr/share/docassemble/files", "/usr/share/docassemble/config", "/usr/share/docassemble/backup", "/etc/letsencrypt"]
+VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql", "/usr/share/docassemble/log", "/usr/share/docassemble/files", "/usr/share/docassemble/config", "/usr/share/docassemble/backup", "/etc/letsencrypt", "/etc/apache2/sites-available"]
 
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]
