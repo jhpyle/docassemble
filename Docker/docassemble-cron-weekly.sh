@@ -2,7 +2,7 @@
 
 if [ "${USEHTTPS-false}" == "true" ]; then
     if [ "${USELETSENCRYPT-false}" == "true" ]; then
-	if [ -f /usr/share/docassemble/using_lets_encrypt ]; then
+	if [ -f /usr/share/docassemble/config/using_lets_encrypt ]; then
  	    cd /usr/share/docassemble/letsencrypt
 	    supervisorctl --serverurl http://localhost:9001 stop apache2
 	    ./letsencrypt-auto renew

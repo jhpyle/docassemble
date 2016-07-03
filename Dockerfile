@@ -8,9 +8,9 @@ RUN cd /usr/share/docassemble && git clone https://github.com/letsencrypt/letsen
 COPY docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/
 COPY Docker/initialize.sh /usr/share/docassemble/webapp/
 COPY Docker/run-postgresql.sh /usr/share/docassemble/webapp/
-COPY Docker/config.yml /usr/share/docassemble/config/
-COPY Docker/apache.conf /etc/apache2/sites-available/000-default.conf
-COPY Docker/apache-ssl.conf /etc/apache2/sites-available/default-ssl.conf
+COPY Docker/config.yml /usr/share/docassemble/config/config.yml.dist
+COPY Docker/apache.conf /etc/apache2/sites-available/000-default.conf.dist
+COPY Docker/apache-ssl.conf /etc/apache2/sites-available/default-ssl.conf.dist
 COPY Docker/apache.logrotate /etc/logrotate.d/apache2
 COPY Docker/docassemble.logrotate /etc/logrotate.d/docassemble
 COPY Docker/docassemble-cron-weekly.sh /etc/cron.weekly/docassemble
@@ -21,7 +21,7 @@ COPY Docker/docassemble.key /etc/ssl/docassemble/
 COPY Docker/docassemble.crt /etc/ssl/docassemble/
 COPY Docker/docassemble.ca.pem /etc/ssl/docassemble/
 COPY . /tmp/docassemble/
-RUN bash -c "chown -R www-data.www-data /usr/share/docassemble /tmp/docassemble && chmod ogu+r /usr/share/docassemble/config/config.yml && chmod -R og-rwx /etc/ssl/docassemble && cd /tmp && wget https://bootstrap.pypa.io/get-pip.py && python get-pip.py && pip install virtualenv"
+RUN bash -c "chown -R www-data.www-data /usr/share/docassemble /tmp/docassemble && chmod ogu+r /usr/share/docassemble/config/config.yml.dist && chmod -R og-rwx /etc/ssl/docassemble && cd /tmp && wget https://bootstrap.pypa.io/get-pip.py && python get-pip.py && pip install virtualenv"
 
 USER www-data
 RUN bash -c "cd /tmp && virtualenv /usr/share/docassemble/local && source /usr/share/docassemble/local/bin/activate && pip install --upgrade pip pip-utils && pip install 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' /tmp/docassemble/docassemble /tmp/docassemble/docassemble_base /tmp/docassemble/docassemble_demo /tmp/docassemble/docassemble_webapp && wget https://www.nodebox.net/code/data/media/linguistics.zip && unzip linguistics.zip -d /usr/share/docassemble/local/lib/python2.7/site-packages/ && rm linguistics.zip"
@@ -43,6 +43,6 @@ EXPOSE 80
 EXPOSE 443
 EXPOSE 9001
 
-VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql", "/usr/share/docassemble/log", "/usr/share/docassemble/files", "/usr/share/docassemble/config", "/usr/share/docassemble/backup"]
+VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql", "/usr/share/docassemble/log", "/usr/share/docassemble/files", "/usr/share/docassemble/config", "/usr/share/docassemble/backup", "/etc/letsencrypt"]
 
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]

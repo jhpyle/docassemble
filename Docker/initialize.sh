@@ -1,5 +1,6 @@
 #! /bin/bash
 
+export CONFIG_FILE_DIST=/usr/share/docassemble/config/config.yml.dist
 export CONFIG_FILE=/usr/share/docassemble/config/config.yml
 source /usr/share/docassemble/local/bin/activate
 
@@ -10,43 +11,46 @@ function deregister {
 trap deregister SIGINT SIGTERM
 
 if [ "${HOSTNAME-none}" != "none" ]; then
-  sed -i'' \
-      -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
-      /etc/apache2/sites-available/default-ssl.conf || exit 1
-  sed -i'' \
-      -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
-      /etc/apache2/sites-available/000-default.conf || exit 1
+    if [ ! -f /etc/apache2/sites-available/default-ssl.conf ]; then
+	sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
+        /etc/apache2/sites-available/default-ssl.conf.dist > /etc/apache2/sites-available/default-ssl.conf || exit 1
+    fi
+    if [ ! -f /etc/apache2/sites-available/000-default.conf ]; then
+	sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
+            /etc/apache2/sites-available/000-default.conf.dist > /etc/apache2/sites-available/000-default.conf || exit 1
+    fi
 fi
 
-if [ "${CONTAINERROLE-all}" == "all" ]; then
-  sed -i'' \
-      -e 's@{{DBPREFIX}}@'"${DBPREFIX-postgresql+psycopg2://}"'@' \
-      -e 's/{{DBNAME}}/'"${DBNAME-docassemble}"'/' \
-      -e 's/{{DBUSER}}/'"${DBUSER-null}"'/' \
-      -e 's/{{DBPASSWORD}}/'"${DBPASSWORD-null}"'/' \
-      -e 's/{{DBHOST}}/'"${DBHOST-null}"'/' \
-      -e 's/{{S3ENABLE}}/'"${S3ENABLE-false}"'/' \
-      -e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY-null}"'/' \
-      -e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
-      -e 's/{{S3BUCKET}}/'"${S3BUCKET-null}"'/' \
-      -e 's/{{EC2}}/'"${EC2-false}"'/' \
-      -e 's/{{LOGSERVER}}/'"${LOGSERVER-null}"'/' \
-      $CONFIG_FILE || exit 1
-else
-  sed -i'' \
-      -e 's@{{DBPREFIX}}@'"${DBPREFIX-postgresql+psycopg2://}"'@' \
-      -e 's/{{DBNAME}}/'"${DBNAME-docassemble}"'/' \
-      -e 's/{{DBUSER}}/'"${DBUSER-docassemble}"'/' \
-      -e 's/{{DBPASSWORD}}/'"${DBPASSWORD-abc123}"'/' \
-      -e 's/{{DBHOST}}/'"${DBHOST-null}"'/' \
-      -e 's/{{S3ENABLE}}/'"${S3ENABLE-false}"'/' \
-      -e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY-null}"'/' \
-      -e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
-      -e 's/{{S3BUCKET}}/'"${S3BUCKET-null}"'/' \
-      -e 's/{{EC2}}/'"${EC2-false}"'/' \
-      -e 's/{{LOGSERVER}}/'"${LOGSERVER-null}"'/' \
-      $CONFIG_FILE || exit 1
+if [ ! -f $CONFIG_FILE ]; then
+    if [ "${CONTAINERROLE-all}" == "all" ]; then
+	sed -e 's@{{DBPREFIX}}@'"${DBPREFIX-postgresql+psycopg2://}"'@' \
+	    -e 's/{{DBNAME}}/'"${DBNAME-docassemble}"'/' \
+	    -e 's/{{DBUSER}}/'"${DBUSER-null}"'/' \
+	    -e 's/{{DBPASSWORD}}/'"${DBPASSWORD-null}"'/' \
+	    -e 's/{{DBHOST}}/'"${DBHOST-null}"'/' \
+	    -e 's/{{S3ENABLE}}/'"${S3ENABLE-false}"'/' \
+	    -e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY-null}"'/' \
+	    -e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
+	    -e 's/{{S3BUCKET}}/'"${S3BUCKET-null}"'/' \
+	    -e 's/{{EC2}}/'"${EC2-false}"'/' \
+	    -e 's/{{LOGSERVER}}/'"${LOGSERVER-null}"'/' \
+	    $CONFIG_FILE_DIST > $CONFIG_FILE || exit 1
+    else
+	sed -e 's@{{DBPREFIX}}@'"${DBPREFIX-postgresql+psycopg2://}"'@' \
+	    -e 's/{{DBNAME}}/'"${DBNAME-docassemble}"'/' \
+	    -e 's/{{DBUSER}}/'"${DBUSER-docassemble}"'/' \
+	    -e 's/{{DBPASSWORD}}/'"${DBPASSWORD-abc123}"'/' \
+	    -e 's/{{DBHOST}}/'"${DBHOST-null}"'/' \
+	    -e 's/{{S3ENABLE}}/'"${S3ENABLE-false}"'/' \
+	    -e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY-null}"'/' \
+	    -e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
+	    -e 's/{{S3BUCKET}}/'"${S3BUCKET-null}"'/' \
+	    -e 's/{{EC2}}/'"${EC2-false}"'/' \
+	    -e 's/{{LOGSERVER}}/'"${LOGSERVER-null}"'/' \
+	    $CONFIG_FILE_DIST > $CONFIG_FILE || exit 1
+    fi
 fi
+
 python -m docassemble.webapp.update_config $CONFIG_FILE || exit 1
 
 if [ "${LOCALE-undefined}" != "undefined" ]; then
@@ -77,10 +81,10 @@ if [ "${USEHTTPS-false}" == "true" ]; then
     a2ensite default-ssl
     if [ "${USELETSENCRYPT-false}" == "true" ]; then
 	cd /usr/share/docassemble/letsencrypt 
-	if [ -f /usr/share/docassemble/using_lets_encrypt ]; then
+	if [ -f /usr/share/docassemble/config/using_lets_encrypt ]; then
 	    ./letsencrypt-auto renew
 	else
-	    ./letsencrypt-auto --apache --quiet --email ${LETSENCRYPTEMAIL} --agree-tos -d ${HOSTNAME} && touch /usr/share/docassemble/using_lets_encrypt
+	    ./letsencrypt-auto --apache --quiet --email ${LETSENCRYPTEMAIL} --agree-tos -d ${HOSTNAME} && touch /usr/share/docassemble/config/using_lets_encrypt
 	fi
 	cd ~-
 	/etc/init.d/apache2 stop
