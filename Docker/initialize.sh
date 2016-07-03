@@ -1,6 +1,6 @@
 #! /bin/bash
 
-export CONFIG_FILE=/usr/share/docassemble/config.yml
+export CONFIG_FILE=/usr/share/docassemble/config/config.yml
 source /usr/share/docassemble/local/bin/activate
 
 function deregister {
