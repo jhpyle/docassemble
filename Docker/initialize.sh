@@ -10,14 +10,17 @@ function deregister {
 
 trap deregister SIGINT SIGTERM
 
+rm -f /etc/apache2/sites-available/000-default.conf
+
 if [ "${HOSTNAME-none}" != "none" ]; then
     if [ ! -f /etc/apache2/sites-available/default-ssl.conf ]; then
 	sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
-        /usr/share/docassemble/config/default-ssl.conf.dist > /etc/apache2/sites-available/default-ssl.conf || exit 1
+            /usr/share/docassemble/config/default-ssl.conf.dist > /etc/apache2/sites-available/default-ssl.conf || exit 1
     fi
-    if [ ! -f /etc/apache2/sites-available/000-default.conf ]; then
+    if [ ! -f /etc/apache2/sites-available/default-http.conf ]; then
 	sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
-        /usr/share/docassemble/config/000-default.conf.dist > /etc/apache2/sites-available/000-default.conf || exit 1
+            /usr/share/docassemble/config/default-http.conf.dist > /etc/apache2/sites-available/default-http.conf || exit 1
+	a2ensite default-http
     fi
 fi
 
