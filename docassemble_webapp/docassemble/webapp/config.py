@@ -92,9 +92,6 @@ mail:
   default_sender: '"Administrator" <no-reply@example.com>'
 admin_address: '"Administrator" <admin@example.com>'
 use_progress_bar: false
-imagemagick: convert
-pacpl: pacpl
-avconv: avconv
 default_interview: docassemble.demo:data/questions/questions.yml
 flask_log: /tmp/flask.log
 language: en

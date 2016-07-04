@@ -23,7 +23,7 @@
   {%- for file in files %}
     <tr>
       <td><a target="_blank" href="{{ url_for('playground_' + section, userid=userid, filename=file) }}">{{ file }}</a></td>
-      <td style="text-align:right;">{% if file in convertible_files %}<a class="label label-info" href="?section={{ section }}&convert={{ file }}">{{ word('Convert to .md') }}</a> {% endif %}<a class="label label-warning" href="?section={{ section }}&delete={{ file }}">{{ word('Delete') }}</a></td>
+      <td style="text-align:right;">{% if file in editable_files %}<a class="label label-success" href="?section={{ section }}&file={{ file }}">{{ word('Edit') }}</a> {% endif %}{% if file in convertible_files %}<a class="label label-info" href="?section={{ section }}&convert={{ file }}">{{ word('Convert to .md') }}</a> {% endif %}<a class="label label-warning" href="?section={{ section }}&delete={{ file }}">{{ word('Delete') }}</a></td>
     </tr>
   {% endfor %}
   </tbody>
@@ -70,4 +70,8 @@
 <p>{{ after_text }}</p>
 {%- endif %}
 
+{%- endblock %}
+{%- block bottom %}
+<div class="daspacer-large"></div>
+<div class="container"><p><a href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></p></div>
 {%- endblock %}

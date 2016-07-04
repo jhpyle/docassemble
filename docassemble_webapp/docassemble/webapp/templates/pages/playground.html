@@ -25,7 +25,7 @@
 {% block rightside %}
             <div id="playgroundbox" class="panel panel-info playgroundbox">
               <div class="panel-heading">
-                <h3 class="panel-title">{{ word('Variables, etc.') }}</h3>
+                <h3 class="panel-title">{{ word('Variables, etc. from') }}&nbsp;<span class="select-wrapper"><select id="daVariables" class="playground-select">{% for file in files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="label label-primary darunbutton" target="_blank" id="daRunButton">{{ word('Run') }}</a></h3>
               </div>
               <div class="panel-body" id="daplaygroundpanel">
                 <table id="daplaygroundtable" class="daplaygroundtable">{{ variables_html }}

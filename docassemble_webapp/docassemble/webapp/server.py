@@ -127,6 +127,9 @@ ok_mimetypes = {"application/javascript": "javascript", "text/x-python": "python
 ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown", 'py': "python"}
 convertible_mimetypes = {"application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx", "application/vnd.oasis.opendocument.text": "odt"}
 convertible_extensions = {"docx": "docx", "odt": "odt"}
+if daconfig.get('libreoffice', 'libreoffice') is not None:
+    convertible_mimetypes.update({"application/msword": "doc", "application/rtf": "rtf"})
+    convertible_extensions.update({"doc": "doc", "rtf": "rtf"})
 default_yaml_filename = daconfig.get('default_interview', 'docassemble.demo:data/questions/questions.yml')
 
 document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
@@ -179,7 +182,7 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['USE_X_SENDFILE'] = daconfig.get('xsendfile', True)
 PNG_RESOLUTION = daconfig.get('png_resolution', 300)
 PNG_SCREEN_RESOLUTION = daconfig.get('png_screen_resolution', 72)
-PDFTOPPM_COMMAND = daconfig.get('pdftoppm', None)
+PDFTOPPM_COMMAND = daconfig.get('pdftoppm', 'pdftoppm')
 DEFAULT_LANGUAGE = daconfig.get('language', 'en')
 DEFAULT_LOCALE = daconfig.get('locale', 'US.utf8')
 DEFAULT_DIALECT = daconfig.get('dialect', 'us')
@@ -1186,6 +1189,8 @@ def index():
     if yaml_parameter is not None:
         show_flash = False
         yaml_filename = yaml_parameter
+        if session.get('nocache', False):
+            docassemble.base.interview_cache.clear_cache(yaml_filename)
         old_yaml_filename = session.get('i', None)
         # if yaml_filename.startswith("/playground") and not current_user.is_authenticated:
         #     flash(word("You must be logged in as a developer to continue"), 'error')
@@ -1299,7 +1304,7 @@ def index():
                 response.set_cookie('secret', secret)
             return response
         for argname in request.args:
-            if argname in ('filename', 'question', 'format', 'index', 'i', 'action', 'from_list', 'session'):
+            if argname in ('filename', 'question', 'format', 'index', 'i', 'nocache', 'action', 'from_list', 'session'):
                 continue
             if re.match('[A-Za-z_]+', argname):
                 exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)
@@ -1526,11 +1531,11 @@ def index():
                             file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
                             extension, mimetype = get_ext_and_mimetype(filename)
                             saved_file = SavedFile(file_number, extension=extension, fix=True)
-                            if extension == "jpg" and 'imagemagick' in daconfig:
+                            if extension == "jpg" and daconfig.get('imagemagick', 'convert') is not None:
                                 unrotated = tempfile.NamedTemporaryFile(suffix=".jpg")
                                 rotated = tempfile.NamedTemporaryFile(suffix=".jpg")
                                 the_file.save(unrotated.name)
-                                call_array = [daconfig['imagemagick'], str(unrotated.name), '-auto-orient', '-density', '300', 'jpeg:' + rotated.name]
+                                call_array = [daconfig.get('imagemagick', 'convert'), str(unrotated.name), '-auto-orient', '-density', '300', 'jpeg:' + rotated.name]
                                 result = call(call_array)
                                 if result == 0:
                                     saved_file.copy_from(rotated.name)
@@ -1539,32 +1544,32 @@ def index():
                             else:
                                 the_file.save(saved_file.path)
                                 saved_file.save()
-                            if mimetype == 'video/quicktime' and 'avconv' in daconfig:
-                                call_array = [daconfig['avconv'], '-i', saved_file.path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', saved_file.path + '.ogv']
+                            if mimetype == 'video/quicktime' and daconfig.get('avconv', 'avconv') is not None:
+                                call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', saved_file.path + '.ogv']
                                 result = call(call_array)
-                                call_array = [daconfig['avconv'], '-i', saved_file.path + '.' + extension, '-vcodec', 'copy', '-acodec', 'copy', saved_file.path + '.mp4']
+                                call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-vcodec', 'copy', '-acodec', 'copy', saved_file.path + '.mp4']
                                 result = call(call_array)
-                            if mimetype == 'video/mp4' and 'avconv' in daconfig:
-                                call_array = [daconfig['avconv'], '-i', saved_file.path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', saved_file.path + '.ogv']
+                            if mimetype == 'video/mp4' and daconfig.get('avconv', 'avconv') is not None:
+                                call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', saved_file.path + '.ogv']
                                 result = call(call_array)
-                            if mimetype == 'video/ogg' and 'avconv' in daconfig:
-                                call_array = [daconfig['avconv'], '-i', saved_file.path + '.' + extension, '-c:v', 'libx264', '-preset', 'veryslow', '-crf', '22', '-c:a', 'libmp3lame', '-qscale:a', '2', '-ac', '2', '-ar', '44100', saved_file.path + '.mp4']
+                            if mimetype == 'video/ogg' and daconfig.get('avconv', 'avconv') is not None:
+                                call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-c:v', 'libx264', '-preset', 'veryslow', '-crf', '22', '-c:a', 'libmp3lame', '-qscale:a', '2', '-ac', '2', '-ar', '44100', saved_file.path + '.mp4']
                                 result = call(call_array)
-                            if mimetype == 'audio/mpeg' and 'pacpl' in daconfig:
-                                call_array = [daconfig['pacpl'], '-t', 'ogg', saved_file.path + '.' + extension]
+                            if mimetype == 'audio/mpeg' and daconfig.get('pacpl', 'pacpl') is not None:
+                                call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', saved_file.path + '.' + extension]
                                 result = call(call_array)
-                            if mimetype == 'audio/ogg' and 'pacpl' in daconfig:
-                                call_array = [daconfig['pacpl'], '-t', 'mp3', saved_file.path + '.' + extension]
+                            if mimetype == 'audio/ogg' and daconfig.get('pacpl', 'pacpl') is not None:
+                                call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'mp3', saved_file.path + '.' + extension]
                                 result = call(call_array)
-                            if mimetype in ['audio/3gpp'] and 'avconv' in daconfig:
-                                call_array = [daconfig['avconv'], '-i', saved_file.path + '.' + extension, saved_file.path + '.ogg']
+                            if mimetype in ['audio/3gpp'] and daconfig.get('avconv', 'avconv') is not None:
+                                call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, saved_file.path + '.ogg']
                                 result = call(call_array)
-                                call_array = [daconfig['avconv'], '-i', saved_file.path + '.' + extension, saved_file.path + '.mp3']
+                                call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, saved_file.path + '.mp3']
                                 result = call(call_array)
-                            if mimetype in ['audio/x-wav', 'audio/wav'] and 'pacpl' in daconfig:
-                                call_array = [daconfig['pacpl'], '-t', 'mp3', saved_file.path + '.' + extension]
+                            if mimetype in ['audio/x-wav', 'audio/wav'] and daconfig.get('pacpl', 'pacpl') is not None:
+                                call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'mp3', saved_file.path + '.' + extension]
                                 result = call(call_array)
-                                call_array = [daconfig['pacpl'], '-t', 'ogg', saved_file.path + '.' + extension]
+                                call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', saved_file.path + '.' + extension]
                                 result = call(call_array)
                             if extension == "pdf":
                                 make_image_files(saved_file.path)
@@ -2401,7 +2406,7 @@ def speak_file():
             audio_file = SavedFile(new_file_number, extension='mp3', fix=True)
             audio_file.fetch_url(url)
             if audio_file.size_in_bytes() > 100:
-                call_array = [daconfig['pacpl'], '-t', 'ogg', audio_file.path + '.mp3']
+                call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', audio_file.path + '.mp3']
                 result = call(call_array)
                 if result != 0:
                     logmessage("Failed to convert downloaded mp3 (" + path + ") to ogg")
@@ -3268,9 +3273,9 @@ def make_example_html(examples, first_id, example_html, data_dict):
     example_html.append('          <ul class="nav nav-pills nav-stacked example-list example-hidden">\n')
     for example in examples:
         if 'list' in example:
-            example_html.append('            <li><a class="example-heading">' + example['title'] + '</a>')
+            example_html.append('          <li><a class="example-heading">' + example['title'] + '</a>')
             make_example_html(example['list'], first_id, example_html, data_dict)
-            example_html.append('</li>')
+            example_html.append('          </li>')
             continue
         #logmessage("Doing example with id " + str(example['id']))
         if len(first_id) == 0:
@@ -3358,8 +3363,9 @@ def playground_files():
                         flash(word("File could not be converted: ") + argument, "error")
                         return redirect(url_for('playground_files', section=section))
                     shutil.copyfile(result.name, to_path)
-                    flash(word("Created new Markdown file called ") + to_file, "success")
-                    return redirect(url_for('playground_files', section=section))
+                    flash(word("Created new Markdown file called ") + to_file + word("."), "success")
+                    area.finalize()
+                    return redirect(url_for('playground_files', section=section, file=to_file))
             else:
                 flash(word("File not found: ") + argument, "error")
     if request.method == 'POST':
@@ -3383,9 +3389,11 @@ def playground_files():
                 with open(filename, 'w') as fp:
                     fp.write(formtwo.file_content.data.encode('utf8'))
                 the_time = time.strftime('%H:%M:%S %Z', time.localtime())
-                flash(word('The file was saved at') + ' ' + the_time + '.', 'success')
+                area.finalize()
+                flash(str(the_file) + word(' was saved at') + ' ' + the_time + '.', 'success')
                 if section == 'modules':
                     restart_wsgi()
+                return redirect(url_for('playground_files', section=section, file=to_file))
             else:
                 flash(word('You need to type in a name for the file'), 'error')                
     files = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
@@ -3703,6 +3711,14 @@ def get_vars_in_use(interview, interview_status):
         else:
             message_to_use = title_documentation['generic error']['doc']
         content += '\n                  <tr><td class="playground-warning-box"><div class="alert alert-' + error_style + '">' + message_to_use + '</div></td></tr>'
+    # content += '\n                  <tr><td><h4>From</h4></td></tr>'
+    # content += '\n                  <tr><td><select>'
+    # for the_file in files:
+    #     content += '<option '
+    #     if the_file == current_file:
+    #         content += "selected "
+    #     content += 'value="' + the_file + '">' + str(the_file) + '</option>'
+    # content += '</select></td></tr>'
     names_used = names_used.difference( functions | classes | modules | set(avail_modules) )
     undefined_names = names_used.difference(fields_used | set(base_name_info.keys()) )
     for var in ['_internal']:
@@ -3816,11 +3832,18 @@ def playground_page():
         else:
             the_file = 'test.yml'
             content = default_playground_yaml
+    active_file = the_file
+    if 'variablefile' in session:
+        if session['variablefile'] in files:
+            active_file = session['variablefile']
+        else:
+            del session['variablefile']
     if the_file != '':
         filename = os.path.join(playground.directory, the_file)
         if not os.path.isfile(filename):
             with open(filename, 'w') as fp:
                 fp.write(content.encode('utf8'))
+            playground.finalize()
     if request.method == 'POST' and the_file != '' and form.validate():
         if form.delete.data:
             if os.path.isfile(filename):
@@ -3830,6 +3853,17 @@ def playground_page():
                 return redirect(url_for('playground_page'))
             else:
                 flash(word('Playground not deleted.  There was an error.'), 'error')
+        post_data = request.form.copy()
+        if 'variablefile' in post_data:
+            if post_data['variablefile'] in files:
+                active_file = post_data['variablefile']
+                session['variablefile'] = active_file
+            interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + active_file)
+            interview_source.set_testing(True)
+            interview = interview_source.get_interview()
+            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
+            variables_html = get_vars_in_use(interview, interview_status)
+            return jsonify(variables_html=variables_html)
         if (form.submit.data or form.run.data) and form.playground_content.data:
             if form.original_playground_name.data and form.original_playground_name.data != the_file:
                 old_filename = os.path.join(playground.directory, form.original_playground_name.data)
@@ -3839,88 +3873,48 @@ def playground_page():
             the_time = time.strftime('%H:%M:%S %Z', time.localtime())
             with open(filename, 'w') as fp:
                 fp.write(form.playground_content.data.encode('utf8'))
+            playground.finalize()
             if form.submit.data:
                 flash(word('Saved at') + ' ' + the_time + '.', 'success')
             else:
-                playground.finalize()
                 flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Running in other tab.'), message_type='success')
                 interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + the_file)
                 interview_source.set_testing(True)
                 interview = interview_source.get_interview()
-                interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + the_file, req=request, action=None))
+                interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
                 variables_html = get_vars_in_use(interview, interview_status)
                 return jsonify(url=url_for('index', i='docassemble.playground' + str(current_user.id) + ':' + the_file), variables_html=variables_html, flash_message=flash_message)
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
     interview_path = None
     if the_file != '':
-        playground.finalize()
         with open(filename, 'rU') as fp:
             form.original_playground_name.data = the_file
             form.playground_name.data = the_file
             content = fp.read().decode('utf8')
             #if not form.playground_content.data:
                 #form.playground_content.data = content
-        interview_path = 'docassemble.playground' + str(current_user.id) + ':' + the_file
+    if active_file != '':
+        is_fictitious = False
+        interview_path = 'docassemble.playground' + str(current_user.id) + ':' + active_file
         interview_source = docassemble.base.parse.interview_source_from_string(interview_path)
         interview_source.set_testing(True)
-    elif form.playground_content.data:
-        content = re.sub(r'\r', '', form.playground_content.data)
-        interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":test.yml", testing=True)
     else:
-        interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":test.yml", testing=True)
+        is_fictitious = True
+        active_file = 'test.yml'
+        if form.playground_content.data:
+            content = re.sub(r'\r', '', form.playground_content.data)
+            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
+        else:
+            interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
     interview = interview_source.get_interview()
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + the_file, req=request, action=None))
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
     variables_html = get_vars_in_use(interview, interview_status)
+    if is_fictitious:
+        active_file = word('(New file)')
+        if active_file not in files:
+            files.unshift(active_file)
     ajax = """
-$("#daRun").click(function(event){
-  daCodeMirror.save();
-  $.ajax({
-    type: "POST",
-    url: """ + '"' + url_for('playground_page') + '"' + """,
-    data: $("#form").serialize() + '&run=Save+and+Run',
-    success: function(data){
-      if ($("#flash").length){
-        $("#flash").html(data.flash_message)
-      }
-      else{
-        $("#main").prepend('<div class="container topcenter" id="flash">' + data.flash_message + '</div>')
-      }
-      $("#daplaygroundtable").html(data.variables_html)
-      window.open(data.url, '_blank');
-      $("#form").trigger("reinitialize.areYouSure")
-      $(function () {
-        $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
-      });
-    },
-    dataType: 'json'
-  });
-  event.preventDefault();
-});
-$(".playground-variable").on("click", function(){
-  daCodeMirror.replaceSelection($(this).data("insert"), "around");
-  daCodeMirror.focus();
-});
-
-$(".daparenthetical").on("click", function(event){
-  var reference = $(this).data("ref");
-  //console.log("reference is " + reference)
-  var target = $('[data-name="' + reference + '"]').first();
-  if (target != null){
-    //console.log("scrolltop is now " + $('#daplaygroundpanel').scrollTop());
-    //console.log("Scrolling to " + target.position().top);
-    $('#daplaygroundpanel').animate({
-        scrollTop: target.position().top
-    }, 1000);
-  }
-  event.preventDefault();
-});
-
-$(".dashowmethods").on("click", function(event){
-  var target_id = $(this).data("showhide");
-  $("#" + target_id).toggleClass("invisible");
-});
-
 var exampleData;
 
 function activateExample(id){
@@ -3953,81 +3947,156 @@ function activateExample(id){
   $("#example-source-after").addClass("invisible");
 }
 
-$(".example-link").on("click", function(){
-  var id = $(this).data("example");
-  activateExample(id);
-});
+interviewBaseUrl = '""" + url_for('index', nocache='1', i='docassemble.playground' + str(current_user.id) + ':.yml') + """';
 
-$(".example-copy").on("click", function(){
-  if (daCodeMirror.somethingSelected()){
-    daCodeMirror.replaceSelection("");
-  }
-  var id = $(".example-active").data("example");
-  var curPos = daCodeMirror.getCursor();
-  var notFound = 1;
-  var insertLine = daCodeMirror.lastLine();
-  daCodeMirror.eachLine(curPos.line, insertLine, function(line){
+function updateRunLink(){
+  $("#daRunButton").attr("href", interviewBaseUrl.replace('.yml', $("#daVariables").val()));
+}
+
+$( document ).ready(function() {
+  $("#daVariables").change(function(event){
+    daCodeMirror.save();
+    updateRunLink();
+    $.ajax({
+      type: "POST",
+      url: """ + '"' + url_for('playground_page') + '"' + """,
+      data: $("#form").serialize() + '&variablefile=' + $(this).val(),
+      success: function(data){
+        console.log("foobar1")
+        $("#daplaygroundtable").html(data.variables_html)
+        $(function () {
+          $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
+        });
+        console.log("foobar2")
+      },
+      dataType: 'json'
+    });
+  });
+  $("#daRun").click(function(event){
+    daCodeMirror.save();
+    $.ajax({
+      type: "POST",
+      url: """ + '"' + url_for('playground_page') + '"' + """,
+      data: $("#form").serialize() + '&run=Save+and+Run',
+      success: function(data){
+        if ($("#flash").length){
+          $("#flash").html(data.flash_message)
+        }
+        else{
+          $("#main").prepend('<div class="container topcenter" id="flash">' + data.flash_message + '</div>')
+        }
+        $("#daplaygroundtable").html(data.variables_html)
+        window.open(data.url, '_blank');
+        $("#form").trigger("reinitialize.areYouSure")
+        $(function () {
+          $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
+        });
+      },
+      dataType: 'json'
+    });
+    event.preventDefault();
+  });
+  $(".playground-variable").on("click", function(){
+    daCodeMirror.replaceSelection($(this).data("insert"), "around");
+    daCodeMirror.focus();
+  });
+
+  $(".daparenthetical").on("click", function(event){
+    var reference = $(this).data("ref");
+    //console.log("reference is " + reference)
+    var target = $('[data-name="' + reference + '"]').first();
+    if (target != null){
+      //console.log("scrolltop is now " + $('#daplaygroundpanel').scrollTop());
+      //console.log("Scrolling to " + target.position().top);
+      $('#daplaygroundpanel').animate({
+          scrollTop: target.position().top
+      }, 1000);
+    }
+    event.preventDefault();
+  });
+
+  $(".dashowmethods").on("click", function(event){
+    var target_id = $(this).data("showhide");
+    $("#" + target_id).toggleClass("invisible");
+  });
+
+  $(".example-link").on("click", function(){
+    var id = $(this).data("example");
+    activateExample(id);
+  });
+
+  $(".example-copy").on("click", function(){
+    if (daCodeMirror.somethingSelected()){
+      daCodeMirror.replaceSelection("");
+    }
+    var id = $(".example-active").data("example");
+    var curPos = daCodeMirror.getCursor();
+    var notFound = 1;
+    var insertLine = daCodeMirror.lastLine();
+    daCodeMirror.eachLine(curPos.line, insertLine, function(line){
+      if (notFound){
+        if (line.text.substring(0, 3) == "---" || line.text.substring(0, 3) == "..."){
+          insertLine = daCodeMirror.getLineNumber(line)
+          //console.log("Found break at line number " + insertLine)
+          notFound = 0;
+        }
+      }
+    });
     if (notFound){
-      if (line.text.substring(0, 3) == "---" || line.text.substring(0, 3) == "..."){
-        insertLine = daCodeMirror.getLineNumber(line)
-        //console.log("Found break at line number " + insertLine)
-        notFound = 0;
+      daCodeMirror.setSelection({'line': insertLine, 'ch': null});
+      daCodeMirror.replaceSelection("\\n---\\n" + exampleData[id]['source'] + "\\n", "around");
+    }
+    else{
+      daCodeMirror.setSelection({'line': insertLine, 'ch': 0});
+      daCodeMirror.replaceSelection("---\\n" + exampleData[id]['source'] + "\\n", "around");
+    }
+    daCodeMirror.focus();
+  });
+
+  $(".example-heading").on("click", function(){
+    var list = $(this).parent().children("ul").first();
+    if (list != null){
+      if (!list.hasClass("example-hidden")){
+        return;
+      }
+      $(".example-list").addClass("example-hidden");
+      var new_link = $(this).parent().find("a.example-link").first();
+      if (new_link.length){
+        var id = new_link.data("example");
+        activateExample(id);  
       }
     }
   });
-  if (notFound){
-    daCodeMirror.setSelection({'line': insertLine, 'ch': null});
-    daCodeMirror.replaceSelection("\\n---\\n" + exampleData[id]['source'] + "\\n", "around");
+
+  $(function () {
+    $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
+  });
+
+  $("#show-full-example").on("click", function(){
+    var id = $(".example-active").data("example");
+    var info = exampleData[id];
+    $(this).addClass("invisible");
+    $("#hide-full-example").removeClass("invisible");
+    $("#example-source-before").removeClass("invisible");
+    $("#example-source-after").removeClass("invisible");
+  });
+
+  $("#hide-full-example").on("click", function(){
+    var id = $(".example-active").data("example");
+    var info = exampleData[id];
+    $(this).addClass("invisible");
+    $("#show-full-example").removeClass("invisible");
+    $("#example-source-before").addClass("invisible");
+    $("#example-source-after").addClass("invisible");
+  });
+  if ($("#playground_name").val().length > 0){
+    daCodeMirror.focus();
   }
   else{
-    daCodeMirror.setSelection({'line': insertLine, 'ch': 0});
-    daCodeMirror.replaceSelection("---\\n" + exampleData[id]['source'] + "\\n", "around");
+    $("#playground_name").focus()
   }
-  daCodeMirror.focus();
+  updateRunLink();
 });
-
-$(".example-heading").on("click", function(){
-  var list = $(this).parent().children("ul").first();
-  if (list != null){
-    if (!list.hasClass("example-hidden")){
-      return;
-    }
-    $(".example-list").addClass("example-hidden");
-    var new_link = $(this).parent().find("a.example-link").first();
-    if (new_link.length){
-      var id = new_link.data("example");
-      activateExample(id);  
-    }
-  }
-});
-
-$(function () {
-  $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
-});
-
-$("#show-full-example").on("click", function(){
-  var id = $(".example-active").data("example");
-  var info = exampleData[id];
-  $(this).addClass("invisible");
-  $("#hide-full-example").removeClass("invisible");
-  $("#example-source-before").removeClass("invisible");
-  $("#example-source-after").removeClass("invisible");
-});
-
-$("#hide-full-example").on("click", function(){
-  var id = $(".example-active").data("example");
-  var info = exampleData[id];
-  $(this).addClass("invisible");
-  $("#show-full-example").removeClass("invisible");
-  $("#example-source-before").addClass("invisible");
-  $("#example-source-after").addClass("invisible");
-});
-if ($("#playground_name").val().length > 0){
-  daCodeMirror.focus();
-}
-else{
-  $("#playground_name").focus()
-}
 """
     example_html = list()
     example_html.append('        <div class="col-md-2">\n          <h4>' + word("Example blocks") +'</h4>')
@@ -4037,7 +4106,7 @@ else{
     example_html.append('        </div>')
     example_html.append('        <div class="col-md-6"><h4>' + word("Preview") + '<a target="_blank" class="label label-primary example-documentation example-hidden" id="example-documentation-link">' + word('View documentation') + '</a></h4><a href="#" target="_blank" id="example-image-link"><img class="example_screenshot" id="example-image"></a></div>')
     example_html.append('        <div class="col-md-4 example-source-col"><h4>' + word('Source') + ' <a class="label label-success example-copy">' + word('Insert') + '</a></h4><div id="example-source-before" class="invisible"></div><div id="example-source"></div><div id="example-source-after" class="invisible"></div><div><a class="example-hider" id="show-full-example">' + word("Show context of example") + '</a><a class="example-hider invisible" id="hide-full-example">' + word("Hide context of example") + '</a></div></div>')
-    return render_template('pages/playground.html', page_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, current_file=the_file, content=content, variables_html=Markup(variables_html), example_html=Markup("\n".join(example_html)), interview_path=interview_path), 200
+    return render_template('pages/playground.html', page_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=Markup("\n".join(example_html)), interview_path=interview_path), 200
 
 # nameInfo = ' + str(json.dumps(vars_in_use['name_info'])) + ';      
 

@@ -21,6 +21,10 @@ def get_interview(path):
         _interview_cache[interview_source.path] = {'modtime': modtime, 'interview': the_interview, 'source': interview_source}
     return(the_interview)
 
+def clear_cache(path):
+    if path in _interview_cache:
+        del interview_cache[path]
+
 def cache_valid(questionPath):
     if questionPath in _interview_cache and _interview_cache[questionPath]['modtime'] == _interview_cache[questionPath]['source'].get_modtime():
         return True

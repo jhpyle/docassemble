@@ -5,15 +5,23 @@ import docassemble.base.filter
 import docassemble.base.util
 import tempfile
 import shutil
+import sys
 import re
+from docassemble.webapp.config import daconfig
 from docassemble.base.logger import logmessage
 
 style_find = re.compile(r'{\s*(\\s([1-9])[^\}]+)\\sbasedon[^\}]+heading ([0-9])', flags=re.DOTALL)
-PANDOC_PATH = 'pandoc'
+PANDOC_PATH = daconfig.get('pandoc', 'pandoc')
+LIBREOFFICE_PATH = daconfig.get('libreoffice', 'libreoffice')
 
 def set_pandoc_path(path):
     global PANDOC_PATH
     PANDOC_PATH = path
+
+def set_libreoffice_path(path):
+    global LIBREOFFICE_PATH
+    LIBREOFFICE_PATH = path
+
 #fontfamily: zi4, mathptmx, courier
 #\ttfamily
 #\renewcommand{\thesubsubsubsection}{\alph{subsubsubsection}.}
@@ -124,7 +132,22 @@ class Pandoc(object):
 
 def word_to_markdown(in_file, in_format):
     temp_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md")
-    subprocess_arguments = [PANDOC_PATH, '--from=%s' % str(in_format), '--to=markdown', str(in_file), '-o', str(temp_file.name)]
+    if in_format not in ['docx', 'odt']:
+        tempdir = tempfile.mkdtemp()
+        from_file = os.path.join(tempdir, "file." + in_format)
+        to_file = os.path.join(tempdir, "file.docx")
+        shutil.copyfile(in_file, from_file)
+        subprocess_arguments = [LIBREOFFICE_PATH, '--headless', '--convert-to', 'docx', from_file]
+        p = subprocess.Popen(subprocess_arguments, cwd=tempdir)
+        result = p.wait()
+        if result != 0:
+            return None
+        in_file_to_use = to_file
+        in_format_to_use = 'docx'
+    else:
+        in_file_to_use = in_file
+        in_format_to_use = in_format
+    subprocess_arguments = [PANDOC_PATH, '--from=%s' % str(in_format_to_use), '--to=markdown', str(in_file_to_use), '-o', str(temp_file.name)]
     result = subprocess.call(subprocess_arguments)
     if result == 0:
         return temp_file
