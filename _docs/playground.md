@@ -96,6 +96,8 @@ upload images that you want to include in interview questions.
 
 ## <a name="modules"></a>The Modules folder
 
+![Modules]({{ site.baseurl }}/img/playground-modules.png)
+
 If your interviews contain any complicated Python code, or you want to
 create your own classes, you should create a Python module and import
 its names into your interview.  In a **docassemble** [package], these

@@ -14,7 +14,7 @@ to install **docassemble** in a multi-server arrangement on
 
 # Prerequisites
 
-Make sure you have at least 16GB of storage space.  (**docassemble**
+Make sure you have at least 8GB of storage space.  (**docassemble**
 has a lot of large dependencies.)  At the end of installation, only
 about 4GB will be taken up, but the installation process requires more
 storage than that to be available.
@@ -75,7 +75,7 @@ docker run -d -p 80:80 -p 443:443 -p 9001:9001 jhpyle/docassemble
 Or, if you are already using port 80 on your machine, use something
 like `-p 8080:80` instead.
 
-The image, which is about 2GB in size, is an [automated build] based
+The image, which is about 2.4GB in size, is an [automated build] based
 on the "master" branch of the [docassemble repository].
 
 You can then connect to the container by pointing your web browser to
@@ -102,6 +102,31 @@ docker stop <containerid>
 
 The container runs a PostgreSQL server, and the data files of the
 server may become corrupted if PostgreSQL is not gracefully shut down.
+
+## Using persistent volumes
+
+To run **docassemble** in a single-server arrangement in such a way
+that the configuration persists after the Docker container is removed
+or updated, run it as follows:
+
+{% highlight bash %}
+docker run --env-file=env.list \
+-v pgetc:/etc/postgresql \
+-v pglog:/var/log/postgresql \
+-v pglib:/var/lib/postgresql \
+-v pgrun:/var/run/postgresql \
+-v dalog:/usr/share/docassemble/log \
+-v dafiles:/usr/share/docassemble/files \
+-v daconfig:/usr/share/docassemble/config \
+-v dabackup:/usr/share/docassemble/backup \
+-v letsencrypt:/etc/letsencrypt \
+-v apache:/etc/apache2/sites-available \
+-d -p 80:80 -p 443:443 -p 9001:9001 jhpyle/docassemble
+{% endhighlight %}
+
+where `--env-file=env.list` is an optional parameter that refers to a
+file `env.list` containing environment variables for the
+configuration.  (More on that below.)
 
 # Multi-server arrangement
 
@@ -303,6 +328,7 @@ Or push it to [Docker Hub]:
 {% highlight bash %}
 docker push yourdockerhubusername/mydocassemble
 {% endhighlight %}
+
 
 # Upgrading a docker image
 
