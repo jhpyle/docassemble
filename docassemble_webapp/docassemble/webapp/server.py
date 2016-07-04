@@ -27,6 +27,7 @@ import docassemble.webapp.database
 import tempfile
 import zipfile
 import traceback
+from docassemble.base.pandoc import word_to_markdown
 from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
 from docassemble.base.util import pickleable_objects, word, comma_and_list
@@ -81,7 +82,7 @@ from pygments.formatters import HtmlFormatter
 default_playground_yaml = """metadata:
   title: Default playground interview
   short title: Test
-  comment: This is a learning tool.  Feel free to delete it.
+  comment: This is a learning tool.  Feel free to write over it.
 ---
 include:
   - basic-questions.yml
@@ -124,7 +125,8 @@ app.debug = False
 
 ok_mimetypes = {"application/javascript": "javascript", "text/x-python": "python"}
 ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown", 'py': "python"}
-
+convertible_mimetypes = {"application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx", "application/vnd.oasis.opendocument.text": "odt"}
+convertible_extensions = {"docx": "docx", "odt": "odt"}
 default_yaml_filename = daconfig.get('default_interview', 'docassemble.demo:data/questions/questions.yml')
 
 document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
@@ -3333,6 +3335,33 @@ def playground_files():
                 area.finalize()
                 flash(word("Deleted file: ") + argument, "success")
                 return redirect(url_for('playground_files', section=section))
+            else:
+                flash(word("File not found: ") + argument, "error")
+    if request.args.get('convert', False):
+        argument = re.sub(r'[^A-Za-z0-9\-\_\.]', '', request.args.get('convert'))
+        if argument:
+            filename = os.path.join(area.directory, argument)
+            if os.path.exists(filename):
+                to_file = os.path.splitext(argument)[0] + '.md'
+                to_path = os.path.join(area.directory, to_file)
+                if not os.path.exists(to_path):
+                    extension, mimetype = get_ext_and_mimetype(argument)
+                    if (mimetype and mimetype in convertible_mimetypes):
+                        the_format = convertible_mimetypes[mimetype]
+                    elif extension and extension in convertible_extensions:
+                        the_format = convertible_extensions[extension]
+                    else:
+                        flash(word("File format not understood: ") + argument, "error")
+                        return redirect(url_for('playground_files', section=section))
+                    result = word_to_markdown(filename, the_format)
+                    if result is None:
+                        flash(word("File could not be converted: ") + argument, "error")
+                        return redirect(url_for('playground_files', section=section))
+                    shutil.copyfile(result.name, to_path)
+                    flash(word("Created new Markdown file called ") + to_file, "success")
+                    return redirect(url_for('playground_files', section=section))
+            else:
+                flash(word("File not found: ") + argument, "error")
     if request.method == 'POST':
         if 'uploadfile' in request.files and request.files['uploadfile'].filename:
             try:
@@ -3361,11 +3390,17 @@ def playground_files():
                 flash(word('You need to type in a name for the file'), 'error')                
     files = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
     editable_files = list()
+    convertible_files = list()
     mode = "yaml"
     for a_file in files:
         extension, mimetype = get_ext_and_mimetype(a_file)
         if (mimetype and mimetype in ok_mimetypes) or (extension and extension in ok_extensions):
             editable_files.append(a_file)
+    for a_file in files:
+        extension, mimetype = get_ext_and_mimetype(a_file)
+        b_file = os.path.splitext(a_file)[0] + '.md'
+        if b_file not in editable_files and ((mimetype and mimetype in convertible_mimetypes) or (extension and extension in convertible_extensions)):
+            convertible_files.append(a_file)
     if request.method == 'GET' and not the_file and not is_new:
         if len(editable_files):
             the_file = editable_files[0]
@@ -3423,7 +3458,7 @@ def playground_files():
       scrollBottom();\n"""
     else:
         extra_command = ""
-    return render_template('pages/playgroundfiles.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("file_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "' + mode + '", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#formtwo").trigger("checkform.areYouSure");});\n      $("#formtwo").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#formtwo").bind("submit", function(){daCodeMirror.save(); $("#formtwo").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text), 200
+    return render_template('pages/playgroundfiles.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("file_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "' + mode + '", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#formtwo").trigger("checkform.areYouSure");});\n      $("#formtwo").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#formtwo").bind("submit", function(){daCodeMirror.save(); $("#formtwo").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text), 200
 
 @app.route('/playgroundpackages', methods=['GET', 'POST'])
 @login_required

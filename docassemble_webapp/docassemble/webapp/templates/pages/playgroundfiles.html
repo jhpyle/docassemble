@@ -23,7 +23,7 @@
   {%- for file in files %}
     <tr>
       <td><a target="_blank" href="{{ url_for('playground_' + section, userid=userid, filename=file) }}">{{ file }}</a></td>
-      <td style="text-align:right;"><a class="label label-warning" href="?section={{ section }}&delete={{ file }}">{{ word('Delete') }}</a></td>
+      <td style="text-align:right;">{% if file in convertible_files %}<a class="label label-info" href="?section={{ section }}&convert={{ file }}">{{ word('Convert to .md') }}</a> {% endif %}<a class="label label-warning" href="?section={{ section }}&delete={{ file }}">{{ word('Delete') }}</a></td>
     </tr>
   {% endfor %}
   </tbody>

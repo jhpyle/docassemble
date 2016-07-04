@@ -122,6 +122,15 @@ class Pandoc(object):
             self.output_content = p.communicate(self.input_content.encode('utf-8'))[0]
         return
 
+def word_to_markdown(in_file, in_format):
+    temp_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md")
+    subprocess_arguments = [PANDOC_PATH, '--from=%s' % str(in_format), '--to=markdown', str(in_file), '-o', str(temp_file.name)]
+    result = subprocess.call(subprocess_arguments)
+    if result == 0:
+        return temp_file
+    else:
+        return None
+    
 def get_rtf_styles(filename):
     file_contents = ''
     styles = dict()
