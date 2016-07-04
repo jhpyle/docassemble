@@ -82,6 +82,10 @@ called `small_claims_complaint.md` in the Templates folder and then
 incorporate that text by reference by including the line `content
 file: small_claims_complaint.md` within an [`attachments`] directive.
 
+In the Templates folder, you can upload files.  Markdown and YAML
+files can be edited.  Uploaded files in `docx` or `odt` format can be
+converted to Markdown format.
+
 ## <a name="static"></a>The Static folder
 
 ![Static]({{ site.baseurl }}/img/playground-static.png)
