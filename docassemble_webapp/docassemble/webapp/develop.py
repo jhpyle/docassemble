@@ -63,6 +63,7 @@ class PlaygroundFilesEditForm(Form):
     file_name = StringField(word('Name'), [validators.Length(min=1, max=255)])
     file_content = TextAreaField(word('File Text'))
     submit = SubmitField(word('Save'))
+    delete = SubmitField(word('Delete'))
 
 class PlaygroundPackagesForm(Form):
     original_file_name = StringField(word('Original Name'))

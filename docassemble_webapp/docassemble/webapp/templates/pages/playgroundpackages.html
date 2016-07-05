@@ -49,9 +49,9 @@
   </div>
   <div class="form-actions">
     {{ render_submit_field(form.submit, class="btn btn-primary btn-lg") }}
-    {{ render_submit_field(form.download, class="btn btn-primary btn-lg") }}
-    {{ render_submit_field(form.install, class="btn btn-primary btn-lg") }}
-    {{ render_submit_field(form.delete, id="daDelete", class="btn btn-danger btn-lg") }}
+    {{ render_submit_field(form.download, class="btn btn-warning btn-lg") }}
+    {{ render_submit_field(form.install, class="btn btn-success btn-lg") }}
+    {{ render_submit_field(form.delete, id="daDelete", class="btn btn-default btn-lg") }}
   </div>
 </form>
 
@@ -61,4 +61,8 @@
 <p>{{ after_text }}</p>
 {%- endif %}
 
+{%- endblock %}
+{%- block bottom %}
+<div class="daspacer-large"></div>
+<div class="container"><p><a href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></p></div>
 {%- endblock %}

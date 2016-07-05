@@ -3,6 +3,7 @@ role_event:
     This is a dummy variable that docassemble looks for during
     multi-user interviews when the role needed to answer the next
     question is different from the current role.
+  show: true
 role_needed:
   doc: |
     This is an internal variable that docassemble uses during
@@ -10,43 +11,51 @@ role_needed:
     questions.  It will be set to a list of roles that are needed to
     answer the next question.
   type: list
+  show: true
 url_args:
   doc: |
     This is a special variable used by docassemble to store the
     parameters passed to the interview through the URL.
   type: dict
+  show: true
 role:
   doc: |
     This is a special variable used in multi-user interviews to indicate
     the role of the current user.  Typically set during initial code.
   type: str
+  show: true
 current_info:
   doc: |
     This is an internal variable that docassemble uses to store
     background information, such as the identity of the user who is
     currently logged in.
   type: dict
+  show: true
 speak_text:
   doc: |
     This is a special variable that can be set during an interview.  If
     True, the text-to-speech feature is turned on.
   type: bool
+  show: true
 track_location:
   doc: |
     This is a special variable that can be set during an interview.  If
     True, the web application will attempt to determine the user's location
     using the GPS features of the browser.
   type: bool
+  show: true
 multi_user:
   doc: |
     This is a special variable that can be set during an interview.  If
     True, the multi-user interview feature will be turned on.
   type: bool
+  show: true
 menu_items:
   doc: |
     This is a special variable that can be set during an interview in
     order to add selections to the menu.
   type: list
+  show: true
 "True":
   doc: |
     This is a built-in Python variable that expresses the boolean value of true.
