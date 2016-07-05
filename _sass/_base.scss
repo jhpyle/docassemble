@@ -291,6 +291,7 @@ box-shadow: $shadow;
 }
 p img {
     @include box-shadow(0px 0px 6px rgba(0,0,0,.3), inset 0px 0px 0px rgba(255,255,255,.8));
+    border-radius: 4px;
     }
 
 img.example {
@@ -298,10 +299,19 @@ img.example {
     margin-bottom: 10px;
     @include box-shadow(0px 0px 6px rgba(0,0,0,.3), inset 0px 0px 0px rgba(255,255,255,.8));
     max-width: 100%;
+    border-radius: 4px;
 }
 
 img.full-width {
     width: 100%;
+}
+
+div.vert-scroll {
+    @include box-shadow(0px 0px 6px rgba(0,0,0,.3), inset 0px 0px 0px rgba(255,255,255,.8));
+    max-height: 500px;
+    overflow-y: scroll;
+    display: inline-block;
+    border-radius: 4px;
 }
 
 table.gsc-table-result td {

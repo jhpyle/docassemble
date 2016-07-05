@@ -158,7 +158,8 @@ and any uploaded documents are deleted from the database.
 **docassemble** can easily be [set up] to run on [HTTPS] rather than
 [HTTP] in order to encrypt the traffic between the browser and the
 server.  SSL certificates are available at no cost from companies like
-[StartCom].
+[StartCom].  In addition, **docassemble** has built-in support for
+using [Let's Encrypt].
 
 ### Multilingual
 
@@ -323,7 +324,7 @@ interview questions and document text are represented in [Markdown]
 enhanced with the [Mako] templating system.  [Mako] allows the full
 power of [Python] to be embedded into interview [questions] and
 [document templates].  Documents are converted from [Markdown] into
-PDF, RTF, and HTML using [pandoc](http://johnmacfarlane.net/pandoc/).
+PDF, RTF, and HTML using [Pandoc].
 
 To test the interview, the author re-packs the [Python] subpackage as
 a .zip file and [uploads] it to a **docassemble** server.  Alternatively,
@@ -411,3 +412,5 @@ the same interview on a single server.
 [HTTPS]: https://en.wikipedia.org/wiki/HTTPS
 [set up]: {{ site.baseurl }}/docs/config.html
 [StartCom]: https://www.startssl.com/
+[Pandoc]: http://johnmacfarlane.net/pandoc/
+[Let's Encrypt]: https://letsencrypt.org/

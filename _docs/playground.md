@@ -15,7 +15,7 @@ or more "files" and then run an interview with one click.
 ## <a name="interview_files"></a>The [YAML] text editor
 
 The main area of the Playground consists of an in-browser text editor
-in which you can edit [YAML] [interview] files.
+with which you can edit [YAML]&nbsp;[interview] files.
 
 ![playground]({{ site.baseurl }}/img/playground-main.png)
 
@@ -82,9 +82,13 @@ called `small_claims_complaint.md` in the Templates folder and then
 incorporate that text by reference by including the line `content
 file: small_claims_complaint.md` within an [`attachments`] directive.
 
+{% include scroll-image.html image="playground-templates-page-clipped.png" %}
+
 In the Templates folder, you can upload files.  Markdown and YAML
-files can be edited.  Uploaded files in `docx` or `odt` format can be
-converted to Markdown format.
+files can be edited.  From the Templates screen, you can convert
+uploaded files from [Microsoft Word] format (`.docx`, `.doc`, or
+`.rtf`) or [OpenDocument] format (`odt`) to Markdown (`.md`) format,
+so that you can include the text in your documents.
 
 ## <a name="static"></a>The Static folder
 
@@ -93,8 +97,11 @@ converted to Markdown format.
 If your interviews include images or sound, you can bundle image and
 audio files with your interview's **docassemble** [package] by
 including them within the `data/static` subdirectory.  In the
-Playground, these files are located within the "Static" folder.  In
-this area, you can upload files or write files of your own.  For
+Playground, these files are located within the "Static" folder.
+
+{% include scroll-image.html image="playground-static-page-clipped.png" %}
+
+In this area, you can upload files or write files of your own.  For
 example, you might want to write your own Javascript files here, or
 upload images that you want to include in interview questions.
 
@@ -136,6 +143,8 @@ The Packages area allows you to bundle the [interview files], [templates],
 You can keep track of one or more packages in the Packages area.  Each
 package has its own tab.  To create a new package, click the <i
 class="glyphicon glyphicon-plus-sign" aria-hidden="true"></i> icon.
+
+{% include scroll-image.html image="playground-packages-page-clipped.png" %}
 
 Packages are defined with the following elements:
 
@@ -224,6 +233,15 @@ The area lists the following types of names (which are color-coded):
 * Decorations: decorations defined with [`images`] or [`image sets`]
   that are available for inclusion with [`decoration`] or [emoji] markup.
 
+By default, the "Variables, etc." area shows variables for the [YAML]
+file you are currently editing.  However, if the [YAML] file you are
+editing is a component of an interview, the information in the
+"Variables, etc." will not be complete.  At the top of the "Variables,
+etc." area, you can select a different file that should be used for
+purposes of populating the "Variables, etc." section.  Usually this
+file will be the "top level" interview file -- the one that that
+[`include`]s the file you are currently editing.  
+
 ## <a name="examples"></a>Example blocks
 
 ![example area]({{ site.baseurl }}/img/playground-example-area.png){: .full-width }
@@ -278,6 +296,7 @@ going to the [packages area].
 [package]: {{ site.baseurl }}/docs/packages.html
 [packages]: {{ site.baseurl }}/docs/packages.html
 [Python package]: {{ site.baseurl }}/docs/packages.html
+[Python packages]: {{ site.baseurl }}/docs/packages.html
 [Python modules]: https://docs.python.org/2/tutorial/modules.html
 [tutorial]: {{ site.baseurl }}/docs/helloworld.html
 [YAML]: https://en.wikipedia.org/wiki/YAML
@@ -298,3 +317,6 @@ going to the [packages area].
 [emoji]: {{ site.baseurl }}/docs/markup.html#emoji
 [`decoration`]: {{ site.baseurl }}/docs/modifiers.html#decoration
 [profile]: {{ site.baseurl }}/docs/users.html#profile
+[Microsoft Word]: https://en.wikipedia.org/wiki/Microsoft_Word
+[OpenDocument]: https://en.wikipedia.org/wiki/OpenDocument
+[`include`]: {{ site.baseurl }}/docs/initial.html#include

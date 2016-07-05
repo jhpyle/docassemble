@@ -93,8 +93,8 @@ ec2: false
 ec2_ip_url: http://169.254.169.254/latest/meta-data/local-ipv4
 {% endhighlight %}
 
-By default, `imagemagick`, `pdftoppm`, `pacpl`, `avconv`, and `oauth` are
-undefined.
+By default, `imagemagick`, `pdftoppm`, `pacpl`, `avconv`,
+`libreoffce`, `pandoc`, and `oauth` are undefined.
 
 The key `config_file` does not appear in the configuration file, but
 it will be set to the file path for the configuration file.  (The
@@ -413,30 +413,72 @@ port 514 on that server, and will not write to the `log` directory.
 
 ## <a name="imagemagick"></a><a name="pdftoppm"></a>Image conversion
 
-If you have ImageMagick and pdftoppm installed on your system, you
-need to tell **docassemble** the names of the commands to use.
+By default, **docassemble** assumes that you have ImageMagick and
+pdftoppm installed on your system, and that they are accessible
+through the commands `convert` and `pdftoppm`, respectively.  If you
+do not have these applications on your system, you need to set the
+configuration variables to null:
 
 {% highlight yaml %}
-imagemagick: convert
-pdftoppm: pdftoppm
+imagemagick: null
+pdftoppm: null
+{% endhighlight %}
+
+If you have the applications, but you want to specify a particular
+path, you can set the path using the configuration variables:
+
+{% highlight yaml %}
+imagemagick: /usr/local/bin/convert
+pdftoppm: /usr/local/bin/pdftoppm
 {% endhighlight %}
 
 ## <a name="pacpl"></a><a name="avconv"></a>Sound file conversion
 
-If you have pacpl (the [Perl Audio Converter]) and/or [avconv] installed
-on your system, you need to tell **docassemble** the name of the
-commands to use.  If the applications are not installed on your
-system, do not include these lines.
+By default, **docassemble** assumes that you have pacpl (the
+[Perl Audio Converter] and/or [avconv] installed on your system, and
+that they are accessible through the commands `pacpl` and
+`avconv`, respectively.  If you do not have these applications on
+your system, you need to set the configuration variables to null:
 
 {% highlight yaml %}
-pacpl: pacpl
-avconv: avconv
+pacpl: null
+avconv: null
 {% endhighlight %}
+
+You can also set these variables to tell **docassemble** to use a
+particular path on your system to run these applications.
 
 If you have [ffmpeg] instead of [avconv], you can do:
 
 {% highlight yaml %}
 avconv: ffmpeg
+{% endhighlight %}
+
+## <a name="libreoffice"></a><a name="pandoc"></a>Document conversion
+
+**docassemble** requires that you have [Pandoc] installed on your
+system.  It assumes that it can be run using the command `pandoc`.
+If you need to specify a different path, you can do so in the configuration:
+
+{% highlight yaml %}
+pandoc: /opt/pandoc/bin/pandoc
+{% endhighlight %}
+
+By default, **docassemble** assumes that you have [LibreOffice]
+installed on your system, and that it is accessible through the
+command `libreoffice`.  If you do not have LibreOffice on your system,
+you need to set the configuration variable to null:
+
+{% highlight yaml %}
+libreoffice: null
+{% endhighlight %}
+
+You can also use this configuration variable to set a different path
+for the application.  There are different versions of [LibreOffice]
+that go by different names:
+
+{% highlight yaml %}
+libreoffice: soffice
 {% endhighlight %}
 
 ## <a name="oauth"></a>Facebook and Google login
@@ -720,3 +762,5 @@ first.
 [`docassemble.wsgi`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble.wsgi
 [`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
 [`root`]: #root
+[Pandoc]: http://johnmacfarlane.net/pandoc/
+[LibreOffice]: https://www.libreoffice.org/
