@@ -14,7 +14,7 @@ COPY Docker/apache-ssl.conf /usr/share/docassemble/config/docassemble-ssl.conf.d
 COPY Docker/apache.logrotate /etc/logrotate.d/apache2
 COPY Docker/docassemble.logrotate /etc/logrotate.d/docassemble
 COPY Docker/docassemble-cron-weekly.sh /etc/cron.weekly/docassemble
-COPY Docker/docassemble-cron-daily.sh /etc/cron.weekly/docassemble
+COPY Docker/docassemble-cron-daily.sh /etc/cron.daily/docassemble
 COPY Docker/docassemble.conf /etc/apache2/conf-available/
 COPY Docker/docassemble-supervisor.conf /etc/supervisor/conf.d/docassemble.conf
 COPY Docker/docassemble.key /etc/ssl/docassemble/
