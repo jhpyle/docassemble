@@ -259,5 +259,5 @@ on and off during the course of the interview as necessary.
 [`code`]: {{ site.baseurl }}/docs/code.html
 [`current_info`]: #current_info
 [`track_location`]: #track_location
-[User List]: "{{ site.baseurl }}/docs/users.html#user_list"
-[Profile]: "{{ site.baseurl }}/docs/users.html#profile"
+[User List]: {{ site.baseurl }}/docs/users.html#user_list
+[Profile]: {{ site.baseurl }}/docs/users.html#profile

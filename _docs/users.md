@@ -78,5 +78,5 @@ fields available include:
 [`show_login`]: {{ site.baseurl }}/docs/config.html#show_login
 [`docassemble.webapp`]: {{ site.baseurl }}/docs/installation.html#docassemble.webapp
 [`create_tables.py`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/create_tables.py
-[User List]: "#user_list"
-[Profile]: "#profile"
+[User List]: #user_list
+[Profile]: #profile

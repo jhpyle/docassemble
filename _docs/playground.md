@@ -308,12 +308,12 @@ going to the [packages area].
 [`images`]: {{ site.baseurl }}/docs/initial.html#images
 [`image sets`]: {{ site.baseurl }}/docs/initial.html#image sets
 [namespace package]: https://www.python.org/dev/peps/pep-0420/
-[interview files]: "#interview_files"
-[templates]: "#templates"
-[template files]: "#templates"
-[static files]: "#static"
-[modules]: "#modules"
-[packages area]: "#packages"
+[interview files]: #interview_files
+[templates]: #templates
+[template files]: #templates
+[static files]: #static
+[modules]: #modules
+[packages area]: #packages
 [emoji]: {{ site.baseurl }}/docs/markup.html#emoji
 [`decoration`]: {{ site.baseurl }}/docs/modifiers.html#decoration
 [profile]: {{ site.baseurl }}/docs/users.html#profile
