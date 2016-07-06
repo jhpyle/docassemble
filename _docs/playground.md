@@ -276,13 +276,6 @@ The "Save and Run" button will open an interview in another window.
 Your browser might block this as an unwanted pop-up window.  Make sure
 to tell your browser to allow pop-ups from **docassemble**.
 
-Once you are running the interview in another tab, changes that you
-make to the interview you ran will be visible if you refresh the
-screen on the interview you are running.  However, these changes will
-only re-appear if you changed the same file for which you pressed
-"Save and Run"; you will not see changes to files included by
-reference unless you re-save the file you ran.
-
 The "Delete" button will remove the interview from the Playground.
 
 To give a link to the interview to someone else, right-click on the

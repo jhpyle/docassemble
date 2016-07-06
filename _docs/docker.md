@@ -14,10 +14,10 @@ to install **docassemble** in a multi-server arrangement on
 
 # Prerequisites
 
-Make sure you have at least 8GB of storage space.  (**docassemble**
+Make sure you have at least 12GB of storage space.  (**docassemble**
 has a lot of large dependencies.)  At the end of installation, only
-about 4GB will be taken up, but the installation process requires more
-storage than that to be available.
+about 4GB will be taken up, but the build and installation processes
+require more storage than that to be available.
 
 # Installing Docker
 
@@ -94,14 +94,31 @@ docker exec -t -i <containerid> /bin/bash
 
 You can find out the ID of the running container by doing `docker ps`.
 
+Log files you might wish to check include:
+
+* `/var/log/supervisor/initialize-stderr---supervisor-*.log`
+* `/var/log/supervisor/postgres-stderr---supervisor-*.log`
+* `/var/log/apache2/error.log`
+* `/usr/share/docassemble/log/docassemble.log`
+
 Make sure to cleanly shut down the container by running:
 
 {% highlight bash %}
-docker stop <containerid>
+docker stop -t 60 <containerid>
 {% endhighlight %}
 
 The container runs a PostgreSQL server, and the data files of the
 server may become corrupted if PostgreSQL is not gracefully shut down.
+
+By default, Docker gives containers ten seconds to shut down before
+forcibly shutting them down, but sometimes PostgreSQL takes a little
+longer than ten seconds, so it is a good idea to give the container
+plenty of time to shut down gracefully.  The `-t 60` means that Docker
+will wait up to 60 seconds before forcibly shutting down the
+container.  Usually the container will shut down in about ten seconds.
+
+To see a list of stopped containers, run `docker ps -a`.  To remove a
+container, run `docker rm <containerid>`.
 
 ## Using persistent volumes
 
@@ -127,6 +144,17 @@ docker run --env-file=env.list \
 where `--env-file=env.list` is an optional parameter that refers to a
 file `env.list` containing environment variables for the
 configuration.  (More on that below.)
+
+An advantage of using persistent containers is that you can completely
+replace the docassemble container and rebuild it from scratch, and
+when you `run` the `jhpyle/docassemble` image again, docassemble will
+keep running where it left off.  This also facilitates backup
+
+To delete all of the volumes, do:
+
+{% highlight bash %}
+docker volume rm $(docker volume ls -qf dangling=true)
+{% endhighlight %}
 
 # Multi-server arrangement
 
