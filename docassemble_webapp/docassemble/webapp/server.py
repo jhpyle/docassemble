@@ -1193,8 +1193,8 @@ def index():
     if yaml_parameter is not None:
         show_flash = False
         yaml_filename = yaml_parameter
-        if session.get('nocache', False):
-            docassemble.base.interview_cache.clear_cache(yaml_filename)
+        # if session.get('nocache', False):
+        #     docassemble.base.interview_cache.clear_cache(yaml_filename)
         old_yaml_filename = session.get('i', None)
         # if yaml_filename.startswith("/playground") and not current_user.is_authenticated:
         #     flash(word("You must be logged in as a developer to continue"), 'error')
@@ -1308,7 +1308,7 @@ def index():
                 response.set_cookie('secret', secret)
             return response
         for argname in request.args:
-            if argname in ('filename', 'question', 'format', 'index', 'i', 'nocache', 'action', 'from_list', 'session'):
+            if argname in ('filename', 'question', 'format', 'index', 'i', 'action', 'from_list', 'session'):
                 continue
             if re.match('[A-Za-z_]+', argname):
                 exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)
@@ -3900,6 +3900,12 @@ def playground_page():
             the_time = time.strftime('%H:%M:%S %Z', time.localtime())
             with open(filename, 'w') as fp:
                 fp.write(form.playground_content.data.encode('utf8'))
+            for a_file in files:
+                docassemble.base.interview_cache.clear_cache('docassemble.playground' + str(current_user.id) + ':' + a_file)
+                a_filename = os.path.join(playground.directory, a_file)
+                if a_filename != filename and os.path.isfile(a_filename):
+                    with open(a_filename, 'a'):
+                        os.utime(a_filename, None)
             playground.finalize()
             if form.submit.data:
                 flash(word('Saved at') + ' ' + the_time + '.', 'success')
@@ -3980,7 +3986,7 @@ function activateExample(id){
   $("#example-source-after").addClass("invisible");
 }
 
-interviewBaseUrl = '""" + url_for('index', nocache='1', i='docassemble.playground' + str(current_user.id) + ':.yml') + """';
+interviewBaseUrl = '""" + url_for('index', i='docassemble.playground' + str(current_user.id) + ':.yml') + """';
 
 function updateRunLink(){
   $("#daRunButton").attr("href", interviewBaseUrl.replace('.yml', $("#daVariables").val()));
