@@ -20,8 +20,8 @@ oauth:
     secret: DGE34gdgerg3GDG545tgdfRf
 secretkey: 28asflwjeifwlfjsd2fejfiefw3g4o87
 password_secretkey: 2f928j3rwjf82498rje9t
-appname: docassemble
-brandname: demo
+default_title: docassemble
+default_short_title: doc
 packagecache: /tmp/docassemble-cache
 uploads: /usr/share/docassemble/files
 packages: /usr/share/docassemble/local
@@ -30,9 +30,6 @@ mail:
   username: null
   password: null
   server: localhost
-  port: 25
-  use_ssl: false
-  use_tls: false
   default_sender: '"Administrator" <no-reply@example.com>'
 admin_address: '"Administrator" <admin@example.com>'
 use_progress_bar: false

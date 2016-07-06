@@ -143,6 +143,8 @@ extraneous_var = re.compile(r'^x\.|^x\[')
 
 if 'mail' not in daconfig:
     daconfig['mail'] = dict()
+default_title = daconfig.get('default_title', daconfig.get('brandname', 'docassemble'))
+default_short_title = daconfig.get('default_short_title', default_title)
 os.environ['PYTHON_EGG_CACHE'] = tempfile.mkdtemp()
 app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
 app.config['BRAND_NAME'] = daconfig.get('brandname', daconfig.get('appname', 'docassemble'))
@@ -152,7 +154,7 @@ app.config['MAIL_DEFAULT_SENDER'] = daconfig['mail'].get('default_sender', None)
 app.config['MAIL_SERVER'] = daconfig['mail'].get('server', 'localhost')
 app.config['MAIL_PORT'] = daconfig['mail'].get('port', 25)
 app.config['MAIL_USE_SSL'] = daconfig['mail'].get('use_ssl', False)
-app.config['MAIL_USE_TLS'] = daconfig['mail'].get('use_tls', False)
+app.config['MAIL_USE_TLS'] = daconfig['mail'].get('use_tls', True)
 #app.config['ADMINS'] = [daconfig.get('admin_address', None)]
 app.config['APP_SYSTEM_ERROR_SUBJECT_LINE'] = app.config['APP_NAME'] + " system error"
 app.config['APPLICATION_ROOT'] = daconfig.get('root', '/')
@@ -1895,7 +1897,7 @@ def index():
     else:
         interview_language = DEFAULT_LANGUAGE
     if interview_status.question.question_type == "signature":
-        output = '<!doctype html>\n<html lang="' + interview_language + '">\n  <head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + interview_status.question.interview.get_title().get('full', app.config['BRAND_NAME']) + '</title><script src="' + url_for('static', filename='app/jquery.min.js') + '"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet"><title>' + word('Sign Your Name') + '</title></head>\n  <body onresize="resizeCanvas()">'
+        output = '<!doctype html>\n<html lang="' + interview_language + '">\n  <head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + interview_status.question.interview.get_title().get('full', default_title) + '</title><script src="' + url_for('static', filename='app/jquery.min.js') + '"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet"><title>' + word('Sign Your Name') + '</title></head>\n  <body onresize="resizeCanvas()">'
         output += signature_html(interview_status, DEBUG, ROOT)
         output += """\n  </body>\n</html>"""
     else:
@@ -1959,8 +1961,8 @@ def index():
         if DEBUG:
             output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
         output += "".join(extra_css)
-        output += '\n    <title>' + interview_status.question.interview.get_title().get('full', app.config['BRAND_NAME']) + '</title>\n  </head>\n  <body>\n'
-        output += make_navbar(interview_status, app.config['BRAND_NAME'], (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN) + '    <div class="container">' + "\n      " + '<div class="row">\n        <div class="tab-content">\n' + flash_content
+        output += '\n    <title>' + interview_status.question.interview.get_title().get('full', default_title) + '</title>\n  </head>\n  <body>\n'
+        output += make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN) + '    <div class="container">' + "\n      " + '<div class="row">\n        <div class="tab-content">\n' + flash_content
         if interview_status.question.interview.use_progress_bar:
             output += progress_bar(user_dict['_internal']['progress'])
         output += content + "        </div>\n      </div>\n"
@@ -2245,7 +2247,7 @@ def get_new_file_number(user_code, file_name, yaml_file_name=None):
     # conn.commit()
     # return (indexno)
 
-def make_navbar(status, page_title, steps, show_login):
+def make_navbar(status, page_title, page_short_title, steps, show_login):
     navbar = """\
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="container-fluid">
@@ -2264,7 +2266,7 @@ def make_navbar(status, page_title, steps, show_login):
           <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="_back_one" value="1"><button class="dabackicon" type="submit"><i class="glyphicon glyphicon-chevron-left dalarge"></i></button></form></span>
 """
     navbar += """\
-          <a href="#question" data-toggle="tab" class="navbar-brand"><span class="hidden-xs">""" + status.question.interview.get_title().get('full', page_title) + """</span><span class="visible-xs-block">""" + status.question.interview.get_title().get('short', page_title) + """</span></a>
+          <a href="#question" data-toggle="tab" class="navbar-brand"><span class="hidden-xs">""" + status.question.interview.get_title().get('full', page_title) + """</span><span class="visible-xs-block">""" + status.question.interview.get_title().get('short', page_short_title) + """</span></a>
           <a class="invisible" id="questionlabel" href="#question" data-toggle="tab">""" + word('Question') + """</a>
 """
     if status.question.helptext is None:
@@ -3840,11 +3842,13 @@ def playground_page():
     the_file = re.sub(r'[^A-Za-z0-9\_\-\.]', '', the_file)
     files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f))])
     content = ''
+    is_default = False
     if request.method == 'GET' and not the_file and not is_new:
         if len(files):
             the_file = files[0]
         else:
             the_file = 'test.yml'
+            is_default = True
             content = default_playground_yaml
     active_file = the_file
     if 'variablefile' in session:
@@ -3920,8 +3924,11 @@ def playground_page():
     if active_file != '':
         is_fictitious = False
         interview_path = 'docassemble.playground' + str(current_user.id) + ':' + active_file
-        interview_source = docassemble.base.parse.interview_source_from_string(interview_path)
-        interview_source.set_testing(True)
+        if is_default:
+            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
+        else:
+            interview_source = docassemble.base.parse.interview_source_from_string(interview_path)
+            interview_source.set_testing(True)
     else:
         is_fictitious = True
         active_file = 'test.yml'
@@ -3934,7 +3941,7 @@ def playground_page():
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
     variables_html = get_vars_in_use(interview, interview_status)
     pulldown_files = list(files)
-    if is_fictitious or is_new:
+    if is_fictitious or is_new or is_default:
         new_active_file = word('(New file)')
         if new_active_file not in pulldown_files:
             pulldown_files.insert(0, new_active_file)
