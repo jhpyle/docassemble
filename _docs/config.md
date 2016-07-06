@@ -62,18 +62,20 @@ db:
   table_prefix: none
 appname: docassemble
 brandname: docassemble
+default_title: docassemble
+default_short_title: docassemble
 uploads: /usr/share/docassemble/files
 packages: /usr/share/docassemble/local
 packagecache: /usr/share/docassemble/cache
 webapp: /usr/share/docassemble/docassemble.wsgi
 mail:
-  default_sender: None #'"Administrator" <no-reply@example.com>'
+  default_sender: None
   username: none
   password: none
   server: localhost
   port: 25
   use_ssl: false
-  use_tls: false
+  use_tls: true
 use_progress_bar: false
 default_interview: docassemble.demo:data/questions/questions.yml
 flask_log: /tmp/flask.log
@@ -156,11 +158,17 @@ database, you can set a `table_prefix`.
 
 These are branding names.
 
-The `appname` appears in the web browser tab.  The `brandname` appears
-in the navigation bar.
+On administration pages, the `appname` appears in the web browser tab,
+and the `brandname` appears in the navigation bar.
 
 The `brandname` will default to the `appname` if `brandname` is not
 specified.
+
+## <a name="default_title"></a><a name="default_short_title"></a>default_title and default_short_title
+
+These are the default names to use in the browser tab and navigation
+bar of interviews that do not specify these titles in their
+[`metadata`].
 
 ## <a name="uploads"></a>uploads
 
@@ -287,7 +295,7 @@ mail:
   server: smtp.example.com
   port: 25
   use_ssl: false
-  use_tls: false
+  use_tls: true
 {% endhighlight %}
 
 Note that any machine that connects to an SMTP server will need to
@@ -764,3 +772,4 @@ first.
 [`root`]: #root
 [Pandoc]: http://johnmacfarlane.net/pandoc/
 [LibreOffice]: https://www.libreoffice.org/
+[`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
