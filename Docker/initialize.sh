@@ -16,13 +16,15 @@ a2dissite 000-default
 a2dissite default-ssl
 
 if [ "${HOSTNAME-none}" != "none" ]; then
-    if [ ! -f /etc/apache2/sites-available/docassemble-ssl.conf ]; then
+    if [ ! -f /etc/apache2/sites-available/docassemble-ssl.conf ] || [ "${USELETSENCRYPT-none}" == "none" ] || [ "${USEHTTPS-false}" == "false" ]; then
 	sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
             /usr/share/docassemble/config/docassemble-ssl.conf.dist > /etc/apache2/sites-available/docassemble-ssl.conf || exit 1
+	rm -f /etc/letsencrypt/da_using_lets_encrypt
     fi
-    if [ ! -f /etc/apache2/sites-available/docassemble-http.conf ]; then
+    if [ ! -f /etc/apache2/sites-available/docassemble-http.conf ] || [ [ "${USELETSENCRYPT-none}" == "none" ] ] || [ "${USEHTTPS-false}" == "false" ]; then
 	sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
             /usr/share/docassemble/config/docassemble-http.conf.dist > /etc/apache2/sites-available/docassemble-http.conf || exit 1
+	rm -f /etc/letsencrypt/da_using_lets_encrypt
     fi
 fi
 a2ensite docassemble-http
@@ -34,6 +36,8 @@ if [ ! -f $CONFIG_FILE ]; then
 	    -e 's/{{DBUSER}}/'"${DBUSER-null}"'/' \
 	    -e 's/{{DBPASSWORD}}/'"${DBPASSWORD-null}"'/' \
 	    -e 's/{{DBHOST}}/'"${DBHOST-null}"'/' \
+	    -e 's/{{DBPORT}}/'"${DBPORT-null}"'/' \
+	    -e 's/{{DBTABLEPREFIX}}/'"${DBTABLEPREFIX-null}"'/' \
 	    -e 's/{{S3ENABLE}}/'"${S3ENABLE-false}"'/' \
 	    -e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY-null}"'/' \
 	    -e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
@@ -47,6 +51,8 @@ if [ ! -f $CONFIG_FILE ]; then
 	    -e 's/{{DBUSER}}/'"${DBUSER-docassemble}"'/' \
 	    -e 's/{{DBPASSWORD}}/'"${DBPASSWORD-abc123}"'/' \
 	    -e 's/{{DBHOST}}/'"${DBHOST-null}"'/' \
+	    -e 's/{{DBPORT}}/'"${DBPORT-null}"'/' \
+	    -e 's/{{DBTABLEPREFIX}}/'"${DBTABLEPREFIX-null}"'/' \
 	    -e 's/{{S3ENABLE}}/'"${S3ENABLE-false}"'/' \
 	    -e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY-null}"'/' \
 	    -e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
@@ -89,15 +95,18 @@ if [ "${USEHTTPS-false}" == "true" ]; then
     a2ensite docassemble-ssl
     if [ "${USELETSENCRYPT-false}" == "true" ]; then
 	cd /usr/share/docassemble/letsencrypt 
-	if [ -f /usr/share/docassemble/config/using_lets_encrypt ]; then
+	if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
 	    ./letsencrypt-auto renew
 	else
-	    ./letsencrypt-auto --apache --quiet --email ${LETSENCRYPTEMAIL} --agree-tos -d ${HOSTNAME} && touch /usr/share/docassemble/config/using_lets_encrypt
+	    ./letsencrypt-auto --apache --quiet --email ${LETSENCRYPTEMAIL} --agree-tos -d ${HOSTNAME} && touch /etc/letsencrypt/da_using_lets_encrypt
 	fi
 	cd ~-
 	/etc/init.d/apache2 stop
+    else
+	rm -f /etc/letsencrypt/da_using_lets_encrypt
     fi
 else
+    rm -f /etc/letsencrypt/da_using_lets_encrypt
     a2dismod ssl
     a2dissite docassemble-ssl
 fi

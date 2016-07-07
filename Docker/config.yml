@@ -7,8 +7,8 @@ db:
   user: {{DBUSER}}
   password: {{DBPASSWORD}}
   host: {{DBHOST}}
-  port: null
-  table_prefix: null
+  port: {{DBPORT}}
+  table_prefix: {{DBTABLEPREFIX}}
 oauth:
   facebook:
     enable: false
