@@ -129,9 +129,9 @@ The core functionality of parsing interviews is in the
 the standard **docassemble** web application, and the `docassemble.demo`
 package contains a [demonstration] interview.
 
-To install **docassemble** and its [Python] dependencies into the
-[Python virtual environment], first install the latest version of
-`pip`:
+<a name="virtualenv"></a>To install **docassemble** and its [Python]
+dependencies into the [Python virtual environment], first install the
+latest version of `pip`:
 
 {% highlight bash %}
 wget https://bootstrap.pypa.io/get-pip.py

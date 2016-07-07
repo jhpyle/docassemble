@@ -22,9 +22,9 @@ recommended method:
 2. Go to [Amazon S3] and obtain an access key and a secret access
 key.  Create a bucket.
 3. Go to [EC2 Container Service].
-4. Create a Task Definition called `docassemble-sql` using the JSON
+4. Create a Task Definition called `docassemble-sql` using the [JSON]
 configuration below.  Edit the `TIMEZONE`.
-5. Create a Task Definition called `docassemble-log` using the JSON
+5. Create a Task Definition called `docassemble-log` using the [JSON]
 configuration below.  Edit the `TIMEZONE`.
 6. Create a Service called `sql-service` that uses the task definition
 `docassemble-sql`.  Edit the `TIMEZONE`.  Set the number of tasks
@@ -34,7 +34,7 @@ on an [EC2] instance.  Make note of the "Private IP" of the instance.
 `docassemble-log`.  Set the number of tasks to 1.  Do not
 choose an Elastic Load Balancer.  Deploy `log-service` on an [EC2]
 instance.  Make note of the "Private IP" of the instance.
-8. Create a Task Definition called `docassemble-app` using the JSON
+8. Create a Task Definition called `docassemble-app` using the [JSON]
 configuration below.  Substitute the "Private IP" of the instance
 running `docassemble-sql` for `DBHOST`.  Substitute the "Private IP"
 of the instance running `docassemble-log` for `LOGSERVER`.  (Or, use
@@ -359,6 +359,9 @@ If you are using Amazon EC2, set the following in the [configuration]:
 ec2: true
 {% endhighlight yaml %}
 
+This can also be set with the `EC2` environment variable if
+[using Docker].
+
 # SQL server
 
 To start a postgresql server in an [Amazon Linux] instance:
@@ -502,4 +505,6 @@ the [configuration] variables `certs` and `cert_install_directory`.
 [Elastic Load Balancer]: https://aws.amazon.com/elasticloadbalancing/
 [Auto Scaling Group]: http://docs.aws.amazon.com/AutoScaling/latest/DeveloperGuide/AutoScalingGroup.html
 [create your own Docker image]: {{ site.baseurl }}/docs/docker.html#build
+[using Docker]: {{ site.baseurl }}/docs/docker.html#build
 [`create_tables`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/create_tables.py
+[JSON]: https://en.wikipedia.org/wiki/JSON
