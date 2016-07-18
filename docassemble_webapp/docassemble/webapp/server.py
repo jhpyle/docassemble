@@ -27,7 +27,7 @@ import docassemble.webapp.database
 import tempfile
 import zipfile
 import traceback
-from docassemble.base.pandoc import word_to_markdown
+from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
 from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
 from docassemble.base.util import pickleable_objects, word, comma_and_list
@@ -125,11 +125,6 @@ app.debug = False
 
 ok_mimetypes = {"application/javascript": "javascript", "text/x-python": "python"}
 ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown", 'py': "python"}
-convertible_mimetypes = {"application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx", "application/vnd.oasis.opendocument.text": "odt"}
-convertible_extensions = {"docx": "docx", "odt": "odt"}
-if daconfig.get('libreoffice', 'libreoffice') is not None:
-    convertible_mimetypes.update({"application/msword": "doc", "application/rtf": "rtf"})
-    convertible_extensions.update({"doc": "doc", "rtf": "rtf"})
 default_yaml_filename = daconfig.get('default_interview', 'docassemble.demo:data/questions/questions.yml')
 
 document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
@@ -278,6 +273,7 @@ initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret
 #    initial_dict = dict(_internal=dict(tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
 if 'initial_dict' in daconfig:
     initial_dict.update(daconfig['initial_dict'])
+docassemble.base.parse.set_initial_dict(initial_dict)
 LOGFILE = daconfig.get('flask_log', '/tmp/flask.log')
 #APACHE_LOGFILE = daconfig.get('apache_log', '/var/log/apache2/error.log')
 
@@ -313,6 +309,18 @@ def get_url_from_file_reference(file_reference, **kwargs):
         return(file_reference)
     if file_reference in ['login', 'signin']:
         return(url_for('user.login'))
+    elif file_reference == 'interviews':
+        return(url_for('interview_list'))
+    elif file_reference == 'playground':
+        return(url_for('playground_page'))
+    elif file_reference == 'playgroundtemplate':
+        return(url_for('playground_files', section='template'))
+    elif file_reference == 'playgroundstatic':
+        return(url_for('playground_files', section='static'))
+    elif file_reference == 'playgroundmodules':
+        return(url_for('playground_files', section='modules'))
+    elif file_reference == 'playgroundstatic':
+        return(url_for('playground_packages'))
     if re.match('[0-9]+', file_reference):
         file_number = file_reference
         if can_access_file_number(file_number):
@@ -441,8 +449,8 @@ def get_info_from_file_reference(file_reference, **kwargs):
         convert = kwargs['convert']
     else:
         convert = None
-    if re.match('[0-9]+', file_reference):
-        result = get_info_from_file_number(file_reference)
+    if re.match('[0-9]+', str(file_reference)):
+        result = get_info_from_file_number(int(file_reference))
     else:
         result = dict()
         question = kwargs.get('question', None)
@@ -1613,7 +1621,7 @@ def index():
     if '_varnames' in post_data:
         known_varnames = json.loads(myb64unquote(post_data['_varnames']))
     known_variables = dict()
-    for orig_key in post_data:
+    for orig_key in copy.deepcopy(post_data):
         if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames']:
             continue
         try:
@@ -1832,7 +1840,13 @@ def index():
         $(function () {
           $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
         })
-        $("#daform input, #daform textarea, #daform select").first().focus();
+        $("#daform input, #daform textarea, #daform select").first().each(function(){
+          $(this).focus();
+          if ($(this).prop('tagName') != 'SELECT'){
+            var strLength = $(this).val().length * 2;
+            $(this)[0].setSelectionRange(strLength, strLength);
+          }
+        });
         $(".to-labelauty").labelauty({ width: "100%" });
         $(".to-labelauty-icon").labelauty({ label: false });
         $(function(){ 
@@ -1856,16 +1870,27 @@ def index():
         });
         $(".showif").each(function(){
           var showIfSign = $(this).data('showif-sign');
-          var showIfVal = $(this).data('showif-val');
+          var showIfVar = $(this).data('showif-var');
+          var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/, "\\\\$1");
           var showIfVal = $(this).data('showif-val');
           var saveAs = $(this).data('saveas');
           var isSame = (saveAs == showIfVar);
           var showIfDiv = this;
           var showHideDiv = function(){
+            //console.log("showHideDiv1")
             if($(this).parents(".showif").length !== 0){
               return;
             }
-            if($(this).val() == showIfVal){
+            var theVal;
+            if ($(this).attr('type') == "checkbox" || $(this).attr('type') == "radio"){
+              theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
+            }
+            else{
+              theVal = $(this).val();
+            }
+            //console.log("val is " + theVal + " and showIfVal is " + showIfVal)
+            if(theVal == showIfVal){
+              //console.log("They are the same");
               if (showIfSign){
                 $(showIfDiv).removeClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", false);
@@ -1876,6 +1901,7 @@ def index():
               }
             }
             else{
+              //console.log("They are not the same");
               if (showIfSign){
                 $(showIfDiv).addClass("invisible");
                 $(showIfDiv).find('input, textarea, select').prop("disabled", true);
@@ -1886,9 +1912,12 @@ def index():
               }
             }
           };
-          showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/, "\\\\$1");
           $("#" + showIfVarEscaped).each(showHideDiv);
           $("#" + showIfVarEscaped).change(showHideDiv);
+          $("input[type='radio'][name='" + showIfVarEscaped + "']").each(showHideDiv);
+          $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDiv);
+          $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDiv);
+          $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDiv);
         });
       });
     </script>"""
@@ -4146,7 +4175,7 @@ $( document ).ready(function() {
     example_html.append('        </div>')
     example_html.append('        <div class="col-md-6"><h4>' + word("Preview") + '<a target="_blank" class="label label-primary example-documentation example-hidden" id="example-documentation-link">' + word('View documentation') + '</a></h4><a href="#" target="_blank" id="example-image-link"><img class="example_screenshot" id="example-image"></a></div>')
     example_html.append('        <div class="col-md-4 example-source-col"><h4>' + word('Source') + ' <a class="label label-success example-copy">' + word('Insert') + '</a></h4><div id="example-source-before" class="invisible"></div><div id="example-source"></div><div id="example-source-after" class="invisible"></div><div><a class="example-hider" id="show-full-example">' + word("Show context of example") + '</a><a class="example-hider invisible" id="hide-full-example">' + word("Hide context of example") + '</a></div></div>')
-    return render_template('pages/playground.html', page_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=Markup("\n".join(example_html)), interview_path=interview_path, is_new=str(is_new)), 200
+    return render_template('pages/playground.html', page_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, "400px");\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=Markup("\n".join(example_html)), interview_path=interview_path, is_new=str(is_new)), 200
 
 # nameInfo = ' + str(json.dumps(vars_in_use['name_info'])) + ';      
 

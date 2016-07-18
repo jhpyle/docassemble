@@ -28,6 +28,7 @@ amp_match = re.compile(r'&')
 emoji_match = re.compile(r':([^ ]+):')
 extension_match = re.compile(r'\.[a-z]+$')
 map_match = re.compile(r'\[MAP ([^\]]+)\]', flags=re.DOTALL)
+code_match = re.compile(r'<code>')
 
 def set_default_page_width(width):
     global DEFAULT_PAGE_WIDTH
@@ -747,7 +748,7 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
     if result:
         if strip_newlines:
             result = result.replace('\n', ' ')
-        if indent:
+        if indent and not code_match.search(result):
             return (" " * indent) + re.sub(r'\n', "\n" + (" " * indent), result).rstrip() + "\n"
     return(result)
 

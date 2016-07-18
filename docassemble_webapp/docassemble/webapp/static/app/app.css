@@ -192,7 +192,7 @@ div.playgroundbox table td.playground-warning-box {
 }
 
 pre {
-    margin: 0;
+    margin: 0 0 10px 0;
 }
 
 img.example_screenshot {
@@ -415,5 +415,15 @@ a.darunbutton {
     vertical-align: text-bottom;
     text-shadow: 0 -1px 0 rgba(0,0,0,.2);
 }
-	       
 
+.min-width {
+    overflow-x: auto;
+}
+
+.min-width > ul.nav {
+    display: inline-flex;
+}
+
+.min-width > ul.nav > li {
+    flex-shrink: 0;
+}

@@ -10,6 +10,7 @@ import datetime
 import operator
 import pprint
 import codecs
+import copy
 import docassemble.base.filter
 import docassemble.base.pdftk
 from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, QuestionError
@@ -67,6 +68,16 @@ def set_save_numbered_file(func):
     #logmessage("set the save_numbered_file function to " + str(func))
     save_numbered_file = func
     return
+
+initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None), url_args=dict())
+
+def set_initial_dict(the_dict):
+    global initial_dict
+    initial_dict = the_dict
+    return
+
+def get_initial_dict():
+    return copy.deepcopy(initial_dict);
 
 class PackageImage(object):
     def __init__(self, **kwargs):
@@ -934,7 +945,7 @@ class Question:
                 if type(content_file) is not str:
                     raise DAError('A content file must be specified as text or a list of text filenames' + self.idebug(data))
                 file_to_read = docassemble.base.util.package_template_filename(content_file, package=self.package)
-                if os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
+                if file_to_read is not None and os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
                     with open(file_to_read, 'rU') as the_file:
                         data['content'] += the_file.read()
                 else:
@@ -948,6 +959,7 @@ class Question:
             field_data = {'saveas': data['template']}
             self.fields.append(Field(field_data))
             self.content = TextObject(definitions + data['content'], names_used=self.mako_names)
+            logmessage("keys are: " + str(self.mako_names))
             if 'subject' in data:
                 self.subcontent = TextObject(definitions + data['subject'], names_used=self.mako_names)
             else:
@@ -1022,11 +1034,11 @@ class Question:
                                 field_info['required'] = False
                             elif key == 'datatype':
                                 field_info['type'] = field[key]
-                                if field[key] in ['yesno', 'yesnowide', 'noyes', 'noyeswide', 'yesnomaybe', 'yesnomaybewide', 'noyesmaybe', 'noyesmaybewide'] and 'required' not in field_info:
+                                if field[key] in ['yesno', 'yesnowide', 'noyes', 'noyeswide', 'yesnomaybe', 'yesnomaybewide', 'noyesmaybe', 'noyesmaybewide', 'yesnoradio', 'noyesradio'] and 'required' not in field_info:
                                     field_info['required'] = False
-                                if field[key] in ['yesno', 'yesnowide']:
+                                if field[key] in ['yesno', 'yesnowide', 'yesnoradio']:
                                     field_info['boolean'] = 1
-                                elif field[key] in ['noyes', 'noyeswide']:
+                                elif field[key] in ['noyes', 'noyeswide', 'noyesradio']:
                                     field_info['boolean'] = -1
                                 elif field[key] in ['yesnomaybe', 'yesnowidemaybe']:
                                     field_info['threestate'] = 1
@@ -1810,6 +1822,7 @@ class Interview:
             source_code = fix_tabs.sub('  ', source_code)
             if source.testing:
                 try:
+                    logmessage("Package is " + str(source_package))
                     document = yaml.load(source_code)
                     if document is not None:
                         question = Question(document, self, source=source, package=source_package, source_code=source_code)

@@ -3,6 +3,7 @@ import random
 from docassemble.base.logger import logmessage
 import re
 import codecs
+from docassemble.base.filter import file_finder
 #from docassemble.base.error import DANameError
 from docassemble.base.util import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need
 
@@ -141,6 +142,8 @@ class DAList(DAObject):
         if not hasattr(self, 'object_type'):
             self.object_type = None
         return super(DAList, self).init(**kwargs)
+    def clear(self):
+        self.elements = list()
     def appendObject(self, *pargs, **kwargs):
         """Creates a new object and adds it to the list.
         Takes an optional argument, which is the type of object
@@ -368,6 +371,8 @@ class DADict(DAObject):
         if not hasattr(self, 'object_type'):
             self.object_type = None
         return super(DADict, self).init(**kwargs)
+    def clear(self):
+        self.elements = list()
     def initializeObject(self, *pargs, **kwargs):
         """Creates a new object and creates an entry in the dictionary for it.
         The first argument is the name of the dictionary key to set.
@@ -570,6 +575,8 @@ class DASet(DAObject):
             self.gathered = True
             del kwargs['elements']
         return super(DASet, self).init(**kwargs)
+    def clear(self):
+        self.elements = list()
     def add(self, *pargs):
         """Adds the arguments to the set, unpacking each argument if it is a
         group of some sort (i.e. it is iterable)."""
@@ -775,6 +782,19 @@ class DAFile(DAObject):
         return self.show()
     def __unicode__(self):
         return unicode(self.__str__())
+    def retrieve(self):
+        self.file_info = file_finder(self.number)
+    def path(self):
+        """Returns a filename at which the file can be accessed"""
+        if not hasattr(self, 'file_info'):
+            self.retrieve()
+        return self.file_info['fullpath']
+    def commit(self):
+        """Ensures that changes to the file are saved and available in the 
+        future
+        """
+        if hasattr(self, 'file_info') and 'savedfile' in self.file_info:
+            self.file_info['savedfile'].finalize()
     def show(self, width=None):
         """Inserts markup that displays the file as an image.  Takes an
         optional keyword argument width.

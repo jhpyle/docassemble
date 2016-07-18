@@ -13,6 +13,11 @@ from docassemble.base.logger import logmessage
 style_find = re.compile(r'{\s*(\\s([1-9])[^\}]+)\\sbasedon[^\}]+heading ([0-9])', flags=re.DOTALL)
 PANDOC_PATH = daconfig.get('pandoc', 'pandoc')
 LIBREOFFICE_PATH = daconfig.get('libreoffice', 'libreoffice')
+convertible_mimetypes = {"application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx", "application/vnd.oasis.opendocument.text": "odt"}
+convertible_extensions = {"docx": "docx", "odt": "odt"}
+if daconfig.get('libreoffice', 'libreoffice') is not None:
+    convertible_mimetypes.update({"application/msword": "doc", "application/rtf": "rtf"})
+    convertible_extensions.update({"doc": "doc", "rtf": "rtf"})
 
 def set_pandoc_path(path):
     global PANDOC_PATH

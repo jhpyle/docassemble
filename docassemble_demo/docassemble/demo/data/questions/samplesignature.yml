@@ -1,0 +1,8 @@
+metadata:
+  title: Sample
+---
+mandatory: true
+signature: the_signature
+question: This is the main message
+subquestion: This is above the signature
+under: This is under the signature

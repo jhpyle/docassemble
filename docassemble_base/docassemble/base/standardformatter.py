@@ -238,34 +238,38 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                 onchange.append(field.saveas)
             if hasattr(field, 'saveas'):
                 varnames[safeid('_field_' + str(field.number))] = field.saveas
+                if hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras:
+                    the_saveas = safeid('_field_' + str(field.number))
+                else:
+                    the_saveas = field.saveas
                 if status.extras['required'][field.number]:
                     #sys.stderr.write(field.datatype + "\n")
-                    validation_rules['rules'][field.saveas] = {'required': True}
-                    validation_rules['messages'][field.saveas] = {'required': word("This field is required.")}
+                    validation_rules['rules'][the_saveas] = {'required': True}
+                    validation_rules['messages'][the_saveas] = {'required': word("This field is required.")}
                 else:
-                    validation_rules['rules'][field.saveas] = {'required': False}
+                    validation_rules['rules'][the_saveas] = {'required': False}
                 for key in ['minlength', 'maxlength']:
                     if hasattr(field, 'extras') and key in field.extras and key in status.extras:
                         #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
-                        validation_rules['rules'][field.saveas][key] = int(status.extras[key][field.number])
+                        validation_rules['rules'][the_saveas][key] = int(status.extras[key][field.number])
             if hasattr(field, 'datatype'):
                 if field.datatype == 'date':
-                    validation_rules['rules'][field.saveas]['date'] = True
-                    validation_rules['messages'][field.saveas]['date'] = word("You need to enter a valid date.")
+                    validation_rules['rules'][the_saveas]['date'] = True
+                    validation_rules['messages'][the_saveas]['date'] = word("You need to enter a valid date.")
                 if field.datatype == 'email':
-                    validation_rules['rules'][field.saveas]['email'] = True
+                    validation_rules['rules'][the_saveas]['email'] = True
                     if status.extras['required'][field.number]:
-                        validation_rules['rules'][field.saveas]['notEmpty'] = True
-                        validation_rules['messages'][field.saveas]['notEmpty'] = word("This field is required.")
-                    validation_rules['messages'][field.saveas]['email'] = word("You need to enter a complete e-mail address.")
+                        validation_rules['rules'][the_saveas]['notEmpty'] = True
+                        validation_rules['messages'][the_saveas]['notEmpty'] = word("This field is required.")
+                    validation_rules['messages'][the_saveas]['email'] = word("You need to enter a complete e-mail address.")
                 if field.datatype in ['number', 'currency', 'float', 'integer']:
-                    validation_rules['rules'][field.saveas]['number'] = True
-                    validation_rules['messages'][field.saveas]['number'] = word("You need to enter a number.")
+                    validation_rules['rules'][the_saveas]['number'] = True
+                    validation_rules['messages'][the_saveas]['number'] = word("You need to enter a number.")
                     #sys.stderr.write("Considering adding validation rule\n")
                     for key in ['min', 'max']:
                         if hasattr(field, 'extras') and key in field.extras and key in status.extras:
                             #sys.stderr.write("Adding validation rule for " + str(key) + "\n")
-                            validation_rules['rules'][field.saveas][key] = int(status.extras[key][field.number])
+                            validation_rules['rules'][the_saveas][key] = int(status.extras[key][field.number])
                 if (field.datatype in ['files', 'file', 'camera', 'camcorder', 'microphone']):
                     enctype_string = ' enctype="multipart/form-data"'
                     files.append(field.saveas)
@@ -888,13 +892,36 @@ def input_for(status, field, wide=False):
     elif hasattr(field, 'datatype'):
         if field.datatype == 'boolean':
             label_text = markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True, escape=True)
-            if field.sign > 0:
-                output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon" type="checkbox" value="True" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
+            if hasattr(field, 'inputtype') and field.inputtype in ['yesnoradio', 'noyesradio']:
+                inner_fieldlist = list()
+                id_index = 0
+                if field.sign > 0:
+                    for pair in [['True', status.question.yes()], ['False', status.question.no()]]:
+                        formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
+                        if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue)):
+                            ischecked = ' checked="checked"'
+                        else:
+                            ischecked = ''
+                        inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
+                        id_index += 1
+                else:
+                    for pair in [['False', status.question.yes()], ['True', status.question.no()]]:
+                        formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
+                        if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue)):
+                            ischecked = ' checked="checked"'
+                        else:
+                            ischecked = ''
+                        inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
+                        id_index += 1
+                output += "".join(inner_fieldlist)
             else:
-                output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon" type="checkbox" value="False" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
-            if defaultvalue:
-                output += ' checked'
-            output += '/> '
+                if field.sign > 0:
+                    output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon" type="checkbox" value="True" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
+                else:
+                    output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon" type="checkbox" value="False" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
+                if defaultvalue:
+                    output += ' checked'
+                output += '/> '
         elif field.datatype == 'threestate':
             inner_fieldlist = list()
             id_index = 0
@@ -978,7 +1005,7 @@ def from_safeid(text):
     return(codecs.decode(text, 'base64').decode('utf-8'))
 
 def escape_id(text):
-    return text
+    return str(text)
     #return re.sub(r'(:|\.|\[|\]|,|=)', r'\\\\\1', text)
 
 def do_escape_id(text):

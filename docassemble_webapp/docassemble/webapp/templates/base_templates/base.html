@@ -79,8 +79,6 @@
     <script src="{{ url_for('static', filename='app/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='app/jasny-bootstrap.min.js') }}"></script>
-    <script>
-      $("input[type!='hidden'], textarea, select").first().focus();
-    </script>{{ extra_js }}
+    {{ extra_js }}
   </body>
 </html>

@@ -780,7 +780,7 @@ def package_template_filename(the_file, **kwargs):
     parts = the_file.split(":")
     if len(parts) == 1:
         package = kwargs.get('package', None)
-        #logmessage("my package is " + str(package))
+        logmessage("my package is " + str(package))
         if package is not None:
             parts = [package, the_file]
             #logmessage("my package is " + str(package))
