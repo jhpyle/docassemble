@@ -2,7 +2,9 @@ import os
 import re
 import copy
 import sys
-from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
+import yaml
+import tempfile
+from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
 from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
 from docassemble.base.core import DAObject, DADict, DAList
 from docassemble.base.error import DAError
@@ -12,7 +14,7 @@ import shutil
 import datetime
 import types
 
-__all__ = ['Playground', 'PlaygroundSection', 'indent_by', 'varname', 'DAField', 'DAFieldList', 'DAQuestion', 'DAQuestionDict', 'DAInterview', 'DAUpload', 'DAUploadMultiple', 'DAAttachmentList', 'DAAttachment', 'to_yaml_file', 'base_name']
+__all__ = ['Playground', 'PlaygroundSection', 'indent_by', 'varname', 'DAField', 'DAFieldList', 'DAQuestion', 'DAQuestionDict', 'DAInterview', 'DAUpload', 'DAUploadMultiple', 'DAAttachmentList', 'DAAttachment', 'to_yaml_file', 'base_name', 'to_package_name']
 
 always_defined = set(["False", "None", "True", "current_info", "dict", "i", "list", "menu_items", "multi_user", "role", "role_event", "role_needed", "speak_text", "track_location", "url_args", "x"])
 replace_square_brackets = re.compile(r'\\\[ *([^\\]+)\\\]')
@@ -46,6 +48,27 @@ class DAInterview(DAObject):
         self.initializeAttribute('questions', DAQuestionDict)
         self.initializeAttribute('final_screen', DAQuestion)
         return super(DAInterview, self).init(**kwargs)
+    def package_info(self):
+        info = dict()
+        for field in ['dependencies', 'interview_files', 'template_files', 'module_files', 'static_files']:
+            if field not in info:
+                info[field] = list()
+        for package in ['docassemble', 'docassemble.base']:
+            if package not in info['dependencies']:
+                info['dependencies'].append(package)
+        info['readme'] = ""
+        info['description'] = self.title
+        info['version'] = "1.0"
+        info['license'] = "The MIT License"
+        info['url'] = "http://docassemble.org"
+        for block in self.all_blocks():
+            for template in block.templates_used:
+                if not re.search(r'^docassemble\.', template):
+                    info['template_files'].append(template)
+        info['interview_files'].append(self.yaml_file_name())
+        return info
+    def yaml_file_name(self):
+        return to_yaml_file(self.file_name)
     def all_blocks(self):
         out = list()
         for block in self.blocks:
@@ -71,6 +94,7 @@ class DAFieldList(DAList):
 class DAQuestion(DAObject):
     def init(self, **kwargs):
         self.initializeAttribute('field_list', DAFieldList)
+        self.templates_used = set()
         return super(DAQuestion, self).init(**kwargs)
     def source(self):
         content = ''
@@ -109,6 +133,7 @@ class DAQuestion(DAObject):
         elif self.type == 'template':
             content += "template: " + varname(self.field_list[0].variable) + "\n"
             content += "content file: " + oneline(self.template_file) + "\n"
+            self.templates_used.add(self.template_file)
         elif self.type == 'metadata':
             content += "metadata:\n"
             content += "  title: " + oneline(self.title) + "\n"
@@ -202,6 +227,26 @@ class Playground(PlaygroundSection):
         return super(Playground, self).__init__(current_info)
     def interview_url(self, filename):
         return self.current_info['url'] + '?i=docassemble.playground' + str(self.user_id) + ":" + filename
+    def write_package(self, pkgname, info):
+        the_yaml = yaml.safe_dump(info, default_flow_style=False, default_style = '|')
+        pg_packages = PlaygroundSection(self.current_info, 'packages')
+        pg_packages.write_file(pkgname, the_yaml)
+    def get_package_as_zip(self, pkgname):
+        pg_packages = PlaygroundSection(self.current_info, 'packages')
+        content = pg_packages.read_file(pkgname)
+        if content is None:
+            raise Exception("package " + str(pkgname) + " not found")
+        info = yaml.load(content)
+        author_info = dict()
+        author_info['author name'] = self.current_info['user']['firstname'] + " " + self.current_info['user']['lastname']
+        author_info['author email'] = self.current_info['user']['email']
+        author_info['author name and email'] = author_info['author name'] + ", " + author_info['author email']
+        author_info['first name'] = self.current_info['user']['firstname']
+        author_info['last name'] = self.current_info['user']['lastname']
+        author_info['id'] = self.user_id
+        zip_file = make_package_zip(pkgname, info, author_info)
+        file_number, extension, mimetype = docassemble.base.parse.save_numbered_file('docassemble-' + str(pkgname) + '.zip', zip_file.name)
+        return file_number
     def variables_from(self, content):
         interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=self.area.directory, path="docassemble.playground" + str(self.user_id) + ":_temp.yml", package='docassemble.playground' + str(self.user_id), testing=True)
         interview = interview_source.get_interview()
@@ -289,3 +334,10 @@ def to_yaml_file(text):
 
 def base_name(filename):
     return os.path.splitext(filename)[0]
+
+def to_package_name(text):
+    text = varname(text)
+    text = re.sub(r'\..*', r'', text)
+    text = re.sub(r'_', r'-', text)
+    return text
+    

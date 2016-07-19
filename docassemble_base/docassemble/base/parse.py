@@ -959,7 +959,7 @@ class Question:
             field_data = {'saveas': data['template']}
             self.fields.append(Field(field_data))
             self.content = TextObject(definitions + data['content'], names_used=self.mako_names)
-            logmessage("keys are: " + str(self.mako_names))
+            #logmessage("keys are: " + str(self.mako_names))
             if 'subject' in data:
                 self.subcontent = TextObject(definitions + data['subject'], names_used=self.mako_names)
             else:
@@ -1822,7 +1822,7 @@ class Interview:
             source_code = fix_tabs.sub('  ', source_code)
             if source.testing:
                 try:
-                    logmessage("Package is " + str(source_package))
+                    #logmessage("Package is " + str(source_package))
                     document = yaml.load(source_code)
                     if document is not None:
                         question = Question(document, self, source=source, package=source_package, source_code=source_code)

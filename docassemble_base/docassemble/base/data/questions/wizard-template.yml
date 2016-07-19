@@ -52,7 +52,10 @@ code: |
   if templates_already_uploaded:
     chosen_templates = [file for file in template_choices if template_choices[file] is True]
   else:
-    chosen_templates = [templates.copy_from(file.path(), file.filename) for file in template_uploads]
+    chosen_templates = list()
+    for the_file in template_uploads:
+      new_template = templates.copy_from(the_file.path(), the_file.filename)
+      chosen_templates.append(new_template)
   for template_filename in chosen_templates:
     if templates.is_markdown(template_filename):
       markdown_filename = template_filename
@@ -109,9 +112,12 @@ code: |
         new_question.field_list[0].variable = var
         ok = False
   pg = Playground(current_info)
-  yaml_file = to_yaml_file(interview.file_name)
+  yaml_file = interview.yaml_file_name()
   pg.write_file(yaml_file, interview.source())
   interview_url = pg.interview_url(yaml_file)
+  package_name = to_package_name(interview.file_name)
+  pg.write_package(package_name, interview.package_info())
+  zip_url = url_of('create_playground_package', package=package_name)
   all_done
 ---
 sets: all_done
@@ -123,13 +129,16 @@ subquestion: |
   <a target="_blank" href="${ interview_url }">run the interview</a>
   to see how it works.
 
+  You can also [download it as a package].
+
   To make changes to your interview, go to the [Playground] and edit
   `${ yaml_file }`.
   % if len(attachments):
   To edit the templates, go to the [Templates section] and edit
   ${ comma_and_list(map(lambda x: '`' + x.markdown_filename + '`', attachments.elements)) }.
   % endif
-  
+
+  [download it as a package]: ${ zip_url }
   [Playground]: ${ url_of('playground') }
   [Templates section]: ${ url_of('playgroundtemplate') }
 buttons:

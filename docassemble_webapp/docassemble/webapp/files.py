@@ -4,6 +4,8 @@ import shutil
 import urllib
 import tempfile
 import mimetypes
+import zipfile
+import datetime
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
 from docassemble.webapp.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED
@@ -197,3 +199,165 @@ def get_ext_and_mimetype(filename):
     if extension == '3gpp':
         mimetype = 'audio/3gpp'
     return(extension, mimetype)
+
+def make_package_zip(pkgname, info, author_info):
+    temp_zip = tempfile.NamedTemporaryFile(suffix=".zip")
+    area = dict()
+    for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundmodules']:
+        area[sec] = SavedFile(author_info['id'], fix=True, section=sec)
+    dependencies = ", ".join(map(lambda x: repr(x), sorted(info['dependencies'])))
+    initpy = """\
+try:
+    __import__('pkg_resources').declare_namespace(__name__)
+except ImportError:
+    __path__ = __import__('pkgutil').extend_path(__path__, __name__)
+
+"""
+    licensetext = info['license']
+    if re.search(r'MIT License', licensetext):
+        licensetext += '\n\nCopyright (c) ' + str(datetime.datetime.now().year) + ' ' + unicode(author_info['first name']) + " " + unicode(author_info['first name']) + """
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+    if info['readme'] and re.search(r'[A-Za-z]', info['readme']):
+        readme = info['readme']
+    else:
+        readme = '# docassemble.' + str(pkgname) + "\n\n" + info['description'] + "\n\n## Author\n\n" + author_info['author name and email'] + "\n\n"
+    setuppy = """\
+#!/usr/bin/env python
+
+import os
+import sys
+from setuptools import setup, find_packages
+from fnmatch import fnmatchcase
+from distutils.util import convert_path
+
+standard_exclude = ('*.py', '*.pyc', '*~', '.*', '*.bak', '*.swp*')
+standard_exclude_directories = ('.*', 'CVS', '_darcs', './build', './dist', 'EGG-INFO', '*.egg-info')
+def find_package_data(where='.', package='', exclude=standard_exclude, exclude_directories=standard_exclude_directories):
+    out = {}
+    stack = [(convert_path(where), '', package)]
+    while stack:
+        where, prefix, package = stack.pop(0)
+        for name in os.listdir(where):
+            fn = os.path.join(where, name)
+            if os.path.isdir(fn):
+                bad_name = False
+                for pattern in exclude_directories:
+                    if (fnmatchcase(name, pattern)
+                        or fn.lower() == pattern.lower()):
+                        bad_name = True
+                        break
+                if bad_name:
+                    continue
+                if os.path.isfile(os.path.join(fn, '__init__.py')):
+                    if not package:
+                        new_package = name
+                    else:
+                        new_package = package + '.' + name
+                        stack.append((fn, '', new_package))
+                else:
+                    stack.append((fn, prefix + name + '/', package))
+            else:
+                bad_name = False
+                for pattern in exclude:
+                    if (fnmatchcase(name, pattern)
+                        or fn.lower() == pattern.lower()):
+                        bad_name = True
+                        break
+                if bad_name:
+                    continue
+                out.setdefault(package, []).append(prefix+name)
+    return out
+
+"""
+    setuppy += "setup(name='docassemble." + str(pkgname) + "',\n" + """\
+      version=""" + repr(info['version']) + """,
+      description=(""" + repr(info['description']) + """),
+      author=""" + repr(author_info['author name']) + """,
+      author_email=""" + repr(author_info['author email']) + """,
+      license=""" + repr(info['license']) + """,
+      url=""" + repr(info['url']) + """,
+      packages=find_packages(),
+      namespace_packages = ['docassemble'],
+      install_requires = [""" + dependencies + """],
+      zip_safe = False,
+      package_data=find_package_data(where='docassemble/""" + str(pkgname) + """/', package='docassemble.""" + str(pkgname) + """'),
+     )
+
+"""
+    templatereadme = """\
+# Template directory
+
+If you want to use non-standard document templates with pandoc,
+put template files in this directory.
+"""
+    staticreadme = """\
+# Static file directory
+
+If you want to make files available in the web app, put them in
+this directory.
+"""
+    directory = tempfile.mkdtemp()
+    packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
+    maindir = os.path.join(packagedir, 'docassemble', str(pkgname))
+    questionsdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'questions')
+    templatesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'templates')
+    staticdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'static')
+    os.makedirs(questionsdir)
+    os.makedirs(templatesdir)
+    os.makedirs(staticdir)
+    for the_file in info['interview_files']:
+        orig_file = os.path.join(area['playground'].directory, the_file)
+        if os.path.exists(orig_file):
+            shutil.copyfile(orig_file, os.path.join(questionsdir, the_file))
+    for the_file in info['template_files']:
+        orig_file = os.path.join(area['playgroundtemplate'].directory, the_file)
+        if os.path.exists(orig_file):
+            shutil.copyfile(orig_file, os.path.join(templatesdir, the_file))
+    for the_file in info['module_files']:
+        orig_file = os.path.join(area['playgroundmodules'].directory, the_file)
+        if os.path.exists(orig_file):
+            shutil.copyfile(orig_file, os.path.join(maindir, the_file))
+    for the_file in info['static_files']:
+        orig_file = os.path.join(area['playgroundstatic'].directory, the_file)
+        if os.path.exists(orig_file):
+            shutil.copyfile(orig_file, os.path.join(staticdir, the_file))
+    with open(os.path.join(packagedir, 'README.md'), 'a') as the_file:
+        the_file.write(readme)
+    with open(os.path.join(packagedir, 'LICENSE'), 'a') as the_file:
+        the_file.write(licensetext)
+    with open(os.path.join(packagedir, 'setup.py'), 'a') as the_file:
+        the_file.write(setuppy)
+    with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'a') as the_file:
+        the_file.write(initpy)
+    with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'a') as the_file:
+        the_file.write('')
+    with open(os.path.join(templatesdir, 'README.md'), 'a') as the_file:
+        the_file.write(templatereadme)
+    with open(os.path.join(staticdir, 'README.md'), 'a') as the_file:
+        the_file.write(staticreadme)
+    zf = zipfile.ZipFile(temp_zip.name, mode='w')
+    trimlength = len(directory) + 1
+    for root, dirs, files in os.walk(packagedir):
+        for file in files:
+            thefilename = os.path.join(root, file)
+            zf.write(thefilename, thefilename[trimlength:])
+    zf.close()
+    return temp_zip

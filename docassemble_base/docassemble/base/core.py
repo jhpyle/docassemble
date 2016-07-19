@@ -788,6 +788,9 @@ class DAFile(DAObject):
         """Returns a filename at which the file can be accessed"""
         if not hasattr(self, 'file_info'):
             self.retrieve()
+        if 'fullpath' not in self.file_info:
+            #logmessage("file_info is " + str(self.file_info))
+            raise Exception("fullpath not found")
         return self.file_info['fullpath']
     def commit(self):
         """Ensures that changes to the file are saved and available in the 

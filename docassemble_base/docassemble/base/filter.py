@@ -96,7 +96,7 @@ file_finder = blank_file_finder
 
 def set_file_finder(func):
     global file_finder
-    #logmessage("set the file finder to " + str(func) + "\n")
+    #sys.stderr.write("set the file finder to " + str(func) + "\n")
     file_finder = func
     return
 
