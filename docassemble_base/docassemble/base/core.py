@@ -186,23 +186,27 @@ class DAList(DAObject):
         and "sue" if there is more than one plaintiff."""
         if not self.gathering:
             self.gathered
-        if len(self.elements) > 1:
-            tense = 'plural'
-        else:
-            tense = 3
         if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
-            return verb_past(the_verb, person=tense)
+            if len(self.elements) > 1:
+                tense = 'ppl'
+            else:
+                tense = '3gp'
+            return verb_past(the_verb, tense)
         else:
-            return verb_present(the_verb, person=tense)
+            if len(self.elements) > 1:
+                tense = 'pl'
+            else:
+                tense = '3sg'
+            return verb_present(the_verb, tense)
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except it returns the past tense of the verb."""        
         if not self.gathering:
             self.gathered
         if len(self.elements) > 1:
-            tense = 'plural'
+            tense = 'ppl'
         else:
-            tense = 3
-        return verb_past(the_verb, person=tense)
+            tense = '3gp'
+        return verb_past(the_verb, tense)
     def as_singular_noun(self):
         """Returns a human-readable expression of the object based on its instanceName,
         without making it plural.  E.g., case.plaintiff.child.as_singular_noun() 
@@ -412,23 +416,27 @@ class DADict(DAObject):
         player."""
         if not self.gathering:
             self.gathered
-        if len(self.elements) > 1:
-            tense = 'plural'
-        else:
-            tense = 3
         if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
-            return verb_past(the_verb, person=tense)
+            if len(self.elements) > 1:
+                tense = 'ppl'
+            else:
+                tense = '3gp'
+            return verb_past(the_verb, tense)
         else:
-            return verb_present(the_verb, person=tense)
+            if len(self.elements) > 1:
+                tense = 'pl'
+            else:
+                tense = '3sg'
+            return verb_present(the_verb, tense)
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except it returns the past tense of the verb."""        
         if not self.gathering:
             self.gathered
         if len(self.elements) > 1:
-            tense = 'plural'
+            tense = 'ppl'
         else:
-            tense = 3
-        return verb_past(the_verb, person=tense)
+            tense = '3gp'
+        return verb_past(the_verb, tense)
     def as_singular_noun(self):
         """Returns a human-readable expression of the object based on its
         instanceName, without making it plural.  E.g.,
@@ -596,23 +604,27 @@ class DASet(DAObject):
         """
         if not self.gathering:
             self.gathered
-        if len(self.elements) > 1:
-            tense = 'plural'
-        else:
-            tense = 3
         if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
-            return verb_past(the_verb, person=tense)
+            if len(self.elements) > 1:
+                tense = 'ppl'
+            else:
+                tense = '3gp'
+            return verb_past(the_verb, tense)
         else:
-            return verb_present(the_verb, person=tense)
+            if len(self.elements) > 1:
+                tense = 'pl'
+            else:
+                tense = '3sg'
+            return verb_present(the_verb, tense)
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except it returns the past tense of the verb."""        
         if not self.gathering:
             self.gathered
         if len(self.elements) > 1:
-            tense = 'plural'
+            tense = 'ppl'
         else:
-            tense = 3
-        return verb_past(the_verb, person=tense)
+            tense = '3gp'
+        return verb_past(the_verb, tense)
     def as_singular_noun(self):
         """Returns a human-readable expression of the object based on its
         instanceName, without making it plural.  E.g.,

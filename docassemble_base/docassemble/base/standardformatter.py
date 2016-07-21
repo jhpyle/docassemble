@@ -11,7 +11,6 @@ import json
 import random
 import sys
 import codecs
-import html2text
 
 def tracker_tag(status):
     output = ''
@@ -654,7 +653,6 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         for attribution in sorted(status.attributions):
             output += '            <div><attribution><small>' + markdown_to_html(attribution, strip_newlines=True) + '</small></attribution></div>\n'
         if status.using_screen_reader:
-            #status.screen_reader_text['help'] = html2text.html2text(output)
             status.screen_reader_text['help'] = unicode(output)
         master_output += output
         master_output += '          </section>\n'

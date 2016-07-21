@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import types
-import en
+import pattern.en
 import re
 import os
 import inspect
@@ -522,16 +522,16 @@ language_functions = {
         'en': prefix_constructor('do you ')
     },
     'verb_past': {
-        'en': lambda x, **kwargs: en.verb.past(x, **kwargs)
+        'en': lambda x, *pargs, **kwargs: pattern.en.conjugate(x, *pargs, **kwargs)
     },
     'verb_present': {
-        'en': lambda x, **kwargs: en.verb.present(x, **kwargs)
+        'en': lambda x, *pargs, **kwargs: pattern.en.conjugate(x, *pargs, **kwargs)
     },
     'noun_plural': {
-        'en': lambda x, **kwargs: en.noun.plural(x, **kwargs)
+        'en': lambda x, *pargs, **kwargs: pattern.en.pluralize(x, *pargs, **kwargs)
     },
     'indefinite_article': {
-        'en': lambda x, **kwargs: en.noun.article(x, **kwargs)
+        'en': lambda x, *pargs, **kwargs: pattern.en.article(x, *pargs, **kwargs)
     },
     'currency_symbol': {
         '*': currency_symbol_default

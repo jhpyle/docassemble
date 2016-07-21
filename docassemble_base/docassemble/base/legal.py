@@ -14,7 +14,7 @@ import re
 import urllib
 import sys
 import threading
-import html2text
+from bs4 import BeautifulSoup
 import yaml
 import us
 from decimal import Decimal
@@ -822,7 +822,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None
             subject = template.subject
         body_html = '<html><body>' + markdown_to_html(template.content) + '</body></html>'
         if body is None:
-            body = html2text.html2text(body_html)
+            body = Beautifulsoup(body_html).get_text('\n')
         if html is None:
             html = body_html
     if body is None and html is None:
