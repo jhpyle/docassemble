@@ -443,7 +443,7 @@ class DADict(DAObject):
         the dictionary has one key or more than one key.  E.g.,
         player.as_noun() returns "player" or "players," as
         appropriate.  If an argument is supplied, the argument is used
-        instead of the instanceName."""
+        as the noun instead of the instanceName."""
         the_noun = self.instanceName
         if not self.gathering:
             self.gathered

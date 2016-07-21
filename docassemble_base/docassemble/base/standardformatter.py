@@ -630,33 +630,34 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         status.screen_reader_text['question'] = unicode(output)
     master_output += output
     master_output += '          </section>\n'
-    master_output += '          <section id="help" class="tab-pane col-lg-6 col-md-8 col-sm-10">\n'
-    output = '<div><a id="backToQuestion" data-toggle="tab" href="#question" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back to question") + '</a></div>'
-    if status.using_screen_reader and 'help' in status.screen_reader_links:
-        output += '            <div>\n' + indent_by(audio_control(status.screen_reader_links['help'], preload="none"), 14) + '            </div>\n'
-    for help_section in status.helpText:
-        if help_section['heading'] is not None:
-            output += '            <div class="page-header"><h3>' + help_section['heading'] + '</h3></div>\n'
-        else:
-            output += '            <div class="page-header"><h3>' + word('Help with this question') + '</h3></div>\n'
-        if help_section['audiovideo'] is not None:
-            uses_audio_video = True
-            audio_urls = get_audio_urls(help_section['audiovideo'])
-            if len(audio_urls):
-                output += '            <div>\n' + indent_by(audio_control(audio_urls), 14) + '            </div>\n'
-            video_urls = get_video_urls(help_section['audiovideo'])
-            if len(video_urls):
-                output += '            <div>\n' + indent_by(video_control(video_urls), 14) + '            </div>\n'
-        output += markdown_to_html(help_section['content'], status=status, indent=12)
-    if len(status.attributions):
-        output += '            <br/><br/><br/><br/><br/><br/><br/>\n'
-    for attribution in sorted(status.attributions):
-        output += '            <div><attribution><small>' + markdown_to_html(attribution, strip_newlines=True) + '</small></attribution></div>\n'
-    if status.using_screen_reader:
-        #status.screen_reader_text['help'] = html2text.html2text(output)
-        status.screen_reader_text['help'] = unicode(output)
-    master_output += output
-    master_output += '          </section>\n'
+    if len(status.helpText):
+        master_output += '          <section id="help" class="tab-pane col-lg-6 col-md-8 col-sm-10">\n'
+        output = '<div><a id="backToQuestion" data-toggle="tab" href="#question" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back to question") + '</a></div>'
+        if status.using_screen_reader and 'help' in status.screen_reader_links:
+            output += '            <div>\n' + indent_by(audio_control(status.screen_reader_links['help'], preload="none"), 14) + '            </div>\n'
+        for help_section in status.helpText:
+            if help_section['heading'] is not None:
+                output += '            <div class="page-header"><h3>' + help_section['heading'] + '</h3></div>\n'
+            else:
+                output += '            <div class="page-header"><h3>' + word('Help with this question') + '</h3></div>\n'
+            if help_section['audiovideo'] is not None:
+                uses_audio_video = True
+                audio_urls = get_audio_urls(help_section['audiovideo'])
+                if len(audio_urls):
+                    output += '            <div>\n' + indent_by(audio_control(audio_urls), 14) + '            </div>\n'
+                video_urls = get_video_urls(help_section['audiovideo'])
+                if len(video_urls):
+                    output += '            <div>\n' + indent_by(video_control(video_urls), 14) + '            </div>\n'
+            output += markdown_to_html(help_section['content'], status=status, indent=12)
+        if len(status.attributions):
+            output += '            <br/><br/><br/><br/><br/><br/><br/>\n'
+        for attribution in sorted(status.attributions):
+            output += '            <div><attribution><small>' + markdown_to_html(attribution, strip_newlines=True) + '</small></attribution></div>\n'
+        if status.using_screen_reader:
+            #status.screen_reader_text['help'] = html2text.html2text(output)
+            status.screen_reader_text['help'] = unicode(output)
+        master_output += output
+        master_output += '          </section>\n'
     extra_scripts.append("""<script>
       var validation_rules = """ + json.dumps(validation_rules) + """;
       validation_rules.submitHandler = function(form){

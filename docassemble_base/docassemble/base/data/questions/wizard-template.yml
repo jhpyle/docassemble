@@ -17,6 +17,7 @@ initial: true
 code: |
   if current_info['user']['is_anonymous']:
       message("You are not authorized to view this page")
+  store_current_info(current_info)
 ---
 question: |
   Have you already uploaded the template (or templates) you want to use?
@@ -44,11 +45,11 @@ fields:
   - no label: template_choices
     datatype: checkboxes
     code: |
-      PlaygroundSection(current_info, 'template').reduced_file_list()
+      PlaygroundSection('template').reduced_file_list()
 ---
 code: |
   attachments.clear()
-  templates = PlaygroundSection(current_info, 'template')
+  templates = PlaygroundSection('template')
   if templates_already_uploaded:
     chosen_templates = [file for file in template_choices if template_choices[file] is True]
   else:
@@ -67,8 +68,11 @@ code: |
     attachment.markdown_filename = markdown_filename
     new_template = interview.questions.initializeObject(base_file)
     new_template.type = 'template'
+    new_template.interview = interview
     new_template.field_list.appendObject()
     new_template.field_list[0].variable = base_file
+    new_template.field_list[0].field_type = 'template'
+    new_template.field_list[0].question = new_template
     new_template.template_file = markdown_filename
   attachments.gathered = True
 ---
@@ -85,16 +89,19 @@ mandatory: true
 code: |
   interview.demonstrate()
   need(attachments.gathered)
-  varsinuse = Playground(current_info).variables_from(interview.source())
+  varsinuse = Playground().variables_from(interview.source())
   main_code.type = 'code'
   main_code.is_mandatory = True
   main_code.code = 'all_done'
   main_code.demonstrated = True
+  interview.target_variable = 'all_done'
   end_question = interview.questions.initializeObject('all_done')
   end_question.type = 'question'
-  end_question.question_type = 'end_attachment'
+  end_question.interview = interview
   end_question.field_list.appendObject()
   end_question.field_list[0].variable = 'all_done'
+  end_question.field_list[0].field_type = 'end_attachment'
+  end_question.field_list[0].question = end_question
   end_question.attachments = attachments
   interview.blocks.append(main_code)
 ---
@@ -104,14 +111,16 @@ code: |
   ok = False
   while not ok:
     ok = True
-    varsinuse = Playground(current_info).variables_from(interview.source())
+    varsinuse = Playground().variables_from(interview.source())
     for var in varsinuse['undefined_names']:
       if var not in interview.questions:
         new_question = interview.questions.initializeObject(var)
+        new_question.interview = interview
         new_question.field_list.appendObject()
         new_question.field_list[0].variable = var
+        new_question.field_list[0].question = new_question
         ok = False
-  pg = Playground(current_info)
+  pg = Playground()
   yaml_file = interview.yaml_file_name()
   pg.write_file(yaml_file, interview.source())
   interview_url = pg.interview_url(yaml_file)
@@ -123,8 +132,6 @@ code: |
 sets: all_done
 question: Here is the interview you created
 subquestion: |
-  ${ indent_by(interview.source(), 4) }
-
   You can try to
   <a target="_blank" href="${ interview_url }">run the interview</a>
   to see how it works.
@@ -132,11 +139,13 @@ subquestion: |
   You can also [download it as a package].
 
   To make changes to your interview, go to the [Playground] and edit
-  `${ yaml_file }`.
+  [`${ yaml_file }`](${ url_of('playground', file=yaml_file) }).
   % if len(attachments):
-  To edit the templates, go to the [Templates section] and edit
-  ${ comma_and_list(map(lambda x: '`' + x.markdown_filename + '`', attachments.elements)) }.
+  To edit the ${ attachments.as_noun('template') }, go to the
+  [Templates section] and edit ${ attachments.url_list() }.
   % endif
+
+  ${ indent_by(interview.source(), 4) }
 
   [download it as a package]: ${ zip_url }
   [Playground]: ${ url_of('playground') }
@@ -148,8 +157,8 @@ generic object: DAQuestion
 question: |
   Signature collection page
 subquestion: |
-  The variable `${ x.field_list[0].variable }` will be the image of the
-  user's signature.  The screen that asks for the signature is
+  The variable `${ x.field_list[0].variable }` will contain the image
+  of the user's signature.  The screen that asks for the signature is
   configurable.
 
   Click Help to see a model of the various parts of the signature
@@ -169,7 +178,7 @@ help: |
 
   The variables you can use are:
 
-  % for var in varsinuse['all_names_reduced']:
+  % for var in x.names_reduced():
   * `${ var }`
   % endfor
   % endif
@@ -189,7 +198,8 @@ question: |
   the interview?
   % else:
   How would you like to ask the question that defines
-  the variable `${ x.field_list[0].variable }`?
+  the ${ x.field_list.as_noun('variable') }
+  ${ x.field_list }?
   % endif
 subquestion: |
   % if x.field_list[0].variable == 'all_done':
@@ -224,12 +234,24 @@ fields:
 ---
 generic object: DAQuestion
 question: |
+  If you would like the question that sets
+  `${ x.field_list[0].variable }` to set any other variables,
+  select the additional variables.
+fields:
+  - no label: x.additional_fields
+    datatype: checkboxes
+    code: |
+      x.other_variables()
+---
+generic object: DAQuestion
+question: |
   Will the variable `${ x.field_list[0].variable }` be set by asking the
-  user a question, or by evaluating a logic statement?
+  user a question, or by evaluating a logic statement, or something else?
 field: x.type
 choices:
-  - A Question: question
-  - A Logic Statement: code
+  - A question: question
+  - A logic statement: code
+  - Gathering a signature: signature
 ---
 generic object: DAQuestion
 question: |
@@ -242,18 +264,19 @@ fields:
     datatype: area
     default: "${ x.field_list[0].variable } = "
 ---
-generic object: DAQuestion
+generic object: DAField
 question: |
-  What type of answer is required to the question
-  "${ x.question_text }"
+  What type of answer is required to define
+  `${ x.variable }`?
 subquestion: |
-  For example, if the type of question is "Simple yes/no," then
-  `${ x.field_list[0].variable }` will be defined either as `True` or
+  For example, if the type of answer is "Simple yes/no," then
+  `${ x.variable }` will be defined either as `True` or
   `False`.
-field: x.question_type
+field: x.field_type
 choices:
-  - "Simple yes/no": yesno
-  - "Short line of text": text
+  - "Yes or no": yesno
+  - "Yes, no, or I don't know": yesnomayne
+  - "One line of text": text
   - "Large area of text": area
 ---
 generic object: DAField

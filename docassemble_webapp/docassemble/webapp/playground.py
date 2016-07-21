@@ -4,17 +4,19 @@ import copy
 import sys
 import yaml
 import tempfile
+import threading
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
 from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
 from docassemble.base.core import DAObject, DADict, DAList
 from docassemble.base.error import DAError
 from docassemble.base.logger import logmessage
+import docassemble.base.util
 import docassemble.base.parse
 import shutil
 import datetime
 import types
 
-__all__ = ['Playground', 'PlaygroundSection', 'indent_by', 'varname', 'DAField', 'DAFieldList', 'DAQuestion', 'DAQuestionDict', 'DAInterview', 'DAUpload', 'DAUploadMultiple', 'DAAttachmentList', 'DAAttachment', 'to_yaml_file', 'base_name', 'to_package_name']
+__all__ = ['Playground', 'PlaygroundSection', 'indent_by', 'varname', 'DAField', 'DAFieldList', 'DAQuestion', 'DAQuestionDict', 'DAInterview', 'DAUpload', 'DAUploadMultiple', 'DAAttachmentList', 'DAAttachment', 'to_yaml_file', 'base_name', 'to_package_name', 'store_current_info']
 
 always_defined = set(["False", "None", "True", "current_info", "dict", "i", "list", "menu_items", "multi_user", "role", "role_event", "role_needed", "speak_text", "track_location", "url_args", "x"])
 replace_square_brackets = re.compile(r'\\\[ *([^\\]+)\\\]')
@@ -25,6 +27,17 @@ invalid_var_characters = re.compile(r'[^A-Za-z0-9_]+')
 digit_start = re.compile(r'^[0-9]+')
 newlines = re.compile(r'\n')
 
+class ThreadVariables(threading.local):
+    initialized = False
+    current_info = dict()
+    def __init__(self, **kw):
+        if self.initialized:
+            raise SystemError('__init__ called too many times')
+        self.initialized = True
+        self.__dict__.update(kw)
+
+this_thread = ThreadVariables()
+
 class DAAttachment(DAObject):
     def init(self, **kwargs):
         return super(DAAttachment, self).init(**kwargs)
@@ -33,6 +46,8 @@ class DAAttachmentList(DAList):
     def init(self, **kwargs):
         self.object_type = DAAttachment
         return super(DAAttachmentList, self).init(**kwargs)
+    def url_list(self):
+        return docassemble.base.util.comma_and_list(map(lambda x: '[`' + x.markdown_filename + '`](' + docassemble.base.util.url_of("playgroundfiles", section="template", file=x.markdown_filename) + ')', self.elements))
 
 class DAUploadMultiple(DAObject):
     def init(self, **kwargs):
@@ -47,6 +62,7 @@ class DAInterview(DAObject):
         self.blocks = list()
         self.initializeAttribute('questions', DAQuestionDict)
         self.initializeAttribute('final_screen', DAQuestion)
+        self.target_variable = None
         return super(DAInterview, self).init(**kwargs)
     def package_info(self):
         info = dict()
@@ -81,6 +97,16 @@ class DAInterview(DAObject):
             block.demonstrated
     def source(self):
         return "---\n".join(map(lambda x: x.source(), self.all_blocks()))
+    def known_source(self, skip=None):
+        output = list()
+        for block in self.all_blocks():
+            if block is skip:
+                continue
+            try:
+                output.append(block.source(follow_additional_fields=False))
+            except:
+                pass
+        return "---\n".join(output)
 
 class DAField(DAObject):
     def init(self, **kwargs):
@@ -89,28 +115,48 @@ class DAField(DAObject):
 class DAFieldList(DAList):
     def init(self, **kwargs):
         self.object_type = DAField
+        self.gathered = True
         return super(DAFieldList, self).init(**kwargs)
+    def __str__(self):
+        return docassemble.base.util.comma_and_list(map(lambda x: '`' + x.variable + '`', self.elements))
 
 class DAQuestion(DAObject):
     def init(self, **kwargs):
         self.initializeAttribute('field_list', DAFieldList)
         self.templates_used = set()
         return super(DAQuestion, self).init(**kwargs)
-    def source(self):
+    def names_reduced(self):
+        varsinuse = Playground().variables_from(self.interview.known_source(skip=self))
+        var_list = sorted([field.variable for field in self.field_list])
+        return [var for var in varsinuse['all_names_reduced'] if var not in var_list and var != self.interview.target_variable]
+    def other_variables(self):
+        varsinuse = Playground().variables_from(self.interview.known_source(skip=self))
+        var_list = sorted([field.variable for field in self.field_list])
+        return [var for var in varsinuse['undefined_names'] if var not in var_list and var != self.interview.target_variable]
+    def source(self, follow_additional_fields=True):
         content = ''
         if self.type == 'question':
-            if self.question_type == 'end_attachment':
+            if self.field_list[0].field_type not in ['end_attachment']:
+                if follow_additional_fields and len(self.other_variables()):
+                    vars_in_question = [field.variable for field in self.field_list]
+                    for addl_field in sorted(self.additional_fields.keys()):
+                        if self.additional_fields[addl_field]:
+                            if addl_field not in vars_in_question:
+                                new_field = self.field_list.appendObject()
+                                new_field.variable = addl_field
+                                new_field.question = self
+                                self.interview.questions[addl_field] = self
+            if self.field_list[0].field_type == 'end_attachment':
                 content += "sets: " + varname(self.field_list[0].variable) + "\n"
-            elif self.question_type == 'signature':
-                content += "signature: " + varname(self.field_list[0].variable) + "\n"
-                if self.under_text:
-                    content += "under: |\n" + varname(self.under_text) + "\n"
             content += "question: |\n" + indent_by(self.question_text, 2)
             if self.subquestion_text != "":
                 content += "subquestion: |\n" + indent_by(self.subquestion_text, 2)
-            if self.question_type == 'yesno':
-                content += "yesno: " + varname(self.field_list[0].variable) + "\n"
-            elif self.question_type == 'end_attachment':
+            if len(self.field_list) == 1:
+                if self.field_list[0].field_type == 'yesno':
+                    content += "yesno: " + varname(self.field_list[0].variable) + "\n"
+                elif self.field_list[0].field_type == 'yesnomaybe':
+                    content += "yesnomaybe: " + varname(self.field_list[0].variable) + "\n"
+            if self.field_list[0].field_type == 'end_attachment':
                 content += "buttons:\n  - Exit: exit\n  - Restart: restart\n"
                 if self.attachments.gathered and len(self.attachments):
                     content += "attachments:\n"
@@ -118,14 +164,27 @@ class DAQuestion(DAObject):
                         content += "  - name: " + oneline(attachment.name) + "\n"
                         content += "    filename: " + varname(attachment.name) + "\n"
                         content += "    content: " + oneline(attachment.content) + "\n"
-            elif self.question_type in ['text', 'area']:
+            else:
                 content += "fields:\n"
-                if self.field_list[0].has_label:
-                    content += "  - " + repr(str(self.field_list[0].label)) + ": " + varname(self.field_list[0].variable) + "\n"
-                else:
-                    content += "  - no label: " + varname(self.field_list[0].variable) + "\n"
-                if self.question_type == 'area':
-                    content += "    datatype: area\n" 
+                for field in self.field_list:
+                    if field.has_label:
+                        content += "  - " + repr(str(field.label)) + ": " + varname(field.variable) + "\n"
+                    else:
+                        content += "  - no label: " + varname(field.variable) + "\n"
+                    if field.field_type == 'yesno':
+                        content += "    datatype: yesno\n"
+                    if field.field_type == 'yesnomaybe':
+                        content += "    datatype: yesnomaybe\n"
+                    if field.field_type == 'area':
+                        content += "    datatype: area\n"
+        elif self.type == 'signature':
+            content += "signature: " + varname(self.field_list[0].variable) + "\n"
+            self.under_text
+            content += "question: |\n" + indent_by(self.question_text, 2)
+            if self.subquestion_text != "":
+                content += "subquestion: |\n" + indent_by(self.subquestion_text, 2)
+            if self.under_text:
+                content += "under: |\n" + indent_by(self.under_text, 2)
         elif self.type == 'code':
             if hasattr(self, 'is_mandatory') and self.is_mandatory:
                 content += "mandatory: true\n"
@@ -147,11 +206,11 @@ class DAQuestionDict(DADict):
         return super(DAQuestionDict, self).init(**kwargs)
 
 class PlaygroundSection(object):
-    def __init__(self, current_info, section=''):
-        if current_info['user']['is_anonymous']:
+    def __init__(self, section=''):
+        if this_thread.current_info['user']['is_anonymous']:
             raise DAError("Users must be logged in to create Playground objects")
-        self.user_id = current_info['user']['theid']
-        self.current_info = current_info
+        self.user_id = this_thread.current_info['user']['theid']
+        self.current_info = this_thread.current_info
         self.section = section
         self.area = SavedFile(self.user_id, fix=True, section='playground' + self.section)
         self._update_file_list()
@@ -220,19 +279,19 @@ class PlaygroundSection(object):
         content = self.read_file(filename)
         if content is None:
             return None
-        return Playground(self.current_info).variables_from(content)
+        return Playground().variables_from(content)
 
 class Playground(PlaygroundSection):
-    def __init__(self, current_info):
-        return super(Playground, self).__init__(current_info)
+    def __init__(self):
+        return super(Playground, self).__init__()
     def interview_url(self, filename):
         return self.current_info['url'] + '?i=docassemble.playground' + str(self.user_id) + ":" + filename
     def write_package(self, pkgname, info):
         the_yaml = yaml.safe_dump(info, default_flow_style=False, default_style = '|')
-        pg_packages = PlaygroundSection(self.current_info, 'packages')
+        pg_packages = PlaygroundSection('packages')
         pg_packages.write_file(pkgname, the_yaml)
     def get_package_as_zip(self, pkgname):
-        pg_packages = PlaygroundSection(self.current_info, 'packages')
+        pg_packages = PlaygroundSection('packages')
         content = pg_packages.read_file(pkgname)
         if content is None:
             raise Exception("package " + str(pkgname) + " not found")
@@ -300,6 +359,7 @@ class Playground(PlaygroundSection):
         all_names_reduced = all_names.difference( set(['current_info', 'url_args']) )
         return dict(names_used=names_used, undefined_names=undefined_names, fields_used=fields_used, all_names=all_names, all_names_reduced=all_names_reduced)
 
+
 def fix_variable_name(match):
     var_name = match.group(1)
     var_name = end_spaces.sub(r'', var_name)
@@ -341,3 +401,5 @@ def to_package_name(text):
     text = re.sub(r'_', r'-', text)
     return text
     
+def store_current_info(new_current_info):
+    this_thread.current_info = new_current_info

@@ -309,11 +309,11 @@ def get_url_from_file_reference(file_reference, **kwargs):
     if re.search(r'^http', file_reference):
         return(file_reference)
     if file_reference in ['login', 'signin']:
-        return(url_for('user.login'))
+        return(url_for('user.login', **kwargs))
     elif file_reference == 'interviews':
-        return(url_for('interview_list'))
+        return(url_for('interview_list', **kwargs))
     elif file_reference == 'playground':
-        return(url_for('playground_page'))
+        return(url_for('playground_page', **kwargs))
     elif file_reference == 'playgroundtemplate':
         return(url_for('playground_files', section='template'))
     elif file_reference == 'playgroundstatic':
@@ -321,7 +321,9 @@ def get_url_from_file_reference(file_reference, **kwargs):
     elif file_reference == 'playgroundmodules':
         return(url_for('playground_files', section='modules'))
     elif file_reference == 'playgroundstatic':
-        return(url_for('playground_packages'))
+        return(url_for('playground_packages', **kwargs))
+    elif file_reference == 'playgroundfiles':
+        return(url_for('playground_files', **kwargs))
     elif file_reference == 'create_playground_package':
         return(url_for('create_playground_package', **kwargs))
     if re.match('[0-9]+', file_reference):
@@ -1823,11 +1825,13 @@ def index():
         session['encrypted'] = encrypted
     flash_content = ""
     messages = get_flashed_messages(with_categories=True) + error_messages
-    if messages:
+    if messages and len(messages):
+        flash_content += '<div class="container topcenter" id="flash">'
         for classname, message in messages:
             if classname == 'error':
                 classname = 'danger'
-            flash_content += '<div class="row"><div class="col-md-6"><div class="alert alert-' + classname + '"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div></div></div>'
+            flash_content += '<div class="row"><div class="col-sm-7 col-md-6 col-lg-5 col-centered"><div class="alert alert-' + classname + '"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div></div></div>'
+        flash_content += '</div>'
 #     scripts = """
 #     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
 #     <script src="//ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min.js"></script>
@@ -2302,10 +2306,11 @@ def make_navbar(status, page_title, page_short_title, steps, show_login):
           <a href="#question" data-toggle="tab" class="navbar-brand"><span class="hidden-xs">""" + status.question.interview.get_title().get('full', page_title) + """</span><span class="visible-xs-block">""" + status.question.interview.get_title().get('short', page_short_title) + """</span></a>
           <a class="invisible" id="questionlabel" href="#question" data-toggle="tab">""" + word('Question') + """</a>
 """
-    if status.question.helptext is None:
-        navbar += '          <a class="mynavbar-text" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + '</a>'
-    else:
-        navbar += '          <a class="mynavbar-text daactivetext" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i></a>'
+    if len(status.helpText):
+        if status.question.helptext is None:
+            navbar += '          <a class="mynavbar-text" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + '</a>'
+        else:
+            navbar += '          <a class="mynavbar-text daactivetext" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i></a>'
     navbar += """
         </div>
         <div class="collapse navbar-collapse" id="navbar-collapse">
