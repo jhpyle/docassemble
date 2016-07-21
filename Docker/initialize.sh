@@ -21,7 +21,7 @@ if [ "${HOSTNAME-none}" != "none" ]; then
             /usr/share/docassemble/config/docassemble-ssl.conf.dist > /etc/apache2/sites-available/docassemble-ssl.conf || exit 1
 	rm -f /etc/letsencrypt/da_using_lets_encrypt
     fi
-    if [ ! -f /etc/apache2/sites-available/docassemble-http.conf ] || [ [ "${USELETSENCRYPT-none}" == "none" ] ] || [ "${USEHTTPS-false}" == "false" ]; then
+    if [ ! -f /etc/apache2/sites-available/docassemble-http.conf ] || [ "${USELETSENCRYPT-none}" == "none" ] || [ "${USEHTTPS-false}" == "false" ]; then
 	sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
             /usr/share/docassemble/config/docassemble-http.conf.dist > /etc/apache2/sites-available/docassemble-http.conf || exit 1
 	rm -f /etc/letsencrypt/da_using_lets_encrypt
