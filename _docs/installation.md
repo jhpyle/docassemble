@@ -160,16 +160,6 @@ pip install 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
 ./docassemble/docassemble_webapp
 {% endhighlight %}
 
-Finally, to install the [Nodebox English Linguistics library], do the
-following as `www-data`:
-
-{% highlight bash %}
-cd /tmp
-wget https://www.nodebox.net/code/data/media/linguistics.zip
-unzip linguistics.zip -d /usr/share/docassemble/local/lib/python2.7/site-packages/
-rm linguistics.zip
-{% endhighlight %}
-
 Now that you have finished installing the Python dependencies into the
 virtual environment, you can stop being `www-data`:
 

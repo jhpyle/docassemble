@@ -897,16 +897,16 @@ call `show()` on itself.
 in order to refer to a document assembled using the `attachments`
 [modifier] in combination with a `variable name`.  It has attributes
 for each file type generated (e.g., `pdf` or `rtf`), where the
-attributes are objects of type `DAFile`.
+attributes are objects of type [`DAFile`].
 
 For example, if the variable `my_file` is a `DAFileCollection`,
-`my_file.pdf` will be a `DAFile` containing the PDF version, and
-`my_file.rtf` will be a `DAFile` containing the RTF version.
+`my_file.pdf` will be a [`DAFile`] containing the PDF version, and
+`my_file.rtf` will be a [`DAFile`] containing the RTF version.
 
 ## <a name="DAFileList"></a>DAFileList
 
-A `DAFileList` is a `DAList`, the elements of which are expected to be
-`DAFile` objects.
+A `DAFileList` is a [`DAList`], the elements of which are expected to be
+[`DAFile`] objects.
 
 When a question has a field with a `datatype` for a file upload (see
 [fields]), the variable will be defined as a `DAFileList` object
@@ -921,7 +921,7 @@ call `show()` on itself.
 
 ## <a name="DATemplate"></a>DATemplate
 
-The `template` block allows you to store some text to a variable.  See
+The [`template`] block allows you to store some text to a variable.  See
 [template].  The variable will be defined as an object of the
 `DATemplate` class.
 
@@ -1072,3 +1072,6 @@ and not an instance of the `Attorney` class.
 [`word()`]: {{ site.baseurl }}/docs/functions.html#word
 [`set_info()`]: {{ site.baseurl }}/docs/functions.html#set_info
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
+[`template`]: {{ site.baseurl }}/docs/template.html
+[`DAFile`]: #DAFile
+[`DAList`]: #DAList

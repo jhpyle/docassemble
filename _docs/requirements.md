@@ -15,9 +15,6 @@ The core **docassemble** module ([`docassemble.base`]) depends on:
   images into RTF files
 * [PyRTF-ng](https://github.com/nekstrom/pyrtf-ng) - for inserting
   images into RTF files
-* [Nodebox English Linguistics library](https://www.nodebox.net/code/index.php/Linguistics) -
-  for verb conjugation and pluralization, used in utility functions
-  that aid in making question templates as general as possible
 * [Pandoc](http://johnmacfarlane.net/pandoc/) - for converting
   documents from Markdown to PDF, RTF, and HTML; depends on
   [LaTeX](http://www.latex-project.org/) for PDF conversion
@@ -29,8 +26,6 @@ The core **docassemble** module ([`docassemble.base`]) depends on:
   provide a list of U.S. states
 * [SmartyPants](https://pypi.python.org/pypi/mdx_smartypants) - for
   converting straight quotes to curly quotes
-* [html2text](https://pypi.python.org/pypi/html2text) - for converting
-  HTML to text for the plain text part of an e-mail.
 
 The web application ([`docassemble.webapp`]) depends on:
 

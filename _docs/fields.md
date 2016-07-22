@@ -251,7 +251,7 @@ The following are the keys that have special meaning:
   `datatype` is `object`, `object_radio`, or `object_checkboxes`.  Any
   object in `exclude` will be omitted from the list of choices if it
   is present in [`choices`](#choices).
-* [`code`]: code that generates a list of possible options for a
+* `code`: code that generates a list of possible options for a
   multiple choice field.
 * `shuffle`: used with [`code`] or [`choices`](#choices), when `true` it
   randomizes the order of the list of choices; the default is not to
@@ -297,9 +297,10 @@ The possible `datatype` values are:
 * <a name="currency"></a>`currency`: a valid numeric value; input box
   shows a currency symbol based on locale defined in the
   [configuration].
-* <a name="file"></a>`file`: a single file upload (a [`DAFileList`] object results).
-* <a name="files">`files`: single or multiple file upload (a [`DAFileList`] object
-  results).
+* <a name="file"></a>`file`: a single file upload (a [`DAFileList`]
+  object is the result).
+* <a name="files"></a>`files`: single or multiple file upload (a [`DAFileList`] object
+  is the result).
 * <a name="camera"></a>`camera`: like `file`, except with HTML5 that
   suggests using the device's camera to take a picture;
 * <a name="camcorder"></a>`camcorder`: like `camera`, except for

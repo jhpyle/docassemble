@@ -795,12 +795,11 @@ use the locale to determine the symbol.
 
 ## <a name="indefinite_article"></a>indefinite_article()
 
+The English language version of this function passes all arguments
+through to the `article()` function of [pattern.en].
+
 `indefinite_article('bean')` returns `a bean` and
 `indefinite_article('apple')` returns `an apple`.
-
-The English language version of this function passes through all
-arguments to the `en.noun.article()` function of the
-[NodeBox English Linguistics Library].
 
 ## <a name="nice_number"></a>nice_number()
 
@@ -814,13 +813,12 @@ This function can be customized by calling
 
 ## <a name="noun_plural"></a>noun_plural()
 
+The English language version of this function passes all arguments
+through to the `pluralize()` function of [pattern.en].
+
 * `noun_plural('friend')` returns `friends`
 * `noun_plural('fish')` returns `fish`
 * `noun_plural('moose')` returns `mooses`
-
-The English language version of
-this function passes through all arguments to the `en.noun.plural()`
-function of the [NodeBox English Linguistics Library].
 
 ## <a name="ordinal_number"></a>ordinal_number()
 
@@ -994,18 +992,20 @@ There is also the `capitalize()` function, which is described above.
 
 ## <a name="verb_past"></a>verb_past()
 
-`verb_past('help')` returns `helped`.  The English language version of
-this function passes through all arguments to the `en.verb.past()`
-function of the [NodeBox English Linguistics Library].
+The English-language version of this function passes all arguments
+through to the `conjugate()` function of [pattern.en].
+
+* `verb_past('help', '3gp')` returns `helped` (third person past tense).
+* `verb_past('help', 'ppl')` returns `helped` (plural past tense).
 
 ## <a name="verb_present"></a>verb_present()
 
-* `verb_present('helped')` returns `help`.
-* `verb_present('help', person=3)` returns `helps`.
+The English-language version of this function passes through all
+arguments to the `conjugate()` function of the [pattern.en].
 
-The English language version of this function passes through all
-arguments to the `en.verb.present()` function of the
-[NodeBox English Linguistics Library].
+* `verb_present('helped', '3sg')` returns `helps` (third person singular).
+* `verb_present('helps', '1sg')` returns `help` (first person singular).
+* `verb_present('helps', 'pl')` returns `help` (plural).
 
 # Simple language functions
 
@@ -1071,7 +1071,6 @@ docassemble.base.util.update_language_function('fr', 'her', docassemble.base.uti
 [language support]: {{ site.baseurl }}/docs/language.html
 [Python locale]: https://docs.python.org/2/library/locale.html
 [locale module]: https://docs.python.org/2/library/locale.html
-[NodeBox English Linguistics Library]: https://www.nodebox.net/code/index.php/Linguistics
 [titlecase]: https://pypi.python.org/pypi/titlecase
 [Markdown]: https://daringfireball.net/projects/markdown/
 [fields]: {{ site.baseurl }}/docs/fields.html
@@ -1105,3 +1104,4 @@ docassemble.base.util.update_language_function('fr', 'her', docassemble.base.uti
 [how **docassemble** runs your code]: {{ site.baseurl }}/docs/logic.html#howitworks
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`subquestion`]: {{ site.baseurl }}/docs/questions.html#subquestion
+[pattern.en]: http://www.clips.ua.ac.be/pages/pattern-en

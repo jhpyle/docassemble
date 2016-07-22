@@ -239,6 +239,7 @@ docker run --env-file=env.list \
 -v pgrun:/var/run/postgresql \
 -v dalog:/usr/share/docassemble/log \
 -v dafiles:/usr/share/docassemble/files \
+-v certs:/usr/share/docassemble/certs \
 -v daconfig:/usr/share/docassemble/config \
 -v dabackup:/usr/share/docassemble/backup \
 -v letsencrypt:/etc/letsencrypt \
@@ -256,7 +257,7 @@ To delete all of the volumes, do:
 docker volume rm $(docker volume ls -qf dangling=true)
 {% endhighlight %}
 
-An advantage of using persistent containers is that you can completely
+An advantage of using persistent volumes is that you can completely
 replace the **docassemble** container and rebuild it from scratch, and
 when you `run` the `jhpyle/docassemble` image again, docassemble will
 keep running where it left off.  This also facilitates backing up a
@@ -401,6 +402,20 @@ the certificates.
 
 See [using HTTPS] for instructions on setting up HTTPS without using
 [Let's Encrypt].
+
+Using your own SSL certificates with [Docker] requires that your SSL
+certificates reside within each container.  There are three ways to
+accomplish this:
+
+* Use [S3], as explained in the [using HTTPS] section.
+* Use [persistent volumes] and copy the SSL certificate files
+  (`docassemble.key`, `docassemble.crt`, and `docassemble.ca.pem`)
+  into the volume for `/usr/share/docassemble/certs` before starting
+  the container.
+* [Build your own private image] in which your SSL certificates are
+  placed in `Docker/docassemble.key`, `Docker/docassemble.crt`, and
+  `Docker/docassemble.ca.pem`.  During the build process, these files
+  will be copied into `/usr/share/docassemble/certs`.
 
 # <a name="build"></a>Creating your own Docker image
 
@@ -547,3 +562,4 @@ Then, subsequent commands will use the latest **docassemble** image.
 [db]: {{ site.baseurl }}/docs/config.html#db
 [s3]: {{ site.baseurl }}/docs/config.html#s3
 [ec2]: {{ site.baseurl }}/docs/config.html#ec2
+[Build your own private image]: #build

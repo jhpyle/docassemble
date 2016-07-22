@@ -211,9 +211,10 @@ the package update.
 ## <a name="certs"></a>certs
 
 This is a path to a directory containing SSL certificates for the web
-application.  This is only necessary if you are using a [multi-server
-arrangement] with HTTPS access and you store certificates in a
-non-standard location.
+application.  It is only necessary to edit this variable if you are
+using a [multi-server arrangement] with HTTPS access and you have
+changed the Apache configuration files so that they look for SSL
+certificates in a non-standard location.
 
 By default, the Apache configuration contains:
 
@@ -232,9 +233,10 @@ install the SSL certificates on every new **docassemble** web server
 you create.
 
 The value of `certs` can be a file path or an [Amazon S3] URL (e.g.,
-`s3://exampledotcom/certs`).  The directory is copied to
-`/etc/ssl/docassemble` (or another directory specified by
-`cert_install_directory`.
+`s3://exampledotcom/certs`).  The contents of the directory are copied
+to `/etc/ssl/docassemble` (or another directory specified by
+`cert_install_directory`) by the `docassemble.webapp.install_certs`
+module.
 
 If you leave the `certs` setting undefined (which is recommended),
 **docassemble** will look in `/usr/share/docassemble/certs` if the
