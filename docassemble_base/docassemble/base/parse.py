@@ -331,6 +331,8 @@ class Field:
             self.saveas = safeid(data['saveas'])
         if 'saveas_code' in data:
             self.saveas_code = data['saveas_code']
+        if 'showif_code' in data:
+            self.showif_code = data['showif_code']
         if 'action' in data:
             self.action = data['action']
         if 'label' in data:
@@ -1013,6 +1015,8 @@ class Question:
                                     if 'variable' in field[key] and 'is' in field[key]:
                                         field_info['extras']['show_if_var'] = safeid(field[key]['variable'])
                                         field_info['extras']['show_if_val'] = TextObject(definitions + unicode(field[key]['is']), names_used=self.mako_names)
+                                    elif 'code' in field[key]:
+                                        field_info['showif_code'] = compile(field[key]['code'], '', 'eval')
                                     else:
                                         raise DAError("The keys of '" + key + "' must be 'variable' and 'is.'" + self.idebug(data))
                                 elif type(field[key]) is list:
@@ -1442,7 +1446,19 @@ class Question:
                         continue
                 extras['ok'][field.number] = True
         else:
+            extras['ok'] = dict()
             for field in self.fields:
+                if hasattr(field, 'showif_code'):
+                    result = eval(field.showif_code, user_dict)
+                    if hasattr(field, 'extras') and 'show_if_sign' in field.extras and field.extras['show_if_sign'] == 0:
+                        if result:
+                            extras['ok'][field.number] = False
+                            continue
+                    else:
+                        if not result:
+                            extras['ok'][field.number] = False
+                            continue
+                extras['ok'][field.number] = True
                 if type(field.required) is bool:
                     extras['required'][field.number] = field.required
                 else:

@@ -89,6 +89,15 @@ if [ "${CONTAINERROLE-all}" == "all" ]; then
 else
     python -m docassemble.webapp.create_tables $CONFIG_FILE
 fi
+if [ ! -f /usr/share/docassemble/certs/docassemble.key ] && [ -f /usr/share/docassemble/certs/docassemble.key.orig ]; then
+    mv /usr/share/docassemble/certs/docassemble.key.orig /usr/share/docassemble/certs/docassemble.key
+fi
+if [ ! -f /usr/share/docassemble/certs/docassemble.crt ] && [ -f /usr/share/docassemble/certs/docassemble.crt.orig ]; then
+    mv /usr/share/docassemble/certs/docassemble.crt.orig /usr/share/docassemble/certs/docassemble.crt
+fi
+if [ ! -f /usr/share/docassemble/certs/docassemble.ca.pem ] && [ -f /usr/share/docassemble/certs/docassemble.ca.pem.orig ]; then
+    mv /usr/share/docassemble/certs/docassemble.ca.pem.orig /usr/share/docassemble/certs/docassemble.ca.pem
+fi
 python -m docassemble.webapp.install_certs $CONFIG_FILE || exit 1
 if [ "${USEHTTPS-false}" == "true" ]; then
     a2enmod ssl

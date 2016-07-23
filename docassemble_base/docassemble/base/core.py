@@ -525,6 +525,9 @@ class DADict(DAObject):
     def values(self):
         """Returns the values of the dictionary as a Python list."""
         return self.elements.values()
+    def iteritems(self):
+        """Iterates through the keys and values of the dictionary."""
+        return self.elements.iteritems()
     def __iter__(self):
         return self.elements.__iter__()
     def __len__(self):

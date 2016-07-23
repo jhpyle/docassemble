@@ -3,7 +3,7 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get clean && apt-get update
 RUN until apt-get -q -y install tzdata python python-dev wget unzip git locales pandoc texlive texlive-latex-extra apache2 postgresql libapache2-mod-wsgi libapache2-mod-xsendfile poppler-utils libffi-dev libffi6 imagemagick gcc supervisor libaudio-flac-header-perl libaudio-musepack-perl libmp3-tag-perl libogg-vorbis-header-pureperl-perl perl make libvorbis-dev libcddb-perl libinline-perl libcddb-get-perl libmp3-tag-perl libaudio-scan-perl libaudio-flac-header-perl libparallel-forkmanager-perl libav-tools autoconf automake libjpeg-dev zlib1g-dev libpq-dev logrotate tmpreaper cron pdftk fail2ban libxml2 libxslt1.1 libxml2-dev libxslt1-dev redis-server libreoffice; do sleep 1; done
 RUN cd /tmp && git clone git://git.code.sf.net/p/pacpl/code pacpl-code && cd pacpl-code && ./configure; make && make install && cd .. && wget https://github.com/jgm/pandoc/releases/download/1.17.1/pandoc-1.17.1-2-amd64.deb && dpkg -i pandoc-1.17.1-2-amd64.deb
-RUN mkdir -p /etc/ssl/docassemble /usr/share/docassemble/local /usr/share/docassemble/backup /usr/share/docassemble/config /usr/share/docassemble/webapp /usr/share/docassemble/files /var/www/.pip /var/www/.cache /usr/share/docassemble/log /tmp/docassemble && chown -R www-data.www-data /var/www && chsh -s /bin/bash www-data
+RUN mkdir -p /etc/ssl/docassemble /usr/share/docassemble/local /usr/share/docassemble/certs /usr/share/docassemble/backup /usr/share/docassemble/config /usr/share/docassemble/webapp /usr/share/docassemble/files /var/www/.pip /var/www/.cache /usr/share/docassemble/log /tmp/docassemble && chown -R www-data.www-data /var/www && chsh -s /bin/bash www-data
 RUN cd /usr/share/docassemble && git clone https://github.com/letsencrypt/letsencrypt && cd letsencrypt && ./letsencrypt-auto --help
 COPY docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/
 COPY Docker/initialize.sh /usr/share/docassemble/webapp/
@@ -17,9 +17,9 @@ COPY Docker/docassemble-cron-weekly.sh /etc/cron.weekly/docassemble
 COPY Docker/docassemble-cron-daily.sh /etc/cron.daily/docassemble
 COPY Docker/docassemble.conf /etc/apache2/conf-available/
 COPY Docker/docassemble-supervisor.conf /etc/supervisor/conf.d/docassemble.conf
-COPY Docker/docassemble.key /etc/ssl/docassemble/
-COPY Docker/docassemble.crt /etc/ssl/docassemble/
-COPY Docker/docassemble.ca.pem /etc/ssl/docassemble/
+COPY Docker/docassemble.key /etc/ssl/docassemble/docassemble.key.orig
+COPY Docker/docassemble.crt /etc/ssl/docassemble/docassemble.crt.orig
+COPY Docker/docassemble.ca.pem /etc/ssl/docassemble/docassemble.ca.pem.orig
 COPY . /tmp/docassemble/
 RUN bash -c "chown -R www-data.www-data /usr/share/docassemble /tmp/docassemble && chmod ogu+r /usr/share/docassemble/config/config.yml.dist && chmod -R og-rwx /etc/ssl/docassemble && cd /tmp && wget https://bootstrap.pypa.io/get-pip.py && python get-pip.py && pip install --upgrade virtualenv"
 

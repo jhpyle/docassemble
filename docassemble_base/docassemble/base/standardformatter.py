@@ -204,6 +204,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         files = list()
         checkbox_validation = False
         for field in status.question.fields:
+            if not status.extras['ok'][field.number]:
+                continue
             if status.extras['required'][field.number]:
                 req_tag = ' required'
             else:
@@ -878,7 +880,7 @@ def input_for(status, field, wide=False):
             output += "".join(inner_fieldlist)
         else:
             output += '<p class="sr-only">' + word('Select box') + '</p>'
-            output += '<select class="daselect" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '" >'
+            output += '<select name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '" >'
             output += '<option value="">' + word('Select...') + '</option>'
             for pair in pairlist:
                 if pair[0] is not None:

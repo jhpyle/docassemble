@@ -11,6 +11,7 @@ objects:
   - interview: DAInterview
   - main_code: DAQuestion
   - metadata: DAQuestion
+  - decorations: DAQuestion
   - attachments: DAAttachmentList
 ---
 initial: true
@@ -76,14 +77,70 @@ code: |
     new_template.template_file = markdown_filename
   attachments.gathered = True
 ---
+question: |
+  Do you want to decorate any of your questions with images?
+yesno: using_decorations
+---
+question: |
+  Have you already uploaded the decoration files you want to use?
+subquestion: |
+  Images are stored in the [Static files section] within the
+  [Playground].
+
+  If you have not already uploaded your decoration files, you can
+  upload them with this wizard.
+
+  [Playground]: ${ url_of('playground') }
+  [Static files section]: ${ url_of('playgroundstatic') }
+yesno: decorations_already_uploaded
+---
+question: |
+  Please upload one or more files containing decorations.
+fields:
+  - Files: decoration_uploads
+    datatype: files
+---
+question: |
+  Which static files are decorations that you want to use?
+fields:
+  - no label: decoration_choices
+    datatype: checkboxes
+    code: |
+      PlaygroundSection('static').image_file_list()
+---
+code: |
+  if using_decorations:
+    static = PlaygroundSection('static')
+    if len(static.image_file_list()) and decorations_already_uploaded:
+      chosen_decorations = [file for file in decoration_choices if decoration_choices[file] is True]
+    else:
+      chosen_decorations = list()
+      for the_file in decoration_uploads:
+        new_static = static.copy_from(the_file.path(), the_file.filename)
+        chosen_decorations.append(new_static)
+    for decoration_filename in chosen_decorations:
+      decoration_key = oneline(base_name(decoration_filename))
+      new_decoration = interview.decorations.initializeObject(decoration_key)
+      new_decoration.filename = decoration_filename
+  interview.decorations.gathered = True
+---
 mandatory: true
 code: |
   splash_screen
   metadata.type = 'metadata'
+  metadata.interview = interview
   metadata.file_name = interview.file_name
   metadata.title = interview.title
   metadata.short_title = interview.short_title
   interview.blocks.append(metadata)
+---
+mandatory: true
+code: |
+  interview.demonstrate()
+  if interview.has_decorations():
+    decorations.type = 'images'
+    decorations.interview = interview
+    interview.blocks.append(decorations)
 ---
 mandatory: true
 code: |
@@ -231,6 +288,14 @@ fields:
   - Body: x.subquestion_text
     datatype: area
     required: false
+  - Decoration: x.decoration
+    datatype: radio
+    default: "None"
+    code: |
+      x.interview.decoration_list()
+    show if:
+      code: |
+        x.interview.has_decorations()
 ---
 generic object: DAQuestion
 question: |

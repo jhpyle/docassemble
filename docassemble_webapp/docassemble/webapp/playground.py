@@ -16,7 +16,7 @@ import shutil
 import datetime
 import types
 
-__all__ = ['Playground', 'PlaygroundSection', 'indent_by', 'varname', 'DAField', 'DAFieldList', 'DAQuestion', 'DAQuestionDict', 'DAInterview', 'DAUpload', 'DAUploadMultiple', 'DAAttachmentList', 'DAAttachment', 'to_yaml_file', 'base_name', 'to_package_name', 'store_current_info']
+__all__ = ['Playground', 'PlaygroundSection', 'indent_by', 'varname', 'DAField', 'DAFieldList', 'DAQuestion', 'DAQuestionDict', 'DAInterview', 'DAUpload', 'DAUploadMultiple', 'DAAttachmentList', 'DAAttachment', 'to_yaml_file', 'base_name', 'to_package_name', 'store_current_info', 'oneline']
 
 always_defined = set(["False", "None", "True", "current_info", "dict", "i", "list", "menu_items", "multi_user", "role", "role_event", "role_needed", "speak_text", "track_location", "url_args", "x"])
 replace_square_brackets = re.compile(r'\\\[ *([^\\]+)\\\]')
@@ -37,6 +37,15 @@ class ThreadVariables(threading.local):
         self.__dict__.update(kw)
 
 this_thread = ThreadVariables()
+
+class DADecoration(DAObject):
+    def init(self, **kwargs):
+        return super(DADecoration, self).init(**kwargs)
+
+class DADecorationDict(DADict):
+    def init(self, **kwargs):
+        self.object_type = DADecoration
+        return super(DADecorationDict, self).init(**kwargs)
 
 class DAAttachment(DAObject):
     def init(self, **kwargs):
@@ -62,8 +71,18 @@ class DAInterview(DAObject):
         self.blocks = list()
         self.initializeAttribute('questions', DAQuestionDict)
         self.initializeAttribute('final_screen', DAQuestion)
+        self.initializeAttribute('decorations', DADecorationDict)
         self.target_variable = None
         return super(DAInterview, self).init(**kwargs)
+    def has_decorations(self):
+        if self.decorations.gathered and len(self.decorations) > 0:
+            return True
+        return False
+    def decoration_list(self):
+        out_list = [["None", "No decoration"]]
+        for key, data in self.decorations.iteritems():
+            out_list.append([key, '[EMOJI ' + str(data.filename) + ', 1em] ' + str(key)])
+        return out_list
     def package_info(self):
         info = dict()
         for field in ['dependencies', 'interview_files', 'template_files', 'module_files', 'static_files']:
@@ -86,11 +105,16 @@ class DAInterview(DAObject):
     def yaml_file_name(self):
         return to_yaml_file(self.file_name)
     def all_blocks(self):
+        seen = set()
         out = list()
         for block in self.blocks:
-            out.append(block)
+            if block not in seen:
+                out.append(block)
+                seen.add(block)
         for var in self.questions:
-            out.append(self.questions[var])
+            if self.questions[var] not in seen:
+                out.append(self.questions[var])
+                seen.add(self.questions[var])
         return out
     def demonstrate(self):
         for block in self.all_blocks():
@@ -177,6 +201,8 @@ class DAQuestion(DAObject):
                         content += "    datatype: yesnomaybe\n"
                     if field.field_type == 'area':
                         content += "    datatype: area\n"
+            if self.interview.has_decorations() and self.decoration and self.decoration != 'None':
+                content += "decoration: " + str(self.decoration) + "\n"
         elif self.type == 'signature':
             content += "signature: " + varname(self.field_list[0].variable) + "\n"
             self.under_text
@@ -197,6 +223,10 @@ class DAQuestion(DAObject):
             content += "metadata:\n"
             content += "  title: " + oneline(self.title) + "\n"
             content += "  short title: " + oneline(self.short_title) + "\n"
+        elif self.type == 'images':
+            content += "images:\n"
+            for key, value in self.interview.decorations.iteritems():
+                content += "  " + repr(str(key)) + ": " + oneline(value.filename) + "\n"
         sys.stderr.write(content)
         return content
 
@@ -216,6 +246,13 @@ class PlaygroundSection(object):
         self._update_file_list()
     def _update_file_list(self):
         self.file_list = sorted([f for f in os.listdir(self.area.directory) if os.path.isfile(os.path.join(self.area.directory, f))])
+    def image_file_list(self):
+        out_list = list()
+        for the_file in self.file_list:
+            extension, mimetype = get_ext_and_mimetype(the_file)
+            if re.search(r'^image', mimetype):
+                out_list.append(the_file)
+        return out_list            
     def reduced_file_list(self):
         lower_list = [f.lower() for f in self.file_list]
         out_list = [f for f in self.file_list if os.path.splitext(f)[1].lower() == '.md' or os.path.splitext(f)[0].lower() + '.md' not in lower_list]
