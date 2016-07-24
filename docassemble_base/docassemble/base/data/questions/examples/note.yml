@@ -1,0 +1,22 @@
+metadata:
+  title: Notes among fields
+  short title: Notes among fields
+  documentation: "http://docassemble.org/docs/fields.html#note"
+---
+question: |
+  Please fill in the following information.
+fields:
+  - Favorite fruit: fruit
+  - Favorite vegetable: vegetable
+  - note: |
+      In case you did not know, a 
+      mushroom is a fungus, not a vegetable.
+  - Favorite fungus: mushroom
+---
+sets: all_done
+question: |
+  You like ${ fruit }, ${ vegetable },
+  and ${ mushroom }.
+---
+mandatory: true
+code: all_done

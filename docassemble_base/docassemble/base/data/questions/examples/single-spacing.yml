@@ -2,8 +2,10 @@ metadata:
   title: Spacing
   documentation: "http://docassemble.org/docs/documents.html#metadata rtf pdf"
 ---
-question: Here is your document.
-subquestion: It demonstrates types of spacing.
+question: |
+  Here is your document.
+subquestion: |
+  It demonstrates types of spacing.
 attachments:
   - name: A test document
     filename: test_document

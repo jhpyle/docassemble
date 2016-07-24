@@ -60,8 +60,8 @@ a.sourceactive {
     position: absolute;
     content: '*';
     color: red;
-    right:5px;
-    top:0;
+    right: 5px;
+    top: 5px;
 }
 .form-group.required.greyedout .control-label:after { 
     display: none;
@@ -379,7 +379,7 @@ div.striping:nth-child(even) {
 }
 
 div.fieldpart {
-    padding-top: 7px;
+    padding-top: 10px;
 }
 
 div.topcenter {

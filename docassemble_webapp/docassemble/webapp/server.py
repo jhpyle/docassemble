@@ -1850,7 +1850,8 @@ def index():
         })
         $("#daform input, #daform textarea, #daform select").first().each(function(){
           $(this).focus();
-          if ($(this).prop('tagName') != 'SELECT'){
+          var inputType = $(this).attr('type');
+          if ($(this).prop('tagName') != 'SELECT' && inputType != "checkbox" && inputType != "radio" && inputType != "hidden" && inputType != "submit" && inputType != "file"){
             var strLength = $(this).val().length * 2;
             $(this)[0].setSelectionRange(strLength, strLength);
           }

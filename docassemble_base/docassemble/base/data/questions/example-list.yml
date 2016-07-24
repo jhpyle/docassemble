@@ -9,9 +9,7 @@
     - allow-emailing-false
 - Fields:
     - text-field
-    - optional-field
     - text-box-field
-    - no-label-field
     - date-field
     - money-field
     - number-field
@@ -20,17 +18,19 @@
     - radio-list
     - pull-down
     - pull-down-with-code
-#    - yes-or-no
-    - signature
     - continue
+- Field modifiers:
+    - no-label-field
     - text-hint
     - text-default
     - text-help
-    - upload
-    - upload-multiple
-    - other
+    - optional-field
     - required-code
-#    - note
+    - other
+    - showif-boolean
+    - hideif-boolean
+    - showif
+    - note
 - Multiple choice:
     - yesno
     - noyes
@@ -42,7 +42,17 @@
     - choices
     - choices-icons
     - fields-mc
-- Modifiers:
+    - fields-yesno
+    - fields-yesnowide
+    - fields-yesnoradio
+    - fields-yesnomaybe
+    - fields-noyesmaybe
+    - fields-checkboxes
+- Files:
+    - upload
+    - upload-multiple
+    - signature
+- Question modifiers:
     - help
     - decoration
     - prevent-going-back
@@ -114,4 +124,3 @@
 - Legal applications:
     - loading-legal
     - interview-url
-

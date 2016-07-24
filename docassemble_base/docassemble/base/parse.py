@@ -1038,15 +1038,15 @@ class Question:
                                 field_info['required'] = False
                             elif key == 'datatype':
                                 field_info['type'] = field[key]
-                                if field[key] in ['yesno', 'yesnowide', 'noyes', 'noyeswide', 'yesnomaybe', 'yesnomaybewide', 'noyesmaybe', 'noyesmaybewide', 'yesnoradio', 'noyesradio'] and 'required' not in field_info:
-                                    field_info['required'] = False
+                                #if field[key] in ['yesno', 'yesnowide', 'noyes', 'noyeswide'] and 'required' not in field_info:
+                                #    field_info['required'] = False
                                 if field[key] in ['yesno', 'yesnowide', 'yesnoradio']:
                                     field_info['boolean'] = 1
                                 elif field[key] in ['noyes', 'noyeswide', 'noyesradio']:
                                     field_info['boolean'] = -1
-                                elif field[key] in ['yesnomaybe', 'yesnowidemaybe']:
+                                elif field[key] in ['yesnomaybe']:
                                     field_info['threestate'] = 1
-                                elif field[key] in ['noyesmaybe', 'noyeswidemaybe']:
+                                elif field[key] in ['noyesmaybe']:
                                     field_info['threestate'] = -1
                             elif key == 'code':
                                 field_info['choicetype'] = 'compute'

@@ -1,0 +1,25 @@
+metadata:
+  title: "Yes/no/maybe within fields (reversed)"
+  short title: "Yes/no/maybe within fields (reversed)"
+  documentation: "http://docassemble.org/docs/fields.html#fields noyesmaybe"
+---
+question: |
+  Please answer the following question.
+fields:
+  - "Was Washington the first U.S. president?": washington_not_the_first_president
+    datatype: noyesmaybe
+---
+sets: all_done
+question: |
+  Thank you for your answer.
+subquestion: |
+  % if washington_not_the_first_president:
+  You fool, of course Washington was the first president!
+  % elif washington_not_the_first_president is None:
+  Don't you know anything about your U.S. presidents?
+  % else:
+  You were correct that Washington was the first President.
+  % endif
+---
+mandatory: true
+code: all_done

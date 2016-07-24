@@ -1,0 +1,24 @@
+metadata:
+  title: Yes/no checkboxes (wide)
+  short title: Yes/no checkboxes (wide)
+  documentation: "http://docassemble.org/docs/fields.html#yesnowide"
+---
+question: |
+  Please provide the following information.
+fields:
+  - note: Check which foods you like.
+  - Peaches: likes_peaches
+    datatype: yesnowide
+  - Pears: dislikes_pears
+    datatype: noyeswide
+---
+question: |
+  Thank you for that information.
+subquestion: |
+  % if likes_peaches:
+  You like peaches.
+  % endif
+sets: all_done
+---
+mandatory: true
+code: all_done

@@ -2,7 +2,8 @@ metadata:
   title: Miscellaneous formatting
   documentation: "http://docassemble.org/docs/documents.html#markup"
 ---
-question: Here is your document.
+question: |
+  Here is your document.
 subquestion: |
   It illustrates some document-related
   features.

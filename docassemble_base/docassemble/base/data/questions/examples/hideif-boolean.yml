@@ -1,0 +1,23 @@
+metadata:
+  title: Conditionally hide
+  short title: Conditionally hide
+  documentation: "http://docassemble.org/docs/fields.html#hide if"
+---
+question: |
+  Please fill in the following information.
+fields:
+  - "Do you you have fruit?": has_fruit
+    datatype: yesnoradio
+  - "What fruit do you need?": fruit
+    hide if: has_fruit
+---
+sets: all_done
+question: |
+  % if has_fruit:
+  You have fruit.
+  % else:
+  You need some ${ fruit }.
+  % endif
+---
+mandatory: true
+code: all_done
