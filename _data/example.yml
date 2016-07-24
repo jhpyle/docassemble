@@ -213,6 +213,22 @@
     - Buy it: purchaser
     - Lease it: borrower
   ---
+"buttons-variation-1": |-
+  ---
+  field: user_gender
+  question: What is your gender?
+  buttons:
+    - Male
+    - Female
+  ---
+"buttons-variation-2": |-
+  ---
+  field: user_gender
+  question: What is your gender?
+  buttons:
+    - Male: Male
+    - Female: Female
+  ---
 "capitalize": |-
   ---
   question: |
@@ -417,6 +433,19 @@
   \  default: I have no political views\n    maxlength: 30\n  - Party: political_party\n\
   \    datatype: radio\n    shuffle: true \n    choices:\n      - Republican\n   \
   \   - Democrat\n      - Independent\n---"
+"fields-checkboxes": |-
+  ---
+  question: |
+    Please tell me what you think.
+  fields:
+    - "Check the fruits you like": likes_fruit
+      datatype: checkboxes
+      choices:
+        - Apples
+        - Peaches
+        - Pears
+    - "What is your favorite fruit overall?": favorite_fruit
+  ---
 "fields-mc": |-
   ---
   question: |
@@ -440,6 +469,55 @@
                   {'pear': "Pears"}
                 ]
   ---
+"fields-noyesmaybe": |-
+  ---
+  question: |
+    Please answer the following question.
+  fields:
+    - "Was Washington the first U.S. president?": washington_not_the_first_president
+      datatype: noyesmaybe
+  ---
+"fields-yesno": |-
+  ---
+  question: |
+    Please provide the following information.
+  fields:
+    - "What is your favorite food?": favorite_food
+    - note: Check which foods you like.
+    - Apples: likes_apples
+      datatype: yesno
+    - Turnips: dislikes_turnips
+      datatype: noyes
+  ---
+"fields-yesnomaybe": |-
+  ---
+  question: |
+    Please answer the following question.
+  fields:
+    - "Is Topeka the capital of Kansas?": topeka_is_capital_of_kansas
+      datatype: yesnomaybe
+  ---
+"fields-yesnoradio": |-
+  ---
+  question: |
+    Please provide the following information.
+  fields:
+    - "Do you like apricots?": likes_apricots
+      datatype: yesnoradio
+    - "Do you like pineapple?": dislikes_pineapple
+      datatype: noyesradio
+  ---
+"fields-yesnowide": |-
+  ---
+  question: |
+    Please provide the following information.
+  fields:
+    - note: Check which foods you like.
+    - Peaches: likes_peaches
+      datatype: yesnowide
+    - Pears: dislikes_pears
+      datatype: noyeswide
+  ---
 "for_fruit": |-
   ---
   code: |
@@ -461,7 +539,7 @@
       user_reconsidering_communism = False
       force_ask('user_is_communist')
   ---
-"formatting": "---\nquestion: Here is your document.\nsubquestion: |\n  It illustrates\
+"formatting": "---\nquestion: |\n  Here is your document.\nsubquestion: |\n  It illustrates\
   \ some document-related\n  features.\nallow emailing: false\nattachments:\n  - name:\
   \ A test document\n    filename: test_document\n    valid formats:\n      - pdf\n\
   \    metadata:\n      FooterCenter: |\n        [HYPHEN] [PAGENUM] [HYPHEN]\n   \
@@ -561,6 +639,16 @@
       want ${ defendant } to suffer.
     audio: |
       message_re_damages.mp3
+  ---
+"hideif-boolean": |-
+  ---
+  question: |
+    Please fill in the following information.
+  fields:
+    - "Do you you have fruit?": has_fruit
+      datatype: yesnoradio
+    - "What fruit do you need?": fruit
+      hide if: has_fruit
   ---
 "image-sets": |-
   ---
@@ -756,6 +844,10 @@
   fields:
     - no label: target_variable
   ---
+"note": "---\nquestion: |\n  Please fill in the following information.\nfields:\n\
+  \  - Favorite fruit: fruit\n  - Favorite vegetable: vegetable\n  - note: |\n   \
+  \   In case you did not know, a \n      mushroom is a fungus, not a vegetable.\n\
+  \  - Favorite fungus: mushroom\n---"
 "noun-plural": |-
   ---
   question: |
@@ -787,6 +879,59 @@
       datatype: integer
     - Ounces of gold: gold_ounces
       datatype: number
+  ---
+"object-try-1": |-
+  ---
+  include: basic-questions.yml
+  ---
+  question: |
+    What is your favorite date?
+  fields:
+    - Greatest Date Ever: favorite_date
+      datatype: date
+      choices:
+        - ${ client.birthdate }
+        - ${ advocate.birthdate }
+  ---
+  question: |
+    The best day in the history of
+    the world was ${ favorite_date }.
+  sets: all_done
+  ---
+  mandatory: true
+  code: all_done
+  ---
+"object-try-2": |-
+  ---
+  question: |
+    Who is the tallest?
+  fields:
+    - Tallest person: tallest_person
+      choices:
+        - ${ client }
+        - ${ advocate }
+  ---
+"object-try-3": |-
+  ---
+  include: basic-questions.yml
+  ---
+  question: Who is the villain?
+  fields:
+    no label: villain
+    datatype: object
+    default: client
+    choices:
+      - client
+      - advocate
+  ---
+  question: |
+    The villain, ${ villain }, was
+    born on
+    ${ format_date(villain.birthdate) }.
+  sets: all_done
+  ---
+  mandatory: true
+  code: all_done
   ---
 "objects": |-
   ---
@@ -1070,6 +1215,28 @@
       url: https://en.wikipedia.org/wiki/Amphiprioninae
   sets: all_done
   ---
+"showif": |-
+  ---
+  question: |
+    Please fill in the following information.
+  fields:
+    - Favorite fruit: fruit
+    - Favorite vegetable: vegetable
+    - Favorite fungus: mushroom
+      show if:
+        code:
+          2 + 2 == 3
+  ---
+"showif-boolean": |-
+  ---
+  question: |
+    Please fill in the following information.
+  fields:
+    - "Do you like fruit?": likes_fruit
+      datatype: yesnoradio
+    - "What's your favorite fruit?": favorite_fruit
+      show if: likes_fruit
+  ---
 "signature": |-
   ---
   question: |
@@ -1083,8 +1250,10 @@
   ---
 "single-spacing": |-
   ---
-  question: Here is your document.
-  subquestion: It demonstrates types of spacing.
+  question: |
+    Here is your document.
+  subquestion: |
+    It demonstrates types of spacing.
   attachments:
     - name: A test document
       filename: test_document
@@ -1246,7 +1415,8 @@
   ---
 "upload": |-
   ---
-  question: Please upload a picture of yourself.
+  question: |
+    Please upload a picture of yourself.
   fields:
     - Picture: user_picture
       datatype: file
@@ -1354,5 +1524,11 @@
   buttons:
     - "You bet": True
     - "No way": False
+  ---
+"yesnomaybe": |-
+  ---
+  question: |
+    Is Topeka the capital of Kansas?
+  yesnomaybe: topeka_is_capital_of_kansas
   ---
 

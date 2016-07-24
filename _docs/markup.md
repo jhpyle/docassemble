@@ -60,7 +60,7 @@ All of these methods will format text in questions as well as PDF and
 RTF documents, with the exception of the `!` image insertion command,
 which does not work within PDF and RTF documents.
 
-# Inserting images
+# <a name="inserting images"></a>Inserting images
 
 To insert an image that is located in the `static` folder of a custom
 Python package, use the `FILE` command.  This works within PDF, RTF,
@@ -96,8 +96,9 @@ or:
 
     [FILE docassemble.crimesolver:mugshot.jpg, 150px]
 
-To insert an image that has been uploaded, simply refer to the
-file variable using [Mako].  For example:
+<a name="inserting uploaded images"></a>To insert an image that has
+been uploaded, simply refer to the file variable using [Mako].  For
+example:
 
 {% highlight yaml %}
 ---
