@@ -1,0 +1,21 @@
+metadata:
+  title: "Yes/no/maybe"
+  short title: "Yes/no/maybe"
+  documentation: "http://docassemble.org/docs/fields.html#yesnomaybe"
+---
+question: |
+  Is Topeka the capital of Kansas?
+yesnomaybe: topeka_is_capital_of_kansas
+---
+sets: all_done
+question: |
+  % if topeka_is_capital_of_kansas:
+  You were right that Topeka is the capital of Kansas.
+  % elif topeka_is_capital_of_kansas is None:
+  You should know your state capitals!
+  % else:
+  Actually, Topeka is the capital of Kansas.
+  % endif
+---
+mandatory: true
+code: all_done

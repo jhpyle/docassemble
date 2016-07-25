@@ -3,6 +3,11 @@ body {
   padding-bottom: 40px;
 }
 
+.slider-horizontal {
+    width: 100% !important;
+    margin-bottom: 15px;
+}
+
 .alert {
     max-height: 150px;
     overflow-y: auto;

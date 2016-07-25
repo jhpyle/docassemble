@@ -1,0 +1,38 @@
+metadata:
+  title: Range slider
+  short title: Range slider
+  documentation: "http://docassemble.org/docs/fields.html#range"
+---
+question: |
+  On a scale from 1 to 10, how
+  much do you like these animals?
+fields:
+  - Possums: possum_preference
+    datatype: range
+    min: 1
+    max: 10
+    step: 0.5
+  - Rabbits: rabbit_preference
+    datatype: range
+    min: 1
+    max: 10
+---
+question: |
+  % if possum_preference > 7:
+  You really like possums!
+  % elif possum_preference > 3:
+  You think possums are ok.
+  % else:
+  I guess you don't really like possums.
+  % endif
+  % if rabbit_preference > 7:
+  You really like rabbits!
+  % elif rabbit_preference > 3:
+  You think rabbits are ok.
+  % else:
+  I guess you don't really like rabbits.
+  % endif
+sets: all_done
+---
+mandatory: true
+code: all_done

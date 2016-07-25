@@ -19,16 +19,17 @@ subquestion: |
   ${ favorite_fruit_of_brother }.
 ---
 question: |
-  What is your brother's favorite fruit?
+  What is your favorite fruit?
 fields:
-  - Fruit: favorite_fruit_of_brother
+  - Fruit: favorite_fruit
     code: |
       myoptions
 ---
 question: |
-  What is your favorite fruit?
+  What is your brother's favorite
+  fruit?
 fields:
-  - Fruit: favorite_fruit
+  - Fruit: favorite_fruit_of_brother
     code: |
       myoptions
 ---

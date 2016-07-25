@@ -18,6 +18,7 @@
     - radio-list
     - pull-down
     - pull-down-with-code
+    - range
     - continue
 - Field modifiers:
     - no-label-field
@@ -31,6 +32,9 @@
     - hideif-boolean
     - showif
     - note
+    - html
+    - min
+    - minlength
 - Multiple choice:
     - yesno
     - noyes
@@ -52,6 +56,11 @@
     - upload
     - upload-multiple
     - signature
+- Objects as fields:
+    - object
+    - object-radio
+    - object-selections
+    - object-checkboxes
 - Question modifiers:
     - help
     - decoration

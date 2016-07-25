@@ -1,0 +1,32 @@
+metadata:
+  title: HTML
+  example start: 2
+  example end: 2
+  documentation: "http://docassemble.org/docs/fields.html#html"
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  I was thinking about your birthday.
+fields:
+  - html: |
+      The date and time is
+      <span class="mytime" id="today_time"></span>.
+  - script: |
+      <script>
+        document.getElementById("today_time").innerHTML = Date();
+      </script>
+  - css: |
+      <link rel="stylesheet" 
+      href="${ url_of('docassemble.demo:data/static/my.css') }">
+  - "When is your next birthday?": birth_date
+    datatype: date
+---
+sets: all_done
+question: |
+  Your birthday is on ${ birth_date }.
+  I have no idea what to get you!
+---
+mandatory: true
+code: all_done

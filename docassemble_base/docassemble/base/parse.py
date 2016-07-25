@@ -1040,6 +1040,8 @@ class Question:
                                 field_info['type'] = field[key]
                                 #if field[key] in ['yesno', 'yesnowide', 'noyes', 'noyeswide'] and 'required' not in field_info:
                                 #    field_info['required'] = False
+                                if field[key] in ['range'] and not ('min' in field and 'max' in field):
+                                    raise DAError("If the datatype of a field is 'range', you must provide a min and a max." + self.idebug(data))
                                 if field[key] in ['yesno', 'yesnowide', 'yesnoradio']:
                                     field_info['boolean'] = 1
                                 elif field[key] in ['noyes', 'noyeswide', 'noyesradio']:
@@ -1068,7 +1070,7 @@ class Question:
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
                                 field_info['extras']['note'] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
-                            elif key in ['min', 'max', 'minlength', 'maxlength']:
+                            elif key in ['min', 'max', 'minlength', 'maxlength', 'step']:
                                 if 'extras' not in field_info:
                                     field_info['extras'] = dict()
                                 field_info['extras'][key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
@@ -1097,6 +1099,8 @@ class Question:
                                 field_info['label'] = TextObject(definitions + unicode(key), names_used=self.mako_names)
                                 field_info['saveas'] = field[key]
                         if 'choicetype' in field_info and field_info['choicetype'] == 'compute' and 'type' in field_info and field_info['type'] in ['object', 'object_radio', 'object_checkboxes']:
+                            if 'choices' not in field:
+                                raise DAError("You need to have a choices element if you want to set a variable to an object." + self.idebug(data))
                             if type(field['choices']) is not list:
                                 select_list = [str(field['choices'])]
                             else:
@@ -1426,7 +1430,7 @@ class Question:
                     except:
                         continue
                 if hasattr(field, 'extras'):
-                    for key in ['note', 'html', 'script', 'css', 'min', 'max', 'minlength', 'maxlength']:
+                    for key in ['note', 'html', 'script', 'css', 'min', 'max', 'minlength', 'maxlength', 'step']:
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()
@@ -1499,7 +1503,7 @@ class Question:
                 if hasattr(field, 'label'):
                     labels[field.number] = field.label.text(user_dict)
                 if hasattr(field, 'extras'):
-                    for key in ['note', 'html', 'script', 'css', 'min', 'max', 'minlength', 'maxlength', 'show_if_val']:
+                    for key in ['note', 'html', 'script', 'css', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step']:
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()

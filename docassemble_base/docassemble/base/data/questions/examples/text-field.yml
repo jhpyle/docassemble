@@ -16,6 +16,5 @@ subquestion: |
   target_variable is: "${ target_variable }"
 ---
 mandatory: true
-code: |
-  all_done
+code: all_done
 

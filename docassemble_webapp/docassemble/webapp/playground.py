@@ -26,6 +26,7 @@ spaces = re.compile(r'[ \n]+')
 invalid_var_characters = re.compile(r'[^A-Za-z0-9_]+')
 digit_start = re.compile(r'^[0-9]+')
 newlines = re.compile(r'\n')
+remove_u = re.compile(r'^u')
 
 class ThreadVariables(threading.local):
     initialized = False
@@ -192,7 +193,7 @@ class DAQuestion(DAObject):
                 content += "fields:\n"
                 for field in self.field_list:
                     if field.has_label:
-                        content += "  - " + repr(str(field.label)) + ": " + varname(field.variable) + "\n"
+                        content += "  - " + repr_str(field.label) + ": " + varname(field.variable) + "\n"
                     else:
                         content += "  - no label: " + varname(field.variable) + "\n"
                     if field.field_type == 'yesno':
@@ -226,7 +227,7 @@ class DAQuestion(DAObject):
         elif self.type == 'images':
             content += "images:\n"
             for key, value in self.interview.decorations.iteritems():
-                content += "  " + repr(str(key)) + ": " + oneline(value.filename) + "\n"
+                content += "  " + repr_str(key) + ": " + oneline(value.filename) + "\n"
         sys.stderr.write(content)
         return content
 
@@ -440,3 +441,6 @@ def to_package_name(text):
     
 def store_current_info(new_current_info):
     this_thread.current_info = new_current_info
+
+def repr_str(text):
+    return remove_u.sub(r'', repr(text))

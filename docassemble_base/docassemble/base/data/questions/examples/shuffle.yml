@@ -1,0 +1,26 @@
+metadata:
+  title: Shuffle
+  documentation: "http://docassemble.org/docs/fields.html#shuffle"
+---
+question: |
+  For which of the following obscure
+  candidates do you wish to vote?
+fields:
+  - Type: candidate
+    datatype: radio
+    shuffle: true
+    choices:
+      - Aaron Aardvark
+      - Albert Arnold
+      - Felicia Fellowes
+      - Miranda Moore
+      - Zachariah Zephyr
+---
+question: Result of question
+subquestion: |
+  You voted for ${ candidate }.
+  Thanks!
+sets: all_done
+---
+mandatory: true
+code: all_done

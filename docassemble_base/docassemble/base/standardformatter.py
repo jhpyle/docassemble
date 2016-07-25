@@ -290,13 +290,13 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
                             checkboxes.append(safeid(from_safeid(field.saveas) + "[" + myb64quote(pair[0]) + "]"))
             if hasattr(field, 'label'):
                 if status.labels[field.number] == 'no label':
-                    fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-md-12">' + input_for(status, field, wide=True) + '</div></div>\n')
+                    fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-md-12">' + input_for(status, field, extra_scripts, wide=True) + '</div></div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesnowide', 'noyeswide']:
-                    fieldlist.append('                <div class="row"><div class="col-md-12">' + input_for(status, field) + '</div></div>\n')
+                    fieldlist.append('                <div class="row"><div class="col-md-12">' + input_for(status, field, extra_scripts) + '</div></div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
-                    fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>\n')
+                    fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field, extra_scripts) + '</div></div>\n')
                 else:
-                    fieldlist.append('                <div class="form-group' + req_tag + '"><label for="' + escape_id(field.saveas) + '" class="control-label col-sm-4">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-sm-8 fieldpart">' + input_for(status, field) + '</div></div>\n')
+                    fieldlist.append('                <div class="form-group' + req_tag + '"><label for="' + escape_id(field.saveas) + '" class="control-label col-sm-4">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-sm-8 fieldpart">' + input_for(status, field, extra_scripts) + '</div></div>\n')
             if hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras and hasattr(field, 'saveas'):
                 fieldlist.append('                </div>\n')
         output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '>\n              <fieldset>\n'
@@ -822,7 +822,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         extra_scripts.append(map_js)
     return master_output
 
-def input_for(status, field, wide=False):
+def input_for(status, field, extra_scripts, wide=False):
     output = ""
     if field.number in status.defaults and type(status.defaults[field.number]) in [str, unicode, int, float]:
         defaultvalue = unicode(status.defaults[field.number])
@@ -886,7 +886,7 @@ def input_for(status, field, wide=False):
                 if pair[0] is not None:
                     formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, do_terms=False)
                     output += '<option value="' + unicode(pair[0]) + '"'
-                    if defaultvalue is not None and unicode(pair[0]) == defaultvalue:
+                    if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue)):
                         output += ' selected="selected"'
                     output += '>' + formatted_item + '</option>'
             output += '</select> '
@@ -960,6 +960,22 @@ def input_for(status, field, wide=False):
                 accept = ''
             output += '<input alt="' + word("You can upload a file here") + '" type="file" class="file" data-show-upload="false" data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + '/>'
             #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>\n'
+        elif field.datatype == 'range':
+            ok = True
+            for key in ['min', 'max']:
+                if not (hasattr(field, 'extras') and key in field.extras and key in status.extras and field.number in status.extras[key]):
+                    ok = False
+            if ok:
+                if defaultvalue is not None:
+                    the_default = ' data-slider-value="' + str(defaultvalue) + '"'
+                else:
+                    the_default = ''
+                if 'step' in field.extras and 'step' in status.extras and field.number in status.extras['step']:
+                    the_step = ' data-slider-step="' + str(status.extras['step'][field.number]) + '"'
+                else:
+                    the_step = ''
+                output += '<input alt="' + word("Slider") + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + the_default + ' data-slider-max="' + str(int(status.extras['max'][field.number])) + '" data-slider-min="' + str(int(status.extras['min'][field.number])) + '"' + the_step + '></input>'
+                extra_scripts.append('<script>$("#' + escape_for_jquery(saveas_string) + '").slider();</script>\n')
         elif field.datatype == 'area':
             output += '<textarea alt="' + word("Input box") + '" class="form-control" rows="4" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + placeholdertext + '>'
             if defaultvalue is not None:
@@ -1011,3 +1027,6 @@ def escape_id(text):
 
 def do_escape_id(text):
     return re.sub(r'(:|\.|\[|\]|,|=)', r'\\\1', text)
+
+def escape_for_jquery(text):
+    return re.sub(r'(:|\.|\[|\]|,|=)', r'\\\\\1', text)

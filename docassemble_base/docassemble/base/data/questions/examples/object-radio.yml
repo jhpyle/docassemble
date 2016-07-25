@@ -1,0 +1,34 @@
+metadata:
+  title: Object radio buttons
+  short title: Object radio buttons
+  example start: 2
+  example end: 4
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  protagonist: Individual
+  antagonist: Individual
+---
+code: |
+  protagonist.name.first = "Harry"
+  protagonist.name.last = "Potter"
+  antagonist.name.first = "Tom"
+  antagonist.name.last = "Riddle"
+---
+question: Who is the villain?
+fields:
+  The villain is: villain
+  datatype: object_radio
+  default: antagonist
+  choices:
+    - protagonist
+    - antagonist
+---
+question: |
+  ${ villain } will surely be defeated!
+sets: all_done
+---
+mandatory: true
+code: all_done

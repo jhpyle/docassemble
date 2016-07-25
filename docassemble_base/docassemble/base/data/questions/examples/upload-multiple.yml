@@ -4,9 +4,10 @@ metadata:
   example end: 2
   documentation: "http://docassemble.org/docs/fields.html#file"
 ---
-question: Please upload pictures of yourself.
+question: |
+  Please upload pictures of yourself.
 fields:
-  - Picture: user_pictures
+  - Pictures: user_pictures
     datatype: files
 ---
 question: |

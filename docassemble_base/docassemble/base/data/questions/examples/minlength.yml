@@ -1,0 +1,21 @@
+metadata:
+  title: Min/max length
+  short title: Min/max length
+  documentation: "http://docassemble.org/docs/fields.html#minlength"
+---
+question: |
+  What is the nuclear launch code?
+fields:
+  - Code: launch_code
+    minlength: 5
+    maxlength: 15
+---
+sets: final_screen
+question: |
+  Thank you for giving me the launch
+  code (${ launch_code }).
+
+  Countdown commencing.
+---
+mandatory: true
+code: final_screen

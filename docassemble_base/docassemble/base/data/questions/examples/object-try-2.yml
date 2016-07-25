@@ -1,0 +1,23 @@
+metadata:
+  title: Bad example 2
+  short title: Bad example 2
+  example start: 2
+  example end: 2
+---
+include: basic-questions.yml
+---
+question: |
+  Who is the tallest?
+fields:
+  - Tallest person: tallest_person
+    choices:
+      - ${ client }
+      - ${ advocate }
+---
+question: |
+  The tallest person is ${ tallest_person }.
+sets: all_done
+---
+mandatory: true
+code: all_done
+---

@@ -1,0 +1,20 @@
+metadata:
+  title: Min/Max value
+  short title: Min/Max value
+  documentation: "http://docassemble.org/docs/fields.html#min"
+---
+question: |
+  What percentage of your friends
+  are turnips?
+fields:
+  - Percent: percent
+    datatype: number
+    min: 0
+    max: 100
+---
+sets: final_screen
+question: |
+  ${ percent }% of your friends are turnips. 
+---
+mandatory: true
+code: final_screen
