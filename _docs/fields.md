@@ -212,12 +212,12 @@ fields.
 {% include side-by-side.html demo="text-field-example" %}
 
 The `fields` must consist of a list in which each list item consists
-of one or more key/value pairs.  One of these keys (typically) is the
-label the user sees, where the value associated with the key is the
-name of the variable that will store the user-provided information for
-that field.  The other key/value pairs in the item (if any) are
-modifiers that allow you to customize how the field is displayed to
-the user.
+of one or more key/value pairs.  One of these keys
+([typically](#label)) is the label the user sees, where the value
+associated with the key is the name of the variable that will store
+the user-provided information for that field.  The other key/value
+pairs in the item (if any) are modifiers that allow you to customize
+how the field is displayed to the user.
 
 These modifiers are distinguished from label/variable pairs based on
 the key; if the key is uses one of the names listed below, it will be
@@ -231,7 +231,8 @@ The following are the keys that have special meaning:
 ### `datatype`
 
 `datatype` affects how the data will be collected, validated and
-stored; there is a [section on `datatype`](#datatype) below.
+stored.  For a full explanation of how this is used, see the
+[section on `datatype`](#datatype) below.
 
 ### <a name="required"></a>`required`
 
@@ -289,25 +290,31 @@ the variable value are the same).
 
 {% include side-by-side.html demo="fields-mc" %}
 
-When the [`datatype`](#datatype) is `object`, `object_radio`, or
-`object_checkboxes`, `choices` indicates a list of objects from which
+When the [`datatype`](#datatype) is [`object`], [`object_radio`], or
+[`object_checkboxes`], `choices` indicates a list of objects from which
 the user will choose.  See the
 [section on selecting objects](#objects), below.
 
 ### <a name="exclude"></a>`exclude`
 
 `exclude` is used in combination with [`choices`](#choices) when the
-`datatype` is `object`, `object_radio`, or `object_checkboxes`.  Any
-object in `exclude` will be omitted from the list of choices if it is
-present in [`choices`](#choices).  See the
+[`datatype`](#datatype) is [`object`], [`object_radio`], or
+[`object_checkboxes`].  Any object in `exclude` will be omitted from the
+list of choices if it is present in [`choices`](#choices).  See the
 [section on selecting objects](#objects), below.
 
 ### <a name="code"></a>`code`
 
-`code` refers to [Python] code that generates a list of possible
-options for a multiple choice field.  See the
-[section on using code to list multiple-choice options](#mc-code),
-below.
+If you have a multiple-choice question and you want to reuse the same
+selections several times, you do not need to type in the whole list
+every time.  You can define a variable to contain the list and a
+[`code`] block that defines the variable.
+
+Adding `code` to a field makes it a multiple-choice question.  The
+`code` itself refers to [Python] code that generates a list of
+possible options for a multiple choice field.
+
+{% include side-by-side.html demo="fields-mc" %}
 
 ### <a name="shuffle"></a>`shuffle`
 
@@ -315,6 +322,8 @@ below.
 [`code`](#code) or [`choices`](#choices)).  When `true`, it randomizes
 the order of the list of choices; the default is not to "shuffle" the
 list.
+
+{% include side-by-side.html demo="shuffle" %}
 
 ### <a name="show if"></a>`show if`
 
@@ -374,20 +383,15 @@ for providing guidance to the user on how to enter information.
 
 {% include side-by-side.html demo="note" %}
 
-### <a name="label"></a>`label` and `field`
-
-Instead of expressing your labels and variable names in the form of `-
-Label: variable_name`, you can specify a label using the `label` key
-and the variable name using the `field` key.
-
 ### <a name="html"></a>`html`
 
-Like `note`, except raw HTML.
+Like [`note`](#note), except raw HTML.  See the [`css`](#css) section, below, for an example.
 
 ### <a name="script"></a>`script`
 
 Raw HTML to be appended to the bottom of the page; usually used for
 Javascript code that interacts with HTML specified in `html` entries.
+See the [`css`](#css) section, below, for an example.
   
 ### <a name="css"></a>`css`
 
@@ -395,137 +399,223 @@ Javascript code that interacts with HTML specified in `html` entries.
 usually used to provide CSS classes for HTML specified in [`html`](#html)
 entries.
 
+{% include side-by-side.html demo="html" %}
+
+The referenced [CSS file] contains the following:
+
+{% highlight css %}
+.mytime {
+    color: green;
+}
+{% endhighlight %}
+
 ### <a name="no label"></a>`no label`
 
 If you use `no label` as the label for your variable, the label will
 be omitted.  On wide screens, the field will fill more of the width of
-the screen if the label is set to `no label`.  To keep the width of
-the field normal, but have a blank label, use `""` as the label.
+the screen if the label is set to `no label`.
 
 {% include side-by-side.html demo="no-label-field" %}
 
+To keep the width of the field normal, but have a blank label, use
+`""` as the label.
+
+{% include side-by-side.html demo="blank-label-field" %}
+
+### <a name="label"></a>`label` and `field`
+
+Instead of expressing your labels and variable names in the form of `-
+Label: variable_name`, you can specify a label using the `label` key
+and the variable name using the `field` key.
+
+{% include side-by-side.html demo="label" %}
+
 ## <a name="datatype"></a>Possible data types for fields
 
-The possible `datatype` values are:
+There are many possible `datatype` values, which affect what the user
+sees and how the input is stored in a variable.
 
-<a name="text"></a>`text`: a single-line text input box.  This is the
+### Text fields
+
+<a name="text"></a>A `datatype: text` provides a single-line text input box.  This is the
 default, so you never need to specify it unless you want to.
 
 {% include side-by-side.html demo="text-field" %}
 
-<a name="area"></a>`area`: a multi-line text area
+<a name="area"></a>`datatype: area` provides a multi-line text area.
 
 {% include side-by-side.html demo="text-box-field" %}
 
-<a name="date"></a>`date`: a valid date.
+<a name="date"></a>`datatype: date` provides a date entry input box
+and requires a valid date.
 
 {% include side-by-side.html demo="date-field" %}
 
-<a name="email"></a>`email`: a valid e-mail address.
+<a name="email"></a>`datatype: email` provides an e-mail address input
+box.
 
 {% include side-by-side.html demo="email-field" %}
 
-<a name="integer"></a>`integer`: a valid whole number.
+### Numeric fields
 
-<a name="number"></a>`number`: a valid numeric value.
+<a name="integer"></a>`datatype: integer` indicates that the input
+should be a valid whole number.
+
+<a name="number"></a>`datatype: number` indicates that the input
+should be a valid numeric value.
 
 {% include side-by-side.html demo="number-field" %}
 
-<a name="currency"></a>`currency`: a valid numeric value; input box
-shows a currency symbol based on locale defined in the
-[configuration].
+<a name="currency"></a>`datatype: currency` indicates that the input
+should be a valid numeric value.  In addition, the input box shows a
+currency symbol based on locale defined in the [configuration].
 
 {% include side-by-side.html demo="money-field" %}
 
-<a name="file"></a>`file`: a single file upload (a [`DAFileList`]
-object is the result).
+<a name="range"></a>`datatype: range` shows a slider that the user can use to
+select a number within a given range.  The range must be supplied by
+providing `min` and `max` values.  An option `step` value can also be
+provided, the default of which is 1.
+
+{% include side-by-side.html demo="range" %}
+
+### File uploads
+
+<a name="file"></a><a name="files"></a>Using the `file` or `files`
+datatypes within a `fields` list, you can allow users to upload one or
+more files.
+
+`datatype: file` indicates that the user can upload a single file.
+The variable is set to a [`DAFileList`] object containing the
+necessary information about the uploaded file.
 
 {% include side-by-side.html demo="upload" %}
 
-<a name="files"></a>`files`: single or multiple file upload (a [`DAFileList`] object
-is the result).
+`datatype: files` indicates that the user can upload one or more
+files.  The variable is set to a [`DAFileList`] object containing the
+necessary information about the uploaded files.
 
 {% include side-by-side.html demo="upload-multiple" %}
 
-<a name="camera"></a>`camera`: like `file`, except with HTML5 that
-suggests using the device's camera to take a picture.
+<a name="camera"></a>`datatype: camera` is just like `file`, except with [HTML5] that
+suggests using the device's camera to take a picture.  On many
+devices, this is no different from `datatype: file`.
 
-<a name="camcorder"></a>`camcorder`: like `camera`, except for
-recording a video.
+<a name="camcorder"></a>`datatype: camcorder` is just like `camera`,
+except for recording a video.
 
-<a name="microphone"></a>`microphone`: like `camera`, except for
-recording an audio clip.
+<a name="microphone"></a>`datatype: microphone` is just like `camera`,
+except for recording an audio clip.
 
-<a name="fields yesno"></a>`yesno`: checkbox with label, aligned with labeled fields.
+### Yes/no fields
 
-<a name="fields noyes"></a>`noyes`: like `yesno`, except with True and False inverted.
+<a name="fields yesno"></a><a name="fields noyes"></a>`datatype:
+yesno` will show a checkbox with a label, aligned with labeled fields.
+`datatype: noyes` is like `datatype: yesno`, except with True and
+False inverted.
 
 {% include side-by-side.html demo="fields-yesno" %}
 
-<a name="fields yesnowide"></a>`yesnowide`: checkbox with label, full width of area.
-
-<a name="fields noyeswide"></a>`noyeswide`: like `yesnowide`, except with True and False inverted.
+<a name="fields yesnowide"></a><a name="fields
+noyeswide"></a>`datatype: yesnowide` will show a checkbox with a label
+that fills the full width of area.  `datatype: noyeswide` is like
+`datatype: yesnowide`, except with True and False inverted.
 
 {% include side-by-side.html demo="fields-yesnowide" %}
 
-<a name="fields yesnoradio"></a>`yesnoradio`: radio buttons offering "Yes" and "No."
+<a name="fields yesnoradio"></a>`datatype: yesnoradio` will show radio
+buttons offering choices "Yes" and "No."
 
-<a name="fields noyesradio"></a>`noyesradio`: like `yesnoradio`, except with True and False inverted.
+<a name="fields noyesradio"></a>`datatype: noyesradio` is like
+`datatype: yesnoradio`, except with True and False inverted.
 
 {% include side-by-side.html demo="fields-yesnoradio" %}
 
-<a name="fields yesnomaybe"></a>`yesnomaybe`: radio buttons offering "Yes," "No," and "I don't know."
+<a name="fields yesnomaybe"></a>`datatype: yesnomaybe` will show radio
+buttons offering choices "Yes," "No," and "I don't know."
 
 {% include side-by-side.html demo="fields-yesnomaybe" %}
 
-<a name="fields noyesmaybe"></a>`noyesmaybe`: like `yesnomaybe`, except with True and False inverted.
+<a name="fields noyesmaybe"></a>`datatype: noyesmaybe` is like
+`datatype: yesnomaybe`, except with True and False inverted.
 
 {% include side-by-side.html demo="fields-noyesmaybe" %}
 
-<a name="fields checkboxes"></a>`checkboxes`: show the [`choices`](#choices) list as checkboxes;
-variable will be a dictionary with items set to true or false
-depending on whether the option was checked.  No validation is done
-to see if the user selected at least one, regardless of the value of
-`required`.
+### Multiple-choice fields
 
-`object`: this is used when you would like to use a variable to
-refer to an existing object.  You can provide the list of objects to
-choose from in one of two ways.  The first way is to list the object
-names under `selections`.  The second way is to provide [`code`]
-that calls the `selections()` [function].  The user will be
-presented with a pull-down selector.
+<a name="fields checkboxes"></a>`datatype: checkboxes` will show the
+[`choices`](#choices) list as checkboxes.  The variable will be a
+dictionary with items set to true or false depending on whether the
+option was checked.  No validation is done to see if the user selected
+at least one, regardless of the value of `required`.
 
-`object_radio`: like `object`, except the user interface uses radio
-buttons rather than a pull-down list.  See [groups] for more information.
+{% include side-by-side.html demo="fields-checkboxes" %}
 
-`object_checkboxes`: this is used when you would like to use a
-question to set the elements of an object of type [`DAList`].  The
-choices in [`choices`](#choices) (optionally modified by `exclude`)
-will be presented to the user as checkboxes.  The `.gathered`
-attribute of the variable will be set to `True` after the elements
-are set.  See [groups] for more information.
-
-`radio`: show a [`choices`](#choices) list as a list of radio
-buttons instead of as a dropdown [select] tag (which is the
+<a name="radio"></a>`datatype: radio` shows a [`choices`](#choices) list as a list of
+radio buttons instead of as a dropdown [select] tag (which is the
 default).  The variable will be set to the value of the choice.
+
+{% include side-by-side.html demo="radio-list" %}
+
+<a name="object"></a>`datatype: object` is used when you would like to use a variable to
+refer to an existing object.  You need to include `choices`, which can
+be a list of objects.
+
+{% include side-by-side.html demo="object" %}
+
+If `choices` refers to a variable that is a list of things, the list
+will be unpacked and used as the list of items from which the user can
+select.  [Python] code can be used here.
+
+{% include side-by-side.html demo="object-selections" %}
+
+<a name="object_radio"></a>`datatype: object_radio` is like `datatype:
+object`, except the user interface uses radio buttons rather than a
+pull-down list.
+
+{% include side-by-side.html demo="object-radio" %}
+
+For a fuller discussion on using multiple-choice object selectors, see
+the [section on selecting objects](#objects), below.
+
+<a name="object_checkboxes"></a>`datatype: object_checkboxes` is used
+when you would like to use a question to set the elements of an object
+of type [`DAList`] (or a subtype thereof).  The choices in
+[`choices`](#choices) (optionally modified by [`exclude`]) will be
+presented to the user as checkboxes.  The `.gathered` attribute of the
+variable will be set to `True` after the elements are set.  See
+[groups] for more information.
+
+{% include side-by-side.html demo="object-checkboxes" %}
+
+## Input validation
 
 For some field types, you can require input validation by adding the
 following to the definition of a field:
 
-* `min`: for `currency` and `number` data types, require a minimum
-  value.
-  [See here for more information](http://jqueryvalidation.org/min-method).
-* `max`: for `currency` and `number` data types, require a maximum
-  value.
-  [See here for more information](http://jqueryvalidation.org/max-method).
-* `minlength`: require a minimum number of characters in a textbox,
-  number of checkboxes checked, etc.
-  [See here for more information](http://jqueryvalidation.org/minlength-method).
-* `maxlength`: require a maximum number of characters in a textbox,
-  number of checkboxes checked, etc.
-  [See here for more information](http://jqueryvalidation.org/maxlength-method).
+* <a name="min"></a>`min`: for `currency` and `number` data types,
+  require a minimum value.  This is passed directly to the
+  [jQuery Validation Plugin](http://jqueryvalidation.org/min-method).
+* <a name="max"></a>`max`: for `currency` and `number` data types,
+  require a maximum value.  This is passed directly to the
+  [jQuery Validation Plugin](http://jqueryvalidation.org/max-method).
 
-Here is a long example that illustrates many of these features.
+{% include side-by-side.html demo="min" %}
+
+* <a name="minlength"></a>`minlength`: require a minimum number of
+  characters in a textbox, number of checkboxes checked, etc.  This is
+  passed directly to the
+  [jQuery Validation Plugin](http://jqueryvalidation.org/minlength-method).
+* <a name="maxlength"></a>`maxlength`: require a maximum number of
+  characters in a textbox, number of checkboxes checked, etc.  This is
+  passed directly to the
+  [jQuery Validation Plugin](http://jqueryvalidation.org/maxlength-method).
+
+{% include side-by-side.html demo="minlength" %}
+
+## Example
+
+Here is a lengthy example that illustrates many of these features.
 
 {% include side-by-side.html demo="fields" %}
 
@@ -536,16 +626,6 @@ The referenced [CSS file] contains the following:
     color: green;
 }
 {% endhighlight %}
-
-## <a name="mc-code"></a>Multiple-choice fields with choices generated from code
-
-Note that adding [`code`] to a field makes it a multiple-choice
-question.  If you have a multiple-choice question and you want to
-reuse the same selections several times, you do not need to type in
-the whole list every time.  You can define a variable to contain the
-list and a [`code`] block that defines the variable.  For example:
-
-{% include side-by-side.html demo="fields-mc" %}
 
 ## <a name="objects"></a>Assigning existing objects to variables
 
@@ -972,3 +1052,9 @@ cannot use because they conflict with built-in names that [Python] and
 [inserting images]: {{ site.baseurl }}/docs/markup.html#inserting uploaded images
 [`fields`]: #fields
 [Python dictionaries]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[HTML5]: https://en.wikipedia.org/wiki/HTML5
+[`selections()` function]: {{ site.baseurl }}/docs/functions.html#selections
+[`exclude`]: #exclude
+[`object`]: #object
+[`object_radio`]: #object_radio
+[`object_checkboxes`]: #object_checkboxes

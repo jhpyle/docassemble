@@ -126,6 +126,13 @@
     proceed.
   field: user_is_relaxed
   ---
+"blank-label-field": |-
+  ---
+  question: |
+    What is your Zodiac sign?
+  fields:
+    - "": target_variable
+  ---
 "buttons": |-
   ---
   question: |
@@ -449,16 +456,17 @@
 "fields-mc": |-
   ---
   question: |
-    What is your brother's favorite fruit?
+    What is your favorite fruit?
   fields:
-    - Fruit: favorite_fruit_of_brother
+    - Fruit: favorite_fruit
       code: |
         myoptions
   ---
   question: |
-    What is your favorite fruit?
+    What is your brother's favorite
+    fruit?
   fields:
-    - Fruit: favorite_fruit
+    - Fruit: favorite_fruit_of_brother
       code: |
         myoptions
   ---
@@ -650,6 +658,12 @@
     - "What fruit do you need?": fruit
       hide if: has_fruit
   ---
+"html": "---\nquestion: |\n  I was thinking about your birthday.\nfields:\n  - html:\
+  \ |\n      The date and time is\n      <span class=\"mytime\" id=\"today_time\"\
+  ></span>.\n  - script: |\n      <script>\n        document.getElementById(\"today_time\"\
+  ).innerHTML = Date();\n      </script>\n  - css: |\n      <link rel=\"stylesheet\"\
+  \ \n      href=\"${ url_of('docassemble.demo:data/static/my.css') }\">\n  - \"When\
+  \ is your next birthday?\": birth_date\n    datatype: date\n---"
 "image-sets": |-
   ---
   image sets:
@@ -724,6 +738,16 @@
     To proceed with the interview,
     click "Yes."
   yesno: ready_to_proceed
+  ---
+"label": |-
+  ---
+  question: |
+    What are your favorite things to eat?
+  fields:
+    - label: Vegetable
+      field: favorite_vegetable
+    - label: Fruit
+      field: favorite_fruit
   ---
 "language": "---\nlanguage: es\nquestion: |\n  \xBFCu\xE1l es el significado de la\
   \ vida?\nfields:\n  - Significado de la Vida: meaning_life\n---"
@@ -802,6 +826,26 @@
     revision_date: 2016-03-22
     documentation: "http://docassemble.org/docs/initial.html#metadata"
   ---
+"min": |-
+  ---
+  question: |
+    What percentage of your friends
+    are turnips?
+  fields:
+    - Percent: percent
+      datatype: number
+      min: 0
+      max: 100
+  ---
+"minlength": |-
+  ---
+  question: |
+    What is the nuclear launch code?
+  fields:
+    - Code: launch_code
+      minlength: 5
+      maxlength: 15
+  ---
 "modules": |-
   ---
   modules:
@@ -879,6 +923,91 @@
       datatype: integer
     - Ounces of gold: gold_ounces
       datatype: number
+  ---
+"object": |-
+  ---
+  objects:
+    protagonist: Individual
+    antagonist: Individual
+  ---
+  code: |
+    protagonist.name.first = "Harry"
+    protagonist.name.last = "Potter"
+    antagonist.name.first = "Tom"
+    antagonist.name.last = "Riddle"
+  ---
+  question: Who is the villain?
+  fields:
+    The villain is: villain
+    datatype: object
+    default: antagonist
+    choices:
+      - protagonist
+      - antagonist
+  ---
+"object-checkboxes": |-
+  ---
+  objects:
+    protagonist: Individual
+    antagonist: Individual
+    villain: PartyList
+  ---
+  code: |
+    protagonist.name.first = "Harry"
+    protagonist.name.last = "Potter"
+    antagonist.name.first = "Tom"
+    antagonist.name.last = "Riddle"
+  ---
+  question: Who are the villains, if any?
+  fields:
+    no label: villain
+    datatype: object_checkboxes
+    choices:
+      - protagonist
+      - antagonist
+  ---
+"object-radio": |-
+  ---
+  objects:
+    protagonist: Individual
+    antagonist: Individual
+  ---
+  code: |
+    protagonist.name.first = "Harry"
+    protagonist.name.last = "Potter"
+    antagonist.name.first = "Tom"
+    antagonist.name.last = "Riddle"
+  ---
+  question: Who is the villain?
+  fields:
+    The villain is: villain
+    datatype: object_radio
+    default: antagonist
+    choices:
+      - protagonist
+      - antagonist
+  ---
+"object-selections": |-
+  ---
+  objects:
+    protagonist: Individual
+    antagonist: Individual
+    actors: PartyList
+  ---
+  code: |
+    protagonist.name.first = "Harry"
+    protagonist.name.last = "Potter"
+    antagonist.name.first = "Tom"
+    antagonist.name.last = "Riddle"
+    actors.append(protagonist)
+    actors.append(antagonist)
+    actors.gathered = True
+  ---
+  question: Who is the villain?
+  fields:
+    The villain is: villain
+    datatype: object
+    choices: actors
   ---
 "object-try-1": |-
   ---
@@ -1126,6 +1255,22 @@
         - Honda: Japan
         - Toyota: Japan
   ---
+"range": |-
+  ---
+  question: |
+    On a scale from 1 to 10, how
+    much do you like these animals?
+  fields:
+    - Possums: possum_preference
+      datatype: range
+      min: 1
+      max: 10
+      step: 0.5
+    - Rabbits: rabbit_preference
+      datatype: range
+      min: 1
+      max: 10
+  ---
 "reconsider": |-
   ---
   code: |
@@ -1236,6 +1381,22 @@
       datatype: yesnoradio
     - "What's your favorite fruit?": favorite_fruit
       show if: likes_fruit
+  ---
+"shuffle": |-
+  ---
+  question: |
+    For which of the following obscure
+    candidates do you wish to vote?
+  fields:
+    - Type: candidate
+      datatype: radio
+      shuffle: true
+      choices:
+        - Aaron Aardvark
+        - Albert Arnold
+        - Felicia Fellowes
+        - Miranda Moore
+        - Zachariah Zephyr
   ---
 "signature": |-
   ---
@@ -1428,9 +1589,10 @@
   ---
 "upload-multiple": |-
   ---
-  question: Please upload pictures of yourself.
+  question: |
+    Please upload pictures of yourself.
   fields:
-    - Picture: user_pictures
+    - Pictures: user_pictures
       datatype: files
   ---
   question: |
