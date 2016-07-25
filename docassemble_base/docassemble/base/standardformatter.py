@@ -975,7 +975,7 @@ def input_for(status, field, extra_scripts, wide=False):
                 else:
                     the_step = ''
                 output += '<input alt="' + word("Slider") + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + the_default + ' data-slider-max="' + str(int(status.extras['max'][field.number])) + '" data-slider-min="' + str(int(status.extras['min'][field.number])) + '"' + the_step + '></input>'
-                extra_scripts.append('<script>$("#' + escape_for_jquery(saveas_string) + '").slider();</script>\n')
+                extra_scripts.append('<script>$("#' + escape_for_jquery(saveas_string) + '").slider({tooltip: "always"});</script>\n')
         elif field.datatype == 'area':
             output += '<textarea alt="' + word("Input box") + '" class="form-control" rows="4" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + placeholdertext + '>'
             if defaultvalue is not None:

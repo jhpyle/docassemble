@@ -32,7 +32,6 @@
     - hideif-boolean
     - showif
     - note
-    - html
     - min
     - minlength
 - Multiple choice:

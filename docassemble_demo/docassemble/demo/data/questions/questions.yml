@@ -608,6 +608,15 @@ mako: |
   ${ person } is adorable. \
   </%def>
 ---
+question: |
+  On a scale of 1 to 10, how much hatred do you harbor toward
+  ${ case.defendant }?
+fields:
+  no label: hatred_level
+  datatype: range
+  min: 1
+  max: 10
+---
 comment: |
   The following question is the interview's main endpoint.  This
   question has two attachment documents.  Most of the questions in the
@@ -674,6 +683,10 @@ attachments:
       and the value of all you own is 
       ${ currency(client.asset.total()) }.  Your home is best described as
       an "${ client.address.type }."
+
+      % if hatred_level > 8:
+      You seem to dislike ${ case.defendant }.
+      % endif
 
       % if client_has_standing:
       You have a valid claim.

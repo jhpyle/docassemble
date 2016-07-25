@@ -11,15 +11,11 @@ question: |
   I was thinking about your birthday.
 fields:
   - html: |
-      The date and time is
-      <span class="mytime" id="today_time"></span>.
+      The date and time is <span class="mytime" id="today_time"></span>.
   - script: |
-      <script>
-        document.getElementById("today_time").innerHTML = Date();
-      </script>
+      <script>document.getElementById("today_time").innerHTML = Date();</script>
   - css: |
-      <link rel="stylesheet" 
-      href="${ url_of('docassemble.demo:data/static/my.css') }">
+      <link rel="stylesheet" href="${ url_of('docassemble.demo:data/static/my.css') }">
   - "When is your next birthday?": birth_date
     datatype: date
 ---

@@ -4045,6 +4045,12 @@ $( document ).ready(function() {
 
 # nameInfo = ' + str(json.dumps(vars_in_use['name_info'])) + ';      
 
+# def mydump(data_dict):
+#     output = ""
+#     for key, val in data_dict.iteritems():
+#         output += "      exampleData[" + str(repr(key)) + "] = " + str(json.dumps(val)) + "\n"
+#     return output
+
 @app.route('/packages', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin', 'developer'])
