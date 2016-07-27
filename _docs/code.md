@@ -4,6 +4,167 @@ title: Code Questions
 short_title: Code
 ---
 
+**docassemble** allows interview authors to use [Python], a general
+purpose programming language, to control the direction of interviews
+and do things with user input.  It is not necessary to use [Python]
+code in an interview, but it is an extremely powerful tool.
+
+[Python] appears in **docassemble** in a number of ways:
+
+* Every [variable name] in **docassemble** is a [Python] variable,
+  whether authors realize it or not.  The value of the variable might
+  be text (e.g., `"123 Main Street"`), a number (e.g., `42`), a
+  special value that has meaning in [Python] (e.g. `True`, `False`,
+  and `None`), a [group] (e.g., a [list], [dictionary], or [set]), an
+  [object], or an attribute of an [object].
+* Authors can use [`code`] blocks to set variables using [Python]
+  code, which may act upon user input.
+* [Python] code can be embedded within [`question`]s, for example to
+  generate a list of choices in a multiple-choice list.
+* The [Mako] templating system, which authors can use to format
+  [questions] and [documents], is based on [Python], and allows
+  authors to embed [Python] statements within templates.  There are
+  slight syntax differences between [Mako] and [Python].  For example,
+  [Mako] requires that if/then/else logic statements be closed with an
+  `endif` statement.
+
+# <a name="python"></a> An introduction to coding in Python
+
+As general purpose programming languages go, [Python] is relatively
+user-friendly and readable.  Python programmers don't need to worry
+that their code will fail because of a missing semicolon.
+
+## Simple examples: arithmetic
+
+Here is some very simple [Python] code:
+
+{% include side-by-side.html demo="code-example-01" %}
+
+This code sets the variable `answer` to 2 + 2.  The code is contained
+in a **docassemble** [`code`] block, which is explained
+[below](#code).
+
+Here is a more complicated example:
+
+{% include side-by-side.html demo="code-example-02" %}
+
+This code first sets the variable `a` to the number 2.  Then it sets
+the variable `b` to the number 3.  Then it sets the variable `answer`
+to the sum of `a` and `b`, which is 5.
+
+Note that once a variable is set, its value does not change.  In the
+code below, the `answer` is still 5, even though `b` is changed to
+`1`.
+
+{% include side-by-side.html demo="code-example-03" %}
+
+The `code` blocks can contain multiple lines of code, which are
+processed one at a time.
+
+It is also possible to run Python code in a more limited way within a
+[Mako] template, using [Mako]'s `${}` syntax.
+
+{% include side-by-side.html demo="code-example-04" %}
+
+The contents of `${ ... }` are processed as [Python] code.  The code
+that can be placed inside `${ ... }` is limited to one line of code,
+the result of which is then placed into the text of the question.  So
+you could not include multiple lines of code within a `${ ... }`
+expression.
+
+You can do complicated arithmetic with [Python]:
+
+{% include side-by-side.html demo="code-example-05" %}
+
+Note that the spaces within this code are purely aesthetic; the code
+will still function without them:
+
+{% include side-by-side.html demo="code-example-06" %}
+
+However, using spaces in your code is highly recommended, because they
+make the code much more readable!
+
+## Conditional actions: if/then/else statements
+
+Sometimes you want different code to run differently depending on
+certain conditions.  In computer programming, the simplest form of a
+"conditional statement" is the if/then/else statement, where you tell
+the computer that _if_ a certain condition is true, _then_ do
+something, or do something _else_ if the condition is false.
+
+For example:
+
+{% include side-by-side.html demo="code-example-07" %}
+
+Here, the condition to be evaluated is `b > a`.  The `>` symbol means
+"greater than."  (The `<` symbol means "less than.")  Since `b` is 5
+and `a` is 4, and 5 is greater than 4, the condition is true.
+Therefore, the lines `b = 62 ` and `answer = 20` will be run, and the
+code `answer = 40` will be ignored.
+
+There are several important things to note in this example because
+they illustrate the syntax of the [Python] language:
+
+* The `if` and `else` statements end in a colon `:`, after which the
+  line ends.
+  * Rule: This colon must be there.  If you forget the colon, you will
+    get an "invalid syntax" error.
+* The lines after the `if` and `else` lines are indented.  The
+  indentation indicates which lines are referred to by the colon, and
+  which are not.
+  * Rule: There must be at least one indented line following the
+    colon.  If you don't have an indented line following a colon, you
+    will see the error "IndentationError: expected an indented block."
+* At the end, `b` will be set to 0.  Although the line follows
+  `else:`, it is not indented relative to the `else:` line.
+* The lines `b = 62` and `answer = 20` are both indented by two
+  spaces.
+  * Rule: While the number of spaces is not important (1, 2, 3, 4, or
+  more spaces would all be valid) the indentation following the colon
+  must be consistent.  If you use inconsistent indentation, you will
+  see the error "IndentationError: unindent does not match any outer
+  indentation level."
+
+These are important rules in [Python].  In other programming
+languages, line breaks and spaces do not matter, and punctuation marks
+like `{`, `}`, and `;` are used to separate different pieces of code.
+In [Python], however, line breaks and spaces are important; they serve
+the same purposes that `{`, `}`, and `;` serve in other languages.
+
+You can have multiple layers of indentation.  For example:
+
+{% include side-by-side.html demo="code-example-08" %}
+
+In addition to greater than (`>`) and less than (`<`), the following
+conditional operators are available in [Python]:
+
+* `a == b` is true if `a` equals `b`.  There are two equal signs to
+  distinguish this from `a = b`, which sets the value of `a` to the
+  value of `b`.  This works with numbers as well as with text.
+* `a is b` is essentially synonomous with `a == b`.
+* `a >= b` is true if `a` is greater than or equal to `b`.
+* `a <= b` is true if `a` is less than or equal to `b`.
+* `a in b` is true if `b` is a [list], [dictionary], or [set], and `a`
+  is contained within `b`.  For example, `42 in [13, 42, 62]` is true.
+  This also works with text.  If you do `a = "Fred"`, then `a in
+  ["Mary", "Fred", "Scott"]` will be true, while `a in
+  ["Harold", "Anthony", "Norman"]` will be false.  In the case where
+  `b` is a [dictionary], `a in b` will return true if `a` is a key
+  within `b`.
+
+The following conditions apply when the variables are text.
+
+* `a.rfind(b) >= 0` will return true if `a` and `b` are both text
+  strings and `b` is contained within `a`.
+* `a.startswith(b)` returns true if the text in `b` is the start of
+  the text in `a`.
+* `a.endswith(b)` returns true if the text in `b` is at the tail end
+  of the text in `a`.
+
+## Going through the items in a group
+
+
+
 # <a name="code"></a> The `code` block
 
 In a **docassemble** interview, a [`question`] block tells
@@ -112,9 +273,6 @@ continue in its effort to find a definition for
 `product_recommendation` and will complete the execution of the `code`
 block.
 
-It is not necessary to have any `code` blocks in your interviews, but
-they are the most elegant way of expressing your interview logic.
-
 # <a name="modifiers"></a>`code` block modifiers
 
 You can change the way `code` blocks work by adding modifiers:
@@ -144,3 +302,14 @@ the [Interview Logic] section.
 [`initial`]: {{ site.baseurl }}/docs/logic.html#initial
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [Interview Logic]: {{ site.baseurl }}/docs/logic.html
+[Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
+[`code`]: #code
+[variable name]: {{ site.baseurl }}/docs/fields.html#variable names
+[object]: {{ site.baseurl }}/docs/objects.html
+[group]: {{ site.baseurl }}/docs/groups.html
+[list]: {{ site.baseurl }}/docs/groups.html#
+[dictionary]: {{ site.baseurl }}/docs/groups.html#
+[set]: {{ site.baseurl }}/docs/groups.html#
+[Mako]: http://www.makotemplates.org/
+[questions]: {{ site.baseurl }}/docs/questions.html
+[documents]: {{ site.baseurl }}/docs/documents.html

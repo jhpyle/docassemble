@@ -47,7 +47,7 @@
   question: |
     You are ${ user.age_in_years() }
     years old.
-  sets: all_done
+  mandatory: true
   ---
 "alignment": |-
   ---
@@ -90,7 +90,7 @@
         | Andrea Advocate
         | 123 Riverside Drive
         | Fort Franklin, AR 92302
-  sets: all_done
+  mandatory: true
   ---
 "allow-emailing-false": |-
   ---
@@ -272,6 +272,78 @@
   code: |
     fruits = peaches + pears
   ---
+"code-example-01": |-
+  ---
+  code: |
+    answer = 2 + 2
+  ---
+  question: |
+    The answer is ${ answer }.
+  mandatory: true
+  ---
+"code-example-02": |-
+  ---
+  code: |
+    a = 2
+    b = 3
+    answer = a + b
+  ---
+"code-example-03": |-
+  ---
+  code: |
+    a = 2
+    b = 3
+    answer = a + b
+    b = 1
+  ---
+"code-example-04": |-
+  ---
+  question: |
+    The answer is ${ 2 + 2 }.
+  mandatory: true
+  ---
+"code-example-05": |-
+  ---
+  question: |
+    The answer is ${ ( 42 + 4 ) * 50 / ( 5 - 2 ) }.
+  mandatory: true
+  ---
+"code-example-06": |-
+  ---
+  question: |
+    The answer is ${(42+4)*50/(5-2)}.
+  mandatory: true
+  ---
+"code-example-07": |-
+  ---
+  code: |
+    a = 4
+    b = 5
+    if b > a:
+      b = 62
+      answer = 20 + b
+    else:
+      answer = 40 + b
+    b = 0
+  ---
+"code-example-08": |-
+  ---
+  code: |
+    a = 4
+    b = 5
+    c = 2
+    d = 6
+    if b > a:
+      b = 62
+      if c < d:
+        answer = 20 + b
+      else:
+        answer = 20 + c - d
+      d = a + b
+    else:
+      answer = 40 + b
+    b = 0
+  ---
 "comment": |-
   ---
   question: Do you like turnips?
@@ -314,7 +386,7 @@
     If you sold ${ number } fish for
     a dollar each, you would get
     ${ currency(number) }.
-  sets: all_done
+  mandatory: true
   ---
 "dalist": |-
   ---
@@ -341,7 +413,7 @@
     You have reached the end of the interview.
   subquestion: |
     I hope you had a good time!
-  sets: all_done
+  mandatory: true
   ---
 "decoration": |-
   ---
@@ -355,8 +427,8 @@
   deride(fruit)\">\n  ${ fruit } are disgusting, and they\n  are basically inedible.\n\
   \  </%def>\n---\nquestion: The world of fruit\nsubquestion: |\n  There are many\
   \ types of fruit in the\n  world.\n  \n  ${ explain(\"Peaches\") }\n  ${ explain(\"\
-  Oranges\") }\n  ${ deride(\"Strawberries\") }\nusedefs:\n - my_explanation\nsets:\
-  \ all_done\n---"
+  Oranges\") }\n  ${ deride(\"Strawberries\") }\nusedefs:\n - my_explanation\nmandatory:\
+  \ true\n---"
 "defined": |-
   ---
   question: Summary
@@ -371,7 +443,7 @@
     I do not know your favorite
     vegetable.
     % endif
-  sets: all_done
+  mandatory: true
   ---
 "document": |-
   ---
@@ -384,7 +456,7 @@
 
         ${ client } is entitled to
         benefits plan ${ benefits }.
-  sets: all_done
+  mandatory: true
   ---
 "email-field": |-
   ---
@@ -537,7 +609,7 @@
     % for fruit in fruit_list:
     I assume you like ${ fruit }.
     % endfor
-  sets: all_done
+  mandatory: true
   ---
 "force-ask": |-
   ---
@@ -589,7 +661,7 @@
   \  Capitol in what was then\n      little more than a tract of\n      wooded wilderness\
   \ here beside\n      the Potomac. We now find it\n      necessary to provide by\
   \ great\n      additional buildings for the\n      business of the government.\n\
-  sets: all_done\n---"
+  mandatory: true\n---"
 "generic-object": |-
   ---
   generic object: Individual
@@ -658,12 +730,20 @@
     - "What fruit do you need?": fruit
       hide if: has_fruit
   ---
-"html": "---\nquestion: |\n  I was thinking about your birthday.\nfields:\n  - html:\
-  \ |\n      The date and time is\n      <span class=\"mytime\" id=\"today_time\"\
-  ></span>.\n  - script: |\n      <script>\n        document.getElementById(\"today_time\"\
-  ).innerHTML = Date();\n      </script>\n  - css: |\n      <link rel=\"stylesheet\"\
-  \ \n      href=\"${ url_of('docassemble.demo:data/static/my.css') }\">\n  - \"When\
-  \ is your next birthday?\": birth_date\n    datatype: date\n---"
+"html": |-
+  ---
+  question: |
+    I was thinking about your birthday.
+  fields:
+    - html: |
+        The date and time is <span class="mytime" id="today_time"></span>.
+    - script: |
+        <script>document.getElementById("today_time").innerHTML = Date();</script>
+    - css: |
+        <link rel="stylesheet" href="${ url_of('docassemble.demo:data/static/my.css') }">
+    - "When is your next birthday?": birth_date
+      datatype: date
+  ---
 "image-sets": |-
   ---
   image sets:
@@ -790,7 +870,7 @@
   \n  Here is a bullet list:\n\n  * Larry;\n  * Curly; and\n  * Moe\n\n  Here is a\
   \ numbered list:\n\n  1. Buy groceries.\n  2. Get the car inspected.\n  3. Take\
   \ over the world!\n  \n  You can [Google](http://google.com)\n  \"markdown\" to\
-  \ learn more.\nsets: all_done\n---"
+  \ learn more.\nmandatory: true\n---"
 "menu-item": |-
   ---
   modules:
@@ -1025,10 +1105,7 @@
   question: |
     The best day in the history of
     the world was ${ favorite_date }.
-  sets: all_done
-  ---
   mandatory: true
-  code: all_done
   ---
 "object-try-2": |-
   ---
@@ -1057,10 +1134,7 @@
     The villain, ${ villain }, was
     born on
     ${ format_date(villain.birthdate) }.
-  sets: all_done
-  ---
   mandatory: true
-  code: all_done
   ---
 "objects": |-
   ---
@@ -1124,7 +1198,7 @@
 
         ${ client } is entitled to
         benefits plan ${ benefits }.
-  sets: all_done
+  mandatory: true
   ---
 "past-tense": |-
   ---
@@ -1161,7 +1235,7 @@
   question: |
     Your application for ${ service }
     has been submitted.
-  sets: all_done
+  mandatory: true
   ---
 "progress": |-
   ---
@@ -1456,7 +1530,7 @@
         nation, or any nation so
         conceived and so dedicated,
         can long endure.
-  sets: all_done
+  mandatory: true
   ---
 "space-underscore": |-
   ---
@@ -1585,7 +1659,7 @@
   question: |
     You're so adorable!
   audio: ${ user_picture }
-  sets: all_done
+  mandatory: true
   ---
 "upload-multiple": |-
   ---
@@ -1598,7 +1672,7 @@
   question: |
     Look at all those adorable photos!
   audio: ${ user_pictures }
-  sets: all_done
+  mandatory: true
   ---
 "upload_audio": |-
   ---
@@ -1610,7 +1684,7 @@
   question: |
     Let's listen to what you uploaded.
   audio: ${ user_mp3_file }
-  sets: all_done
+  mandatory: true
   ---
 "upload_audio_microphone": |-
   ---
@@ -1622,7 +1696,7 @@
   question: |
     Let's listen to what you recorded.
   audio: ${ user_audio_file }
-  sets: all_done
+  mandatory: true
   ---
 "url-of": |-
   ---
@@ -1641,7 +1715,7 @@
   subquestion: |
     Your favorite fruit is
     ${ value('favorite_fruit') }.
-  sets: all_done
+  mandatory: true
   ---
 "video": |-
   ---

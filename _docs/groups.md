@@ -10,7 +10,7 @@ types of the same name that exist in Python.
 
 # Overview of types of data structures
 
-## List
+## <a name="list"></a>List
 
 A **list** is a **group that has a defined order**.  Elements are
 numbered with an index that starts from zero.  In Python, if a list is
@@ -20,7 +20,7 @@ return `pear`.  Adding a new element to the list is called "appending"
 to the list.  In **docassemble**, lists are objects of type [`DAList`],
 but they behave much like Python lists.
 
-## Dictionary
+## <a name="dictionary"></a>Dictionary
 
 A dictionary, or **dict**, is a **group of key/value pairs**.  By
 analogy with a dictionary, the "key" represents the word and the
@@ -34,7 +34,7 @@ dictionary, whereas doing `feet['dog'] = 3` will change the entry for
 `dog`.  The elements in a dictionary are stored in no particular
 order; the order in which you add them is not remembered.
 
-## Set
+## <a name="set"></a>Set
 
 A **set** is a **group of unique elements with no order**.  There is
 no index or key that allows you to refer to a particular entry; an
