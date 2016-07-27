@@ -524,7 +524,7 @@ def pixels_in(length):
     logmessage("Could not read " + str(length) + "\n")
     return(300)
 
-def image_url_string(match, emoji=False, question=None):
+def image_url_string(match, emoji=False, question=None, playground=False):
     file_reference = match.group(1)
     try:
         width = match.group(2)

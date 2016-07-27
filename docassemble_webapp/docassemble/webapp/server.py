@@ -445,7 +445,7 @@ def add_info_about_file(filename, result):
 
 def get_info_from_file_reference(file_reference, **kwargs):
     #sys.stderr.write('file reference is ' + str(file_reference) + "\n")
-    #logmessage('file reference is ' + str(file_reference))
+    logmessage('file reference is ' + str(file_reference))
     if 'convert' in kwargs:
         convert = kwargs['convert']
     else:
@@ -466,7 +466,7 @@ def get_info_from_file_reference(file_reference, **kwargs):
             else:
                 file_reference = 'docassemble.base:' + file_reference
         result['fullpath'] = docassemble.base.util.static_filename_path(file_reference)
-    #logmessage("path is " + str(result['fullpath']))
+    logmessage("path is " + str(result['fullpath']))
     if result['fullpath'] is not None and os.path.isfile(result['fullpath']):
         result['filename'] = os.path.basename(result['fullpath'])
         ext_type, result['mimetype'] = get_ext_and_mimetype(result['fullpath'])
@@ -485,7 +485,7 @@ def get_info_from_file_reference(file_reference, **kwargs):
             else:
                 logmessage("Did not find file " + result['path'] + '.' + convert[result['extension']])
                 return dict()
-        #logmessage("Full path is " + result['fullpath'])
+        logmessage("Full path is " + result['fullpath'])
         if os.path.isfile(result['fullpath']):
             add_info_about_file(result['fullpath'], result)
     else:

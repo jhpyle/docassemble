@@ -82,7 +82,7 @@ class DAInterview(DAObject):
     def decoration_list(self):
         out_list = [["None", "No decoration"]]
         for key, data in self.decorations.iteritems():
-            out_list.append([key, '[EMOJI ' + str(data.filename) + ', 1em] ' + str(key)])
+            out_list.append([key, '[EMOJI ' + str(data.fileref) + ', 1em] ' + str(key)])
         return out_list
     def package_info(self):
         info = dict()

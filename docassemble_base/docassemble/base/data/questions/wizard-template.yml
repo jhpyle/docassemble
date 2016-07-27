@@ -122,6 +122,7 @@ code: |
       decoration_key = oneline(base_name(decoration_filename))
       new_decoration = interview.decorations.initializeObject(decoration_key)
       new_decoration.filename = decoration_filename
+      new_decoration.fileref = 'docassemble.playground' + str(static.user_id) + ':' + decoration_filename
   interview.decorations.gathered = True
 ---
 mandatory: true
