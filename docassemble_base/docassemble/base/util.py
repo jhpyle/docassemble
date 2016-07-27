@@ -481,6 +481,22 @@ def a_preposition_b_default(a, b, **kwargs):
     else:
         return unicode(a) + unicode(' ' + preposition + ' ') + unicode(b)
 
+def verb_present_en(*pargs, **kwargs):
+    new_args = list()
+    for arg in pargs:
+        new_args.append(arg)
+    if len(new_args) < 2:
+        new_args.append('3sg')
+    return pattern.en.conjugate(*new_args, **kwargs)
+    
+def verb_past_en(*pargs, **kwargs):
+    new_args = list()
+    for arg in pargs:
+        new_args.append(arg)
+    if len(new_args) < 2:
+        new_args.append('3sgp')
+    return pattern.en.conjugate(*new_args, **kwargs)
+    
 language_functions = {
     'in_the': {
         'en': prefix_constructor('in the ')
@@ -522,16 +538,16 @@ language_functions = {
         'en': prefix_constructor('do you ')
     },
     'verb_past': {
-        'en': lambda x, *pargs, **kwargs: pattern.en.conjugate(x, *pargs, **kwargs)
+        'en': lambda *pargs, **kwargs: verb_past_en(*pargs, **kwargs)
     },
     'verb_present': {
-        'en': lambda x, *pargs, **kwargs: pattern.en.conjugate(x, *pargs, **kwargs)
+        'en': lambda *pargs, **kwargs: verb_present_en(*pargs, **kwargs)
     },
     'noun_plural': {
-        'en': lambda x, *pargs, **kwargs: pattern.en.pluralize(x, *pargs, **kwargs)
+        'en': lambda *pargs, **kwargs: pattern.en.pluralize(*pargs, **kwargs)
     },
     'indefinite_article': {
-        'en': lambda x, *pargs, **kwargs: pattern.en.article(x, *pargs, **kwargs)
+        'en': lambda *pargs, **kwargs: pattern.en.article(*pargs, **kwargs) + " " + unicode(pargs[0])
     },
     'currency_symbol': {
         '*': currency_symbol_default

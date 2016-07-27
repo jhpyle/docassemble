@@ -25,12 +25,9 @@ question: |
 fields:
   - no label: thing[i]
 ---
-sets: all_done
 need: thing.gathered
 question: |
   The things are: ${ thing }.
 buttons:
   - Restart: restart
----
 mandatory: true
-code: all_done

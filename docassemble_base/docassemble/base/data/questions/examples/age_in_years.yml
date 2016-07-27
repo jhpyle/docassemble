@@ -19,7 +19,4 @@ fields:
 question: |
   You are ${ user.age_in_years() }
   years old.
-sets: all_done
----
 mandatory: true
-code: all_done

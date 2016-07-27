@@ -13,10 +13,7 @@ fields:
       mushroom is a fungus, not a vegetable.
   - Favorite fungus: mushroom
 ---
-sets: all_done
 question: |
   You like ${ fruit }, ${ vegetable },
   and ${ mushroom }.
----
 mandatory: true
-code: all_done

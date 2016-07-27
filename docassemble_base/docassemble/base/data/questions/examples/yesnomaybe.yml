@@ -7,7 +7,6 @@ question: |
   Is Topeka the capital of Kansas?
 yesnomaybe: topeka_is_capital_of_kansas
 ---
-sets: all_done
 question: |
   % if topeka_is_capital_of_kansas:
   You were right that Topeka is the capital of Kansas.
@@ -16,6 +15,4 @@ question: |
   % else:
   Actually, Topeka is the capital of Kansas.
   % endif
----
 mandatory: true
-code: all_done

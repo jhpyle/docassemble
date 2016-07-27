@@ -6,7 +6,4 @@ question: |
   You have reached the end of the interview.
 subquestion: |
   I hope you had a good time!
-sets: all_done
----
 mandatory: true
-code: all_done

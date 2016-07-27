@@ -47,11 +47,8 @@ attachments:
       nation, or any nation so
       conceived and so dedicated,
       can long endure.
-sets: all_done
+mandatory: true
 ---
 code: |
   client = "Jane Doe"
   benefits = "G-432"
----
-mandatory: true
-code: all_done

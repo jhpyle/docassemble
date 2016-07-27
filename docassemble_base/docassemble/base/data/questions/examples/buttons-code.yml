@@ -18,7 +18,4 @@ subquestion: |
   You need to go to a ${ car_make }
   dealership and ask if they have a
   ${ car_model } for sale.
-sets: all_done
----
 mandatory: true
-code: all_done

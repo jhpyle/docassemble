@@ -22,7 +22,6 @@ question: |
 fields:
   - no label: x[i]
 ---
-sets: tell_story
 question: A funny story
 subquestion: |
   ${ person[0] } went to ${ place[0] } to buy
@@ -38,6 +37,4 @@ subquestion: |
   ${ noun[1] }, thereby saving the day.
 buttons:
   - Do it again: restart
----
 mandatory: true
-code: tell_story

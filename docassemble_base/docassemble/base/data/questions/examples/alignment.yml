@@ -41,11 +41,8 @@ attachments:
       | Andrea Advocate
       | 123 Riverside Drive
       | Fort Franklin, AR 92302
-sets: all_done
+mandatory: true
 ---
 code: |
   client = "Jane Doe"
   benefits = "G-432"
----
-mandatory: true
-code: all_done

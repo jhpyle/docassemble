@@ -27,7 +27,4 @@ subquestion: |
   You like pears.
   % endif
   Your favorite, though, is ${ favorite_fruit }.
-sets: all_done
----
 mandatory: true
-code: all_done

@@ -9,7 +9,4 @@ question: |
   Your favorite fruit is ${ favorite_fruit }
   and your favorite vegetable is
   ${ favorite_vegetable }.
-sets: all_done
----
 mandatory: true
-code: all_done

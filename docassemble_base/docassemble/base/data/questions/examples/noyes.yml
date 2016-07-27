@@ -9,7 +9,4 @@ noyes: user_is_minor
 question: Result of question
 subquestion: |
   user_is_minor is: "${ user_is_minor }"
-sets: all_done
----
 mandatory: true
-code: all_done

@@ -18,7 +18,4 @@ yesno: ready_to_start
 ---
 need: ready_to_start
 question: This is the end of the interview.
-sets: all_done
----
 mandatory: true
-code: all_done

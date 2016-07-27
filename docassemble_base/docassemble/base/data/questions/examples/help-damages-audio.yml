@@ -17,19 +17,16 @@ help:
   audio: |
     message_re_damages.mp3
 ---
+modules:
+  - docassemble.base.util
+---
+code: |
+  defendant = "Dastardly Defendant"
+---
 question: |
   Thank you.
 subquestion: |
   You are seeking
   ${ currency(damages_sought) }
   in damages
-sets: all_done
----
-code: |
-  defendant = "Dastardly Defendant"
----
-modules:
-  - docassemble.base.util
----
 mandatory: true
-code: all_done

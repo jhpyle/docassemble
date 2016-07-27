@@ -190,7 +190,7 @@ class DAList(DAObject):
             if len(self.elements) > 1:
                 tense = 'ppl'
             else:
-                tense = '3gp'
+                tense = '3sgp'
             return verb_past(the_verb, tense)
         else:
             if len(self.elements) > 1:
@@ -205,7 +205,7 @@ class DAList(DAObject):
         if len(self.elements) > 1:
             tense = 'ppl'
         else:
-            tense = '3gp'
+            tense = '3sgp'
         return verb_past(the_verb, tense)
     def as_singular_noun(self):
         """Returns a human-readable expression of the object based on its instanceName,
@@ -420,7 +420,7 @@ class DADict(DAObject):
             if len(self.elements) > 1:
                 tense = 'ppl'
             else:
-                tense = '3gp'
+                tense = '3sgp'
             return verb_past(the_verb, tense)
         else:
             if len(self.elements) > 1:
@@ -435,7 +435,7 @@ class DADict(DAObject):
         if len(self.elements) > 1:
             tense = 'ppl'
         else:
-            tense = '3gp'
+            tense = '3sgp'
         return verb_past(the_verb, tense)
     def as_singular_noun(self):
         """Returns a human-readable expression of the object based on its
@@ -611,7 +611,7 @@ class DASet(DAObject):
             if len(self.elements) > 1:
                 tense = 'ppl'
             else:
-                tense = '3gp'
+                tense = '3sgp'
             return verb_past(the_verb, tense)
         else:
             if len(self.elements) > 1:
@@ -626,7 +626,7 @@ class DASet(DAObject):
         if len(self.elements) > 1:
             tense = 'ppl'
         else:
-            tense = '3gp'
+            tense = '3sgp'
         return verb_past(the_verb, tense)
     def as_singular_noun(self):
         """Returns a human-readable expression of the object based on its

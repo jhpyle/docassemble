@@ -19,7 +19,4 @@ field: ready_to_proceed
 question: |
   All done with the interview
 need: ready_to_proceed
-sets: all_done
----
 mandatory: true
-code: all_done

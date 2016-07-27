@@ -10,11 +10,8 @@ fields:
   - Vegetable: target_variable
   - Fruit: other_target_variable
 ---
-sets: all_done
 question: Result of question
 subquestion: |
   target_variable is: "${ target_variable }"
----
 mandatory: true
-code: all_done
 

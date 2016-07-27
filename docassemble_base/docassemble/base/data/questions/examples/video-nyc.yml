@@ -12,7 +12,4 @@ question: |
   You are going to New York City.
   % else:
   You are not going to New York City.
-sets: all_done
----
 mandatory: true
-code: all_done

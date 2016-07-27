@@ -36,7 +36,4 @@ subquestion: |
   is:
 
   ${ meaning_life }
-sets: all_done
----
 mandatory: true
-code: all_done

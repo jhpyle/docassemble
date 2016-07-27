@@ -10,12 +10,9 @@ fields:
     minlength: 5
     maxlength: 15
 ---
-sets: final_screen
 question: |
   Thank you for giving me the launch
   code (${ launch_code }).
 
   Countdown commencing.
----
 mandatory: true
-code: final_screen

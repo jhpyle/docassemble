@@ -1,0 +1,11 @@
+metadata:
+  title: Two plus two
+  example start: 1
+  example end: 2
+---
+code: |
+  answer = 2 + 2
+---
+question: |
+  The answer is ${ answer }.
+mandatory: true

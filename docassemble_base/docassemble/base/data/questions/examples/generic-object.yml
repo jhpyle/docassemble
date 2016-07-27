@@ -28,7 +28,4 @@ subquestion: |
   % else:
   Cats are not universally liked, it seems.
   % endif
-sets: all_done
----
 mandatory: true
-code: all_done

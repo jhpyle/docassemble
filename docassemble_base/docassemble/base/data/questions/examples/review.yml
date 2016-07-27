@@ -80,7 +80,6 @@ comment: |
   after answering some of the
   questions.
 ---
-sets: all_done
 question: |
   Ok, ${ user }, you like ${ fruit },
   ${ vegetable }, and ${ fungi }.
@@ -88,6 +87,4 @@ subquestion: |
   You can revisit your answers by
   selecting "Review Answers" from the
   menu.
----
 mandatory: true
-code: all_done

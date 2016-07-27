@@ -11,13 +11,10 @@ fields:
   - "What's your favorite fruit?": favorite_fruit
     show if: likes_fruit
 ---
-sets: all_done
 question: |
   % if likes_fruit is True:
   You like ${ favorite_fruit }.
   % else:
   You do not like fruit.
   % endif
----
 mandatory: true
-code: all_done

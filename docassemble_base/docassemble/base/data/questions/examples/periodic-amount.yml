@@ -22,7 +22,4 @@ subquestion: |
   ${ user_salary }
   and period is
   ${ period }.
-sets: all_done
----
 mandatory: true
-code: all_done

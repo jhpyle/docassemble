@@ -21,7 +21,4 @@ question: End of interview
 subquestion: |
   Your docket number is
   "${ docket_number }."
-sets: all_done
----
 mandatory: true
-code: all_done

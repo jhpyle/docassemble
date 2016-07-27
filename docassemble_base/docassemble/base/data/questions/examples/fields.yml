@@ -9,7 +9,7 @@ imports:
 modules:
   - docassemble.base.util
 ---
-sets: final_screen
+mandatory: true
 question: All done
 subquestion: |
   Your income is ${ user_annual_income }.
@@ -77,6 +77,3 @@ fields:
       - Republican
       - Democrat
       - Independent
----
-mandatory: true
-code: final_screen

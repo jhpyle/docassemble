@@ -23,7 +23,4 @@ subquestion: |
   % else:
   You clearly need to play more Minecraft.
   % endif
-sets: all_done
----
 mandatory: true
-code: all_done

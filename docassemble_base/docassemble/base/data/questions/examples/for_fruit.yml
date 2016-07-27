@@ -13,7 +13,4 @@ subquestion: |
   % for fruit in fruit_list:
   I assume you like ${ fruit }.
   % endfor
-sets: all_done
----
 mandatory: true
-code: all_done

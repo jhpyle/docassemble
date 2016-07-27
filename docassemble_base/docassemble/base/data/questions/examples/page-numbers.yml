@@ -15,11 +15,8 @@ attachments:
 
       ${ client } is entitled to
       benefits plan ${ benefits }.
-sets: all_done
+mandatory: true
 ---
 code: |
   client = "Jane Doe"
   benefits = "G-432"
----
-mandatory: true
-code: all_done

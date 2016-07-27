@@ -15,7 +15,7 @@ question: |
   Your application for ${ service }
   has been submitted.
 need: app_submitted
-sets: all_done
+mandatory: true
 ---
 question: |
   For what service would you like
@@ -24,6 +24,3 @@ field: service
 choices:
   - Tutoring
   - Resume writing assistance
----
-mandatory: true
-code: all_done

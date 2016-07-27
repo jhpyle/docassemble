@@ -506,20 +506,20 @@ class Person(DAObject):
         """Given a verb like "eat," returns "eat" or "eats"
         depending on whether the person is the user."""
         if self == this_thread.user:
-            tense = 1
+            tense = '1sg'
         else:
-            tense = 3
+            tense = '3sg'
         if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
-            return verb_past(the_verb, person=tense)
+            return verb_past(the_verb, tense)
         else:
-            return verb_present(the_verb, person=tense)
+            return verb_present(the_verb, tense)
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except uses the past tense of the verb."""
         if self == this_thread.user:
-            tense = 1
+            tense = '1sg'
         else:
-            tense = 3
-        return verb_past(the_verb, person=tense)
+            tense = '3sg'
+        return verb_past(the_verb, tense)
 
 class Individual(Person):
     """Represents a natural person."""

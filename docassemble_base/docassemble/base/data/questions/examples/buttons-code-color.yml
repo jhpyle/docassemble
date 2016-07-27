@@ -18,7 +18,4 @@ buttons:
         - Light Green
 ---
 question: Your favorite color is ${ favorite_color }.
-sets: all_done
----
 mandatory: true
-code: all_done

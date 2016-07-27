@@ -30,7 +30,4 @@ question: End of interview
 subquestion: |
   The hero is ${ hero } and the villain
   is ${ villain }.
-sets: all_done
----
 mandatory: true
-code: all_done

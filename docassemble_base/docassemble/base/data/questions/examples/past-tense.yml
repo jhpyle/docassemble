@@ -1,11 +1,15 @@
 metadata:
   title: Past tense
-  example start: 2
-  example end: 2
+  example start: 3
+  example end: 3
   documentation: "http://docassemble.org/docs/functions.html#verb_past"
 ---
 modules:
   - docassemble.base.util
+---
+mandatory: true
+code: |
+  the_verb = "eat"
 ---
 question: |
   I ${ verb_past(the_verb) }
@@ -15,9 +19,4 @@ fields:
 sets: all_done
 ---
 mandatory: true
-code: |
-  the_verb = "eat"
----
-mandatory: true
 code: all_done
-  

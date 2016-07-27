@@ -1,0 +1,6 @@
+metadata:
+  title: Arithmetic
+---
+question: |
+  The answer is ${ ( 42 + 4 ) * 50 / ( 5 - 2 ) }.
+mandatory: true

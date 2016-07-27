@@ -13,7 +13,4 @@ sets: all_done
 ---
 question: |
   The velocity is ${ swallow_velocity }
-sets: all_done
----
 mandatory: true
-code: all_done

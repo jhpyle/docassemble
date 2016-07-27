@@ -9,7 +9,4 @@ yesno: over_eighteen
 question: Result of question
 subquestion: |
   over_eighteen is: "${ over_eighteen }"
-sets: all_done
----
 mandatory: true
-code: all_done

@@ -33,15 +33,8 @@ fields:
     datatype: integer
 ---
 question: |
-  This is the end of the interview 
-sets: all_done
----
-question: |
   You have ${ fruits } pieces of fruit.
 subquestion: |
   The value of the counter
   is ${ counter }.
-sets: all_done
----
 mandatory: true
-code: all_done

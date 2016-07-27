@@ -34,7 +34,4 @@ question: |
   ${ villain.does_verb("include") }
   ${ villain }.
   % endif
-sets: all_done
----
 mandatory: true
-code: all_done

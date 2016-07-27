@@ -1,0 +1,28 @@
+metadata:
+  title: Divorce advice
+---
+question: |
+  On a scale from 1 to 10:
+fields:
+  - "How vindictive do you feel toward your spouse?": client_vindictiveness
+    datatype: range
+    min: 1
+    max: 10
+  - "How vindictive do you think your spouse feels toward you?": op_vindictiveness
+    datatype: range
+    min: 1
+    max: 10
+---
+sets: all_done
+question: |
+  % if client_vindictiveness == op_vindictiveness:
+  It is unclear who will get the most out of a divorce.
+  % elif client_vindictiveness > op_vindictiveness:
+  You are likely to get the better of your spouse.
+  % else:
+  Your spouse is going to take you to the cleaners.
+  % endif
+---
+mandatory: true
+code: all_done
+  

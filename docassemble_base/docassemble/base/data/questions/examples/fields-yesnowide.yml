@@ -18,7 +18,4 @@ subquestion: |
   % if likes_peaches:
   You like peaches.
   % endif
-sets: all_done
----
 mandatory: true
-code: all_done

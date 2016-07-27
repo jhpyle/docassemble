@@ -24,8 +24,5 @@ subquestion: |
   You can reach the grantee at ${ grantee.phone_number }.
 
   You can reach the trustee at ${ trustee.phone_number }.
-sets: all_done
----
 mandatory: true
-code: all_done
   

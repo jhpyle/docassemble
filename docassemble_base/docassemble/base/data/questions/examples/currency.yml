@@ -1,19 +1,18 @@
 metadata:
   title: Currency
-  example start: 2
-  example end: 2
+  example start: 3
+  example end: 3
   documentation: "http://docassemble.org/docs/functions.html#currency"
 ---
 modules:
   - docassemble.base.util
 ---
+mandatory: true
+code: |
+  number = 3.5
+---  
 question: |
   If you sold ${ number } fish for
   a dollar each, you would get
   ${ currency(number) }.
-sets: all_done
----
 mandatory: true
-code: |
-  number = 3.5
-  all_done

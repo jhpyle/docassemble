@@ -10,12 +10,9 @@ question: Summary
 subquestion: |
   Your favorite fruit is
   ${ value('favorite_fruit') }.
-sets: all_done
+mandatory: true
 ---
 question: |
   Tell me about your favorite fruit.
 fields:
   - Favorite fruit: favorite_fruit
----
-mandatory: true
-code: all_done

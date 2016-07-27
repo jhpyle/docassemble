@@ -11,13 +11,10 @@ fields:
   - "What fruit do you need?": fruit
     hide if: has_fruit
 ---
-sets: all_done
 question: |
   % if has_fruit:
   You have fruit.
   % else:
   You need some ${ fruit }.
   % endif
----
 mandatory: true
-code: all_done

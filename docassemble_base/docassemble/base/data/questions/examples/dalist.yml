@@ -23,11 +23,11 @@ subquestion: |
   So far you have told me about ${ people }.
 yesno: people.there_is_another
 ---
-sets: all_done
 question: |
   Here is your list of people.
 subquestion: |
   ${ people }
+sets: all_done
 ---
 mandatory: true
 code: |

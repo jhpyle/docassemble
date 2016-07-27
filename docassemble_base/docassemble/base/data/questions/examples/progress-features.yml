@@ -16,8 +16,5 @@ subquestion: |
   % else:
   I am sorry to hear that!
   % endif
-sets: all_done
 progress: 100
----
 mandatory: true
-code: all_done

@@ -10,13 +10,9 @@ fields:
   - label: Fruit
     field: favorite_fruit
 ---
-sets: all_done
 question: Result of question
 subquestion: |
   You must love ${ favorite_vegetable }
   and ${ favorite_fruit } pancakes.
   I know I do!
----
 mandatory: true
-code: all_done
-

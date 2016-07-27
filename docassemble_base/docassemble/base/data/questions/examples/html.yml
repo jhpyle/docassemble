@@ -19,10 +19,7 @@ fields:
   - "When is your next birthday?": birth_date
     datatype: date
 ---
-sets: all_done
 question: |
   Your birthday is on ${ birth_date }.
   I have no idea what to get you!
----
 mandatory: true
-code: all_done

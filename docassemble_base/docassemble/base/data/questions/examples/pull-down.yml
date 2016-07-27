@@ -22,7 +22,4 @@ subquestion: |
   ${ favorite_fruit }, which is not
   surprising given that you have only
   a ${ education} education.
-sets: all_done
----
 mandatory: true
-code: all_done

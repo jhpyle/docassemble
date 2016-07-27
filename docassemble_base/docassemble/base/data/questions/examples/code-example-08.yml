@@ -1,0 +1,22 @@
+metadata:
+  title: If/then/else in code
+---
+code: |
+  a = 4
+  b = 5
+  c = 2
+  d = 6
+  if b > a:
+    b = 62
+    if c < d:
+      answer = 20 + b
+    else:
+      answer = 20 + c - d
+    d = a + b
+  else:
+    answer = 40 + b
+  b = 0
+---
+question: |
+  The answer is ${ answer }.
+mandatory: true

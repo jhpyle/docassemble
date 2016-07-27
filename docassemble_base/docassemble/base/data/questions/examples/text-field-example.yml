@@ -9,11 +9,8 @@ fields:
     datatype: area
     required: false
 ---
-sets: all_done
 question: Result of question
 subquestion: |
   user_favorite_color is: "${ user_favorite_color }"
----
 mandatory: true
-code: all_done
 

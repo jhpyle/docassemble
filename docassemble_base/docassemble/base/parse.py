@@ -1040,6 +1040,8 @@ class Question:
                                 field_info['type'] = field[key]
                                 #if field[key] in ['yesno', 'yesnowide', 'noyes', 'noyeswide'] and 'required' not in field_info:
                                 #    field_info['required'] = False
+                                if field[key] in ['range'] and 'required' not in field_info:
+                                    field_info['required'] = False
                                 if field[key] in ['range'] and not ('min' in field and 'max' in field):
                                     raise DAError("If the datatype of a field is 'range', you must provide a min and a max." + self.idebug(data))
                                 if field[key] in ['yesno', 'yesnowide', 'yesnoradio']:
@@ -1958,7 +1960,7 @@ class Interview:
                         if question.name:
                             user_dict['_internal']['answered'].add(question.name)
                             #logmessage("Question " + str(question.name) + " marked as answered")
-                    if hasattr(question, 'content') and question.name and question.is_mandatory:
+                    if question.is_mandatory and hasattr(question, 'content') and question.name:
                         if debug:
                             interview_status.seeking.append({'question': question, 'reason': 'mandatory question'})
                         if question.name and question.name in user_dict['_internal']['answers']:

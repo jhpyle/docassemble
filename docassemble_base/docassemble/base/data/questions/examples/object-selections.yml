@@ -29,7 +29,4 @@ fields:
 ---
 question: |
   ${ villain } will surely be defeated!
-sets: all_done
----
 mandatory: true
-code: all_done

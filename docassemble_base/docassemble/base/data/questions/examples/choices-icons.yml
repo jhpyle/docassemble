@@ -28,7 +28,4 @@ fields:
 ---
 question: |
   You were born in ${ target_variable }.
-sets: all_done
----
 mandatory: true
-code: all_done

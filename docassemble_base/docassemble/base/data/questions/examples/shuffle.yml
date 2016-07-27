@@ -20,7 +20,4 @@ question: Result of question
 subquestion: |
   You voted for ${ candidate }.
   Thanks!
-sets: all_done
----
 mandatory: true
-code: all_done

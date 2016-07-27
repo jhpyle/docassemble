@@ -12,7 +12,4 @@ fields:
 question: |
   Let's listen to what you uploaded.
 audio: ${ user_mp3_file }
-sets: all_done
----
 mandatory: true
-code: all_done

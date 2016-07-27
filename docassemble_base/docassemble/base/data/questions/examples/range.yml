@@ -32,7 +32,4 @@ question: |
   % else:
   I guess you don't really like rabbits.
   % endif
-sets: all_done
----
 mandatory: true
-code: all_done

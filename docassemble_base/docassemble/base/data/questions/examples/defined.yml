@@ -18,12 +18,9 @@ subquestion: |
   I do not know your favorite
   vegetable.
   % endif
-sets: all_done
+mandatory: true
 ---
 question: |
   Tell me about your favorite fruit.
 fields:
   - Favorite fruit: favorite_fruit
----
-mandatory: true
-code: all_done

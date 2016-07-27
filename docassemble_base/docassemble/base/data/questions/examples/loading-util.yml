@@ -16,7 +16,4 @@ subquestion: |
   Note: this is done for you
   automatically when you load
   `docassemble.base.legal`
-sets: all_done
----
 mandatory: true
-code: all_done

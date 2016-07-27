@@ -14,7 +14,4 @@ comment: |
 question: |
   All done with the interview.
 need: day_is_nice
-sets: all_done
----
 mandatory: true
-code: all_done

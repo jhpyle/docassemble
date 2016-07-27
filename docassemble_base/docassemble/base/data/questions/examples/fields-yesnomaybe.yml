@@ -9,7 +9,6 @@ fields:
   - "Is Topeka the capital of Kansas?": topeka_is_capital_of_kansas
     datatype: yesnomaybe
 ---
-sets: all_done
 question: |
   Thank you for your answers.
 subquestion: |
@@ -20,6 +19,4 @@ subquestion: |
   % else:
   Actually, Topeka is the capital of Kansas.
   % endif
----
 mandatory: true
-code: all_done

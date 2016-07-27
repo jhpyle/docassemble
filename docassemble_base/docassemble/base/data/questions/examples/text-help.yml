@@ -20,8 +20,5 @@ question: Result of question
 subquestion: |
   target_variable is:
   "${ target_variable }"
-sets: all_done
----
 mandatory: true
-code: all_done
 

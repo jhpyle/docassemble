@@ -11,7 +11,4 @@ field: user_is_relaxed
 ---
 question: You are done for today.
 need: user_is_relaxed
-sets: all_done
----
 mandatory: true
-code: all_done

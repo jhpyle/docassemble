@@ -39,7 +39,4 @@ question: |
   you will need to buy
   ${ cat_food_cans_needed } cans
   of cat food.
-sets: all_done
----
 mandatory: true
-code: all_done

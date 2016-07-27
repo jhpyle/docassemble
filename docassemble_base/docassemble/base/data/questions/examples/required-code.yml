@@ -22,7 +22,4 @@ subquestion: |
   favorite_soda is:
   "${ favorite_soda }"
   % endif  
-sets: all_done
----
 mandatory: true
-code: all_done

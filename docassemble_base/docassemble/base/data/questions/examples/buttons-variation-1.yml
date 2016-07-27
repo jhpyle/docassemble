@@ -11,7 +11,4 @@ buttons:
 question: Result of question
 subquestion: |
   You are ${ user_gender }.
-sets: all_done
----
 mandatory: true
-code: all_done

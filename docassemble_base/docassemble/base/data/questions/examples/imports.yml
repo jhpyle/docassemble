@@ -20,8 +20,4 @@ question: Located address
 subquestion: |
   The address "${ user_address }" is
   located in ${ user_county }.
-sets: all_done
----
 mandatory: true
-code: all_done
-  

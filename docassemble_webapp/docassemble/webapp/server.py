@@ -88,10 +88,6 @@ include:
   - basic-questions.yml
 ---
 mandatory: true
-code: |
-  need(all_done)
----
-sets: all_done
 question: |
   Here is your document, ${ client }.
 subquestion: |
@@ -2350,9 +2346,9 @@ def make_navbar(status, page_title, page_short_title, steps, show_login):
         if current_user.is_anonymous:
             #logmessage("is_anonymous is " + str(current_user.is_anonymous))
             if custom_menu:
-                navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('user.login', next=url_for('interview_list')) + '">' + word('Sign in') + '</a></li></ul></li>' + "\n"
+                navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('user.login', next=url_for('interview_list')) + '">' + word('Sign in or sign up to save answers') + '</a></li></ul></li>' + "\n"
             else:
-                navbar += '            <li><a href="' + url_for('user.login', next=url_for('interview_list')) + '">' + word('Sign in') + '</a></li>' + "\n"
+                navbar += '            <li><a href="' + url_for('user.login', next=url_for('interview_list')) + '">' + word('Sign in or sign up to save answers') + '</a></li>' + "\n"
         else:
             navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + current_user.email + '<span class="caret"></span></a><ul class="dropdown-menu">'
             if custom_menu:

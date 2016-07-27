@@ -19,8 +19,4 @@ fields:
 ---
 question: |
   You have ${ fruits } pieces of fruit.
-sets: all_done
----
 mandatory: true
-code: all_done
-

@@ -12,9 +12,6 @@ fields:
     min: 0
     max: 100
 ---
-sets: final_screen
 question: |
-  ${ percent }% of your friends are turnips. 
----
+  ${ percent }% of your friends are turnips.
 mandatory: true
-code: final_screen

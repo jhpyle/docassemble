@@ -35,7 +35,4 @@ subquestion: |
   You have submitted the fact that
   your favorite color is ${ color }.
   % endif
-sets: all_done
----
 mandatory: true
-code: all_done

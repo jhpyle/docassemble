@@ -1,0 +1,6 @@
+metadata:
+  title: Two plus two in template
+---
+question: |
+  The answer is ${ 2 + 2 }.
+mandatory: true

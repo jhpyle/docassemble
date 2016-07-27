@@ -13,7 +13,4 @@ fields:
 question: |
   You're so adorable!
 audio: ${ user_picture }
-sets: all_done
----
 mandatory: true
-code: all_done

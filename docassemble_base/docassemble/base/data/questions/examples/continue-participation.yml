@@ -12,7 +12,4 @@ question: Result of question
 subquestion: |
   user_saw_intro is:
   "${ user_saw_intro }"
-sets: all_done
----
 mandatory: true
-code: all_done

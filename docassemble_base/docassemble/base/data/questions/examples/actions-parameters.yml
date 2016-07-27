@@ -43,7 +43,4 @@ subquestion: |
   fishes and ${ fishes['red'] } red
   fishes.
   % endif
-sets: all_done
----
 mandatory: true
-code: all_done

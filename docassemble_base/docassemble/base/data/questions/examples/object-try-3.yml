@@ -19,7 +19,4 @@ question: |
   The villain, ${ villain }, was
   born on
   ${ format_date(villain.birthdate) }.
-sets: all_done
----
 mandatory: true
-code: all_done

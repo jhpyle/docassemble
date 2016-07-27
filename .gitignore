@@ -17,6 +17,7 @@ compile2.sh
 www-compile2.sh
 reset.sh
 requirements.txt
+full-requirements.txt
 taskdefinition.json
 TODO.md
 docassemble_webapp/docassemble/webapp/templates/pages/twiliotest.html

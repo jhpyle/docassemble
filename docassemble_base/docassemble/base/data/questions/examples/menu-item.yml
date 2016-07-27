@@ -26,12 +26,9 @@ subquestion: |
 buttons:
   - Continue: continue
 ---
-sets: all_done
 question: Welcome to the interview
 subquestion: |
   Check out the menu in the
   upper-right corner.
----
 mandatory: true
-code: all_done
 

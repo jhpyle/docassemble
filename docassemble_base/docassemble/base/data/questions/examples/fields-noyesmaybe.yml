@@ -9,7 +9,6 @@ fields:
   - "Was Washington the first U.S. president?": washington_not_the_first_president
     datatype: noyesmaybe
 ---
-sets: all_done
 question: |
   Thank you for your answer.
 subquestion: |
@@ -20,6 +19,4 @@ subquestion: |
   % else:
   You were correct that Washington was the first President.
   % endif
----
 mandatory: true
-code: all_done

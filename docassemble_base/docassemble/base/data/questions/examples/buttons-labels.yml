@@ -11,7 +11,4 @@ buttons:
   - Lease it: borrower
 ---
 question: You are a ${ target_variable }.
-sets: all_done
----
 mandatory: true
-code: all_done
