@@ -70,7 +70,7 @@ def set_save_numbered_file(func):
     save_numbered_file = func
     return
 
-initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None), url_args=dict())
+initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict()), url_args=dict())
 
 def set_initial_dict(the_dict):
     global initial_dict
@@ -1908,7 +1908,7 @@ class Interview:
             interview_status = InterviewStatus()
         interview_status.set_tracker(user_dict['_internal']['tracker'])
         docassemble.base.functions.reset_local_variables()
-        interview_status.current_info.update({'default_role': self.default_role})
+        interview_status.current_info.update({'default_role': self.default_role, 'internal': user_dict['_internal']})
         user_dict['current_info'] = interview_status.current_info
         for question in self.questions_list:
             if question.question_type == 'imports':

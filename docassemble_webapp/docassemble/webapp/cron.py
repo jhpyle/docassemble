@@ -1,5 +1,6 @@
 import sys
 import copy
+import datetime
 if __name__ == "__main__":
     cron_type = 'cron_daily'
     arguments = copy.deepcopy(sys.argv)
@@ -28,12 +29,27 @@ def get_cron_user():
                 return(user)
     sys.exit("Cron user not found")
 
+def clear_old_interviews():
+    stale = list()
+    nowtime = datetime.datetime.utcnow()
+    interview_delete_days = docassemble.base.config.daconfig.get('interview_delete_days', 90)
+    #sys.stderr.write("days is " + str(interview_delete_days) + "\n")
+    subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).group_by(UserDict.filename, UserDict.key).subquery()
+    results = db.session.query(UserDict.dictionary, UserDict.key, UserDict.user_id, UserDict.filename, UserDict.modtime, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno).order_by(UserDict.indexno)
+    for record in results:
+        delta = nowtime - record.modtime
+        #sys.stderr.write("delta days is " + str(delta.days) + "\n")
+        if delta.days > interview_delete_days:
+            stale.append(dict(key=record.key, filename=record.filename))
+    for item in stale:
+        reset_user_dict(item['key'], item['filename'])
+    
 def run_cron(cron_type):
     cron_user = get_cron_user()
     #sys.stderr.write("cron_user id is " + str(cron_user.id) + ".\n")
     to_do = list()
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).group_by(UserDict.filename, UserDict.key).filter(UserDict.encrypted == False).subquery()
-    results = db.session.query(UserDict.dictionary, UserDict.key, UserDict.user_id, UserDict.filename, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno).order_by(UserDict.indexno)
+    results = db.session.query(UserDict.dictionary, UserDict.key, UserDict.user_id, UserDict.filename, UserDict.modtime, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno).order_by(UserDict.indexno)
     for record in results:
         #sys.stderr.write("Trying " + str(record.key) + " for " + str(record.filename) + "\n")
         try:
@@ -67,7 +83,7 @@ def run_cron(cron_type):
                 reset_user_dict(item['key'], item['filename'])
             else:
                 #sys.stderr.write("  Saving where type is " + + "\n")
-                save_user_dict(item['key'], user_dict, item['filename'], encrypt=False)
+                save_user_dict(item['key'], user_dict, item['filename'], encrypt=False, manual_user_id=cron_user.id)
                 if interview_status.question.question_type == "response":
                     if not hasattr(interview_status.question, 'binaryresponse'):
                         sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
@@ -75,4 +91,6 @@ def run_cron(cron_type):
             continue
             
 if __name__ == "__main__":
+    if cron_type == 'cron_daily':
+        clear_old_interviews()
     run_cron(cron_type)

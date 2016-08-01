@@ -31,6 +31,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
 from docassemble.base.functions import pickleable_objects, word, comma_and_list
 from docassemble.base.logger import logmessage
+import docassemble.base.util
 from Crypto.Cipher import AES
 from Crypto.Hash import MD5
 import mimetypes
@@ -290,6 +291,26 @@ def get_url_from_file_reference(file_reference, **kwargs):
         url = fileroot + 'packagestatic/' + parts[0] + '/' + parts[1] + extn
     return(url)
 
+class FakeUser(object):
+    pass
+class FakeRole(object):
+    pass
+def user_id_dict():
+    output = dict()
+    for user in User.query.all():
+        output[user.id] = user
+    anon = FakeUser()
+    anon_role = FakeRole()
+    anon_role.name = word('anonymous')
+    anon.roles = [anon_role]
+    anon.id = -1
+    anon.firstname = 'Anonymous'
+    anon.lastname = 'User'
+    output[-1] = anon
+    return output
+
+docassemble.base.util.set_user_id_function(user_id_dict)
+
 docassemble.base.parse.set_url_finder(get_url_from_file_reference)
 
 def get_documentation_dict():
@@ -396,6 +417,7 @@ def pad_to_16(the_string):
     return str(the_string) + (16 - len(the_string)) * '0'
 
 def decrypt_session(secret):
+    nowtime = datetime.datetime.utcnow()
     user_code = session.get('uid', None)
     filename = session.get('i', None)
     if user_code == None or filename == None or secret is None:
@@ -414,6 +436,7 @@ def decrypt_session(secret):
             the_dict = decrypt_dictionary(record.dictionary, secret)
             record.dictionary = pack_dictionary(the_dict)
             record.encrypted = False
+            record.modtime = nowtime
             changed = True
     if changed:
         db.session.commit()
@@ -422,12 +445,14 @@ def decrypt_session(secret):
         the_dict = decrypt_dictionary(record.dictionary, secret)
         record.dictionary = pack_dictionary(the_dict)
         record.encrypted = False
+        record.modtime = nowtime
         changed = True
     if changed:
         db.session.commit()
     return
 
 def encrypt_session(secret):
+    nowtime = datetime.datetime.utcnow()
     user_code = session.get('uid', None)
     filename = session.get('i', None)
     if user_code == None or filename == None or secret is None:
@@ -446,6 +471,7 @@ def encrypt_session(secret):
             the_dict = unpack_dictionary(record.dictionary)
             record.dictionary = encrypt_dictionary(the_dict, secret)
             record.encrypted = True
+            record.modtime = nowtime
             changed = True
     if changed:
         db.session.commit()
@@ -454,6 +480,7 @@ def encrypt_session(secret):
         the_dict = unpack_dictionary(record.dictionary)
         record.dictionary = encrypt_dictionary(the_dict, secret)
         record.encrypted = True
+        record.modtime = nowtime
         changed = True
     if changed:
         db.session.commit()
@@ -954,9 +981,18 @@ def cleanup_sessions():
     kv_session.cleanup_sessions()
     return render_template('base_templates/blank.html')
 
-def add_timestamps(the_dict):
-    the_dict['_internal']['starttime'] = datetime.datetime.utcnow()
-    the_dict['_internal']['modtime'] = datetime.datetime.utcnow()
+def add_timestamps(the_dict, manual_user_id=None):
+    nowtime = datetime.datetime.utcnow()
+    the_dict['_internal']['starttime'] = nowtime 
+    the_dict['_internal']['modtime'] = nowtime
+    if manual_user_id is not None or (current_user and current_user.is_authenticated and not current_user.is_anonymous):
+        if manual_user_id is not None:
+            the_user_id = manual_user_id
+        else:
+            the_user_id = current_user.id
+        the_dict['_internal']['accesstime'][the_user_id] = nowtime
+    else:
+        the_dict['_internal']['accesstime'][-1] = nowtime
     return
 
 def fresh_dictionary():
@@ -1926,6 +1962,7 @@ def unpack_dictionary(dict_string):
     return pickle.loads(codecs.decode(dict_string, 'base64'))
 
 def get_unique_name(filename, secret):
+    nowtime = datetime.datetime.utcnow()
     while True:
         newname = ''.join(random.choice(string.ascii_letters) for i in range(32))
         existing_key = UserDict.query.filter_by(key=newname).first()
@@ -1936,7 +1973,7 @@ def get_unique_name(filename, secret):
         # if cur.fetchone():
         #     #logmessage("Key already exists in database")
         #     continue
-        new_user_dict = UserDict(key=newname, filename=filename, dictionary=encrypt_dictionary(fresh_dictionary(), secret))
+        new_user_dict = UserDict(modtime=nowtime, key=newname, filename=filename, dictionary=encrypt_dictionary(fresh_dictionary(), secret))
         db.session.add(new_user_dict)
         db.session.commit()
         # cur.execute("INSERT INTO userdict (key, filename, dictionary) values (%s, %s, %s);", [newname, filename, codecs.encode(pickle.dumps(initial_dict.copy()), 'base64').decode()])
@@ -2022,35 +2059,43 @@ def save_user_dict_key(user_code, filename):
         db.session.commit()
     return
 
-def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, encrypt=True):
-    user_dict['_internal']['modtime'] = datetime.datetime.utcnow()
-    if current_user and current_user.is_authenticated and not current_user.is_anonymous:
-        the_user_id = current_user.id
+def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, encrypt=True, manual_user_id=None):
+    nowtime = datetime.datetime.utcnow()
+    user_dict['_internal']['modtime'] = nowtime
+    if manual_user_id is not None or (current_user and current_user.is_authenticated and not current_user.is_anonymous):
+        if manual_user_id is not None:
+            the_user_id = manual_user_id
+        else:
+            the_user_id = current_user.id
+        user_dict['_internal']['accesstime'][the_user_id] = nowtime
     else:
+        user_dict['_internal']['accesstime'][-1] = nowtime
         the_user_id = None
     if changed is True:
         if encrypt:
-            new_record = UserDict(key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
+            new_record = UserDict(modtime=nowtime, key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
         else:
-            new_record = UserDict(key=user_code, dictionary=pack_dictionary(user_dict), filename=filename, user_id=the_user_id, encrypted=False)
+            new_record = UserDict(modtime=nowtime, key=user_code, dictionary=pack_dictionary(user_dict), filename=filename, user_id=the_user_id, encrypted=False)
         db.session.add(new_record)
         db.session.commit()
     else:
         max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(UserDict.key == user_code and UserDict.filename == filename).scalar()
         if max_indexno is None:
             if encrypt:
-                new_record = UserDict(key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
+                new_record = UserDict(modtime=nowtime, key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
             else:
-                new_record = UserDict(key=user_code, dictionary=pack_dictionary(user_dict), filename=filename, user_id=the_user_id, encrypted=False)
+                new_record = UserDict(modtime=nowtime, key=user_code, dictionary=pack_dictionary(user_dict), filename=filename, user_id=the_user_id, encrypted=False)
             db.session.add(new_record)
             db.session.commit()
         else:
             for record in UserDict.query.filter_by(key=user_code, filename=filename, indexno=max_indexno).all():
                 if encrypt:
                     record.dictionary = encrypt_dictionary(user_dict, secret)
+                    record.modtime = nowtime
                     record.encrypted = True
                 else:
                     record.dictionary = pack_dictionary(user_dict)
+                    record.modtime = nowtime
                     record.encrypted = False                   
             db.session.commit()
     return

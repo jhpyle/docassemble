@@ -353,7 +353,7 @@ def set_da_config(config):
 def get_config(key):
     """Returns a value from the docassemble configuration.  If not defined, returns None."""
     return daconfig.get(key, None)
-    
+
 def set_default_language(lang):
     global default_language
     default_language = lang

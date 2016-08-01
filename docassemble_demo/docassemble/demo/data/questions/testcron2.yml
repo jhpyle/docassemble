@@ -9,7 +9,7 @@ code: |
   counter = 0
 ---
 modules:
-  - docassemble.base.legal
+  - docassemble.base.util
 ---
 initial: true
 code: |
@@ -19,7 +19,7 @@ code: |
 ---
 event: cron_hourly
 code: |
-  response("Cron hourly was called.  Counter is ${ counter }.")
+  response("Cron hourly was called.  Counter is " + str(counter) + ".  Last access minutes is " + str(last_access_minutes()) + ".  Last access days is " + str(last_access_days()) + ".  Last access hours is " + str(last_access_hours()) + ".")
 ---
 event: set_status
 code: |
@@ -31,6 +31,7 @@ mandatory: true
 question: |
   The current status is ${ status } and the counter is ${ counter }.
 subquestion: |
+  ${ last_access_minutes() }
   Set the status to:
 
   * [normal](${ interview_url_action('set_status', status='normal') })
