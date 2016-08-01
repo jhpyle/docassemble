@@ -2,7 +2,6 @@ import os
 import os.path
 import subprocess
 import docassemble.base.filter
-import docassemble.base.util
 import tempfile
 import shutil
 import fdfgen
@@ -12,7 +11,7 @@ from PIL import Image
 from docassemble.base.error import DAError
 from subprocess import call, check_output
 from docassemble.base.logger import logmessage
-from docassemble.base.util import word
+from docassemble.base.functions import word
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdftypes import resolve1

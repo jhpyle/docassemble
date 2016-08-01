@@ -1,0 +1,33 @@
+metadata:
+  title: Custom response
+  example start: 2
+  documentation: "http://docassemble.org/docs/functions.html#response"
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+code: |
+  svg_image = """\
+  <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+  <svg
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:cc="http://creativecommons.org/ns#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:svg="http://www.w3.org/2000/svg"
+     xmlns="http://www.w3.org/2000/svg"
+     version="1.1"
+     id="svg2"
+     width="100"
+     height="100">
+    <circle
+       id="circle4"
+       fill="red"
+       stroke-width="3"
+       stroke="black"
+       r="40"
+       cy="50"
+       cx="50" />
+  </svg>
+  """
+  response(binaryresponse=svg_image, content_type="image/svg+xml")

@@ -8,7 +8,7 @@ import zipfile
 import datetime
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
-from docassemble.webapp.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED
+from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED
 
 if S3_ENABLED:
     import docassemble.webapp.amazon

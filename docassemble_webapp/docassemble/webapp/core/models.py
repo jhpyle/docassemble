@@ -1,5 +1,5 @@
 from docassemble.webapp.app_and_db import db
-from docassemble.webapp.config import daconfig, dbtableprefix
+from docassemble.base.config import daconfig, dbtableprefix
 
 class Attachments(db.Model):
     __tablename__ = dbtableprefix + "attachments"

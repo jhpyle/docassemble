@@ -10,7 +10,7 @@ from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, con
 from docassemble.base.core import DAObject, DADict, DAList
 from docassemble.base.error import DAError
 from docassemble.base.logger import logmessage
-import docassemble.base.util
+import docassemble.base.functions
 import docassemble.base.parse
 import shutil
 import datetime
@@ -57,7 +57,7 @@ class DAAttachmentList(DAList):
         self.object_type = DAAttachment
         return super(DAAttachmentList, self).init(**kwargs)
     def url_list(self):
-        return docassemble.base.util.comma_and_list(map(lambda x: '[`' + x.markdown_filename + '`](' + docassemble.base.util.url_of("playgroundfiles", section="template", file=x.markdown_filename) + ')', self.elements))
+        return docassemble.base.functions.comma_and_list(map(lambda x: '[`' + x.markdown_filename + '`](' + docassemble.base.functions.url_of("playgroundfiles", section="template", file=x.markdown_filename) + ')', self.elements))
 
 class DAUploadMultiple(DAObject):
     def init(self, **kwargs):
@@ -143,7 +143,7 @@ class DAFieldList(DAList):
         self.gathered = True
         return super(DAFieldList, self).init(**kwargs)
     def __str__(self):
-        return docassemble.base.util.comma_and_list(map(lambda x: '`' + x.variable + '`', self.elements))
+        return docassemble.base.functions.comma_and_list(map(lambda x: '`' + x.variable + '`', self.elements))
 
 class DAQuestion(DAObject):
     def init(self, **kwargs):
@@ -384,7 +384,7 @@ class Playground(PlaygroundSection):
                 classes.add(val)
             elif type(user_dict[val]) is types.ModuleType:
                 modules.add(val)
-        for val in docassemble.base.util.pickleable_objects(user_dict):
+        for val in docassemble.base.functions.pickleable_objects(user_dict):
             names_used.add(val)
         for var in ['_internal']:
             names_used.discard(var)

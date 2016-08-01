@@ -9,8 +9,8 @@ import subprocess
 
 from distutils.version import LooseVersion
 if __name__ == "__main__":
-    import docassemble.webapp.config
-    docassemble.webapp.config.load(arguments=sys.argv)
+    import docassemble.base.config
+    docassemble.base.config.load(arguments=sys.argv)
 from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.packages.models import Package, Install, PackageAuth
 from docassemble.base.logger import logmessage
@@ -18,7 +18,7 @@ from docassemble.webapp.files import SavedFile
 
 def check_for_updates():
     logmessage("check_for_update: starting")
-    from docassemble.webapp.config import hostname
+    from docassemble.base.config import hostname
     ok = True
     here_already = dict()
     installed_packages = get_installed_distributions()
@@ -96,7 +96,7 @@ def check_for_updates():
 def update_versions():
     logmessage("update_versions")
     install_by_id = dict()
-    from docassemble.webapp.config import hostname
+    from docassemble.base.config import hostname
     for install in Install.query.filter_by(hostname=hostname).all():
         install_by_id[install.package_id] = install
     package_by_name = dict()
@@ -115,7 +115,7 @@ def update_versions():
 
 def add_dependencies(user_id):
     logmessage('add_dependencies: ' + str(user_id))
-    from docassemble.webapp.config import hostname
+    from docassemble.base.config import hostname
     package_by_name = dict()
     for package in Package.query.filter_by(active=True).all():
         package_by_name[package.name] = package
@@ -192,7 +192,7 @@ class Object(object):
     pass
 
 def get_installed_distributions():
-    from docassemble.webapp.config import daconfig
+    from docassemble.base.config import daconfig
     PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
     results = list()
     output, err = subprocess.Popen([daconfig.get('pip', os.path.join(PACKAGE_DIRECTORY, 'bin', 'pip')), 'freeze'], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate()

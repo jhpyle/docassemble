@@ -1,6 +1,6 @@
 ---
 modules:
-  - docassemble.base.legal
+  - docassemble.base.util
 ---
 objects:
   - user: Individual
@@ -8,7 +8,7 @@ objects:
 ---
 initial: true
 code: |
-  update_info(user, 'user', current_info)
+  update_info(current_info, user=user, role='user')
   track_location = user.location.status()
 ---
 mandatory: true

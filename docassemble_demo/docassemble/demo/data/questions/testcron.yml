@@ -1,0 +1,48 @@
+metadata:
+  title: Cron test 1
+---
+mandatory: true
+code: |
+  multi_user = True
+  allow_cron = True
+  status = 'normal'
+  counter = 0
+---
+modules:
+  - docassemble.base.util
+---
+initial: true
+code: |
+  counter += 1
+  update_info(current_info)
+  process_action(current_info)
+---
+event: cron_daily
+code: |
+  import sys
+  sys.stderr.write("Should delete this.\n")
+  command('exit')
+---
+event: cron_hourly
+code: |
+  response("Cron hourly was called.  Counter is ${ counter }.")
+---
+event: set_status
+code: |
+  if 'status' in current_info['arguments']:
+    status = current_info['arguments']['status']
+  response(status)
+---
+mandatory: true
+question: |
+  The current status is ${ status } and the counter is ${ counter }.
+subquestion: |
+  Set the status to:
+
+  * [normal](${ interview_url_action('set_status', status='normal') })
+  * [danger](${ interview_url_action('set_status', status='danger') })
+  * [critical](${ interview_url_action('set_status', status='critical') })
+
+  To read the status without changing it, use:
+
+  * [this](${ interview_url_action('set_status') })

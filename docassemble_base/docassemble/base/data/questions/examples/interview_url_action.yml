@@ -1,0 +1,37 @@
+metadata:
+  title: Action from anywhere
+  example start: 1
+  example end: 6
+  documentation: "http://docassemble.org/docs/functions.html#interview_url_action"
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - user: Individual
+---
+mandatory: true
+code: |
+  multi_user = True
+  status = 'normal'
+---
+initial: true
+code: |
+  update_info(current_info)
+  process_action(current_info)
+---
+event: check_update_status
+code: |
+  if 'status' in current_info['arguments']:
+    status = current_info['arguments']['status']
+---
+mandatory: true
+question: |
+  The current status is ${ status }.
+subquestion: |
+  Anyone can use the following links
+  to change the current status:
+
+  * Change to [normal](${ interview_url_action('check_update_status', status='normal') })
+  * Change to [danger](${ interview_url_action('check_update_status', status='danger') })
+  * Change to [critical](${ interview_url_action('check_update_status', status='critical') })

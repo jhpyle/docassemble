@@ -2,10 +2,10 @@ metadata:
   title: Link for sharing
   example start: 1
   example end: 4
-  documentation: "http://docassemble.org/docs/legal.html#interview_url"
+  documentation: "http://docassemble.org/docs/functions.html#interview_url"
 ---
 modules:
-  - docassemble.base.legal
+  - docassemble.base.util
 ---
 mandatory: true
 code: |
@@ -13,7 +13,7 @@ code: |
 ---
 initial: true
 code: |
-  update_info(user, 'interviewee', current_info)
+  update_info(current_info)
 ---
 question: |
   Ready to proceed?

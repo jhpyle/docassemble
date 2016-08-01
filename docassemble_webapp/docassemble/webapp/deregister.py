@@ -1,14 +1,14 @@
 import os
 import sys
 if __name__ == "__main__":
-    import docassemble.webapp.config
-    docassemble.webapp.config.load(arguments=sys.argv)
+    import docassemble.base.config
+    docassemble.base.config.load(arguments=sys.argv)
 from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.core.models import Supervisors
 from docassemble.base.logger import logmessage
 
 def main():
-    from docassemble.webapp.config import hostname
+    from docassemble.base.config import hostname
     supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
     if supervisor_url:
         Supervisors.query.filter_by(hostname=hostname).delete()

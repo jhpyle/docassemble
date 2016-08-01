@@ -5,7 +5,7 @@ import re
 import codecs
 from docassemble.base.filter import file_finder
 #from docassemble.base.error import DANameError
-from docassemble.base.util import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need
+from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate']
 
@@ -213,8 +213,10 @@ class DAList(DAObject):
         returns "child" even if there are multiple children."""
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
-        return the_noun        
-    def as_noun(self, *pargs):
+        return the_noun
+    def possessive(self, target):
+        return possessify(self.as_noun(), target, plural=(len(self.elements) > 1))
+    def as_noun(self, *pargs, **kwargs):
         """Returns a human-readable expression of the object based on its instanceName,
         using singular or plural depending on whether the list has one element or more
         than one element.  E.g., case.plaintiff.child.as_noun() returns "child" or
@@ -227,9 +229,15 @@ class DAList(DAObject):
                 the_noun = pargs[0]
         the_noun = re.sub(r'.*\.', '', the_noun)
         if len(self.elements) > 1 or len(self.elements) == 0:
-            return noun_plural(the_noun)
+            if 'capitalize' in kwargs and kwargs['capitalize']:
+                return capitalize(noun_plural(the_noun))
+            else:
+                return noun_plural(the_noun)
         else:
-            return the_noun
+            if 'capitalize' in kwargs and kwargs['capitalize']:
+                return capitalize(the_noun)
+            else:
+                return the_noun
     def number(self):
         """Returns the number of elements in the list.  Forces the gathering of the
         elements if necessary."""
@@ -915,3 +923,5 @@ def setify(item, output=set()):
     else:
         output.add(item)
     return output
+
+    

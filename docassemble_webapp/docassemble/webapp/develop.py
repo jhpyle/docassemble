@@ -1,6 +1,6 @@
 from flask_wtf import Form
 from flask_wtf.file import FileField
-from docassemble.base.util import word
+from docassemble.base.functions import word
 from wtforms import validators, ValidationError, StringField, SubmitField, TextAreaField, SelectMultipleField, SelectField
 import re
 import sys

@@ -6,7 +6,7 @@
     <a title="{{ word('Create new interview') }}" href="?new=1"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Add') }}</a>
   </li>
   <li>
-    <a title="{{ word('Create interview with wizard') }}" href="{{ url_for('index', i='docassemble.base:data/questions/wizard-template.yml') }}"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Wizard') }}</a>
+    <a title="{{ word('Create interview with wizard') }}" href="{{ url_for('index', i='docassemble.webapp:data/questions/wizard-template.yml') }}"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Wizard') }}</a>
   </li>
   <li role="presentation" class="dropdown">
     <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Items in the Playground other than interviews') }}">

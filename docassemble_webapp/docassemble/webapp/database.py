@@ -1,5 +1,5 @@
 from docassemble.base.error import DAError
-from docassemble.webapp.config import daconfig
+from docassemble.base.config import daconfig
 
 if 'db' not in daconfig:
     daconfig['db'] = dict()

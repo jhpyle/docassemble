@@ -1,0 +1,21 @@
+#event: say_hello
+mandatory: true
+response: |
+  Hello, ${ world }!
+---
+modules:
+  - docassemble.base.util
+---
+initial: true
+code: |
+  process_action(current_info)
+---
+question: |
+  What is the world?
+fields:
+  World: world
+---
+question: |
+  Click the link.
+subquestion: |
+  [Click here](${ url_action('say_hello') })

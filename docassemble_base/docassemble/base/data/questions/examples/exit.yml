@@ -1,0 +1,20 @@
+metadata:
+  title: Exit programmatically
+  example start: 2
+  example end: 3
+  documentation: "http://docassemble.org/docs/functions.html#command"
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+code: |
+  command('exit', url=target_url)
+---
+question: |
+  Where do you want to go?
+field: target_url
+buttons:
+  - Stanford: "http://stanford.edu/"
+  - Harvard: "http://www.harvard.edu/"
+---

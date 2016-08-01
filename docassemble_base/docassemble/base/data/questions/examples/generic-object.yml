@@ -8,7 +8,7 @@ question: |
 yesno: x.likes_cats
 ---
 modules:
-  - docassemble.base.legal
+  - docassemble.base.util
 ---
 objects:
   - person_one: Individual

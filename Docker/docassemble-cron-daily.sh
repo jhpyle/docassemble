@@ -1,6 +1,7 @@
 #! /bin/bash
 
 if [ "${CONTAINERROLE-all}" == "all" ]; then
+    /usr/share/docassemble/webapp/run-cron.sh cron_daily
     MONTHDAY=$(date +%m-%d)
     BACKUPDIR=/usr/share/docassemble/backup/$MONTHDAY
     rm -rf $BACKUPDIR

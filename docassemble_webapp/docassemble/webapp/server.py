@@ -22,7 +22,6 @@ import docassemble.base.pdftk
 import docassemble.base.interview_cache
 import docassemble.webapp.update
 from docassemble.base.standardformatter import as_html, signature_html
-import xml.etree.ElementTree as ET
 import docassemble.webapp.database
 import tempfile
 import zipfile
@@ -30,7 +29,7 @@ import traceback
 from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
 from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
-from docassemble.base.util import pickleable_objects, word, comma_and_list
+from docassemble.base.functions import pickleable_objects, word, comma_and_list
 from docassemble.base.logger import logmessage
 from Crypto.Cipher import AES
 from Crypto.Hash import MD5
@@ -61,20 +60,16 @@ from flask_kvsession import KVSessionExtension
 from simplekv.db.sql import SQLAlchemyStore
 from sqlalchemy import create_engine, MetaData, Sequence, or_, and_
 from docassemble.webapp.app_and_db import app, db
+from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Messages, Supervisors
 from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
-from docassemble.webapp.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, dbtableprefix, hostname
+from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, hostname
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
-from PIL import Image
-import pyPdf
 import yaml
 import inspect
 from subprocess import call, Popen, PIPE
 DEBUG = daconfig.get('debug', False)
-docassemble.base.parse.debug = DEBUG
-import docassemble.base.util
-docassemble.base.util.set_debug_status(DEBUG)
 from pygments import highlight
 from pygments.lexers import YamlLexer
 from pygments.formatters import HtmlFormatter
@@ -137,42 +132,6 @@ if 'mail' not in daconfig:
 default_title = daconfig.get('default_title', daconfig.get('brandname', 'docassemble'))
 default_short_title = daconfig.get('default_short_title', default_title)
 os.environ['PYTHON_EGG_CACHE'] = tempfile.mkdtemp()
-app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
-app.config['BRAND_NAME'] = daconfig.get('brandname', daconfig.get('appname', 'docassemble'))
-app.config['MAIL_USERNAME'] = daconfig['mail'].get('username', None)
-app.config['MAIL_PASSWORD'] = daconfig['mail'].get('password', None)
-app.config['MAIL_DEFAULT_SENDER'] = daconfig['mail'].get('default_sender', None)
-app.config['MAIL_SERVER'] = daconfig['mail'].get('server', 'localhost')
-app.config['MAIL_PORT'] = daconfig['mail'].get('port', 25)
-app.config['MAIL_USE_SSL'] = daconfig['mail'].get('use_ssl', False)
-app.config['MAIL_USE_TLS'] = daconfig['mail'].get('use_tls', True)
-#app.config['ADMINS'] = [daconfig.get('admin_address', None)]
-app.config['APP_SYSTEM_ERROR_SUBJECT_LINE'] = app.config['APP_NAME'] + " system error"
-app.config['APPLICATION_ROOT'] = daconfig.get('root', '/')
-app.config['CSRF_ENABLED'] = False
-app.config['USER_APP_NAME'] = app.config['APP_NAME']
-app.config['USER_SEND_PASSWORD_CHANGED_EMAIL'] = False
-app.config['USER_SEND_REGISTERED_EMAIL'] = False
-app.config['USER_SEND_USERNAME_CHANGED_EMAIL'] = False
-app.config['USER_ENABLE_EMAIL'] = True
-app.config['USER_ENABLE_USERNAME'] = False
-app.config['USER_ENABLE_REGISTRATION'] = True
-app.config['USER_ENABLE_CHANGE_USERNAME'] = False
-app.config['USER_ENABLE_CONFIRM_EMAIL'] = False
-app.config['USER_AUTO_LOGIN_AFTER_REGISTER'] = True
-app.config['USER_AUTO_LOGIN_AFTER_RESET_PASSWORD'] = False
-app.config['USER_AFTER_FORGOT_PASSWORD_ENDPOINT'] = 'user.login'
-app.config['USER_AFTER_CHANGE_PASSWORD_ENDPOINT'] = 'user.login'
-app.config['USER_AFTER_CHANGE_USERNAME_ENDPOINT'] = 'user.login'
-app.config['USER_AFTER_CONFIRM_ENDPOINT'] = 'user.login'
-app.config['USER_AFTER_FORGOT_PASSWORD_ENDPOINT'] = 'user.login'
-app.config['USER_AFTER_LOGIN_ENDPOINT'] = 'interview_list'
-app.config['USER_AFTER_LOGOUT_ENDPOINT'] = 'user.login'
-app.config['USER_AFTER_REGISTER_ENDPOINT'] = 'interview_list'
-app.config['USER_AFTER_RESEND_CONFIRM_EMAIL_ENDPOINT'] = 'user.login'
-app.config['USER_AFTER_RESET_PASSWORD_ENDPOINT'] = 'user.login' 
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-app.config['USE_X_SENDFILE'] = daconfig.get('xsendfile', True)
 PNG_RESOLUTION = daconfig.get('png_resolution', 300)
 PNG_SCREEN_RESOLUTION = daconfig.get('png_screen_resolution', 72)
 PDFTOPPM_COMMAND = daconfig.get('pdftoppm', 'pdftoppm')
@@ -180,14 +139,7 @@ DEFAULT_LANGUAGE = daconfig.get('language', 'en')
 DEFAULT_LOCALE = daconfig.get('locale', 'US.utf8')
 DEFAULT_DIALECT = daconfig.get('dialect', 'us')
 LOGSERVER = daconfig.get('log server', None)
-docassemble.base.util.set_default_language(DEFAULT_LANGUAGE)
-docassemble.base.util.set_default_locale(DEFAULT_LOCALE)
-docassemble.base.util.set_default_dialect(DEFAULT_DIALECT)
-docassemble.base.util.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
-docassemble.base.util.set_locale(DEFAULT_LOCALE)
-docassemble.base.util.set_da_config(daconfig)
-docassemble.base.util.update_locale()
-message_sequence = dbtableprefix + 'message_id_seq'
+#message_sequence = dbtableprefix + 'message_id_seq'
 
 audio_mimetype_table = {'mp3': 'audio/mpeg', 'ogg': 'audio/ogg'}
 
@@ -217,14 +169,8 @@ if not voicerss_config or ('enable' in voicerss_config and not voicerss_config['
 else:
     VOICERSS_ENABLED = True
 ROOT = daconfig.get('root', '/')
-if 'currency symbol' in daconfig:
-    docassemble.base.util.update_language_function('*', 'currency_symbol', lambda: daconfig['currency symbol'])
 #app.logger.warning("default sender is " + app.config['MAIL_DEFAULT_SENDER'] + "\n")
 exit_page = daconfig.get('exitpage', '/')
-
-if S3_ENABLED:
-    import docassemble.webapp.amazon
-    s3 = docassemble.webapp.amazon.s3object(s3_config)
 
 SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
 PACKAGE_CACHE = daconfig.get('packagecache', '/var/www/.cache')
@@ -264,12 +210,7 @@ SHOW_LOGIN = daconfig.get('show_login', True)
 #USER_PACKAGES = daconfig.get('user_packages', '/var/lib/docassemble/dist-packages')
 #sys.path.append(USER_PACKAGES)
 #if USE_PROGRESS_BAR:
-initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None), url_args=dict())
-#else:
-#    initial_dict = dict(_internal=dict(tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
-if 'initial_dict' in daconfig:
-    initial_dict.update(daconfig['initial_dict'])
-docassemble.base.parse.set_initial_dict(initial_dict)
+
 LOGFILE = daconfig.get('flask_log', '/tmp/flask.log')
 #APACHE_LOGFILE = daconfig.get('apache_log', '/var/log/apache2/error.log')
 
@@ -288,17 +229,6 @@ metadata = MetaData(bind=engine)
 store = SQLAlchemyStore(engine, metadata, 'kvstore')
 
 kv_session = KVSessionExtension(store, app)
-
-error_file_handler = logging.FileHandler(filename=LOGFILE)
-error_file_handler.setLevel(logging.DEBUG)
-app.logger.addHandler(error_file_handler)
-
-#sys.stderr.write("__name__ is " + str(__name__) + " and __package__ is " + str(__package__) + "\n")
-
-def flask_logger(message):
-    #app.logger.warning(message)
-    sys.stderr.write(unicode(message) + "\n")
-    return
 
 def get_url_from_file_reference(file_reference, **kwargs):
     file_reference = str(file_reference)
@@ -362,139 +292,6 @@ def get_url_from_file_reference(file_reference, **kwargs):
 
 docassemble.base.parse.set_url_finder(get_url_from_file_reference)
 
-def absolute_filename(the_file):
-    match = re.match(r'^docassemble.playground([0-9]+):(.*)', the_file)
-    #logmessage("absolute_filename call: " + the_file)
-    if match:
-        filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(2))
-        #logmessage("absolute_filename: filename is " + filename)
-        playground = SavedFile(match.group(1), section='playground', fix=True, filename=filename)
-        return playground
-    match = re.match(r'^/playgroundtemplate/([0-9]+)/(.*)', the_file)
-    if match:
-        filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(2))
-        playground = SavedFile(match.group(1), section='playgroundtemplate', fix=True, filename=filename)
-        return playground
-    match = re.match(r'^/playgroundstatic/([0-9]+)/(.*)', the_file)
-    if match:
-        filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(2))
-        playground = SavedFile(match.group(1), section='playgroundstatic', fix=True, filename=filename)
-        return playground
-    return(None)
-
-# def absolute_validator(the_file):
-#     #logmessage("Running my validator")
-#     if the_file.startswith(os.path.join(UPLOAD_DIRECTORY, 'playground')) and current_user.is_authenticated and not current_user.is_anonymous and current_user.has_role('admin', 'developer') and os.path.dirname(the_file) == os.path.join(UPLOAD_DIRECTORY, 'playground', str(current_user.id)):
-#         return True
-#     return False
-
-docassemble.base.parse.set_absolute_filename(absolute_filename)
-#logmessage("Server started")
-
-def can_access_file_number(file_number):
-    upload = Uploads.query.filter_by(indexno=file_number, key=session['uid']).first()
-    if upload:
-        return True
-    return False
-
-def get_info_from_file_number(file_number):
-    result = dict()
-    upload = Uploads.query.filter_by(indexno=file_number, key=session['uid']).first()
-    if upload:
-        result['filename'] = upload.filename
-        result['extension'], result['mimetype'] = get_ext_and_mimetype(result['filename'])
-        result['savedfile'] = SavedFile(file_number, extension=result['extension'], fix=True)
-        result['path'] = result['savedfile'].path
-        result['fullpath'] = result['path'] + '.' + result['extension']
-    # cur = conn.cursor()
-    # cur.execute("SELECT filename FROM uploads where indexno=%s and key=%s", [file_number, session['uid']])
-    # for d in cur:
-    #     result['path'] = get_path_from_file_number(file_number)
-    #     result['filename'] = d[0]
-    #     result['extension'], result['mimetype'] = get_ext_and_mimetype(result['filename'])
-    #     result['fullpath'] = result['path'] + '.' + result['extension']
-    #     break
-    # conn.commit()
-    if 'path' not in result:
-        logmessage("path is not in result for " + str(file_number))
-        return result
-    filename = result['path'] + '.' + result['extension']
-    if os.path.isfile(filename):
-        add_info_about_file(filename, result)
-    else:
-        logmessage("Filename DID NOT EXIST.")
-    return(result)
-
-def add_info_about_file(filename, result):
-    if result['extension'] == 'pdf':
-        reader = pyPdf.PdfFileReader(open(filename))
-        result['pages'] = reader.getNumPages()
-    elif result['extension'] in ['png', 'jpg', 'gif']:
-        im = Image.open(filename)
-        result['width'], result['height'] = im.size
-    elif result['extension'] == 'svg':
-        tree = ET.parse(filename)
-        root = tree.getroot()
-        viewBox = root.attrib.get('viewBox', None)
-        if viewBox is not None:
-            dimen = viewBox.split(' ')
-            if len(dimen) == 4:
-                result['width'] = float(dimen[2]) - float(dimen[0])
-                result['height'] = float(dimen[3]) - float(dimen[1])
-    return
-
-def get_info_from_file_reference(file_reference, **kwargs):
-    #sys.stderr.write('file reference is ' + str(file_reference) + "\n")
-    logmessage('file reference is ' + str(file_reference))
-    if 'convert' in kwargs:
-        convert = kwargs['convert']
-    else:
-        convert = None
-    if re.match('[0-9]+', str(file_reference)):
-        result = get_info_from_file_number(int(file_reference))
-    else:
-        result = dict()
-        question = kwargs.get('question', None)
-        the_package = None
-        parts = file_reference.split(':')
-        if len(parts) == 1:
-            the_package = None
-            if question is not None:
-                the_package = question.from_source.package
-            if the_package is not None:
-                file_reference = the_package + ':' + file_reference
-            else:
-                file_reference = 'docassemble.base:' + file_reference
-        result['fullpath'] = docassemble.base.util.static_filename_path(file_reference)
-    logmessage("path is " + str(result['fullpath']))
-    if result['fullpath'] is not None and os.path.isfile(result['fullpath']):
-        result['filename'] = os.path.basename(result['fullpath'])
-        ext_type, result['mimetype'] = get_ext_and_mimetype(result['fullpath'])
-        path_parts = os.path.splitext(result['fullpath'])
-        result['path'] = path_parts[0]
-        result['extension'] = path_parts[1].lower()
-        result['extension'] = re.sub(r'\.', '', result['extension'])
-        #logmessage("Extension is " + result['extension'])
-        if convert is not None and result['extension'] in convert:
-            #logmessage("Converting...")
-            if os.path.isfile(result['path'] + '.' + convert[result['extension']]):
-                #logmessage("Found conversion file ")
-                result['extension'] = convert[result['extension']]
-                result['fullpath'] = result['path'] + '.' + result['extension']
-                ext_type, result['mimetype'] = get_ext_and_mimetype(result['fullpath'])
-            else:
-                logmessage("Did not find file " + result['path'] + '.' + convert[result['extension']])
-                return dict()
-        logmessage("Full path is " + result['fullpath'])
-        if os.path.isfile(result['fullpath']):
-            add_info_about_file(result['fullpath'], result)
-    else:
-        logmessage("File reference " + str(file_reference) + " DID NOT EXIST.")
-    return(result)
-
-#sys.stderr.write("server.py: setting file_finder" + "\n")
-docassemble.base.parse.set_file_finder(get_info_from_file_reference)
-
 def get_documentation_dict():
     documentation = get_info_from_file_reference('docassemble.base:data/questions/documentation.yml')
     if 'fullpath' in documentation:
@@ -531,24 +328,6 @@ for val in base_name_info:
     if 'show' not in base_name_info[val]:
         base_name_info[val]['show'] = False
 
-def get_mail_variable(*args, **kwargs):
-    return mail
-
-def save_numbered_file(filename, orig_path, yaml_file_name=None):
-    file_number = get_new_file_number(session['uid'], filename, yaml_file_name=yaml_file_name)
-    extension, mimetype = get_ext_and_mimetype(filename)
-    new_file = SavedFile(file_number, extension=extension, fix=True)
-    new_file.copy_from(orig_path)
-    new_file.save(finalize=True)
-    return(file_number, extension, mimetype)
-
-def async_mail(the_message):
-    mail.send(the_message)
-
-docassemble.base.parse.set_mail_variable(get_mail_variable)
-docassemble.base.parse.set_async_mail(async_mail)
-docassemble.base.parse.set_save_numbered_file(save_numbered_file)
-
 key_requires_preassembly = re.compile('^(x\.|x\[|_multiple_choice)')
 match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
 match_invalid_key = re.compile('[^A-Za-z0-9_\[\].\'\%\- =]')
@@ -557,7 +336,6 @@ match_inside_and_outside_brackets = re.compile('(.*)(\[\'[^\]]+\'\])$')
 match_inside_brackets = re.compile('\[\'([^\]]+)\'\]')
 
 APPLICATION_NAME = 'docassemble'
-app.config['SQLALCHEMY_DATABASE_URI'] = alchemy_connect_string
 app.config['USE_GOOGLE_LOGIN'] = False
 app.config['USE_FACEBOOK_LOGIN'] = False
 if 'oauth' in daconfig:
@@ -567,7 +345,6 @@ if 'oauth' in daconfig:
     if 'facebook' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enable'] is False):
         app.config['USE_FACEBOOK_LOGIN'] = True
 
-app.secret_key = daconfig.get('secretkey', '38ihfiFehfoU34mcq_4clirglw3g4o87')
 password_secret_key = daconfig.get('password_secretkey', app.secret_key)
 #app.secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits)
 #                         for x in xrange(32))
@@ -584,7 +361,7 @@ for word_file in word_file_list:
                 if document and type(document) is dict:
                     for lang, words in document.iteritems():
                         if type(words) is dict:
-                            docassemble.base.util.update_word_collection(lang, words)
+                            docassemble.base.functions.update_word_collection(lang, words)
                         else:
                             logmessage("Error reading " + str(word_file) + ": words not in dictionary form.")
                 else:
@@ -870,7 +647,13 @@ else:
     import logging.handlers
     handler = logging.handlers.SysLogHandler(address=(LOGSERVER, 514), socktype=socket.SOCK_STREAM)
     sys_logger.addHandler(handler)
-    
+
+request_active = True
+
+def set_request_active(value):
+    global request_active
+    request_active = value
+
 LOGFORMAT = 'docassemble: ip=%(clientip)s i=%(yamlfile)s uid=%(session)s user=%(user)s %(message)s'
 def syslog_message(message):
     message = re.sub(r'\n', ' ', message)
@@ -878,7 +661,10 @@ def syslog_message(message):
         the_user = current_user.email
     else:
         the_user = "anonymous"
-    sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': request.remote_addr, 'yamlfile': session.get('i', 'na'), 'user': the_user, 'session': session.get('uid', 'na')})
+    if request_active:
+        sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': request.remote_addr, 'yamlfile': session.get('i', 'na'), 'user': the_user, 'session': session.get('uid', 'na')})
+    else:
+        sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': 'localhost', 'yamlfile': 'na', 'user': 'na', 'session': 'na'})
 
 def syslog_message_with_timestamp(message):
     syslog_message(time.strftime("%Y-%m-%d %H:%M:%S") + " " + message)
@@ -1248,7 +1034,7 @@ def index():
         user_code = session_id
         #logmessage("session id is " + str(session_id))
         try:
-            steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret)
+            steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
         except:
             user_code, user_dict = reset_session(yaml_filename, secret)
             encrypted = False
@@ -1262,18 +1048,18 @@ def index():
             session['encrypted'] = encrypted
         # if currentsecret is not None:
         #     try:
-        #         steps, user_dict = fetch_user_dict(user_code, yaml_filename, currentsecret)
+        #         steps, user_dict = fetch_user_dict(user_code, yaml_filename, secret=currentsecret)
         #         secret_to_use = currentsecret
         #     except:
         #         del session['currentsecret']
         #         currentsecret = None
         #         try:
-        #             steps, user_dict = fetch_user_dict(user_code, yaml_filename, secret)
+        #             steps, user_dict = fetch_user_dict(user_code, yaml_filename, secret=secret)
         #             secret_to_use = secret
         #         except:
         #             logmessage("Error: could not get user dict")
         # else:
-        #     steps, user_dict = fetch_user_dict(user_code, yaml_filename, secret)
+        #     steps, user_dict = fetch_user_dict(user_code, yaml_filename, secret=secret)
         #     secret_to_use = secret
         if user_dict is None:
             logmessage("user_dict was none")
@@ -1324,7 +1110,7 @@ def index():
                 exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)
             need_to_reset = True
     if need_to_reset:
-        save_user_dict(user_code, user_dict, yaml_filename, secret, encrypt=encrypted)
+        save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
         # if current_user.is_authenticated:
         #     save_user_dict_key(user_code, yaml_filename)
         #     session['key_logged'] = True
@@ -1464,6 +1250,7 @@ def index():
             except:
                 logmessage("Bad key: " + str(key))
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+    #logmessage("Getting interview status where action is " + str(action))
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location), tracker=user_dict['_internal']['tracker'])
     if should_assemble:
         logmessage("Reassembling.")
@@ -1778,7 +1565,7 @@ def index():
         user_dict['url_args'] = url_args
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
         reset_user_dict(user_code, yaml_filename)
-        save_user_dict(user_code, user_dict, yaml_filename, secret)
+        save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
         if current_user.is_authenticated:
             save_user_dict_key(user_code, yaml_filename)
             session['key_logged'] = True
@@ -1790,7 +1577,7 @@ def index():
     if interview_status.question.question_type == "exit":
         user_dict = fresh_dictionary()
         reset_user_dict(user_code, yaml_filename)
-        save_user_dict(user_code, user_dict, yaml_filename, secret)
+        save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
         if current_user.is_authenticated:
             save_user_dict_key(user_code, yaml_filename)
             session['key_logged'] = True
@@ -1807,10 +1594,21 @@ def index():
             return redirect(interview_status.questionText)
         else:
             return redirect(exit_page)
+    if interview_status.question.question_type == "response":
+        save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
+        if hasattr(interview_status.question, 'binaryresponse'):
+            response_to_send = make_response(interview_status.question.binaryresponse, '200 OK')
+        else:
+            response_to_send = make_response(interview_status.questionText.encode('utf8'), '200 OK')
+        response_to_send.headers['Content-type'] = interview_status.extras['content_type']
+        if set_cookie:
+            response_to_send.set_cookie('secret', secret)
+    else:
+        response_to_send = None
     user_dict['_internal']['answers'] = dict()
     if changed and interview_status.question.interview.use_progress_bar:
         advance_progress(user_dict)
-    save_user_dict(user_code, user_dict, yaml_filename, secret, changed=changed, encrypt=encrypted)
+    save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
     if user_dict.get('multi_user', False) is True and encrypted is True:
         encrypted = False
         session['encrypted'] = encrypted
@@ -1819,6 +1617,8 @@ def index():
         encrypt_session(secret)
         encrypted = True
         session['encrypted'] = encrypted
+    if response_to_send is not None:
+        return response_to_send
     flash_content = ""
     messages = get_flashed_messages(with_categories=True) + error_messages
     if messages and len(messages):
@@ -1940,8 +1740,8 @@ def index():
         extra_css = list()
         if 'speak_text' in interview_status.extras and interview_status.extras['speak_text']:
             interview_status.initialize_screen_reader()
-            util_language = docassemble.base.util.get_language()
-            util_dialect = docassemble.base.util.get_dialect()
+            util_language = docassemble.base.functions.get_language()
+            util_dialect = docassemble.base.functions.get_dialect()
             question_language = interview_status.question.language
             if question_language != '*':
                 the_language = question_language
@@ -2051,7 +1851,7 @@ def index():
                             output += "<p>Variables in templates: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].mako_names)]) + "</p>"
                     elif 'variable' in stage:
                         output += "          <h5>" + word('Needed definition of') + " <code>" + str(stage['variable']) + "</code></h5>\n"
-                output += '          <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.util.pickleable_objects(user_dict))]) + '</p>' + "\n"
+                output += '          <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.functions.pickleable_objects(user_dict))]) + '</p>' + "\n"
             output += '        </div>' + "\n"
             output += '      </div>' + "\n"
         output += '    </div>'
@@ -2180,7 +1980,7 @@ def update_attachment_info(the_user_code, the_user_dict, the_interview_status, s
     db.session.commit()
     return
 
-def fetch_user_dict(user_code, filename, secret):
+def fetch_user_dict(user_code, filename, secret=None):
     user_dict = None
     steps = 0
     encrypted = True
@@ -2204,7 +2004,7 @@ def fetch_previous_user_dict(user_code, filename, secret):
     if max_indexno is not None:
         UserDict.query.filter_by(indexno=max_indexno).delete()
         db.session.commit()
-    return fetch_user_dict(user_code, filename, secret)
+    return fetch_user_dict(user_code, filename, secret=secret)
 
 def advance_progress(user_dict):
     user_dict['_internal']['progress'] += 0.05*(100-user_dict['_internal']['progress'])
@@ -2222,9 +2022,9 @@ def save_user_dict_key(user_code, filename):
         db.session.commit()
     return
 
-def save_user_dict(user_code, user_dict, filename, secret, changed=False, encrypt=True):
+def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, encrypt=True):
     user_dict['_internal']['modtime'] = datetime.datetime.utcnow()
-    if current_user.is_authenticated and not current_user.is_anonymous:
+    if current_user and current_user.is_authenticated and not current_user.is_anonymous:
         the_user_id = current_user.id
     else:
         the_user_id = None
@@ -2241,7 +2041,7 @@ def save_user_dict(user_code, user_dict, filename, secret, changed=False, encryp
             if encrypt:
                 new_record = UserDict(key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
             else:
-                new_record = UserDict(key=user_code, dictionary=pack_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=False)
+                new_record = UserDict(key=user_code, dictionary=pack_dictionary(user_dict), filename=filename, user_id=the_user_id, encrypted=False)
             db.session.add(new_record)
             db.session.commit()
         else:
@@ -2379,7 +2179,7 @@ def make_navbar(status, page_title, page_short_title, steps, show_login):
 @app.context_processor
 def utility_processor():
     def word(text):
-        return docassemble.base.util.word(text)
+        return docassemble.base.functions.word(text)
     def random_social():
         return 'local$' + ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
     return dict(random_social=random_social, word=word)
@@ -3576,7 +3376,7 @@ def get_vars_in_use(interview, interview_status):
                 method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': noquote(inspect.getdoc(value)), 'tag': '.' + str(name) + str(inspect.formatargspec(*inspect.getargspec(value)))})
             #logmessage("Defining name_info for " + str(val))
             name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'bases': bases, 'methods': method_list}
-    for val in docassemble.base.util.pickleable_objects(user_dict):
+    for val in docassemble.base.functions.pickleable_objects(user_dict):
         names_used.add(val)
         if val not in name_info:
             name_info[val] = dict()
@@ -4143,7 +3943,7 @@ def test_post():
 
 @app.route('/packagestatic/<package>/<filename>', methods=['GET'])
 def package_static(package, filename):
-    the_file = docassemble.base.util.package_data_filename(str(package) + ':data/static/' + str(filename))
+    the_file = docassemble.base.functions.package_data_filename(str(package) + ':data/static/' + str(filename))
     if the_file is None:
         abort(404)
     extension, mimetype = get_ext_and_mimetype(the_file)

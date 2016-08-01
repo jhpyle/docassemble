@@ -1,4 +1,4 @@
-from docassemble.base.util import word, currency_symbol, url_action
+from docassemble.base.functions import word, currency_symbol, url_action
 import docassemble.base.filter
 from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote
 from docassemble.base.parse import Question, debug

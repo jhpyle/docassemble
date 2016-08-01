@@ -1,0 +1,19 @@
+metadata:
+  title: "Command: leave"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+code: |
+  command('leave', url=target_url)
+---
+question: |
+  Where do you want to go?
+field: target_url
+buttons:
+  - Stanford: "http://stanford.edu/"
+  - Harvard: "http://www.harvard.edu/"
+---

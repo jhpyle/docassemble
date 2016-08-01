@@ -1,10 +1,10 @@
 import sys
 if __name__ == "__main__":
-    import docassemble.webapp.config
-    docassemble.webapp.config.load(arguments=sys.argv)
+    import docassemble.base.config
+    docassemble.base.config.load(arguments=sys.argv)
 
 def check_for_config():
-    from docassemble.webapp.config import s3_config, S3_ENABLED, daconfig
+    from docassemble.base.config import s3_config, S3_ENABLED, daconfig
     if S3_ENABLED:
         import docassemble.webapp.amazon
         s3 = docassemble.webapp.amazon.s3object(s3_config)

@@ -13,8 +13,9 @@ import codecs
 import copy
 import docassemble.base.filter
 import docassemble.base.pdftk
-from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, QuestionError
-from docassemble.base.util import pickleable_objects, word, get_language
+from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, QuestionError, ResponseError, CommandError
+import docassemble.base.functions
+from docassemble.base.functions import pickleable_objects, word, get_language
 from docassemble.base.logger import logmessage
 from docassemble.base.pandoc import Pandoc
 from docassemble.base.mako.template import Template
@@ -43,11 +44,11 @@ def textify(data, user_dict):
 
 def set_absolute_filename(func):
     #logmessage("Running set_absolute_filename in parse")
-    docassemble.base.util.set_absolute_filename(func)
+    docassemble.base.functions.set_absolute_filename(func)
 
 def set_url_finder(func):
     docassemble.base.filter.set_url_finder(func)
-    docassemble.base.util.set_url_finder(func)
+    docassemble.base.functions.set_url_finder(func)
 
 def set_file_finder(func):
     docassemble.base.filter.set_file_finder(func)
@@ -86,7 +87,7 @@ class PackageImage(object):
         self.setname = kwargs.get('setname', None)
         self.package = kwargs.get('package', 'docassemble.base')
     def get_filename(self):
-        return(docassemble.base.util.static_filename_path(str(self.package) + ':' + str(self.filename)))
+        return(docassemble.base.functions.static_filename_path(str(self.package) + ':' + str(self.filename)))
     def get_reference(self):
         #logmessage("get_reference is considering " + str(self.package) + ':' + str(self.filename))
         return str(self.package) + ':' + str(self.filename)
@@ -476,7 +477,7 @@ class Question:
                         for yaml_file in the_list:
                             if type(yaml_file) is not str:
                                 raise DAError('An initial yaml file must be a string.' + self.idebug(data))
-                            self.interview.attachment_options['initial_yaml'].append(docassemble.base.util.package_template_filename(yaml_file, package=self.package))
+                            self.interview.attachment_options['initial_yaml'].append(docassemble.base.functions.package_template_filename(yaml_file, package=self.package))
                     elif key == 'additional yaml':
                         if 'additional_yaml' not in self.interview.attachment_options:
                             self.interview.attachment_options['additional_yaml'] = list()
@@ -487,19 +488,19 @@ class Question:
                         for yaml_file in the_list:
                             if type(yaml_file) is not str:
                                 raise DAError('An additional yaml file must be a string.' + self.idebug(data))
-                            self.interview.attachment_options['additional_yaml'].append(docassemble.base.util.package_template_filename(yaml_file, package=self.package))
+                            self.interview.attachment_options['additional_yaml'].append(docassemble.base.functions.package_template_filename(yaml_file, package=self.package))
                     elif key == 'template file':
                         if type(value) is not str:
                             raise DAError('The template file must be a string.' + self.idebug(data))
-                        self.interview.attachment_options['template_file'] = docassemble.base.util.package_template_filename(value, package=self.package)
+                        self.interview.attachment_options['template_file'] = docassemble.base.functions.package_template_filename(value, package=self.package)
                     elif key == 'rtf template file':
                         if type(value) is not str:
                             raise DAError('The rtf template file must be a string.' + self.idebug(data))
-                        self.interview.attachment_options['rtf_template_file'] = docassemble.base.util.package_template_filename(value, package=self.package)
+                        self.interview.attachment_options['rtf_template_file'] = docassemble.base.functions.package_template_filename(value, package=self.package)
                     elif key == 'docx reference file':
                         if type(value) is not str:
                             raise DAError('The docx reference file must be a string.' + self.idebug(data))
-                        self.interview.attachment_options['docx_reference_file'] = docassemble.base.util.package_template_filename(value, package=self.package)
+                        self.interview.attachment_options['docx_reference_file'] = docassemble.base.functions.package_template_filename(value, package=self.package)
         if 'script' in data:
             if type(data) is not str:
                 raise DAError("A script section must be plain text." + self.idebug(data))
@@ -769,6 +770,20 @@ class Question:
         #         raise DAError("A role section must be text or a list." + self.idebug(data))
         if 'progress' in data:
             self.progress = data['progress']
+        if 'response' in data:
+            self.content = TextObject(definitions + data['response'], names_used=self.mako_names)
+            self.question_type = 'response'
+        if 'binaryresponse' in data:
+            self.question_type = 'response'
+            self.content = 'binary'
+            self.binaryresponse = data['binaryresponse']
+            if 'response' not in data:
+                self.content = TextObject('')
+        if 'response' in data or 'binaryresponse' in data:
+            if 'content type' in data:
+                self.content_type = TextObject(definitions + data['content type'], names_used=self.mako_names)
+            else:
+                self.content_type = TextObject('text/plain; charset=utf-8')
         if 'question' in data:
             self.content = TextObject(definitions + data['question'], names_used=self.mako_names)
         if 'subquestion' in data:
@@ -946,7 +961,7 @@ class Question:
             for content_file in data['content file']:
                 if type(content_file) is not str:
                     raise DAError('A content file must be specified as text or a list of text filenames' + self.idebug(data))
-                file_to_read = docassemble.base.util.package_template_filename(content_file, package=self.package)
+                file_to_read = docassemble.base.functions.package_template_filename(content_file, package=self.package)
                 if file_to_read is not None and os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
                     with open(file_to_read, 'rU') as the_file:
                         data['content'] += the_file.read()
@@ -1272,7 +1287,7 @@ class Question:
                 for yaml_file in target['initial yaml']:
                     if type(yaml_file) is not str:
                         raise DAError('An initial yaml file must be a string.' + self.idebug(target))
-                    options['initial_yaml'].append(docassemble.base.util.package_template_filename(yaml_file, package=self.package))
+                    options['initial_yaml'].append(docassemble.base.functions.package_template_filename(yaml_file, package=self.package))
             if 'additional yaml' in target:
                 if type(target['additional yaml']) is not list:
                     target['additional yaml'] = [target['additional yaml']]
@@ -1280,19 +1295,19 @@ class Question:
                 for yaml_file in target['additional yaml']:
                     if type(yaml_file) is not str:
                         raise DAError('An additional yaml file must be a string.' + self.idebug(target))
-                    options['additional_yaml'].append(docassemble.base.util.package_template_filename(yaml_file, package=self.package))
+                    options['additional_yaml'].append(docassemble.base.functions.package_template_filename(yaml_file, package=self.package))
             if 'template file' in target:
                 if type(target['template file']) is not str:
                     raise DAError('The template file must be a string.' + self.idebug(target))
-                options['template_file'] = docassemble.base.util.package_template_filename(target['template file'], package=self.package)
+                options['template_file'] = docassemble.base.functions.package_template_filename(target['template file'], package=self.package)
             if 'rtf template file' in target:
                 if type(target['rtf template file']) is not str:
                     raise DAError('The rtf template file must be a string.' + self.idebug(target))
-                options['rtf_template_file'] = docassemble.base.util.package_template_filename(target['rtf template file'], package=self.package)
+                options['rtf_template_file'] = docassemble.base.functions.package_template_filename(target['rtf template file'], package=self.package)
             if 'docx reference file' in target:
                 if type(target['docx reference file']) is not str:
                     raise DAError('The docx reference file must be a string.' + self.idebug(target))
-                options['docx_reference_file'] = docassemble.base.util.package_template_filename(target['docx reference file'], package=self.package)
+                options['docx_reference_file'] = docassemble.base.functions.package_template_filename(target['docx reference file'], package=self.package)
             if 'usedefs' in target:
                 if type(target['usedefs']) is str:
                     the_list = [target['usedefs']]
@@ -1340,7 +1355,7 @@ class Question:
                 for content_file in target['content file']:
                     if type(content_file) is not str:
                         raise DAError('A content file must be specified as text or a list of text filenames' + self.idebug(target))
-                    file_to_read = docassemble.base.util.package_template_filename(content_file, package=self.package)
+                    file_to_read = docassemble.base.functions.package_template_filename(content_file, package=self.package)
                     if file_to_read is not None and os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
                         with open(file_to_read, 'rU') as the_file:
                             target['content'] += the_file.read()
@@ -1355,7 +1370,7 @@ class Question:
                     raise DAError('fields supplied to attachment must be a dictionary' + self.idebug(target))
                 target['content'] = ''
                 target['valid formats'] = ['pdf']
-                options['pdf_template_file'] = docassemble.base.util.package_template_filename(target['pdf template file'], package=self.package)
+                options['pdf_template_file'] = docassemble.base.functions.package_template_filename(target['pdf template file'], package=self.package)
                 options['fields'] = dict()
                 for key, val in target['fields'].iteritems():
                     logmessage("Set " + str(key) + " to " + str(val))
@@ -1422,6 +1437,10 @@ class Question:
         extras = dict()
         labels = dict()
         extras['required'] = dict()
+        if self.question_type == 'response':
+            extras['content_type'] = self.content_type.text(user_dict)
+            if hasattr(self, 'binaryresponse'):
+                extras['binaryresponse'] = self.binaryresponse
         if self.question_type == 'review':
             extras['ok'] = dict()
             for field in self.fields:
@@ -1505,11 +1524,16 @@ class Question:
                 if hasattr(field, 'label'):
                     labels[field.number] = field.label.text(user_dict)
                 if hasattr(field, 'extras'):
-                    for key in ['note', 'html', 'script', 'css', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step']:
+                    for key in ['note', 'html', 'script', 'css', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'textresponse', 'content_type']:
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()
                             extras[key][field.number] = field.extras[key].text(user_dict)
+                    for key in ['binaryresponse']:
+                        if key in field.extras:
+                            if key not in extras:
+                                extras[key] = dict()
+                            extras[key][field.number] = field.extras[key]
                 if hasattr(field, 'saveas'):
                     try:
                         defaults[field.number] = eval(from_safeid(field.saveas), user_dict)
@@ -1672,8 +1696,8 @@ class Question:
         return(result)
     def prepare_attachment(self, attachment, user_dict, **kwargs):
         if 'language' in attachment['options']:
-            old_language = docassemble.base.util.get_language()
-            docassemble.base.util.set_language(attachment['options']['language'])
+            old_language = docassemble.base.functions.get_language()
+            docassemble.base.functions.set_language(attachment['options']['language'])
         else:
             old_language = None
         result = {'name': attachment['name'].text(user_dict), 'filename': attachment['filename'].text(user_dict), 'description': attachment['description'].text(user_dict), 'valid_formats': attachment['valid_formats']}
@@ -1730,7 +1754,7 @@ class Question:
                     result['markdown'][doc_format] = emoji_match.sub(emoji_matcher_html(self), result['markdown'][doc_format])
                 #logmessage("output was:\n" + repr(result['content'][doc_format]))
         if old_language is not None:
-            docassemble.base.util.set_language(old_language)
+            docassemble.base.functions.set_language(old_language)
         return(result)
 
 def emoji_matcher_insert(obj):
@@ -1752,7 +1776,7 @@ def interview_source_from_string(path, **kwargs):
         if new_source is not None:
             return new_source
     #sys.stderr.write("Trying to find it\n")
-    for the_filename in [docassemble.base.util.package_question_filename(path), docassemble.base.util.standard_question_filename(path), docassemble.base.util.absolute_filename(path)]:
+    for the_filename in [docassemble.base.functions.package_question_filename(path), docassemble.base.functions.standard_question_filename(path), docassemble.base.functions.absolute_filename(path)]:
         #sys.stderr.write("Trying " + str(the_filename) + " with path " + str(path) + "\n")
         if the_filename is not None:
             new_source = InterviewSourceFile(filepath=the_filename, path=path)
@@ -1883,7 +1907,7 @@ class Interview:
         else:
             interview_status = InterviewStatus()
         interview_status.set_tracker(user_dict['_internal']['tracker'])
-        docassemble.base.util.reset_local_variables()
+        docassemble.base.functions.reset_local_variables()
         interview_status.current_info.update({'default_role': self.default_role})
         user_dict['current_info'] = interview_status.current_info
         for question in self.questions_list:
@@ -1986,6 +2010,35 @@ class Interview:
                     #logmessage("Need to ask:\n  " + question_result['question_text'])
                     interview_status.populate(question_result)
                     break
+            except CommandError as qError:
+                question_data = dict(command=qError.return_type, url=qError.url)
+                new_interview_source = InterviewSourceString(content='')
+                new_interview = new_interview_source.get_interview()
+                new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
+                new_question.name = "Question_Temp"
+                interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
+                break
+            except ResponseError as qError:
+                #logmessage("Trapped ResponseError")
+                question_data = dict(extras=dict())
+                if hasattr(qError, 'response') and qError.response is not None:
+                    question_data['response'] = qError.response
+                if hasattr(qError, 'binaryresponse') and qError.binaryresponse is not None:
+                    question_data['binaryresponse'] = qError.binaryresponse
+                if hasattr(qError, 'content_type') and qError.content_type:
+                    question_data['content type'] = qError.content_type
+                # new_interview = copy.deepcopy(self)
+                # if self.source is None:
+                #     new_interview_source = InterviewSourceString(content='')
+                # else:
+                #     new_interview_source = self.source
+                new_interview_source = InterviewSourceString(content='')
+                new_interview = new_interview_source.get_interview()
+                new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
+                new_question.name = "Question_Temp"
+                #the_question = new_question.follow_multiple_choice(user_dict)
+                interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
+                break
             except QuestionError as qError:
                 question_data = dict()
                 if qError.question:
@@ -2026,7 +2079,7 @@ class Interview:
                 break
             else:
                 raise DAErrorNoEndpoint('Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any).  It is a best practice to end your interview with a question that says goodbye and offers an Exit button.')
-        if docassemble.base.util.get_info('prevent_going_back'):
+        if docassemble.base.functions.get_info('prevent_going_back'):
             interview_status.can_go_back = False
         return(pickleable_objects(user_dict))
     def askfor(self, missingVariable, user_dict, **kwargs):
@@ -2333,6 +2386,28 @@ class Interview:
                     if question_result['type'] == 'continue':
                         continue
                     return(question_result)
+                except CommandError as qError:
+                    question_data = dict(command=qError.return_type, url=qError.url)
+                    new_interview_source = InterviewSourceString(content='')
+                    new_interview = new_interview_source.get_interview()
+                    new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
+                    new_question.name = "Question_Temp"
+                    return(new_question.ask(user_dict, 'None', 'None'))
+                except ResponseError as qError:
+                    #logmessage("Trapped ResponseError")
+                    question_data = dict(extras=dict())
+                    if hasattr(qError, 'response') and qError.response is not None:
+                        question_data['response'] = qError.response
+                    if hasattr(qError, 'binaryresponse') and qError.binaryresponse is not None:
+                        question_data['binaryresponse'] = qError.binaryresponse
+                    if hasattr(qError, 'content_type') and qError.content_type:
+                        question_data['content type'] = qError.content_type
+                    new_interview_source = InterviewSourceString(content='')
+                    new_interview = new_interview_source.get_interview()
+                    new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
+                    new_question.name = "Question_Temp"
+                    #the_question = new_question.follow_multiple_choice(user_dict)
+                    return(new_question.ask(user_dict, 'None', 'None'))
         raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + missingVariable + "' that could not be found in the question file or in any of the files incorporated by reference into the question file.")
 
 class myextract(ast.NodeVisitor):

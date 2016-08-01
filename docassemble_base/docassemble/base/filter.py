@@ -9,7 +9,7 @@ import qrcode
 import qrcode.image.svg
 import StringIO
 import tempfile
-import docassemble.base.util
+import docassemble.base.functions
 from docassemble.base.pandoc import Pandoc
 from mdx_smartypants import SmartypantsExt
 
@@ -556,7 +556,7 @@ def image_url_string(match, emoji=False, question=None, playground=False):
         elif file_info['extension'] == 'pdf':
             output = '<img class="daicon" style="' + width_string + '" src="' + url_finder(file_reference, size="screen", page=1, question=question) + '"/>'
             if 'pages' in file_info and file_info['pages'] > 1:
-                output += " (" + str(file_info['pages']) + " " + docassemble.base.util.word('pages') + ")"
+                output += " (" + str(file_info['pages']) + " " + docassemble.base.functions.word('pages') + ")"
             return(output)
         else:
             return('<a href="' + url_finder(file_reference, question=question) + '">' + file_info['filename'] + '</a>')
@@ -783,7 +783,7 @@ def audio_control(files, preload="metadata"):
             if d[1] is not None:
                 output += ' type="' + d[1] + '"/>'
             output += "\n"
-    output += '  <a target="_blank" href="' + files[-1][0] +  '">' + docassemble.base.util.word('Listen') + '</a>\n'
+    output += '  <a target="_blank" href="' + files[-1][0] +  '">' + docassemble.base.functions.word('Listen') + '</a>\n'
     output += "</audio>\n"
     return output
 
@@ -798,7 +798,7 @@ def video_control(files):
             if d[1] is not None:
                 output += ' type="' + d[1] + '"/>'
             output += "\n"
-    output += '  <a target="_blank" href="' + files[-1][0] +  '">' + docassemble.base.util.word('Listen') + '</a>\n'
+    output += '  <a target="_blank" href="' + files[-1][0] +  '">' + docassemble.base.functions.word('Listen') + '</a>\n'
     output += "</video>\n"
     return output
 

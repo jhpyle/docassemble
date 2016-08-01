@@ -1,6 +1,6 @@
 from flask_user import UserMixin
 from docassemble.webapp.app_and_db import db
-from docassemble.webapp.config import daconfig, dbtableprefix
+from docassemble.base.config import daconfig, dbtableprefix
 
 class User(UserMixin, db.Model):
     __tablename__ = dbtableprefix + 'user'

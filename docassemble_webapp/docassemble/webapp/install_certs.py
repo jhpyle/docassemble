@@ -4,7 +4,7 @@ import stat
 import re
 
 def main():
-    from docassemble.webapp.config import daconfig, S3_ENABLED, s3_config
+    from docassemble.base.config import daconfig, S3_ENABLED, s3_config
     certs_location = daconfig.get('certs', None)
     if S3_ENABLED:
         import docassemble.webapp.amazon
@@ -59,7 +59,7 @@ def main():
     return
 
 if __name__ == "__main__":
-    import docassemble.webapp.config
-    docassemble.webapp.config.load(arguments=sys.argv)
+    import docassemble.base.config
+    docassemble.base.config.load(arguments=sys.argv)
     main()
     sys.exit(0)

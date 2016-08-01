@@ -3,7 +3,7 @@ metadata:
   documentation: "http://docassemble.org/docs/modifiers#generic object"
 ---
 modules:
-  - docassemble.base.legal
+  - docassemble.base.util
 ---
 objects:
   - grantor: Individual
@@ -25,4 +25,19 @@ subquestion: |
 
   You can reach the trustee at ${ trustee.phone_number }.
 mandatory: true
-  
+---
+generic object: Individual
+question: |
+  What is ${ x.object_possessive('name') }?
+fields:
+  - First Name: x.name.first
+    default: ${ x.first_name_hint() }
+  - Middle Name: x.name.middle
+    required: False
+  - Last Name: x.name.last
+    default: ${ x.last_name_hint() }
+  - Suffix: x.name.suffix
+    required: False
+    code: |
+      name_suffix()
+---

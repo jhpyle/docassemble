@@ -26,7 +26,7 @@ code: |
   else:
     user = client
     role = 'client'
-  update_info(user, role, current_info)
+  update_info(current_info, user=user, role=role)
 comment: |
   The default role is "client" and an optional role is "advocate."
   Unless otherwise specified, all questions require the user to be a

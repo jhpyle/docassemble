@@ -1,9 +1,9 @@
 import sys
 import os
-import docassemble.webapp.config
-from docassemble.webapp.config import daconfig, s3_config, S3_ENABLED
+import docassemble.base.config
+from docassemble.base.config import daconfig, s3_config, S3_ENABLED
 if __name__ == "__main__":
-    docassemble.webapp.config.load(arguments=sys.argv)
+    docassemble.base.config.load(arguments=sys.argv)
 WEBAPP_PATH = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
 
 def main():

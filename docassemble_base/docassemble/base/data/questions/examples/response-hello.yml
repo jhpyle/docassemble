@@ -1,0 +1,11 @@
+metadata:
+  title: Custom response
+  example start: 2
+  documentation: "http://docassemble.org/docs/functions.html#response"
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+code: |
+  response("Hello, world!")

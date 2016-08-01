@@ -1,0 +1,15 @@
+metadata:
+  title: Custom response
+  example start: 3
+  documentation: "http://docassemble.org/docs/functions.html#response"
+---
+modules:
+  - docassemble.base.util
+---
+imports:
+  - json
+---
+mandatory: true
+code: |
+  data = dict(fruit='apple', slices=2)
+  response(json.dumps(data), content_type="application/json")

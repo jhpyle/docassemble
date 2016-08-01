@@ -7,14 +7,17 @@ RUN mkdir -p /etc/ssl/docassemble /usr/share/docassemble/local /usr/share/docass
 RUN cd /usr/share/docassemble && git clone https://github.com/letsencrypt/letsencrypt && cd letsencrypt && ./letsencrypt-auto --help
 COPY docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/
 COPY Docker/initialize.sh /usr/share/docassemble/webapp/
+COPY Docker/run-cron.sh /usr/share/docassemble/webapp/
 COPY Docker/run-postgresql.sh /usr/share/docassemble/webapp/
 COPY Docker/config.yml /usr/share/docassemble/config/config.yml.dist
 COPY Docker/apache.conf /usr/share/docassemble/config/docassemble-http.conf.dist
 COPY Docker/apache-ssl.conf /usr/share/docassemble/config/docassemble-ssl.conf.dist
 COPY Docker/apache.logrotate /etc/logrotate.d/apache2
 COPY Docker/docassemble.logrotate /etc/logrotate.d/docassemble
+COPY Docker/docassemble-cron-monthly.sh /etc/cron.monthly/docassemble
 COPY Docker/docassemble-cron-weekly.sh /etc/cron.weekly/docassemble
 COPY Docker/docassemble-cron-daily.sh /etc/cron.daily/docassemble
+COPY Docker/docassemble-cron-hourly.sh /etc/cron.hourly/docassemble
 COPY Docker/docassemble.conf /etc/apache2/conf-available/
 COPY Docker/docassemble-supervisor.conf /etc/supervisor/conf.d/docassemble.conf
 COPY Docker/docassemble.key /etc/ssl/docassemble/docassemble.key.orig

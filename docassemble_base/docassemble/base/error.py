@@ -58,3 +58,32 @@ class QuestionError(Exception):
             self.dead_end = None
     def __str__(self):
         return str(self.question)
+
+class ResponseError(Exception):
+    def __init__(self, *pargs, **kwargs):
+        if len(pargs) == 0 and not ('response' in kwargs or 'binaryresponse' in kwargs):
+            self.response = "Response not specified"
+        if len(pargs) > 0:
+            self.response = pargs[0];
+        elif 'response' in kwargs:
+            self.response = kwargs['response'];
+        if 'content_type' in kwargs:
+            self.content_type = kwargs['content_type'];
+        if 'binaryresponse' in kwargs:
+            self.binaryresponse = kwargs['binaryresponse'];
+    def __str__(self):
+        if hasattr(self, 'response'):
+            return str(self.response)
+        return "A ResponseError exception was thrown"
+
+class CommandError(Exception):
+    def __init__(self, *pargs, **kwargs):
+        if len(pargs) > 0:
+            self.return_type = pargs[0];
+        elif 'type' in kwargs:
+            self.return_type = kwargs['type'];
+        else:
+            self.return_type = "exit"
+        self.url = kwargs.get('url', '');
+    def __str__(self):
+        return str(self.return_type)

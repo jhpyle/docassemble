@@ -5,7 +5,7 @@ metadata:
   example end: 4
 ---
 modules:
-  - docassemble.base.legal
+  - docassemble.base.util
 ---
 objects:
   protagonist: Individual

@@ -1,11 +1,11 @@
 metadata:
   title: age_in_years()
-  documentation: "http://docassemble.org/docs/legal.html#Individual.age_in_years"
+  documentation: "http://docassemble.org/docs/objects.html#Individual.age_in_years"
   example start: 3
   example end: 4
 ---
 modules:
-  - docassemble.base.legal
+  - docassemble.base.util
 ---
 objects:
   - user: Individual

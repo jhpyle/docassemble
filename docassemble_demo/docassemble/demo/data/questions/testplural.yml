@@ -1,0 +1,46 @@
+metadata:
+  title: Linguistics
+  example start: 3
+  example end: 3
+---
+include:
+  - basic-questions.yml
+---
+mandatory: true
+code: |
+  case.defendant.gathered = case.defendant.gather()
+---
+mandatory: true
+question: |
+  ${ case.defendant.as_noun(capitalize=True) }
+  ${ case.defendant.does_verb("have") }
+  ${ indefinite_article(balance_sheet_item) }.
+---
+question: |
+  What is the ${ case.defendant.possessive("balance") }?
+fields:
+  - Amount: balance
+    datatype: number
+---
+code: |
+  if balance < 0:
+    balance_sheet_item = "liability"
+  else:
+    balance_sheet_item = "asset"
+---
+code: |
+  case.defendant.gathering = True
+  if client not in case.defendant and not client.is_plaintiff and \
+     client.is_defendant:
+    case.defendant.append(client)
+  if case.defendant.number_gathered() == 0:
+    case.defendant.appendObject(Individual)
+  while case.defendant.there_is_another:
+    case.defendant.appendObject(Individual)
+    del case.defendant.there_is_another
+  case.defendant.gathering = False
+  case.defendant.gathered = True
+# Defendant has an asset
+# Defendant has a liability
+# Defendants have an asset
+# Defendants have a liability

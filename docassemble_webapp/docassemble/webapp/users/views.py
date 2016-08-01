@@ -3,7 +3,7 @@ from flask_user import current_user, login_required, roles_required
 from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, MyRegisterForm, NewPrivilegeForm
 from docassemble.webapp.users.models import UserAuth, User, Role
-from docassemble.base.util import word, debug_status
+from docassemble.base.functions import word, debug_status
 from docassemble.base.logger import logmessage
 import random
 import string
@@ -14,7 +14,7 @@ import string
 def privilege_list():
     output = '<ol>';
     for role in db.session.query(Role).order_by(Role.name):
-        if role.name not in ['user', 'admin', 'developer', 'advocate']:
+        if role.name not in ['user', 'admin', 'developer', 'advocate', 'cron']:
             output += '<li>' + str(role.name) + ' <a href="' + url_for('delete_privilege', id=role.id) + '">Delete</a></li>'
         else:
             output += '<li>' + str(role.name) + '</li>'
@@ -28,6 +28,8 @@ def privilege_list():
 def user_list():
     output = '<ol>';
     for user in db.session.query(User).order_by(User.last_name, User.first_name, User.email):
+        if user.nickname == 'cron':
+            continue
         name_string = ''
         if user.first_name:
             name_string += str(user.first_name) + " "
@@ -48,7 +50,7 @@ def user_list():
 def delete_privilege(id):
     role = Role.query.filter_by(id=id).first()
     user_role = Role.query.filter_by(name='user').first()
-    if role is None or role.name in ['user', 'admin', 'developer', 'advocate']:
+    if role is None or role.name in ['user', 'admin', 'developer', 'advocate', 'cron']:
         flash(word('The role could not be deleted.'), 'error')
     else:
         for user in db.session.query(User):

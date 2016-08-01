@@ -2,12 +2,12 @@ import os
 import os.path
 import subprocess
 import docassemble.base.filter
-import docassemble.base.util
+import docassemble.base.functions
 import tempfile
 import shutil
 import sys
 import re
-from docassemble.webapp.config import daconfig
+from docassemble.base.config import daconfig
 from docassemble.base.logger import logmessage
 
 style_find = re.compile(r'{\s*(\\s([1-9])[^\}]+)\\sbasedon[^\}]+heading ([0-9])', flags=re.DOTALL)
@@ -57,11 +57,11 @@ class Pandoc(object):
                     for key in data:
                         metadata_as_dict[key] = data[key]
         if self.output_format == 'rtf' and self.template_file is None:
-            self.template_file = docassemble.base.util.standard_template_filename('Legal-Template.rtf')
+            self.template_file = docassemble.base.functions.standard_template_filename('Legal-Template.rtf')
         if self.output_format == 'docx' and self.reference_file is None:
-            self.reference_file = docassemble.base.util.standard_template_filename('Legal-Template.docx')
+            self.reference_file = docassemble.base.functions.standard_template_filename('Legal-Template.docx')
         if (self.output_format == 'pdf' or self.output_format == 'tex') and self.template_file is None:
-            self.template_file = docassemble.base.util.standard_template_filename('Legal-Template.tex')
+            self.template_file = docassemble.base.functions.standard_template_filename('Legal-Template.tex')
         yaml_to_use = list()
         if self.output_format == 'rtf':
             #logmessage("pre input content is " + str(self.input_content))
@@ -71,7 +71,7 @@ class Pandoc(object):
             self.input_content = docassemble.base.filter.docx_filter(self.input_content, metadata=metadata_as_dict, question=question)
         if self.output_format == 'pdf' or self.output_format == 'tex':
             if len(self.initial_yaml) == 0:
-                standard_file = docassemble.base.util.standard_template_filename('Legal-Template.yml')
+                standard_file = docassemble.base.functions.standard_template_filename('Legal-Template.yml')
                 if standard_file is not None:
                     self.initial_yaml.append(standard_file)
             for yaml_file in self.initial_yaml:

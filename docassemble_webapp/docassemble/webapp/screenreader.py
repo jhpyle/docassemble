@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from docassemble.base.util import word
+from docassemble.base.functions import word
 import re
 
 __all__ = ['to_text']

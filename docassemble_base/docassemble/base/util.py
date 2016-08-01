@@ -1,1061 +1,703 @@
 # -*- coding: utf-8 -*-
-import types
-import pattern.en
-import re
-import os
-import inspect
-import mimetypes
 import datetime
-import locale
-import pkg_resources
-import titlecase
 from docassemble.base.logger import logmessage
-from docassemble.base.error import QuestionError
-import babel.dates
+from docassemble.base.error import DAError
+from docassemble.base.functions import comma_and_list, get_language, set_language, get_dialect, word, comma_list, ordinal, ordinal_number, need, nice_number, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, period_list, name_suffix, currency_symbol, currency, indefinite_article, today, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, month_of, day_of, year_of, format_date, defined, value, message, response, command, single_paragraph, update_info, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, objects_from_file, email_string, this_thread, static_image
+from docassemble.base.core import DAObject, DAList, DADict, DAFile, DAFileCollection, DAFileList, DATemplate, selections
+from decimal import Decimal
+from docassemble.base.filter import file_finder, url_finder, markdown_to_html, async_mail
 import dateutil.parser
-import locale
 import json
-import threading
-import urllib
 import codecs
-import base64
-import json
-import ast
-import astunparse
-locale.setlocale(locale.LC_ALL, '')
+import us
+from bs4 import BeautifulSoup
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'single_paragraph']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'update_info', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'email_string', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate', 'us', 'today']
 
-class lister(ast.NodeVisitor):
-    def __init__(self):
-        self.stack = []
-    def visit_Name(self, node):
-        self.stack.append(['name', node.id])
-        ast.NodeVisitor.generic_visit(self, node)
-    def visit_Attribute(self, node):
-        self.stack.append(['attr', node.attr])
-        ast.NodeVisitor.generic_visit(self, node)
-    def visit_Subscript(self, node):
-        self.stack.append(['index', re.sub(r'\n', '', astunparse.unparse(node.slice))])
-        ast.NodeVisitor.generic_visit(self, node)
-
-debug = False
-default_dialect = 'us'
-default_language = 'en'
-default_locale = 'US.utf8'
-daconfig = dict()
-dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
-newlines = re.compile(r'[\r\n]+')
-
-class ThreadVariables(threading.local):
-    language = default_language
-    dialect = default_dialect
-    locale = default_locale
-    initialized = False
-    def __init__(self, **kw):
-        if self.initialized:
-            raise SystemError('__init__ called too many times')
-        self.initialized = True
-        self.__dict__.update(kw)
-
-this_thread = ThreadVariables()
-
-def get_info(att):
-    """Used to retrieve the values of global variables set through set_info()."""
-    if hasattr(this_thread, att):
-        return getattr(this_thread, att)
-
-def set_info(**kwargs):
-    """Used to set the values of global variables you wish to retrieve through get_info()."""
-    for att, value in kwargs.iteritems():
-        setattr(this_thread, att, value)
-    
-word_collection = {
-    'es': {
-        'Continue': 'Continuar',
-        'Help': 'Ayuda',
-        'Sign in': 'Registrarse',
-        'Question': 'Interrogación',
-        'save_as_multiple': 'The document is available in the following formats:',
-        'save_as_singular': 'The document is available in the following format:',
-        'pdf_message': 'for printing; requires Adobe Reader or similar application',
-        'rtf_message': 'for editing; requires Microsoft Word, Wordpad, or similar application',
-        'docx_message': 'for editing; requires Microsoft Word or compatible application',
-        'tex_message': 'for debugging PDF output',
-        'attachment_message_plural': 'The following documents have been created for you.',
-        'attachment_message_singular': 'The following document has been created for you.'
-        },
-    'en': {
-        'and': "and",
-        'or': "or",
-        'yes': "yes",
-        'no': "no",
-        'Document': "Document",
-        'content': 'content',
-        'Open as:': 'Open this document as:',
-        'Open as:': 'Save this documents as:',
-        'Question': 'Question',
-        'Help': 'Help',
-        'Download': 'Download',
-        'Preview': 'Preview',
-        'Markdown': 'Markdown',
-        'Source': 'Source',
-        'attachment_message_plural': 'The following documents have been created for you.',
-        'attachment_message_singular': 'The following document has been created for you.',
-        'save_as_multiple': 'The document is available in the following formats:',
-        'save_as_singular': 'The document is available in the following format:',
-        'pdf_message': 'for printing; requires Adobe Reader or similar application',
-        'rtf_message': 'for editing; requires Microsoft Word, Wordpad, or similar application',
-        'docx_message': 'for editing; requires Microsoft Word or compatible application',
-        'tex_message': 'for debugging PDF output',
-        'vs.': 'vs.',
-        'v.': 'v.',
-        'Case No.': 'Case No.',
-        'In the': 'In the',
-        'This field is required.': 'You need to fill this in.',
-        "You need to enter a valid date.": "You need to enter a valid date.",
-        "You need to enter a complete e-mail address.": "You need to enter a complete e-mail address.",
-        "You need to enter a number.": "You need to enter a number.",
-        "You need to select one.": "You need to select one.",
-        "Country Code": 'Country Code (e.g., "us")',
-        "First Subdivision": "State Abbreviation (e.g., 'NY')",
-        "Second Subdivision": "County",
-        "Third Subdivision": "Municipality",
-        "Organization": "Organization",
-    }
-}
-
-ordinal_numbers = {
-    'en': {
-        '0': 'zeroeth',
-        '1': 'first',
-        '2': 'second',
-        '3': 'third',
-        '4': 'fourth',
-        '5': 'fifth',
-        '6': 'sixth',
-        '7': 'seventh',
-        '8': 'eighth',
-        '9': 'ninth',
-        '10': 'tenth'
-    }
-}
-
-nice_numbers = {
-    'en': {
-        '0': 'zero',
-        '1': 'one',
-        '2': 'two',
-        '3': 'three',
-        '4': 'four',
-        '5': 'five',
-        '6': 'six',
-        '7': 'seven',
-        '8': 'eight',
-        '9': 'nine',
-        '10': 'ten'
-    }
-}
-
-def basic_url_of(text):
-    return text
-
-url_of = basic_url_of
-
-def set_url_finder(func):
-    global url_of
-    url_of = func
-    return
-
-def default_ordinal_function(i):
-    return unicode(i)
-
-def ordinal_function_en(i):
-    num = unicode(i)
-    if 10 <= i % 100 <= 20:
-        return num + 'th'
-    elif i % 10 == 3:
-        return num + 'rd'
-    elif i % 10 == 1:
-        return num + 'st'
-    elif i % 10 == 2:
-        return num + 'nd'
-    else:
-        return num + 'th'
-
-ordinal_functions = {
-    'en': ordinal_function_en
-}
-
-def words():
-    return word_collection[this_thread.language]
-
-def word(the_word, **kwargs):
-    """Returns the word translated into the current language.  If a translation is not known,
-    the input is returned."""
-    # Currently, no kwargs are used, but in the future, this function could be
-    # expanded to use kwargs.  For example, for languages with gendered words,
-    # the gender could be passed as a keyword argument.
-    if the_word is True:
-        the_word = 'yes'
-    elif the_word is False:
-        the_word = 'no'
-    elif the_word is None:
-        the_word = "I don't know"
-    try:
-        return word_collection[this_thread.language][the_word].decode('utf-8')
-    except:
-        return unicode(the_word)
-
-def update_language_function(lang, term, func):
-    if term not in language_functions:
-        language_functions[term] = dict()
-    language_functions[term][lang] = func
-    return
-
-def update_nice_numbers(lang, defs):
-    if lang not in nice_numbers:
-        nice_numbers[lang] = dict()
-    for number, word in defs.iteritems():
-        nice_numbers[lang][unicode(number)] = word
-    return
-
-def update_ordinal_numbers(lang, defs):
-    if lang not in ordinal_numbers:
-        ordinal_numbers[lang] = dict()
-    for number, word in defs.iteritems():
-        ordinal_numbers[lang][unicode(number)] = word
-    return
-
-def update_ordinal_function(lang, func):
-    ordinal_functions[lang] = func
-    return
-
-def update_word_collection(lang, defs):
-    if lang not in word_collection:
-        word_collection[lang] = dict()
-    for word, translation in defs.iteritems():
-        word_collection[lang][word] = translation
-    return
-
-def set_da_config(config):
-    global daconfig
-    daconfig = config
-
-def get_config(key):
-    """Returns a value from the docassemble configuration.  If not defined, returns None."""
-    return daconfig.get(key, None)
-    
-def set_default_language(lang):
-    global default_language
-    default_language = lang
-    return
-
-def set_default_dialect(dialect):
-    global default_dialect
-    default_dialect = dialect
-    return
-
-def reset_local_variables():
-    this_thread.language = default_language
-    this_thread.locale = default_locale
-    this_thread.prevent_going_back = False
-    return
-
-def prevent_going_back():
-    """Instructs docassemble to disable the user's back button, so that the user cannot
-    go back and change any answers before this point in the interview."""
-    this_thread.prevent_going_back = True
-    return
-
-def set_language(lang, dialect=None):
-    """Sets the language to use for linguistic functions.
-    E.g., set_language('es') to set the language to Spanish.
-    Use the keyword argument "dialect" to set a dialect."""
-    if dialect:
-        this_thread.dialect = dialect
-    elif lang != this_thread.language:
-        this_thread.dialect = None
-    this_thread.language = lang
-    return
-
-def get_language():
-    """Returns the current language (e.g., "en")."""
-    return this_thread.language
-
-def get_dialect():
-    """Returns the current dialect."""
-    return this_thread.dialect
-
-def set_default_locale(loc):
-    global default_locale
-    default_locale = loc
-    return
-
-def set_locale(loc):
-    """Sets the current locale.  See also update_locale()."""
-    this_thread.locale = loc
-    return
-
-def get_locale():
-    """Returns the current locale setting."""
-    return this_thread.locale
-
-def update_locale():
-    """Updates the system locale based on the value set by set_locale()."""
-    #logmessage("Using " + str(language) + '_' + str(this_locale) + "\n")
-    locale.setlocale(locale.LC_ALL, str(this_thread.language) + '_' + str(this_thread.locale))
-    return
-
-def comma_list_en(*pargs, **kargs):
-    """Returns the arguments separated by commas.  If the first argument is a list, 
-    that list is used.  Otherwise, the arguments are treated as individual items.
-    See also comma_and_list()."""
-    if 'comma_string' in kargs:
-        comma_string = kargs['comma_string']
-    else:
-        comma_string = ", "
-    if (len(pargs) == 0):
-        return unicode('')
-    elif (len(pargs) == 1):
-        if type(pargs[0]) == list:
-            pargs = pargs[0]
-    if (len(pargs) == 0):
-        return unicode('')
-    elif (len(pargs) == 1):
-        return(unicode(pargs[0]))
-    else:
-        return(comma_string.join(pargs))
-
-def comma_and_list_en(*pargs, **kargs):
-    """Returns an English-language listing of the arguments.  If the first argument is a list, 
-    that list is used.  Otherwise, the arguments are treated as individual items in the list.
-    Use the optional argument oxford=False if you do not want a comma before the "and."
-    See also comma_list()."""
-    if 'oxford' in kargs and kargs['oxford'] == False:
-        extracomma = ""
-    else:
-        extracomma = ","
-    if 'and_string' in kargs:
-        and_string = kargs['and_string']
-    else:
-        and_string = word('and')
-    if 'comma_string' in kargs:
-        comma_string = kargs['comma_string']
-    else:
-        comma_string = ", "
-    if 'before_and' in kargs:
-        before_and = kargs['before_and']
-    else:
-        before_and = " "
-    if 'after_and' in kargs:
-        after_and = kargs['after_and']
-    else:
-        after_and = " "
-    if (len(pargs) == 0):
-        return unicode('')
-    elif (len(pargs) == 1):
-        if type(pargs[0]) == list:
-            pargs = pargs[0]
-    if (len(pargs) == 0):
-        return unicode('')
-    elif (len(pargs) == 1):
-        return(unicode(pargs[0]))
-    elif (len(pargs) == 2):
-        return(unicode(pargs[0]) + before_and + and_string + after_and + unicode(pargs[1]))
-    else:
-        return(comma_string.join(map(unicode, pargs[:-1])) + extracomma + before_and + and_string + after_and + unicode(pargs[-1]))
-
-def need(*pargs):
-    """Given one or more variables, this function instructs docassemble 
-    to do what is necessary to define the variables."""
-    for argument in pargs:
-        argument
-    return True
-
-def pickleable_objects(input_dict):
-    output_dict = dict()
-    for key in input_dict:
-        if type(input_dict[key]) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType]:
-            continue
-        if key == "__builtins__":
-            continue
-        output_dict[key] = input_dict[key]
-    return(output_dict)
-
-def ordinal_number_default(i):
-    """Returns the "first," "second," "third," etc. for a given number.
-    ordinal_number(1) returns "first."  For a function that can be used
-    on index numbers that start with zero, see ordinal()."""
-    num = unicode(i)
-    if this_thread.language in ordinal_numbers and num in ordinal_numbers[this_thread.language]:
-        return ordinal_numbers[this_thread.language][num]
-    if this_thread.language in ordinal_functions:
-        return ordinal_functions[this_thread.language](i)
-    else:
-        return default_ordinal_function(i)
-
-def ordinal_default(j):
-    """Returns the "first," "second," "third," etc. for a given number, which is expected to
-    be an index starting with zero.  ordinal(0) returns "first."  For a more literal ordinal 
-    number function, see ordinal_number()."""
-    return ordinal_number(int(j) + 1)
-
-def nice_number_default(num):
-    """Returns the number as a word in the current language."""
-    if this_thread.language in nice_numbers and unicode(num) in nice_numbers[this_thread.language]:
-        return nice_numbers[this_thread.language][unicode(num)]
-    return unicode(num)
-
-def capitalize_default(a):
-    if a and (type(a) is str or type(a) is unicode) and len(a) > 1:
-        return(a[0].upper() + a[1:])
-    else:
-        return(unicode(a))
-
-def today_default(format='long'):
-    return babel.dates.format_date(datetime.date.today(), format=format, locale=this_thread.language)
-
-def currency_symbol_default():
-    """Returns the currency symbol for the current locale."""
-    return locale.localeconv()['currency_symbol'].decode('utf8')
-
-def currency_default(value, decimals=True):
-    """Returns the value as a currency, according to the conventions of the current locale.
-    Use the optional keyword argument decimals=False if you do not want to see decimal places
-    in the number."""
-    obj_type = type(value).__name__
-    if obj_type in ['FinancialList', 'PeriodicFinancialList']:
-        value = value.total()
-    elif obj_type in ['Value', 'PeriodicValue']:
-        if value.exists:
-            value = value.amount()
+class LatitudeLongitude(DAObject):
+    """Represents a GPS location."""
+    def init(self, **kwargs):
+        self.gathered = False
+        self.known = False
+        self.description = ""
+        return super(LatitudeLongitude, self).init(**kwargs)
+    def status(self):
+        """Returns True or False depending on whether an attempt has yet been made
+        to gather the latitude and longitude."""
+        #logmessage("got to status")
+        if self.gathered:
+            #logmessage("gathered is true")
+            return False
         else:
-            value = 0
-    if decimals:
-        return locale.currency(value, symbol=True, grouping=True).decode('utf8')
-    else:
-        return currency_symbol() + locale.format("%d", value, grouping=True)
-
-def prefix_constructor(prefix):
-    def func(word, **kwargs):
-        if 'capitalize' in kwargs and kwargs['capitalize']:
-            return capitalize(unicode(prefix)) + unicode(word)
-        else:
-            return unicode(prefix) + unicode(word)
-    return func
-
-def double_prefix_constructor_reverse(prefix_one, prefix_two):
-    def func(word_one, word_two, **kwargs):
-        if 'capitalize' in kwargs and kwargs['capitalize']:
-            return capitalize(unicode(prefix_one)) + unicode(word_two) + unicode(prefix_two) + unicode(word_one)
-        else:
-            return unicode(prefix_one) + unicode(word_two) + unicode(prefix_two) + unicode(word_one)
-    return func
-
-def prefix_constructor_two_arguments(prefix, **kwargs):
-    def func(word_one, word_two, **kwargs):
-        if 'capitalize' in kwargs and kwargs['capitalize']:
-            return capitalize(unicode(prefix)) + unicode(word_one) + ' ' + unicode(word_two)
-        else:
-            return unicode(prefix) + unicode(word_one) + ' ' + unicode(word_two)
-    return func
-
-def middle_constructor(middle, **kwargs):
-    def func(a, b, **kwargs):
-        if 'capitalize' in kwargs and kwargs['capitalize']:
-            return capitalize(unicode(a)) + unicode(middle) + unicode(b)
-        else:
-            return unicode(a) + unicode(middle) + unicode(b)
-    return func
-
-def a_preposition_b_default(a, b, **kwargs):
-    logmessage("Got here")
-    if hasattr(a, 'preposition'):
-        logmessage("Has preposition")
-        preposition = a.preposition
-    else:
-        preposition = word('in the')
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(unicode(a)) + unicode(' ' + preposition + ' ') + unicode(b)
-    else:
-        return unicode(a) + unicode(' ' + preposition + ' ') + unicode(b)
-
-def verb_present_en(*pargs, **kwargs):
-    new_args = list()
-    for arg in pargs:
-        new_args.append(arg)
-    if len(new_args) < 2:
-        new_args.append('3sg')
-    return pattern.en.conjugate(*new_args, **kwargs)
-    
-def verb_past_en(*pargs, **kwargs):
-    new_args = list()
-    for arg in pargs:
-        new_args.append(arg)
-    if len(new_args) < 2:
-        new_args.append('3sgp')
-    return pattern.en.conjugate(*new_args, **kwargs)
-    
-language_functions = {
-    'in_the': {
-        'en': prefix_constructor('in the ')
-    },
-    'a_preposition_b': {
-        'en': a_preposition_b_default
-    },
-    'a_in_the_b': {
-        'en': middle_constructor(' in the ')
-    },
-    'her': {
-        'en': prefix_constructor('her ')
-    },
-    'his': {
-        'en': prefix_constructor('his ')
-    },
-    'is_word': {
-        'en': prefix_constructor('is ')
-    },
-    'their': {
-        'en': prefix_constructor('their ')
-    },
-    'of_the': {
-        'en': prefix_constructor('of the ')
-    },
-    'your': {
-        'en': prefix_constructor('your ')
-    },
-    'its': {
-        'en': prefix_constructor('its ')
-    },
-    'the': {
-        'en': prefix_constructor('the ')
-    },
-    'does_a_b': {
-        'en': prefix_constructor_two_arguments('does ')
-    },
-    'do_you': {
-        'en': prefix_constructor('do you ')
-    },
-    'verb_past': {
-        'en': lambda *pargs, **kwargs: verb_past_en(*pargs, **kwargs)
-    },
-    'verb_present': {
-        'en': lambda *pargs, **kwargs: verb_present_en(*pargs, **kwargs)
-    },
-    'noun_plural': {
-        'en': lambda *pargs, **kwargs: pattern.en.pluralize(*pargs, **kwargs)
-    },
-    'indefinite_article': {
-        'en': lambda *pargs, **kwargs: pattern.en.article(*pargs, **kwargs) + " " + unicode(pargs[0])
-    },
-    'currency_symbol': {
-        '*': currency_symbol_default
-    },
-    'today': {
-        '*': today_default
-    },
-    'period_list': {
-        '*': lambda: [[12, word("Per Month")], [1, word("Per Year")], [52, word("Per Week")], [24, word("Twice Per Month")], [26, word("Every Two Weeks")]]
-    },
-    'name_suffix': {
-        '*': lambda: ['Jr', 'Sr', 'II', 'III', 'IV', 'V', 'VI']
-    },
-    'currency': {
-        '*': currency_default
-    },
-    'possessify': {
-        'en': middle_constructor("'s ")
-    },
-    'possessify_long': {
-        'en': double_prefix_constructor_reverse('the ', ' of the ')
-    },
-    'comma_and_list': {
-        'en': comma_and_list_en
-    },
-    'comma_list': {
-        'en': comma_list_en
-    },
-    'nice_number': {
-        '*': nice_number_default
-    },
-    'ordinal_number': {
-        '*': ordinal_number_default
-    },
-    'ordinal': {
-        '*': ordinal_default
-    },
-    'capitalize': {
-        '*': capitalize_default
-    },
-    'title_case': {
-        '*': titlecase.titlecase
-    }
-}
-
-def language_function_constructor(term):
-    if term not in language_functions:
-        raise SystemError("term " + str(term) + " not in language_functions")
-    def func(*args, **kwargs):
-        if this_thread.language in language_functions[term]:
-            return language_functions[term][this_thread.language](*args, **kwargs)
-        if '*' in language_functions[term]:
-            return language_functions[term]['*'](*args, **kwargs)
-        if 'en' in language_functions[term]:
-            logmessage("Term " + str(term) + " is not defined for language " + str(this_thread.language))
-            return language_functions[term]['en'](*args, **kwargs)
-        raise SystemError("term " + str(term) + " not defined in language_functions for English or *")
-    return func
-    
-in_the = language_function_constructor('in_the')
-a_preposition_b = language_function_constructor('a_preposition_b')
-a_in_the_b = language_function_constructor('a_in_the_b')
-her = language_function_constructor('her')
-his = language_function_constructor('his')
-is_word = language_function_constructor('is_word')
-their = language_function_constructor('their')
-your = language_function_constructor('your')
-its = language_function_constructor('its')
-of_the = language_function_constructor('of_the')
-the = language_function_constructor('the')
-do_you = language_function_constructor('do_you')
-does_a_b = language_function_constructor('does_a_b')
-verb_past = language_function_constructor('verb_past')
-verb_present = language_function_constructor('verb_present')
-noun_plural = language_function_constructor('noun_plural')
-indefinite_article = language_function_constructor('indefinite_article')
-today = language_function_constructor('today')
-period_list = language_function_constructor('period_list')
-name_suffix = language_function_constructor('name_suffix')
-currency = language_function_constructor('currency')
-currency_symbol = language_function_constructor('currency_symbol')
-possessify = language_function_constructor('possessify')
-possessify_long = language_function_constructor('possessify_long')
-comma_list = language_function_constructor('comma_list')
-comma_and_list = language_function_constructor('comma_and_list')
-nice_number = language_function_constructor('nice_number')
-capitalize = language_function_constructor('capitalize')
-title_case = language_function_constructor('title_case')
-ordinal_number = language_function_constructor('ordinal_number')
-ordinal = language_function_constructor('ordinal')
-
-if verb_past.__doc__ is None:
-    verb_past.__doc__ = """Given a verb, returns the past tense of the verb."""
-if verb_present.__doc__ is None:
-    verb_present.__doc__ = """Given a verb, returns the present tense of the verb."""
-if noun_plural.__doc__ is None:
-    noun_plural.__doc__ = """Given a noun, returns the plural version of the noun."""
-if indefinite_article.__doc__ is None:
-    indefinite_article.__doc__ = """Given a noun, returns the noun with an indefinite article attached
-                                 (e.g., indefinite_article("fish") returns "a fish")."""
-if capitalize.__doc__ is None:
-    capitalize.__doc__ = """Capitalizes the first letter of the word or phrase."""
-if period_list.__doc__ is None:
-    period_list.__doc__ = """Returns an array of arrays where the first element of each array is a number, 
-                          and the second element is a word expressing what that numbers means as a per-year
-                          period.  This is meant to be used in code for a multiple-choice field."""
-if name_suffix.__doc__ is None:
-    name_suffix.__doc__ = """Returns an array of choices for the suffix of a name.
-                          This is meant to be used in code for a multiple-choice field."""
-if today.__doc__ is None:
-    today.__doc__ = """Returns today's date in long form according to the current locale."""    
-if period_list.__doc__ is None:
-    period_list.__doc__ = """Returns a list of periods of a year, for inclusion in dropdown items."""
-if name_suffix.__doc__ is None:
-    name_suffix.__doc__ = """Returns a list of name suffixes, for inclusion in dropdown items."""
-if currency.__doc__ is None:
-    currency.__doc__ = """Formats the argument as a currency value, according to language and locale."""
-if currency_symbol.__doc__ is None:
-    currency_symbol.__doc__ = """Returns the symbol for currency, according to the locale."""
-if possessify.__doc__ is None:
-    possessify.__doc__ = """Given two arguments, a and b, returns "a's b." """
-if possessify_long.__doc__ is None:
-    possessify_long.__doc__ = """Given two arguments, a and b, returns "the b of a." """
-if comma_list.__doc__ is None:
-    comma_list.__doc__ = """Returns the arguments separated by commas."""
-if comma_and_list.__doc__ is None:
-    comma_and_list.__doc__ = """Returns the arguments separated by commas with "and" before the last one."""
-if nice_number.__doc__ is None:
-    nice_number.__doc__ = """Takes a number as an argument and returns the number as a word if ten or below."""
-if capitalize.__doc__ is None:
-    capitalize.__doc__ = """Returns the argument with the first letter capitalized."""
-if title_case.__doc__ is None:
-    title_case.__doc__ = """Returns the argument with the first letter of each word capitalized, as in a title."""
-if ordinal_number.__doc__ is None:
-    ordinal_number.__doc__ = """Given a number, returns "first" or "23rd" for 1 or 23, respectively."""
-if ordinal.__doc__ is None:
-    ordinal.__doc__ = """Given a number that is expected to be an index, returns "first" or "23rd" for 0 or 22, respectively."""
-if url_of.__doc__ is None:
-    url_of.__doc__ = """Returns a URL to a file within a docassemble package."""
-
-def month_of(the_date, as_word=False):
-    """Interprets the_date as a date and returns the month.  
-    Set as_word to True if you want the month as a word."""
-    try:
-        date = dateutil.parser.parse(the_date)
-        if as_word:
-            return(date.strftime('%B'))
-        return(date.strftime('%m'))
-    except:
-        return word("Bad date")
-
-def day_of(the_date):
-    """Interprets the_date as a date and returns the day of month."""
-    try:
-        date = dateutil.parser.parse(the_date)
-        return(date.strftime('%d'))
-    except:
-        return word("Bad date")
-
-def year_of(the_date):
-    """Interprets the_date as a date and returns the year."""
-    try:
-        date = dateutil.parser.parse(the_date)
-        return(date.strftime('%Y'))
-    except:
-        return word("Bad date")
-
-def format_date(the_date, format='long'):
-    """Interprets the_date as a date and returns the date formatted in long form."""
-    try:
-        return(babel.dates.format_date(dateutil.parser.parse(the_date), format=format, locale=get_language()))
-    except:
-        return word("Bad date")
-
-def underscore_to_space(a):
-    return(re.sub('_', ' ', unicode(a)))
-
-def space_to_underscore(a):
-    """Converts spaces in the input to underscores in the output.  Useful for making filenames without spaces."""
-    return(re.sub(' +', '_', unicode(a).encode('ascii', errors='ignore')))
-
-def message(*pargs, **kwargs):
-    """Presents a screen to the user with the given message"""
-    raise QuestionError(*pargs, **kwargs)
-    
-def force_ask(variable_name):
-    """Given a variable, instructs docassemble to do what is necessary to define the variable,
-    even if the variable has already been defined."""
-    raise NameError("name '" + variable_name + "' is not defined")
-
-def static_filename_path(filereference):
-    result = package_data_filename(static_filename(filereference))
-    #if result is None or not os.path.isfile(result):
-    #    result = absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\.]', '', filereference)).path
-    return(result)
-
-def static_filename(filereference):
-    if re.search(r',', filereference):
-        return(None)
-    #filereference = re.sub(r'^None:data/static/', '', filereference)
-    #filereference = re.sub(r'^None:', '', filereference)
-    parts = filereference.split(':')
-    if len(parts) < 2:
-        parts = ['docassemble.base', filereference]
-    if re.search(r'\.\./', parts[1]):
-        return(None)
-    if not re.match(r'(data|static)/.*', parts[1]):
-        parts[1] = 'data/static/' + parts[1]
-    return(parts[0] + ':' + parts[1])
-
-def static_image(filereference, **kwargs):
-    """Inserts appropriate markup to include a static image.  If you know
-    the image path, you can just use the "[FILE ...]" markup.  This function is
-    useful when you want to assemble the image path programmatically.
-    Takes an optional keyword argument "width"
-    (e.g., static_image('docassemble.demo:crawling.png', width='2in'))."""
-    filename = static_filename(filereference)
-    if filename is None:
-        return('ERROR: invalid image reference')
-    width = kwargs.get('width', None)
-    if width is None:
-        return('[FILE ' + filename + ']')
-    else:
-        return('[FILE ' + filename + ', ' + width + ']')
-
-def qr_code(string, **kwargs):
-    """Inserts appropriate markup to include a QR code image.  If you know
-    the string you want to encode, you can just use the "[QR ...]" markup.  
-    This function is useful when you want to assemble the string programmatically.
-    Takes an optional keyword argument "width"
-    (e.g., qr_code('http://google.com', width='2in'))."""
-    width = kwargs.get('width', None)
-    if width is None:
-        return('[QR ' + string + ']')
-    else:
-        return('[QR ' + string + ', ' + width + ']')
-
-def standard_template_filename(the_file):
-    try:
-        return(pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.base'), "docassemble/base/data/templates/" + str(the_file)))
-    except:
-        #logmessage("Error retrieving data file\n")
-        return(None)
-
-def package_template_filename(the_file, **kwargs):
-    parts = the_file.split(":")
-    if len(parts) == 1:
-        package = kwargs.get('package', None)
-        #logmessage("my package is " + str(package))
-        if package is not None:
-            parts = [package, the_file]
-            #logmessage("my package is " + str(package))
-        #else:
-            #parts = ['docassemble.base', the_file]
-            #logmessage("my package is docassemble.base and the_file is " + str(the_file))
-        #else:
-        #    retval = absolute_filename('/playgroundtemplate/' + the_file).path
-        #    logmessage("package_template_filename: retval is " + str(retval))
-        #    return(retval)
-    if len(parts) == 2:
-        m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
-        if m:
-            parts[1] = re.sub(r'^data/templates/', '', parts[1])
-            return(absolute_filename("/playgroundtemplate/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\.]', '', parts[1])).path)
-        if not re.match(r'data/.*', parts[1]):
-            parts[1] = 'data/templates/' + parts[1]
-        try:
-            #logmessage("Trying with " + str(parts[0]) + " and " + str(parts[1]))
-            return(pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1]))
-        except:
-            return(None)
-    return(None)
-
-def standard_question_filename(the_file):
-    return(pkg_resources.resource_filename(pkg_resources.Requirement.parse('docassemble.base'), "docassemble/base/data/questions/" + str(the_file)))
-    return(None)
-
-def package_data_filename(the_file):
-    #logmessage("package_data_filename with: " + str(the_file))
-    if the_file is None:
-        return(None)
-    #the_file = re.sub(r'^None:data/static/', '', the_file)
-    #the_file = re.sub(r'^None:', '', the_file)
-    parts = the_file.split(":")
-    result = None
-    #if len(parts) == 1:
-    #    parts = ['docassemble.base', the_file]
-    if len(parts) == 2:
-        m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
-        if m:
-            parts[1] = re.sub(r'^data/static/', '', parts[1])
-            return(absolute_filename("/playgroundstatic/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\.]', '', parts[1])).path)
-        try:
-            result = pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
-        except:
-            result = None
-    #if result is None or not os.path.isfile(result):
-    #    result = absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\.]', '', the_file)).path
-    return(result)
-
-def package_question_filename(the_file):
-    parts = the_file.split(":")
-    #if len(parts) == 1:
-    #    parts = ['docassemble.base', the_file]
-    if len(parts) == 2:
-        if not re.match(r'data/.*', parts[1]):
-            parts[1] = 'data/questions/' + parts[1]
-        try:
-            return(pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1]))
-        except:
-            return(None)
-    return(None)
-
-def default_absolute_filename(the_file):
-    return the_file
-
-absolute_filename = default_absolute_filename
-
-def set_absolute_filename(func):
-    #logmessage("Running set_absolute_filename in util")
-    global absolute_filename
-    absolute_filename = func
-    return
-
-def nodoublequote(text):
-    return re.sub(r'"', '', unicode(text))
-
-def process_action(current_info):
-    """If an action is waiting to be processed, it processes the action."""
-    if 'action' not in current_info:
+            if location_returned():
+                #logmessage("returned is true")
+                self._set_to_current()
+                return False
+            else:
+                return True
+    def _set_to_current(self):
+        logmessage("set to current")
+        if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and type(this_thread.current_info['user']['location']) is dict:
+            if 'latitude' in this_thread.current_info['user']['location'] and 'longitude' in this_thread.current_info['user']['location']:
+                self.latitude = this_thread.current_info['user']['location']['latitude']
+                self.longitude = this_thread.current_info['user']['location']['longitude']
+                self.known = True
+                #logmessage("known is true")
+            elif 'error' in this_thread.current_info['user']['location']:
+                self.error = this_thread.current_info['user']['location']['error']
+                self.known = False
+                #logmessage("known is false")
+            self.gathered = True
+            self.description = str(self)
         return
-    the_action = current_info['action']
-    del current_info['action']
-    force_ask(the_action)
+    def __str__(self):
+        if hasattr(self, 'latitude') and hasattr(self, 'longitude'):
+            return str(self.latitude) + ', ' + str(self.longitude)
+        elif hasattr(self, 'error'):
+            return str(self.error)
+        return 'Unknown'
 
-def url_action(action, **kwargs):
-    """Returns a URL to run an action in the interview."""
-    return '?action=' + urllib.quote(myb64quote(json.dumps({'action': action, 'arguments': kwargs})))
+class RoleChangeTracker(DAObject):
+    """Used within an interview to facilitate changes in the active role
+    required for filling in interview information.  Ensures that participants
+    do not receive multiple e-mails needlessly."""
+    def init(self):
+        self.last_role = None
+        return
+    # def should_send_email(self):
+    #     """Returns True or False depending on whether an e-mail will be sent on
+    #     role change"""
+    #     return True
+    def _update(self, target_role):
+        """When a notification is delivered about a necessary change in the
+        active role of the interviewee, this function is called with
+        the name of the new role.  This prevents the send_email()
+        function from sending duplicative notifications."""
+        self.last_role = target_role
+        return
+    def send_email(self, roles_needed, **kwargs):
+        """Sends a notification e-mail if necessary because of a change in the
+        active of the interviewee.  Returns True if an e-mail was
+        successfully sent.  Otherwise, returns False.  False could
+        mean that it was not necessary to send an e-mail."""
+        #logmessage("Current role is " + str(this_thread.role))
+        for role_option in kwargs:
+            if 'to' in kwargs[role_option]:
+                need(kwargs[role_option]['to'].email)
+        for role_needed in roles_needed:
+            #logmessage("One role needed is " + str(role_needed))
+            if role_needed == self.last_role:
+                #logmessage("Already notified new role " + str(role_needed))
+                return False
+            if role_needed in kwargs:
+                #logmessage("I have info on " + str(role_needed))
+                email_info = kwargs[role_needed]
+                if 'to' in email_info and 'email' in email_info:
+                    #logmessage("I have email info on " + str(role_needed))
+                    try:
+                        result = send_email(to=email_info['to'], html=email_info['email'].content, subject=email_info['email'].subject)
+                    except DAError:
+                        result = False
+                    if result:
+                        self._update(role_needed)
+                    return result
+        return False
 
-def myb64quote(text):
-    return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
+class Name(DAObject):
+    """Base class for an object's name."""
+    def full(self):
+        """Returns the full name."""
+        return(self.text)
+    def firstlast(self):
+        """This method is included for compatibility with other types of names."""
+        return(self.text)
+    def lastfirst(self):
+        """This method is included for compatibility with other types of names."""
+        return(self.text)
+    def defined(self):
+        """Returns True if the name has been defined.  Otherwise, returns False."""
+        return hasattr(self, 'text')
+    def __str__(self):
+        return(self.full())
+    def __repr__(self):
+        return(repr(self.full()))
 
-def set_debug_status(new_value):
-    global debug
-    debug = new_value
+class IndividualName(Name):
+    """The name of an Individual."""
+    def defined(self):
+        """Returns True if the name has been defined.  Otherwise, returns False."""
+        return hasattr(self, 'first')
+    def full(self, middle='initial', use_suffix=True):
+        """Returns the full name.  Has optional keyword arguments middle 
+        and use_suffix."""
+        names = [self.first]
+        if hasattr(self, 'middle') and len(self.middle):
+            if middle is False or middle is None:
+                pass
+            elif middle == 'initial':
+                names.append(self.middle[0] + '.')
+            else:
+                names.append(self.middle)
+        if hasattr(self, 'last') and len(self.last):
+            names.append(self.last)
+        if hasattr(self, 'suffix') and use_suffix and len(self.suffix):
+            names.append(self.suffix)
+        return(" ".join(names))
+    def firstlast(self):
+        """Returns the first name followed by the last name."""
+        return(self.first + " " + self.last)
+    def lastfirst(self):
+        """Returns the last name followed by a comma, followed by the 
+        last name, followed by the suffix (if a suffix exists)."""
+        output = self.last + ", " + self.first
+        if hasattr(self, 'suffix'):
+            output += " " + self.suffix
+        return output
 
-def debug_status():
-    return debug
-# grep -E -R -o -h "word\(['\"][^\)]+\)" * | sed "s/^[^'\"]+['\"]//g"
-
-def action_menu_item(label, action):
-    """Takes two arguments: a label and an action.
-    The label is what the user will see and the action is the action that will be
-    performed when the user clicks on the item in the menu.  This is only used 
-    when setting the special variable menu_items.
-    E.g., menu_items = [ action_menu_item('Ask for my favorite food', 'favorite_food') ]"""
-    return dict(label=label, url=url_action(action))
-
-def from_b64_json(string):
-    """Converts the string from base-64, then parses the string as JSON, and returns the object.
-    This is an advanced function that is used by software developers to integrate other systems 
-    with docassemble."""
-    if string is None:
+class Address(DAObject):
+    """A geographic address."""
+    def init(self, **kwargs):
+        self.initializeAttribute('location', LatitudeLongitude)
+        self.geolocated = False
+        return super(Address, self).init(**kwargs)
+    def __str__(self):
+        return(self.block())
+    def address_for_geolocation(self):
+        """Returns a one-line address.  Primarily used internally for geolocation."""
+        output = str(self.address) + ", " + str(self.city) + ", " + str(self.state)
+        if hasattr(self, 'zip'):
+            output += " " + str(self.zip)
+        return output
+    def _map_info(self):
+        if (self.location.gathered and self.location.known) or self.address.geolocate():
+            the_info = self.location.description
+            result = {'latitude': self.location.latitude, 'longitude': self.location.longitude, 'info': the_info}
+            if hasattr(self, 'icon'):
+                result['icon'] = self.icon
+            return [result]
         return None
-    return json.loads(base64.b64decode(string))
-
-def components_of(full_variable):
-    node = ast.parse(full_variable, mode='eval')
-    crawler = lister()
-    crawler.visit(node)
-    return list(reversed(crawler.stack))
-
-def defined(var):
-    """Returns true if the variable has already been defined.  Otherwise, returns false."""
-    if type(var) not in [str, unicode]:
-        raise Exception("defined() must be given a string")
-    frame = inspect.stack()[1][0]
-    components = components_of(var)
-    variable = components[0][1]
-    the_user_dict = frame.f_locals
-    while variable not in the_user_dict:
-        frame = frame.f_back
-        if frame is None:
-            return False
-        if 'user_dict' in frame.f_locals:
-            the_user_dict = eval('user_dict', frame.f_locals)
-            if variable in the_user_dict:
-                break
-            else:
-                return False
+    def geolocate(self):
+        """Determines the latitude and longitude of the location."""
+        if self.geolocated:
+            return self.geolocate_success    
+        the_address = self.address_for_geolocation()
+        logmessage("Trying to geolocate " + str(the_address))
+        from geopy.geocoders import GoogleV3
+        my_geocoder = GoogleV3()
+        results = my_geocoder.geocode(the_address)
+        self.geolocated = True
+        if results:
+            self.geolocate_success = True
+            self.location.gathered = True
+            self.location.known = True
+            self.location.latitude = results.latitude
+            self.location.longitude = results.longitude
+            self.location.description = self.block()
+            self.geolocate_response = results.raw
+            if 'address_components' in results.raw:
+                geo_types = {'administrative_area_level_2': 'county', 'neighborhood': 'neighborhood', 'postal_code': 'zip', 'country': 'country'}
+                for component in results.raw['address_components']:
+                    if 'types' in component and 'long_name' in component:
+                        for geo_type, addr_type in geo_types.iteritems():
+                            if geo_type in component['types'] and not hasattr(self, addr_type):
+                                logmessage("Setting " + str(addr_type) + " to " + str(getattr(results[0], geo_type)) + " from " + str(geo_type))
+                                setattr(self, addr_type, component['long_name'])
         else:
-            the_user_dict = frame.f_locals
-    if variable not in the_user_dict:
+            logmessage("valid not ok: result count was " + str(len(results)))
+            self.geolocate_success = False
+        return self.geolocate_success
+    def block(self):
+        """Returns the address formatted as a block, as in a mailing."""
+        output = str(self.address) + " [NEWLINE] "
+        if hasattr(self, 'unit') and self.unit:
+            output += str(self.unit) + " [NEWLINE] "
+        output += str(self.city) + ", " + str(self.state) + " " + str(self.zip)
+        return(output)
+    def line_one(self):
+        """Returns the first line of the address, including the unit 
+        number if there is one."""
+        output = str(self.address)
+        if hasattr(self, 'unit') and self.unit:
+            output += ", " + str(self.unit)
+        return(output)
+    def line_two(self):
+        """Returns the second line of the address, including the city,
+        state and zip code."""
+        output = str(self.city) + ", " + str(self.state) + " " + str(self.zip)
+        return(output)
+
+class Person(DAObject):
+    """Represents a legal or natural person."""
+    def init(self, **kwargs):
+        self.initializeAttribute('name', Name)
+        self.initializeAttribute('address', Address)
+        self.initializeAttribute('location', LatitudeLongitude)
+        if 'name' in kwargs:
+            self.name.text = kwargs['name']
+            del kwargs['name']
+        self.roles = set()
+        return super(Person, self).init(**kwargs)
+    def _map_info(self):
+        if not self.location.known:
+            if (self.address.location.gathered and self.address.location.known) or self.address.geolocate():
+                self.location = self.address.location
+        if self.location.gathered and self.location.known:
+            if self.name.defined():
+                the_info = self.name.full()
+            else:
+                the_info = capitalize(self.object_name())
+            the_info += ' [NEWLINE] ' + self.location.description
+            result = {'latitude': self.location.latitude, 'longitude': self.location.longitude, 'info': the_info}
+            if hasattr(self, 'icon'):
+                result['icon'] = self.icon
+            elif self is this_thread.user:
+                result['icon'] = {'path': 'CIRCLE', 'scale': 5, 'strokeColor': 'blue'}
+            return [result]
+        return None
+    def identified(self):
+        """Returns True if the person's name has been set.  Otherwise, returns False."""
+        if hasattr(self.name, 'text'):
+            return True
         return False
-    if len(components) == 1:
+    def __setattr__(self, attrname, value):
+        if attrname == 'name' and type(value) == str:
+            self.name.text = value
+        else:
+            self.__dict__[attrname] = value
+    def __str__(self):
+        return self.name.full()
+    def pronoun_objective(self, **kwargs):
+        """Returns "it" or "It" depending on the value of the optional
+        keyword argument "capitalize." """
+        output = word('it', **kwargs)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)            
+    def possessive(self, target, **kwargs):
+        """Given a word like "fish," returns "your fish" or 
+        "John Smith's fish," depending on whether the person is the user."""
+        if self is this_thread.user:
+            return your(target, **kwargs)
+        else:
+            return possessify(self.name, target)
+    def object_possessive(self, target, **kwargs):
+        """Given a word, returns a phrase indicating possession, but
+        uses the variable name rather than the object's actual name."""
+        if self is this_thread.user:
+            return your(target, **kwargs)
+        return super(Person, self).object_possessive(target, **kwargs)
+    def is_are_you(self, **kwargs):
+        """Returns "are you" if the object is the user, otherwise returns
+        "is" followed by the object name."""
+        if self is this_thread.user:
+            output = word('are you', **kwargs)
+        else:
+            output = is_word(self.full(), **kwargs)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)
+    def is_user(self):
+        """Returns True if the person is the user, otherwise False."""
+        return self is this_thread.user
+    def address_block(self):
+        """Return's the person name address as a block, for use in mailings."""
+        return("[FLUSHLEFT] " + self.name.full() + " [NEWLINE] " + self.address.block())
+    def email_address(self, include_name=None):
+        """Returns an e-mail address for the person"""
+        if include_name is True or (include_name is not False and self.name.defined()):
+            return('"' + nodoublequote(self.name) + '" <' + str(self.email) + '>')
+        return(str(self.email))
+    # def age(self):
+    #     if (hasattr(self, 'age_in_years')):
+    #         return self.age_in_years
+    #     today = date.today()
+    #     born = self.birthdate
+    #     try: 
+    #         birthday = born.replace(year=today.year)
+    #     except ValueError:
+    #         birthday = born.replace(year=today.year, month=born.month+1, day=1)
+    #     if birthday > today:
+    #         return today.year - born.year - 1
+    #     else:
+    #         return today.year - born.year
+    def do_question(self, the_verb, **kwargs):
+        """Given a verb like "eat," returns "do you eat" or "does John Smith eat,"
+        depending on whether the person is the user."""
+        if self == this_thread.user:
+            return(do_you(the_verb, **kwargs))
+        else:
+            return(does_a_b(self.name, the_verb, **kwargs))
+    def did_question(self, the_verb, **kwargs):
+        """Given a verb like "eat," returns "do you eat" or "does John Smith eat,"
+        depending on whether the person is the user."""
+        if self == this_thread.user:
+            return(did_you(the_verb, **kwargs))
+        else:
+            return(did_a_b(self.name, the_verb, **kwargs))
+    def does_verb(self, the_verb, **kwargs):
+        """Given a verb like "eat," returns "eat" or "eats"
+        depending on whether the person is the user."""
+        if self == this_thread.user:
+            tense = '1sg'
+        else:
+            tense = '3sg'
+        if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
+            return verb_past(the_verb, tense)
+        else:
+            return verb_present(the_verb, tense)
+    def did_verb(self, the_verb, **kwargs):
+        """Like does_verb(), except uses the past tense of the verb."""
+        if self == this_thread.user:
+            tense = '1sg'
+        else:
+            tense = '3sg'
+        return verb_past(the_verb, tense)
+
+class Individual(Person):
+    """Represents a natural person."""
+    def init(self, **kwargs):
+        self.initializeAttribute('name', IndividualName)
+        self.initializeAttribute('child', ChildList)
+        self.initializeAttribute('income', Income)
+        self.initializeAttribute('asset', Asset)
+        self.initializeAttribute('expense', Expense)
+        return super(Individual, self).init(**kwargs)
+    def identified(self):
+        """Returns True if the individual's name has been set.  Otherwise, returns False."""
+        if hasattr(self.name, 'first'):
+            return True
+        return False
+    def age_in_years(self, decimals=False, as_of=None):
+        """Returns the individual's age in years, based on self.birthdate."""
+        if hasattr(self, 'age'):
+            if decimals:
+                return float(self.age)
+            else:
+                return int(self.age)
+        if as_of is None:
+            comparator = datetime.datetime.now()
+        else:
+            comparator = dateutil.parser.parse(as_of)
+        rd = dateutil.relativedelta.relativedelta(comparator, dateutil.parser.parse(self.birthdate))
+        if decimals:
+            return float(rd.years)
+        else:
+            return int(rd.years)
+    def first_name_hint(self):
+        """If the individual is the user and the user is logged in and 
+        the user has set up a name in the user profile, this returns 
+        the user's first name.  Otherwise, returns a blank string."""
+        if self is this_thread.user and this_thread.current_info['user']['is_authenticated'] and 'firstname' in this_thread.current_info['user'] and this_thread.current_info['user']['firstname']:
+            return this_thread.current_info['user']['firstname'];
+        return ''
+    def last_name_hint(self):
+        """If the individual is the user and the user is logged in and 
+        the user has set up a name in the user profile, this returns 
+        the user's last name.  Otherwise, returns a blank string."""
+        if self is this_thread.user and this_thread.current_info['user']['is_authenticated'] and 'lastname' in this_thread.current_info['user'] and this_thread.current_info['user']['lastname']:
+            return this_thread.current_info['user']['lastname'];
+        return ''
+    def salutation(self):
+        """Depending on the gender attribute, returns "Mr." or "Ms." """
+        if self.gender == 'female':
+            return('Ms.')
+        else:
+            return('Mr.')
+    def pronoun_possessive(self, target, **kwargs):
+        """Given a word like "fish," returns "her fish" or "his fish," as appropriate."""
+        if self == this_thread.user and ('thirdperson' not in kwargs or not kwargs['thirdperson']):
+            output = your(target, **kwargs)
+        elif self.gender == 'female':
+            output = her(target, **kwargs)
+        else:
+            output = his(target, **kwargs)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)            
+    def pronoun(self, **kwargs):
+        """Returns a pronoun like "you," "her," or "him," as appropriate."""
+        if self == this_thread.user:
+            output = word('you', **kwargs)
+        if self.gender == 'female':
+            output = word('her', **kwargs)
+        else:
+            output = word('him', **kwargs)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)
+    def pronoun_objective(self, **kwargs):
+        """Same as pronoun()."""
+        return self.pronoun(**kwargs)
+    def pronoun_subjective(self, **kwargs):
+        """Returns a pronoun like "you," "she," or "he," as appropriate."""
+        if self == this_thread.user and ('thirdperson' not in kwargs or not kwargs['thirdperson']):
+            output = word('you', **kwargs)
+        elif self.gender == 'female':
+            output = word('she', **kwargs)
+        else:
+            output = word('he', **kwargs)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)
+    def yourself_or_name(self, **kwargs):
+        """Returns a "yourself" if the individual is the user, otherwise 
+        returns the individual's name."""
+        if self == this_thread.user:
+            output = word('yourself', **kwargs)
+        else:
+            output = self.name.full()
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)
+
+class ChildList(DAList):
+    """Represents a list of children."""
+    def init(self, **kwargs):
+        self.object_type = Individual
+        return super(ChildList, self).init(**kwargs)
+
+class FinancialList(DADict):
+    """Represents a set of currency amounts."""
+    def init(self, **kwargs):
+        self.object_type = Value
+        return super(FinancialList, self).init(**kwargs)
+    def total(self):
+        """Returns the total value in the list, gathering the list items if necessary."""
+        if self.gathered:
+            result = 0
+            for item in self.elements:
+                if self[item].exists:
+                    result += Decimal(self[item].value)
+            return(result)
+    def total_gathered(self):
+        """Returns the total value in the list, for items gathered so far."""
+        result = 0
+        for item in self.elements:
+            elem = self.elements[item]
+            if hasattr(elem, 'exists') and hasattr(elem, 'value'):
+                if elem.exists:
+                    result += Decimal(elem.value)
+        return(result)
+    def _new_item_init_callback(self):
+        self.elements[self.new_item_name].exists = True
+        if hasattr(self, 'new_item_value'):
+            self.elements[self.new_item_name].value = self.new_item_value
+            del self.new_item_value
+        return super(FinancialList, self)._new_item_init_callback()
+    def __str__(self):
+        return str(self.total())
+    
+class PeriodicFinancialList(FinancialList):
+    """Represents a set of currency items, each of which has an associated period."""
+    def init(self, **kwargs):
+        self.object_type = PeriodicValue
+        return super(FinancialList, self).init(**kwargs)
+    def total(self, period_to_use=1):
+        """Returns the total periodic value in the list, gathering the list items if necessary."""
+        if self.gathered:
+            result = 0
+            if period_to_use == 0:
+                return(result)
+            for item in self.elements:
+                if self.elements[item].exists:
+                    result += Decimal(self.elements[item].value) * Decimal(self.elements[item].period)
+            return(result/Decimal(period_to_use))
+    def total_gathered(self, period_to_use=1):
+        """Returns the total periodic value in the list, for items gathered so far."""
+        result = 0
+        if period_to_use == 0:
+            return(result)
+        for item in self.elements:
+            elem = getattr(self, item)
+            if hasattr(elem, 'exists') and hasattr(elem, 'value') and hasattr(elem, 'period'):
+                if elem.exists:
+                    result += Decimal(elem.value * Decimal(elem.period))
+        return(result/Decimal(period_to_use))
+    def _new_item_init_callback(self):
+        if hasattr(self, 'new_item_period'):
+            self.elements[self.new_item_name].period = self.new_item_period
+            del self.new_item_period
+        return super(PeriodicFinancialList, self)._new_item_init_callback()
+
+class Income(PeriodicFinancialList):
+    """A PeriodicFinancialList representing a person's income."""
+    pass
+
+class Asset(FinancialList):
+    """A FinancialList representing a person's assets"""
+    pass
+
+class Expense(PeriodicFinancialList):
+    """A PeriodicFinancialList representing a person's expenses"""
+    pass
+
+class Value(DAObject):
+    """Represents a value in a FinancialList."""
+    def amount(self):
+        """Returns the value's amount, or 0 if the value does not exist."""
+        if not self.exists:
+            return 0
+        return (Decimal(self.value))
+    def __str__(self):
+        return str(self.amount())
+
+class PeriodicValue(Value):
+    """Represents a value in a PeriodicFinancialList."""
+    def amount(self, period_to_use=1):
+        """Returns the periodic value's amount for a full period, 
+        or 0 if the value does not exist."""
+        if not self.exists:
+            return 0
+        logmessage("period is a " + str(type(self.period).__name__))
+        return (Decimal(self.value) * Decimal(self.period)) / Decimal(period_to_use)
+
+class OfficeList(DAList):
+    """Represents a list of offices of a company or organization."""
+    def init(self, **kwargs):
+        self.object_type = Address
+        return super(OfficeList, self).init(**kwargs)
+
+class Organization(Person):
+    """Represents a company or organization."""
+    def init(self, **kwargs):
+        self.initializeAttribute('office', OfficeList)
+        if 'offices' in kwargs:
+            if type(kwargs['offices']) is list:
+                for office in kwargs['offices']:
+                    if type(office) is dict:
+                        new_office = self.office.appendObject(Address, **office)
+                        new_office.geolocate()
+            del kwargs['offices']
+        return super(Organization, self).init(**kwargs)
+    def will_handle(self, problem=None, county=None):
+        """Returns True or False depending on whether the organization 
+        serves the given county and/or handles the given problem."""
+        logmessage("Testing " + str(problem) + " against " + str(self.handles))
+        if problem:
+            if not (hasattr(self, 'handles') and problem in self.handles):
+                return False
+        if county:
+            if not (hasattr(self, 'serves') and county in self.serves):
+                return False
         return True
-    cum_variable = ''
-    for elem in components:
-        if elem[0] == 'name':
-            cum_variable += elem[1]
-            continue
-        elif elem[0] == 'attr':
-            to_eval = "hasattr(" + cum_variable + ", " + repr(elem[1]) + ")"
-            cum_variable += '.' + elem[1]
-        elif elem[0] == 'index':
-            try:
-                the_index = eval(elem[1], the_user_dict)
-            except:
-                return False
-            if type(the_index) == int:
-                to_eval = 'len(' + cum_variable + ') > ' + str(the_index)
-            else:
-                to_eval = elem[1] + " in " + cum_variable
-            cum_variable += '[' + elem[1] + ']'
-        try:
-            result = eval(to_eval, the_user_dict)
-        except:
-            return False
-        if result:
-            continue
+    def _map_info(self):
+        the_response = list()
+        for office in self.office:
+            if (office.location.gathered and office.location.known) or office.geolocate():
+                if self.name.defined():
+                    the_info = self.name.full()
+                else:
+                    the_info = capitalize(self.object_name())
+                the_info += ' [NEWLINE] ' + office.location.description
+                this_response = {'latitude': office.location.latitude, 'longitude': office.location.longitude, 'info': the_info}
+                if hasattr(office, 'icon'):
+                    this_response['icon'] = office.icon
+                elif hasattr(self, 'icon'):
+                    this_response['icon'] = self.icon
+                the_response.append(this_response)
+        if len(the_response):
+            return the_response
+        return None
+
+def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None, html=None, subject="", attachments=[]):
+    """Sends an e-mail and returns whether sending the e-mail was successful."""
+    from flask_mail import Message
+    if type(to) is not list:
+        to = [to]
+    if len(to) == 0:
         return False
-    return True
-
-def value(var):
-    """Returns the value of the variable given by the string 'var'."""
-    if type(var) not in [str, unicode]:
-        raise Exception("value() must be given a string")
-    frame = inspect.stack()[1][0]
-    components = components_of(var)
-    variable = components[0][1]
-    the_user_dict = frame.f_locals
-    while variable not in the_user_dict:
-        frame = frame.f_back
-        if frame is None:
-            force_ask(var)
-        if 'user_dict' in frame.f_locals:
-            the_user_dict = eval('user_dict', frame.f_locals)
-            if variable in the_user_dict:
-                break
+    if template is not None:
+        if subject is None or subject == '':
+            subject = template.subject
+        body_html = '<html><body>' + markdown_to_html(template.content) + '</body></html>'
+        if body is None:
+            body = BeautifulSoup(body_html, "html").get_text('\n')
+        if html is None:
+            html = body_html
+    if body is None and html is None:
+        body = ""
+    email_stringer = lambda x: email_string(x, include_name=False)
+    msg = Message(subject, sender=email_stringer(sender), recipients=email_stringer(to), cc=email_stringer(cc), bcc=email_stringer(bcc), body=body, html=html)
+    success = True
+    for attachment in attachments:
+        attachment_list = list()
+        if type(attachment) is DAFileCollection:
+            subattachment = getattr(attachment, 'pdf', None)
+            if subattachment is None:
+                subattachment = getattr(attachment, 'rtf', None)
+            if subattachment is None:
+                subattachment = getattr(attachment, 'tex', None)
+            if subattachment is not None:
+                attachment_list.append(subattachment)
             else:
-                force_ask(var)
+                success = False
+        elif type(attachment) is DAFile:
+            attachment_list.append(attachment)
+        elif type(attachment) is DAFileList:
+            attachment_list.extend(attachment.elements)
         else:
-            the_user_dict = frame.f_locals
-    if variable not in the_user_dict:
-        force_ask(var)
-    if len(components) == 1:
-        return eval(variable, the_user_dict)
-    cum_variable = ''
-    for elem in components:
-        if elem[0] == 'name':
-            cum_variable += elem[1]
-            continue
-        elif elem[0] == 'attr':
-            to_eval = "hasattr(" + cum_variable + ", " + repr(elem[1]) + ")"
-            cum_variable += '.' + elem[1]
-        elif elem[0] == 'index':
-            try:
-                the_index = eval(elem[1], the_user_dict)
-            except:
-                force_ask(var)
-            if type(the_index) == int:
-                to_eval = 'len(' + cum_variable + ') > ' + str(the_index)
-            else:
-                to_eval = elem[1] + " in " + cum_variable
-            cum_variable += '[' + elem[1] + ']'
+            success = False
+        if success:
+            for the_attachment in attachment_list:
+                if the_attachment.ok:
+                    file_info = file_finder(str(the_attachment.number))
+                    if ('path' in file_info):
+                        failed = True
+                        with open(file_info['path'], 'rb') as fp:
+                            msg.attach(the_attachment.filename, file_info['mimetype'], fp.read())
+                            failed = False
+                        if failed:
+                            success = False
+                    else:
+                        success = False
+    # appmail = mail_variable()
+    # if not appmail:
+    #     success = False
+    if success:
         try:
-            result = eval(to_eval, the_user_dict)
-        except:
-            force_ask(var)
-        if result:
-            continue
-        force_ask(var)
-    return eval(cum_variable, the_user_dict)
+            # appmail.send(msg)
+            logmessage("Starting to send")
+            async_mail(msg)
+            logmessage("Finished sending")
+        except Exception as errmess:
+            logmessage("Sending mail failed: " + str(errmess))
+            success = False
+    return(success)
 
-# def _undefine(*pargs):
-#     logmessage("called _undefine")
-#     for var in pargs:
-#         _undefine(var)
-
-# def undefine(var):
-#     """Makes the given variable undefined."""
-#     logmessage("called undefine")
-#     if type(var) not in [str, unicode]:
-#         raise Exception("undefine() must be given one or more strings")
-#     components = components_of(var)
-#     variable = components[0][1]
-#     frame = inspect.stack()[1][0]
-#     the_user_dict = frame.f_locals
-#     while variable not in the_user_dict:
-#         frame = frame.f_back
-#         if frame is None:
-#             return
-#         if 'user_dict' in frame.f_locals:
-#             the_user_dict = eval('user_dict', frame.f_locals)
-#             if variable in the_user_dict:
-#                 break
-#             else:
-#                 return
-#         else:
-#             the_user_dict = frame.f_locals
-#     try:
-#         exec("del " + var, the_user_dict)
-#     except:
-#         logmessage("Failed to delete " + var)
-#         pass
-#     return
-
-def single_paragraph(text):
-    """Reduces the text to a single paragraph.  Useful when using Markdown 
-    to indent user-supplied text."""
-    return newlines.sub(' ', text)
+def map_of(*pargs, **kwargs):
+    """Inserts into markup a Google Map representing the objects passed as arguments."""
+    the_map = {'markers': list()}
+    all_args = list()
+    for arg in pargs:
+        if type(arg) is list:
+            all_args.extend(arg)
+        else:
+            all_args.append(arg)
+    for arg in all_args:
+        if isinstance(arg, DAObject):
+            markers = arg._map_info()
+            if markers:
+                for marker in markers:
+                    if 'icon' in marker and type(marker['icon']) is not dict:
+                        marker['icon'] = {'url': url_finder(marker['icon'])}
+                    if 'info' in marker and marker['info']:
+                        marker['info'] = markdown_to_html(marker['info'], trim=True)
+                    the_map['markers'].append(marker)
+    if 'center' in kwargs:
+        the_center = kwargs['center']
+        if callable(getattr(the_center, '_map_info', None)):
+            markers = the_center._map_info()
+            if markers:
+                the_map['center'] = markers[0]
+    if 'center' not in the_map and len(the_map['markers']):
+        the_map['center'] = the_map['markers'][0]
+    if len(the_map['markers']) or 'center' in the_map:
+        return '[MAP ' + codecs.encode(json.dumps(the_map).encode('utf-8'), 'base64').decode().replace('\n', '') + ']'
+    return '(Unable to display map)'
+    

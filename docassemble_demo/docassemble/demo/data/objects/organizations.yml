@@ -1,5 +1,5 @@
 object: Organization
-module: docassemble.base.legal
+module: docassemble.base.util
 items:
   - name: Community Legal Services
     icon: docassemble.demo:data/static/crown.png

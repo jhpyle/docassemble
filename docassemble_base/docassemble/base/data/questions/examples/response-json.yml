@@ -1,0 +1,59 @@
+metadata:
+  title: Custom response
+  example start: 2
+  example end: 7
+  documentation: "http://docassemble.org/docs/functions.html#response"
+---
+imports:
+  - json
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - user: Individual
+---
+mandatory: true
+code: |
+  multi_user = True
+---
+initial: true
+code: |
+  update_info(current_info)
+  process_action(current_info)
+---
+event: query_fruit
+code: |
+  data = dict(fruit=favorite_fruit, slices=number_of_slices)
+  response(json.dumps(data), content_type="application/json")
+---
+mandatory: true
+question: |
+  You currently have
+  ${ nice_number(number_of_slices) }
+  ${ noun_plural('slice', number_of_slices) }
+  of
+  ${ noun_singular(favorite_fruit) }.
+subquestion: |
+  Use
+  [this link](${ interview_url_action('query_fruit') })
+  to query the information from
+  another application.
+
+  You can also change the 
+  [fruit](${ url_action('favorite_fruit') })
+  and the
+  [number of slices](${ url_action('number_of_slices') }).
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---
+question: |
+  How many slices of ${ noun_singular(favorite_fruit) }
+  do you have?
+fields:
+  - Slices: number_of_slices
+    datatype: integer
+    min: 0

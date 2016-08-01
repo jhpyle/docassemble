@@ -19,7 +19,7 @@ objects:
 ---
 initial: true
 code: |
-  update_info(user, 'client', current_info)
+  update_info(current_info, user=user, role='client')
 ---
 question: |
   Thanks for the information
