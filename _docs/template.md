@@ -39,17 +39,17 @@ subquestion: |
 ---
 {% endhighlight %}
 
-The `template` block, like `question` and `code` blocks, offers to
+The `template` block, like [`question`] and [`code`] blocks, offers to
 define a variable.  So when **docassemble** needs to know the
 definition of `disclaimer` and finds that `disclaimer` is not defined,
-it will look for a `question`, `code`, or `template` block that offers
+it will look for a [`question`], [`code`], or `template` block that offers
 to define `disclaimer`.  If it finds the `template` block above, it
-will define the `disclaimer` variable.  Note that once the variable is
-defined, it will always return the same text, even if underlying
-variables like `company` may have changed in the interim.  If you want
-a template that returns something different every time, you can use
-code to make `disclaimer` undefined again (`del disclaimer`), write a
-[Mako] `def` function, or write a custom [Python] function.
+will define the `disclaimer` variable.
+
+A template, once defined, is a variable of type [`DATemplate`].
+However, this variable is undefined each time the screen loads.
+Therefore, if the variables that the template depends on are
+redefined, the template will change accordingly.
 
 Optionally, a `template` can have a `subject`:
 
@@ -84,11 +84,14 @@ Writing `${ disclaimer }` has the same effect as writing
 `${ disclaimer.content }`.
 
 Templates are also useful for defining the content of e-mails.  See
-[Legal Applications].
+[`send_email()`] for more information.
 
 [markup]: {{ site.baseurl }}/docs/markup.html
 [documents]: {{ site.baseurl }}/docs/documents.html
 [Mako]: http://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
 [Python]: https://www.python.org/
-[Legal Applications]: {{ site.baseurl }}/docs/legal.html
+[`DATemplate`]: {{ site.baseurl }}/docs/objects.html#DATemplate
+[`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
+[`question`]: {{ site.baseurl }}/docs/questions.html#question
+[`code`]: {{ site.baseurl }}/docs/code.html#code

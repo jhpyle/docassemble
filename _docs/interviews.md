@@ -65,17 +65,6 @@ separated by `---`.  For example, this interview has four blocks:
 
 {% highlight yaml %}
 ---
-mandatory: true
-code: |
-  exit_page
----
-sets: exit_page
-question: What a coincidence!
-subquestion: |
-  My favorite animal is the ${ favorite_animal }, too!
-buttons:
-  - Exit: exit
----
 question: What is your favorite animal?
 fields:
   - Animal: favorite_animal
@@ -84,50 +73,44 @@ question: What is your favorite vegetable?
 fields:
   - Animal: favorite_vegetable
 ---
+mandatory: true
+question: What a coincidence!
+subquestion: |
+  My favorite animal is the ${ favorite_animal }, too!
+buttons:
+  - Exit: exit
+---
 {% endhighlight %}
 
-The first block is a bit of [Python] code that is marked [`mandatory`].
-This is very simple code; is simply refers to a variable, `exit_page`.
-This tells **docassemble** that the goal of the interview is to get a
-definition for the `exit_page` variable.
+The first block is a "question" that defines the variable `favorite_animal`.
 
-The second block is a "question" that offers to define the
-`exit_page`.  It refers to the variable `favorite_animal`.
+The second block is a "question" that defines the variable `favorite_vegetable`.
 
-The third block is a "question" that defines the variable `favorite_animal`.
-
-The fourth block is a "question" that defines the variable `favorite_vegetable`.
+The third block is a "question" that is marked as `mandatory`.  This
+is not really a question, since it offers the user no option except
+clicking the "Exit" button.  It refers to the variable `favorite_animal`.
 
 When **docassemble** presents this interview to the user, it follows
 these steps:
 
 1. It scans the file and processes everything that is "[`mandatory`]."  It
   treats everything else as optional.
-2. It finds [`mandatory`] [Python] code in the first block and tries to
-   run it.
-3. It can't run the code because `exit_page` is not defined,
-so it looks for a question that defines `exit_page`.
-4. It looks through the blocks for a question that offers to define
-`exit_page`, and finds it in the second block.
-5. It tries to ask the `exit_page` question, but runs into a variable
-it doesn't know: `favorite_animal`.
-6. It looks through the blocks for a question that defines
-`favorite_animal`, and finds it in the third block.
-7. It asks the user for his or her favorite animal, and goes back to
-step 1.  This time around, it is able to ask the `exit_page` question,
+2. It finds a [`mandatory`] question in the third block and tries to
+   ask the question.
+3. It can't assemble the question because `favorite_animal` is not defined,
+so it looks for a question that defines `favorite_animal`.
+4. It looks through the blocks for a question that defines
+`favorite_animal`, and finds it in the first block.
+5. It asks the user for his or her favorite animal, and goes back to
+step 1.  This time around, it is able to ask the `mandatory` question,
 and the interview stops there because the only thing the user can do
 is press the "Exit" button.
 
 The order of the blocks in the file is irrelevant; **docassemble**
 would do the same thing regardless of the order of the blocks.
 
-Note that the fourth block, containing the question about the user's
+Note that the second block, containing the question about the user's
 favorite vegetable, was never used because it was never needed.
-
-The logic of the interview was as follows:
-
-* I need `exit_page`
-* For that, I need to ask `favorite_animal`
 
 You can
 [try out this interview]({{ site.demourl }}?i=docassemble.demo:data/questions/animal.yml){:target="_blank"}

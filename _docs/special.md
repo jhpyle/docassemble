@@ -240,6 +240,11 @@ code: |
 Since menu items are controlled with [`code`] blocks, you can turn them
 on and off during the course of the interview as necessary.
 
+## <a name="allow_cron"></a>allow_cron
+
+This variable should be set to `True` if you want to allow the server
+to run "cron jobs" on your interview.
+
 [VoiceRSS]: http://www.voicerss.org/
 [get]: https://docs.python.org/2/library/stdtypes.html#dict.get
 [Python list]: https://docs.python.org/2/tutorial/datastructures.html

@@ -477,6 +477,19 @@
   buttons:
     - Exit: leave
   ---
+"exit": |-
+  ---
+  mandatory: true
+  code: |
+    command('exit', url=target_url)
+  ---
+  question: |
+    Where do you want to go?
+  field: target_url
+  buttons:
+    - Stanford: "http://stanford.edu/"
+    - Harvard: "http://www.harvard.edu/"
+  ---
 "field-note": |-
   ---
   question: |
@@ -672,7 +685,7 @@
 "generic-object-phone-number": |-
   ---
   modules:
-    - docassemble.base.legal
+    - docassemble.base.util
   ---
 "help": |-
   ---
@@ -797,7 +810,7 @@
 "interview-url": |-
   ---
   modules:
-    - docassemble.base.legal
+    - docassemble.base.util
   ---
   mandatory: true
   code: |
@@ -805,7 +818,7 @@
   ---
   initial: true
   code: |
-    update_info(user, 'interviewee', current_info)
+    update_info(current_info)
   ---
   question: |
     Ready to proceed?
@@ -819,6 +832,40 @@
     click "Yes."
   yesno: ready_to_proceed
   ---
+"interview_url_action": |-
+  ---
+  modules:
+    - docassemble.base.util
+  ---
+  objects:
+    - user: Individual
+  ---
+  mandatory: true
+  code: |
+    multi_user = True
+    status = 'normal'
+  ---
+  initial: true
+  code: |
+    update_info(current_info)
+    process_action(current_info)
+  ---
+  event: check_update_status
+  code: |
+    if 'status' in current_info['arguments']:
+      status = current_info['arguments']['status']
+  ---
+  mandatory: true
+  question: |
+    The current status is ${ status }.
+  subquestion: |
+    Anyone can use the following links
+    to change the current status:
+
+    * Change to [normal](${ interview_url_action('check_update_status', status='normal') })
+    * Change to [danger](${ interview_url_action('check_update_status', status='danger') })
+    * Change to [critical](${ interview_url_action('check_update_status', status='critical') })
+  ---
 "label": |-
   ---
   question: |
@@ -831,6 +878,19 @@
   ---
 "language": "---\nlanguage: es\nquestion: |\n  \xBFCu\xE1l es el significado de la\
   \ vida?\nfields:\n  - Significado de la Vida: meaning_life\n---"
+"leave": |-
+  ---
+  mandatory: true
+  code: |
+    command('leave', url=target_url)
+  ---
+  question: |
+    Where do you want to go?
+  field: target_url
+  buttons:
+    - Stanford: "http://stanford.edu/"
+    - Harvard: "http://www.harvard.edu/"
+  ---
 "lists": |-
   ---
   question: Your fears
@@ -1143,7 +1203,7 @@
     - villain: Individual
   ---
   modules:
-    - docassemble.base.legal
+    - docassemble.base.util
   ---
 "optional-field": |-
   ---
@@ -1365,6 +1425,58 @@
   ---
   reset:
     - cat_food_cans_needed
+  ---
+"response": |-
+  ---
+  mandatory: true
+  code: |
+    data = dict(fruit='apple', slices=2)
+    response(json.dumps(data), content_type="application/json")
+  ---
+"response-hello": |-
+  ---
+  mandatory: true
+  code: |
+    response("Hello, world!")
+  ---
+"response-json": "---\nmodules:\n  - docassemble.base.util\n---\nobjects:\n  - user:\
+  \ Individual\n---\nmandatory: true\ncode: |\n  multi_user = True\n---\ninitial:\
+  \ true\ncode: |\n  update_info(current_info)\n  process_action(current_info)\n---\n\
+  event: query_fruit\ncode: |\n  data = dict(fruit=favorite_fruit, slices=number_of_slices)\n\
+  \  response(json.dumps(data), content_type=\"application/json\")\n---\nmandatory:\
+  \ true\nquestion: |\n  You currently have\n  ${ nice_number(number_of_slices) }\n\
+  \  ${ noun_plural('slice', number_of_slices) }\n  of\n  ${ noun_singular(favorite_fruit)\
+  \ }.\nsubquestion: |\n  Use\n  [this link](${ interview_url_action('query_fruit')\
+  \ })\n  to query the information from\n  another application.\n\n  You can also\
+  \ change the \n  [fruit](${ url_action('favorite_fruit') })\n  and the\n  [number\
+  \ of slices](${ url_action('number_of_slices') }).\n---"
+"response-svg": |-
+  ---
+  mandatory: true
+  code: |
+    svg_image = """\
+    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+    <svg
+       xmlns:dc="http://purl.org/dc/elements/1.1/"
+       xmlns:cc="http://creativecommons.org/ns#"
+       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+       xmlns:svg="http://www.w3.org/2000/svg"
+       xmlns="http://www.w3.org/2000/svg"
+       version="1.1"
+       id="svg2"
+       width="100"
+       height="100">
+      <circle
+         id="circle4"
+         fill="red"
+         stroke-width="3"
+         stroke="black"
+         r="40"
+         cy="50"
+         cx="50" />
+    </svg>
+    """
+    response(binaryresponse=svg_image, content_type="image/svg+xml")
   ---
 "review": |-
   ---

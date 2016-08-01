@@ -13,17 +13,17 @@
     - questions
     - fields
     - modifiers
-    - template
     - code
     - logic
+    - template
+    - documents
+    - markup
     - objects
     - groups
-    - markup
     - functions
-    - documents
+    - legal
     - roles
     - special
-    - legal
     - reserved
     - errors
 - title: Miscellaneous

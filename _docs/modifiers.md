@@ -336,7 +336,7 @@ by **docassemble**, so it can contain any valid [YAML].
 [images]: {{ site.baseurl }}/docs/initial.html#images
 [default language]: {{ site.baseurl }}/docs/initial.html#default language
 [progress bar]: {{ site.baseurl }}/docs/initial.html#features
-[`Individual`]: {{ site.baseurl }}/docs/legal.html#Individual
+[`Individual`]: {{ site.baseurl }}/docs/objects.html#Individual
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`microphone`]: {{ site.baseurl }}/docs/fields.html#microphone
 [`field` with `choices`]: {{ site.baseurl }}/docs/fields.html#field with choices

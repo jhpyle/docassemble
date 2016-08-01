@@ -398,7 +398,7 @@ the interview.  The setting of the progress bar is controlled by the
 [`include`]: {{ site.baseurl}}/docs/initial.html#include
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
-[`update_info()`]: {{ site.baseurl}}/docs/legal.html#update_info
+[`update_info()`]: {{ site.baseurl}}/docs/functions.html#update_info
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`code` block]: {{ site.baseurl}}/docs/code.html
 [`code` blocks]: {{ site.baseurl}}/docs/code.html

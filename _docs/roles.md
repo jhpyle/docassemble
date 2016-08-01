@@ -486,7 +486,7 @@ cases.
 [`code`]: {{ site.baseurl }}/docs/code.html
 [`role`]: {{ site.baseurl }}/docs/special.html#role
 [`include`]: {{ site.baseurl }}/docs/initial.html#include
-[`interview_url()`]: {{ site.baseurl }}/docs/legal.html#interview_url
+[`interview_url()`]: {{ site.baseurl }}/docs/functions.html#interview_url
 [`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
 [`DADict`]: {{ site.baseurl }}/docs/objects.html#DADict
 [`generic object`]: {{ site.baseurl }}/docs/modifiers.html#generic object
