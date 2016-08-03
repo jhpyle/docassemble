@@ -48,7 +48,7 @@ def clear_old_interviews():
 def run_cron(cron_type):
     #sys.stderr.write("calling send_email\n")
     #sys.stderr.write(str(app.config['MAIL_SERVER']) + "\n")
-    docassemble.base.util.send_email(to="jhpyle@gmail.com", body="Asdf", html="<p>Asdf</p>")
+    #docassemble.base.util.send_email(to="jhpyle@gmail.com", body="Asdf", html="<p>Asdf</p>")
     cron_user = get_cron_user()
     #sys.stderr.write("cron_user id is " + str(cron_user.id) + ".\n")
     to_do = list()
