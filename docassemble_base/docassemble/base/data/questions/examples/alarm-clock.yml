@@ -61,7 +61,7 @@ code: |
   else:
     email_sent = send_email(to=email, template=wakeup_email)
     if email_sent:
-      command('exit')
+      response('E-mail was sent')
     response("E-mail could not be sent")
 ---
 template: wakeup_email
