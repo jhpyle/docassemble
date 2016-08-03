@@ -57,7 +57,7 @@ code: |
 event: cron_hourly
 code: |
   if email_sent:
-    response("E-mail already sent")
+    command('exit')
   if local_wakeup_time >= now:
     response("Not ready to send wakeup call:" + str(local_wakeup_time))
   else:
