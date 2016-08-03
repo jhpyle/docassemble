@@ -61,10 +61,7 @@ code: |
   if local_wakeup_time >= now:
     response("Not ready to send wakeup call:" + str(local_wakeup_time))
   else:
-    try:
-      email_sent = send_email(to=email, subject="asdf", body="asdf", html="<p>asdf</p>")
-    except Exception as errmess:
-      response('send_email triggered error: ' + str(errmess))
+    email_sent = send_email(to=email, template=wakeup_email)
     if email_sent:
       command('exit')
     response("E-mail could not be sent")
