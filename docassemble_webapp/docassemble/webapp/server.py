@@ -31,7 +31,6 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
 from docassemble.base.functions import pickleable_objects, word, comma_and_list
 from docassemble.base.logger import logmessage
-import docassemble.base.util
 from Crypto.Cipher import AES
 from Crypto.Hash import MD5
 import mimetypes
@@ -61,12 +60,13 @@ from flask_kvsession import KVSessionExtension
 from simplekv.db.sql import SQLAlchemyStore
 from sqlalchemy import create_engine, MetaData, Sequence, or_, and_
 from docassemble.webapp.app_and_db import app, db
-from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference
+from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Messages, Supervisors
 from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, hostname
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
+import docassemble.base.util
 import yaml
 import inspect
 from subprocess import call, Popen, PIPE
@@ -217,8 +217,6 @@ LOGFILE = daconfig.get('flask_log', '/tmp/flask.log')
 
 connect_string = docassemble.webapp.database.connection_string()
 alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
-
-mail = Mail(app)
 
 def my_default_url(error, endpoint, values):
     return url_for('index')

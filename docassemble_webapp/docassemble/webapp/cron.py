@@ -13,9 +13,10 @@ if __name__ == "__main__":
         remaining_arguments.append(arguments.pop(0))
     import docassemble.base.config
     docassemble.base.config.load(arguments=remaining_arguments)
-from docassemble.webapp.server import User, UserDict, logmessage, unpack_dictionary, db, set_request_active, fetch_user_dict, save_user_dict, fresh_dictionary, reset_user_dict
+from docassemble.webapp.server import User, UserDict, logmessage, unpack_dictionary, db, set_request_active, fetch_user_dict, save_user_dict, fresh_dictionary, reset_user_dict, app
 import docassemble.base.interview_cache
 import docassemble.base.parse
+import docassemble.base.util
 import os
 import pickle
 import codecs
@@ -45,6 +46,9 @@ def clear_old_interviews():
         reset_user_dict(item['key'], item['filename'])
     
 def run_cron(cron_type):
+    #sys.stderr.write("calling send_email\n")
+    #sys.stderr.write(str(app.config['MAIL_SERVER']) + "\n")
+    docassemble.base.util.send_email(to="jhpyle@gmail.com", body="Asdf", html="<p>Asdf</p>")
     cron_user = get_cron_user()
     #sys.stderr.write("cron_user id is " + str(cron_user.id) + ".\n")
     to_do = list()
@@ -79,8 +83,9 @@ def run_cron(cron_type):
             interview.assemble(user_dict, interview_status)
             #sys.stderr.write("  " + str(cron_type) + " save\n")
             if interview_status.question.question_type in ["restart", "exit"]:
-                #sys.stderr.write("  Deleting\n")
+                sys.stderr.write("  Deleting dictionary\n")
                 reset_user_dict(item['key'], item['filename'])
+                sys.stderr.write("  Deleted dictionary\n")
             else:
                 #sys.stderr.write("  Saving where type is " + cron_type + "\n")
                 save_user_dict(item['key'], user_dict, item['filename'], encrypt=False, manual_user_id=cron_user.id)
@@ -93,4 +98,5 @@ def run_cron(cron_type):
 if __name__ == "__main__":
     if cron_type == 'cron_daily':
         clear_old_interviews()
-    run_cron(cron_type)
+    with app.app_context():
+        run_cron(cron_type)

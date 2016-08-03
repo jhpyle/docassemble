@@ -9,11 +9,13 @@ import logging
 import docassemble.base.parse
 import re
 import os
+import sys
 import pyPdf
 from flask import session
 from flask_mail import Mail, Message
 from PIL import Image
 import xml.etree.ElementTree as ET
+#sys.stderr.write("I am in backend\n")
 
 app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
 app.config['BRAND_NAME'] = daconfig.get('brandname', daconfig.get('appname', 'docassemble'))
@@ -61,9 +63,6 @@ alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
 app.config['SQLALCHEMY_DATABASE_URI'] = alchemy_connect_string
 app.secret_key = daconfig.get('secretkey', '38ihfiFehfoU34mcq_4clirglw3g4o87')
 
-def get_mail_variable(*args, **kwargs):
-    return mail
-
 def save_numbered_file(filename, orig_path, yaml_file_name=None):
     file_number = get_new_file_number(session['uid'], filename, yaml_file_name=yaml_file_name)
     extension, mimetype = get_ext_and_mimetype(filename)
@@ -72,12 +71,23 @@ def save_numbered_file(filename, orig_path, yaml_file_name=None):
     new_file.save(finalize=True)
     return(file_number, extension, mimetype)
 
-def async_mail(the_message):
-    mail.send(the_message)
+def get_mail_variable(*args, **kwargs):
+    return mail
 
+mail = Mail(app)
+
+def async_mail(the_message):
+    #logmessage("real async mail start")
+    mail.send(the_message)
+    #logmessage("real async mail finished")
+
+#sys.stderr.write("setting mail variable\n")
 docassemble.base.parse.set_mail_variable(get_mail_variable)
+#sys.stderr.write("setting async_mail variable\n")
 docassemble.base.parse.set_async_mail(async_mail)
+
 docassemble.base.parse.set_save_numbered_file(save_numbered_file)
+#sys.stderr.write("I am in backend again4\n")
 
 import docassemble.base.functions
 docassemble.base.functions.set_debug_status(DEBUG)

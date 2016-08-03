@@ -11,6 +11,7 @@ import operator
 import pprint
 import codecs
 import copy
+#sys.stderr.write("loading filter\n")
 import docassemble.base.filter
 import docassemble.base.pdftk
 from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, QuestionError, ResponseError, CommandError
@@ -2020,7 +2021,7 @@ class Interview:
                 interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
                 break
             except ResponseError as qError:
-                logmessage("Trapped ResponseError")
+                #logmessage("Trapped ResponseError")
                 question_data = dict(extras=dict())
                 if hasattr(qError, 'response') and qError.response is not None:
                     question_data['response'] = qError.response
@@ -2395,7 +2396,7 @@ class Interview:
                     new_question.name = "Question_Temp"
                     return(new_question.ask(user_dict, 'None', 'None'))
                 except ResponseError as qError:
-                    logmessage("Trapped ResponseError2")
+                    #logmessage("Trapped ResponseError2")
                     question_data = dict(extras=dict())
                     if hasattr(qError, 'response') and qError.response is not None:
                         question_data['response'] = qError.response

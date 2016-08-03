@@ -80,8 +80,10 @@ def set_mail_variable(func):
     return
 
 def blank_async_mail(*args, **kwargs):
+    logmessage("blank async mail")
     return(None)
 
+#sys.stderr.write("setting blank async mail")
 async_mail = blank_async_mail
 
 def set_async_mail(func):
