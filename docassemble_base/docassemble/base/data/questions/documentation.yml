@@ -74,7 +74,6 @@ DAList.number_gathered: "http://docassemble.org/docs/objects.html#DAList.number_
 DAList.number_gathered_as_word: "http://docassemble.org/docs/objects.html#DAList.number_gathered_as_word"
 DAList.remove: "http://docassemble.org/docs/objects.html#DAList.remove"
 DAList.comma_and_list: "http://docassemble.org/docs/objects.html#DAList.comma_and_list"
-update_info: "http://docassemble.org/docs/functions.html#update_info"
 interview_url: "http://docassemble.org/docs/functions.html#interview_url"
 interview_url_as_qr: "http://docassemble.org/docs/functions.html#interview_url_as_qr"
 map_of: "http://docassemble.org/docs/functions.html#map_of"

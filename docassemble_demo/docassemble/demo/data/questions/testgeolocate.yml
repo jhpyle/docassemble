@@ -8,7 +8,7 @@ objects:
 ---
 initial: true
 code: |
-  update_info(current_info, user=user, role='user')
+  set_info(user=user, role='user')
   track_location = user.location.status()
 ---
 mandatory: true

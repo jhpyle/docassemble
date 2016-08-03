@@ -14,8 +14,7 @@ modules:
 initial: true
 code: |
   counter += 1
-  update_info(current_info)
-  process_action(current_info)
+  process_action()
 ---
 event: cron_daily
 code: |

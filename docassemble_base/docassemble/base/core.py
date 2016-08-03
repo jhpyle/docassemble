@@ -924,4 +924,3 @@ def setify(item, output=set()):
         output.add(item)
     return output
 
-    

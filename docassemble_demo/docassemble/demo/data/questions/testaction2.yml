@@ -4,7 +4,7 @@ modules:
 ---
 initial: true
 code: |
-  process_action(current_info)
+  process_action()
 ---
 mandatory: true
 code: |

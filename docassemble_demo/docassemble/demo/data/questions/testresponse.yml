@@ -8,7 +8,7 @@ modules:
 ---
 initial: true
 code: |
-  process_action(current_info)
+  process_action()
 ---
 question: |
   What is the world?

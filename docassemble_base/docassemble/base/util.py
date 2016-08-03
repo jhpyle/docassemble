@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 import datetime
+import pytz
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
-from docassemble.base.functions import comma_and_list, get_language, set_language, get_dialect, word, comma_list, ordinal, ordinal_number, need, nice_number, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, period_list, name_suffix, currency_symbol, currency, indefinite_article, today, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, month_of, day_of, year_of, format_date, defined, value, message, response, command, single_paragraph, update_info, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, objects_from_file, email_string, this_thread, static_image
+from docassemble.base.functions import comma_and_list, get_language, set_language, get_dialect, word, comma_list, ordinal, ordinal_number, need, nice_number, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, period_list, name_suffix, currency_symbol, currency, indefinite_article, today, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, month_of, day_of, year_of, format_date, defined, value, message, response, command, single_paragraph, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, objects_from_file, this_thread, static_image, action_arguments, action_argument, default_timezone
 from docassemble.base.core import DAObject, DAList, DADict, DAFile, DAFileCollection, DAFileList, DATemplate, selections
 from decimal import Decimal
 from docassemble.base.filter import file_finder, url_finder, markdown_to_html, async_mail
+import dateutil
 import dateutil.parser
 import json
 import codecs
 import us
 from bs4 import BeautifulSoup
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'update_info', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'email_string', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate', 'us', 'today', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'email_string', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate', 'us', 'today', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'action_arguments', 'action_argument', 'timezone_list', 'default_timezone', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval']
 
 def default_user_id_function():
     return dict()
@@ -23,6 +25,67 @@ def set_user_id_function(func):
     global user_id_dict
     user_id_dict = func
     return
+
+def current_datetime(timezone=default_timezone):
+    return pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone))
+
+def as_datetime(date_as_text, timezone=default_timezone):
+    new_datetime = dateutil.parser.parse(date_as_text)
+    if new_datetime.tzinfo:
+        new_datetime = new_datetime.astimezone(pytz.timezone(timezone))
+    else:
+        new_datetime = pytz.timezone(timezone).localize(new_datetime)
+    return new_datetime
+    
+class DateTimeDelta(object):
+    pass
+
+def date_interval(**kwargs):
+    return datetime.timedelta(**kwargs)
+
+def date_difference(a, b, timezone=default_timezone):
+    if not isinstance(a, datetime.datetime):
+        a = dateutil.parser.parse(a)
+    if not isinstance(b, datetime.datetime):
+        b = dateutil.parser.parse(b)
+    if a.tzinfo:
+        a = a.astimezone(pytz.timezone(timezone))
+    else:
+        a = pytz.timezone(timezone).localize(a)
+    if b.tzinfo:
+        b = b.astimezone(pytz.timezone(timezone))
+    else:
+        b = pytz.timezone(timezone).localize(b)
+    delta = a - b
+    output = DateTimeDelta()
+    output.delta = delta
+    output.days = delta.days + (delta.seconds / 86400.0)
+    output.hours = (delta.days * 24.0) + (delta.seconds / 3600.0)
+    output.minutes = (delta.days * 1440.0) + (delta.seconds / 60.0)
+    return output
+    
+def email_string(persons, include_name=None):
+    if persons is None:
+        return None
+    if type(persons) is not list:
+        persons = [persons]
+    result = []
+    for person in persons:
+        if isinstance(person, Person):
+            result.append(person.email_address(include_name=include_name))
+        else:
+            result.append(str(person))
+    return result
+
+def valid_datetime(time):
+    try:
+        dateutil.parser.parse(time)
+        return True
+    except:
+        return False
+
+def timezone_list():
+    return sorted([tz for tz in pytz.all_timezones])
 
 def last_access_delta(*pargs, **kwargs):
     last_time = last_access_time(*pargs, **kwargs)
@@ -36,11 +99,11 @@ def last_access_days(*pargs, **kwargs):
 
 def last_access_hours(*pargs, **kwargs):
     delta = last_access_delta(*pargs, **kwargs) 
-    return (delta.days * 24) + (delta.seconds / 3600.0)
+    return (delta.days * 24.0) + (delta.seconds / 3600.0)
 
 def last_access_minutes(*pargs, **kwargs):
     delta = last_access_delta(*pargs, **kwargs) 
-    return (delta.days * 1440) + (delta.seconds / 60.0)
+    return (delta.days * 1440.0) + (delta.seconds / 60.0)
 
 def last_access_time(*pargs, **kwargs):
     include_cron = kwargs.get('include_cron', False)
@@ -427,7 +490,7 @@ class Individual(Person):
             else:
                 return int(self.age)
         if as_of is None:
-            comparator = datetime.datetime.now()
+            comparator = datetime.datetime.utcnow()
         else:
             comparator = dateutil.parser.parse(as_of)
         rd = dateutil.relativedelta.relativedelta(comparator, dateutil.parser.parse(self.birthdate))
@@ -667,7 +730,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None
             subject = template.subject
         body_html = '<html><body>' + markdown_to_html(template.content) + '</body></html>'
         if body is None:
-            body = BeautifulSoup(body_html, "html").get_text('\n')
+            body = BeautifulSoup(body_html, "html.parser").get_text('\n')
         if html is None:
             html = body_html
     if body is None and html is None:

@@ -82,7 +82,7 @@ def run_cron(cron_type):
                 #sys.stderr.write("  Deleting\n")
                 reset_user_dict(item['key'], item['filename'])
             else:
-                #sys.stderr.write("  Saving where type is " + + "\n")
+                #sys.stderr.write("  Saving where type is " + cron_type + "\n")
                 save_user_dict(item['key'], user_dict, item['filename'], encrypt=False, manual_user_id=cron_user.id)
                 if interview_status.question.question_type == "response":
                     if not hasattr(interview_status.question, 'binaryresponse'):

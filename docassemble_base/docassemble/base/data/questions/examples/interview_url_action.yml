@@ -17,8 +17,7 @@ code: |
 ---
 initial: true
 code: |
-  update_info(current_info)
-  process_action(current_info)
+  process_action()
 ---
 event: check_update_status
 code: |

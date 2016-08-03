@@ -11,10 +11,6 @@ mandatory: true
 code: |
   multi_user = True
 ---
-initial: true
-code: |
-  update_info(current_info)
----
 question: |
   Ready to proceed?
 subquestion: |

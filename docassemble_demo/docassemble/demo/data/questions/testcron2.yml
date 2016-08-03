@@ -14,8 +14,7 @@ modules:
 initial: true
 code: |
   counter += 1
-  update_info(current_info)
-  process_action(current_info)
+  process_action()
 ---
 event: cron_hourly
 code: |
@@ -23,8 +22,8 @@ code: |
 ---
 event: set_status
 code: |
-  if 'status' in current_info['arguments']:
-    status = current_info['arguments']['status']
+  if 'status' in argion_arguments():
+    status = action_argument('status')
   response(status)
 ---
 mandatory: true

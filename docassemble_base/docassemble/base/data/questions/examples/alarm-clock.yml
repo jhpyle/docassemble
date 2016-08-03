@@ -1,0 +1,71 @@
+metadata:
+  title: Scheduled task
+  documentation: "http://docassemble.org/docs/scheduled.html"
+---
+modules:
+  - docassemble.base.util
+---
+initial: true
+code: |
+  process_action()
+---
+mandatory: true
+code: |
+  email_sent = False
+  multi_user = True
+  allow_cron = True
+  email
+  raw_wakeup_time
+  timezone
+  local_wakeup_time
+  final_screen
+---
+question: |
+  What is your e-mail address?
+fields:
+  - E-mail: email
+    datatype: email
+---
+question: |
+  When shall I wake you up?
+fields:
+  Time: raw_wakeup_time
+---
+question: |
+  What is your time zone?
+fields:
+  - Time zone: timezone
+    default: "America/New_York"
+    code: |
+      timezone_list()
+---
+sets: final_screen
+question: |
+  Good night!
+subquestion: |
+  I'll e-mail you when it's time to get up.
+---
+reconsider: true
+code: |
+  now = current_datetime(timezone=timezone)
+---
+code: |
+  local_wakeup_time = as_datetime(raw_wakeup_time, timezone=timezone)
+  if local_wakeup_time < now:
+    local_wakeup_time += date_interval(days=1)
+---
+event: cron_hourly
+code: |
+  if local_wakeup_time >= now:
+    response("Not ready to send wakeup call:" + str(local_wakeup_time))
+  else:
+    email_sent = send_email(to=email, template=wakeup_email)
+    if email_sent:
+      command('exit')
+    response("E-mail could not be sent")
+---
+template: wakeup_email
+subject: |
+  Time to wake up!
+content: |
+  This is your wakeup e-mail!

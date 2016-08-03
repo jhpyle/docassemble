@@ -148,7 +148,7 @@ class InterviewSourceString(InterviewSource):
         self.set_path(kwargs.get('path', None))
         self.set_directory(kwargs.get('directory', None))
         self.set_content(kwargs.get('content', None))
-        self._modtime = datetime.datetime.now()
+        self._modtime = datetime.datetime.utcnow()
         return super(InterviewSourceString, self).__init__(**kwargs)
 
 class InterviewSourceFile(InterviewSource):
@@ -242,7 +242,7 @@ class InterviewSourceURL(InterviewSource):
             resp, content = h.request(self.path, "GET")
             if resp['status'] >= 200 and resp['status'] < 300:
                 self.set_content(content)
-                self._modtime = datetime.datetime.now()
+                self._modtime = datetime.datetime.utcnow()
                 return True
         except:
             pass
@@ -1910,6 +1910,7 @@ class Interview:
         docassemble.base.functions.reset_local_variables()
         interview_status.current_info.update({'default_role': self.default_role, 'internal': user_dict['_internal']})
         user_dict['current_info'] = interview_status.current_info
+        docassemble.base.functions.this_thread.current_info = interview_status.current_info
         for question in self.questions_list:
             if question.question_type == 'imports':
                 #logmessage("Found imports")
@@ -2019,7 +2020,7 @@ class Interview:
                 interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
                 break
             except ResponseError as qError:
-                #logmessage("Trapped ResponseError")
+                logmessage("Trapped ResponseError")
                 question_data = dict(extras=dict())
                 if hasattr(qError, 'response') and qError.response is not None:
                     question_data['response'] = qError.response
@@ -2394,7 +2395,7 @@ class Interview:
                     new_question.name = "Question_Temp"
                     return(new_question.ask(user_dict, 'None', 'None'))
                 except ResponseError as qError:
-                    #logmessage("Trapped ResponseError")
+                    logmessage("Trapped ResponseError2")
                     question_data = dict(extras=dict())
                     if hasattr(qError, 'response') and qError.response is not None:
                         question_data['response'] = qError.response

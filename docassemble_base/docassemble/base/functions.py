@@ -23,16 +23,16 @@ import ast
 import us
 import threading
 import astunparse
-#from bs4 import BeautifulSoup
 import yaml
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'update_info', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'objects_from_file', 'email_string']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'objects_from_file', 'action_arguments', 'action_argument']
 
 debug = False
 default_dialect = 'us'
 default_language = 'en'
 default_locale = 'US.utf8'
+default_timezone = 'America/New_York'
 daconfig = dict()
 dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
 newlines = re.compile(r'[\r\n]+')
@@ -53,17 +53,14 @@ class ThreadVariables(threading.local):
 
 this_thread = ThreadVariables()
 
-def update_info(new_current_info, **kwargs):
-    """Transmits information to docassemble about the current state of the 
-    interview, such as whether the user is logged in and the user's latitude
-    and longitude as determined from GPS.  Can additionally include 
-    information about who the current user is and what the current user's role is.
-    Always called within an initial block."""
-    #logmessage("Updating info!")
-    this_thread.current_info = new_current_info
-    for att, value in kwargs.iteritems():
-        setattr(this_thread, att, value)
-    return
+def action_arguments():
+    if 'arguments' in this_thread.current_info:
+        return this_thread.current_info['arguments']
+    else:
+        return dict()
+
+def action_argument(item):
+    return this_thread.current_info['arguments'][item]
 
 def location_returned():
     """Returns True or False depending on whether an attempt has yet been made to transmit
@@ -88,9 +85,7 @@ def location_known():
     return False
 
 def user_lat_lon():
-    """Returns the user's latitude and longitude as a tuple.
-    Requires that the information about the user's location has already 
-    been passed to docassemble using update_info()."""
+    """Returns the user's latitude and longitude as a tuple."""
     if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and type(this_thread.current_info['user']['location']) is dict:
         if 'latitude' in this_thread.current_info['user']['location'] and 'longitude' in this_thread.current_info['user']['location']:
             return this_thread.current_info['user']['location']['latitude'], this_thread.current_info['user']['location']['longitude']
@@ -101,8 +96,7 @@ def user_lat_lon():
 def interview_url(**kwargs):
     """Returns a URL that is direct link to the interview and the current
     variable store.  This is used in multi-user interviews to invite
-    additional users to participate. This function depends on
-    update_info() having been run in "initial" code."""
+    additional users to participate."""
     args = kwargs
     args['i'] = this_thread.current_info['yaml_filename']
     args['session'] = this_thread.current_info['session']
@@ -164,19 +158,6 @@ def objects_from_file(file_ref):
                         raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained an item, ' + str(item) + ' that was not expressed as a dictionary')
                     objects.append(constructor(**item))
     return objects
-
-def email_string(persons, include_name=None):
-    if persons is None:
-        return None
-    if type(persons) is not list:
-        persons = [persons]
-    result = []
-    for person in persons:
-        if isinstance(person, Person):
-            result.append(person.email_address(include_name=include_name))
-        else:
-            result.append(str(person))
-    return result
 
 word_collection = {
     'es': {
@@ -362,6 +343,11 @@ def set_default_language(lang):
 def set_default_dialect(dialect):
     global default_dialect
     default_dialect = dialect
+    return
+
+def set_default_timezone(timezone):
+    global default_timezone
+    default_timezone = timezone
     return
 
 def reset_local_variables():
@@ -1023,12 +1009,12 @@ def set_absolute_filename(func):
 def nodoublequote(text):
     return re.sub(r'"', '', unicode(text))
 
-def process_action(current_info):
+def process_action():
     """If an action is waiting to be processed, it processes the action."""
-    if 'action' not in current_info:
+    if 'action' not in this_thread.current_info:
         return
-    the_action = current_info['action']
-    del current_info['action']
+    the_action = this_thread.current_info['action']
+    del this_thread.current_info['action']
     force_ask(the_action)
 
 def url_action(action, **kwargs):
