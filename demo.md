@@ -1060,7 +1060,7 @@ code: |
   else:
     user = client
     role = 'client'
-  update_info(user, role, current_info)
+  set_info(user=user, role=role)
 comment: |
   The default role is "client" and an optional role is "advocate."
   Unless otherwise specified, all questions require the user to be a
@@ -1068,9 +1068,9 @@ comment: |
   interview if the user is logged in and the user has "advocate" as a
   user role.
 
-  The functions in docassemble.base.legal need to know who the user
-  is.  The update_info function communicates that information to the
-  docassemble.base.legal module.  Since the code is paired with the
+  The functions in docassemble.base.util need to know who the user
+  is.  The set_info function communicates that information to the
+  docassemble.base.util module.  Since the code is paired with the
   "default role" declaration, this code is run as "initial" code,
   meaning that it is run every time docassemble processes the
   interview (i.e., every time the screen loads).

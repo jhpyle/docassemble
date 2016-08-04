@@ -324,7 +324,7 @@ code: |
   else:
     user = client
     role = 'client'
-  update_info(user, role, current_info)
+  set_info(user=user, role=role)
 ---
 {% endhighlight %}
 
@@ -347,9 +347,9 @@ In the example above, the interview has two roles: "client" and
 `code` block, which is executed every time the interview logic is
 processed.
 
-In addition, the [`update_info()`] function from
-[`docassemble.base.legal`] is called.  This lets the linguistic
-functions in [`docassemble.base.legal`] know who the user is, so that
+In addition, the [`set_info()`] function from
+[`docassemble.base.util`] is called.  This lets the linguistic
+functions in [`docassemble.base.utl`] know who the user is, so that
 questions can ask "What is your date of birth?" or "What is John
 Smith's date of birth" depending on whether the current user is John
 Smith or not.
@@ -398,7 +398,7 @@ the interview.  The setting of the progress bar is controlled by the
 [`include`]: {{ site.baseurl}}/docs/initial.html#include
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
-[`update_info()`]: {{ site.baseurl}}/docs/functions.html#update_info
+[`set_info()`]: {{ site.baseurl}}/docs/functions.html#set_info
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`code` block]: {{ site.baseurl}}/docs/code.html
 [`code` blocks]: {{ site.baseurl}}/docs/code.html

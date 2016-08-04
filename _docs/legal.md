@@ -178,7 +178,6 @@ including `pleading.caption()` will require the following:
 [`object_possessive`]: {{ site.baseurl }}/docs/objects.html#DAObject.object_possessive
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`code`]: {{ site.baseurl }}/docs/code.html
-[`current_info`]: {{ site.baseurl }}/docs/special.html#current_info
 [`initial`]: {{ site.baseurl }}/docs/logic.html#initial
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [`DATemplate`]: {{ site.baseurl }}/docs/objects.html#DATemplate
@@ -188,11 +187,8 @@ including `pleading.caption()` will require the following:
 [`DAFileList`]: {{ site.baseurl }}/docs/objects.html#DAFileList
 [`DAFileCollection`]: {{ site.baseurl }}/docs/objects.html#DAFileCollection
 [`attachments`]: {{ site.baseurl }}/docs/document.html#attachments
-[`get_info()`]: {{ site.baseurl }}/docs/functions.html#get_info
-[`set_info()`]: {{ site.baseurl }}/docs/functions.html#set_info
 [`objects`]: {{ site.baseurl }}/docs/initial.html#objects
 [`default role`]: {{ site.baseurl }}/docs/initial.html#default role
-[`update_info()`]: #update_info
 [`Individual`]: #Individual
 [`Person`]: #Person
 [`LatitudeLongitude`]: #LatitudeLongitude

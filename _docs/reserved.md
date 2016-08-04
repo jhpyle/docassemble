@@ -99,7 +99,6 @@ the list of reserved names expands to the following:
 * `spouse`
 * [`title_case`]
 * [`today`]
-* [`update_info`]
 * [`url_action`]
 * [`url_args`]
 * [`url_of`]
@@ -396,7 +395,6 @@ All others are available for you to use and to retrieve with
 [`space_to_underscore`]: {{ site.baseurl }}/docs/functions.html#space_to_underscore
 [`title_case`]: {{ site.baseurl }}/docs/functions.html#title_case
 [`today`]: {{ site.baseurl }}/docs/functions.html#today
-[`update_info`]: {{ site.baseurl }}/docs/functions.html#update_info
 [`url_action`]: {{ site.baseurl }}/docs/functions.html#url_action
 [`url_args`]: {{ site.baseurl }}/docs/special.html#url_args
 [`url_of`]: {{ site.baseurl }}/docs/functions.html#url_of

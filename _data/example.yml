@@ -2,7 +2,7 @@
   ---
   initial: true
   code: |
-    process_action(current_info)
+    process_action()
   ---
   question: |
     Review your information.
@@ -16,7 +16,7 @@
   ---
   initial: true
   code: |
-    process_action(current_info)
+    process_action()
   ---
   question: |
     Review your information.
@@ -48,6 +48,11 @@
     You are ${ user.age_in_years() }
     years old.
   mandatory: true
+  ---
+"alarm-clock": |-
+  ---
+  modules:
+    - docassemble.base.util
   ---
 "alignment": |-
   ---
@@ -117,6 +122,8 @@
       content: |
         Hello, world!
   ---
+"as-datetime": "---\nquestion: |\n  The Delorean will go back in time to \n  ${ as_datetime('11/5/1955').year\
+  \ }.\nmandatory: true\n---"
 "audio": |-
   ---
   audio: schumann-clip-1.mp3
@@ -388,6 +395,18 @@
     ${ currency(number) }.
   mandatory: true
   ---
+"current-datetime": |-
+  ---
+  question: |
+    % if current_datetime() < as_datetime('October 14, 1066'):
+    The Normans have not yet invaded
+    England.
+    % else:
+    Unfortunately, the Normans have
+    already invaded England.
+    % endif
+  mandatory: true
+  ---
 "dalist": |-
   ---
   modules:
@@ -399,6 +418,24 @@
     - docassemble.base.core
     - docassemble.base.util
   ---
+"date-difference": |-
+  ---
+  code: |
+    birthday = as_datetime('5/17/2016')
+    christmas = as_datetime('12/25/2016')
+    interval = date_difference(christmas, birthday)
+  ---
+  question: |
+    The length of time between my birthday
+    and Christmas can be described several ways.
+  subquestion: |
+    * ${ interval.weeks } weeks
+    * ${ interval.days } days
+    * ${ interval.hours } hours
+    * ${ interval.minutes } minutes
+    * ${ interval.seconds } seconds
+  mandatory: true
+  ---
 "date-field": |-
   ---
   question: |
@@ -406,6 +443,13 @@
   fields:
     - Birthdate: target_variable
       datatype: date
+  ---
+"date-interval": |-
+  ---
+  question: |
+    In three days, it will be
+    ${ format_date( current_datetime() + date_interval(days=3) ) }.
+  mandatory: true
   ---
 "dead-end": |-
   ---
@@ -687,6 +731,13 @@
   modules:
     - docassemble.base.util
   ---
+"get-default-timezone": |-
+  ---
+  question: |
+    The default time zone is
+    ${ get_default_timezone() }.
+  mandatory: true
+  ---
 "help": |-
   ---
   question: |
@@ -816,10 +867,6 @@
   code: |
     multi_user = True
   ---
-  initial: true
-  code: |
-    update_info(current_info)
-  ---
   question: |
     Ready to proceed?
   subquestion: |
@@ -831,6 +878,11 @@
     To proceed with the interview,
     click "Yes."
   yesno: ready_to_proceed
+  ---
+  question: All done
+  subquestion: |
+    Now we are done with the interview.
+  sets: final_screen
   ---
 "interview_url_action": |-
   ---
@@ -847,8 +899,7 @@
   ---
   initial: true
   code: |
-    update_info(current_info)
-    process_action(current_info)
+    process_action()
   ---
   event: check_update_status
   code: |
@@ -911,9 +962,24 @@
   ---
 "madlibs": |-
   ---
-  modules:
-    - docassemble.base.core
-    - docassemble.base.util
+  question: A funny story
+  subquestion: |
+    ${ person[0] } went to ${ place[0] }
+    to buy
+    ${ indefinite_article(noun[0]) }.
+
+    At the ${ place[0] }, there was
+    ${ indefinite_article(adjective[0])}
+    ${ noun[1] }, which tried to zap
+    ${ person[0] }.
+
+    But luckily, ${ person[1] } came out of
+    the back room just in time and
+    lunged at the ${ noun[1] }, thereby
+    saving the day.
+  buttons:
+    - Do it again: restart
+  mandatory: true
   ---
 "mandatory": |-
   ---
@@ -938,7 +1004,7 @@
   ---
   initial: true
   code: |
-    process_action(current_info)
+    process_action()
   ---
   mandatory: true
   code: |
@@ -1007,9 +1073,18 @@
   ---
 "nested-for-loop": |-
   ---
-  modules:
-    - docassemble.base.core
-    - docassemble.base.legal
+  mandatory: true
+  code: |
+    for the_person in person:
+        need(the_person.name.first)
+        for the_child in the_person.child:
+            need(the_child.name.first)
+            for allergy in the_child.allergy:
+                need(allergy)
+            need(the_child.allergy.gathered)
+        need(the_person.child.gathered)
+    need(person.gathered)
+    need(all_done)
   ---
 "nice-number": |-
   ---
@@ -1353,6 +1428,12 @@
     ${ qr_code('http://wsj.com') }
   sets: all_done
   ---
+"quantity-noun": |-
+  ---
+  mandatory: true
+  question: |
+    You have ${ quantity_noun(4, "apple") }.
+  ---
 "question": |-
   ---
   question: |
@@ -1441,15 +1522,14 @@
   ---
 "response-json": "---\nmodules:\n  - docassemble.base.util\n---\nobjects:\n  - user:\
   \ Individual\n---\nmandatory: true\ncode: |\n  multi_user = True\n---\ninitial:\
-  \ true\ncode: |\n  update_info(current_info)\n  process_action(current_info)\n---\n\
-  event: query_fruit\ncode: |\n  data = dict(fruit=favorite_fruit, slices=number_of_slices)\n\
-  \  response(json.dumps(data), content_type=\"application/json\")\n---\nmandatory:\
-  \ true\nquestion: |\n  You currently have\n  ${ nice_number(number_of_slices) }\n\
-  \  ${ noun_plural('slice', number_of_slices) }\n  of\n  ${ noun_singular(favorite_fruit)\
-  \ }.\nsubquestion: |\n  Use\n  [this link](${ interview_url_action('query_fruit')\
-  \ })\n  to query the information from\n  another application.\n\n  You can also\
-  \ change the \n  [fruit](${ url_action('favorite_fruit') })\n  and the\n  [number\
-  \ of slices](${ url_action('number_of_slices') }).\n---"
+  \ true\ncode: |\n  process_action()\n---\nevent: query_fruit\ncode: |\n  data =\
+  \ dict(fruit=favorite_fruit, slices=number_of_slices)\n  response(json.dumps(data),\
+  \ content_type=\"application/json\")\n---\nmandatory: true\nquestion: |\n  You currently\
+  \ have\n  ${ nice_number(number_of_slices) }\n  ${ noun_plural('slice', number_of_slices)\
+  \ }\n  of\n  ${ noun_singular(favorite_fruit) }.\nsubquestion: |\n  Use\n  [this\
+  \ link](${ interview_url_action('query_fruit') })\n  to query the information from\n\
+  \  another application.\n\n  You can also change the \n  [fruit](${ url_action('favorite_fruit')\
+  \ })\n  and the\n  [number of slices](${ url_action('number_of_slices') }).\n---"
 "response-svg": |-
   ---
   mandatory: true
@@ -1544,7 +1624,7 @@
     - Try again: restart
     - Learn More: exit
       url: https://en.wikipedia.org/wiki/Amphiprioninae
-  sets: all_done
+  mandatory: true
   ---
 "showif": |-
   ---
@@ -1749,6 +1829,16 @@
     - Fruit: other_target_variable
       hint: e.g., apples, oranges
   ---
+"timezone-list": |-
+  ---
+  question: |
+    What is your time zone?
+  fields:
+    - Time zone: user_timezone
+      default: "America/New_York"
+      code: |
+        timezone_list()
+  ---
 "title-case": |-
   ---
   question: |
@@ -1759,6 +1849,12 @@
     its title should be
     "${ title_case(subject) }."
   sets: all_done
+  ---
+"today": |-
+  ---
+  question: |
+    Today's date is ${ today() }.
+  mandatory: true
   ---
 "upload": |-
   ---

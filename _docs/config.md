@@ -93,10 +93,11 @@ xsendfile: true
 log: /usr/share/docassemble/log
 ec2: false
 ec2_ip_url: http://169.254.169.254/latest/meta-data/local-ipv4
+interview_delete_days: 90
 {% endhighlight %}
 
 By default, `imagemagick`, `pdftoppm`, `pacpl`, `avconv`,
-`libreoffce`, `pandoc`, and `oauth` are undefined.
+`libreoffce`, `pandoc`, `timezone`, and `oauth` are undefined.
 
 The key `config_file` does not appear in the configuration file, but
 it will be set to the file path for the configuration file.  (The
@@ -419,6 +420,16 @@ debugging problems with interviews.
 If a `log server` is set, **docassemble** will write messages to TCP
 port 514 on that server, and will not write to the `log` directory.
 
+## <a name="interview_delete_days"></a>interview_delete_days
+
+When the [scheduled tasks] feature is activated, **docassemble** will
+delete interviews after 90 days of inactivity.  To change the number
+of days, set `interview_delete_days` in the configuration.  For example:
+
+{% highlight yaml %}
+interview_delete_days: 180
+{% endhighlight %}
+
 # Enabling optional features
 
 ## <a name="imagemagick"></a><a name="pdftoppm"></a>Image conversion
@@ -490,6 +501,15 @@ that go by different names:
 {% highlight yaml %}
 libreoffice: soffice
 {% endhighlight %}
+
+## <a name="timezone"></a>timezone
+
+Functions like [`as_datetime()`] that deal with dates will use a
+default time zone if an explicit timezone is not supplied.  If you set
+the `timezone` configuration setting to something like
+`America/New_York`, this will be used as the default time zone.
+Otherwise, the default time zone will be set to the time zone of the
+server.
 
 ## <a name="oauth"></a>Facebook and Google login
 
@@ -775,3 +795,6 @@ first.
 [Pandoc]: http://johnmacfarlane.net/pandoc/
 [LibreOffice]: https://www.libreoffice.org/
 [`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
+[scheduled tasks]: {{ site.baseurl }}/docs/scheduled.html
+[`as_datetime()`]: {{ site.baseurl }}/docs/functions.html#as_datetime
+[`pytz`]: http://pytz.sourceforge.net/

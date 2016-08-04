@@ -265,7 +265,7 @@ The following are the keys that have special meaning:
 
 `datatype` affects how the data will be collected, validated and
 stored.  For a full explanation of how this is used, see the
-[section on `datatype`](#datatype) below.
+[section on `datatype`] below.
 
 ### <a name="required"></a>`required`
 
@@ -323,7 +323,7 @@ the variable value are the same).
 
 {% include side-by-side.html demo="fields-mc" %}
 
-When the [`datatype`](#datatype) is [`object`], [`object_radio`], or
+When the [`datatype`] is [`object`], [`object_radio`], or
 [`object_checkboxes`], `choices` indicates a list of objects from which
 the user will choose.  See the
 [section on selecting objects](#objects), below.
@@ -331,7 +331,7 @@ the user will choose.  See the
 ### <a name="exclude"></a>`exclude`
 
 `exclude` is used in combination with [`choices`](#choices) when the
-[`datatype`](#datatype) is [`object`], [`object_radio`], or
+[`datatype`] is [`object`], [`object_radio`], or
 [`object_checkboxes`].  Any object in `exclude` will be omitted from the
 list of choices if it is present in [`choices`](#choices).  See the
 [section on selecting objects](#objects), below.
@@ -682,7 +682,7 @@ would not be able to do that.  Instead, you would want
 `advocate`, so that you can refer to `tallest_person.birthdate` just
 as you would refer to `client.birthdate`.
 
-You can accomplish this by setting `datatype` to `object` within a
+You can accomplish this by setting [`datatype`] to `object` within a
 `fields` list, where the [`choices`](#choices) are the names of the objects from
 which to choose.  (Optionally, you can set a `default` value, which is
 also the name of a variable.)
@@ -724,9 +724,9 @@ objects, such as `case.defendant` or `client.child` (objects of type
 included.  You can also include under `choices` [Python] code, such as
 `case.parties()` or `case.all_known_people()`.
 
-The `datatype` of `object` presents the list of choices as a
+The [`datatype`] of `object` presents the list of choices as a
 pull-down.  If you prefer to present the user with radio buttons, set
-the `datatype` to `object_radio`.
+the [`datatype`] to `object_radio`.
 
 # Terminal screens
 
@@ -1058,3 +1058,5 @@ why this needs to be done manually as opposed to automatically:
 [`object`]: #object
 [`object_radio`]: #object_radio
 [`object_checkboxes`]: #object_checkboxes
+[section on `datatype`]: #datatype
+[`datatype`]: #datatype

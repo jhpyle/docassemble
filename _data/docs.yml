@@ -24,6 +24,7 @@
     - legal
     - roles
     - special
+    - scheduled
     - reserved
     - errors
 - title: Miscellaneous

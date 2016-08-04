@@ -1006,7 +1006,7 @@ inserting the following [initial block]:
 ---
 initial: true
 code: |
-  update_info(user, 'user_role', current_info)
+  set_info(user=user, role='user_role')
 ---
 {% endhighlight %}
 
@@ -1361,7 +1361,7 @@ objects:
 ---
 initial: true
 code: |
-  update_info(user, 'user_role', current_info)
+  set_info(user=user, role='user_role')
   track_location = user.location.status()
 ---
 {% endhighlight %}
@@ -1376,7 +1376,7 @@ user for this:
 ---
 initial: true
 code: |
-  update_info(user, 'user_role', current_info)
+  set_info(user=user, role='user_role')
   if user_ok_with_sharing_location:
     track_location = user.location.status()
 ---
@@ -1770,7 +1770,7 @@ code: |
   else:
     user = client
     role = 'client'
-  update_info(user, role, current_info)
+  set_info(user=user, role=role)
 ---
 event: role_event
 question: You are done for now.
@@ -1976,7 +1976,7 @@ and not an instance of the `Attorney` class.
 [`generic object`]: {{ site.baseurl }}/docs/modifiers.html#generic object
 [`get_info()`]: {{ site.baseurl }}/docs/functions.html#get_info
 [`initial`]: {{ site.baseurl }}/docs/logic.html#initial
-[`interview_url()`]: #interview_url
+[`interview_url()`]: {{ site.baseurl }}/docs/functions.html#interview_url
 [`legal.py`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [`modules`]: {{ site.baseurl }}/docs/initial.html#modules
@@ -1989,7 +1989,6 @@ and not an instance of the `Attorney` class.
 [`set_info()`]: {{ site.baseurl }}/docs/functions.html#set_info
 [`template`]: {{ site.baseurl }}/docs/template.html
 [`track_location`]:  {{ site.baseurl }}/docs/special.html#track_location
-[`update_info()`]: #update_info
 [`word()`]: {{ site.baseurl }}/docs/functions.html#word
 [classes]: https://docs.python.org/2/tutorial/classes.html
 [configuration]: {{ site.baseurl }}/docs/config.html
