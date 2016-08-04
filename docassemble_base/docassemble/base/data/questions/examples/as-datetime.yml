@@ -1,0 +1,13 @@
+metadata:
+  title: Convert to datetime
+  example start: 2
+  documentation: "http://docassemble.org/docs/functions.html#as_datetime"
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  The Delorean will go back in time to 
+  ${ as_datetime('11/5/1955').year }.
+mandatory: true
+  

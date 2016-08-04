@@ -121,6 +121,13 @@
     - review
     - prevent-back
     - force-ask
+    - interview-url
+- Dates:
+    - timezone-list
+    - as-datetime
+    - current-datetime
+    - date-difference
+    - date-interval
 - Linguistic:
     - capitalize
     - lists
@@ -128,9 +135,9 @@
     - indefinite-article
     - nice-number
     - noun-plural
+    - quantity-noun
     - ordinal-number
     - title-case
     - past-tense
 - Legal applications:
     - loading-legal
-    - interview-url

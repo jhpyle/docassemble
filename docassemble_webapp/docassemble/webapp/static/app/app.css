@@ -197,7 +197,11 @@ div.playgroundbox table td.playground-warning-box {
 }
 
 pre {
-    margin: 0 0 10px 0;
+    margin: 0;
+}
+
+div.highlight {
+    margin: 0 0 5px 0;
 }
 
 img.example_screenshot {
@@ -216,6 +220,11 @@ img.example_screenshot {
 .example-heading {
     cursor: pointer;
     font-weight: bold;
+}
+
+div > ul.example-list {
+    max-height: 35em;
+    overflow-y: auto;
 }
 
 ul.example-list ul {
@@ -289,13 +298,19 @@ table.daplaygroundtable td table td {
     cursor: pointer;
 }
 
+#example-source-before {
+    margin-top: 5px;
+}
+
+#example-source-after {
+    margin-top: 5px;
+}
+
 #example-source-before pre {
-    margin-bottom: 5px;
     background-color: #e7e7e7;
 }
 
 #example-source-after pre {
-    margin-top: 5px;
     background-color: #e7e7e7;
 }
 

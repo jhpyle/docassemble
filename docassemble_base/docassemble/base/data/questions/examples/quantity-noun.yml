@@ -1,0 +1,11 @@
+metadata:
+  title: Quantity of noun
+  example start: 2
+  documentation: "http://docassemble.org/docs/functions.html#quantity-noun"
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+question: |
+  You have ${ quantity_noun(4, "apple") }.

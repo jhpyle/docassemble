@@ -1,5 +1,7 @@
 metadata:
   title: Mad libs
+  example start: 4
+  example end: 4
   documentation: "http://docassemble.org/docs/groups.html"
 ---
 modules:
@@ -24,7 +26,8 @@ fields:
 ---
 question: A funny story
 subquestion: |
-  ${ person[0] } went to ${ place[0] } to buy
+  ${ person[0] } went to ${ place[0] }
+  to buy
   ${ indefinite_article(noun[0]) }.
 
   At the ${ place[0] }, there was
@@ -33,8 +36,9 @@ subquestion: |
   ${ person[0] }.
 
   But luckily, ${ person[1] } came out of
-  the back room just in time and lunged at the
-  ${ noun[1] }, thereby saving the day.
+  the back room just in time and
+  lunged at the ${ noun[1] }, thereby
+  saving the day.
 buttons:
   - Do it again: restart
 mandatory: true

@@ -5,14 +5,11 @@ import re
 import os
 import inspect
 import mimetypes
-import datetime
 import locale
 import pkg_resources
 import titlecase
 from docassemble.base.logger import logmessage
 from docassemble.base.error import QuestionError, ResponseError, CommandError
-import babel.dates
-import dateutil.parser
 import locale
 import json
 import urllib
@@ -24,15 +21,19 @@ import us
 import threading
 import astunparse
 import yaml
+import tzlocal
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'objects_from_file', 'action_arguments', 'action_argument']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'objects_from_file', 'action_arguments', 'action_argument', 'get_default_timezone']
 
 debug = False
 default_dialect = 'us'
 default_language = 'en'
 default_locale = 'US.utf8'
-default_timezone = 'America/New_York'
+try:
+    default_timezone = tzlocal.get_localzone().zone
+except:
+    default_timezone = 'America/New_York'
 daconfig = dict()
 dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
 newlines = re.compile(r'[\r\n]+')
@@ -350,6 +351,9 @@ def set_default_timezone(timezone):
     default_timezone = timezone
     return
 
+def get_default_timezone():
+    return default_timezone
+
 def reset_local_variables():
     this_thread.language = default_language
     this_thread.locale = default_locale
@@ -501,14 +505,16 @@ def nice_number_default(num):
         return nice_numbers[this_thread.language][unicode(num)]
     return unicode(num)
 
+def quantity_noun_default(num, noun, as_integer=True):
+    if as_integer:
+        num = int(round(num))
+    return nice_number(num) + " " + noun_plural(noun, num)
+
 def capitalize_default(a):
     if a and (type(a) is str or type(a) is unicode) and len(a) > 1:
         return(a[0].upper() + a[1:])
     else:
         return(unicode(a))
-
-def today_default(format='long'):
-    return babel.dates.format_date(datetime.date.today(), format=format, locale=this_thread.language)
 
 def currency_symbol_default():
     """Returns the currency symbol for the current locale."""
@@ -675,9 +681,6 @@ language_functions = {
     'currency_symbol': {
         '*': currency_symbol_default
     },
-    'today': {
-        '*': today_default
-    },
     'period_list': {
         '*': lambda: [[12, word("Per Month")], [1, word("Per Year")], [52, word("Per Week")], [24, word("Twice Per Month")], [26, word("Every Two Weeks")]]
     },
@@ -701,6 +704,9 @@ language_functions = {
     },
     'nice_number': {
         '*': nice_number_default
+    },
+    'quantity_noun': {
+        '*': quantity_noun_default
     },
     'ordinal_number': {
         '*': ordinal_number_default
@@ -750,7 +756,6 @@ verb_present = language_function_constructor('verb_present')
 noun_plural = language_function_constructor('noun_plural')
 noun_singular = language_function_constructor('noun_singular')
 indefinite_article = language_function_constructor('indefinite_article')
-today = language_function_constructor('today')
 period_list = language_function_constructor('period_list')
 name_suffix = language_function_constructor('name_suffix')
 currency = language_function_constructor('currency')
@@ -760,6 +765,7 @@ possessify_long = language_function_constructor('possessify_long')
 comma_list = language_function_constructor('comma_list')
 comma_and_list = language_function_constructor('comma_and_list')
 nice_number = language_function_constructor('nice_number')
+quantity_noun = language_function_constructor('quantity_noun')
 capitalize = language_function_constructor('capitalize')
 title_case = language_function_constructor('title_case')
 ordinal_number = language_function_constructor('ordinal_number')
@@ -783,8 +789,6 @@ if period_list.__doc__ is None:
 if name_suffix.__doc__ is None:
     name_suffix.__doc__ = """Returns an array of choices for the suffix of a name.
                           This is meant to be used in code for a multiple-choice field."""
-if today.__doc__ is None:
-    today.__doc__ = """Returns today's date in long form according to the current locale."""    
 if period_list.__doc__ is None:
     period_list.__doc__ = """Returns a list of periods of a year, for inclusion in dropdown items."""
 if name_suffix.__doc__ is None:
@@ -803,6 +807,8 @@ if comma_and_list.__doc__ is None:
     comma_and_list.__doc__ = """Returns the arguments separated by commas with "and" before the last one."""
 if nice_number.__doc__ is None:
     nice_number.__doc__ = """Takes a number as an argument and returns the number as a word if ten or below."""
+if quantity_noun.__doc__ is None:
+    quantity_noun.__doc__ = """Takes a number and a singular noun as an argument and returns the number as a word if ten or below, followed by the noun in a singular or plural form depending on the number."""
 if capitalize.__doc__ is None:
     capitalize.__doc__ = """Returns the argument with the first letter capitalized."""
 if title_case.__doc__ is None:
@@ -813,40 +819,6 @@ if ordinal.__doc__ is None:
     ordinal.__doc__ = """Given a number that is expected to be an index, returns "first" or "23rd" for 0 or 22, respectively."""
 if url_of.__doc__ is None:
     url_of.__doc__ = """Returns a URL to a file within a docassemble package."""
-
-def month_of(the_date, as_word=False):
-    """Interprets the_date as a date and returns the month.  
-    Set as_word to True if you want the month as a word."""
-    try:
-        date = dateutil.parser.parse(the_date)
-        if as_word:
-            return(date.strftime('%B'))
-        return(date.strftime('%m'))
-    except:
-        return word("Bad date")
-
-def day_of(the_date):
-    """Interprets the_date as a date and returns the day of month."""
-    try:
-        date = dateutil.parser.parse(the_date)
-        return(date.strftime('%d'))
-    except:
-        return word("Bad date")
-
-def year_of(the_date):
-    """Interprets the_date as a date and returns the year."""
-    try:
-        date = dateutil.parser.parse(the_date)
-        return(date.strftime('%Y'))
-    except:
-        return word("Bad date")
-
-def format_date(the_date, format='long'):
-    """Interprets the_date as a date and returns the date formatted in long form."""
-    try:
-        return(babel.dates.format_date(dateutil.parser.parse(the_date), format=format, locale=get_language()))
-    except:
-        return word("Bad date")
 
 def underscore_to_space(a):
     return(re.sub('_', ' ', unicode(a)))

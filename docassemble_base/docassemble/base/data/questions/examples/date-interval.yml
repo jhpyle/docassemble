@@ -1,0 +1,13 @@
+metadata:
+  title: Adding to a date
+  example start: 2
+  example end: 2
+  documentation: "http://docassemble.org/docs/functions.html#date_interval"
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  In three days, it will be
+  ${ format_date( current_datetime() + date_interval(days=3) ) }.
+mandatory: true

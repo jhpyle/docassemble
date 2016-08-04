@@ -1,0 +1,13 @@
+metadata:
+  title: Default timezone
+  example start: 2
+  documentation: "http://docassemble.org/docs/functions.html#get_default_timezone"
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  The default time zone is
+  ${ get_default_timezone() }.
+mandatory: true
+  

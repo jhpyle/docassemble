@@ -3,7 +3,7 @@ import datetime
 import pytz
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
-from docassemble.base.functions import comma_and_list, get_language, set_language, get_dialect, word, comma_list, ordinal, ordinal_number, need, nice_number, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, period_list, name_suffix, currency_symbol, currency, indefinite_article, today, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, month_of, day_of, year_of, format_date, defined, value, message, response, command, single_paragraph, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, objects_from_file, this_thread, static_image, action_arguments, action_argument, default_timezone
+from docassemble.base.functions import comma_and_list, get_language, set_language, get_dialect, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, value, message, response, command, single_paragraph, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, objects_from_file, this_thread, static_image, action_arguments, action_argument, default_timezone, language_functions, language_function_constructor, get_default_timezone
 from docassemble.base.core import DAObject, DAList, DADict, DAFile, DAFileCollection, DAFileList, DATemplate, selections
 from decimal import Decimal
 import sys
@@ -14,9 +14,10 @@ import dateutil.parser
 import json
 import codecs
 import us
+import babel.dates
 from bs4 import BeautifulSoup
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'email_string', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate', 'us', 'today', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'action_arguments', 'action_argument', 'timezone_list', 'default_timezone', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'email_string', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate', 'us', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'format_date', 'today', 'get_default_timezone']
 
 def default_user_id_function():
     return dict()
@@ -28,24 +29,94 @@ def set_user_id_function(func):
     user_id_dict = func
     return
 
+def today_default(format='long', timezone=default_timezone):
+    return babel.dates.format_date(pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone)).date(), format=format, locale=this_thread.language)
+
+language_functions['today'] = {'*': today_default}
+
+today = language_function_constructor('today')
+if today.__doc__ is None:
+    today.__doc__ = """Returns today's date in long form according to the current locale."""    
+
+def month_of(the_date, as_word=False):
+    """Interprets the_date as a date and returns the month.  
+    Set as_word to True if you want the month as a word."""
+    try:
+        if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
+            date = the_date
+        else:
+            date = dateutil.parser.parse(the_date)
+        if as_word:
+            return(date.strftime('%B'))
+        return(date.strftime('%m'))
+    except:
+        return word("Bad date")
+
+def day_of(the_date):
+    """Interprets the_date as a date and returns the day of month."""
+    try:
+        if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
+            date = the_date
+        else:
+            date = dateutil.parser.parse(the_date)
+        return(date.strftime('%d'))
+    except:
+        return word("Bad date")
+
+def year_of(the_date):
+    """Interprets the_date as a date and returns the year."""
+    try:
+        if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
+            date = the_date
+        else:
+            date = dateutil.parser.parse(the_date)
+        return(date.strftime('%Y'))
+    except:
+        return word("Bad date")
+
+def format_date(the_date, format='long'):
+    """Interprets the_date as a date and returns the date formatted in long form."""
+    try:
+        if isinstance(the_date, datetime.datetime) or isinstance(the_date, datetime.date):
+            date = the_date
+        else:
+            date = dateutil.parser.parse(the_date)
+        return babel.dates.format_date(date, format=format, locale=get_language())
+    except:
+        return word("Bad date")
+
+class DateTimeDelta(object):
+    def __str__(self):
+        return quantity_noun(output.days, word('day'))
+    pass
+
 def current_datetime(timezone=default_timezone):
     return pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone))
 
-def as_datetime(date_as_text, timezone=default_timezone):
-    new_datetime = dateutil.parser.parse(date_as_text)
+def as_datetime(the_date, timezone=default_timezone):
+    if isinstance(the_date, datetime.date):
+        the_date = datetime.datetime.combine(the_date, datetime.datetime.min.time())
+    if isinstance(the_date, datetime.datetime):
+        new_datetime = the_date
+    else:
+        new_datetime = dateutil.parser.parse(the_date)
     if new_datetime.tzinfo:
         new_datetime = new_datetime.astimezone(pytz.timezone(timezone))
     else:
         new_datetime = pytz.timezone(timezone).localize(new_datetime)
     return new_datetime
-    
-class DateTimeDelta(object):
-    pass
 
 def date_interval(**kwargs):
-    return datetime.timedelta(**kwargs)
+    """Expresses a date and time interval.  Passes through all arguments 
+    to dateutil.relativedelta.relativedelta."""
+    return dateutil.relativedelta.relativedelta(**kwargs)
 
 def date_difference(a, b, timezone=default_timezone):
+    """"""
+    if isinstance(a, datetime.date):
+        a = datetime.datetime.combine(a, datetime.datetime.min.time())
+    if isinstance(a, datetime.date):
+        b = datetime.datetime.combine(b, datetime.datetime.min.time())
     if not isinstance(a, datetime.datetime):
         a = dateutil.parser.parse(a)
     if not isinstance(b, datetime.datetime):
@@ -61,9 +132,11 @@ def date_difference(a, b, timezone=default_timezone):
     delta = a - b
     output = DateTimeDelta()
     output.delta = delta
+    output.weeks = (delta.days / 7.0) + (delta.seconds / 604800.0)
     output.days = delta.days + (delta.seconds / 86400.0)
     output.hours = (delta.days * 24.0) + (delta.seconds / 3600.0)
     output.minutes = (delta.days * 1440.0) + (delta.seconds / 60.0)
+    output.seconds = (delta.days * 86400) + delta.seconds
     return output
     
 def email_string(persons, include_name=None):

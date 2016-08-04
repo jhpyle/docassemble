@@ -1,0 +1,21 @@
+metadata:
+  title: Selecting a timezone
+  example start: 2
+  documentation: "http://docassemble.org/docs/functions.html#timezone_list"
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  What is your time zone?
+fields:
+  - Time zone: user_timezone
+    default: "America/New_York"
+    code: |
+      timezone_list()
+---
+question: |
+  The time in your timezone is
+  ${ today(timezone=user_timezone) }.
+mandatory: true
+  
