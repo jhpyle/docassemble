@@ -1115,6 +1115,8 @@ def index():
         encrypted = False
         session['encrypted'] = encrypted
         decrypt_session(secret)
+        # Added this for locking
+        # steps, user_dict, new_is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
         # user_dict['_internal']['secret'] = ''.join(random.choice(string.ascii_letters) for i in range(16))
         # currentsecret, temptwo = substitute_secret(secret, user_dict['_internal']['secret'])
         # session['currentsecret'] = currentsecret
@@ -1123,6 +1125,8 @@ def index():
         encrypt_session(secret)
         encrypted = True
         session['encrypted'] = encrypted
+        # Added this for locking
+        # steps, user_dict, new_is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     if current_user.is_authenticated and 'key_logged' not in session:
         #logmessage("save_user_dict_key called with " + user_code + " and " + yaml_filename)
         save_user_dict_key(user_code, yaml_filename)
@@ -3364,17 +3368,22 @@ def infobutton(title):
         docstring += "<a target='_blank' href='" + title_documentation[title]['url'] + "'>" + word("View documentation") + "</a>"
     return '&nbsp;<a class="daquestionsign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + docstring + '" title="' + word("Help") + '" data-selector="true" data-title="' + noquote(title_documentation[title].get('title', title)) + '"><i class="glyphicon glyphicon-question-sign"></i></a>'
     
-def get_vars_in_use(interview, interview_status):
+def get_vars_in_use(interview, interview_status, debug_mode=False):
     user_dict = fresh_dictionary()
     has_no_endpoint = False
-    try:
-        interview.assemble(user_dict, interview_status)
-        has_error = False
-    except Exception as errmess:
+    if debug_mode:
         has_error = True
-        error_message = str(errmess)
-        error_type = type(errmess)
-        logmessage("Failed assembly with error type " + str(error_type) + " and message: " + error_message)
+        error_message = "Not checking variables because in debug mode."
+        error_type = Exception
+    else:
+        try:
+            interview.assemble(user_dict, interview_status)
+            has_error = False
+        except Exception as errmess:
+            has_error = True
+            error_message = str(errmess)
+            error_type = type(errmess)
+            logmessage("Failed assembly with error type " + str(error_type) + " and message: " + error_message)
     fields_used = set()
     names_used = set()
     names_used.update(interview.names_used)
@@ -3550,7 +3559,9 @@ def playground_page():
     the_file = request.args.get('file', '')
     if request.method == 'GET':
         is_new = request.args.get('new', False)
+        debug_mode = request.args.get('debug', False)
     else:
+        debug_mode = False
         is_new = False
     if is_new:
         the_file = ''
@@ -3612,7 +3623,7 @@ def playground_page():
             interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
         interview = interview_source.get_interview()
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
-        variables_html = get_vars_in_use(interview, interview_status)
+        variables_html = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
         return jsonify(variables_html=variables_html)
     if request.method == 'POST' and the_file != '' and form.validate():
         if form.delete.data:
@@ -3649,7 +3660,7 @@ def playground_page():
                 interview_source.set_testing(True)
                 interview = interview_source.get_interview()
                 interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
-                variables_html = get_vars_in_use(interview, interview_status)
+                variables_html = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
                 return jsonify(url=url_for('index', i='docassemble.playground' + str(current_user.id) + ':' + the_file), variables_html=variables_html, flash_message=flash_message)
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
@@ -3679,7 +3690,7 @@ def playground_page():
             interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
     interview = interview_source.get_interview()
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
-    variables_html = get_vars_in_use(interview, interview_status)
+    variables_html = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
     pulldown_files = list(files)
     if is_fictitious or is_new or is_default:
         new_active_file = word('(New file)')

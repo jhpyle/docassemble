@@ -4,7 +4,6 @@ import copy
 import sys
 import yaml
 import tempfile
-import threading
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
 from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
 from docassemble.base.core import DAObject, DADict, DAList
@@ -16,9 +15,9 @@ import shutil
 import datetime
 import types
 
-__all__ = ['Playground', 'PlaygroundSection', 'indent_by', 'varname', 'DAField', 'DAFieldList', 'DAQuestion', 'DAQuestionDict', 'DAInterview', 'DAUpload', 'DAUploadMultiple', 'DAAttachmentList', 'DAAttachment', 'to_yaml_file', 'base_name', 'to_package_name', 'store_current_info', 'oneline']
+__all__ = ['Playground', 'PlaygroundSection', 'indent_by', 'varname', 'DAField', 'DAFieldList', 'DAQuestion', 'DAQuestionDict', 'DAInterview', 'DAUpload', 'DAUploadMultiple', 'DAAttachmentList', 'DAAttachment', 'to_yaml_file', 'base_name', 'to_package_name', 'oneline']
 
-always_defined = set(["False", "None", "True", "current_info", "dict", "i", "list", "menu_items", "multi_user", "role", "role_event", "role_needed", "speak_text", "track_location", "url_args", "x"])
+always_defined = set(["False", "None", "True", "dict", "i", "list", "menu_items", "multi_user", "role", "role_event", "role_needed", "speak_text", "track_location", "url_args", "x"])
 replace_square_brackets = re.compile(r'\\\[ *([^\\]+)\\\]')
 start_spaces = re.compile(r'^ +')
 end_spaces = re.compile(r' +$')
@@ -27,17 +26,6 @@ invalid_var_characters = re.compile(r'[^A-Za-z0-9_]+')
 digit_start = re.compile(r'^[0-9]+')
 newlines = re.compile(r'\n')
 remove_u = re.compile(r'^u')
-
-class ThreadVariables(threading.local):
-    initialized = False
-    current_info = dict()
-    def __init__(self, **kw):
-        if self.initialized:
-            raise SystemError('__init__ called too many times')
-        self.initialized = True
-        self.__dict__.update(kw)
-
-this_thread = ThreadVariables()
 
 class DADecoration(DAObject):
     def init(self, **kwargs):
@@ -238,10 +226,10 @@ class DAQuestionDict(DADict):
 
 class PlaygroundSection(object):
     def __init__(self, section=''):
-        if this_thread.current_info['user']['is_anonymous']:
+        if docassemble.base.functions.this_thread.current_info['user']['is_anonymous']:
             raise DAError("Users must be logged in to create Playground objects")
-        self.user_id = this_thread.current_info['user']['theid']
-        self.current_info = this_thread.current_info
+        self.user_id = docassemble.base.functions.this_thread.current_info['user']['theid']
+        self.current_info = docassemble.base.functions.this_thread.current_info
         self.section = section
         self.area = SavedFile(self.user_id, fix=True, section='playground' + self.section)
         self._update_file_list()
@@ -394,7 +382,7 @@ class Playground(PlaygroundSection):
             undefined_names.discard(var)
         names_used = names_used.difference( undefined_names )
         all_names = names_used | undefined_names | fields_used
-        all_names_reduced = all_names.difference( set(['current_info', 'url_args']) )
+        all_names_reduced = all_names.difference( set(['url_args']) )
         return dict(names_used=names_used, undefined_names=undefined_names, fields_used=fields_used, all_names=all_names, all_names_reduced=all_names_reduced)
 
 
@@ -439,8 +427,5 @@ def to_package_name(text):
     text = re.sub(r'_', r'-', text)
     return text
     
-def store_current_info(new_current_info):
-    this_thread.current_info = new_current_info
-
 def repr_str(text):
     return remove_u.sub(r'', repr(text))

@@ -4,7 +4,7 @@ modules:
 ---
 initial: true
 code: |
-  process_action(current_info)
+  process_action()
 ---
 mandatory: true
 code: |
@@ -36,7 +36,7 @@ buttons:
 ---
 event: set_number_event
 code: |
-  lucky_number += current_info['arguments']['increment']
+  lucky_number += action_argument('increment')
 ---
 code: |
   lucky_number = 2

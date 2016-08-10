@@ -44,6 +44,7 @@
     - buttons-code
     - choices
     - choices-icons
+    - fields-choices
     - fields-mc
     - fields-yesno
     - fields-yesnowide
@@ -70,7 +71,7 @@
     - comment
     - audio
     - video
-    - video-nyc
+#    - video-static
     - help-damages-audio
     - progress
 - Initial blocks:

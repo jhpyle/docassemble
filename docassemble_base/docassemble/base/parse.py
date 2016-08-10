@@ -1909,9 +1909,10 @@ class Interview:
             interview_status = InterviewStatus()
         interview_status.set_tracker(user_dict['_internal']['tracker'])
         docassemble.base.functions.reset_local_variables()
-        interview_status.current_info.update({'default_role': self.default_role, 'internal': user_dict['_internal']})
-        user_dict['current_info'] = interview_status.current_info
+        interview_status.current_info.update({'default_role': self.default_role})
+        #user_dict['_current_info'] = interview_status.current_info
         docassemble.base.functions.this_thread.current_info = interview_status.current_info
+        docassemble.base.functions.this_thread.internal = user_dict['_internal']
         for question in self.questions_list:
             if question.question_type == 'imports':
                 #logmessage("Found imports")

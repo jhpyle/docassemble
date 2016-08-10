@@ -1,13 +1,16 @@
 ---
+modules:
+  - docassemble.base.util
+---
 default role: organizer
 code: |
   multi_user = True
   role = 'organizer'
   if introduction_made and participants_invited:
-    if current_info['user']['is_authenticated']:
-      if current_info['user']['email'] == first_person_email:
+    if user_logged_in():
+      if user_info().email == first_person_email:
         role = 'first_person'
-      elif current_info['user']['email'] == second_person_email:
+      elif user_info().email == second_person_email:
         role = 'second_person'
 ---
 event: role_event
@@ -19,7 +22,7 @@ subquestion: |
   We are waiting for the organizer.
   % endif
 
-  % if not current_info['user']['is_authenticated']:
+  % if not user_logged_in():
   If you were invited to participate, please click "Sign in."
   % endif
 
@@ -59,12 +62,9 @@ subquestion: |
 
   Tell them to go to the following URL:
 
-  [${ interview_url }](${ interview_url })
+  [${ interview_url() }](${ interview_url() })
 
   Press Continue before inviting the recipients.
----
-code: |
-  interview_url = current_info['url'] + '?i=' + current_info['yaml_filename'] + '&session=' + current_info['session']
 ---
 sets: announce_winner
 role:

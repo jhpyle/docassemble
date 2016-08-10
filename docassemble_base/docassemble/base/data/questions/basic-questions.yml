@@ -19,8 +19,7 @@ comment: |
 ---
 default role: client
 code: |
-  if current_info['user']['is_authenticated'] and \
-     'advocate' in current_info['user']['roles']:
+  if user_logged_in() and user_has_privilege('advocate'):
     user = advocate
     role = 'advocate'
   else:

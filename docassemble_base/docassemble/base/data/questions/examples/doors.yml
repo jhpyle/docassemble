@@ -1,0 +1,27 @@
+metadata:
+  title: Ending screens
+  example start: 1
+  example end: 4
+  documentation: "http://docassemble.org/docs/questions.html#event"
+---
+question: |
+  Which door do you choose?
+field: door_choice
+choices:
+  - Door Number 1
+  - Door Number 2
+---
+mandatory: true
+code: |
+  if door_choice == 'Door Number 1':
+    good_luck
+  if door_choice == 'Door Number 2':
+    bad_luck
+---
+question: |
+  You walk into a field of clover.
+event: good_luck
+---
+question: |
+  You walk into a stinky swamp.
+event: bad_luck

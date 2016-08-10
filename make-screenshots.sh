@@ -5,7 +5,7 @@ for path in docassemble_base/docassemble/base/data/questions/examples/*.yml
 do
     file=${path##*/}
     file=${file%.*}
-    if [ "$file" = "audio" -o "$file" = "video" -o "$file" = "vimeo" -o "$file" = "video-nyc" ]
+    if [ "$file" = "audio" -o "$file" = "video" -o "$file" = "vimeo" -o "$file" = "video-static" ]
     then
 	continue
     fi

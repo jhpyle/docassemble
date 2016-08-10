@@ -28,8 +28,8 @@ code: |
 ---
 event: set_status
 code: |
-  if 'status' in current_info['arguments']:
-    status = current_info['arguments']['status']
+  if 'status' in action_arguments():
+    status = action_argument('status')
   response(status)
 ---
 mandatory: true

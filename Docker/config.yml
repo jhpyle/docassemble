@@ -55,3 +55,5 @@ s3:
   bucket: {{S3BUCKET}}
 ec2: {{EC2}}
 log server: {{LOGSERVER}}
+words:
+  - docassemble.base:data/translations/us-words.yml

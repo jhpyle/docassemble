@@ -25,9 +25,9 @@ subquestion: |
 ---
 event: set_stuff
 code: |
-  user_favorite_fish = current_info['arguments']['fish']
-  user_favorite_fruit = current_info['arguments']['berry']
-  if current_info['arguments']['money'] > 15000:
+  user_favorite_fish = action_argument('fish')
+  user_favorite_fruit = action_argument('berry')
+  if action_argument('money') > 15000:
     user_is_rich = True
-  actor_to_hire = current_info['arguments']['actor']
+  actor_to_hire = action_argument('actor')
 ---

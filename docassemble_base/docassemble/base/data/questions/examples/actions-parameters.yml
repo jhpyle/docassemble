@@ -33,7 +33,7 @@ field: info_is_verified
 ---
 event: add
 code: |
-  fishes[current_info['arguments']['color']] += 1
+  fishes[action_argument('color')] += 1
 ---
 question: |
   Information submitted.

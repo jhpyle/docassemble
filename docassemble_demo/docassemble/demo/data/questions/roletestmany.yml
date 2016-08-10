@@ -1,19 +1,20 @@
 ---
 modules:
   - docassemble.base.core
+  - docassemble.base.util
 ---
 objects:
   - respondents: DADict
 ---
 comment: |
-        respondents.addObject(DAObject, current_info['user']['email'])
+        respondents.addObject(DAObject, user_info().email)
 initial: true
 code: |
   multi_user = True
-  if current_info['user']['is_authenticated']:
-    if current_info['user']['email'] not in respondents:
-      respondents.setObject(current_info['user']['email'], DAObject)
-    user = respondents[current_info['user']['email']]
+  if user_logged_in():
+    if user_info().email not in respondents:
+      respondents.setObject(user_info().email, DAObject)
+    user = respondents[user_info().email]
     final_page
   else:
     must_be_logged_in_page
@@ -37,12 +38,9 @@ question: |
 subquestion: |
   Share this link with others!
 
-  [${ interview_url }](${ interview_url })
+  [${ interview_url() }](${ interview_url() })
 buttons:
   - Check: refresh
----
-code: |
-  interview_url = current_info['url'] + '?i=' + current_info['yaml_filename'] + '&session=' + current_info['session']
 ---
 generic object: DAObject
 question: How many cats do you have?

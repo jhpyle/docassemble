@@ -54,3 +54,5 @@ s3:
   secret_access_key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
   bucket: yourbucketname
 ec2: false
+words:
+  - docassemble.base:data/translations/us-words.yml

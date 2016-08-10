@@ -3,7 +3,7 @@ import datetime
 import pytz
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
-from docassemble.base.functions import comma_and_list, get_language, set_language, get_dialect, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, value, message, response, command, single_paragraph, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, objects_from_file, this_thread, static_image, action_arguments, action_argument, default_timezone, language_functions, language_function_constructor, get_default_timezone
+from docassemble.base.functions import comma_and_list, get_language, set_language, get_dialect, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, value, message, response, command, single_paragraph, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, objects_from_file, this_thread, static_image, action_arguments, action_argument, default_timezone, language_functions, language_function_constructor, get_default_timezone, user_logged_in, user_privileges, user_has_privilege, user_info
 from docassemble.base.core import DAObject, DAList, DADict, DAFile, DAFileCollection, DAFileList, DATemplate, selections
 from decimal import Decimal
 import sys
@@ -17,7 +17,7 @@ import us
 import babel.dates
 from bs4 import BeautifulSoup
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'email_string', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate', 'us', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'format_date', 'today', 'get_default_timezone']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'email_string', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate', 'us', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'format_date', 'today', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info']
 
 def default_user_id_function():
     return dict()
@@ -91,9 +91,13 @@ class DateTimeDelta(object):
     pass
 
 def current_datetime(timezone=default_timezone):
+    """Returns the current time as a datetime.datetime object with a timezone.
+    Uses the default timezone unless another timezone is explicitly provided."""
     return pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone))
 
 def as_datetime(the_date, timezone=default_timezone):
+    """Converts the_date to a datetime.datetime object with a timezone.  Uses the
+    default timezone unless another timezone is explicitly provided."""
     if isinstance(the_date, datetime.date):
         the_date = datetime.datetime.combine(the_date, datetime.datetime.min.time())
     if isinstance(the_date, datetime.datetime):
@@ -112,7 +116,8 @@ def date_interval(**kwargs):
     return dateutil.relativedelta.relativedelta(**kwargs)
 
 def date_difference(a, b, timezone=default_timezone):
-    """"""
+    """Calculates the difference between date a and date b.  Returns an
+    object with attributes weeks, days, hours, minutes, seconds, and delta."""
     if isinstance(a, datetime.date):
         a = datetime.datetime.combine(a, datetime.datetime.min.time())
     if isinstance(a, datetime.date):
@@ -152,35 +157,49 @@ def email_string(persons, include_name=None):
             result.append(str(person))
     return result
 
-def valid_datetime(time):
+def valid_datetime(the_datetime):
+    """Returns True if the provided text represents a valid date or time."""
+    if isinstance(the_datetime, datetime.datetime) or isinstance(the_datetime, datetime.date):
+        return True
     try:
-        dateutil.parser.parse(time)
+        dateutil.parser.parse(the_datetime)
         return True
     except:
         return False
 
 def timezone_list():
+    """Returns a list of timezone choices, expressed as text."""
     return sorted([tz for tz in pytz.all_timezones])
 
 def last_access_delta(*pargs, **kwargs):
+    """Returns a datatime.timedelta object expressing the length of
+    time that has passed since the last time the interview was accessed."""
     last_time = last_access_time(*pargs, **kwargs)
     if last_time is None:
         return datetime.timedelta(0)
     return datetime.datetime.utcnow() - last_time
 
 def last_access_days(*pargs, **kwargs):
+    """Returns the number of days since the last time the interview 
+    was accessed."""
     delta = last_access_delta(*pargs, **kwargs) 
     return delta.days + (delta.seconds / 86400.0)
 
 def last_access_hours(*pargs, **kwargs):
+    """Returns the number of hours since the last time the interview 
+    was accessed."""
     delta = last_access_delta(*pargs, **kwargs) 
     return (delta.days * 24.0) + (delta.seconds / 3600.0)
 
 def last_access_minutes(*pargs, **kwargs):
+    """Returns the number of minutes since the last time the interview 
+    was accessed."""
     delta = last_access_delta(*pargs, **kwargs) 
     return (delta.days * 1440.0) + (delta.seconds / 60.0)
 
 def last_access_time(*pargs, **kwargs):
+    """Returns the last time the interview was accessed, as a 
+    datetime.datetime object."""
     include_cron = kwargs.get('include_cron', False)
     max_time = None
     roles = None
@@ -191,7 +210,7 @@ def last_access_time(*pargs, **kwargs):
         if 'cron' in roles:
             include_cron = True    
     lookup_dict = user_id_dict()
-    for user_id, access_time in this_thread.current_info['internal']['accesstime'].iteritems():
+    for user_id, access_time in this_thread.internal['accesstime'].iteritems():
         if user_id in lookup_dict and hasattr(lookup_dict[user_id], 'roles'):
             for role in lookup_dict[user_id].roles:
                 if include_cron is False:

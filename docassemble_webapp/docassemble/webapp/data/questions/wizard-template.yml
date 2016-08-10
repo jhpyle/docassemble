@@ -16,9 +16,8 @@ objects:
 ---
 initial: true
 code: |
-  if current_info['user']['is_anonymous']:
+  if not user_logged_in():
       message("You are not authorized to view this page")
-  store_current_info(current_info)
 ---
 question: |
   Have you already uploaded the template (or templates) you want to use?

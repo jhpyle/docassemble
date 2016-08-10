@@ -11,7 +11,7 @@ objects:
 ---
 initial: true
 code: |
-  if current_info['user']['is_anonymous']:
+  if not user_logged_in():
       message("You are not authorized to view this page")
 ---
 question: |
@@ -23,7 +23,7 @@ fields:
 ---
 code: |
   attachments.clear()
-  templates = PlaygroundSection(current_info, 'template')
+  templates = PlaygroundSection('template')
   for uploaded_file in template_uploads:
     template_filename = templates.copy_from(uploaded_file.path(), uploaded_file.filename)
     markdown_filename = templates.convert_file_to_md(template_filename)
@@ -62,14 +62,14 @@ code: |
   ok = False
   while not ok:
     ok = True
-    varsinuse = Playground(current_info).variables_from(interview.source())
+    varsinuse = Playground().variables_from(interview.source())
     for var in varsinuse['undefined_names']:
       if var not in interview.questions:
         new_question = interview.questions.initializeObject(var)
         new_question.field_list.appendObject()
         new_question.field_list[0].variable = var
         ok = False
-  pg = Playground(current_info)
+  pg = Playground()
   yaml_file = to_yaml_file(interview.file_name)
   pg.write_file(yaml_file, interview.source())
   interview_url = pg.interview_url(yaml_file)

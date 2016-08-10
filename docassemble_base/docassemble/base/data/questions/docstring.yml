@@ -24,13 +24,6 @@ role:
     the role of the current user.  Typically set during initial code.
   type: str
   show: true
-current_info:
-  doc: |
-    This is an internal variable that docassemble uses to store
-    background information, such as the identity of the user who is
-    currently logged in.
-  type: dict
-  show: true
 speak_text:
   doc: |
     This is a special variable that can be set during an interview.  If

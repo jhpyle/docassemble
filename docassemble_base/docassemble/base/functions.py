@@ -24,7 +24,7 @@ import yaml
 import tzlocal
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'objects_from_file', 'action_arguments', 'action_argument', 'get_default_timezone']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'objects_from_file', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info']
 
 debug = False
 default_dialect = 'us'
@@ -45,6 +45,7 @@ class ThreadVariables(threading.local):
     user = None
     role = 'user'
     current_info = dict()
+    internal = dict()
     initialized = False
     def __init__(self, **kw):
         if self.initialized:
@@ -54,19 +55,76 @@ class ThreadVariables(threading.local):
 
 this_thread = ThreadVariables()
 
+def user_logged_in():
+    """Returns True if the user is logged in, False otherwise."""
+    if this_thread.current_info['user']['is_authenticated']:
+        return True
+    return False
+
+def user_privileges():
+    """Returns a list of the user's privileges.  For users who are not 
+    logged in, this is always ['user']."""
+    if user_logged_in():
+        return [role for role in this_thread.current_info['user']['roles']]
+    else:
+        return [word('user')]
+    return False
+
+def user_has_privilege(privileges):
+    """Given a privilege or a list of privileges, returns True if the user 
+    has any of the privileges, False otherwise."""
+    if type(privileges) is not list:
+        privileges = [privileges]
+    if user_logged_in():
+        for privilege in privileges:
+            if privilege in this_thread.current_info['user']['roles']:
+                return True
+    else:
+        if 'user' in privileges:
+            return True
+    return False
+
+class TheUser:
+    pass
+
+def user_info():
+    """Returns an object with information from the user profile.  Keys 
+    include first_name, last_name, email, country, subdivision_first, 
+    subdivision_second, subdivision_third, and organization."""
+    user = TheUser()
+    if user_logged_in():
+        user.first_name = this_thread.current_info['user']['firstname']
+        user.last_name = this_thread.current_info['user']['lastname']
+        user.email = this_thread.current_info['user']['email']
+        user.country = this_thread.current_info['user']['country']
+        user.subdivision_first = this_thread.current_info['user']['subdivisionfirst']
+        user.subdivision_second = this_thread.current_info['user']['subdivisionsecond']
+        user.subdivision_third = this_thread.current_info['user']['subdivisionthird']
+        user.organization = this_thread.current_info['user']['organization']
+    else:
+        user.first_name = word("Anonymous")
+        user.last_name = word("User")
+    return user
+
 def action_arguments():
+    """Used when processing an "action."  Returns a dictionary with the 
+    arguments passed to url_action() or interview_url_action()"""
     if 'arguments' in this_thread.current_info:
         return this_thread.current_info['arguments']
     else:
         return dict()
 
 def action_argument(item):
+    """Used when processing an "action."  Returns the value of the given 
+    argument, which is assumed to have been passed to url_action() or 
+    interview_url_action()."""
     return this_thread.current_info['arguments'][item]
 
 def location_returned():
-    """Returns True or False depending on whether an attempt has yet been made to transmit
-    the user's GPS location from the browser to docassemble.  Will return true even
-    if the attempt was not successful or the user refused to consent to the transfer."""
+    """Returns True or False depending on whether an attempt has yet 
+    been made to transmit the user's GPS location from the browser to 
+    docassemble.  Will return true even if the attempt was not successful 
+    or the user refused to consent to the transfer."""
     #logmessage("Location returned")
     if 'user' in this_thread.current_info:
         #logmessage("user exists")
@@ -117,6 +175,11 @@ def interview_url_as_qr(**kwargs):
     This can be used to pass control from a web browser or a paper 
     handout to a mobile device."""
     return qr_code(interview_url(**kwargs))
+
+def interview_url_action_as_qr(action, **kwargs):
+    """Like interview_url_as_qr, except it additionally specifies an 
+    action.  The keyword arguments are arguments to the action."""
+    return qr_code(interview_url_action(action, **kwargs))
 
 def get_info(att):
     """Used to retrieve the values of global variables set through set_info()."""
@@ -247,14 +310,20 @@ nice_numbers = {
     }
 }
 
-def basic_url_of(text):
-    return text
+def basic_url_of(*pargs, **kwargs):
+    """Returns a URL to a file within a docassemble package."""
+    return pargs[0]
 
-url_of = basic_url_of
+the_url_func = basic_url_of
+
+def url_of(*pargs, **kwargs):
+    return the_url_func(*pargs, **kwargs)
 
 def set_url_finder(func):
     global url_of
     url_of = func
+    if url_of.__doc__ is None:
+        url_of.__doc__ = """Returns a URL to a file within a docassemble package."""
     return
 
 def default_ordinal_function(i):
@@ -776,7 +845,9 @@ if verb_past.__doc__ is None:
 if verb_present.__doc__ is None:
     verb_present.__doc__ = """Given a verb, returns the present tense of the verb."""
 if noun_plural.__doc__ is None:
-    noun_plural.__doc__ = """Given a noun, returns the plural version of the noun."""
+    noun_plural.__doc__ = """Given a noun, returns the plural version of the noun, unless the optional second argument indicates a quantity of 1."""
+if noun_singular.__doc__ is None:
+    noun_singular.__doc__ = """Given a noun, returns the singular version of the noun, unless the optional second argument indicates a quantity other than 1."""
 if indefinite_article.__doc__ is None:
     indefinite_article.__doc__ = """Given a noun, returns the noun with an indefinite article attached
                                  (e.g., indefinite_article("fish") returns "a fish")."""
@@ -817,8 +888,6 @@ if ordinal_number.__doc__ is None:
     ordinal_number.__doc__ = """Given a number, returns "first" or "23rd" for 1 or 23, respectively."""
 if ordinal.__doc__ is None:
     ordinal.__doc__ = """Given a number that is expected to be an index, returns "first" or "23rd" for 0 or 22, respectively."""
-if url_of.__doc__ is None:
-    url_of.__doc__ = """Returns a URL to a file within a docassemble package."""
 
 def underscore_to_space(a):
     return(re.sub('_', ' ', unicode(a)))
