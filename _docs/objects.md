@@ -1391,21 +1391,21 @@ yesno: user_ok_with_sharing_location
 whether or not it should ask the browser for the user's GPS
 coordinates the next time a question is posed to the user.  If
 [`track_location`] is `True`, **docassemble** will ask the browser to
-provide the information, and if it receives it, it will store it in
-the [special variable] [`current_info`].
+provide the information, and if it receives it, it will make it
+available for retrieval through the [`user_lat_lon()`] function.
 
-The `.status()` method looks in [`current_info`] to see if a latitude
-and longitude were provided by the browser, or in the alternative that
-an error message was provided, such as "the user refused to share the
-information," or "this device cannot determine the user's location."
-If the latitude and longitude information is conveyed, `.status()`
-stores the information in `user.location.latitude` and
-`user.location.longitude`.  The `.status()` method returns `False` in
-these situations, which means "we already asked for the latitude and
-longitude and got a response, so there is no longer any need for the
-browser to keep asking for it."  Otherwise, it returns `True`, which
-means "the browser has not yet been asked for the location
-information, so let's ask it."
+The `.status()` method looks to see if a latitude and longitude were
+provided by the browser, or in the alternative that an error message
+was provided, such as "the user refused to share the information," or
+"this device cannot determine the user's location."  If the latitude
+and longitude information is conveyed, `.status()` stores the
+information in `user.location.latitude` and `user.location.longitude`.
+The `.status()` method returns `False` in these situations, which
+means "we already asked for the latitude and longitude and got a
+response, so there is no longer any need for the browser to keep
+asking for it."  Otherwise, it returns `True`, which means "the
+browser has not yet been asked for the location information, so let's
+ask it."
 
 # Classes for currency
 
@@ -1762,9 +1762,9 @@ objects:
 ---
 default role: client
 code: |
-  if current_info['user']['is_authenticated'] and \
-     advocate.attribute_defined('email') and \
-     advocate.email == current_info['user']['email']:
+  if user_logged_in() and \
+      advocate.attribute_defined('email') and \
+      advocate.email == user_info().email:
     user = advocate
     role = 'advocate'
   else:
@@ -1968,7 +1968,6 @@ and not an instance of the `Attorney` class.
 [`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
 [`code`]: {{ site.baseurl }}/docs/code.html
 [`currency()`]: {{ site.baseurl }}/docs/functions.html#currency
-[`current_info`]: {{ site.baseurl }}/docs/special.html#current_info
 [`default role`]: {{ site.baseurl }}/docs/initial.html#default role
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
 [`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
@@ -2019,3 +2018,4 @@ and not an instance of the `Attorney` class.
 [user login system]: {{ site.baseurl }}/docs/users.html
 [`nice_number()`]: {{ site.baseurl }}/docs/functions.html#nice_number
 [`comma_and_list()`]: {{ site.baseurl }}/docs/functions.html#comma_and_list
+[`user_lat_lon()`]: {{ site.baseurl }}/docs/functions.html#user_lat_lon

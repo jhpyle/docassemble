@@ -42,11 +42,6 @@ explanation is necessary.
 
 # Using questions to set variables
 
-Every [`question`] block in a **docassemble** interview must have a
-purpose.  Otherwise, **docassemble** would never have a reason for
-asking the question.  Questions are given a purpose by adding an extra
-statement, like [`fields`] in the example above.
-
 Here is a brief summary of the types of questions that can be asked.
 More detail about how these question types work is provided in the
 [next section].
@@ -106,30 +101,118 @@ You can ask the user to write his or her signature using [`signature`]:
 The signature will be stored as an image file in the variable
 indicated by [`signature`].
 
-## Ending screens: `sets`
+## <a name="ending screens"></a>Ending screens
 
-If the purpose of your [`question`] is not to ask a question but to
-present an end screen to the user, use [`sets`].
+Sometimes, the purpose of your [`question`] is not to gather
+information but to present an end screen to the user.  You can create
+such "questions" by marking them as [`mandatory`]:
 
-{% include side-by-side.html demo="sets" %}
+{% include side-by-side.html demo="terminal-screen" %}
 
-If **docassemble** needs the variable `all_done`, it will present this
-"question" to the user.  See the [interview logic] section for more
-information about how to tell **docassemble** which ending screens the
-interview should endeavor to reach.
+If you have more than one possible ending screen in your interview,
+use the [`event`](#event) feature described below.
 
-## Special screens: `event` (advanced)
+## <a name="event"></a>Special screens: `event`
+
+Some screens are shown to the user when a special event occurs.
+
+For example, if you have a [multi-user interview] and the interview
+reaches a point where the user cannot proceed until the other
+interviewee answers a question, the user will see a [`question`] that
+explains why he or she needs to wait.
+
+Or, you might want to provide the user with the ability to review his
+or her answers on a single screen, using the [`review`] functionality.
 
 The [`event`] directive advertises to the interview logic that the
-question should be asked if an special event occurs, such as a user
-not being able to proceed with an interview because the interview
-logic requires information from a person in a different [role].
+question should be asked if an special event occurs.
 
-This directive is also used to create screens that the user can reach
-from the menu or from hyperlinks embedded in question text.  For more
-information, see [`event`], [`url_action()`], [`process_action()`],
-[`action_menu_item()`], and [`menu_items`].
+{% include side-by-side.html demo="event-example" %}
 
+This directive can be used to indicate an
+[ending screen](#ending screens), where your interview has more than
+one possible ending screen and you use [interview logic] to direct the
+user to the appropriate screen.
+
+{% include side-by-side.html demo="doors" %}
+
+In this example, `good_luck` and `bad_luck` are actually names of
+[Python] variables.  However, they are [Python] variables that will
+never be defined.  If a reference to these variables is made, as it is
+in the [`mandatory`] [`code`] block, **docassemble** will locate the
+`good_luck` and `bad_luck` questions, just as it looks for questions
+that offer to define any variable.
+
+See [interview logic] for more information about how to
+give direction to your interview by adding [`code`] blocks that are
+marked with the [`mandatory`] modifier.
+
+The `event` directive is also used to create screens that the user can
+reach from the menu or from hyperlinks embedded in question text.  For
+more information, see [`event`], [`url_action()`],
+[`process_action()`], [`action_menu_item()`], and [`menu_items`].
+
+## <a name="sets special"></a>Adding action buttons to a "terminal" screen
+
+The `sets` statement is also used in conjunction with `buttons` in
+multiple choice questions where there is no `field` to be set.
+
+{% include side-by-side.html demo="sets-exit" %}
+
+The above example allows the user to "exit" the interview (be redirected
+to a specific web site that is pre-set in the **docassemble**
+[configuration] or "restart" the interview (go back to the beginning).
+
+There are six special button functions:
+
+* `restart`
+* `exit`
+* `leave`
+* `continue`
+* `refresh`
+* `signin`
+
+`restart` resets the user's variable store, except that any parameters
+that were originally passed through as URL parameters will be used again.
+
+`exit` means that the user's variable store will be reset and the user
+will be redirected either to the URL given by the associated `url`
+text, or if no `url` is defined, to the `exit` page defined in the
+[configuration].  If the user tries to come back to the interview
+again, he will start the interview again, as though it had never been
+started.  Original URL parameters will be lost.
+
+For example:
+
+{% include side-by-side.html demo="sets-exit-url" %}
+
+[Mako] can be used in the `url` text.
+
+`leave` works like `exit` except that the user's variable store will be left
+intact.  This means that if the user comes back to the interview
+again, he will pick up where he left off.
+
+`continue` means that **docassemble** will look for another question
+in the interview that might define the necessary variable.
+
+`refresh` re-runs the [interview logic].  It has much the same effect as
+refreshing the page in the browser.  It is useful in multi-user
+interviews when the user is waiting for another user to finish
+entering information.  It can also be useful in interviews that use
+external data sources.
+
+`signin` redirects the user to the **docassemble** sign-in page.
+
+Instead of using `buttons`, you can use `choices` to get a radio list
+instead of a selection of buttons.
+
+{% include side-by-side.html demo="sets-exit-choices" %}
+
+The functionality is the same.
+
+
+[`review`]: {{ site.baseurl }}/docs/fields.html#review
+[multi-user interview]: {{ site.baseurl }}/docs/roles.html
 [role]: {{ site.baseurl }}/docs/roles.html
 [Mako]: http://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
@@ -157,3 +240,5 @@ information, see [`event`], [`url_action()`], [`process_action()`],
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [`question`]: #question
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
+[`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
+[`code`]: {{ site.baseurl }}/docs/code.html#code

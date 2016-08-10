@@ -564,7 +564,7 @@ The `words` directive loads one or more [YAML] files in order:
 
 {% highlight yaml %}
 words:
-  - docassemble.demo:data/translations/words.yml
+  - docassemble.base:data/translations/us-words.yml
 {% endhighlight %}
 
 Each [YAML] file listed under `words` must be in the form of a

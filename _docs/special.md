@@ -93,46 +93,6 @@ subquestion: |
 You can test this out by trying the following link:
 [{{ site.demourl }}?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder]({{ site.demourl }}?i=docassemble.demo:data/questions/testurlarg2.yml&from=wild blue yonder){:target="_blank"}.
 
-## <a name="current_info"></a>current_info
-
-`current_info` is a [Python dictionary] that is defined by
-**docassemble** every time a screen loads.  It allows interviews to
-access certain information from **docassemble**, such as the identity
-of the person logged in and other information.
-
-`current_info` contains the following keys:
-
-* `default_role` - the default role for the interview, as defined by
-  the [`default role` initial block];
-* `session` - the session key, which is a secret identifier that
-  unlocks access to the variable store of the user's interview.  If
-  passed as the `session` parameter of a URL, the interview will load
-  using the variable store for that session key.
-* `url` - the base URL of the docassemble application (e.g.,
-  `http://demo.docassemble.org`).
-* `user` - a [Python dictionary] containing the following keys:
-  * `is_authenticated` - whether the user is logged in (True or False)
-  * `is_anonymous` - whether the user is not logged in (True or False)
-  * `email` - the user's e-mail address
-  * `theid` - the unique ID of the user
-  * `roles` - a [Python list] containing the user's roles, as defined
-    by a site administrator.  (Administrators can change user roles on
-    the [User List] page.)
-  * `firstname` - the user's first name.  This and the following can
-    all be set by the user on the [Profile] page.
-  * `lastname` - the user's last name.
-  * `country` - the user's country.
-  * `subdivisionfirst` - in the U.S., the state.
-  * `subdivisionsecond` - in the U.S., the county.
-  * `subdivisionthird` - in the U.S., the municipality.
-  * `organization` - the user's organization.
-  * `location` - if [`track_location`] (see below) is set to true, and
-    the user's location is successfully obtained, this entry will
-    contain a dictionary with the keys `latitude` and `longitude`,
-    indicating the user's location.
-* `yaml_filename` - the filename of the current interview, in the
-  package:path form (e.g., `docassemble.demo:data/questions/questions.yml`)
-
 ## <a name="role_needed"></a>role_needed
 
 If you use the [multi-user interview feature] and the user reaches a
@@ -168,8 +128,8 @@ reuses them whenever possible.
 
 If set to `True`, the web app will attempt to obtain the user's
 position, based on GPS or any other geolocation feature enabled in the
-browser.  The result is stored in the [`current_info`] dictionary (see
-above).
+browser.  The [`location_known()`], [`location_returned()`], and
+[`user_lat_lon()`] functions can be used to retrieve the information.
 
 The most common way to use this feature is as follows:
 
@@ -262,7 +222,9 @@ to run "cron jobs" on your interview.
 [`role_event`]: {{ site.baseurl }}/docs/roles.html
 [`voicerss`]: {{ site.baseurl }}/docs/config.html#voicerss
 [`code`]: {{ site.baseurl }}/docs/code.html
-[`current_info`]: #current_info
 [`track_location`]: #track_location
 [User List]: {{ site.baseurl }}/docs/users.html#user_list
 [Profile]: {{ site.baseurl }}/docs/users.html#profile
+[`location_known()`]: {{ site.baseurl }}/docs/functions.html#location_known
+[`location_returned()`]: {{ site.baseurl }}/docs/functions.html#location_returned
+[`user_lat_lon()`]: {{ site.baseurl }}/docs/functions.html#user_lat_lon

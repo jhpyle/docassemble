@@ -68,8 +68,6 @@ to all interviews.
 
 ## <a name="templates"></a>The Templates folder
 
-![Templates]({{ site.baseurl }}/img/playground-templates.png)
-
 If you create [documents], you might want to use separate document
 templates.  In a typical **docassemble** package, these templates are
 files in the `data/templates` subdirectory.  In the Playground, they
@@ -92,8 +90,6 @@ so that you can include the text in your documents.
 
 ## <a name="static"></a>The Static folder
 
-![Static]({{ site.baseurl }}/img/playground-static.png)
-
 If your interviews include images or sound, you can bundle image and
 audio files with your interview's **docassemble** [package] by
 including them within the `data/static` subdirectory.  In the
@@ -106,8 +102,6 @@ example, you might want to write your own Javascript files here, or
 upload images that you want to include in interview questions.
 
 ## <a name="modules"></a>The Modules folder
-
-![Modules]({{ site.baseurl }}/img/playground-modules.png)
 
 If your interviews contain any complicated Python code, or you want to
 create your own classes, you should create a Python module and import
@@ -132,15 +126,13 @@ modules:
 This notation will work both in the Playground and when the interview
 is bundled as a Python module.
 
-## <a name="packages"></a>The Packages area
-
-![Packages]({{ site.baseurl }}/img/playground-packages.png)
+## <a name="packages"></a>The Packages folder
 
 The Packages area allows you to bundle the [interview files], [templates],
 [static files], and/or [modules] from your Playground into a
 [Python package] that can be downloaded as a ZIP file.
 
-You can keep track of one or more packages in the Packages area.  Each
+You can keep track of one or more packages in the Packages folder.  Each
 package has its own tab.  To create a new package, click the <i
 class="glyphicon glyphicon-plus-sign" aria-hidden="true"></i> icon.
 
@@ -199,7 +191,7 @@ your [profile].
 For more information on managing [Python packages] within
 **docassemble**, see [packages].
 
-## <a name="variables"></a>Variables, etc.
+## <a name="variables"></a>The Variables, etc. area
 
 ![variables]({{ site.baseurl }}/img/playground-variables.png)
 
@@ -238,11 +230,11 @@ file you are currently editing.  However, if the [YAML] file you are
 editing is a component of an interview, the information in the
 "Variables, etc." will not be complete.  At the top of the "Variables,
 etc." area, you can select a different file that should be used for
-purposes of populating the "Variables, etc." section.  Usually this
-file will be the "top level" interview file -- the one that that
-[`include`]s the file you are currently editing.  
+purposes of populating the "Variables, etc." section.  Usually the
+file you want to select here is the "top level" file for your
+interview, which [`include`]s the file you are editing.
 
-## <a name="examples"></a>Example blocks
+## <a name="examples"></a>The examples area
 
 ![example area]({{ site.baseurl }}/img/playground-example-area.png){: .full-width }
 
@@ -258,7 +250,10 @@ The area consists of three parts:
 blocks that you can view.
 * The "Preview" part is a screenshot demonstrating what the example
 block does.  If you click on the preview, an example interview
-containing the example block will open in another tab.
+containing the example block will open in another tab.  There is a
+"View documentation" button that will open the page of the
+**docassemble** documentation pertaining to the concept illustrated in
+the example.
 * The "Source" part contains the text of the example block.  You can
 click "Insert" to copy it into the text editor.  You can click "Show
 context of example" to see the other blocks that are necessary for the
@@ -282,10 +277,63 @@ To give a link to the interview to someone else, right-click on the
 "<i class="glyphicon glyphicon-link" aria-hidden="true"></i> Share"
 button and copy the URL to your clipboard.
 
+Note that users do not need to log in to be able to run interviews
+from your Playground.  If you want to protect your interviews during
+development, you can add an initial block like this, which will stop
+anyone other than a developer from using the interview:
+
+{% highlight yaml %}
+---
+initial: true
+code: |
+  if not (user_logged_in() or user_has_privilege('developer')):
+    message("Only developers can access this interview.", show_restart=False)
+---
+{% endhighlight %}
+
 Note that the "Playground" is a development platform.  If you are
 going to put an interview into production, put it into a package by
 going to the [packages area].
 
+# Recovering from infinite loops
+
+If you accidentially write code that gets into an infinite loop, the
+only way to stop the code is to terminate the process in which the
+code is runnnig.  In a production web server environment, this could
+impact other users because the process may be running multiple threads
+for different users, only one of which is stuck in an infinite loop.
+Unfortunately, it is not possible in [Python] to terminate a specific
+thread.
+
+Restarting the web server will terminate the process.
+
+If you are running the [Docker] implementation of **docassemble**, a
+watchdog runs in the background ([`docassemble.webapp.watchdog`]),
+looks for [Apache] processes that appear to be stuck, and terminates
+them after 60-90 seconds.
+
+If the interview with the infinite loop is in the Playground, and the
+code with the infinite loop runs at the beginning of the interview,
+the editing screen will not load at all.  This is due to the fact that
+the Playground page's [Variables, etc.](#variables) feature needs to
+run the interview in order to figure out what variables are in use.
+To get around this, you need to edit the URL that accesses the
+interview.  If your interview is `myinterview.yml`, the URL that edits
+the interview will be something like
+
+{% highlight text %}
+https://dev.docassemble.org/playground?file=myinterview.yml
+{% endhighlight %}
+
+You will need to add `&debug=1` to the end:
+
+{% highlight text %}
+https://dev.docassemble.org/playground?file=myinterview.yml&debug=1
+{% endhighlight %}
+
+Then the editing screen will load.
+
+[Apache]: https://en.wikipedia.org/wiki/Apache_HTTP_Server
 [package]: {{ site.baseurl }}/docs/packages.html
 [packages]: {{ site.baseurl }}/docs/packages.html
 [Python package]: {{ site.baseurl }}/docs/packages.html
@@ -313,3 +361,6 @@ going to the [packages area].
 [Microsoft Word]: https://en.wikipedia.org/wiki/Microsoft_Word
 [OpenDocument]: https://en.wikipedia.org/wiki/OpenDocument
 [`include`]: {{ site.baseurl }}/docs/initial.html#include
+[Docker]: {{ site.baseurl }}/docs/docker.html
+[`docassemble.webapp.watchdog`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/watchdog.py
+[Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29

@@ -27,13 +27,15 @@ and three authoring features that were introduced in other sections:
 
 * <span></span>[`role` modifier]: designates certain questions as being answerable
   only by a particular user (or group of users).
-* <span></span>[`default role` initial block]: sets the `role` modifier for
-  questions that do not have a `role` explicitly set.  The [`code`]
-  within this block is run as [`initial`] code.  The responsibility of
-  this [`code`] is to set the [special variable `role`] depending on the
-  circumstances, which can include the identity and privileges of the
-  person logged in (which can be determined from the
-  `current_info['user']` dictionary).
+* <span></span>[`default role` initial block]: sets the `role`
+  modifier for questions that do not have a `role` explicitly set.
+  The [`code`] within this block is run as [`initial`] code.  The
+  responsibility of this [`code`] is to set the
+  [special variable `role`] depending on the circumstances, which can
+  include the identity and privileges of the person logged in, which
+  can be retrieved with the functions [`user_logged_in()`],
+  [`user_info()`], [`user_privileges()`], and
+  [`user_has_privilege()`].
 * <span></span>[`event` variables]: when the current user cannot proceed further
   with the interview because the interview needs input from a
   different user, **docassemble** will display a message for the
@@ -58,15 +60,18 @@ for their bids).
 
 {% highlight yaml %}
 ---
+modules:
+  - docassemble.base.util
+---
 default role: organizer
 code: |
   multi_user = True
   role = 'organizer'
   if introduction_made and participants_invited:
-    if current_info['user']['is_authenticated']:
-      if current_info['user']['email'] == first_person_email:
+    if user_logged_in():
+      if user_info().email == first_person_email:
         role = 'first_person'
-      elif current_info['user']['email'] == second_person_email:
+      elif user_info().email == second_person_email:
         role = 'second_person'
 ---
 event: role_event
@@ -78,7 +83,7 @@ subquestion: |
   We are waiting for the organizer.
   % endif
 
-  % if not current_info['user']['is_authenticated']:
+  % if not user_logged_in():
   If you were invited to participate, please click "Sign in."
   % endif
 
@@ -117,10 +122,7 @@ subquestion: |
 
   Tell them to go to the following URL:
 
-  [${ interview_url }](${ interview_url })
----
-code: |
-  interview_url = current_info['url'] + '?i=' + current_info['yaml_filename'] + '&session=' + current_info['session']
+  [${ interview_url() }](${ interview_url() })
 ---
 sets: announce_winner
 role:
@@ -173,7 +175,7 @@ buttons:
 Most of the code is self-explanatory, but a few of the blocks warrant
 explanation.
 
-Consider the first block:
+Consider the second block:
 
 {% highlight yaml %}
 ---
@@ -182,10 +184,10 @@ code: |
   multi_user = True
   role = 'organizer'
   if introduction_made and participants_invited:
-    if current_info['user']['is_authenticated']:
-      if current_info['user']['email'] == first_person_email:
+    if user_logged_in():
+      if user_info().email == first_person_email:
         role = 'first_person'
-      elif current_info['user']['email'] == second_person_email:
+      elif user_info().email == second_person_email:
         role = 'second_person'
 ---
 {% endhighlight %}
@@ -199,7 +201,7 @@ the [`role`] variable, which is the role of whichever user is currently
 in the interview.  This code runs every single time the page loads for
 any user.
 
-This code block also sets the [special variable] `multi_user` to
+This code block also sets the [special variable] [`multi_user`] to
 `True`, which tells **docassemble** that multiple users will be using
 this interview.  When `multi_user` is `True`, **docassemble** will not
 encrypt the answers on the server.  This reduces [security] somewhat,
@@ -229,8 +231,8 @@ the other participant.
 There are times when you just want **docassemble** to figure out the
 interview flow implicitly, and there are times when you want to be
 explicit about it.  Setting up roles is one situation where you want
-to be pretty explicit, so that you account for all the unexpected
-scenarios that may occur.
+to be pretty explicit, so that users do not see `role_event` screens
+unnecessarily.
 
 Another block that warrants explanation is the `mandatory` `code`
 block:
@@ -247,29 +249,20 @@ code: |
 ---
 {% endhighlight %}
 
-This code block also sets a goal for the interview: finding the value
-of `announce_winner`.  Note that if we took out the two `if`
-statements, the interview could still get done, because
-`announce_winner` implicitly asks for both `firth_person_bid` and
-`second_person_bid`.  The problem with that (or the inconvenience) is
-that `announce_winner` looks for the value of `first_person_bid`
-before it looks for the value of `second_person_bid`.  This means that
-the second participant would have to wait to enter his bid until the
-first participant had done so.  This would be arbitrary and could
-cause unnecessary delay.  The additional code here will ask each
-participant for his bid regardless of which one is first to log in.
+This code block sets a goal for the interview: finding the value of
+`announce_winner`.  Note that if we took out the two `if` statements,
+the interview could still get done, because `announce_winner`
+implicitly asks for both `firth_person_bid` and `second_person_bid`.
+The problem with that (or the inconvenience) is that `announce_winner`
+looks for the value of `first_person_bid` before it looks for the
+value of `second_person_bid`.  This means that the second participant
+would have to wait to enter his bid until the first participant had
+done so.  This would be arbitrary and could cause unnecessary delay.
+The additional code here will ask each participant for his bid
+regardless of which one is first to log in.
 
-The `interview_url` text looks very complicated, because it is.
-
-{% highlight yaml %}
----
-code: |
-  interview_url = current_info['url'] + '?i=' + current_info['yaml_filename'] + '&session=' + current_info['session']
----
-{% endhighlight %}
-
-The URL that is defined in `interview_url` contains the secret
-`session` key of the interview, which was created when the organizer
+The URL that is created through `interview_url()` contains the secret
+"session key" of the interview, which was created when the organizer
 started the interview.  When someone goes to this URL, they will enter
 the interview that is already in progress, whatever the current state
 of the interview is.  Note that the URL in the location bar of the web
@@ -277,37 +270,6 @@ browser will be shortened after the first page load, but the
 interview-specific information in the URL will not be forgotten
 (essentially, it is moved from the location bar into a cookie in the
 web browser).
-
-It isn't a good practice to include complicated computer code like
-this `interview_url` block in your interview [YAML].  (You will see in
-the section on [legal applications] that there is a function available
-for retrieving the interview URL in a clean way.)  We included the
-details here so that we could give you a complete example with no
-hidden detail.
-
-In practice, it's a good idea to [`include`] a question file, such as
-[`basic-questions.yml`] from [`docassemble.base`], which provides you with
-functions that handle complicated computer code for you.  One of the
-functions that [`basic-questions.yml`] gives you is [`interview_url()`],
-from the [`docassemble.base.legal`] module.
-
-If we had included:
-
-{% highlight yaml %}
----
-include: basic-questions.yml
----
-{% endhighlight %}
-
-then we could have written:
-
-{% highlight yaml %}
-  Tell them to go to the following URL:
-
-  [${ interview_url() }](${ interview_url() })
-{% endhighlight %}
-
-Then we would not need to have the `interview_url` variable.
 
 # Interviews with an unknown number of users
 
@@ -323,6 +285,7 @@ Consider the following example, which uses [generic objects]:
 ---
 modules:
   - docassemble.base.core
+  - docassemble.base.util
 ---
 objects:
   - respondents: DADict
@@ -330,10 +293,10 @@ objects:
 initial: true
 code: |
   multi_user = True
-  if current_info['user']['is_authenticated']:
-    if current_info['user']['email'] not in respondents:
-      respondents.initializeObject(current_info['user']['email'])
-    user = respondents[current_info['user']['email']]
+  if user_logged_in():
+    if user_info().email not in respondents:
+      respondents.initializeObject(user_info().email)
+    user = respondents[user_info().email]
     final_page
   else:
     must_be_logged_in_page
@@ -358,12 +321,9 @@ question: |
 subquestion: |
   Share this link with others!
 
-  [${ interview_url }](${ interview_url })
+  [${ interview_url() }](${ interview_url() })
 buttons:
   - Check: refresh
----
-code: |
-  interview_url = current_info['url'] + '?i=' + current_info['yaml_filename'] + '&session=' + current_info['session']
 ---
 generic object: DAObject
 question: How many cats do you have?
@@ -410,16 +370,15 @@ These lines in the [`initial`] block define the `user` variable and keep
 track of each user:
 
 {% highlight python %}
-if current_info['user']['email'] not in respondents:
-  respondents.initializeObject(current_info['user']['email'])
-user = respondents[current_info['user']['email']]
+if user_info().email not in respondents:
+  respondents.initializeObject(user_info().email)
+user = respondents[user_info().email]
 {% endhighlight %}
 
-`current_info['user']` is a [Python dictionary] containing information
-about the logged-in user.  (See [special variables] for more
-information.)  If the user was not logged in, the `email` would not be
-known.  The `email` is a unique identifier for each user in the login
-system.
+[`user_info()`] is a special [function] that returns information about
+the logged-in user.  If the user was not logged in, the `email` would
+not be known.  The `email` is a unique identifier for each user in the
+login system.
 
 The [`objects`] block defines `respondents` as an object of type [`DADict`].
 A [`DADict`] acts much like an ordinary [Python dictionary], except that it
@@ -427,12 +386,12 @@ has special properties that allow **docassemble** to set its
 attributes using [`generic object`] questions.
 
 The second line in the excerpt above defines an entry in this
-[Python dictionary], `respondents[current_info['user']['email']]` as a new
-object of type DAObject.  The [`initializeObject()`] method effectively
-does this:
+[Python dictionary], `respondents[user_info().email]` as a new object
+of type DAObject.  The [`initializeObject()`] method effectively does
+this:
 
 {% highlight python %}
-respondents[current_info['user']['email']] = DAObject()
+respondents[user_info().email] = DAObject()
 {% endhighlight %}
 
 However, it does not work to actually write that; the [`initializeObject()`]
@@ -476,7 +435,6 @@ cases.
 [user login]: {{ site.baseurl }}/docs/users.html
 [`event` variables]: {{ site.baseurl }}/docs/fields.html#event
 [special variable]: {{ site.baseurl }}/docs/special.html
-[special variables]: {{ site.baseurl }}/docs/special.html#current_info
 [security]: {{ site.baseurl }}/docs/security.html
 [legal applications]: {{ site.baseurl }}/docs/legal.html
 [special variable `role`]: {{ site.baseurl }}/docs/special.html#role
@@ -497,3 +455,8 @@ cases.
 [`docassemble.base.core`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/core.py
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
 [`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
+[`user_info()`]: {{ site.baseurl }}/docs/functions.html#user_info
+[`multi_user`]: {{ site.baseurl }}/docs/special.html#multi_user
+[`user_logged_in()`]: {{ site.baseurl }}/docs/functions.html#user_logged_in
+[`user_privileges()`]: {{ site.baseurl }}/docs/functions.html#user_privileges
+[`user_has_privilege()`]: {{ site.baseurl }}/docs/functions.html#user_has_privilege

@@ -261,7 +261,7 @@ label.
 
 The following are the keys that have special meaning:
 
-### `datatype`
+### <a name="datatype summary"></a>`datatype`
 
 `datatype` affects how the data will be collected, validated and
 stored.  For a full explanation of how this is used, see the
@@ -321,7 +321,7 @@ refer to a list of possible options.  Can be a list of key/value pairs
 the user) or a list of plain text items (in which case the label and
 the variable value are the same).
 
-{% include side-by-side.html demo="fields-mc" %}
+{% include side-by-side.html demo="fields-choices" %}
 
 When the [`datatype`] is [`object`], [`object_radio`], or
 [`object_checkboxes`], `choices` indicates a list of objects from which
@@ -348,6 +348,10 @@ Adding `code` to a field makes it a multiple-choice question.  The
 possible options for a multiple choice field.
 
 {% include side-by-side.html demo="fields-mc" %}
+
+The [Python] code runs at the time the question is asked.  Therefore,
+you can use the `code` feature to create multiple-choice questions
+that have dynamically-created lists of choices.
 
 ### <a name="shuffle"></a>`shuffle`
 
@@ -727,101 +731,6 @@ included.  You can also include under `choices` [Python] code, such as
 The [`datatype`] of `object` presents the list of choices as a
 pull-down.  If you prefer to present the user with radio buttons, set
 the [`datatype`] to `object_radio`.
-
-# Terminal screens
-
-## <a name="sets"></a>Using the `sets` statement to advertise that a block will set a variable
-
-A `sets` line tells **docassemble** that if it is looking for the
-value of a particular variable, it should try asking the question in
-the question block containing the `sets` statement.
-
-{% include side-by-side.html demo="sets" %}
-
-This does not necessarily mean that the variable identified in `sets`
-will actually be set.  For example, the question above does not allow
-the user to do anything.
-
-When used as an "empty promise" of setting a variable, the `sets`
-statement is useful for creating the final screen that the user sees
-before exiting the interview.  For example, the [interview logic] can
-cause the "question" above to appear by including a final line of code
-such as:
-
-{% highlight text %}
-need(all_done)
-{% endhighlight %}
-
-Or, the following would do the same thing:
-
-{% highlight text %}
-all_done
-{% endhighlight %}
-
-The `all_done` variable will never be set to any value, but that is
-ok, because you don't want the user to be able to "get past" the final
-screen.  See [functions] for an explanation of the [`need()`]
-function.  See [interview logic] for more information about how to
-give direction to your interview by adding [`code`] blocks that are
-marked with the [`mandatory`] modifier.
-
-## <a name="sets special"></a>Adding action buttons to a "terminal" screen
-
-The `sets` statement is also used in conjunction with `buttons` in
-multiple choice questions where there is no `field` to be set.
-
-{% include side-by-side.html demo="sets-exit" %}
-
-The above example allows the user to "exit" the interview (be redirected
-to a specific web site that is pre-set in the **docassemble**
-[configuration] or "restart" the interview (go back to the beginning).
-
-There are six special button functions:
-
-* `restart`
-* `exit`
-* `leave`
-* `continue`
-* `refresh`
-* `signin`
-
-`restart` resets the user's variable store, except that any parameters
-that were originally passed through as URL parameters will be used again.
-
-`exit` means that the user's variable store will be reset and the user
-will be redirected either to the URL given by the associated `url`
-text, or if no `url` is defined, to the `exit` page defined in the
-[configuration].  If the user tries to come back to the interview
-again, he will start the interview again, as though it had never been
-started.  Original URL parameters will be lost.
-
-For example:
-
-{% include side-by-side.html demo="sets-exit-url" %}
-
-[Mako] can be used in the `url` text.
-
-`leave` works like `exit` except that the user's variable store will be left
-intact.  This means that if the user comes back to the interview
-again, he will pick up where he left off.
-
-`continue` means that **docassemble** will look for another question
-in the interview that might define the necessary variable.
-
-`refresh` re-runs the [interview logic].  It has much the same effect as
-refreshing the page in the browser.  It is useful in multi-user
-interviews when the user is waiting for another user to finish
-entering information.  It can also be useful in interviews that use
-external data sources.
-
-`signin` redirects the user to the **docassemble** sign-in page.
-
-Instead of using `buttons`, you can use `choices` to get a radio list
-instead of a selection of buttons.
-
-{% include side-by-side.html demo="sets-exit-choices" %}
-
-The functionality is the same.
 
 # Special screens
 

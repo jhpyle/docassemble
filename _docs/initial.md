@@ -316,9 +316,12 @@ may or may not want this extra newline.
 
 {% highlight yaml %}
 ---
+modules:
+  - docassemble.base.util
+---
 default role: client
 code: |
-  if current_info['user']['is_authenticated'] and 'advocate' in current_info['user']['roles']:
+  if user_logged_in() and user_has_privilege('advocate'):
     user = advocate
     role = 'advocate'
   else:
@@ -333,7 +336,7 @@ the `default role` statement will define what role or roles will be
 required for any question that does not contain an explicit `role`
 statement.
 
-When you use the roles feature, you need to have some way of telling
+When you use the [roles] feature, you need to have some way of telling
 your interview logic what the role of the interviewee is.
 
 If you include `code` within the same block as your `default role`
@@ -349,7 +352,7 @@ processed.
 
 In addition, the [`set_info()`] function from
 [`docassemble.base.util`] is called.  This lets the linguistic
-functions in [`docassemble.base.utl`] know who the user is, so that
+functions in [`docassemble.base.util`] know who the user is, so that
 questions can ask "What is your date of birth?" or "What is John
 Smith's date of birth" depending on whether the current user is John
 Smith or not.
@@ -398,6 +401,7 @@ the interview.  The setting of the progress bar is controlled by the
 [`include`]: {{ site.baseurl}}/docs/initial.html#include
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
+[`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
 [`set_info()`]: {{ site.baseurl}}/docs/functions.html#set_info
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`code` block]: {{ site.baseurl}}/docs/code.html

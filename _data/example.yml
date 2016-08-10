@@ -34,7 +34,7 @@
   ---
   event: add
   code: |
-    fishes[current_info['arguments']['color']] += 1
+    fishes[action_argument('color')] += 1
   ---
 "age_in_years": |-
   ---
@@ -502,6 +502,30 @@
         benefits plan ${ benefits }.
   mandatory: true
   ---
+"doors": |-
+  ---
+  question: |
+    Which door do you choose?
+  field: door_choice
+  choices:
+    - Door Number 1
+    - Door Number 2
+  ---
+  mandatory: true
+  code: |
+    if door_choice == 'Door Number 1':
+      good_luck
+    if door_choice == 'Door Number 2':
+      bad_luck
+  ---
+  question: |
+    You walk into a field of clover.
+  event: good_luck
+  ---
+  question: |
+    You walk into a stinky swamp.
+  event: bad_luck
+  ---
 "email-field": |-
   ---
   question: |
@@ -509,6 +533,12 @@
   fields:
     - E-mail: target_variable
       datatype: email
+  ---
+"event-example": |-
+  ---
+  question: |
+    This is a special screen.
+  event: show_special_screen
   ---
 "event-role-event": |-
   ---
@@ -533,6 +563,32 @@
   buttons:
     - Stanford: "http://stanford.edu/"
     - Harvard: "http://www.harvard.edu/"
+  ---
+"exit-buttons": |-
+  ---
+  question: We are all done.
+  buttons:
+    - Exit: exit
+    - Restart: restart
+  sets: all_done
+  ---
+"exit-choices": |-
+  ---
+  question: We are all done.
+  choices:
+    - Exit: exit
+    - Restart: restart
+  sets: all_done
+  ---
+"exit-url": |-
+  ---
+  question: |
+    Congratulations, you found Nemo!
+  buttons:
+    - Try again: restart
+    - Learn More: exit
+      url: https://en.wikipedia.org/wiki/Amphiprioninae
+  mandatory: true
   ---
 "field-note": |-
   ---
@@ -581,6 +637,17 @@
         - Peaches
         - Pears
     - "What is your favorite fruit overall?": favorite_fruit
+  ---
+"fields-choices": |-
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+      choices:
+        - Apples: apple
+        - Oranges: orange
+        - Pears: pear
   ---
 "fields-mc": |-
   ---
@@ -903,8 +970,8 @@
   ---
   event: check_update_status
   code: |
-    if 'status' in current_info['arguments']:
-      status = current_info['arguments']['status']
+    if 'status' in action_arguments():
+      status = action_argument('status')
   ---
   mandatory: true
   question: |
@@ -1592,40 +1659,6 @@
 "set-language": "---\ninitial: true\ncode: |\n  set_language(language)\n---\nquestion:\
   \ |\n  What language do you speak?\nfield: language\nchoices:\n  - English: en\n\
   \  - Espa\xF1ol: es\n---"
-"sets": |-
-  ---
-  question: |
-    Congratulations!
-  subquestion: |
-    You are all done with the interview.
-  sets: all_done
-  ---
-"sets-exit": |-
-  ---
-  question: We are all done.
-  buttons:
-    - Exit: exit
-    - Restart: restart
-  sets: all_done
-  ---
-"sets-exit-choices": |-
-  ---
-  question: We are all done.
-  choices:
-    - Exit: exit
-    - Restart: restart
-  sets: all_done
-  ---
-"sets-exit-url": |-
-  ---
-  question: |
-    Congratulations, you found Nemo!
-  buttons:
-    - Try again: restart
-    - Learn More: exit
-      url: https://en.wikipedia.org/wiki/Amphiprioninae
-  mandatory: true
-  ---
 "showif": |-
   ---
   question: |
@@ -1741,6 +1774,14 @@
   subquestion: Be careful how you answer.
   fields:
     - Velocity: swallow_velocity
+  ---
+"terminal-screen": |-
+  ---
+  question: |
+    Congratulations!
+  subquestion: |
+    You are all done with the interview.
+  mandatory: true
   ---
 "terms": |-
   ---
