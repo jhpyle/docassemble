@@ -170,20 +170,10 @@ defined.
 The `defined()` function checks to see if a variable has been
 defined.  You give it a name of a variable.
 
-{% highlight yaml %}
----
-code: |
-  if defined('fruit'):
-    fruit_known = True
-  else:
-    fruit_known = False
----
-{% endhighlight %}
+{% include side-by-side.html demo="defined" %}
 
 It is essential that you use quotation marks around the name of the
 variable.  If you don't, it is as if you are referring to the variable.
-
-{% include side-by-side.html demo="defined" %}
 
 ## <a name="value"></a>value()
 
@@ -216,7 +206,8 @@ attempt to find the value of the variable `chocolate`.
 
 The `need()` function takes one or more variables as arguments and
 causes **docassemble** to ask questions to define each of the
-variables if the variables are not already defined.
+variables if the variables are not already defined.  Note that with
+`need()`, you do _not_ put quotation marks around the variable name.
 
 For example, this [`mandatory`] code block expresses [interview logic]
 requiring that the user first be shown a splash screen and then be
@@ -963,7 +954,7 @@ in, and otherwise returns `False`.
 ## <a name="user_privileges"></a>user_privileges()
 
 The `user_privileges()` function returns the user's privileges as a
-list.  If the user is not logged in, the result is [`user`].  If the
+list.  If the user is not logged in, the result is `['user']`.  If the
 user is a "user" as well as a "customer," the result is
 `['user', 'customer']`.  If the interview is running a
 [scheduled task] in the background, the result is `['cron']`.
@@ -1756,12 +1747,10 @@ docassemble.base.util.update_language_function('fr', 'her', docassemble.base.uti
 [`noun_plural()`]: #noun_plural
 [`object_possessive`]: {{ site.baseurl }}/docs/objects.html#DAObject.object_possessive
 [`objects`]: {{ site.baseurl }}/docs/initial.html#objects
-[`objects`]: {{ site.baseurl }}/docs/initial.html#objects
 [`process_action()`]: #process_action
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
-[`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`set_info()`]: #set_info
-[`set_locale`]: #set_locale
+[`set_locale()`]: #set_locale
 [`subquestion`]: {{ site.baseurl }}/docs/questions.html#subquestion
 [`title_case()`]: #title_case
 [`track_location`]:  {{ site.baseurl }}/docs/special.html#track_location

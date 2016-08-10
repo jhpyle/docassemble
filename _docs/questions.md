@@ -157,7 +157,7 @@ more information, see [`event`], [`url_action()`],
 The `sets` statement is also used in conjunction with `buttons` in
 multiple choice questions where there is no `field` to be set.
 
-{% include side-by-side.html demo="sets-exit" %}
+{% include side-by-side.html demo="exit" %}
 
 The above example allows the user to "exit" the interview (be redirected
 to a specific web site that is pre-set in the **docassemble**
@@ -184,7 +184,7 @@ started.  Original URL parameters will be lost.
 
 For example:
 
-{% include side-by-side.html demo="sets-exit-url" %}
+{% include side-by-side.html demo="exit-url" %}
 
 [Mako] can be used in the `url` text.
 
@@ -206,10 +206,9 @@ external data sources.
 Instead of using `buttons`, you can use `choices` to get a radio list
 instead of a selection of buttons.
 
-{% include side-by-side.html demo="sets-exit-choices" %}
+{% include side-by-side.html demo="exit-choices" %}
 
 The functionality is the same.
-
 
 [`review`]: {{ site.baseurl }}/docs/fields.html#review
 [multi-user interview]: {{ site.baseurl }}/docs/roles.html
@@ -242,3 +241,4 @@ The functionality is the same.
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [`code`]: {{ site.baseurl }}/docs/code.html#code
+[configuration]: {{ site.baseurl }}/docs/config.html

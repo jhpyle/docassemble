@@ -4,7 +4,7 @@ title: Special Variables
 short_title: Special Variables
 ---
 
-# Variables set by **docassemble**.
+# Variables set by **docassemble**
 
 There are some special variables that **docassemble** sets in every
 interview's variable store.
