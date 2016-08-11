@@ -203,8 +203,32 @@ on and off during the course of the interview as necessary.
 ## <a name="allow_cron"></a>allow_cron
 
 This variable should be set to `True` if you want to allow the server
-to run "cron jobs" on your interview.
+to run [scheduled tasks] from your interview.
 
+# Variables that stand in for events
+
+**docassemble** interviews ask questions or run code when required by
+[interview logic] and also when caused to do so by [events] and
+[actions].  These [events] and [actions] are identified using
+variables, which may not ever be defined by an interview.
+
+There are some built-in variable names with special meaning:
+
+* <a name="role_event"></a>[`role_event`] is used to present a special screen when the [roles]
+  system requires a change in the interview role.
+* <a name="cron_hourly"></a>[`cron_hourly`] is used by the [scheduled tasks] system.  This
+  [event] is triggered in the background, every hour, by the server.
+  (This requires that [`allow_cron`] be set to `True`.)
+* <a name="cron_daily"></a>[`cron_daily`] is similar, except runs on a daily basis.
+* <a name="cron_weekly"></a>[`cron_weekly`] is similar, except runs on a weekly basis.
+* <a name="cron_monthly"></a>[`cron_monthly`] is similar, except runs on a monthly basis.
+
+[`allow_cron`]: #allow_cron
+[scheduled tasks]: {{ site.baseurl }}/docs/scheduled.html
+[roles]: {{ site.baseurl }}/docs/roles.html
+[interview logic]: {{ site.baseurl }}/docs/logic.html
+[actions]: {{ site.baseurl }}/docs/functions.html#actions
+[events]: {{ site.baseurl }}/docs/fields.html#event
 [VoiceRSS]: http://www.voicerss.org/
 [get]: https://docs.python.org/2/library/stdtypes.html#dict.get
 [Python list]: https://docs.python.org/2/tutorial/datastructures.html

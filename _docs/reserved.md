@@ -25,6 +25,14 @@ experience errors or unexpected results.
   system.
 * <span></span>[`role_needed`]: a [special variable] that is used as part of the [roles]
   system.
+* <span></span>[`cron_hourly`]: a [special variable] that is used as
+  part of the [scheduled tasks] system.
+* <span></span>[`cron_daily`]: a [special variable] that is used as
+  part of the [scheduled tasks] system.
+* <span></span>[`cron_weekly`]: a [special variable] that is used as
+  part of the [scheduled tasks] system.
+* <span></span>[`cron_monthly`]: a [special variable] that is used as
+  part of the [scheduled tasks] system.
 * <span></span>[`url_args`]: a dictionary available to interview code that contains
   values encoded in the URL with which the interview was initially
   loaded.
@@ -335,6 +343,10 @@ All others are available for you to use and to retrieve with
 [`speak_text`]: {{ site.baseurl }}/docs/special.html#speak_text
 [`role_event`]: {{ site.baseurl }}/docs/roles.html
 [`role_needed`]: {{ site.baseurl }}/docs/special.html#role_needed
+[`cron_hourly`]: {{ site.baseurl }}/docs/special.html#cron_hourly
+[`cron_daily`]: {{ site.baseurl }}/docs/special.html#cron_daily
+[`cron_weekly`]: {{ site.baseurl }}/docs/special.html#cron_weekly
+[`cron_monthly`]: {{ site.baseurl }}/docs/special.html#cron_monthly
 [`url_args`]: {{ site.baseurl }}/docs/special.html#url_args
 [`Asset`]: {{ site.baseurl }}/docs/objects.html#Asset
 [`Case`]: {{ site.baseurl }}/docs/legal.html#Case
@@ -401,3 +413,4 @@ All others are available for you to use and to retrieve with
 [`us`]: https://pypi.python.org/pypi/us
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
 [`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
+[scheduled tasks]: {{ site.baseurl }}/docs/scheduled.html

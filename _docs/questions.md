@@ -175,12 +175,12 @@ There are six special button functions:
 `restart` resets the user's variable store, except that any parameters
 that were originally passed through as URL parameters will be used again.
 
-`exit` means that the user's variable store will be reset and the user
-will be redirected either to the URL given by the associated `url`
-text, or if no `url` is defined, to the `exit` page defined in the
-[configuration].  If the user tries to come back to the interview
-again, he will start the interview again, as though it had never been
-started.  Original URL parameters will be lost.
+<a name="exit"></a>`exit` means that the user's variable store will be
+reset and the user will be redirected either to the URL given by the
+associated `url` text, or if no `url` is defined, to the `exit` page
+defined in the [configuration].  If the user tries to come back to the
+interview again, he will start the interview again, as though it had
+never been started.  Original URL parameters will be lost.
 
 For example:
 
@@ -188,9 +188,9 @@ For example:
 
 [Mako] can be used in the `url` text.
 
-`leave` works like `exit` except that the user's variable store will be left
-intact.  This means that if the user comes back to the interview
-again, he will pick up where he left off.
+<a name="leave"></a>`leave` works like `exit` except that the user's
+variable store will be left intact.  This means that if the user comes
+back to the interview again, he will pick up where he left off.
 
 `continue` means that **docassemble** will look for another question
 in the interview that might define the necessary variable.

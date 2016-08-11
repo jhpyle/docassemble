@@ -12,7 +12,7 @@ It is important to deploy **docassemble** using HTTPS rather than
 HTTP.  **docassemble** sends passwords and security keys over the
 network in plain text.
 
-# Server-side information storage
+# <a name="server_encryption"></a>Server-side information storage
 
 User passwords and interview answers are stored in a SQL database in
 encrypted form.

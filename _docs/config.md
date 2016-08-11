@@ -422,13 +422,17 @@ port 514 on that server, and will not write to the `log` directory.
 
 ## <a name="interview_delete_days"></a>interview_delete_days
 
-When the [scheduled tasks] feature is activated, **docassemble** will
-delete interviews after 90 days of inactivity.  To change the number
-of days, set `interview_delete_days` in the configuration.  For example:
+When the [scheduled tasks] feature is [enabled] on the server,
+**docassemble** will delete interviews after 90 days of inactivity.
+To change the number of days, set `interview_delete_days` in the
+configuration.  For example:
 
 {% highlight yaml %}
 interview_delete_days: 180
 {% endhighlight %}
+
+If `interview_delete_days` is set to `0`, interviews will never be
+deleted through [scheduled tasks].
 
 # Enabling optional features
 
@@ -796,5 +800,6 @@ first.
 [LibreOffice]: https://www.libreoffice.org/
 [`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
 [scheduled tasks]: {{ site.baseurl }}/docs/scheduled.html
+[enabled]: {{ site.baseurl }}/docs/scheduled.html#enabling
 [`as_datetime()`]: {{ site.baseurl }}/docs/functions.html#as_datetime
 [`pytz`]: http://pytz.sourceforge.net/
