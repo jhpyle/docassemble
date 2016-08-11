@@ -186,3 +186,8 @@ user_has_privilege: "http://docassemble.org/docs/functions.html#user_has_privile
 user_info: "http://docassemble.org/docs/functions.html#user_info"
 action_arguments: "http://docassemble.org/docs/functions.html#action_arguments"
 action_argument: "http://docassemble.org/docs/functions.html#action_argument"
+task_performed: "http://docassemble.org/docs/functions.html#task_performed"
+task_not_yet_performed: "http://docassemble.org/docs/functions.html#task_not_yet_performed"
+mark_task_as_performed: "http://docassemble.org/docs/functions.html#mark_task_as_performed"
+times_task_performed: "http://docassemble.org/docs/functions.html#times_task_performed"
+set_task_counter: "http://docassemble.org/docs/functions.html#set_task_counter"

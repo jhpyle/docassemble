@@ -10,7 +10,7 @@ modules:
 code: |
   birthday = as_datetime('5/17/2016')
   christmas = as_datetime('12/25/2016')
-  interval = date_difference(christmas, birthday)
+  interval = date_difference(starting=birthday, ending=christmas)
 ---
 question: |
   The length of time between my birthday

@@ -31,9 +31,11 @@ def get_cron_user():
     sys.exit("Cron user not found")
 
 def clear_old_interviews():
+    interview_delete_days = docassemble.base.config.daconfig.get('interview_delete_days', 90)
+    if interview_delete_days == 0:
+        return
     stale = list()
     nowtime = datetime.datetime.utcnow()
-    interview_delete_days = docassemble.base.config.daconfig.get('interview_delete_days', 90)
     #sys.stderr.write("days is " + str(interview_delete_days) + "\n")
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).group_by(UserDict.filename, UserDict.key).subquery()
     results = db.session.query(UserDict.dictionary, UserDict.key, UserDict.user_id, UserDict.filename, UserDict.modtime, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno).order_by(UserDict.indexno)

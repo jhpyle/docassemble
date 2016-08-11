@@ -3,7 +3,7 @@ import datetime
 import pytz
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
-from docassemble.base.functions import comma_and_list, get_language, set_language, get_dialect, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, value, message, response, command, single_paragraph, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, objects_from_file, this_thread, static_image, action_arguments, action_argument, default_timezone, language_functions, language_function_constructor, get_default_timezone, user_logged_in, user_privileges, user_has_privilege, user_info
+from docassemble.base.functions import comma_and_list, get_language, set_language, get_dialect, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, value, message, response, command, single_paragraph, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, objects_from_file, this_thread, static_image, action_arguments, action_argument, default_timezone, language_functions, language_function_constructor, get_default_timezone, user_logged_in, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter
 from docassemble.base.core import DAObject, DAList, DADict, DAFile, DAFileCollection, DAFileList, DATemplate, selections
 from decimal import Decimal
 import sys
@@ -17,7 +17,7 @@ import us
 import babel.dates
 from bs4 import BeautifulSoup
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'email_string', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate', 'us', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'format_date', 'today', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'email_string', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate', 'us', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'format_date', 'today', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter']
 
 def default_user_id_function():
     return dict()
@@ -115,26 +115,27 @@ def date_interval(**kwargs):
     to dateutil.relativedelta.relativedelta."""
     return dateutil.relativedelta.relativedelta(**kwargs)
 
-def date_difference(a, b, timezone=default_timezone):
-    """Calculates the difference between date a and date b.  Returns an
-    object with attributes weeks, days, hours, minutes, seconds, and delta."""
-    if isinstance(a, datetime.date):
-        a = datetime.datetime.combine(a, datetime.datetime.min.time())
-    if isinstance(a, datetime.date):
-        b = datetime.datetime.combine(b, datetime.datetime.min.time())
-    if not isinstance(a, datetime.datetime):
-        a = dateutil.parser.parse(a)
-    if not isinstance(b, datetime.datetime):
-        b = dateutil.parser.parse(b)
-    if a.tzinfo:
-        a = a.astimezone(pytz.timezone(timezone))
+def date_difference(starting=current_datetime(), ending=current_datetime(), timezone=default_timezone):
+    """Calculates the difference between the date indicated by "starting" 
+    and the date indicated by "ending."  Returns an object with attributes weeks, 
+    days, hours, minutes, seconds, and delta."""
+    if isinstance(starting, datetime.date):
+        starting = datetime.datetime.combine(starting, datetime.datetime.min.time())
+    if isinstance(ending, datetime.date):
+        ending = datetime.datetime.combine(ending, datetime.datetime.min.time())
+    if not isinstance(starting, datetime.datetime):
+        starting = dateutil.parser.parse(starting)
+    if not isinstance(ending, datetime.datetime):
+        ending = dateutil.parser.parse(ending)
+    if starting.tzinfo:
+        starting = starting.astimezone(pytz.timezone(timezone))
     else:
-        a = pytz.timezone(timezone).localize(a)
-    if b.tzinfo:
-        b = b.astimezone(pytz.timezone(timezone))
+        starting = pytz.timezone(timezone).localize(starting)
+    if ending.tzinfo:
+        ending = ending.astimezone(pytz.timezone(timezone))
     else:
-        b = pytz.timezone(timezone).localize(b)
-    delta = a - b
+        ending = pytz.timezone(timezone).localize(ending)
+    delta = ending - starting
     output = DateTimeDelta()
     output.delta = delta
     output.weeks = (delta.days / 7.0) + (delta.seconds / 604800.0)
@@ -812,7 +813,7 @@ class Organization(Person):
             return the_response
         return None
 
-def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None, html=None, subject="", attachments=[]):
+def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, attachments=[]):
     """Sends an e-mail and returns whether sending the e-mail was successful."""
     from flask_mail import Message
     if type(to) is not list:
@@ -875,6 +876,8 @@ def send_email(to=None, sender=None, cc=None, bcc=None, template=None, body=None
         except Exception as errmess:
             logmessage("Sending mail failed: " + str(errmess))
             success = False
+    if success and task is not None:
+        mark_task_as_performed(task)
     return(success)
 
 def map_of(*pargs, **kwargs):

@@ -24,7 +24,7 @@ import yaml
 import tzlocal
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'objects_from_file', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'objects_from_file', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter']
 
 debug = False
 default_dialect = 'us'
@@ -350,8 +350,8 @@ def words():
     return word_collection[this_thread.language]
 
 def word(the_word, **kwargs):
-    """Returns the word translated into the current language.  If a translation is not known,
-    the input is returned."""
+    """Returns the word translated into the current language.  If a translation 
+    is not known, the input is returned."""
     # Currently, no kwargs are used, but in the future, this function could be
     # expanded to use kwargs.  For example, for languages with gendered words,
     # the gender could be passed as a keyword argument.
@@ -1247,3 +1247,32 @@ def single_paragraph(text):
     """Reduces the text to a single paragraph.  Useful when using Markdown 
     to indent user-supplied text."""
     return newlines.sub(' ', text)
+
+def task_performed(task):
+    """Returns True if the task has been performed at least once, otherwise False."""
+    if task in this_thread.internal['tasks'] and this_thread.internal['tasks'][task]:
+        return True
+    return False
+
+def task_not_yet_performed(task):
+    """Returns True if the task has never been performed, otherwise False."""
+    if task_performed(task):
+        return False
+    return True
+
+def mark_task_as_performed(task):
+    """Increases by 1 the number of times the task has been performed."""
+    if not task in this_thread.internal['tasks']:
+        this_thread.internal['tasks'][task] = 0
+    this_thread.internal['tasks'][task] += 1
+    return this_thread.internal['tasks'][task]
+
+def times_task_performed(task):
+    """Returns the number of times the task has been performed."""
+    if not task in this_thread.internal['tasks']:
+        return 0
+    return this_thread.internal['tasks'][task]
+
+def set_task_counter(task, times):
+    """Allows you to manually set the number of times the task has been performed."""
+    this_thread.internal['tasks'][task] = times

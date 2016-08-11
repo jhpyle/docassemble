@@ -71,7 +71,7 @@ def set_save_numbered_file(func):
     save_numbered_file = func
     return
 
-initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict()), url_args=dict())
+initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict()), url_args=dict())
 
 def set_initial_dict(the_dict):
     global initial_dict
