@@ -1,0 +1,18 @@
+metadata:
+  title: Flushleft
+  documentation: "http://docassemble.org/docs/documents.html#metadata rtf pdf"
+---
+mandatory: true
+question: |
+  Here is your document.
+subquestion: |
+  It demonstrates the flush left environment.
+attachments:
+  - name: A test document
+    filename: test_document
+    content: |
+      This line is indented.
+      
+      This line is also indented.
+      
+      [FLUSHLEFT] This line is not indented. [NEWLINE] Nor is this line.

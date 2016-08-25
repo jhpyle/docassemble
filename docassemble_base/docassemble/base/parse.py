@@ -14,7 +14,7 @@ import copy
 #sys.stderr.write("loading filter\n")
 import docassemble.base.filter
 import docassemble.base.pdftk
-from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, QuestionError, ResponseError, CommandError
+from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, CommandError
 import docassemble.base.functions
 from docassemble.base.functions import pickleable_objects, word, get_language
 from docassemble.base.logger import logmessage
@@ -71,7 +71,7 @@ def set_save_numbered_file(func):
     save_numbered_file = func
     return
 
-initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict()), url_args=dict())
+initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict())
 
 def set_initial_dict(the_dict):
     global initial_dict
@@ -399,6 +399,7 @@ class Question:
             self.source_code = kwargs.get('source_code', None)
         self.fields = []
         self.attachments = []
+        self.is_generic = False
         self.name = None
         self.role = list()
         self.need = None
@@ -1241,6 +1242,8 @@ class Question:
                 self.interview.questions_by_id[self.id].append(self)
             except:
                 self.interview.questions_by_id[self.id] = [self]
+        if hasattr(self, 'name'):
+            self.interview.questions_by_name[self.name] = self
         for field_name in self.fields_used:
             if field_name not in self.interview.questions:
                 self.interview.questions[field_name] = dict()
@@ -1599,7 +1602,7 @@ class Question:
                 elif type(value) == str:
                     if value in ['exit', 'leave'] and 'url' in the_dict:
                         result_dict[key] = Question({'command': value, 'url': the_dict['url']}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
-                    elif value in ["continue", "restart", "refresh", "signin", "exit", "leave"]:
+                    elif value in ['continue', 'restart', 'refresh', 'signin', 'exit', 'leave']:
                         result_dict[key] = Question({'command': value}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                     elif key == 'url':
                         pass
@@ -1629,7 +1632,7 @@ class Question:
             #logmessage("2 Question name was " + self.name)
             the_choice = self.fields[0].choices[user_dict['_internal']['answers'][self.name]]
             for key in the_choice:
-                if key == 'image':
+                if key in ('image', 'compute'):
                     continue
                 #logmessage("Setting target")
                 target = the_choice[key]
@@ -1812,6 +1815,7 @@ class Interview:
         self.questions = dict()
         self.generic_questions = dict()
         self.questions_by_id = dict()
+        self.questions_by_name = dict()
         self.questions_list = list()
         self.images = dict()
         self.metadata = list()
@@ -1907,6 +1911,8 @@ class Interview:
             interview_status = args[0]
         else:
             interview_status = InterviewStatus()
+        if interview_status.current_info['url'] is not None:
+            user_dict['_internal']['url'] = interview_status.current_info['url']
         interview_status.set_tracker(user_dict['_internal']['tracker'])
         docassemble.base.functions.reset_local_variables()
         interview_status.current_info.update({'default_role': self.default_role})
@@ -1998,10 +2004,16 @@ class Interview:
                             interview_status.populate(question.ask(user_dict, 'None', 'None'))
                         raise MandatoryQuestion()
             except NameError as errMess:
+                if isinstance(errMess, ForcedNameError):
+                    logmessage("forced nameerror")
+                    follow_mc = False
+                else:
+                    logmessage("regular nameerror")
+                    follow_mc = True
                 #logmessage("Gota this: " + str(errMess))
                 missingVariable = extract_missing_name(errMess)
                 #missingVariable = str(errMess).split("'")[1]
-                question_result = self.askfor(missingVariable, user_dict, seeking=interview_status.seeking)
+                question_result = self.askfor(missingVariable, user_dict, seeking=interview_status.seeking, follow_mc=follow_mc)
                 if question_result['type'] == 'continue':
                     #logmessage("Continuing after asking for " + missingVariable + "...")
                     continue
@@ -2072,7 +2084,7 @@ class Interview:
                 new_interview = new_interview_source.get_interview()
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                the_question = new_question.follow_multiple_choice(user_dict)
+                #the_question = new_question.follow_multiple_choice(user_dict)
                 interview_status.populate(the_question.ask(user_dict, 'None', 'None'))
                 break
             except AttributeError as errMess:
@@ -2088,6 +2100,7 @@ class Interview:
     def askfor(self, missingVariable, user_dict, **kwargs):
         variable_stack = kwargs.get('variable_stack', set())
         language = get_language()
+        follow_mc = kwargs.get('follow_mc', True)
         seeking = kwargs.get('seeking', list())
         if debug:
             seeking.append({'variable': missingVariable})
@@ -2273,7 +2286,10 @@ class Interview:
                         #logmessage("i is " + str(the_i))
                         #logmessage("is_generic is " + str(is_generic))
                         #logmessage("Trying question of type " + str(the_question.question_type))
-                        question = the_question.follow_multiple_choice(user_dict)
+                        if follow_mc:
+                            question = the_question.follow_multiple_choice(user_dict)
+                        else:
+                            question = the_question
                         #logmessage("Back from follow_multiple_choice")
                         #logmessage("Trying a question of type " + str(the_question.question_type))
                         if is_generic:
@@ -2382,10 +2398,16 @@ class Interview:
                             return question.ask(user_dict, the_x, the_i)
                     raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + missingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
                 except NameError as errMess:
+                    if isinstance(errMess, ForcedNameError):
+                        logmessage("forced nameerror")
+                        follow_mc = False
+                    else:
+                        logmessage("regular nameerror")
+                        follow_mc = True
                     #logmessage("got this error: " + str(errMess))
                     newMissingVariable = extract_missing_name(errMess)
                     #newMissingVariable = str(errMess).split("'")[1]
-                    question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking)
+                    question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking, follow_mc=follow_mc)
                     if question_result['type'] == 'continue':
                         continue
                     return(question_result)

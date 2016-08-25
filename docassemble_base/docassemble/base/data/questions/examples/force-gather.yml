@@ -1,0 +1,52 @@
+metadata:
+  title: "force_gather()"
+  documentation: "http://docassemble.org/docs/functions.html#force_gather"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+initial: true
+code: |
+  process_action()
+---
+event: gather_it
+code: |
+  force_gather('favorite_food')
+---
+mandatory: true
+question: |
+  All done with the interview!
+subquestion: |
+  [Ask about food](${url_action('gather_it')})
+---
+question: |
+  I give up.  Just tell me your favorite food.
+fields:
+  Favorite food: favorite_food
+---
+question: |
+  Ok, are any of these your favorite food?
+choices:
+  - Strawberries:
+      code: |
+        favorite_food = 'strawberries'
+  - Grapes:
+      code: |
+        favorite_food = 'grapes'
+  - Kiwi:
+      code: |
+        favorite_food = 'kiwi'
+  - Something else: continue
+---
+question: |
+  What is your favorite food?
+choices:
+  - Apples:
+      code: |
+        favorite_food = 'apples'
+  - Oranges:
+      code: |
+        favorite_food = 'oranges'
+  - Something else: continue

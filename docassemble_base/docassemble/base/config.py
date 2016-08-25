@@ -43,7 +43,7 @@ def load(**kwargs):
     else:
         daconfig['config_file'] = filename
     s3_config = daconfig.get('s3', None)
-    if not s3_config or ('enable' in s3_config and not s3_config['enable']) or not ('access_key_id' in s3_config and s3_config['access_key_id']) or not ('secret_access_key' in s3_config and s3_config['secret_access_key']):
+    if not s3_config or ('enable' in s3_config and not s3_config['enable']): # or not ('access_key_id' in s3_config and s3_config['access_key_id']) or not ('secret_access_key' in s3_config and s3_config['secret_access_key']):
         S3_ENABLED = False
     else:
         S3_ENABLED = True

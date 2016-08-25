@@ -1,0 +1,8 @@
+---
+modules:
+  - .test
+---
+mandatory: true
+question: |
+  The number after 3 is ${ plus_one(3) }.
+---

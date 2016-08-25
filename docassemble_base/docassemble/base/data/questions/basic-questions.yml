@@ -122,6 +122,13 @@ comment: |
 ---
 generic object: Individual
 question: |
+  What is ${ x.possessive('time zone') }?
+fields:
+  - Time Zone: x.timezone
+    code: timezone_list()
+---
+generic object: Individual
+question: |
   What is ${ x.possessive('Social Security Number') }?
 fields:
   - Social Security Number: x.ssn

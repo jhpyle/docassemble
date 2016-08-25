@@ -129,6 +129,7 @@ def rtf_prefilter(text, metadata=dict()):
     return(text)
 
 def rtf_filter(text, metadata=dict(), styles=dict(), question=None):
+    #sys.stderr.write(text + "\n")
     if 'fontsize' in metadata:
         text = re.sub(r'{\\pard', '\\fs' + str(convert_length(metadata['fontsize'], 'hp')) + ' {\\pard', text, count=1)
         after_space_multiplier = str(convert_length(metadata['fontsize'], 'twips'))
@@ -160,7 +161,7 @@ def rtf_filter(text, metadata=dict(), styles=dict(), question=None):
         default_spacing = 'double'
     after_space = after_space_multiplier * rtf_after_space[default_spacing]
     text = re.sub(r'{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 \[HEADING([0-9]+)\] *', (lambda x: '{\\pard ' + styles.get(x.group(1), '\\ql \\f0 \\sa180 \\li0 \\fi0 ')), text)
-    text = re.sub(r'{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 \[(BEGIN_TWOCOL|BREAK|END_TWOCOL|BEGIN_CAPTION|VERTICAL_LINE|END_CAPTION|SINGLESPACING|DOUBLESPACING|INDENTATION|NOINDENTATION|PAGEBREAK|SKIPLINE)\] *', r'[\1]{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 ', text)
+    text = re.sub(r'{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 \[(BEGIN_TWOCOL|BREAK|END_TWOCOL|BEGIN_CAPTION|VERTICAL_LINE|END_CAPTION|SINGLESPACING|DOUBLESPACING|INDENTATION|NOINDENTATION|PAGEBREAK|SKIPLINE|FLUSHLEFT|FLUSHRIGHT|CENTER|BOLDCENTER)\] *', r'[\1]{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 ', text)
     text = re.sub(r'{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 *\\par}', r'', text)
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
     text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', rtf_caption_table, text, flags=re.DOTALL)
@@ -181,14 +182,12 @@ def rtf_filter(text, metadata=dict(), styles=dict(), question=None):
     text = re.sub(r'\[PAGENUM\]', r'{\\chpgn}', text)
     text = re.sub(r'\[TOTALPAGES\]', r'{\\nofpages3}', text)
     text = re.sub(r'\[SECTIONNUM\]', r'{\\sectnum}', text)
-    text = re.sub(r'\[SKIPLINE\] *', r'\\line ', text)
-    text = re.sub(r'\[NEWLINE\] *', r'\\line ', text)
-    text = re.sub(r'\[BR\] *', r'\\line ', text)
-    text = re.sub(r'\[TAB\] *', r'\\tab ', text)
-    #text = re.sub(r'\[FLUSHLEFT\] *(.+?)\n\n', flushleft_rtf, text, flags=re.MULTILINE | re.DOTALL)
-    #text = re.sub(r'\[FLUSHLEFT\] *', r'\\ql \\fi0 \\sl0', text)
-    text = re.sub(r'\[CENTER\] *', r'\\qc ', text)
-    text = re.sub(r'\[BOLDCENTER\] *', r'\\qc \\b ', text)
+    text = re.sub(r' *\[SKIPLINE\] *', r'\\line ', text)
+    text = re.sub(r' *\[NEWLINE\] *', r'\\line ', text)
+    text = re.sub(r' *\[BR\] *', r'\\line ', text)
+    text = re.sub(r' *\[TAB\] *', r'\\tab ', text)
+    #text = re.sub(r'\[CENTER\] *', r'\\qc ', text)
+    #text = re.sub(r'\[BOLDCENTER\] *', r'\\qc \\b ', text)
     text = re.sub(r'\\sa180\\sa180\\par', r'\\par', text)
     text = re.sub(r'\\sa180', r'\\sa0', text)
     text = re.sub(r'\s*\[(SINGLESPACING|DOUBLESPACING|TRIPLESPACING|ONEANDAHALFSPACING|INDENTATION|NOINDENTATION)\]\s*', r'\n[\1]\n', text)
@@ -218,18 +217,35 @@ def rtf_filter(text, metadata=dict(), styles=dict(), question=None):
         elif re.search(r'\[NOINDENTATION\]', line):
             indentation_command = '\\fi0'
         elif line != '':
-            if indentation_command != '':
+            if re.search(r'\[FLUSHLEFT\]', line):
+                #sys.stderr.write("Flushleft line is: " + line + "\n")
+                line = re.sub(r'\\fi-?[0-9]+ ', r'\\fi0 ', line)
+                line = re.sub(r'\[FLUSHLEFT\]', '', line)
+            elif re.search(r'\[FLUSHRIGHT\]', line):
+                #sys.stderr.write("Flushright line is: " + line + "\n")
+                line = re.sub(r'\\fi-?[0-9]+ ', r'\\fi0 ', line)
+                line = re.sub(r'\\ql', r'\\qr', line)
+                line = re.sub(r'\[FLUSHRIGHT\]', '', line)
+            elif re.search(r'\[CENTER\]', line):
+                line = re.sub(r'\\fi-?[0-9]+ ', r'\\fi0 ', line)
+                line = re.sub(r'\\ql', r'\\qc', line)
+                line = re.sub(r'\[CENTER\]', '', line)
+            elif re.search(r'\[BOLDCENTER\]', line):
+                line = re.sub(r'\\fi-?[0-9]+ ', r'\\fi0 ', line)
+                line = re.sub(r'\\ql', r'\\qc \\b', line)
+                line = re.sub(r'\[BOLDCENTER\]', '', line)
+            elif indentation_command != '':
                 line = re.sub(r'\\fi-?[0-9]+ ', indentation_command, line)
             if not re.search(r'\\s[0-9]', line):
-                line = re.sub(r'\\pard ', '\\pard ' + str(spacing_command), line)
+                line = re.sub(r'\\pard ', r'\\pard ' + str(spacing_command), line)
             if not (re.search(r'\\fi0\\(endash|bullet)', line) or re.search(r'\\s[0-9]', line)):
                 if after_space > 0:
-                    line = re.sub(r'\\sa[0-9]+ ', '\\sa' + str(after_space), line)
+                    line = re.sub(r'\\sa[0-9]+ ', r'\\sa' + str(after_space), line)
                 else:
-                    line = re.sub(r'\\sa[0-9]+ ', '\\sa0', line)
+                    line = re.sub(r'\\sa[0-9]+ ', r'\\sa0', line)
             text += line + '\n'
     text = re.sub(r'{\\pard \\sl[0-9]+\\slmult[0-9]+ \\ql \\f[0-9]+ \\sa[0-9]+ \\li[0-9]+ \\fi-?[0-9]*\s*\\par}', r'', text)
-    text = re.sub(r'{\\pard \\sl[0-9]+\\slmult[0-9]+ \\ql \\f[0-9]+ \\sa[0-9]+ \\li[0-9]+ \\fi-?[0-9]*\s*\[FLUSHLEFT\]}', r'', text)
+    #text = re.sub(r'{\\pard \\sl[0-9]+\\slmult[0-9]+ \\ql \\f[0-9]+ \\sa[0-9]+ \\li[0-9]+ \\fi-?[0-9]*\s*\[FLUSHLEFT\]}', r'', text)
     return(text)
 
 def docx_filter(text, metadata=dict(), question=None):
@@ -382,6 +398,11 @@ def add_newlines(string):
     string = re.sub(r' *\n', r'\n', string)
     string = re.sub(r'(?<!\[NEWLINE\])\n', r' [NEWLINE]\n', string)
     return string    
+
+def flushleft_rtf(match):
+    string = match.group(1)
+    string = re.sub(r'\\fi[0-9]+', r'\\fi0', string)
+    return string + '}'
 
 def flushleft_pdf(match):
     string = match.group(1)

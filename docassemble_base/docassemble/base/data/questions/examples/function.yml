@@ -1,0 +1,18 @@
+metadata:
+  title: Function
+  example start: 2
+  example end: 2
+  documentation: "http://docassemble.org/docs/functions.html"
+---
+modules:
+  - docassemble.base.util  
+---
+question: |
+  The word ${ color } becomes
+  ${ capitalize(color) } when
+  passed through the
+  `capitalize()` function.
+mandatory: true
+---
+code: |
+  color = 'green'

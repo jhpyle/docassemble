@@ -1,0 +1,25 @@
+metadata:
+  title: Sign in button
+  example start: 2
+  example end: 2
+  documentation: "http://docassemble.org/docs/questions.html#signin"
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+code: |
+  if user_logged_in():
+    goodbye_page
+  else:
+    sign_in_page
+---
+question: |
+  Please sign in
+buttons:
+  - Sign in: signin
+sets: sign_in_page
+---
+question: |
+  Thanks for logging in.  Bye!
+sets: goodbye_page

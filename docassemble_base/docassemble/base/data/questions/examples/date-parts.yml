@@ -1,7 +1,12 @@
+metadata:
+  title: Date parts
+  example start: 2
+  example end: 2
 ---
 modules:
-  - docassemble.base.legal
+  - docassemble.base.util
 ---
+mandatory: true
 question: The date, explained.
 subquestion: |
   The year is ${ year_of(some_date) }.
@@ -9,13 +14,9 @@ subquestion: |
   The month is ${ month_of(some_date) }.
 
   The day of month is ${ day_of(some_date) }.
-sets: all_done
 ---
 question: |
   Give me a date.
 fields:
   - Date: some_date
     datatype: date
----
-mandatory: true
-code: all_done

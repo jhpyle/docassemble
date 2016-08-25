@@ -1,0 +1,24 @@
+metadata:
+  title: Dialog box
+  example start: 2
+  example end: 3
+  documentation: "http://docassemble.org/docs/fields.html#event"
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+code: |
+  if task_not_yet_performed('show current date'):
+    mark_task_as_performed('show current date')
+    show_date
+---
+event: show_date
+question: |
+  The current date is ${ format_date(current_datetime()) }.
+buttons:
+  - Ok: continue
+---
+mandatory: true
+question: |
+  Ok, the interview is now over.

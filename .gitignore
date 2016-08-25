@@ -9,6 +9,8 @@ foobar.pickle
 make_session_store.py
 da.wsgi
 oauth.wsgi
+RTF-specification_files
+RTF-specification.html
 trash
 site
 compile.sh

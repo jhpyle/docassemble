@@ -15,7 +15,7 @@ mandatory: true
 code: |
   menu_items = [ action_menu_item('Visit Cow', 'see_cow') ]
 ---
-sets: see_cow
+event: see_cow
 question: |
   Moo!
 subquestion: |

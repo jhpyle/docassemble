@@ -9,7 +9,7 @@ import locale
 import pkg_resources
 import titlecase
 from docassemble.base.logger import logmessage
-from docassemble.base.error import QuestionError, ResponseError, CommandError
+from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError
 import locale
 import json
 import urllib
@@ -159,7 +159,7 @@ def interview_url(**kwargs):
     args = kwargs
     args['i'] = this_thread.current_info['yaml_filename']
     args['session'] = this_thread.current_info['session']
-    return str(this_thread.current_info['url']) + '?' + '&'.join(map((lambda (k, v): str(k) + '=' + urllib.quote(str(v))), args.iteritems()))
+    return str(this_thread.internal['url']) + '?' + '&'.join(map((lambda (k, v): str(k) + '=' + urllib.quote(str(v))), args.iteritems()))
 
 def interview_url_action(action, **kwargs):
     """Like interview_url, except it additionally specifies an action.
@@ -168,7 +168,7 @@ def interview_url_action(action, **kwargs):
     args['i'] = this_thread.current_info['yaml_filename']
     args['session'] = this_thread.current_info['session']
     args['action'] = myb64quote(json.dumps({'action': action, 'arguments': kwargs}))
-    return str(this_thread.current_info['url']) + '?' + '&'.join(map((lambda (k, v): str(k) + '=' + urllib.quote(str(v))), args.iteritems()))
+    return str(this_thread.internal['url']) + '?' + '&'.join(map((lambda (k, v): str(k) + '=' + urllib.quote(str(v))), args.iteritems()))
 
 def interview_url_as_qr(**kwargs):
     """Inserts into the markup a QR code linking to the interview.
@@ -909,9 +909,32 @@ def command(*pargs, **kwargs):
     raise CommandError(*pargs, **kwargs)
 
 def force_ask(variable_name):
-    """Given a variable, instructs docassemble to do what is necessary to define the variable,
-    even if the variable has already been defined."""
+    """Given a variable, instructs docassemble to ask a question that would
+    define the variable, even if the variable has already been defined.
+    This does not change the interview logic, but merely diverts from the 
+    interview logic, temporarily, in order to attempt to ask a question."""
+    raise ForcedNameError("name '" + str(variable_name) + "' is not defined")
+
+def force_ask_nameerror(variable_name):
     raise NameError("name '" + str(variable_name) + "' is not defined")
+
+def force_ask(variable_name):
+    """Given a variable, instructs docassemble to ask a question that would
+    define the variable, even if the variable has already been defined.
+    This does not change the interview logic, but merely diverts from the 
+    interview logic, temporarily, in order to attempt to ask a question."""
+    raise ForcedNameError("name '" + str(variable_name) + "' is not defined")
+
+def force_gather(*pargs):
+    """Like force_ask(), except more insistent.  In addition to making a 
+    single attempt to ask a question that offers to define the variable, 
+    it enlists the process_action() function to seek the definition of 
+    the variable.  The process_action() function will keep trying to define
+    the variable until it is defined."""
+    for variable_name in pargs:
+        if variable_name not in this_thread.internal['gather']:
+            this_thread.internal['gather'].append(variable_name)
+    raise ForcedNameError("name '" + str(variable_name) + "' is not defined")
 
 def static_filename_path(filereference):
     result = package_data_filename(static_filename(filereference))
@@ -1053,9 +1076,32 @@ def nodoublequote(text):
 def process_action():
     """If an action is waiting to be processed, it processes the action."""
     if 'action' not in this_thread.current_info:
+        to_be_gathered = [variable_name for variable_name in this_thread.internal['gather']]
+        for variable_name in to_be_gathered:
+            if defined(variable_name):
+                this_thread.internal['gather'].remove(variable_name)
+            else:
+                force_ask_nameerror(variable_name)
         return
     the_action = this_thread.current_info['action']
     del this_thread.current_info['action']
+    if the_action == 'need':
+        for key in ['variable', 'variables']:
+            if key in this_thread.current_info['arguments']:
+                if type(this_thread.current_info['arguments'][key]) is list:
+                    for var in this_thread.current_info['arguments'][key]:
+                        if var not in this_thread.internal['gather']:
+                            this_thread.internal['gather'].append(var)
+                elif this_thread.current_info['arguments'][key] not in this_thread.internal['gather']:
+                    this_thread.internal['gather'].append(this_thread.current_info['arguments'][key])
+                del this_thread.current_info['arguments'][key]
+        to_be_gathered = [variable_name for variable_name in this_thread.internal['gather']]
+        for variable_name in to_be_gathered:
+            if defined(variable_name):
+                this_thread.internal['gather'].remove(variable_name)
+            else:
+                force_ask_nameerror(variable_name)
+        return        
     force_ask(the_action)
 
 def url_action(action, **kwargs):

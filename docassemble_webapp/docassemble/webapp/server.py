@@ -1591,6 +1591,9 @@ def index():
         # user_dict['role_event_notification_sent'] = False
     if changed and '_question_name' in post_data and post_data['_question_name'] not in user_dict['_internal']['answers']:
         user_dict['_internal']['answered'].add(post_data['_question_name'])
+    # if '_multiple_choice' in post_data and '_question_name' in post_data and post_data['_question_name'] in interview.questions_by_name and not interview.questions_by_name[post_data['_question_name']].is_generic:
+    #     interview_status.populate(interview.questions_by_name[post_data['_question_name']].ask(user_dict, 'None', 'None'))
+    # else:
     interview.assemble(user_dict, interview_status)
     if not interview_status.can_go_back:
         user_dict['_internal']['steps_offset'] = steps
@@ -1610,6 +1613,15 @@ def index():
         steps = 0
         changed = False
         interview.assemble(user_dict, interview_status)
+    if interview_status.question.question_type == "refresh":
+        return redirect(url_for('index'))
+    if interview_status.question.question_type == "signin":
+        return redirect(url_for('user.login'))
+    if interview_status.question.question_type == "leave":
+        if interview_status.questionText != '':
+            return redirect(interview_status.questionText)
+        else:
+            return redirect(exit_page)
     if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
         user_dict['_internal']['progress'] = interview_status.question.progress
     if interview_status.question.question_type == "exit":
@@ -1619,15 +1631,6 @@ def index():
         if current_user.is_authenticated:
             save_user_dict_key(user_code, yaml_filename)
             session['key_logged'] = True
-        if interview_status.questionText != '':
-            return redirect(interview_status.questionText)
-        else:
-            return redirect(exit_page)
-    if interview_status.question.question_type == "refresh":
-        return redirect(url_for('index'))
-    if interview_status.question.question_type == "signin":
-        return redirect(url_for('user.login'))
-    if interview_status.question.question_type == "leave":
         if interview_status.questionText != '':
             return redirect(interview_status.questionText)
         else:
@@ -1643,7 +1646,10 @@ def index():
             response_to_send.set_cookie('secret', secret)
     else:
         response_to_send = None
-    user_dict['_internal']['answers'] = dict()
+    # Why do this?
+    # user_dict['_internal']['answers'] = dict()
+    if interview_status.question.name and interview_status.question.name in user_dict['_internal']['answers']:
+        del user_dict['_internal']['answers'][interview_status.question.name]
     if changed and interview_status.question.interview.use_progress_bar:
         advance_progress(user_dict)
     save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)

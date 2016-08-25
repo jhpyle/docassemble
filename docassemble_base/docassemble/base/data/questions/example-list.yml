@@ -122,6 +122,7 @@
     - review
     - prevent-back
     - force-ask
+    - force-gather
     - interview-url
 - Dates:
     - timezone-list

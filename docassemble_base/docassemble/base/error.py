@@ -4,6 +4,9 @@ class DAError(Exception):
     def __str__(self):
         return str(self.value)
 
+class ForcedNameError(NameError):
+    pass
+
 class DAErrorNoEndpoint(DAError):
     pass
 

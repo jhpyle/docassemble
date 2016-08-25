@@ -1,0 +1,12 @@
+metadata:
+  title: Custom function in module
+  example start: 1
+  example end: 2
+---
+modules:
+  - .test
+---
+mandatory: true
+question: |
+  The number after 3 is
+  ${ plus_one(3) }.
