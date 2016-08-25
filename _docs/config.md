@@ -780,8 +780,8 @@ first.
 [EC2]: https://aws.amazon.com/ec2/
 [Docker]: https://www.docker.com/
 [fully qualified domain name]: https://en.wikipedia.org/wiki/Fully_qualified_domain_name
-[`exit`]: {{ site.baseurl }}/docs/fields.html#sets special
-[`leave`]: {{ site.baseurl }}/docs/fields.html#sets special
+[`exit`]: {{ site.baseurl }}/docs/questions.html#exit
+[`leave`]: {{ site.baseurl }}/docs/questions.html#leave
 [`progress` modifier]: {{ site.baseurl }}/docs/modifiers.html#progress
 [`word()`]: {{ site.baseurl }}/docs/functions.html#word
 [`set_language()`]: {{ site.baseurl }}/docs/functions.html#set_language

@@ -53,7 +53,7 @@ or No button is pressed.  [`noyes`] does the opposite.
 
 {% include side-by-side.html demo="yesno" %}
 
-## Multiple choice: `choices` or `buttons`
+## <a name="choices"></a><a name="buttons"></a>Multiple choice: `choices` or `buttons`
 
 You can ask a multiple-choice question by providing a list of [`choices`]:
 
@@ -112,6 +112,85 @@ such "questions" by marking them as [`mandatory`]:
 If you have more than one possible ending screen in your interview,
 use the [`event`](#event) feature described below.
 
+### <a name="special buttons"></a>Special buttons
+
+Using the [`buttons`](#buttons) or [`choices`](#choices) syntax
+described above, you can add special buttons to a screen.  These
+buttons are special because they do not set a variable.  (You do not
+need to specify a [`field`] to go along with these
+[`buttons`](#buttons).)
+
+These buttons are particularly useful on "terminal" screens.
+
+{% include side-by-side.html demo="exit" %}
+
+The above example allows the user to "exit" the interview (i.e., to be
+redirected to a different web site) or "restart" the interview (i.e.,
+go back to the beginning, with all of the answers forgotten).
+
+There are six special button functions:
+
+* `restart`
+* `exit`
+* `leave`
+* `continue`
+* `refresh`
+* `signin`
+
+<a name="restart"></a>`restart` resets the user's variable store,
+except that any parameters that were originally passed through as URL
+parameters will be used again.  The user is redirected to the first
+question of the interview.
+
+<a name="exit"></a>`exit` means that the user's variable store will be
+erased and the user will be redirected either to the URL given by the
+associated `url` text, or if no `url` is defined, to the `exit` page
+defined in the [configuration].  If the user tries to come back to the
+interview again, he will start the interview again, as though it had
+never been started.  Original URL parameters will be lost.
+
+For example:
+
+{% include side-by-side.html demo="exit-url" %}
+
+[Mako] can be used in the `url` text.
+
+<a name="leave"></a>`leave` works like `exit` except that the user's
+variable store will be left intact.  This means that if the user comes
+back to the interview again, he will pick up where he left off.
+
+<a name="continue"></a>`continue` means that **docassemble** will move
+on from the question without really doing anything.  Here is an
+example of when it is useful:
+
+{% include side-by-side.html demo="menu-item" %}
+
+This example uses the [actions] feature to present a special screen
+that shows a picture.  This screen does not set any variable, but the
+user can click the button to "continue" with the normal course of the
+interview.
+
+<a name="refresh"></a>`refresh` re-runs the [interview logic].  It has
+much the same effect as refreshing the page in the browser.  It is
+useful in multi-user interviews when the user is waiting for another
+user to finish entering information.  It can also be useful in
+interviews that use external data sources.
+
+{% include side-by-side.html demo="refresh" %}
+
+<a name="signin"></a>`signin` redirects the user to the
+**docassemble** sign-in page.
+
+{% include side-by-side.html demo="signin" %}
+
+Instead of using [`buttons`](#buttons), you can use
+[`choices`](#choices) to get a radio list instead of a selection of
+buttons.
+
+{% include side-by-side.html demo="exit-choices" %}
+
+The functionality is the same.
+
 ## <a name="event"></a>Special screens: `event`
 
 Some screens are shown to the user when a special event occurs.
@@ -152,64 +231,6 @@ reach from the menu or from hyperlinks embedded in question text.  For
 more information, see [`event`], [`url_action()`],
 [`process_action()`], [`action_menu_item()`], and [`menu_items`].
 
-## <a name="sets special"></a>Adding action buttons to a "terminal" screen
-
-The `sets` statement is also used in conjunction with `buttons` in
-multiple choice questions where there is no `field` to be set.
-
-{% include side-by-side.html demo="exit" %}
-
-The above example allows the user to "exit" the interview (be redirected
-to a specific web site that is pre-set in the **docassemble**
-[configuration] or "restart" the interview (go back to the beginning).
-
-There are six special button functions:
-
-* `restart`
-* `exit`
-* `leave`
-* `continue`
-* `refresh`
-* `signin`
-
-`restart` resets the user's variable store, except that any parameters
-that were originally passed through as URL parameters will be used again.
-
-<a name="exit"></a>`exit` means that the user's variable store will be
-reset and the user will be redirected either to the URL given by the
-associated `url` text, or if no `url` is defined, to the `exit` page
-defined in the [configuration].  If the user tries to come back to the
-interview again, he will start the interview again, as though it had
-never been started.  Original URL parameters will be lost.
-
-For example:
-
-{% include side-by-side.html demo="exit-url" %}
-
-[Mako] can be used in the `url` text.
-
-<a name="leave"></a>`leave` works like `exit` except that the user's
-variable store will be left intact.  This means that if the user comes
-back to the interview again, he will pick up where he left off.
-
-`continue` means that **docassemble** will look for another question
-in the interview that might define the necessary variable.
-
-`refresh` re-runs the [interview logic].  It has much the same effect as
-refreshing the page in the browser.  It is useful in multi-user
-interviews when the user is waiting for another user to finish
-entering information.  It can also be useful in interviews that use
-external data sources.
-
-`signin` redirects the user to the **docassemble** sign-in page.
-
-Instead of using `buttons`, you can use `choices` to get a radio list
-instead of a selection of buttons.
-
-{% include side-by-side.html demo="exit-choices" %}
-
-The functionality is the same.
-
 [`review`]: {{ site.baseurl }}/docs/fields.html#review
 [multi-user interview]: {{ site.baseurl }}/docs/roles.html
 [role]: {{ site.baseurl }}/docs/roles.html
@@ -232,7 +253,6 @@ The functionality is the same.
 [`noyes`]: {{ site.baseurl }}/docs/fields.html#noyes
 [`choices`]: {{ site.baseurl }}/docs/fields.html#field with choices
 [`buttons`]: {{ site.baseurl }}/docs/fields.html#field with buttons
-[`sets`]: {{ site.baseurl }}/docs/fields.html#sets
 [`field`]: {{ site.baseurl }}/docs/fields.html#field
 [`signature`]: {{ site.baseurl }}/docs/fields.html#signature
 [`event`]: {{ site.baseurl }}/docs/fields.html#event
@@ -242,3 +262,4 @@ The functionality is the same.
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [`code`]: {{ site.baseurl }}/docs/code.html#code
 [configuration]: {{ site.baseurl }}/docs/config.html
+[actions]: {{ site.baseurl }}/docs/functions.html#actions

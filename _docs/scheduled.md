@@ -65,15 +65,39 @@ Let's go through this example step-by-step.
 First, we use [`modules`] to load [`docassemble.base.util`], which
 provides a lot of the special [functions] we need.
 
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.util
+---
+{% endhighlight %}
+
 Second, we set [`use_cron`] to `True`, which allows scheduled tasks to
 run, and we set [`multi_user`] to `True`, which disables
 [server-side encryption].
 
-Then, we set up some [`initial`] [`code`] so that the
+{% highlight yaml %}
+---
+mandatory: true
+code: |
+  use_cron = True
+  multi_user = True
+---
+{% endhighlight %}
+
+Then, we set up some [`initial`]<span></span> [`code`] so that the
 [`process_action()`] function runs every time the [interview logic] is
 processed.  This causes the [`code`] within [events] to be run, such
 as the `cron_daily` [`event`], which appears later on in the
 interview.
+
+{% highlight yaml %}
+---
+initial: true
+code: |
+  process_actions()
+---
+{% endhighlight %}
 
 Next, there are three standard [`question`]s that gather the
 `filing_date` and `email_address` variables and present a "final"
@@ -85,10 +109,52 @@ on the server.  This is important because we want the interview to
 persist on the server.  We need the interview to exist twenty days
 after the `filing_date` so that it can send the reminder e-mail.
 
-After this, we set the [`template`] for the e-mail that will be sent.
+{% highlight yaml %}
+---
+question: |
+  When was the document filed?
+fields:
+  - Filing Date: filing_date
+    datatype: date
+---
+question: |
+  What is your e-mail address?
+fields:
+  - E-mail: email_address
+    datatype: email
+---
+mandatory: true
+question: |
+  Ok, I'll e-mail you at ${ email_address} 20 days
+  from ${ format_date(filing_date) }.
+buttons:
+  Leave: leave
+---
+{% endhighlight %}
+
+After this, we define the [`template`] for the e-mail that will be sent.
+
+{% highlight yaml %}
+---
+template: reminder_email
+subject: |
+  Hey, it's been 20 days.
+content: |
+  Don't forget about that thing you need to do!
+---
+{% endhighlight %}
 
 Finally, we get to the "scheduled task."  The [`event`] uses the
 [special variable] [`cron_daily`].  This code will run once per day.
+
+{% highlight yaml %}
+---
+event: cron_daily
+code: |
+  if task_not_yet_performed('20 day reminder') and date_difference(starting=filing_date).days > 20:
+    send_email(to=email_address, template=reminder_email, task='20 day reminder')
+---
+{% endhighlight %}
 
 The first thing the code does (wisely) is question whether the e-mail
 reminder has already been sent.  If the e-mail has already been sent,

@@ -6,7 +6,7 @@ short_title: Groups
 
 To help you organize groups of things, **docassemble** offers three
 data structures: lists, dictionaries, and sets.  These mirror the data
-types of the same name that exist in Python.
+types of the same name that exist in [Python].
 
 # Overview of types of data structures
 
@@ -70,13 +70,11 @@ repeatedly, such as iterating through each item in a list.
 For example, here is an example in [Python]:
 
 {% highlight python %}
----
 numbers = [5, 7, 2]
 total = 0
 for n in numbers:
     total = total + n
 print total
----
 {% endhighlight %}
 
 This code "loops" through the elements of `numbers` and computes the
@@ -90,24 +88,28 @@ For loops can be included in **docassemble** templates using the
 [Mako] "for" loops work just like [Python] for loops, except that they
 need to be ended with "endfor."
 
+If the list might be empty, you can check its length using an
+`if`/`else`/`endif` [Mako] statement:
+
 {% highlight yaml %}
 ---
 question: |
-  Summary of the case
+  Summary of fruit
 subquestion: |
-  % for person in case.plaintiff:
-  ${ person } is a plaintiff.
+  % if len(fruit_list) > 0:
+  % for fruit in fruit_list:
+  I assume you like ${ fruit }.
   % endfor
+  % else:
+  There are no fruits to discuss.
+  % endif
+mandatory: true
 ---
 {% endhighlight %}
 
-This results in a sentence like:
-
-> John Smith is a plaintiff. Jane Doe is a plaintiff. Robert Jones is
-> a plaintiff.
-
-If the list might be empty, you can check its [`.number()`] first using
-an `if`/`else`/`endif` [Mako] statement:
+You can do the same with a [`DAList`], but you can check its
+[`.number()`], which has the effect of causing the list to be
+gathered.
 
 {% highlight yaml %}
 ---
@@ -124,6 +126,9 @@ subquestion: |
 ---
 {% endhighlight %}
 
+The `len()` function, by contrast, only returns the number of elements
+gathered so far, or `0` if no elements have been gathered.
+  
 You can check if something is in a list using a statement of the form
 `if` ... `in`:
 

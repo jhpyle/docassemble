@@ -327,7 +327,7 @@ uploads: /usr/share/docassemble/files
 {% endhighlight %}
 
 However, **docassemble** will use [Amazon S3] instead of this folder
-if access keys are provided as follows:
+if [S3] is enabled as follows:
 
 {% highlight yaml %}
 s3:
@@ -492,6 +492,21 @@ server instance.
 If you need to use different filesystem or S3 locations, you can edit
 the [configuration] variables [`certs`] and [`cert_install_directory`].
 
+# Using S3 without passing access keys in the configuration
+
+If you are running **docassemble** on an [EC2] instance, or on a
+[Docker] container within an [EC2] instance, you can set up the
+instance with an [IAM role] that allows access [S3] without supplying
+credentials.  In this case, the configuration in **docassemble** does
+not include an `access_key_id` or a `secret_access_key`.
+
+{% highlight yaml %}
+s3:
+  enable: true
+  bucket: yourbucketname
+{% endhighlight %}
+
+[IAM role]: http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html
 [SMTP Authentication]: https://en.wikipedia.org/wiki/SMTP_Authentication
 [Apache]: https://en.wikipedia.org/wiki/Apache_HTTP_Server
 [Apache configuration]: {{ site.baseurl }}/docs/installation.html
@@ -500,13 +515,14 @@ the [configuration] variables [`certs`] and [`cert_install_directory`].
 [`cert_install_directory`]: {{ site.baseurl }}/docs/config.html#cert_install_directory
 [installation]: {{ site.baseurl }}/docs/installation.html
 [SQLAlchemy]: http://www.sqlalchemy.org/
+[S3]: https://aws.amazon.com/s3/
 [Amazon S3]: https://aws.amazon.com/s3/
 [Amazon EC2]: https://aws.amazon.com/ec2/
 [EC2]: https://aws.amazon.com/ec2/
 [Amazon SES]: https://aws.amazon.com/ses/
 [Amazon Linux]: https://aws.amazon.com/amazon-linux-ami/
 [Amazon Web Services]: https://aws.amazon.com
-[Docker]: https://www.docker.com/
+[Docker]: {{ site.baseurl }}/docs/docker.html
 [Amazon's Docker instructions]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/docker-basics.html
 [Virtual Private Cloud]: https://aws.amazon.com/vpc/
 [VPC]: https://aws.amazon.com/vpc/

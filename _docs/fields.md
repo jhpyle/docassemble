@@ -744,21 +744,29 @@ such a screen using the `event` statement.
 An `event` statement acts just like `sets`: it advertises to
 **docassemble** that the question will potentially define a variable.
 
+In the following example, the variable `show_date` is never defined;
+it is simply sought.  The [`task_not_yet_performed()`] function is
+used to make sure that the dialog box only appears once.
+
+{% include side-by-side.html demo="dialog-box" %}
+
+The `event` statement is important if you use the [roles] feature to
+conduct multi-user interviews.
+
 {% include side-by-side.html demo="event-role-event" %}
 
 In the example above, the `event` line tells **docassemble** that this
 [`question`] should be displayed to the user if **docassemble**
 encounters the `role_event`, which is a special "event" that can
-happen in multi-user interviews (see
-[roles]({{site.baseurl}}/docs/roles.html)).  The event is triggered
-when the interview reaches a point when a person other than the
-current user needs to answer a question.  For example, while a client
-is filling out an interview, the [interview logic] might call for a
-variable that can only be set by an advocate who reviews the client's
-answers.  In this scenario, a `role_event` will be triggered.  When
-this happens, **docassemble** will look for a [`question`] or [`code`]
-block that defines the variable `role_event`, and it will find the
-example question above.
+happen in multi-user interviews.  The event is triggered when the
+interview reaches a point when a person other than the current user
+needs to answer a question.  For example, while a client is filling
+out an interview, the [interview logic] might call for a variable that
+can only be set by an advocate who reviews the client's answers.  In
+this scenario, a `role_event` will be triggered.  When this happens,
+**docassemble** will look for a [`question`] or [`code`] block that
+defines the variable `role_event`, and it will find the example
+question above.
 
 This directive can also be used to create screens that the user can
 reach from the menu or from hyperlinks embedded in question text.  For
@@ -969,3 +977,5 @@ why this needs to be done manually as opposed to automatically:
 [`object_checkboxes`]: #object_checkboxes
 [section on `datatype`]: #datatype
 [`datatype`]: #datatype
+[roles]: {{ site.baseurl }}/docs/roles.html
+[`task_not_yet_performed()`]: {{ site.baseurl }}/docs/functions.html#task_not_yet_performed

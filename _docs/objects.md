@@ -591,7 +591,7 @@ for assignments with the `=` operator, and keeps track of which code
 sections define which variables.  But sometimes variables are assigned
 by functions, and **docassemble** does not realize that.  The
 `sets: tree.branch` line tells **docassemble** that the code promises
-to define `tree.branch`.
+to define `tree.branch`.  See [`sets`] for more information.
 
 One of the useful things about `DAObject`s is that you can write
 `generic object` questions that work in a wide variety of
@@ -2019,3 +2019,4 @@ and not an instance of the `Attorney` class.
 [`nice_number()`]: {{ site.baseurl }}/docs/functions.html#nice_number
 [`comma_and_list()`]: {{ site.baseurl }}/docs/functions.html#comma_and_list
 [`user_lat_lon()`]: {{ site.baseurl }}/docs/functions.html#user_lat_lon
+[`sets`]: {{ site.baseurl }}/docs/fields.html#sets

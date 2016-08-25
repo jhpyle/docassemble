@@ -13,9 +13,6 @@ modules:
   - docassemble.base.legal
 ---
 mandatory: true
-code: all_done
----
-sets: all_done
 question: |
   Summary of the parties in this case
 subquestion: |

@@ -245,10 +245,6 @@ For example, this interview provides a QR code that directs the user to
 {% highlight yaml %}
 ---
 mandatory: true
-code: |
-  final_screen
----
-sets: final_screen
 question: Here is a URL for you in a QR code
 subquestion: |
   [QR http://news.google.com, 200px]

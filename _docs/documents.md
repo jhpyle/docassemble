@@ -105,7 +105,7 @@ called [sample-form.pdf]({{ site.demourl }}/packagestatic/docassemble.demo/sampl
 
 {% highlight yaml %}
 ---
-sets: final_screen
+mandatory: true
 question: |
   Here is your PDF form
 attachments:
@@ -201,10 +201,10 @@ signature: user.signature
 under: |
   ${ user }
 ---
+sets: final_screen
 question: Congratulations!
 subquestion: |
   You have now transferred everything you own to ${ friend }.
-sets: final_screen
 attachment:
   - name: Transfer of Ownership
     filename: Transfer-of-Ownership

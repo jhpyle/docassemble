@@ -4,6 +4,19 @@ title: Functions
 short_title: Functions
 ---
 
+# What is a function?
+
+A function is a piece of code that takes one or more pieces of input
+and returns something as output.  For example:
+
+{% include side-by-side.html demo="function" %}
+
+Functions allow you to do a lot of different things in
+**docassemble**.  This section explains the standard **docassemble**
+functions.  If you know how to write [Python] code, you can write your
+own functions and include them in your interview using a [`modules`]
+block.
+
 # How to use functions
 
 To use the functions described in this section in your interviews, you
@@ -31,8 +44,8 @@ will stop what it is doing to ask a question or run code in an attempt
 to obtain a definition for that variable.
 
 Sometimes, this is not what you want **docassemble** to do.  For
-example, you might just want to check to see if a variable ever got
-defined.
+example, you might just want to check to see if a variable has been
+defined yet.
 
 The `defined()` function checks to see if a variable has been
 defined.  You give it a name of a variable.
@@ -107,9 +120,9 @@ because it helps you convey in "natural language" that your interview
 ## <a name="force_ask"></a>force_ask()
 
 Usually, **docassemble** only asks a question when it encounters a
-variable that is not defined.  However, with the `force_ask` function
-from [`docassemble.base.util`], you can cause such a condition to happen
-manually, even when a variable is already defined.
+variable that is not defined.  However, with the `force_ask` function,
+you can cause such a condition to happen manually, even when a
+variable is already defined.
 
 In this example, we use `force_ask` to cause **docassemble** to ask a
 question that has already been asked.
@@ -143,45 +156,69 @@ question: |
 {% endhighlight %}
 
 This may be useful in particular circumstances.  Note, however, that
-it does not make any change to the variables that are defined.  If the
-user refreshes the screen while looking at the `user_is_communist`
-question a second time, it will be as though `force_ask` never
-happened.
+the effect of `force_ask()` is temporary.  If the user refreshes the
+screen while looking at the `user_is_communist` question a second
+time, it will be as though `force_ask` never happened.
 
-Note also that no code that comes after `force_ask` will ever be
-executed.  That is why, in the example above, we set
+Note also that no code that comes after `force_ask()` will ever be
+executed.  Once the `force_ask()` function is called, the code stops
+running, and the question indicated by the variable name will be
+shown.  That is why, in the example above, we set
 `user_reconsidering_communism` to False before calling `force_ask`.
 The variable `user_reconsidering_communism`, which had been set to
-True by the "I suggest you reconsider your answer" question, is set to
-False before the call to `force_ask` so that the [`mandatory`] code
-block does not get stuck in an infinite loop.
+`True` by the "I suggest you reconsider your answer" question, is set
+to `False` before the call to `force_ask` so that the [`mandatory`]
+code block does not get stuck in an infinite loop.
 
 A different way to reask a question is to use the built-in Python
 operator `del`.  This makes the variable undefined.  Instead of
 writing:
 
-{% highlight python %}
-if user_is_communist and user_reconsidering_communism:
-  user_reconsidering_communism = False
-  force_ask('user_is_communist')
-{% endhighlight %}
+{% include side-by-side.html demo="force-ask" %}
 
 we could have written:
 
-{% highlight python %}
-if user_is_communist and user_reconsidering_communism:
-  user_reconsidering_communism = False
-  del user_is_communist
-  need(user_is_communist)
-{% endhighlight %}
+{% include side-by-side.html demo="del" %}
 
 This will also cause the `user_is_communist` question to be asked
 again.  This is more robust than using `force_ask` because the user
-cannot get past the question simply by refeshing the screen.  (By the
-way, `need(user_is_communist)` could be left out here because the
-second [`mandatory`] code block would cause the question to be asked
-again.  But you make your intentions more clear to readers of your
-code by calling [`need()`].)
+cannot get past the question simply by refeshing the screen.
+
+The `force_ask()` function can also be given the names of variables
+that refer to [`event`] blocks.  The screen will be shown, but no
+variable will be defined.
+
+## <a name="force_gather"></a>force_gather()
+
+The `force_gather()` function is similar to [`force_ask()`], except it
+is not only asks a question, but insists that a variable be defined.
+
+In addition to doing what [`force_ask()`] does, `force_gather()`
+engages the assistance of the [`process_action()`] function to make
+sure that the variable is defined.  The [`process_action()`] function
+will not finish until the variable is defined.
+
+In order for `force_gather()` to work as intended, you need to include
+[`process_action()`] in an [`initial`] <span></span> [`code`] block.
+
+{% include side-by-side.html demo="force-gather" %}
+
+In this example, [`force_ask()`] would not have worked in place of
+`force_gather()`, because if the user selects "Something else," the
+interview would not continue on to the next question that offers to
+define `favorite_food`.  Calling `force_ask('favorite_food')` means
+"look for a question that offers to define `favorite_food`, and
+present it to the user, whereas calling
+`force_gather('favorite_food')` means "until `favorite_food` is
+defined, keep asking questions that offer to define `favorite_food`."
+
+Normally, you will not need to use either [`force_ask()`] or
+[`force_gather()`]; you can just mention the name of a variable in
+your [`question`]s or [`code`] blocks, and **docassemble** will make
+sure that the variables get defined.  The [`force_ask()`] and
+[`force_gather()`] functions are primarily useful when you are using
+[actions] to do things that are outside the normal course of the
+[interview logic].
 
 # <a name="special responses"></a>Functions for special responses
 
@@ -257,13 +294,11 @@ response(response="Hello world!")
 {% endhighlight %}
 
 The `response()` command can be used to integrate a **docassemble**
-interview with another application.  For example, you could use
-another application to retrieve data in [JSON] format. You would first
-need to set [`multi_user`] to `True`, build a URL with
-[`interview_url_action()`], and cause actions to run with
-[`process_action()`].
+interview with another application.
 
-Here is an example.
+The following example shows how you can make information entered into
+an interview available to a third-party application through a URL that
+returns data in [JSON] format.
 
 {% include side-by-side.html demo="response-json" %}
 
@@ -650,7 +685,7 @@ and you would refer to them by writing something like:
 
 {% highlight yaml %}
 ---
-sets: user_done
+mandatory: true
 question: You are done.
 subquestion: |
   To learn more about this topic, read
@@ -1037,32 +1072,7 @@ current time and the last access time.
 
 These functions read a date and provide the parts of the date.
 
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.util
----
-question: The date, explained.
-subquestion: |
-  The year is ${ year_of(some_date) }.
-
-  The month is ${ month_of(some_date) }.
-
-  The day of month is ${ day_of(some_date) }.
-sets: all_done
----
-question: |
-  Give me a date.
-fields:
-  - Date: some_date
-    datatype: date
----
-mandatory: true
-code: all_done
----
-{% endhighlight %}
-
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testdate.yml){:target="_blank"}.)
+{% include side-by-side.html demo="date-parts" %}
 
 The `month_of` function has an optional setting: if called as, e.g.,
 `month_of(some_date, as_word=True)`, it will return the month as a
@@ -1087,7 +1097,24 @@ For example:
 
 For more information about how to specify date formats, see the
 documentation for
-[babel.dates](http://babel.pocoo.org/en/latest/api/dates.html).
+[babel.dates](http://babel.pocoo.org/en/latest/api/dates.html).  The
+`format` argument, which defaults to `long`, is passed directly to the
+`babel.dates.format_date()` function.
+
+## <a name="format_time"></a>format_time()
+
+The `format_time()` function works just like [`format_date()`], except
+it returns a time, rather than a date.
+
+For example:
+
+* `format_time("04:01:23")` returns `4:00 AM`.
+
+For more information about how to specify time formats, see the
+documentation for
+[babel.dates](http://babel.pocoo.org/en/latest/api/dates.html).  The
+`format` argument, which defaults to `short`, is passed directly to
+the `babel.dates.format_time()` function.
 
 ## <a name="today"></a>today()
 
@@ -1215,8 +1242,10 @@ your code.
 ## <a name="task_performed"></a>task_performed():
 
 The `task_performed()` function returns `True` if the task has been
-performed at least once, otherwise `False`.  For example,
-`task_performed('application_for_assistance')` will return `False` until
+performed at least once, otherwise `False`.
+
+For example, `task_performed('application_for_assistance')` will
+return `False` until
 `mark_task_as_performed('application_for_assistance')` is called.
 
 ## <a name="task_not_yet_performed"></a>task_not_yet_performed():
@@ -1760,6 +1789,77 @@ its elements are added to the list of selections.
 `objects_from_file()` is a utility function for initializing a group
 of objects from a [YAML] file written in a certain format.
 
+# Writing your own functions
+
+There are two ways that you can write your own functions in
+**docassemble**.
+
+The first way is to use the `<%def></%def>` feature of [Mako] in order
+to use "functions" in your templates.  These are not true
+[Python functions] because they are based around [Mako] templates, but
+they are similar to [Python functions].  The `<%def></%def>` feature
+is documented on the [Mako web site].  **docassemble**'s [`def` block]
+makes it easy to re-use [`def` blocks] in your interviews.
+
+The second way, which is usually more elegant, is to write a
+[Python module] containing a definition of a [Python function], and
+then include that module in your interview using the
+[`modules` block].  This allows you to use your function both in
+[Mako] templates and in [`code`] blocks.
+
+Here is a brief tutorial on how to write a function `plus_one()` that
+takes a number and returns the number plus one.  For example,
+`plus_one(3)` should return `4`.
+
+First, go to the [Playground].  (This requires that you have a
+developer account on the server.)
+
+Then, go to the [modules folder] of the [Playground].
+
+![modules folder]({{ site.baseurl }}/img/docassemble-modules.png)
+
+Then, type the following [Python] code into the text box:
+
+{% highlight python %}
+def plus_one(number):
+  return number + 1
+{% endhighlight %}
+
+The screen should look like this:
+
+![sample function]({{ site.baseurl }}/img/docassemble-sample-function.png)
+
+Then, press the "Save" button at the bottom of the screen.  This will
+create a [Python module] called `test`.  (The text file is called
+`test.py` in the [modules folder] because files containing Python code
+have the extension `.py` in their file names.  Within [Python], you
+refer to modules using the file name without the file extension.)
+
+Then click the "Back to Playground" button to leave the "Modules"
+folder.
+
+Now, you can use the `plus_one()` function in your interviews by
+doing something like:
+
+{% include side-by-side.html demo="sample-function" %}
+
+The `.` in front of the module name is [Python]'s way of referring to
+modules that are in the current package.  If you put your module
+within a [package] called `docassemble.simplemath`, then you could
+write, instead:
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.simplemath.test
+---
+{% endhighlight %}
+
+[package]: {{ site.baseurl }}/docs/playground.html#packages
+[modules folder]: {{ site.baseurl }}/docs/playground.html#modules
+[Playground]: {{ site.baseurl }}/docs/playground.html
+[Mako web site]: http://docs.makotemplates.org/en/latest/defs.html
+[Mako]: http://www.makotemplates.org/
 [Content-Type header]: https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
 [Documents]: {{ site.baseurl }}/docs/documents.html
 [Flask-Mail]: https://pythonhosted.org/Flask-Mail/
@@ -1768,6 +1868,8 @@ of objects from a [YAML] file written in a certain format.
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [Markdown]: https://daringfireball.net/projects/markdown/
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[Python function]: https://docs.python.org/2/tutorial/controlflow.html#defining-functions
+[Python functions]: https://docs.python.org/2/tutorial/controlflow.html#defining-functions
 [Python interpreter]: https://docs.python.org/2/tutorial/interpreter.html
 [Python list]: https://docs.python.org/2/tutorial/datastructures.html
 [Python locale]: https://docs.python.org/2/library/locale.html
@@ -1807,6 +1909,7 @@ of objects from a [YAML] file written in a certain format.
 [`legal.py`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [`modules`]: {{ site.baseurl }}/docs/initial.html#modules
+[`modules` block]: {{ site.baseurl }}/docs/initial.html#modules
 [`multi_user`]: {{ site.baseurl }}/docs/special.html#multi_user
 [`need()`]: #need
 [`nice_number()`]: #nice_number
@@ -1844,7 +1947,7 @@ of objects from a [YAML] file written in a certain format.
 [locale module]: https://docs.python.org/2/library/locale.html
 [markup]: {{ site.baseurl }}/docs/markup.html
 [methods]: {{ site.baseurl }}/docs/objects.html#person classes
-[modifier]: {{ site.baseurl }}/docs/modifiers.html
+[modifier]: {{ site.baseurl }}/docs/modifiers.html#prevent_going_back
 [multi-user interviews]: {{ site.baseurl }}/docs/roles.html
 [objects]: {{ site.baseurl }}/docs/objects.html
 [pattern.en]: http://www.clips.ua.ac.be/pages/pattern-en
@@ -1882,3 +1985,7 @@ of objects from a [YAML] file written in a certain format.
 [`set_task_counter()`]: #set_task_counter
 [task]: #tasks
 [actions]: #actions
+[`format_date()`]: #format_date
+[`format_time()`]: #format_time
+[`def` block]: {{ site.baseurl }}/docs/initial.html#def
+[`def` blocks]: {{ site.baseurl }}/docs/initial.html#def

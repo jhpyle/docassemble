@@ -234,8 +234,7 @@ question: |
 yesno: user_wants_to_go_to_dance
 ---
 question: That is splendid news!
-sets:
-  - life_is_good
+sets: life_is_good
 ---
 {% endhighlight %}
 
@@ -276,8 +275,7 @@ choices:
   - "I don't care for flowerly language": continue
 ---
 question: That is splendid news!
-sets:
-  - life_is_good
+sets: life_is_good
 ---
 {% endhighlight %}
 
@@ -305,8 +303,7 @@ code: |
     user_wants_to_go_to_dance = True
 ---
 question: That is splendid news!
-sets:
-  - life_is_good
+sets: life_is_good
 ---
 {% endhighlight %}
 

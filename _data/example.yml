@@ -387,6 +387,11 @@
     Your participation means a lot to us.
   field: user_saw_intro
   ---
+"continue-special": |-
+  ---
+  modules:
+    - docassemble.base.util
+  ---
 "currency": |-
   ---
   question: |
@@ -423,7 +428,7 @@
   code: |
     birthday = as_datetime('5/17/2016')
     christmas = as_datetime('12/25/2016')
-    interval = date_difference(christmas, birthday)
+    interval = date_difference(starting=birthday, ending=christmas)
   ---
   question: |
     The length of time between my birthday
@@ -450,6 +455,17 @@
     In three days, it will be
     ${ format_date( current_datetime() + date_interval(days=3) ) }.
   mandatory: true
+  ---
+"date-parts": |-
+  ---
+  mandatory: true
+  question: The date, explained.
+  subquestion: |
+    The year is ${ year_of(some_date) }.
+
+    The month is ${ month_of(some_date) }.
+
+    The day of month is ${ day_of(some_date) }.
   ---
 "dead-end": |-
   ---
@@ -488,6 +504,28 @@
     vegetable.
     % endif
   mandatory: true
+  ---
+"del": |-
+  ---
+  mandatory: true
+  code: |
+    if user_is_communist and user_reconsidering_communism:
+      user_reconsidering_communism = False
+      del user_is_communist
+  ---
+"dialog-box": |-
+  ---
+  mandatory: true
+  code: |
+    if task_not_yet_performed('show current date'):
+      mark_task_as_performed('show current date')
+      show_date
+  ---
+  event: show_date
+  question: |
+    The current date is ${ format_date(current_datetime()) }.
+  buttons:
+    - Ok: continue
   ---
 "document": |-
   ---
@@ -743,6 +781,16 @@
       user_reconsidering_communism = False
       force_ask('user_is_communist')
   ---
+"force-gather": |-
+  ---
+  initial: true
+  code: |
+    process_action()
+  ---
+  event: gather_it
+  code: |
+    force_gather('favorite_food')
+  ---
 "formatting": "---\nquestion: |\n  Here is your document.\nsubquestion: |\n  It illustrates\
   \ some document-related\n  features.\nallow emailing: false\nattachments:\n  - name:\
   \ A test document\n    filename: test_document\n    valid formats:\n      - pdf\n\
@@ -786,6 +834,15 @@
   \ here beside\n      the Potomac. We now find it\n      necessary to provide by\
   \ great\n      additional buildings for the\n      business of the government.\n\
   mandatory: true\n---"
+"function": |-
+  ---
+  question: |
+    The word ${ color } becomes
+    ${ capitalize(color) } when
+    passed through the
+    `capitalize()` function.
+  mandatory: true
+  ---
 "generic-object": |-
   ---
   generic object: Individual
@@ -1559,6 +1616,14 @@
     cat_food_cans_needed = number_of_cats * 4
   reconsider: true
   ---
+"refresh": |-
+  ---
+  question: |
+    The current date is ${ format_date(current_datetime()) }.
+  buttons:
+    - Tell me again: refresh
+  mandatory: true
+  ---
 "required-code": |-
   ---
   question: |
@@ -1656,6 +1721,16 @@
         We suspect you prefer
         ${ fruit } to ${ vegetable }.
   ---
+"sample-function": |-
+  ---
+  modules:
+    - .test
+  ---
+  mandatory: true
+  question: |
+    The number after 3 is
+    ${ plus_one(3) }.
+  ---
 "set-language": "---\ninitial: true\ncode: |\n  set_language(language)\n---\nquestion:\
   \ |\n  What language do you speak?\nfield: language\nchoices:\n  - English: en\n\
   \  - Espa\xF1ol: es\n---"
@@ -1707,6 +1782,15 @@
   signature: target_variable
   under: |
     ${ user }
+  ---
+"signin": |-
+  ---
+  mandatory: true
+  code: |
+    if user_logged_in():
+      goodbye_page
+    else:
+      sign_in_page
   ---
 "single-spacing": |-
   ---
@@ -1977,7 +2061,7 @@
   video: |
     [YOUTUBE 9bZkp7q19f0]
   ---
-"video-nyc": |-
+"video-static": |-
   ---
   question: |
     Are you traveling to New York City?
