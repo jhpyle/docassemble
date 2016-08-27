@@ -161,7 +161,7 @@ def rtf_filter(text, metadata=dict(), styles=dict(), question=None):
         default_spacing = 'double'
     after_space = after_space_multiplier * rtf_after_space[default_spacing]
     text = re.sub(r'{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 \[HEADING([0-9]+)\] *', (lambda x: '{\\pard ' + styles.get(x.group(1), '\\ql \\f0 \\sa180 \\li0 \\fi0 ')), text)
-    text = re.sub(r'{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 \[(BEGIN_TWOCOL|BREAK|END_TWOCOL|BEGIN_CAPTION|VERTICAL_LINE|END_CAPTION|SINGLESPACING|DOUBLESPACING|INDENTATION|NOINDENTATION|PAGEBREAK|SKIPLINE|FLUSHLEFT|FLUSHRIGHT|CENTER|BOLDCENTER)\] *', r'[\1]{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 ', text)
+    text = re.sub(r'{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 \[(BEGIN_TWOCOL|BREAK|END_TWOCOL|BEGIN_CAPTION|VERTICAL_LINE|END_CAPTION|SINGLESPACING|DOUBLESPACING|INDENTATION|NOINDENTATION|PAGEBREAK|SKIPLINE|FLUSHLEFT|FLUSHRIGHT|CENTER|BOLDCENTER|INDENTBY[^\]]*)\] *', r'[\1]{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 ', text)
     text = re.sub(r'{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 *\\par}', r'', text)
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
     text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', rtf_caption_table, text, flags=re.DOTALL)
@@ -186,8 +186,11 @@ def rtf_filter(text, metadata=dict(), styles=dict(), question=None):
     text = re.sub(r' *\[NEWLINE\] *', r'\\line ', text)
     text = re.sub(r' *\[BR\] *', r'\\line ', text)
     text = re.sub(r' *\[TAB\] *', r'\\tab ', text)
-    #text = re.sub(r'\[CENTER\] *', r'\\qc ', text)
-    #text = re.sub(r'\[BOLDCENTER\] *', r'\\qc \\b ', text)
+    text = re.sub(r'\[ENDFLUSHLEFT\]', r'', text)
+    text = re.sub(r'\[ENDFLUSHRIGHT\]', r'', text)
+    text = re.sub(r'\[ENDCENTER\]', r'', text)
+    text = re.sub(r'\[ENDBOLDCENTER\]', r'', text)
+    text = re.sub(r'\[ENDINDENTBY\]', r'', text)
     text = re.sub(r'\\sa180\\sa180\\par', r'\\par', text)
     text = re.sub(r'\\sa180', r'\\sa0', text)
     text = re.sub(r'\s*\[(SINGLESPACING|DOUBLESPACING|TRIPLESPACING|ONEANDAHALFSPACING|INDENTATION|NOINDENTATION)\]\s*', r'\n[\1]\n', text)
@@ -217,7 +220,18 @@ def rtf_filter(text, metadata=dict(), styles=dict(), question=None):
         elif re.search(r'\[NOINDENTATION\]', line):
             indentation_command = '\\fi0'
         elif line != '':
-            if re.search(r'\[FLUSHLEFT\]', line):
+            n = re.search(r'\[INDENTBY *([0-9\.]+ *[A-Za-z]+) *([0-9\.]+ *[A-Za-z]+)\]', line)
+            m = re.search(r'\[INDENTBY *([0-9\.]+ *[A-Za-z]+)\]', line)
+            if n:
+                line = re.sub(r'\\fi-?[0-9]+ ', r'\\fi0 ', line)
+                line = re.sub(r'\\ri-?[0-9]+ ', r'', line)
+                line = re.sub(r'\\li-?[0-9]+ ', r'\\li' + str(convert_length(n.group(1), 'twips')) + r' \\ri' + str(convert_length(n.group(2), 'twips')) + ' ', line)
+                line = re.sub(r'\[INDENTBY[^\]]*\]', '', line)
+            if m:
+                line = re.sub(r'\\fi-?[0-9]+ ', r'\\fi0 ', line)
+                line = re.sub(r'\\li-?[0-9]+ ', r'\\li' + str(convert_length(m.group(1), 'twips')) + ' ', line)
+                line = re.sub(r'\[INDENTBY[^\]]*\]', '', line)
+            elif re.search(r'\[FLUSHLEFT\]', line):
                 #sys.stderr.write("Flushleft line is: " + line + "\n")
                 line = re.sub(r'\\fi-?[0-9]+ ', r'\\fi0 ', line)
                 line = re.sub(r'\[FLUSHLEFT\]', '', line)
@@ -240,9 +254,9 @@ def rtf_filter(text, metadata=dict(), styles=dict(), question=None):
                 line = re.sub(r'\\pard ', r'\\pard ' + str(spacing_command), line)
             if not (re.search(r'\\fi0\\(endash|bullet)', line) or re.search(r'\\s[0-9]', line)):
                 if after_space > 0:
-                    line = re.sub(r'\\sa[0-9]+ ', r'\\sa' + str(after_space), line)
+                    line = re.sub(r'\\sa[0-9]+ ', r'\\sa' + str(after_space) + ' ', line)
                 else:
-                    line = re.sub(r'\\sa[0-9]+ ', r'\\sa0', line)
+                    line = re.sub(r'\\sa[0-9]+ ', r'\\sa0 ', line)
             text += line + '\n'
     text = re.sub(r'{\\pard \\sl[0-9]+\\slmult[0-9]+ \\ql \\f[0-9]+ \\sa[0-9]+ \\li[0-9]+ \\fi-?[0-9]*\s*\\par}', r'', text)
     #text = re.sub(r'{\\pard \\sl[0-9]+\\slmult[0-9]+ \\ql \\f[0-9]+ \\sa[0-9]+ \\li[0-9]+ \\fi-?[0-9]*\s*\[FLUSHLEFT\]}', r'', text)
@@ -319,9 +333,17 @@ def pdf_filter(text, metadata=dict(), question=None):
     text = re.sub(r'\[NEWLINE\] *', r'\\newline ', text)
     text = re.sub(r'\[BR\] *', r'\\manuallinebreak ', text)
     text = re.sub(r'\[TAB\] *', r'\\manualindent ', text)
-    text = re.sub(r'\[FLUSHLEFT\] *(.+?)\n\n', flushleft_pdf, text, flags=re.MULTILINE | re.DOTALL)
-    text = re.sub(r'\[CENTER\] *(.+?)\n\n', center_pdf, text, flags=re.MULTILINE | re.DOTALL)
-    text = re.sub(r'\[BOLDCENTER\] *(.+?)\n\n', boldcenter_pdf, text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[ENDFLUSHLEFT\]', r'\n\n', text)
+    text = re.sub(r'\[ENDFLUSHRIGHT\]', r'\n\n', text)
+    text = re.sub(r'\[ENDCENTER\]', r'\n\n', text)
+    text = re.sub(r'\[ENDBOLDCENTER\]', r'\n\n', text)
+    text = re.sub(r'\[ENDINDENTBY\]', r'\n\n', text)
+    text = re.sub(r'\[FLUSHLEFT\] *(.+?)\n *\n', flushleft_pdf, text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[FLUSHRIGHT\] *(.+?)\n *\n', flushright_pdf, text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[CENTER\] *(.+?)\n *\n', center_pdf, text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[BOLDCENTER\] *(.+?)\n *\n', boldcenter_pdf, text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[INDENTBY *([0-9]+ *[A-Za-z]+)\] *(.+?)\n *\n', indentby_left_pdf, text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[INDENTBY *([0-9]+ *[A-Za-z]+) *([0-9]+ *[A-Za-z]+)\] *(.+?)\n *\n', indentby_both_pdf, text, flags=re.MULTILINE | re.DOTALL)
     return(text)
 
 def html_filter(text, status=None, question=None):
@@ -357,12 +379,26 @@ def html_filter(text, status=None, question=None):
     text = re.sub(r'\[NEWLINE\] *', r'<br />', text)
     text = re.sub(r'\[BR\] *', r'<br />', text)
     text = re.sub('\[TAB\] *', '<span class="datab"></span>', text)
+    text = re.sub(r'\[ENDFLUSHLEFT\]', r'\n\n', text)
+    text = re.sub(r'\[ENDFLUSHRIGHT\]', r'\n\n', text)
+    text = re.sub(r'\[ENDCENTER\]', r'\n\n', text)
+    text = re.sub(r'\[ENDBOLDCENTER\]', r'\n\n', text)
+    text = re.sub(r'\[ENDINDENTBY\]', r'\n\n', text)
     text = re.sub(r'\[FLUSHLEFT\] *(.+?)\n\n', r'<p class="daflushleft">\1</p>\n\n', text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[FLUSHRIGHT\] *(.+?)\n\n', r'<p class="daflushright">\1</p>\n\n', text, flags=re.MULTILINE | re.DOTALL)
     text = re.sub(r'\[CENTER\] *(.+?)\n\n', r'<p class="dacenter">\1</p>\n\n', text, flags=re.MULTILINE | re.DOTALL)
     text = re.sub(r'\[BOLDCENTER\] *(.+?)\n\n', r'<p class="dacenter dabold">\1</p>\n\n', text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[INDENTBY *([0-9]+ *[A-Za-z]+)\] *(.+?)\n\n', html_left_indentby, text, flags=re.MULTILINE | re.DOTALL)
+    text = re.sub(r'\[INDENTBY *([0-9]+ *[A-Za-z]+) *([0-9]+ *[A-Za-z]+)\] *(.+?)\n\n', html_both_indentby, text, flags=re.MULTILINE | re.DOTALL)
     text = re.sub(r'\\_', r'__', text)
     text = re.sub(r'\n+$', r'', text)
     return(text)
+
+def html_left_indentby(match):
+    return r'<p style="padding-left:' + str(convert_length(match.group(1), 'px')) + 'px">' + match.group(2) + '</p>\n\n'
+
+def html_both_indentby(match):
+    return r'<p style="padding-left:' + str(convert_length(match.group(1), 'px')) + 'px;padding-right:' + str(convert_length(match.group(2), 'px')) + 'px">' + match.group(3) + '</p>\n\n'
 
 def clean_markdown_to_latex(string):
     string = re.sub(r'^[\n ]+', '', string)
@@ -399,15 +435,15 @@ def add_newlines(string):
     string = re.sub(r'(?<!\[NEWLINE\])\n', r' [NEWLINE]\n', string)
     return string    
 
-def flushleft_rtf(match):
-    string = match.group(1)
-    string = re.sub(r'\\fi[0-9]+', r'\\fi0', string)
-    return string + '}'
-
 def flushleft_pdf(match):
     string = match.group(1)
     string = re.sub(r'\[NEWLINE\] *', r'\\newline ', string)
     return('\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\setlength{\\parindent}{0pt}\\noindent ' + unicode(string) + '\\par\\endgroup' + "\n\n")
+
+def flushright_pdf(match):
+    string = match.group(1)
+    string = re.sub(r'\[NEWLINE\] *', r'\\newline ', string)
+    return('\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\setlength{\\parindent}{0pt}\\RaggedLeft ' + unicode(string) + '\\par\\endgroup' + "\n\n")
 
 def center_pdf(match):
     string = match.group(1)
@@ -418,6 +454,16 @@ def boldcenter_pdf(match):
     string = match.group(1)
     string = re.sub(r'\[NEWLINE\] *', r'\\newline ', string)
     return('\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\Centering\\bfseries\\noindent ' + unicode(string) + '\\par\\endgroup' + "\n\n")
+
+def indentby_left_pdf(match):
+    string = match.group(2)
+    string = re.sub(r'\[NEWLINE\] *', r'\\newline ', string)
+    return('\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\setlength{\\leftskip}{' + str(convert_length(match.group(1), 'pt')) + 'pt}\\noindent ' + unicode(string) + '\\par\\endgroup' + "\n\n")
+
+def indentby_both_pdf(match):
+    string = match.group(3)
+    string = re.sub(r'\[NEWLINE\] *', r'\\newline ', string)
+    return('\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\setlength{\\leftskip}{' + str(convert_length(match.group(1), 'pt')) + 'pt}\\setlength{\\rightskip}{' + str(convert_length(match.group(2), 'pt')) + 'pt}\\noindent ' + unicode(string) + '\\par\\endgroup' + "\n\n")
 
 def image_as_rtf(match, question=None):
     width_supplied = False
@@ -523,7 +569,7 @@ def rtf_image(file_info, width, insert_page_breaks):
         content = ''
     return(content + image.Data)
     
-unit_multipliers = {'twips':1440, 'hp': 144, 'in':72, 'pt':1, 'px':1, 'em':12, 'cm':28.346472}
+unit_multipliers = {'twips': 0.0500, 'hp': 0.5, 'in': 72, 'pt': 1, 'px': 1, 'em': 12, 'cm': 28.346472}
 
 def convert_length(length, unit):
     value = pixels_in(length)

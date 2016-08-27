@@ -1291,7 +1291,7 @@ def index():
     #logmessage("Getting interview status where action is " + str(action))
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location), tracker=user_dict['_internal']['tracker'])
     if should_assemble:
-        logmessage("Reassembling.")
+        #logmessage("Reassembling.")
         interview.assemble(user_dict, interview_status)
     #else:
         #logmessage("I am not assembling.")        

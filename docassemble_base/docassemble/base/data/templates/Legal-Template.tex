@@ -93,17 +93,20 @@ $endif$
 $if(geometry)$
 \usepackage[$for(geometry)$$geometry$$sep$,$endfor$]{geometry}
 $endif$
-\newcommand{\headerlines}{1}
-$if(HeaderLines)$
-\renewcommand{\headerlines}{$HeaderLines$}
-$endif$
-\ifthenelse{\boolean{usesheader} \OR \boolean{usesfirstheader}}{\geometry{headheight=\baselineskip*\real{\headerlines}}}{\geometry{headsep=0pt,headheight=0pt}}
+%\newcommand{\headerlines}{1}
+%$if(HeaderLines)$
+%\renewcommand{\headerlines}{$HeaderLines$}
+%$endif$
+%\ifthenelse{\boolean{usesheader} \OR \boolean{usesfirstheader}}{\geometry{headheight=\baselineskip*\real{\headerlines}}}{\geometry{headsep=0pt,headheight=0pt}}
 
+\newlength{\defaulttopmargin}
+\setlength{\defaulttopmargin}{1in}
+\newlength{\defaultheadheight}
+\setlength{\defaultheadheight}{\headheight}
+\newlength{\defaultbottommargin}
+\setlength{\defaultbottommargin}{1in}
 $if(FooterSkip)$
 \geometry{footskip=$FooterSkip$}
-\geometry{bottom=1in-$FooterSkip$}
-$else$
-\geometry{bottom=1in-\footskip}
 $endif$
 $if(natbib)$
 \usepackage{natbib}
@@ -259,6 +262,7 @@ $if(HeaderCenter)$
 \fancyhead[CE,CO]{\myfontfamily $HeaderCenter$}
 $endif$
 }
+
 \fancypagestyle{firststyle}{
 \fancyhf{}
 $if(FirstFooterLeft)$
@@ -281,12 +285,80 @@ $if(FirstHeaderCenter)$
 $endif$
 }
 
+\newsavebox{\headerbox}
+\newlength{\newtop}
+\setlength{\newtop}{\defaulttopmargin}
+\newlength{\maxheaderfirst}
+\setlength{\maxheaderfirst}{0pt}
+\newlength{\thisheaderheight}
+
+$if(FirstHeaderLeft)$
+\savebox{\headerbox}{\parbox{\textwidth}{\myfontfamily $FirstHeaderLeft$}}
+\settototalheight{\thisheaderheight}{\usebox{\headerbox}}
+\ifthenelse{\lengthtest{\thisheaderheight>\maxheaderfirst}}{\setlength{\maxheaderfirst}{\thisheaderheight}}{}
+$endif$
+$if(FirstHeaderRight)$
+\savebox{\headerbox}{\parbox{\textwidth}{\myfontfamily $FirstHeaderRight$}}
+\settototalheight{\thisheaderheight}{\usebox{\headerbox}}
+\ifthenelse{\lengthtest{\thisheaderheight>\maxheaderfirst}}{\setlength{\maxheaderfirst}{\thisheaderheight}}{}
+$endif$
+$if(FirstHeaderCenter)$
+\savebox{\headerbox}{\parbox{\textwidth}{\myfontfamily $FirstHeaderCenter$}}
+\settototalheight{\thisheaderheight}{\usebox{\headerbox}}
+\ifthenelse{\lengthtest{\thisheaderheight>\maxheaderfirst}}{\setlength{\maxheaderfirst}{\thisheaderheight}}{}
+$endif$
+
+\newlength{\maxheader}
+\setlength{\maxheader}{0pt}
+
+$if(HeaderLeft)$
+\savebox{\headerbox}{\parbox{\textwidth}{\myfontfamily $HeaderLeft$}}
+\settototalheight{\thisheaderheight}{\usebox{\headerbox}}
+\ifthenelse{\lengthtest{\thisheaderheight>\maxheader}}{\setlength{\maxheader}{\thisheaderheight}}{}
+$endif$
+$if(HeaderRight)$
+\savebox{\headerbox}{\parbox{\textwidth}{\myfontfamily $HeaderRight$}}
+\settototalheight{\thisheaderheight}{\usebox{\headerbox}}
+\ifthenelse{\lengthtest{\thisheaderheight>\maxheader}}{\setlength{\maxheader}{\thisheaderheight}}{}
+$endif$
+$if(HeaderCenter)$
+\savebox{\headerbox}{\parbox{\textwidth}{\myfontfamily $HeaderCenter$}}
+\settototalheight{\thisheaderheight}{\usebox{\headerbox}}
+\ifthenelse{\lengthtest{\thisheaderheight>\maxheader}}{\setlength{\maxheader}{\thisheaderheight}}{}
+$endif$
+
+\newlength{\maxheaderboth}
+\setlength{\maxheaderboth}{\maxheader}
+\ifthenelse{\lengthtest{\maxheaderfirst>\maxheader}}{\setlength{\maxheaderboth}{\maxheaderfirst}}{}
+
+\newlength{\backup}
+\setlength\backup{0pt}
+
+\ifthenelse{\lengthtest{\maxheaderboth>\defaultheadheight}}{
+  \addtolength{\newtop}{\maxheaderboth-\defaultheadheight}
+  \ifthenelse{\lengthtest{\maxheaderfirst<\maxheader}}{
+    \ifthenelse{\lengthtest{\maxheaderfirst=0pt}}{%
+      \setlength{\backup}{\defaultheadheight-\maxheaderboth}
+    }{
+      \setlength{\backup}{\maxheaderfirst-\maxheader}
+    }
+  }{
+  }
+}{
+}
+
+\ifthenelse{\boolean{usesheader} \OR \boolean{usesfirstheader}}{
+  \addtolength{\maxheaderboth}{1.76pt}
+  \geometry{top=\newtop,headheight=\maxheaderboth}
+}{
+  %\geometry{headsep=0pt,headheight=0pt}
+}
+
 \pagestyle{basicstyle}
 
 \begin{document}
-\newlength{\mynegspace}
-\setlength\mynegspace{\baselineskip*\real{\headerlines}*\real{2}+\headsep}
-\ifthenelse{\boolean{usesfirstheader} \AND \boolean{usesheader}}{}{\vspace*{-\mynegspace}}
+\ifthenelse{\lengthtest{\backup<0pt}}{\addtolength{\backup}{-2\baselineskip}\vspace*{\backup}\par}{}
+
 $if(SingleSpacing)$
 \setlength{\parskip}{\myfontsize}
 $else$
@@ -329,6 +401,7 @@ $if(toc)$
 }
 $endif$
 \thispagestyle{firststyle}
+
 $body$
 
 $if(natbib)$

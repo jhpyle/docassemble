@@ -682,7 +682,7 @@ attachments:
       Your annual income is ${ currency(client.income.total()) }
       and the value of all you own is 
       ${ currency(client.asset.total()) }.  Your home is best described as
-      an "${ client.address.type }."
+      a "${ client.address.type }."
 
       % if hatred_level > 8:
       You seem to dislike ${ case.defendant }.

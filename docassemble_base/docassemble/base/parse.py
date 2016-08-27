@@ -2005,10 +2005,10 @@ class Interview:
                         raise MandatoryQuestion()
             except NameError as errMess:
                 if isinstance(errMess, ForcedNameError):
-                    logmessage("forced nameerror")
+                    #logmessage("forced nameerror")
                     follow_mc = False
                 else:
-                    logmessage("regular nameerror")
+                    #logmessage("regular nameerror")
                     follow_mc = True
                 #logmessage("Gota this: " + str(errMess))
                 missingVariable = extract_missing_name(errMess)
@@ -2399,10 +2399,10 @@ class Interview:
                     raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + missingVariable + "' that could not be looked up in the question file or in any of the files incorporated by reference into the question file.")
                 except NameError as errMess:
                     if isinstance(errMess, ForcedNameError):
-                        logmessage("forced nameerror")
+                        #logmessage("forced nameerror")
                         follow_mc = False
                     else:
-                        logmessage("regular nameerror")
+                        #logmessage("regular nameerror")
                         follow_mc = True
                     #logmessage("got this error: " + str(errMess))
                     newMissingVariable = extract_missing_name(errMess)

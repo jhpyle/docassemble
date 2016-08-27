@@ -45,7 +45,6 @@
     '("LR" 1)
     '("RL" 1)
     "euro"
-    "headerlines"
     "tightlist"
     "oldparagraph"
     "oldsubparagraph")
@@ -55,6 +54,16 @@
    (LaTeX-add-bibliographies
     "$biblio-files$")
    (LaTeX-add-lengths
-    "mynegspace"
-    "myindentamount")))
+    "defaulttopmargin"
+    "defaultheadheight"
+    "defaultbottommargin"
+    "newtop"
+    "maxheaderfirst"
+    "thisheaderheight"
+    "maxheader"
+    "maxheaderboth"
+    "backup"
+    "myindentamount")
+   (LaTeX-add-saveboxes
+    "headerbox")))
 

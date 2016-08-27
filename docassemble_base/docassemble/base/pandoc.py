@@ -80,7 +80,7 @@ class Pandoc(object):
             for yaml_file in self.additional_yaml:
                 if yaml_file is not None:
                     yaml_to_use.append(yaml_file)
-            #print "Before: " + repr(self.input_content)
+            #logmessage("Before: " + repr(self.input_content))
             self.input_content = docassemble.base.filter.pdf_filter(self.input_content, metadata=metadata_as_dict, question=question)
             #logmessage("After: " + repr(self.input_content))
         temp_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md", delete=False)

@@ -10,9 +10,75 @@ subquestion: |
 attachments:
   - name: A test document
     filename: test_document
+    metadata:
+#      HeaderRight: |
+#        Example, LLP
+#        [BR] 123 Main Street, Suite 1500
+#        [BR] Philadelphia, PA 19102
+      SingleSpacing: true
     content: |
       This line is to the left.
       
       This line is also to the left.
       
       [FLUSHRIGHT] This line is flush right. [NEWLINE] So is this line.
+
+      [INDENTBY 1in] This line is indented. [NEWLINE] So is this line.
+
+      [INDENTBY 2in 1in] This is a very confined paragraph that is not
+      to be taken lightly because it is so absolutely constrained
+      beyond any belief or any person's imagination in the whole wide
+      world under the sun and the moon and the barn down the street.
+
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc
+      quis odio a dolor rhoncus elementum ut sed ex. Lorem ipsum dolor
+      sit amet, consectetur adipiscing elit. Aenean blandit massa nec
+      ante rutrum, nec interdum ipsum auctor. Pellentesque posuere
+      rhoncus pulvinar. Cras rutrum tellus sit amet elit euismod, quis
+      viverra metus dignissim. Aenean id convallis eros. Vestibulum
+      tristique, erat non ornare rhoncus, lectus urna consectetur
+      urna, sit amet rhoncus magna est a orci. Sed sed euismod tortor.
+
+      Aliquam nec turpis massa. Integer non vulputate nibh. Integer mi
+      justo, sagittis eget erat quis, porta auctor purus. Quisque ac
+      rutrum nibh. Duis id massa faucibus, facilisis mauris sit amet,
+      congue nisl. Duis vel odio vehicula, sodales tellus ut, tempor
+      ipsum. Morbi tempor aliquam gravida. Aliquam tortor est,
+      tincidunt sed libero et, vehicula ullamcorper tellus. Curabitur
+      quis magna erat. Vivamus euismod gravida ante, eu congue arcu
+      ultricies ac. Praesent porta euismod urna non sodales.
+
+      Phasellus orci diam, sodales a elementum ac, gravida sit amet
+      erat. Nunc imperdiet malesuada magna, nec laoreet tortor dapibus
+      in. Praesent nulla elit, rhoncus vitae tincidunt non, rutrum ut
+      justo. Suspendisse aliquam sollicitudin porttitor. In suscipit,
+      magna sit amet eleifend iaculis, nisl elit sodales diam, dapibus
+      rutrum odio augue sed velit. Ut ullamcorper, quam at dapibus
+      hendrerit, nibh libero vulputate massa, non pretium nisl libero
+      at enim. Donec vestibulum sapien purus, et mattis nunc ultricies
+      non. Morbi velit lacus, ornare a lectus sed, auctor accumsan
+      ante. Donec imperdiet quis velit non varius. Suspendisse in
+      ultricies massa, id venenatis arcu.
+
+      In vitae erat luctus urna rutrum convallis et id nibh. Fusce
+      suscipit lacus at ligula mattis, vitae maximus nunc
+      ultrices. Praesent pellentesque nulla sem. Donec rhoncus leo
+      velit. Ut nec dui accumsan, commodo elit ac, maximus
+      lacus. Curabitur malesuada tortor augue, quis mattis augue
+      aliquet vel. Mauris gravida orci at neque dictum
+      scelerisque. Quisque turpis quam, dignissim ut augue quis,
+      euismod placerat nisi. Donec convallis mollis varius. Fusce
+      posuere rutrum risus vel porta. Curabitur erat diam, semper vel
+      condimentum vitae, fringilla non neque. Etiam nec nunc id est
+      pharetra dignissim. Nam condimentum nibh sit amet erat mattis
+      suscipit vitae vel eros. Donec eu pellentesque arcu, vitae
+      euismod tortor. Aliquam accumsan nulla aliquam diam ultricies
+      venenatis.
+
+      Cras mattis tellus neque, ut congue mi scelerisque eget. Cras
+      finibus tincidunt augue, ut rutrum risus vehicula vel. Praesent
+      fermentum tortor posuere feugiat interdum. Ut turpis arcu,
+      sagittis vitae odio vel, gravida cursus urna. Suspendisse
+      dignissim tortor id iaculis tincidunt. Nulla
+      facilisi. Suspendisse lacinia nisl interdum, egestas turpis non,
+      fringilla felis.
