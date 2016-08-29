@@ -1,3 +1,6 @@
+import mimetypes
+import re
+
 class DAError(Exception):
     def __init__(self, value):
         self.value = value
@@ -79,6 +82,25 @@ class ResponseError(Exception):
             return str(self.response)
         return "A ResponseError exception was thrown"
 
+class SendFileError(Exception):
+    def __init__(self, *pargs, **kwargs):
+        if len(pargs) == 0 and not ('filename' in kwargs):
+            self.filename = None
+        if len(pargs) > 0:
+            self.filename = pargs[0];
+        elif 'filename' in kwargs:
+            self.filename = kwargs['filename'];
+        if 'content_type' in kwargs:
+            self.content_type = kwargs['content_type'];
+        elif self.filename is not None:
+            self.content_type = get_mimetype(self.filename)
+        else:
+            self.content_type = 'text/plain; charset=utf-8'
+    def __str__(self):
+        if hasattr(self, 'filename'):
+            return str(self.filename)
+        return "A ResponseError exception was thrown"
+
 class CommandError(Exception):
     def __init__(self, *pargs, **kwargs):
         if len(pargs) > 0:
@@ -90,3 +112,13 @@ class CommandError(Exception):
         self.url = kwargs.get('url', '');
     def __str__(self):
         return str(self.return_type)
+
+def get_mimetype(filename):
+    mimetype, encoding = mimetypes.guess_type(filename)
+    extension = filename.lower()
+    extension = re.sub('.*\.', '', extension)
+    if extension == '3gpp':
+        mimetype = 'audio/3gpp'
+    if mimetype is None:
+        mimetype = 'text/plain'    
+    return mimetype

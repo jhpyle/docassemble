@@ -53,6 +53,7 @@ app.config['USER_AFTER_RESEND_CONFIRM_EMAIL_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_RESET_PASSWORD_ENDPOINT'] = 'user.login' 
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['USE_X_SENDFILE'] = daconfig.get('xsendfile', True)
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 DEBUG = daconfig.get('debug', False)
 docassemble.base.parse.debug = DEBUG
@@ -151,6 +152,19 @@ def can_access_file_number(file_number):
     if upload:
         return True
     return False
+
+def get_new_file_number(user_code, file_name, yaml_file_name=None):
+    new_upload = Uploads(key=user_code, filename=file_name, yamlfile=yaml_file_name)
+    db.session.add(new_upload)
+    db.session.commit()
+    return new_upload.indexno
+    # indexno = None
+    # cur = conn.cursor()
+    # cur.execute("INSERT INTO uploads (key, filename) values (%s, %s) RETURNING indexno", [user_code, file_name])
+    # for d in cur:
+    #     indexno = d[0]
+    # conn.commit()
+    # return (indexno)
 
 def get_info_from_file_number(file_number):
     result = dict()

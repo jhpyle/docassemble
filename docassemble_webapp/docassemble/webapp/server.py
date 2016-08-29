@@ -1644,6 +1644,16 @@ def index():
         response_to_send.headers['Content-type'] = interview_status.extras['content_type']
         if set_cookie:
             response_to_send.set_cookie('secret', secret)
+    elif interview_status.question.question_type == "sendfile":
+        save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
+        the_path = interview_status.question.response_filename
+        if not os.path.isfile(the_path):
+            logmessage("Could not send file because file (" + the_path + ") not found")
+            abort(404)
+        response_to_send = send_file(the_path, mimetype=interview_status.extras['content_type'])
+        response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        if set_cookie:
+            response_to_send.set_cookie('secret', secret)
     else:
         response_to_send = None
     # Why do this?
@@ -2123,19 +2133,6 @@ def reset_user_dict(user_code, filename):
     SpeakList.query.filter_by(key=user_code, filename=filename).delete()
     db.session.commit()
     return
-
-def get_new_file_number(user_code, file_name, yaml_file_name=None):
-    new_upload = Uploads(key=user_code, filename=file_name, yamlfile=yaml_file_name)
-    db.session.add(new_upload)
-    db.session.commit()
-    return new_upload.indexno
-    # indexno = None
-    # cur = conn.cursor()
-    # cur.execute("INSERT INTO uploads (key, filename) values (%s, %s) RETURNING indexno", [user_code, file_name])
-    # for d in cur:
-    #     indexno = d[0]
-    # conn.commit()
-    # return (indexno)
 
 def make_navbar(status, page_title, page_short_title, steps, show_login):
     navbar = """\

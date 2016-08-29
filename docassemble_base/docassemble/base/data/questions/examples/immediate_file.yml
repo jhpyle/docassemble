@@ -1,0 +1,18 @@
+metadata:
+  title: Immediate file
+---
+modules:
+  - docassemble.base.util
+---
+attachment:
+  name: A file
+  file: test_file
+  variable name: the_file
+  valid formats:
+    - rtf
+  content: |
+    Hello, world!
+---
+mandatory: true
+code: |
+  send_file(the_file.rtf.path())
