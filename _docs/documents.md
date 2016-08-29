@@ -443,32 +443,60 @@ In addition to using [Markdown] syntax, you can use
 **docassemble**-specific markup tags to control the appearance of
 documents.
 
-* `[INDENTATION]` - From now on, indent every paragraph.
-* `[NOINDENTATION]` - From now on, do not indent every paragraph.
-* `[BEGIN_TWOCOL] First column text [BREAK] Second column text [END_TWOCOL]` -
-  Puts text into two columns.
-* `[FLUSHLEFT]` - Used at the beginning of a paragraph to designate
+* `[INDENTATION]` - From now on, indent the first line of every paragraph.
+* `[NOINDENTATION]` - From now on, do not indent the first line of
+  every paragraph.
+* `[BEGIN_TWOCOL] First column text [BREAK] Second column text
+  [END_TWOCOL]` - Puts text into two columns.
+* `[FLUSHLEFT]` - Used at the beginning of a paragraph to indicate
   that the paragraph should be flushed left and not indented.
-* `[CENTER]` - Used at the beginning of a paragraph to designate that
+* `[FLUSHRIGHT]` - Used at the beginning of a paragraph to indicate
+  that the paragraph should be flushed right and not indented.
+* `[CENTER]` - Used at the beginning of a paragraph to indicate that
   the paragraph should be centered.
 * `[BOLDCENTER]` - Like `[CENTER]` except that text is bolded.
+* `[INDENTBY 1in]` - Used at the beginning of a paragraph to indicate
+  that all the lines paragraph should be indented on the left.  In
+  this example, the amount of indentation is one inch.  You can
+  express lengths using units of `in` for inches, `pt` for points, or
+  `cm` for centimeters.
+* `[INDENTBY 1in 0.5in]` - This is like the previous tag, except it
+  indents both on the left and on the right.  In this example, the
+  amount of left indentation is one inch and the amount of right
+  indentation is half an inch.
+* `[BORDER]` - Used at the beginning of a paragraph to indicate that
+  the paragraph should have a box drawn around it.  (The border will
+  only go around one paragraph; that is, the effect of `[BORDER]`
+  lasts until the next empty line.  You can use `[NEWPAR]` in place of
+  an empty line to extend the effect of the `[BORDER]` tag to
+  another paragraph.)
 * `[SINGLESPACING]` - From now on, paragraphs should be single-spaced.
-* `[ONEANDAHALFSPACING]` - From now on, paragraphs should be one-and-a-half-spaced.
+* `[ONEANDAHALFSPACING]` - From now on, paragraphs should be
+  one-and-a-half-spaced.
 * `[DOUBLESPACING]` - From now on, paragraphs should be double-spaced.
 * `[NBSP]` - Insert a non-breaking space.
-* `[ENDASH]` - Insert an en dash.
-* `[EMDASH]` - Insert an em dash.
-* `[HYPHEN]` - Insert a hyphen.
+* `[ENDASH]` - Normally, `--` produces an en-dash, but if you want to
+  be explicit, `[ENDASH]` will do the same thing.
+* `[EMDASH]` - Normally, `---` produces an em-dash, but if you want to
+  be explicit, `[EMDASH]` will do the same thing.
+* `[HYPHEN]` - Insert a hyphen.  Normally, `---` produces an em-dash, but if you want to
+  be explicit, `[HYPHEN]` will do the same thing.
 * `[PAGEBREAK]` - Insert a manual page break.
 * `[PAGENUM]` - Insert the current page number.
 * `[SECTIONNUM]` - Insert the current section number.
-* `[SKIPLINE]` - Skip a line (insert vertical space).  (Cannot be used
-  within `[FLUSHLEFT]`, `[CENTER]`, and `[BOLDCENTER]` environments.)
+* `[NEWPAR]` - Insert a paragraph break.  (Cannot be used within
+  `[FLUSHLEFT]`, `[FLUSHRIGHT]`, `[CENTER]`, or `[BOLDCENTER]` environments.)
+* `[SKIPLINE]` - Skip a line (insert vertical space).  This is
+  different from `[NEWPAR]` because `[NEWPAR]` breaks a paragraph but
+  multiple calls to `[NEWPAR]` will not insert additional vertical
+  space.  (Cannot be used within `[FLUSHLEFT]`, `[FLUSHRIGHT]`,
+  `[CENTER]`, or `[BOLDCENTER]` environments.)
 * `[BR]` - Insert a line break.  `[BR]` is useful to use with
-  environments like `[FLUSHLEFT]`, `[CENTER]`, and `[BOLDCENTER]` that
-  only apply to a single paragraph.  Within the `[BEGIN_TWOCOL]`
-  environment, a standard [Markdown] paragraph break (pressing enter
-  twice, i.e., leaving one blank line) has the same effect.
+  environments like `[FLUSHLEFT]`, `[FLUSHRIGHT]`, `[CENTER]`, and
+  `[BOLDCENTER]` that only apply to a single paragraph.  Within the
+  `[BEGIN_TWOCOL]` environment, a standard [Markdown] paragraph break
+  (pressing enter twice, i.e., leaving one blank line) has the same
+  effect.
 * `[TAB]` - Insert a tab (horizontal space), e.g., to indent the first
   line of a paragraph when it otherwise would not be indented.
 
@@ -536,29 +564,7 @@ Metadata values can contain [Mako] template commands.
   * `HeaderLeft`
   * `HeaderCenter`
   * `HeaderRight`
-* `HeaderLines` - if you have a header containing more than one line
-  (lines should be separated by `[BR]`), set `HeaderLines` to the number
-  of the lines in the header, so that [LaTeX] can apply the
-  appropriate spacing between the header and the text.
-
-The use of `HeaderLines` is important.  For example, a business letter
-may contain a first page header with three lines on it, and a second
-page header with two lines:
-
-{% highlight yaml %}
-    metadata:
-      FirstHeaderRight: |
-        Example, LLP [BR] 123 Main Street, Suite 1500 [BR]
-        Philadelphia, PA 19102
-      HeaderLeft: |
-        ${ client } [BR] ${ today() } [BR] Page [PAGENUM]
-      HeaderLines: "3"
-{% endhighlight %}
-
-In this case, the `HeaderLines: "3"` metadata will ensure that [LaTeX]
-formats the headers correctly.  Otherwise the header may overlap the
-document text.
-
+  
 ## <a name="metadata pdf"></a>Metadata applicable to PDF only
 
 The following metadata tags only apply to PDF file generation.  To
@@ -577,8 +583,12 @@ the next section).
   numbered; if false, they are not.  (In [LaTeX], `secnumdepth` is
   set to 5, otherwise 0.)
 * `geometry` - default is
-`left=1in,right=1in,top=1in,heightrounded,includeheadfoot`.  These are
-options for the the [geometry] package that set the page margins.
+  `left=1in,right=1in,top=1in,bottom=1in,heightrounded`.  These are
+  options for the the [geometry] package that set the page margins.
+* `TopMargin` - default is `1in`.  If you changed the top margin in
+  `geometry`, change it here as well.
+* `BottomMargin` - default is `1in`.  If you changed the bottom margin
+  in `geometry`, change it here as well.
 * `FooterSkip` - default is not defined.  If defined, will set the
   `footskip` option of the [geometry] package to control spacing
   between the footer and the text.
