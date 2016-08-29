@@ -315,6 +315,37 @@ Note the following about this interview.
    In order to enable actions to operate in this interview, we call
    [`process_action()`].
 
+## <a name="send_file"></a>send_file()
+
+The `send_file()` command is similar to [`response()`], except it
+sends a file that exists on the server.  For example, this can be used
+to send a file that was assembled as an [`attachment`].
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.util
+---
+attachment:
+  name: A file
+  file: test_file
+  variable name: the_file
+  valid formats:
+    - pdf
+  content: |
+    Hello, world!
+---
+mandatory: true
+code: |
+  send_file(the_file.pdf.path())
+---
+{% endhighlight %}
+
+If the optional `content_type` keyword argument is omitted, an attempt
+will be made to determine the [Content-Type header] from the filename.
+If the attempt fails, the content type will fall back to `text/plain;
+charset=utf-8`.
+
 ## <a name="command"></a>command()
 
 {% include side-by-side.html demo="exit" %}
@@ -1926,6 +1957,7 @@ modules:
 [`url_action()`]: #url_action
 [`words`]: {{ site.baseurl }}/docs/config.html#words
 [action]: #url_action
+[`attachment`]: {{ site.baseurl }}/docs/documents.html
 [attachments]: {{ site.baseurl }}/docs/documents.html
 [classes]: https://docs.python.org/2/tutorial/classes.html
 [configuration]: {{ site.baseurl }}/docs/config.html
@@ -1989,3 +2021,4 @@ modules:
 [`format_time()`]: #format_time
 [`def` block]: {{ site.baseurl }}/docs/initial.html#def
 [`def` blocks]: {{ site.baseurl }}/docs/initial.html#def
+[`response()`]: #response
