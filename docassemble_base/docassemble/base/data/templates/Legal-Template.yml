@@ -17,6 +17,7 @@ header-includes:
   - \usepackage{pdfpages}
   - \usepackage{lastpage}
   - \usepackage[none]{hyphenat}
+  - \usepackage[linewidth=1pt]{mdframed}
   - \renewcommand{\headrulewidth}{0pt}
   - \renewcommand{\thesection}{\Roman{section}.} 
   - \renewcommand{\thesubsection}{\Alph{subsection}.}

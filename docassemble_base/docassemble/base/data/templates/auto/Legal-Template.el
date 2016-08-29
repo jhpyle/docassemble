@@ -55,8 +55,8 @@
     "$biblio-files$")
    (LaTeX-add-lengths
     "defaulttopmargin"
-    "defaultheadheight"
     "defaultbottommargin"
+    "defaultheadheight"
     "newtop"
     "maxheaderfirst"
     "thisheaderheight"

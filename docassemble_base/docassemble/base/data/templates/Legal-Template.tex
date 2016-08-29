@@ -100,11 +100,24 @@ $endif$
 %\ifthenelse{\boolean{usesheader} \OR \boolean{usesfirstheader}}{\geometry{headheight=\baselineskip*\real{\headerlines}}}{\geometry{headsep=0pt,headheight=0pt}}
 
 \newlength{\defaulttopmargin}
+
 \setlength{\defaulttopmargin}{1in}
+$if(TopMargin)$
+\setlength{\defaulttopmargin}{$TopMargin$}
+$else$
+\setlength{\defaulttopmargin}{1in}
+$endif$
+
+\newlength{\defaultbottommargin}
+
+\setlength{\defaultbottommargin}{1in}
+$if(BottomMargin)$
+\setlength{\defaultbottommargin}{$BottomMargin$}
+$else$
+\setlength{\defaultbottommargin}{1in}
+$endif$
 \newlength{\defaultheadheight}
 \setlength{\defaultheadheight}{\headheight}
-\newlength{\defaultbottommargin}
-\setlength{\defaultbottommargin}{1in}
 $if(FooterSkip)$
 \geometry{footskip=$FooterSkip$}
 $endif$

@@ -135,6 +135,17 @@ a.sourceactive {
     width: 4em;
 }
 
+.datable table {
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 1em;
+}
+
+.daborder {
+    border-style: solid;
+    border-width: 1px;
+}
+
 .daflushleft {
     text-align: left;
 }

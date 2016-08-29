@@ -11,35 +11,62 @@ attachments:
   - name: A test document
     filename: test_document
     metadata:
-#      HeaderRight: |
-#        Example, LLP
-#        [BR] 123 Main Street, Suite 1500
-#        [BR] Philadelphia, PA 19102
+      FirstHeaderLeft: Test me test me
+      FirstHeaderCenter: Test me test me
+      FirstHeaderRight: |
+        Example, LLP [BR]
+        124 Main Street, Suite 1500 [BR]
+        Philadelphia, PA 19102
+      HeaderLeft: Test me test me
+      HeaderCenter: Test me test me
+      HeaderRight: |
+        Example, LLP [BR]
+        123--24 Main Street, Suite 1500 [BR]
+        Philadelphia, PA 19102
+      FirstFooterLeft: Test me test me
+      FirstFooterCenter: Test me test me
+      FirstFooterRight: |
+        Example, LLP [BR]
+        124 Main Street, _Suite_ 1500 [BR]
+        Philadelphia, PA 19102
+      FooterLeft: Test me test me
+      FooterCenter: Test me test me
+      FooterRight: |
+        Example, LLP [BR]
+        123 Main Street, Suite 1500 [BR]
+        Philadelphia, PA 19102
       SingleSpacing: true
     content: |
-      This line is to the left.
+      This "line" is to the left.
       
-      This line is also to the left.
+      This line is "also" to the left.
       
-      [FLUSHRIGHT] This line is flush right. [NEWLINE] So is this line.
+      [FLUSHRIGHT] This line is "flush" right. [NEWLINE] So is _this_ line.
 
-      [INDENTBY 1in] This line is indented. [NEWLINE] So is this line.
+      [INDENTBY 1in] [BORDER] This **line** is indented. [NEWLINE] So is this line.
 
-      [INDENTBY 2in 1in] This is a very confined paragraph that is not
-      to be taken lightly because it is so absolutely constrained
-      beyond any belief or any person's imagination in the whole wide
-      world under the sun and the moon and the barn down the street.
+      [BORDER] [INDENTBY 2in 1in] This is a very "confined" paragraph
+      that is not to be taken lightly---because it's so absolutely
+      constrained beyond any belief or any person's imagination in the
+      whole wide world under the sun and the moon and the barn down
+      the street.
 
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc
+      fruit| price
+      -----|-----:
+      apple|2.05
+      pear|1.37
+      orange|3.09
+
+      Lorem ipsum "dolor" sit amet from 1--2, consectetur adipiscing elit. Nunc
       quis odio a dolor rhoncus elementum ut sed ex. Lorem ipsum dolor
       sit amet, consectetur adipiscing elit. Aenean blandit massa nec
       ante rutrum, nec interdum ipsum auctor. Pellentesque posuere
-      rhoncus pulvinar. Cras rutrum tellus sit amet elit euismod, quis
+      rhoncus pulvinar. Cras rutrum---if I may say---tellus sit amet elit euismod, quis
       viverra metus dignissim. Aenean id convallis eros. Vestibulum
       tristique, erat non ornare rhoncus, lectus urna consectetur
       urna, sit amet rhoncus magna est a orci. Sed sed euismod tortor.
 
-      Aliquam nec turpis massa. Integer non vulputate nibh. Integer mi
+      [BORDER] Aliquam nec turpis massa. Integer non vulputate nibh. Integer mi
       justo, sagittis eget erat quis, porta auctor purus. Quisque ac
       rutrum nibh. Duis id massa faucibus, facilisis mauris sit amet,
       congue nisl. Duis vel odio vehicula, sodales tellus ut, tempor
@@ -47,7 +74,7 @@ attachments:
       tincidunt sed libero et, vehicula ullamcorper tellus. Curabitur
       quis magna erat. Vivamus euismod gravida ante, eu congue arcu
       ultricies ac. Praesent porta euismod urna non sodales.
-
+      [NEWPAR]
       Phasellus orci diam, sodales a elementum ac, gravida sit amet
       erat. Nunc imperdiet malesuada magna, nec laoreet tortor dapibus
       in. Praesent nulla elit, rhoncus vitae tincidunt non, rutrum ut

@@ -88,7 +88,7 @@ class Pandoc(object):
         temp_file.close()
         temp_outfile = tempfile.NamedTemporaryFile(mode="wb", suffix="." + str(self.output_format), delete=False)
         temp_outfile.close()
-        subprocess_arguments = [PANDOC_PATH]
+        subprocess_arguments = [PANDOC_PATH, '--smart']
         if len(yaml_to_use) > 0:
             subprocess_arguments.extend(yaml_to_use)
         subprocess_arguments.extend([temp_file.name])
@@ -123,7 +123,7 @@ class Pandoc(object):
         if (self.output_format == "pdf" or self.output_format == "tex" or self.output_format == "rtf" or self.output_format == "epub" or self.output_format == "docx"):
             self.convert_to_file(question)
         else:
-            subprocess_arguments = [PANDOC_PATH, '--from=%s' % self.input_format, '--to=%s' % self.output_format]
+            subprocess_arguments = [PANDOC_PATH, '--smart', '--from=%s' % self.input_format, '--to=%s' % self.output_format]
             subprocess_arguments.extend(self.arguments)
             p = subprocess.Popen(
                 subprocess_arguments,
@@ -152,7 +152,7 @@ def word_to_markdown(in_file, in_format):
     else:
         in_file_to_use = in_file
         in_format_to_use = in_format
-    subprocess_arguments = [PANDOC_PATH, '--from=%s' % str(in_format_to_use), '--to=markdown', str(in_file_to_use), '-o', str(temp_file.name)]
+    subprocess_arguments = [PANDOC_PATH, '--smart', '--from=%s' % str(in_format_to_use), '--to=markdown', str(in_file_to_use), '-o', str(temp_file.name)]
     result = subprocess.call(subprocess_arguments)
     if result == 0:
         return temp_file

@@ -1746,7 +1746,14 @@ class Question:
                 else:
                     the_markdown = ""
                     if len(result['metadata']):
-                        the_markdown += "---\n" + yaml.safe_dump(result['metadata'], default_flow_style=False, default_style = '|') + "...\n"
+                        modified_metadata = dict()
+                        for key, data in result['metadata'].iteritems():
+                            if re.search(r'Footer|Header', key):
+                                #modified_metadata[key] = docassemble.base.filter.metadata_filter(data, doc_format) + unicode('[END]')
+                                modified_metadata[key] = data + unicode('[END]')
+                            else:
+                                modified_metadata[key] = data
+                        the_markdown += "---\n" + yaml.safe_dump(modified_metadata, default_flow_style=False, default_style = '|') + "...\n"
                     the_markdown += attachment['content'].text(user_dict)
                     #logmessage("Markdown is:\n" + repr(the_markdown) + "END")
                     if emoji_match.search(the_markdown) and len(self.interview.images) > 0:
