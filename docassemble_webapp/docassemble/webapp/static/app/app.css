@@ -135,7 +135,7 @@ a.sourceactive {
     width: 4em;
 }
 
-.datable table {
+table.datable {
     margin-left: auto;
     margin-right: auto;
     margin-bottom: 1em;

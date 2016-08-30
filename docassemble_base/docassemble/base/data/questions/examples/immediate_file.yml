@@ -9,10 +9,10 @@ attachment:
   file: test_file
   variable name: the_file
   valid formats:
-    - rtf
+    - pdf
   content: |
-    Hello, world!
+    Hello, ${ url_args.get('name', 'you')}!
 ---
 mandatory: true
 code: |
-  send_file(the_file.rtf.path())
+  response(file=the_file.pdf)

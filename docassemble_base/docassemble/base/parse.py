@@ -1,4 +1,5 @@
 # docassemble.base.parse
+import mimetypes
 import re
 import ast
 import yaml
@@ -14,7 +15,7 @@ import copy
 #sys.stderr.write("loading filter\n")
 import docassemble.base.filter
 import docassemble.base.pdftk
-from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, SendFileError, CommandError
+from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, CommandError
 import docassemble.base.functions
 from docassemble.base.functions import pickleable_objects, word, get_language
 from docassemble.base.logger import logmessage
@@ -772,20 +773,40 @@ class Question:
         #         raise DAError("A role section must be text or a list." + self.idebug(data))
         if 'progress' in data:
             self.progress = data['progress']
-        if 'response filename' in data:
-            self.question_type = 'sendfile'
-            self.response_filename = data['response filename']
-            self.content = TextObject('')
         if 'response' in data:
             self.content = TextObject(definitions + data['response'], names_used=self.mako_names)
             self.question_type = 'response'
-        if 'binaryresponse' in data:
+        elif 'binaryresponse' in data:
             self.question_type = 'response'
             self.content = TextObject('binary')
             self.binaryresponse = data['binaryresponse']
             if 'response' not in data:
                 self.content = TextObject('')
-        if 'response' in data or 'binaryresponse' in data or 'response filename' in data:
+        elif 'response filename' in data:
+            self.question_type = 'sendfile'
+            if str(type(data['response filename'])) == "<class 'docassemble.base.core.DAFile'>":
+                self.response_filename = data['response filename'].path()
+                if hasattr(data['response filename'], 'mimetype') and data['response filename'].mimetype:
+                    self.content_type = TextObject(data['response filename'].mimetype)
+            else:
+                info = docassemble.base.filter.file_finder(data['response filename'], question=self)
+                if 'fullpath' in info and info['fullpath']:
+                    self.response_filename = info['fullpath']
+                else:
+                    self.response_filename = None
+                if 'mimetype' in info and info['mimetype']:
+                    self.content_type = TextObject(info['mimetype'])
+                else:
+                    self.content_type = TextObject('text/plain; charset=utf-8')
+            self.content = TextObject('')
+            if 'content type' in data:
+                self.content_type = TextObject(definitions + data['content type'], names_used=self.mako_names)
+            elif not (hasattr(self, 'content_type') and self.content_type):
+                self.content_type = TextObject(get_mimetype(self.response_filename))
+        elif 'redirect url' in data:
+            self.question_type = 'redirect'
+            self.content = TextObject(definitions + data['redirect url'], names_used=self.mako_names)
+        if 'response' in data or 'binaryresponse' in data:
             if 'content type' in data:
                 self.content_type = TextObject(definitions + data['content type'], names_used=self.mako_names)
             else:
@@ -1449,10 +1470,10 @@ class Question:
             extras['content_type'] = self.content_type.text(user_dict)
             if hasattr(self, 'binaryresponse'):
                 extras['binaryresponse'] = self.binaryresponse
-        if self.question_type == 'sendfile':
+        elif self.question_type == 'sendfile':
+            extras['response_filename'] = self.response_filename
             extras['content_type'] = self.content_type.text(user_dict)
-            extras['response filename'] = self.response_filename
-        if self.question_type == 'review':
+        elif self.question_type == 'review':
             extras['ok'] = dict()
             for field in self.fields:
                 extras['ok'][field.number] = False
@@ -2052,8 +2073,12 @@ class Interview:
                 question_data = dict(extras=dict())
                 if hasattr(qError, 'response') and qError.response is not None:
                     question_data['response'] = qError.response
-                if hasattr(qError, 'binaryresponse') and qError.binaryresponse is not None:
+                elif hasattr(qError, 'binaryresponse') and qError.binaryresponse is not None:
                     question_data['binaryresponse'] = qError.binaryresponse
+                elif hasattr(qError, 'filename') and qError.filename is not None:
+                    question_data['response filename'] = qError.filename
+                elif hasattr(qError, 'url') and qError.url is not None:
+                    question_data['redirect url'] = qError.url
                 if hasattr(qError, 'content_type') and qError.content_type:
                     question_data['content type'] = qError.content_type
                 # new_interview = copy.deepcopy(self)
@@ -2068,19 +2093,19 @@ class Interview:
                 #the_question = new_question.follow_multiple_choice(user_dict)
                 interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
                 break
-            except SendFileError as qError:
-                #logmessage("Trapped SendFileError")
-                question_data = dict(extras=dict())
-                if hasattr(qError, 'filename') and qError.filename is not None:
-                    question_data['response filename'] = qError.filename
-                if hasattr(qError, 'content_type') and qError.content_type:
-                    question_data['content type'] = qError.content_type
-                new_interview_source = InterviewSourceString(content='')
-                new_interview = new_interview_source.get_interview()
-                new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
-                new_question.name = "Question_Temp"
-                interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
-                break
+            # except SendFileError as qError:
+            #     #logmessage("Trapped SendFileError")
+            #     question_data = dict(extras=dict())
+            #     if hasattr(qError, 'filename') and qError.filename is not None:
+            #         question_data['response filename'] = qError.filename
+            #     if hasattr(qError, 'content_type') and qError.content_type:
+            #         question_data['content type'] = qError.content_type
+            #     new_interview_source = InterviewSourceString(content='')
+            #     new_interview = new_interview_source.get_interview()
+            #     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
+            #     new_question.name = "Question_Temp"
+            #     interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
+            #     break
             except QuestionError as qError:
                 question_data = dict()
                 if qError.question:
@@ -2450,8 +2475,12 @@ class Interview:
                     question_data = dict(extras=dict())
                     if hasattr(qError, 'response') and qError.response is not None:
                         question_data['response'] = qError.response
-                    if hasattr(qError, 'binaryresponse') and qError.binaryresponse is not None:
+                    elif hasattr(qError, 'binaryresponse') and qError.binaryresponse is not None:
                         question_data['binaryresponse'] = qError.binaryresponse
+                    elif hasattr(qError, 'filename') and qError.filename is not None:
+                        question_data['response filename'] = qError.filename
+                    elif hasattr(qError, 'url') and qError.url is not None:
+                        question_data['redirect url'] = qError.url
                     if hasattr(qError, 'content_type') and qError.content_type:
                         question_data['content type'] = qError.content_type
                     new_interview_source = InterviewSourceString(content='')
@@ -2460,18 +2489,18 @@ class Interview:
                     new_question.name = "Question_Temp"
                     #the_question = new_question.follow_multiple_choice(user_dict)
                     return(new_question.ask(user_dict, 'None', 'None'))
-                except SendFileError as qError:
-                    #logmessage("Trapped SendFileError2")
-                    question_data = dict(extras=dict())
-                    if hasattr(qError, 'filename') and qError.filename is not None:
-                        question_data['response filename'] = qError.filename
-                    if hasattr(qError, 'content_type') and qError.content_type:
-                        question_data['content type'] = qError.content_type
-                    new_interview_source = InterviewSourceString(content='')
-                    new_interview = new_interview_source.get_interview()
-                    new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
-                    new_question.name = "Question_Temp"
-                    return(new_question.ask(user_dict, 'None', 'None'))
+                # except SendFileError as qError:
+                #     #logmessage("Trapped SendFileError2")
+                #     question_data = dict(extras=dict())
+                #     if hasattr(qError, 'filename') and qError.filename is not None:
+                #         question_data['response filename'] = qError.filename
+                #     if hasattr(qError, 'content_type') and qError.content_type:
+                #         question_data['content type'] = qError.content_type
+                #     new_interview_source = InterviewSourceString(content='')
+                #     new_interview = new_interview_source.get_interview()
+                #     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
+                #     new_question.name = "Question_Temp"
+                #     return(new_question.ask(user_dict, 'None', 'None'))
         raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + missingVariable + "' that could not be found in the question file or in any of the files incorporated by reference into the question file.")
 
 class myextract(ast.NodeVisitor):
@@ -2606,3 +2635,15 @@ def auto_determine_type(field_info, the_value=None):
         field_info['type'] = 'float'
         return
     return
+
+def get_mimetype(filename):
+    if filename is None:
+        return 'text/plain; charset=utf-8'
+    mimetype, encoding = mimetypes.guess_type(filename)
+    extension = filename.lower()
+    extension = re.sub('.*\.', '', extension)
+    if extension == '3gpp':
+        mimetype = 'audio/3gpp'
+    if mimetype is None:
+        mimetype = 'text/plain'    
+    return mimetype

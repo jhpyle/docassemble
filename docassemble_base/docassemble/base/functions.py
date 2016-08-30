@@ -9,7 +9,7 @@ import locale
 import pkg_resources
 import titlecase
 from docassemble.base.logger import logmessage
-from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, SendFileError, CommandError
+from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError
 import locale
 import json
 import urllib
@@ -904,9 +904,9 @@ def response(*pargs, **kwargs):
     """Sends a custom HTTP response"""
     raise ResponseError(*pargs, **kwargs)
 
-def send_file(*pargs, **kwargs):
-    """Sends a file as an HTTP response"""
-    raise SendFileError(*pargs, **kwargs)
+# def send_file(*pargs, **kwargs):
+#     """Sends a file as an HTTP response"""
+#     raise SendFileError(*pargs, **kwargs)
 
 def command(*pargs, **kwargs):
     """Executes a command, such as exit, restart, or leave"""

@@ -60,7 +60,7 @@ from flask_kvsession import KVSessionExtension
 from simplekv.db.sql import SQLAlchemyStore
 from sqlalchemy import create_engine, MetaData, Sequence, or_, and_
 from docassemble.webapp.app_and_db import app, db
-from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail
+from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Messages, Supervisors
 from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
@@ -1262,7 +1262,9 @@ def index():
                     mime_type = 'application/rtf'
                 elif the_format == "docx":
                     mime_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                return(send_file(the_filename, mimetype=str(mime_type), as_attachment=True, attachment_filename=str(the_attachment['filename']) + '.' + str(the_format)))
+                response = send_file(the_filename, mimetype=str(mime_type), as_attachment=True, attachment_filename=str(the_attachment['filename']) + '.' + str(the_format))
+                response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+                return(response)
     if '_checkboxes' in post_data:
         checkbox_fields = json.loads(myb64unquote(post_data['_checkboxes'])) #post_data['_checkboxes'].split(",")
         for checkbox_field in checkbox_fields:
@@ -1636,7 +1638,8 @@ def index():
         else:
             return redirect(exit_page)
     if interview_status.question.question_type == "response":
-        save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
+        # Duplicative to save here?
+        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         if hasattr(interview_status.question, 'binaryresponse'):
             response_to_send = make_response(interview_status.question.binaryresponse, '200 OK')
         else:
@@ -1645,7 +1648,8 @@ def index():
         if set_cookie:
             response_to_send.set_cookie('secret', secret)
     elif interview_status.question.question_type == "sendfile":
-        save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
+        # Duplicative to save here?  Just for the 404?
+        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         the_path = interview_status.question.response_filename
         if not os.path.isfile(the_path):
             logmessage("Could not send file because file (" + the_path + ") not found")
@@ -1654,6 +1658,10 @@ def index():
         response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         if set_cookie:
             response_to_send.set_cookie('secret', secret)
+    elif interview_status.question.question_type == "redirect":
+        # Duplicative to save here?
+        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
+        response_to_send = redirect(interview_status.questionText)
     else:
         response_to_send = None
     # Why do this?
@@ -2318,7 +2326,8 @@ def speak_file():
     if not os.path.isfile(the_path):
         logmessage("Could not serve speak file because file (" + the_path + ") not found")
         abort(404)
-    return(send_file(the_path, mimetype=audio_mimetype_table[file_format]))
+    response = send_file(the_path, mimetype=audio_mimetype_table[file_format])
+    return(response)
 
 @app.route('/uploadedfile/<number>.<extension>', methods=['GET'])
 def serve_uploaded_file_with_extension(number, extension):
@@ -2334,7 +2343,8 @@ def serve_uploaded_file_with_extension(number, extension):
         else:
             if os.path.isfile(file_info['path'] + '.' + extension):
                 extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + extension)
-                return(send_file(file_info['path'] + '.' + extension, mimetype=mimetype))
+                response = send_file(file_info['path'] + '.' + extension, mimetype=mimetype)
+                return(response)
             else:
                 abort(404)
 
@@ -2348,7 +2358,8 @@ def serve_uploaded_file(number):
     else:
         #block_size = 4096
         #status = '200 OK'
-        return(send_file(file_info['path'], mimetype=file_info['mimetype']))
+        response = send_file(file_info['path'], mimetype=file_info['mimetype'])
+        return(response)
 
 @app.route('/uploadedpage/<number>/<page>', methods=['GET'])
 def serve_uploaded_page(number, page):
@@ -2360,7 +2371,8 @@ def serve_uploaded_page(number, page):
     else:
         filename = file_info['path'] + 'page-' + str(page) + '.png'
         if os.path.isfile(filename):
-            return(send_file(filename, mimetype='image/png'))
+            response = send_file(filename, mimetype='image/png')
+            return(response)
         else:
             abort(404)
 
@@ -2375,7 +2387,8 @@ def serve_uploaded_pagescreen(number, page):
     else:
         filename = file_info['path'] + 'screen-' + str(page) + '.png'
         if os.path.isfile(filename):
-            return(send_file(filename, mimetype='image/png'))
+            response = send_file(filename, mimetype='image/png')
+            return(response)
         else:
             logmessage('path ' + filename + ' is not a file')
             abort(404)
@@ -2715,8 +2728,9 @@ def create_playground_package():
                 install_zip_package('docassemble.' + pkgname, file_number)
                 return redirect(url_for('playground_packages', file=current_package))
             else:
-                resp = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
-                return resp
+                response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
+                response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+                return(response)
     return render_template('pages/create_playground_package.html', form=form, current_package=current_package, package_names=file_list['playgroundpackages']), 200
 
 @app.route('/createpackage', methods=['GET', 'POST'])
@@ -2947,8 +2961,9 @@ class Fruit(DAObject):
                 existing_package.active = True
                 existing_package.version += 1
             db.session.commit()
-            resp = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
-            return resp
+            response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
+            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+            return response
     return render_template('pages/create_package.html', form=form), 200
 
 def name_of_user(user, include_email=False):
@@ -3036,7 +3051,8 @@ def playground_static(userid, filename):
     filename = os.path.join(area.directory, filename)
     if os.path.isfile(filename):
         extension, mimetype = get_ext_and_mimetype(filename)
-        return(send_file(filename, mimetype=str(mimetype)))
+        response = send_file(filename, mimetype=str(mimetype))
+        return(response)
     abort(404)
 
 @app.route('/playgroundtemplate/<userid>/<filename>', methods=['GET'])
@@ -3046,7 +3062,8 @@ def playground_template(userid, filename):
     filename = os.path.join(area.directory, filename)
     if os.path.isfile(filename):
         extension, mimetype = get_ext_and_mimetype(filename)
-        return(send_file(filename, mimetype=str(mimetype)))
+        response = send_file(filename, mimetype=str(mimetype))
+        return(response)
     abort(404)
 
 @app.route('/playgroundfiles', methods=['GET', 'POST'])
@@ -4004,7 +4021,8 @@ def package_static(package, filename):
     if the_file is None:
         abort(404)
     extension, mimetype = get_ext_and_mimetype(the_file)
-    return(send_file(the_file, mimetype=str(mimetype)))
+    response = send_file(the_file, mimetype=str(mimetype))
+    return(response)
 
 def current_info(yaml=None, req=None, action=None, location=None):
     if current_user.is_authenticated and not current_user.is_anonymous:
@@ -4061,7 +4079,9 @@ def logfile(filename):
         h = httplib2.Http()
         resp, content = h.request("http://" + LOGSERVER + ':8080', "GET")
         the_file, headers = urllib.urlretrieve("http://" + LOGSERVER + ':8080/' + urllib.quote(filename))
-    return(send_file(the_file, as_attachment=True, mimetype='text/plain', attachment_filename=filename, cache_timeout=0))
+    response = send_file(the_file, as_attachment=True, mimetype='text/plain', attachment_filename=filename, cache_timeout=0)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    return(response)
 
 @app.route('/logs', methods=['GET', 'POST'])
 @login_required

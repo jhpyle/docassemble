@@ -179,7 +179,6 @@ last_access_minutes: "http://docassemble.org/docs/functions.html#last_access_min
 message: "http://docassemble.org/docs/functions.html#message"
 response: "http://docassemble.org/docs/functions.html#response"
 command: "http://docassemble.org/docs/functions.html#command"
-send_file: "http://docassemble.org/docs/functions.html#send_file"
 single_paragraph: "http://docassemble.org/docs/functions.html#single_paragraph"
 x: "http://docassemble.org/docs/modifiers.html#generic object"
 i: "http://docassemble.org/docs/groups.html#i"

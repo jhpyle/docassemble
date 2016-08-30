@@ -888,8 +888,7 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
         converter.input_content = a
         converter.convert(question)
         result = converter.output_content.decode('utf-8')
-        result = re.sub(r'<table>', r'<div class="datable"><table>', result)
-        result = re.sub(r'</table>', r'<table></div>', result)
+        result = re.sub(r'<table>', r'<table class="datable">', result)
     else:
         result = markdown.markdown(a, extensions=[SmartypantsExt(configs=dict())], output_format='html5')
     result = re.sub('<a href="(?!\?)', '<a target="_blank" href="', result)
