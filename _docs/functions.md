@@ -262,39 +262,54 @@ The optional keyword arguments influence the appearance of the screen:
 
 ## <a name="response"></a>response()
 
+The `response()` command allows the interview author to use code to
+send a special HTTP response.  Instead of seeing a new **docassemble**
+screen, the user will see raw content as an HTTP response, or be
+redirected to another web site.  As soon as **docassemble** runs the
+`response()` command, it stops what it is doing and returns the
+response.
+
+There are four different types of responses, which you can invoke by
+using one of four keyword arguments: `response`, `binaryresponse`,
+`file`, and `url`.  There is also an optional keyword argument
+`content_type`, which determines the setting of the
+[Content-Type header].  (This is not used for `url` responses,
+though.)
+
+The four response types are:
+
+* `response`: This is treated as text and encoded to UTF-8.  For
+  example, if you have some data in a dictionary `info` and you want
+  to return it in [JSON] format, you could do
+  `response(response=json.dumps(info),
+  content_type='application/json')`.  If the `content_type` keyword
+  argument is omitted, the [Content-Type header] defaults to
+  `text/plain; charset=utf-8`.
+* `binaryresponse`: This is like `response`, except that the data
+  provided as the `binaryresponse` is treated as binary bytes rather
+  than text, and it is passed directly without any modification.  You
+  could use this to transmit images that are created using a software
+  library like the [Python Imaging Library].  If the `content_type`
+  keyword argument is omitted, the [Content-Type header] defaults to
+  `text/plain; charset=utf-8`.
+* `file`: The contents of the specified file will be delivered in
+  response to the HTTP request.  You can supply one of two types of
+  file designators: a [`DAFile`] object (e.g., an assembled document
+  or an uploaded file), or a reference to a file in a **docassemble**
+  package (e.g., `'moon_stars.jpg'` for a file in the static files
+  folder of the current package, or
+  `'docassemble.demo:data/static/orange_picture.jpg'` to refer to a
+  file in another package).
+* `url`: If you provide a URL, the web server will redirect the user's
+  browser to the provided URL.
+
+Here is an example that demonstrates `response`:
+
 {% include side-by-side.html demo="response" %}
 
-The `response()` command allows the interview author to send a special
-HTTP response to the user's browser.  Instead of seeing a new
-**docassemble** screen, the user will see raw content.
-
-As soon as **docassemble** runs the `response()` command, it stops
-what it is doing and returns the response.
-
-If the optional `content_type` keyword argument is omitted, the
-[Content-Type header] will be `text/plain; charset=utf-8`.
-
-The first argument to `response()` is the text you want to return.
-This is treated as text and encoded to UTF-8.
-
-If you want to return literal bytes, use the keyword argument
-`binaryresponse`.
+Here is an example that demonstrates the `binaryresponse`:
 
 {% include side-by-side.html demo="response-svg" %}
-
-You can specify the text you want to return using the keyword argument
-`response`.  For example, the following are equivalent:
-
-{% highlight python %}
-response("Hello world!")
-{% endhighlight %}
-
-{% highlight python %}
-response(response="Hello world!")
-{% endhighlight %}
-
-The `response()` command can be used to integrate a **docassemble**
-interview with another application.
 
 The following example shows how you can make information entered into
 an interview available to a third-party application through a URL that
@@ -315,11 +330,13 @@ Note the following about this interview.
    In order to enable actions to operate in this interview, we call
    [`process_action()`].
 
-## <a name="send_file"></a>send_file()
-
-The `send_file()` command is similar to [`response()`], except it
-sends a file that exists on the server.  For example, this can be used
-to send a file that was assembled as an [`attachment`].
+The `response()` command can be used to integrate a **docassemble**
+interview with another application.  For example, the other
+application could call **docassemble** with a URL that includes an
+interview file name (argument `i`) along with a number of
+[URL arguments].  The interview would process the information passed
+through the URLs, but would not ask any questions.  It would instead
+return an assembled document using `response()`.
 
 {% highlight yaml %}
 ---
@@ -337,14 +354,14 @@ attachment:
 ---
 mandatory: true
 code: |
-  send_file(the_file.pdf.path())
+  response(file=the_file.pdf)
 ---
 {% endhighlight %}
 
-If the optional `content_type` keyword argument is omitted, an attempt
-will be made to determine the [Content-Type header] from the filename.
-If the attempt fails, the content type will fall back to `text/plain;
-charset=utf-8`.
+Here is a link that runs this interview.  Notice how the name "Fred" is
+embedded in the URL.  The result is an immediate PDF document.
+
+> [{{ site.demourl }}?i=docassemble.base:data/questions/examples/immediate_file.yml&name=Fred]({{ site.demourl }}?i=docassemble.base:data/questions/examples/immediate_file.yml&name=Fred){:target="_blank"}
 
 ## <a name="command"></a>command()
 
@@ -2022,3 +2039,5 @@ modules:
 [`def` block]: {{ site.baseurl }}/docs/initial.html#def
 [`def` blocks]: {{ site.baseurl }}/docs/initial.html#def
 [`response()`]: #response
+[Python Imaging Library]: http://www.pythonware.com/products/pil/
+[URL arguments]: {{ site.baseurl }}/docs/special.html#url_args
