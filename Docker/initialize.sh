@@ -1,14 +1,13 @@
 #! /bin/bash
 
-export CONFIG_FILE_DIST=/usr/share/docassemble/config/config.yml.dist
-export CONFIG_FILE=/usr/share/docassemble/config/config.yml
+export DA_CONFIG_FILE_DIST=/usr/share/docassemble/config/config.yml.dist
+export DA_CONFIG_FILE=/usr/share/docassemble/config/config.yml
+export CONTAINERROLE=":${CONTAINERROLE-all}:"
 source /usr/share/docassemble/local/bin/activate
 
 function deregister {
     su -c '/usr/share/docassemble/local/bin/python -m docassemble.webapp.deregister' www-data
 }
-
-trap deregister SIGINT SIGTERM
 
 rm -f /etc/apache2/sites-available/000-default.conf
 rm -f /etc/apache2/sites-available/default-ssl.conf
@@ -26,31 +25,35 @@ if [ "${HOSTNAME-none}" != "none" ]; then
             /usr/share/docassemble/config/docassemble-http.conf.dist > /etc/apache2/sites-available/docassemble-http.conf || exit 1
 	rm -f /etc/letsencrypt/da_using_lets_encrypt
     fi
+    if [ ! -f /etc/apache2/sites-available/docassemble-log.conf ]; then
+	sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
+            /usr/share/docassemble/config/docassemble-log.conf.dist > /etc/apache2/sites-available/docassemble-log.conf || exit 1
+    fi
 fi
 a2ensite docassemble-http
 
-if [ ! -f $CONFIG_FILE ]; then
-    if [ "${CONTAINERROLE-all}" == "all" ]; then
-	sed -e 's@{{DBPREFIX}}@'"${DBPREFIX-postgresql+psycopg2://}"'@' \
-	    -e 's/{{DBNAME}}/'"${DBNAME-docassemble}"'/' \
-	    -e 's/{{DBUSER}}/'"${DBUSER-null}"'/' \
-	    -e 's/{{DBPASSWORD}}/'"${DBPASSWORD-null}"'/' \
-	    -e 's/{{DBHOST}}/'"${DBHOST-null}"'/' \
-	    -e 's/{{DBPORT}}/'"${DBPORT-null}"'/' \
-	    -e 's/{{DBTABLEPREFIX}}/'"${DBTABLEPREFIX-null}"'/' \
-	    -e 's/{{S3ENABLE}}/'"${S3ENABLE-false}"'/' \
-	    -e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY-null}"'/' \
-	    -e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
-	    -e 's/{{S3BUCKET}}/'"${S3BUCKET-null}"'/' \
-	    -e 's/{{EC2}}/'"${EC2-false}"'/' \
-	    -e 's/{{LOGSERVER}}/'"${LOGSERVER-null}"'/' \
-	    $CONFIG_FILE_DIST > $CONFIG_FILE || exit 1
-    else
+if [ ! -f $DA_CONFIG_FILE ]; then
+    # if [ "${CONTAINERROLE-all}" == "all" ]; then
+    # 	sed -e 's@{{DBPREFIX}}@'"${DBPREFIX-postgresql+psycopg2://}"'@' \
+    # 	    -e 's/{{DBNAME}}/'"${DBNAME-docassemble}"'/' \
+    # 	    -e 's/{{DBUSER}}/'"${DBUSER-null}"'/' \
+    # 	    -e 's/{{DBPASSWORD}}/'"${DBPASSWORD-null}"'/' \
+    # 	    -e 's/{{DBHOST}}/'"${DBHOST-null}"'/' \
+    # 	    -e 's/{{DBPORT}}/'"${DBPORT-null}"'/' \
+    # 	    -e 's/{{DBTABLEPREFIX}}/'"${DBTABLEPREFIX-null}"'/' \
+    # 	    -e 's/{{S3ENABLE}}/'"${S3ENABLE-false}"'/' \
+    # 	    -e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY-null}"'/' \
+    # 	    -e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
+    # 	    -e 's/{{S3BUCKET}}/'"${S3BUCKET-null}"'/' \
+    # 	    -e 's/{{EC2}}/'"${EC2-false}"'/' \
+    # 	    -e 's/{{LOGSERVER}}/'"${LOGSERVER-null}"'/' \
+    # 	    $DA_CONFIG_FILE_DIST > $DA_CONFIG_FILE || exit 1
+    # else
 	sed -e 's@{{DBPREFIX}}@'"${DBPREFIX-postgresql+psycopg2://}"'@' \
 	    -e 's/{{DBNAME}}/'"${DBNAME-docassemble}"'/' \
 	    -e 's/{{DBUSER}}/'"${DBUSER-docassemble}"'/' \
 	    -e 's/{{DBPASSWORD}}/'"${DBPASSWORD-abc123}"'/' \
-	    -e 's/{{DBHOST}}/'"${DBHOST-null}"'/' \
+	    -e 's/{{DBHOST}}/'"${DBHOST-localhost}"'/' \
 	    -e 's/{{DBPORT}}/'"${DBPORT-null}"'/' \
 	    -e 's/{{DBTABLEPREFIX}}/'"${DBTABLEPREFIX-null}"'/' \
 	    -e 's/{{S3ENABLE}}/'"${S3ENABLE-false}"'/' \
@@ -58,13 +61,13 @@ if [ ! -f $CONFIG_FILE ]; then
 	    -e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
 	    -e 's/{{S3BUCKET}}/'"${S3BUCKET-null}"'/' \
 	    -e 's/{{EC2}}/'"${EC2-false}"'/' \
-	    -e 's/{{LOGSERVER}}/'"${LOGSERVER-null}"'/' \
-	    $CONFIG_FILE_DIST > $CONFIG_FILE || exit 1
-    fi
-    chown www-data.www-data $CONFIG_FILE
+	    -e 's/{{LOGSERVER}}/'"${LOGSERVER-localhost}"'/' \
+	    $DA_CONFIG_FILE_DIST > $DA_CONFIG_FILE || exit 1
+#    fi
+    chown www-data.www-data $DA_CONFIG_FILE
 fi
 
-python -m docassemble.webapp.update_config $CONFIG_FILE || exit 1
+python -m docassemble.webapp.update_config $DA_CONFIG_FILE || exit 1
 
 if [ "${LOCALE-undefined}" != "undefined" ]; then
     set -- $LOCALE
@@ -78,53 +81,89 @@ if [ "${TIMEZONE-undefined}" != "undefined" ]; then
     dpkg-reconfigure -f noninteractive tzdata
 fi
 
-if [ "${CONTAINERROLE-all}" == "all" ]; then
-    supervisorctl --serverurl http://localhost:9001 start postgres || exit 1
-    sleep 4
-    dbexists=`su -c "psql -tAc \"SELECT 1 FROM pg_database WHERE datname='docassemble'\"" postgres`
-    if [ -z "$dbexists" ]; then
-	echo "drop database if exists docassemble; drop role if exists \"www-data\"; create role \"www-data\" login; drop role if exists root; create role root login; create database docassemble owner \"www-data\";" | su -c psql postgres || exit 1
-        su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.create_tables $CONFIG_FILE" www-data || exit 1
-    fi
-else
-    python -m docassemble.webapp.create_tables $CONFIG_FILE
-fi
-if [ ! -f /usr/share/docassemble/certs/docassemble.key ] && [ -f /usr/share/docassemble/certs/docassemble.key.orig ]; then
-    mv /usr/share/docassemble/certs/docassemble.key.orig /usr/share/docassemble/certs/docassemble.key
-fi
-if [ ! -f /usr/share/docassemble/certs/docassemble.crt ] && [ -f /usr/share/docassemble/certs/docassemble.crt.orig ]; then
-    mv /usr/share/docassemble/certs/docassemble.crt.orig /usr/share/docassemble/certs/docassemble.crt
-fi
-if [ ! -f /usr/share/docassemble/certs/docassemble.ca.pem ] && [ -f /usr/share/docassemble/certs/docassemble.ca.pem.orig ]; then
-    mv /usr/share/docassemble/certs/docassemble.ca.pem.orig /usr/share/docassemble/certs/docassemble.ca.pem
-fi
-python -m docassemble.webapp.install_certs $CONFIG_FILE || exit 1
-if [ "${USEHTTPS-false}" == "true" ]; then
-    a2enmod ssl
-    a2ensite docassemble-ssl
-    if [ "${USELETSENCRYPT-false}" == "true" ]; then
-	cd /usr/share/docassemble/letsencrypt 
-	if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
-	    ./letsencrypt-auto renew
-	else
-	    ./letsencrypt-auto --apache --quiet --email ${LETSENCRYPTEMAIL} --agree-tos -d ${HOSTNAME} && touch /etc/letsencrypt/da_using_lets_encrypt
-	fi
-	cd ~-
-	/etc/init.d/apache2 stop
-    else
-	rm -f /etc/letsencrypt/da_using_lets_encrypt
-    fi
-else
-    rm -f /etc/letsencrypt/da_using_lets_encrypt
-    a2dismod ssl
-    a2dissite docassemble-ssl
-fi
-
-if [ "${LOGSERVER-none}" != "none" ]; then
+if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
     supervisorctl --serverurl http://localhost:9001 start syslogng
 fi
 
-supervisorctl --serverurl http://localhost:9001 start apache2
+if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]]; then
+    supervisorctl --serverurl http://localhost:9001 start redis
+fi
+
+if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]]; then
+    supervisorctl --serverurl http://localhost:9001 start rabbitmq
+fi
+
+if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]]; then
+    supervisorctl --serverurl http://localhost:9001 start celery
+fi
+
+if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
+    supervisorctl --serverurl http://localhost:9001 start postgres || exit 1
+    sleep 4
+    dbexists=`su -c "psql -tAc \"SELECT 1 FROM pg_database WHERE datname='${DBNAME-docassemble}'\"" postgres`
+    roleexists=`su -c "psql -tAc \"SELECT 1 FROM pg_roles WHERE rolname='${DBUSER-docassemble}'\"" postgres`
+    if [ -z "$roleexists" ]; then
+	echo "create role "${DBUSER-docassemble}" with login password '"${DBPASSWORD-abc123}"';" | su -c psql postgres || exit 1
+    fi
+    if [ -z "$dbexists" ]; then
+	echo "create database "${DBNAME-docassemble}" owner "${DBUSER-docassemble}";" | su -c psql postgres || exit 1
+    fi
+    python -m docassemble.webapp.create_tables $DA_CONFIG_FILE
+fi
+    # if [ -z "$dbexists" ]; then
+    # 	echo "drop database if exists ${DBNAME-docassemble}; drop role if exists \"www-data\"; create role \"www-data\" login; drop role if exists root; create role root login; create database docassemble owner \"www-data\";" | su -c psql postgres || exit 1
+    #     su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.create_tables $DA_CONFIG_FILE" www-data || exit 1
+    # fi
+
+if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
+    rm -f /etc/apache2/ports.conf
+fi
+
+if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
+    echo "Listen 80" >> /etc/apache2/ports.conf
+    if [ ! -f /usr/share/docassemble/certs/docassemble.key ] && [ -f /usr/share/docassemble/certs/docassemble.key.orig ]; then
+	mv /usr/share/docassemble/certs/docassemble.key.orig /usr/share/docassemble/certs/docassemble.key
+    fi
+    if [ ! -f /usr/share/docassemble/certs/docassemble.crt ] && [ -f /usr/share/docassemble/certs/docassemble.crt.orig ]; then
+	mv /usr/share/docassemble/certs/docassemble.crt.orig /usr/share/docassemble/certs/docassemble.crt
+    fi
+    if [ ! -f /usr/share/docassemble/certs/docassemble.ca.pem ] && [ -f /usr/share/docassemble/certs/docassemble.ca.pem.orig ]; then
+	mv /usr/share/docassemble/certs/docassemble.ca.pem.orig /usr/share/docassemble/certs/docassemble.ca.pem
+    fi
+    python -m docassemble.webapp.install_certs $DA_CONFIG_FILE || exit 1
+    if [ "${USEHTTPS-false}" == "true" ]; then
+	echo "Listen 443" >> /etc/apache2/ports.conf
+	a2enmod ssl
+	a2ensite docassemble-ssl
+	if [ "${USELETSENCRYPT-false}" == "true" ]; then
+	    cd /usr/share/docassemble/letsencrypt 
+	    if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
+		./letsencrypt-auto renew
+	    else
+		./letsencrypt-auto --apache --quiet --email ${LETSENCRYPTEMAIL} --agree-tos -d ${HOSTNAME} && touch /etc/letsencrypt/da_using_lets_encrypt
+	    fi
+	    cd ~-
+	    /etc/init.d/apache2 stop
+	else
+	    rm -f /etc/letsencrypt/da_using_lets_encrypt
+	fi
+    else
+	rm -f /etc/letsencrypt/da_using_lets_encrypt
+	a2dismod ssl
+	a2dissite docassemble-ssl
+    fi
+    trap deregister SIGINT SIGTERM
+fi
+
+if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
+    echo "Listen 8080" >> /etc/apache2/ports.conf
+    a2enmod cgid
+    a2ensite docassemble-log
+fi
+
+if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
+    supervisorctl --serverurl http://localhost:9001 start apache2
+fi
 
 sleep infinity &
 wait %1

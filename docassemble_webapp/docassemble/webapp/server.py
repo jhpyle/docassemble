@@ -17,6 +17,8 @@ import codecs
 import weakref
 import types
 import pkg_resources
+import babel.dates
+import pytz
 import docassemble.base.parse
 import docassemble.base.pdftk
 import docassemble.base.interview_cache
@@ -29,7 +31,7 @@ import traceback
 from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
 from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
-from docassemble.base.functions import pickleable_objects, word, comma_and_list
+from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone
 from docassemble.base.logger import logmessage
 from Crypto.Cipher import AES
 from Crypto.Hash import MD5
@@ -139,7 +141,10 @@ PDFTOPPM_COMMAND = daconfig.get('pdftoppm', 'pdftoppm')
 DEFAULT_LANGUAGE = daconfig.get('language', 'en')
 DEFAULT_LOCALE = daconfig.get('locale', 'US.utf8')
 DEFAULT_DIALECT = daconfig.get('dialect', 'us')
-LOGSERVER = daconfig.get('log server', None)
+if 'log server' in daconfig:
+    LOGSERVER = daconfig['log server']
+else:
+    LOGSERVER = 'localhost'
 #message_sequence = dbtableprefix + 'message_id_seq'
 
 audio_mimetype_table = {'mp3': 'audio/mpeg', 'ogg': 'audio/ogg'}
@@ -2847,7 +2852,7 @@ metadata:
   authors:
     - name: """ + unicode(current_user.first_name) + " " + unicode(current_user.last_name) + """
       organization: """ + unicode(current_user.organization) + """
-  revision_date: """ + time.strftime("%Y-%m-%d") + """
+  revision_date: """ + formatted_current_date() + """
 ---
 mandatory: true
 code: |
@@ -3160,7 +3165,7 @@ def playground_files():
                 filename = os.path.join(area.directory, the_file)
                 with open(filename, 'w') as fp:
                     fp.write(formtwo.file_content.data.encode('utf8'))
-                the_time = time.strftime('%H:%M:%S %Z', time.localtime())
+                the_time = formatted_current_time()
                 area.finalize()
                 flash(str(the_file) + word(' was saved at') + ' ' + the_time + '.', 'success')
                 if section == 'modules':
@@ -3333,7 +3338,7 @@ def playground_packages():
                     return redirect(url_for('create_playground_package', package=the_file))
                 if form.install.data:
                     return redirect(url_for('create_playground_package', package=the_file, install=True))
-                the_time = time.strftime('%H:%M:%S %Z', time.localtime())
+                the_time = formatted_current_time()
                 flash(word('The package information was saved.'), 'success')
     files = sorted([f for f in os.listdir(area['playgroundpackages'].directory) if os.path.isfile(os.path.join(area['playgroundpackages'].directory, f))])
     editable_files = list()
@@ -3662,7 +3667,7 @@ def playground_page():
                 if os.path.isfile(old_filename):
                     os.remove(old_filename)
                     files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f))])
-            the_time = time.strftime('%H:%M:%S %Z', time.localtime())
+            the_time = formatted_current_time()
             with open(filename, 'w') as fp:
                 fp.write(form.playground_content.data.encode('utf8'))
             for a_file in files:
@@ -4208,8 +4213,22 @@ def utilities():
                 fields_output += "---"
     return render_template('pages/utilities.html', form=form, fields=fields_output)
 
-def nice_date_from_utc(timestamp):
-    return timestamp.replace(tzinfo=tz.tzutc()).astimezone(tz.tzlocal()).strftime('%x %X')
+def nice_date_from_utc(timestamp, timezone=tz.tzlocal()):
+    return timestamp.replace(tzinfo=tz.tzutc()).astimezone(timezone).strftime('%x %X')
+
+def formatted_current_time():
+    if current_user.timezone:
+        the_timezone = pytz.timezone(current_user.timezone)
+    else:
+        the_timezone = pytz.timezone(get_default_timezone())
+    return datetime.datetime.utcnow().replace(tzinfo=tz.tzutc()).astimezone(the_timezone).strftime('%H:%M:%S %Z')
+
+def formatted_current_date():
+    if current_user.timezone:
+        the_timezone = pytz.timezone(current_user.timezone)
+    else:
+        the_timezone = pytz.timezone(get_default_timezone())
+    return datetime.datetime.utcnow().replace(tzinfo=tz.tzutc()).astimezone(the_timezone).strftime("%Y-%m-%d")
 
 @app.route('/save', methods=['GET', 'POST'])
 def save_for_later():
@@ -4220,6 +4239,10 @@ def save_for_later():
 @app.route('/interviews', methods=['GET', 'POST'])
 @login_required
 def interview_list():
+    if current_user.timezone:
+        the_timezone = pytz.timezone(current_user.timezone)
+    else:
+        the_timezone = pytz.timezone(get_default_timezone())
     secret = request.cookies.get('secret', None)
     #logmessage("interview_list: secret is " + str(secret))
     if 'action' in request.args and request.args.get('action') == 'delete':
@@ -4253,8 +4276,8 @@ def interview_list():
                 continue
         else:
             dictionary = unpack_dictionary(interview_info.dictionary)
-        starttime = nice_date_from_utc(dictionary['_internal']['starttime'])
-        modtime = nice_date_from_utc(dictionary['_internal']['modtime'])
+        starttime = nice_date_from_utc(dictionary['_internal']['starttime'], timezone=the_timezone)
+        modtime = nice_date_from_utc(dictionary['_internal']['modtime'], timezone=the_timezone)
         interviews.append({'interview_info': interview_info, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'title': interview_title})
     return render_template('pages/interviews.html', interviews=sorted(interviews, key=lambda x: x['dict']['_internal']['starttime']))
 

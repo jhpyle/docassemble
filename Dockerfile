@@ -2,18 +2,25 @@ FROM debian:latest
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm
 RUN apt-get clean && apt-get update
-RUN until apt-get -q -y install tzdata python python-dev wget unzip git locales pandoc texlive texlive-latex-extra apache2 postgresql libapache2-mod-wsgi libapache2-mod-xsendfile poppler-utils libffi-dev libffi6 imagemagick gcc supervisor libaudio-flac-header-perl libaudio-musepack-perl libmp3-tag-perl libogg-vorbis-header-pureperl-perl make perl libvorbis-dev libcddb-perl libinline-perl libcddb-get-perl libmp3-tag-perl libaudio-scan-perl libaudio-flac-header-perl libparallel-forkmanager-perl libav-tools autoconf automake libjpeg-dev zlib1g-dev libpq-dev logrotate tmpreaper cron pdftk fail2ban libxml2 libxslt1.1 libxml2-dev libxslt1-dev redis-server libreoffice libtool libtool-bin pacpl; do sleep 1; done
+RUN until apt-get -q -y install tzdata python python-dev wget unzip git locales pandoc texlive texlive-latex-extra apache2 postgresql libapache2-mod-wsgi libapache2-mod-xsendfile poppler-utils libffi-dev libffi6 imagemagick gcc supervisor libaudio-flac-header-perl libaudio-musepack-perl libmp3-tag-perl libogg-vorbis-header-pureperl-perl make perl libvorbis-dev libcddb-perl libinline-perl libcddb-get-perl libmp3-tag-perl libaudio-scan-perl libaudio-flac-header-perl libparallel-forkmanager-perl libav-tools autoconf automake libjpeg-dev zlib1g-dev libpq-dev logrotate tmpreaper cron pdftk fail2ban libxml2 libxslt1.1 libxml2-dev libxslt1-dev redis-server rabbitmq-server libreoffice libtool libtool-bin pacpl syslog-ng rsync s3cmd; do sleep 1; done
 RUN apt-get -q -y remove pacpl && cd /tmp && git clone git://git.code.sf.net/p/pacpl/code pacpl-code && sleep 5 && cd pacpl-code && ( ./configure || true) && sleep 5 && ( make || true ) && sleep 5 && ( make install || true ) 
 RUN cd /tmp && wget https://github.com/jgm/pandoc/releases/download/1.17.1/pandoc-1.17.1-2-amd64.deb && dpkg -i pandoc-1.17.1-2-amd64.deb
 RUN mkdir -p /etc/ssl/docassemble /usr/share/docassemble/local /usr/share/docassemble/certs /usr/share/docassemble/backup /usr/share/docassemble/config /usr/share/docassemble/webapp /usr/share/docassemble/files /var/www/.pip /var/www/.cache /usr/share/docassemble/log /tmp/docassemble && chown -R www-data.www-data /var/www && chsh -s /bin/bash www-data
+RUN mkdir -p /var/log/docassemble /var/www/html/log && chown www-data.www-data /var/www/html/log
 RUN cd /usr/share/docassemble && git clone https://github.com/letsencrypt/letsencrypt && cd letsencrypt && ./letsencrypt-auto --help
+RUN echo "host   all   all  0.0.0.0/0   md5" >> /etc/postgresql/9.4/main/pg_hba.conf
+RUN echo "listen_addresses = '*'" >> /etc/postgresql/9.4/main/postgresql.conf
 COPY docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/
 COPY Docker/initialize.sh /usr/share/docassemble/webapp/
 COPY Docker/run-cron.sh /usr/share/docassemble/webapp/
 COPY Docker/run-postgresql.sh /usr/share/docassemble/webapp/
+COPY Docker/run-rabbitmq.sh /usr/share/docassemble/webapp/
 COPY Docker/config.yml /usr/share/docassemble/config/config.yml.dist
 COPY Docker/apache.conf /usr/share/docassemble/config/docassemble-http.conf.dist
 COPY Docker/apache-ssl.conf /usr/share/docassemble/config/docassemble-ssl.conf.dist
+COPY Docker/apache-log.conf /usr/share/docassemble/config/docassemble-log.conf.dist
+COPY Docker/index.sh /usr/lib/cgi-bin/
+COPY Docker/syslog-ng.conf /etc/syslog-ng/
 COPY Docker/apache.logrotate /etc/logrotate.d/apache2
 COPY Docker/docassemble.logrotate /etc/logrotate.d/docassemble
 COPY Docker/docassemble-cron-monthly.sh /etc/cron.monthly/docassemble
@@ -47,7 +54,10 @@ ENV APACHE_LOG_DIR /var/log/apache2
 EXPOSE 80
 EXPOSE 443
 EXPOSE 9001
+EXPOSE 514
+EXPOSE 8080
+EXPOSE 5432
 
-VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql", "/usr/share/docassemble/log", "/usr/share/docassemble/files", "/usr/share/docassemble/config", "/usr/share/docassemble/backup", "/etc/letsencrypt", "/etc/apache2/sites-available", "/var/run/postgresql"]
+VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql", "/usr/share/docassemble/log", "/usr/share/docassemble/files", "/usr/share/docassemble/config", "/usr/share/docassemble/backup", "/etc/letsencrypt", "/etc/apache2/sites-available", "/var/run/postgresql", "/var/log/docassemble"]
 
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]

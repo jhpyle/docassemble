@@ -3,10 +3,11 @@ from flask_user import current_user, login_required, roles_required
 from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, MyRegisterForm, NewPrivilegeForm
 from docassemble.webapp.users.models import UserAuth, User, Role
-from docassemble.base.functions import word, debug_status
+from docassemble.base.functions import word, debug_status, get_default_timezone
 from docassemble.base.logger import logmessage
 import random
 import string
+import pytz
 
 @app.route('/privilegelist', methods=['GET', 'POST'])
 @login_required
@@ -84,9 +85,10 @@ def edit_user_profile_page(id):
         the_role_id = [str(Role.query.filter_by(name='user').first().id)]
     form = EditUserProfileForm(request.form, user, role_id=the_role_id)
     form.role_id.choices = [(r.id, r.name) for r in db.session.query(Role).filter(Role.name != 'cron').order_by('name')]
-    
+    form.timezone.choices = [(x, x) for x in sorted([tz for tz in pytz.all_timezones])]
+    if not form.timezone.data:
+        form.timezone.data = (user.timezone if user.timezone else get_default_timezone())
     if request.method == 'POST' and form.validate():
-
         form.populate_obj(user)
         roles_to_remove = list()
         the_role_id = list()
@@ -130,14 +132,12 @@ def add_privilege():
 @login_required
 def user_profile_page():
     form = UserProfileForm(request.form, current_user)
-
+    form.timezone.choices = [(x, x) for x in sorted([tz for tz in pytz.all_timezones])]
+    if not form.timezone.data:
+        form.timezone.data = (current_user.timezone if current_user.timezone else get_default_timezone())
     if request.method == 'POST' and form.validate():
-
         form.populate_obj(current_user)
-
         db.session.commit()
-
         flash(word('Your information was saved.'), 'success')
         return redirect(url_for('interview_list'))
-
     return render_template('users/user_profile_page.html', form=form, debug=debug_status())

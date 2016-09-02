@@ -11,6 +11,7 @@ S3_ENABLED = False
 gc_config = dict()
 GC_ENABLED = False
 hostname = None
+loaded = False
 
 def load(**kwargs):
     global daconfig
@@ -20,10 +21,11 @@ def load(**kwargs):
     global GC_ENABLED
     global dbtableprefix
     global hostname
+    global loaded
     if 'arguments' in kwargs and kwargs['arguments'] and len(kwargs['arguments']) > 1:
         filename = kwargs['arguments'][1]
     else:
-        filename = kwargs.get('filename', '/usr/share/docassemble/config/config.yml')
+        filename = kwargs.get('filename', os.getenv('DA_CONFIG_FILE', '/usr/share/docassemble/config/config.yml'))
     if not os.path.isfile(filename):
         if not os.access(os.path.dirname(filename), os.W_OK):
             sys.stderr.write("Configuration file " + str(filename) + " does not exist and cannot be created\n")
@@ -66,6 +68,7 @@ def load(**kwargs):
             sys.exit(1)
     # else:
     #     sys.stderr.write("ec2 was set to " + str(daconfig.get('ec2', False)))
+    loaded = True
     return
 
 def default_config():
@@ -76,9 +79,9 @@ exitpage: /
 db:
   prefix: postgresql+psycopg2://
   name: docassemble
-  user: null
-  password: null
-  host: null
+  user: docassemble
+  password: abc123
+  host: localhost
   port: null
 secretkey: 28asflwjeifwlfjsd2fejfiefw3g4o87
 password_secretkey: 2f928j3rwjf82498rje9t

@@ -17,6 +17,7 @@ class User(UserMixin, db.Model):
     subdivisionsecond = db.Column(db.String(50))
     subdivisionthird = db.Column(db.String(50))
     organization = db.Column(db.String(64))
+    timezone = db.Column(db.String(64))
     user_auth = db.relationship('UserAuth', uselist=False, primaryjoin="UserAuth.user_id==User.id")
     roles = db.relationship('Role', secondary='user_roles', backref=db.backref('user', lazy='dynamic'))
 

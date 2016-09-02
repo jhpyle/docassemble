@@ -1,6 +1,6 @@
 from flask_user.forms import RegisterForm
 from flask_wtf import Form
-from wtforms import StringField, SubmitField, ValidationError, BooleanField, SelectMultipleField, validators
+from wtforms import StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, validators
 from wtforms.validators import DataRequired, Email
 
 from docassemble.base.functions import word
@@ -34,6 +34,7 @@ class UserProfileForm(Form):
     subdivisionsecond = StringField(word('Second subdivision'))
     subdivisionthird = StringField(word('Third subdivision'))
     organization = StringField(word('Organization'))
+    timezone = SelectField(word('Time Zone'))
     submit = SubmitField(word('Save'))
 
 class EditUserProfileForm(UserProfileForm):
