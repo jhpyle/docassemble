@@ -15,6 +15,7 @@ COPY Docker/initialize.sh /usr/share/docassemble/webapp/
 COPY Docker/run-cron.sh /usr/share/docassemble/webapp/
 COPY Docker/run-postgresql.sh /usr/share/docassemble/webapp/
 COPY Docker/run-rabbitmq.sh /usr/share/docassemble/webapp/
+COPY Docker/run-celery.sh /usr/share/docassemble/webapp/
 COPY Docker/config.yml /usr/share/docassemble/config/config.yml.dist
 COPY Docker/apache.conf /usr/share/docassemble/config/docassemble-http.conf.dist
 COPY Docker/apache-ssl.conf /usr/share/docassemble/config/docassemble-ssl.conf.dist
