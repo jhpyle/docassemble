@@ -6,7 +6,7 @@ RUN until apt-get -q -y install tzdata python python-dev wget unzip git locales 
 RUN apt-get -q -y remove pacpl && cd /tmp && git clone git://git.code.sf.net/p/pacpl/code pacpl-code && sleep 5 && cd pacpl-code && ( ./configure || true) && sleep 5 && ( make || true ) && sleep 5 && ( make install || true ) 
 RUN cd /tmp && wget https://github.com/jgm/pandoc/releases/download/1.17.1/pandoc-1.17.1-2-amd64.deb && dpkg -i pandoc-1.17.1-2-amd64.deb
 RUN mkdir -p /var/log/celery && mkdir -p /etc/ssl/docassemble /usr/share/docassemble/local /usr/share/docassemble/certs /usr/share/docassemble/backup /usr/share/docassemble/config /usr/share/docassemble/webapp /usr/share/docassemble/files /var/www/.pip /var/www/.cache /usr/share/docassemble/log /tmp/docassemble && chown -R www-data.www-data /var/www && chsh -s /bin/bash www-data
-RUN mkdir -p /var/log/docassemble /var/www/html/log && chown www-data.www-data /var/www/html/log && 
+RUN mkdir -p /var/log/docassemble && mkdir -p /var/www/html/log && chown www-data.www-data /var/www/html/log
 RUN cd /usr/share/docassemble && git clone https://github.com/letsencrypt/letsencrypt && cd letsencrypt && ./letsencrypt-auto --help
 RUN echo "host   all   all  0.0.0.0/0   md5" >> /etc/postgresql/9.4/main/pg_hba.conf
 RUN echo "listen_addresses = '*'" >> /etc/postgresql/9.4/main/postgresql.conf
