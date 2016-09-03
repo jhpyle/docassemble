@@ -3973,7 +3973,11 @@ def trigger_update(except_for=None):
     if USING_SUPERVISOR:
         for host in Supervisors.query.all():
             if host.url and not (except_for and host.hostname == except_for):
-                args = [SUPERVISORCTL, '-s', host.url, 'start update']
+                if host.hostname == hostname:
+                    the_url = 'http://localhost:9001'
+                else:
+                    the_url = host.url
+                args = [SUPERVISORCTL, '-s', the_url, 'start update']
                 result = call(args)
                 if result == 0:
                     logmessage("trigger_update: sent reset to " + str(host.hostname))
@@ -3982,15 +3986,19 @@ def trigger_update(except_for=None):
     return
 
 def restart_on(host):
+    if host.hostname == hostname:
+        the_url = 'http://localhost:9001'
+    else:
+        the_url = host.url
     if re.search(r':(web|all):', host.role):
-        args = [SUPERVISORCTL, '-s', host.url, 'start reset']
+        args = [SUPERVISORCTL, '-s', the_url, 'start reset']
     result = call(args)
     if result == 0:
         logmessage("restart_this: sent reset to " + str(host.hostname))
     else:
         logmessage("restart_this: call to supervisorctl with reset on " + str(host.hostname) + " was not successful")
     if re.search(r':(celery|all):', host.role):
-        args = [SUPERVISORCTL, '-s', host.url, 'restart celery']
+        args = [SUPERVISORCTL, '-s', the_url, 'restart celery']
     result = call(args)
     if result == 0:
         logmessage("restart_this: sent restart celery to " + str(host.hostname))
@@ -4164,7 +4172,7 @@ def logs():
 def call_sync():
     if not USING_SUPERVISOR:
         return
-    args = [SUPERVISORCTL, '-s', 'http://' + hostname + ':9001', 'start', 'sync']
+    args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'sync']
     result = call(args)
     if result == 0:
         logmessage("logs: sent message to " + hostname)
@@ -4173,7 +4181,7 @@ def call_sync():
         abort(404)
     in_process = 1
     counter = 10
-    check_args = [SUPERVISORCTL, '-s', 'http://' + hostname + ':9001', 'status', 'sync']
+    check_args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'status', 'sync']
     while in_process == 1 and counter > 0:
         output, err = Popen(check_args, stdout=PIPE, stderr=PIPE).communicate()
         if not re.search(r'RUNNING', output):
@@ -4182,7 +4190,6 @@ def call_sync():
             time.sleep(1)
         counter -= 1
     return
-
 
 @app.route('/reqdev', methods=['GET', 'POST'])
 @login_required

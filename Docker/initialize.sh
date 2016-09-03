@@ -138,6 +138,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 	a2dismod ssl
 	a2dissite docassemble-ssl
     fi
+    python -m docassemble.webapp.update $DA_CONFIG_FILE || exit 1
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
