@@ -141,10 +141,7 @@ PDFTOPPM_COMMAND = daconfig.get('pdftoppm', 'pdftoppm')
 DEFAULT_LANGUAGE = daconfig.get('language', 'en')
 DEFAULT_LOCALE = daconfig.get('locale', 'US.utf8')
 DEFAULT_DIALECT = daconfig.get('dialect', 'us')
-if 'log server' in daconfig:
-    LOGSERVER = daconfig['log server']
-else:
-    LOGSERVER = 'localhost'
+LOGSERVER = daconfig.get('log server', None)
 #message_sequence = dbtableprefix + 'message_id_seq'
 
 audio_mimetype_table = {'mp3': 'audio/mpeg', 'ogg': 'audio/ogg'}
