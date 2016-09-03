@@ -57,17 +57,16 @@ def load(**kwargs):
     dbtableprefix = daconfig['db'].get('table_prefix', None)
     if not dbtableprefix:
         dbtableprefix = ''
-    hostname = socket.gethostname()
     if daconfig.get('ec2', False):
         h = httplib2.Http()
-        resp, content = h.request(daconfig.get('ec2_ip_url', "http://169.254.169.254/latest/meta-data/local-ipv4"), "GET")
+        resp, content = h.request(daconfig.get('ec2_ip_url', "http://169.254.169.254/latest/meta-data/local-hostname"), "GET")
         if resp['status'] and int(resp['status']) == 200:
             hostname = content
         else:
             sys.stderr.write("Could not get hostname from ec2\n")
             sys.exit(1)
-    # else:
-    #     sys.stderr.write("ec2 was set to " + str(daconfig.get('ec2', False)))
+    else:
+        hostname = socket.gethostname()
     loaded = True
     return
 

@@ -659,11 +659,6 @@ lm.login_view = 'user.login'
 supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
 if supervisor_url:
     USING_SUPERVISOR = True
-    Supervisors.query.filter_by(hostname=hostname).delete()
-    db.session.commit()
-    new_entry = Supervisors(hostname=hostname, url="http://" + hostname + ":9001")
-    db.session.add(new_entry)
-    db.session.commit()
 else:
     USING_SUPERVISOR = False
 
@@ -2513,7 +2508,7 @@ def uninstall_package(packagename):
         if the_package_type == 'zip' and the_upload_number is not None:
             SavedFile(the_upload_number).delete()
         trigger_update(except_for=hostname)
-        restart_wsgi()
+        restart_this()
         flash(word("Uninstall successful"), 'success')
     else:
         flash(word("Uninstall not successful"), 'error')
@@ -2545,7 +2540,7 @@ def install_zip_package(packagename, file_number):
     #logmessage('pip log: ' + str(logmessages), 'info')
     if ok:
         trigger_update(except_for=hostname)
-        restart_wsgi()
+        restart_this()
         flash(word("Install successful"), 'success')
     else:
         flash(word("Install not successful"), 'error')
@@ -2581,7 +2576,7 @@ def install_git_package(packagename, giturl):
     ok, logmessages = docassemble.webapp.update.check_for_updates()
     if ok:
         trigger_update(except_for=hostname)
-        restart_wsgi()
+        restart_this()
         flash(word("Install successful"), 'success')
     else:
         flash(word("Install not successful"), 'error')
@@ -2614,7 +2609,7 @@ def install_pip_package(packagename, limitation):
     ok, logmessages = docassemble.webapp.update.check_for_updates()
     if ok:
         trigger_update(except_for=hostname)
-        restart_wsgi()
+        restart_this()
         flash(word("Install successful"), 'success')
     else:
         flash(word("Install not successful"), 'error')
@@ -3009,7 +3004,7 @@ def config_page():
                 with open(daconfig['config_file'], 'w') as fp:
                     fp.write(form.config_content.data.encode('utf8'))
                     flash(word('The configuration file was saved.'), 'success')
-                restart_wsgi()
+                restart_all()
                 return redirect(url_for('interview_list'))
         elif form.cancel.data:
             flash(word('Configuration not updated.'), 'info')
@@ -3169,7 +3164,7 @@ def playground_files():
                 area.finalize()
                 flash(str(the_file) + word(' was saved at') + ' ' + the_time + '.', 'success')
                 if section == 'modules':
-                    restart_wsgi()
+                    restart_all()
                 return redirect(url_for('playground_files', section=section, file=the_file))
             else:
                 flash(word('You need to type in a name for the file'), 'error')                
@@ -3986,39 +3981,66 @@ def trigger_update(except_for=None):
                     logmessage("trigger_update: call to supervisorctl on " + str(host.hostname) + " was not successful")
     return
 
-def restart_wsgi():
-    logmessage("Got to restart_wsgi")
+def restart_on(host):
+    if re.search(r':(web|all):', host.role):
+        args = [SUPERVISORCTL, '-s', host.url, 'start reset']
+    result = call(args)
+    if result == 0:
+        logmessage("restart_this: sent reset to " + str(host.hostname))
+    else:
+        logmessage("restart_this: call to supervisorctl with reset on " + str(host.hostname) + " was not successful")
+    if re.search(r':(celery|all):', host.role):
+        args = [SUPERVISORCTL, '-s', host.url, 'restart celery']
+    result = call(args)
+    if result == 0:
+        logmessage("restart_this: sent restart celery to " + str(host.hostname))
+    else:
+        logmessage("restart_this: call to supervisorctl with restart celery on " + str(host.hostname) + " was not successful")
+    return
+
+def restart_all():
+    restart_others()
+    restart_this()
+    return
+
+def restart_this():
     if USING_SUPERVISOR:
         for host in Supervisors.query.all():
             if host.url:
-                args = [SUPERVISORCTL, '-s', host.url, 'start reset']
-                result = call(args)
-                if result == 0:
-                    logmessage("restart_wsgi: sent reset to " + str(host.hostname))
-                else:
-                    logmessage("restart_wsgi: call to supervisorctl on " + str(host.hostname) + " was not successful")
+                if host.hostname == hostname:
+                    restart_on(host)
             else:
-                logmessage("restart_wsgi: unable to get host url")
-        time.sleep(1)
+                logmessage("restart_this: unable to get host url")
     else:
-        logmessage("restart_wsgi: touched wsgi file")
+        logmessage("restart_this: touched wsgi file")
         wsgi_file = WEBAPP_PATH
         if os.path.isfile(wsgi_file):
             with open(wsgi_file, 'a'):
                 os.utime(wsgi_file, None)
     return
 
-@app.route('/testpost', methods=['GET', 'POST'])
-def test_post():
-    errmess = "Hello, " + str(request.method) + "!"
-    is_redir = request.args.get('redir', None)
-    if is_redir or request.method == 'GET':
-        return render_template('pages/testpost.html', error=errmess), 200
-    newargs = dict(request.args)
-    newargs['redir'] = '1'
-    logtext = url_for('test_post', **newargs)
-    #return render_template('pages/testpost.html', error=errmess, logtext=logtext), 200
-    return redirect(logtext, code=307)
+def restart_others():
+    logmessage("Got to restart_others")
+    if USING_SUPERVISOR:
+        for host in Supervisors.query.all():
+            if host.url:
+                if host.hostname != hostname:
+                    restart_on(host)
+            else:
+                logmessage("restart_others: unable to get host url")
+    return
+
+# @app.route('/testpost', methods=['GET', 'POST'])
+# def test_post():
+#     errmess = "Hello, " + str(request.method) + "!"
+#     is_redir = request.args.get('redir', None)
+#     if is_redir or request.method == 'GET':
+#         return render_template('pages/testpost.html', error=errmess), 200
+#     newargs = dict(request.args)
+#     newargs['redir'] = '1'
+#     logtext = url_for('test_post', **newargs)
+#     #return render_template('pages/testpost.html', error=errmess, logtext=logtext), 200
+#     return redirect(logtext, code=307)
 
 @app.route('/packagestatic/<package>/<filename>', methods=['GET'])
 def package_static(package, filename):

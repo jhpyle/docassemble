@@ -2,20 +2,44 @@
 {% block content %}
 {%- from "base_templates/form_macros.html" import render_addon_field, render_submit_field, myrender_hidden_field with context %}
 <h3>{{ word('Logs') }}</h3>
-<ul class="nav nav-tabs">{% for file in files %}{% if file == current_file %}<li class="active"><a href="#">{{ file }}</a></li>{% else %}<li><a href="?file={{ file }}">{{ file }}</a></li>{% endif %}{% endfor %}</ul>
-<form action="{{ url_for('logs') }}" method="POST" class="form-inline vspace" role="form" id="form">
+<div class="container-fluid">
+<div class="collapse navbar-collapse">
+<ul class="nav navbar-nav">
+  <li class="dropdown">
+    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Open another log file')}}">
+      <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;&nbsp;{{ current_file }}<span class="caret"></span>
+    </a>
+    <ul class="dropdown-menu">
+      {% for file in files %}{% if file == current_file %}<li class="active">
+        <a href="#"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {{ file }}
+        </a>
+      </li>
+      {% else %}<li>
+        <a href="?file={{ file }}"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {{ file }}
+        </a>
+      </li>
+      {% endif %}{% endfor %}
+    </ul>
+  </li>
+  <li>
+    <a title="{{ word('Download this log file') }}"href="{{ url_for('logfile', filename=current_file) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Download') }}</a>
+  </li>
+</ul>
+<!-- class="form-inline vspace" -->
+<form action="{{ url_for('logs') }}" method="POST" class="navbar-form navbar-left" role="form" id="form">
   <div class="form-group">
-    <label class="sr-only" for="filter_string">{{ word('Filter for') }}</label>
+    <!--<label class="sr-only" for="filter_string">{{ word('Filter for') }}</label>-->
     <div class="input-group">
-      <div class="input-group-addon">{{ word('Filter for') }}</div>
-      <input type="text" class="form-control" name="filter_string" id="filter_string" value="{{ default_filter_string }}">
+      <!--<div class="input-group-addon">{{ word('Filter for') }}</div>-->
+      <input type="text" class="form-control" name="filter_string" id="filter_string" value="{{ default_filter_string }}" placeholder="{{ word('Filter for') }}">
     </div>
   </div>
   <button type="submit" name="{{ form.submit.id }}" class="btn btn-primary" value="{{ form.submit.label.text }}">{{ form.submit.label.text }}</button>
   <button type="submit" name="{{ form.clear.id }}" class="btn btn-default" value="{{ form.clear.label.text }}">{{ form.clear.label.text }}</button>
-  <a class="btn btn-primary pull-right" href="{{ url_for('logfile', filename=current_file) }}">{{ word('Download') }}</a>
   {{ form.hidden_tag() }}
   {{ myrender_hidden_field(form.file_name, value=current_file) }}
 </form>
+</div>
+</div>
 <pre class="wrappre vspace">{{ content }}</pre>
 {%- endblock %}

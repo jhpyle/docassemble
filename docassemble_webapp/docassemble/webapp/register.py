@@ -12,6 +12,9 @@ def main():
     if supervisor_url:
         Supervisors.query.filter_by(hostname=hostname).delete()
         db.session.commit()
+        new_entry = Supervisors(hostname=hostname, url="http://" + hostname + ":9001", role=os.environ.get('CONTAINERROLE', None))
+        db.session.add(new_entry)
+        db.session.commit()
 
 if __name__ == "__main__":
     import docassemble.webapp.database

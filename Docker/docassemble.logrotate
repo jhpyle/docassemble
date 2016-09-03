@@ -1,4 +1,6 @@
 /usr/share/docassemble/log/docassemble.log
+/usr/share/docassemble/log/apache_access.log
+/usr/share/docassemble/log/apache_error.log
 {
 	rotate 7
 	daily

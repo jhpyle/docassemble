@@ -37,8 +37,8 @@ default_interview: docassemble.demo:data/questions/questions.yml
 flask_log: /tmp/flask.log
 language: en
 locale: US.utf8
-redis: 'redis://localhost'
-rabbitmq: 'amqp://guest@localhost//'
+redis: {{REDIS}}
+rabbitmq: {{RABBITMQ}}
 default_admin_account:
   nickname: admin
   email: admin@admin.com

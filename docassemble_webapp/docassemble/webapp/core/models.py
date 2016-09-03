@@ -70,3 +70,4 @@ class Supervisors(db.Model):
     hostname = db.Column(db.Text())
     url = db.Column(db.Text())
     start_time = db.Column(db.DateTime(), server_default=db.func.now())
+    role = db.Column(db.Text())

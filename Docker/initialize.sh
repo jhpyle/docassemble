@@ -9,61 +9,47 @@ function deregister {
     su -c '/usr/share/docassemble/local/bin/python -m docassemble.webapp.deregister' www-data
 }
 
-rm -f /etc/apache2/sites-available/000-default.conf
-rm -f /etc/apache2/sites-available/default-ssl.conf
-a2dissite 000-default
-a2dissite default-ssl
-
-if [ "${HOSTNAME-none}" != "none" ]; then
-    if [ ! -f /etc/apache2/sites-available/docassemble-ssl.conf ] || [ "${USELETSENCRYPT-none}" == "none" ] || [ "${USEHTTPS-false}" == "false" ]; then
-	sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
-            /usr/share/docassemble/config/docassemble-ssl.conf.dist > /etc/apache2/sites-available/docassemble-ssl.conf || exit 1
-	rm -f /etc/letsencrypt/da_using_lets_encrypt
+if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
+    rm -f /etc/apache2/sites-available/000-default.conf
+    rm -f /etc/apache2/sites-available/default-ssl.conf
+    a2dissite 000-default
+    a2dissite default-ssl
+    if [ "${HOSTNAME-none}" != "none" ]; then
+	if [ ! -f /etc/apache2/sites-available/docassemble-ssl.conf ] || [ "${USELETSENCRYPT-none}" == "none" ] || [ "${USEHTTPS-false}" == "false" ]; then
+	    sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
+		/usr/share/docassemble/config/docassemble-ssl.conf.dist > /etc/apache2/sites-available/docassemble-ssl.conf || exit 1
+	    rm -f /etc/letsencrypt/da_using_lets_encrypt
+	fi
+	if [ ! -f /etc/apache2/sites-available/docassemble-http.conf ] || [ "${USELETSENCRYPT-none}" == "none" ] || [ "${USEHTTPS-false}" == "false" ]; then
+	    sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
+		/usr/share/docassemble/config/docassemble-http.conf.dist > /etc/apache2/sites-available/docassemble-http.conf || exit 1
+	    rm -f /etc/letsencrypt/da_using_lets_encrypt
+	fi
+	if [ ! -f /etc/apache2/sites-available/docassemble-log.conf ]; then
+	    sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
+		/usr/share/docassemble/config/docassemble-log.conf.dist > /etc/apache2/sites-available/docassemble-log.conf || exit 1
+	fi
     fi
-    if [ ! -f /etc/apache2/sites-available/docassemble-http.conf ] || [ "${USELETSENCRYPT-none}" == "none" ] || [ "${USEHTTPS-false}" == "false" ]; then
-	sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
-            /usr/share/docassemble/config/docassemble-http.conf.dist > /etc/apache2/sites-available/docassemble-http.conf || exit 1
-	rm -f /etc/letsencrypt/da_using_lets_encrypt
-    fi
-    if [ ! -f /etc/apache2/sites-available/docassemble-log.conf ]; then
-	sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
-            /usr/share/docassemble/config/docassemble-log.conf.dist > /etc/apache2/sites-available/docassemble-log.conf || exit 1
-    fi
+    a2ensite docassemble-http
 fi
-a2ensite docassemble-http
 
 if [ ! -f $DA_CONFIG_FILE ]; then
-    # if [ "${CONTAINERROLE-all}" == "all" ]; then
-    # 	sed -e 's@{{DBPREFIX}}@'"${DBPREFIX-postgresql+psycopg2://}"'@' \
-    # 	    -e 's/{{DBNAME}}/'"${DBNAME-docassemble}"'/' \
-    # 	    -e 's/{{DBUSER}}/'"${DBUSER-null}"'/' \
-    # 	    -e 's/{{DBPASSWORD}}/'"${DBPASSWORD-null}"'/' \
-    # 	    -e 's/{{DBHOST}}/'"${DBHOST-null}"'/' \
-    # 	    -e 's/{{DBPORT}}/'"${DBPORT-null}"'/' \
-    # 	    -e 's/{{DBTABLEPREFIX}}/'"${DBTABLEPREFIX-null}"'/' \
-    # 	    -e 's/{{S3ENABLE}}/'"${S3ENABLE-false}"'/' \
-    # 	    -e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY-null}"'/' \
-    # 	    -e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
-    # 	    -e 's/{{S3BUCKET}}/'"${S3BUCKET-null}"'/' \
-    # 	    -e 's/{{EC2}}/'"${EC2-false}"'/' \
-    # 	    -e 's/{{LOGSERVER}}/'"${LOGSERVER-null}"'/' \
-    # 	    $DA_CONFIG_FILE_DIST > $DA_CONFIG_FILE || exit 1
-    # else
-	sed -e 's@{{DBPREFIX}}@'"${DBPREFIX-postgresql+psycopg2://}"'@' \
-	    -e 's/{{DBNAME}}/'"${DBNAME-docassemble}"'/' \
-	    -e 's/{{DBUSER}}/'"${DBUSER-docassemble}"'/' \
-	    -e 's/{{DBPASSWORD}}/'"${DBPASSWORD-abc123}"'/' \
-	    -e 's/{{DBHOST}}/'"${DBHOST-localhost}"'/' \
-	    -e 's/{{DBPORT}}/'"${DBPORT-null}"'/' \
-	    -e 's/{{DBTABLEPREFIX}}/'"${DBTABLEPREFIX-null}"'/' \
-	    -e 's/{{S3ENABLE}}/'"${S3ENABLE-false}"'/' \
-	    -e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY-null}"'/' \
-	    -e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
-	    -e 's/{{S3BUCKET}}/'"${S3BUCKET-null}"'/' \
-	    -e 's/{{EC2}}/'"${EC2-false}"'/' \
-	    -e 's/{{LOGSERVER}}/'"${LOGSERVER-localhost}"'/' \
-	    $DA_CONFIG_FILE_DIST > $DA_CONFIG_FILE || exit 1
-#    fi
+    sed -e 's@{{DBPREFIX}}@'"${DBPREFIX-postgresql+psycopg2://}"'@' \
+	-e 's/{{DBNAME}}/'"${DBNAME-docassemble}"'/' \
+	-e 's/{{DBUSER}}/'"${DBUSER-docassemble}"'/' \
+	-e 's/{{DBPASSWORD}}/'"${DBPASSWORD-abc123}"'/' \
+	-e 's/{{DBHOST}}/'"${DBHOST-localhost}"'/' \
+	-e 's/{{DBPORT}}/'"${DBPORT-null}"'/' \
+	-e 's/{{DBTABLEPREFIX}}/'"${DBTABLEPREFIX-null}"'/' \
+	-e 's/{{S3ENABLE}}/'"${S3ENABLE-false}"'/' \
+	-e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY-null}"'/' \
+	-e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
+	-e 's/{{S3BUCKET}}/'"${S3BUCKET-null}"'/' \
+	-e 's/{{REDIS}}/'"${REDIS-redis:\/\/localhost}"'/' \
+	-e 's/{{RABBITMQ}}/'"${RABBITMQ-amqp:\/\/guest@localhost\/\/}"'/' \
+	-e 's/{{EC2}}/'"${EC2-false}"'/' \
+	-e 's/{{LOGSERVER}}/'"${LOGSERVER-localhost}"'/' \
+	$DA_CONFIG_FILE_DIST > $DA_CONFIG_FILE || exit 1
     chown www-data.www-data $DA_CONFIG_FILE
 fi
 
@@ -152,7 +138,6 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 	a2dismod ssl
 	a2dissite docassemble-ssl
     fi
-    trap deregister SIGINT SIGTERM
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
@@ -164,6 +149,10 @@ fi
 if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
     supervisorctl --serverurl http://localhost:9001 start apache2
 fi
+
+su -c '/usr/share/docassemble/local/bin/python -m docassemble.webapp.register' www-data
+
+trap deregister SIGINT SIGTERM
 
 sleep infinity &
 wait %1

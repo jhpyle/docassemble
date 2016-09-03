@@ -75,6 +75,7 @@ def delete_privilege(id):
 @roles_required('admin')
 def edit_user_profile_page(id):
     user = User.query.filter_by(id=id).first()
+    the_tz = (user.timezone if user.timezone else get_default_timezone())
     if user is None:
         abort(404)
     the_role_id = list()
@@ -86,8 +87,9 @@ def edit_user_profile_page(id):
     form = EditUserProfileForm(request.form, user, role_id=the_role_id)
     form.role_id.choices = [(r.id, r.name) for r in db.session.query(Role).filter(Role.name != 'cron').order_by('name')]
     form.timezone.choices = [(x, x) for x in sorted([tz for tz in pytz.all_timezones])]
-    if not form.timezone.data:
-        form.timezone.data = (user.timezone if user.timezone else get_default_timezone())
+    form.timezone.default = the_tz
+    if str(form.timezone.data) == 'None':
+        form.timezone.data = the_tz
     if request.method == 'POST' and form.validate():
         form.populate_obj(user)
         roles_to_remove = list()
@@ -131,10 +133,12 @@ def add_privilege():
 @app.route('/user/profile', methods=['GET', 'POST'])
 @login_required
 def user_profile_page():
+    the_tz = (current_user.timezone if current_user.timezone else get_default_timezone())
     form = UserProfileForm(request.form, current_user)
     form.timezone.choices = [(x, x) for x in sorted([tz for tz in pytz.all_timezones])]
-    if not form.timezone.data:
-        form.timezone.data = (current_user.timezone if current_user.timezone else get_default_timezone())
+    form.timezone.default = the_tz
+    if str(form.timezone.data) == 'None':
+        form.timezone.data = the_tz
     if request.method == 'POST' and form.validate():
         form.populate_obj(current_user)
         db.session.commit()
