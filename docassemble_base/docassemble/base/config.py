@@ -42,8 +42,7 @@ def load(**kwargs):
         with open(filename, 'r') as fp:
             sys.stderr.write(fp.read() + "\n")
         sys.exit(1)
-    else:
-        daconfig['config_file'] = filename
+    daconfig['config_file'] = filename
     s3_config = daconfig.get('s3', None)
     if not s3_config or ('enable' in s3_config and not s3_config['enable']): # or not ('access_key_id' in s3_config and s3_config['access_key_id']) or not ('secret_access_key' in s3_config and s3_config['secret_access_key']):
         S3_ENABLED = False
@@ -67,6 +66,27 @@ def load(**kwargs):
             sys.exit(1)
     else:
         hostname = socket.gethostname()
+    if S3_ENABLED:
+        import docassemble.webapp.amazon
+        s3 = docassemble.webapp.amazon.s3object(s3_config)
+        if 'db' not in daconfig:
+            daconfig['db'] = dict()
+        if 'host' not in daconfig['db'] or daconfig['db']['host'] is None:
+            key = s3.get('hostname-sql')
+            if key.exists():
+                daconfig['db']['host'] = key.get_contents_as_string()
+        if 'log server' not in daconfig or daconfig['log server'] is None:
+            key = s3.get('hostname-log')
+            if key.exists():
+                daconfig['log server'] = key.get_contents_as_string()
+        if 'redis' not in daconfig or daconfig['rabbitmq'] is None:
+            key = s3.get('hostname-redis')
+            if key.exists():
+                daconfig['redis'] = 'redis://' + key.get_contents_as_string()
+        if 'rabbitmq' not in daconfig or daconfig['rabbitmq'] is None:
+            key = s3.get('hostname-rabbitmq')
+            if key.exists():
+                daconfig['rabbitmq'] = 'amqp://guest@' + key.get_contents_as_string() + '\/\/'
     loaded = True
     return
 

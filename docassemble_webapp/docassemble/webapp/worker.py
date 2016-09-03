@@ -3,8 +3,14 @@ import docassemble.base.config
 from docassemble.base.config import daconfig
 if not docassemble.base.config.loaded:
     docassemble.base.config.load()
-
-workerapp = Celery('worker', backend=daconfig.get('redis', 'redis://localhost'), broker=daconfig.get('rabbitmq', 'amqp://guest@localhost//'))
+backend = daconfig.get('redis', None)
+if backend is None:
+    backend = 'redis://localhost'
+broker = daconfig.get('rabbitmq', None)
+if broker is None:
+    broker = 'amqp://guest@localhost//'
+    
+workerapp = Celery('worker', backend=backend, broker=broker)
 workerapp.conf.update(
     CELERY_TASK_SERIALIZER='json',
     CELERY_ACCEPT_CONTENT=['json'],

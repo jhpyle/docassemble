@@ -38,17 +38,17 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 	-e 's/{{DBNAME}}/'"${DBNAME-docassemble}"'/' \
 	-e 's/{{DBUSER}}/'"${DBUSER-docassemble}"'/' \
 	-e 's/{{DBPASSWORD}}/'"${DBPASSWORD-abc123}"'/' \
-	-e 's/{{DBHOST}}/'"${DBHOST-localhost}"'/' \
+	-e 's/{{DBHOST}}/'"${DBHOST-null}"'/' \
 	-e 's/{{DBPORT}}/'"${DBPORT-null}"'/' \
 	-e 's/{{DBTABLEPREFIX}}/'"${DBTABLEPREFIX-null}"'/' \
 	-e 's/{{S3ENABLE}}/'"${S3ENABLE-false}"'/' \
 	-e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY-null}"'/' \
 	-e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
 	-e 's/{{S3BUCKET}}/'"${S3BUCKET-null}"'/' \
-	-e 's/{{REDIS}}/'"${REDIS-redis:\/\/localhost}"'/' \
-	-e 's/{{RABBITMQ}}/'"${RABBITMQ-amqp:\/\/guest@localhost\/\/}"'/' \
+	-e 's/{{REDIS}}/'"${REDIS-null}"'/' \
+	-e 's/{{RABBITMQ}}/'"${RABBITMQ-null}"'/' \
 	-e 's/{{EC2}}/'"${EC2-false}"'/' \
-	-e 's/{{LOGSERVER}}/'"${LOGSERVER-localhost}"'/' \
+	-e 's/{{LOGSERVER}}/'"${LOGSERVER-null}"'/' \
 	$DA_CONFIG_FILE_DIST > $DA_CONFIG_FILE || exit 1
     chown www-data.www-data $DA_CONFIG_FILE
 fi
@@ -71,22 +71,6 @@ if [ "${TIMEZONE-undefined}" != "undefined" ]; then
     dpkg-reconfigure -f noninteractive tzdata
 fi
 
-if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
-    supervisorctl --serverurl http://localhost:9001 start syslogng
-fi
-
-if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]]; then
-    supervisorctl --serverurl http://localhost:9001 start redis
-fi
-
-if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]]; then
-    supervisorctl --serverurl http://localhost:9001 start rabbitmq
-fi
-
-if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]]; then
-    supervisorctl --serverurl http://localhost:9001 start celery
-fi
-
 if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
     supervisorctl --serverurl http://localhost:9001 start postgres || exit 1
     sleep 4
@@ -100,10 +84,26 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
     fi
     python -m docassemble.webapp.create_tables $DA_CONFIG_FILE
 fi
-    # if [ -z "$dbexists" ]; then
-    # 	echo "drop database if exists ${DBNAME-docassemble}; drop role if exists \"www-data\"; create role \"www-data\" login; drop role if exists root; create role root login; create database docassemble owner \"www-data\";" | su -c psql postgres || exit 1
-    #     su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.create_tables $DA_CONFIG_FILE" www-data || exit 1
-    # fi
+
+if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
+    supervisorctl --serverurl http://localhost:9001 start syslogng
+fi
+
+if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]]; then
+    supervisorctl --serverurl http://localhost:9001 start redis
+fi
+
+if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]]; then
+    supervisorctl --serverurl http://localhost:9001 start rabbitmq
+fi
+
+su -c '/usr/share/docassemble/local/bin/python -m docassemble.webapp.register' www-data
+
+trap deregister SIGINT SIGTERM
+
+if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]]; then
+    supervisorctl --serverurl http://localhost:9001 start celery
+fi
 
 if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
     rm -f /etc/apache2/ports.conf
@@ -153,10 +153,6 @@ fi
 if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
     supervisorctl --serverurl http://localhost:9001 start apache2
 fi
-
-su -c '/usr/share/docassemble/local/bin/python -m docassemble.webapp.register' www-data
-
-trap deregister SIGINT SIGTERM
 
 sleep infinity &
 wait %1

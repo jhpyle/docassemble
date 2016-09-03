@@ -6,6 +6,8 @@ if 'db' not in daconfig:
 dbuser = daconfig['db'].get('user', None)
 dbpassword = daconfig['db'].get('password', None)
 dbhost = daconfig['db'].get('host', None)
+if dbhost is None and dbuser is not None:
+    dbhost = 'localhost'
 dbport = daconfig['db'].get('port', None)
 dbprefix = daconfig['db'].get('prefix', 'postgresql+psycopg2://')
 dbname = daconfig['db'].get('name', 'docassemble')
