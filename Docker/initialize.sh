@@ -14,19 +14,19 @@ if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
     rm -f /etc/apache2/sites-available/default-ssl.conf
     a2dissite 000-default
     a2dissite default-ssl
-    if [ "${HOSTNAME-none}" != "none" ]; then
+    if [ "${DAHOSTNAME-none}" != "none" ]; then
 	if [ ! -f /etc/apache2/sites-available/docassemble-ssl.conf ] || [ "${USELETSENCRYPT-none}" == "none" ] || [ "${USEHTTPS-false}" == "false" ]; then
-	    sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
+	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/' \
 		/usr/share/docassemble/config/docassemble-ssl.conf.dist > /etc/apache2/sites-available/docassemble-ssl.conf || exit 1
 	    rm -f /etc/letsencrypt/da_using_lets_encrypt
 	fi
 	if [ ! -f /etc/apache2/sites-available/docassemble-http.conf ] || [ "${USELETSENCRYPT-none}" == "none" ] || [ "${USEHTTPS-false}" == "false" ]; then
-	    sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
+	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/' \
 		/usr/share/docassemble/config/docassemble-http.conf.dist > /etc/apache2/sites-available/docassemble-http.conf || exit 1
 	    rm -f /etc/letsencrypt/da_using_lets_encrypt
 	fi
 	if [ ! -f /etc/apache2/sites-available/docassemble-log.conf ]; then
-	    sed -e 's/#ServerName {{HOSTNAME}}/ServerName '"${HOSTNAME}"'/' \
+	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/' \
 		/usr/share/docassemble/config/docassemble-log.conf.dist > /etc/apache2/sites-available/docassemble-log.conf || exit 1
 	fi
     fi
@@ -126,7 +126,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 	    if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
 		./letsencrypt-auto renew
 	    else
-		./letsencrypt-auto --apache --quiet --email ${LETSENCRYPTEMAIL} --agree-tos -d ${HOSTNAME} && touch /etc/letsencrypt/da_using_lets_encrypt
+		./letsencrypt-auto --apache --quiet --email ${LETSENCRYPTEMAIL} --agree-tos -d ${DAHOSTNAME} && touch /etc/letsencrypt/da_using_lets_encrypt
 	    fi
 	    cd ~-
 	    /etc/init.d/apache2 stop

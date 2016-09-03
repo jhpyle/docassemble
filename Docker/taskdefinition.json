@@ -79,7 +79,7 @@
           "value": "admin@admin.com"
         },
         {
-          "name": "HOSTNAME",
+          "name": "DAHOSTNAME",
           "value": "host.example.com"
         }
       ]
