@@ -3,6 +3,8 @@
 /usr/share/docassemble/log/apache_error.log
 /usr/share/docassemble/log/worker.log
 {
+        su www-data www-data
+	create 600 www-data www-data
 	rotate 7
 	daily
 	missingok

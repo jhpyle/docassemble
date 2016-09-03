@@ -55,6 +55,10 @@ fi
 
 python -m docassemble.webapp.update_config $DA_CONFIG_FILE || exit 1
 
+if [[ $CONTAINERROLE =~ .*:(all|web|celery):.* ]]; then
+    python -m docassemble.webapp.update $DA_CONFIG_FILE || exit 1
+fi
+
 if [ "${LOCALE-undefined}" != "undefined" ]; then
     set -- $LOCALE
     DA_LANGUAGE=$1
@@ -138,7 +142,6 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 	a2dismod ssl
 	a2dissite docassemble-ssl
     fi
-    python -m docassemble.webapp.update $DA_CONFIG_FILE || exit 1
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then

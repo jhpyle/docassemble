@@ -88,9 +88,9 @@
     - progress-features
     - reset
 - Exit questions:
-    - sets-exit
-    - sets-exit-choices
-    - sets-exit-url
+    - exit-buttons
+    - exit-choices
+    - exit-url
     - dead-end
 - Groups:
     - for_fruit
