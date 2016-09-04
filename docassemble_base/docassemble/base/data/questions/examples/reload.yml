@@ -1,0 +1,27 @@
+metadata:
+  title: Auto reload
+  example start: 4
+  example end: 4
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+code: |
+  counter = 0
+---
+initial: true
+code: |
+  counter += 1
+---
+reload: true
+question: |
+  You have viewed this screen
+  ${ counter }
+  ${ noun_plural('time', counter) }.
+field: acknowledged
+---
+mandatory: true
+need: acknowledged
+question: |
+  All done with the interview.

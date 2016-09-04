@@ -73,6 +73,7 @@
     - video
 #    - video-static
     - help-damages-audio
+    - reload
     - progress
 - Initial blocks:
     - metadata

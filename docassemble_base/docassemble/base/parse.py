@@ -406,6 +406,7 @@ class Question:
         self.need = None
         self.helptext = None
         self.subcontent = None
+        self.reload_after = None
         self.undertext = None
         self.continuelabel = None
         self.progress = None
@@ -815,6 +816,8 @@ class Question:
             self.content = TextObject(definitions + data['question'], names_used=self.mako_names)
         if 'subquestion' in data:
             self.subcontent = TextObject(definitions + data['subquestion'], names_used=self.mako_names)
+        if 'reload' in data and data['reload']:
+            self.reload_after = TextObject(definitions + str(data['reload']), names_used=self.mako_names)
         if 'help' in data:
             if type(data['help']) is dict:
                 for key, value in data['help'].iteritems():
@@ -1466,6 +1469,18 @@ class Question:
         extras = dict()
         labels = dict()
         extras['required'] = dict()
+        if self.reload_after is not None:
+            number = str(self.reload_after.text(user_dict))
+            if number not in ["False", "false", "Null", "None", "none", "null"]:
+                if number in ["True", "true"]:
+                    number = "10"
+                if number:
+                    number = re.sub(r'[^0-9]', r'', number)
+                else:
+                    number = "10"
+                if int(number) < 4:
+                    number = "4"                
+                extras['reload_after'] = number
         if self.question_type == 'response':
             extras['content_type'] = self.content_type.text(user_dict)
             if hasattr(self, 'binaryresponse'):
@@ -1556,16 +1571,16 @@ class Question:
                 if hasattr(field, 'label'):
                     labels[field.number] = field.label.text(user_dict)
                 if hasattr(field, 'extras'):
-                    for key in ['note', 'html', 'script', 'css', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step', 'textresponse', 'content_type']:
+                    for key in ['note', 'html', 'script', 'css', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step']: # , 'textresponse', 'content_type'
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()
                             extras[key][field.number] = field.extras[key].text(user_dict)
-                    for key in ['binaryresponse', 'response_filename']:
-                        if key in field.extras:
-                            if key not in extras:
-                                extras[key] = dict()
-                            extras[key][field.number] = field.extras[key]
+                    # for key in ['binaryresponse', 'response_filename']:
+                    #     if key in field.extras:
+                    #         if key not in extras:
+                    #             extras[key] = dict()
+                    #         extras[key][field.number] = field.extras[key]
                 if hasattr(field, 'saveas'):
                     try:
                         defaults[field.number] = eval(from_safeid(field.saveas), user_dict)
