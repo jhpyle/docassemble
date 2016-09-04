@@ -72,19 +72,19 @@ def load(**kwargs):
         if 'db' not in daconfig:
             daconfig['db'] = dict()
         if 'host' not in daconfig['db'] or daconfig['db']['host'] is None:
-            key = s3.get('hostname-sql')
+            key = s3.get_key('hostname-sql')
             if key.exists():
                 daconfig['db']['host'] = key.get_contents_as_string()
         if 'log server' not in daconfig or daconfig['log server'] is None:
-            key = s3.get('hostname-log')
+            key = s3.get_key('hostname-log')
             if key.exists():
                 daconfig['log server'] = key.get_contents_as_string()
         if 'redis' not in daconfig or daconfig['rabbitmq'] is None:
-            key = s3.get('hostname-redis')
+            key = s3.get_key('hostname-redis')
             if key.exists():
                 daconfig['redis'] = 'redis://' + key.get_contents_as_string()
         if 'rabbitmq' not in daconfig or daconfig['rabbitmq'] is None:
-            key = s3.get('hostname-rabbitmq')
+            key = s3.get_key('hostname-rabbitmq')
             if key.exists():
                 daconfig['rabbitmq'] = 'amqp://guest@' + key.get_contents_as_string() + '\/\/'
     loaded = True
