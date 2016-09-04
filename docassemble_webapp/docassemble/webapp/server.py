@@ -173,7 +173,7 @@ else:
     VOICERSS_ENABLED = True
 ROOT = daconfig.get('root', '/')
 #app.logger.warning("default sender is " + app.config['MAIL_DEFAULT_SENDER'] + "\n")
-exit_page = daconfig.get('exitpage', '/')
+exit_page = daconfig.get('exitpage', 'http://docassemble.org')
 
 SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
 PACKAGE_CACHE = daconfig.get('packagecache', '/var/www/.cache')

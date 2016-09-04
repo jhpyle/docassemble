@@ -10,6 +10,30 @@ function deregister {
     python -m docassemble.webapp.s3deregister
 }
 
+if [ ! -f $DA_CONFIG_FILE ]; then
+    sed -e 's@{{DBPREFIX}}@'"${DBPREFIX-postgresql+psycopg2://}"'@' \
+	-e 's/{{DBNAME}}/'"${DBNAME-docassemble}"'/' \
+	-e 's/{{DBUSER}}/'"${DBUSER-docassemble}"'/' \
+	-e 's/{{DBPASSWORD}}/'"${DBPASSWORD-abc123}"'/' \
+	-e 's/{{DBHOST}}/'"${DBHOST-null}"'/' \
+	-e 's/{{DBPORT}}/'"${DBPORT-null}"'/' \
+	-e 's/{{DBTABLEPREFIX}}/'"${DBTABLEPREFIX-null}"'/' \
+	-e 's/{{S3ENABLE}}/'"${S3ENABLE-false}"'/' \
+	-e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY-null}"'/' \
+	-e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
+	-e 's/{{S3BUCKET}}/'"${S3BUCKET-null}"'/' \
+	-e 's/{{REDIS}}/'"${REDIS-null}"'/' \
+	-e 's/{{RABBITMQ}}/'"${RABBITMQ-null}"'/' \
+	-e 's/{{EC2}}/'"${EC2-false}"'/' \
+	-e 's/{{LOGSERVER}}/'"${LOGSERVER-null}"'/' \
+	$DA_CONFIG_FILE_DIST > $DA_CONFIG_FILE || exit 1
+    chown www-data.www-data $DA_CONFIG_FILE
+fi
+
+python -m docassemble.webapp.update_config $DA_CONFIG_FILE || exit 1
+
+source /dev/stdin < <(python -m docassemble.base.read_config $DA_CONFIG_FILE)
+
 if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
     rm -f /etc/apache2/sites-available/000-default.conf
     rm -f /etc/apache2/sites-available/default-ssl.conf
@@ -33,28 +57,6 @@ if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
     fi
     a2ensite docassemble-http
 fi
-
-if [ ! -f $DA_CONFIG_FILE ]; then
-    sed -e 's@{{DBPREFIX}}@'"${DBPREFIX-postgresql+psycopg2://}"'@' \
-	-e 's/{{DBNAME}}/'"${DBNAME-docassemble}"'/' \
-	-e 's/{{DBUSER}}/'"${DBUSER-docassemble}"'/' \
-	-e 's/{{DBPASSWORD}}/'"${DBPASSWORD-abc123}"'/' \
-	-e 's/{{DBHOST}}/'"${DBHOST-null}"'/' \
-	-e 's/{{DBPORT}}/'"${DBPORT-null}"'/' \
-	-e 's/{{DBTABLEPREFIX}}/'"${DBTABLEPREFIX-null}"'/' \
-	-e 's/{{S3ENABLE}}/'"${S3ENABLE-false}"'/' \
-	-e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY-null}"'/' \
-	-e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY-null}"'/' \
-	-e 's/{{S3BUCKET}}/'"${S3BUCKET-null}"'/' \
-	-e 's/{{REDIS}}/'"${REDIS-null}"'/' \
-	-e 's/{{RABBITMQ}}/'"${RABBITMQ-null}"'/' \
-	-e 's/{{EC2}}/'"${EC2-false}"'/' \
-	-e 's/{{LOGSERVER}}/'"${LOGSERVER-null}"'/' \
-	$DA_CONFIG_FILE_DIST > $DA_CONFIG_FILE || exit 1
-    chown www-data.www-data $DA_CONFIG_FILE
-fi
-
-python -m docassemble.webapp.update_config $DA_CONFIG_FILE || exit 1
 
 if [ "${LOCALE-undefined}" != "undefined" ]; then
     set -- $LOCALE
