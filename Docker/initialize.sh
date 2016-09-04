@@ -10,6 +10,10 @@ function deregister {
     python -m docassemble.webapp.s3deregister
 }
 
+if [ "${S3ENABLE-null}" == "null" ] && [ "${S3BUCKET-null}" != "null" ]; then
+    export S3ENABLE=true
+fi
+
 if [ ! -f $DA_CONFIG_FILE ]; then
     sed -e 's@{{DBPREFIX}}@'"${DBPREFIX-postgresql+psycopg2://}"'@' \
 	-e 's/{{DBNAME}}/'"${DBNAME-docassemble}"'/' \

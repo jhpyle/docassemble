@@ -53,6 +53,8 @@ def load(**kwargs):
         GC_ENABLED = False
     else:
         GC_ENABLED = True
+    if 'db' not in daconfig:
+        daconfig['db'] = dict()
     dbtableprefix = daconfig['db'].get('table_prefix', None)
     if not dbtableprefix:
         dbtableprefix = ''
