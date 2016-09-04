@@ -14,7 +14,7 @@ def main():
         roles = re.sub(r'^:+|:+$', r'', roles)
         role_list = roles.split(":")
         if 'all' in role_list:
-            role_list = ['sql', 'log', 'redis', 'rabbitmq']
+            role_list = ['sql', 'redis', 'rabbitmq']
         for role in role_list:
             if role in ['sql', 'log', 'redis', 'rabbitmq']:
                 key = s3.get_key('hostname-' + role)
