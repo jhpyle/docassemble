@@ -6,7 +6,8 @@ export CONTAINERROLE=":${CONTAINERROLE-all}:"
 source /usr/share/docassemble/local/bin/activate
 
 function deregister {
-    su -c '/usr/share/docassemble/local/bin/python -m docassemble.webapp.deregister' www-data
+    python -m docassemble.webapp.deregister
+    python -m docassemble.webapp.s3deregister
 }
 
 if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
@@ -55,10 +56,6 @@ fi
 
 python -m docassemble.webapp.update_config $DA_CONFIG_FILE || exit 1
 
-if [[ $CONTAINERROLE =~ .*:(all|web|celery):.* ]]; then
-    python -m docassemble.webapp.update $DA_CONFIG_FILE || exit 1
-fi
-
 if [ "${LOCALE-undefined}" != "undefined" ]; then
     set -- $LOCALE
     DA_LANGUAGE=$1
@@ -70,6 +67,8 @@ if [ "${TIMEZONE-undefined}" != "undefined" ]; then
     echo $TIMEZONE > /etc/timezone
     dpkg-reconfigure -f noninteractive tzdata
 fi
+
+python -m docassemble.webapp.s3register $DA_CONFIG_FILE
 
 if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
     supervisorctl --serverurl http://localhost:9001 start postgres || exit 1
@@ -97,9 +96,9 @@ if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]]; then
     supervisorctl --serverurl http://localhost:9001 start rabbitmq
 fi
 
-su -c '/usr/share/docassemble/local/bin/python -m docassemble.webapp.register' www-data
-
-trap deregister SIGINT SIGTERM
+if [[ $CONTAINERROLE =~ .*:(all|web|celery):.* ]]; then
+    python -m docassemble.webapp.update $DA_CONFIG_FILE || exit 1
+fi
 
 if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]]; then
     supervisorctl --serverurl http://localhost:9001 start celery
@@ -153,6 +152,10 @@ fi
 if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
     supervisorctl --serverurl http://localhost:9001 start apache2
 fi
+
+python -m docassemble.webapp.register $DA_CONFIG_FILE
+
+trap deregister SIGINT SIGTERM
 
 sleep infinity &
 wait %1
