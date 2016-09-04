@@ -106,6 +106,10 @@ if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "${LOGSERVER-undefined}" == "null" ]
     OTHERLOGSERVER=false
 fi
 
+if [ "$OTHERLOGSERVER" = false ] && [ -f /usr/share/docassemble/log/docassemble.log ]; then
+    chown www-data.www-data /usr/share/docassemble/log/docassemble.log
+fi
+
 if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "$OTHERLOGSERVER" = true ]; then
     if [ -d /etc/syslog-ng ]; then
 	if [ "$OTHERLOGSERVER" = true ]; then
