@@ -20,7 +20,8 @@ COPY Docker/apache.conf /usr/share/docassemble/config/docassemble-http.conf.dist
 COPY Docker/apache-ssl.conf /usr/share/docassemble/config/docassemble-ssl.conf.dist
 COPY Docker/apache-log.conf /usr/share/docassemble/config/docassemble-log.conf.dist
 COPY Docker/index.sh /usr/lib/cgi-bin/
-COPY Docker/syslog-ng.conf /etc/syslog-ng/
+COPY Docker/syslog-ng.conf /usr/share/docassemble/webapp/syslog-ng.conf
+COPY Docker/docassemble-syslog-ng.conf /usr/share/docassemble/webapp/docassemble-syslog-ng.conf
 COPY Docker/apache.logrotate /etc/logrotate.d/apache2
 COPY Docker/docassemble.logrotate /etc/logrotate.d/docassemble
 COPY Docker/docassemble-cron-monthly.sh /etc/cron.monthly/docassemble

@@ -13,8 +13,8 @@ function deregister {
 if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
     rm -f /etc/apache2/sites-available/000-default.conf
     rm -f /etc/apache2/sites-available/default-ssl.conf
-    a2dissite 000-default
-    a2dissite default-ssl
+    a2dissite -q 000-default &> /dev/null
+    a2dissite -q default-ssl &> /dev/null
     if [ "${DAHOSTNAME-none}" != "none" ]; then
 	if [ ! -f /etc/apache2/sites-available/docassemble-ssl.conf ] || [ "${USELETSENCRYPT-none}" == "none" ] || [ "${USEHTTPS-false}" == "false" ]; then
 	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/' \
@@ -84,8 +84,39 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
     python -m docassemble.webapp.create_tables $DA_CONFIG_FILE
 fi
 
-if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
-    supervisorctl --serverurl http://localhost:9001 start syslogng
+if [ -f /etc/syslog-ng/syslog-ng.conf ] && [ ! -f /usr/share/docassemble/webapp/syslog-ng-orig.conf ]; then
+    cp /etc/syslog-ng/syslog-ng.conf /usr/share/docassemble/webapp/syslog-ng-orig.conf
+fi
+
+OTHERLOGSERVER=false
+
+if [[ $CONTAINERROLE =~ .*:(web|celery):.* ]]; then
+    if [ "${LOGSERVER-undefined}" == "undefined" ]; then
+	DEFINEDLOGSERVER=`python -m docassemble.webapp.logserver`
+	if [ "${DEFINEDLOGSERVER}" != ""]; then
+	    export LOGSERVER="${DEFINEDLOGSERVER}"
+	fi
+    fi
+    if [ "${LOGSERVER-undefined}" != "undefined" ]; then
+	OTHERLOGSERVER=true
+    fi
+fi
+
+if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "${LOGSERVER-undefined}" == "null" ]; then
+    OTHERLOGSERVER=false
+fi
+
+if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "$OTHERLOGSERVER" = true ]; then
+    if [ -d /etc/syslog-ng ]; then
+	if [ "$OTHERLOGSERVER" = true ]; then
+	    cp /usr/share/docassemble/webapp/syslog-ng-orig.conf /etc/syslog-ng/syslog-ng.conf
+	    cp /usr/share/docassemble/webapp/docassemble-syslog-ng.conf /etc/syslog-ng/conf.d/docassemble
+	else
+	    rm -f /etc/syslog-ng/conf.d/docassemble
+	    cp /usr/share/docassemble/webapp/syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
+	fi
+	supervisorctl --serverurl http://localhost:9001 start syslogng
+    fi
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]]; then
