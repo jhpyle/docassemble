@@ -74,19 +74,33 @@ def load(**kwargs):
         if 'host' not in daconfig['db'] or daconfig['db']['host'] is None:
             key = s3.get_key('hostname-sql')
             if key.exists():
-                daconfig['db']['host'] = key.get_contents_as_string()
+                the_host = key.get_contents_as_string()
+                if the_host == hostname:
+                    daconfig['db']['host'] = 'localhost'
+                else:
+                    daconfig['db']['host'] = the_host
         if 'log server' not in daconfig or daconfig['log server'] is None:
             key = s3.get_key('hostname-log')
             if key.exists():
-                daconfig['log server'] = key.get_contents_as_string()
+                the_host = key.get_contents_as_string()
+                if the_host == hostname:
+                    daconfig['log server'] = 'localhost'
+                else:
+                    daconfig['log server'] = the_host
         if 'redis' not in daconfig or daconfig['rabbitmq'] is None:
             key = s3.get_key('hostname-redis')
             if key.exists():
-                daconfig['redis'] = 'redis://' + key.get_contents_as_string()
+                the_host = key.get_contents_as_string()
+                if the_host == hostname:
+                    the_host = 'localhost'
+                daconfig['redis'] = 'redis://' + the_host
         if 'rabbitmq' not in daconfig or daconfig['rabbitmq'] is None:
             key = s3.get_key('hostname-rabbitmq')
             if key.exists():
-                daconfig['rabbitmq'] = 'amqp://guest@' + key.get_contents_as_string() + '\/\/'
+                the_host = key.get_contents_as_string()
+                if the_host == hostname:
+                    the_host = 'localhost'
+                daconfig['rabbitmq'] = 'amqp://guest@' + the_host + '\/\/'
     loaded = True
     return
 

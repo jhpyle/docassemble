@@ -57,6 +57,11 @@ EXPOSE 9001
 EXPOSE 514
 EXPOSE 8080
 EXPOSE 5432
+EXPOSE 6379
+EXPOSE 4369
+EXPOSE 5671
+EXPOSE 5672
+EXPOSE 25672
 
 VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql", "/usr/share/docassemble/log", "/usr/share/docassemble/files", "/usr/share/docassemble/config", "/usr/share/docassemble/backup", "/etc/letsencrypt", "/etc/apache2/sites-available", "/var/run/postgresql"]
 
