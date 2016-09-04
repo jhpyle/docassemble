@@ -54,7 +54,7 @@ def load(**kwargs):
     else:
         GC_ENABLED = True
     if 'db' not in daconfig:
-        daconfig['db'] = dict()
+        daconfig['db'] = dict(name="docassemble", user="docassemble", password="abc123")
     dbtableprefix = daconfig['db'].get('table_prefix', None)
     if not dbtableprefix:
         dbtableprefix = ''
@@ -71,8 +71,6 @@ def load(**kwargs):
     if S3_ENABLED:
         import docassemble.webapp.amazon
         s3 = docassemble.webapp.amazon.s3object(s3_config)
-        if 'db' not in daconfig:
-            daconfig['db'] = dict()
         if 'host' not in daconfig['db'] or daconfig['db']['host'] is None:
             key = s3.get_key('hostname-sql')
             if key.exists():
