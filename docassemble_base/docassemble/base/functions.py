@@ -17,7 +17,6 @@ import codecs
 import base64
 import json
 import ast
-import us
 import threading
 import astunparse
 import yaml

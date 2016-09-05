@@ -1681,11 +1681,11 @@ def index():
     flash_content = ""
     messages = get_flashed_messages(with_categories=True) + error_messages
     if messages and len(messages):
-        flash_content += '<div class="container topcenter" id="flash">'
+        flash_content += '<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash">'
         for classname, message in messages:
             if classname == 'error':
                 classname = 'danger'
-            flash_content += '<div class="row"><div class="col-sm-7 col-md-6 col-lg-5 col-centered"><div class="alert alert-' + classname + '"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div></div></div>'
+            flash_content += '<div class="alert alert-' + classname + '"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div>'
         flash_content += '</div>'
 #     scripts = """
 #     <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
@@ -1862,7 +1862,7 @@ def index():
             output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
         output += "".join(extra_css)
         output += '\n    <title>' + interview_status.question.interview.get_title().get('full', default_title) + '</title>\n  </head>\n  <body>\n'
-        output += make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN) + '    <div class="container">' + "\n      " + '<div class="row">\n        <div class="tab-content">\n' + flash_content
+        output += make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">\n        <div class="tab-content">\n'
         if interview_status.question.interview.use_progress_bar:
             output += progress_bar(user_dict['_internal']['progress'])
         output += content + "        </div>\n      </div>\n"
@@ -3022,11 +3022,7 @@ def config_page():
 
 def flash_as_html(message, message_type="info"):
     output = """
-        <div class="row">
-          <div class="col-sm-7 col-md-6 col-lg-5 col-centered">
-            <div class="alert alert-""" + str(message_type) + """"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>""" + str(message) + """</div>
-          </div>
-        </div>
+        <div class="alert alert-""" + str(message_type) + """"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>""" + str(message) + """</div>
 """
     return output
 
@@ -3789,7 +3785,7 @@ $( document ).ready(function() {
           $("#flash").html(data.flash_message)
         }
         else{
-          $("#main").prepend('<div class="container topcenter" id="flash">' + data.flash_message + '</div>')
+          $("#main").prepend('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash">' + data.flash_message + '</div>')
         }
         $("#daplaygroundtable").html(data.variables_html)
         window.open(data.url, '_blank');

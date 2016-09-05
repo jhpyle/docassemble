@@ -58,17 +58,13 @@
     {%- block flash_messages %}
       {%- with messages = get_flashed_messages(with_categories=true) -%}
         {%- if messages %}
-      <div class="container topcenter" id="flash">
-        <div class="row">
-          <div class="col-sm-7 col-md-6 col-lg-5 col-centered">
+      <div class="topcenter col-sm-7 col-md-6 col-lg-5 col-centered" id="flash">
           {%- for category, message in messages %}
             {%- if category=='error' %}
               {%- set category='danger' %}
             {%- endif %}
             <div class="alert alert-{{category}}"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>{{ message|safe }}</div>
           {%- endfor %}
-          </div>
-        </div>
       </div>
         {%- endif %}
       {%- endwith %}
