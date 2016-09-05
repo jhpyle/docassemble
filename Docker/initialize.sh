@@ -15,17 +15,18 @@ if [ "${S3ENABLE-null}" == "true" ] && [ "${S3BUCKET-null}" != "null" ] && [ "${
 fi
 
 if [ "${S3ENABLE-false}" == "true" ]; then
-    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ `s3cmd ls s3://${S3BUCKET}/letsencrypt` ]; then
-	s3cmd sync s3://${S3BUCKET}/letsencrypt/ /etc/letsencrypt/
+    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/letsencrypt) ]]; then
+	s3cmd -q sync s3://${S3BUCKET}/letsencrypt/ /etc/letsencrypt/
     fi
-    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ `s3cmd ls s3://${S3BUCKET}/apache` ]; then
-	s3cmd sync s3://${S3BUCKET}/apache/ /etc/apache2/sites-available/
+    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/apache) ]]; then
+	s3cmd -q sync s3://${S3BUCKET}/apache/ /etc/apache2/sites-available/
     fi
-    if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [ `s3cmd ls s3://${S3BUCKET}/log` ]; then
-	s3cmd sync s3://${S3BUCKET}/log/ /usr/share/docassemble/log/
+    if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/log) ]]; then
+	s3cmd -q sync s3://${S3BUCKET}/log/ /usr/share/docassemble/log/
     fi
-    if [ `s3cmd ls s3://${S3BUCKET}/config.yml` ]; then
-	s3cmd get s3://${S3BUCKET}/config.yml $DA_CONFIG_FILE
+    if [[ $(s3cmd ls s3://${S3BUCKET}/config.yml) ]]; then
+	rm -f $DA_CONFIG_FILE
+	s3cmd -q get s3://${S3BUCKET}/config.yml $DA_CONFIG_FILE
     fi
 fi
 
@@ -104,9 +105,9 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
     if [ -z "$roleexists" ]; then
 	echo "create role "${DBUSER-docassemble}" with login password '"${DBPASSWORD-abc123}"';" | su -c psql postgres || exit 1
     fi
-    if [ "${S3ENABLE-false}" == "true" ] && [ `s3cmd ls s3://${S3BUCKET}/postgres` ]; then
+    if [ "${S3ENABLE-false}" == "true" ] && [[ $(s3cmd ls s3://${S3BUCKET}/postgres) ]]; then
 	PGBACKUPDIR=`mktemp -d`
-	s3cmd sync s3://${S3BUCKET}/postgres/ "$PGBACKUPDIR/"
+	s3cmd -q sync s3://${S3BUCKET}/postgres/ "$PGBACKUPDIR/"
 	cd "$PGBACKUPDIR"
 	for db in $( ls ); do
 	    pg_restore -F c -C -c $db | su -c psql postgres
@@ -212,8 +213,8 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 	a2dissite docassemble-ssl
     fi
     if [ "${S3ENABLE-false}" == "true" ]; then
-	s3cmd sync /etc/letsencrypt/ 's3://'${S3BUCKET}/letsencrypt/ 
-	s3cmd sync /etc/apache2/sites-available/ 's3://'${S3BUCKET}/apache/
+	s3cmd -q sync /etc/letsencrypt/ 's3://'${S3BUCKET}/letsencrypt/ 
+	s3cmd -q sync /etc/apache2/sites-available/ 's3://'${S3BUCKET}/apache/
     fi
 fi
 
@@ -234,7 +235,7 @@ function deregister {
     if [ "${S3ENABLE-false}" == "true" ]; then
 	python -m docassemble.webapp.s3deregister
 	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
-	    s3cmd sync /usr/share/docassemble/log/ s3://${S3BUCKET}/log/
+	    s3cmd -q sync /usr/share/docassemble/log/ s3://${S3BUCKET}/log/
 	fi
     fi
 }
