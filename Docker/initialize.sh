@@ -15,8 +15,12 @@ if [ "${S3ENABLE-null}" == "true" ] && [ "${S3BUCKET-null}" != "null" ] && [ "${
 fi
 
 if [ "${S3ENABLE-false}" == "true" ]; then
-    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/letsencrypt) ]]; then
-	s3cmd -q sync s3://${S3BUCKET}/letsencrypt/ /etc/letsencrypt/
+    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/letsencrypt.tar.gz) ]]; then
+	rm -f /tmp/letsencrypt.tar.gz
+	s3cmd -q get s3://${S3BUCKET}/letsencrypt.tar.gz /tmp/letsencrypt.tar.gz
+	cd /
+	tar -xf /tmp/letsencrypt.tar.gz
+	rm -f /tmp/letsencrypt.tar.gz
     fi
     if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/apache) ]]; then
 	s3cmd -q sync s3://${S3BUCKET}/apache/ /etc/apache2/sites-available/
@@ -100,6 +104,7 @@ fi
 
 if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
     supervisorctl --serverurl http://localhost:9001 start postgres || exit 1
+    sleep 4
     while ! pg_isready; do sleep 1; done
     roleexists=`su -c "psql -tAc \"SELECT 1 FROM pg_roles WHERE rolname='${DBUSER-docassemble}'\"" postgres`
     if [ -z "$roleexists" ]; then
@@ -213,7 +218,10 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 	a2dissite docassemble-ssl
     fi
     if [ "${S3ENABLE-false}" == "true" ]; then
-	s3cmd -q sync /etc/letsencrypt/ 's3://'${S3BUCKET}/letsencrypt/ 
+	cd /
+	rm -f /tmp/letsencrypt.tar.gz
+	tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
+	s3cmd -q put /tmp/letsencrypt.tar.gz 's3://'${S3BUCKET}/letsencrypt.tar.gz 
 	s3cmd -q sync /etc/apache2/sites-available/ 's3://'${S3BUCKET}/apache/
     fi
 fi

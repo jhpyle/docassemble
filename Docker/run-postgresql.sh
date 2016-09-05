@@ -32,5 +32,8 @@ else
     install -d -m 2775 -o postgres -g postgres /var/run/postgresql
 fi
 
+mkdir -p /var/run/postgresql/9.4-main.pg_stat_tmp
+chown -R postgres.postgres /var/run/postgresql/9.4-main.pg_stat_tmp
+
 su postgres -c "/usr/lib/postgresql/9.4/bin/postgres -D /var/lib/postgresql/9.4/main -c config_file=/etc/postgresql/9.4/main/postgresql.conf" &
 wait %1
