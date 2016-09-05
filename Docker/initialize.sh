@@ -5,13 +5,28 @@ export DA_CONFIG_FILE=/usr/share/docassemble/config/config.yml
 export CONTAINERROLE=":${CONTAINERROLE-all}:"
 source /usr/share/docassemble/local/bin/activate
 
-function deregister {
-    python -m docassemble.webapp.deregister
-    python -m docassemble.webapp.s3deregister
-}
-
 if [ "${S3ENABLE-null}" == "null" ] && [ "${S3BUCKET-null}" != "null" ]; then
     export S3ENABLE=true
+fi
+
+if [ "${S3ENABLE-null}" == "true" ] && [ "${S3BUCKET-null}" != "null" ] && [ "${S3ACCESSKEY-null}" != "null" ] && [ "${S3SECRETACCESSKEY-null}" != "null" ]; then
+    export AWS_ACCESS_KEY_ID=$S3ACCESSKEY
+    export AWS_SECRET_ACCESS_KEY=$S3SECRETACCESSKEY
+fi
+
+if [ "${S3ENABLE-false}" == "true" ]; then
+    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ `s3cmd ls s3://${S3BUCKET}/letsencrypt` ]; then
+	s3cmd sync s3://${S3BUCKET}/letsencrypt/ /etc/letsencrypt/
+    fi
+    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ `s3cmd ls s3://${S3BUCKET}/apache` ]; then
+	s3cmd sync s3://${S3BUCKET}/apache/ /etc/apache2/sites-available/
+    fi
+    if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [ `s3cmd ls s3://${S3BUCKET}/log` ]; then
+	s3cmd sync s3://${S3BUCKET}/log/ /usr/share/docassemble/log/
+    fi
+    if [ `s3cmd ls s3://${S3BUCKET}/config.yml` ]; then
+	s3cmd get s3://${S3BUCKET}/config.yml $DA_CONFIG_FILE
+    fi
 fi
 
 if [ ! -f $DA_CONFIG_FILE ]; then
@@ -34,9 +49,13 @@ if [ ! -f $DA_CONFIG_FILE ]; then
     chown www-data.www-data $DA_CONFIG_FILE
 fi
 
-python -m docassemble.webapp.update_config $DA_CONFIG_FILE || exit 1
-
 source /dev/stdin < <(python -m docassemble.base.read_config $DA_CONFIG_FILE)
+
+if [ "${EC2-false}" == "true" ]; then
+    export LOCAL_HOSTNAME=`curl http://169.254.169.254/latest/meta-data/local-hostname`
+else
+    export LOCAL_HOSTNAME=`hostname --fqdn`
+fi
 
 if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
     rm -f /etc/apache2/sites-available/000-default.conf
@@ -74,16 +93,26 @@ if [ "${TIMEZONE-undefined}" != "undefined" ]; then
     dpkg-reconfigure -f noninteractive tzdata
 fi
 
-python -m docassemble.webapp.s3register $DA_CONFIG_FILE
+if [ "${S3ENABLE-false}" == "true" ]; then
+    python -m docassemble.webapp.s3register $DA_CONFIG_FILE
+fi
 
 if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
     supervisorctl --serverurl http://localhost:9001 start postgres || exit 1
-    sleep 4
-    dbexists=`su -c "psql -tAc \"SELECT 1 FROM pg_database WHERE datname='${DBNAME-docassemble}'\"" postgres`
+    while ! pg_isready; do sleep 1; done
     roleexists=`su -c "psql -tAc \"SELECT 1 FROM pg_roles WHERE rolname='${DBUSER-docassemble}'\"" postgres`
     if [ -z "$roleexists" ]; then
 	echo "create role "${DBUSER-docassemble}" with login password '"${DBPASSWORD-abc123}"';" | su -c psql postgres || exit 1
     fi
+    if [ "${S3ENABLE-false}" == "true" ] && [ `s3cmd ls s3://${S3BUCKET}/postgres` ]; then
+	PGBACKUPDIR=`mktemp -d`
+	s3cmd sync s3://${S3BUCKET}/postgres/ "$PGBACKUPDIR/"
+	cd "$PGBACKUPDIR"
+	for db in $( ls ); do
+	    pg_restore -F c -C -c $db | su -c psql postgres
+	done
+    fi
+    dbexists=`su -c "psql -tAc \"SELECT 1 FROM pg_database WHERE datname='${DBNAME-docassemble}'\"" postgres`
     if [ -z "$dbexists" ]; then
 	echo "create database "${DBNAME-docassemble}" owner "${DBUSER-docassemble}";" | su -c psql postgres || exit 1
     fi
@@ -182,6 +211,10 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 	a2dismod ssl
 	a2dissite docassemble-ssl
     fi
+    if [ "${S3ENABLE-false}" == "true" ]; then
+	s3cmd sync /etc/letsencrypt/ 's3://'${S3BUCKET}/letsencrypt/ 
+	s3cmd sync /etc/apache2/sites-available/ 's3://'${S3BUCKET}/apache/
+    fi
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
@@ -195,6 +228,16 @@ if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
 fi
 
 python -m docassemble.webapp.register $DA_CONFIG_FILE
+
+function deregister {
+    python -m docassemble.webapp.deregister
+    if [ "${S3ENABLE-false}" == "true" ]; then
+	python -m docassemble.webapp.s3deregister
+	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
+	    s3cmd sync /usr/share/docassemble/log/ s3://${S3BUCKET}/log/
+	fi
+    fi
+}
 
 trap deregister SIGINT SIGTERM
 
