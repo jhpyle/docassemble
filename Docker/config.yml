@@ -32,7 +32,6 @@ mail:
   server: localhost
   default_sender: '"Administrator" <no-reply@example.com>'
 admin_address: '"Administrator" <admin@example.com>'
-use_progress_bar: false
 default_interview: docassemble.demo:data/questions/questions.yml
 flask_log: /tmp/flask.log
 language: en

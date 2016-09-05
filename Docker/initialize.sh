@@ -29,12 +29,6 @@ else
     RABBITMQRUNNING=false
 fi
 
-if celery -A docassemble.webapp.worker status &> /dev/null; then
-    CELERYRUNNING=true
-else
-    CELERYRUNNING=false
-fi
-
 if [ -f /var/run/crond.pid ]; then
     CRONRUNNING=true
 else
@@ -87,8 +81,8 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 	-e 's/{{EC2}}/'"${EC2-false}"'/' \
 	-e 's/{{LOGSERVER}}/'"${LOGSERVER-null}"'/' \
 	$DA_CONFIG_FILE_DIST > $DA_CONFIG_FILE || exit 1
-    chown www-data.www-data $DA_CONFIG_FILE
 fi
+chown www-data.www-data $DA_CONFIG_FILE
 
 source /dev/stdin < <(python -m docassemble.base.read_config $DA_CONFIG_FILE)
 
@@ -118,16 +112,20 @@ if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
 	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/' \
 		/usr/share/docassemble/config/docassemble-log.conf.dist > /etc/apache2/sites-available/docassemble-log.conf || exit 1
 	fi
+    else
+	cp /usr/share/docassemble/config/docassemble-http.conf.dist /etc/apache2/sites-available/docassemble-http.conf || exit 1
     fi
     a2ensite docassemble-http
 fi
 
-if [ "${LOCALE-undefined}" != "undefined" ]; then
-    set -- $LOCALE
-    DA_LANGUAGE=$1
-    grep -q "^$LOCALE" /etc/locale.gen || { echo $LOCALE >> /etc/locale.gen && locale-gen ; }
-    update-locale LANG=$DA_LANGUAGE
+if [ "${LOCALE-undefined}" == "undefined" ]; then
+    LOCALE="en_US.UTF-8 UTF-8"
 fi
+
+set -- $LOCALE
+DA_LANGUAGE=$1
+grep -q "^$LOCALE" /etc/locale.gen || { echo $LOCALE >> /etc/locale.gen && locale-gen ; }
+update-locale LANG=$DA_LANGUAGE
 
 if [ "${TIMEZONE-undefined}" != "undefined" ]; then
     echo $TIMEZONE > /etc/timezone
@@ -212,6 +210,12 @@ if [[ $CONTAINERROLE =~ .*:(all|web|celery):.* ]]; then
     python -m docassemble.webapp.update $DA_CONFIG_FILE || exit 1
 fi
 
+if celery -A docassemble.webapp.worker status &> /dev/null; then
+    CELERYRUNNING=true
+else
+    CELERYRUNNING=false
+fi
+
 if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" = false ]; then
     supervisorctl --serverurl http://localhost:9001 start celery
 fi
@@ -251,7 +255,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
     else
 	rm -f /etc/letsencrypt/da_using_lets_encrypt
 	a2dismod ssl
-	a2dissite docassemble-ssl
+	a2dissite -q docassemble-ssl &> /dev/null
     fi
     if [ "${S3ENABLE-false}" == "true" ]; then
 	cd /
@@ -262,7 +266,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
     fi
 fi
 
-if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [ "$APACHERUNNING" = false ]; then
+if [[ $CONTAINERROLE =~ .*:(log):.* ]] && [ "$APACHERUNNING" = false ]; then
     echo "Listen 8080" >> /etc/apache2/ports.conf
     a2enmod cgid
     a2ensite docassemble-log

@@ -470,7 +470,7 @@ def get_locale():
 
 def update_locale():
     """Updates the system locale based on the value set by set_locale()."""
-    #logmessage("Using " + str(language) + '_' + str(this_locale) + "\n")
+    #logmessage("Using " + str(this_thread.language) + '_' + str(this_thread.locale) + "\n")
     locale.setlocale(locale.LC_ALL, str(this_thread.language) + '_' + str(this_thread.locale))
     return
 
