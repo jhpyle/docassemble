@@ -214,4 +214,5 @@ if __name__ == "__main__":
     if os.path.isfile(wsgi_file):
         with open(wsgi_file, 'a'):
             os.utime(wsgi_file, None)
+    db.engine.dispose()
     sys.exit(0)

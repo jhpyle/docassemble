@@ -4321,3 +4321,8 @@ def interview_list():
 #     response = redirect(next)
 #     response.set_cookie('secret', newsecret)
 #     return response
+
+@app.teardown_appcontext
+def close_db(error):
+    if hasattr(db, 'engine'):
+        db.engine.dispose()

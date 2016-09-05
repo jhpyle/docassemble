@@ -21,3 +21,5 @@ if __name__ == "__main__":
     import docassemble.webapp.database
     app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
     main()
+    db.engine.dispose()
+

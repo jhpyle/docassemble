@@ -10,6 +10,7 @@ if [ "${S3ENABLE-null}" == "true" ] && [ "${S3BUCKET-null}" != "null" ] && [ "${
 fi
 
 function stopfunc {
+    echo backing up postgres
     if [ "${S3ENABLE-false}" == "true" ]; then
 	PGBACKUPDIR=`mktemp -d`
 	chown postgres.postgres "$PGBACKUPDIR"
@@ -24,7 +25,7 @@ function stopfunc {
 
 trap stopfunc SIGINT SIGTERM
 
-source /usr/share/postgresql-common/init.d-functions
+#source /usr/share/postgresql-common/init.d-functions
 
 if [ -d /var/run/postgresql ]; then
     chmod 2775 /var/run/postgresql

@@ -5,6 +5,42 @@ export DA_CONFIG_FILE=/usr/share/docassemble/config/config.yml
 export CONTAINERROLE=":${CONTAINERROLE-all}:"
 source /usr/share/docassemble/local/bin/activate
 
+if pg_isready -q; then
+    PGRUNNING=true
+else
+    PGRUNNING=false
+fi
+
+if [ -f /var/run/apache2/apache2.pid ]; then
+    APACHERUNNING=true
+else
+    APACHERUNNING=false
+fi
+
+if redis-cli ping &> /dev/null; then
+    REDISRUNNING=true
+else
+    REDISRUNNING=false
+fi
+
+if rabbitmqctl status &> /dev/null; then
+    RABBITMQRUNNING=true
+else
+    RABBITMQRUNNING=false
+fi
+
+if celery -A docassemble.webapp.worker status &> /dev/null; then
+    CELERYRUNNING=true
+else
+    CELERYRUNNING=false
+fi
+
+if [ -f /var/run/crond.pid ]; then
+    CRONRUNNING=true
+else
+    CRONRUNNING=false
+fi
+
 if [ "${S3ENABLE-null}" == "null" ] && [ "${S3BUCKET-null}" != "null" ]; then
     export S3ENABLE=true
 fi
@@ -102,10 +138,10 @@ if [ "${S3ENABLE-false}" == "true" ]; then
     python -m docassemble.webapp.s3register $DA_CONFIG_FILE
 fi
 
-if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
+if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
     supervisorctl --serverurl http://localhost:9001 start postgres || exit 1
     sleep 4
-    while ! pg_isready; do sleep 1; done
+    su -c "while ! pg_isready -q; do sleep 1; done" postgres
     roleexists=`su -c "psql -tAc \"SELECT 1 FROM pg_roles WHERE rolname='${DBUSER-docassemble}'\"" postgres`
     if [ -z "$roleexists" ]; then
 	echo "create role "${DBUSER-docassemble}" with login password '"${DBPASSWORD-abc123}"';" | su -c psql postgres || exit 1
@@ -164,11 +200,11 @@ if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "$OTHERLOGSERVER" = true ]; then
     fi
 fi
 
-if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]]; then
+if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [ "$REDISRUNNING" = false ]; then
     supervisorctl --serverurl http://localhost:9001 start redis
 fi
 
-if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]]; then
+if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]] && [ "$RABBITMQRUNNING" = false ]; then
     supervisorctl --serverurl http://localhost:9001 start rabbitmq
 fi
 
@@ -176,7 +212,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web|celery):.* ]]; then
     python -m docassemble.webapp.update $DA_CONFIG_FILE || exit 1
 fi
 
-if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]]; then
+if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" = false ]; then
     supervisorctl --serverurl http://localhost:9001 start celery
 fi
 
@@ -184,7 +220,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
     rm -f /etc/apache2/ports.conf
 fi
 
-if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
+if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
     echo "Listen 80" >> /etc/apache2/ports.conf
     if [ ! -f /usr/share/docassemble/certs/docassemble.key ] && [ -f /usr/share/docassemble/certs/docassemble.key.orig ]; then
 	mv /usr/share/docassemble/certs/docassemble.key.orig /usr/share/docassemble/certs/docassemble.key
@@ -226,17 +262,21 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
     fi
 fi
 
-if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
+if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [ "$APACHERUNNING" = false ]; then
     echo "Listen 8080" >> /etc/apache2/ports.conf
     a2enmod cgid
     a2ensite docassemble-log
 fi
 
-if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
+if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ "$APACHERUNNING" = false ]; then
     supervisorctl --serverurl http://localhost:9001 start apache2
 fi
 
 python -m docassemble.webapp.register $DA_CONFIG_FILE
+
+if [ "$CRONRUNNING" = false ]; then
+   supervisorctl --serverurl http://localhost:9001 start cron
+fi
 
 function deregister {
     python -m docassemble.webapp.deregister
