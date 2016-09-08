@@ -69,7 +69,7 @@ service docker start
 run the image by doing:
 
 {% highlight bash %}
-docker run -d -p 80:80 -p 443:443 jhpyle/docassemble
+docker run -d -p 80:80 -p 443:443 -p 9001:9001 jhpyle/docassemble
 {% endhighlight %}
 
 Or, if you are already using port 80 on your machine, use something
@@ -134,7 +134,7 @@ about [ECS].)
 Here is a sample `env.list` file:
 
 {% highlight text %}
-HOSTNAME=legalhelp.com
+DAHOSTNAME=legalhelp.com
 LOCALE=en_US.UTF-8 UTF-8
 TIMEZONE=America/New_York
 USEHTTPS=true
@@ -179,7 +179,7 @@ The available environment variables include:
 * `USEHTTPS`: Set this to `true` if you would like **docassemble** to
   communicate with the browser using encryption.  See [HTTPS] for more
   information.  Defaults to `false`.
-* `HOSTNAME`: Set this to the hostname by which web browsers can find
+* `DAHOSTNAME`: Set this to the hostname by which web browsers can find
   **docassemble**.  This is necessary for [HTTPS] to function.
 * `USELETSENCRYPT`: Set this to `true` if you are
   [using Let's Encrypt].  The default is `false`.
@@ -214,7 +214,7 @@ going to change the way **docassemble** works.  For example:
   [Apache] configuration files, if stored on a persistent volume, will
   not be overwritten if they already exist when a new container starts
   up.  So if you are using [Let's Encrypt] and you want to change the
-  `HOSTNAME`, run `docker volume rm letsencrypt` to remove the
+  `DAHOSTNAME`, run `docker volume rm letsencrypt` to remove the
   [Let's Encrypt] configuration before running a new container.
 * If `S3ENABLE` is `true`, then on startup, the container will
   retrieve the configuration file from [S3] and use it as the
@@ -279,6 +279,19 @@ Host dev.docassemble.org
     IdentityFile /root/ec2-user.pem
 {% endhighlight %}
 
+## Cleaning up after multiple builds
+
+If you build docker images, you may find your disk space being used
+up.  These three lines will stop all containers, remove all
+containers, and then remove all of the images that [Docker] created
+during the build process.
+
+{% highlight bash %}
+docker stop $(docker ps -a -q)
+docker rm $(docker ps -a -q)
+docker rmi $(docker images | grep "^<none>" | awk "{print $3}")
+{% endhighlight %}
+
 # Multi-server arrangement
 
 To run **docassemble** in a [multi-server arrangement] using [Docker],
@@ -328,7 +341,7 @@ DBUSER=docassemble
 DBPASSWORD=abc123
 DBHOST=192.168.0.56
 USEHTTPS=false
-HOSTNAME=host.example.com
+DAHOSTNAME=host.example.com
 USELETSENCRYPT=false
 LETSENCRYPTEMAIL=admin@admin.com
 S3ENABLE=true
@@ -372,7 +385,7 @@ environment variables:
 * `USELETSENCRYPT`: set this to `true`.
 * `LETSENCRYPTEMAIL`: [Let's Encrypt] requires an e-mail address, which
   it will use to get in touch with you about renewing the SSL certificates.
-* `HOSTNAME`: set this to the hostname that users will use to get to
+* `DAHOSTNAME`: set this to the hostname that users will use to get to
   the web application.  [Let's Encrypt] needs this in order to verify
   that you have access to the host.
 * `USEHTTPS`: set this to `true`.
@@ -383,7 +396,7 @@ For example, your `env.list` may look like:
 CONTAINERROLE=all
 DBNAME=docassemble
 USEHTTPS=true
-HOSTNAME=host.example.com
+DAHOSTNAME=host.example.com
 USELETSENCRYPT=true
 LETSENCRYPTEMAIL=admin@admin.com
 TIMEZONE=America/New_York
@@ -416,6 +429,84 @@ accomplish this:
   placed in `Docker/docassemble.key`, `Docker/docassemble.crt`, and
   `Docker/docassemble.ca.pem`.  During the build process, these files
   will be copied into `/usr/share/docassemble/certs`.
+
+# Example docker run command
+
+{% highlight bash %}
+docker run \
+-e CONTAINERROLE=sql:log:redis:rabbitmq \
+-e S3BUCKET=hosted-docassemble-org \
+-v pgetc:/etc/postgresql \
+-v pglog:/var/log/postgresql \
+-v pglib:/var/lib/postgresql \
+-v pgrun:/var/run/postgresql \
+-v dalog:/usr/share/docassemble/log \
+-v daconfig:/usr/share/docassemble/config \
+-v dabackup:/usr/share/docassemble/backup \
+-p 9001:9001 -p 5432:5432 -p 514:514 -p 6379:6379 \
+-p 4369:4369 -p 5671:5671 -p 5672:5672 -p 25672:25672  \
+-d jhpyle/docassemble
+{% endhighlight %}
+
+{% highlight bash %}
+docker run \
+-e CONTAINERROLE=web:celery \
+-e S3BUCKET=hosted-docassemble-org \
+-v dafiles:/usr/share/docassemble/files \
+-v certs:/usr/share/docassemble/certs \
+-v daconfig:/usr/share/docassemble/config \
+-v dabackup:/usr/share/docassemble/backup \
+-v letsencrypt:/etc/letsencrypt \
+-v apache:/etc/apache2/sites-available \
+-p 80:80 -p 443:443 -p 9001:9001 \
+-d jhpyle/docassemble
+{% endhighlight %}
+
+{% highlight bash %}
+docker run \
+-e CONTAINERROLE=all \
+-e S3BUCKET=hosted-docassemble-org \
+-v pgetc:/etc/postgresql \
+-v pglog:/var/log/postgresql \
+-v pglib:/var/lib/postgresql \
+-v pgrun:/var/run/postgresql \
+-v dalog:/usr/share/docassemble/log \
+-v dafiles:/usr/share/docassemble/files \
+-v certs:/usr/share/docassemble/certs \
+-v daconfig:/usr/share/docassemble/config \
+-v dabackup:/usr/share/docassemble/backup \
+-v letsencrypt:/etc/letsencrypt \
+-v apache:/etc/apache2/sites-available \
+-d -p 80:80 -p 443:443 \
+jhpyle/testdocassemble
+{% endhighlight %}
+
+
+{% highlight bash %}
+docker run \
+-e CONTAINERROLE=all \
+-e USEHTTPS=true \
+-e DAHOSTNAME=hosted.docassemble.org \
+-e USELETSENCRYPT=true \
+-e LETSENCRYPTEMAIL=jhpyle@gmail.com \
+-e S3ENABLE=true \
+-e S3BUCKET=hosted-docassemble-org \
+-e EC2=true \
+-e TIMEZONE=America/New_York \
+-v pgetc:/etc/postgresql \
+-v pglog:/var/log/postgresql \
+-v pglib:/var/lib/postgresql \
+-v pgrun:/var/run/postgresql \
+-v dalog:/usr/share/docassemble/log \
+-v dafiles:/usr/share/docassemble/files \
+-v certs:/usr/share/docassemble/certs \
+-v daconfig:/usr/share/docassemble/config \
+-v dabackup:/usr/share/docassemble/backup \
+-v letsencrypt:/etc/letsencrypt \
+-v apache:/etc/apache2/sites-available \
+-d -p 80:80 -p 443:443 -p 9001:9001 \
+jhpyle/docassemble
+{% endhighlight %}
 
 # <a name="build"></a>Creating your own Docker image
 

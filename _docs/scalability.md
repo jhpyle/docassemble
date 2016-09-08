@@ -67,7 +67,7 @@ Here is the task definition for `docassemble-sql`:
   "containerDefinitions": [
     {
       "name": "docassemble-sql",
-      "image": "jhpyle/docassemble-sql",
+      "image": "jhpyle/docassemble",
       "cpu": 1,
       "memory": 900,
       "portMappings": [
@@ -79,22 +79,66 @@ Here is the task definition for `docassemble-sql`:
       "essential": true,
       "environment": [
         {
-          "name": "DBNAME",
-          "value": "docassemble"
+          "name": "CONTAINERROLE",
+          "value": "sql"
         },
         {
-          "name": "DBUSER",
-          "value": "docassemble"
+          "name": "S3ENABLE",
+          "value": "true"
         },
         {
-          "name": "DBPASSWORD",
-          "value": "abc123"
+          "name": "S3BUCKET",
+          "value": "yourbucketname"
         },
         {
           "name": "TIMEZONE",
           "value": "America/New_York"
         }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "pgetc",
+          "containerPath": "/etc/postgresql"
+        },
+        {
+          "sourceVolume": "pglog",
+          "containerPath": "/var/log/postgresql"
+        },
+        {
+          "sourceVolume": "pglib",
+          "containerPath": "/var/lib/postgresql"
+        },
+        {
+          "sourceVolume": "pgrun",
+          "containerPath": "/var/run/postgresql"
+        }
       ]
+    }
+  ],
+  "volumes": [
+    {
+      "name": "pgetc",
+      "host": {
+        "sourcePath": "/ecs/pgetc"
+      }
+    },
+    {
+      "name": "pglog",
+      "host": {
+        "sourcePath": "/ecs/pglog"
+      }
+    },
+    {
+      "name": "pglib",
+      "host": {
+        "sourcePath": "/ecs/pglib"
+      }
+    },
+    {
+      "name": "pgrun",
+      "host": {
+        "sourcePath": "/ecs/pgrun"
+      }
     }
   ]
 }
@@ -108,7 +152,7 @@ Here is the task definition for `docassemble-log`:
   "containerDefinitions": [
     {
       "name": "docassemble-log",
-      "image": "jhpyle/docassemble-log",
+      "image": "jhpyle/docassemble",
       "cpu": 1,
       "memory": 300,
       "portMappings": [
@@ -117,17 +161,35 @@ Here is the task definition for `docassemble-log`:
           "hostPort": 514
         },
         {
-          "containerPort": 80,
+          "containerPort": 8080,
           "hostPort": 8080
         }
       ],
       "essential": true,
       "environment": [
         {
+          "name": "CONTAINERROLE",
+          "value": "log"
+        },
+        {
           "name": "TIMEZONE",
           "value": "America/New_York"
         }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "dalog",
+          "containerPath": "/usr/share/docassemble/log"
+        }
       ]
+    }
+  ],
+  "volumes": [
+    {
+      "name": "dalog",
+      "host": {
+        "sourcePath": "/ecs/dalog"
+      }
     }
   ]
 }
@@ -221,10 +283,262 @@ Here is the task definition for `docassemble-app`:
           "value": "admin@admin.com"
         },
         {
-          "name": "HOSTNAME",
+          "name": "DAHOSTNAME",
           "value": "host.example.com"
         }
       ]
+    }
+  ]
+}
+{% endhighlight %}
+
+# Combining roles
+
+Here is the task definition for `docassemble-sql-log-redis-rabbitmq`:
+
+{% highlight json %}
+{
+  "family": "docassemble-sql-log-redis-rabbitmq",
+  "containerDefinitions": [
+    {
+      "name": "docassemble-sql-log-redis-rabbitmq",
+      "image": "jhpyle/docassemble",
+      "cpu": 1,
+      "memory": 900,
+      "portMappings": [
+        {
+          "containerPort": 5432,
+          "hostPort": 5432
+        },
+        {
+          "containerPort": 514,
+          "hostPort": 514
+        },
+        {
+          "containerPort": 6379,
+          "hostPort": 6379
+        },
+        {
+          "containerPort": 4369,
+          "hostPort": 4369
+        },
+        {
+          "containerPort": 5671,
+          "hostPort": 5671
+        },
+        {
+          "containerPort": 5672,
+          "hostPort": 5672
+        },
+        {
+          "containerPort": 25672,
+          "hostPort": 25672
+        },
+        {
+          "containerPort": 9001,
+          "hostPort": 9001
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "CONTAINERROLE",
+          "value": "sql:log:redis:rabbitmq"
+        },
+        {
+          "name": "S3BUCKET",
+          "value": "hosted-docassemble-org"
+        }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "pgetc",
+          "containerPath": "/etc/postgresql"
+        },
+        {
+          "sourceVolume": "pglog",
+          "containerPath": "/var/log/postgresql"
+        },
+        {
+          "sourceVolume": "pglib",
+          "containerPath": "/var/lib/postgresql"
+        },
+        {
+          "sourceVolume": "pgrun",
+          "containerPath": "/var/run/postgresql"
+        },
+        {
+          "sourceVolume": "dalog",
+          "containerPath": "/usr/share/docassemble/log"
+        },
+        {
+          "sourceVolume": "daconfig",
+          "containerPath": "/usr/share/docassemble/config"
+        },
+        {
+          "sourceVolume": "dabackup",
+          "containerPath": "/usr/share/docassemble/backup"
+        }
+      ]
+    }
+  ],
+  "volumes": [
+    {
+      "name": "pgetc",
+      "host": {
+        "sourcePath": "/ecs/pgetc"
+      }
+    },
+    {
+      "name": "pglog",
+      "host": {
+        "sourcePath": "/ecs/pglog"
+      }
+    },
+    {
+      "name": "pglib",
+      "host": {
+        "sourcePath": "/ecs/pglib"
+      }
+    },
+    {
+      "name": "pgrun",
+      "host": {
+        "sourcePath": "/ecs/pgrun"
+      }
+    },
+    {
+      "name": "dalog",
+      "host": {
+        "sourcePath": "/ecs/dalog"
+      }
+    },
+    {
+      "name": "daconfig",
+      "host": {
+        "sourcePath": "/ecs/daconfig"
+      }
+    },
+    {
+      "name": "dabackup",
+      "host": {
+        "sourcePath": "/ecs/dabackup"
+      }
+    }
+  ]
+}
+{% endhighlight %}
+
+Here is the task definition for `docassemble-web-celery`:
+
+{% highlight json %}
+{
+  "family": "docassemble-web-celery",
+  "containerDefinitions": [
+    {
+      "name": "docassemble-web-celery",
+      "image": "jhpyle/docassemble",
+      "cpu": 1,
+      "memory": 900,
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "hostPort": 80
+        },
+        {
+          "containerPort": 443,
+          "hostPort": 443
+        },
+        {
+          "containerPort": 9001,
+          "hostPort": 9001
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "CONTAINERROLE",
+          "value": "web:celery"
+        },
+        {
+          "name": "S3BUCKET",
+          "value": "hosted-docassemble-org"
+        }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "dafiles",
+          "containerPath": "/usr/share/docassemble/files"
+        },
+        {
+          "sourceVolume": "certs",
+          "containerPath": "/usr/share/docassemble/certs"
+        },
+        {
+          "sourceVolume": "dalog",
+          "containerPath": "/usr/share/docassemble/log"
+        },
+        {
+          "sourceVolume": "daconfig",
+          "containerPath": "/usr/share/docassemble/config"
+        },
+        {
+          "sourceVolume": "dabackup",
+          "containerPath": "/usr/share/docassemble/backup"
+        },
+        {
+          "sourceVolume": "letsencrypt",
+          "containerPath": "/etc/letsencrypt"
+        },
+        {
+          "sourceVolume": "apache",
+          "containerPath": "/etc/apache2/sites-available"
+        }
+      ]
+    }
+  ],
+  "volumes": [
+    {
+      "name": "dafiles",
+      "host": {
+        "sourcePath": "/ecs/dafiles"
+      }
+    },
+    {
+      "name": "certs",
+      "host": {
+        "sourcePath": "/ecs/certs"
+      }
+    },
+    {
+      "name": "dalog",
+      "host": {
+        "sourcePath": "/ecs/dalog"
+      }
+    },
+    {
+      "name": "daconfig",
+      "host": {
+        "sourcePath": "/ecs/daconfig"
+      }
+    },
+    {
+      "name": "dabackup",
+      "host": {
+        "sourcePath": "/ecs/dabackup"
+      }
+    },
+    {
+      "name": "letsencrypt",
+      "host": {
+        "sourcePath": "/ecs/letsencrypt"
+      }
+    },
+    {
+      "name": "apache",
+      "host": {
+        "sourcePath": "/ecs/apache"
+      }
     }
   ]
 }

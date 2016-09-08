@@ -60,8 +60,8 @@ else:
   user.is_eligible = False
 {% endhighlight %}
       
-The [Markdown] language is very simple.  For example, if you write
-this [Markdown] text:
+The [Markdown] language is simple.  For example, if you write this
+[Markdown] text:
 
 {% highlight text %}
 It is *very* important that you obtain your
@@ -101,14 +101,21 @@ are lawyers can "practice at the top of their license" by spending
 their time thinking about the law (a lawyer function) rather than
 thinking about the interview process (a non-lawyer function).
 
-[YAML] has a very short set of rules, so it is not hard to learn.
-**docassemble**'s [YAML] files are pretty easy to read, and if you
-forget the right words to use, you can easily copy, paste, and edit an
-example.
-
-There are many text editors that have special features for editing
-[YAML] files.  On Windows, the best is [Notepad++], and [Sublime Text]
-works pretty well, too.
+[YAML] has a very short set of rules, so it is not hard to learn.  The
+advantage of [YAML] is that it represents structured information in a
+way that is both computer-readable and human-readable, without a lot
+of punctuation marks.  There are many different type "blocks" that you
+can create using **docassemble** (e.g., see [here]({{ site.baseurl
+}}/docs/initial.html) and [here]({{ site.baseurl
+}}/docs/fields.html)), and it can be challenging to remember what
+words to use, but most block types will be used rarely, if at all.  If
+you forget the right words to use, you can easily copy, paste, and
+edit an example.  In the authoring [Playground], a wide variety of
+example blocks are available on the same screen where you write your
+interviews.  If you want to write interviews off-line, there are many
+text editors that have special features for editing [YAML] files.  On
+Windows, the best is [Notepad++], and [Sublime Text] works pretty
+well, too.
 
 ### The full power of Python
 
@@ -138,22 +145,24 @@ to take advantage of the [Python] package distribution and
 installation system.  Authors can incorporate the work of another
 author simply by [installing] the other author's [Python package] on
 the server and incorporating the author's interview questions or
-modules by reference.  The web interface allows [Python packages] to
-be installed either as .zip files, through the cloning of [GitHub]
-repositories, or through installation from [PyPI].
+modules by reference into their own interviews.  The web interface
+allows [Python packages] to be installed either as .zip files, through
+the cloning of [GitHub] repositories, or through installation from
+[PyPI].
 
 ### Secure
 
 User answers are stored on a server in an encrypted format, so that
 even if someone were to gain access to the server, they would need to
-somehow figure out a user's password in order to decrypt the user's
-answers.  (Users who are not logged in yet are given a random key,
-which is stored as a cookie.)  User passwords are stored in hashed
-format, not in plain text, so that they cannot be discovered.
+figure out a user's password in order to decrypt the user's answers.
+(Users who are not logged in yet are given a random key, which is
+stored as a cookie.)  User passwords are stored in hashed format, not
+in plain text, so that they cannot be discovered.
 
 **docassemble** deletes user information whenever possible.  For
-example, if a user finishes an interview and exits, the user's answers
-and any uploaded documents are deleted from the database.
+example, if a user finishes an interview and clicks an "exit" button,
+the user's answers and any uploaded documents are deleted from the
+database.
 
 **docassemble** can easily be [set up] to run on [HTTPS] rather than
 [HTTP] in order to encrypt the traffic between the browser and the
@@ -167,6 +176,11 @@ All of the text presented to the user of the **docassemble** web
 application can be [translated] to a language other than English.
 **docassemble** supports the full use of [Unicode] characters in
 interviews.
+
+### Scalable
+
+**docassemble** can be deployed in a [multi-server configuration] on
+Amazon's EC3 platform with load balancing.
 
 ### Multi-purpose
 
@@ -404,6 +418,7 @@ the same interview on a single server.
 [Google's geocoding API]: https://developers.google.com/maps/documentation/geocoding/intro
 [PyPI]: https://pypi.python.org/pypi
 [set up in a multi-server environment]: {{ site.baseurl }}/docs/scalability.html
+[multi-server configuration]: {{ site.baseurl }}/docs/scalability.html
 [pull request]: https://help.github.com/articles/using-pull-requests/
 [Drools]: http://www.drools.org/
 [Javascript]: https://en.wikipedia.org/wiki/JavaScript

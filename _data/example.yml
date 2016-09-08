@@ -133,6 +133,55 @@
     proceed.
   field: user_is_relaxed
   ---
+"background_action": |-
+  ---
+  question: |
+    How much shall I add to 553?
+  fields:
+    - Number: value_to_add
+      datatype: integer
+  ---
+  code: |
+    the_task = background_action('bg_task', additional=value_to_add)
+  ---
+  event: bg_task
+  code: |
+    background_response(553 + action_argument('additional'))
+  ---
+  mandatory: true
+  code: |
+    if the_task.ready():
+      final_screen
+    else:
+      waiting_screen
+  ---
+"background_action_with_response_action": |-
+  ---
+  question: |
+    How much shall I add to 553?
+  fields:
+    - Number: value_to_add
+      datatype: integer
+  ---
+  code: |
+    the_task = background_action('bg_task', additional=value_to_add)
+  ---
+  event: bg_task
+  code: |
+    value = 553 + action_argument('additional')
+    background_response_action('bg_resp', ans=value)
+  ---
+  event: bg_resp
+  code: |
+    answer = action_argument('ans')
+  ---
+  mandatory: true
+  code: |
+    if the_task.ready():
+      final_screen
+    else:
+      waiting_screen
+  ---
 "blank-label-field": |-
   ---
   question: |
@@ -760,6 +809,72 @@
     - Pears: dislikes_pears
       datatype: noyeswide
   ---
+"flushleft": "---\nmandatory: true\nquestion: |\n  Here is your document.\nsubquestion:\
+  \ |\n  It demonstrates the flush left environment.\nattachments:\n  - name: A test\
+  \ document\n    filename: test_document\n    content: |\n      This line is indented.\n\
+  \      \n      This line is also indented.\n      \n      [FLUSHLEFT] This line\
+  \ is not indented. [NEWLINE] Nor is this line.\n---"
+"flushright": "---\nmandatory: true\nquestion: |\n  Here is your document.\nsubquestion:\
+  \ |\n  It demonstrates the flush right environment.\nattachments:\n  - name: A test\
+  \ document\n    filename: test_document\n    metadata:\n      FirstHeaderLeft: Test\
+  \ me test me\n      FirstHeaderCenter: Test me test me\n      FirstHeaderRight:\
+  \ |\n        Example, LLP [BR]\n        124 Main Street, Suite 1500 [BR]\n     \
+  \   Philadelphia, PA 19102\n      HeaderLeft: Test me test me\n      HeaderCenter:\
+  \ Test me test me\n      HeaderRight: |\n        Example, LLP [BR]\n        123--24\
+  \ Main Street, Suite 1500 [BR]\n        Philadelphia, PA 19102\n      FirstFooterLeft:\
+  \ Test me test me\n      FirstFooterCenter: Test me test me\n      FirstFooterRight:\
+  \ |\n        Example, LLP [BR]\n        124 Main Street, _Suite_ 1500 [BR]\n   \
+  \     Philadelphia, PA 19102\n      FooterLeft: Test me test me\n      FooterCenter:\
+  \ Test me test me\n      FooterRight: |\n        Example, LLP [BR]\n        123\
+  \ Main Street, Suite 1500 [BR]\n        Philadelphia, PA 19102\n      SingleSpacing:\
+  \ true\n    content: |\n      This \"line\" is to the left.\n      \n      This\
+  \ line is \"also\" to the left.\n      \n      [FLUSHRIGHT] This line is \"flush\"\
+  \ right. [NEWLINE] So is _this_ line.\n\n      [INDENTBY 1in] [BORDER] This **line**\
+  \ is indented. [NEWLINE] So is this line.\n\n      [BORDER] [INDENTBY 2in 1in] This\
+  \ is a very \"confined\" paragraph\n      that is not to be taken lightly---because\
+  \ it's so absolutely\n      constrained beyond any belief or any person's imagination\
+  \ in the\n      whole wide world under the sun and the moon and the barn down\n\
+  \      the street.\n\n      fruit| price\n      -----|-----:\n      apple|2.05\n\
+  \      pear|1.37\n      orange|3.09\n\n      Lorem ipsum \"dolor\" sit amet from\
+  \ 1--2, consectetur adipiscing elit. Nunc\n      quis odio a dolor rhoncus elementum\
+  \ ut sed ex. Lorem ipsum dolor\n      sit amet, consectetur adipiscing elit. Aenean\
+  \ blandit massa nec\n      ante rutrum, nec interdum ipsum auctor. Pellentesque\
+  \ posuere\n      rhoncus pulvinar. Cras rutrum---if I may say---tellus sit amet\
+  \ elit euismod, quis\n      viverra metus dignissim. Aenean id convallis eros. Vestibulum\n\
+  \      tristique, erat non ornare rhoncus, lectus urna consectetur\n      urna,\
+  \ sit amet rhoncus magna est a orci. Sed sed euismod tortor.\n\n      [BORDER] Aliquam\
+  \ nec turpis massa. Integer non vulputate nibh. Integer mi\n      justo, sagittis\
+  \ eget erat quis, porta auctor purus. Quisque ac\n      rutrum nibh. Duis id massa\
+  \ faucibus, facilisis mauris sit amet,\n      congue nisl. Duis vel odio vehicula,\
+  \ sodales tellus ut, tempor\n      ipsum. Morbi tempor aliquam gravida. Aliquam\
+  \ tortor est,\n      tincidunt sed libero et, vehicula ullamcorper tellus. Curabitur\n\
+  \      quis magna erat. Vivamus euismod gravida ante, eu congue arcu\n      ultricies\
+  \ ac. Praesent porta euismod urna non sodales.\n      [NEWPAR]\n      Phasellus\
+  \ orci diam, sodales a elementum ac, gravida sit amet\n      erat. Nunc imperdiet\
+  \ malesuada magna, nec laoreet tortor dapibus\n      in. Praesent nulla elit, rhoncus\
+  \ vitae tincidunt non, rutrum ut\n      justo. Suspendisse aliquam sollicitudin\
+  \ porttitor. In suscipit,\n      magna sit amet eleifend iaculis, nisl elit sodales\
+  \ diam, dapibus\n      rutrum odio augue sed velit. Ut ullamcorper, quam at dapibus\n\
+  \      hendrerit, nibh libero vulputate massa, non pretium nisl libero\n      at\
+  \ enim. Donec vestibulum sapien purus, et mattis nunc ultricies\n      non. Morbi\
+  \ velit lacus, ornare a lectus sed, auctor accumsan\n      ante. Donec imperdiet\
+  \ quis velit non varius. Suspendisse in\n      ultricies massa, id venenatis arcu.\n\
+  \n      In vitae erat luctus urna rutrum convallis et id nibh. Fusce\n      suscipit\
+  \ lacus at ligula mattis, vitae maximus nunc\n      ultrices. Praesent pellentesque\
+  \ nulla sem. Donec rhoncus leo\n      velit. Ut nec dui accumsan, commodo elit ac,\
+  \ maximus\n      lacus. Curabitur malesuada tortor augue, quis mattis augue\n  \
+  \    aliquet vel. Mauris gravida orci at neque dictum\n      scelerisque. Quisque\
+  \ turpis quam, dignissim ut augue quis,\n      euismod placerat nisi. Donec convallis\
+  \ mollis varius. Fusce\n      posuere rutrum risus vel porta. Curabitur erat diam,\
+  \ semper vel\n      condimentum vitae, fringilla non neque. Etiam nec nunc id est\n\
+  \      pharetra dignissim. Nam condimentum nibh sit amet erat mattis\n      suscipit\
+  \ vitae vel eros. Donec eu pellentesque arcu, vitae\n      euismod tortor. Aliquam\
+  \ accumsan nulla aliquam diam ultricies\n      venenatis.\n\n      Cras mattis tellus\
+  \ neque, ut congue mi scelerisque eget. Cras\n      finibus tincidunt augue, ut\
+  \ rutrum risus vehicula vel. Praesent\n      fermentum tortor posuere feugiat interdum.\
+  \ Ut turpis arcu,\n      sagittis vitae odio vel, gravida cursus urna. Suspendisse\n\
+  \      dignissim tortor id iaculis tincidunt. Nulla\n      facilisi. Suspendisse\
+  \ lacinia nisl interdum, egestas turpis non,\n      fringilla felis.\n---"
 "for_fruit": |-
   ---
   code: |
@@ -947,6 +1062,11 @@
   images:
     star: star.svg
     diamond: bluediamond.svg
+  ---
+"immediate_file": |-
+  ---
+  modules:
+    - docassemble.base.util
   ---
 "imports": |-
   ---
@@ -1623,6 +1743,15 @@
   buttons:
     - Tell me again: refresh
   mandatory: true
+  ---
+"reload": |-
+  ---
+  reload: true
+  question: |
+    You have viewed this screen
+    ${ counter }
+    ${ noun_plural('time', counter) }.
+  field: acknowledged
   ---
 "required-code": |-
   ---

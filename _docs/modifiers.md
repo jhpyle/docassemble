@@ -312,6 +312,29 @@ If the user does not have an appropriate role, **docassemble** will
 look for a question in the interview in which `event` has been set to
 `role_event`.
 
+# <a name="reload"></a>`reload`
+
+To cause the screen to reload in the web browser after a number of
+seconds, use the `reload` modifier.
+
+{% include side-by-side.html demo="reload" %}
+
+If you set `reload` to `true`, the screen on which the question is
+asked will reload every 10 seconds.  To use a different number of
+seconds, set `reload` to the number of seconds you wish to use.  E.g.,
+
+{% highlight yaml %}
+reload: 5
+{% endhighlight %}
+
+Since it is not good to reload the screen too quickly, you cannot use
+a number of seconds less than four.  If the number of seconds is less
+than four, four seconds will be used as the number of seconds.
+
+You can use [Mako] to determine the number of seconds.  If the
+`reload` value evaluates to `False` or `None`, the screen will not
+reload.
+
 # <a name="comment"></a>`comment`
 
 To make a note to yourself about a question, which will not be seen by

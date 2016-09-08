@@ -741,6 +741,43 @@ subquestion: |
 ---
 {% endhighlight %}
 
+# Background processes
+
+{% include side-by-side.html demo="background_action" %}
+
+If you include code in your interview that does something
+time-consuming, such as looking up information in an on-line database
+or web scraping, the user may have to wait a long time for the screen
+to load.  This can be a problem because the user may think that the
+page has "crashed" when it is actually just working normally.
+
+To get around this problem, **docassemble** allows interview authors
+to run code in "background processes."  While the user is answering
+other questions, the **docassemble** server can be hard at work
+carrying out a variety of time-consuming tasks.  These tasks can even
+operate in parallel.  For example, if your interview searches the
+user's name in four different on-line databases, all of these
+searches can be carried out simultaneously, which will return a result
+to the user much faster than if the searches were carried out one
+after the other.
+
+Since **docassemble** uses [Celery] to run these background tasks, the
+system is highly scalable.  If you are running **docassemble** on a
+single server and you start 100 tasks at the same time, [Celery] will
+will queue the tasks and handle them in order, working on a few of
+them at a time.
+
+## <a name="background_action"></a>background_action()
+
+
+
+## <a name="background_response"></a>background_response()
+
+## <a name="background_response_action"></a>background_response_action()
+
+{% include side-by-side.html demo="background_action_with_response_action" %}
+
+
 # Geographic functions
 
 ## <a name="map_of"></a>map_of()
@@ -2041,3 +2078,4 @@ modules:
 [`response()`]: #response
 [Python Imaging Library]: http://www.pythonware.com/products/pil/
 [URL arguments]: {{ site.baseurl }}/docs/special.html#url_args
+[Celery]: http://www.celeryproject.org/

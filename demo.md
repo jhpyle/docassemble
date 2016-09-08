@@ -22,8 +22,8 @@ as an interview; it is simply intended to demonstrate the features of
 100% of the source code for the example interview is listed below in
 the form of two [YAML] files, which are annotated with comments.
 
-Also, when you are using the demonstration, you can click "Source" to
-see the [YAML] source code that generated the question, along with a
+When you are using the demonstration, you can click "Source" to see
+the [YAML] source code that generated the question, along with a
 review of the conditions that led to the question being asked.  You
 can learn a lot about how to do things in **docassemble** by clicking
 "Source" and comparing the [YAML] source to the end result.  The
@@ -42,16 +42,16 @@ listed below.  Note that:
 * The code is not entirely self-explanatory, but for computer code, it
   is pretty close to plain English.
 * Note that complicated processes, such as asking a series of
-  questions that gather the names of the user's children, can be
-  specified in just a few lines of code.
+  questions that gather the names of the children of the parties
+  involved in the case, can be specified in just a few lines of code.
 * The questions and logic are not specified in any particular order.
-  If docassemble needs to get the value of a variable, it knows where
-  to find it.  This makes things easier for the author, who can
-  organize the information however he or she wants.  Moreover, the
+  If **docassemble** needs to get the value of a variable, it knows
+  where to find it.  This makes things easier for the author, who can
+  organize the questions however he or she wants.  Moreover, the
   author can represent the underlying legal logic in modular,
-  bite-size pieces.  The logic does not have to be placed into a
-  specific structure in an interview or a document.  The bits of logic
-  can be packaged and reused in a variety of contexts.
+  bite-size pieces.  A question or a bit of logic that an author
+  writes for one interview can be packaged and reused in other
+  interviews.
 
 {% highlight yaml %}
 metadata:
@@ -664,6 +664,15 @@ mako: |
   ${ person } is adorable. \
   </%def>
 ---
+question: |
+  On a scale of 1 to 10, how much hatred do you harbor toward
+  ${ case.defendant }?
+fields:
+  no label: hatred_level
+  datatype: range
+  min: 1
+  max: 10
+---
 comment: |
   The following question is the interview's main endpoint.  This
   question has two attachment documents.  Most of the questions in the
@@ -729,7 +738,11 @@ attachments:
       Your annual income is ${ currency(client.income.total()) }
       and the value of all you own is 
       ${ currency(client.asset.total()) }.  Your home is best described as
-      an "${ client.address.type }."
+      a "${ client.address.type }."
+
+      % if hatred_level > 8:
+      You seem to dislike ${ case.defendant }.
+      % endif
 
       % if client_has_standing:
       You have a valid claim.
@@ -956,11 +969,6 @@ generic object: Individual
 question: |
   What language ${ x.do_question('speak') }?
 field: x.language
-#video: ${ my_av_file }
-#audio: |
-#  [FILE docassemble.demo:data/static/schumann-clip-1.mp3]
-#subquestion: |
-#  ${ my_av_file }
 choices:
   - English: en
   - Español: es
@@ -1016,11 +1024,6 @@ fields:
   - Suffix: village_idiot.name.suffix
     required: False
     code: name_suffix()
----
-question: Take something!
-fields:
-  - no label: my_av_file
-    datatype: camera
 ...
 {% endhighlight %}
 
@@ -1032,7 +1035,6 @@ defined in the `basic-questions.yml` file.  Here is an annotated
 guide to this file.
 
 {% highlight yaml %}
----
 metadata:
   description: |
     These are basic questions common to a variety of scenarios
@@ -1053,8 +1055,7 @@ comment: |
 ---
 default role: client
 code: |
-  if current_info['user']['is_authenticated'] and \
-     'advocate' in current_info['user']['roles']:
+  if user_logged_in() and user_has_privilege('advocate'):
     user = advocate
     role = 'advocate'
   else:
@@ -1068,7 +1069,7 @@ comment: |
   interview if the user is logged in and the user has "advocate" as a
   user role.
 
-  The functions in docassemble.base.util need to know who the user
+  The functions in docassemble.base.utl need to know who the user
   is.  The set_info function communicates that information to the
   docassemble.base.util module.  Since the code is paired with the
   "default role" declaration, this code is run as "initial" code,
@@ -1154,6 +1155,13 @@ comment: |
   Here we pre-define some icon files so that we can easily refer to
   them later.  These files are located in the docassemble.base package
   in the subdirectory docassemble/base/data/static.
+---
+generic object: Individual
+question: |
+  What is ${ x.possessive('time zone') }?
+fields:
+  - Time Zone: x.timezone
+    code: timezone_list()
 ---
 generic object: Individual
 question: |
