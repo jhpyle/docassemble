@@ -66,7 +66,7 @@ from docassemble.webapp.backend import s3, initial_dict, can_access_file_number,
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Messages, Supervisors
 from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
-from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, hostname
+from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, hostname, in_celery
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
 import docassemble.base.util
 import yaml
@@ -214,7 +214,10 @@ SHOW_LOGIN = daconfig.get('show_login', True)
 #sys.path.append(USER_PACKAGES)
 #if USE_PROGRESS_BAR:
 
-LOGFILE = daconfig.get('flask_log', '/tmp/flask.log')
+if in_celery:
+    LOGFILE = daconfig.get('celery_flask_log', '/tmp/celery-flask.log')
+else:
+    LOGFILE = daconfig.get('flask_log', '/tmp/flask.log')
 #APACHE_LOGFILE = daconfig.get('apache_log', '/var/log/apache2/error.log')
 
 connect_string = docassemble.webapp.database.connection_string()
@@ -374,7 +377,7 @@ word_file_list = daconfig.get('words', list())
 if type(word_file_list) is not list:
     word_file_list = [word_file_list]
 for word_file in word_file_list:
-    logmessage("Reading from " + str(word_file))
+    sys.stderr.write("Reading from " + str(word_file) + "\n")
     file_info = get_info_from_file_reference(word_file)
     if 'fullpath' in file_info:
         with open(file_info['fullpath'], 'rU') as stream:
@@ -384,11 +387,11 @@ for word_file in word_file_list:
                         if type(words) is dict:
                             docassemble.base.functions.update_word_collection(lang, words)
                         else:
-                            logmessage("Error reading " + str(word_file) + ": words not in dictionary form.")
+                            sys.stderr.write("Error reading " + str(word_file) + ": words not in dictionary form.\n")
                 else:
-                    logmessage("Error reading " + str(word_file) + ": yaml file not in dictionary form.")
+                    sys.stderr.write("Error reading " + str(word_file) + ": yaml file not in dictionary form.\n")
     else:
-        logmessage("Error reading " + str(word_file) + ": yaml file not found.")
+        sys.stderr.write("Error reading " + str(word_file) + ": yaml file not found.\n")
         
 def logout():
     secret = request.cookies.get('secret', None)
@@ -1878,12 +1881,12 @@ def index():
                 output += word('unavailable')
             else:
                 output += highlight(interview_status.question.source_code, YamlLexer(), HtmlFormatter())
-            if len(interview_status.question.fields_used):
-                output += "<p>Variables set: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview_status.question.fields_used)]) + "</p>"
-            if len(interview_status.question.names_used):
-                output += "<p>Variables in code: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview_status.question.names_used)]) + "</p>"
-            if len(interview_status.question.mako_names):
-                output += "<p>Variables in templates: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview_status.question.mako_names)]) + "</p>"
+            # if len(interview_status.question.fields_used):
+            #     output += "<p>Variables set: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview_status.question.fields_used)]) + "</p>"
+            # if len(interview_status.question.names_used):
+            #     output += "<p>Variables in code: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview_status.question.names_used)]) + "</p>"
+            # if len(interview_status.question.mako_names):
+            #     output += "<p>Variables in templates: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(interview_status.question.mako_names)]) + "</p>"
             if len(interview_status.seeking) > 1:
                 output += '          <h4>' + word('How question came to be asked') + '</h4>' + "\n"
                 # output += '<ul>\n'
@@ -1906,15 +1909,15 @@ def index():
                             output += word('unavailable')
                         else:
                             output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter())
-                        if len(stage['question'].fields_used):
-                            output += "<p>Variables set: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].fields_used)]) + "</p>"
-                        if len(stage['question'].names_used):
-                            output += "<p>Variables in code: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].names_used)]) + "</p>"
-                        if len(stage['question'].mako_names):
-                            output += "<p>Variables in templates: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].mako_names)]) + "</p>"
+                        # if len(stage['question'].fields_used):
+                        #     output += "<p>Variables set: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].fields_used)]) + "</p>"
+                        # if len(stage['question'].names_used):
+                        #     output += "<p>Variables in code: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].names_used)]) + "</p>"
+                        # if len(stage['question'].mako_names):
+                        #     output += "<p>Variables in templates: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].mako_names)]) + "</p>"
                     elif 'variable' in stage:
                         output += "          <h5>" + word('Needed definition of') + " <code>" + str(stage['variable']) + "</code></h5>\n"
-                output += '          <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.functions.pickleable_objects(user_dict))]) + '</p>' + "\n"
+                # output += '          <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.functions.pickleable_objects(user_dict))]) + '</p>' + "\n"
             output += '        </div>' + "\n"
             output += '      </div>' + "\n"
         output += '    </div>'
@@ -4063,9 +4066,11 @@ def current_info(yaml=None, req=None, action=None, location=None):
         ext = dict(email=None, theid=None, roles=list())
     if req is None:
         url = 'http://localhost'
+        secret = None
     else:
         url = req.base_url
-    return_val = {'session': session.get('uid', None), 'yaml_filename': yaml, 'url': url, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}}
+        secret = req.cookies.get('secret', None)
+    return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'url': url, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}}
     if action is not None:
         return_val.update(action)
     if location is not None:
@@ -4322,3 +4327,8 @@ def interview_list():
 def close_db(error):
     if hasattr(db, 'engine'):
         db.engine.dispose()
+
+if not in_celery:
+    import docassemble.webapp.worker
+    #sys.stderr.write("calling set worker now\n")
+    docassemble.base.functions.set_worker(docassemble.webapp.worker.background_action)

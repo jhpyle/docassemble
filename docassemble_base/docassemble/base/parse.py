@@ -15,7 +15,7 @@ import copy
 #sys.stderr.write("loading filter\n")
 import docassemble.base.filter
 import docassemble.base.pdftk
-from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, CommandError
+from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError
 import docassemble.base.functions
 from docassemble.base.functions import pickleable_objects, word, get_language
 from docassemble.base.logger import logmessage
@@ -774,6 +774,14 @@ class Question:
         #         raise DAError("A role section must be text or a list." + self.idebug(data))
         if 'progress' in data:
             self.progress = data['progress']
+        if 'action' in data:
+            self.question_type = 'backgroundresponseaction'
+            self.content = TextObject('action')
+            self.action = data['action']
+        if 'backgroundresponse' in data:
+            self.question_type = 'backgroundresponse'
+            self.content = TextObject('backgroundresponse')
+            self.backgroundresponse = data['backgroundresponse']
         if 'response' in data:
             self.content = TextObject(definitions + data['response'], names_used=self.mako_names)
             self.question_type = 'response'
@@ -2108,6 +2116,28 @@ class Interview:
                 #the_question = new_question.follow_multiple_choice(user_dict)
                 interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
                 break
+            except BackgroundResponseError as qError:
+                #logmessage("Trapped BackgroundResponseError")
+                question_data = dict(extras=dict())
+                if hasattr(qError, 'backgroundresponse'):
+                    question_data['backgroundresponse'] = qError.backgroundresponse
+                new_interview_source = InterviewSourceString(content='')
+                new_interview = new_interview_source.get_interview()
+                new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
+                new_question.name = "Question_Temp"
+                interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
+                break
+            except BackgroundResponseActionError as qError:
+                #logmessage("Trapped BackgroundResponseActionError")
+                question_data = dict(extras=dict())
+                if hasattr(qError, 'action'):
+                    question_data['action'] = qError.action
+                new_interview_source = InterviewSourceString(content='')
+                new_interview = new_interview_source.get_interview()
+                new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
+                new_question.name = "Question_Temp"
+                interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
+                break
             # except SendFileError as qError:
             #     #logmessage("Trapped SendFileError")
             #     question_data = dict(extras=dict())
@@ -2503,6 +2533,26 @@ class Interview:
                     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                     new_question.name = "Question_Temp"
                     #the_question = new_question.follow_multiple_choice(user_dict)
+                    return(new_question.ask(user_dict, 'None', 'None'))
+                except BackgroundResponseError as qError:
+                    #logmessage("Trapped BackgroundResponseError2")
+                    question_data = dict(extras=dict())
+                    if hasattr(qError, 'backgroundresponse'):
+                        question_data['backgroundresponse'] = qError.backgroundresponse
+                    new_interview_source = InterviewSourceString(content='')
+                    new_interview = new_interview_source.get_interview()
+                    new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
+                    new_question.name = "Question_Temp"
+                    return(new_question.ask(user_dict, 'None', 'None'))
+                except BackgroundResponseActionError as qError:
+                    #logmessage("Trapped BackgroundResponseActionError2")
+                    question_data = dict(extras=dict())
+                    if hasattr(qError, 'action'):
+                        question_data['action'] = qError.action
+                    new_interview_source = InterviewSourceString(content='')
+                    new_interview = new_interview_source.get_interview()
+                    new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
+                    new_question.name = "Question_Temp"
                     return(new_question.ask(user_dict, 'None', 'None'))
                 # except SendFileError as qError:
                 #     #logmessage("Trapped SendFileError2")

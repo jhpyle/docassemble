@@ -1,6 +1,6 @@
 #! /bin/bash
 
-export CRONTYPE=${1-cron_daily}
+export CRONTYPE=${1:-cron_daily}
 export DA_CONFIG_FILE=/usr/share/docassemble/config/config.yml
 source /usr/share/docassemble/local/bin/activate
 

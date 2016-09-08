@@ -78,7 +78,7 @@ def run_cron(cron_type):
         #sys.stderr.write("  " + str(cron_type) + " is enabled in this interview\n")
         try:
             #sys.stderr.write("  " + str(cron_type) + " status\n")
-            interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user.id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, locatiion=None), session=item['key'], yaml_filename=item['filename'], url=None, action=cron_type, arguments=dict()))
+            interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user.id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None), session=item['key'], yaml_filename=item['filename'], url=None, action=cron_type, arguments=dict()))
             #sys.stderr.write("  " + str(cron_type) + " fetch\n")
             steps, user_dict, is_encrypted = fetch_user_dict(item['key'], item['filename'])
             #sys.stderr.write("  " + str(cron_type) + " assemble\n")

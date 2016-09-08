@@ -1,5 +1,5 @@
 from docassemble.webapp.app_and_db import app, db
-from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, dbtableprefix, hostname
+from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, dbtableprefix, hostname, in_celery
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.webapp.core.models import Uploads
 from docassemble.base.logger import logmessage
@@ -15,6 +15,7 @@ from flask import session
 from flask_mail import Mail, Message
 from PIL import Image
 import xml.etree.ElementTree as ET
+import docassemble.webapp.worker
 #sys.stderr.write("I am in backend\n")
 
 app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
@@ -103,6 +104,7 @@ docassemble.base.functions.set_default_dialect(DEFAULT_DIALECT)
 docassemble.base.functions.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
 docassemble.base.functions.set_locale(DEFAULT_LOCALE)
 docassemble.base.functions.set_da_config(daconfig)
+
 docassemble.base.functions.update_locale()
 if 'currency symbol' in daconfig:
     docassemble.base.functions.update_language_function('*', 'currency_symbol', lambda: daconfig['currency symbol'])
@@ -263,7 +265,10 @@ def get_info_from_file_reference(file_reference, **kwargs):
 
 docassemble.base.parse.set_file_finder(get_info_from_file_reference)
 
-LOGFILE = daconfig.get('flask_log', '/tmp/flask.log')
+if in_celery:
+    LOGFILE = daconfig.get('celery_flask_log', '/tmp/celery-flask.log')
+else:
+    LOGFILE = daconfig.get('flask_log', '/tmp/flask.log')
 
 error_file_handler = logging.FileHandler(filename=LOGFILE)
 error_file_handler.setLevel(logging.DEBUG)

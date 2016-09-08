@@ -12,6 +12,7 @@ gc_config = dict()
 GC_ENABLED = False
 hostname = None
 loaded = False
+in_celery = False
 
 def load(**kwargs):
     global daconfig
@@ -22,10 +23,13 @@ def load(**kwargs):
     global dbtableprefix
     global hostname
     global loaded
+    global in_celery
     if 'arguments' in kwargs and kwargs['arguments'] and len(kwargs['arguments']) > 1:
         filename = kwargs['arguments'][1]
     else:
         filename = kwargs.get('filename', os.getenv('DA_CONFIG_FILE', '/usr/share/docassemble/config/config.yml'))
+    if 'in_celery' in kwargs and kwargs['in_celery']:
+        in_celery = True
     if not os.path.isfile(filename):
         if not os.access(os.path.dirname(filename), os.W_OK):
             sys.stderr.write("Configuration file " + str(filename) + " does not exist and cannot be created\n")

@@ -19,7 +19,7 @@
         </Directory>
         Alias /robots.txt /var/www/html/robots.txt
         Alias /favicon.ico /var/www/html/favicon.ico
-        ErrorLog ${APACHE_LOG_DIR}/error.log
-        CustomLog ${APACHE_LOG_DIR}/access.log combined
+        ErrorLog /var/log/apache2/error.log
+        CustomLog /var/log/apache2/access.log combined
     </VirtualHost>
 </IfModule>

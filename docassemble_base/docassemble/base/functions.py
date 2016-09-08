@@ -9,7 +9,7 @@ import locale
 import pkg_resources
 import titlecase
 from docassemble.base.logger import logmessage
-from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError
+from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError
 import locale
 import json
 import urllib
@@ -20,10 +20,11 @@ import ast
 import threading
 import astunparse
 import yaml
+import sys
 import tzlocal
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'objects_from_file', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'send_file']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'objects_from_file', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action']
 
 debug = False
 default_dialect = 'us'
@@ -323,6 +324,39 @@ def set_url_finder(func):
     url_of = func
     if url_of.__doc__ is None:
         url_of.__doc__ = """Returns a URL to a file within a docassemble package."""
+    return
+
+def null_worker(*pargs, **kwargs):
+    #sys.stderr.write("Got to null worker\n")
+    return None
+
+bg_action = null_worker()
+
+def background_response(*pargs, **kwargs):
+    """Finishes a background task"""
+    raise BackgroundResponseError(*pargs, **kwargs)
+
+def background_response_action(*pargs, **kwargs):
+    """Finishes a background task by running an action to save values"""
+    raise BackgroundResponseActionError(*pargs, **kwargs)
+
+def background_action(action, **kwargs):
+    """Runs an action in the background."""
+    #sys.stderr.write("Got to background_action in functions\n")
+    return(bg_action(action, **kwargs))
+
+def worker_caller(func, action):
+    #sys.stderr.write("Got to worker_caller in functions\n")
+    return func.delay(this_thread.current_info['yaml_filename'], this_thread.current_info['user'], this_thread.current_info['session'], this_thread.current_info['secret'], this_thread.current_info['url'], action)
+    
+def set_worker(func):
+    #sys.stderr.write("Got to set_worker in functions\n")
+    def new_func(action, **kwargs):
+        #sys.stderr.write("Got to actual new func\n")
+        return worker_caller(func, {'action': action, 'arguments': kwargs})
+    global bg_action
+    bg_action = new_func
+    #sys.stderr.write("Just set bg_action\n")
     return
 
 def default_ordinal_function(i):
@@ -902,10 +936,6 @@ def message(*pargs, **kwargs):
 def response(*pargs, **kwargs):
     """Sends a custom HTTP response"""
     raise ResponseError(*pargs, **kwargs)
-
-# def send_file(*pargs, **kwargs):
-#     """Sends a file as an HTTP response"""
-#     raise SendFileError(*pargs, **kwargs)
 
 def command(*pargs, **kwargs):
     """Executes a command, such as exit, restart, or leave"""

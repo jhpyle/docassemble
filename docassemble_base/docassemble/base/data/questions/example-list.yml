@@ -125,6 +125,9 @@
     - force-ask
     - force-gather
     - interview-url
+- Background processes:
+    - background_action
+    - background_action_with_response_action
 - Dates:
     - timezone-list
     - as-datetime

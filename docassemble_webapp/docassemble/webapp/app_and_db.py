@@ -13,6 +13,12 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
+def reset_db():
+    global db
+    if hasattr(db, 'engine'):
+        db.engine.dispose()
+    db = SQLAlchemy(app)
+
 # def make_celery(app):
 #     celery = Celery(app.import_name, broker=app.config['CELERY_BROKER_URL'])
 #     celery.conf.update(app.config)

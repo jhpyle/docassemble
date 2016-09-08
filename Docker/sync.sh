@@ -1,6 +1,6 @@
 #! /bin/bash
 
-export CONTAINERROLE=":${CONTAINERROLE-all}:"
+export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 
 if [[ $CONTAINERROLE =~ .*:(log):.* ]]; then
     rsync -auq --delete /usr/share/docassemble/log/ /var/www/html/log/ && chown -R www-data.www-data /var/www/html/log

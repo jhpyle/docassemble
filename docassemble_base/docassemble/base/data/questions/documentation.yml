@@ -193,3 +193,6 @@ task_not_yet_performed: "http://docassemble.org/docs/functions.html#task_not_yet
 mark_task_as_performed: "http://docassemble.org/docs/functions.html#mark_task_as_performed"
 times_task_performed: "http://docassemble.org/docs/functions.html#times_task_performed"
 set_task_counter: "http://docassemble.org/docs/functions.html#set_task_counter"
+background_action: "http://docassemble.org/docs/functions.html#background_action"
+background_response: "http://docassemble.org/docs/functions.html#background_response"
+background_response_action: "http://docassemble.org/docs/functions.html#background_response_action"

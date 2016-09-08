@@ -1,0 +1,50 @@
+metadata:
+  title: Background action that sets a variable
+  example start: 3
+  example end: 7
+---
+modules:
+  - docassemble.base.util
+---
+initial: true
+code: |
+  process_action()
+---
+question: |
+  How much shall I add to 553?
+fields:
+  - Number: value_to_add
+    datatype: integer
+---
+code: |
+  the_task = background_action('bg_task', additional=value_to_add)
+---
+event: bg_task
+code: |
+  value = 553 + action_argument('additional')
+  background_response_action('bg_resp', ans=value)
+---
+event: bg_resp
+code: |
+  answer = action_argument('ans')
+---
+mandatory: true
+code: |
+  if the_task.ready():
+    final_screen
+  else:
+    waiting_screen
+---
+event: waiting_screen
+reload: true
+question: |
+  Hang tight.
+  Still waiting for an answer.
+subquestion: |
+  This screen will reload every
+  ten seconds until the answer
+  is available.
+---
+event: final_screen
+question: |
+  The answer is ${ answer }.

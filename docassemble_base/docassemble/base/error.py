@@ -65,6 +65,35 @@ class QuestionError(Exception):
     def __str__(self):
         return str(self.question)
 
+class BackgroundResponseError(Exception):
+    def __init__(self, *pargs, **kwargs):
+        if len(pargs) > 0 and len(kwargs) > 0:
+            self.backgroundresponse = dict(pargs=[arg for arg in pargs], kwargs=kwargs)
+        elif len(pargs) > 1:
+            self.backgroundresponse = [arg for arg in pargs]
+        elif len(pargs) == 1:
+            self.backgroundresponse = pargs[0]
+        else:
+            self.backgroundresponse = kwargs
+    def __str__(self):
+        if hasattr(self, 'backgroundresponse'):
+            return str(self.backgroundresponse)
+        return "A BackgroundResponseError exception was thrown"
+
+class BackgroundResponseActionError(Exception):
+    def __init__(self, *pargs, **kwargs):
+        self.action = dict(arguments=dict())
+        if len(pargs) == 0:
+            self.action['action'] = None
+        else:
+            self.action['action'] = pargs[0]
+        for key in kwargs:
+            self.action['arguments'][key] = kwargs[key]
+    def __str__(self):
+        if hasattr(self, 'action'):
+            return str(self.action)
+        return "A BackgroundResponseActionError exception was thrown"
+    
 class ResponseError(Exception):
     def __init__(self, *pargs, **kwargs):
         if len(pargs) == 0 and not ('response' in kwargs or 'binaryresponse' in kwargs or 'file' in kwargs or 'url' in kwargs):

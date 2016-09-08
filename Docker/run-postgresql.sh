@@ -1,17 +1,17 @@
 #!/bin/bash
 
-if [ "${S3ENABLE-null}" == "null" ] && [ "${S3BUCKET-null}" != "null" ]; then
+if [ "${S3ENABLE:-null}" == "null" ] && [ "${S3BUCKET:-null}" != "null" ]; then
     export S3ENABLE=true
 fi
 
-if [ "${S3ENABLE-null}" == "true" ] && [ "${S3BUCKET-null}" != "null" ] && [ "${S3ACCESSKEY-null}" != "null" ] && [ "${S3SECRETACCESSKEY-null}" != "null" ]; then
+if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "${S3ACCESSKEY:-null}" != "null" ] && [ "${S3SECRETACCESSKEY:-null}" != "null" ]; then
     export AWS_ACCESS_KEY_ID=$S3ACCESSKEY
     export AWS_SECRET_ACCESS_KEY=$S3SECRETACCESSKEY
 fi
 
 function stopfunc {
     echo backing up postgres
-    if [ "${S3ENABLE-false}" == "true" ]; then
+    if [ "${S3ENABLE:-false}" == "true" ]; then
 	PGBACKUPDIR=`mktemp -d`
 	chown postgres.postgres "$PGBACKUPDIR"
 	su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
