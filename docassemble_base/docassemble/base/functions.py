@@ -1152,13 +1152,17 @@ def debug_status():
     return debug
 # grep -E -R -o -h "word\(['\"][^\)]+\)" * | sed "s/^[^'\"]+['\"]//g"
 
-def action_menu_item(label, action):
-    """Takes two arguments: a label and an action.
-    The label is what the user will see and the action is the action that will be
-    performed when the user clicks on the item in the menu.  This is only used 
-    when setting the special variable menu_items.
-    E.g., menu_items = [ action_menu_item('Ask for my favorite food', 'favorite_food') ]"""
-    return dict(label=label, url=url_action(action))
+def action_menu_item(label, action, **kwargs):
+    """Takes two arguments, a label and an action, and optionally takes
+    keyword arguments that are passed on to the action.  The label is
+    what the user will see and the action is the action that will be
+    performed when the user clicks on the item in the menu.  This is
+    only used when setting the special variable menu_items.  E.g.,
+    menu_items = [ action_menu_item('Ask for my favorite food',
+    'favorite_food') ]
+
+    """
+    return dict(label=label, url=url_action(action, **kwargs))
 
 def from_b64_json(string):
     """Converts the string from base-64, then parses the string as JSON, and returns the object.

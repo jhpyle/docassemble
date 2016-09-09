@@ -1,6 +1,6 @@
 metadata:
   title: Background action that returns a value
-  example start: 3
+  example start: 2
   example end: 6
 ---
 modules:

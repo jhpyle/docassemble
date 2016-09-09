@@ -1,6 +1,6 @@
 metadata:
   title: Background action that sets a variable
-  example start: 3
+  example start: 2
   example end: 7
 ---
 modules:

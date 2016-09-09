@@ -104,7 +104,7 @@ def load(**kwargs):
                 the_host = key.get_contents_as_string()
                 if the_host == hostname:
                     the_host = 'localhost'
-                daconfig['rabbitmq'] = 'amqp://guest@' + the_host + '\/\/'
+                daconfig['rabbitmq'] = 'amqp://guest@' + str(the_host) + '//'
     loaded = True
     return
 
