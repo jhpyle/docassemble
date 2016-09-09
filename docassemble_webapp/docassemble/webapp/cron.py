@@ -13,7 +13,7 @@ if __name__ == "__main__":
         remaining_arguments.append(arguments.pop(0))
     import docassemble.base.config
     docassemble.base.config.load(arguments=remaining_arguments)
-from docassemble.webapp.server import User, UserDict, logmessage, unpack_dictionary, db, set_request_active, fetch_user_dict, save_user_dict, fresh_dictionary, reset_user_dict, app
+from docassemble.webapp.server import User, UserDict, logmessage, unpack_dictionary, db, set_request_active, fetch_user_dict, save_user_dict, fresh_dictionary, reset_user_dict, obtain_lock, release_lock, app
 import docassemble.base.interview_cache
 import docassemble.base.parse
 import docassemble.base.util
@@ -45,7 +45,9 @@ def clear_old_interviews():
         if delta.days > interview_delete_days:
             stale.append(dict(key=record.key, filename=record.filename))
     for item in stale:
+        obtain_lock(item['key'], item['filename'])
         reset_user_dict(item['key'], item['filename'])
+        release_lock(item['key'], item['filename'])
     
 def run_cron(cron_type):
     #sys.stderr.write("calling send_email\n")
@@ -80,6 +82,7 @@ def run_cron(cron_type):
             #sys.stderr.write("  " + str(cron_type) + " status\n")
             interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user.id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None), session=item['key'], yaml_filename=item['filename'], url=None, action=cron_type, arguments=dict()))
             #sys.stderr.write("  " + str(cron_type) + " fetch\n")
+            obtain_lock(item['key'], item['filename'])
             steps, user_dict, is_encrypted = fetch_user_dict(item['key'], item['filename'])
             #sys.stderr.write("  " + str(cron_type) + " assemble\n")
             interview.assemble(user_dict, interview_status)
@@ -87,14 +90,17 @@ def run_cron(cron_type):
             if interview_status.question.question_type in ["restart", "exit"]:
                 sys.stderr.write("  Deleting dictionary\n")
                 reset_user_dict(item['key'], item['filename'])
+                release_lock(item['key'], item['filename'])
                 sys.stderr.write("  Deleted dictionary\n")
             else:
                 #sys.stderr.write("  Saving where type is " + cron_type + "\n")
                 save_user_dict(item['key'], user_dict, item['filename'], encrypt=False, manual_user_id=cron_user.id)
+                release_lock(item['key'], item['filename'])
                 if interview_status.question.question_type == "response":
                     if not hasattr(interview_status.question, 'binaryresponse'):
                         sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
         except:
+            release_lock(item['key'], item['filename'])
             continue
             
 if __name__ == "__main__":

@@ -39,12 +39,14 @@ w = None
 def initialize_db():
     global w
     w = WorkerController()
-    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict
+    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, release_lock
     from docassemble.webapp.server import app as flaskapp
     w.flaskapp = flaskapp
     w.set_request_active = set_request_active
     w.fetch_user_dict = fetch_user_dict
     w.save_user_dict = save_user_dict
+    w.obtain_lock = obtain_lock
+    w.release_lock = release_lock
     #sys.stderr.write("initialized db")
 
 @workerapp.task
@@ -80,6 +82,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, actio
             #sys.stderr.write("Got backgroundresponseaction in worker\n")
             new_action = interview_status.question.action
             interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, action=new_action['action'], arguments=new_action['arguments'], location=None))
+            w.obtain_lock(session_code, yaml_filename)
             steps, user_dict, is_encrypted = w.fetch_user_dict(session_code, yaml_filename, secret=secret)
             try:
                 interview.assemble(user_dict, interview_status)
@@ -88,9 +91,6 @@ def background_action(yaml_filename, user_info, session_code, secret, url, actio
                 #sys.stderr.write("Assembled 2 not ok\n")
                 pass
             w.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted)
+            w.release_lock(session_code, yaml_filename)
             return(new_action)
         return(None)
-        #steps, user_dict, is_encrypted = fetch_user_dict(session_code, yaml_filename, secret=secret)
-        # save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted)
-        #sys.stderr.write("Done with background action in worker\n")
-        #return('done')

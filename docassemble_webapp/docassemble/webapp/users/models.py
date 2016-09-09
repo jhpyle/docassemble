@@ -64,4 +64,4 @@ class UserDictLock(db.Model):
     indexno = db.Column(db.Integer(), primary_key=True)
     filename = db.Column(db.Text())
     key = db.Column(db.String(250))
-    locktime = db.Column(db.DateTime(), server_default=db.func.now())
+    #locktime = db.Column(db.DateTime(), server_default=db.func.now())

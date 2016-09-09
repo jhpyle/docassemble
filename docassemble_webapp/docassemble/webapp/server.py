@@ -63,7 +63,7 @@ from simplekv.db.sql import SQLAlchemyStore
 from sqlalchemy import create_engine, MetaData, Sequence, or_, and_
 from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number
-from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Messages, Supervisors
+from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, Messages
 from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, hostname, in_celery
@@ -971,7 +971,9 @@ def exit():
     if 'key_logged' in session:
         del session['key_logged']
     if session_id is not None and yaml_filename is not None:
+        obtain_lock(session_id, yaml_filename)
         reset_user_dict(session_id, yaml_filename)
+        release_lock(session_id, yaml_filename)
     return redirect(exit_page)
 
 @app.route("/cleanup_sessions", methods=['GET'])
@@ -1042,6 +1044,7 @@ def index():
                     message = "Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews."
             #logmessage("session parameter is none")
             user_code, user_dict = reset_session(yaml_filename, secret)
+            release_lock(user_code, yaml_filename)
             session_id = session.get('uid', None)
             if 'key_logged' in session:
                 del session['key_logged']
@@ -1067,9 +1070,11 @@ def index():
     if session_id:
         user_code = session_id
         #logmessage("session id is " + str(session_id))
+        obtain_lock(user_code, yaml_filename)
         try:
             steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
         except:
+            release_lock(user_code, yaml_filename)
             user_code, user_dict = reset_session(yaml_filename, secret)
             encrypted = False
             session['encrypted'] = encrypted
@@ -1097,6 +1102,10 @@ def index():
         #     secret_to_use = secret
         if user_dict is None:
             logmessage("user_dict was none")
+            try:
+                release_lock(user_code, yaml_filename)
+            except:
+                pass
             del user_code
             del user_dict
     try:
@@ -1140,6 +1149,7 @@ def index():
             response = redirect(url_for('index'))
             if set_cookie:
                 response.set_cookie('secret', secret)
+            release_lock(user_code, yaml_filename)
             return response
         for argname in request.args:
             if argname in ('filename', 'question', 'format', 'index', 'i', 'action', 'from_list', 'session'):
@@ -1155,6 +1165,7 @@ def index():
         response = redirect(url_for('index'))
         if set_cookie:
             response.set_cookie('secret', secret)
+        release_lock(user_code, yaml_filename)
         return response
     #logmessage("action is " + str(action))
     post_data = request.form.copy()
@@ -1264,6 +1275,7 @@ def index():
                     mime_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                 response = send_file(the_filename, mimetype=str(mime_type), as_attachment=True, attachment_filename=str(the_attachment['filename']) + '.' + str(the_format))
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+                release_lock(user_code, yaml_filename)
                 return(response)
     if '_checkboxes' in post_data:
         checkbox_fields = json.loads(myb64unquote(post_data['_checkboxes'])) #post_data['_checkboxes'].split(",")
@@ -1616,10 +1628,13 @@ def index():
         changed = False
         interview.assemble(user_dict, interview_status)
     if interview_status.question.question_type == "refresh":
+        release_lock(user_code, yaml_filename)
         return redirect(url_for('index'))
     if interview_status.question.question_type == "signin":
+        release_lock(user_code, yaml_filename)
         return redirect(url_for('user.login'))
     if interview_status.question.question_type == "leave":
+        release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
             return redirect(interview_status.questionText)
         else:
@@ -1633,6 +1648,7 @@ def index():
         if current_user.is_authenticated:
             save_user_dict_key(user_code, yaml_filename)
             session['key_logged'] = True
+        release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
             return redirect(interview_status.questionText)
         else:
@@ -1680,6 +1696,7 @@ def index():
         encrypted = True
         session['encrypted'] = encrypted
     if response_to_send is not None:
+        release_lock(user_code, yaml_filename)
         return response_to_send
     flash_content = ""
     messages = get_flashed_messages(with_categories=True) + error_messages
@@ -1927,6 +1944,7 @@ def index():
     response.headers['Content-type'] = 'text/html; charset=utf-8'
     if set_cookie:
         response.set_cookie('secret', secret)
+    release_lock(user_code, yaml_filename)
     return response
 
 if __name__ == "__main__":
@@ -1995,8 +2013,10 @@ def get_unique_name(filename, secret):
     nowtime = datetime.datetime.utcnow()
     while True:
         newname = ''.join(random.choice(string.ascii_letters) for i in range(32))
+        obtain_lock(newname, filename)
         existing_key = UserDict.query.filter_by(key=newname).first()
         if existing_key:
+            release_lock(newname, filename)
             continue
         # cur = conn.cursor()
         # cur.execute("SELECT key from userdict where key=%s", [newname])
@@ -2046,6 +2066,30 @@ def update_attachment_info(the_user_code, the_user_dict, the_interview_status, s
     db.session.add(new_attachment)
     db.session.commit()
     return
+
+def obtain_lock(user_code, filename):
+    #logmessage("Obtain lock: " + str(user_code) + " " + str(filename))
+    found = False
+    count = 4
+    while count > 0:
+        record = UserDictLock.query.filter_by(key=user_code, filename=filename).first()
+        if record:
+            time.sleep(1.0)
+        else:
+            found = False
+            break
+        found = True
+        count -= 1
+    if found:
+        release_lock(user_code, filename)
+    new_record = UserDictLock(key=user_code, filename=filename)
+    db.session.add(new_record)
+    db.session.commit()
+    
+def release_lock(user_code, filename):
+    #logmessage("Release lock: " + str(user_code) + " " + str(filename))
+    UserDictLock.query.filter_by(key=user_code, filename=filename).delete()
+    db.session.commit()
 
 def fetch_user_dict(user_code, filename, secret=None):
     user_dict = None
@@ -4280,7 +4324,9 @@ def interview_list():
         yaml_file = request.args.get('filename', None)
         session_id = request.args.get('session', None)
         if yaml_file is not None and session_id is not None:
+            obtain_lock(session_id, yaml_file)
             reset_user_dict(session_id, yaml_file)
+            release_lock(session_id, yaml_file)
             flash(word("Deleted interview"), 'success')
             return redirect(url_for('interview_list'))
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key).subquery()
