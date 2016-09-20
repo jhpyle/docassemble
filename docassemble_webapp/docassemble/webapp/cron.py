@@ -1,6 +1,7 @@
 import sys
 import copy
 import datetime
+import re
 if __name__ == "__main__":
     cron_type = 'cron_daily'
     arguments = copy.deepcopy(sys.argv)
@@ -20,6 +21,7 @@ import docassemble.base.util
 import os
 import pickle
 import codecs
+#import docassemble.webapp.worker
 
 set_request_active(False)
 
@@ -53,7 +55,11 @@ def run_cron(cron_type):
     #sys.stderr.write("calling send_email\n")
     #sys.stderr.write(str(app.config['MAIL_SERVER']) + "\n")
     #docassemble.base.util.send_email(to="jhpyle@gmail.com", body="Asdf", html="<p>Asdf</p>")
+    cron_types = [cron_type]
+    if not re.search(r'_background$', cron_type):
+        cron_types.append(str(cron_type) + "_background")
     cron_user = get_cron_user()
+    user_info = dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user.id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None)
     #sys.stderr.write("cron_user id is " + str(cron_user.id) + ".\n")
     to_do = list()
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).group_by(UserDict.filename, UserDict.key).filter(UserDict.encrypted == False).subquery()
@@ -74,34 +80,51 @@ def run_cron(cron_type):
             interview = docassemble.base.interview_cache.get_interview(item['filename'])
         except:
             continue
-        if cron_type not in interview.questions:
-            #sys.stderr.write("  " + str(cron_type) + " not enabled in this interview\n")
-            continue
-        #sys.stderr.write("  " + str(cron_type) + " is enabled in this interview\n")
-        try:
-            #sys.stderr.write("  " + str(cron_type) + " status\n")
-            interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user.id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None), session=item['key'], yaml_filename=item['filename'], url=None, action=cron_type, arguments=dict()))
-            #sys.stderr.write("  " + str(cron_type) + " fetch\n")
-            obtain_lock(item['key'], item['filename'])
-            steps, user_dict, is_encrypted = fetch_user_dict(item['key'], item['filename'])
-            #sys.stderr.write("  " + str(cron_type) + " assemble\n")
-            interview.assemble(user_dict, interview_status)
-            #sys.stderr.write("  " + str(cron_type) + " save\n")
-            if interview_status.question.question_type in ["restart", "exit"]:
-                sys.stderr.write("  Deleting dictionary\n")
-                reset_user_dict(item['key'], item['filename'])
-                release_lock(item['key'], item['filename'])
-                sys.stderr.write("  Deleted dictionary\n")
+        for cron_type_to_use in cron_types:
+            if cron_type_to_use not in interview.questions:
+                continue
+            if re.search(r'_background$', cron_type_to_use):
+                new_task = docassemble.webapp.worker.background_action.delay(item['filename'], user_info, item['key'], None, None, {'action': cron_type_to_use, 'arguments': dict()})
             else:
-                #sys.stderr.write("  Saving where type is " + cron_type + "\n")
-                save_user_dict(item['key'], user_dict, item['filename'], encrypt=False, manual_user_id=cron_user.id)
-                release_lock(item['key'], item['filename'])
-                if interview_status.question.question_type == "response":
-                    if not hasattr(interview_status.question, 'binaryresponse'):
-                        sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
-        except:
-            release_lock(item['key'], item['filename'])
-            continue
+                try:
+                    #sys.stderr.write("  " + str(cron_type_to_use) + " status\n")
+                    interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user.id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None), session=item['key'], yaml_filename=item['filename'], url=None, action=cron_type_to_use, arguments=dict()))
+                    #sys.stderr.write("  " + str(cron_type_to_use) + " fetch\n")
+                    obtain_lock(item['key'], item['filename'])
+                    steps, user_dict, is_encrypted = fetch_user_dict(item['key'], item['filename'])
+                    #sys.stderr.write("  " + str(cron_type_to_use) + " assemble\n")
+                    interview.assemble(user_dict, interview_status)
+                    #sys.stderr.write("  " + str(cron_type_to_use) + " save\n")
+                    if interview_status.question.question_type in ["restart", "exit"]:
+                        #sys.stderr.write("  Deleting dictionary\n")
+                        reset_user_dict(item['key'], item['filename'])
+                        release_lock(item['key'], item['filename'])
+                        #sys.stderr.write("  Deleted dictionary\n")
+                    elif interview_status.question.question_type in ["backgroundresponse"]:
+                        pass
+                    elif interview_status.question.question_type in ["backgroundresponseaction"]:
+                        new_action = interview_status.question.action
+                        interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=item['key'], secret=None, yaml_filename=item['filename'], url=None, action=new_action['action'], arguments=new_action['arguments'], location=None))
+                        obtain_lock(session_code, yaml_filename)
+                        steps, user_dict, is_encrypted = fetch_user_dict(session_code, yaml_filename, secret=secret)
+                        try:
+                            interview.assemble(user_dict, interview_status)
+                            #sys.stderr.write("Assembled 2 ok\n")
+                        except:
+                            #sys.stderr.write("Assembled 2 not ok\n")
+                            pass
+                        save_user_dict(item['key'], user_dict, item['filename'], encrypt=False, manual_user_id=cron_user.id)
+                        release_lock(item['key'], item['filename'])
+                    else:
+                        #sys.stderr.write("  Saving where type is " + str(cron_type_to_use) + "\n")
+                        save_user_dict(item['key'], user_dict, item['filename'], encrypt=False, manual_user_id=cron_user.id)
+                        release_lock(item['key'], item['filename'])
+                        if interview_status.question.question_type == "response":
+                            if not hasattr(interview_status.question, 'binaryresponse'):
+                                sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
+                except:
+                    release_lock(item['key'], item['filename'])
+                    continue
             
 if __name__ == "__main__":
     if cron_type == 'cron_daily':

@@ -136,7 +136,7 @@ flask_log: /tmp/flask.log
 language: en
 locale: US.utf8
 words:
-  - docassemble.base:data/translations/us-words.yml
+  - docassemble.base:data/sources/us-words.yml
 default_admin_account:
   nickname: admin
   email: admin@admin.com

@@ -19,17 +19,24 @@ code: |
 event: cron_daily
 code: |
   import sys
-  sys.stderr.write("Should delete this.\n")
-  command('exit')
+  sys.stderr.write("I am in cron_daily and I am running a background action")
+  task = background_action('bg_task', myarg=2)
 ---
-event: cron_hourly_background
+event: bg_task
 code: |
-  #response("Cron hourly was called.  Counter is ${ counter }.")
-  background_response_action('save_counter', counter=counter)
+  import sys
+  sys.stderr.write("I am a background cron job with argument " + str(action_argument('myarg')))
+  background_response_action('bg_response', ans=myarg + 4)
 ---
-event: save_counter
+event: bg_response
 code: |
-  counter = action_argument('counter')
+  answer = action_argument('ans')
+  import sys
+  sys.stderr.write("The answer is " + str(answer))
+---
+event: cron_hourly
+code: |
+  response("Cron hourly was called.  Counter is ${ counter }.")
 ---
 event: set_status
 code: |

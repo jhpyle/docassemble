@@ -75,6 +75,15 @@ def background_action(yaml_filename, user_info, session_code, secret, url, actio
         #     sys.stderr.write("Answer now is " + str(user_dict['answer']) + "\n")
         # else:
         #     sys.stderr.write("Answer still not in user_dict\n")
+        if interview_status.question.question_type in ["restart", "exit"]:
+            #sys.stderr.write("  Deleting dictionary\n")
+            reset_user_dict(session_code, yaml_filename)
+            release_lock(session_code, yaml_filename)
+            #sys.stderr.write("  Deleted dictionary\n")
+        if interview_status.question.question_type == "response":
+            #sys.stderr.write("  Got response\n")
+            if not hasattr(interview_status.question, 'binaryresponse'):
+                sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
         if interview_status.question.question_type == "backgroundresponse":
             #sys.stderr.write("Got backgroundresponse in worker\n")
             return(interview_status.question.backgroundresponse)
@@ -90,7 +99,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, actio
             except:
                 #sys.stderr.write("Assembled 2 not ok\n")
                 pass
-            w.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted)
+            w.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'])
             w.release_lock(session_code, yaml_filename)
             return(new_action)
         return(None)

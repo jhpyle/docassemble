@@ -55,4 +55,4 @@ s3:
   bucket: yourbucketname
 ec2: false
 words:
-  - docassemble.base:data/translations/us-words.yml
+  - docassemble.base:data/sources/us-words.yml

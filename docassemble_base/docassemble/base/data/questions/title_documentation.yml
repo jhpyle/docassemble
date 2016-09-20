@@ -49,6 +49,13 @@ static:
     Playground and that are available for use through the "image sets," "images,"
     "decoration," and "[FILE]" features.
   url: "http://docassemble.org/docs/functions.html#url_of"
+sources:
+  title: Source files
+  doc: >-
+    These are the data files that exist in the "Sources" area of the
+    Playground.  The data files may include word translation files and
+    data files for training a machine learning model.
+  url: "http://docassemble.org/docs/functions.html#word"
 decorations:
   title: Decorations
   doc: >-

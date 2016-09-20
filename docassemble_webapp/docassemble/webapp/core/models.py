@@ -71,3 +71,13 @@ class Supervisors(db.Model):
     url = db.Column(db.Text())
     start_time = db.Column(db.DateTime(), server_default=db.func.now())
     role = db.Column(db.Text())
+
+class MachineLearning(db.Model):
+    __tablename__ = dbtableprefix + "machinelearning"
+    id = db.Column(db.Integer(), primary_key=True)
+    group_id = db.Column(db.Text())
+    independent = db.Column(db.Text())
+    dependent = db.Column(db.Text())
+    create_time = db.Column(db.DateTime())
+    modtime = db.Column(db.DateTime())
+    active = db.Column(db.Boolean(), nullable=False, server_default='0')

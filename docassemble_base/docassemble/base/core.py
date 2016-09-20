@@ -3,6 +3,7 @@ import random
 from docassemble.base.logger import logmessage
 import re
 import codecs
+import redis
 from docassemble.base.filter import file_finder
 #from docassemble.base.error import DANameError
 from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize
@@ -923,4 +924,3 @@ def setify(item, output=set()):
     else:
         output.add(item)
     return output
-

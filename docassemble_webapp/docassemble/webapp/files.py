@@ -203,7 +203,7 @@ def get_ext_and_mimetype(filename):
 def make_package_zip(pkgname, info, author_info):
     temp_zip = tempfile.NamedTemporaryFile(suffix=".zip")
     area = dict()
-    for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundmodules']:
+    for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
         area[sec] = SavedFile(author_info['id'], fix=True, section=sec)
     dependencies = ", ".join(map(lambda x: repr(x), sorted(info['dependencies'])))
     initpy = """\
@@ -314,15 +314,23 @@ put template files in this directory.
 If you want to make files available in the web app, put them in
 this directory.
 """
+    sourcesreadme = """\
+# Sources directory
+
+This directory is used to store word translation files, 
+machine learning training files, and other source files.
+"""
     directory = tempfile.mkdtemp()
     packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
     maindir = os.path.join(packagedir, 'docassemble', str(pkgname))
     questionsdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'questions')
     templatesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'templates')
     staticdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'static')
+    sourcesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'sources')
     os.makedirs(questionsdir)
     os.makedirs(templatesdir)
     os.makedirs(staticdir)
+    os.makedirs(sourcesdir)
     for the_file in info['interview_files']:
         orig_file = os.path.join(area['playground'].directory, the_file)
         if os.path.exists(orig_file):
@@ -339,6 +347,10 @@ this directory.
         orig_file = os.path.join(area['playgroundstatic'].directory, the_file)
         if os.path.exists(orig_file):
             shutil.copyfile(orig_file, os.path.join(staticdir, the_file))
+    for the_file in info['sources_files']:
+        orig_file = os.path.join(area['playgroundsources'].directory, the_file)
+        if os.path.exists(orig_file):
+            shutil.copyfile(orig_file, os.path.join(sourcesdir, the_file))
     with open(os.path.join(packagedir, 'README.md'), 'a') as the_file:
         the_file.write(readme)
     with open(os.path.join(packagedir, 'LICENSE'), 'a') as the_file:
@@ -353,6 +365,8 @@ this directory.
         the_file.write(templatereadme)
     with open(os.path.join(staticdir, 'README.md'), 'a') as the_file:
         the_file.write(staticreadme)
+    with open(os.path.join(sourcesdir, 'README.md'), 'a') as the_file:
+        the_file.write(sourcesreadme)
     zf = zipfile.ZipFile(temp_zip.name, mode='w')
     trimlength = len(directory) + 1
     for root, dirs, files in os.walk(packagedir):

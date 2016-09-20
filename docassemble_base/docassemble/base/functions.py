@@ -48,6 +48,7 @@ class ThreadVariables(threading.local):
     current_info = dict()
     internal = dict()
     initialized = False
+    redis = None
     def __init__(self, **kw):
         if self.initialized:
             raise SystemError('__init__ called too many times')
@@ -1070,6 +1071,9 @@ def package_data_filename(the_file):
     if len(parts) == 2:
         m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
         if m:
+            if re.search(r'^data/sources/', parts[1]):
+                parts[1] = re.sub(r'^data/sources/', '', parts[1])
+                return(absolute_filename("/playgroundsources/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\.]', '', parts[1])).path)
             parts[1] = re.sub(r'^data/static/', '', parts[1])
             return(absolute_filename("/playgroundstatic/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\.]', '', parts[1])).path)
         try:

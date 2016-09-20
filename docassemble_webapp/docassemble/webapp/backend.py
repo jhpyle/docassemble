@@ -5,6 +5,8 @@ from docassemble.webapp.core.models import Uploads
 from docassemble.base.logger import logmessage
 import docassemble.webapp.database
 import logging
+import urllib
+import tempfile
 
 import docassemble.base.parse
 import re
@@ -138,6 +140,11 @@ def absolute_filename(the_file):
         filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(2))
         playground = SavedFile(match.group(1), section='playgroundstatic', fix=True, filename=filename)
         return playground
+    match = re.match(r'^/playgroundsources/([0-9]+)/(.*)', the_file)
+    if match:
+        filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(2))
+        playground = SavedFile(match.group(1), section='playgroundsources', fix=True, filename=filename)
+        return playground
     return(None)
 
 # def absolute_validator(the_file):
@@ -223,7 +230,19 @@ def get_info_from_file_reference(file_reference, **kwargs):
         convert = None
     if re.match('[0-9]+', str(file_reference)):
         result = get_info_from_file_number(int(file_reference))
+    elif re.search(r'^https*://', str(file_reference)):
+        #logmessage(str(file_reference) + " is a URL")
+        m = re.search('(\.[A-Za-z0-9]+)$', file_reference)
+        if m:
+            suffix = m.group(1)
+        else:
+            suffix = '.html'
+        result = dict(tempfile=tempfile.NamedTemporaryFile(suffix=suffix))
+        urllib.urlretrieve(file_reference, result['tempfile'].name)
+        result['fullpath'] = result['tempfile'].name
+        #logmessage("Downloaded to " + result['tempfile'].name)
     else:
+        #logmessage(str(file_reference) + " is not a URL")
         result = dict()
         question = kwargs.get('question', None)
         the_package = None

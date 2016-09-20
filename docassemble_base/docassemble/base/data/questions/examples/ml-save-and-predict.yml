@@ -1,0 +1,37 @@
+metadata:
+  title: Save answer for later classification
+  short title: Machine learning
+  example start: 3
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  Enter some text.
+fields:
+  - no label: phrase
+---
+mandatory: true
+code: |
+  ml = SimpleTextMachineLearner('demo')
+  ml.save_for_classification(phrase)
+  predictions = ml.predict(phrase)
+---
+mandatory: true
+question: |
+  The prediction
+subquestion: |
+  The text provided was:
+  > ${ phrase }
+  
+  % if len(predictions):
+  The prediction was:
+
+  > ${ predictions[0] }
+  % else:
+  There is not enough training data
+  to make a prediction yet.
+  % endif
+buttons:
+  - Restart: restart

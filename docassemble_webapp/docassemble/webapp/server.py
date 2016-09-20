@@ -47,6 +47,7 @@ import urlparse
 import json
 import base64
 import requests
+import redis
 from flask import make_response, abort, render_template, request, session, send_file, redirect, url_for, current_app, get_flashed_messages, flash, Markup, jsonify
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
 from flask_user import login_required, roles_required, UserManager, SQLAlchemyAdapter
@@ -117,8 +118,8 @@ code: |
 
 app.debug = False
 
-ok_mimetypes = {"application/javascript": "javascript", "text/x-python": "python"}
-ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown", 'py': "python"}
+ok_mimetypes = {"application/javascript": "javascript", "text/x-python": "python", "application/json": "json"}
+ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown", 'py': "python", "json": "json"}
 default_yaml_filename = daconfig.get('default_interview', 'docassemble.demo:data/questions/questions.yml')
 
 document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
@@ -248,9 +249,11 @@ def get_url_from_file_reference(file_reference, **kwargs):
         return(url_for('playground_files', section='template'))
     elif file_reference == 'playgroundstatic':
         return(url_for('playground_files', section='static'))
+    elif file_reference == 'playgroundsources':
+        return(url_for('playground_files', section='sources'))
     elif file_reference == 'playgroundmodules':
         return(url_for('playground_files', section='modules'))
-    elif file_reference == 'playgroundstatic':
+    elif file_reference == 'playgroundpackages':
         return(url_for('playground_packages', **kwargs))
     elif file_reference == 'playgroundfiles':
         return(url_for('playground_files', **kwargs))
@@ -318,7 +321,7 @@ docassemble.base.parse.set_url_finder(get_url_from_file_reference)
 
 def get_documentation_dict():
     documentation = get_info_from_file_reference('docassemble.base:data/questions/documentation.yml')
-    if 'fullpath' in documentation:
+    if 'fullpath' in documentation and documentation['fullpath'] is not None:
         with open(documentation['fullpath'], 'rU') as fp:
             content = fp.read().decode('utf8')
             content = fix_tabs.sub('  ', content)
@@ -327,7 +330,7 @@ def get_documentation_dict():
 
 def get_name_info():
     docstring = get_info_from_file_reference('docassemble.base:data/questions/docstring.yml')
-    if 'fullpath' in docstring:
+    if 'fullpath' in docstring and docstring['fullpath'] is not None:
         with open(docstring['fullpath'], 'rU') as fp:
             content = fp.read().decode('utf8')
             content = fix_tabs.sub('  ', content)
@@ -336,7 +339,7 @@ def get_name_info():
 
 def get_title_documentation():
     documentation = get_info_from_file_reference('docassemble.base:data/questions/title_documentation.yml')
-    if 'fullpath' in documentation:
+    if 'fullpath' in documentation and documentation['fullpath'] is not None:
         with open(documentation['fullpath'], 'rU') as fp:
             content = fp.read().decode('utf8')
             content = fix_tabs.sub('  ', content)
@@ -379,7 +382,7 @@ if type(word_file_list) is not list:
 for word_file in word_file_list:
     sys.stderr.write("Reading from " + str(word_file) + "\n")
     file_info = get_info_from_file_reference(word_file)
-    if 'fullpath' in file_info:
+    if 'fullpath' in file_info and file_info['fullpath'] is not None:
         with open(file_info['fullpath'], 'rU') as stream:
             for document in yaml.load_all(stream):
                 if document and type(document) is dict:
@@ -737,7 +740,7 @@ def proc_example_list(example_list, examples):
         file_info = get_info_from_file_reference(example_file)
         start_block = 1
         end_block = 2
-        if 'fullpath' not in file_info:
+        if 'fullpath' not in file_info or file_info['fullpath'] is None:
             continue
         try:
             interview = docassemble.base.interview_cache.get_interview(example_file)
@@ -776,7 +779,7 @@ def proc_example_list(example_list, examples):
 def get_examples():
     examples = list()
     example_list_file = get_info_from_file_reference('docassemble.base:data/questions/example-list.yml')
-    if 'fullpath' in example_list_file:
+    if 'fullpath' in example_list_file and example_list_file['fullpath'] is not None:
         example_list = list()
         with open(example_list_file['fullpath'], 'rU') as fp:
             content = fp.read().decode('utf8')
@@ -1000,6 +1003,22 @@ def fresh_dictionary():
     add_timestamps(the_dict)
     return the_dict    
 
+@app.route("/checkin", methods=['POST', 'GET'])
+def checkin():
+    session_id = session.get('uid', None)
+    yaml_filename = session.get('i', None)
+    if session_id is None or yaml_filename is None:
+        return jsonify(success=False)
+    #logmessage("Got to checkin")
+    if request.form.get('action', None) == 'checkin':
+        #logmessage("Doing redis statement")
+        key = 'da:session:' + str(session_id) + ':' + str(yaml_filename)
+        pipe = r.pipeline()
+        pipe.set(key, 1)
+        pipe.expire(key, 60)
+        pipe.execute()
+        return jsonify(success=True)
+    return jsonify(success=False)
 @app.route("/", methods=['POST', 'GET'])
 def index():
     #seq = Sequence(message_sequence)
@@ -1680,8 +1699,8 @@ def index():
         response_to_send = redirect(interview_status.questionText)
     else:
         response_to_send = None
-    # Why do this?
-    # user_dict['_internal']['answers'] = dict()
+    # Why do this?  To prevent loops of redirects?
+    user_dict['_internal']['answers'] = dict()
     if interview_status.question.name and interview_status.question.name in user_dict['_internal']['answers']:
         del user_dict['_internal']['answers'][interview_status.question.name]
     if changed and interview_status.question.interview.use_progress_bar:
@@ -1804,6 +1823,20 @@ def index():
           $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDiv);
           $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDiv);
         });
+        function daCheckinCallback(data){
+        }
+        function daCheckin(){
+          $.ajax({
+            type: 'POST',
+            url: """ + "'" + url_for('checkin') + "'" + """,
+            data: 'action=checkin',
+            success: daCheckinCallback,
+            dataType: 'json'
+          });
+          return true;
+        }
+        daCheckin();
+        setInterval(daCheckin, 6000);
       });
     </script>"""
     if interview_status.question.language != '*':
@@ -2252,9 +2285,9 @@ def make_navbar(status, page_title, page_short_title, steps, show_login):
         if current_user.is_anonymous:
             #logmessage("is_anonymous is " + str(current_user.is_anonymous))
             if custom_menu:
-                navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('user.login', next=url_for('interview_list')) + '">' + word('Sign in or sign up to save answers') + '</a></li></ul></li>' + "\n"
+                navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('user.login', next=url_for('index')) + '">' + word('Sign in or sign up to save answers') + '</a></li></ul></li>' + "\n"
             else:
-                navbar += '            <li><a href="' + url_for('user.login', next=url_for('interview_list')) + '">' + word('Sign in or sign up to save answers') + '</a></li>' + "\n"
+                navbar += '            <li><a href="' + url_for('user.login', next=url_for('index')) + '">' + word('Sign in or sign up to save answers') + '</a></li>' + "\n"
         else:
             navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + current_user.email + '<span class="caret"></span></a><ul class="dropdown-menu">'
             if custom_menu:
@@ -2697,6 +2730,43 @@ def get_package_info():
             package_list.append(Object(package=package, can_update=can_update, can_uninstall=can_uninstall))
     return package_list, package_auth
 
+@app.route('/testws', methods=['GET', 'POST'])
+def test_websocket():
+    script = '<script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>' + """<script type="text/javascript" charset="utf-8">
+    var socket;
+    $(document).ready(function(){
+        if (location.protocol === 'http:' || document.location.protocol === 'http:'){
+            socket = io.connect("http://" + document.domain + "/myns", {path: '/ws/socket.io'});
+            //socket = io.connect("http://" + document.domain + ":5000/myns");
+        }
+        if (location.protocol === 'https:' || document.location.protocol === 'https:'){
+            socket = io.connect("https://" + document.domain + "/myns" + location.port, {path: '/wss/socket.io'});
+        }
+        if (typeof socket !== 'undefined') {
+            socket.on('connect', function() {
+                //console.log("Connected!");
+                socket.emit('message', {data: "I am connected!"});
+            });
+            socket.on('mymessage', function(arg) {
+                //console.log("Received " + arg.data);
+                $("#daPushResult").html(arg.data);
+            });
+            socket.on('chatmessage', function(arg) {
+                //console.log("Received chat message " + arg.data);
+                var newDiv = document.createElement('div');
+                $(newDiv).html(arg.data);
+                $("#daCorrespondence").append(newDiv);
+            });
+        }
+        $("#daSend").click(function(){
+            //console.log("Clicked it")
+            socket.emit('chatmessage', {data: $("#daMessage").val()});
+            $("#daMessage").val("");
+        });
+    });
+</script>"""
+    return render_template('pages/socketserver.html', extra_js=Markup(script)), 200
+
 @app.route('/createplaygroundpackage', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin', 'developer'])
@@ -2731,8 +2801,8 @@ def create_playground_package():
         flash(word('Sorry, that package name does not exist in the playground'), 'error')
         current_package = None
     if current_package is not None:
-        section_sec = {'playgroundtemplate': 'template', 'playgroundstatic': 'static', 'playgroundmodules': 'modules'}
-        for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundmodules']:
+        section_sec = {'playgroundtemplate': 'template', 'playgroundstatic': 'static', 'playgroundsources': 'sources', 'playgroundmodules': 'modules'}
+        for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
             area[sec] = SavedFile(current_user.id, fix=True, section=sec)
             file_list[sec] = sorted([f for f in os.listdir(area[sec].directory) if os.path.isfile(os.path.join(area[sec].directory, f))])
         if os.path.isfile(os.path.join(area['playgroundpackages'].directory, current_package)):
@@ -2741,7 +2811,7 @@ def create_playground_package():
             with open(filename, 'rU') as fp:
                 content = fp.read().decode('utf8')
                 info = yaml.load(content)
-            for field in ['dependencies', 'interview_files', 'template_files', 'module_files', 'static_files']:
+            for field in ['dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files']:
                 if field not in info:
                     info[field] = list()
             for package in ['docassemble', 'docassemble.base']:
@@ -2928,6 +2998,12 @@ put template files in this directory.
 If you want to make files available in the web app, put them in
 this directory.
 """
+            sourcesreadme = """\
+# Sources directory
+
+This directory is used to store word translation files, 
+machine learning training files, and other source files.
+"""
             objectfile = """\
 # This is a Python module in which you can write your own Python code,
 # if you want to.
@@ -2963,9 +3039,11 @@ class Fruit(DAObject):
             questionsdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'questions')
             templatesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'templates')
             staticdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'static')
+            sourcesdir = os.path.join(packagedir, 'docassemble', str(pkgname), 'data', 'sources')
             os.makedirs(questionsdir)
             os.makedirs(templatesdir)
             os.makedirs(staticdir)
+            os.makedirs(sourcesdir)
             with open(os.path.join(packagedir, 'README.md'), 'a') as the_file:
                 the_file.write(readme)
             with open(os.path.join(packagedir, 'LICENSE'), 'a') as the_file:
@@ -2982,6 +3060,8 @@ class Fruit(DAObject):
                 the_file.write(templatereadme)
             with open(os.path.join(staticdir, 'README.md'), 'a') as the_file:
                 the_file.write(staticreadme)
+            with open(os.path.join(sourcesdir, 'README.md'), 'a') as the_file:
+                the_file.write(sourcesreadme)
             with open(os.path.join(questionsdir, 'questions.yml'), 'a') as the_file:
                 the_file.write(questionfiletext)
             nice_name = 'docassemble-' + str(pkgname) + '.zip'
@@ -3099,6 +3179,20 @@ def playground_static(userid, filename):
         return(response)
     abort(404)
 
+@login_required
+@roles_required(['developer', 'admin'])
+@app.route('/playgroundsources/<userid>/<filename>', methods=['GET'])
+def playground_sources(userid, filename):
+    filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', filename)
+    area = SavedFile(userid, fix=True, section='playgroundsources')
+    filename = os.path.join(area.directory, filename)
+    if os.path.isfile(filename):
+        extension, mimetype = get_ext_and_mimetype(filename)
+        response = send_file(filename, mimetype=str(mimetype))
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        return(response)
+    abort(404)
+
 @app.route('/playgroundtemplate/<userid>/<filename>', methods=['GET'])
 def playground_template(userid, filename):
     filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', filename)
@@ -3107,6 +3201,7 @@ def playground_template(userid, filename):
     if os.path.isfile(filename):
         extension, mimetype = get_ext_and_mimetype(filename)
         response = send_file(filename, mimetype=str(mimetype))
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return(response)
     abort(404)
 
@@ -3134,7 +3229,7 @@ def playground_files():
         if (formtwo.file_name.data):
             the_file = formtwo.file_name.data
             the_file = re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', the_file)
-    if section not in ("template", "static", "modules", "packages"):
+    if section not in ("template", "static", "sources", "modules", "packages"):
         section = "template"
     area = SavedFile(current_user.id, fix=True, section='playground' + section)
     if request.args.get('delete', False):
@@ -3231,6 +3326,8 @@ def playground_files():
         else:
             if section == 'modules':
                 the_file = 'test.py'
+            elif section == 'sources':
+                the_file = 'test.json'
             else:
                 the_file = 'test.md'
     if the_file != '':
@@ -3264,6 +3361,12 @@ def playground_files():
         description = 'Add files here that you want to include in your interviews with "images," "image sets," "[FILE]" or "url_of()."'
         upload_header = word("Upload a static file")
         edit_header = word('Edit text files')
+        after_text = None
+    elif (section == "sources"):
+        header = word("Source files")
+        description = 'Add files here that you want to make available to your interview code, such as word translation files and training data for machine learning.'
+        upload_header = word("Upload a source file")
+        edit_header = word('Edit source files')
         after_text = None
     elif (section == "modules"):
         header = word("Modules")
@@ -3307,10 +3410,10 @@ def playground_packages():
         the_file = ''
     area = dict()
     file_list = dict()
-    section_name = {'playground': 'Interview files', 'playgroundpackages': 'Packages', 'playgroundtemplate': 'Template files', 'playgroundstatic': 'Static files', 'playgroundmodules': 'Modules'}
-    section_sec = {'playgroundtemplate': 'template', 'playgroundstatic': 'static', 'playgroundmodules': 'modules'}
-    section_field = {'playground': form.interview_files, 'playgroundtemplate': form.template_files, 'playgroundstatic': form.static_files, 'playgroundmodules': form.module_files}
-    for sec in ['playground', 'playgroundpackages', 'playgroundtemplate', 'playgroundstatic', 'playgroundmodules']:
+    section_name = {'playground': 'Interview files', 'playgroundpackages': 'Packages', 'playgroundtemplate': 'Template files', 'playgroundstatic': 'Static files', 'playgroundsources': 'Source files', 'playgroundmodules': 'Modules'}
+    section_sec = {'playgroundtemplate': 'template', 'playgroundstatic': 'static', 'playgroundsources': 'sources', 'playgroundmodules': 'modules'}
+    section_field = {'playground': form.interview_files, 'playgroundtemplate': form.template_files, 'playgroundstatic': form.static_files, 'playgroundsources': form.sources_files, 'playgroundmodules': form.module_files}
+    for sec in ['playground', 'playgroundpackages', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
         area[sec] = SavedFile(current_user.id, fix=True, section=sec)
         file_list[sec] = sorted([f for f in os.listdir(area[sec].directory) if os.path.isfile(os.path.join(area[sec].directory, f))])
     for sec, field in section_field.iteritems():
@@ -3346,7 +3449,7 @@ def playground_packages():
                             form[field].data = old_info[field]
                         else:
                             form[field].data = ''
-                    for field in ['dependencies', 'interview_files', 'template_files', 'module_files', 'static_files']:
+                    for field in ['dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files']:
                         if field in old_info and type(old_info[field]) is list and len(old_info[field]):
                             form[field].data = old_info[field]
         else:
@@ -3358,7 +3461,7 @@ def playground_packages():
             flash(word("Deleted package"), "success")
             return redirect(url_for('playground_packages'))
         new_info = dict()
-        for field in ['license', 'description', 'version', 'url', 'readme', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files']:
+        for field in ['license', 'description', 'version', 'url', 'readme', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files']:
             new_info[field] = form[field].data
         #logmessage("found " + str(new_info))
         if form.submit.data or form.download.data or form.install.data:
@@ -3467,6 +3570,8 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
     templates = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
     area = SavedFile(current_user.id, fix=True, section='playgroundstatic')
     static = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
+    area = SavedFile(current_user.id, fix=True, section='playgroundsources')
+    sources = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
     area = SavedFile(current_user.id, fix=True, section='playgroundmodules')
     avail_modules = sorted([re.sub(r'.py$', '', f) for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
     for val in user_dict:
@@ -3605,6 +3710,11 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
     if len(static):
         content += '\n                  <tr><td><h4>Static files' + infobutton('static') + '</h4></td></tr>'
         for var in static:
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-default playground-variable">' + noquote(var) + '</a>'
+            content += '</td></tr>'
+    if len(sources):
+        content += '\n                  <tr><td><h4>Source files' + infobutton('sources') + '</h4></td></tr>'
+        for var in sources:
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-default playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
     if len(interview.images):
@@ -4374,7 +4484,17 @@ def close_db(error):
     if hasattr(db, 'engine'):
         db.engine.dispose()
 
+redis_host = daconfig.get('redis', None)
+if redis_host is None:
+    redis_host = 'redis://localhost'
+
+docassemble.base.util.set_redis_server(redis_host)
+
+r = redis.StrictRedis(host=docassemble.base.util.redis_server)
+
 if not in_celery:
     import docassemble.webapp.worker
     #sys.stderr.write("calling set worker now\n")
     docassemble.base.functions.set_worker(docassemble.webapp.worker.background_action)
+import docassemble.webapp.machinelearning
+docassemble.base.util.set_knn_machine_learner(docassemble.webapp.machinelearning.SimpleTextMachineLearner)

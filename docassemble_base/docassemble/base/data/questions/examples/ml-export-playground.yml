@@ -1,0 +1,21 @@
+metadata:
+  title: Save training set to playground
+  example start: 1
+  example end: 2
+---
+modules:
+  - docassemble.webapp.playground
+  - docassemble.base.util
+---
+initial: true
+code: |
+  ml = SimpleTextMachineLearner('demo')
+  the_data = ml.export_training_set(output_format='json')
+  sources = PlaygroundSection('sources')
+  sources.write_file('my_training_data.json', the_data)
+---
+mandatory: true
+question: |
+  The training data have been saved.
+buttons:
+  - Save again: refresh

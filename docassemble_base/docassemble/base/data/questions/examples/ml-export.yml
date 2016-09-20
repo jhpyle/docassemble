@@ -1,0 +1,13 @@
+metadata:
+  title: Export training set
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+initial: true
+code: |
+  ml = SimpleTextMachineLearner('demo')
+  the_data = ml.export_training_set(output_format='json')
+  response(response=the_data, content_type='application/json')

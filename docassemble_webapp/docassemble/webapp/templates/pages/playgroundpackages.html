@@ -31,7 +31,7 @@
       {%- endfor %}
     </select>
   </div>
-  {%- for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundmodules'] %}
+  {%- for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules'] %}
   <h2>{{ section_field[sec].label }}</h2>
   <div class="form-group">
     <label for="{{ section_field[sec].id }}">{{ word("Select zero or more files") }}</label>
