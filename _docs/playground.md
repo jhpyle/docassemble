@@ -101,6 +101,15 @@ In this area, you can upload files or write files of your own.  For
 example, you might want to write your own Javascript files here, or
 upload images that you want to include in interview questions.
 
+## <a name="sources"></a>The Sources folder
+
+This is where you can store data files for use by your interviews,
+including:
+
+* Translation files for the [`word()`] function, which you can include
+using the [`words`] directive in the [configuration].
+* Training data for the [machine learning] function.
+
 ## <a name="modules"></a>The Modules folder
 
 If your interviews contain any complicated Python code, or you want to
@@ -364,3 +373,7 @@ Then the editing screen will load.
 [Docker]: {{ site.baseurl }}/docs/docker.html
 [`docassemble.webapp.watchdog`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/watchdog.py
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
+[`word()`]: {{ site.baseurl }}/docs/functions.html#word
+[`words`]: {{ site.baseurl }}/docs/config.html#words
+[configuration]: {{ site.baseurl }}/docs/config.html
+[machine learning]: {{ site.baseurl }}/docs/ml.html

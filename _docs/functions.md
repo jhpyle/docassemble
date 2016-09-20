@@ -741,42 +741,173 @@ subquestion: |
 ---
 {% endhighlight %}
 
-# Background processes
+# <a name="background"></a>Background processes
 
 {% include side-by-side.html demo="background_action" %}
 
-If you include code in your interview that does something
-time-consuming, such as looking up information in an on-line database
-or web scraping, the user may have to wait a long time for the screen
-to load.  This can be a problem because the user may think that the
-page has "crashed" when it is actually just working normally.
+If you include code in your interview that takes a long time to run,
+such as code that looks up information in an on-line database, the
+screen will take a long time to load and the user may think that the
+application has "crashed" when it is actually just working normally.
 
 To get around this problem, **docassemble** allows interview authors
 to run code in "background processes."  While the user is answering
 other questions, the **docassemble** server can be hard at work
-carrying out a variety of time-consuming tasks.  These tasks can even
-operate in parallel.  For example, if your interview searches the
-user's name in four different on-line databases, all of these
-searches can be carried out simultaneously, which will return a result
-to the user much faster than if the searches were carried out one
-after the other.
+carrying out a variety of time-consuming tasks for the user.
 
-Since **docassemble** uses [Celery] to run these background tasks, the
-system is highly scalable.  If you are running **docassemble** on a
-single server and you start 100 tasks at the same time, [Celery] will
-will queue the tasks and handle them in order, working on a few of
-them at a time.
+These tasks can even operate in parallel.  For example, if your
+interview searches the user's name in four different on-line
+databases, all of these searches can be carried out simultaneously,
+which will return a result to the user much faster than if the
+searches were carried out one after the other.
+
+**docassemble** uses [Celery], a "distributed task queue" system, to
+run these background tasks.  [Celery] is highly scalable.  If you are
+running **docassemble** on a single server and an interview starts 100
+tasks at the same time, [Celery] will will queue the tasks and handle
+them in order, working on several of them at a time.  And if
+background tasks are particularly important for your application, you
+can install multiple servers dedicated to handling these tasks.
 
 ## <a name="background_action"></a>background_action()
 
+Starting a task involves calling the `background_action()` function.
 
+{% highlight yaml %}
+---
+code: |
+  the_task = background_action('bg_task', additional=value_to_add)
+---
+{% endhighlight %}
+
+In this example, the first argument, `bg_task`, is the name of an
+[action](#actions) available in the interview.  The keyword argument,
+`additional`, is an argument that is passed to that action (which can
+be retrieved with [`action_argument()`]).  The parameters to
+`background_action()` should be familiar if you have ever used
+[`url_action()`].
+
+The `background_action()` function returns a [Celery] "task" object.
+If the object is named `the_task`, it can be used in the following
+ways:
+
+* `the_task.ready()` returns `True` if the task has been completed
+  yet, and `False` if not.
+* `the_task.get()` returns the result of the task, if available.
+
+Even if the `bg_task` action takes a long time to finish, the
+`background_action()` function will always return a response right
+away.  The `bg_task` action will run in the background, independently
+of whatever goes on between the user and the web application.
+
+[Celery] will start trying to run the the `bg_task` action as soon as
+possible after `background_action()` is called.  If a lot of other
+tasks are already running, the task will go into a queue and will be
+run as soon as a [Celery] "worker" is available.
+
+The background action runs much like other [actions] do: via the
+[`process_action()`] function.  If you call `background_action()` in
+your interview, make sure that you have include [`initial`] code that
+calls [`process_action()`], as in the example above.  This is
+important because it gives interview authors the ability to determine
+the context in which the [`process_action()`] function is called.  For
+example, you might want to call [`set_info()`] first to declare the
+role of the user.
+
+The code in a background action can use the [`user_logged_in()`],
+[`user_has_privilege()`], and [`user_info()`] functions to determine
+information about the current user (i.e. the user who caused the
+`background_action()` function to be called).  In this respect,
+background actions are different from [scheduled tasks], which always
+run as the special "[cron user]."  In addition, background tasks are
+different from [scheduled tasks] in that you can run background tasks
+regardless of whether [`multi_user`] is set to `True` or `False`.
+
+Any changes made to variables by a background action will not be
+remembered after the action finishes.  You need to use
+[`background_response()`] or [`background_response_action()`]
+(discussed below) in order to make a lasting change to variables in
+the interview.  This limitation exists because background actions are
+intended to run at the same time the user is answering questions in
+the interview.  If the background process starts at 3:05 p.m. and
+finishes at 3:10 p.m., but the user answers five questions between
+3:05 p.m. and 3:10 p.m., the user's changes would be overwritten if
+the background process saved its changes at 3:10 p.m.
 
 ## <a name="background_response"></a>background_response()
 
+The `background_response()` function allows you to return information
+from a background action to the interview.  The information is
+accessed by using the `.get()` method on the "task" that was created.
+
+For example, in the above example, the task is created like this:
+
+{% highlight python %}
+the_task = background_action('bg_task', additional=value_to_add)
+{% endhighlight %}
+
+There is now a variable `the_task` in the interview, which is used to
+keep track of the status of the `bg_task` action, which is running in
+the background.
+
+The `bg_task` action does not change any of the variables in the
+interview, but it passes its result back to the interview using
+`background_response()`.
+
+{% highlight python %}
+background_response(553 + action_argument('additional'))
+{% endhighlight %}
+
+The response value is the sum of 553 and whatever number was provided
+in the `additional` parameter.  This value is not saved to any
+variable, since any changes that background actions make to variables
+are forgotten once the action completes.
+
+The interview retrieves the response value within a [Mako] template by
+calling the `.get()` method on the `the_task` variable:
+
+{% highlight yaml %}
+question: |
+  The answer is ${ the_task.get() }.
+{% endhighlight %}
+
 ## <a name="background_response_action"></a>background_response_action()
+
+It is possible for long-running tasks to save information to the
+interview's dictionary, but they need to do so by calling a separate
+"action."  Information can be passed to the action as arguments.
 
 {% include side-by-side.html demo="background_action_with_response_action" %}
 
+In this example, the action that runs in the background is `bg_task`.
+The action that changes the interview's dictionary is `bg_resp`.
+
+{% highlight yaml %}
+---
+event: bg_task
+code: |
+  value = 553 + action_argument('additional')
+  background_response_action('bg_resp', ans=value)
+---
+event: bg_resp
+code: |
+  answer = action_argument('ans')
+---
+{% endhighlight %}
+
+The `bg_task` action ends by calling
+`background_response_action('bg_resp', ans=value)`.  The first
+argument to `background_response_action()` is the name of the action
+to run, and the remainder of the arguments are keyword arguments.  The
+`bg_resp` action retrieves the argument `ans` and changes the variable
+`answer` in the interview's dictionary to the value of `ans`.
+
+The idea here is that `bg_task` is a long-running task, while
+`bg_resp` is a short-running task devoted only to saving the results
+of the long-running task.
+
+In computer science terminology, the `bg_resp` action is similar to a
+[callback function].
 
 # Geographic functions
 
@@ -1987,6 +2118,7 @@ modules:
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
 [`event`]: {{ site.baseurl }}/docs/fields.html#event
 [`force_ask()`]: #force_ask
+[`force_gather()`]: #force_gather
 [`get_info()`]: #get_info
 [`initial`]: {{ site.baseurl }}/docs/logic.html#initial
 [`interview_url()`]: #interview_url
@@ -2016,7 +2148,6 @@ modules:
 [classes]: https://docs.python.org/2/tutorial/classes.html
 [configuration]: {{ site.baseurl }}/docs/config.html
 [dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
-[fields]: {{ site.baseurl }}/docs/fields.html
 [fields]: {{ site.baseurl }}/docs/fields.html
 [function]: https://docs.python.org/2/tutorial/controlflow.html#defining-functions
 [functions]: #functions
@@ -2073,9 +2204,15 @@ modules:
 [actions]: #actions
 [`format_date()`]: #format_date
 [`format_time()`]: #format_time
+[`user_info()`]: #user_info
+[`user_logged_in()`]: #user_logged_in
+[`user_has_privilege()`]: #user_logged_in
 [`def` block]: {{ site.baseurl }}/docs/initial.html#def
 [`def` blocks]: {{ site.baseurl }}/docs/initial.html#def
 [`response()`]: #response
 [Python Imaging Library]: http://www.pythonware.com/products/pil/
 [URL arguments]: {{ site.baseurl }}/docs/special.html#url_args
 [Celery]: http://www.celeryproject.org/
+[`background_response()`]: #background_response
+[`background_response_action()`]: #background_response_action
+[callback function]: https://en.wikipedia.org/wiki/Callback_(computer_programming)

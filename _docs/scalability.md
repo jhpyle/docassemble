@@ -544,6 +544,40 @@ Here is the task definition for `docassemble-web-celery`:
 }
 {% endhighlight %}
 
+## All in one
+
+{% highlight json %}
+{
+  "family": "docassemble-all",
+  "containerDefinitions": [
+    {
+      "name": "docassemble-all",
+      "image": "jhpyle/docassemble",
+      "memory": 900,
+      "cpu": 1,
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "hostPort": 80
+        },
+        {
+          "containerPort": 443,
+          "hostPort": 443
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "S3BUCKET",
+          "value": "hosted-docassemble-org"
+        }
+      ]
+    }
+  ]
+}
+{% endhighlight %}
+
+
 # Alternative method without using EC2 Container Service
 
 1. Get an [Amazon Web Services] account.

@@ -11,8 +11,10 @@ are installed on a server.  The [Python package] also includes:
 
 * [Python modules], which include any [classes] and other code that you might
 write to go along with your interviews;
-* Static content (images, downloads) that you want to include with
-your interview; and
+* Static content (images, downloadable files) that you want to include
+with your interview;
+* Data files ([translations], [machine learning] training data) on which
+  your interview depends; and
 * Any [document templates] you created.
 
 A package containing **docassemble** code needs to be a subpackage of
@@ -38,6 +40,8 @@ docassemble-baseball
 |   |   |   |-- static
 |   |   |   |   |-- catcher.jpg
 |   |   |   |   `-- pitcher.jpg
+|   |   |   |-- sources
+|   |   |   |   `-- words.yml
 |   |   |   `-- templates
 |   |   |       `-- game-summary.md
 |   |   `-- __init__.py
@@ -123,8 +127,8 @@ directories under `docassemble`.
 use to write [Python] code.  The `__init.py__` file is necessary for
 declaring `missouri_family_law` to be a package.
 5. You also have a `data` directory with subdirectories `questions`,
-`static`, and `templates`.  These are for [interviews], static files,
-and [document templates].
+`static`, `sources`, and `templates`.  These are for [interviews],
+static files, data files, and [document templates].
 
 ## Installing your package
 
@@ -243,3 +247,5 @@ interviews that might have a very different purpose.
 [mandatory]: {{ site.baseurl }}/docs/logic.html#mandatory
 [initial]: {{ site.baseurl }}/docs/logic.html#initial
 [initial blocks]: {{ site.baseurl }}/docs/logic.html#mandatory
+[machine learning]: {{ site.baseurl }}/docs/ml.html
+[translations]: {{ site.baseurl }}/docs/config.html#words

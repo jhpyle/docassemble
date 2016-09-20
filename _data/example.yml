@@ -135,6 +135,10 @@
   ---
 "background_action": |-
   ---
+  initial: true
+  code: |
+    process_action()
+  ---
   question: |
     How much shall I add to 553?
   fields:
@@ -156,6 +160,10 @@
       waiting_screen
   ---
 "background_action_with_response_action": |-
+  ---
+  initial: true
+  code: |
+    process_action()
   ---
   question: |
     How much shall I add to 553?
@@ -1296,6 +1304,77 @@
       minlength: 5
       maxlength: 15
   ---
+"ml-classify": |-
+  ---
+  code: |
+    ml = SimpleTextMachineLearner('demo')
+  ---
+  initial: true
+  code: |
+    if defined('classification'):
+      entry_to_classify.classify(classification)
+      del classification
+    entry_to_classify = ml.one_unclassified_entry()
+    if entry_to_classify is not None:
+      need(classification)
+  ---
+  question: |
+    How should this be classified?
+  subquestion: |
+    > ${ entry_to_classify.independent }
+  fields:
+    - no label: classification
+  ---
+  mandatory: true
+  question: |
+    There is nothing left to classify.
+  buttons:
+    - Check again: refresh
+  ---
+"ml-export": |-
+  ---
+  initial: true
+  code: |
+    ml = SimpleTextMachineLearner('demo')
+    the_data = ml.export_training_set(output_format='json')
+    response(response=the_data, content_type='application/json')
+  ---
+"ml-export-playground": |-
+  ---
+  modules:
+    - docassemble.webapp.playground
+    - docassemble.base.util
+  ---
+  initial: true
+  code: |
+    ml = SimpleTextMachineLearner('demo')
+    the_data = ml.export_training_set(output_format='json')
+    sources = PlaygroundSection('sources')
+    sources.write_file('my_training_data.json', the_data)
+  ---
+"ml-export-yaml": |-
+  ---
+  initial: true
+  code: |
+    ml = SimpleTextMachineLearner('demo')
+    the_data = ml.export_training_set(output_format='yaml')
+    response(response=the_data, content_type='text/plain')
+  ---
+"ml-predict": "---\nquestion: |\n  Enter some text.\nfields:\n  - no label: phrase\n\
+  ---\nmandatory: true\ncode: |\n  ml = SimpleTextMachineLearner('demo')\n  predictions\
+  \ = ml.predict(phrase)\n---\nmandatory: true\nquestion: |\n  The prediction\nsubquestion:\
+  \ |\n  The text provided was:\n  > ${ phrase }\n  \n  % if len(predictions):\n \
+  \ The prediction was:\n\n  > ${ predictions[0] }\n  % else:\n  There is not enough\
+  \ training data\n  to make a prediction yet.\n  % endif\nbuttons:\n  - Restart:\
+  \ restart\n---"
+"ml-save-and-predict": |-
+  ---
+  mandatory: true
+  code: |
+    ml = SimpleTextMachineLearner('demo')
+    ml.save_for_classification(phrase)
+    predictions = ml.predict(phrase)
+  ---
 "modules": |-
   ---
   modules:
@@ -1736,6 +1815,10 @@
     cat_food_cans_needed = number_of_cats * 4
   reconsider: true
   ---
+"redis": "---\nobjects:\n  r: DARedis\n---\nmandatory: true\ncode: |\n  key = r.key('my_variable')\n\
+  \  r.set(key, 'hello world')\n---\nmandatory: true\nquestion: |\n  Value has been\
+  \ retrieved from\n  the redis server.\nsubquestion: |\n  The key is `${ key }`.\n\
+  \  \n  The value is \"${ r.get(key) }\".\n---"
 "refresh": |-
   ---
   question: |
