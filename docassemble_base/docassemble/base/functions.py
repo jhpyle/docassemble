@@ -322,10 +322,10 @@ def url_of(*pargs, **kwargs):
     return the_url_func(*pargs, **kwargs)
 
 def set_url_finder(func):
-    global url_of
-    url_of = func
-    if url_of.__doc__ is None:
-        url_of.__doc__ = """Returns a URL to a file within a docassemble package."""
+    global the_url_func
+    the_url_func = func
+    if the_url_func.__doc__ is None:
+        the_url_func.__doc__ = """Returns a URL to a file within a docassemble package."""
     return
 
 def null_worker(*pargs, **kwargs):

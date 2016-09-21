@@ -957,6 +957,8 @@ class Question:
                 field_data = {'choices': choices, 'shuffle': shuffle}
                 if has_code:
                     field_data['has_code'] = True
+                if 'default' in data:
+                    field_data['default'] = TextObject(definitions + data['default'], names_used=self.mako_names)
                 self.question_variety = 'radio'
             elif 'buttons' in data:
                 has_code, choices = self.parse_fields(data['buttons'], register_target, uses_field)

@@ -43,6 +43,7 @@
     - buttons-icons
     - buttons-code
     - choices
+    - choices-with-default
     - choices-icons
     - fields-choices
     - fields-mc

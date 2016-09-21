@@ -186,10 +186,27 @@ class DAQuestion(DAObject):
                         content += "  - no label: " + varname(field.variable) + "\n"
                     if field.field_type == 'yesno':
                         content += "    datatype: yesno\n"
-                    if field.field_type == 'yesnomaybe':
+                    elif field.field_type == 'yesnomaybe':
                         content += "    datatype: yesnomaybe\n"
-                    if field.field_type == 'area':
+                    elif field.field_type == 'area':
                         content += "    datatype: area\n"
+                    elif field.field_type == 'file':
+                        content += "    datatype: file\n"
+                    elif field.field_data_type == 'integer':
+                        content += "    datatype: integer\n"
+                    elif field.field_data_type == 'number':
+                        content += "    datatype: number\n"
+                    elif field.field_data_type == 'currency':
+                        content += "    datatype: currency\n"
+                    elif field.field_data_type == 'date':
+                        content += "    datatype: date\n"
+                    elif field.field_data_type == 'email':
+                        content += "    datatype: email\n"
+                    elif field.field_data_type == 'range':
+                        content += "    datatype: range\n"
+                        content += "    min: " + field.range_min + "\n"
+                        content += "    max: " + field.range_max + "\n"
+                        content += "    step: " + field.range_step + "\n"
             if self.interview.has_decorations() and self.decoration and self.decoration != 'None':
                 content += "decoration: " + str(self.decoration) + "\n"
         elif self.type == 'signature':
@@ -204,6 +221,11 @@ class DAQuestion(DAObject):
             if hasattr(self, 'is_mandatory') and self.is_mandatory:
                 content += "mandatory: true\n"
             content += "code: |\n" + indent_by(self.code, 2)
+        elif self.type == 'text_template':
+            content += "template: " + varname(self.field_list[0].variable) + "\n"
+            if hasattr(self, 'template_subject') and self.template_subject:
+                content += "  subject: " + oneline(self.template_subject) + "\n"
+            content += "content: |\n" + indent_by(self.template_body, 2)
         elif self.type == 'template':
             content += "template: " + varname(self.field_list[0].variable) + "\n"
             content += "content file: " + oneline(self.template_file) + "\n"

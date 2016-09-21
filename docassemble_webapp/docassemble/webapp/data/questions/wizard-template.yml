@@ -63,7 +63,7 @@ code: |
     else:
       markdown_filename = templates.convert_file_to_md(template_filename)
     attachment = attachments.appendObject()
-    base_file = base_name(markdown_filename)
+    base_file = varname(base_name(markdown_filename))
     attachment.content = '${ ' + base_file + ' }'
     attachment.markdown_filename = markdown_filename
     new_template = interview.questions.initializeObject(base_file)
@@ -241,9 +241,7 @@ help: |
   % endif
 fields:
   - Message: x.question_text
-    datatype: area
   - Text above signature: x.subquestion_text
-    datatype: area
     required: false
   - Text under signature: x.under_text
     required: false
@@ -284,7 +282,6 @@ help: |
   % endif
 fields:
   - Title: x.question_text
-    datatype: area
   - Body: x.subquestion_text
     datatype: area
     required: false
@@ -317,6 +314,7 @@ choices:
   - A question: question
   - A logic statement: code
   - Gathering a signature: signature
+  - Inserting a template: text_template
 ---
 generic object: DAQuestion
 question: |
@@ -328,6 +326,16 @@ fields:
   - no label: x.code
     datatype: area
     default: "${ x.field_list[0].variable } = "
+---
+generic object: DAQuestion
+question: |
+  Please provide the subject and body of the template that defines
+  `${ x.field_list[0].variable }`.
+fields:
+  - Subject: x.template_subject
+    required: false
+  - Body: x.template_body
+    datatype: area
 ---
 generic object: DAField
 question: |
@@ -341,8 +349,36 @@ field: x.field_type
 choices:
   - "Yes or no": yesno
   - "Yes, no, or I don't know": yesnomayne
-  - "One line of text": text
-  - "Large area of text": area
+  - "One line of input": text
+  - "Large text area": area
+  - "Image upload": file
+---
+generic object: DAField
+question: |
+  What type of value is `${ x.variable }`?
+field: x.field_data_type
+default: text
+choices:
+  - "Text": text
+  - "Integer": integer
+  - "Number": number
+  - "Slider": range
+  - "Currency": currency
+  - "Date": date
+  - "E-mail address": email
+---
+generic object: DAField
+question: |
+  You said `${ x.variable }` should be set with a slider.  What
+  parameters should be used for the numeric range?
+fields:
+  - Minimum: x.range_min
+    datatype: numeric
+  - Maximum: x.range_max
+    datatype: numeric
+  - Step: x.range_step
+    datatype: numeric
+    default: 1.0
 ---
 generic object: DAField
 question: |
@@ -409,13 +445,13 @@ subquestion: |
 
   The wizard will build a **docassemble** interview that gathers
   definitions of necessary variables `phone_number` and `city` in
-  order to create the assembled document.
+  order to create the assembled document.  Here is a [sample Word
+  file].
 
   The Word file(s) you upload will be converted to [Markdown].  As a
-  result, some of the formatting in the documents will likely be lost.
-  This is the way **docassemble** works.  See the [Documents] section
-  of the documentation for more information about formatting documents
-  in **docassemble**.
+  result, some of the formatting in the documents may be lost.
+  See the [Documents] section of the documentation for more
+  information about how documents are formatted in **docassemble**.
 
   You can also upload templates in [Markdown] format, or use
   already-uploaded files instead of uploading new files.
@@ -428,6 +464,7 @@ subquestion: |
   **docassemble** that are not available with this wizard.
   
   [Playground]: ${ url_of('playground') }
+  [sample Word file]: ${ url_of('docassemble.webapp:data/static/test-document.docx') }
   [Markdown]: https://daringfireball.net/projects/markdown/syntax
   [Documents]: http://docassemble.org/docs/documents.html
 field: splash_screen
