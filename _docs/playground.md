@@ -270,7 +270,7 @@ example block to run as part of a working interview.  This working
 interview is what you will run when you click the "Preview"
 screenshot.
 
-# How to use the Playground
+# The buttons
 
 ![buttons]({{ site.baseurl }}/img/playground-buttons.png){: .full-width }
 
@@ -303,6 +303,28 @@ code: |
 Note that the "Playground" is a development platform.  If you are
 going to put an interview into production, put it into a package by
 going to the [packages area].
+
+# <a name="wizard"></a>The Wizard
+
+If you are new to **docassemble**, a good way to learn is by using the
+"Wizard" to construct a document assembly interview.  To launch the
+wizard, click the "Wizard" button.
+
+![buttons]({{ site.baseurl }}/img/playground-wizard.png)
+
+The Wizard allows you to upload one or more documents in Microsoft
+Word format in which you have indicated with square brackets the areas
+where the interview needs to "fill in the blanks."
+
+For example, your Word file could include:
+
+  > Your phone number is \[phone number\] and you live in \[city\].
+
+Along the way, the Wizard will show you what blocks it is adding the
+interview it is generating.
+
+When you are done specifying the elements of your interview, the
+Wizard allows you to download the assembled interview as a [package].
 
 # Recovering from infinite loops
 

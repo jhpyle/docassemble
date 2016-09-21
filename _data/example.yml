@@ -331,6 +331,18 @@
     - "Where?": where
       image: map
   ---
+"choices-with-default": |-
+  ---
+  question: |
+    What type of shoes do you wear?
+  field: target_variable
+  default: Sandals
+  choices:
+    - Sneakers
+    - Sandals
+    - Clogs
+    - Other
+  ---
 "code": |-
   ---
   code: |

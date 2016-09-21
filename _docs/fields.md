@@ -136,6 +136,10 @@ To provide a multiple choice question with "radio buttons" and a
 
 {% include side-by-side.html demo="choices" %}
 
+You can specify a default value using `default`:
+
+{% include side-by-side.html demo="choices-with-default" %}
+
 ## <a name="image button"></a>Adding images to buttons and list items
 
 To add a decorative icon to a choice, use a key/value pair and add
