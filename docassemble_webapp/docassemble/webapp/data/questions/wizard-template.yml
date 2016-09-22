@@ -334,8 +334,22 @@ question: |
 fields:
   - Subject: x.template_subject
     required: false
+  - Type: x.template_type
+    default: text
+    choices:
+      - From text: text
+      - From a file: file
   - Body: x.template_body
     datatype: area
+    show if:
+      variable: x.template_type
+      is: text
+  - File: x.template_file
+    code: |
+      PlaygroundSection('template').reduced_file_list()
+    show if:
+      variable: x.template_type
+      is: file
 ---
 generic object: DAField
 question: |
@@ -429,6 +443,7 @@ question: |
   The following block was added to your interview.
 subquestion: |
   ${ indent_by(x.source(), 4) }
+  [SKIPLINE]
 field: x.demonstrated
 ---
 question: |

@@ -224,8 +224,11 @@ class DAQuestion(DAObject):
         elif self.type == 'text_template':
             content += "template: " + varname(self.field_list[0].variable) + "\n"
             if hasattr(self, 'template_subject') and self.template_subject:
-                content += "  subject: " + oneline(self.template_subject) + "\n"
-            content += "content: |\n" + indent_by(self.template_body, 2)
+                content += "subject: " + oneline(self.template_subject) + "\n"
+            if self.template_type == 'file':
+                content += "content file: " + oneline(self.template_file) + "\n"
+            else:
+                content += "content: |\n" + indent_by(self.template_body, 2)
         elif self.type == 'template':
             content += "template: " + varname(self.field_list[0].variable) + "\n"
             content += "content file: " + oneline(self.template_file) + "\n"
