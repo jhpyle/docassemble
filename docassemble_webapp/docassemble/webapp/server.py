@@ -4605,7 +4605,7 @@ def webrtc_token():
     if twilio_config is None:
         logmessage("Could not get twilio configuration")
         return
-    account_sid = twilio_config.get('account sig', None)
+    account_sid = twilio_config.get('account sid', None)
     auth_token = twilio_config.get('auth token', None)
     application_sid = twilio_config.get('app sid', None)
 
