@@ -4628,14 +4628,15 @@ def voice():
         return
     twilio_caller_id = twilio_config.get('caller id', None)
     resp = twilio.twiml.Response()
-    if "To" in request.form and request.form["To"] != '':
-        dial = resp.dial(callerId=twilio_caller_id)
-        if phone_pattern.match(request.form["To"]):
-            dial.number(request.form["To"])
-        else:
-            dial.client(request.form["To"])
-    else:
-        resp.say("Thanks for calling!")
+    # if "To" in request.form and request.form["To"] != '':
+    #     dial = resp.dial(callerId=twilio_caller_id)
+    #     if phone_pattern.match(request.form["To"]):
+    #         dial.number(request.form["To"])
+    #     else:
+    #         dial.client(request.form["To"])
+    # else:
+    #     resp.say("Thanks for calling!")
+    resp.say("Hello, world!")
 
     return flask.Response(str(resp), mimetype='text/xml')
 
