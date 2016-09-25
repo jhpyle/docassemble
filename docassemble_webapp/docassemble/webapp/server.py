@@ -4611,7 +4611,7 @@ def webrtc_token():
 
     logmessage("account sid is " + str(account_sid) + "; auth_token is " + str(auth_token) + "; application_sid is " + str(application_sid))
 
-    identity = 'testuser'
+    identity = 'testuser2'
 
     capability = TwilioCapability(account_sid, auth_token)
     capability.allow_client_outgoing(application_sid)
