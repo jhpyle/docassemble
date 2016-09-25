@@ -4601,7 +4601,6 @@ phone_pattern = re.compile(r"^[\d\+\-\(\) ]+$")
 
 @app.route('/webrtc_token', methods=['GET'])
 def webrtc_token():
-    # get credentials for environment variables
     twilio_config = daconfig.get('twilio', None)
     if twilio_config is None:
         logmessage("Could not get twilio configuration")
@@ -4609,17 +4608,16 @@ def webrtc_token():
     account_sid = twilio_config.get('account sig', None)
     auth_token = twilio_config.get('auth token', None)
     application_sid = twilio_config.get('app sid', None)
-    
-    # Generate a random user name
+
+    logmessage("account sid is " + str(account_sid) + "; auth_token is " + str(auth_token) + "; application_sid is " + str(application_sid))
+
     identity = 'testuser'
 
-    # Create a Capability Token
     capability = TwilioCapability(account_sid, auth_token)
     capability.allow_client_outgoing(application_sid)
     capability.allow_client_incoming(identity)
     token = capability.generate()
 
-    # Return token info as JSON
     return jsonify(identity=identity, token=token)
 
 @app.route("/voice", methods=['POST'])
@@ -4632,8 +4630,6 @@ def voice():
     resp = twilio.twiml.Response()
     if "To" in request.form and request.form["To"] != '':
         dial = resp.dial(callerId=twilio_caller_id)
-        # wrap the phone number or client name in the appropriate TwiML verb
-        # by checking if the number given has only digits and format symbols
         if phone_pattern.match(request.form["To"]):
             dial.number(request.form["To"])
         else:
