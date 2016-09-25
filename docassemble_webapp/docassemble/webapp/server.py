@@ -4628,6 +4628,9 @@ def voice():
         return
     #twilio_caller_id = twilio_config.get('caller id', None)
     resp = twilio.twiml.Response()
+    with resp.gather(action="/digits", finishOnKey='#', method="POST", timeout=10, numDigits=5) as g:
+        g.say("Please enter your four digit access code, followed by the pound sign.")
+
     # if "To" in request.form and request.form["To"] != '':
     #     dial = resp.dial(callerId=twilio_caller_id)
     #     if phone_pattern.match(request.form["To"]):
@@ -4636,7 +4639,29 @@ def voice():
     #         dial.client(request.form["To"])
     # else:
     #     resp.say("Thanks for calling!")
-    resp.say("Hello, world!")
+    # resp.say("Hello, world!")
+
+    return Response(str(resp), mimetype='text/xml')
+
+@app.route("/digits", methods=['POST', 'GET'])
+def digits():
+    twilio_config = daconfig.get('twilio', None)
+    if twilio_config is None:
+        logmessage("Could not get twilio configuration")
+        return
+    #twilio_caller_id = twilio_config.get('caller id', None)
+    resp = twilio.twiml.Response()
+    logmessage("Got digits " + str(request.form["Digits"]))
+    dial = resp.dial(number="+12159813843")
+    # if "To" in request.form and request.form["To"] != '':
+    #     dial = resp.dial(callerId=twilio_caller_id)
+    #     if phone_pattern.match(request.form["To"]):
+    #         dial.number(request.form["To"])
+    #     else:
+    #         dial.client(request.form["To"])
+    # else:
+    #     resp.say("Thanks for calling!")
+    # resp.say("Hello, world!")
 
     return Response(str(resp), mimetype='text/xml')
 
