@@ -4620,13 +4620,13 @@ def webrtc_token():
 
     return jsonify(identity=identity, token=token)
 
-@app.route("/voice", methods=['POST'])
+@app.route("/voice", methods=['POST', 'GET'])
 def voice():
     twilio_config = daconfig.get('twilio', None)
     if twilio_config is None:
         logmessage("Could not get twilio configuration")
         return
-    twilio_caller_id = twilio_config.get('caller id', None)
+    #twilio_caller_id = twilio_config.get('caller id', None)
     resp = twilio.twiml.Response()
     # if "To" in request.form and request.form["To"] != '':
     #     dial = resp.dial(callerId=twilio_caller_id)
