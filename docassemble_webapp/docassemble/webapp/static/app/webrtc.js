@@ -2,10 +2,6 @@
   log('Requesting Capability Token...');
   $.getJSON('/webrtc_token')
     .done(function (data) {
-      log('Got a token.');
-      console.log('Token: ' + data.token);
-
-      // Setup Twilio.Device
       Twilio.Device.setup(data.token);
 
       Twilio.Device.ready(function (device) {
