@@ -49,7 +49,7 @@ import json
 import base64
 import requests
 import redis
-from flask import make_response, abort, render_template, request, session, send_file, redirect, url_for, current_app, get_flashed_messages, flash, Markup, jsonify
+from flask import make_response, abort, render_template, request, session, send_file, redirect, url_for, current_app, get_flashed_messages, flash, Markup, jsonify, Response
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
 from flask_user import login_required, roles_required, UserManager, SQLAlchemyAdapter
 from flask_user.forms import LoginForm
@@ -4638,7 +4638,7 @@ def voice():
     #     resp.say("Thanks for calling!")
     resp.say("Hello, world!")
 
-    return flask.Response(str(resp), mimetype='text/xml')
+    return Response(str(resp), mimetype='text/xml')
 
 redis_host = daconfig.get('redis', None)
 if redis_host is None:
