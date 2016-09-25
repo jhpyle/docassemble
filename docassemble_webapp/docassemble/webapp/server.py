@@ -4598,8 +4598,8 @@ def webrtc():
 alphanumeric_only = re.compile('[\W_]+')
 phone_pattern = re.compile(r"^[\d\+\-\(\) ]+$")
 
-@app.route('/token', methods=['GET'])
-def token():
+@app.route('/webrtc_token', methods=['GET'])
+def webrtc_token():
     # get credentials for environment variables
     twilio_config = daconfig.get('twilio', None)
     if twilio_config is None:
