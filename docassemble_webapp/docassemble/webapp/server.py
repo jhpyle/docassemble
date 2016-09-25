@@ -974,6 +974,7 @@ def exit():
     if 'key_logged' in session:
         del session['key_logged']
     if session_id is not None and yaml_filename is not None:
+        manual_checkout()
         obtain_lock(session_id, yaml_filename)
         reset_user_dict(session_id, yaml_filename)
         release_lock(session_id, yaml_filename)
@@ -1003,6 +1004,15 @@ def fresh_dictionary():
     add_timestamps(the_dict)
     return the_dict    
 
+def manual_checkout():
+    session_id = session.get('uid', None)
+    yaml_filename = session.get('i', None)
+    if session_id is None or yaml_filename is None:
+        return jsonify(success=False)
+    key = 'da:session:' + str(session_id) + ':' + str(yaml_filename)
+    r.delete(key)
+    return
+
 @app.route("/checkin", methods=['POST', 'GET'])
 def checkin():
     session_id = session.get('uid', None)
@@ -1019,10 +1029,22 @@ def checkin():
         pipe.execute()
         return jsonify(success=True)
     return jsonify(success=False)
+
+def do_redirect(url, is_ajax):
+    if is_ajax:
+        return jsonify(action='redirect', url=url)
+    else:
+        return redirect(url)
+
 @app.route("/", methods=['POST', 'GET'])
 def index():
     #seq = Sequence(message_sequence)
     #nextid = connection.execute(seq)
+    if 'ajax' in request.form:
+        #sys.stderr.write("This is ajax!\n")
+        is_ajax = True
+    else:
+        is_ajax = False
     session_id = session.get('uid', None)
     secret = request.cookies.get('secret', None)
     encrypted = session.get('encrypted', True)
@@ -1165,7 +1187,7 @@ def index():
     if len(request.args):
         if 'action' in request.args:
             session['action'] = request.args['action']
-            response = redirect(url_for('index'))
+            response = do_redirect(url_for('index'), is_ajax)
             if set_cookie:
                 response.set_cookie('secret', secret)
             release_lock(user_code, yaml_filename)
@@ -1181,7 +1203,7 @@ def index():
         # if current_user.is_authenticated:
         #     save_user_dict_key(user_code, yaml_filename)
         #     session['key_logged'] = True
-        response = redirect(url_for('index'))
+        response = do_redirect(url_for('index'), is_ajax)
         if set_cookie:
             response.set_cookie('secret', secret)
         release_lock(user_code, yaml_filename)
@@ -1482,7 +1504,7 @@ def index():
         known_varnames = json.loads(myb64unquote(post_data['_varnames']))
     known_variables = dict()
     for orig_key in copy.deepcopy(post_data):
-        if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames']:
+        if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax']:
             continue
         try:
             key = myb64unquote(orig_key)
@@ -1491,7 +1513,7 @@ def index():
         if key.startswith('_field_') and orig_key in known_varnames:
             post_data[known_varnames[orig_key]] = post_data[orig_key]
     for orig_key in post_data:
-        if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames']:
+        if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax']:
             continue
         #logmessage("Got a key: " + key)
         data = post_data[orig_key]
@@ -1634,6 +1656,7 @@ def index():
         #logmessage("Updating attachment info")
         update_attachment_info(user_code, user_dict, interview_status, secret)
     if interview_status.question.question_type == "restart":
+        manual_checkout()
         url_args = user_dict['url_args']
         user_dict = fresh_dictionary()
         user_dict['url_args'] = url_args
@@ -1648,19 +1671,20 @@ def index():
         interview.assemble(user_dict, interview_status)
     if interview_status.question.question_type == "refresh":
         release_lock(user_code, yaml_filename)
-        return redirect(url_for('index'))
+        return do_redirect(url_for('index'), is_ajax)
     if interview_status.question.question_type == "signin":
         release_lock(user_code, yaml_filename)
-        return redirect(url_for('user.login'))
+        return do_redirect(url_for('user.login'), is_ajax)
     if interview_status.question.question_type == "leave":
         release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
-            return redirect(interview_status.questionText)
+            return do_redirect(interview_status.questionText, is_ajax)
         else:
-            return redirect(exit_page)
+            return do_redirect(exit_page, is_ajax)
     if interview_status.question.interview.use_progress_bar and interview_status.question.progress is not None and interview_status.question.progress > user_dict['_internal']['progress']:
         user_dict['_internal']['progress'] = interview_status.question.progress
     if interview_status.question.question_type == "exit":
+        manual_checkout()
         user_dict = fresh_dictionary()
         reset_user_dict(user_code, yaml_filename)
         save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
@@ -1669,34 +1693,42 @@ def index():
             session['key_logged'] = True
         release_lock(user_code, yaml_filename)
         if interview_status.questionText != '':
-            return redirect(interview_status.questionText)
+            return do_redirect(interview_status.questionText, is_ajax)
         else:
-            return redirect(exit_page)
+            return do_redirect(exit_page, is_ajax)
     if interview_status.question.question_type == "response":
         # Duplicative to save here?
         #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
-        if hasattr(interview_status.question, 'binaryresponse'):
-            response_to_send = make_response(interview_status.question.binaryresponse, '200 OK')
+        if is_ajax:
+            release_lock(user_code, yaml_filename)
+            return jsonify(action='resubmit')
         else:
-            response_to_send = make_response(interview_status.questionText.encode('utf8'), '200 OK')
-        response_to_send.headers['Content-type'] = interview_status.extras['content_type']
+            if hasattr(interview_status.question, 'binaryresponse'):
+                response_to_send = make_response(interview_status.question.binaryresponse, '200 OK')
+            else:
+                response_to_send = make_response(interview_status.questionText.encode('utf8'), '200 OK')
+            response_to_send.headers['Content-type'] = interview_status.extras['content_type']
         if set_cookie:
             response_to_send.set_cookie('secret', secret)
     elif interview_status.question.question_type == "sendfile":
-        # Duplicative to save here?  Just for the 404?
-        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
-        the_path = interview_status.question.response_filename
-        if not os.path.isfile(the_path):
-            logmessage("Could not send file because file (" + the_path + ") not found")
-            abort(404)
-        response_to_send = send_file(the_path, mimetype=interview_status.extras['content_type'])
-        response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        if is_ajax:
+            release_lock(user_code, yaml_filename)
+            return jsonify(action='resubmit')
+        else:
+            # Duplicative to save here?  Just for the 404?
+            #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
+            the_path = interview_status.question.response_filename
+            if not os.path.isfile(the_path):
+                logmessage("Could not send file because file (" + the_path + ") not found")
+                abort(404)
+            response_to_send = send_file(the_path, mimetype=interview_status.extras['content_type'])
+            response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         if set_cookie:
             response_to_send.set_cookie('secret', secret)
     elif interview_status.question.question_type == "redirect":
         # Duplicative to save here?
         #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
-        response_to_send = redirect(interview_status.questionText)
+        response_to_send = do_redirect(interview_status.questionText, is_ajax)
     else:
         response_to_send = None
     # Why do this?  To prevent loops of redirects?
@@ -1735,14 +1767,65 @@ def index():
         # $(function () {
         #   $('.tabs a:last').tab('show')
         # })
-    scripts = '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/bootstrap-slider.min.js') + '"></script>\n'
+    scripts = '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/signature.js') + '"></script>\n'
     #\n    <script src="' + url_for('static', filename='jquery-mobile/jquery.mobile.custom.min.js') + '"></script>
     scripts += '    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>' + """
     <script>
-      $( document ).ready(function() {
+      var daReloader = null;
+      var dadisable = null;
+      var daSubmitter = null;
+      function daProcessAjax(data, form){
+        if (dadisable != null){
+          clearTimeout(dadisable);
+        }
+        if (data.action == 'body'){
+          $("body").html(data.body);
+          $("body").removeClass();
+          $("body").addClass(data.bodyclass);
+          daInitialize();
+          var tempDiv = document.createElement('div');
+          tempDiv.innerHTML = data.extra_scripts;
+          var scripts = tempDiv.getElementsByTagName('script');
+          for (var i = 0; i < scripts.length; i++){
+            eval(scripts[i].innerHTML);
+          }
+          for (var i = 0; i < data.extra_css.length; i++){
+            $("head").append(data.extra_css[i]);
+          }
+          document.title = data.browser_title;
+          if ($("html").attr("lang") != data.lang){
+            $("html").attr("lang", data.lang);
+          }
+          if (daReloader != null){
+            clearTimeout(daReloader);
+          }
+          if (data.reload_after != null){
+            daReloader = setTimeout(function(){location.reload();}, data.reload_after);
+          }
+        }
+        else if (data.action == 'redirect'){
+          window.location = data.url;
+        }
+        else if (data.action == 'resubmit'){
+          if (daSubmitter != null){
+            var input = $("<input>")
+              .attr("type", "hidden")
+              .attr("name", daSubmitter.name).val(daSubmitter.value);
+            $(form).append($(input));
+          }
+          form.submit();
+        }
+      }
+      function daInitialize(){
         $(function () {
           $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
-        })
+        });
+        $('#daform button[type="submit"]').click(function(){
+          daSubmitter = this;
+        });
+        $('#daform input[type="submit"]').click(function(){
+          daSubmitter = this;
+        });
         $("#daform input, #daform textarea, #daform select").first().each(function(){
           $(this).focus();
           var inputType = $(this).attr('type');
@@ -1823,6 +1906,9 @@ def index():
           $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDiv);
           $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDiv);
         });
+      }
+      $( document ).ready(function(){
+        daInitialize();
         function daCheckinCallback(data){
         }
         function daCheckin(){
@@ -1843,13 +1929,34 @@ def index():
         interview_language = interview_status.question.language
     else:
         interview_language = DEFAULT_LANGUAGE
-    if interview_status.question.question_type == "signature":
-        output = '<!doctype html>\n<html lang="' + interview_language + '">\n  <head><meta charset="utf-8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" /><title>' + interview_status.question.interview.get_title().get('full', default_title) + '</title><script src="' + url_for('static', filename='app/jquery.min.js') + '"></script><script src="' + url_for('static', filename='app/signature.js') + '"></script><link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet"><title>' + word('Sign Your Name') + '</title></head>\n  <body onresize="resizeCanvas()">'
-        output += signature_html(interview_status, DEBUG, ROOT)
-        output += """\n  </body>\n</html>"""
+    extra_scripts = list()
+    extra_css = list()
+    validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'help-inline'}
+    if interview_status.question.language != '*':
+        interview_language = interview_status.question.language
     else:
-        extra_scripts = list()
-        extra_css = list()
+        interview_language = DEFAULT_LANGUAGE
+    if 'reload_after' in interview_status.extras:
+        reload_after = '\n    <meta http-equiv="refresh" content="' + str(interview_status.extras['reload_after']) + '">'
+    else:
+        reload_after = ''
+    browser_title = interview_status.question.interview.get_title().get('full', default_title)
+    standard_header_start = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">' + reload_after + '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/css/bootstrap-slider.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet">'
+    if DEBUG:
+        standard_header_start += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
+    if interview_status.question.question_type == "signature":
+        extra_scripts.append('<script>$( document ).ready(function() {daInitializeSignature();});</script>')
+        bodyclass="dasignature"
+        if is_ajax:
+            output = ""
+        else:
+            #output = '<!doctype html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" />\n    <title>' + interview_status.question.interview.get_title().get('full', default_title) + '</title>\n    <link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet">\n  </head>\n  <body class="dasignature">\n'
+            output = standard_header_start + '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dasignature">\n'
+        output += signature_html(interview_status, DEBUG, ROOT, extra_scripts, validation_rules)
+        if not is_ajax:
+            output += scripts + "\n    " + "\n    ".join(extra_scripts) + """\n  </body>\n</html>"""
+    else:
+        bodyclass="dabody"
         if 'speak_text' in interview_status.extras and interview_status.extras['speak_text']:
             interview_status.initialize_screen_reader()
             util_language = docassemble.base.functions.get_language()
@@ -1874,7 +1981,7 @@ def index():
                     interview_status.screen_reader_links[question_type].append([url_for('speak_file', question=interview_status.question.number, type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
         # else:
         #     logmessage("speak_text was not here")
-        content = as_html(interview_status, extra_scripts, extra_css, url_for, DEBUG, ROOT)
+        content = as_html(interview_status, extra_scripts, extra_css, url_for, DEBUG, ROOT, validation_rules)
         if interview_status.using_screen_reader:
             for question_type in ['question', 'help']:
                 #phrase = codecs.encode(to_text(interview_status.screen_reader_text[question_type]).encode('utf-8'), 'base64').decode().replace('\n', '')
@@ -1899,22 +2006,13 @@ def index():
                     new_entry = SpeakList(filename=yaml_filename, key=user_code, phrase=the_phrase, question=interview_status.question.number, type=question_type, language=the_language, dialect=the_dialect, encrypted=encrypted)
                     db.session.add(new_entry)
                     db.session.commit()
-        if interview_status.question.language != '*':
-            interview_language = interview_status.question.language
-        else:
-            interview_language = DEFAULT_LANGUAGE
         # output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" rel="stylesheet">\n    <link href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
-        if 'reload_after' in interview_status.extras:
-            reload_after = '\n    <meta http-equiv="refresh" content="' + str(interview_status.extras['reload_after']) + '">'
+        if is_ajax:
+            output = ""
         else:
-            reload_after = ''
-        output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">' + reload_after + '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/css/bootstrap-slider.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
-        #    <link href="' + url_for('static', filename='jquery-mobile/jquery.mobile.custom.theme.min.css') + '" rel="stylesheet">\n
-        #\n    <link href="' + url_for('static', filename='jquery-mobile/jquery.mobile.custom.structure.css') + '" rel="stylesheet">
-        if DEBUG:
-            output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
-        output += "".join(extra_css)
-        output += '\n    <title>' + interview_status.question.interview.get_title().get('full', default_title) + '</title>\n  </head>\n  <body>\n'
+            output = standard_header_start
+            output += "".join(extra_css)
+            output += '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dabody">\n'
         output += make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">\n        <div class="tab-content">\n'
         if interview_status.question.interview.use_progress_bar:
             output += progress_bar(user_dict['_internal']['progress'])
@@ -1971,10 +2069,18 @@ def index():
             output += '        </div>' + "\n"
             output += '      </div>' + "\n"
         output += '    </div>'
-        output += scripts + "\n    " + "".join(extra_scripts) + """\n  </body>\n</html>"""
+        if not is_ajax:
+            output += scripts + "\n    " + "".join(extra_scripts) + """\n  </body>\n</html>"""
     #logmessage(output.encode('utf8'))
-    response = make_response(output.encode('utf8'), '200 OK')
-    response.headers['Content-type'] = 'text/html; charset=utf-8'
+    if is_ajax:
+        if 'reload_after' in interview_status.extras:
+            reload_after = 1000 * int(interview_status.extras['reload_after'])
+        else:
+            reload_after = None
+        response = jsonify(action='body', body=output, extra_scripts=extra_scripts, extra_css=extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after)
+    else:
+        response = make_response(output.encode('utf8'), '200 OK')
+        response.headers['Content-type'] = 'text/html; charset=utf-8'
     if set_cookie:
         response.set_cookie('secret', secret)
     release_lock(user_code, yaml_filename)
@@ -4434,6 +4540,7 @@ def interview_list():
         yaml_file = request.args.get('filename', None)
         session_id = request.args.get('session', None)
         if yaml_file is not None and session_id is not None:
+            manual_checkout()
             obtain_lock(session_id, yaml_file)
             reset_user_dict(session_id, yaml_file)
             release_lock(session_id, yaml_file)
@@ -4484,6 +4591,57 @@ def close_db(error):
     if hasattr(db, 'engine'):
         db.engine.dispose()
 
+@app.route('/webrtc')
+def webrtc():
+    return render_template('pages/webrtc.html')
+
+alphanumeric_only = re.compile('[\W_]+')
+phone_pattern = re.compile(r"^[\d\+\-\(\) ]+$")
+
+@app.route('/token', methods=['GET'])
+def token():
+    # get credentials for environment variables
+    twilio_config = daconfig.get('twilio', None)
+    if twilio_config is None:
+        logmessage("Could not get twilio configuration")
+        return
+    account_sid = twilio_config.get('account sig', None)
+    auth_token = twilio_config.get('auth token', None)
+    application_sid = twilio_config.get('app sid', None)
+    
+    # Generate a random user name
+    identity = 'testuser'
+
+    # Create a Capability Token
+    capability = TwilioCapability(account_sid, auth_token)
+    capability.allow_client_outgoing(application_sid)
+    capability.allow_client_incoming(identity)
+    token = capability.generate()
+
+    # Return token info as JSON
+    return jsonify(identity=identity, token=token)
+
+@app.route("/voice", methods=['POST'])
+def voice():
+    twilio_config = daconfig.get('twilio', None)
+    if twilio_config is None:
+        logmessage("Could not get twilio configuration")
+        return
+    twilio_caller_id = twilio_config.get('caller id', None)
+    resp = twilio.twiml.Response()
+    if "To" in request.form and request.form["To"] != '':
+        dial = resp.dial(callerId=twilio_caller_id)
+        # wrap the phone number or client name in the appropriate TwiML verb
+        # by checking if the number given has only digits and format symbols
+        if phone_pattern.match(request.form["To"]):
+            dial.number(request.form["To"])
+        else:
+            dial.client(request.form["To"])
+    else:
+        resp.say("Thanks for calling!")
+
+    return flask.Response(str(resp), mimetype='text/xml')
+
 redis_host = daconfig.get('redis', None)
 if redis_host is None:
     redis_host = 'redis://localhost'
@@ -4498,3 +4656,4 @@ if not in_celery:
     docassemble.base.functions.set_worker(docassemble.webapp.worker.background_action)
 import docassemble.webapp.machinelearning
 docassemble.base.util.set_knn_machine_learner(docassemble.webapp.machinelearning.SimpleTextMachineLearner)
+

@@ -8,6 +8,15 @@ modules:
 ---
 mandatory: true
 code: |
+  if press_to_continue:
+    all_done
+---
+field: press_to_continue
+question: |
+  Press Continue to continue.
+---
+sets: all_done
+code: |
   svg_image = """\
   <?xml version="1.0" encoding="UTF-8" standalone="no"?>
   <svg

@@ -1,4 +1,4 @@
-body {
+body.dasignature {
     position: fixed;
     top: 0px;
     left: 0px;
@@ -20,27 +20,27 @@ body {
     -webkit-tap-highlight-color: rgba(0,0,0,0);
 }
         
-.header, .footer{
+.sigheader, .sigfooter{
     position: absolute;
     background-color: #222;
     text-align: center;
 }
-.header {
-    position: fixed;
+.sigheader {
+    /*position: fixed;*/
     top: 0px;
     left: 0px;
     right: 0px;
-    height: 32px;
-    padding:6px;
+    height: 42px;
+    padding: 6px;
 }
-.footer {
+.sigfooter {
     bottom: 0px;
     left: 0px; 
     right: 0px;
     height: 42px;
     padding:2px;    
 }
-.title {
+.sigtitle {
     width: auto;
     line-height: 32px;
     font-size: 20px;
@@ -49,7 +49,7 @@ body {
     text-shadow: 0px -1px #000;
     padding:0 60px;
 }
-.navbtn {
+.signavbtn {
     cursor: pointer;
     padding: 6px 10px;
     font-weight: bold;
@@ -62,22 +62,22 @@ body {
     background-color: #606060;
     box-shadow: 0 0 1px 1px #555,inset 0 1px 0 0 #666;     
 }
-.navbtn:hover, .navbtn:active {
+.signavbtn:hover, .signavbtn:active {
     color: #222;
     text-shadow: 0px 1px #aaa;
     background-color: #aaa;
     box-shadow: 0 0 1px 1px #444,inset 0 1px 0 0 #ccc;   
 }
 
-.nav-left {
+.signav-left {
     float:left;
 }
 
-.nav-right {
+.signav-right {
     float:right
 }
 
-#content{
+#sigcontent{
     /*position: absolute;*/
     /*top: 44px;
     left: 0px;
@@ -88,68 +88,68 @@ body {
     padding-right: 25px;
     /* background-color:#fff; */
 }
-#canvas{
+#sigcanvas{
     cursor:crosshair;
     border-style: solid;
     border-color: black;
     border-width: 1px;
     /*background-color:#fff; */
 }
-.palette-case {
+.sigpalette-case {
     width:260px;
     margin:auto;
     text-align:center;
 }
-.palette-box {
+.sigpalette-box {
     float:left;
     padding:2px 6px 2px 6px;
 }
-.palette {
+.sigpalette {
     border:2px solid #777;
     height:36px;
     width:36px;
 }
-.red{
+.sigred{
     background-color:#c22;
 }
-.blue{
+.sigblue{
     background-color:#22c;
 }
-.green{
+.siggreen{
     background-color:#2c2;
 }
-.white{
+.sigwhite{
     background-color:#fff;
 }
-.black{
+.sigblack{
     background-color:#000;
     border:2px dashed #fff;
 }
-.toppart {
+.sigtoppart {
     text-align: center;
     padding-top: 50px;
     padding-bottom: 6px;
 }
-.midpart {
+.sigmidpart {
     text-align: center;
     padding-top: 6px;
     padding-bottom: 6px;
 }
-.bottompart {
+.sigbottompart {
     text-align: center;
     padding-top:6px;
 }
-.page {
+.sigpage {
     width: 100%;
 }
 @media (min-width: 850px) {
-    .page{
+    .sigpage{
 	width: 850px;
     }
-    .innerheader{
+    .siginnerheader{
 	width: 850px;
     }
-    .toppart {
+    .sigtoppart {
 	text-align: left;
 	padding-top: 70px;
 	padding-left: 25px;
@@ -160,7 +160,7 @@ body {
 	line-height: 1.1;
 	color: #333;
     }
-    .midpart {
+    .sigmidpart {
 	text-align: left;
 	padding-top: 6px;
 	padding-bottom: 14px;
@@ -170,7 +170,7 @@ body {
 	line-height: 1.42857143;
 	color: #333;
     }
-    .bottompart {
+    .sigbottompart {
 	padding-top: 6px;
 	font-size: 14px;
 	line-height: 1.42857143;
@@ -178,12 +178,12 @@ body {
     }
 }
 
-.errormessage {
+.sigerrormessage {
     text-align: center;
     color: blue;
     padding-bottom: 10px;
 }
 
-.notshowing {
+.signotshowing {
     display: none;
 }

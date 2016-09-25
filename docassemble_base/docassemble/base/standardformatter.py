@@ -47,26 +47,27 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
         sizing += 'height:auto;'    
     return('<img class="daicon" src="' + url + '" style="' + sizing + '"/>')
 
-def signature_html(status, debug, root):
+def signature_html(status, debug, root, extra_scripts, validation_rules):
     if (status.continueLabel):
         continue_label = markdown_to_html(status.continueLabel, trim=True)
     else:
         continue_label = word('Done')
-    output = '<div class="page" id="page"><div class="header" id="header"><div class="innerheader"><a id="new" class="navbtn nav-left">' + word('Clear') + '</a><a id="save" class="navbtn nav-right">' + continue_label + '</a><div class="title">' + word('Sign Your Name') + '</div></div></div><div class="toppart" id="toppart"><div id="errormess" class="errormessage notshowing">' + word("You must sign your name to continue.") + '</div>'
+    output = '    <div class="sigpage" id="sigpage">\n      <div class="sigheader" id="sigheader">\n        <div class="siginnerheader">\n          <a id="new" class="signavbtn signav-left">' + word('Clear') + '</a>\n          <a id="save" class="signavbtn signav-right">' + continue_label + '</a>\n          <div class="sigtitle">' + word('Sign Your Name') + '</div>\n        </div>\n      </div>\n      <div class="sigtoppart" id="sigtoppart">\n        <div id="errormess" class="sigerrormessage signotshowing">' + word("You must sign your name to continue.") + '</div>\n        '
     if status.questionText:
         output += markdown_to_html(status.questionText, trim=True)
-    output += '</div>'
+    output += '\n      </div>'
     if status.subquestionText:
-        output += '<div class="midpart">' + markdown_to_html(status.subquestionText) + '</div>'
-    output += '<div id="content"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div><div class="bottompart" id="bottompart">'
+        output += '\n      <div class="sigmidpart">\n        ' + markdown_to_html(status.subquestionText) + '\n      </div>'
+    output += '\n      <div id="sigcontent"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div>\n      <div class="sigbottompart" id="sigbottompart">\n        '
     if (status.underText):
         output += markdown_to_html(status.underText, trim=True)
-    output += '</div></div><form action="' + root + '" id="daform" method="POST"><input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/><input type="hidden" id="_the_image" name="_the_image" value=""/><input type="hidden" id="_success" name="_success" value="0"/>'
+    output += '\n      </div>\n    </div>\n    <form action="' + root + '" id="daform" method="POST"><input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/><input type="hidden" id="_the_image" name="_the_image" value=""/><input type="hidden" id="_success" name="_success" value="0"/>'
     output += tracker_tag(status)
     output += '</form>\n'
+    add_validation(extra_scripts, validation_rules)
     return output
 
-def as_html(status, extra_scripts, extra_css, url_for, debug, root):
+def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_rules):
     decorations = list()
     uses_audio_video = False
     audio_text = ''
@@ -78,7 +79,6 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
         continue_label = markdown_to_html(status.continueLabel, trim=True)
     else:
         continue_label = word('Continue')        
-    validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'help-inline'}
     if status.question.script is not None:
         extra_scripts.append(status.question.script)
     if status.audiovideo is not None:
@@ -319,7 +319,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
             for saveasname in files:
                 init_string += '$("#' + saveasname + '").fileinput();' + "\n"
             init_string += '</script>'
-            extra_scripts.append('<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + init_string)
+            #extra_scripts.append('<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + init_string)
+            extra_scripts.append(init_string)
             #extra_css.append('<link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />')
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
         output += '                <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + continue_label + '</button></div>\n'
@@ -658,17 +659,6 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
             status.screen_reader_text['help'] = unicode(output)
         master_output += output
         master_output += '          </section>\n'
-    extra_scripts.append("""<script>
-      var validation_rules = """ + json.dumps(validation_rules) + """;
-      validation_rules.submitHandler = function(form){
-        form.submit();
-        setTimeout(function(){
-          $("#daform").find('button[type="submit"]').prop("disabled", true);
-        }, 1);
-        return(false);
-      };
-      $("#daform").validate(validation_rules);
-    </script>""")
     # if status.question.question_type == "fields":
     #     extra_scripts.append("""\
     # <script>
@@ -683,6 +673,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
     #     }
     #   });
     # </script>""")
+    add_validation(extra_scripts, validation_rules)
     for element_id_unescaped in onchange:
         element_id = re.sub(r'(:|\.|\[|\]|,|=)', r'\\\\\1', element_id_unescaped)
         the_script = """\
@@ -821,6 +812,43 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root):
 """
         extra_scripts.append(map_js)
     return master_output
+
+def add_validation(extra_scripts, validation_rules):
+    extra_scripts.append("""<script>
+      var validation_rules = """ + json.dumps(validation_rules) + """;
+      validation_rules.submitHandler = function(form){
+        //form.submit();
+        dadisable = setTimeout(function(){
+          $("#daform").find('button[type="submit"]').prop("disabled", true);
+        }, 1);
+        if ($('#daform input[name="_files"]').length){
+          form.submit();
+        }
+        else{
+          $.ajax({
+            type: "POST",
+            url: $("#daform").attr('action'),
+            data: $("#daform").serialize() + '&ajax=1', 
+            success: function(data){
+              daProcessAjax(data, form);
+            }
+          });
+        }
+        return(false);
+      };
+      $("#daform").validate(validation_rules);
+      $("#backbutton").submit(function(event){
+        $.ajax({
+          type: "POST",
+          url: $("#backbutton").attr('action'),
+          data: $("#backbutton").serialize() + '&ajax=1', 
+          success: function(data){
+            daProcessAjax(data, document.getElementById('backbutton'));
+          }
+        });
+        event.preventDefault();
+      });;
+    </script>""")
 
 def input_for(status, field, extra_scripts, wide=False):
     output = ""

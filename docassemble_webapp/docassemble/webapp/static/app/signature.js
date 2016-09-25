@@ -1,25 +1,31 @@
 var ctx, color = "#000";	
 
-var theTop;
-var theLeft;
+//var theTop;
+//var theLeft;
 var theWidth;
-var aspectRatio = 0.30;
-var theBorders = 50;
-var waiter = 0;
-var waitlimit = 2;
-var isEmpty = 1;
+var aspectRatio;
+var theBorders;
+var waiter;
+var waitlimit;
+var isEmpty;
 
-$(document).ready(function () {
+function daInitializeSignature(){
+  aspectRatio = 0.30;
+  theBorders = 50;
+  waiter = 0;
+  waitlimit = 2;
+  isEmpty = 1;
   setTimeout(function(){
     if (!isCanvasSupported()){
-      post({'success': 0});
+      da_post({'success': 0});
     }
     newCanvas();
   }, 1000);
+  $(window).resize(function(){resizeCanvas()});
   
-  $(".palette").click(function(){
-    $(".palette").css("border-color", "#777");
-    $(".palette").css("border-style", "solid");
+  $(".sigpalette").click(function(){
+    $(".sigpalette").css("border-color", "#777");
+    $(".sigpalette").css("border-style", "solid");
     $(this).css("border-color", "#fff");
     $(this).css("border-style", "dashed");
     color = $(this).css("background-color");
@@ -33,8 +39,8 @@ $(document).ready(function () {
   });
   $("#save").click(function() {
     if (isEmpty){
-      $("#errormess").removeClass("notshowing");
-      setTimeout(function(){ $("#errormess").addClass("notshowing"); }, 3000);
+      $("#errormess").removeClass("signotshowing");
+      setTimeout(function(){ $("#errormess").addClass("signotshowing"); }, 3000);
     }
     else{
       document.getElementById('save').disabled = true;
@@ -42,12 +48,12 @@ $(document).ready(function () {
     }
   });
   window.scrollTo(0,1);
-});
+}
 
 // function to setup a new canvas for drawing
 
 function resizeCanvas(){
-  //var cheight = $(window).height()-($("#header").height() + $("#toppart").height() + $("#bottompart").height());
+  //var cheight = $(window).height()-($("#sigheader").height() + $("#sigtoppart").height() + $("#sigbottompart").height());
   newCanvas();
   //console.log("I resized");
   return;
@@ -60,13 +66,13 @@ function resizeCanvas(){
   // }
   // var cwidth = $(window).width() - theBorders;
   
-  // $("#content").height(cheight);
-  // //$("#content").css('top', ($("#header").height() + $("#toppart").height()) + "px");
-  // //$("#bottompart").css('top', (cheight) + "px");
-  // $("#canvas").width(cwidth);
-  // $("#canvas").height(cheight);
-  // theTop = $("#canvas").offset().top;
-  // theLeft = $("#canvas").offset().left;
+  // $("#sigcontent").height(cheight);
+  // //$("#sigcontent").css('top', ($("#sigheader").height() + $("#sigtoppart").height()) + "px");
+  // //$("#sigbottompart").css('top', (cheight) + "px");
+  // $("#sigcanvas").width(cwidth);
+  // $("#sigcanvas").height(cheight);
+  // theTop = $("#sigcanvas").offset().top;
+  // theLeft = $("#sigcanvas").offset().left;
   // theWidth = cwidth/100.0;
   // if (theWidth < 1){
   //   theWidth = 1;
@@ -74,11 +80,10 @@ function resizeCanvas(){
   // return;
 }
 
-
 function saveCanvas(){
-  var dataURL = document.getElementById("canvas").toDataURL();
+  var dataURL = document.getElementById("sigcanvas").toDataURL();
   //console.log(dataURL)
-  post({'_success': 1, '_the_image': dataURL});
+  da_post({'_success': 1, '_the_image': dataURL});
 }
 
 function newCanvas(){
@@ -87,32 +92,32 @@ function newCanvas(){
     cwidth = 800;
   }
   var cheight = cwidth*aspectRatio;
-  var otherHeights = $("#toppart").outerHeight(true) + $("#bottompart").outerHeight(true);
+  var otherHeights = $("#sigtoppart").outerHeight(true) + $("#sigbottompart").outerHeight(true);
   if (cheight > $(window).height()-otherHeights){
     cheight = $(window).height()-otherHeights;
   }
   if (cheight > 350){
     cheight = 350;
   }
-  $("#content").height(cheight);
-  var canvas = '<canvas id="canvas" width="'+(cwidth)+'px" height="'+(cheight)+'px"></canvas>';
-  $("#content").html(canvas);
-  theTop = $("#canvas").offset().top;
-  theLeft = $("#canvas").offset().left;
+  $("#sigcontent").height(cheight);
+  var canvas = '<canvas id="sigcanvas" width="'+(cwidth)+'px" height="'+(cheight)+'px"></canvas>';
+  $("#sigcontent").html(canvas);
+  //theTop = $("#sigcanvas").offset().top;
+  //theLeft = $("#sigcanvas").offset().left;
   theWidth = cwidth/100.0;
   if (theWidth < 1){
     theWidth = 1;
   }
   
   // setup canvas
-  ctx=document.getElementById("canvas").getContext("2d");
+  ctx=document.getElementById("sigcanvas").getContext("2d");
   ctx.strokeStyle = color;
   ctx.lineWidth = theWidth;	
   
   // setup to trigger drawing on mouse or touch
-  $("#canvas").drawTouch();
-  $("#canvas").drawPointer();
-  $("#canvas").drawMouse();
+  $("#sigcanvas").drawTouch();
+  $("#sigcanvas").drawPointer();
+  $("#sigcanvas").drawMouse();
   //$(document).on("touchend", function(event){event.preventDefault();});
   //$(document).on("touchcancel", function(event){event.preventDefault();});
   //$(document).on("touchstart", function(event){event.preventDefault();});
@@ -125,8 +130,8 @@ function newCanvas(){
 $.fn.drawTouch = function() {
   var start = function(e) {
     e = e.originalEvent;
-    x = e.changedTouches[0].pageX-$("#canvas").offset().left;
-    y = e.changedTouches[0].pageY-$("#canvas").offset().top;
+    x = e.changedTouches[0].pageX-$("#sigcanvas").offset().left;
+    y = e.changedTouches[0].pageY-$("#sigcanvas").offset().top;
     ctx.beginPath();
     ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
     ctx.fill();
@@ -142,8 +147,8 @@ $.fn.drawTouch = function() {
     e.preventDefault();
     if (waiter % waitlimit == 0){
       e = e.originalEvent;
-      x = e.changedTouches[0].pageX-$("#canvas").offset().left;
-      y = e.changedTouches[0].pageY-$("#canvas").offset().top;
+      x = e.changedTouches[0].pageX-$("#sigcanvas").offset().left;
+      y = e.changedTouches[0].pageY-$("#sigcanvas").offset().top;
       ctx.lineTo(x,y);
       ctx.stroke();
       if (isEmpty){
@@ -165,8 +170,8 @@ $.fn.drawTouch = function() {
     e.preventDefault();
     e = e.originalEvent;
     ctx.lineJoin="round";
-    x = e.pageX-$("#canvas").offset().left;
-    y = e.pageY-$("#canvas").offset().top;
+    x = e.pageX-$("#sigcanvas").offset().left;
+    y = e.pageY-$("#sigcanvas").offset().top;
     ctx.beginPath();
     ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
     ctx.fill();
@@ -191,8 +196,8 @@ $.fn.drawPointer = function() {
     e = e.originalEvent;
     ctx.beginPath();
     ctx.lineJoin="round";
-    x = e.pageX-$("#canvas").offset().left;
-    y = e.pageY-$("#canvas").offset().top;
+    x = e.pageX-$("#sigcanvas").offset().left;
+    y = e.pageY-$("#sigcanvas").offset().top;
     ctx.moveTo(x,y);
     if (isEmpty){
       //$("#save").prop("disabled", false);
@@ -205,8 +210,8 @@ $.fn.drawPointer = function() {
     e.preventDefault();
     if (waiter % waitlimit == 0){
       e = e.originalEvent;
-      x = e.pageX-$("#canvas").offset().left;
-      y = e.pageY-$("#canvas").offset().top;
+      x = e.pageX-$("#sigcanvas").offset().left;
+      y = e.pageY-$("#sigcanvas").offset().top;
       ctx.lineTo(x,y);
       ctx.stroke();
       ctx.beginPath();
@@ -235,8 +240,8 @@ $.fn.drawMouse = function() {
   var clicked = 0;
   var start = function(e) {
     clicked = 1;
-    x = e.pageX-$("#canvas").offset().left;
-    y = e.pageY-$("#canvas").offset().top;
+    x = e.pageX-$("#sigcanvas").offset().left;
+    y = e.pageY-$("#sigcanvas").offset().top;
     ctx.beginPath();
     ctx.arc(x, y, 0.5*theWidth, 0, 2*Math.PI);
     ctx.fill();
@@ -250,8 +255,8 @@ $.fn.drawMouse = function() {
   };
   var move = function(e) {
     if(clicked && waiter % waitlimit == 0){
-      x = e.pageX-$("#canvas").offset().left;
-      y = e.pageY-$("#canvas").offset().top;
+      x = e.pageX-$("#sigcanvas").offset().left;
+      y = e.pageY-$("#sigcanvas").offset().top;
       ctx.lineTo(x,y);
       ctx.stroke();
       ctx.beginPath();
@@ -276,7 +281,7 @@ $.fn.drawMouse = function() {
   $(window).on("mouseup", stop);
 };
 
-function post(params) {
+function da_post(params) {
   for(var key in params) {
     if(params.hasOwnProperty(key)) {
       var hiddenField = document.getElementById(key);
