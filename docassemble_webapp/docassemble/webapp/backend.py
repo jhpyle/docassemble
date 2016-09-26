@@ -7,6 +7,12 @@ import docassemble.webapp.database
 import logging
 import urllib
 import tempfile
+import pickle
+import codecs
+import string
+import random
+from Crypto.Cipher import AES
+from dateutil import tz
 
 import docassemble.base.parse
 import re
@@ -121,6 +127,7 @@ initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret
 if 'initial_dict' in daconfig:
     initial_dict.update(daconfig['initial_dict'])
 docassemble.base.parse.set_initial_dict(initial_dict)
+from docassemble.base.functions import pickleable_objects
 
 def absolute_filename(the_file):
     match = re.match(r'^docassemble.playground([0-9]+):(.*)', the_file)
@@ -299,3 +306,44 @@ def flask_logger(message):
     #app.logger.warning(message)
     sys.stderr.write(unicode(message) + "\n")
     return
+
+def pad(the_string):
+    return the_string + (16 - len(the_string) % 16) * chr(16 - len(the_string) % 16)
+
+def unpad(the_string):
+    return the_string[0:-ord(the_string[-1])]
+
+def encrypt_phrase(phrase, secret):
+    iv = app.secret_key[:16]
+    encrypter = AES.new(secret, AES.MODE_CBC, iv)
+    return iv + codecs.encode(encrypter.encrypt(pad(phrase)), 'base64').decode()
+
+def pack_phrase(phrase):
+    return codecs.encode(phrase, 'base64').decode()
+
+def decrypt_phrase(phrase_string, secret):
+    decrypter = AES.new(secret, AES.MODE_CBC, phrase_string[:16])
+    return unpad(decrypter.decrypt(codecs.decode(phrase_string[16:], 'base64')))
+
+def unpack_phrase(phrase_string):
+    return codecs.decode(phrase_string, 'base64')
+
+def encrypt_dictionary(the_dict, secret):
+    iv = ''.join(random.choice(string.ascii_letters) for i in range(16))
+    encrypter = AES.new(secret, AES.MODE_CBC, iv)
+    return iv + codecs.encode(encrypter.encrypt(pad(pickle.dumps(pickleable_objects(the_dict)))), 'base64').decode()
+
+def pack_dictionary(the_dict):
+    return codecs.encode(pickle.dumps(pickleable_objects(the_dict)), 'base64').decode()
+
+def decrypt_dictionary(dict_string, secret):
+    decrypter = AES.new(secret, AES.MODE_CBC, dict_string[:16])
+    return pickle.loads(unpad(decrypter.decrypt(codecs.decode(dict_string[16:], 'base64'))))
+
+def unpack_dictionary(dict_string):
+    return pickle.loads(codecs.decode(dict_string, 'base64'))
+
+def nice_date_from_utc(timestamp, timezone=tz.tzlocal()):
+    return timestamp.replace(tzinfo=tz.tzutc()).astimezone(timezone).strftime('%x %X')
+
+

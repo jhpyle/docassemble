@@ -65,3 +65,19 @@ class UserDictLock(db.Model):
     filename = db.Column(db.Text())
     key = db.Column(db.String(250))
     #locktime = db.Column(db.DateTime(), server_default=db.func.now())
+
+class TempUser(db.Model):
+    __tablename__ = dbtableprefix + 'tempuser'
+    id = db.Column(db.Integer, primary_key=True)
+    
+class ChatLog(db.Model):
+    __tablename__ = dbtableprefix + "chatlog"
+    id = db.Column(db.Integer(), primary_key=True)
+    filename = db.Column(db.Text())
+    key = db.Column(db.String(250))
+    message = db.Column(db.Text())
+    user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
+    temp_user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'tempuser.id', ondelete='CASCADE'))
+    encrypted = db.Column(db.Boolean(), nullable=False, server_default='1')
+    modtime = db.Column(db.DateTime())
+    

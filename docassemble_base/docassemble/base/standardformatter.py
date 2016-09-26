@@ -635,6 +635,41 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
     if len(status.helpText):
         master_output += '          <section id="help" class="tab-pane col-lg-6 col-md-8 col-sm-10">\n'
         output = '<div><a id="backToQuestion" data-toggle="tab" href="#question" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back to question") + '</a></div>'
+        output += """
+<div id="daChatOnButton" class="row">
+  <div class="col-md-12 dachatbutton">
+    <a class="label label-success">""" + word("Activate chat") + """</a>
+  </div>
+</div>
+<div id="daChatBox" class="invisible">
+  <div class="row">
+    <div class="col-md-12 dachatbutton">
+      <a id="daChatOffButton" class="label label-warning">""" + word("Turn off chat") + """</a>
+      <h3 class="dachatbutton">""" + word("Live chat") + """</h3>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-12">
+      <ul class="list-group dachatbox" id="daCorrespondence"></ul>
+    </div>
+  </div>
+  <form id="#dachat" autocomplete="off">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="input-group">
+            <input type="text" class="form-control" id="daMessage">
+            <span class="input-group-btn"><button class="btn btn-default" id="daSend" type="button">""" + word("Send") + """</button></span>
+        </div>
+      </div>
+    </div>
+  </form>
+  <div class="row invisible">
+    <div class="col-md-12">
+      <p id="daPushResult"></p>
+    </div>
+  </div>
+</div>
+"""
         if status.using_screen_reader and 'help' in status.screen_reader_links:
             output += '            <div>\n' + indent_by(audio_control(status.screen_reader_links['help'], preload="none"), 14) + '            </div>\n'
         for help_section in status.helpText:

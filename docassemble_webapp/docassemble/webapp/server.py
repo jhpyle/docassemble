@@ -34,7 +34,6 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone
 from docassemble.base.logger import logmessage
-from Crypto.Cipher import AES
 from Crypto.Hash import MD5
 import mimetypes
 import logging
@@ -64,9 +63,9 @@ from flask_kvsession import KVSessionExtension
 from simplekv.db.sql import SQLAlchemyStore
 from sqlalchemy import create_engine, MetaData, Sequence, or_, and_
 from docassemble.webapp.app_and_db import app, db
-from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number
+from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, Messages
-from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock
+from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock, TempUser, ChatLog
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, hostname, in_celery
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -432,7 +431,7 @@ def decrypt_session(secret):
     changed = False
     for record in SpeakList.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
         phrase = decrypt_phrase(record.phrase, secret)
-        record.phrase = pack_phrase(the_dict)
+        record.phrase = pack_phrase(phrase)
         record.encrypted = False
         changed = True
     if changed:
@@ -453,6 +452,14 @@ def decrypt_session(secret):
         record.dictionary = pack_dictionary(the_dict)
         record.encrypted = False
         record.modtime = nowtime
+        changed = True
+    if changed:
+        db.session.commit()
+    changed = False
+    for record in ChatLog.query.filter_by(key=user_code, filename=filename, encrypted=True).all():
+        phrase = decrypt_phrase(record.message, secret)
+        record.message = pack_phrase(phrase)
+        record.encrypted = False
         changed = True
     if changed:
         db.session.commit()
@@ -488,6 +495,14 @@ def encrypt_session(secret):
         record.dictionary = encrypt_dictionary(the_dict, secret)
         record.encrypted = True
         record.modtime = nowtime
+        changed = True
+    if changed:
+        db.session.commit()
+    changed = False
+    for record in ChatLog.query.filter_by(key=user_code, filename=filename, encrypted=False).all():
+        phrase = unpack_phrase(record.message)
+        record.message = encrypt_phrase(phrase, secret)
+        record.encrypted = True
         changed = True
     if changed:
         db.session.commit()
@@ -540,13 +555,24 @@ def substitute_secret(oldsecret, newsecret):
         #logmessage("re-encrypted with secret " + newsecret)
         changed = True
     if changed:
-        #logmessage("committed changes")
+        db.session.commit()
+    changed = False
+    for record in ChatLog.query.filter_by(key=user_code, filename=filename).all():
+        if record.encrypted:
+            phrase = decrypt_phrase(record.message, oldsecret)
+        else:
+            phrase = unpack_phrase(record.message)
+            record.encrypted = True
+        record.message = encrypt_phrase(phrase, newsecret)
+        changed = True
+    if changed:
         db.session.commit()
     return newsecret
 
 def _do_login_user(user, password, secret, next, remember_me=False):
     # User must have been authenticated
-    if not user: return unauthenticated()
+    if not user:
+        return unauthenticated()
 
     # Check if user account has been disabled
     if not _call_or_get(user.is_active):
@@ -573,6 +599,16 @@ def _do_login_user(user, password, secret, next, remember_me=False):
     # Send user_logged_in signal
     signals.user_logged_in.send(current_app._get_current_object(), user=user)
 
+    if 'tempuser' in session:
+        changed = False
+        for chat_entry in ChatLog.query.filter_by(temp_user_id=session['tempuser']).all():
+            chat_entry.user_id = user.id
+            chat_entry.temp_user_id = None
+            changed = True
+        if changed:
+            db.session.commit()
+        del session['tempuser']
+    session['user_id'] = user.id
     # Prepare one-time system message
     flash(word('You have signed in successfully.'), 'success')
 
@@ -1047,6 +1083,15 @@ def index():
     else:
         is_ajax = False
     session_id = session.get('uid', None)
+    if current_user.is_anonymous:
+        if 'tempuser' not in session:
+            new_temp_user = TempUser()
+            db.session.add(new_temp_user)
+            db.session.commit()
+            session['tempuser'] = new_temp_user.id
+    else:
+        if 'user_id' not in session:
+            session['user_id'] = current_user.id
     secret = request.cookies.get('secret', None)
     encrypted = session.get('encrypted', True)
     if secret is None:
@@ -1768,10 +1813,100 @@ def index():
         # $(function () {
         #   $('.tabs a:last').tab('show')
         # })
-    scripts = '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/signature.js') + '"></script>\n'
-    #\n    <script src="' + url_for('static', filename='jquery-mobile/jquery.mobile.custom.min.js') + '"></script>
-    scripts += '    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>' + """
-    <script>
+    scripts = '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/signature.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>\n'
+    scripts += """    <script type="text/javascript" charset="utf-8">
+      var socket = null;
+      var foobar = null;
+      var chatHistory = [];
+      function daCloseSocket(){
+        if (typeof socket !== 'undefined'){
+          //socket.emit('terminate');
+          //io.unwatch();
+        }
+      }
+      function publishMessage(data){
+        var newDiv = document.createElement('li');
+        $(newDiv).addClass("list-group-item");
+        if (data.is_self){
+          $(newDiv).addClass("list-group-item-warning");
+          $(newDiv).addClass("dalistright");
+        }
+        else{
+          $(newDiv).addClass("list-group-item-info");
+        }
+        $(newDiv).html(data.message);
+        $("#daCorrespondence").append(newDiv);
+      }
+      function scrollChat(){
+        var chatScroller = $("#daCorrespondence");
+        if (chatScroller.length){
+          var height = chatScroller[0].scrollHeight;
+          chatScroller.animate({scrollTop: height}, 800);
+        }
+        else{
+          console.log("error")
+        }
+      }
+      function scrollChatFast(){
+        var chatScroller = $("#daCorrespondence");
+        if (chatScroller.length){
+          var height = chatScroller[0].scrollHeight;
+          chatScroller.scrollTop(height);
+        }
+        else{
+          console.log("error")
+        }
+      }
+      function daSender(){
+        //console.log("Clicked it")
+        if ($("#daMessage").val().length){
+          socket.emit('chatmessage', {data: $("#daMessage").val()});
+          $("#daMessage").val("");
+        }
+        return false;
+      }
+      function daInitializeSocket(){
+        if (location.protocol === 'http:' || document.location.protocol === 'http:'){
+            socket = io.connect("http://" + document.domain + "/myns", {path: '/ws/socket.io'});
+            //socket = io.connect("http://" + document.domain + ":5000/myns");
+        }
+        if (location.protocol === 'https:' || document.location.protocol === 'https:'){
+            socket = io.connect("https://" + document.domain + "/myns" + location.port, {path: '/wss/socket.io'});
+        }
+        if (typeof socket !== 'undefined' && socket != null) {
+            socket.on('connect', function() {
+                if (socket == null){
+                  return;
+                }
+                console.log("Connected socket with sid " + socket.id);
+                socket.emit('chat_log', {data: 1});
+            });
+            socket.on('chat_log', function(arg) {
+                chatHistory = []; 
+                var messages = arg.data;
+                for (var i = 0; i < messages.length; ++i){
+                  chatHistory.push(messages[i]);
+                  publishMessage(messages[i]);
+                }
+                scrollChatFast();
+            });
+            socket.on('disconnect', function() {
+                console.log("Disconnected socket");
+                //socket = null;
+            });
+            socket.on('mymessage', function(arg) {
+                //console.log("Received " + arg.data);
+                $("#daPushResult").html(arg.data);
+            });
+            socket.on('chatmessage', function(arg) {
+                //console.log("Received chat message " + arg.data + " from " + arg.sid);
+                chatHistory.push(arg.data);
+                publishMessage(arg.data);
+                scrollChat();
+            });
+        }
+      }
+      var checkinInterval = null;
       var daReloader = null;
       var dadisable = null;
       var daSubmitter = null;
@@ -1817,9 +1952,60 @@ def index():
           form.submit();
         }
       }
+      var daChatStatus = 0;
+      function daTurnOnChat(){
+        daChatStatus = 1;
+        $("#daChatOnButton").addClass("invisible");
+        $("#daChatBox").removeClass("invisible");
+        $("#daCorrespondence").html('');
+        if (socket == null){
+          daInitializeSocket();
+        }
+        for(var i = 0; i < chatHistory.length; i++){
+          publishMessage(chatHistory[i]);
+        }
+        scrollChatFast();
+        $("#daSend").click(daSender);
+        daStopCheckingIn();
+      }
+      function daTurnOffChat(){
+        daChatStatus = 0;
+        $("#daChatOnButton").removeClass("invisible");
+        $("#daChatBox").addClass("invisible");
+        daCloseSocket();
+        chatHistory = [];
+        $("#daSend").unbind();
+        daStartCheckingIn();
+      }
+      function daCheckinCallback(data){
+      }
+      function daCheckin(){
+        $.ajax({
+          type: 'POST',
+          url: """ + "'" + url_for('checkin') + "'" + """,
+          data: 'action=checkin',
+          success: daCheckinCallback,
+          dataType: 'json'
+        });
+        return true;
+      }
+      function daStopCheckingIn(){
+        if (checkinInterval != null){
+          clearInterval(checkinInterval);
+        }
+      }
+      function daStartCheckingIn(){
+        daStopCheckingIn();
+        checkinInterval = setInterval(daCheckin, 6000);
+      }
       function daInitialize(){
         $(function () {
           $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
+        });
+        $("#daChatOnButton a").click(daTurnOnChat);
+        $("#daChatOffButton").click(daTurnOffChat);
+        $('#daMessage').bind('keypress keydown keyup', function(e){
+          if(e.keyCode == 13) { daSender(); e.preventDefault(); }
         });
         $('#daform button[type="submit"]').click(function(){
           daSubmitter = this;
@@ -1907,23 +2093,14 @@ def index():
           $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDiv);
           $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDiv);
         });
+        if (daChatStatus){
+          daTurnOnChat();
+        }
       }
       $( document ).ready(function(){
         daInitialize();
-        function daCheckinCallback(data){
-        }
-        function daCheckin(){
-          $.ajax({
-            type: 'POST',
-            url: """ + "'" + url_for('checkin') + "'" + """,
-            data: 'action=checkin',
-            success: daCheckinCallback,
-            dataType: 'json'
-          });
-          return true;
-        }
         daCheckin();
-        setInterval(daCheckin, 6000);
+        daStartCheckingIn();
       });
     </script>"""
     if interview_status.question.language != '*':
@@ -2113,42 +2290,6 @@ def progress_bar(progress):
         return('');
     return('<div class="row"><div class="col-lg-6 col-md-8 col-sm-10"><div class="progress"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;"></div></div></div></div>\n')
 
-def pad(the_string):
-    return the_string + (16 - len(the_string) % 16) * chr(16 - len(the_string) % 16)
-
-def unpad(the_string):
-    return the_string[0:-ord(the_string[-1])]
-
-def encrypt_phrase(phrase, secret):
-    iv = app.secret_key[:16]
-    encrypter = AES.new(secret, AES.MODE_CBC, iv)
-    return iv + codecs.encode(encrypter.encrypt(pad(phrase)), 'base64').decode()
-
-def pack_phrase(phrase):
-    return codecs.encode(phrase, 'base64').decode()
-
-def decrypt_phrase(phrase_string, secret):
-    decrypter = AES.new(secret, AES.MODE_CBC, phrase_string[:16])
-    return unpad(decrypter.decrypt(codecs.decode(phrase_string[16:], 'base64')))
-
-def unpack_phrase(phrase_string):
-    return codecs.decode(phrase_string, 'base64')
-
-def encrypt_dictionary(the_dict, secret):
-    iv = ''.join(random.choice(string.ascii_letters) for i in range(16))
-    encrypter = AES.new(secret, AES.MODE_CBC, iv)
-    return iv + codecs.encode(encrypter.encrypt(pad(pickle.dumps(pickleable_objects(the_dict)))), 'base64').decode()
-
-def pack_dictionary(the_dict):
-    return codecs.encode(pickle.dumps(pickleable_objects(the_dict)), 'base64').decode()
-
-def decrypt_dictionary(dict_string, secret):
-    decrypter = AES.new(secret, AES.MODE_CBC, dict_string[:16])
-    return pickle.loads(unpad(decrypter.decrypt(codecs.decode(dict_string[16:], 'base64'))))
-
-def unpack_dictionary(dict_string):
-    return pickle.loads(codecs.decode(dict_string, 'base64'))
-
 def get_unique_name(filename, secret):
     nowtime = datetime.datetime.utcnow()
     while True:
@@ -2328,6 +2469,8 @@ def reset_user_dict(user_code, filename):
     db.session.commit()
     SpeakList.query.filter_by(key=user_code, filename=filename).delete()
     db.session.commit()
+    ChatLog.query.filter_by(key=user_code, filename=filename).delete()
+    db.session.commit()
     return
 
 def make_navbar(status, page_title, page_short_title, steps, show_login):
@@ -2431,7 +2574,7 @@ def utility_processor():
     return dict(random_social=random_social, word=word)
 
 def delete_session():
-    for key in ['i', 'uid', 'key_logged', 'action']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id']:
         if key in session:
             del session[key]
     return
@@ -2852,7 +2995,7 @@ def test_websocket():
         if (typeof socket !== 'undefined') {
             socket.on('connect', function() {
                 //console.log("Connected!");
-                socket.emit('message', {data: "I am connected!"});
+                socket.emit('chat_log', {data: 1});
             });
             socket.on('mymessage', function(arg) {
                 //console.log("Received " + arg.data);
@@ -2865,11 +3008,7 @@ def test_websocket():
                 $("#daCorrespondence").append(newDiv);
             });
         }
-        $("#daSend").click(function(){
-            //console.log("Clicked it")
-            socket.emit('chatmessage', {data: $("#daMessage").val()});
-            $("#daMessage").val("");
-        });
+        $("#daSend").click(daSender);
     });
 </script>"""
     return render_template('pages/socketserver.html', extra_js=Markup(script)), 200
@@ -4505,9 +4644,6 @@ def utilities():
                 fields_output += "---"
     return render_template('pages/utilities.html', form=form, fields=fields_output)
 
-def nice_date_from_utc(timestamp, timezone=tz.tzlocal()):
-    return timestamp.replace(tzinfo=tz.tzutc()).astimezone(timezone).strftime('%x %X')
-
 def formatted_current_time():
     if current_user.timezone:
         the_timezone = pytz.timezone(current_user.timezone)
@@ -4622,15 +4758,15 @@ def webrtc_token():
 
 @app.route("/voice", methods=['POST', 'GET'])
 def voice():
-    twilio_config = daconfig.get('twilio', None)
-    if twilio_config is None:
-        logmessage("Could not get twilio configuration")
-        return
-    #twilio_caller_id = twilio_config.get('caller id', None)
     resp = twilio.twiml.Response()
     with resp.gather(action="/digits", finishOnKey='#', method="POST", timeout=10, numDigits=5) as g:
         g.say("Please enter your four digit access code, followed by the pound sign.")
 
+    # twilio_config = daconfig.get('twilio', None)
+    # if twilio_config is None:
+    #     logmessage("Could not get twilio configuration")
+    #     return
+    # twilio_caller_id = twilio_config.get('caller id', None)
     # if "To" in request.form and request.form["To"] != '':
     #     dial = resp.dial(callerId=twilio_caller_id)
     #     if phone_pattern.match(request.form["To"]):
@@ -4639,29 +4775,14 @@ def voice():
     #         dial.client(request.form["To"])
     # else:
     #     resp.say("Thanks for calling!")
-    # resp.say("Hello, world!")
 
     return Response(str(resp), mimetype='text/xml')
 
 @app.route("/digits", methods=['POST', 'GET'])
 def digits():
-    twilio_config = daconfig.get('twilio', None)
-    if twilio_config is None:
-        logmessage("Could not get twilio configuration")
-        return
-    #twilio_caller_id = twilio_config.get('caller id', None)
     resp = twilio.twiml.Response()
     logmessage("Got digits " + str(request.form["Digits"]))
     dial = resp.dial(number="+12159813843")
-    # if "To" in request.form and request.form["To"] != '':
-    #     dial = resp.dial(callerId=twilio_caller_id)
-    #     if phone_pattern.match(request.form["To"]):
-    #         dial.number(request.form["To"])
-    #     else:
-    #         dial.client(request.form["To"])
-    # else:
-    #     resp.say("Thanks for calling!")
-    # resp.say("Hello, world!")
 
     return Response(str(resp), mimetype='text/xml')
 

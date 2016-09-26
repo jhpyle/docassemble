@@ -339,6 +339,23 @@ a.example-share {
     float: right;
 }
 
+.dachatbox {
+    max-height: 20em;
+    overflow-y: auto;
+    margin-bottom: 5px;
+}
+
+.dachatbutton a {
+    font-size: 14px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    float: right;
+}
+
+.dalistright {
+    text-align: right;
+}
+
 a.example-share:focus {
     outline: none;
 }
