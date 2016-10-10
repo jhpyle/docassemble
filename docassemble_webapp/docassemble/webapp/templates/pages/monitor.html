@@ -1,0 +1,16 @@
+{% extends 'base_templates/flask_wide_base.html' %}
+
+{% block content %}
+<h2>{{ word("Monitor") }}</h2>
+<div class="monitorcontrols" id="monitorcontrols">
+<h4>{{ word("Your status: ") }}
+<button title="{{ word("Click to change your status to not available") }}" id="daAvailable" class="btn btn-primary">Available for chat</button>
+<button title="{{ word("Click to change your status to available") }}" id="daNotAvailable" class="btn btn-danger">Not available for chat</button>
+</h4></div>
+<div class="monitorroles" id="monitorroles">
+<h4>{{ word("You are available for the following roles: ") }}</h4>
+</div>
+<h3>{{ word("Sessions") }}</h3>
+<ul class="list-group" id="monitorsessions"></ul>
+<p id="emptylist">{{ word("There are no active sessions.") }}</p>
+{% endblock %}

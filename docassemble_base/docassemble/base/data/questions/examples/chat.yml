@@ -1,0 +1,32 @@
+metadata:
+  title: Live chat
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+code: |
+  set_chat_status(availability='available', mode='peerhelp', partner_roles=['advocate'])
+---
+mandatory: true
+question: |
+  Chat system
+subquestion: |
+  If someone is available to chat, you will see a chat icon in the navigation bar.
+fields:
+  - Some field: some_field
+  - A toggler: a_toggler
+    datatype: yesno
+  - Scoops of ice cream: scoops
+    datatype: range
+    min: 1
+    max: 10
+---
+mandatory: true
+question: |
+  All done
+subquestion: |
+  Thank you for telling me that information.
+  

@@ -12,5 +12,6 @@ fields:
 ---
 question: |
   You're so adorable!
-audio: ${ user_picture }
+subquestion: |
+  ${ user_picture }
 mandatory: true

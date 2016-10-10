@@ -63,7 +63,7 @@ from flask_kvsession import KVSessionExtension
 from simplekv.db.sql import SQLAlchemyStore
 from sqlalchemy import create_engine, MetaData, Sequence, or_, and_
 from docassemble.webapp.app_and_db import app, db
-from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc
+from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, Messages
 from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock, TempUser, ChatLog
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
@@ -607,6 +607,13 @@ def _do_login_user(user, password, secret, next, remember_me=False):
             changed = True
         if changed:
             db.session.commit()
+        changed = False
+        for chat_entry in ChatLog.query.filter_by(temp_owner_id=session['tempuser']).all():
+            chat_entry.owner_id = user.id
+            chat_entry.temp_owner_id = None
+            changed = True
+        if changed:
+            db.session.commit()
         del session['tempuser']
     session['user_id'] = user.id
     # Prepare one-time system message
@@ -1045,26 +1052,126 @@ def manual_checkout():
     session_id = session.get('uid', None)
     yaml_filename = session.get('i', None)
     if session_id is None or yaml_filename is None:
-        return jsonify(success=False)
-    key = 'da:session:' + str(session_id) + ':' + str(yaml_filename)
-    r.delete(key)
+        return
+    if current_user.is_anonymous:
+        the_user_id = 't' + str(session.get('tempuser', None))
+    else:
+        the_user_id = current_user.id
+    endpart = ':uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+    #logmessage("Checking out from " + endpart)
+    pipe = r.pipeline()
+    pipe.expire('da:session' + endpart, 12)
+    pipe.expire('da:html' + endpart, 12)
+    pipe.expire('da:chatsession' + endpart, 12)
+    pipe.expire('da:ready' + endpart, 12)
+    pipe.execute()
+    #r.publish('da:monitor', json.dumps(dict(messagetype='refreshsessions')))
+    #logmessage("Done checking out from " + endpart)
     return
+
+@app.route("/checkout", methods=['POST', 'GET'])
+def checkout():
+    try:
+        manual_checkout()
+    except:
+        return jsonify(success=False)
+    return jsonify(success=True)
 
 @app.route("/checkin", methods=['POST', 'GET'])
 def checkin():
     session_id = session.get('uid', None)
     yaml_filename = session.get('i', None)
+    if 'visitor_secret' in request.cookies:
+        secret = request.cookies['visitor_secret']
+    else:
+        secret = request.cookies.get('secret', None)
+    #session_cookie_id = request.cookies.get('session', None)
     if session_id is None or yaml_filename is None:
         return jsonify(success=False)
-    #logmessage("Got to checkin")
+    if current_user.is_anonymous:
+        the_user_id = 't' + str(session['tempuser'])
+    else:
+        the_user_id = current_user.id
     if request.form.get('action', None) == 'checkin':
         #logmessage("Doing redis statement")
-        key = 'da:session:' + str(session_id) + ':' + str(yaml_filename)
+        old_chatstatus = session.get('chatstatus', None)
+        chatstatus = request.form.get('chatstatus', 'off')
+        if old_chatstatus != chatstatus:
+            session['chatstatus'] = chatstatus
+        obj = dict(chatstatus=chatstatus, i=yaml_filename, uid=session_id, userid=the_user_id)
+        potential_partners = list()
+        if str(chatstatus) in ['waiting', 'standby', 'ringing', 'ready', 'on']:
+            steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+            obj['secret'] = secret
+            obj['encrypted'] = is_encrypted
+            obj['roles'] = user_dict['_internal']['chat']['roles']
+            obj['partner_roles'] = user_dict['_internal']['chat']['partner_roles']
+            if len(obj['partner_roles']):
+                pipe = r.pipeline()
+                for role in obj['partner_roles']:
+                    role_key = 'da:chat:roletype:' + str(role)
+                    pipe.set(role_key, 1)
+                    pipe.expire(role_key, 2592000)
+                pipe.execute()
+                for role in obj['partner_roles']:
+                    for key in r.keys('da:monitor:role:' + role + ':userid:*'):
+                        user_id = re.sub(r'^.*:userid:', '', key)
+                        if user_id not in potential_partners:
+                            potential_partners.append(user_id)
+            if len(potential_partners) > 0:
+                if chatstatus == 'ringing':
+                    lkey = 'da:ready:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+                    #logmessage("Writing to " + str(lkey))
+                    pipe = r.pipeline()
+                    failure = True
+                    for user_id in potential_partners:
+                        for key in r.keys('da:monitor:available:' + user_id):
+                            pipe.rpush(lkey, key)
+                            failure = False
+                    if failure:
+                        chatstatus = 'waiting'
+                        session['chatstatus'] = chatstatus
+                        obj['chatstatus'] = chatstatus
+                    else:
+                        pipe.expire(lkey, 6000)
+                        pipe.execute()
+                        #logmessage("Wrote to " + str(lkey))
+                        chatstatus = 'ready'
+                        session['chatstatus'] = chatstatus
+                        obj['chatstatus'] = chatstatus
+                if chatstatus == 'waiting':
+                    chatstatus = 'standby'
+                    session['chatstatus'] = chatstatus
+                    obj['chatstatus'] = chatstatus
+            else:
+                if chatstatus != 'waiting':
+                    chatstatus = 'waiting'
+                    session['chatstatus'] = chatstatus
+                    obj['chatstatus'] = chatstatus
+        html_key = 'da:html:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+        key = 'da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+        if old_chatstatus != chatstatus:
+            logmessage("Doing a sessionupdate because " + str(chatstatus))
+            html = r.get(html_key)
+            if html is not None:
+                html_obj = json.loads(html)
+                if 'browser_title' in html_obj:
+                    obj['browser_title'] = html_obj['browser_title']
+                r.publish('da:monitor', json.dumps(dict(messagetype='sessionupdate', key=key, session=obj)))
+            else:
+                logmessage("The html was not found")
+        #logmessage("Setting " + key)
         pipe = r.pipeline()
-        pipe.set(key, 1)
+        pipe.set(key, pickle.dumps(obj))
         pipe.expire(key, 60)
+        pipe.expire(html_key, 60)
         pipe.execute()
-        return jsonify(success=True)
+        #logmessage("Done setting " + key)
+        parameters = request.form.get('parameters', None)
+        if parameters is not None:
+            key = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+            r.publish(key, parameters)
+        return jsonify(success=True, chat_status=chatstatus)
     return jsonify(success=False)
 
 def do_redirect(url, is_ajax):
@@ -1073,6 +1180,15 @@ def do_redirect(url, is_ajax):
     else:
         return redirect(url)
 
+def standard_scripts():
+    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/signature.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>\n'
+    
+def standard_html_start(interview_language=DEFAULT_LANGUAGE, reload_after='', debug=False):
+    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">' + reload_after + '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/css/bootstrap-slider.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet">'
+    if debug:
+        output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
+    return output
+    
 @app.route("/", methods=['POST', 'GET'])
 def index():
     #seq = Sequence(message_sequence)
@@ -1082,6 +1198,7 @@ def index():
         is_ajax = True
     else:
         is_ajax = False
+    chatstatus = session.get('chatstatus', 'off')
     session_id = session.get('uid', None)
     if current_user.is_anonymous:
         if 'tempuser' not in session:
@@ -1092,7 +1209,15 @@ def index():
     else:
         if 'user_id' not in session:
             session['user_id'] = current_user.id
-    secret = request.cookies.get('secret', None)
+    expire_visitor_secret = False
+    if 'visitor_secret' in request.cookies:
+        if 'session' in request.args:
+            secret = request.cookies.get('secret', None)
+            expire_visitor_secret = True
+        else:
+            secret = request.cookies['visitor_secret']
+    else:
+        secret = request.cookies.get('secret', None)
     encrypted = session.get('encrypted', True)
     if secret is None:
         secret = ''.join(random.choice(string.ascii_letters) for i in range(16))
@@ -1236,6 +1361,8 @@ def index():
             response = do_redirect(url_for('index'), is_ajax)
             if set_cookie:
                 response.set_cookie('secret', secret)
+            if expire_visitor_secret:
+                response.set_cookie('visitor_secret', '', expires=0)
             release_lock(user_code, yaml_filename)
             return response
         for argname in request.args:
@@ -1252,6 +1379,8 @@ def index():
         response = do_redirect(url_for('index'), is_ajax)
         if set_cookie:
             response.set_cookie('secret', secret)
+        if expire_visitor_secret:
+            response.set_cookie('visitor_secret', '', expires=0)
         release_lock(user_code, yaml_filename)
         return response
     #logmessage("action is " + str(action))
@@ -1709,7 +1838,7 @@ def index():
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request))
         reset_user_dict(user_code, yaml_filename)
         save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
-        if current_user.is_authenticated:
+        if current_user.is_authenticated and 'visitor_secret' not in request.cookies:
             save_user_dict_key(user_code, yaml_filename)
             session['key_logged'] = True
         steps = 0
@@ -1734,7 +1863,7 @@ def index():
         user_dict = fresh_dictionary()
         reset_user_dict(user_code, yaml_filename)
         save_user_dict(user_code, user_dict, yaml_filename, secret=secret)
-        if current_user.is_authenticated:
+        if current_user.is_authenticated and 'visitor_secret' not in request.cookies:
             save_user_dict_key(user_code, yaml_filename)
             session['key_logged'] = True
         release_lock(user_code, yaml_filename)
@@ -1756,6 +1885,8 @@ def index():
             response_to_send.headers['Content-type'] = interview_status.extras['content_type']
         if set_cookie:
             response_to_send.set_cookie('secret', secret)
+        if expire_visitor_secret:
+            response.set_cookie('visitor_secret', '', expires=0)
     elif interview_status.question.question_type == "sendfile":
         if is_ajax:
             release_lock(user_code, yaml_filename)
@@ -1771,6 +1902,8 @@ def index():
             response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         if set_cookie:
             response_to_send.set_cookie('secret', secret)
+        if expire_visitor_secret:
+            response.set_cookie('visitor_secret', '', expires=0)
     elif interview_status.question.question_type == "redirect":
         # Duplicative to save here?
         #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
@@ -1813,11 +1946,28 @@ def index():
         # $(function () {
         #   $('.tabs a:last').tab('show')
         # })
-    scripts = '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/signature.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>\n'
-    scripts += """    <script type="text/javascript" charset="utf-8">
+    if not is_ajax:
+        scripts = standard_scripts()
+        chat_available = user_dict['_internal']['chat']['availability']
+        chat_mode = user_dict['_internal']['chat']['mode']
+        if chat_available == 'unavailable':
+            chat_status = 'off'
+        else:
+            chat_status = chatstatus
+        if chat_status in ('ringing', 'ready', 'on'):
+            chat_status = 'standby'
+        if chat_status in ('waiting', 'standby', 'ringing'):
+            send_changes = 'true'
+        else:
+            send_changes = 'false'
+        scripts += """    <script type="text/javascript" charset="utf-8">
       var socket = null;
       var foobar = null;
       var chatHistory = [];
+      var daChatStatus = """ + repr(str(chat_status)) + """;
+      var daChatAvailable = """ + repr(str(chat_available)) + """;
+      var daChatMode = """ + repr(str(chat_mode)) + """;
+      var daSendChanges = """ + send_changes + """;
       function daCloseSocket(){
         if (typeof socket !== 'undefined'){
           //socket.emit('terminate');
@@ -1867,11 +2017,10 @@ def index():
       }
       function daInitializeSocket(){
         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
-            socket = io.connect("http://" + document.domain + "/myns", {path: '/ws/socket.io'});
-            //socket = io.connect("http://" + document.domain + ":5000/myns");
+            socket = io.connect("http://" + document.domain + "/interview", {path: '/ws/socket.io'});
         }
         if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-            socket = io.connect("https://" + document.domain + "/myns" + location.port, {path: '/wss/socket.io'});
+            socket = io.connect("https://" + document.domain + "/interview" + location.port, {path: '/wss/socket.io'});
         }
         if (typeof socket !== 'undefined' && socket != null) {
             socket.on('connect', function() {
@@ -1879,6 +2028,9 @@ def index():
                   return;
                 }
                 console.log("Connected socket with sid " + socket.id);
+                daChatStatus = 'on';
+                pushChanges();
+                daTurnOnChat();
                 socket.emit('chat_log', {data: 1});
             });
             socket.on('chat_log', function(arg) {
@@ -1891,7 +2043,7 @@ def index():
                 scrollChatFast();
             });
             socket.on('disconnect', function() {
-                console.log("Disconnected socket");
+                //console.log("Disconnected socket");
                 //socket = null;
             });
             socket.on('mymessage', function(arg) {
@@ -1899,7 +2051,7 @@ def index():
                 $("#daPushResult").html(arg.data);
             });
             socket.on('chatmessage', function(arg) {
-                //console.log("Received chat message " + arg.data + " from " + arg.sid);
+                //console.log("Received chat message " + arg.data);
                 chatHistory.push(arg.data);
                 publishMessage(arg.data);
                 scrollChat();
@@ -1910,6 +2062,15 @@ def index():
       var daReloader = null;
       var dadisable = null;
       var daSubmitter = null;
+      var daChatRoles = """ + json.dumps(user_dict['_internal']['chat']['roles']) + """;
+      var daChatPartnerRoles = """ + json.dumps(user_dict['_internal']['chat']['partner_roles']) + """;
+      function pushChanges(){
+        if (checkinInterval != null){
+          clearInterval(checkinInterval);
+        }
+        daCheckin();
+        checkinInterval = setInterval(daCheckin, 6000);
+      }
       function daProcessAjax(data, form){
         if (dadisable != null){
           clearTimeout(dadisable);
@@ -1918,6 +2079,10 @@ def index():
           $("body").html(data.body);
           $("body").removeClass();
           $("body").addClass(data.bodyclass);
+          daChatAvailable = data.chat.available;
+          daChatMode = data.chat.mode;
+          daChatRoles = data.chat.roles;
+          daChatPartnerRoles = data.chat.partner_roles;
           daInitialize();
           var tempDiv = document.createElement('div');
           tempDiv.innerHTML = data.extra_scripts;
@@ -1952,44 +2117,104 @@ def index():
           form.submit();
         }
       }
-      var daChatStatus = 0;
+      function daShowChat(){
+        $("#daChatOnButton").removeClass("invisible");
+        $("#daChatAvailable").removeClass("invisible");
+      }
+      function daHideChat(){
+        $("#daChatOnButton").addClass("invisible");
+        $("#daChatAvailable").addClass("invisible");
+      }
+      function daRingChat(){
+        daChatStatus = 'ringing';
+        pushChanges();
+      }
       function daTurnOnChat(){
-        daChatStatus = 1;
+        //daChatStatus = 'on';
         $("#daChatOnButton").addClass("invisible");
         $("#daChatBox").removeClass("invisible");
         $("#daCorrespondence").html('');
-        if (socket == null){
-          daInitializeSocket();
-        }
         for(var i = 0; i < chatHistory.length; i++){
           publishMessage(chatHistory[i]);
         }
         scrollChatFast();
+        $("#daMessage").prop('disabled', false);
         $("#daSend").click(daSender);
-        daStopCheckingIn();
+      }
+      function daCloseChat(){
+        daChatStatus = 'standby';
+        pushChanges();
+        daTurnOffChat();
       }
       function daTurnOffChat(){
-        daChatStatus = 0;
         $("#daChatOnButton").removeClass("invisible");
         $("#daChatBox").addClass("invisible");
         daCloseSocket();
-        chatHistory = [];
+        $("#daMessage").prop('disabled', true);
         $("#daSend").unbind();
-        daStartCheckingIn();
+        //daStartCheckingIn();
       }
       function daCheckinCallback(data){
+        //console.log("success is " + data.success)
+        if (data.success){
+          console.log("daCheckinCallback: from " + daChatStatus + " to " + data.chat_status)
+          var statusChanged;
+          if (daChatStatus == data.chat_status){
+            statusChanged = false;
+          }
+          else{
+            statusChanged = true;
+          }
+          if (statusChanged){
+            daChatStatus = data.chat_status;
+            if (daChatStatus == 'standby' || daChatStatus == 'ringing' || daChatStatus == 'ready' || daChatStatus == 'on'){
+              daTurnOffChat();
+              daShowChat();
+            }
+            if (daChatStatus == 'ready'){
+              //daStopCheckingIn();
+              //console.log("Calling initialize socket from checkincallback")
+              daInitializeSocket();
+            }
+            if (daChatStatus == 'waiting' || daChatStatus == 'off'){
+              daTurnOffChat();
+              daHideChat();
+            }
+          }
+        }
+      }
+      function daCheckoutCallback(data){
       }
       function daCheckin(){
+        var datastring;
+        if ((daChatStatus == 'waiting' || daChatStatus == 'standby' || daChatStatus == 'ringing' || daChatStatus == 'ready' || daChatStatus == 'on') && $("#daform").length > 0){
+          datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, parameters: JSON.stringify($("#daform").serializeArray())});
+        }
+        else{
+          datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode});
+        }
+        //console.log("Doing checkin with " + daChatStatus);
         $.ajax({
           type: 'POST',
           url: """ + "'" + url_for('checkin') + "'" + """,
-          data: 'action=checkin',
+          data: datastring,
           success: daCheckinCallback,
           dataType: 'json'
         });
         return true;
       }
+      function daCheckout(){
+        $.ajax({
+          type: 'POST',
+          url: """ + "'" + url_for('checkout') + "'" + """,
+          data: 'action=checkout',
+          success: daCheckoutCallback,
+          dataType: 'json'
+        });
+        return true;
+      }
       function daStopCheckingIn(){
+        daCheckout();
         if (checkinInterval != null){
           clearInterval(checkinInterval);
         }
@@ -2002,8 +2227,8 @@ def index():
         $(function () {
           $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
         });
-        $("#daChatOnButton a").click(daTurnOnChat);
-        $("#daChatOffButton").click(daTurnOffChat);
+        $("#daChatOnButton a").click(daRingChat);
+        $("#daChatOffButton").click(daCloseChat);
         $('#daMessage').bind('keypress keydown keyup', function(e){
           if(e.keyCode == 13) { daSender(); e.preventDefault(); }
         });
@@ -2031,6 +2256,7 @@ def index():
             }
           });
           $("#helptoggle").on("click", function(){
+            //console.log("Got to helptoggle");
             window.scrollTo(0, 0);
             $(this).removeClass('daactivetext')
           });
@@ -2093,14 +2319,49 @@ def index():
           $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDiv);
           $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDiv);
         });
-        if (daChatStatus){
+        if (daChatAvailable == 'unavailable'){
+          if (daChatStatus == 'on'){
+            daHideChat();
+            daTurnOffChat();
+          }
+          daChatStatus = 'off';
+        }
+        if (daChatStatus == 'off' && daChatAvailable == 'available'){
+          daChatStatus = 'waiting';
+        }
+        if (daChatStatus == 'standby' || daChatStatus == 'ringing'){
+          daShowChat();
+        }
+        if (daChatStatus == 'off'){
+          daHideChat();
+        }
+        if (daChatStatus == 'ready' || daChatStatus == 'on'){
+          //console.log("Calling turn on chat from dainitialize")
+          daShowChat();
           daTurnOnChat();
+        }
+        if (daChatStatus == 'waiting' || daChatStatus == 'standby' || daChatStatus == 'ringing' || daChatStatus == 'ready' || daChatStatus == 'on'){
+          daSendChanges = true;
+        }
+        else{
+          daSendChange = false;
+        }
+        if (daSendChanges){
+          $("#daform").each(function(){
+            $(this).find(':input').change(pushChanges)
+          });
         }
       }
       $( document ).ready(function(){
         daInitialize();
-        daCheckin();
-        daStartCheckingIn();
+        setTimeout(daCheckin, 100);
+        checkinInterval = setInterval(daCheckin, 6000);
+        $( window ).unload(function() {
+          daStopCheckingIn();
+          if (typeof socket !== 'undefined'){
+            socket.emit('terminate');
+          }
+        });
       });
     </script>"""
     if interview_status.question.language != '*':
@@ -2119,20 +2380,17 @@ def index():
     else:
         reload_after = ''
     browser_title = interview_status.question.interview.get_title().get('full', default_title)
-    standard_header_start = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">' + reload_after + '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/css/bootstrap-slider.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet">'
-    if DEBUG:
-        standard_header_start += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
+    if not is_ajax:
+        standard_header_start = standard_html_start(interview_language=interview_language, reload_after=reload_after, debug=DEBUG)
     if interview_status.question.question_type == "signature":
         extra_scripts.append('<script>$( document ).ready(function() {daInitializeSignature();});</script>')
         bodyclass="dasignature"
-        if is_ajax:
-            output = ""
-        else:
+        if not is_ajax:
             #output = '<!doctype html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" />\n    <title>' + interview_status.question.interview.get_title().get('full', default_title) + '</title>\n    <link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet">\n  </head>\n  <body class="dasignature">\n'
-            output = standard_header_start + '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dasignature">\n'
+            start_output = standard_header_start + '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dasignature">\n'
         output += signature_html(interview_status, DEBUG, ROOT, extra_scripts, validation_rules)
         if not is_ajax:
-            output += scripts + "\n    " + "\n    ".join(extra_scripts) + """\n  </body>\n</html>"""
+            end_output = scripts + "\n    " + "\n    ".join(extra_scripts) + """\n  </body>\n</html>"""
     else:
         bodyclass="dabody"
         if 'speak_text' in interview_status.extras and interview_status.extras['speak_text']:
@@ -2185,13 +2443,11 @@ def index():
                     db.session.add(new_entry)
                     db.session.commit()
         # output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" rel="stylesheet">\n    <link href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
-        if is_ajax:
-            output = ""
-        else:
-            output = standard_header_start
-            output += "".join(extra_css)
-            output += '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dabody">\n'
-        output += make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">\n        <div class="tab-content">\n'
+        if not is_ajax:
+            start_output = standard_header_start
+            start_output += "".join(extra_css)
+            start_output += '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dabody">\n'
+        output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['chat']) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">\n        <div class="tab-content">\n'
         if interview_status.question.interview.use_progress_bar:
             output += progress_bar(user_dict['_internal']['progress'])
         output += content + "        </div>\n      </div>\n"
@@ -2248,24 +2504,95 @@ def index():
             output += '      </div>' + "\n"
         output += '    </div>'
         if not is_ajax:
-            output += scripts + "\n    " + "".join(extra_scripts) + """\n  </body>\n</html>"""
+            end_output = scripts + "\n    " + "".join(extra_scripts) + """\n  </body>\n</html>"""
     #logmessage(output.encode('utf8'))
+    if current_user.is_anonymous:
+        the_user_id = 't' + str(session['tempuser'])
+    else:
+        the_user_id = current_user.id
+    key = 'da:html:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+    #logmessage("Setting " + key)
+    pipe = r.pipeline()
+    pipe.set(key, json.dumps(dict(body=output, extra_scripts=extra_scripts, extra_css=extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after)))
+    pipe.expire(key, 60)
+    pipe.execute()
+    #logmessage("Done setting " + key)
+    if session.get('chatstatus', 'off') in ['waiting', 'standby', 'ringing', 'ready', 'on']:
+        inputkey = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+        r.publish(inputkey, json.dumps(dict(message='newpage', key=key)))
     if is_ajax:
         if 'reload_after' in interview_status.extras:
             reload_after = 1000 * int(interview_status.extras['reload_after'])
         else:
             reload_after = None
-        response = jsonify(action='body', body=output, extra_scripts=extra_scripts, extra_css=extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after)
+        response = jsonify(action='body', body=output, extra_scripts=extra_scripts, extra_css=extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, chat=user_dict['_internal']['chat'])
     else:
+        output = start_output + output + end_output
         response = make_response(output.encode('utf8'), '200 OK')
         response.headers['Content-type'] = 'text/html; charset=utf-8'
     if set_cookie:
         response.set_cookie('secret', secret)
+    if expire_visitor_secret:
+        response.set_cookie('visitor_secret', '', expires=0)
     release_lock(user_code, yaml_filename)
     return response
 
 if __name__ == "__main__":
     app.run()
+
+
+def save_user_dict_key(user_code, filename):
+    the_record = UserDictKeys.query.filter_by(key=user_code, filename=filename, user_id=current_user.id).first()
+    if the_record:
+        found = True
+    else:
+        found = False
+    if not found:
+        new_record = UserDictKeys(key=user_code, filename=filename, user_id=current_user.id)
+        db.session.add(new_record)
+        db.session.commit()
+    return
+
+def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, encrypt=True, manual_user_id=None):
+    nowtime = datetime.datetime.utcnow()
+    user_dict['_internal']['modtime'] = nowtime
+    if manual_user_id is not None or (current_user and current_user.is_authenticated and not current_user.is_anonymous):
+        if manual_user_id is not None:
+            the_user_id = manual_user_id
+        else:
+            the_user_id = current_user.id
+        user_dict['_internal']['accesstime'][the_user_id] = nowtime
+    else:
+        user_dict['_internal']['accesstime'][-1] = nowtime
+        the_user_id = None
+    if changed is True:
+        if encrypt:
+            new_record = UserDict(modtime=nowtime, key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
+        else:
+            new_record = UserDict(modtime=nowtime, key=user_code, dictionary=pack_dictionary(user_dict), filename=filename, user_id=the_user_id, encrypted=False)
+        db.session.add(new_record)
+        db.session.commit()
+    else:
+        max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(UserDict.key == user_code and UserDict.filename == filename).scalar()
+        if max_indexno is None:
+            if encrypt:
+                new_record = UserDict(modtime=nowtime, key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
+            else:
+                new_record = UserDict(modtime=nowtime, key=user_code, dictionary=pack_dictionary(user_dict), filename=filename, user_id=the_user_id, encrypted=False)
+            db.session.add(new_record)
+            db.session.commit()
+        else:
+            for record in UserDict.query.filter_by(key=user_code, filename=filename, indexno=max_indexno).all():
+                if encrypt:
+                    record.dictionary = encrypt_dictionary(user_dict, secret)
+                    record.modtime = nowtime
+                    record.encrypted = True
+                else:
+                    record.dictionary = pack_dictionary(user_dict)
+                    record.modtime = nowtime
+                    record.encrypted = False                   
+            db.session.commit()
+    return
 
 def process_bracket_expression(match):
     #return("[" + repr(urllib.unquote(match.group(1)).encode('unicode_escape')) + "]")
@@ -2372,108 +2699,8 @@ def release_lock(user_code, filename):
     UserDictLock.query.filter_by(key=user_code, filename=filename).delete()
     db.session.commit()
 
-def fetch_user_dict(user_code, filename, secret=None):
-    user_dict = None
-    steps = 0
-    encrypted = True
-    subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).filter(UserDict.key == user_code and UserDict.filename == filename).subquery()
-    results = db.session.query(UserDict.dictionary, UserDict.encrypted, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno)
-    for d in results:
-        if d.dictionary:
-            if d.encrypted:
-                user_dict = decrypt_dictionary(d.dictionary, secret)
-            else:
-                user_dict = unpack_dictionary(d.dictionary)
-                encrypted = False
-        if d.count:
-            steps = d.count
-        break
-    return steps, user_dict, encrypted
 
-def fetch_previous_user_dict(user_code, filename, secret):
-    user_dict = None
-    max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(UserDict.key == user_code and UserDict.filename == filename).scalar()
-    if max_indexno is not None:
-        UserDict.query.filter_by(indexno=max_indexno).delete()
-        db.session.commit()
-    return fetch_user_dict(user_code, filename, secret=secret)
-
-def advance_progress(user_dict):
-    user_dict['_internal']['progress'] += 0.05*(100-user_dict['_internal']['progress'])
-    return
-
-def save_user_dict_key(user_code, filename):
-    the_record = UserDictKeys.query.filter_by(key=user_code, filename=filename, user_id=current_user.id).first()
-    if the_record:
-        found = True
-    else:
-        found = False
-    if not found:
-        new_record = UserDictKeys(key=user_code, filename=filename, user_id=current_user.id)
-        db.session.add(new_record)
-        db.session.commit()
-    return
-
-def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, encrypt=True, manual_user_id=None):
-    nowtime = datetime.datetime.utcnow()
-    user_dict['_internal']['modtime'] = nowtime
-    if manual_user_id is not None or (current_user and current_user.is_authenticated and not current_user.is_anonymous):
-        if manual_user_id is not None:
-            the_user_id = manual_user_id
-        else:
-            the_user_id = current_user.id
-        user_dict['_internal']['accesstime'][the_user_id] = nowtime
-    else:
-        user_dict['_internal']['accesstime'][-1] = nowtime
-        the_user_id = None
-    if changed is True:
-        if encrypt:
-            new_record = UserDict(modtime=nowtime, key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
-        else:
-            new_record = UserDict(modtime=nowtime, key=user_code, dictionary=pack_dictionary(user_dict), filename=filename, user_id=the_user_id, encrypted=False)
-        db.session.add(new_record)
-        db.session.commit()
-    else:
-        max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(UserDict.key == user_code and UserDict.filename == filename).scalar()
-        if max_indexno is None:
-            if encrypt:
-                new_record = UserDict(modtime=nowtime, key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
-            else:
-                new_record = UserDict(modtime=nowtime, key=user_code, dictionary=pack_dictionary(user_dict), filename=filename, user_id=the_user_id, encrypted=False)
-            db.session.add(new_record)
-            db.session.commit()
-        else:
-            for record in UserDict.query.filter_by(key=user_code, filename=filename, indexno=max_indexno).all():
-                if encrypt:
-                    record.dictionary = encrypt_dictionary(user_dict, secret)
-                    record.modtime = nowtime
-                    record.encrypted = True
-                else:
-                    record.dictionary = pack_dictionary(user_dict)
-                    record.modtime = nowtime
-                    record.encrypted = False                   
-            db.session.commit()
-    return
-
-def reset_user_dict(user_code, filename):
-    UserDict.query.filter_by(key=user_code, filename=filename).delete()
-    db.session.commit()
-    UserDictKeys.query.filter_by(key=user_code, filename=filename).delete()
-    db.session.commit()
-    for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename).all():
-        old_file = SavedFile(upload.indexno)
-        old_file.delete()
-    Uploads.query.filter_by(key=user_code, yamlfile=filename).delete()
-    db.session.commit()
-    Attachments.query.filter_by(key=user_code, filename=filename).delete()
-    db.session.commit()
-    SpeakList.query.filter_by(key=user_code, filename=filename).delete()
-    db.session.commit()
-    ChatLog.query.filter_by(key=user_code, filename=filename).delete()
-    db.session.commit()
-    return
-
-def make_navbar(status, page_title, page_short_title, steps, show_login):
+def make_navbar(status, page_title, page_short_title, steps, show_login, chat_info):
     navbar = """\
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="container-fluid">
@@ -2497,9 +2724,11 @@ def make_navbar(status, page_title, page_short_title, steps, show_login):
 """
     if len(status.helpText):
         if status.question.helptext is None:
-            navbar += '          <a class="mynavbar-text" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + '</a>'
+            navbar += '          <a class="mynavbar-text" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + ' <i id="daChatAvailable" class="glyphicon glyphicon-comment invisible"></i></a>'
         else:
-            navbar += '          <a class="mynavbar-text daactivetext" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i></a>'
+            navbar += '          <a class="mynavbar-text daactivetext" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i> <i id="daChatAvailable" class="glyphicon glyphicon-comment invisible"></i></a>'
+    elif chat_info['availability'] == 'available':
+        navbar += '          <a class="mynavbar-text invisible" href="#help" id="daChatAvailable" data-toggle="tab"><i class="glyphicon glyphicon-comment"></i></a>'
     navbar += """
         </div>
         <div class="collapse navbar-collapse" id="navbar-collapse">
@@ -2542,6 +2771,8 @@ def make_navbar(status, page_title, page_short_title, steps, show_login):
             navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + current_user.email + '<span class="caret"></span></a><ul class="dropdown-menu">'
             if custom_menu:
                 navbar += custom_menu
+            if current_user.has_role('admin', 'developer', 'advocate'):
+                navbar +='<li><a href="' + url_for('monitor') + '">' + word('Monitor') + '</a></li>'
             if current_user.has_role('admin', 'developer'):
                 navbar +='<li><a href="' + url_for('package_page') + '">' + word('Package Management') + '</a></li>'
                 navbar +='<li><a href="' + url_for('logs') + '">' + word('Logs') + '</a></li>'
@@ -2746,6 +2977,572 @@ class Object(object):
         for key, value in kwargs.iteritems():
             setattr(self, key, value)
     pass
+
+@app.route('/visit_interview', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer', 'advocate'])
+def visit_interview():
+    i = request.args.get('i', None)
+    uid = request.args.get('uid', None)
+    userid = request.args.get('userid', None)
+    key = 'da:session:uid:' + str(uid) + ':i:' + str(i) + ':userid:' + str(userid)
+    try:
+        obj = pickle.loads(r.get(key))
+    except:
+        abort(404)
+    if 'secret' not in obj or 'encrypted' not in obj:
+        abort(404)
+    session['i'] = i
+    session['uid'] = uid
+    session['encrypted'] = obj['encrypted']
+    if 'user_id' not in session:
+        session['user_id'] = current_user.id
+    session['key_logged'] = True
+    if 'tempuser' in session:
+        del session['tempuser']
+    response = redirect(url_for('index'))
+    response.set_cookie('visitor_secret', obj['secret'])
+    return response
+
+@app.route('/observer', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer', 'advocate'])
+def observer():
+    session['observer'] = 1
+    i = request.args.get('i', None)
+    uid = request.args.get('uid', None)
+    userid = request.args.get('userid', None)
+    observation_script = """
+    <script>
+      function daInitialize(){
+        $(function () {
+          $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
+        });
+        $(".to-labelauty").labelauty({ width: "100%" });
+        $(".to-labelauty-icon").labelauty({ label: false });
+        $(function(){ 
+          var navMain = $("#navbar-collapse");
+          navMain.on("click", "a", null, function () {
+            if (!($(this).hasClass("dropdown-toggle"))){
+              navMain.collapse('hide');
+            }
+          });
+          $("#helptoggle").on("click", function(){
+            //console.log("Got to helptoggle");
+            window.scrollTo(0, 0);
+            $(this).removeClass('daactivetext')
+            return true;
+          });
+          $("#sourcetoggle").on("click", function(){
+            $(this).toggleClass("sourceactive");
+          });
+          $('#backToQuestion').click(function(event){
+            event.preventDefault();
+            $('#questionlabel').trigger('click');
+          });
+        });
+        $(".showif").each(function(){
+          var showIfSign = $(this).data('showif-sign');
+          var showIfVar = $(this).data('showif-var');
+          var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/, "\\\\$1");
+          var showIfVal = $(this).data('showif-val');
+          var saveAs = $(this).data('saveas');
+          var isSame = (saveAs == showIfVar);
+          var showIfDiv = this;
+          var showHideDiv = function(){
+            //console.log("showHideDiv1")
+            if($(this).parents(".showif").length !== 0){
+              return;
+            }
+            var theVal;
+            if ($(this).attr('type') == "checkbox" || $(this).attr('type') == "radio"){
+              theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
+            }
+            else{
+              theVal = $(this).val();
+            }
+            //console.log("val is " + theVal + " and showIfVal is " + showIfVal)
+            if(theVal == showIfVal){
+              //console.log("They are the same");
+              if (showIfSign){
+                $(showIfDiv).removeClass("invisible");
+                $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+              }
+              else{
+                $(showIfDiv).addClass("invisible");
+                $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+              }
+            }
+            else{
+              //console.log("They are not the same");
+              if (showIfSign){
+                $(showIfDiv).addClass("invisible");
+                $(showIfDiv).find('input, textarea, select').prop("disabled", true);
+              }
+              else{
+                $(showIfDiv).removeClass("invisible");
+                $(showIfDiv).find('input, textarea, select').prop("disabled", false);
+              }
+            }
+          };
+          $("#" + showIfVarEscaped).each(showHideDiv);
+          $("#" + showIfVarEscaped).change(showHideDiv);
+          $("input[type='radio'][name='" + showIfVarEscaped + "']").each(showHideDiv);
+          $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDiv);
+          $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDiv);
+          $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDiv);
+        });
+        dadisable = setTimeout(function(){
+          $("#daform").find('button[type="submit"]').prop("disabled", true);
+          //$("#daform").find(':input').prop("disabled", true);
+        }, 1);
+      }
+      $( document ).ready(function(){
+        daInitialize();
+        if (location.protocol === 'http:' || document.location.protocol === 'http:'){
+            socket = io.connect("http://" + document.domain + "/observer" + location.port, {path: '/ws/socket.io'});
+        }
+        if (location.protocol === 'https:' || document.location.protocol === 'https:'){
+            socket = io.connect("https://" + document.domain + "/observer" + location.port, {path: '/wss/socket.io'});
+        }
+        if (typeof socket !== 'undefined') {
+            socket.on('connect', function() {
+                //console.log("Connected!");
+                socket.emit('observe', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """});
+            });
+            socket.on('disconnect', function() {
+                //console.log("Disconnected socket");
+            });
+            socket.on('newpage', function(incoming) {
+                var data = incoming.obj;
+                $("body").html(data.body);
+                $("body").removeClass();
+                $("body").addClass(data.bodyclass);
+                daInitialize();
+                var tempDiv = document.createElement('div');
+                tempDiv.innerHTML = data.extra_scripts;
+                var scripts = tempDiv.getElementsByTagName('script');
+                for (var i = 0; i < scripts.length; i++){
+                  eval(scripts[i].innerHTML);
+                }
+                for (var i = 0; i < data.extra_css.length; i++){
+                  $("head").append(data.extra_css[i]);
+                }
+                document.title = data.browser_title;
+                if ($("html").attr("lang") != data.lang){
+                  $("html").attr("lang", data.lang);
+                }
+            });
+            socket.on('pushchanges', function(data) {
+                var valArray = Object();
+                var values = data.parameters;
+                for (var i = 0; i < values.length; i++) {
+                    valArray[values[i].name] = values[i].value;
+                }
+                $("#daform").each(function(){
+                    $(this).find(':input').each(function(){
+                        var type = $(this).attr('type');
+                        var id = $(this).attr('id');
+                        if (type == 'radio' || type == 'checkbox'){
+                            if (id in valArray){
+                                if (valArray[id] == 'True'){
+                                    $(this).prop('checked', true);
+                                }
+                                else{
+                                    $(this).prop('checked', false);
+                                }
+                            }
+                            else{
+                                $(this).prop('checked', false);
+                            }
+                        }
+                        else if ($(this).data().hasOwnProperty('sliderMax')){
+                            $(this).slider('setValue', parseInt(valArray[id]));
+                        }
+                        else{
+                            if (id in valArray){
+                                $(this).val(valArray[id]);
+                            }
+                        }
+                    });
+                });
+            });
+        }
+    });
+    </script>
+"""
+    the_key = 'da:html:uid:' + str(uid) + ':i:' + str(i) + ':userid:' + str(userid)
+    html = r.get(the_key)
+    if html is not None:
+        obj = json.loads(html)
+    else:
+        logmessage("Failed to load JSON from key " + the_key)
+        obj = dict()
+    output = standard_html_start(interview_language=obj.get('lang', 'en'), debug=DEBUG)
+    output += "".join(obj.get('extra_css', list()))
+    output += '\n    <title>' + word('Observation') + '</title>\n  </head>\n  <body class="' + obj.get('bodyclass', 'dabody') + '">\n'
+    output += obj.get('body', '')
+    output += standard_scripts() + observation_script + "\n    " + "".join(obj.get('extra_scripts', list())) + "\n  </body>\n</html>"
+    response = make_response(output.encode('utf8'), '200 OK')
+    response.headers['Content-type'] = 'text/html; charset=utf-8'
+    return response
+
+@app.route('/monitor', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer', 'advocate'])
+def monitor():
+    session['monitor'] = 1
+    if 'user_id' not in session:
+        session['user_id'] = current_user.id
+    sub_role_key = 'da:monitor:userrole:' + str(session['user_id'])
+    if r.exists(sub_role_key):
+        subscribed_roles = r.hgetall(sub_role_key)
+        r.expire(sub_role_key, 2592000)
+    else:
+        subscribed_roles = dict()
+    key = 'da:monitor:available:' + str(current_user.id)
+    if r.exists(key):
+        daAvailableForChat = 'true'
+    else:
+        daAvailableForChat = 'false'
+    script = '<script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n' + """<script type="text/javascript" charset="utf-8">
+    var socket;
+    var daUserid = """ + str(current_user.id) + """;
+    var daSessions = Object();
+    var daAvailRoles = Object();
+    var daSubscribedRoles = """ + json.dumps(subscribed_roles) + """;
+    var daAvailableForChat = """ + daAvailableForChat + """;
+    var daFirstTime = 1;
+    var updateMonitorInterval = null;
+    function scrollChat(key){
+      var chatScroller = $(key).find('ul').first();
+      if (chatScroller.length){
+        var height = chatScroller[0].scrollHeight;
+        chatScroller.animate({scrollTop: height}, 800);
+      }
+      else{
+        console.log("error")
+      }
+    }
+    function scrollChatFast(key){
+      var chatScroller = $(key).find('ul').first();
+      if (chatScroller.length){
+        var height = chatScroller[0].scrollHeight;
+        chatScroller.scrollTop(height);
+      }
+      else{
+        console.log("error")
+      }
+    }
+    function do_update_monitor(){
+        //console.log("do update monitor with " + daAvailableForChat);
+        socket.emit('updatemonitor', {available_for_chat: daAvailableForChat, subscribed_roles: daSubscribedRoles});
+    }
+    function update_monitor(){
+        if (updateMonitorInterval != null){
+            clearInterval(updateMonitorInterval);
+        }
+        do_update_monitor();
+        updateMonitorInterval = setInterval(do_update_monitor, 6000);
+        //console.log("update_monitor");
+    }
+    function undraw_session(key){
+        //console.log("Undrawing...")
+        var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+        $("#listelement" + skey).addClass("list-group-item-danger");
+        $("#session" + skey).find("a").remove();
+        $("#session" + skey).find("span").html('""" + word("offline") + """');
+        $("#session" + skey).find("span").removeClass('label-info');
+        $("#session" + skey).find("span").addClass('label-danger');
+        $("#iframe" + skey).find('iframe').first().contents().find('body').addClass("dainactive");
+        $("#chatarea" + skey).find('input, button').prop("disabled", true);
+        delete daSessions[key];
+    }
+    function draw_session(key, obj){
+        var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+        var the_html;
+        var wants_to_chat;
+        if (obj.chatstatus == 'waiting' || obj.chatstatus == 'standby' || obj.chatstatus == 'ringing' || obj.chatstatus == 'ready' || obj.chatstatus == 'on'){
+            wants_to_chat = true;
+        }
+        if (wants_to_chat){
+            the_html = obj.browser_title + ' ';
+        }
+        var theListElement;
+        var sessionDiv;
+        var controlDiv;
+        var theIframe;
+        if ($("#session" + skey).length && !(key in daSessions)){
+            $("#listelement" + skey).removeClass("list-group-item-danger");
+            $("#iframe" + skey).find('iframe').first().contents().find('body').removeClass("dainactive");
+        }
+        daSessions[key] = 1;
+        if ($("#session" + skey).length){
+            theListElement = $("#listelement" + skey).first();
+            sessionDiv = $("#session" + skey).first();
+            controlDiv = $("#control" + skey).first();
+            theIframe = $("#iframe" + skey).first();
+            theChatArea = $("#chatarea" + skey).first();
+            $(sessionDiv).empty();
+        }
+        else{
+            var theListElement = document.createElement('li');
+            $(theListElement).addClass('list-group-item');
+            $(theListElement).attr('id', "listelement" + key);
+            var sessionDiv = document.createElement('div');
+            $(sessionDiv).attr('id', "session" + key);
+            $(sessionDiv).appendTo($(theListElement));
+            $(theListElement).appendTo("#monitorsessions");
+            controlDiv = document.createElement('div');
+            $(controlDiv).attr('id', "control" + key);
+            $(controlDiv).addClass("chatcontrol");
+            $(controlDiv).addClass("invisible");
+            $(controlDiv).appendTo($(theListElement));
+            var controlButton = document.createElement('a');
+            $(controlButton).addClass("label");
+            $(controlButton).addClass("label-default");
+            $(controlButton).addClass("observebutton");
+            $(controlButton).html('""" + word("Close") + """');
+            $(controlButton).appendTo($(controlDiv));
+            var joinButton = document.createElement('a');
+            $(joinButton).addClass("label");
+            $(joinButton).addClass("label-warning");
+            $(joinButton).addClass("observebutton");
+            $(joinButton).html('""" + word("Join") + """');
+            $(joinButton).attr('href', '""" + url_for('visit_interview') + """?' + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
+            $(joinButton).attr('target', '_blank');
+            $(joinButton).appendTo($(controlDiv));
+            theIframeContainer = document.createElement('div');
+            $(theIframeContainer).addClass("observer-container");
+            $(theIframeContainer).attr('id', 'iframe' + key);
+            theIframe = document.createElement('iframe');
+            $(theIframeContainer).addClass("invisible");
+            $(theIframe).addClass("observer");
+            $(theIframe).attr('name', 'iframe' + key);
+            //$(theIframe).attr('frameborder', '0');
+            //$(theIframe).attr('vspace', '0');
+            //$(theIframe).attr('hspace', '0');
+            //$(theIframe).attr('marginwidth', '0');
+            //$(theIframe).attr('marginheight', '0');
+            $(theIframe).appendTo($(theIframeContainer));
+            $(theIframeContainer).appendTo($(theListElement));
+            theChatArea = document.createElement('div');
+            $(theChatArea).addClass('monitor-chat-area');
+            $(theChatArea).addClass('invisible');
+            $(theChatArea).html('<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"></ul></div></div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control" disabled><span class="input-group-btn"><button class="btn btn-default" type="button" disabled>""" + word("Send") + """</button></span></div></div></div></form>');
+            $(theChatArea).attr('id', 'chatarea' + key);
+            var submitter = function(){
+                var input = $(theChatArea).find("input").first();
+                var message = input.val().trim();
+                if (message == null || message == ""){
+                    return false;
+                }
+                socket.emit('chatmessage', {key: key, data: input.val()});
+                input.val('');
+                return false;
+            };
+            $(theChatArea).find("button").click(submitter);
+            $(theChatArea).find("input").bind('keypress keydown keyup', function(e){
+                if(e.keyCode == 13) { submitter(); e.preventDefault(); }
+            });
+            $(theChatArea).appendTo($(theListElement));
+            $(controlButton).click(function(){
+                $(controlDiv).addClass("invisible");
+                $(sessionDiv).removeClass("invisible");
+                theIframe.contentWindow.document.open();
+                theIframe.contentWindow.document.write("");
+                theIframe.contentWindow.document.close();
+                $(theIframeContainer).addClass("invisible");
+            });
+        }
+        theText = document.createTextNode(the_html);
+        var statusLabel = document.createElement('span');
+        $(statusLabel).addClass("label");
+        $(statusLabel).addClass("label-info");
+        $(statusLabel).addClass("chat-status-label");
+        $(statusLabel).html(obj.chatstatus);
+        $(statusLabel).appendTo($(sessionDiv));
+        $(theText).appendTo($(sessionDiv));
+        if (wants_to_chat){
+            var openButton = document.createElement('a');
+            $(openButton).addClass("label");
+            $(openButton).addClass("label-primary");
+            $(openButton).addClass("observebutton");
+            $(openButton).attr('href', '""" + url_for('observer') + """?' + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
+            //$(openButton).attr('href', 'about:blank');
+            $(openButton).attr('target', 'iframe' + key);
+            $(openButton).html('""" + word("Observe") + """');
+            $(openButton).appendTo($(sessionDiv));
+            $(openButton).click(function(){
+                $(sessionDiv).addClass("invisible");
+                $(controlDiv).removeClass("invisible");
+                $(theIframeContainer).removeClass("invisible");
+                return true;
+            });
+        }
+    }
+    $(document).ready(function(){
+        if (location.protocol === 'http:' || document.location.protocol === 'http:'){
+            socket = io.connect("http://" + document.domain + "/monitor" + location.port, {path: '/ws/socket.io'});
+        }
+        if (location.protocol === 'https:' || document.location.protocol === 'https:'){
+            socket = io.connect("https://" + document.domain + "/monitor" + location.port, {path: '/wss/socket.io'});
+        }
+        if (typeof socket !== 'undefined') {
+            socket.on('connect', function() {
+                //console.log("Connected!");
+                update_monitor();
+            });
+            socket.on('disconnect', function() {
+                //console.log("Disconnected socket");
+            });
+            socket.on('refreshsessions', function(data) {
+                update_monitor();
+            });
+            socket.on('chatready', function(data) {
+                var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
+                var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+                //console.log("Received chat ready");
+                $("#chatarea" + skey).removeClass('invisible');
+                $("#chatarea" + skey).find('input, button').prop("disabled", false);
+            });
+            socket.on('chatmessage', function(data) {
+                var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
+                var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+                //console.log("Received chat message for #chatarea" + skey);
+                var chatArea = $("#chatarea" + skey).find('ul').first();
+                var newLi = document.createElement('li');
+                $(newLi).addClass("list-group-item");
+                if (data.data.is_self){
+                  $(newLi).addClass("list-group-item-warning");
+                  $(newLi).addClass("dalistright");
+                }
+                else{
+                  $(newLi).addClass("list-group-item-info");
+                }
+                $(newLi).html(data.data.message);
+                $(newLi).appendTo(chatArea);
+                scrollChat("#chatarea" + skey);
+            });
+            socket.on('sessionupdate', function(data) {
+                //console.log("Got session update: " + data.session.chatstatus);
+                draw_session(data.key, data.session);
+            });
+            socket.on('updatemonitor', function(data) {
+                //console.log("Got update monitor response");
+                var newSubscribedRoles = Object();
+                for (var key in data.subscribedRoles){
+                    if (data.subscribedRoles.hasOwnProperty(key)){
+                        newSubscribedRoles[key] = 1;
+                    }
+                }
+                for (var i = 0; i < data.availRoles.length; ++i){
+                    var key = data.availRoles[i];
+                    if ($("#role" + key).length == 0){
+                        var label = document.createElement('label');
+                        $(label).addClass('checkbox-inline');
+                        var input = document.createElement('input');
+                        var text = document.createTextNode(key);
+                        $(input).attr('type', 'checkbox');
+                        $(input).attr('id', "role" + key);
+                        if (key in newSubscribedRoles){
+                            $(input).prop('checked', true);
+                        }
+                        else{
+                            $(input).prop('checked', false);
+                        }
+                        $(input).val(key);
+                        $(input).appendTo($(label));
+                        $(text).appendTo($(label));
+                        $(label).appendTo($("#monitorroles"));
+                        $(input).change(function(){
+                            var key = $(this).val();
+                            //console.log("change to " + key);
+                            if ($(this).is(":checked")) {
+                                //console.log("it is checked");
+                                daSubscribedRoles[key] = 1;
+                            }
+                            else{
+                                //console.log("it is not checked");
+                                if (key in daSubscribedRoles){
+                                    delete daSubscribedRoles[key];
+                                }
+                            }
+                            update_monitor();
+                        });
+                    }
+                    else{
+                        var input = $("role" + key).first();
+                        if (key in newSubscribedRoles){
+                            $(input).prop('checked', true);
+                        }
+                        else{
+                            $(input).prop('checked', false);
+                        }
+                    }
+                }
+                daSubscribedRoles = newSubscribedRoles;
+                newDaSessions = Object();
+                for (var key in data.sessions){
+                    if (data.sessions.hasOwnProperty(key)){
+                        var user_id = key.replace(/^.*:userid:/, '');
+                        if (user_id != daUserid){
+                            var obj = data.sessions[key];
+                            newDaSessions[key] = obj;
+                            draw_session(key, obj);
+                        }
+                    }
+                }
+                var toDelete = Array();
+                var numSessions = 0;
+                for (var key in daSessions){
+                    if (daSessions.hasOwnProperty(key)){
+                        numSessions++;
+                        if (!(key in newDaSessions)){
+                            toDelete.push(key);
+                        }
+                    }
+                }
+                for (var i = 0; i < toDelete.length; ++i){
+                    var key = toDelete[i];
+                    undraw_session(key);
+                }
+                if ($("#monitorsessions").find("li").length > 0){
+                    $("#emptylist").addClass("invisible");
+                }
+                else{
+                    $("#emptylist").removeClass("invisible");
+                }
+            });
+        }
+        if (daAvailableForChat){
+            $("#daNotAvailable").addClass("invisible");
+        }
+        else{
+            $("#daAvailable").addClass("invisible");
+        }
+        $("#daAvailable").click(function(){
+            $("#daAvailable").addClass("invisible");
+            $("#daNotAvailable").removeClass("invisible");
+            daAvailableForChat = false;
+            //console.log("daAvailableForChat: " + daAvailableForChat);
+            update_monitor();
+        });
+        $("#daNotAvailable").click(function(){
+            $("#daNotAvailable").addClass("invisible");
+            $("#daAvailable").removeClass("invisible");
+            daAvailableForChat = true;
+            //console.log("daAvailableForChat: " + daAvailableForChat);
+            update_monitor();
+        });
+        $( window ).unload(function() {
+          if (typeof socket !== 'undefined'){
+            socket.emit('terminate');
+          }
+        });
+    });
+</script>"""
+    return render_template('pages/monitor.html', extra_js=Markup(script)), 200
 
 @app.route('/updatepackage', methods=['GET', 'POST'])
 @login_required
@@ -2980,38 +3777,37 @@ def get_package_info():
             package_list.append(Object(package=package, can_update=can_update, can_uninstall=can_uninstall))
     return package_list, package_auth
 
-@app.route('/testws', methods=['GET', 'POST'])
-def test_websocket():
-    script = '<script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>' + """<script type="text/javascript" charset="utf-8">
-    var socket;
-    $(document).ready(function(){
-        if (location.protocol === 'http:' || document.location.protocol === 'http:'){
-            socket = io.connect("http://" + document.domain + "/myns", {path: '/ws/socket.io'});
-            //socket = io.connect("http://" + document.domain + ":5000/myns");
-        }
-        if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-            socket = io.connect("https://" + document.domain + "/myns" + location.port, {path: '/wss/socket.io'});
-        }
-        if (typeof socket !== 'undefined') {
-            socket.on('connect', function() {
-                //console.log("Connected!");
-                socket.emit('chat_log', {data: 1});
-            });
-            socket.on('mymessage', function(arg) {
-                //console.log("Received " + arg.data);
-                $("#daPushResult").html(arg.data);
-            });
-            socket.on('chatmessage', function(arg) {
-                //console.log("Received chat message " + arg.data);
-                var newDiv = document.createElement('div');
-                $(newDiv).html(arg.data);
-                $("#daCorrespondence").append(newDiv);
-            });
-        }
-        $("#daSend").click(daSender);
-    });
-</script>"""
-    return render_template('pages/socketserver.html', extra_js=Markup(script)), 200
+# @app.route('/testws', methods=['GET', 'POST'])
+# def test_websocket():
+#     script = '<script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>' + """<script type="text/javascript" charset="utf-8">
+#     var socket;
+#     $(document).ready(function(){
+#         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
+#             socket = io.connect("http://" + document.domain + "/interview", {path: '/ws/socket.io'});
+#         }
+#         if (location.protocol === 'https:' || document.location.protocol === 'https:'){
+#             socket = io.connect("https://" + document.domain + "/interview" + location.port, {path: '/wss/socket.io'});
+#         }
+#         if (typeof socket !== 'undefined') {
+#             socket.on('connect', function() {
+#                 //console.log("Connected!");
+#                 socket.emit('chat_log', {data: 1});
+#             });
+#             socket.on('mymessage', function(arg) {
+#                 //console.log("Received " + arg.data);
+#                 $("#daPushResult").html(arg.data);
+#             });
+#             socket.on('chatmessage', function(arg) {
+#                 console.log("Received chat message " + arg.data);
+#                 var newDiv = document.createElement('div');
+#                 $(newDiv).html(arg.data.message);
+#                 $("#daCorrespondence").append(newDiv);
+#             });
+#         }
+#         $("#daSend").click(daSender);
+#     });
+# </script>"""
+#     return render_template('pages/socketserver.html', extra_js=Markup(script)), 200
 
 @app.route('/createplaygroundpackage', methods=['GET', 'POST'])
 @login_required
@@ -3192,8 +3988,8 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
             setuppy += "setup(name='docassemble." + str(pkgname) + "',\n" + """\
       version='0.1',
       description=('A docassemble extension.'),
-      author=""" + repr(name_of_user(current_user)) + """,
-      author_email=""" + repr(current_user.email) + """,
+      author=""" + repr(str(name_of_user(current_user))) + """,
+      author_email=""" + repr(str(current_user.email)) + """,
       license='MIT',
       url='http://docassemble.org',
       packages=find_packages(),
@@ -4166,12 +4962,12 @@ $( document ).ready(function() {
       url: """ + '"' + url_for('playground_page') + '"' + """,
       data: $("#form").serialize() + '&variablefile=' + $(this).val(),
       success: function(data){
-        console.log("foobar1")
+        //console.log("foobar1")
         $("#daplaygroundtable").html(data.variables_html)
         $(function () {
           $('[data-toggle="popover"]').popover({trigger: 'hover', html: true})
         });
-        console.log("foobar2")
+        //console.log("foobar2")
       },
       dataType: 'json'
     });
@@ -4800,4 +5596,5 @@ if not in_celery:
     docassemble.base.functions.set_worker(docassemble.webapp.worker.background_action)
 import docassemble.webapp.machinelearning
 docassemble.base.util.set_knn_machine_learner(docassemble.webapp.machinelearning.SimpleTextMachineLearner)
+
 

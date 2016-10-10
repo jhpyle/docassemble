@@ -78,6 +78,8 @@ class ChatLog(db.Model):
     message = db.Column(db.Text())
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
     temp_user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'tempuser.id', ondelete='CASCADE'))
+    owner_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
+    temp_owner_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'tempuser.id', ondelete='CASCADE'))
+    open_to_peer = db.Column(db.Boolean(), nullable=False, server_default='0')
     encrypted = db.Column(db.Boolean(), nullable=False, server_default='1')
     modtime = db.Column(db.DateTime())
-    

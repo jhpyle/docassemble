@@ -1,6 +1,20 @@
 body.dabody {
-  padding-top: 60px;
-  padding-bottom: 40px;
+    border: 0px;
+    margin: 0px;
+    padding-top: 60px;
+    padding-bottom: 40px;
+}
+
+body.dainactive {
+    background-color: #f2dede;
+}
+
+body.dainactive .form-control{
+    background-color: #f2dede;
+}
+
+body.dainactive > .navbar-inverse {
+    background-image: linear-gradient(to bottom,#883c3c 0,#522 100%);
 }
 
 .slider-horizontal {
@@ -426,6 +440,25 @@ span.daparenthetical {
     margin-right: 3px;
 }
 
+.observebutton {
+    font-size: 14px;
+    float: right;
+    margin-bottom: 4px;
+    margin-left: 4px;
+}
+
+.chat-status-label {
+    width: 6em;
+    font-size: 14px;
+    float: left;
+    margin-bottom: 4px;
+    margin-right: 8px;
+}
+
+.chatcontrol {
+    height: 24px
+}
+
 div.striping:nth-child(even) {
     background-color: #e7e7e7;
 }
@@ -478,4 +511,28 @@ a.darunbutton {
 
 .min-width > ul.nav > li {
     flex-shrink: 0;
+}
+
+.observer-container {
+    height: 324px;
+    overflow: hidden;
+}
+
+iframe.observer {
+    width: 768px;
+    height: 432px;
+    overflow: auto;
+    -moz-transform: scale(0.75, 0.75); 
+    -webkit-transform: scale(0.75, 0.75); 
+    -o-transform: scale(0.75, 0.75);
+    -ms-transform: scale(0.75, 0.75);
+    transform: scale(0.75, 0.75); 
+    -moz-transform-origin: top left;
+    -webkit-transform-origin: top left;
+    -o-transform-origin: top left;
+    -ms-transform-origin: top left;
+    transform-origin: top left;
+    border: solid #ccc 3px;
+    margin: 0;
+    padding: 0;
 }

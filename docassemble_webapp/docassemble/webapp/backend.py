@@ -3,6 +3,8 @@ from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, 
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.webapp.core.models import Uploads
 from docassemble.base.logger import logmessage
+from docassemble.webapp.users.models import UserDict, UserDictKeys, ChatLog
+from docassemble.webapp.core.models import Attachments, Uploads, SpeakList
 import docassemble.webapp.database
 import logging
 import urllib
@@ -11,6 +13,7 @@ import pickle
 import codecs
 import string
 import random
+import datetime
 from Crypto.Cipher import AES
 from dateutil import tz
 
@@ -121,7 +124,7 @@ if S3_ENABLED:
     s3 = docassemble.webapp.amazon.s3object(s3_config)
 else:
     s3 = None
-initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict())
+initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, chat=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict())
 #else:
 #    initial_dict = dict(_internal=dict(tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
 if 'initial_dict' in daconfig:
@@ -345,5 +348,56 @@ def unpack_dictionary(dict_string):
 
 def nice_date_from_utc(timestamp, timezone=tz.tzlocal()):
     return timestamp.replace(tzinfo=tz.tzutc()).astimezone(timezone).strftime('%x %X')
+
+def nice_utc_date(timestamp, timezone=tz.tzlocal()):
+    return timestamp.strftime('%F %T')
+
+def fetch_user_dict(user_code, filename, secret=None):
+    user_dict = None
+    steps = 0
+    encrypted = True
+    subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).filter(UserDict.key == user_code and UserDict.filename == filename).subquery()
+    results = db.session.query(UserDict.dictionary, UserDict.encrypted, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno)
+    for d in results:
+        if d.dictionary:
+            if d.encrypted:
+                user_dict = decrypt_dictionary(d.dictionary, secret)
+            else:
+                user_dict = unpack_dictionary(d.dictionary)
+                encrypted = False
+        if d.count:
+            steps = d.count
+        break
+    return steps, user_dict, encrypted
+
+def fetch_previous_user_dict(user_code, filename, secret):
+    user_dict = None
+    max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(UserDict.key == user_code and UserDict.filename == filename).scalar()
+    if max_indexno is not None:
+        UserDict.query.filter_by(indexno=max_indexno).delete()
+        db.session.commit()
+    return fetch_user_dict(user_code, filename, secret=secret)
+
+def advance_progress(user_dict):
+    user_dict['_internal']['progress'] += 0.05*(100-user_dict['_internal']['progress'])
+    return
+
+def reset_user_dict(user_code, filename):
+    UserDict.query.filter_by(key=user_code, filename=filename).delete()
+    db.session.commit()
+    UserDictKeys.query.filter_by(key=user_code, filename=filename).delete()
+    db.session.commit()
+    for upload in Uploads.query.filter_by(key=user_code, yamlfile=filename).all():
+        old_file = SavedFile(upload.indexno)
+        old_file.delete()
+    Uploads.query.filter_by(key=user_code, yamlfile=filename).delete()
+    db.session.commit()
+    Attachments.query.filter_by(key=user_code, filename=filename).delete()
+    db.session.commit()
+    SpeakList.query.filter_by(key=user_code, filename=filename).delete()
+    db.session.commit()
+    ChatLog.query.filter_by(key=user_code, filename=filename).delete()
+    db.session.commit()
+    return
 
 

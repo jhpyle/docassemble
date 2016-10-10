@@ -1,0 +1,21 @@
+metadata:
+  title: Live chat
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+code: |
+  set_chat_status(status='available', roles=['user'], partner_roles=['advocate'])
+---
+mandatory: true
+question: |
+  Welcome to the live chat test.
+subquestion: |
+  Check the Help section
+  for the live chat interface.
+---
+interview help:
+  heading: The live chat system is above
+  content: |
+    See above for the live chat system.

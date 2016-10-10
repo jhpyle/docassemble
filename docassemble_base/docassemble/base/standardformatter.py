@@ -632,10 +632,9 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
         status.screen_reader_text['question'] = unicode(output)
     master_output += output
     master_output += '          </section>\n'
-    if len(status.helpText):
-        master_output += '          <section id="help" class="tab-pane col-lg-6 col-md-8 col-sm-10">\n'
-        output = '<div><a id="backToQuestion" data-toggle="tab" href="#question" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back to question") + '</a></div>'
-        output += """
+    master_output += '          <section id="help" class="tab-pane col-lg-6 col-md-8 col-sm-10">\n'
+    output = '<div><a id="backToQuestion" data-toggle="tab" href="#question" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back to question") + '</a></div>'
+    output += """
 <div id="daChatOnButton" class="row">
   <div class="col-md-12 dachatbutton">
     <a class="label label-success">""" + word("Activate chat") + """</a>
@@ -653,7 +652,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
       <ul class="list-group dachatbox" id="daCorrespondence"></ul>
     </div>
   </div>
-  <form id="#dachat" autocomplete="off">
+  <form id="dachat" autocomplete="off">
     <div class="row">
       <div class="col-md-12">
         <div class="input-group">
@@ -670,6 +669,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
   </div>
 </div>
 """
+    if len(status.helpText):
         if status.using_screen_reader and 'help' in status.screen_reader_links:
             output += '            <div>\n' + indent_by(audio_control(status.screen_reader_links['help'], preload="none"), 14) + '            </div>\n'
         for help_section in status.helpText:
@@ -692,8 +692,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
             output += '            <div><attribution><small>' + markdown_to_html(attribution, strip_newlines=True) + '</small></attribution></div>\n'
         if status.using_screen_reader:
             status.screen_reader_text['help'] = unicode(output)
-        master_output += output
-        master_output += '          </section>\n'
+    master_output += output
+    master_output += '          </section>\n'
     # if status.question.question_type == "fields":
     #     extra_scripts.append("""\
     # <script>
@@ -857,6 +857,20 @@ def add_validation(extra_scripts, validation_rules):
           $("#daform").find('button[type="submit"]').prop("disabled", true);
         }, 1);
         if ($('#daform input[name="_files"]').length){
+          $("#uploadiframe").remove();
+          var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"></iframe>');
+          $("body").append(iframe);
+          $(form).attr("target", "uploadiframe");
+          $('<input>').attr({
+              type: 'hidden',
+              name: 'ajax',
+              value: '1'
+          }).appendTo($(form));
+          iframe.load(function(){
+            setTimeout(function(){
+              daProcessAjax($.parseJSON($("#uploadiframe").contents().text()), form);
+            }, 0);
+          });
           form.submit();
         }
         else{
@@ -865,7 +879,9 @@ def add_validation(extra_scripts, validation_rules):
             url: $("#daform").attr('action'),
             data: $("#daform").serialize() + '&ajax=1', 
             success: function(data){
-              daProcessAjax(data, form);
+              setTimeout(function(){
+                daProcessAjax(data, form);
+              }, 0);
             }
           });
         }
@@ -878,11 +894,13 @@ def add_validation(extra_scripts, validation_rules):
           url: $("#backbutton").attr('action'),
           data: $("#backbutton").serialize() + '&ajax=1', 
           success: function(data){
-            daProcessAjax(data, document.getElementById('backbutton'));
+            setTimeout(function(){
+              daProcessAjax(data, document.getElementById('backbutton'));
+            }, 0);
           }
         });
         event.preventDefault();
-      });;
+      });
     </script>""")
 
 def input_for(status, field, extra_scripts, wide=False):

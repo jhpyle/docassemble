@@ -2,6 +2,7 @@ metadata:
   title: Auto reload
   example start: 4
   example end: 4
+  documentation: "http://docassemble.org/docs/modifiers.html#reload"
 ---
 modules:
   - docassemble.base.util
