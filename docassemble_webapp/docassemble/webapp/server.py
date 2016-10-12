@@ -1100,7 +1100,7 @@ def checkin():
             session['chatstatus'] = chatstatus
         obj = dict(chatstatus=chatstatus, i=yaml_filename, uid=session_id, userid=the_user_id)
         potential_partners = list()
-        if str(chatstatus) in ['waiting', 'standby', 'ringing', 'ready', 'on']:
+        if str(chatstatus) in ['waiting', 'standby', 'ringing', 'ready', 'on', 'hangup']:
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
             obj['secret'] = secret
             obj['encrypted'] = is_encrypted
@@ -1121,7 +1121,7 @@ def checkin():
             if len(potential_partners) > 0:
                 if chatstatus == 'ringing':
                     lkey = 'da:ready:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-                    #logmessage("Writing to " + str(lkey))
+                    logmessage("Writing to " + str(lkey))
                     pipe = r.pipeline()
                     failure = True
                     for user_id in potential_partners:
@@ -1135,16 +1135,16 @@ def checkin():
                     else:
                         pipe.expire(lkey, 6000)
                         pipe.execute()
-                        #logmessage("Wrote to " + str(lkey))
+                        logmessage("Wrote to " + str(lkey))
                         chatstatus = 'ready'
                         session['chatstatus'] = chatstatus
                         obj['chatstatus'] = chatstatus
-                if chatstatus == 'waiting':
+                if chatstatus in ['waiting', 'hangup']:
                     chatstatus = 'standby'
                     session['chatstatus'] = chatstatus
                     obj['chatstatus'] = chatstatus
             else:
-                if chatstatus != 'waiting':
+                if chatstatus in ['standby', 'ready', 'ringing', 'hangup']:
                     chatstatus = 'waiting'
                     session['chatstatus'] = chatstatus
                     obj['chatstatus'] = chatstatus
@@ -1366,7 +1366,7 @@ def index():
             release_lock(user_code, yaml_filename)
             return response
         for argname in request.args:
-            if argname in ('filename', 'question', 'format', 'index', 'i', 'action', 'from_list', 'session'):
+            if argname in ['filename', 'question', 'format', 'index', 'i', 'action', 'from_list', 'session']:
                 continue
             if re.match('[A-Za-z_]+', argname):
                 exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)
@@ -1952,11 +1952,13 @@ def index():
         chat_mode = user_dict['_internal']['chat']['mode']
         if chat_available == 'unavailable':
             chat_status = 'off'
+            session['chatstatus'] = 'off'
         else:
             chat_status = chatstatus
-        if chat_status in ('ringing', 'ready', 'on'):
-            chat_status = 'standby'
-        if chat_status in ('waiting', 'standby', 'ringing'):
+        if chat_status in ['ready', 'on']:
+            chat_status = 'ringing'
+            session['chatstatus'] = 'ringing'
+        if chat_status != 'off':
             send_changes = 'true'
         else:
             send_changes = 'false'
@@ -2016,6 +2018,11 @@ def index():
         return false;
       }
       function daInitializeSocket(){
+        if (socket != null){
+            console.log("Calling connectagain")
+            socket.emit('connectagain', {data: 1});
+            return;
+        }
         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
             socket = io.connect("http://" + document.domain + "/interview", {path: '/ws/socket.io'});
         }
@@ -2027,13 +2034,15 @@ def index():
                 if (socket == null){
                   return;
                 }
-                console.log("Connected socket with sid " + socket.id);
+                //console.log("Connected socket with sid " + socket.id);
                 daChatStatus = 'on';
+                display_chat()
                 pushChanges();
-                daTurnOnChat();
+                //daTurnOnChat();
                 socket.emit('chat_log', {data: 1});
             });
             socket.on('chat_log', function(arg) {
+                $("#daCorrespondence").html('');
                 chatHistory = []; 
                 var messages = arg.data;
                 for (var i = 0; i < messages.length; ++i){
@@ -2046,9 +2055,23 @@ def index():
                 //console.log("Disconnected socket");
                 //socket = null;
             });
+            socket.on('reconnected', function() {
+                console.log("Reconnected")
+                daChatStatus = 'on';
+                display_chat();
+                pushChanges();
+                daTurnOnChat();
+                socket.emit('chat_log', {data: 1});
+            });
             socket.on('mymessage', function(arg) {
                 //console.log("Received " + arg.data);
                 $("#daPushResult").html(arg.data);
+            });
+            socket.on('departure', function(arg) {
+                console.log("Departure " + arg.numpartners);
+                if (arg.numpartners == 0){
+                    daCloseChat();
+                }
             });
             socket.on('chatmessage', function(arg) {
                 //console.log("Received chat message " + arg.data);
@@ -2139,24 +2162,57 @@ def index():
         }
         scrollChatFast();
         $("#daMessage").prop('disabled', false);
-        $("#daSend").click(daSender);
       }
       function daCloseChat(){
-        daChatStatus = 'standby';
+        daChatStatus = 'hangup';
         pushChanges();
-        daTurnOffChat();
+        //daTurnOffChat();
       }
       function daTurnOffChat(){
         $("#daChatOnButton").removeClass("invisible");
         $("#daChatBox").addClass("invisible");
-        daCloseSocket();
+        //daCloseSocket();
         $("#daMessage").prop('disabled', true);
         $("#daSend").unbind();
         //daStartCheckingIn();
       }
+      function display_chat(){
+        if (daChatStatus == 'off'){
+          $("#daChatBox").addClass("invisible");
+          $("#daChatAvailable").addClass("invisible");
+          $("#daChatOnButton").addClass("invisible");
+        }
+        if (daChatStatus != 'off'){
+          $("#daChatBox").removeClass("invisible");
+        }
+        if (daChatStatus == 'waiting'){
+          //console.log("I see waiting")
+          $("#daChatAvailable").addClass("invisible");
+          $("#daChatOnButton").addClass("invisible");
+          $("#daChatOffButton").addClass("invisible");
+          $("#daMessage").prop('disabled', true);
+          $("#daSend").prop('disabled', true);
+        }
+        if (daChatStatus == 'standby' || daChatStatus == 'ready'){
+          //console.log("I see standby")
+          $("#daChatAvailable").removeClass("invisible");
+          $("#daChatOnButton").removeClass("invisible");
+          $("#daChatOffButton").addClass("invisible");
+          $("#daMessage").prop('disabled', true);
+          $("#daSend").prop('disabled', true);
+        }
+        if (daChatStatus == 'on'){
+          $("#daChatAvailable").removeClass("invisible");
+          $("#daChatOnButton").addClass("invisible");
+          $("#daChatOffButton").removeClass("invisible");
+          $("#daMessage").prop('disabled', false);
+          $("#daSend").prop('disabled', false);
+        }
+      }
       function daCheckinCallback(data){
         //console.log("success is " + data.success)
         if (data.success){
+          oldDaChatStatus = daChatStatus
           console.log("daCheckinCallback: from " + daChatStatus + " to " + data.chat_status)
           var statusChanged;
           if (daChatStatus == data.chat_status){
@@ -2167,18 +2223,10 @@ def index():
           }
           if (statusChanged){
             daChatStatus = data.chat_status;
-            if (daChatStatus == 'standby' || daChatStatus == 'ringing' || daChatStatus == 'ready' || daChatStatus == 'on'){
-              daTurnOffChat();
-              daShowChat();
-            }
+            display_chat();
             if (daChatStatus == 'ready'){
-              //daStopCheckingIn();
-              //console.log("Calling initialize socket from checkincallback")
+              console.log("calling initialize socket because ready");
               daInitializeSocket();
-            }
-            if (daChatStatus == 'waiting' || daChatStatus == 'off'){
-              daTurnOffChat();
-              daHideChat();
             }
           }
         }
@@ -2319,32 +2367,22 @@ def index():
           $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDiv);
           $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDiv);
         });
+        $("#daSend").click(daSender);
         if (daChatAvailable == 'unavailable'){
-          if (daChatStatus == 'on'){
-            daHideChat();
-            daTurnOffChat();
-          }
           daChatStatus = 'off';
         }
         if (daChatStatus == 'off' && daChatAvailable == 'available'){
           daChatStatus = 'waiting';
         }
-        if (daChatStatus == 'standby' || daChatStatus == 'ringing'){
-          daShowChat();
-        }
-        if (daChatStatus == 'off'){
-          daHideChat();
-        }
+        display_chat();
         if (daChatStatus == 'ready' || daChatStatus == 'on'){
-          //console.log("Calling turn on chat from dainitialize")
-          daShowChat();
-          daTurnOnChat();
+          daInitializeSocket();
         }
-        if (daChatStatus == 'waiting' || daChatStatus == 'standby' || daChatStatus == 'ringing' || daChatStatus == 'ready' || daChatStatus == 'on'){
+        if (daChatStatus != 'off'){
           daSendChanges = true;
         }
         else{
-          daSendChange = false;
+          daSendChanges = false;
         }
         if (daSendChanges){
           $("#daform").each(function(){
@@ -3246,6 +3284,17 @@ def monitor():
         updateMonitorInterval = setInterval(do_update_monitor, 6000);
         //console.log("update_monitor");
     }
+    function activateChatArea(key){
+        var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+        $("#chatarea" + skey).removeClass('invisible');
+        $("#chatarea" + skey).find('input, button').prop("disabled", false);
+        $("#chatarea" + skey).find('ul').html('');
+        socket.emit('chat_log', {key: key});
+    }
+    function deActivateChatArea(key){
+        var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+        $("#chatarea" + skey).find('input, button').prop("disabled", true);
+    }
     function undraw_session(key){
         //console.log("Undrawing...")
         var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
@@ -3284,6 +3333,9 @@ def monitor():
             theIframe = $("#iframe" + skey).first();
             theChatArea = $("#chatarea" + skey).first();
             $(sessionDiv).empty();
+            if (obj.chatstatus == 'on' && $("#chatarea" + skey).find('button').first().prop("disabled") == true){
+                activateChatArea(key);
+            }
         }
         else{
             var theListElement = document.createElement('li');
@@ -3354,6 +3406,9 @@ def monitor():
                 theIframe.contentWindow.document.close();
                 $(theIframeContainer).addClass("invisible");
             });
+            if (obj.chatstatus == 'on'){
+                activateChatArea(key);
+            }
         }
         theText = document.createTextNode(the_html);
         var statusLabel = document.createElement('span');
@@ -3380,6 +3435,12 @@ def monitor():
                 return true;
             });
         }
+        if (obj.chatstatus == 'on' && $("#chatarea" + skey).hasClass('invisible')){
+            activateChatArea(key);
+        }
+        if (obj.chatstatus != 'on' && $("#chatarea" + skey).find('button').first().prop("disabled") == false){
+            deActivateChatArea(key);
+        }
     }
     $(document).ready(function(){
         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
@@ -3401,11 +3462,30 @@ def monitor():
             });
             socket.on('chatready', function(data) {
                 var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
-                var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-                //console.log("Received chat ready");
-                $("#chatarea" + skey).removeClass('invisible');
-                $("#chatarea" + skey).find('input, button').prop("disabled", false);
+                activateChatArea(key);
             });
+            socket.on('chat_log', function(arg) {
+                var key = 'da:session:uid:' + arg.uid + ':i:' + arg.i + ':userid:' + arg.userid
+                var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+                //console.log("Got response from chat_log: " + key + " with " + arg.data)
+                var chatArea = $("#chatarea" + skey).find('ul').first();
+                var messages = arg.data;
+                for (var i = 0; i < messages.length; ++i){
+                    var message = messages[i];
+                    var newLi = document.createElement('li');
+                    $(newLi).addClass("list-group-item");
+                    if (message.is_self){
+                      $(newLi).addClass("list-group-item-warning");
+                      $(newLi).addClass("dalistright");
+                    }
+                    else{
+                      $(newLi).addClass("list-group-item-info");
+                    }
+                    $(newLi).html(message.message);
+                    $(newLi).appendTo(chatArea);
+                }
+                scrollChatFast("#chatarea" + skey);
+            });            
             socket.on('chatmessage', function(data) {
                 var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
                 var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
@@ -3427,6 +3507,12 @@ def monitor():
             socket.on('sessionupdate', function(data) {
                 //console.log("Got session update: " + data.session.chatstatus);
                 draw_session(data.key, data.session);
+                if ($("#monitorsessions").find("li").length > 0){
+                    $("#emptylist").addClass("invisible");
+                }
+                else{
+                    $("#emptylist").removeClass("invisible");
+                }
             });
             socket.on('updatemonitor', function(data) {
                 //console.log("Got update monitor response");
@@ -4271,7 +4357,7 @@ def playground_files():
         if (formtwo.file_name.data):
             the_file = formtwo.file_name.data
             the_file = re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', the_file)
-    if section not in ("template", "static", "sources", "modules", "packages"):
+    if section not in ["template", "static", "sources", "modules", "packages"]:
         section = "template"
     area = SavedFile(current_user.id, fix=True, section='playground' + section)
     if request.args.get('delete', False):

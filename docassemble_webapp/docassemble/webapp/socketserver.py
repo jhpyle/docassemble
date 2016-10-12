@@ -49,6 +49,7 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
     r = redis.StrictRedis()
     pubsub = r.pubsub()
     pubsub.subscribe([sid])
+    partners = set()
     for item in pubsub.listen():
         if item['type'] != 'message':
             continue
@@ -61,76 +62,143 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
             continue
         if data.get('message', None) == "KILL" and (('sid' in data and data['sid'] == sid) or 'sid' not in data):
             pubsub.unsubscribe(sid)
-            sys.stderr.write("  unsubscribed and finished for " + str(sid) + "\n")
+            sys.stderr.write("  interview unsubscribed and finished for " + str(sid) + "\n")
             break
         else:
-            sys.stderr.write("  Got something for uid " + data.get('uid', 'Unknown UID') + " from " + data.get('origin', "Unknown origin") + "\n")
-            if 'messagetype' in data and data['messagetype'] == 'chat':
-                sys.stderr.write("  Emitting interview chat message: " + str(data['message']['message']) + "\n")
-                if (user_is_temp is True and str(temp_user_id) == str(data['message'].get('temp_user_id', None))) or (user_is_temp is False and str(user_id) == str(data['message'].get('user_id', None))):
-                    data['message']['is_self'] = True
-                else:
-                    data['message']['is_self'] = False
-                socketio.emit('chatmessage', {'i': data['yaml_filename'], 'uid': data['uid'], 'userid': data['user_id'], 'data': data['message']}, namespace='/interview', room=sid)
+            sys.stderr.write("  Got something for sid " + str(sid) + " from " + data.get('origin', "Unknown origin") + "\n")
+            if 'messagetype' in data:
+                if data['messagetype'] == 'chat':
+                    sys.stderr.write("  Emitting interview chat message: " + str(data['message']['message']) + "\n")
+                    if (user_is_temp is True and str(temp_user_id) == str(data['message'].get('temp_user_id', None))) or (user_is_temp is False and str(user_id) == str(data['message'].get('user_id', None))):
+                        data['message']['is_self'] = True
+                    else:
+                        data['message']['is_self'] = False
+                    socketio.emit('chatmessage', {'i': data['yaml_filename'], 'uid': data['uid'], 'userid': data['user_id'], 'data': data['message']}, namespace='/interview', room=sid)
+                elif data['messagetype'] == 'departure':
+                    partners.remove(data['sid'])
+                    socketio.emit('departure', {'numpartners': len(partners)}, namespace='/interview', room=sid)
+                elif data['messagetype'] == 'chatpartner':
+                    partners.add(data['sid'])
 
 @socketio.on('message', namespace='/interview')
 def handle_message(message):
     socketio.emit('mymessage', {'data': "Hello"}, namespace='/interview')
     sys.stderr.write('received message from ' + str(session.get('uid', 'NO UID')) + ': ' + message['data'] + "\n")
 
-@socketio.on('chat_log', namespace='/interview')
-def chat_log(message):
-    secret = request.cookies.get('secret', None)
+def get_person(user_id, cache):
+    if user_id in cache:
+        return cache[user_id]
+    for record in User.query.filter_by(id=user_id):
+        cache[record.id] = record
+        return record
+    return None
+    
+def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, self_user_id, self_temp_id):
+    messages = list()
     people = dict()
-    for record in User.query.filter_by(active=True):
-        people[record.id] = record
-    if 'user_id' in session and session['user_id'] in people:
+    if user_id is not None:
+        if get_person(user_id, people) is None:
+            return list()
+        chat_person_type = 'auth'
+        chat_person_id = user_id
+    else:
+        chat_person_type = 'anon'
+        chat_person_id = temp_user_id
+    if self_user_id is not None:
+        if get_person(self_user_id, people) is None:
+            return list()
         self_person_type = 'auth'
-        self_person_id = session['user_id']
+        self_person_id = self_user_id
     else:
         self_person_type = 'anon'
-        self_person_id = session['tempuser']
-    messages = list()
-    user_dict = get_dict()
-    chat_mode = user_dict['_internal']['chat']['mode']
+        self_person_id = self_temp_id
     if chat_mode in ['peer', 'peerhelp']:
         open_to_peer = True
     else:
         open_to_peer = False
-    if self_person_type == 'auth':
+    if chat_person_type == 'auth':
         if chat_mode in ['peer', 'peerhelp']:
-            records = ChatLog.query.filter(and_(ChatLog.filename == session.get('i', None), ChatLog.key == session.get('uid', None), or_(ChatLog.open_to_peer == True, ChatLog.owner_id == self_person_id))).order_by(ChatLog.id).all()
+            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, or_(ChatLog.open_to_peer == True, ChatLog.owner_id == chat_person_id))).order_by(ChatLog.id).all()
         else:
-            records = ChatLog.query.filter(and_(ChatLog.filename == session.get('i', None), ChatLog.key == session.get('uid', None), ChatLog.owner_id == self_person_id)).order_by(ChatLog.id).all()
+            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, ChatLog.owner_id == chat_person_id)).order_by(ChatLog.id).all()
         for record in records:
             if record.encrypted:
-                message = decrypt_phrase(record.message, secret)
+                try:
+                    message = decrypt_phrase(record.message, secret)
+                except:
+                    sys.stderr.write("Could not decrypt phrase with secret " + str(secret) + "\n")
+                    continue
             else:
                 message = unpack_phrase(record.message)
             modtime = nice_utc_date(record.modtime)
-            person = people[record.user_id]
-            if record.user_id == self_person_id:
-                is_self = True
+            if self_person_type == 'auth':
+                if self_person_id == record.user_id:
+                    is_self = True
+                else:
+                    is_self = False
             else:
-                is_self = False
-            messages.append(dict(id=record.id, is_self=is_self, owner_id=record.owner_id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=message, roles=[role.name for role in person.roles]))
+                if self_person_id == record.temp_user_id:
+                    is_self = True
+                else:
+                    is_self = False
+            if record.user_id is not None:
+                person = get_person(record.user_id, people)
+                if person is None:
+                    sys.stderr.write("Person " + str(record.user_id) + " did not exist\n")
+                    continue
+                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=message, roles=[role.name for role in person.roles]))
+            else:
+                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, modtime=modtime, message=message, roles=['user']))
     else:
         if chat_mode in ['peer', 'peerhelp']:
-            records = ChatLog.query.filter(and_(ChatLog.filename == session.get('i', None), ChatLog.key == session.get('uid', None), or_(ChatLog.open_to_peer == True, ChatLog.temp_owner_id == self_person_id))).order_by(ChatLog.id).all()
+            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, or_(ChatLog.open_to_peer == True, ChatLog.temp_owner_id == chat_person_id))).order_by(ChatLog.id).all()
         else:
-            records = ChatLog.query.filter(and_(ChatLog.filename == session.get('i', None), ChatLog.key == session.get('uid', None), ChatLog.temp_owner_id == self_person_id)).order_by(ChatLog.id).all()
+            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, ChatLog.temp_owner_id == chat_person_id)).order_by(ChatLog.id).all()
         for record in records:
             if record.encrypted:
-                message = decrypt_phrase(record.message, secret)
+                try:
+                    message = decrypt_phrase(record.message, secret)
+                except:
+                    sys.stderr.write("Could not decrypt phrase with secret " + str(secret) + "\n")
+                    continue
             else:
                 message = unpack_phrase(record.message)
             modtime = nice_utc_date(record.modtime)
-            if record.temp_user_id == self_person_id:
-                is_self = True
+            if self_person_type == 'auth':
+                if self_person_id == record.user_id:
+                    is_self = True
+                else:
+                    is_self = False
             else:
-                is_self = False
-            messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, modtime=modtime, message=message, roles=['user']))
+                if self_person_id == record.temp_user_id:
+                    is_self = True
+                else:
+                    is_self = False
+            if record.user_id is not None:
+                person = get_person(record.user_id, people)
+                if person is None:
+                    sys.stderr.write("Person " + str(record.user_id) + " did not exist\n")
+                    continue
+                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=message, roles=[role.name for role in person.roles]))
+            else:
+                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, modtime=modtime, message=message, roles=['user']))
+    return messages
+    
+@socketio.on('chat_log', namespace='/interview')
+def chat_log(message):
+    user_dict = get_dict()
+    chat_mode = user_dict['_internal']['chat']['mode']
+    yaml_filename = session.get('i', None)
+    session_id = session.get('uid', None)
+    user_id = session.get('user_id', None)
+    if user_id is None:
+        temp_user_id = session.get('tempuser', None)
+    else:
+        temp_user_id = None
+    secret = request.cookies.get('secret', None)
+    messages = get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, user_id, temp_user_id)
     socketio.emit('chat_log', {'data': messages}, namespace='/interview')
+    #sys.stderr.write("Interview: sending back " + str(len(messages)) + " messages")
 
 @socketio.on('transmit', namespace='/interview')
 def handle_message(message):
@@ -158,13 +226,17 @@ def chat_message(data):
     else:
         message = pack_phrase(data['data'], secret)
     user_id = session.get('user_id', None)
-    temp_user_id = session.get('tempuser', None)
-    # chat_mode = data['chat_mode']
-    # if chat_mode in ['peer', 'peerhelp']:
-    #     open_to_peer = True
-    # else:
-    #     open_to_peer = False
-    record = ChatLog(filename=yaml_filename, key=session_id, message=message, encrypted=encrypted, modtime=nowtime, temp_user_id=temp_user_id, user_id=user_id)
+    if user_id is None:
+        temp_user_id = session.get('tempuser', None)
+    else:
+        temp_user_id = None
+    user_dict = get_dict()
+    chat_mode = user_dict['_internal']['chat']['mode']
+    if chat_mode in ['peer', 'peerhelp']:
+        open_to_peer = True
+    else:
+        open_to_peer = False
+    record = ChatLog(filename=yaml_filename, key=session_id, message=message, encrypted=encrypted, modtime=nowtime, temp_user_id=temp_user_id, user_id=user_id, open_to_peer=open_to_peer, temp_owner_id=temp_user_id, owner_id=user_id)
     db.session.add(record)
     db.session.commit()
     if user_id is not None:
@@ -199,6 +271,15 @@ def wait_for_channel(rr, channel):
 @socketio.on('connect', namespace='/interview')
 def on_interview_connect():
     sys.stderr.write("Client connected on interview\n")
+    interview_connect()
+
+@socketio.on('connectagain', namespace='/interview')
+def on_interview_reconnect(data):
+    sys.stderr.write("Client reconnected on interview\n")
+    interview_connect()
+    socketio.emit('reconnected', {}, namespace='/interview')
+    
+def interview_connect():
     session_id = session.get('uid', None)
     if session_id is not None:
         user_dict, is_encrypted = get_dict_encrypt()
@@ -249,6 +330,7 @@ def on_interview_connect():
                 sys.stderr.write("Trying to pub to " + partner_sid + "\n")
                 listeners = rr.publish(partner_sid, json.dumps(dict(messagetype='chatready', uid=session_id, i=yaml_filename, userid=the_user_id, secret=secret, sid=request.sid)))
                 sys.stderr.write("Listeners: " + str(listeners) + "\n")
+                rr.publish(request.sid, json.dumps(dict(messagetype='chatpartner', sid=partner_sid)))
                 if listeners > 0:
                     failure = False
                     break
@@ -259,7 +341,6 @@ def on_interview_connect():
 
         key = 'da:chatsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         rr.set(key, request.sid)
-        #PPP
         join_room(request.sid)
 
 @socketio.on('disconnect', namespace='/interview')
@@ -312,6 +393,7 @@ def monitor_thread(sid=None, user_id=None):
     else:
         the_timezone = pytz.timezone(get_default_timezone())
     r = redis.StrictRedis()
+    listening_sids = set()
     pubsub = r.pubsub()
     pubsub.subscribe(['da:monitor', sid])
     for item in pubsub.listen():
@@ -326,10 +408,15 @@ def monitor_thread(sid=None, user_id=None):
             continue
         if 'message' in data and data['message'] == "KILL":
             if item['channel'] == str(sid):
+                sys.stderr.write("  monitor unsubscribed from all\n")
                 pubsub.unsubscribe()
+                for interview_sid in listening_sids:
+                    r.publish(interview_sid, json.dumps(dict(messagetype='departure', sid=sid)))
                 break
             elif item['channel'] != 'da:monitor':
                 pubsub.unsubscribe(item['channel'])
+                if data['sid'] in listening_sids:
+                    listening_sids.remove(data['sid'])
                 sys.stderr.write("  monitor unsubscribed from " + str(item['channel']) + "\n")
             continue
         else:
@@ -340,6 +427,7 @@ def monitor_thread(sid=None, user_id=None):
                     socketio.emit('sessionupdate', {'key': data['key'], 'session': data['session']}, namespace='/monitor', room=sid);
                 if data['messagetype'] == 'chatready':
                     pubsub.subscribe(data['sid'])
+                    listening_sids.add(data['sid'])
                     secrets[data['sid']] = data['secret']
                     socketio.emit('chatready', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid']}, namespace='/monitor', room=sid);
                 if data['messagetype'] == 'refreshsessions':
@@ -371,7 +459,7 @@ def on_monitor_connect():
         threads[request.sid] = socketio.start_background_task(target=monitor_thread, sid=request.sid, user_id=user_id)
 
 @socketio.on('disconnect', namespace='/monitor')
-def on_interview_disconnect():
+def on_monitor_disconnect():
     user_id = session.get('user_id', None)
     sys.stderr.write('Client disconnected from monitor\n')
     rr.delete('da:monitor:' + str(request.sid))
@@ -500,14 +588,64 @@ def monitor_chat_message(data):
         message = pack_phrase(data['data'], secret)
     user_id = session.get('user_id', None)
     person = User.query.filter_by(id=user_id).first()
-    #chat_mode = data['chat_mode']
-    record = ChatLog(filename=yaml_filename, key=session_id, message=message, encrypted=encrypted, modtime=nowtime, user_id=user_id)
+    chat_mode = user_dict['_internal']['chat']['mode']
+    m = re.match('t([0-9]+)', chat_user_id)
+    if m:
+        temp_owner_id = m.group(1)
+        owner_id = None
+    else:
+        temp_owner_id = None
+        owner_id = chat_user_id
+    if chat_mode in ['peer', 'peerhelp']:
+        open_to_peer = True
+    else:
+        open_to_peer = False
+    record = ChatLog(filename=yaml_filename, key=session_id, message=message, encrypted=encrypted, modtime=nowtime, user_id=user_id, temp_owner_id=temp_owner_id, owner_id=owner_id, open_to_peer=open_to_peer)
     db.session.add(record)
     db.session.commit()
     modtime = nice_utc_date(nowtime)
     rr.publish(sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id=chat_user_id, message=dict(id=record.id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=data['data'], roles=[role.name for role in person.roles]))))
     sys.stderr.write('received chat message on monitor from sid ' + str(request.sid) + ': ' + data['data'] + "\n")
     
+@socketio.on('chat_log', namespace='/monitor')
+def monitor_chat_log(data):
+    key = data.get('key', None)
+    sys.stderr.write("Key is " + str(key) + "\n")
+    if key is None:
+        sys.stderr.write("No key provided\n")
+        return
+    m = re.match(r'da:session:uid:(.*):i:(.*):userid:(.*)', key)
+    if not m:
+        sys.stderr.write("Invalid key provided\n")
+        return
+    session_id = m.group(1)
+    yaml_filename = m.group(2)
+    chat_user_id = m.group(3)
+    key = 'da:chatsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(chat_user_id)
+    sid = rr.get(key)
+    if sid is None:
+        sys.stderr.write("No sid for monitor chat message with key " + str(key) + "\n")
+        return
+
+    secret = secrets.get(sid, None)
+    try:
+        steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+    except:
+        sys.stderr.write("Could not get dictionary for monitor_chat_message\n")
+        return
+    chat_mode = user_dict['_internal']['chat']['mode']
+    m = re.match('t([0-9]+)', chat_user_id)
+    if m:
+        temp_user_id = m.group(1)
+        user_id = None
+    else:
+        temp_user_id = None
+        user_id = chat_user_id
+    self_user_id = session.get('user_id', None)
+    messages = get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, self_user_id, None)
+    socketio.emit('chat_log', {'uid': session_id, 'i': yaml_filename, 'userid': chat_user_id, 'data': messages}, namespace='/monitor')
+    #sys.stderr.write("Monitor: sending back " + str(len(messages)) + " messages")
+
 #observer
 
 def observer_thread(sid=None, key=None):
