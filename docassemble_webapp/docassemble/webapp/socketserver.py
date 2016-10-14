@@ -8,7 +8,7 @@ import docassemble.base.config
 docassemble.base.config.load(filename="/usr/share/docassemble/config/config.yml")
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, dbtableprefix, hostname, in_celery
 from docassemble.webapp.app_and_db import app, db
-from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, nice_utc_date, nice_date_from_utc, fetch_user_dict
+from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, nice_utc_date, nice_date_from_utc, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase
 from docassemble.webapp.users.models import User, ChatLog
 import docassemble.webapp.database
 from docassemble.base.functions import get_default_timezone
@@ -77,6 +77,9 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
                 elif data['messagetype'] == 'departure':
                     partners.remove(data['sid'])
                     socketio.emit('departure', {'numpartners': len(partners)}, namespace='/interview', room=sid)
+                elif data['messagetype'] == 'block':
+                    partners.remove(data['sid'])
+                    socketio.emit('departure', {'numpartners': len(partners)}, namespace='/interview', room=sid)
                 elif data['messagetype'] == 'chatpartner':
                     partners.add(data['sid'])
 
@@ -84,105 +87,6 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
 def handle_message(message):
     socketio.emit('mymessage', {'data': "Hello"}, namespace='/interview')
     sys.stderr.write('received message from ' + str(session.get('uid', 'NO UID')) + ': ' + message['data'] + "\n")
-
-def get_person(user_id, cache):
-    if user_id in cache:
-        return cache[user_id]
-    for record in User.query.filter_by(id=user_id):
-        cache[record.id] = record
-        return record
-    return None
-    
-def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, self_user_id, self_temp_id):
-    messages = list()
-    people = dict()
-    if user_id is not None:
-        if get_person(user_id, people) is None:
-            return list()
-        chat_person_type = 'auth'
-        chat_person_id = user_id
-    else:
-        chat_person_type = 'anon'
-        chat_person_id = temp_user_id
-    if self_user_id is not None:
-        if get_person(self_user_id, people) is None:
-            return list()
-        self_person_type = 'auth'
-        self_person_id = self_user_id
-    else:
-        self_person_type = 'anon'
-        self_person_id = self_temp_id
-    if chat_mode in ['peer', 'peerhelp']:
-        open_to_peer = True
-    else:
-        open_to_peer = False
-    if chat_person_type == 'auth':
-        if chat_mode in ['peer', 'peerhelp']:
-            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, or_(ChatLog.open_to_peer == True, ChatLog.owner_id == chat_person_id))).order_by(ChatLog.id).all()
-        else:
-            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, ChatLog.owner_id == chat_person_id)).order_by(ChatLog.id).all()
-        for record in records:
-            if record.encrypted:
-                try:
-                    message = decrypt_phrase(record.message, secret)
-                except:
-                    sys.stderr.write("Could not decrypt phrase with secret " + str(secret) + "\n")
-                    continue
-            else:
-                message = unpack_phrase(record.message)
-            modtime = nice_utc_date(record.modtime)
-            if self_person_type == 'auth':
-                if self_person_id == record.user_id:
-                    is_self = True
-                else:
-                    is_self = False
-            else:
-                if self_person_id == record.temp_user_id:
-                    is_self = True
-                else:
-                    is_self = False
-            if record.user_id is not None:
-                person = get_person(record.user_id, people)
-                if person is None:
-                    sys.stderr.write("Person " + str(record.user_id) + " did not exist\n")
-                    continue
-                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=message, roles=[role.name for role in person.roles]))
-            else:
-                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, modtime=modtime, message=message, roles=['user']))
-    else:
-        if chat_mode in ['peer', 'peerhelp']:
-            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, or_(ChatLog.open_to_peer == True, ChatLog.temp_owner_id == chat_person_id))).order_by(ChatLog.id).all()
-        else:
-            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, ChatLog.temp_owner_id == chat_person_id)).order_by(ChatLog.id).all()
-        for record in records:
-            if record.encrypted:
-                try:
-                    message = decrypt_phrase(record.message, secret)
-                except:
-                    sys.stderr.write("Could not decrypt phrase with secret " + str(secret) + "\n")
-                    continue
-            else:
-                message = unpack_phrase(record.message)
-            modtime = nice_utc_date(record.modtime)
-            if self_person_type == 'auth':
-                if self_person_id == record.user_id:
-                    is_self = True
-                else:
-                    is_self = False
-            else:
-                if self_person_id == record.temp_user_id:
-                    is_self = True
-                else:
-                    is_self = False
-            if record.user_id is not None:
-                person = get_person(record.user_id, people)
-                if person is None:
-                    sys.stderr.write("Person " + str(record.user_id) + " did not exist\n")
-                    continue
-                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=message, roles=[role.name for role in person.roles]))
-            else:
-                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, modtime=modtime, message=message, roles=['user']))
-    return messages
     
 @socketio.on('chat_log', namespace='/interview')
 def chat_log(message):
@@ -382,6 +286,8 @@ def get_dict_encrypt():
         return None, None
     return user_dict, is_encrypted
 
+#monitor
+
 def monitor_thread(sid=None, user_id=None):
     sys.stderr.write("Started monitor thread for " + str(sid) + " who is " + str(user_id) + "\n")
     if user_id is not None:
@@ -424,14 +330,19 @@ def monitor_thread(sid=None, user_id=None):
             if 'messagetype' in data:
                 if data['messagetype'] == 'sessionupdate':
                     sys.stderr.write("  Got a session update: " + str(data['session']) + "\n")
-                    socketio.emit('sessionupdate', {'key': data['key'], 'session': data['session']}, namespace='/monitor', room=sid);
+                    socketio.emit('sessionupdate', {'key': data['key'], 'session': data['session']}, namespace='/monitor', room=sid)
                 if data['messagetype'] == 'chatready':
                     pubsub.subscribe(data['sid'])
                     listening_sids.add(data['sid'])
                     secrets[data['sid']] = data['secret']
-                    socketio.emit('chatready', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid']}, namespace='/monitor', room=sid);
+                    socketio.emit('chatready', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid']}, namespace='/monitor', room=sid)
+                if data['messagetype'] == 'block':
+                    pubsub.unsubscribe(item['channel'])
+                    if item['channel'] in listening_sids:
+                        listening_sids.remove(item['channel'])
+                    sys.stderr.write("  monitor unsubscribed from " + str(item['channel']) + "\n")
                 if data['messagetype'] == 'refreshsessions':
-                    socketio.emit('refreshsessions', {}, namespace='/monitor', room=sid);
+                    socketio.emit('refreshsessions', {}, namespace='/monitor', room=sid)
                 if data['messagetype'] == 'chat':
                     sys.stderr.write("  Emitting monitor chat message: " + str(data['message']['message']) + "\n")
                     if str(user_id) == str(data['message'].get('user_id', None)):
@@ -442,7 +353,7 @@ def monitor_thread(sid=None, user_id=None):
                 if data['messagetype'] == 'chatstop':
                     sys.stderr.write("  Chat termination for sid " + data['sid'] + "\n")
                     pubsub.unsubscribe(data['sid'])
-                    socketio.emit('chatstop', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid']}, namespace='/monitor', room=sid);
+                    socketio.emit('chatstop', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid']}, namespace='/monitor', room=sid)
 
 @socketio.on('connect', namespace='/monitor')
 def on_monitor_connect():
@@ -474,6 +385,29 @@ def terminate_monitor_connection():
     # if request.sid in threads:
     #     rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))
     disconnect()
+
+@socketio.on('block', namespace='/monitor')
+def monitor_block(data):
+    key = data.get('key', None)
+    if key is None:
+        sys.stderr.write("No key provided\n")
+        return
+    rr.set(re.sub(r'^da:session:', 'da:block:', key), 1)
+    sid = rr.get(re.sub(r'^da:session:', 'da:chatsession:', key))
+    if sid is not None:
+        rr.publish(sid, json.dumps(dict(messagetype='block', sid=request.sid)))
+        sys.stderr.write("Blocking\n")
+    else:
+        sys.stderr.write("Could not block because could not get sid\n")
+    
+@socketio.on('unblock', namespace='/monitor')
+def monitor_unblock(data):
+    key = data.get('key', None)
+    if key is None:
+        sys.stderr.write("No key provided\n")
+        return
+    sys.stderr.write("Unblocking\n")
+    rr.delete(re.sub(r'^da:session:', 'da:block:', key))
     
 @socketio.on('updatemonitor', namespace='/monitor')
 def update_monitor(message):
@@ -517,7 +451,7 @@ def update_monitor(message):
     for role_key in new_subscribed_roles.keys():
         if role_key not in subscribed_roles:
             rr.hset(sub_role_key, role_key, 1)
-            subscribed_roles[role_key] = 1;
+            subscribed_roles[role_key] = 1
     for role_key in subscribed_roles.keys():
         if role_key not in new_subscribed_roles:
             rr.hdel(sub_role_key, role_key)
@@ -552,8 +486,12 @@ def update_monitor(message):
             if html is not None:
                 obj = json.loads(html)
                 sessobj['browser_title'] = obj.get('browser_title', 'not available')
-                sessions[key] = sessobj;
-    socketio.emit('updatemonitor', {'available_for_chat': available_for_chat, 'subscribedRoles': subscribed_roles, 'sessions': sessions, 'availRoles': sorted(avail_roles)}, namespace='/monitor');
+                if rr.exists(re.sub(r'^da:session:', 'da:block:', key)):
+                    sessobj['blocked'] = True
+                else:
+                    sessobj['blocked'] = False
+                sessions[key] = sessobj
+    socketio.emit('updatemonitor', {'available_for_chat': available_for_chat, 'subscribedRoles': subscribed_roles, 'sessions': sessions, 'availRoles': sorted(avail_roles)}, namespace='/monitor')
 
 @socketio.on('chatmessage', namespace='/monitor')
 def monitor_chat_message(data):
@@ -674,10 +612,10 @@ def observer_thread(sid=None, key=None):
             except:
                 sys.stderr.write("  newpage JSON parse error\n")
                 continue
-            socketio.emit('newpage', {'obj': obj}, namespace='/observer', room=sid);
+            socketio.emit('newpage', {'obj': obj}, namespace='/observer', room=sid)
         else:
             sys.stderr.write("  Got something for observer\n")
-            socketio.emit('pushchanges', {'parameters': data}, namespace='/observer', room=sid);
+            socketio.emit('pushchanges', {'parameters': data}, namespace='/observer', room=sid)
 
 @socketio.on('connect', namespace='/observer')
 def on_observer_connect():

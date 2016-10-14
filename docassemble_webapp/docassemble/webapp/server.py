@@ -63,7 +63,7 @@ from flask_kvsession import KVSessionExtension
 from simplekv.db.sql import SQLAlchemyStore
 from sqlalchemy import create_engine, MetaData, Sequence, or_, and_
 from docassemble.webapp.app_and_db import app, db
-from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict
+from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, Messages
 from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock, TempUser, ChatLog
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
@@ -601,14 +601,14 @@ def _do_login_user(user, password, secret, next, remember_me=False):
 
     if 'tempuser' in session:
         changed = False
-        for chat_entry in ChatLog.query.filter_by(temp_user_id=session['tempuser']).all():
+        for chat_entry in ChatLog.query.filter_by(temp_user_id=int(session['tempuser'])).all():
             chat_entry.user_id = user.id
             chat_entry.temp_user_id = None
             changed = True
         if changed:
             db.session.commit()
         changed = False
-        for chat_entry in ChatLog.query.filter_by(temp_owner_id=session['tempuser']).all():
+        for chat_entry in ChatLog.query.filter_by(temp_owner_id=int(session['tempuser'])).all():
             chat_entry.owner_id = user.id
             chat_entry.temp_owner_id = None
             changed = True
@@ -1064,6 +1064,7 @@ def manual_checkout():
     pipe.expire('da:html' + endpart, 12)
     pipe.expire('da:chatsession' + endpart, 12)
     pipe.expire('da:ready' + endpart, 12)
+    pipe.expire('da:block' + endpart, 12)
     pipe.execute()
     #r.publish('da:monitor', json.dumps(dict(messagetype='refreshsessions')))
     #logmessage("Done checking out from " + endpart)
@@ -1090,8 +1091,18 @@ def checkin():
         return jsonify(success=False)
     if current_user.is_anonymous:
         the_user_id = 't' + str(session['tempuser'])
+        auth_user_id = None
+        temp_user_id = int(session['tempuser'])
     else:
+        auth_user_id = current_user.id
         the_user_id = current_user.id
+        temp_user_id = None
+    if request.form.get('action', None) == 'chat_log':
+        steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+        if user_dict['_internal']['chat']['availability'] == 'unavailable':
+            return jsonify(success=False)
+        messages = get_chat_log(user_dict['_internal']['chat']['mode'], yaml_filename, session_id, auth_user_id, temp_user_id, secret, auth_user_id, temp_user_id)
+        return jsonify(success=True, uid=session_id, i=yaml_filename, userid=the_user_id, messages=messages)
     if request.form.get('action', None) == 'checkin':
         #logmessage("Doing redis statement")
         old_chatstatus = session.get('chatstatus', None)
@@ -1106,7 +1117,7 @@ def checkin():
             obj['encrypted'] = is_encrypted
             obj['roles'] = user_dict['_internal']['chat']['roles']
             obj['partner_roles'] = user_dict['_internal']['chat']['partner_roles']
-            if len(obj['partner_roles']):
+            if len(obj['partner_roles']) and not r.exists('da:block:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)):
                 pipe = r.pipeline()
                 for role in obj['partner_roles']:
                     role_key = 'da:chat:roletype:' + str(role)
@@ -1157,6 +1168,10 @@ def checkin():
                 html_obj = json.loads(html)
                 if 'browser_title' in html_obj:
                     obj['browser_title'] = html_obj['browser_title']
+                if r.exists('da:block:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)):
+                    obj['blocked'] = True
+                else:
+                    obj['blocked'] = False
                 r.publish('da:monitor', json.dumps(dict(messagetype='sessionupdate', key=key, session=obj)))
             else:
                 logmessage("The html was not found")
@@ -1970,6 +1985,8 @@ def index():
       var daChatAvailable = """ + repr(str(chat_available)) + """;
       var daChatMode = """ + repr(str(chat_mode)) + """;
       var daSendChanges = """ + send_changes + """;
+      var daInitialized = false;
+
       function daCloseSocket(){
         if (typeof socket !== 'undefined'){
           //socket.emit('terminate');
@@ -1980,8 +1997,7 @@ def index():
         var newDiv = document.createElement('li');
         $(newDiv).addClass("list-group-item");
         if (data.is_self){
-          $(newDiv).addClass("list-group-item-warning");
-          $(newDiv).addClass("dalistright");
+          $(newDiv).addClass("list-group-item-warning dalistright");
         }
         else{
           $(newDiv).addClass("list-group-item-info");
@@ -2046,8 +2062,8 @@ def index():
                 chatHistory = []; 
                 var messages = arg.data;
                 for (var i = 0; i < messages.length; ++i){
-                  chatHistory.push(messages[i]);
-                  publishMessage(messages[i]);
+                    chatHistory.push(messages[i]);
+                    publishMessage(messages[i]);
                 }
                 scrollChatFast();
             });
@@ -2140,20 +2156,19 @@ def index():
           form.submit();
         }
       }
-      function daShowChat(){
-        $("#daChatOnButton").removeClass("invisible");
-        $("#daChatAvailable").removeClass("invisible");
-      }
-      function daHideChat(){
-        $("#daChatOnButton").addClass("invisible");
-        $("#daChatAvailable").addClass("invisible");
-      }
+      // function daShowChat(){
+      //   $("#daChatOnButton").removeClass("invisible");
+      //   $("#daChatAvailable").removeClass("invisible");
+      // }
+      // function daHideChat(){
+      //   $("#daChatOnButton").addClass("invisible");
+      //   $("#daChatAvailable").addClass("invisible");
+      // }
       function daRingChat(){
         daChatStatus = 'ringing';
         pushChanges();
       }
       function daTurnOnChat(){
-        //daChatStatus = 'on';
         $("#daChatOnButton").addClass("invisible");
         $("#daChatBox").removeClass("invisible");
         $("#daCorrespondence").html('');
@@ -2166,16 +2181,15 @@ def index():
       function daCloseChat(){
         daChatStatus = 'hangup';
         pushChanges();
-        //daTurnOffChat();
       }
-      function daTurnOffChat(){
-        $("#daChatOnButton").removeClass("invisible");
-        $("#daChatBox").addClass("invisible");
-        //daCloseSocket();
-        $("#daMessage").prop('disabled', true);
-        $("#daSend").unbind();
-        //daStartCheckingIn();
-      }
+      // function daTurnOffChat(){
+      //   $("#daChatOnButton").removeClass("invisible");
+      //   $("#daChatBox").addClass("invisible");
+      //   //daCloseSocket();
+      //   $("#daMessage").prop('disabled', true);
+      //   $("#daSend").unbind();
+      //   //daStartCheckingIn();
+      // }
       function display_chat(){
         if (daChatStatus == 'off'){
           $("#daChatBox").addClass("invisible");
@@ -2187,7 +2201,16 @@ def index():
         }
         if (daChatStatus == 'waiting'){
           //console.log("I see waiting")
-          $("#daChatAvailable").addClass("invisible");
+          if (chatHistory.length > 0){
+            $("#daChatAvailable i").removeClass("chat-active");
+            $("#daChatAvailable i").addClass("chat-inactive");
+            $("#daChatAvailable").removeClass("invisible");
+          }
+          else{
+            $("#daChatAvailable i").removeClass("chat-active");
+            $("#daChatAvailable i").removeClass("chat-inactive");
+            $("#daChatAvailable").addClass("invisible");
+          }
           $("#daChatOnButton").addClass("invisible");
           $("#daChatOffButton").addClass("invisible");
           $("#daMessage").prop('disabled', true);
@@ -2196,6 +2219,8 @@ def index():
         if (daChatStatus == 'standby' || daChatStatus == 'ready'){
           //console.log("I see standby")
           $("#daChatAvailable").removeClass("invisible");
+          $("#daChatAvailable i").removeClass("chat-inactive");
+          $("#daChatAvailable i").addClass("chat-active");
           $("#daChatOnButton").removeClass("invisible");
           $("#daChatOffButton").addClass("invisible");
           $("#daMessage").prop('disabled', true);
@@ -2203,10 +2228,26 @@ def index():
         }
         if (daChatStatus == 'on'){
           $("#daChatAvailable").removeClass("invisible");
+          $("#daChatAvailable i").removeClass("chat-inactive");
+          $("#daChatAvailable i").addClass("chat-active");
           $("#daChatOnButton").addClass("invisible");
           $("#daChatOffButton").removeClass("invisible");
           $("#daMessage").prop('disabled', false);
           $("#daSend").prop('disabled', false);
+        }
+      }
+      function daChatLogCallback(data){
+        console.log("daChatLogCallback: success is " + data.success);
+        if (data.success){
+          $("#daCorrespondence").html('');
+          chatHistory = []; 
+          var messages = data.messages;
+          for (var i = 0; i < messages.length; ++i){
+            chatHistory.push(messages[i]);
+            publishMessage(messages[i]);
+          }
+          scrollChatFast();
+          display_chat();
         }
       }
       function daCheckinCallback(data){
@@ -2375,8 +2416,26 @@ def index():
           daChatStatus = 'waiting';
         }
         display_chat();
-        if (daChatStatus == 'ready' || daChatStatus == 'on'){
+        if (daChatStatus == 'ready'){
           daInitializeSocket();
+        }
+        if (daInitialized == false && (daChatStatus == 'waiting' || daChatStatus != 'standby')){
+          setTimeout(function(){
+            $.ajax({
+              type: 'POST',
+              url: """ + "'" + url_for('checkin') + "'" + """,
+              data: $.param({action: 'chat_log'}),
+              success: daChatLogCallback,
+              dataType: 'json'
+            });
+          }, 200);
+        }
+        if (daInitialized == true){
+          $("#daCorrespondence").html('');
+          for(var i = 0; i < chatHistory.length; i++){
+            publishMessage(chatHistory[i]);
+          }
+          scrollChatFast();
         }
         if (daChatStatus != 'off'){
           daSendChanges = true;
@@ -2389,6 +2448,7 @@ def index():
             $(this).find(':input').change(pushChanges)
           });
         }
+        daInitialized = true;
       }
       $( document ).ready(function(){
         daInitialize();
@@ -3298,14 +3358,53 @@ def monitor():
     function undraw_session(key){
         //console.log("Undrawing...")
         var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+        var xButton = document.createElement('a');
+        var xButtonIcon = document.createElement('i');
+        $(xButton).addClass("corner-remove");
+        $(xButtonIcon).addClass("glyphicon glyphicon-remove-circle");
+        $(xButtonIcon).appendTo($(xButton));
         $("#listelement" + skey).addClass("list-group-item-danger");
         $("#session" + skey).find("a").remove();
         $("#session" + skey).find("span").html('""" + word("offline") + """');
         $("#session" + skey).find("span").removeClass('label-info');
         $("#session" + skey).find("span").addClass('label-danger');
+        $(xButton).click(function(){
+            $("#listelement" + skey).slideUp(300, function(){
+                $("#listelement" + skey).remove();
+                check_if_empty();
+            });
+        });
+        $(xButton).appendTo($("#session" + skey));
         $("#iframe" + skey).find('iframe').first().contents().find('body').addClass("dainactive");
         $("#chatarea" + skey).find('input, button').prop("disabled", true);
         delete daSessions[key];
+    }
+    function publish_chat_log(uid, yaml_filename, userid, messages){
+        var key = 'da:session:uid:' + uid + ':i:' + yaml_filename + ':userid:' + userid
+        var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+        var chatArea = $("#chatarea" + skey).find('ul').first();
+        for (var i = 0; i < messages.length; ++i){
+            var message = messages[i];
+            var newLi = document.createElement('li');
+            $(newLi).addClass("list-group-item");
+            if (message.is_self){
+              $(newLi).addClass("list-group-item-warning dalistright");
+            }
+            else{
+              $(newLi).addClass("list-group-item-info");
+            }
+            $(newLi).html(message.message);
+            $(newLi).appendTo(chatArea);
+        }
+        scrollChatFast("#chatarea" + skey);
+    }
+    function check_if_empty(){
+        if ($("#monitorsessions").find("li").length > 0){
+            $("#emptylist").addClass("invisible");
+        }
+        else{
+            $("#emptylist").removeClass("invisible");
+        }
     }
     function draw_session(key, obj){
         var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
@@ -3319,8 +3418,7 @@ def monitor():
         }
         var theListElement;
         var sessionDiv;
-        var controlDiv;
-        var theIframe;
+        var theIframeContainer;
         if ($("#session" + skey).length && !(key in daSessions)){
             $("#listelement" + skey).removeClass("list-group-item-danger");
             $("#iframe" + skey).find('iframe').first().contents().find('body').removeClass("dainactive");
@@ -3329,8 +3427,8 @@ def monitor():
         if ($("#session" + skey).length){
             theListElement = $("#listelement" + skey).first();
             sessionDiv = $("#session" + skey).first();
-            controlDiv = $("#control" + skey).first();
-            theIframe = $("#iframe" + skey).first();
+            //controlDiv = $("#control" + skey).first();
+            theIframeContainer = $("#iframe" + skey).first();
             theChatArea = $("#chatarea" + skey).first();
             $(sessionDiv).empty();
             if (obj.chatstatus == 'on' && $("#chatarea" + skey).find('button').first().prop("disabled") == true){
@@ -3343,44 +3441,23 @@ def monitor():
             $(theListElement).attr('id', "listelement" + key);
             var sessionDiv = document.createElement('div');
             $(sessionDiv).attr('id', "session" + key);
+            $(sessionDiv).addClass('chat-session');
             $(sessionDiv).appendTo($(theListElement));
             $(theListElement).appendTo("#monitorsessions");
-            controlDiv = document.createElement('div');
-            $(controlDiv).attr('id', "control" + key);
-            $(controlDiv).addClass("chatcontrol");
-            $(controlDiv).addClass("invisible");
-            $(controlDiv).appendTo($(theListElement));
-            var controlButton = document.createElement('a');
-            $(controlButton).addClass("label");
-            $(controlButton).addClass("label-default");
-            $(controlButton).addClass("observebutton");
-            $(controlButton).html('""" + word("Close") + """');
-            $(controlButton).appendTo($(controlDiv));
-            var joinButton = document.createElement('a');
-            $(joinButton).addClass("label");
-            $(joinButton).addClass("label-warning");
-            $(joinButton).addClass("observebutton");
-            $(joinButton).html('""" + word("Join") + """');
-            $(joinButton).attr('href', '""" + url_for('visit_interview') + """?' + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
-            $(joinButton).attr('target', '_blank');
-            $(joinButton).appendTo($(controlDiv));
+            // controlDiv = document.createElement('div');
+            // $(controlDiv).attr('id', "control" + key);
+            // $(controlDiv).addClass("chatcontrol invisible chat-session");
+            // $(controlDiv).appendTo($(theListElement));
             theIframeContainer = document.createElement('div');
-            $(theIframeContainer).addClass("observer-container");
+            $(theIframeContainer).addClass("observer-container invisible");
             $(theIframeContainer).attr('id', 'iframe' + key);
-            theIframe = document.createElement('iframe');
-            $(theIframeContainer).addClass("invisible");
+            var theIframe = document.createElement('iframe');
             $(theIframe).addClass("observer");
             $(theIframe).attr('name', 'iframe' + key);
-            //$(theIframe).attr('frameborder', '0');
-            //$(theIframe).attr('vspace', '0');
-            //$(theIframe).attr('hspace', '0');
-            //$(theIframe).attr('marginwidth', '0');
-            //$(theIframe).attr('marginheight', '0');
             $(theIframe).appendTo($(theIframeContainer));
             $(theIframeContainer).appendTo($(theListElement));
             theChatArea = document.createElement('div');
-            $(theChatArea).addClass('monitor-chat-area');
-            $(theChatArea).addClass('invisible');
+            $(theChatArea).addClass('monitor-chat-area invisible');
             $(theChatArea).html('<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"></ul></div></div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control" disabled><span class="input-group-btn"><button class="btn btn-default" type="button" disabled>""" + word("Send") + """</button></span></div></div></div></form>');
             $(theChatArea).attr('id', 'chatarea' + key);
             var submitter = function(){
@@ -3398,42 +3475,98 @@ def monitor():
                 if(e.keyCode == 13) { submitter(); e.preventDefault(); }
             });
             $(theChatArea).appendTo($(theListElement));
-            $(controlButton).click(function(){
-                $(controlDiv).addClass("invisible");
-                $(sessionDiv).removeClass("invisible");
-                theIframe.contentWindow.document.open();
-                theIframe.contentWindow.document.write("");
-                theIframe.contentWindow.document.close();
-                $(theIframeContainer).addClass("invisible");
-            });
             if (obj.chatstatus == 'on'){
                 activateChatArea(key);
             }
         }
         theText = document.createTextNode(the_html);
         var statusLabel = document.createElement('span');
-        $(statusLabel).addClass("label");
-        $(statusLabel).addClass("label-info");
-        $(statusLabel).addClass("chat-status-label");
+        $(statusLabel).addClass("label label-info chat-status-label");
         $(statusLabel).html(obj.chatstatus);
         $(statusLabel).appendTo($(sessionDiv));
         $(theText).appendTo($(sessionDiv));
+        var unblockButton = document.createElement('a');
+        $(unblockButton).addClass("label label-info observebutton");
+        if (!obj.blocked){
+            $(unblockButton).addClass("invisible");
+        }
+        $(unblockButton).html('""" + word("Unblock") + """');
+        $(unblockButton).attr('href', '#');
+        $(unblockButton).appendTo($(sessionDiv));
+        var blockButton = document.createElement('a');
+        $(blockButton).addClass("label label-danger observebutton");
+        if (obj.blocked){
+            $(blockButton).addClass("invisible");
+        }
+        $(blockButton).html('""" + word("Block") + """');
+        $(blockButton).attr('href', '#');
+        $(blockButton).appendTo($(sessionDiv));
+        $(blockButton).click(function(e){
+            $(unblockButton).removeClass("invisible");
+            $(this).addClass("invisible");
+            deActivateChatArea(key);
+            socket.emit('block', {key: key});
+            e.preventDefault();
+            return false;
+        });
+        $(unblockButton).click(function(e){
+            $(blockButton).removeClass("invisible");
+            $(this).addClass("invisible");
+            socket.emit('unblock', {key: key});
+            e.preventDefault();
+            return false;
+        });
+        var joinButton = document.createElement('a');
+        $(joinButton).addClass("label label-warning observebutton");
+        $(joinButton).html('""" + word("Join") + """');
+        $(joinButton).attr('href', '""" + url_for('visit_interview') + """?' + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
+        $(joinButton).attr('target', '_blank');
+        $(joinButton).appendTo($(sessionDiv));
         if (wants_to_chat){
             var openButton = document.createElement('a');
-            $(openButton).addClass("label");
-            $(openButton).addClass("label-primary");
-            $(openButton).addClass("observebutton");
+            $(openButton).addClass("label label-primary observebutton");
             $(openButton).attr('href', '""" + url_for('observer') + """?' + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
             //$(openButton).attr('href', 'about:blank');
+            $(openButton).attr('id', 'observe' + key);
             $(openButton).attr('target', 'iframe' + key);
             $(openButton).html('""" + word("Observe") + """');
             $(openButton).appendTo($(sessionDiv));
+            var controlButton = document.createElement('a');
+            $(controlButton).addClass("label label-default observebutton invisible");
+            $(controlButton).html('""" + word("Stop Observing") + """');
+            $(controlButton).attr('href', '#');
+            $(controlButton).appendTo($(sessionDiv));
             $(openButton).click(function(){
-                $(sessionDiv).addClass("invisible");
-                $(controlDiv).removeClass("invisible");
-                $(theIframeContainer).removeClass("invisible");
+                //console.log("Observing..");
+                $(this).addClass("invisible");
+                $(controlButton).removeClass("invisible");
+                $("#iframe" + skey).removeClass("invisible");
                 return true;
             });
+            $(controlButton).click(function(e){
+                //console.log("Unobserving..");
+                $(this).addClass("invisible");
+                $(openButton).removeClass("invisible");
+                var theIframe = $("#iframe" + skey).find('iframe');
+                if (theIframe != null && theIframe.contentWindow){
+                    theIframe.contentWindow.document.open();
+                    theIframe.contentWindow.document.write("");
+                    theIframe.contentWindow.document.close();
+                }
+                $("#iframe" + skey).slideUp(400, function(){
+                    $(this).css("display", "").addClass("invisible");
+                });
+                e.preventDefault();
+                return false;
+            });
+            if ($(theIframeContainer).hasClass("invisible")){
+                $(openButton).removeClass("invisible");
+                $(controlButton).addClass("invisible");
+            }
+            else{
+                $(openButton).addClass("invisible");
+                $(controlButton).removeClass("invisible");
+            }
         }
         if (obj.chatstatus == 'on' && $("#chatarea" + skey).hasClass('invisible')){
             activateChatArea(key);
@@ -3465,26 +3598,7 @@ def monitor():
                 activateChatArea(key);
             });
             socket.on('chat_log', function(arg) {
-                var key = 'da:session:uid:' + arg.uid + ':i:' + arg.i + ':userid:' + arg.userid
-                var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-                //console.log("Got response from chat_log: " + key + " with " + arg.data)
-                var chatArea = $("#chatarea" + skey).find('ul').first();
-                var messages = arg.data;
-                for (var i = 0; i < messages.length; ++i){
-                    var message = messages[i];
-                    var newLi = document.createElement('li');
-                    $(newLi).addClass("list-group-item");
-                    if (message.is_self){
-                      $(newLi).addClass("list-group-item-warning");
-                      $(newLi).addClass("dalistright");
-                    }
-                    else{
-                      $(newLi).addClass("list-group-item-info");
-                    }
-                    $(newLi).html(message.message);
-                    $(newLi).appendTo(chatArea);
-                }
-                scrollChatFast("#chatarea" + skey);
+                publish_chat_log(arg.uid, arg.i, arg.userid, arg.data);
             });            
             socket.on('chatmessage', function(data) {
                 var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
@@ -3494,8 +3608,7 @@ def monitor():
                 var newLi = document.createElement('li');
                 $(newLi).addClass("list-group-item");
                 if (data.data.is_self){
-                  $(newLi).addClass("list-group-item-warning");
-                  $(newLi).addClass("dalistright");
+                  $(newLi).addClass("list-group-item-warning dalistright");
                 }
                 else{
                   $(newLi).addClass("list-group-item-info");
@@ -3507,12 +3620,7 @@ def monitor():
             socket.on('sessionupdate', function(data) {
                 //console.log("Got session update: " + data.session.chatstatus);
                 draw_session(data.key, data.session);
-                if ($("#monitorsessions").find("li").length > 0){
-                    $("#emptylist").addClass("invisible");
-                }
-                else{
-                    $("#emptylist").removeClass("invisible");
-                }
+                check_if_empty();
             });
             socket.on('updatemonitor', function(data) {
                 //console.log("Got update monitor response");

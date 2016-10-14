@@ -71,6 +71,26 @@ button.btn-da-custom {
     background-color: yellow;
 }
 
+.chat-active {
+    color: #45bf41;
+}
+
+.chat-session {
+    overflow: hidden;
+}
+
+.chat-active:hover {
+    color: #55cf51;
+}
+
+.chat-inactive {
+    color: #4f4f4f;
+}
+
+.chat-inactive:hover {
+    color: #5f5f5f;
+}
+
 a.sourceactive {
     background-color: #080808;
     background-image: linear-gradient(to bottom, #080808 0px, #0F0F0F 100%);
@@ -288,6 +308,17 @@ a.example-copy {
 a.example-documentation {
     font-size: 14px;
     float: right;
+}
+
+a.corner-remove {
+    float: right;
+    cursor: pointer;
+    color: #666666;
+    font-size: 20px;
+}
+
+a.corner-remove:hover {
+    color: #000000;
 }
 
 table.daplaygroundtable {

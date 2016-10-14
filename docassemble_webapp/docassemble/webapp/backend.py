@@ -3,8 +3,9 @@ from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, 
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.webapp.core.models import Uploads
 from docassemble.base.logger import logmessage
-from docassemble.webapp.users.models import UserDict, UserDictKeys, ChatLog
+from docassemble.webapp.users.models import User, ChatLog, UserDict, UserDictKeys, ChatLog
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList
+from sqlalchemy import or_, and_
 import docassemble.webapp.database
 import logging
 import urllib
@@ -400,4 +401,102 @@ def reset_user_dict(user_code, filename):
     db.session.commit()
     return
 
+def get_person(user_id, cache):
+    if user_id in cache:
+        return cache[user_id]
+    for record in User.query.filter_by(id=user_id):
+        cache[record.id] = record
+        return record
+    return None
 
+def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, self_user_id, self_temp_id):
+    messages = list()
+    people = dict()
+    if user_id is not None:
+        if get_person(user_id, people) is None:
+            return list()
+        chat_person_type = 'auth'
+        chat_person_id = user_id
+    else:
+        chat_person_type = 'anon'
+        chat_person_id = temp_user_id
+    if self_user_id is not None:
+        if get_person(self_user_id, people) is None:
+            return list()
+        self_person_type = 'auth'
+        self_person_id = self_user_id
+    else:
+        self_person_type = 'anon'
+        self_person_id = self_temp_id
+    if chat_mode in ['peer', 'peerhelp']:
+        open_to_peer = True
+    else:
+        open_to_peer = False
+    if chat_person_type == 'auth':
+        if chat_mode in ['peer', 'peerhelp']:
+            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, or_(ChatLog.open_to_peer == True, ChatLog.owner_id == chat_person_id))).order_by(ChatLog.id).all()
+        else:
+            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, ChatLog.owner_id == chat_person_id)).order_by(ChatLog.id).all()
+        for record in records:
+            if record.encrypted:
+                try:
+                    message = decrypt_phrase(record.message, secret)
+                except:
+                    sys.stderr.write("Could not decrypt phrase with secret " + str(secret) + "\n")
+                    continue
+            else:
+                message = unpack_phrase(record.message)
+            modtime = nice_utc_date(record.modtime)
+            if self_person_type == 'auth':
+                if self_person_id == record.user_id:
+                    is_self = True
+                else:
+                    is_self = False
+            else:
+                if self_person_id == record.temp_user_id:
+                    is_self = True
+                else:
+                    is_self = False
+            if record.user_id is not None:
+                person = get_person(record.user_id, people)
+                if person is None:
+                    sys.stderr.write("Person " + str(record.user_id) + " did not exist\n")
+                    continue
+                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=message, roles=[role.name for role in person.roles]))
+            else:
+                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, modtime=modtime, message=message, roles=['user']))
+    else:
+        if chat_mode in ['peer', 'peerhelp']:
+            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, or_(ChatLog.open_to_peer == True, ChatLog.temp_owner_id == chat_person_id))).order_by(ChatLog.id).all()
+        else:
+            records = ChatLog.query.filter(and_(ChatLog.filename == yaml_filename, ChatLog.key == session_id, ChatLog.temp_owner_id == chat_person_id)).order_by(ChatLog.id).all()
+        for record in records:
+            if record.encrypted:
+                try:
+                    message = decrypt_phrase(record.message, secret)
+                except:
+                    sys.stderr.write("Could not decrypt phrase with secret " + str(secret) + "\n")
+                    continue
+            else:
+                message = unpack_phrase(record.message)
+            modtime = nice_utc_date(record.modtime)
+            if self_person_type == 'auth':
+                if self_person_id == record.user_id:
+                    is_self = True
+                else:
+                    is_self = False
+            else:
+                #logmessage("self person id is " + str(self_person_id) + " and record user id is " + str(record.temp_user_id))
+                if self_person_id == record.temp_user_id:
+                    is_self = True
+                else:
+                    is_self = False
+            if record.user_id is not None:
+                person = get_person(record.user_id, people)
+                if person is None:
+                    sys.stderr.write("Person " + str(record.user_id) + " did not exist\n")
+                    continue
+                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=message, roles=[role.name for role in person.roles]))
+            else:
+                messages.append(dict(id=record.id, is_self=is_self, temp_owner_id=record.temp_owner_id, temp_user_id=record.temp_user_id, owner_id=record.owner_id, user_id=record.user_id, modtime=modtime, message=message, roles=['user']))
+    return messages
