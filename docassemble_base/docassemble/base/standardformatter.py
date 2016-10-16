@@ -260,8 +260,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
                 if field.datatype == 'email':
                     validation_rules['rules'][the_saveas]['email'] = True
                     if status.extras['required'][field.number]:
-                        validation_rules['rules'][the_saveas]['notEmpty'] = True
-                        validation_rules['messages'][the_saveas]['notEmpty'] = word("This field is required.")
+                        validation_rules['rules'][the_saveas]['minlength'] = 1
+                        validation_rules['messages'][the_saveas]['minlength'] = word("This field is required.")
                     validation_rules['messages'][the_saveas]['email'] = word("You need to enter a complete e-mail address.")
                 if field.datatype in ['number', 'currency', 'float', 'integer']:
                     validation_rules['rules'][the_saveas]['number'] = True
@@ -623,7 +623,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
               </div>
             </div>
 """
-            extra_scripts.append("""<script>\n      $("#emailform").validate(""" + json.dumps({'rules': {'_attachment_email_address': {'notEmpty': True, 'required': True, 'email': True}}, 'messages': {'_attachment_email_address': {'required': word("An e-mail address is required."), 'email': word("You need to enter a complete e-mail address.")}}, 'errorClass': 'help-inline'}) + """);\n    </script>""")
+            extra_scripts.append("""<script>\n      $("#emailform").validate(""" + json.dumps({'rules': {'_attachment_email_address': {'minlength': 1, 'required': True, 'email': True}}, 'messages': {'_attachment_email_address': {'required': word("An e-mail address is required."), 'email': word("You need to enter a complete e-mail address.")}}, 'errorClass': 'help-inline'}) + """);\n    </script>""")
     if len(status.attributions):
         output += '            <br/><br/><br/><br/><br/><br/><br/>\n'
     for attribution in sorted(status.attributions):
@@ -635,6 +635,12 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
     master_output += '          <section id="help" class="tab-pane col-lg-6 col-md-8 col-sm-10">\n'
     output = '<div><a id="backToQuestion" data-toggle="tab" href="#question" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back to question") + '</a></div>'
     output += """
+<div id="daPhoneMessage" class="row invisible">
+  <div class="col-md-12">
+    <h3>""" + word("Telephone assistance") + """</h3>
+    <p></p>
+  </div>
+</div>
 <div id="daChatBox" class="invisible">
   <div class="row">
     <div class="col-md-12 dachatbutton">

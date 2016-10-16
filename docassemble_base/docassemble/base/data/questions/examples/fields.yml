@@ -10,6 +10,11 @@ modules:
   - docassemble.base.util
 ---
 mandatory: true
+code: |
+  multi_user = True
+  set_chat_status(availability='available', mode='peerhelp', partner_roles=['advocate'])
+---
+mandatory: true
 question: All done
 subquestion: |
   Your income is ${ user_annual_income }.
@@ -31,6 +36,10 @@ fields:
     datatype: yesno
   - Seen Mount Rushmore: mount_rushmore_visited
     datatype: yesnowide
+  - Opinion of turnips: turnip_rating
+    datatype: range
+    min: 1
+    max: 10
   - Belly button type: belly_button
     datatype: radio
     choices:

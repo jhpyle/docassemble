@@ -1114,6 +1114,23 @@ def checkin():
             session['chatstatus'] = chatstatus
         obj = dict(chatstatus=chatstatus, i=yaml_filename, uid=session_id, userid=the_user_id)
         key = 'da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+        call_forwarding_on = False
+        twilio_config = daconfig.get('twilio', None)
+        forwarding_phone_number = None
+        if twilio_config is not None:
+            forwarding_phone_number = twilio_config.get('caller id', None)
+            if forwarding_phone_number is not None:
+                call_forwarding_on = True
+        call_forwarding_code = None
+        call_forwarding_message = None
+        if call_forwarding_on:
+            for call_key in r.keys(re.sub(r'^da:session:uid:', 'da:phonecode:monitor:*:uid:', key)):
+                call_forwarding_code = r.get(call_key)
+                if call_forwarding_code is not None:
+                    remaining_seconds = r.ttl(call_key)
+                    if remaining_seconds > 30:
+                        call_forwarding_message = '<span class="phone-message"><i class="glyphicon glyphicon-earphone"></i> ' + word('To reach an advocate who can assist you, call') + ' <a class="phone-number" href="tel:' + str(forwarding_phone_number) + '">' + str(forwarding_phone_number) + '</a> ' + word("and enter the code") + ' <span class="phone-code">' + str(call_forwarding_code) + '</span>.</span>'
+                        break
         chat_session_key = 'da:chatsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         potential_partners = list()
         if str(chatstatus) in ['waiting', 'standby', 'ringing', 'ready', 'on', 'hangup']:
@@ -1127,6 +1144,11 @@ def checkin():
             if obj['mode'] in ['help', 'peerhelp']:
                 help_ok = True
             obj['partner_roles'] = user_dict['_internal']['chat']['partner_roles']
+            if current_user.is_authenticated:
+                for attribute in ['email', 'confirmed_at', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone']:
+                    obj[attribute] = getattr(current_user, attribute, None)
+            else:
+                obj['temp_user_id'] = temp_user_id
             if help_ok and len(obj['partner_roles']) and not r.exists('da:block:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)):
                 pipe = r.pipeline()
                 for role in obj['partner_roles']:
@@ -1162,7 +1184,7 @@ def checkin():
                         session['chatstatus'] = chatstatus
                         obj['chatstatus'] = chatstatus
                     else:
-                        pipe.expire(lkey, 6000)
+                        pipe.expire(lkey, 60)
                         pipe.execute()
                         logmessage("Wrote to " + str(lkey))
                         chatstatus = 'ready'
@@ -1250,9 +1272,9 @@ def checkin():
             key = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
             r.publish(key, parameters)
         if peer_ok:
-            return jsonify(success=True, chat_status=chatstatus, num_peers=num_peers, help_available=help_available)
+            return jsonify(success=True, chat_status=chatstatus, num_peers=num_peers, help_available=help_available, phone=call_forwarding_message)
         else:
-            return jsonify(success=True, chat_status=chatstatus)
+            return jsonify(success=True, chat_status=chatstatus, phone=call_forwarding_message)
     return jsonify(success=False)
 
 def do_redirect(url, is_ajax):
@@ -2083,7 +2105,7 @@ def index():
           chatScroller.animate({scrollTop: height}, 800);
         }
         else{
-          console.log("error")
+          console.log("scrollChat: error")
         }
       }
       function scrollChatFast(){
@@ -2094,7 +2116,7 @@ def index():
             notYetScrolled = true;
             return;
           }
-          console.log("Scrolling to " + height + " where there are " + chatScroller[0].childElementCount + " children");
+          //console.log("Scrolling to " + height + " where there are " + chatScroller[0].childElementCount + " children");
           chatScroller.scrollTop(height);
         }
         else{
@@ -2112,7 +2134,7 @@ def index():
       function daInitializeSocket(){
         if (socket != null){
             if (socket.connected){
-                console.log("Calling connectagain")
+                //console.log("Calling connectagain")
                 socket.emit('connectagain', {data: 1});
             }
             else{
@@ -2132,16 +2154,16 @@ def index():
                   console.log("Whoops, socket is null");
                   return;
                 }
-                console.log("Connected socket with sid " + socket.id);
+                //console.log("Connected socket with sid " + socket.id);
                 daChatStatus = 'on';
                 display_chat();
                 pushChanges();
                 //daTurnOnChat();
-                console.log("Emitting chat_log from on connect");
+                //console.log("Emitting chat_log from on connect");
                 socket.emit('chat_log', {data: 1});
             });
             socket.on('chat_log', function(arg) {
-                console.log("Got chat_log");
+                //console.log("Got chat_log");
                 $("#daCorrespondence").html('');
                 chatHistory = []; 
                 var messages = arg.data;
@@ -2153,23 +2175,23 @@ def index():
             });
             socket.on('chatready', function(data) {
                 //var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
-                console.log('chatready');
+                //console.log('chatready');
             });
             socket.on('terminate', function() {
-                console.log("Terminating socket");
+                //console.log("Terminating socket");
                 socket.disconnect();
             });
             socket.on('disconnect', function() {
-                console.log("Disconnected socket");
+                //console.log("Disconnected socket");
                 //socket = null;
             });
             socket.on('reconnected', function() {
-                console.log("Reconnected")
+                //console.log("Reconnected")
                 daChatStatus = 'on';
                 display_chat();
                 pushChanges();
                 daTurnOnChat();
-                console.log("Emitting chat_log from reconnected");
+                //console.log("Emitting chat_log from reconnected");
                 socket.emit('chat_log', {data: 1});
             });
             socket.on('mymessage', function(arg) {
@@ -2177,7 +2199,7 @@ def index():
                 $("#daPushResult").html(arg.data);
             });
             socket.on('departure', function(arg) {
-                console.log("Departure " + arg.numpartners);
+                //console.log("Departure " + arg.numpartners);
                 if (arg.numpartners == 0){
                     daCloseChat();
                 }
@@ -2262,7 +2284,7 @@ def index():
         pushChanges();
       }
       function daTurnOnChat(){
-        console.log("Publishing from daTurnOnChat");
+        //console.log("Publishing from daTurnOnChat");
         $("#daChatOnButton").addClass("invisible");
         $("#daChatBox").removeClass("invisible");
         $("#daCorrespondence").html('');
@@ -2334,7 +2356,7 @@ def index():
         }
       }
       function daChatLogCallback(data){
-        console.log("daChatLogCallback: success is " + data.success);
+        //console.log("daChatLogCallback: success is " + data.success);
         if (data.success){
           $("#daCorrespondence").html('');
           chatHistory = []; 
@@ -2351,7 +2373,15 @@ def index():
         //console.log("success is " + data.success)
         if (data.success){
           oldDaChatStatus = daChatStatus
-          console.log("daCheckinCallback: from " + daChatStatus + " to " + data.chat_status)
+          //console.log("daCheckinCallback: from " + daChatStatus + " to " + data.chat_status)
+          if (data.phone == null){
+            $("#daPhoneMessage").addClass("invisible");
+            $("#daPhoneMessage p").html('');
+          }
+          else{
+            $("#daPhoneMessage").removeClass("invisible");
+            $("#daPhoneMessage p").html(data.phone);
+          }
           var statusChanged;
           if (daChatStatus == data.chat_status){
             statusChanged = false;
@@ -2363,7 +2393,7 @@ def index():
             daChatStatus = data.chat_status;
             display_chat();
             if (daChatStatus == 'ready'){
-              console.log("calling initialize socket because ready");
+              //console.log("calling initialize socket because ready");
               daInitializeSocket();
             }
           }
@@ -2531,7 +2561,7 @@ def index():
         }
         if (true || daInitialized == false){
           setTimeout(function(){
-            console.log("daInitialize call to chat_log in checkin");
+            //console.log("daInitialize call to chat_log in checkin");
             $.ajax({
               type: 'POST',
               url: """ + "'" + url_for('checkin') + "'" + """,
@@ -2542,7 +2572,7 @@ def index():
           }, 200);
         }
         if (daInitialized == true){
-          console.log("Publishing from memory");
+          //console.log("Publishing from memory");
           $("#daCorrespondence").html('');
           for(var i = 0; i < chatHistory.length; i++){
             publishMessage(chatHistory[i]);
@@ -3320,11 +3350,11 @@ def observer():
                 socket.emit('observe', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """});
             });
             socket.on('terminate', function() {
-                console.log("Terminating socket");
+                //console.log("Terminating socket");
                 socket.disconnect();
             });
             socket.on('disconnect', function() {
-                console.log("Disconnected socket");
+                //console.log("Disconnected socket");
                 //socket = null;
             });
             socket.on('newpage', function(incoming) {
@@ -3357,9 +3387,10 @@ def observer():
                     $(this).find(':input').each(function(){
                         var type = $(this).attr('type');
                         var id = $(this).attr('id');
-                        if (type == 'radio' || type == 'checkbox'){
-                            if (id in valArray){
-                                if (valArray[id] == 'True'){
+                        var name = $(this).attr('name');
+                        if (type == 'checkbox'){
+                            if (name in valArray){
+                                if (valArray[name] == 'True'){
                                     $(this).prop('checked', true);
                                 }
                                 else{
@@ -3370,12 +3401,22 @@ def observer():
                                 $(this).prop('checked', false);
                             }
                         }
+                        else if (type == 'radio'){
+                            if (name in valArray){
+                                if (valArray[name] == $(this).val()){
+                                    $(this).prop('checked', true);
+                                }
+                                else{
+                                    $(this).prop('checked', false);
+                                }
+                            }
+                        }
                         else if ($(this).data().hasOwnProperty('sliderMax')){
-                            $(this).slider('setValue', parseInt(valArray[id]));
+                            $(this).slider('setValue', parseInt(valArray[name]));
                         }
                         else{
-                            if (id in valArray){
-                                $(this).val(valArray[id]);
+                            if (name in valArray){
+                                $(this).val(valArray[name]);
                             }
                         }
                     });
@@ -3408,6 +3449,10 @@ def monitor():
     session['monitor'] = 1
     if 'user_id' not in session:
         session['user_id'] = current_user.id
+    phone_number_key = 'da:monitor:phonenumber:' + str(session['user_id'])
+    default_phone_number = r.get(phone_number_key)
+    if default_phone_number is None:
+        default_phone_number = ''
     sub_role_key = 'da:monitor:userrole:' + str(session['user_id'])
     if r.exists(sub_role_key):
         subscribed_roles = r.hgetall(sub_role_key)
@@ -3419,16 +3464,59 @@ def monitor():
         daAvailableForChat = 'true'
     else:
         daAvailableForChat = 'false'
+    call_forwarding_on = 'false'
+    twilio_config = daconfig.get('twilio', None)
+    if twilio_config is not None:
+        forwarding_phone_number = twilio_config.get('caller id', None)
+        if forwarding_phone_number is not None:
+            call_forwarding_on = 'true'
     script = '<script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n' + """<script type="text/javascript" charset="utf-8">
     var socket;
     var daUserid = """ + str(current_user.id) + """;
+    var daPhoneOnMessage = """ + repr(str("The user can call you.  Click to cancel.")) + """;
+    var daPhoneOffMessage = """ + repr(str("Click if you want the user to be able to call you.")) + """;
     var daSessions = Object();
     var daAvailRoles = Object();
     var daChatPartners = Object();
+    var daPhonePartners = Object();
+    var daNewPhonePartners = Object();
+    var daTermPhonePartners = Object();
+    var daUsePhone = """ + call_forwarding_on + """;
     var daSubscribedRoles = """ + json.dumps(subscribed_roles) + """;
     var daAvailableForChat = """ + daAvailableForChat + """;
+    var daPhoneNumber = """ + repr(str(default_phone_number)) + """;
     var daFirstTime = 1;
     var updateMonitorInterval = null;
+    function phoneNumberOk(){
+      var phoneNumber = $("#daPhoneNumber").val();
+      if (phoneNumber == '' || phoneNumber.match(/^\+[1-9]\d{1,14}$/)){
+        return true;
+      }
+      else{
+        return false;
+      }
+    }
+    function checkPhone(){
+      //console.log("Doing checkPhone");
+      $("#daPhoneNumber").val($("#daPhoneNumber").val().replace(/[^0-9\+]/g, ''));
+      if (phoneNumberOk()){
+        $("#daPhoneNumber").parent().removeClass("has-error");
+        $("#daPhoneError").addClass("invisible");
+        daPhoneNumber = $("#daPhoneNumber").val();
+        if (daPhoneNumber == ''){
+          daPhoneNumber = null;
+        }
+        else{
+          $(".phone").removeClass("invisible");
+        }
+      }
+      else{
+        $("#daPhoneNumber").parent().addClass("has-error");
+        $("#daPhoneError").removeClass("invisible");
+        daPhoneNumber = null;
+        $(".phone").addClass("invisible");
+      }
+    }
     function allSessions(uid, yaml_filename){
       var prefix = 'da:session:uid:' + uid + ':i:' + yaml_filename + ':userid:';
       var output = Array();
@@ -3453,7 +3541,7 @@ def monitor():
       var chatScroller = $(key).find('ul').first();
       if (chatScroller.length){
         var height = chatScroller[0].scrollHeight;
-        console.log("Scrolling to " + height + " where there are " + chatScroller[0].childElementCount + " children");
+        //console.log("Scrolling to " + height + " where there are " + chatScroller[0].childElementCount + " children");
         chatScroller.scrollTop(height);
       }
       else{
@@ -3462,7 +3550,16 @@ def monitor():
     }
     function do_update_monitor(){
         //console.log("do update monitor with " + daAvailableForChat);
-        socket.emit('updatemonitor', {available_for_chat: daAvailableForChat, subscribed_roles: daSubscribedRoles});
+        if (phoneNumberOk()){
+          daPhoneNumber = $("#daPhoneNumber").val();
+          if (daPhoneNumber == ''){
+            daPhoneNumber = null;
+          }
+        }
+        else{
+          daPhoneNumber = null;
+        }
+        socket.emit('updatemonitor', {available_for_chat: daAvailableForChat, phone_number: daPhoneNumber, subscribed_roles: daSubscribedRoles, phone_partners_to_add: daNewPhonePartners, phone_partners_to_terminate: daTermPhonePartners});
     }
     function update_monitor(){
         if (updateMonitorInterval != null){
@@ -3493,9 +3590,9 @@ def monitor():
         $(xButtonIcon).appendTo($(xButton));
         $("#listelement" + skey).addClass("list-group-item-danger");
         $("#session" + skey).find("a").remove();
-        $("#session" + skey).find("span").html('""" + word("offline") + """');
-        $("#session" + skey).find("span").removeClass('label-info');
-        $("#session" + skey).find("span").addClass('label-danger');
+        $("#session" + skey).find("span").first().html('""" + word("offline") + """');
+        $("#session" + skey).find("span").first().removeClass('label-info');
+        $("#session" + skey).find("span").first().addClass('label-danger');
         $(xButton).click(function(){
             $("#listelement" + skey).slideUp(300, function(){
                 $("#listelement" + skey).remove();
@@ -3551,7 +3648,13 @@ def monitor():
             wants_to_chat = true;
         }
         if (wants_to_chat){
-            the_html = obj.browser_title + ' ';
+            the_html = obj.browser_title + ' &mdash; '
+            if (obj.hasOwnProperty('first_name')){
+              the_html += obj.first_name + ' ' + obj.last_name;
+            }
+            else{
+              the_html += '""" + word("Anonymous visitor") + """ ' + obj.temp_user_id;
+            }
         }
         var theListElement;
         var sessionDiv;
@@ -3599,11 +3702,11 @@ def monitor():
             $(theChatArea).html('<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"></ul></div></div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control" disabled><span class="input-group-btn"><button class="btn btn-default" type="button" disabled>""" + word("Send") + """</button></span></div></div></div></form>');
             $(theChatArea).attr('id', 'chatarea' + key);
             var submitter = function(){
-                console.log("I am the submitter and I am submitting " + key);
+                //console.log("I am the submitter and I am submitting " + key);
                 var input = $(theChatArea).find("input").first();
                 var message = input.val().trim();
                 if (message == null || message == ""){
-                    console.log("Message was blank");
+                    //console.log("Message was blank");
                     return false;
                 }
                 socket.emit('chatmessage', {key: key, data: input.val()});
@@ -3619,12 +3722,65 @@ def monitor():
                 activateChatArea(key);
             }
         }
-        var theText = document.createTextNode(the_html);
+        var theText = document.createElement('span');
+        theText.innerHTML = the_html;
         var statusLabel = document.createElement('span');
         $(statusLabel).addClass("label label-info chat-status-label");
         $(statusLabel).html(obj.chatstatus);
         $(statusLabel).appendTo($(sessionDiv));
         $(theText).appendTo($(sessionDiv));
+        if (daUsePhone){
+          var phoneButton = document.createElement('a');
+          var phoneIcon = document.createElement('i');
+          $(phoneIcon).addClass("glyphicon glyphicon-earphone");
+          $(phoneIcon).appendTo($(phoneButton));
+          $(phoneButton).addClass("label phone observebutton");
+          if (key in daPhonePartners){
+            $(phoneButton).addClass("phone-on label-success");
+            $(phoneButton).attr('title', daPhoneOnMessage);
+          }
+          else{
+            $(phoneButton).addClass("phone-off label-default");
+            $(phoneButton).attr('title', daPhoneOffMessage);
+          }
+          $(phoneButton).appendTo($(sessionDiv));
+          $(phoneButton).attr('href', '#');
+          if (daPhoneNumber == null){
+            $(phoneButton).addClass("invisible");
+          }
+          $(phoneButton).click(function(e){
+            if ($(this).hasClass("phone-off") && daPhoneNumber != null){
+              $(this).removeClass("phone-off");
+              $(this).removeClass("label-default");
+              $(this).addClass("phone-on");
+              $(this).addClass("label-success");
+              $(this).attr('title', daPhoneOnMessage);
+              daPhonePartners[key] = 1;
+              daNewPhonePartners[key] = 1;
+              if (key in daTermPhonePartners){
+                delete daTermPhonePartners[key];
+              }
+              update_monitor();
+            }
+            else{
+              $(this).removeClass("phone-on");
+              $(this).removeClass("label-success");
+              $(this).addClass("phone-off");
+              $(this).addClass("label-default");
+              $(this).attr('title', daPhoneOffMessage);
+              if (key in daPhonePartners){
+                delete daPhonePartners[key];
+              }
+              if (key in daNewPhonePartners){
+                delete daNewPhonePartners[key];
+              }
+              daTermPhonePartners[key] = 1;
+              update_monitor();
+            }
+            e.preventDefault();
+            return false;
+          });
+        }
         var unblockButton = document.createElement('a');
         $(unblockButton).addClass("label label-info observebutton");
         if (!obj.blocked){
@@ -3731,11 +3887,11 @@ def monitor():
                 update_monitor();
             });
             socket.on('terminate', function() {
-                console.log("Terminating socket");
+                //console.log("Terminating socket");
                 socket.disconnect();
             });
             socket.on('disconnect', function() {
-                console.log("Disconnected socket");
+                //console.log("Disconnected socket");
                 //socket = null;
             });
             socket.on('refreshsessions', function(data) {
@@ -3748,7 +3904,7 @@ def monitor():
             });
             socket.on('chatstop', function(data) {
                 var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
-                console.log('chatstop: ' + key);
+                //console.log('chatstop: ' + key);
                 if (key in daChatPartners){
                     delete daChatPartners[key];
                 }
@@ -3758,11 +3914,11 @@ def monitor():
                 publish_chat_log(arg.uid, arg.i, arg.userid, arg.mode, arg.data);
             });            
             socket.on('block', function(arg) {
-                console.log("back from blocking " + arg.key);
+                //console.log("back from blocking " + arg.key);
                 update_monitor();
             });            
             socket.on('unblock', function(arg) {
-                console.log("back from unblocking " + arg.key);
+                //console.log("back from unblocking " + arg.key);
                 update_monitor();
             });            
             socket.on('chatmessage', function(data) {
@@ -3800,6 +3956,9 @@ def monitor():
                 //console.log("Got update monitor response");
                 //console.log("updatemonitor: chat partners are: " + data.chatPartners);
                 daChatPartners = data.chatPartners;
+                daNewPhonePartners = Object();
+                daTermPhonePartners = Object();
+                daPhonePartners = data.phonePartners;
                 var newSubscribedRoles = Object();
                 for (var key in data.subscribedRoles){
                     if (data.subscribedRoles.hasOwnProperty(key)){
@@ -3856,7 +4015,7 @@ def monitor():
                 for (var key in data.sessions){
                     if (data.sessions.hasOwnProperty(key)){
                         var user_id = key.replace(/^.*:userid:/, '');
-                        if (user_id != daUserid){
+                        if (true || user_id != daUserid){
                             var obj = data.sessions[key];
                             newDaSessions[key] = obj;
                             draw_session(key, obj);
@@ -3910,6 +4069,11 @@ def monitor():
             socket.emit('terminate');
           }
         });
+        if (daUsePhone){
+          $("#daPhoneInfo").removeClass("invisible");
+          $("#daPhoneNumber").val(daPhoneNumber);
+          $("#daPhoneNumber").change(checkPhone);
+        }
     });
 </script>"""
     return render_template('pages/monitor.html', extra_js=Markup(script)), 200
@@ -5924,9 +6088,11 @@ def webrtc_token():
 
 @app.route("/voice", methods=['POST', 'GET'])
 def voice():
+    for item in request.form:
+        logmessage("Item " + str(item) + " is " + str(request.form[item]))
     resp = twilio.twiml.Response()
     with resp.gather(action="/digits", finishOnKey='#', method="POST", timeout=10, numDigits=5) as g:
-        g.say("Please enter your four digit access code, followed by the pound sign.")
+        g.say(word("Please enter your four digit access code, followed by the pound sign."))
 
     # twilio_config = daconfig.get('twilio', None)
     # if twilio_config is None:
@@ -5947,9 +6113,17 @@ def voice():
 @app.route("/digits", methods=['POST', 'GET'])
 def digits():
     resp = twilio.twiml.Response()
-    logmessage("Got digits " + str(request.form["Digits"]))
-    dial = resp.dial(number="+12159813843")
-
+    if "Digits" in request.form:
+        logmessage("digits: got " + str(request.form["Digits"]))
+        phone_number = r.get('da:callforward:' + str(request.form["Digits"]))
+        if phone_number is None:
+            resp.say(word("The access code you entered is invalid or expired."))
+        else:
+            dial = resp.dial(number=phone_number)
+            r.delete('da:callforward:' + str(request.form["Digits"]))
+    else:
+        logmessage("digits: no digits received")
+        resp.say(word("No access code was entered"))
     return Response(str(resp), mimetype='text/xml')
 
 redis_host = daconfig.get('redis', None)

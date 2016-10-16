@@ -579,3 +579,33 @@ iframe.observer {
 .topspace {
     margin-top: 10px;
 }
+
+.monitor-note {
+    font-size: 12px;
+}
+
+.phone-error {
+    background-color: #f2dede;
+}
+
+.phone-warning {
+    color: orangered !important;
+    cursor: default;
+}
+
+.phone-off {
+    color: #4f4f4f;
+}
+
+.phone-off:hover {
+    color: #5f5f5f;
+}
+
+.phone-message {
+}
+
+.phone-code {
+}
+
+.phone-number {
+}

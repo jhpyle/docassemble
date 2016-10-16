@@ -20,6 +20,7 @@ import pytz
 import pickle
 import re
 import time
+import random
 eventlet.monkey_patch()
 
 alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
@@ -358,7 +359,7 @@ def monitor_thread(sid=None, user_id=None):
                     pubsub.subscribe(data['sid'])
                     listening_sids.add(data['sid'])
                     secrets[data['sid']] = data['secret']
-                    r.hset('da:monitor:chatpartners:' + str(user_id), 'da:chatsession:uid:' + str(data['uid']) + ':i:' + str(data['i']) + ':userid:' + data['userid'], 1)
+                    r.hset('da:monitor:chatpartners:' + str(user_id), 'da:chatsession:uid:' + str(data['uid']) + ':i:' + str(data['i']) + ':userid:' + str(data['userid']), 1)
                     socketio.emit('chatready', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid']}, namespace='/monitor', room=sid)
                 if data['messagetype'] == 'block':
                     pubsub.unsubscribe(item['channel'])
@@ -389,7 +390,10 @@ def on_monitor_connect():
         return
     sys.stderr.write('Client connected on monitor and will join room monitor\n')
     key = 'da:monitor:' + str(request.sid)
-    rr.set(key, 1)
+    pipe = rr.pipeline()
+    pipe.set(key, 1)
+    pipe.expire(key, 60)
+    pipe.execute()
     join_room('monitor')
     join_room(request.sid)
     user_id = session.get('user_id', None)
@@ -417,6 +421,9 @@ def terminate_monitor_connection():
 
 @socketio.on('block', namespace='/monitor')
 def monitor_block(data):
+    if 'monitor' not in session:
+        terminate_monitor_connection()
+        return
     key = data.get('key', None)
     if key is None:
         sys.stderr.write("No key provided\n")
@@ -432,6 +439,9 @@ def monitor_block(data):
     
 @socketio.on('unblock', namespace='/monitor')
 def monitor_unblock(data):
+    if 'monitor' not in session:
+        terminate_monitor_connection()
+        return
     key = data.get('key', None)
     if key is None:
         sys.stderr.write("No key provided\n")
@@ -445,10 +455,73 @@ def monitor_unblock(data):
     
 @socketio.on('updatemonitor', namespace='/monitor')
 def update_monitor(message):
+    if 'monitor' not in session:
+        terminate_monitor_connection()
+        return
     #sys.stderr.write('received message from ' + str(request.sid) + "\n")
     available_for_chat = message['available_for_chat']
     new_subscribed_roles = message['subscribed_roles']
+    new_phone_partners = message['phone_partners_to_add']
+    term_phone_partners = message['phone_partners_to_terminate']
+    phone_number = message['phone_number']
+    phone_number_key = 'da:monitor:phonenumber:' + str(session['user_id'])
+    if phone_number is None or phone_number == '':
+        rr.delete(phone_number_key)
+    else:
+        pipe = rr.pipeline()
+        pipe.set(phone_number_key, phone_number)
+        pipe.expire(phone_number_key, 2592000)
+        pipe.execute()
+    phone_partners = dict()
+    prefix = 'da:phonecode:monitor:' + str(session['user_id']) + ':uid:'
+    for key in term_phone_partners:
+        the_code = rr.get(key)
+        if the_code is not None:
+            rr.delete(key)
+            rr.delete('da:callforward:' + str(the_code))
+    if phone_number is None or phone_number == '':
+        for key in rr.keys(prefix + '*'):
+            the_code = rr.get(key)
+            if the_code is not None:
+                rr.delete(key)
+                rr.delete('da:callforward:' + str(the_code))
+    else:
+        codes_in_use = set()
+        for key in rr.keys('da:callforward:*'):
+            code = re.sub(r'^da:callforward:', '', key)
+            codes_in_use.add(code)
+        for key in rr.keys(prefix + '*'):
+            phone_partners[re.sub(r'^da:phonecode:monitor:[0-9]*:uid:', 'da:session:uid:', key)] = 1
+        for key in new_phone_partners:
+            if key in phone_partners:
+                continue
+            times = 0
+            ok = False
+            while times < 1000:
+                times += 1
+                code = "%04d" % random.randint(1000, 9999)
+                if code in codes_in_use:
+                    continue
+                ok = True
+                the_code = code
+                new_key = re.sub(r'^da:session:uid:', prefix, key)
+                code_key = 'da:callforward:' + str(code)
+                pipe = rr.pipeline()
+                pipe.set(new_key, code)
+                pipe.set(code_key, phone_number)
+                pipe.expire(new_key, 300)
+                pipe.expire(code_key, 300)
+                pipe.execute()
+                phone_partners[key] = 1
+                break
+            if times >= 1000:
+                logmessage("update_monitor: could not get a random integer")
     #sys.stderr.write('subscribed roles are type ' + str(type(new_subscribed_roles)) + " which is "  + str(new_subscribed_roles) + "\n")
+    monitor_key = 'da:monitor:' + str(request.sid)
+    pipe = rr.pipeline()
+    pipe.set(monitor_key, 1)
+    pipe.expire(monitor_key, 60)
+    pipe.execute()
     key = 'da:monitor:available:' + str(session['user_id'])
     key_exists = rr.exists(key)
     chat_partners = dict()
@@ -528,10 +601,13 @@ def update_monitor(message):
                 else:
                     sessobj['blocked'] = False
                 sessions[key] = sessobj
-    socketio.emit('updatemonitor', {'available_for_chat': available_for_chat, 'subscribedRoles': subscribed_roles, 'sessions': sessions, 'availRoles': sorted(avail_roles), 'chatPartners': chat_partners}, namespace='/monitor', room=request.sid)
+    socketio.emit('updatemonitor', {'available_for_chat': available_for_chat, 'subscribedRoles': subscribed_roles, 'sessions': sessions, 'availRoles': sorted(avail_roles), 'chatPartners': chat_partners, 'phonePartners': phone_partners}, namespace='/monitor', room=request.sid)
 
 @socketio.on('chatmessage', namespace='/monitor')
 def monitor_chat_message(data):
+    if 'monitor' not in session:
+        terminate_monitor_connection()
+        return
     key = data.get('key', None)
     sys.stderr.write("Key is " + str(key) + "\n")
     if key is None:
@@ -584,6 +660,9 @@ def monitor_chat_message(data):
     
 @socketio.on('chat_log', namespace='/monitor')
 def monitor_chat_log(data):
+    if 'monitor' not in session:
+        terminate_monitor_connection()
+        return
     key = data.get('key', None)
     sys.stderr.write("Key is " + str(key) + "\n")
     if key is None:
@@ -663,6 +742,9 @@ def on_observer_connect():
 
 @socketio.on('observe', namespace='/observer')
 def on_observe(message):
+    if 'observer' not in session:
+        terminate_observer_connection()
+        return
     if request.sid not in threads:
         key = 'da:input:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid'])
         sys.stderr.write('Observing ' + key + '\n')
