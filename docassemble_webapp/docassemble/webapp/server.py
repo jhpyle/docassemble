@@ -6088,6 +6088,16 @@ def webrtc_token():
 
 @app.route("/voice", methods=['POST', 'GET'])
 def voice():
+    twilio_config = daconfig.get('twilio', None)
+    if twilio_config is not None:
+        logmessage("Ignoring call to voice because Twilio not enabled")
+        return
+    if "AccountSid" not in request.form:
+        logmessage("Invalid call to voice")
+        return
+    if request.form["AccountSid"] != twilio_config.get('account sid', None):
+        logmessage("Request to voice did not authenticate")
+        return
     for item in request.form:
         logmessage("Item " + str(item) + " is " + str(request.form[item]))
     resp = twilio.twiml.Response()
@@ -6112,15 +6122,26 @@ def voice():
 
 @app.route("/digits", methods=['POST', 'GET'])
 def digits():
+    twilio_config = daconfig.get('twilio', None)
+    if twilio_config is not None:
+        logmessage("Ignoring call to digits because Twilio not enabled")
+        return
+    if "AccountSid" not in request.form:
+        logmessage("Invalid call to digits")
+        return
+    if request.form["AccountSid"] != twilio_config.get('account sid', None):
+        logmessage("Request to digits did not authenticate")
+        return
     resp = twilio.twiml.Response()
     if "Digits" in request.form:
         logmessage("digits: got " + str(request.form["Digits"]))
-        phone_number = r.get('da:callforward:' + str(request.form["Digits"]))
+        the_digits = re.sub(r'^[0-9]', '', request.form["Digits"])
+        phone_number = r.get('da:callforward:' + str(the_digits))
         if phone_number is None:
             resp.say(word("The access code you entered is invalid or expired."))
         else:
             dial = resp.dial(number=phone_number)
-            r.delete('da:callforward:' + str(request.form["Digits"]))
+            r.delete('da:callforward:' + str(the_digits))
     else:
         logmessage("digits: no digits received")
         resp.say(word("No access code was entered"))
