@@ -390,6 +390,10 @@ a.example-share {
     margin-bottom: 5px;
 }
 
+/* .dachatbutton { */
+/*     overflow: hidden; */
+/* } */
+
 .dachatbutton a {
     font-size: 14px;
     margin-top: 5px;
@@ -566,4 +570,12 @@ iframe.observer {
     border: solid #ccc 3px;
     margin: 0;
     padding: 0;
+}
+
+/* .peer-message > .badge { */
+/*     float: right; */
+/* } */
+
+.topspace {
+    margin-top: 10px;
 }

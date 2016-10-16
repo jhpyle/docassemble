@@ -635,16 +635,12 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
     master_output += '          <section id="help" class="tab-pane col-lg-6 col-md-8 col-sm-10">\n'
     output = '<div><a id="backToQuestion" data-toggle="tab" href="#question" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> ' + word("Back to question") + '</a></div>'
     output += """
-<div id="daChatOnButton" class="row">
-  <div class="col-md-12 dachatbutton">
-    <a class="label label-success">""" + word("Activate chat") + """</a>
-  </div>
-</div>
 <div id="daChatBox" class="invisible">
   <div class="row">
     <div class="col-md-12 dachatbutton">
+      <a id="daChatOnButton" class="label label-success">""" + word("Activate chat") + """</a>
       <a id="daChatOffButton" class="label label-warning">""" + word("Turn off chat") + """</a>
-      <h3 class="dachatbutton">""" + word("Live chat") + """</h3>
+      <h3>""" + word("Live chat") + """</h3>
     </div>
   </div>
   <div class="row">
@@ -665,6 +661,14 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
   <div class="row invisible">
     <div class="col-md-12">
       <p id="daPushResult"></p>
+    </div>
+  </div>
+  <div class="row topspace">
+    <div class="col-md-12">
+      <p>
+        <span class="peer-message" id="peerMessage"></span>
+        <span class="peer-message" id="peerHelpMessage"></span>
+      </p>
     </div>
   </div>
 </div>

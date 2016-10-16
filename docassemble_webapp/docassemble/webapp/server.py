@@ -1102,22 +1102,32 @@ def checkin():
         if user_dict['_internal']['chat']['availability'] == 'unavailable':
             return jsonify(success=False)
         messages = get_chat_log(user_dict['_internal']['chat']['mode'], yaml_filename, session_id, auth_user_id, temp_user_id, secret, auth_user_id, temp_user_id)
-        return jsonify(success=True, uid=session_id, i=yaml_filename, userid=the_user_id, messages=messages)
+        return jsonify(success=True, messages=messages)
     if request.form.get('action', None) == 'checkin':
         #logmessage("Doing redis statement")
+        peer_ok = False
+        num_peers = 0
+        help_available = 0
         old_chatstatus = session.get('chatstatus', None)
         chatstatus = request.form.get('chatstatus', 'off')
         if old_chatstatus != chatstatus:
             session['chatstatus'] = chatstatus
         obj = dict(chatstatus=chatstatus, i=yaml_filename, uid=session_id, userid=the_user_id)
+        key = 'da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+        chat_session_key = 'da:chatsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         potential_partners = list()
         if str(chatstatus) in ['waiting', 'standby', 'ringing', 'ready', 'on', 'hangup']:
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
             obj['secret'] = secret
             obj['encrypted'] = is_encrypted
             obj['roles'] = user_dict['_internal']['chat']['roles']
+            obj['mode'] = user_dict['_internal']['chat']['mode']
+            if obj['mode'] in ['peer', 'peerhelp']:
+                peer_ok = True
+            if obj['mode'] in ['help', 'peerhelp']:
+                help_ok = True
             obj['partner_roles'] = user_dict['_internal']['chat']['partner_roles']
-            if len(obj['partner_roles']) and not r.exists('da:block:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)):
+            if help_ok and len(obj['partner_roles']) and not r.exists('da:block:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)):
                 pipe = r.pipeline()
                 for role in obj['partner_roles']:
                     role_key = 'da:chat:roletype:' + str(role)
@@ -1125,8 +1135,8 @@ def checkin():
                     pipe.expire(role_key, 2592000)
                 pipe.execute()
                 for role in obj['partner_roles']:
-                    for key in r.keys('da:monitor:role:' + role + ':userid:*'):
-                        user_id = re.sub(r'^.*:userid:', '', key)
+                    for the_key in r.keys('da:monitor:role:' + role + ':userid:*'):
+                        user_id = re.sub(r'^.*:userid:', '', the_key)
                         if user_id not in potential_partners:
                             potential_partners.append(user_id)
             if len(potential_partners) > 0:
@@ -1136,11 +1146,19 @@ def checkin():
                     pipe = r.pipeline()
                     failure = True
                     for user_id in potential_partners:
-                        for key in r.keys('da:monitor:available:' + user_id):
-                            pipe.rpush(lkey, key)
+                        for the_key in r.keys('da:monitor:available:' + str(user_id)):
+                            pipe.rpush(lkey, the_key)
                             failure = False
+                    if peer_ok:
+                        for the_key in r.keys('da:chatsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:*'):
+                            if the_key != chat_session_key:
+                                pipe.rpush(lkey, the_key)
+                                failure = False
                     if failure:
-                        chatstatus = 'waiting'
+                        if peer_ok:
+                            chatstatus = 'ready'
+                        else:
+                            chatstatus = 'waiting'
                         session['chatstatus'] = chatstatus
                         obj['chatstatus'] = chatstatus
                     else:
@@ -1150,17 +1168,62 @@ def checkin():
                         chatstatus = 'ready'
                         session['chatstatus'] = chatstatus
                         obj['chatstatus'] = chatstatus
+                elif chatstatus in ['on']:
+                    if len(potential_partners) > 0:
+                        already_connected_to_help = False
+                        for user_id in potential_partners:
+                            for the_key in r.hgetall('da:monitor:chatpartners:' + str(user_id)):
+                                if the_key == chat_session_key:
+                                    already_connected_to_help = True
+                        if not already_connected_to_help:
+                            for user_id in potential_partners:
+                                mon_sid = r.get('da:monitor:available:' + str(user_id))
+                                if mon_sid is None:
+                                    continue
+                                int_sid = r.get('da:chatsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id))
+                                if int_sid is None:
+                                    continue
+                                r.publish(mon_sid, json.dumps(dict(messagetype='chatready', uid=session_id, i=yaml_filename, userid=the_user_id, secret=secret, sid=int_sid)))
+                                r.publish(int_sid, json.dumps(dict(messagetype='chatpartner', sid=mon_sid)))
+                                break
                 if chatstatus in ['waiting', 'hangup']:
                     chatstatus = 'standby'
                     session['chatstatus'] = chatstatus
                     obj['chatstatus'] = chatstatus
             else:
-                if chatstatus in ['standby', 'ready', 'ringing', 'hangup']:
-                    chatstatus = 'waiting'
-                    session['chatstatus'] = chatstatus
-                    obj['chatstatus'] = chatstatus
+                logmessage("Peer ok is " + str(peer_ok) + " and chatstatus is " + str(chatstatus))
+                if peer_ok:
+                    if chatstatus == 'ringing':
+                        lkey = 'da:ready:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+                        logmessage("Writing to " + str(lkey))
+                        pipe = r.pipeline()
+                        failure = True
+                        for the_key in r.keys('da:chatsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:*'):
+                            if the_key != chat_session_key:
+                                pipe.rpush(lkey, the_key)
+                                failure = False
+                        if not failure:
+                            pipe.expire(lkey, 6000)
+                            pipe.execute()
+                            logmessage("Wrote to " + str(lkey))
+                        chatstatus = 'ready'
+                        session['chatstatus'] = chatstatus
+                        obj['chatstatus'] = chatstatus
+                    elif chatstatus in ['waiting', 'hangup']:
+                        chatstatus = 'standby'
+                        session['chatstatus'] = chatstatus
+                        obj['chatstatus'] = chatstatus
+                else:
+                    if chatstatus in ['standby', 'ready', 'ringing', 'hangup']:
+                        chatstatus = 'waiting'
+                        session['chatstatus'] = chatstatus
+                        obj['chatstatus'] = chatstatus
+            if peer_ok:
+                for sess_key in r.keys('da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:*'):
+                    if sess_key != key:
+                        num_peers += 1
+                help_available = len(potential_partners)
         html_key = 'da:html:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-        key = 'da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         if old_chatstatus != chatstatus:
             logmessage("Doing a sessionupdate because " + str(chatstatus))
             html = r.get(html_key)
@@ -1186,7 +1249,10 @@ def checkin():
         if parameters is not None:
             key = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
             r.publish(key, parameters)
-        return jsonify(success=True, chat_status=chatstatus)
+        if peer_ok:
+            return jsonify(success=True, chat_status=chatstatus, num_peers=num_peers, help_available=help_available)
+        else:
+            return jsonify(success=True, chat_status=chatstatus)
     return jsonify(success=False)
 
 def do_redirect(url, is_ajax):
@@ -1986,7 +2052,7 @@ def index():
       var daChatMode = """ + repr(str(chat_mode)) + """;
       var daSendChanges = """ + send_changes + """;
       var daInitialized = false;
-
+      var notYetScrolled = true;
       function daCloseSocket(){
         if (typeof socket !== 'undefined'){
           //socket.emit('terminate');
@@ -2009,6 +2075,11 @@ def index():
         var chatScroller = $("#daCorrespondence");
         if (chatScroller.length){
           var height = chatScroller[0].scrollHeight;
+          //console.log("Slow scrolling to " + height)
+          if (height == 0){
+            notYetScrolled = true;
+            return;
+          }
           chatScroller.animate({scrollTop: height}, 800);
         }
         else{
@@ -2019,10 +2090,15 @@ def index():
         var chatScroller = $("#daCorrespondence");
         if (chatScroller.length){
           var height = chatScroller[0].scrollHeight;
+          if (height == 0){
+            notYetScrolled = true;
+            return;
+          }
+          console.log("Scrolling to " + height + " where there are " + chatScroller[0].childElementCount + " children");
           chatScroller.scrollTop(height);
         }
         else{
-          console.log("error")
+          console.log("scrollChatFast: error");
         }
       }
       function daSender(){
@@ -2035,8 +2111,13 @@ def index():
       }
       function daInitializeSocket(){
         if (socket != null){
-            console.log("Calling connectagain")
-            socket.emit('connectagain', {data: 1});
+            if (socket.connected){
+                console.log("Calling connectagain")
+                socket.emit('connectagain', {data: 1});
+            }
+            else{
+                socket.connect();
+            }
             return;
         }
         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
@@ -2045,19 +2126,22 @@ def index():
         if (location.protocol === 'https:' || document.location.protocol === 'https:'){
             socket = io.connect("https://" + document.domain + "/interview" + location.port, {path: '/wss/socket.io'});
         }
-        if (typeof socket !== 'undefined' && socket != null) {
+        if (socket != null){
             socket.on('connect', function() {
                 if (socket == null){
+                  console.log("Whoops, socket is null");
                   return;
                 }
-                //console.log("Connected socket with sid " + socket.id);
+                console.log("Connected socket with sid " + socket.id);
                 daChatStatus = 'on';
-                display_chat()
+                display_chat();
                 pushChanges();
                 //daTurnOnChat();
+                console.log("Emitting chat_log from on connect");
                 socket.emit('chat_log', {data: 1});
             });
             socket.on('chat_log', function(arg) {
+                console.log("Got chat_log");
                 $("#daCorrespondence").html('');
                 chatHistory = []; 
                 var messages = arg.data;
@@ -2067,8 +2151,16 @@ def index():
                 }
                 scrollChatFast();
             });
+            socket.on('chatready', function(data) {
+                //var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
+                console.log('chatready');
+            });
+            socket.on('terminate', function() {
+                console.log("Terminating socket");
+                socket.disconnect();
+            });
             socket.on('disconnect', function() {
-                //console.log("Disconnected socket");
+                console.log("Disconnected socket");
                 //socket = null;
             });
             socket.on('reconnected', function() {
@@ -2077,6 +2169,7 @@ def index():
                 display_chat();
                 pushChanges();
                 daTurnOnChat();
+                console.log("Emitting chat_log from reconnected");
                 socket.emit('chat_log', {data: 1});
             });
             socket.on('mymessage', function(arg) {
@@ -2169,6 +2262,7 @@ def index():
         pushChanges();
       }
       function daTurnOnChat(){
+        console.log("Publishing from daTurnOnChat");
         $("#daChatOnButton").addClass("invisible");
         $("#daChatBox").removeClass("invisible");
         $("#daCorrespondence").html('');
@@ -2181,6 +2275,9 @@ def index():
       function daCloseChat(){
         daChatStatus = 'hangup';
         pushChanges();
+        if (socket != null && socket.connected){
+          socket.disconnect();
+        }
       }
       // function daTurnOffChat(){
       //   $("#daChatOnButton").removeClass("invisible");
@@ -2246,8 +2343,8 @@ def index():
             chatHistory.push(messages[i]);
             publishMessage(messages[i]);
           }
-          scrollChatFast();
           display_chat();
+          scrollChatFast();
         }
       }
       function daCheckinCallback(data){
@@ -2269,6 +2366,12 @@ def index():
               console.log("calling initialize socket because ready");
               daInitializeSocket();
             }
+          }
+          if (daChatMode == 'peer' || daChatMode == 'peerhelp'){
+            $("#peerMessage").html('<span class="badge btn-info">' + data.num_peers + ' """ + word("other users") + """</span>');
+          }
+          if (daChatMode == 'peerhelp'){
+            $("#peerHelpMessage").html('<span class="badge btn-primary">' + data.help_available + ' """ + word("operators") + """</span>');
           }
         }
       }
@@ -2313,10 +2416,17 @@ def index():
         checkinInterval = setInterval(daCheckin, 6000);
       }
       function daInitialize(){
+        notYetScrolled = true;
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+          if (notYetScrolled && $(e.target).attr("href") == '#help'){
+            scrollChatFast();
+            notYetScrolled = false;
+          }
+        });
         $(function () {
           $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
         });
-        $("#daChatOnButton a").click(daRingChat);
+        $("#daChatOnButton").click(daRingChat);
         $("#daChatOffButton").click(daCloseChat);
         $('#daMessage').bind('keypress keydown keyup', function(e){
           if(e.keyCode == 13) { daSender(); e.preventDefault(); }
@@ -2419,8 +2529,9 @@ def index():
         if (daChatStatus == 'ready'){
           daInitializeSocket();
         }
-        if (daInitialized == false && (daChatStatus == 'waiting' || daChatStatus != 'standby')){
+        if (true || daInitialized == false){
           setTimeout(function(){
+            console.log("daInitialize call to chat_log in checkin");
             $.ajax({
               type: 'POST',
               url: """ + "'" + url_for('checkin') + "'" + """,
@@ -2431,11 +2542,11 @@ def index():
           }, 200);
         }
         if (daInitialized == true){
+          console.log("Publishing from memory");
           $("#daCorrespondence").html('');
           for(var i = 0; i < chatHistory.length; i++){
             publishMessage(chatHistory[i]);
           }
-          scrollChatFast();
         }
         if (daChatStatus != 'off'){
           daSendChanges = true;
@@ -2456,7 +2567,7 @@ def index():
         checkinInterval = setInterval(daCheckin, 6000);
         $( window ).unload(function() {
           daStopCheckingIn();
-          if (typeof socket !== 'undefined'){
+          if (socket != null && socket.connected){
             socket.emit('terminate');
           }
         });
@@ -2523,7 +2634,7 @@ def index():
                 if encrypted:
                     the_phrase = encrypt_phrase(phrase, secret)
                 else:
-                    the_phrase = pack_phrase(phrase, secret)
+                    the_phrase = pack_phrase(phrase)
                 existing_entry = SpeakList.query.filter_by(filename=yaml_filename, key=user_code, question=interview_status.question.number, type=question_type, language=the_language, dialect=the_dialect).first()
                 if existing_entry:
                     if existing_entry.encrypted:
@@ -3208,8 +3319,13 @@ def observer():
                 //console.log("Connected!");
                 socket.emit('observe', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """});
             });
+            socket.on('terminate', function() {
+                console.log("Terminating socket");
+                socket.disconnect();
+            });
             socket.on('disconnect', function() {
-                //console.log("Disconnected socket");
+                console.log("Disconnected socket");
+                //socket = null;
             });
             socket.on('newpage', function(incoming) {
                 var data = incoming.obj;
@@ -3308,10 +3424,21 @@ def monitor():
     var daUserid = """ + str(current_user.id) + """;
     var daSessions = Object();
     var daAvailRoles = Object();
+    var daChatPartners = Object();
     var daSubscribedRoles = """ + json.dumps(subscribed_roles) + """;
     var daAvailableForChat = """ + daAvailableForChat + """;
     var daFirstTime = 1;
     var updateMonitorInterval = null;
+    function allSessions(uid, yaml_filename){
+      var prefix = 'da:session:uid:' + uid + ':i:' + yaml_filename + ':userid:';
+      var output = Array();
+      for (var key in daSessions){
+         if (daSessions.hasOwnProperty(key) && key.indexOf(prefix) == 0){
+           output.push(key);
+         }
+      }
+      return(output);
+    }
     function scrollChat(key){
       var chatScroller = $(key).find('ul').first();
       if (chatScroller.length){
@@ -3319,17 +3446,18 @@ def monitor():
         chatScroller.animate({scrollTop: height}, 800);
       }
       else{
-        console.log("error")
+        console.log("scrollChat: error")
       }
     }
     function scrollChatFast(key){
       var chatScroller = $(key).find('ul').first();
       if (chatScroller.length){
         var height = chatScroller[0].scrollHeight;
+        console.log("Scrolling to " + height + " where there are " + chatScroller[0].childElementCount + " children");
         chatScroller.scrollTop(height);
       }
       else{
-        console.log("error")
+        console.log("scrollChatFast: error")
       }
     }
     function do_update_monitor(){
@@ -3379,24 +3507,33 @@ def monitor():
         $("#chatarea" + skey).find('input, button').prop("disabled", true);
         delete daSessions[key];
     }
-    function publish_chat_log(uid, yaml_filename, userid, messages){
-        var key = 'da:session:uid:' + uid + ':i:' + yaml_filename + ':userid:' + userid
-        var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-        var chatArea = $("#chatarea" + skey).find('ul').first();
-        for (var i = 0; i < messages.length; ++i){
-            var message = messages[i];
-            var newLi = document.createElement('li');
-            $(newLi).addClass("list-group-item");
-            if (message.is_self){
-              $(newLi).addClass("list-group-item-warning dalistright");
+    function publish_chat_log(uid, yaml_filename, userid, mode, messages){
+        var keys; 
+        //if (mode == 'peer' || mode == 'peerhelp'){
+        //    keys = allSessions(uid, yaml_filename);
+        //}
+        //else{
+            keys = ['da:session:uid:' + uid + ':i:' + yaml_filename + ':userid:' + userid];
+        //}
+        for (var i = 0; i < keys.length; ++i){
+            key = keys[i];
+            var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+            var chatArea = $("#chatarea" + skey).find('ul').first();
+            for (var i = 0; i < messages.length; ++i){
+                var message = messages[i];
+                var newLi = document.createElement('li');
+                $(newLi).addClass("list-group-item");
+                if (message.is_self){
+                    $(newLi).addClass("list-group-item-warning dalistright");
+                }
+                else{
+                    $(newLi).addClass("list-group-item-info");
+                }
+                $(newLi).html(message.message);
+                $(newLi).appendTo(chatArea);
             }
-            else{
-              $(newLi).addClass("list-group-item-info");
-            }
-            $(newLi).html(message.message);
-            $(newLi).appendTo(chatArea);
+            scrollChatFast("#chatarea" + skey);
         }
-        scrollChatFast("#chatarea" + skey);
     }
     function check_if_empty(){
         if ($("#monitorsessions").find("li").length > 0){
@@ -3419,6 +3556,7 @@ def monitor():
         var theListElement;
         var sessionDiv;
         var theIframeContainer;
+        var theChatArea;
         if ($("#session" + skey).length && !(key in daSessions)){
             $("#listelement" + skey).removeClass("list-group-item-danger");
             $("#iframe" + skey).find('iframe').first().contents().find('body').removeClass("dainactive");
@@ -3431,7 +3569,7 @@ def monitor():
             theIframeContainer = $("#iframe" + skey).first();
             theChatArea = $("#chatarea" + skey).first();
             $(sessionDiv).empty();
-            if (obj.chatstatus == 'on' && $("#chatarea" + skey).find('button').first().prop("disabled") == true){
+            if (obj.chatstatus == 'on' && key in daChatPartners && $("#chatarea" + skey).find('button').first().prop("disabled") == true){
                 activateChatArea(key);
             }
         }
@@ -3456,14 +3594,16 @@ def monitor():
             $(theIframe).attr('name', 'iframe' + key);
             $(theIframe).appendTo($(theIframeContainer));
             $(theIframeContainer).appendTo($(theListElement));
-            theChatArea = document.createElement('div');
+            var theChatArea = document.createElement('div');
             $(theChatArea).addClass('monitor-chat-area invisible');
             $(theChatArea).html('<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"></ul></div></div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control" disabled><span class="input-group-btn"><button class="btn btn-default" type="button" disabled>""" + word("Send") + """</button></span></div></div></div></form>');
             $(theChatArea).attr('id', 'chatarea' + key);
             var submitter = function(){
+                console.log("I am the submitter and I am submitting " + key);
                 var input = $(theChatArea).find("input").first();
                 var message = input.val().trim();
                 if (message == null || message == ""){
+                    console.log("Message was blank");
                     return false;
                 }
                 socket.emit('chatmessage', {key: key, data: input.val()});
@@ -3475,11 +3615,11 @@ def monitor():
                 if(e.keyCode == 13) { submitter(); e.preventDefault(); }
             });
             $(theChatArea).appendTo($(theListElement));
-            if (obj.chatstatus == 'on'){
+            if (obj.chatstatus == 'on' && key in daChatPartners){
                 activateChatArea(key);
             }
         }
-        theText = document.createTextNode(the_html);
+        var theText = document.createTextNode(the_html);
         var statusLabel = document.createElement('span');
         $(statusLabel).addClass("label label-info chat-status-label");
         $(statusLabel).html(obj.chatstatus);
@@ -3568,10 +3708,13 @@ def monitor():
                 $(controlButton).removeClass("invisible");
             }
         }
-        if (obj.chatstatus == 'on' && $("#chatarea" + skey).hasClass('invisible')){
+        if (obj.chatstatus == 'on' && key in daChatPartners && $("#chatarea" + skey).hasClass('invisible')){
             activateChatArea(key);
         }
-        if (obj.chatstatus != 'on' && $("#chatarea" + skey).find('button').first().prop("disabled") == false){
+        if ((obj.chatstatus != 'on' || !(key in daChatPartners)) && $("#chatarea" + skey).find('button').first().prop("disabled") == false){
+            deActivateChatArea(key);
+        }
+        else if (obj.blocked){
             deActivateChatArea(key);
         }
     }
@@ -3587,35 +3730,66 @@ def monitor():
                 //console.log("Connected!");
                 update_monitor();
             });
+            socket.on('terminate', function() {
+                console.log("Terminating socket");
+                socket.disconnect();
+            });
             socket.on('disconnect', function() {
-                //console.log("Disconnected socket");
+                console.log("Disconnected socket");
+                //socket = null;
             });
             socket.on('refreshsessions', function(data) {
                 update_monitor();
             });
             socket.on('chatready', function(data) {
                 var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
+                //console.log('chatready: ' + key);
                 activateChatArea(key);
             });
+            socket.on('chatstop', function(data) {
+                var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
+                console.log('chatstop: ' + key);
+                if (key in daChatPartners){
+                    delete daChatPartners[key];
+                }
+                deActivateChatArea(key);
+            });
             socket.on('chat_log', function(arg) {
-                publish_chat_log(arg.uid, arg.i, arg.userid, arg.data);
+                publish_chat_log(arg.uid, arg.i, arg.userid, arg.mode, arg.data);
+            });            
+            socket.on('block', function(arg) {
+                console.log("back from blocking " + arg.key);
+                update_monitor();
+            });            
+            socket.on('unblock', function(arg) {
+                console.log("back from unblocking " + arg.key);
+                update_monitor();
             });            
             socket.on('chatmessage', function(data) {
-                var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
-                var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-                //console.log("Received chat message for #chatarea" + skey);
-                var chatArea = $("#chatarea" + skey).find('ul').first();
-                var newLi = document.createElement('li');
-                $(newLi).addClass("list-group-item");
-                if (data.data.is_self){
-                  $(newLi).addClass("list-group-item-warning dalistright");
+                var keys; 
+                if (data.data.mode == 'peer' || data.data.mode == 'peerhelp'){
+                  keys = allSessions(data.uid, data.i);
                 }
                 else{
-                  $(newLi).addClass("list-group-item-info");
+                  keys = ['da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid];
                 }
-                $(newLi).html(data.data.message);
-                $(newLi).appendTo(chatArea);
-                scrollChat("#chatarea" + skey);
+                for (var i = 0; i < keys.length; ++i){
+                  key = keys[i];
+                  var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+                  //console.log("Received chat message for #chatarea" + skey);
+                  var chatArea = $("#chatarea" + skey).find('ul').first();
+                  var newLi = document.createElement('li');
+                  $(newLi).addClass("list-group-item");
+                  if (data.data.is_self){
+                    $(newLi).addClass("list-group-item-warning dalistright");
+                  }
+                  else{
+                    $(newLi).addClass("list-group-item-info");
+                  }
+                  $(newLi).html(data.data.message);
+                  $(newLi).appendTo(chatArea);
+                  scrollChat("#chatarea" + skey);
+                }
             });
             socket.on('sessionupdate', function(data) {
                 //console.log("Got session update: " + data.session.chatstatus);
@@ -3624,6 +3798,8 @@ def monitor():
             });
             socket.on('updatemonitor', function(data) {
                 //console.log("Got update monitor response");
+                //console.log("updatemonitor: chat partners are: " + data.chatPartners);
+                daChatPartners = data.chatPartners;
                 var newSubscribedRoles = Object();
                 for (var key in data.subscribedRoles){
                     if (data.subscribedRoles.hasOwnProperty(key)){

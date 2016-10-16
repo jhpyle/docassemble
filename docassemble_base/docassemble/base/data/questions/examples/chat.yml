@@ -8,6 +8,7 @@ modules:
 ---
 mandatory: true
 code: |
+  multi_user = True
   set_chat_status(availability='available', mode='peerhelp', partner_roles=['advocate'])
 ---
 mandatory: true
@@ -15,6 +16,8 @@ question: |
   Chat system
 subquestion: |
   If someone is available to chat, you will see a chat icon in the navigation bar.
+  
+  [Link to this interview](${ interview_url() })
 fields:
   - Some field: some_field
   - A toggler: a_toggler

@@ -47,9 +47,10 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
     else:
         the_timezone = pytz.timezone(get_default_timezone())
     r = redis.StrictRedis()
+
+    partners = set()
     pubsub = r.pubsub()
     pubsub.subscribe([sid])
-    partners = set()
     for item in pubsub.listen():
         if item['type'] != 'message':
             continue
@@ -74,18 +75,24 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
                     else:
                         data['message']['is_self'] = False
                     socketio.emit('chatmessage', {'i': data['yaml_filename'], 'uid': data['uid'], 'userid': data['user_id'], 'data': data['message']}, namespace='/interview', room=sid)
+                elif data['messagetype'] == 'chatready':
+                    pubsub.subscribe(data['sid'])
+                    partners.add(data['sid'])
+                    socketio.emit('chatready', {}, namespace='/interview', room=sid)
                 elif data['messagetype'] == 'departure':
-                    partners.remove(data['sid'])
+                    if data['sid'] in partners:
+                        partners.remove(data['sid'])
                     socketio.emit('departure', {'numpartners': len(partners)}, namespace='/interview', room=sid)
                 elif data['messagetype'] == 'block':
-                    partners.remove(data['sid'])
+                    if data['sid'] in partners:
+                        partners.remove(data['sid'])
                     socketio.emit('departure', {'numpartners': len(partners)}, namespace='/interview', room=sid)
                 elif data['messagetype'] == 'chatpartner':
                     partners.add(data['sid'])
 
 @socketio.on('message', namespace='/interview')
 def handle_message(message):
-    socketio.emit('mymessage', {'data': "Hello"}, namespace='/interview')
+    socketio.emit('mymessage', {'data': "Hello"}, namespace='/interview', room=request.sid)
     sys.stderr.write('received message from ' + str(session.get('uid', 'NO UID')) + ': ' + message['data'] + "\n")
     
 @socketio.on('chat_log', namespace='/interview')
@@ -101,7 +108,7 @@ def chat_log(message):
         temp_user_id = None
     secret = request.cookies.get('secret', None)
     messages = get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, user_id, temp_user_id)
-    socketio.emit('chat_log', {'data': messages}, namespace='/interview')
+    socketio.emit('chat_log', {'data': messages}, namespace='/interview', room=request.sid)
     #sys.stderr.write("Interview: sending back " + str(len(messages)) + " messages")
 
 @socketio.on('transmit', namespace='/interview')
@@ -116,7 +123,8 @@ def terminate_interview_connection():
     # hopefully the disconnect will be triggered
     # if request.sid in threads:
     #     rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))
-    disconnect()
+    socketio.emit('terminate', {}, namespace='/interview', room=request.sid)
+    #disconnect()
 
 @socketio.on('chatmessage', namespace='/interview')
 def chat_message(data):
@@ -128,7 +136,7 @@ def chat_message(data):
     if encrypted:
         message = encrypt_phrase(data['data'], secret)
     else:
-        message = pack_phrase(data['data'], secret)
+        message = pack_phrase(data['data'])
     user_id = session.get('user_id', None)
     if user_id is None:
         temp_user_id = session.get('tempuser', None)
@@ -149,17 +157,9 @@ def chat_message(data):
         person = None
     modtime = nice_utc_date(nowtime)
     if person is None:
-        # if record.temp_user_id == temp_user_id:
-        #     is_self = True
-        # else:
-        #     is_self = False
-        rr.publish(request.sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id='t' + str(temp_user_id), message=dict(id=record.id, temp_user_id=record.temp_user_id, modtime=modtime, message=data['data'], roles=['user']))))
+        rr.publish(request.sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id='t' + str(temp_user_id), message=dict(id=record.id, temp_user_id=record.temp_user_id, modtime=modtime, message=data['data'], roles=['user'], mode=chat_mode))))
     else:
-        # if record.user_id == user_id:
-        #     is_self = True
-        # else:
-        #     is_self = False
-        rr.publish(request.sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id=user_id, message=dict(id=record.id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=data['data'], roles=[role.name for role in person.roles]))))
+        rr.publish(request.sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id=user_id, message=dict(id=record.id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=data['data'], roles=[role.name for role in person.roles], mode=chat_mode))))
     sys.stderr.write('received chat message from sid ' + str(request.sid) + ': ' + data['data'] + "\n")
 
 def wait_for_channel(rr, channel):
@@ -175,13 +175,16 @@ def wait_for_channel(rr, channel):
 @socketio.on('connect', namespace='/interview')
 def on_interview_connect():
     sys.stderr.write("Client connected on interview\n")
+    join_room(request.sid)
     interview_connect()
+    rr.publish('da:monitor', json.dumps(dict(messagetype='refreshsessions')))
 
 @socketio.on('connectagain', namespace='/interview')
 def on_interview_reconnect(data):
     sys.stderr.write("Client reconnected on interview\n")
     interview_connect()
-    socketio.emit('reconnected', {}, namespace='/interview')
+    rr.publish('da:monitor', json.dumps(dict(messagetype='refreshsessions')))
+    socketio.emit('reconnected', {}, namespace='/interview', room=request.sid)
     
 def interview_connect():
     session_id = session.get('uid', None)
@@ -202,7 +205,11 @@ def interview_connect():
             terminate_interview_connection()
             return
         sys.stderr.write('chat info is ' + str(chat_info) + "\n")
-        
+        if user_dict['_internal']['chat']['mode'] in ['peer', 'peerhelp']:
+            peer_ok = True
+        else:
+            peer_ok = False
+
         yaml_filename = session.get('i', None)
         the_user_id = session.get('user_id', 't' + str(session.get('tempuser', None)))
         
@@ -215,37 +222,52 @@ def interview_connect():
             return
         lkey = 'da:ready:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         sys.stderr.write("Searching: " + lkey + "\n")
-        if not rr.exists(lkey):
+        if rr.exists(lkey):
+            lkey_exists = True
+        else:
+            lkey_exists = False
+        if lkey_exists is False and peer_ok is False:
             sys.stderr.write("Key does not exist: " + lkey + ".\n")
             terminate_interview_connection()
             return
-        partner_keys = rr.lrange(lkey, 0, -1)
-        sys.stderr.write("partner_keys is: " + str(type(partner_keys)) + " " + str(partner_keys) + "\n")
-        if partner_keys is None:
-            sys.stderr.write("No partner keys: " + lkey + ".\n")
-            terminate_interview_connection()
-            return
-        rr.delete(lkey)
-        failure = True
-        for pkey in partner_keys:
-            sys.stderr.write("Considering: " + pkey + "\n")
-            partner_sid = rr.get(pkey)
-            if partner_sid is not None:
-                sys.stderr.write("Trying to pub to " + partner_sid + "\n")
-                listeners = rr.publish(partner_sid, json.dumps(dict(messagetype='chatready', uid=session_id, i=yaml_filename, userid=the_user_id, secret=secret, sid=request.sid)))
-                sys.stderr.write("Listeners: " + str(listeners) + "\n")
-                rr.publish(request.sid, json.dumps(dict(messagetype='chatpartner', sid=partner_sid)))
-                if listeners > 0:
-                    failure = False
-                    break
-        if failure:
+        failed_to_find_partner = True
+        found_help = False
+        if lkey_exists:
+            partner_keys = rr.lrange(lkey, 0, -1)
+            sys.stderr.write("partner_keys is: " + str(type(partner_keys)) + " " + str(partner_keys) + "\n")
+            if partner_keys is None and not peer_ok:
+                sys.stderr.write("No partner keys: " + lkey + ".\n")
+                terminate_interview_connection()
+                return
+            rr.delete(lkey)
+            for pkey in partner_keys:
+                sys.stderr.write("Considering: " + pkey + "\n")
+                partner_sid = rr.get(pkey)
+                if partner_sid is not None:
+                    if re.match(r'^da:monitor:available:.*', pkey):
+                        is_help = True
+                    else:
+                        is_help = False
+                    if is_help and found_help:
+                        continue
+                    sys.stderr.write("Trying to pub to " + str(partner_sid) + " from " + str(pkey) + "\n")
+                    listeners = rr.publish(partner_sid, json.dumps(dict(messagetype='chatready', uid=session_id, i=yaml_filename, userid=the_user_id, secret=secret, sid=request.sid)))
+                    sys.stderr.write("Listeners: " + str(listeners) + "\n")
+                    if re.match(r'^da:chatsession.*', pkey):
+                        rr.publish(request.sid, json.dumps(dict(messagetype='chatready', sid=partner_sid)))
+                    else:
+                        rr.publish(request.sid, json.dumps(dict(messagetype='chatpartner', sid=partner_sid)))
+                    if listeners > 0:
+                        if is_help:
+                            found_help = True
+                        failed_to_find_partner = False
+        if failed_to_find_partner and peer_ok is False:
             sys.stderr.write("Unable to reach any potential chat partners.\n")
             terminate_interview_connection()
             return
 
         key = 'da:chatsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         rr.set(key, request.sid)
-        join_room(request.sid)
 
 @socketio.on('disconnect', namespace='/interview')
 def on_interview_disconnect():
@@ -256,8 +278,9 @@ def on_interview_disconnect():
     if request.sid in secrets:
         del secrets[request.sid]
     if session_id is not None:
-        key = 'da:chatsession:uid:' + str(session.get('uid', None)) + ':i:' + str(session.get('i', None)) + ':userid:' + str(the_user_id)
-        rr.delete(key)
+        rr.delete('da:chatsession:uid:' + str(session.get('uid', None)) + ':i:' + str(session.get('i', None)) + ':userid:' + str(the_user_id))
+        key = 'da:session:uid:' + str(session.get('uid', None)) + ':i:' + str(session.get('i', None)) + ':userid:' + str(the_user_id)
+        rr.expire(key, 10)
         rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))
 
 def get_dict():
@@ -335,6 +358,7 @@ def monitor_thread(sid=None, user_id=None):
                     pubsub.subscribe(data['sid'])
                     listening_sids.add(data['sid'])
                     secrets[data['sid']] = data['secret']
+                    r.hset('da:monitor:chatpartners:' + str(user_id), 'da:chatsession:uid:' + str(data['uid']) + ':i:' + str(data['i']) + ':userid:' + data['userid'], 1)
                     socketio.emit('chatready', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid']}, namespace='/monitor', room=sid)
                 if data['messagetype'] == 'block':
                     pubsub.unsubscribe(item['channel'])
@@ -353,6 +377,9 @@ def monitor_thread(sid=None, user_id=None):
                 if data['messagetype'] == 'chatstop':
                     sys.stderr.write("  Chat termination for sid " + data['sid'] + "\n")
                     pubsub.unsubscribe(data['sid'])
+                    if data['sid'] in secrets:
+                        del secrets[data['sid']]
+                    r.hdel('da:monitor:chatpartners:' + str(user_id), 'da:chatsession:uid:' + str(data['uid']) + ':i:' + str(data['i']) + ':userid:' + data['userid'])
                     socketio.emit('chatstop', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid']}, namespace='/monitor', room=sid)
 
 @socketio.on('connect', namespace='/monitor')
@@ -374,9 +401,10 @@ def on_monitor_disconnect():
     user_id = session.get('user_id', None)
     sys.stderr.write('Client disconnected from monitor\n')
     rr.delete('da:monitor:' + str(request.sid))
-    #rr.delete('da:monitor:available:' + str(user_id))
+    rr.expire('da:monitor:available:' + str(user_id), 5)
     for key in rr.keys('da:monitor:role:*:userid:' + str(user_id)):
         rr.delete(key)
+    rr.expire('da:monitor:chatpartners:' + str(user_id), 5)
     rr.publish(request.sid, json.dumps(dict(message='KILL', sid=request.sid)))
 
 @socketio.on('terminate', namespace='/monitor')
@@ -384,7 +412,8 @@ def terminate_monitor_connection():
     # hopefully the disconnect will be triggered
     # if request.sid in threads:
     #     rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))
-    disconnect()
+    socketio.emit('terminate', {}, namespace='/monitor', room=request.sid)
+    #disconnect()
 
 @socketio.on('block', namespace='/monitor')
 def monitor_block(data):
@@ -399,6 +428,7 @@ def monitor_block(data):
         sys.stderr.write("Blocking\n")
     else:
         sys.stderr.write("Could not block because could not get sid\n")
+    socketio.emit('block', {'key': key}, namespace='/monitor', room=request.sid)
     
 @socketio.on('unblock', namespace='/monitor')
 def monitor_unblock(data):
@@ -408,6 +438,10 @@ def monitor_unblock(data):
         return
     sys.stderr.write("Unblocking\n")
     rr.delete(re.sub(r'^da:session:', 'da:block:', key))
+    sid = rr.get(re.sub(r'^da:session:', 'da:chatsession:', key))
+    if sid is not None:
+        rr.publish(sid, json.dumps(dict(messagetype='chatpartner', sid=request.sid)))
+    socketio.emit('unblock', {'key': key}, namespace='/monitor', room=request.sid)
     
 @socketio.on('updatemonitor', namespace='/monitor')
 def update_monitor(message):
@@ -417,6 +451,9 @@ def update_monitor(message):
     #sys.stderr.write('subscribed roles are type ' + str(type(new_subscribed_roles)) + " which is "  + str(new_subscribed_roles) + "\n")
     key = 'da:monitor:available:' + str(session['user_id'])
     key_exists = rr.exists(key)
+    chat_partners = dict()
+    for cp_key in rr.hgetall('da:monitor:chatpartners:' + str(session['user_id'])):
+        chat_partners[re.sub('^da:chatsession:uid:', r'da:session:uid:', cp_key)] = 1
     #sys.stderr.write('daAvailableForChat is ' + str(available_for_chat) + " for key " + key + "\n")
     if available_for_chat:
         pipe = rr.pipeline()
@@ -491,7 +528,7 @@ def update_monitor(message):
                 else:
                     sessobj['blocked'] = False
                 sessions[key] = sessobj
-    socketio.emit('updatemonitor', {'available_for_chat': available_for_chat, 'subscribedRoles': subscribed_roles, 'sessions': sessions, 'availRoles': sorted(avail_roles)}, namespace='/monitor')
+    socketio.emit('updatemonitor', {'available_for_chat': available_for_chat, 'subscribedRoles': subscribed_roles, 'sessions': sessions, 'availRoles': sorted(avail_roles), 'chatPartners': chat_partners}, namespace='/monitor', room=request.sid)
 
 @socketio.on('chatmessage', namespace='/monitor')
 def monitor_chat_message(data):
@@ -523,7 +560,7 @@ def monitor_chat_message(data):
     if encrypted:
         message = encrypt_phrase(data['data'], secret)
     else:
-        message = pack_phrase(data['data'], secret)
+        message = pack_phrase(data['data'])
     user_id = session.get('user_id', None)
     person = User.query.filter_by(id=user_id).first()
     chat_mode = user_dict['_internal']['chat']['mode']
@@ -542,7 +579,7 @@ def monitor_chat_message(data):
     db.session.add(record)
     db.session.commit()
     modtime = nice_utc_date(nowtime)
-    rr.publish(sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id=chat_user_id, message=dict(id=record.id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=data['data'], roles=[role.name for role in person.roles]))))
+    rr.publish(sid, json.dumps(dict(origin='client', messagetype='chat', sid=request.sid, yaml_filename=yaml_filename, uid=session_id, user_id=chat_user_id, message=dict(id=record.id, user_id=record.user_id, first_name=person.first_name, last_name=person.last_name, email=person.email, modtime=modtime, message=data['data'], roles=[role.name for role in person.roles], mode=chat_mode))))
     sys.stderr.write('received chat message on monitor from sid ' + str(request.sid) + ': ' + data['data'] + "\n")
     
 @socketio.on('chat_log', namespace='/monitor')
@@ -581,7 +618,7 @@ def monitor_chat_log(data):
         user_id = chat_user_id
     self_user_id = session.get('user_id', None)
     messages = get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, secret, self_user_id, None)
-    socketio.emit('chat_log', {'uid': session_id, 'i': yaml_filename, 'userid': chat_user_id, 'data': messages}, namespace='/monitor')
+    socketio.emit('chat_log', {'uid': session_id, 'i': yaml_filename, 'userid': chat_user_id, 'mode': chat_mode, 'data': messages}, namespace='/monitor', room=request.sid)
     #sys.stderr.write("Monitor: sending back " + str(len(messages)) + " messages")
 
 #observer
@@ -643,7 +680,8 @@ def terminate_observer_connection():
     # hopefully the disconnect will be triggered
     # if request.sid in threads:
     #     rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))
-    disconnect()
+    socketio.emit('terminate', {}, namespace='/observer', room=request.sid)
+    #disconnect()
 
 if __name__ == '__main__':
     socketio.run(app)
