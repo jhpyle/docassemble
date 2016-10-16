@@ -6128,7 +6128,7 @@ def digits():
         logmessage("Request to digits did not authenticate")
         return Response(str(resp), mimetype='text/xml')
     if "Digits" in request.form:
-        the_digits = re.sub(r'^[0-9]', '', request.form["Digits"])
+        the_digits = re.sub(r'[^0-9]', '', request.form["Digits"])
         logmessage("digits: got " + str(the_digits))
         phone_number = r.get('da:callforward:' + str(the_digits))
         if phone_number is None:
