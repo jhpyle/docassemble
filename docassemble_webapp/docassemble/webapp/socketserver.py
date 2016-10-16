@@ -30,7 +30,7 @@ store = SQLAlchemyStore(engine, metadata, 'kvstore')
 kv_session = KVSessionExtension(store, app)
 
 async_mode = 'eventlet'
-socketio = SocketIO(app, async_mode=async_mode)
+socketio = SocketIO(app, async_mode=async_mode, verify=False)
 threads = dict()
 secrets = dict()
 
