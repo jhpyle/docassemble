@@ -6088,19 +6088,16 @@ def webrtc_token():
 
 @app.route("/voice", methods=['POST', 'GET'])
 def voice():
+    resp = twilio.twiml.Response()
     twilio_config = daconfig.get('twilio', None)
-    if twilio_config is not None:
+    if twilio_config is None:
         logmessage("Ignoring call to voice because Twilio not enabled")
-        return
-    if "AccountSid" not in request.form:
-        logmessage("Invalid call to voice")
-        return
-    if request.form["AccountSid"] != twilio_config.get('account sid', None):
+        return Response(str(resp), mimetype='text/xml')
+    if "AccountSid" not in request.form or request.form["AccountSid"] != twilio_config.get('account sid', None):
         logmessage("Request to voice did not authenticate")
-        return
+        return Response(str(resp), mimetype='text/xml')
     for item in request.form:
         logmessage("Item " + str(item) + " is " + str(request.form[item]))
-    resp = twilio.twiml.Response()
     with resp.gather(action="/digits", finishOnKey='#', method="POST", timeout=10, numDigits=5) as g:
         g.say(word("Please enter your four digit access code, followed by the pound sign."))
 
@@ -6122,17 +6119,14 @@ def voice():
 
 @app.route("/digits", methods=['POST', 'GET'])
 def digits():
-    twilio_config = daconfig.get('twilio', None)
-    if twilio_config is not None:
-        logmessage("Ignoring call to digits because Twilio not enabled")
-        return
-    if "AccountSid" not in request.form:
-        logmessage("Invalid call to digits")
-        return
-    if request.form["AccountSid"] != twilio_config.get('account sid', None):
-        logmessage("Request to digits did not authenticate")
-        return
     resp = twilio.twiml.Response()
+    twilio_config = daconfig.get('twilio', None)
+    if twilio_config is None:
+        logmessage("Ignoring call to digits because Twilio not enabled")
+        return Response(str(resp), mimetype='text/xml')
+    if "AccountSid" not in request.form or request.form["AccountSid"] != twilio_config.get('account sid', None):
+        logmessage("Request to digits did not authenticate")
+        return Response(str(resp), mimetype='text/xml')
     if "Digits" in request.form:
         logmessage("digits: got " + str(request.form["Digits"]))
         the_digits = re.sub(r'^[0-9]', '', request.form["Digits"])
