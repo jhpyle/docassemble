@@ -1127,6 +1127,10 @@ def checkin():
             for call_key in r.keys(re.sub(r'^da:session:uid:', 'da:phonecode:monitor:*:uid:', key)):
                 call_forwarding_code = r.get(call_key)
                 if call_forwarding_code is not None:
+                    other_value = r.get('da:callforward:' + str(call_forwarding_code))
+                    if other_value is None:
+                        r.delete(call_key)
+                        continue
                     remaining_seconds = r.ttl(call_key)
                     if remaining_seconds > 30:
                         call_forwarding_message = '<span class="phone-message"><i class="glyphicon glyphicon-earphone"></i> ' + word('To reach an advocate who can assist you, call') + ' <a class="phone-number" href="tel:' + str(forwarding_phone_number) + '">' + str(forwarding_phone_number) + '</a> ' + word("and enter the code") + ' <span class="phone-code">' + str(call_forwarding_code) + '</span>.</span>'
