@@ -6099,7 +6099,7 @@ def voice():
     for item in request.form:
         logmessage("Item " + str(item) + " is " + str(request.form[item]))
     with resp.gather(action="/digits", finishOnKey='#', method="POST", timeout=10, numDigits=5) as g:
-        g.say(word("Please enter your four digit access code, followed by the pound sign."))
+        g.say(word("Please enter the four digit code, followed by the pound sign."))
 
     # twilio_config = daconfig.get('twilio', None)
     # if twilio_config is None:
@@ -6128,17 +6128,19 @@ def digits():
         logmessage("Request to digits did not authenticate")
         return Response(str(resp), mimetype='text/xml')
     if "Digits" in request.form:
-        logmessage("digits: got " + str(request.form["Digits"]))
         the_digits = re.sub(r'^[0-9]', '', request.form["Digits"])
+        logmessage("digits: got " + str(the_digits))
         phone_number = r.get('da:callforward:' + str(the_digits))
         if phone_number is None:
-            resp.say(word("The access code you entered is invalid or expired."))
+            resp.say(word("I am sorry.  The code you entered is invalid or expired.  Goodbye."))
+            resp.hangup()
         else:
             dial = resp.dial(number=phone_number)
             r.delete('da:callforward:' + str(the_digits))
     else:
         logmessage("digits: no digits received")
-        resp.say(word("No access code was entered"))
+        resp.say(word("No access code was entered."))
+        resp.hangup()
     return Response(str(resp), mimetype='text/xml')
 
 redis_host = daconfig.get('redis', None)
