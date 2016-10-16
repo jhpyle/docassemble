@@ -477,7 +477,7 @@ def update_monitor(message):
     for key in term_phone_partners:
         the_code = rr.get(key)
         if the_code is not None:
-            rr.delete(key)
+            rr.delete(re.sub(r'da:session:uid:', prefix, key))
             rr.delete('da:callforward:' + str(the_code))
     if phone_number is None or phone_number == '':
         for key in rr.keys(prefix + '*'):
