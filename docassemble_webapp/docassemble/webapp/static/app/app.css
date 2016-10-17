@@ -226,8 +226,9 @@ table.datable {
 .mynavbar-icon {
   float: right;
   height: 50px;
-  padding: 15px 3px;
+  padding: 15px 6px;
   color: #9d9d9d;
+  font-size: 20px;
 }
 .mynavbar-icon:hover,
 .mynavbar-icon:focus {
