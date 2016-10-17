@@ -1106,6 +1106,7 @@ def checkin():
     if request.form.get('action', None) == 'checkin':
         #logmessage("Doing redis statement")
         peer_ok = False
+        help_ok = False
         num_peers = 0
         help_available = 0
         old_chatstatus = session.get('chatstatus', None)
@@ -1168,7 +1169,7 @@ def checkin():
             if len(potential_partners) > 0:
                 if chatstatus == 'ringing':
                     lkey = 'da:ready:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-                    logmessage("Writing to " + str(lkey))
+                    #logmessage("Writing to " + str(lkey))
                     pipe = r.pipeline()
                     failure = True
                     for user_id in potential_partners:
@@ -1190,7 +1191,7 @@ def checkin():
                     else:
                         pipe.expire(lkey, 60)
                         pipe.execute()
-                        logmessage("Wrote to " + str(lkey))
+                        #logmessage("Wrote to " + str(lkey))
                         chatstatus = 'ready'
                         session['chatstatus'] = chatstatus
                         obj['chatstatus'] = chatstatus
@@ -1217,11 +1218,11 @@ def checkin():
                     session['chatstatus'] = chatstatus
                     obj['chatstatus'] = chatstatus
             else:
-                logmessage("Peer ok is " + str(peer_ok) + " and chatstatus is " + str(chatstatus))
+                #logmessage("Peer ok is " + str(peer_ok) + " and chatstatus is " + str(chatstatus))
                 if peer_ok:
                     if chatstatus == 'ringing':
                         lkey = 'da:ready:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-                        logmessage("Writing to " + str(lkey))
+                        #logmessage("Writing to " + str(lkey))
                         pipe = r.pipeline()
                         failure = True
                         for the_key in r.keys('da:chatsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:*'):
@@ -1231,7 +1232,7 @@ def checkin():
                         if not failure:
                             pipe.expire(lkey, 6000)
                             pipe.execute()
-                            logmessage("Wrote to " + str(lkey))
+                            #logmessage("Wrote to " + str(lkey))
                         chatstatus = 'ready'
                         session['chatstatus'] = chatstatus
                         obj['chatstatus'] = chatstatus
@@ -1248,10 +1249,10 @@ def checkin():
                 for sess_key in r.keys('da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:*'):
                     if sess_key != key:
                         num_peers += 1
-                help_available = len(potential_partners)
+        help_available = len(potential_partners)
         html_key = 'da:html:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         if old_chatstatus != chatstatus:
-            logmessage("Doing a sessionupdate because " + str(chatstatus))
+            #logmessage("Doing a sessionupdate because " + str(chatstatus))
             html = r.get(html_key)
             if html is not None:
                 html_obj = json.loads(html)
@@ -1275,7 +1276,7 @@ def checkin():
         if parameters is not None:
             key = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
             r.publish(key, parameters)
-        if peer_ok:
+        if peer_ok or help_ok:
             return jsonify(success=True, chat_status=chatstatus, num_peers=num_peers, help_available=help_available, phone=call_forwarding_message)
         else:
             return jsonify(success=True, chat_status=chatstatus, phone=call_forwarding_message)
@@ -2075,10 +2076,38 @@ def index():
       var chatHistory = [];
       var daChatStatus = """ + repr(str(chat_status)) + """;
       var daChatAvailable = """ + repr(str(chat_available)) + """;
+      var daPhoneAvailable = false;
       var daChatMode = """ + repr(str(chat_mode)) + """;
       var daSendChanges = """ + send_changes + """;
       var daInitialized = false;
       var notYetScrolled = true;
+      var daInformed = Object();
+      function inform_about(subject){
+        if (subject in daInformed){
+          return;
+        }
+        var target;
+        var message;
+        var waitPeriod = 3000;
+        if (subject == 'chat'){
+          target = "#daChatAvailable i";
+          message = """ + repr(str(word("Get help through live chat by clicking here."))) + """;
+        }
+        else if (subject == 'phone'){
+          target = "#daPhoneAvailable i";
+          message = """ + repr(str(word("Click here to get help over the phone."))) + """;
+        }
+        else{
+          return;
+        }
+        daInformed[subject] = 1;
+        $(target).popover({"content": message, "placement": "bottom", "trigger": "manual", "container": "body"});
+        $(target).popover('show');
+        setTimeout(function(){
+          $(target).popover('destroy');
+          $(target).removeAttr('title');
+        }, waitPeriod);
+      }
       function daCloseSocket(){
         if (typeof socket !== 'undefined'){
           //socket.emit('terminate');
@@ -2275,14 +2304,6 @@ def index():
           form.submit();
         }
       }
-      // function daShowChat(){
-      //   $("#daChatOnButton").removeClass("invisible");
-      //   $("#daChatAvailable").removeClass("invisible");
-      // }
-      // function daHideChat(){
-      //   $("#daChatOnButton").addClass("invisible");
-      //   $("#daChatAvailable").addClass("invisible");
-      // }
       function daRingChat(){
         daChatStatus = 'ringing';
         pushChanges();
@@ -2348,6 +2369,7 @@ def index():
           $("#daChatOffButton").addClass("invisible");
           $("#daMessage").prop('disabled', true);
           $("#daSend").prop('disabled', true);
+          inform_about('chat');
         }
         if (daChatStatus == 'on'){
           $("#daChatAvailable").removeClass("invisible");
@@ -2357,6 +2379,7 @@ def index():
           $("#daChatOffButton").removeClass("invisible");
           $("#daMessage").prop('disabled', false);
           $("#daSend").prop('disabled', false);
+          inform_about('chat');
         }
       }
       function daChatLogCallback(data){
@@ -2381,10 +2404,15 @@ def index():
           if (data.phone == null){
             $("#daPhoneMessage").addClass("invisible");
             $("#daPhoneMessage p").html('');
+            $("#daPhoneAvailable").addClass("invisible");
+            daPhoneAvailable = false;
           }
           else{
             $("#daPhoneMessage").removeClass("invisible");
             $("#daPhoneMessage p").html(data.phone);
+            $("#daPhoneAvailable").removeClass("invisible");
+            daPhoneAvailable = true;
+            inform_about('phone');
           }
           var statusChanged;
           if (daChatStatus == data.chat_status){
@@ -2403,9 +2431,17 @@ def index():
           }
           if (daChatMode == 'peer' || daChatMode == 'peerhelp'){
             $("#peerMessage").html('<span class="badge btn-info">' + data.num_peers + ' """ + word("other users") + """</span>');
+            $("#peerMessage").removeClass("invisible");
           }
-          if (daChatMode == 'peerhelp'){
+          else{
+            $("#peerMessage").addClass("invisible");
+          }
+          if (daChatMode == 'peerhelp' || daChatMode == 'help'){
             $("#peerHelpMessage").html('<span class="badge btn-primary">' + data.help_available + ' """ + word("operators") + """</span>');
+            $("#peerHelpMessage").removeClass("invisible");
+          }
+          else{
+            $("#peerHelpMessage").addClass("invisible");
           }
         }
       }
@@ -2460,6 +2496,9 @@ def index():
         $(function () {
           $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
         });
+        if (daPhoneAvailable){
+          $("#daPhoneAvailable").removeClass("invisible");
+        }
         $("#daChatOnButton").click(daRingChat);
         $("#daChatOffButton").click(daCloseChat);
         $('#daMessage').bind('keypress keydown keyup', function(e){
@@ -2950,7 +2989,7 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
         <div class="navbar-header">
 """
     navbar += """\
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
+          <button type="button" class="navbar-toggle collapsed mynavbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
             <span class="sr-only">Toggle navigation</span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
@@ -2965,13 +3004,18 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
           <a href="#question" data-toggle="tab" class="navbar-brand"><span class="hidden-xs">""" + status.question.interview.get_title().get('full', page_title) + """</span><span class="visible-xs-block">""" + status.question.interview.get_title().get('short', page_short_title) + """</span></a>
           <a class="invisible" id="questionlabel" href="#question" data-toggle="tab">""" + word('Question') + """</a>
 """
+    help_message = word("Help is available")
+    extra_help_message = word("Help is available for this question")
+    phone_message = word("Phone help is available")
+    chat_message = word("Live chat is available")
+    source_message = word("How this question came to be asked")
     if len(status.helpText):
         if status.question.helptext is None:
-            navbar += '          <a class="mynavbar-text" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + ' <i id="daChatAvailable" class="glyphicon glyphicon-comment invisible"></i></a>'
+            navbar += '          <a title="' + help_message + '" class="mynavbar-text" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + '</a> <a title="' + phone_message + '" id="daPhoneAvailable invisible" class="mynavbar-icon" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-earphone chat-active"></i></a> <a title="' + chat_message + '" id="daChatAvailable invisible" class="mynavbar-icon" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-comment"></i></a>'
         else:
-            navbar += '          <a class="mynavbar-text daactivetext" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i> <i id="daChatAvailable" class="glyphicon glyphicon-comment invisible"></i></a>'
+            navbar += '          <a title="' + extra_help_message + '" class="mynavbar-text daactivetext" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i></a> <a title="' + phone_message + '" id="daPhoneAvailable" class="mynavbar-icon daactivetext invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-earphone chat-active"></i></a> <a title="' + chat_message + '" id="daChatAvailable" class="mynavbar-icon daactivetext invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-comment"></i></a>'
     elif chat_info['availability'] == 'available':
-        navbar += '          <a class="mynavbar-text invisible" href="#help" id="daChatAvailable" data-toggle="tab"><i class="glyphicon glyphicon-comment"></i></a>'
+        navbar += '          <a title="' + phone_message + '" id="daPhoneAvailable" class="mynavbar-icon invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-earphone chat-active"></i></a> <a title="' + chat_message + '" id="daChatAvailable" class="mynavbar-icon invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-comment"></i></a>'
     navbar += """
         </div>
         <div class="collapse navbar-collapse" id="navbar-collapse">
@@ -2983,7 +3027,7 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
     #     navbar += '<li><a class="daactivetext" href="#help" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i>' + "</a></li>\n"
     if DEBUG:
         navbar += """\
-            <li><a id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">""" + word('Source') + """</a></li>
+            <li><a class="no-outline" title=""" + repr(str(source_message)) + """ id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">""" + word('Source') + """</a></li>
 """
     navbar += """\
           </ul>
@@ -3493,7 +3537,7 @@ def monitor():
     var updateMonitorInterval = null;
     function phoneNumberOk(){
       var phoneNumber = $("#daPhoneNumber").val();
-      if (phoneNumber == '' || phoneNumber.match(/^\+[1-9]\d{1,14}$/)){
+      if (phoneNumber == '' || phoneNumber.match(/^\+?[1-9]\d{1,14}$/)){
         return true;
       }
       else{
@@ -3657,7 +3701,7 @@ def monitor():
               the_html += obj.first_name + ' ' + obj.last_name;
             }
             else{
-              the_html += '""" + word("Anonymous visitor") + """ ' + obj.temp_user_id;
+              the_html += '""" + word("anonymous visitor") + """ ' + obj.temp_user_id;
             }
         }
         var theListElement;

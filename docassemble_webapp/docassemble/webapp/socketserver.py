@@ -407,7 +407,12 @@ def on_monitor_disconnect():
     rr.delete('da:monitor:' + str(request.sid))
     rr.expire('da:monitor:available:' + str(user_id), 5)
     for key in rr.keys('da:monitor:role:*:userid:' + str(user_id)):
-        rr.delete(key)
+        rr.expire(key, 5)
+    for key in rr.keys('da:phonecode:monitor:' + str(user_id) + ':uid:*'):
+        the_code = rr.get(key)
+        if the_code is not None:
+            rr.expire('da:callforward:' + str(the_code), 5)
+        rr.expire(key, 5)
     rr.expire('da:monitor:chatpartners:' + str(user_id), 5)
     rr.publish(request.sid, json.dumps(dict(message='KILL', sid=request.sid)))
 

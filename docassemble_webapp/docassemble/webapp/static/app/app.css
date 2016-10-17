@@ -205,17 +205,36 @@ table.datable {
 .vspace {
     margin-top: 10px;
 }
+.navbar-brand:focus {
+    outline: none;
+}
 .mynavbar-text {
   float: right;
   height: 50px;
   padding: 15px 15px;
   color: #9d9d9d;
+  outline: none;
 }
 .mynavbar-text:hover,
 .mynavbar-text:focus {
   text-decoration: none;
   color: #fff;
   background-color: transparent;
+  outline: none;
+}
+
+.mynavbar-icon {
+  float: right;
+  height: 50px;
+  padding: 15px 3px;
+  color: #9d9d9d;
+}
+.mynavbar-icon:hover,
+.mynavbar-icon:focus {
+  text-decoration: none;
+  color: #fff;
+  background-color: transparent;
+  outline: none;
 }
 
 .daactivetext {
@@ -608,4 +627,12 @@ iframe.observer {
 }
 
 .phone-number {
+}
+
+.no-outline:focus {
+    outline: none;
+}
+
+.mynavbar-toggle {
+    margin-left: 12px;
 }
