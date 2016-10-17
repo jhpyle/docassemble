@@ -12,9 +12,9 @@
 	RewriteEngine On
         RewriteCond %{REQUEST_URI}      ^/wss/socket.io         [NC]
         RewriteCond %{QUERY_STRING}     transport=websocket     [NC]
-        RewriteRule /wss/(.*)           wss://localhost:5000/$1 [P,L]
-        ProxyPass /wss/ https://localhost:5000/
-        ProxyPassReverse /wss/ https://localhost:5000/
+        RewriteRule /wss/(.*)           ws://localhost:5000/$1 [P,L]
+        ProxyPass /wss/ http://localhost:5000/
+        ProxyPassReverse /wss/ http://localhost:5000/
         WSGIDaemonProcess docassemble.webserver user=www-data group=www-data threads=5
         WSGIScriptAlias / /usr/share/docassemble/webapp/docassemble.wsgi
         <Directory /usr/share/docassemble/webapp>
