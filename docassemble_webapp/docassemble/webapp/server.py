@@ -2670,7 +2670,7 @@ def index():
         if not is_ajax:
             #output = '<!doctype html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" />\n    <title>' + interview_status.question.interview.get_title().get('full', default_title) + '</title>\n    <link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet">\n  </head>\n  <body class="dasignature">\n'
             start_output = standard_header_start + '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dasignature">\n'
-        output += signature_html(interview_status, DEBUG, ROOT, extra_scripts, validation_rules)
+        output = signature_html(interview_status, DEBUG, ROOT, extra_scripts, validation_rules)
         if not is_ajax:
             end_output = scripts + "\n    " + "\n    ".join(extra_scripts) + """\n  </body>\n</html>"""
     else:
