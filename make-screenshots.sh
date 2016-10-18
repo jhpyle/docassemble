@@ -27,9 +27,9 @@ do
 	convert $tempfile -crop 650x630+13+78 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 docassemble_webapp/docassemble/webapp/static/examples/$file.png
     fi
 done
-if [ -d ~/gh-page-da ]
+if [ -d ~/gh-pages-da ]
 then
-    ./get_yaml_from_example.py docassemble_base/docassemble/base/data/questions/examples > ~/gh-page-da/_data/example.yml
-    rsync -auv docassemble_webapp/docassemble/webapp/static/examples ~/gh-page-da/img/
+    ./get_yaml_from_example.py docassemble_base/docassemble/base/data/questions/examples > ~/gh-pages-da/_data/example.yml
+    rsync -auv docassemble_webapp/docassemble/webapp/static/examples ~/gh-pages-da/img/
 fi
 rm $tempfile
