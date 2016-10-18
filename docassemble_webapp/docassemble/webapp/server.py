@@ -48,7 +48,7 @@ import json
 import base64
 import requests
 import redis
-from flask import make_response, abort, render_template, request, session, send_file, redirect, url_for, current_app, get_flashed_messages, flash, Markup, jsonify, Response
+from flask import make_response, abort, render_template, request, session, send_file, redirect, url_for, current_app, get_flashed_messages, flash, Markup, jsonify, Response, g
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
 from flask_user import login_required, roles_required, UserManager, SQLAlchemyAdapter
 from flask_user.forms import LoginForm
@@ -1296,7 +1296,12 @@ def standard_html_start(interview_language=DEFAULT_LANGUAGE, reload_after='', de
     if debug:
         output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
     return output
-    
+
+@app.before_request
+def before_request():
+    g.request_start_time = time.time()
+    g.request_time = lambda: "%.5fs" % (time.time() - g.request_start_time)
+
 @app.route("/", methods=['POST', 'GET'])
 def index():
     #seq = Sequence(message_sequence)
@@ -2788,6 +2793,7 @@ def index():
         if not is_ajax:
             end_output = scripts + "\n    " + "".join(extra_scripts) + """\n  </body>\n</html>"""
     #logmessage(output.encode('utf8'))
+    logmessage("Request time interim: " + str(g.request_time()))
     if current_user.is_anonymous:
         the_user_id = 't' + str(session['tempuser'])
     else:
@@ -2817,11 +2823,11 @@ def index():
     if expire_visitor_secret:
         response.set_cookie('visitor_secret', '', expires=0)
     release_lock(user_code, yaml_filename)
+    logmessage("Request time final: " + str(g.request_time()))
     return response
 
 if __name__ == "__main__":
     app.run()
-
 
 def save_user_dict_key(user_code, filename):
     the_record = UserDictKeys.query.filter_by(key=user_code, filename=filename, user_id=current_user.id).first()
