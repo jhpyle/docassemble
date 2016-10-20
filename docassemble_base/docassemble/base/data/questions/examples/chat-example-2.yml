@@ -1,0 +1,29 @@
+metadata:
+  title: Petition To Modify Support Order
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+code: |
+  multi_user = True
+  set_chat_status(availability='available', mode='peerhelp', partner_roles=['advocate'])
+---
+mandatory: true
+question: |
+  How would you like to change the support order?
+fields:
+  - no label: type_of_change_sought
+    datatype: checkboxes
+    choices:
+      - Reduce amount
+      - Increase amount
+      - End the support order
+---
+mandatory: true
+question: |
+  All done
+subquestion: |
+  Thank you for telling me that information.

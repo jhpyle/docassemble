@@ -706,8 +706,10 @@ lm.login_view = 'user.login'
 supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
 if supervisor_url:
     USING_SUPERVISOR = True
+    #sys.stderr.write("Using supervisor and hostname is " + str(hostname) + "\n")
 else:
     USING_SUPERVISOR = False
+    #sys.stderr.write("Not using supervisor and hostname is " + str(hostname) + "\n")
 
 sys_logger = logging.getLogger('docassemble')
 sys_logger.setLevel(logging.DEBUG)
@@ -1077,6 +1079,24 @@ def checkout():
     except:
         return jsonify(success=False)
     return jsonify(success=True)
+
+@app.route("/restart_ajax", methods=['POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def restart_ajax():
+    logmessage("Action is " + str(request.form.get('action', None)))
+    # if 'restart' in session:
+    #     logmessage("Restart is in session")
+    # else:
+    #     logmessage("Restart is not in session")
+    if current_user.has_role('admin', 'developer'):
+        logmessage("User has perms")
+    else:
+        logmessage("User has no perms")
+    if request.form.get('action', None) == 'restart' and current_user.has_role('admin', 'developer'):
+        #del session['restart']
+        restart_all()
+        return jsonify(success=True)
 
 @app.route("/checkin", methods=['POST', 'GET'])
 def checkin():
@@ -2079,6 +2099,7 @@ def index():
       var socket = null;
       var foobar = null;
       var chatHistory = [];
+      var daCheckingIn = 0;
       var daChatStatus = """ + repr(str(chat_status)) + """;
       var daChatAvailable = """ + repr(str(chat_available)) + """;
       var daPhoneAvailable = false;
@@ -2402,10 +2423,11 @@ def index():
         }
       }
       function daCheckinCallback(data){
-        //console.log("success is " + data.success)
+        daCheckingIn = 0;
+        //console.log("success is " + data.success);
         if (data.success){
-          oldDaChatStatus = daChatStatus
-          //console.log("daCheckinCallback: from " + daChatStatus + " to " + data.chat_status)
+          oldDaChatStatus = daChatStatus;
+          //console.log("daCheckinCallback: from " + daChatStatus + " to " + data.chat_status);
           if (data.phone == null){
             $("#daPhoneMessage").addClass("invisible");
             $("#daPhoneMessage p").html('');
@@ -2453,6 +2475,11 @@ def index():
       function daCheckoutCallback(data){
       }
       function daCheckin(){
+        daCheckingIn += 1;
+        if (daCheckingIn > 1 && !(daCheckingIn % 3)){
+          console.log("daCheckin: request already pending, not re-sending");
+          return;
+        }
         var datastring;
         if ((daChatStatus == 'waiting' || daChatStatus == 'standby' || daChatStatus == 'ringing' || daChatStatus == 'ready' || daChatStatus == 'on') && $("#daform").length > 0){
           datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, parameters: JSON.stringify($("#daform").serializeArray())});
@@ -4021,7 +4048,8 @@ def monitor():
                 }
                 for (var i = 0; i < data.availRoles.length; ++i){
                     var key = data.availRoles[i];
-                    if ($("#role" + key).length == 0){
+                    var skey = key.replace(/(:|\.|\[|\]|,|=|\/| )/g, '\\\\$1');
+                    if ($("#role" + skey).length == 0){
                         var label = document.createElement('label');
                         $(label).addClass('checkbox-inline');
                         var input = document.createElement('input');
@@ -4055,7 +4083,7 @@ def monitor():
                         });
                     }
                     else{
-                        var input = $("role" + key).first();
+                        var input = $("#role" + skey).first();
                         if (key in newSubscribedRoles){
                             $(input).prop('checked', true);
                         }
@@ -4738,6 +4766,34 @@ def name_of_user(user, include_email=False):
         output += user.email
     return output
 
+@app.route('/restart', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def restart_page():
+    script = """<script>
+      function daRestartCallback(data){
+        //console.log("Restart result: " + data.success);
+      }
+      function daRestart(){
+        $.ajax({
+          type: 'POST',
+          url: """ + repr(str(url_for('restart_ajax'))) + """,
+          data: 'action=restart',
+          success: daRestartCallback,
+          dataType: 'json'
+        });
+        return true;
+      }
+      $( document ).ready(function() {
+        //console.log("restarting");
+        setTimeout(daRestart, 500);
+      });
+    </script>
+"""
+    next_url = request.args.get('next', url_for('interview_list'))
+    extra_meta = """\n    <meta http-equiv="refresh" content="5;URL='""" + next_url + """'">"""
+    return render_template('pages/restart.html', extra_meta=Markup(extra_meta), extra_js=Markup(script))
+
 @app.route('/config', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin'])
@@ -4762,14 +4818,14 @@ def config_page():
                 with open(daconfig['config_file'], 'w') as fp:
                     fp.write(form.config_content.data.encode('utf8'))
                     flash(word('The configuration file was saved.'), 'success')
-                restart_all()
-                return redirect(url_for('interview_list'))
+                #session['restart'] = 1
+                return redirect(url_for('restart_page'))
         elif form.cancel.data:
             flash(word('Configuration not updated.'), 'info')
-            return redirect(url_for('index'))
+            return redirect(url_for('interview_list'))
         else:
             flash(word('Configuration not updated.  There was an error.'), 'error')
-            return redirect(url_for('index'))
+            return redirect(url_for('interview_list'))
     if ok:
         with open(daconfig['config_file'], 'rU') as fp:
             content = fp.read().decode('utf8')
@@ -4933,7 +4989,8 @@ def playground_files():
                 area.finalize()
                 flash(str(the_file) + word(' was saved at') + ' ' + the_time + '.', 'success')
                 if section == 'modules':
-                    restart_all()
+                    #restart_all()
+                    return redirect(url_for('restart_page', next=url_for('playground_files', section=section, file=the_file)))
                 return redirect(url_for('playground_files', section=section, file=the_file))
             else:
                 flash(word('You need to type in a name for the file'), 'error')                
@@ -5778,16 +5835,16 @@ def restart_on(host):
         args = [SUPERVISORCTL, '-s', the_url, 'start reset']
     result = call(args)
     if result == 0:
-        logmessage("restart_this: sent reset to " + str(host.hostname))
+        logmessage("restart_on: sent reset to " + str(host.hostname))
     else:
-        logmessage("restart_this: call to supervisorctl with reset on " + str(host.hostname) + " was not successful")
-    if re.search(r':(celery|all):', host.role):
-        args = [SUPERVISORCTL, '-s', the_url, 'restart celery']
-    result = call(args)
-    if result == 0:
-        logmessage("restart_this: sent restart celery to " + str(host.hostname))
-    else:
-        logmessage("restart_this: call to supervisorctl with restart celery on " + str(host.hostname) + " was not successful")
+        logmessage("restart_on: call to supervisorctl with reset on " + str(host.hostname) + " was not successful")
+    # if re.search(r':(celery|all):', host.role):
+    #     args = [SUPERVISORCTL, '-s', the_url, 'restart celery']
+    # result = call(args)
+    # if result == 0:
+    #     logmessage("restart_on: sent restart celery to " + str(host.hostname))
+    # else:
+    #     logmessage("restart_on: call to supervisorctl with restart celery on " + str(host.hostname) + " was not successful")
     return
 
 def restart_all():
@@ -5799,6 +5856,7 @@ def restart_this():
     if USING_SUPERVISOR:
         for host in Supervisors.query.all():
             if host.url:
+                logmessage("restart_this: considering " + str(host.hostname) + "against " + str(hostname))
                 if host.hostname == hostname:
                     restart_on(host)
             else:

@@ -10,11 +10,6 @@ modules:
   - docassemble.base.util
 ---
 mandatory: true
-code: |
-  multi_user = True
-  set_chat_status(availability='available', mode='peerhelp', partner_roles=['advocate'])
----
-mandatory: true
 question: All done
 subquestion: |
   Your income is ${ user_annual_income }.

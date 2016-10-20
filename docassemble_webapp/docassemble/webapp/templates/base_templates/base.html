@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 {%- if request.path == "/user/google-sign-in" and config['USE_GOOGLE_LOGIN'] %}
     <meta name="google-signin-client_id" content="{{ config['OAUTH_CREDENTIALS']['google']['id'] }}">
-{%- endif %}
+{%- endif %}{{ extra_meta }}
     <title>{{ config['APP_NAME'] }}</title>
     <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') }}" rel="stylesheet">
