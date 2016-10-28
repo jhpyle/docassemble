@@ -788,30 +788,7 @@ here").
 
 Here is an example of a `review` block that is launched from the menu:
 
-{% highlight yaml %}
----
-event: review_answers
-question: |
-  Revisit questions
-subquestion: |
-  These are the questions you have answered so far.  Click to revisit.
-review:
-  - Favorite fruit: fruit
-  - Favorite vegetable: vegetable
-  - Favorite fungus: fungi
----
-mandatory: true
-code: |
-  menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
----
-{% endhighlight %}
-
-If `fruit` and `vegetable` have been defined, and the user selects
-"Review Answers" from the menu, he or see will see this:
-
-![Screenshot of review]({{ site.baseurl }}/img/review-block.png)
-
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testreview.yml){:target="_blank"}.)
+{% include side-by-side.html demo="review-1" image="review-block.png" %}
 
 Note that the `review` block does not show a link for "Favorite
 fungus" because the variable `fungi` has not been defined yet.
@@ -832,29 +809,7 @@ For more information about adding menu items, see the sections on
 You can provide the user with a review of answers and buttons that the
 user can press to revisit an answer:
 
-{% highlight yaml %}
----
-event: review_answers
-question: |
-  Revisit your answers
-review:
-  - Revisit fruit: fruit
-    button: |
-      You said your favorite fruit was ${ fruit }.
-  - Revisit vegetable: vegetable
-    button: |
-      You said your favorite vegetable was ${ vegetable }.
-  - Revisit fungus: fungi
-    button: |
-      You said your favorite fungus was ${ fungi }.
----
-{% endhighlight %}
-
-This results in a screen that looks like this:
-
-![Screenshot of review with buttons]({{ site.baseurl }}/img/review-block-buttons.png)
-
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testreview2.yml){:target="_blank"}.)
+{% include side-by-side.html demo="review-2" image="review-block-buttons.png" %}
 
 In addition, the `review` block, like the `fields` block, allows you
 to use `note`, `html`, `script`, and `css` entries.
@@ -864,24 +819,7 @@ only be displayed if the variable referenced by the `show if` modifier
 has been defined.  In addition, if any of these entries refer to a
 variable that has not been defined yet, they will be omitted.
 
-{% highlight yaml %}
----
-event: review_answers
-question: |
-  Review your answers
-review:
-  - note: |
-      Revisit your food preferences.
-    show if: fruit
-  - Favorite fruit: fruit
-  - Favorite vegetable: vegetable
-  - Favorite fungus: fungi
----
-{% endhighlight %}
-
-![Screenshot of review with note]({{ site.baseurl }}/img/review-block-note.png)
-
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testreview3.yml){:target="_blank"}.)
+{% include side-by-side.html demo="review-3" image="review-block-note.png" %}
 
 The `review` block allows you to add `help` text to an entry, in
 which case the text is shown underneath the hyperlink.  If this text
@@ -889,27 +827,15 @@ expects a variable to be defined that has not actually been defined,
 the item will not be shown.  Note: this is not available with the
 `button` display format.
 
-{% highlight yaml %}
----
-event: review_answers
-question: |
-  Review your answers
-review:
-  - Favorite fruit: fruit
-    help: |
-      You indicated you liked ${ fruit }.
-  - Favorite vegetable: vegetable
-    help: |
-      You indicated you liked ${ vegetable }.
-  - Favorite fungus: fungi
-    help: |
-      You indicated you liked ${ fungi }.
----
-{% endhighlight %}
+{% include side-by-side.html demo="review-4" image="review-block-help.png" %}
 
-![Screenshot of review with help]({{ site.baseurl }}/img/review-block-help.png)
+### <a name="resume button label"></a>Customizing the Resume button
 
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testreview4.yml){:target="_blank"}.)
+By default, the `review` block puts a "Resume" button at the bottom of
+the screen.  If you want the label on the button to be something other
+than the word "Resume," add a `resume button label` modifier.
+
+{% include side-by-side.html demo="resume-button-label" image="review-block-custom-button.png" %}
 
 ### <a name="review auto"></a>Why can't `review` blocks be automatically generated?
 

@@ -39,7 +39,7 @@ current physical location by accessing the geolocation feature of the
 user's browser, and present Google Maps to the user on the basis of
 addresses geocoded with [Google's geocoding API].
 
-### Easy to develop
+### Easy to develop (once you get used to text mode)
 
 Interviews in **docassemble** are easy to create.  Interviews are
 authored as [YAML] files.  Within the [YAML] files, the text of the
@@ -112,10 +112,11 @@ words to use, but most block types will be used rarely, if at all.  If
 you forget the right words to use, you can easily copy, paste, and
 edit an example.  In the authoring [Playground], a wide variety of
 example blocks are available on the same screen where you write your
-interviews.  If you want to write interviews off-line, there are many
-text editors that have special features for editing [YAML] files.  On
-Windows, the best is [Notepad++], and [Sublime Text] works pretty
-well, too.
+interviews.
+
+If you want to write interviews off-line, there are many text editors
+that have special features for editing [YAML] files.  On Windows, the
+best is [Notepad++], and [Sublime Text] works pretty well, too.
 
 ### The full power of Python
 
@@ -149,6 +150,59 @@ modules by reference into their own interviews.  The web interface
 allows [Python packages] to be installed either as .zip files, through
 the cloning of [GitHub] repositories, or through installation from
 [PyPI].
+
+### More than a traditional guided interview
+
+**docassemble** opens up a wide variety of possibilities for what can
+be expected from an interview.  It enables:
+
+* **Multi-user interviews** The [roles] feature allows for multiple
+interviewees.  For example, in an legal advice application, the client
+could answer questions, and then the attorney could review those
+answers, make a legal judgment, and then the client would receive the
+legal advice.  In a divorce application, both spouses could answer
+questions about their situation, and the interview could suggest a
+compromise.
+* **Interview sessions spanning months** **docassemble** interviews do
+not have to end the day the interviewee starts the interview.  The
+interview and its answers can persist for months, and the interview
+could guide the interviewee through a long legal process.  The
+interview can [check in] on an hourly, daily, weekly, or monthly basis
+for the purpose of checking on-line dockets or sending e-mails.  For
+example, in a divorce application, the interview could produce a
+divorce petition and then check in with the user five days later to
+make sure service of process was carried out.  Then the interview
+could check in months later to offer to help with the next stage of
+the divorce process.
+* **Code that runs in the background** By bringing the full power of
+[Python] into an interview, **docassemble** enables interviews to
+conduct factual research on behalf of users.  For example, the
+interview could take the user's name and address and then web-scrape
+information about the user's court case from the court's on-line
+docket.  It could download the complaint in the user's case, use
+optical character recognition to extract the allegations, and ask the
+user to respond to each allegation.  It could take an assembled
+document that the user has signed and electronically file it in court.
+If any of these processes takes a long time to run, the interview will
+not need to make the user wait for the process to complete.
+**docassemble** allows tasks to be placed into a task queue and
+[run in the background].  While the user is busy answering other
+questions, the server can be hard at work conducting time-intensive
+operations.
+* **APIs for your interview** Interviews can be started with URLs that
+contain [embedded answers] to particular questions.  A third party
+application can interact with an ongoing interview by
+[sending information] to the interview, possibly changing interview
+answers.  It can also [extract] information from the interview, such
+as a [JSON] representation of particular user answers, or an assembled
+PDF file.
+
+### Fuzzy logic
+
+**docassemble** interviews can use [machine learning] to process user
+input.  Your interviews can become "smarter" over time as the machine
+learning models are trained to associate particular user input with
+particular concepts.
 
 ### Secure
 
@@ -426,6 +480,14 @@ the same interview on a single server.
 [HTTP]: https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol
 [HTTPS]: https://en.wikipedia.org/wiki/HTTPS
 [set up]: {{ site.baseurl }}/docs/config.html
+[roles]: {{ site.baseurl }}/docs/roles.html
 [StartCom]: https://www.startssl.com/
 [Pandoc]: http://johnmacfarlane.net/pandoc/
 [Let's Encrypt]: https://letsencrypt.org/
+[extract]: {{ site.baseurl }}/docs/functions.html#response
+[sending information]: {{ site.baseurl }}/docs/functions.html#interview_url_action
+[JSON]: https://en.wikipedia.org/wiki/JSON
+[embedded answers]: {{ site.baseurl }}/docs/special.html#url_args
+[run in the background]: {{ site.baseurl }}/docs/functions.html#background
+[machine learning]: {{ site.baseurl }}/docs/ml.html
+[check in]: {{ site.baseurl }}/docs/scheduled.html

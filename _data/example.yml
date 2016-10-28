@@ -308,6 +308,48 @@
     not your favorite color of eggs.
   sets: all_done
   ---
+"chat": |-
+  ---
+  mandatory: true
+  code: |
+    multi_user = True
+    set_chat_status(availability='available', mode='help', partner_roles=['advocate'])
+  ---
+"chat-example-1": |-
+  ---
+  mandatory: true
+  code: |
+    set_chat_status(availability='available', mode='help', partner_roles=['advocate', 'family law'])
+  ---
+  mandatory: true
+  question: |
+    What types of support are you seeking?
+  fields:
+    - no label: support_types
+      datatype: checkboxes
+      choices:
+        - Child Support
+        - Spousal Support
+  ---
+"chat-example-2": |-
+  ---
+  mandatory: true
+  code: |
+    multi_user = True
+    set_chat_status(availability='available', mode='peerhelp', partner_roles=['advocate'])
+  ---
+"chat-partners-available": |-
+  ---
+  mandatory: true
+  question: |
+    Live chat status
+  subquestion: |
+    % if chat_partners_available('advocate').help > 0:
+    An advocate is available to assist you.
+    % else:
+    No advocates are available to assist you at this time.
+    % endif
+  ---
 "choices": |-
   ---
   question: |
@@ -717,7 +759,8 @@
   \ color, eye color, \n      favorite movies, etc.\n  - Annual income: user_annual_income\n\
   \    datatype: currency\n    min: 100\n  - E-mail address: user_email_address\n\
   \    datatype: email\n  - Been vaccinated: user_vaccinated\n    datatype: yesno\n\
-  \  - Seen Mount Rushmore: mount_rushmore_visited\n    datatype: yesnowide\n  - Belly\
+  \  - Seen Mount Rushmore: mount_rushmore_visited\n    datatype: yesnowide\n  - Opinion\
+  \ of turnips: turnip_rating\n    datatype: range\n    min: 1\n    max: 10\n  - Belly\
   \ button type: belly_button\n    datatype: radio\n    choices:\n      - Innie\n\
   \      - Outie\n  - html: |\n      The date and time is\n      <span class=\"mytime\"\
   \n      id=\"today_time\"></span>.\n  - script: |\n      <script>\n        document.getElementById(\"\
@@ -1181,6 +1224,14 @@
     * Change to [danger](${ interview_url_action('check_update_status', status='danger') })
     * Change to [critical](${ interview_url_action('check_update_status', status='critical') })
   ---
+"join": |-
+  ---
+  initial: true
+  code: |
+    process_action()
+    if user_has_privilege('advocate'):
+      advocate_screen
+  ---
 "label": |-
   ---
   question: |
@@ -1213,6 +1264,11 @@
     You are afraid of
     ${ comma_and_list(fears) }.
   sets: all_done
+  ---
+"live_chat": |-
+  ---
+  modules:
+    - docassemble.base.util
   ---
 "loading-legal": |-
   ---
@@ -1890,29 +1946,28 @@
   ---
   mandatory: true
   code: |
-    svg_image = """\
-    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-    <svg
-       xmlns:dc="http://purl.org/dc/elements/1.1/"
-       xmlns:cc="http://creativecommons.org/ns#"
-       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-       xmlns:svg="http://www.w3.org/2000/svg"
-       xmlns="http://www.w3.org/2000/svg"
-       version="1.1"
-       id="svg2"
-       width="100"
-       height="100">
-      <circle
-         id="circle4"
-         fill="red"
-         stroke-width="3"
-         stroke="black"
-         r="40"
-         cy="50"
-         cx="50" />
-    </svg>
-    """
-    response(binaryresponse=svg_image, content_type="image/svg+xml")
+    if press_to_continue:
+      all_done
+  ---
+"resume-button-label": |-
+  ---
+  event: review_answers
+  question: |
+    Revisit your answers
+  review:
+    - Revisit fruit: fruit
+      button: |
+        You indicated you liked
+        ${ fruit }.
+    - Revisit vegetable: vegetable
+      button: |
+        You indicated you liked
+        ${ vegetable }.
+    - Revisit fungus: fungi
+      button: |
+        You indicated you liked
+        ${ fungi }.
+  resume button label: Keep going
   ---
 "review": |-
   ---
@@ -1944,6 +1999,60 @@
     - note: |
         We suspect you prefer
         ${ fruit } to ${ vegetable }.
+  ---
+"review-1": |-
+  ---
+  event: review_answers
+  question: |
+    Revisit questions
+  subquestion: |
+    These are the questions you have
+    answered so far.  Click to revisit.
+  review:
+    - Favorite fruit: fruit
+    - Favorite vegetable: vegetable
+    - Favorite fungus: fungi
+  ---
+  mandatory: true
+  code: |
+    menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
+  ---
+"review-2": "---\nevent: review_answers\nquestion: |\n  Revisit your answers\nreview:\n\
+  \  - Revisit fruit: fruit\n    button: |\n      You said your favorite fruit was\n\
+  \      ${ fruit }.\n  - Revisit vegetable: vegetable\n    button: |\n      You said\
+  \ your favorite vegetable\n      was ${ vegetable }.\n  - Revisit fungus: fungi\n\
+  \    button: |\n      You said your favorite fungus \n      was ${ fungi }.\n---"
+"review-3": |-
+  ---
+  event: review_answers
+  question: |
+    Revisit your answers
+  review:
+    - note: |
+        Revisit your food preferences.
+      show if: fruit
+    - Favorite fruit: fruit
+    - Favorite vegetable: vegetable
+    - Favorite fungus: fungi
+  ---
+"review-4": |-
+  ---
+  event: review_answers
+  question: |
+    Revisit your answers
+  review:
+    - Favorite fruit: fruit
+      help: |
+        You indicated you liked
+        ${ fruit }.
+    - Favorite vegetable: vegetable
+      help: |
+        You indicated you liked
+        ${ vegetable }.
+    - Favorite fungus: fungi
+      help: |
+        You indicated you liked
+        ${ fungi }.
   ---
 "sample-function": |-
   ---
@@ -2215,7 +2324,8 @@
   ---
   question: |
     You're so adorable!
-  audio: ${ user_picture }
+  subquestion: |
+    ${ user_picture }
   mandatory: true
   ---
 "upload-multiple": |-

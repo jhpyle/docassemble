@@ -874,13 +874,15 @@ question: |
 ## <a name="background_response_action"></a>background_response_action()
 
 It is possible for long-running tasks to save information to the
-interview's dictionary, but they need to do so by calling a separate
-"action."  Information can be passed to the action as arguments.
+interview's dictionary, but they need to do so by sending the
+information to a separate "action," the purpose of which is to save
+the information to the interview's dictionary.  Information can be
+passed to the action as arguments.
 
 {% include side-by-side.html demo="background_action_with_response_action" %}
 
-In this example, the action that runs in the background is `bg_task`.
-The action that changes the interview's dictionary is `bg_resp`.
+In this example, the action that runs in the background is `bg_task`
+and the action that changes the interview's dictionary is `bg_resp`.
 
 {% highlight yaml %}
 ---
@@ -895,10 +897,17 @@ code: |
 ---
 {% endhighlight %}
 
-The `bg_task` action ends by calling
-`background_response_action('bg_resp', ans=value)`.  The first
-argument to `background_response_action()` is the name of the action
-to run, and the remainder of the arguments are keyword arguments.  The
+The `bg_task` action finishes by calling
+`background_response_action('bg_resp', ans=value)`.
+(`background_response_action()`, like other functions including
+[`background_response()`], [`message()`], [`command()`], and
+[`response()`], tells **docassemble** to stop whatever it is doing.
+**docassemble** will not process any code that follows
+`background_response_action()`.)
+
+The first argument to `background_response_action()` is the name of
+the action to be run, and the remainder of the arguments are keyword
+arguments that are provided to the action.  In the above example, The
 `bg_resp` action retrieves the argument `ans` and changes the variable
 `answer` in the interview's dictionary to the value of `ans`.
 
@@ -906,8 +915,28 @@ The idea here is that `bg_task` is a long-running task, while
 `bg_resp` is a short-running task devoted only to saving the results
 of the long-running task.
 
+When the code for the `bg_resp` action runs, it runs separately from
+the `bg_task` action.  If `bg_task` changes a variable in the
+interview's dictionary, the `bg_resp` action will not be able to see
+those changes.  The only way the `bg_task` action can send information
+to the `bg_resp` action is by passing arguments via the
+`background_response_action()` function.
+
 In computer science terminology, the `bg_resp` action is similar to a
 [callback function].
+
+These [background processes] are designed to run in the background
+while the user is still using the application.  If the user closes the
+web browser, the actions will still continue to run.
+
+## Comparison with scheduled tasks
+
+**docassemble** also has a [scheduled tasks] feature, which is similar
+to the [background processes] feature in that the code runs in the
+background, without any direct interaction with the user.  The
+[scheduled tasks] are different in that they are triggered at monthly,
+weekly, daily, or hourly intervals, rather than being triggered by the
+user.
 
 # Geographic functions
 
@@ -2005,6 +2034,25 @@ its elements are added to the list of selections.
 `objects_from_file()` is a utility function for initializing a group
 of objects from a [YAML] file written in a certain format.
 
+# Accessing redis server
+
+If you do not know what a [redis] server is, skip this section!
+
+The [background processes] feature of **docassemble** depends on a
+[redis] server being available.  The server is also used to facilitate
+[live chat].
+
+Interview authors may want to make use of the [redis] server for
+purposes of storing information across users of a particular
+interview, keeping usage statistics, or other purposes.
+
+{% include side-by-side.html demo="redis" %}
+
+To use the [redis] server, use an [`objects`] section to create an
+object of type [`DARedis`].  This object can now be used to
+communicate with the redis server, much as though it had been created
+by calling `redis.StrictRedis()`.
+
 # Writing your own functions
 
 There are two ways that you can write your own functions in
@@ -2210,9 +2258,13 @@ modules:
 [`def` block]: {{ site.baseurl }}/docs/initial.html#def
 [`def` blocks]: {{ site.baseurl }}/docs/initial.html#def
 [`response()`]: #response
+[`command()`]: #command
+[`message()`]: #message
 [Python Imaging Library]: http://www.pythonware.com/products/pil/
 [URL arguments]: {{ site.baseurl }}/docs/special.html#url_args
 [Celery]: http://www.celeryproject.org/
 [`background_response()`]: #background_response
 [`background_response_action()`]: #background_response_action
 [callback function]: https://en.wikipedia.org/wiki/Callback_(computer_programming)
+[background processes]: #background
+[live chat]: {{ site.baseurl }}/docs/chat.html

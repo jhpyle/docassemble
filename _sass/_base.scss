@@ -325,3 +325,12 @@ table.gsc-table-result td {
 div.gsc-cursor-box {
     text-align: center;
 }
+
+img.nofloat {
+    float: none;
+}
+
+img.maybe-full-width {
+    float: none;
+    max-width: 100%;
+}
