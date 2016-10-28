@@ -25,7 +25,7 @@ import tzlocal
 import us
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'objects_from_file', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_chat_status']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'objects_from_file', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_chat_status', 'chat_partners_available']
 
 debug = False
 default_dialect = 'us'
@@ -72,11 +72,17 @@ def user_privileges():
         return [word('user')]
     return False
 
-def user_has_privilege(privileges):
+def user_has_privilege(*pargs):
     """Given a privilege or a list of privileges, returns True if the user 
     has any of the privileges, False otherwise."""
-    if type(privileges) is not list:
-        privileges = [privileges]
+    privileges = list()
+    for parg in pargs:
+        if type(parg) is list:
+            arg_list = parg
+        else:
+            arg_list = [parg]
+        for arg in arg_list:
+            privileges.append(arg)
     if user_logged_in():
         for privilege in privileges:
             if privilege in this_thread.current_info['user']['roles']:
@@ -153,6 +159,32 @@ def user_lat_lon():
         elif 'error' in this_thread.current_info['user']['location']:
             return this_thread.current_info['user']['location']['error'], this_thread.current_info['user']['location']['error']
     return None, None
+
+def chat_partners_available(*pargs, **kwargs):
+    """Given a list of partner roles, returns the number of operators and 
+    peers available to chat with the user"""
+    partner_roles = kwargs.get('partner_roles', list())
+    mode = kwargs.get('mode', 'peerhelp')
+    if type(partner_roles) is not list:
+        partner_roles = [partner_roles]
+    for parg in pargs:
+        if type(parg) is not list:
+            the_parg = [parg]
+        else:
+            the_parg = parg
+        for the_arg in the_parg:
+            if the_arg not in partner_roles:
+                partner_roles.append(the_arg)
+    yaml_filename = this_thread.current_info['yaml_filename']
+    session_id = this_thread.current_info['session']
+    if this_thread.current_info['user']['is_authenticated']:
+        the_user_id = this_thread.current_info['user']['theid']
+    else:
+        the_user_id = 't' + str(this_thread.current_info['user']['theid'])
+    if the_user_id == 'tNone':
+        logmessage("chat_partners_available: unable to get temporary user id")
+        return dict(peer=0, help=0)
+    return chat_partners_available_func(session_id, yaml_filename, the_user_id, mode, partner_roles)
 
 def interview_url(**kwargs):
     """Returns a URL that is direct link to the interview and the current
@@ -319,6 +351,7 @@ def basic_url_of(*pargs, **kwargs):
 the_url_func = basic_url_of
 
 def url_of(*pargs, **kwargs):
+    """Returns a URL to a file within a docassemble package."""
     return the_url_func(*pargs, **kwargs)
 
 def set_url_finder(func):
@@ -350,7 +383,17 @@ def background_action(action, **kwargs):
 def worker_caller(func, action):
     #sys.stderr.write("Got to worker_caller in functions\n")
     return func.delay(this_thread.current_info['yaml_filename'], this_thread.current_info['user'], this_thread.current_info['session'], this_thread.current_info['secret'], this_thread.current_info['url'], action)
-    
+
+def null_chat_partners(*pargs, **kwargs):
+    return (dict(peer=0, help=0))
+
+chat_partners_available_func = null_chat_partners
+
+def set_chat_partners_available(func):
+    global chat_partners_available_func
+    chat_partners_available_func = func
+    return
+
 def set_worker(func):
     #sys.stderr.write("Got to set_worker in functions\n")
     def new_func(action, **kwargs):
@@ -456,6 +499,11 @@ def set_default_timezone(timezone):
     return
 
 def get_default_timezone():
+    """Returns the default timezone (e.g., 'America/New_York').  This is
+    the time zone of the server, unless the default timezone is set in
+    the docassemble configuration.
+
+    """
     return default_timezone
 
 def reset_local_variables():
@@ -932,15 +980,15 @@ def space_to_underscore(a):
     return(re.sub(' +', '_', unicode(a).encode('ascii', errors='ignore')))
 
 def message(*pargs, **kwargs):
-    """Presents a screen to the user with the given message"""
+    """Presents a screen to the user with the given message."""
     raise QuestionError(*pargs, **kwargs)
     
 def response(*pargs, **kwargs):
-    """Sends a custom HTTP response"""
+    """Sends a custom HTTP response."""
     raise ResponseError(*pargs, **kwargs)
 
 def command(*pargs, **kwargs):
-    """Executes a command, such as exit, restart, or leave"""
+    """Executes a command, such as exit, restart, or leave."""
     raise CommandError(*pargs, **kwargs)
 
 def force_ask(variable_name):
@@ -1398,4 +1446,3 @@ def set_chat_status(availability=None, mode=None, roles=None, partner_roles=None
             for arg in plist:
                 new_roles.add(arg)
         this_thread.internal['chat']['partner_roles'] = list(new_roles)
-

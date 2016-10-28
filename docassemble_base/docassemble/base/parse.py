@@ -72,7 +72,7 @@ def set_save_numbered_file(func):
     save_numbered_file = func
     return
 
-initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, chat=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict())
+initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, informed=dict(), chat=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict())
 
 def set_initial_dict(the_dict):
     global initial_dict
@@ -458,6 +458,10 @@ class Question:
             if 'yesno' in data or 'noyes' in data or 'yesnomaybe' in data or 'noyesmaybe' in data or 'buttons' in data:
                 raise DAError("You cannot set a continue button label if the type of question is yesno, noyes, yesnomaybe, noyesmaybe, or buttons." + self.idebug(data))
             self.continuelabel = TextObject(definitions + data['continue button label'], names_used=self.mako_names)
+        if 'resume button label' in data:
+            if 'review' not in data:
+                raise DAError("You cannot set a resume button label if the type of question is not review." + self.idebug(data))
+            self.continuelabel = TextObject(definitions + data['resume button label'], names_used=self.mako_names)
         if 'mandatory' in data and data['mandatory'] is True:
             self.is_mandatory = True
         else:

@@ -11,7 +11,7 @@ from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, nice_utc_date, nice_date_from_utc, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase
 from docassemble.webapp.users.models import User, ChatLog
 import docassemble.webapp.database
-from docassemble.base.functions import get_default_timezone
+from docassemble.base.functions import get_default_timezone, word
 import redis
 import json
 import eventlet
@@ -360,7 +360,15 @@ def monitor_thread(sid=None, user_id=None):
                     listening_sids.add(data['sid'])
                     secrets[data['sid']] = data['secret']
                     r.hset('da:monitor:chatpartners:' + str(user_id), 'da:chatsession:uid:' + str(data['uid']) + ':i:' + str(data['i']) + ':userid:' + str(data['userid']), 1)
-                    socketio.emit('chatready', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid']}, namespace='/monitor', room=sid)
+                    if str(data['userid']).startswith('t'):
+                        name = word("anonymous visitor") + ' ' + str(data['userid'])[1:]
+                    else:
+                        person = User.query.filter_by(id=data['userid']).first()
+                        if person.first_name:
+                            name = str(person.first_name) + ' ' + str(person.last_name)
+                        else:
+                            name = str(person.email)
+                    socketio.emit('chatready', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid'], 'name': name}, namespace='/monitor', room=sid)
                 if data['messagetype'] == 'block':
                     pubsub.unsubscribe(item['channel'])
                     if item['channel'] in listening_sids:
@@ -531,7 +539,10 @@ def update_monitor(message):
     key_exists = rr.exists(key)
     chat_partners = dict()
     for cp_key in rr.hgetall('da:monitor:chatpartners:' + str(session['user_id'])):
-        chat_partners[re.sub('^da:chatsession:uid:', r'da:session:uid:', cp_key)] = 1
+        if rr.get(cp_key) is None:
+            rr.hdel('da:monitor:chatpartners:' + str(session['user_id']), cp_key)
+        else:
+            chat_partners[re.sub('^da:chatsession:uid:', r'da:session:uid:', cp_key)] = 1
     #sys.stderr.write('daAvailableForChat is ' + str(available_for_chat) + " for key " + key + "\n")
     if available_for_chat:
         pipe = rr.pipeline()

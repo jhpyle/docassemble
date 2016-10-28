@@ -18,6 +18,8 @@ subquestion: |
   If someone is available to chat, you will see a chat icon in the navigation bar.
   
   [Link to this interview](${ interview_url() })
+#
+#  Chat partners: ${ chat_partners_available(mode='help', partner_roles=['advocate']) }
 fields:
   - Some field: some_field
   - A toggler: a_toggler

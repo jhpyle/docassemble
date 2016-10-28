@@ -1,0 +1,54 @@
+metadata:
+  title: Join from monitor
+  example start: 3
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+code: |
+  set_chat_status(availability='available', mode='help', partner_roles=['advocate'])
+---
+initial: true
+code: |
+  process_action()
+  if user_has_privilege('admin', 'developer'):
+    advocate_screen
+---
+event: advocate_screen
+question: |
+  Summary of user's answers so far.
+review:
+  - Change Fruit: fruit
+    button: |
+      The favorite fruit was ${ fruit }.
+  - Change Vegetable: vegetable
+    button: |
+      The favorite vegetable was ${ vegetable }.
+  - Change Fungus: fungi
+    button: |
+      The favorite fungus was ${ fungi }.
+resume button label: Refresh
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Vegetable: vegetable
+---
+question: |
+  What is your favorite fungi?
+fields:
+  - Fungi: fungi
+---
+mandatory: true
+question: |
+  My conclusion
+subquestion: |
+  You like ${ fruit }, ${ vegetable }, and
+  ${ fungi }.

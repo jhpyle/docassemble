@@ -7,7 +7,7 @@
 <button title="{{ word("Click to change your status to not available") }}" id="daAvailable" class="btn btn-primary">Available for chat</button>
 <button title="{{ word("Click to change your status to available") }}" id="daNotAvailable" class="btn btn-danger">Not available for chat</button>
 </h4>
-<div id="daPhoneInfo" class="input-group col-md-8 invisible"><span class="input-group-addon" title="{{ word('Must be in E.164 format.  U.S. phone numbers begin with +1.') }}">{{ word("Your phone #") }}</span><input class="form-control" id="daPhoneNumber" placeholder="e.g., +12025551212"><span id="daPhoneError" title="{{ word('The phone number is not in E.164 format (e.g. +12025551212)') }}" class="input-group-addon phone-warning invisible"><i class="glyphicon glyphicon-warning-sign"></i></span></div>
+<div id="daPhoneInfo" class="input-group col-md-8 invisible"><span class="input-group-addon" title="{{ word('Must be in E.164 format.  U.S. phone numbers begin with +1.') }}">{{ word("Your phone #") }}</span><input class="form-control" id="daPhoneNumber" placeholder="e.g., +12025551212"><span id="daPhoneError" title="{{ word('The phone number is not in E.164 format (e.g. +12025551212)') }}" class="input-group-addon phone-warning invisible"><i class="glyphicon glyphicon-warning-sign"></i></span><span id="daPhoneSaved" class="input-group-addon invisible phone-saved">{{ word('Saved') }}</span></div>
 </div>
 <div class="monitorroles" id="monitorroles">
 <h4>{{ word("You are available for the following roles: ") }}</h4>
@@ -15,4 +15,6 @@
 <h3>{{ word("Sessions") }}</h3>
 <ul class="list-group" id="monitorsessions"></ul>
 <p id="emptylist">{{ word("There are no active sessions.") }}</p>
+<a href="#" style="display: none" id="chat-message-above" class="chat-notifier chat-notifier-above"></a>
+<a href="#" style="display: none" id="chat-message-below" class="chat-notifier chat-notifier-below"></a>
 {% endblock %}

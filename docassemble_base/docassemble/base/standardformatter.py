@@ -194,7 +194,11 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
             output += indent_by(video_text, 12)
         if (len(fieldlist)):
             output += "".join(fieldlist)
-        output += '                <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + word('Resume') + '</button></div>\n'
+        if status.continueLabel:
+            resume_button_label = markdown_to_html(status.continueLabel, trim=True)
+        else:
+            resume_button_label = word('Resume')
+        output += '                <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + resume_button_label + '</button></div>\n'
         output += tracker_tag(status)
         output += '              </fieldset>\n            </form>\n'
     elif status.question.question_type == "fields":
@@ -658,7 +662,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
     <div class="row">
       <div class="col-md-12">
         <div class="input-group">
-            <input type="text" class="form-control" id="daMessage">
+            <input type="text" class="form-control" id="daMessage" placeholder=""" + '"' + word("Type your message here.") + '"' + """>
             <span class="input-group-btn"><button class="btn btn-default" id="daSend" type="button">""" + word("Send") + """</button></span>
         </div>
       </div>
@@ -884,13 +888,22 @@ def add_validation(extra_scripts, validation_rules):
           form.submit();
         }
         else{
+          var informed = '';
+          if (daInformedChanged){
+            informed = '&informed=' + Object.keys(daInformed).join(',');
+          }
           $.ajax({
             type: "POST",
             url: $("#daform").attr('action'),
-            data: $("#daform").serialize() + '&ajax=1', 
+            data: $("#daform").serialize() + '&ajax=1' + informed, 
             success: function(data){
               setTimeout(function(){
                 daProcessAjax(data, form);
+              }, 0);
+            },
+            error: function(xhr, status, error){
+              setTimeout(function(){
+                daProcessAjaxError(xhr, status, error);
               }, 0);
             }
           });
@@ -899,13 +912,22 @@ def add_validation(extra_scripts, validation_rules):
       };
       $("#daform").validate(validation_rules);
       $("#backbutton").submit(function(event){
+        var informed = '';
+        if (daInformedChanged){
+          informed = '&informed=' + Object.keys(daInformed).join(',');
+        }
         $.ajax({
           type: "POST",
           url: $("#backbutton").attr('action'),
-          data: $("#backbutton").serialize() + '&ajax=1', 
+          data: $("#backbutton").serialize() + '&ajax=1' + informed, 
           success: function(data){
             setTimeout(function(){
               daProcessAjax(data, document.getElementById('backbutton'));
+            }, 0);
+          },
+          error: function(xhr, status, error){
+            setTimeout(function(){
+              daProcessAjaxError(xhr, status, error);
             }, 0);
           }
         });

@@ -1098,6 +1098,43 @@ def restart_ajax():
         restart_all()
         return jsonify(success=True)
 
+class ChatPartners(object):
+    pass
+    
+def chat_partners_available(session_id, yaml_filename, the_user_id, mode, partner_roles):
+    key = 'da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+    if mode in ['peer', 'peerhelp']:
+        peer_ok = True
+    else:
+        peer_ok = False
+    if mode in ['help', 'peerhelp']:
+        help_ok = True
+    else:
+        help_ok = False
+    potential_partners = set()
+    if help_ok and len(partner_roles) and not r.exists('da:block:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)):
+        chat_session_key = 'da:chatsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+        for role in partner_roles:
+            for the_key in r.keys('da:monitor:role:' + role + ':userid:*'):
+                user_id = re.sub(r'^.*:userid:', '', the_key)
+                potential_partners.add(user_id)
+        for the_key in r.keys('da:monitor:chatpartners:*'):
+            user_id = re.sub(r'^.*chatpartners:', '', the_key)
+            if user_id not in potential_partners:
+                for chat_key in r.hgetall(the_key):
+                    if chat_key == chat_session_key:
+                        potential_partners.add(user_id)
+    num_peer = 0
+    if peer_ok:
+        for sess_key in r.keys('da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:*'):
+            if sess_key != key:
+                num_peer += 1
+    result = ChatPartners()
+    result.peer = num_peer
+    result.help = len(potential_partners)
+    #return (dict(peer=num_peer, help=len(potential_partners)))
+    return result
+    
 @app.route("/checkin", methods=['POST', 'GET'])
 def checkin():
     session_id = session.get('uid', None)
@@ -1186,6 +1223,12 @@ def checkin():
                         user_id = re.sub(r'^.*:userid:', '', the_key)
                         if user_id not in potential_partners:
                             potential_partners.append(user_id)
+                for the_key in r.keys('da:monitor:chatpartners:*'):
+                    user_id = re.sub(r'^.*chatpartners:', '', the_key)
+                    if user_id not in potential_partners:
+                        for chat_key in r.hgetall(the_key):
+                            if chat_key == chat_session_key:
+                                potential_partners.append(user_id)
             if len(potential_partners) > 0:
                 if chatstatus == 'ringing':
                     lkey = 'da:ready:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
@@ -1218,10 +1261,12 @@ def checkin():
                 elif chatstatus in ['on']:
                     if len(potential_partners) > 0:
                         already_connected_to_help = False
+                        current_helper = None
                         for user_id in potential_partners:
                             for the_key in r.hgetall('da:monitor:chatpartners:' + str(user_id)):
                                 if the_key == chat_session_key:
                                     already_connected_to_help = True
+                                    current_helper = user_id
                         if not already_connected_to_help:
                             for user_id in potential_partners:
                                 mon_sid = r.get('da:monitor:available:' + str(user_id))
@@ -1812,7 +1857,7 @@ def index():
         known_varnames = json.loads(myb64unquote(post_data['_varnames']))
     known_variables = dict()
     for orig_key in copy.deepcopy(post_data):
-        if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax']:
+        if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed']:
             continue
         try:
             key = myb64unquote(orig_key)
@@ -1821,7 +1866,7 @@ def index():
         if key.startswith('_field_') and orig_key in known_varnames:
             post_data[known_varnames[orig_key]] = post_data[orig_key]
     for orig_key in post_data:
-        if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax']:
+        if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed']:
             continue
         #logmessage("Got a key: " + key)
         data = post_data[orig_key]
@@ -1944,6 +1989,14 @@ def index():
             steps += 1
         except Exception as errMess:
             error_messages.append(("error", "Error: " + str(errMess)))
+    if 'informed' in request.form:
+        if current_user.is_anonymous:
+            the_user_id = 't' + str(session['tempuser'])
+        else:
+            the_user_id = str(current_user.id)
+        user_dict['_internal']['informed'][the_user_id] = dict()
+        for key in request.form['informed'].split(','):
+            user_dict['_internal']['informed'][the_user_id][key] = 1
     # if 'x' in user_dict:
     #     del user_dict['x']
     # if 'i' in user_dict:
@@ -2095,11 +2148,23 @@ def index():
             send_changes = 'true'
         else:
             send_changes = 'false'
+        if current_user.is_authenticated:
+            user_id_string = str(current_user.id)
+            if current_user.has_role('admin', 'developer', 'advocate'):
+                is_user = 'false'
+            else:
+                is_user = 'true'
+        else:
+            user_id_string = 't' + str(session['tempuser'])
+            is_user = 'true'
+#      var daUserId = """ + repr(str(user_id_string)) + """;
         scripts += """    <script type="text/javascript" charset="utf-8">
       var socket = null;
       var foobar = null;
       var chatHistory = [];
       var daCheckingIn = 0;
+      var daShowingHelp = 0;
+      var daIsUser = """ + is_user + """;
       var daChatStatus = """ + repr(str(chat_status)) + """;
       var daChatAvailable = """ + repr(str(chat_available)) + """;
       var daPhoneAvailable = false;
@@ -2107,9 +2172,15 @@ def index():
       var daSendChanges = """ + send_changes + """;
       var daInitialized = false;
       var notYetScrolled = true;
-      var daInformed = Object();
+      var daInformedChanged = false;
+      var daInformed = """ + json.dumps(user_dict['_internal']['informed'].get(user_id_string, dict())) + """;
       function inform_about(subject){
-        if (subject in daInformed){
+        if (subject in daInformed || !daIsUser){
+          return;
+        }
+        if (daShowingHelp){
+          daInformed[subject] = 1;
+          daInformedChanged = true;
           return;
         }
         var target;
@@ -2119,6 +2190,10 @@ def index():
           target = "#daChatAvailable i";
           message = """ + repr(str(word("Get help through live chat by clicking here."))) + """;
         }
+        else if (subject == 'chatmessage'){
+          target = "#daChatAvailable i";
+          message = """ + repr(str(word("A chat message has arrived."))) + """;
+        }
         else if (subject == 'phone'){
           target = "#daPhoneAvailable i";
           message = """ + repr(str(word("Click here to get help over the phone."))) + """;
@@ -2126,7 +2201,10 @@ def index():
         else{
           return;
         }
-        daInformed[subject] = 1;
+        if (subject != 'chatmessage'){
+          daInformed[subject] = 1;
+          daInformedChanged = true;
+        }
         $(target).popover({"content": message, "placement": "bottom", "trigger": "manual", "container": "body"});
         $(target).popover('show');
         setTimeout(function(){
@@ -2187,6 +2265,7 @@ def index():
         if ($("#daMessage").val().length){
           socket.emit('chatmessage', {data: $("#daMessage").val()});
           $("#daMessage").val("");
+          $("#daMessage").focus();
         }
         return false;
       }
@@ -2210,7 +2289,7 @@ def index():
         if (socket != null){
             socket.on('connect', function() {
                 if (socket == null){
-                  console.log("Whoops, socket is null");
+                  console.log("Error: socket is null");
                   return;
                 }
                 //console.log("Connected socket with sid " + socket.id);
@@ -2268,6 +2347,7 @@ def index():
                 chatHistory.push(arg.data);
                 publishMessage(arg.data);
                 scrollChat();
+                inform_about('chatmessage');
             });
         }
       }
@@ -2284,7 +2364,13 @@ def index():
         daCheckin();
         checkinInterval = setInterval(daCheckin, 6000);
       }
+      function daProcessAjaxError(xhr, status, error){
+        //console.log("Got error: " + error);
+        //console.log("Status was: " + status);
+        $("body").html(xhr.responseText);
+      }
       function daProcessAjax(data, form){
+        daInformedChanged = false;
         if (dadisable != null){
           clearTimeout(dadisable);
         }
@@ -2344,6 +2430,9 @@ def index():
         }
         scrollChatFast();
         $("#daMessage").prop('disabled', false);
+        if (daShowingHelp){
+          $("#daMessage").focus();
+        }
       }
       function daCloseChat(){
         daChatStatus = 'hangup';
@@ -2404,6 +2493,9 @@ def index():
           $("#daChatOnButton").addClass("invisible");
           $("#daChatOffButton").removeClass("invisible");
           $("#daMessage").prop('disabled', false);
+          if (daShowingHelp){
+            $("#daMessage").focus();
+          }
           $("#daSend").prop('disabled', false);
           inform_about('chat');
         }
@@ -2457,14 +2549,24 @@ def index():
             }
           }
           if (daChatMode == 'peer' || daChatMode == 'peerhelp'){
-            $("#peerMessage").html('<span class="badge btn-info">' + data.num_peers + ' """ + word("other users") + """</span>');
+            if (data.num_peers == 1){
+              $("#peerMessage").html('<span class="badge btn-info">' + data.num_peers + ' """ + word("other user") + """</span>');
+            }
+            else{
+              $("#peerMessage").html('<span class="badge btn-info">' + data.num_peers + ' """ + word("other users") + """</span>');
+            }
             $("#peerMessage").removeClass("invisible");
           }
           else{
             $("#peerMessage").addClass("invisible");
           }
           if (daChatMode == 'peerhelp' || daChatMode == 'help'){
-            $("#peerHelpMessage").html('<span class="badge btn-primary">' + data.help_available + ' """ + word("operators") + """</span>');
+            if (data.help_available == 1){
+              $("#peerHelpMessage").html('<span class="badge btn-primary">' + data.help_available + ' """ + word("operator") + """</span>');
+            }
+            else{
+              $("#peerHelpMessage").html('<span class="badge btn-primary">' + data.help_available + ' """ + word("operators") + """</span>');
+            }
             $("#peerHelpMessage").removeClass("invisible");
           }
           else{
@@ -2520,9 +2622,15 @@ def index():
       function daInitialize(){
         notYetScrolled = true;
         $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-          if (notYetScrolled && $(e.target).attr("href") == '#help'){
-            scrollChatFast();
-            notYetScrolled = false;
+          if ($(e.target).attr("href") == '#help'){
+            daShowingHelp = 1;
+            if (notYetScrolled){
+              scrollChatFast();
+              notYetScrolled = false;
+            }
+          }
+          else{
+            daShowingHelp = 0;
           }
         });
         $(function () {
@@ -2661,10 +2769,11 @@ def index():
         }
         if (daSendChanges){
           $("#daform").each(function(){
-            $(this).find(':input').change(pushChanges)
+            $(this).find(':input').change(pushChanges);
           });
         }
         daInitialized = true;
+        daShowingHelp = 0;
       }
       $( document ).ready(function(){
         daInitialize();
@@ -3552,7 +3661,11 @@ def monitor():
         if forwarding_phone_number is not None:
             call_forwarding_on = 'true'
     script = '<script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n' + """<script type="text/javascript" charset="utf-8">
+    var daAudioContext = null;
     var socket;
+    var soundBuffer = Object();
+    var daShowingNotif = false;
+    var daUpdatedSessions = Object();
     var daUserid = """ + str(current_user.id) + """;
     var daPhoneOnMessage = """ + repr(str("The user can call you.  Click to cancel.")) + """;
     var daPhoneOffMessage = """ + repr(str("Click if you want the user to be able to call you.")) + """;
@@ -3568,66 +3681,201 @@ def monitor():
     var daPhoneNumber = """ + repr(str(default_phone_number)) + """;
     var daFirstTime = 1;
     var updateMonitorInterval = null;
-    function phoneNumberOk(){
-      var phoneNumber = $("#daPhoneNumber").val();
-      if (phoneNumber == '' || phoneNumber.match(/^\+?[1-9]\d{1,14}$/)){
-        return true;
-      }
-      else{
-        return false;
-      }
+    var daNotificationsEnabled = false;
+    function daOnError(){
+        console.log('daOnError');
     }
-    function checkPhone(){
-      //console.log("Doing checkPhone");
-      $("#daPhoneNumber").val($("#daPhoneNumber").val().replace(/[^0-9\+]/g, ''));
-      if (phoneNumberOk()){
-        $("#daPhoneNumber").parent().removeClass("has-error");
-        $("#daPhoneError").addClass("invisible");
-        daPhoneNumber = $("#daPhoneNumber").val();
-        if (daPhoneNumber == ''){
-          daPhoneNumber = null;
+    function loadSoundBuffer(key, url_a, url_b){
+        var pos = 0;
+        if (daAudioContext == null){
+            return;
+        }
+        var request = new XMLHttpRequest();
+        request.open('GET', url_a, true);
+        request.responseType = 'arraybuffer';
+        request.onload = function(){
+            daAudioContext.decodeAudioData(request.response, function(buffer){
+                if (!buffer){
+                    if (pos == 1){
+                        console.error('error decoding file data');
+                        return;
+                    }
+                    else {
+                        pos = 1;
+                        console.info('error decoding file data, trying next source');
+                        request.open("GET", url_b, true);
+                        return request.send();
+                    }
+                }
+                soundBuffer[key] = buffer;
+            },
+            function(error){
+                if (pos == 1){
+                    console.error('decodeAudioData error');
+                    return;
+                }
+                else{
+                    pos = 1;
+                    console.info('decodeAudioData error, trying next source');
+                    request.open("GET", url_b, true);
+                    return request.send();
+                }
+            });
+        }
+        request.send();
+    }
+    function playSound(key) {
+        var buffer = soundBuffer[key];
+        if (!daAudioContext || !buffer){
+            return;
+        }
+        var source = daAudioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(daAudioContext.destination);
+        source.start(0);
+    }
+    function checkNotifications(){
+        if (daNotificationsEnabled){
+            return;
+        }
+        if (!("Notification" in window)) {
+            daNotificationsEnabled = false;
+            return;
+        }
+        if (Notification.permission === "granted") {
+            daNotificationsEnabled = true;
+            return;
+        }
+        if (Notification.permission !== 'denied') {
+            Notification.requestPermission(function (permission) {
+                if (permission === "granted") {
+                    daNotificationsEnabled = true;
+                }
+            });
+        }
+    }
+    function notifyOperator(key, mode, message) {
+        var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+        if (mode == "chat"){
+          playSound('newmessage');
         }
         else{
-          $(".phone").removeClass("invisible");
+          playSound('newconversation');
         }
-      }
-      else{
-        $("#daPhoneNumber").parent().addClass("has-error");
-        $("#daPhoneError").removeClass("invisible");
-        daPhoneNumber = null;
-        $(".phone").addClass("invisible");
-      }
+        if ($("#listelement" + skey).offset().top > $(window).scrollTop() + $(window).height()){
+          if (mode == "chat"){
+            $("#chat-message-below").html("New message below");
+          }
+          else{
+            $("#chat-message-below").html("New conversation below");
+          }
+          //$("#chat-message-below").data('key', key);
+          $("#chat-message-below").slideDown();
+          daShowingNotif = true;
+          markAsUpdated(key);
+        }
+        else if ($("#listelement" + skey).offset().top + $("#listelement" + skey).height() < $(window).scrollTop() + 32){
+          if (mode == "chat"){
+            $("#chat-message-above").html(""" + repr(str(word("New message above"))) + """);
+          }
+          else{
+            $("#chat-message-above").html(""" + repr(str(word("New conversation above"))) + """);
+          }
+          //$("#chat-message-above").data('key', key);
+          $("#chat-message-above").slideDown();
+          daShowingNotif = true;
+          markAsUpdated(key);
+        }
+        else{
+          //console.log("It is visible");
+        }
+        if (!daNotificationsEnabled){
+            //console.log("Browser will not enable notifications")
+            return;
+        }
+        if (!("Notification" in window)) {
+            return;
+        }
+        if (Notification.permission === "granted") {
+            var notification = new Notification(message);
+        }
+        else if (Notification.permission !== 'denied') {
+            Notification.requestPermission(function (permission) {
+                if (permission === "granted") {
+                    var notification = new Notification(message);
+                    daNotificationsEnabled = true;
+                }
+            });
+        }
+    }
+    function phoneNumberOk(){
+        var phoneNumber = $("#daPhoneNumber").val();
+        if (phoneNumber == '' || phoneNumber.match(/^\+?[1-9]\d{1,14}$/)){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+    function checkPhone(){
+        //console.log("Doing checkPhone");
+        $("#daPhoneNumber").val($("#daPhoneNumber").val().replace(/[^0-9\+]/g, ''));
+        var the_number = $("#daPhoneNumber").val();
+        if (the_number[0] != '+'){
+            $("#daPhoneNumber").val('+' + the_number);
+        }
+        if (phoneNumberOk()){
+            $("#daPhoneNumber").parent().removeClass("has-error");
+            $("#daPhoneError").addClass("invisible");
+            daPhoneNumber = $("#daPhoneNumber").val();
+            if (daPhoneNumber == ''){
+                daPhoneNumber = null;
+            }
+            else{
+                $(".phone").removeClass("invisible");
+            }
+        }
+        else{
+            $("#daPhoneNumber").parent().addClass("has-error");
+            $("#daPhoneError").removeClass("invisible");
+            daPhoneNumber = null;
+            $(".phone").addClass("invisible");
+        }
+        $("#daPhoneSaved").removeClass("invisible");
+        setTimeout(function(){
+            $("#daPhoneSaved").addClass("invisible");
+        }, 2000);
     }
     function allSessions(uid, yaml_filename){
-      var prefix = 'da:session:uid:' + uid + ':i:' + yaml_filename + ':userid:';
-      var output = Array();
-      for (var key in daSessions){
-         if (daSessions.hasOwnProperty(key) && key.indexOf(prefix) == 0){
-           output.push(key);
-         }
-      }
-      return(output);
+        var prefix = 'da:session:uid:' + uid + ':i:' + yaml_filename + ':userid:';
+        var output = Array();
+        for (var key in daSessions){
+            if (daSessions.hasOwnProperty(key) && key.indexOf(prefix) == 0){
+                output.push(key);
+            }
+        }
+        return(output);
     }
     function scrollChat(key){
-      var chatScroller = $(key).find('ul').first();
-      if (chatScroller.length){
-        var height = chatScroller[0].scrollHeight;
-        chatScroller.animate({scrollTop: height}, 800);
-      }
-      else{
-        console.log("scrollChat: error")
-      }
+        var chatScroller = $(key).find('ul').first();
+        if (chatScroller.length){
+            var height = chatScroller[0].scrollHeight;
+            chatScroller.animate({scrollTop: height}, 800);
+        }
+        else{
+            console.log("scrollChat: error")
+        }
     }
     function scrollChatFast(key){
-      var chatScroller = $(key).find('ul').first();
-      if (chatScroller.length){
-        var height = chatScroller[0].scrollHeight;
-        //console.log("Scrolling to " + height + " where there are " + chatScroller[0].childElementCount + " children");
-        chatScroller.scrollTop(height);
-      }
-      else{
-        console.log("scrollChatFast: error")
-      }
+        var chatScroller = $(key).find('ul').first();
+        if (chatScroller.length){
+          var height = chatScroller[0].scrollHeight;
+            //console.log("Scrolling to " + height + " where there are " + chatScroller[0].childElementCount + " children");
+            chatScroller.scrollTop(height);
+          }
+        else{
+            console.log("scrollChatFast: error")
+        }
     }
     function do_update_monitor(){
         //console.log("do update monitor with " + daAvailableForChat);
@@ -3650,8 +3898,27 @@ def monitor():
         updateMonitorInterval = setInterval(do_update_monitor, 6000);
         //console.log("update_monitor");
     }
+    function isHidden(ref){
+        if (($(ref).offset().top + $(ref).height() < $(window).scrollTop() + 32)){
+            return -1;
+        }
+        else if ($(ref).offset().top > $(window).scrollTop() + $(window).height()){
+            return 1;
+        }
+        else{
+            return 0;
+        }
+    }
+    function markAsUpdated(key){
+        var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+        if (isHidden("#listelement" + skey)){
+            daUpdatedSessions["#listelement" + skey] = 1;
+        }
+    }
     function activateChatArea(key){
         var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+        $("#listelement" + skey).addClass("new-message");
+        markAsUpdated(key);
         $("#chatarea" + skey).removeClass('invisible');
         $("#chatarea" + skey).find('input, button').prop("disabled", false);
         $("#chatarea" + skey).find('ul').html('');
@@ -3660,6 +3927,7 @@ def monitor():
     function deActivateChatArea(key){
         var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
         $("#chatarea" + skey).find('input, button').prop("disabled", true);
+        $("#listelement" + skey).removeClass("new-message");
     }
     function undraw_session(key){
         //console.log("Undrawing...")
@@ -3798,24 +4066,27 @@ def monitor():
             $(theChatArea).find("input").bind('keypress keydown keyup', function(e){
                 if(e.keyCode == 13) { submitter(); e.preventDefault(); }
             });
+            $(theChatArea).find("input").focus(function(){
+              $(theListElement).removeClass("new-message");
+            });
             $(theChatArea).appendTo($(theListElement));
             if (obj.chatstatus == 'on' && key in daChatPartners){
                 activateChatArea(key);
             }
         }
         var theText = document.createElement('span');
+        $(theText).addClass('chat-title-label');
         theText.innerHTML = the_html;
         var statusLabel = document.createElement('span');
         $(statusLabel).addClass("label label-info chat-status-label");
         $(statusLabel).html(obj.chatstatus);
         $(statusLabel).appendTo($(sessionDiv));
-        $(theText).appendTo($(sessionDiv));
         if (daUsePhone){
           var phoneButton = document.createElement('a');
           var phoneIcon = document.createElement('i');
           $(phoneIcon).addClass("glyphicon glyphicon-earphone");
           $(phoneIcon).appendTo($(phoneButton));
-          $(phoneButton).addClass("label phone observebutton");
+          $(phoneButton).addClass("label phone");
           if (key in daPhonePartners){
             $(phoneButton).addClass("phone-on label-success");
             $(phoneButton).attr('title', daPhoneOnMessage);
@@ -3824,6 +4095,7 @@ def monitor():
             $(phoneButton).addClass("phone-off label-default");
             $(phoneButton).attr('title', daPhoneOffMessage);
           }
+          $(phoneButton).addClass('observebutton')
           $(phoneButton).appendTo($(sessionDiv));
           $(phoneButton).attr('href', '#');
           if (daPhoneNumber == null){
@@ -3945,6 +4217,7 @@ def monitor():
                 $(controlButton).removeClass("invisible");
             }
         }
+        $(theText).appendTo($(sessionDiv));
         if (obj.chatstatus == 'on' && key in daChatPartners && $("#chatarea" + skey).hasClass('invisible')){
             activateChatArea(key);
         }
@@ -3956,6 +4229,16 @@ def monitor():
         }
     }
     $(document).ready(function(){
+        try {
+            window.AudioContext = window.AudioContext || window.webkitAudioContext;
+            daAudioContext = new AudioContext();
+        }
+        catch(e) {
+            console.log('Web Audio API is not supported in this browser');
+        }
+        loadSoundBuffer('newmessage', '""" + url_for('static', filename='sounds/notification-click-on.mp3') + """', '""" + url_for('static', filename='sounds/notification-click-on.ogg') + """');
+        loadSoundBuffer('newconversation', '""" + url_for('static', filename='sounds/notification-stapler.mp3') + """', '""" + url_for('static', filename='sounds/notification-stapler.ogg') + """');
+        loadSoundBuffer('signinout', '""" + url_for('static', filename='sounds/notification-snap.mp3') + """', '""" + url_for('static', filename='sounds/notification-snap.ogg') + """');
         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
             socket = io.connect("http://" + document.domain + "/monitor" + location.port, {path: '/ws/socket.io'});
         }
@@ -3982,6 +4265,7 @@ def monitor():
                 var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
                 //console.log('chatready: ' + key);
                 activateChatArea(key);
+                notifyOperator(key, "chatready", """ + repr(str(word("New chat connection from "))) + """ + data.name)
             });
             socket.on('chatstop', function(data) {
                 var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
@@ -4026,6 +4310,23 @@ def monitor():
                   $(newLi).html(data.data.message);
                   $(newLi).appendTo(chatArea);
                   scrollChat("#chatarea" + skey);
+                  if (data.data.is_self){
+                    $("#listelement" + skey).removeClass("new-message");
+                  }
+                  else{
+                    $("#listelement" + skey).addClass("new-message");
+                    if (data.data.hasOwnProperty('temp_user_id')){
+                      notifyOperator(key, "chat", """ + repr(str(word("anonymous visitor"))) + """ + ' ' + data.data.temp_user_id + ': ' + data.data.message);
+                    }
+                    else{
+                      if (data.data.first_name && data.data.first_name != ''){
+                        notifyOperator(key, "chat", data.data.first_name + ' ' + data.data.last_name + ': ' + data.data.message);
+                      }
+                      else{
+                        notifyOperator(key, "chat", data.data.email + ': ' + data.data.message);
+                      }
+                    }
+                  }
                 }
             });
             socket.on('sessionupdate', function(data) {
@@ -4128,6 +4429,7 @@ def monitor():
         }
         if (daAvailableForChat){
             $("#daNotAvailable").addClass("invisible");
+            checkNotifications();
         }
         else{
             $("#daAvailable").addClass("invisible");
@@ -4138,13 +4440,16 @@ def monitor():
             daAvailableForChat = false;
             //console.log("daAvailableForChat: " + daAvailableForChat);
             update_monitor();
+            playSound('signinout');
         });
         $("#daNotAvailable").click(function(){
+            checkNotifications();
             $("#daNotAvailable").addClass("invisible");
             $("#daAvailable").removeClass("invisible");
             daAvailableForChat = true;
             //console.log("daAvailableForChat: " + daAvailableForChat);
             update_monitor();
+            playSound('signinout');
         });
         $( window ).unload(function() {
           if (typeof socket !== 'undefined'){
@@ -4155,7 +4460,91 @@ def monitor():
           $("#daPhoneInfo").removeClass("invisible");
           $("#daPhoneNumber").val(daPhoneNumber);
           $("#daPhoneNumber").change(checkPhone);
+          $("#daPhoneNumber").bind('keypress keydown keyup', function(e){
+            if(e.keyCode == 13) { $(this).blur(); e.preventDefault(); }
+          });
         }
+        $(window).scroll(function(){
+            if (!daShowingNotif){
+                return true;
+            }
+            var obj = Array();
+            for (var key in daUpdatedSessions){
+                if (daUpdatedSessions.hasOwnProperty(key)){
+                    obj.push(key);
+                }
+            }
+            var somethingAbove = false;
+            var somethingBelow = false;
+            var firstElement = -1;
+            var lastElement = -1;
+            for (var i = 0; i < obj.length; ++i){
+                var result = isHidden(obj[i]);
+                if (result == 0){
+                    delete daUpdatedSessions[obj[i]];
+                }
+                else if (result < 0){
+                    var top = $(obj[i]).offset().top;
+                    somethingAbove = true;
+                    if (firstElement == -1 || top < firstElement){
+                        firstElement = top;
+                    }
+                }
+                else if (result > 0){
+                    var top = $(obj[i]).offset().top;
+                    somethingBelow = true;
+                    if (lastElement == -1 || top > lastElement){
+                        lastElement = top;
+                    }
+                }
+            }
+            if (($("#chat-message-above").is(":visible")) && !somethingAbove){
+                $("#chat-message-above").hide();
+            }
+            if (($("#chat-message-below").is(":visible")) && !somethingBelow){
+                $("#chat-message-below").hide();
+            }
+            if (!(somethingAbove || somethingBelow)){
+                daShowingNotif = false;
+            }
+            return true;
+        });
+        $(".chat-notifier").click(function(e){
+            //var key = $(this).data('key');
+            var direction = 0;
+            if ($(this).attr('id') == "chat-message-above"){
+                direction = -1;
+            }
+            else{
+                direction = 1;
+            }
+            var target = -1;
+            var targetElement = null;
+            for (var key in daUpdatedSessions){
+                if (daUpdatedSessions.hasOwnProperty(key)){
+                    var top = $(key).offset().top;
+                    if (direction == -1){
+                        if (target == -1 || top < target){
+                            target = top;
+                            targetElement = key;
+                        }
+                    }
+                    else{
+                        if (target == -1 || top > target){
+                            target = top;
+                            targetElement = key;
+                        }
+                    }
+                }
+            }
+            if (target >= 0){
+                $("html, body").animate({scrollTop: target - 60}, 500, function(){
+                    $(targetElement).find("input").first().focus();
+                });
+            }
+            e.preventDefault();
+            return false;
+        })
     });
 </script>"""
     return render_template('pages/monitor.html', extra_js=Markup(script)), 200
@@ -5905,7 +6294,7 @@ def current_info(yaml=None, req=None, action=None, location=None):
     if current_user.is_authenticated and not current_user.is_anonymous:
         ext = dict(email=current_user.email, roles=[role.name for role in current_user.roles], theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization)
     else:
-        ext = dict(email=None, theid=None, roles=list())
+        ext = dict(email=None, theid=session.get('tempuser', None), roles=list())
     if req is None:
         url = 'http://localhost'
         secret = None
@@ -6260,6 +6649,7 @@ if redis_host is None:
     redis_host = 'redis://localhost'
 
 docassemble.base.util.set_redis_server(redis_host)
+docassemble.base.functions.set_chat_partners_available(chat_partners_available)
 
 r = redis.StrictRedis(host=docassemble.base.util.redis_server)
 
@@ -6269,5 +6659,3 @@ if not in_celery:
     docassemble.base.functions.set_worker(docassemble.webapp.worker.background_action)
 import docassemble.webapp.machinelearning
 docassemble.base.util.set_knn_machine_learner(docassemble.webapp.machinelearning.SimpleTextMachineLearner)
-
-

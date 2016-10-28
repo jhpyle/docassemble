@@ -637,3 +637,46 @@ iframe.observer {
 .mynavbar-toggle {
     margin-left: 12px;
 }
+
+.new-message {
+    background-color: #ffff99;
+}
+
+.chat-notifier {
+    position: fixed;
+    right: 10px;
+    background-color: #ffff99;
+    color: #444444;
+    padding: 10px;
+    border-color: #f0cc77;
+    border-style: solid;
+}
+
+.chat-notifier-below {
+    bottom: 0px;
+    border-radius: 15px 15px 0 0;
+    border-width: 3px 3px 0px 3px;
+}
+
+.chat-notifier-above {
+    top: 51px;
+    border-radius: 0 0 15px 15px;
+    border-width: 0px 3px 3px 3px;
+}
+
+.phone-saved {
+  border-color: #3c763d;
+  outline: 0;
+  color: #3c763d;
+  background-color: #dff0d8;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(60,118,61,.6);
+          box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(60,118,61,.6);
+}
+
+ul.navbar-nav li {
+  text-align: right;
+}
+
+.chat-title-label {
+  float: left;
+}
