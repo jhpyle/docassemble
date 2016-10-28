@@ -2174,6 +2174,19 @@ def index():
       var notYetScrolled = true;
       var daInformedChanged = false;
       var daInformed = """ + json.dumps(user_dict['_internal']['informed'].get(user_id_string, dict())) + """;
+      function userNameString(data){
+          if (data.hasOwnProperty('temp_user_id')){
+              return """ + repr(str(word("anonymous visitor"))) + """ + ' ' + data.temp_user_id;
+          }
+          else{
+              if (data.first_name && data.first_name != ''){
+                  return data.first_name + ' ' + data.last_name;
+              }
+              else{
+                  return data.email;
+              }
+          }
+      }
       function inform_about(subject){
         if (subject in daInformed || !daIsUser){
           return;
@@ -2227,13 +2240,13 @@ def index():
         else{
           $(newDiv).addClass("list-group-item-info");
         }
-        var newSpan = document.createElement('span');
-        $(newSpan).html(data.message);
-        $(newSpan).appendTo($(newDiv));
-        var newName = document.createElement('span');
-        $(newName).html(userNameString(data));
-        $(newName).appendTo($(newDiv));
-        //$(newDiv).html(data.message);
+        //var newSpan = document.createElement('span');
+        //$(newSpan).html(data.message);
+        //$(newSpan).appendTo($(newDiv));
+        //var newName = document.createElement('span');
+        //$(newName).html(userNameString(data));
+        //$(newName).appendTo($(newDiv));
+        $(newDiv).html(data.message);
         $("#daCorrespondence").append(newDiv);
       }
       function scrollChat(){
@@ -3688,19 +3701,6 @@ def monitor():
     var daFirstTime = 1;
     var updateMonitorInterval = null;
     var daNotificationsEnabled = false;
-    function userNameString(data){
-        if (data.hasOwnProperty('temp_user_id')){
-            return """ + repr(str(word("anonymous visitor"))) + """ + ' ' + data.temp_user_id;
-        }
-        else{
-            if (data.first_name && data.first_name != ''){
-                return data.first_name + ' ' + data.last_name;
-            }
-            else{
-                return data.email;
-            }
-        }
-    }
     function daOnError(){
         console.log('daOnError');
     }
