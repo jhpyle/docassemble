@@ -381,7 +381,7 @@ if 'twilio' in daconfig:
     else:
         config_list = daconfig['twilio']
     for tconfig in config_list:
-        if type(tconfig) is dict and 'account_sid' in tconfig and 'number' in tconfig:
+        if type(tconfig) is dict and 'account sid' in tconfig and 'number' in tconfig:
             twilio_config['account sid'][tconfig['account sid']] = 1
             twilio_config['number'] = tconfig
             if 'default' not in twilio_config['name']:
