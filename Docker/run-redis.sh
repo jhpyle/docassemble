@@ -13,7 +13,7 @@ function stopfunc {
     redis-cli shutdown
     echo backing up redis
     if [ "${S3ENABLE:-false}" == "true" ]; then
-	s3cmd cp "/var/lib/redis/dump.rdb" s3://${S3BUCKET}/redis.rdb
+	s3cmd -q put "/var/lib/redis/dump.rdb" s3://${S3BUCKET}/redis.rdb
     fi
     exit 0
 }

@@ -63,7 +63,7 @@ if [ "${S3ENABLE:-false}" == "true" ]; then
 	s3cmd -q get s3://${S3BUCKET}/config.yml $DA_CONFIG_FILE
     fi
     if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/redis.rdb) ]] && [ "$REDISRUNNING" = false ]; then
-	s3cmd -q get s3://${S3BUCKET}/redis.rdb "/var/lib/redis/dump.rdb"
+	s3cmd -q -f get s3://${S3BUCKET}/redis.rdb "/var/lib/redis/dump.rdb"
 	chown redis.redis "/var/lib/redis/dump.rdb"
     fi
 fi
@@ -91,7 +91,7 @@ chown www-data.www-data $DA_CONFIG_FILE
 source /dev/stdin < <(su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
 
 if [ "${EC2:-false}" == "true" ]; then
-    export LOCAL_HOSTNAME=`curl http://169.254.169.254/latest/meta-data/local-hostname`
+    export LOCAL_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/local-hostname`
 else
     export LOCAL_HOSTNAME=`hostname --fqdn`
 fi
@@ -152,6 +152,7 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
 	PGBACKUPDIR=`mktemp -d`
 	s3cmd -q sync s3://${S3BUCKET}/postgres/ "$PGBACKUPDIR/"
 	cd "$PGBACKUPDIR"
+	chown -R postgres.postgres "$PGBACKUPDIR"
 	for db in $( ls ); do
 	    pg_restore -F c -C -c $db | su -c psql postgres
 	done

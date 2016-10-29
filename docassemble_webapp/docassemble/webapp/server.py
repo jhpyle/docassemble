@@ -371,6 +371,28 @@ match_brackets = re.compile('\[\'.*\'\]$')
 match_inside_and_outside_brackets = re.compile('(.*)(\[\'[^\]]+\'\])$')
 match_inside_brackets = re.compile('\[\'([^\]]+)\'\]')
 
+if 'twilio' in daconfig:
+    twilio_config = dict()
+    twilio_config['account sid'] = dict()
+    twilio_config['number'] = dict()
+    twilio_config['name'] = dict()
+    if type(daconfig['twilio']) is not list:
+        config_list = [daconfig['twilio']]
+    else:
+        config_list = daconfig['twilio']
+    for tconfig in config_list:
+        if type(tconfig) is dict and 'account_sid' in tconfig and 'number' in tconfig:
+            twilio_config['account sid'][tconfig['account sid']] = 1
+            twilio_config['number'] = tconfig
+            if 'default' not in twilio_config['name']:
+                twilio_config['name']['default'] = tconfig
+            if 'name' in tconfig:
+                twilio_config['name'][tconfig['name']] = tconfig
+    if 'default' not in twilio_config['name']:
+        twilio_config = None
+else:
+    twilio_config = None
+
 APPLICATION_NAME = 'docassemble'
 app.config['USE_GOOGLE_LOGIN'] = False
 app.config['USE_FACEBOOK_LOGIN'] = False
@@ -1182,10 +1204,9 @@ def checkin():
         obj = dict(chatstatus=chatstatus, i=yaml_filename, uid=session_id, userid=the_user_id)
         key = 'da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         call_forwarding_on = False
-        twilio_config = daconfig.get('twilio', None)
         forwarding_phone_number = None
         if twilio_config is not None:
-            forwarding_phone_number = twilio_config.get('caller id', None)
+            forwarding_phone_number = twilio_config['name']['default'].get('number', None)
             if forwarding_phone_number is not None:
                 call_forwarding_on = True
         call_forwarding_code = None
@@ -3688,9 +3709,8 @@ def monitor():
     else:
         daAvailableForChat = 'false'
     call_forwarding_on = 'false'
-    twilio_config = daconfig.get('twilio', None)
     if twilio_config is not None:
-        forwarding_phone_number = twilio_config.get('caller id', None)
+        forwarding_phone_number = twilio_config['name']['default'].get('number', None)
         if forwarding_phone_number is not None:
             call_forwarding_on = 'true'
     script = '<script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n' + """<script type="text/javascript" charset="utf-8">
@@ -6601,13 +6621,12 @@ phone_pattern = re.compile(r"^[\d\+\-\(\) ]+$")
 
 @app.route('/webrtc_token', methods=['GET'])
 def webrtc_token():
-    twilio_config = daconfig.get('twilio', None)
     if twilio_config is None:
         logmessage("Could not get twilio configuration")
         return
-    account_sid = twilio_config.get('account sid', None)
-    auth_token = twilio_config.get('auth token', None)
-    application_sid = twilio_config.get('app sid', None)
+    account_sid = twilio_config['name']['default'].get('account sid', None)
+    auth_token = twilio_config['name']['default'].get('auth token', None)
+    application_sid = twilio_config['name']['default'].get('app sid', None)
 
     logmessage("account sid is " + str(account_sid) + "; auth_token is " + str(auth_token) + "; application_sid is " + str(application_sid))
 
@@ -6623,11 +6642,10 @@ def webrtc_token():
 @app.route("/voice", methods=['POST', 'GET'])
 def voice():
     resp = twilio.twiml.Response()
-    twilio_config = daconfig.get('twilio', None)
     if twilio_config is None:
         logmessage("Ignoring call to voice because Twilio not enabled")
         return Response(str(resp), mimetype='text/xml')
-    if "AccountSid" not in request.form or request.form["AccountSid"] != twilio_config.get('account sid', None):
+    if "AccountSid" not in request.form or request.form["AccountSid"] != twilio_config['name']['default'].get('account sid', None):
         logmessage("Request to voice did not authenticate")
         return Response(str(resp), mimetype='text/xml')
     for item in request.form:
@@ -6639,7 +6657,7 @@ def voice():
     # if twilio_config is None:
     #     logmessage("Could not get twilio configuration")
     #     return
-    # twilio_caller_id = twilio_config.get('caller id', None)
+    # twilio_caller_id = twilio_config.get('number', None)
     # if "To" in request.form and request.form["To"] != '':
     #     dial = resp.dial(callerId=twilio_caller_id)
     #     if phone_pattern.match(request.form["To"]):
@@ -6654,11 +6672,10 @@ def voice():
 @app.route("/digits", methods=['POST', 'GET'])
 def digits():
     resp = twilio.twiml.Response()
-    twilio_config = daconfig.get('twilio', None)
     if twilio_config is None:
         logmessage("Ignoring call to digits because Twilio not enabled")
         return Response(str(resp), mimetype='text/xml')
-    if "AccountSid" not in request.form or request.form["AccountSid"] != twilio_config.get('account sid', None):
+    if "AccountSid" not in request.form or request.form["AccountSid"] != twilio_config['name']['default'].get('account sid', None):
         logmessage("Request to digits did not authenticate")
         return Response(str(resp), mimetype='text/xml')
     if "Digits" in request.form:
@@ -6675,6 +6692,18 @@ def digits():
         logmessage("digits: no digits received")
         resp.say(word("No access code was entered."))
         resp.hangup()
+    return Response(str(resp), mimetype='text/xml')
+
+@app.route("/sms", methods=['POST'])
+def sms():
+    resp = twilio.twiml.Response()
+    if twilio_config is None:
+        logmessage("Ignoring call to digits because Twilio not enabled")
+        return Response(str(resp), mimetype='text/xml')
+    if "AccountSid" not in request.form or request.form["AccountSid"] != twilio_config['name']['default'].get('account sid', None):
+        logmessage("Request to digits did not authenticate")
+        return Response(str(resp), mimetype='text/xml')
+    logmessage(str(request.form))
     return Response(str(resp), mimetype='text/xml')
 
 docassemble.base.functions.set_chat_partners_available(chat_partners_available)
