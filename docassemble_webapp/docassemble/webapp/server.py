@@ -1,4 +1,5 @@
 from twilio.util import TwilioCapability
+from twilio.rest import TwilioRestClient
 import twilio.twiml
 import socket
 import copy
@@ -24,7 +25,7 @@ import docassemble.base.parse
 import docassemble.base.pdftk
 import docassemble.base.interview_cache
 import docassemble.webapp.update
-from docassemble.base.standardformatter import as_html, signature_html
+from docassemble.base.standardformatter import as_html, as_sms, signature_html
 import docassemble.webapp.database
 import tempfile
 import zipfile
@@ -6763,6 +6764,8 @@ def sms():
             del user_dict['_internal']['answers'][interview_status.question.name]
         
         logmessage("sms: " + interview_status.questionText)
+        twilio_client = TwilioRestClient(tconfig['account sid'], tconfig['auth token'])
+        message = twilio_client.messages.create(to=request.form["From"], from_=request.form["To"], body=as_sms(interview_status))
         save_user_dict(sess_info['uid'], user_dict, sess_info['yaml_filename'], secret=sess_info['secret'], encrypt=encrypted)
         if user_dict.get('multi_user', False) is True and encrypted is True:
             encrypted = False

@@ -2,4 +2,7 @@ metadata:
   title: SMS interface
 ---
 mandatory: true
-question: "Hello, world!"
+question: |
+  Hello, world!
+subquestion: |
+  How are you doing today?

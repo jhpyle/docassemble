@@ -67,6 +67,12 @@ def signature_html(status, debug, root, extra_scripts, validation_rules):
     add_validation(extra_scripts, validation_rules)
     return output
 
+def as_sms(status):
+    output = status.questionText
+    if status.subQuestionText:
+        output += "\n" + status.subQuestionText
+    return output
+
 def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_rules):
     decorations = list()
     uses_audio_video = False
