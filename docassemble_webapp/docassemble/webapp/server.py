@@ -6718,8 +6718,8 @@ def sms():
         yaml_filename = tconfig.get('default interview', default_yaml_filename)
         if 'dispatch' in tconfig and type(tconfig['dispatch']) is dict:
             if inp.lower() in tconfig['dispatch']:
-                yaml_filename = tconfig['dispatch']
-                logmessage("Using interview from dispatch: " + yaml_filename)
+                yaml_filename = tconfig['dispatch'][inp.lower()]
+                logmessage("Using interview from dispatch: " + str(yaml_filename))
         secret = ''.join(random.choice(string.ascii_letters) for i in range(16))
         uid = get_unique_name(yaml_filename, secret)
         new_temp_user = TempUser()
