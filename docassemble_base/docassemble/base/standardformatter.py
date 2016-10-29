@@ -69,8 +69,8 @@ def signature_html(status, debug, root, extra_scripts, validation_rules):
 
 def as_sms(status):
     output = status.questionText
-    if status.subQuestionText:
-        output += "\n" + status.subQuestionText
+    if status.subquestionText:
+        output += "\n" + status.subquestionText
     return output
 
 def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_rules):
