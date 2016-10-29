@@ -1,0 +1,5 @@
+metadata:
+  title: SMS interface
+---
+mandatory: true
+question: "Hello, world!"

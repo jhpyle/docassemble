@@ -453,10 +453,8 @@ def pad_to_16(the_string):
         return the_string[:16]
     return str(the_string) + (16 - len(the_string)) * '0'
 
-def decrypt_session(secret):
+def decrypt_session(secret, user_code=None, filename=None):
     nowtime = datetime.datetime.utcnow()
-    user_code = session.get('uid', None)
-    filename = session.get('i', None)
     if user_code == None or filename == None or secret is None:
         return
     changed = False
@@ -496,10 +494,8 @@ def decrypt_session(secret):
         db.session.commit()
     return
 
-def encrypt_session(secret):
+def encrypt_session(secret, user_code=None, filename=None):
     nowtime = datetime.datetime.utcnow()
-    user_code = session.get('uid', None)
-    filename = session.get('i', None)
     if user_code == None or filename == None or secret is None:
         return
     changed = False
@@ -1543,7 +1539,7 @@ def index():
     if user_dict.get('multi_user', False) is True and encrypted is True:
         encrypted = False
         session['encrypted'] = encrypted
-        decrypt_session(secret)
+        decrypt_session(secret, user_code=session.get('uid', None), filename=session.get('i', None))
         # Added this for locking
         # steps, user_dict, new_is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
         # user_dict['_internal']['secret'] = ''.join(random.choice(string.ascii_letters) for i in range(16))
@@ -1551,7 +1547,7 @@ def index():
         # session['currentsecret'] = currentsecret
         # secret_in_use = currentsecret
     if user_dict.get('multi_user', False) is False and encrypted is False:
-        encrypt_session(secret)
+        encrypt_session(secret, user_code=session.get('uid', None), filename=session.get('i', None))
         encrypted = True
         session['encrypted'] = encrypted
         # Added this for locking
@@ -2136,9 +2132,9 @@ def index():
     if user_dict.get('multi_user', False) is True and encrypted is True:
         encrypted = False
         session['encrypted'] = encrypted
-        decrypt_session(secret)
+        decrypt_session(secret, user_code=session.get('uid', None), filename=session.get('i', None))
     if user_dict.get('multi_user', False) is False and encrypted is False:
-        encrypt_session(secret)
+        encrypt_session(secret, user_code=session.get('uid', None), filename=session.get('i', None))
         encrypted = True
         session['encrypted'] = encrypted
     if response_to_send is not None:
@@ -6698,12 +6694,88 @@ def digits():
 def sms():
     resp = twilio.twiml.Response()
     if twilio_config is None:
-        logmessage("Ignoring call to digits because Twilio not enabled")
+        logmessage("Ignoring message to sms because Twilio not enabled")
         return Response(str(resp), mimetype='text/xml')
     if "AccountSid" not in request.form or request.form["AccountSid"] not in twilio_config['account sid']:
-        logmessage("Request to digits did not authenticate")
+        logmessage("Request to sms did not authenticate")
         return Response(str(resp), mimetype='text/xml')
-    logmessage(str(request.form))
+    if "To" not in request.form or request.form["To"] not in twilio_config['number']:
+        logmessage("Request to sms ignored because recipient number not in configuration")
+        return Response(str(resp), mimetype='text/xml')
+    tconfig = twilio_config['number'][request.form["To"]]
+    if "From" not in request.form or not re.search(r'[0-9]', request.form["From"]):
+        logmessage("Request to sms ignored because unable to determine caller ID")
+        return Response(str(resp), mimetype='text/xml')
+    if "Body" not in request.form:
+        logmessage("Request to sms ignored because message had no content")
+        return Response(str(resp), mimetype='text/xml')
+    inp = request.form['Body'].strip()
+    key = 'da:sms:' + request.form["From"]
+    sess_contents = r.get(key)
+    if sess_contents is None:
+        yaml_filename = tconfig.get('default interview', default_yaml_filename)
+        if 'dispatch' in tconfig and type(tconfig['dispatch']) is dict:
+            if inp.lower() in tconfig['dispatch']:
+                yaml_filename = tconfig['dispatch']
+                logmessage("Using interview from dispatch: " + yaml_filename)
+        secret = ''.join(random.choice(string.ascii_letters) for i in range(16))
+        uid = get_unique_name(yaml_filename, secret)
+        new_temp_user = TempUser()
+        db.session.add(new_temp_user)
+        db.session.commit()
+        sess_info = dict(yaml_filename=yaml_filename, uid=uid, secret=secret, number=request.form["From"], encrypted=True, tempuser=new_temp_user.id)
+        r.set(key, pickle.dumps(sess_info))
+    else:
+        try:        
+            sess_info = pickle.loads(sess_contents)
+        except:
+            logmessage("Unable to decode session information")
+            return Response(str(resp), mimetype='text/xml')
+    obtain_lock(sess_info['uid'], sess_info['yaml_filename'])
+    steps, user_dict, is_encrypted = fetch_user_dict(sess_info['uid'], sess_info['yaml_filename'], secret=sess_info['secret'])
+    encrypted = sess_info['encrypted']
+    if user_dict.get('multi_user', False) is True and encrypted is True:
+        encrypted = False
+        sess_info['encrypted'] = encrypted
+        is_encrypted = encrypted
+        r.set(key, pickle.dumps(sess_info))
+        decrypt_session(secret, user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
+    if user_dict.get('multi_user', False) is False and encrypted is False:
+        encrypted = True
+        sess_info['encrypted'] = encrypted
+        is_encrypted = encrypted
+        r.set(key, pickle.dumps(sess_info))
+        encrypt_session(secret, user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
+    interview = docassemble.base.interview_cache.get_interview(sess_info['yaml_filename'])
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], yaml_filename=sess_info['yaml_filename'], url=None, action=None, arguments=dict()))
+    interview.assemble(user_dict, interview_status)
+    if interview_status.question.question_type in ["restart", "exit"]:
+        logmessage("sms: exiting")
+        reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
+        r.delete(key)
+    else:
+        if not interview_status.can_go_back:
+            user_dict['_internal']['steps_offset'] = steps
+        user_dict['_internal']['answers'] = dict()
+        if interview_status.question.name and interview_status.question.name in user_dict['_internal']['answers']:
+            del user_dict['_internal']['answers'][interview_status.question.name]
+        
+        logmessage("sms: " + interview_status.questionText)
+        save_user_dict(sess_info['uid'], user_dict, sess_info['yaml_filename'], secret=sess_info['secret'], encrypt=encrypted)
+        if user_dict.get('multi_user', False) is True and encrypted is True:
+            encrypted = False
+            sess_info['encrypted'] = encrypted
+            is_encrypted = encrypted
+            r.set(key, pickle.dumps(sess_info))
+            decrypt_session(secret, user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
+        if user_dict.get('multi_user', False) is False and encrypted is False:
+            encrypted = True
+            sess_info['encrypted'] = encrypted
+            is_encrypted = encrypted
+            r.set(key, pickle.dumps(sess_info))
+            encrypt_session(secret, user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
+    release_lock(sess_info['uid'], sess_info['yaml_filename'])
+    #logmessage(str(request.form))
     return Response(str(resp), mimetype='text/xml')
 
 docassemble.base.functions.set_chat_partners_available(chat_partners_available)
