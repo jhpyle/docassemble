@@ -82,6 +82,13 @@ class SavedFile(object):
         urllib.urlretrieve(url, os.path.join(self.directory, filename))
         self.save()
         return
+    def fetch_url_post(self, url, post_args, **kwargs):
+        filename = kwargs.get('filename', self.filename)
+        if not self.fixed:
+            self.fix()
+        urllib.urlretrieve(url, os.path.join(self.directory, filename), None, urllib.urlencode(post_args))
+        self.save()
+        return
     def size_in_bytes(self, **kwargs):
         filename = kwargs.get('filename', self.filename)
         if S3_ENABLED and not self.fixed:

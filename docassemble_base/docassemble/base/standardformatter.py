@@ -959,6 +959,7 @@ def input_for(status, field, extra_scripts, wide=False):
         if field.datatype in ['checkboxes', 'object_checkboxes']:
             inner_fieldlist = list()
             id_index = 0
+            output += '<p class="sr-only">' + word('Checkboxes:') + '</p>'
             for pair in pairlist:
                 if pair[0] is not None:
                     inner_field = safeid(from_safeid(saveas_string) + "[" + myb64quote(pair[0]) + "]")
@@ -978,6 +979,7 @@ def input_for(status, field, extra_scripts, wide=False):
         elif field.datatype in ['radio', 'object_radio']:
             inner_fieldlist = list()
             id_index = 0
+            output += '<p class="sr-only">' + word('Choices:') + '</p>'
             for pair in pairlist:
                 if pair[0] is not None:
                     #sys.stderr.write(str(saveas_string) + "\n")
@@ -1007,6 +1009,7 @@ def input_for(status, field, extra_scripts, wide=False):
         if field.datatype == 'boolean':
             label_text = markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True, escape=True)
             if hasattr(field, 'inputtype') and field.inputtype in ['yesnoradio', 'noyesradio']:
+                output += '<p class="sr-only">' + word('Choices:') + '</p>'
                 inner_fieldlist = list()
                 id_index = 0
                 if field.sign > 0:
@@ -1039,6 +1042,7 @@ def input_for(status, field, extra_scripts, wide=False):
         elif field.datatype == 'threestate':
             inner_fieldlist = list()
             id_index = 0
+            output += '<p class="sr-only">' + word('Choices:') + '</p>'
             if field.sign > 0:
                 for pair in [['True', status.question.yes()], ['False', status.question.no()], ['None', status.question.maybe()]]:
                     formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
@@ -1087,7 +1091,9 @@ def input_for(status, field, extra_scripts, wide=False):
                     the_step = ' data-slider-step="' + str(status.extras['step'][field.number]) + '"'
                 else:
                     the_step = ''
-                output += '<input alt="' + word("Slider") + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + the_default + ' data-slider-max="' + str(int(status.extras['max'][field.number])) + '" data-slider-min="' + str(int(status.extras['min'][field.number])) + '"' + the_step + '></input>'
+                max_string = str(int(status.extras['max'][field.number]))
+                min_string = str(int(status.extras['min'][field.number]))
+                output += '<input alt="' + word('Select a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + the_default + ' data-slider-max="' + max_string + '" data-slider-min="' + min_string + '"' + the_step + '></input>'
                 extra_scripts.append('<script>$("#' + escape_for_jquery(saveas_string) + '").slider({tooltip: "always"});</script>\n')
         elif field.datatype == 'area':
             output += '<textarea alt="' + word("Input box") + '" class="form-control" rows="4" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + placeholdertext + '>'

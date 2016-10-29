@@ -1,14 +1,18 @@
 from bs4 import BeautifulSoup
 from docassemble.base.functions import word
+#from docassemble.base.logger import logmessage
 import re
 
 __all__ = ['to_text']
 
 def to_text(html_doc):
+    #logmessage("Starting to_text")
     output = ""
     soup = BeautifulSoup(html_doc, 'html.parser')
     [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title', 'audio', 'video', 'pre', 'attribution'])]
     [s.extract() for s in soup.find_all(hidden)]
+    [s.extract() for s in soup.find_all('div', {'class': 'invisible'})]
+    previous = ""
     for s in soup.find_all(do_show):
         if s.name in ['input', 'textarea', 'img'] and s.has_attr('alt'):
             words = s.attrs['alt']
@@ -19,7 +23,9 @@ def to_text(html_doc):
         words = re.sub(r'\n\s*', ' ', words, flags=re.DOTALL)
         if len(words) and re.search(r'\w *$', words, re.UNICODE):
             words = words + '.'
-        output += words + "\n"
+        if words != previous:
+            output += words + "\n"
+        previous = words
     terms = dict()
     for s in soup.find_all('a'):
         if s.has_attr('class') and s.attrs['class'][0] == 'daterm' and s.has_attr('data-content'):
@@ -33,6 +39,8 @@ def to_text(html_doc):
     output = re.sub(r'&gt;', '>', output)
     output = re.sub(r'&lt;', '<', output)
     output = re.sub(r'<[^>]+>', '', output)
+    #foo = unicode(output).encode('utf8')
+    #logmessage("ending to_text")
     return output
 
 def hidden(element):
@@ -42,7 +50,7 @@ def hidden(element):
                 return True
     return False
 
-bad_list = ['div', 'option', 'a']
+bad_list = ['div', 'option']
 
 good_list = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'button', 'textarea', 'note']
 

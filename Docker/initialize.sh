@@ -62,6 +62,10 @@ if [ "${S3ENABLE:-false}" == "true" ]; then
 	rm -f $DA_CONFIG_FILE
 	s3cmd -q get s3://${S3BUCKET}/config.yml $DA_CONFIG_FILE
     fi
+    if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/redis.rdb) ]] && [ "$REDISRUNNING" = false ]; then
+	s3cmd -q get s3://${S3BUCKET}/redis.rdb "/var/lib/redis/dump.rdb"
+	chown redis.redis "/var/lib/redis/dump.rdb"
+    fi
 fi
 
 if [ ! -f $DA_CONFIG_FILE ]; then

@@ -17,10 +17,10 @@ class Uploads(db.Model):
     filename = db.Column(db.Text())
     yamlfile = db.Column(db.Text())
 
-class KVStore(db.Model):
-    __tablename__ = dbtableprefix + "kvstore"
-    key = db.Column(db.String(250), primary_key=True)
-    value = db.Column(db.LargeBinary(), nullable=False)
+# class KVStore(db.Model):
+#     __tablename__ = dbtableprefix + "kvstore"
+#     key = db.Column(db.String(250), primary_key=True)
+#     value = db.Column(db.LargeBinary(), nullable=False)
 
 # class Ticket(db.Model):
 #     __tablename__ = dbtableprefix + 'ticket'

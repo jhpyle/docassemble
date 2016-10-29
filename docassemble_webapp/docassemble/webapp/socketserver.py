@@ -2,7 +2,8 @@ import sys
 from flask import render_template, session, request
 from flask_kvsession import KVSessionExtension
 from sqlalchemy import create_engine, MetaData, or_, and_
-from simplekv.db.sql import SQLAlchemyStore
+from simplekv.memory.redisstore import RedisStore
+#from simplekv.db.sql import SQLAlchemyStore
 from flask_socketio import SocketIO, join_room, disconnect
 import docassemble.base.config
 docassemble.base.config.load(filename="/usr/share/docassemble/config/config.yml")
@@ -12,6 +13,7 @@ from docassemble.webapp.backend import s3, initial_dict, can_access_file_number,
 from docassemble.webapp.users.models import User, ChatLog
 import docassemble.webapp.database
 from docassemble.base.functions import get_default_timezone, word
+import docassemble.base.util
 import redis
 import json
 import eventlet
@@ -26,15 +28,22 @@ eventlet.monkey_patch()
 alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
 engine = create_engine(alchemy_connect_string, convert_unicode=True)
 metadata = MetaData(bind=engine)
-store = SQLAlchemyStore(engine, metadata, 'kvstore')
+
+redis_host = daconfig.get('redis', None)
+if redis_host is None:
+    redis_host = 'redis://localhost'
+docassemble.base.util.set_redis_server(redis_host)
+
+rr = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
+
+store = RedisStore(redis.StrictRedis(host=docassemble.base.util.redis_server, db=1))
+#store = SQLAlchemyStore(engine, metadata, 'kvstore')
 kv_session = KVSessionExtension(store, app)
 
 async_mode = 'eventlet'
 socketio = SocketIO(app, async_mode=async_mode, verify=False)
 threads = dict()
 secrets = dict()
-
-rr = redis.StrictRedis()
 
 def background_thread(sid=None, user_id=None, temp_user_id=None):
     if user_id is None:

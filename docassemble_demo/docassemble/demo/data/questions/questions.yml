@@ -161,7 +161,7 @@ content: |
 mandatory: true
 code: |
   multi_user = False
-  speak_text = False
+  speak_text = True
 ---
 initial: true
 code: |

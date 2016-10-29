@@ -60,7 +60,8 @@ import httplib2
 from werkzeug import secure_filename, FileStorage
 from rauth import OAuth1Service, OAuth2Service
 from flask_kvsession import KVSessionExtension
-from simplekv.db.sql import SQLAlchemyStore
+from simplekv.memory.redisstore import RedisStore
+#from simplekv.db.sql import SQLAlchemyStore
 from sqlalchemy import create_engine, MetaData, Sequence, or_, and_
 from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log
@@ -231,7 +232,15 @@ app.handle_url_build_error = my_default_url
 
 engine = create_engine(alchemy_connect_string, convert_unicode=True)
 metadata = MetaData(bind=engine)
-store = SQLAlchemyStore(engine, metadata, 'kvstore')
+#store = SQLAlchemyStore(engine, metadata, 'kvstore')
+
+redis_host = daconfig.get('redis', None)
+if redis_host is None:
+    redis_host = 'redis://localhost'
+
+docassemble.base.util.set_redis_server(redis_host)
+
+store = RedisStore(redis.StrictRedis(host=docassemble.base.util.redis_server, db=1))
 
 kv_session = KVSessionExtension(store, app)
 
@@ -2863,9 +2872,12 @@ def index():
         if interview_status.using_screen_reader:
             for question_type in ['question', 'help']:
                 #phrase = codecs.encode(to_text(interview_status.screen_reader_text[question_type]).encode('utf-8'), 'base64').decode().replace('\n', '')
+                if question_type not in interview_status.screen_reader_text:
+                    continue
                 phrase = to_text(interview_status.screen_reader_text[question_type])
+                #logmessage("Phrase is " + repr(phrase))
                 if encrypted:
-                    the_phrase = encrypt_phrase(phrase, secret)
+                    the_phrase = encrypt_phrase(phrase.encode('utf8'), secret)
                 else:
                     the_phrase = pack_phrase(phrase)
                 existing_entry = SpeakList.query.filter_by(filename=yaml_filename, key=user_code, question=interview_status.question.number, type=question_type, language=the_language, dialect=the_dialect).first()
@@ -2899,7 +2911,8 @@ def index():
             if interview_status.using_screen_reader:
                 output += '          <h3>' + word('Plain text of sections') + '</h3>' + "\n"
                 for question_type in ['question', 'help']:
-                    output += '<pre style="white-space: pre-wrap;">' + to_text(interview_status.screen_reader_text[question_type]) + '</pre>\n'
+                    if question_type in interview_status.screen_reader_text:
+                        output += '<pre style="white-space: pre-wrap;">' + to_text(interview_status.screen_reader_text[question_type]) + '</pre>\n'
             output += '          <h3>' + word('Source code for question') + '</h3>' + "\n"
             if interview_status.question.source_code is None:
                 output += word('unavailable')
@@ -3311,21 +3324,22 @@ def speak_file():
                 phrase = decrypt_phrase(entry.phrase, secret)
             else:
                 phrase = unpack_phrase(entry.phrase)
-            url = "https://api.voicerss.org/?" + urllib.urlencode({'key': voicerss_config['key'], 'src': phrase, 'hl': str(entry.language) + '-' + str(entry.dialect)})
+            url = "https://api.voicerss.org/"
             logmessage("Retrieving " + url)
             audio_file = SavedFile(new_file_number, extension='mp3', fix=True)
-            audio_file.fetch_url(url)
+            audio_file.fetch_url_post(url, dict(key=voicerss_config['key'], src=phrase, hl=str(entry.language) + '-' + str(entry.dialect)))
             if audio_file.size_in_bytes() > 100:
                 call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', audio_file.path + '.mp3']
+                logmessage("Calling " + " ".join(call_array))
                 result = call(call_array)
                 if result != 0:
-                    logmessage("Failed to convert downloaded mp3 (" + path + ") to ogg")
+                    logmessage("Failed to convert downloaded mp3 (" + audio_file.path + '.mp3' + ") to ogg")
                     abort(404)
                 entry.upload = new_file_number
                 audio_file.finalize()
                 db.session.commit()
             else:
-                logmessage("Download from voicerss (" + path + ") failed")
+                logmessage("Download from voicerss (" + url + ") failed")
                 abort(404)
     if not entry.upload:
         logmessage("Upload file number was not set")
@@ -6663,14 +6677,9 @@ def digits():
         resp.hangup()
     return Response(str(resp), mimetype='text/xml')
 
-redis_host = daconfig.get('redis', None)
-if redis_host is None:
-    redis_host = 'redis://localhost'
-
-docassemble.base.util.set_redis_server(redis_host)
 docassemble.base.functions.set_chat_partners_available(chat_partners_available)
 
-r = redis.StrictRedis(host=docassemble.base.util.redis_server)
+r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
 
 if not in_celery:
     import docassemble.webapp.worker

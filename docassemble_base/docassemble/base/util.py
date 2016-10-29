@@ -48,7 +48,7 @@ class DARedis(DAObject):
         return this_thread.current_info.get('yaml_filename', '') + ':' + str(keyname)
     def __getattr__(self, funcname):
         if this_thread.redis is None:
-            this_thread.redis = redis.StrictRedis(host=redis_server)
+            this_thread.redis = redis.StrictRedis(host=redis_server, db=2)
         return getattr(this_thread.redis, funcname)
 
 def set_redis_server(redis_host):
