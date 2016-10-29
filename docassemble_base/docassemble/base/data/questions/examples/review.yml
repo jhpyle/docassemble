@@ -9,7 +9,6 @@ include:
 ---
 initial: true
 code: |
-  speak_text = True
   process_action()
 ---
 event: review_answers

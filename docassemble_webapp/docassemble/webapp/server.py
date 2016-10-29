@@ -6700,7 +6700,7 @@ def sms():
     if twilio_config is None:
         logmessage("Ignoring call to digits because Twilio not enabled")
         return Response(str(resp), mimetype='text/xml')
-    if "AccountSid" not in request.form or request.form["AccountSid"] != twilio_config['name']['default'].get('account sid', None):
+    if "AccountSid" not in request.form or request.form["AccountSid"] not in twilio_config['account sid']:
         logmessage("Request to digits did not authenticate")
         return Response(str(resp), mimetype='text/xml')
     logmessage(str(request.form))
