@@ -382,12 +382,14 @@ if 'twilio' in daconfig:
         config_list = daconfig['twilio']
     for tconfig in config_list:
         if type(tconfig) is dict and 'account sid' in tconfig and 'number' in tconfig:
-            twilio_config['account sid'][tconfig['account sid']] = 1
+            twilio_config['account sid'][unicode(tconfig['account sid'])] = 1
             twilio_config['number'][unicode(tconfig['number'])] = tconfig
             if 'default' not in twilio_config['name']:
                 twilio_config['name']['default'] = tconfig
             if 'name' in tconfig:
                 twilio_config['name'][tconfig['name']] = tconfig
+        else:
+            logmessage("Improper setup in twilio configuration")    
     if 'default' not in twilio_config['name']:
         twilio_config = None
 else:
@@ -6700,7 +6702,7 @@ def sms():
         logmessage("Request to sms did not authenticate")
         return Response(str(resp), mimetype='text/xml')
     if "To" not in request.form or request.form["To"] not in twilio_config['number']:
-        logmessage("Request to sms ignored because recipient number not in configuration")
+        logmessage("Request to sms ignored because recipient number " + str(request.form.get('To', None)) + " not in configuration, " + str(twilio_config))
         return Response(str(resp), mimetype='text/xml')
     tconfig = twilio_config['number'][request.form["To"]]
     if "From" not in request.form or not re.search(r'[0-9]', request.form["From"]):
