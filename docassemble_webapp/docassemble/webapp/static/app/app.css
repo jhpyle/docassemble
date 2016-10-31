@@ -17,6 +17,10 @@ body.dainactive > .navbar-inverse {
     background-image: linear-gradient(to bottom,#883c3c 0,#522 100%);
 }
 
+body.dacontrolled > .navbar-inverse {
+    background-image: linear-gradient(to bottom,#883c3c 0,#522 100%);
+}
+
 .slider-horizontal {
     width: 100% !important;
     margin-top: 15px;
@@ -679,4 +683,21 @@ ul.navbar-nav li {
 
 .chat-title-label {
   float: left;
+}
+
+div.center-alert {
+    position: fixed;
+    top: 0px;
+    left: 50%;
+    color: #444444;
+    transform: translate(-50%, 0);
+    font-size: 14px;
+    border-radius: 0 0 15px 15px;
+    background-color: #ffff99;
+    padding: 5px;
+    text-align: center;
+    border-color: #f0cc77;
+    border-style: solid;
+    border-width: 0px 3px 3px 3px;
+    z-index: 10000;
 }

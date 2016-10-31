@@ -1,8 +1,17 @@
 metadata:
   title: SMS interface
 ---
-mandatory: true
 question: |
   Hello, world!
 subquestion: |
-  How are you doing today?
+  Are you doing well?
+yesno: doing_well
+---
+mandatory: true
+question: |
+  % if doing_well:
+  Glad to hear that!
+  % else:
+  Sorry to hear that!
+  % endif
+

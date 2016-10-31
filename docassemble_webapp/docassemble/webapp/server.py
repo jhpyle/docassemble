@@ -1094,7 +1094,7 @@ def manual_checkout():
     pipe = r.pipeline()
     pipe.expire('da:session' + endpart, 12)
     pipe.expire('da:html' + endpart, 12)
-    pipe.expire('da:chatsession' + endpart, 12)
+    pipe.expire('da:interviewsession' + endpart, 12)
     pipe.expire('da:ready' + endpart, 12)
     pipe.expire('da:block' + endpart, 12)
     pipe.execute()
@@ -1143,7 +1143,7 @@ def chat_partners_available(session_id, yaml_filename, the_user_id, mode, partne
         help_ok = False
     potential_partners = set()
     if help_ok and len(partner_roles) and not r.exists('da:block:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)):
-        chat_session_key = 'da:chatsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+        chat_session_key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         for role in partner_roles:
             for the_key in r.keys('da:monitor:role:' + role + ':userid:*'):
                 user_id = re.sub(r'^.*:userid:', '', the_key)
@@ -1222,7 +1222,7 @@ def checkin():
                     if remaining_seconds > 30:
                         call_forwarding_message = '<span class="phone-message"><i class="glyphicon glyphicon-earphone"></i> ' + word('To reach an advocate who can assist you, call') + ' <a class="phone-number" href="tel:' + str(forwarding_phone_number) + '">' + str(forwarding_phone_number) + '</a> ' + word("and enter the code") + ' <span class="phone-code">' + str(call_forwarding_code) + '</span>.</span>'
                         break
-        chat_session_key = 'da:chatsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+        chat_session_key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         potential_partners = list()
         if str(chatstatus) in ['waiting', 'standby', 'ringing', 'ready', 'on', 'hangup']:
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
@@ -1269,7 +1269,7 @@ def checkin():
                             pipe.rpush(lkey, the_key)
                             failure = False
                     if peer_ok:
-                        for the_key in r.keys('da:chatsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:*'):
+                        for the_key in r.keys('da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:*'):
                             if the_key != chat_session_key:
                                 pipe.rpush(lkey, the_key)
                                 failure = False
@@ -1301,7 +1301,7 @@ def checkin():
                                 mon_sid = r.get('da:monitor:available:' + str(user_id))
                                 if mon_sid is None:
                                     continue
-                                int_sid = r.get('da:chatsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id))
+                                int_sid = r.get('da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id))
                                 if int_sid is None:
                                     continue
                                 r.publish(mon_sid, json.dumps(dict(messagetype='chatready', uid=session_id, i=yaml_filename, userid=the_user_id, secret=secret, sid=int_sid)))
@@ -1319,7 +1319,7 @@ def checkin():
                         #logmessage("Writing to " + str(lkey))
                         pipe = r.pipeline()
                         failure = True
-                        for the_key in r.keys('da:chatsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:*'):
+                        for the_key in r.keys('da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:*'):
                             if the_key != chat_session_key:
                                 pipe.rpush(lkey, the_key)
                                 failure = False
@@ -1365,15 +1365,21 @@ def checkin():
         pipe.expire(key, 60)
         pipe.expire(html_key, 60)
         pipe.execute()
+        ocontrol_key = 'da:control:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+        ocontrol = r.get(ocontrol_key)
+        if ocontrol is None:
+            observer_control = False
+        else:
+            observer_control = True
         #logmessage("Done setting " + key)
         parameters = request.form.get('parameters', None)
         if parameters is not None:
             key = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
             r.publish(key, parameters)
         if peer_ok or help_ok:
-            return jsonify(success=True, chat_status=chatstatus, num_peers=num_peers, help_available=help_available, phone=call_forwarding_message)
+            return jsonify(success=True, chat_status=chatstatus, num_peers=num_peers, help_available=help_available, phone=call_forwarding_message, observerControl=observer_control)
         else:
-            return jsonify(success=True, chat_status=chatstatus, phone=call_forwarding_message)
+            return jsonify(success=True, chat_status=chatstatus, phone=call_forwarding_message, observerControl=observer_control)
     return jsonify(success=False)
 
 def do_redirect(url, is_ajax):
@@ -2201,6 +2207,7 @@ def index():
       var daSendChanges = """ + send_changes + """;
       var daInitialized = false;
       var notYetScrolled = true;
+      var daBeingControlled = false;
       var daInformedChanged = false;
       var daInformed = """ + json.dumps(user_dict['_internal']['informed'].get(user_id_string, dict())) + """;
       function userNameString(data){
@@ -2317,11 +2324,43 @@ def index():
         }
         return false;
       }
+      function show_control(mode){
+        //console.log("You are now being controlled");
+        $("body").addClass("dacontrolled");
+        var newDiv = document.createElement('div');
+        $(newDiv).addClass("center-alert col-md-6");
+        $(newDiv).html(""" + repr(str(word("Your screen is being controlled by an operator."))) + """)
+        $(newDiv).attr('id', "controlAlert");
+        $(newDiv).css("display", "none");
+        $(newDiv).appendTo($("body"));
+        if (mode == 'animated'){
+          $(newDiv).slideDown();
+        }
+        else{
+          $(newDiv).show();
+        }
+      }
+      function hide_control(){
+        //console.log("You are no longer being controlled");
+        $("body").removeClass("dacontrolled");
+        $("#controlAlert").html(""" + repr(str(word("The operator is no longer controlling your screen."))) + """);
+        setTimeout(function(){
+          $("#controlAlert").slideUp(300, function(){
+            $("#controlAlert").remove();
+          });
+        }, 2000);
+      }
       function daInitializeSocket(){
         if (socket != null){
             if (socket.connected){
                 //console.log("Calling connectagain")
-                socket.emit('connectagain', {data: 1});
+                if (daChatStatus == 'ready'){
+                  socket.emit('connectagain', {data: 1});
+                }
+                if (daBeingControlled){
+                    show_control('animated');
+                    socket.emit('start_being_controlled', {data: 1});
+                }
             }
             else{
                 socket.connect();
@@ -2337,16 +2376,22 @@ def index():
         if (socket != null){
             socket.on('connect', function() {
                 if (socket == null){
-                  console.log("Error: socket is null");
-                  return;
+                    console.log("Error: socket is null");
+                    return;
                 }
                 //console.log("Connected socket with sid " + socket.id);
-                daChatStatus = 'on';
-                display_chat();
-                pushChanges();
-                //daTurnOnChat();
-                //console.log("Emitting chat_log from on connect");
-                socket.emit('chat_log', {data: 1});
+                if (daChatStatus == 'ready'){
+                    daChatStatus = 'on';
+                    display_chat();
+                    pushChanges();
+                    //daTurnOnChat();
+                    //console.log("Emitting chat_log from on connect");
+                    socket.emit('chat_log', {data: 1});
+                }
+                if (daBeingControlled){
+                    show_control('animated')
+                    socket.emit('start_being_controlled', {data: 1});
+                }
             });
             socket.on('chat_log', function(arg) {
                 //console.log("Got chat_log");
@@ -2364,8 +2409,21 @@ def index():
                 //console.log('chatready');
             });
             socket.on('terminate', function() {
-                //console.log("Terminating socket");
+                //console.log("interview: terminating socket");
                 socket.disconnect();
+            });
+            socket.on('controllerstart', function(){
+              daBeingControlled = true;
+              show_control('animated');
+            });
+            socket.on('controllerexit', function(){
+              daBeingControlled = false;
+              hide_control();
+              if (daChatStatus != 'on'){
+                if (socket != null && socket.connected){
+                  socket.emit('terminate');
+                }
+              }
             });
             socket.on('disconnect', function() {
                 //console.log("Disconnected socket");
@@ -2396,6 +2454,62 @@ def index():
                 publishMessage(arg.data);
                 scrollChat();
                 inform_about('chatmessage');
+            });
+            socket.on('newpage', function(incoming) {
+                //console.log("newpage received");
+                var data = incoming.obj;
+                daProcessAjax(data, $("#daform"));
+            });
+            socket.on('controllerchanges', function(data) {
+                //console.log("controllerchanges: " + data.parameters);
+                var valArray = Object();
+                var values = JSON.parse(data.parameters);
+                for (var i = 0; i < values.length; i++) {
+                    valArray[values[i].name] = values[i].value;
+                }
+                //console.log("valArray is " + JSON.stringify(valArray));
+                $("#daform").each(function(){
+                    $(this).find(':input').each(function(){
+                        var type = $(this).attr('type');
+                        var id = $(this).attr('id');
+                        var name = $(this).attr('name');
+                        if (type == 'checkbox'){
+                            if (name in valArray){
+                                if (valArray[name] == 'True'){
+                                    $(this).prop('checked', true);
+                                }
+                                else{
+                                    $(this).prop('checked', false);
+                                }
+                            }
+                            else{
+                                $(this).prop('checked', false);
+                            }
+                        }
+                        else if (type == 'radio'){
+                            if (name in valArray){
+                                if (valArray[name] == $(this).val()){
+                                    $(this).prop('checked', true);
+                                }
+                                else{
+                                    $(this).prop('checked', false);
+                                }
+                            }
+                        }
+                        else if ($(this).data().hasOwnProperty('sliderMax')){
+                            $(this).slider('setValue', parseInt(valArray[name]));
+                        }
+                        else{
+                            if (name in valArray){
+                                $(this).val(valArray[name]);
+                            }
+                        }
+                    });
+                });
+                if (data.clicked){
+                    //console.log("Need to click " + data.clicked);
+                    $(data.clicked).click();
+                }
             });
         }
       }
@@ -2483,6 +2597,7 @@ def index():
         }
       }
       function daCloseChat(){
+        //console.log('daCloseChat');
         daChatStatus = 'hangup';
         pushChanges();
         if (socket != null && socket.connected){
@@ -2620,6 +2735,23 @@ def index():
           else{
             $("#peerHelpMessage").addClass("invisible");
           }
+          if (daBeingControlled){
+            if (!data.observerControl){
+              daBeingControlled = false;
+              hide_control();
+              if (daChatStatus != 'on'){
+                if (socket != null && socket.connected){
+                  socket.emit('terminate');
+                }
+              }
+            }
+          }
+          else{
+            if (data.observerControl){
+              daBeingControlled = true;
+              daInitializeSocket();
+            }
+          }
         }
       }
       function daCheckoutCallback(data){
@@ -2631,7 +2763,7 @@ def index():
           return;
         }
         var datastring;
-        if ((daChatStatus == 'waiting' || daChatStatus == 'standby' || daChatStatus == 'ringing' || daChatStatus == 'ready' || daChatStatus == 'on') && $("#daform").length > 0){
+        if ((daChatStatus == 'waiting' || daChatStatus == 'standby' || daChatStatus == 'ringing' || daChatStatus == 'ready' || daChatStatus == 'on') && $("#daform").length > 0 && !daBeingControlled){
           datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, parameters: JSON.stringify($("#daform").serializeArray())});
         }
         else{
@@ -2822,6 +2954,9 @@ def index():
         }
         daInitialized = true;
         daShowingHelp = 0;
+        if (daBeingControlled){
+          show_control('fast');
+        }
       }
       $( document ).ready(function(){
         daInitialize();
@@ -3496,10 +3631,73 @@ def observer():
     userid = request.args.get('userid', None)
     observation_script = """
     <script>
+      var daSendChanges = false;
+      var daConnected = false;
+      var observerChangesInterval = null;
+      var daInitialized = false;
+      var daShowingHelp = false;
+      var daInformedChanged = false;
+      var dadisable = null;
+      window.turnOnControl = function(){
+        //console.log("Turning on control");
+        daSendChanges = true;
+        resetPushChanges();
+        socket.emit('observerStartControl', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """});
+      }
+      window.turnOffControl = function(){
+        //console.log("Turning off control");
+        daSendChanges = false;
+        stopPushChanges();
+        socket.emit('observerStopControl', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """});
+      }
+      function stopPushChanges(){
+        if (observerChangesInterval != null){
+          clearInterval(observerChangesInterval);
+        }
+      }
+      function resetPushChanges(){
+        if (observerChangesInterval != null){
+          clearInterval(observerChangesInterval);
+        }
+        observerChangesInterval = setInterval(pushChanges, 6000);
+      }
+      function pushChanges(){
+        //console.log("Pushing changes");
+        if (observerChangesInterval != null){
+          clearInterval(observerChangesInterval);
+        }
+        if (!daSendChanges || !daConnected){
+          return;
+        }
+        observerChangesInterval = setInterval(pushChanges, 6000);
+        socket.emit('observerChanges', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """, parameters: JSON.stringify($("#daform").serializeArray())});
+      }
+      function daSubmitter(event){
+        event.preventDefault();
+        if (!daSendChanges || !daConnected){
+          return false;
+        }
+        var theId = $(this).attr('id');
+        var skey;
+        if (theId){
+          skey = '#' + theId.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+        }
+        else{
+          skey = '#' + $(this).parents("form").attr('id') + ' ' + $(this).prop('tagName').toLowerCase() + '[type="submit"]';
+        }
+        //console.log("Need to click on " + skey);
+        if (observerChangesInterval != null){
+          clearInterval(observerChangesInterval);
+        }
+        socket.emit('observerChanges', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """, clicked: skey, parameters: JSON.stringify($("#daform").serializeArray())});
+        return false;
+      }
       function daInitialize(){
         $(function () {
           $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
         });
+        $('button[type="submit"]').click(daSubmitter);
+        $('input[type="submit"]').click(daSubmitter);
         $(".to-labelauty").labelauty({ width: "100%" });
         $(".to-labelauty-icon").labelauty({ label: false });
         $(function(){ 
@@ -3574,13 +3772,23 @@ def observer():
           $("input[type='checkbox'][name='" + showIfVarEscaped + "']").each(showHideDiv);
           $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDiv);
         });
-        dadisable = setTimeout(function(){
-          $("#daform").find('button[type="submit"]').prop("disabled", true);
-          //$("#daform").find(':input').prop("disabled", true);
-        }, 1);
+        // dadisable = setTimeout(function(){
+        //   $("#daform").find('button[type="submit"]').prop("disabled", true);
+        //   //$("#daform").find(':input').prop("disabled", true);
+        // }, 1);
+        $("#daform").each(function(){
+          $(this).find(':input').change(pushChanges);
+        });
+        daInitialized = true;
+        daShowingHelp = 0;
       }
       $( document ).ready(function(){
         daInitialize();
+        $( window ).unload(function() {
+          if (socket != null && socket.connected){
+            socket.emit('terminate');
+          }
+        });
         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
             socket = io.connect("http://" + document.domain + "/observer" + location.port, {path: '/ws/socket.io'});
         }
@@ -3591,6 +3799,7 @@ def observer():
             socket.on('connect', function() {
                 //console.log("Connected!");
                 socket.emit('observe', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """});
+                daConnected = true;
             });
             socket.on('terminate', function() {
                 //console.log("Terminating socket");
@@ -3599,6 +3808,16 @@ def observer():
             socket.on('disconnect', function() {
                 //console.log("Disconnected socket");
                 //socket = null;
+            });
+            socket.on('stopcontrolling', function() {
+                //console.log("Got stopcontrolling");
+                daSendChanges = false;
+                stopPushChanges();
+            });
+            socket.on('abortcontrolling', function() {
+                //console.log("Got abortcontrolling");
+                daSendChanges = false;
+                stopPushChanges();
             });
             socket.on('newpage', function(incoming) {
                 var data = incoming.obj;
@@ -3619,6 +3838,7 @@ def observer():
                 if ($("html").attr("lang") != data.lang){
                   $("html").attr("lang", data.lang);
                 }
+                pushChanges();
             });
             socket.on('pushchanges', function(data) {
                 var valArray = Object();
@@ -3666,6 +3886,7 @@ def observer():
                 });
             });
         }
+        observerChangesInterval = setInterval(pushChanges, 6000);
     });
     </script>
 """
@@ -3734,6 +3955,7 @@ def monitor():
     var daFirstTime = 1;
     var updateMonitorInterval = null;
     var daNotificationsEnabled = false;
+    var daControlling = Object();
     function daOnError(){
         console.log('daOnError');
     }
@@ -4232,24 +4454,80 @@ def monitor():
             $(openButton).attr('target', 'iframe' + key);
             $(openButton).html('""" + word("Observe") + """');
             $(openButton).appendTo($(sessionDiv));
+            var stopObservingButton = document.createElement('a');
+            $(stopObservingButton).addClass("label label-default observebutton invisible");
+            $(stopObservingButton).html('""" + word("Stop Observing") + """');
+            $(stopObservingButton).attr('href', '#');
+            $(stopObservingButton).appendTo($(sessionDiv));
             var controlButton = document.createElement('a');
-            $(controlButton).addClass("label label-default observebutton invisible");
-            $(controlButton).html('""" + word("Stop Observing") + """');
+            $(controlButton).addClass("label label-info observebutton");
+            $(controlButton).html('""" + word("Control") + """');
             $(controlButton).attr('href', '#');
             $(controlButton).appendTo($(sessionDiv));
+            var stopControllingButton = document.createElement('a');
+            $(stopControllingButton).addClass("label label-default observebutton invisible");
+            $(stopControllingButton).html('""" + word("Stop Controlling") + """');
+            $(stopControllingButton).attr('href', '#');
+            $(stopControllingButton).appendTo($(sessionDiv));
+            $(controlButton).click(function(event){
+                event.preventDefault();
+                //console.log("Controlling...");
+                $(this).addClass("invisible");
+                $(stopControllingButton).removeClass("invisible");
+                $(stopObservingButton).addClass("invisible");
+                var theIframe = $("#iframe" + skey).find('iframe')[0];
+                if (theIframe != null && theIframe.contentWindow){
+                    theIframe.contentWindow.turnOnControl();
+                }
+                else{
+                    console.log("Cannot turn on control");
+                }
+                daControlling[key] = 1;
+                return false;
+            });
+            $(stopControllingButton).click(function(event){
+                event.preventDefault();
+                //console.log("Stop controlling...");
+                $(this).addClass("invisible");
+                $(controlButton).removeClass("invisible");
+                $(stopObservingButton).removeClass("invisible");
+                if (daControlling.hasOwnProperty(key)){
+                    delete daControlling[key];
+                }
+                var theIframe = $("#iframe" + skey).find('iframe')[0];
+                if (theIframe != null && theIframe.contentWindow){
+                    theIframe.contentWindow.turnOffControl();
+                }
+                else{
+                    console.log("Cannot turn off control");
+                }
+                return false;
+            });
             $(openButton).click(function(){
                 //console.log("Observing..");
                 $(this).addClass("invisible");
-                $(controlButton).removeClass("invisible");
+                $(stopObservingButton).removeClass("invisible");
                 $("#iframe" + skey).removeClass("invisible");
+                $(controlButton).removeClass("invisible");
                 return true;
             });
-            $(controlButton).click(function(e){
+            $(stopObservingButton).click(function(e){
                 //console.log("Unobserving..");
                 $(this).addClass("invisible");
                 $(openButton).removeClass("invisible");
-                var theIframe = $("#iframe" + skey).find('iframe');
+                $(controlButton).addClass("invisible");
+                $(stopObservingButton).addClass("invisible");
+                $(stopControllingButton).addClass("invisible");
+                var theIframe = $("#iframe" + skey).find('iframe')[0];
+                if (daControlling.hasOwnProperty(key)){
+                    delete daControlling[key];
+                    if (theIframe != null && theIframe.contentWindow){
+                        //console.log("Calling turnOffControl in iframe");
+                        theIframe.contentWindow.turnOffControl();
+                    }
+                }
                 if (theIframe != null && theIframe.contentWindow){
+                    //console.log("Deleting the iframe");
                     theIframe.contentWindow.document.open();
                     theIframe.contentWindow.document.write("");
                     theIframe.contentWindow.document.close();
@@ -4262,11 +4540,25 @@ def monitor():
             });
             if ($(theIframeContainer).hasClass("invisible")){
                 $(openButton).removeClass("invisible");
+                $(stopObservingButton).addClass("invisible");
                 $(controlButton).addClass("invisible");
+                $(stopControllingButton).addClass("invisible");
+                if (daControlling.hasOwnProperty(key)){
+                    delete daControlling[key];
+                }
             }
             else{
                 $(openButton).addClass("invisible");
-                $(controlButton).removeClass("invisible");
+                if (daControlling.hasOwnProperty(key)){
+                    $(stopObservingButton).addClass("invisible");
+                    $(controlButton).addClass("invisible");
+                    $(stopControllingButton).removeClass("invisible");
+                }
+                else{
+                    $(stopObservingButton).removeClass("invisible");
+                    $(controlButton).removeClass("invisible");
+                    $(stopControllingButton).addClass("invisible");
+                }
             }
         }
         $(theText).appendTo($(sessionDiv));
@@ -4303,15 +4595,18 @@ def monitor():
                 update_monitor();
             });
             socket.on('terminate', function() {
-                //console.log("Terminating socket");
+                //console.log("monitor: terminating socket");
                 socket.disconnect();
             });
             socket.on('disconnect', function() {
-                //console.log("Disconnected socket");
+                //console.log("monitor: disconnected socket");
                 //socket = null;
             });
             socket.on('refreshsessions', function(data) {
                 update_monitor();
+            });
+            socket.on('abortcontroller', function(data) {
+                console.log("Got abortcontroller message for " + data.key);
             });
             socket.on('chatready', function(data) {
                 var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
@@ -6728,12 +7023,14 @@ def sms():
         db.session.commit()
         sess_info = dict(yaml_filename=yaml_filename, uid=uid, secret=secret, number=request.form["From"], encrypted=True, tempuser=new_temp_user.id)
         r.set(key, pickle.dumps(sess_info))
+        accepting_input = False
     else:
         try:        
             sess_info = pickle.loads(sess_contents)
         except:
             logmessage("Unable to decode session information")
             return Response(str(resp), mimetype='text/xml')
+        accepting_input = True
     obtain_lock(sess_info['uid'], sess_info['yaml_filename'])
     steps, user_dict, is_encrypted = fetch_user_dict(sess_info['uid'], sess_info['yaml_filename'], secret=sess_info['secret'])
     encrypted = sess_info['encrypted']
@@ -6752,6 +7049,36 @@ def sms():
     interview = docassemble.base.interview_cache.get_interview(sess_info['yaml_filename'])
     interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], yaml_filename=sess_info['yaml_filename'], url=None, action=None, arguments=dict()))
     interview.assemble(user_dict, interview_status)
+    if accepting_input:
+        saveas = None
+        if len(interview_status.question.fields):
+            saveas = myb64unquote(interview_status.question.fields[0].saveas)
+            logmessage("Variable to set is " + str(saveas))
+        if interview_status.question.question_type in ["yesno"]:
+            if inp.lower() in [word('yes')]:
+                data = 'True'
+            elif inp.lower() in [word('no')]:
+                data = 'False'
+            else:
+                data = None
+        if interview_status.question.question_type in ["yesnomaybe"]:
+            if inp.lower() in [word('yes')]:
+                data = 'True'
+            elif inp.lower() in [word('no')]:
+                data = 'False'
+            else:
+                data = 'None'
+        if data is None:
+            logmessage("Could not process input")
+        else:
+            the_string = saveas + ' = ' + data
+            try:
+                exec(the_string, user_dict)
+            except:
+                logmessage("Failure to set variable with " + the_string)
+                return Response(str(resp), mimetype='text/xml')
+        interview.assemble(user_dict, interview_status)
+        save_user_dict(sess_info['uid'], user_dict, sess_info['yaml_filename'], secret=sess_info['secret'], encrypt=encrypted)
     if interview_status.question.question_type in ["restart", "exit"]:
         logmessage("sms: exiting")
         reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
@@ -6762,11 +7089,9 @@ def sms():
         user_dict['_internal']['answers'] = dict()
         if interview_status.question.name and interview_status.question.name in user_dict['_internal']['answers']:
             del user_dict['_internal']['answers'][interview_status.question.name]
-        
-        logmessage("sms: " + interview_status.questionText)
-        twilio_client = TwilioRestClient(tconfig['account sid'], tconfig['auth token'])
-        message = twilio_client.messages.create(to=request.form["From"], from_=request.form["To"], body=as_sms(interview_status))
-        save_user_dict(sess_info['uid'], user_dict, sess_info['yaml_filename'], secret=sess_info['secret'], encrypt=encrypted)
+        logmessage("sms: " + as_sms(interview_status))
+        #twilio_client = TwilioRestClient(tconfig['account sid'], tconfig['auth token'])
+        #message = twilio_client.messages.create(to=request.form["From"], from_=request.form["To"], body=as_sms(interview_status))
         if user_dict.get('multi_user', False) is True and encrypted is True:
             encrypted = False
             sess_info['encrypted'] = encrypted
