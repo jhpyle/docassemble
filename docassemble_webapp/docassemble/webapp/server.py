@@ -1358,7 +1358,7 @@ def checkin():
                     obj['blocked'] = False
                 r.publish('da:monitor', json.dumps(dict(messagetype='sessionupdate', key=key, session=obj)))
             else:
-                logmessage("The html was not found")
+                logmessage("The html was not found at " + str(html_key))
         #logmessage("Setting " + key)
         pipe = r.pipeline()
         pipe.set(key, pickle.dumps(obj))
@@ -3121,13 +3121,13 @@ def index():
         the_user_id = 't' + str(session['tempuser'])
     else:
         the_user_id = current_user.id
-    key = 'da:html:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-    #logmessage("Setting " + key)
+    key = 'da:html:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
+    logmessage("Setting html key " + key)
     pipe = r.pipeline()
     pipe.set(key, json.dumps(dict(body=output, extra_scripts=extra_scripts, extra_css=extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after)))
     pipe.expire(key, 60)
     pipe.execute()
-    #logmessage("Done setting " + key)
+    logmessage("Done setting html key " + key)
     if session.get('chatstatus', 'off') in ['waiting', 'standby', 'ringing', 'ready', 'on']:
         inputkey = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         r.publish(inputkey, json.dumps(dict(message='newpage', key=key)))
@@ -3678,14 +3678,22 @@ def observer():
           return false;
         }
         var theId = $(this).attr('id');
+        var theName = $(this).attr('name');
+        var theValue = $(this).val();
         var skey;
         if (theId){
-          skey = '#' + theId.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+          skey = '#' + theId.replace(/(:|\.|\[|\]|,|=|\/|\")/g, '\\\\$1');
+        }
+        else if (theName){
+          skey = '#' + $(this).parents("form").attr('id') + ' ' + $(this).prop('tagName').toLowerCase() + '[name="' + theName.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1') + '"]';
+          if (typeof theValue !== 'undefined'){
+            skey += '[value="' + theValue + '"]'
+          }
         }
         else{
           skey = '#' + $(this).parents("form").attr('id') + ' ' + $(this).prop('tagName').toLowerCase() + '[type="submit"]';
         }
-        //console.log("Need to click on " + skey);
+        console.log("Need to click on " + skey);
         if (observerChangesInterval != null){
           clearInterval(observerChangesInterval);
         }
@@ -4173,11 +4181,16 @@ def monitor():
         //console.log("update_monitor");
     }
     function isHidden(ref){
-        if (($(ref).offset().top + $(ref).height() < $(window).scrollTop() + 32)){
-            return -1;
-        }
-        else if ($(ref).offset().top > $(window).scrollTop() + $(window).height()){
-            return 1;
+        if ($(ref).length){
+            if (($(ref).offset().top + $(ref).height() < $(window).scrollTop() + 32)){
+                return -1;
+            }
+            else if ($(ref).offset().top > $(window).scrollTop() + $(window).height()){
+                return 1;
+            }
+            else{
+                return 0;
+            }
         }
         else{
             return 0;

@@ -162,6 +162,7 @@ mandatory: true
 code: |
   multi_user = False
   speak_text = False
+  set_chat_status(availability='available', mode='help', partner_roles=['advocate'])
 ---
 initial: true
 code: |

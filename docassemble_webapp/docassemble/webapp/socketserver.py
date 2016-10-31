@@ -113,6 +113,7 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
                 #         sys.stderr.write("  newpage JSON parse error\n")
                 #         continue
                 #     socketio.emit('newpage', {'obj': obj}, namespace='/interview', room=sid)
+    sys.stderr.write('  exiting thread for sid ' + str(sid) + '\n')
 
 @socketio.on('message', namespace='/interview')
 def handle_message(message):
@@ -378,7 +379,8 @@ def monitor_thread(sid=None, user_id=None):
                 if data['messagetype'] == 'abortcontroller':
                     socketio.emit('abortcontroller', {'key': data['key']}, namespace='/monitor', room=sid)
                 if data['messagetype'] == 'sessionupdate':
-                    sys.stderr.write("  Got a session update: " + str(data['session']) + "\n")
+                    #sys.stderr.write("  Got a session update: " + str(data['session']) + "\n")
+                    sys.stderr.write("  Got a session update\n")
                     socketio.emit('sessionupdate', {'key': data['key'], 'session': data['session']}, namespace='/monitor', room=sid)
                 if data['messagetype'] == 'chatready':
                     pubsub.subscribe(data['sid'])
@@ -415,6 +417,7 @@ def monitor_thread(sid=None, user_id=None):
                         del secrets[data['sid']]
                     r.hdel('da:monitor:chatpartners:' + str(user_id), 'da:interviewsession:uid:' + str(data['uid']) + ':i:' + str(data['i']) + ':userid:' + data['userid'])
                     socketio.emit('chatstop', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid']}, namespace='/monitor', room=sid)
+    sys.stderr.write('  exiting thread for sid ' + str(sid) + '\n')
 
 @socketio.on('connect', namespace='/monitor')
 def on_monitor_connect():
@@ -782,6 +785,7 @@ def observer_thread(sid=None, key=None):
         else:
             sys.stderr.write("  Got something for observer\n")
             socketio.emit('pushchanges', {'parameters': data}, namespace='/observer', room=sid)
+    sys.stderr.write('  exiting thread for sid ' + str(sid) + '\n')
 
 @socketio.on('connect', namespace='/observer')
 def on_observer_connect():
