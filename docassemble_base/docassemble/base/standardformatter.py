@@ -622,7 +622,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
                         <div class="form-group"><label for="_attachment_email_address" class="control-label col-sm-4">""" + word('E-mail address') + """</label><div class="col-sm-8"><input alt=""" + '"' + word ("Input box") + '"' + """ class="form-control" type="email" name="_attachment_email_address" id="_attachment_email_address" value=""" + '"' + str(default_email) + '"' + """/></div></div>"""
             if editable_included:
                 output += """
-                        <div class="form-group"><label for="_attachment_include_editable" class="control-label col-sm-4">""" + '&nbsp;</label><div class="col-sm-8"><input alt="' + word ("Check box") + ", " + word('Include ' + editable_name + ' for editing') + '" type="checkbox" value="True" name="_attachment_include_editable" id="_attachment_include_editable"/> ' + word('Include ' + editable_name + ' for editing') + '</div></div>\n'
+                        <div class="form-group"><div class="col-sm-4"></div><div class="col-sm-8"><input alt="' + word ("Check box") + ", " + word('Include ' + editable_name + ' for editing') + '" type="checkbox" value="True" name="_attachment_include_editable" id="_attachment_include_editable"/>&nbsp;<label for="_attachment_include_editable" class="nobold">""" + word('Include ' + editable_name + ' for editing') + '</label></div></div>\n'
             output += """
                         <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Send') + '</button></div><input type="hidden" name="_email_attachments" value="1"/><input type="hidden" name="_question_number" value="' + str(status.question.number) + '"/>'
             output += """
@@ -874,6 +874,7 @@ def add_validation(extra_scripts, validation_rules):
       validation_rules.submitHandler = function(form){
         //form.submit();
         dadisable = setTimeout(function(){
+          $("#daform").find('input[type="submit"]').prop("disabled", true);
           $("#daform").find('button[type="submit"]').prop("disabled", true);
         }, 1);
         if ($('#daform input[name="_files"]').length){

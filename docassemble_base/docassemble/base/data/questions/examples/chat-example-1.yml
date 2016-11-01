@@ -8,7 +8,7 @@ modules:
 ---
 mandatory: true
 code: |
-  set_chat_status(availability='available', mode='help', partner_roles=['advocate', 'family law'])
+  set_live_help_status(availability='available', mode='help', partner_roles=['advocate', 'family law'])
 ---
 mandatory: true
 question: |

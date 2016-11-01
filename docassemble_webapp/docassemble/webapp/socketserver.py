@@ -113,7 +113,16 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
                 #         sys.stderr.write("  newpage JSON parse error\n")
                 #         continue
                 #     socketio.emit('newpage', {'obj': obj}, namespace='/interview', room=sid)
-    sys.stderr.write('  exiting thread for sid ' + str(sid) + '\n')
+    sys.stderr.write('  exiting interview thread for sid ' + str(sid) + '\n')
+
+@socketio.on('start_being_controlled', namespace='/interview')
+def interview_start_being_controlled(message):
+    sys.stderr.write("received start_being_controlled\n")
+    session_id = session.get('uid', None)
+    yaml_filename = session.get('i', None)
+    the_user_id = session.get('user_id', 't' + str(session.get('tempuser', None)))
+    key = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+    rr.publish(key, json.dumps(dict(message='start_being_controlled', key=re.sub(r'^da:input:uid:', 'da:session:uid:', key))))
 
 @socketio.on('message', namespace='/interview')
 def handle_message(message):
@@ -123,7 +132,7 @@ def handle_message(message):
 @socketio.on('chat_log', namespace='/interview')
 def chat_log(message):
     user_dict = get_dict()
-    chat_mode = user_dict['_internal']['chat']['mode']
+    chat_mode = user_dict['_internal']['livehelp']['mode']
     yaml_filename = session.get('i', None)
     session_id = session.get('uid', None)
     user_id = session.get('user_id', None)
@@ -169,7 +178,7 @@ def chat_message(data):
     else:
         temp_user_id = None
     user_dict = get_dict()
-    chat_mode = user_dict['_internal']['chat']['mode']
+    chat_mode = user_dict['_internal']['livehelp']['mode']
     if chat_mode in ['peer', 'peerhelp']:
         open_to_peer = True
     else:
@@ -225,13 +234,13 @@ def interview_connect():
             terminate_interview_connection()
             return
         
-        chat_info = user_dict['_internal']['chat']
+        chat_info = user_dict['_internal']['livehelp']
         if chat_info['availability'] != 'available':
             sys.stderr.write("Socket started but chat not available.\n")
             terminate_interview_connection()
             return
         sys.stderr.write('chat info is ' + str(chat_info) + "\n")
-        if user_dict['_internal']['chat']['mode'] in ['peer', 'peerhelp']:
+        if user_dict['_internal']['livehelp']['mode'] in ['peer', 'peerhelp']:
             peer_ok = True
         else:
             peer_ok = False
@@ -376,8 +385,8 @@ def monitor_thread(sid=None, user_id=None):
         else:
             sys.stderr.write("  Got something for monitor\n")
             if 'messagetype' in data:
-                if data['messagetype'] == 'abortcontroller':
-                    socketio.emit('abortcontroller', {'key': data['key']}, namespace='/monitor', room=sid)
+                #if data['messagetype'] == 'abortcontroller':
+                #    socketio.emit('abortcontroller', {'key': data['key']}, namespace='/monitor', room=sid)
                 if data['messagetype'] == 'sessionupdate':
                     #sys.stderr.write("  Got a session update: " + str(data['session']) + "\n")
                     sys.stderr.write("  Got a session update\n")
@@ -417,7 +426,7 @@ def monitor_thread(sid=None, user_id=None):
                         del secrets[data['sid']]
                     r.hdel('da:monitor:chatpartners:' + str(user_id), 'da:interviewsession:uid:' + str(data['uid']) + ':i:' + str(data['i']) + ':userid:' + data['userid'])
                     socketio.emit('chatstop', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid']}, namespace='/monitor', room=sid)
-    sys.stderr.write('  exiting thread for sid ' + str(sid) + '\n')
+    sys.stderr.write('  exiting monitor thread for sid ' + str(sid) + '\n')
 
 @socketio.on('connect', namespace='/monitor')
 def on_monitor_connect():
@@ -454,6 +463,7 @@ def on_monitor_disconnect():
 
 @socketio.on('terminate', namespace='/monitor')
 def terminate_monitor_connection():
+    sys.stderr.write("terminate_monitor_connection\n")
     # hopefully the disconnect will be triggered
     # if request.sid in threads:
     #     rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))
@@ -635,7 +645,7 @@ def update_monitor(message):
         except:
             sys.stderr.write('error parsing value of ' + str(key) + " which was " + str(rr.get(key)) + "\n")
             continue
-        if sessobj.get('chatstatus', None) in ('waiting', 'standby', 'ringing', 'ready', 'on'):
+        if sessobj.get('chatstatus', None) != 'off':
             html = rr.get(re.sub(r'^da:session:', 'da:html:', key))
             if html is not None:
                 obj = json.loads(html)
@@ -683,7 +693,7 @@ def monitor_chat_message(data):
         message = pack_phrase(data['data'])
     user_id = session.get('user_id', None)
     person = User.query.filter_by(id=user_id).first()
-    chat_mode = user_dict['_internal']['chat']['mode']
+    chat_mode = user_dict['_internal']['livehelp']['mode']
     m = re.match('t([0-9]+)', chat_user_id)
     if m:
         temp_owner_id = m.group(1)
@@ -731,7 +741,7 @@ def monitor_chat_log(data):
     except:
         sys.stderr.write("Could not get dictionary for monitor_chat_message\n")
         return
-    chat_mode = user_dict['_internal']['chat']['mode']
+    chat_mode = user_dict['_internal']['livehelp']['mode']
     m = re.match('t([0-9]+)', chat_user_id)
     if m:
         temp_user_id = m.group(1)
@@ -765,27 +775,22 @@ def observer_thread(sid=None, key=None):
             pubsub.unsubscribe()
             sys.stderr.write("  observer unsubscribed and finished for " + str(sid) + "\n")
             break
-        elif 'message' in data and data['message'] == "newpage":
-            # merely_observing = True
-            # self_key = 'da:control:sid:' + str(sid)
-            # int_key = rr.get(self_key)
-            # if int_key is not None:
-            #     other_sid = rr.get(re.sub(r'^da:control:uid:', 'da:interviewsession:uid:', int_key))
-            #     if other_sid is not None:
-            #         rr.publish(other_sid, json.dumps(dict(messagetype='newpage', key=data['key'])))
-            #         merely_observing = False
-            # if merely_observing:
-            sys.stderr.write("  Got new page for observer\n")
-            try:
-                obj = json.loads(r.get(data['key']))
-            except:
-                sys.stderr.write("  newpage JSON parse error\n")
-                continue
-            socketio.emit('newpage', {'obj': obj}, namespace='/observer', room=sid)
+        elif 'message' in data:
+            if data['message'] == "newpage":
+                sys.stderr.write("  Got new page for observer\n")
+                try:
+                    obj = json.loads(r.get(data['key']))
+                except:
+                    sys.stderr.write("  newpage JSON parse error\n")
+                    continue
+                socketio.emit('newpage', {'obj': obj}, namespace='/observer', room=sid)
+            elif data['message'] == "start_being_controlled":
+                sys.stderr.write("  got start_being_controlled message with key " + str(data['key']) + "\n")
+                socketio.emit('start_being_controlled', {'key': data['key']}, namespace='/observer', room=sid)
         else:
             sys.stderr.write("  Got something for observer\n")
             socketio.emit('pushchanges', {'parameters': data}, namespace='/observer', room=sid)
-    sys.stderr.write('  exiting thread for sid ' + str(sid) + '\n')
+    sys.stderr.write('  exiting observer thread for sid ' + str(sid) + '\n')
 
 @socketio.on('connect', namespace='/observer')
 def on_observer_connect():
@@ -826,8 +831,9 @@ def start_control(message):
             rr.publish(int_sid, json.dumps(dict(messagetype='controllerstart')))
     else:
         sys.stderr.write('That key ' + key + ' is already taken\n')
-        rr.publish('da:monitor', json.dumps(dict(messagetype='abortcontroller', key='da:session:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid']))))
-        socketio.emit('abortcontrolling', {}, namespace='/observer', room=request.sid)
+        key = 'da:session:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid'])
+        #rr.publish('da:monitor', json.dumps(dict(messagetype='abortcontroller', key=key)))
+        socketio.emit('abortcontrolling', {'key': key}, namespace='/observer', room=request.sid)
 
 @socketio.on('observerStopControl', namespace='/observer')
 def stop_control(message):
@@ -837,13 +843,17 @@ def stop_control(message):
     self_key = 'da:control:sid:' + str(request.sid)
     key = 'da:control:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid'])
     sys.stderr.write('Stop controlling ' + key + '\n')
+    existing_sid = rr.get(key)
     pipe = rr.pipeline()
-    pipe.delete(key)
     pipe.delete(self_key)
-    pipe.execute()
-    sid = rr.get('da:interviewsession:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid']))
-    if sid is not None:
-        rr.publish(sid, json.dumps(dict(messagetype='controllerexit', sid=request.sid)))
+    if existing_sid is not None and existing_sid == request.sid:
+        pipe.delete(key)
+        pipe.execute()
+        sid = rr.get('da:interviewsession:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid']))
+        if sid is not None:
+            rr.publish(sid, json.dumps(dict(messagetype='controllerexit', sid=request.sid)))
+    else:
+        pipe.execute()
 
 @socketio.on('observerChanges', namespace='/observer')
 def observer_changes(message):
@@ -853,9 +863,13 @@ def observer_changes(message):
         return
     sid = rr.get('da:interviewsession:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid']))
     if sid is None:
-        sys.stderr.write('observerChanges: sid is none.  Sending stopcontrolling.\n')
-        rr.publish('da:monitor', json.dumps(dict(messagetype='abortcontroller', key='da:session:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid']))))
-        socketio.emit('stopcontrolling', {}, namespace='/observer', room=request.sid)
+        key = 'da:session:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid'])
+        sys.stderr.write('observerChanges: sid is none.\n')
+        if rr.get(key) is None:
+            sys.stderr.write('observerChanges: session has gone away for good.  Sending stopcontrolling.\n')
+            socketio.emit('stopcontrolling', {'key': key}, namespace='/observer', room=request.sid)
+        else:
+            socketio.emit('noconnection', {'key': key}, namespace='/observer', room=request.sid)
     else:
         sys.stderr.write('observerChanges: sid exists\n')
         rr.publish(sid, json.dumps(dict(messagetype='controllerchanges', sid=request.sid, clicked=message.get('clicked', None), parameters=message['parameters'])))
@@ -887,6 +901,7 @@ def on_observer_disconnect():
     
 @socketio.on('terminate', namespace='/observer')
 def terminate_observer_connection():
+    sys.stderr.write("terminate_observer_connection\n")
     # hopefully the disconnect will be triggered
     # if request.sid in threads:
     #     rr.publish(request.sid, json.dumps(dict(origin='client', message='KILL', sid=request.sid)))

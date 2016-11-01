@@ -1186,9 +1186,9 @@ def checkin():
         temp_user_id = None
     if request.form.get('action', None) == 'chat_log':
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
-        if user_dict['_internal']['chat']['availability'] == 'unavailable':
+        if user_dict['_internal']['livehelp']['availability'] != 'available':
             return jsonify(success=False)
-        messages = get_chat_log(user_dict['_internal']['chat']['mode'], yaml_filename, session_id, auth_user_id, temp_user_id, secret, auth_user_id, temp_user_id)
+        messages = get_chat_log(user_dict['_internal']['livehelp']['mode'], yaml_filename, session_id, auth_user_id, temp_user_id, secret, auth_user_id, temp_user_id)
         return jsonify(success=True, messages=messages)
     if request.form.get('action', None) == 'checkin':
         #logmessage("Doing redis statement")
@@ -1224,17 +1224,18 @@ def checkin():
                         break
         chat_session_key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         potential_partners = list()
-        if str(chatstatus) in ['waiting', 'standby', 'ringing', 'ready', 'on', 'hangup']:
+        if str(chatstatus) != 'off': #in ['waiting', 'standby', 'ringing', 'ready', 'on', 'hangup', 'observeonly']:
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+            obj['chatstatus'] = chatstatus
             obj['secret'] = secret
             obj['encrypted'] = is_encrypted
-            obj['roles'] = user_dict['_internal']['chat']['roles']
-            obj['mode'] = user_dict['_internal']['chat']['mode']
+            obj['roles'] = user_dict['_internal']['livehelp']['roles']
+            obj['mode'] = user_dict['_internal']['livehelp']['mode']
             if obj['mode'] in ['peer', 'peerhelp']:
                 peer_ok = True
             if obj['mode'] in ['help', 'peerhelp']:
                 help_ok = True
-            obj['partner_roles'] = user_dict['_internal']['chat']['partner_roles']
+            obj['partner_roles'] = user_dict['_internal']['livehelp']['partner_roles']
             if current_user.is_authenticated:
                 for attribute in ['email', 'confirmed_at', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone']:
                     obj[attribute] = getattr(current_user, attribute, None)
@@ -2167,13 +2168,20 @@ def index():
         # $(function () {
         #   $('.tabs a:last').tab('show')
         # })
+    if current_user.is_anonymous:
+        the_user_id = 't' + str(session['tempuser'])
+    else:
+        the_user_id = current_user.id
     if not is_ajax:
         scripts = standard_scripts()
-        chat_available = user_dict['_internal']['chat']['availability']
-        chat_mode = user_dict['_internal']['chat']['mode']
+        chat_available = user_dict['_internal']['livehelp']['availability']
+        chat_mode = user_dict['_internal']['livehelp']['mode']
         if chat_available == 'unavailable':
             chat_status = 'off'
             session['chatstatus'] = 'off'
+        elif chat_available == 'observeonly':
+            chat_status = 'observeonly'
+            session['chatstatus'] = 'observeonly'
         else:
             chat_status = chatstatus
         if chat_status in ['ready', 'on']:
@@ -2192,7 +2200,10 @@ def index():
         else:
             user_id_string = 't' + str(session['tempuser'])
             is_user = 'true'
-#      var daUserId = """ + repr(str(user_id_string)) + """;
+        if r.get('da:control:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)) is not None:
+            being_controlled = 'true'
+        else:
+            being_controlled = 'false'
         scripts += """    <script type="text/javascript" charset="utf-8">
       var socket = null;
       var foobar = null;
@@ -2207,7 +2218,7 @@ def index():
       var daSendChanges = """ + send_changes + """;
       var daInitialized = false;
       var notYetScrolled = true;
-      var daBeingControlled = false;
+      var daBeingControlled = """ + being_controlled + """;
       var daInformedChanged = false;
       var daInformed = """ + json.dumps(user_dict['_internal']['informed'].get(user_id_string, dict())) + """;
       function userNameString(data){
@@ -2224,7 +2235,7 @@ def index():
           }
       }
       function inform_about(subject){
-        if (subject in daInformed || !daIsUser){
+        if (subject in daInformed || (subject != 'chatmessage' && !daIsUser)){
           return;
         }
         if (daShowingHelp){
@@ -2261,12 +2272,12 @@ def index():
           $(target).removeAttr('title');
         }, waitPeriod);
       }
-      function daCloseSocket(){
-        if (typeof socket !== 'undefined'){
-          //socket.emit('terminate');
-          //io.unwatch();
-        }
-      }
+      // function daCloseSocket(){
+      //   if (typeof socket !== 'undefined' && socket.connected){
+      //     //socket.emit('terminate');
+      //     //io.unwatch();
+      //   }
+      // }
       function publishMessage(data){
         var newDiv = document.createElement('li');
         $(newDiv).addClass("list-group-item");
@@ -2326,9 +2337,13 @@ def index():
       }
       function show_control(mode){
         //console.log("You are now being controlled");
+        if ($("body").hasClass("dacontrolled")){
+          return;
+        }
+        $('input[type="submit"], button[type="submit"]').prop("disabled", true);
         $("body").addClass("dacontrolled");
         var newDiv = document.createElement('div');
-        $(newDiv).addClass("center-alert col-md-6");
+        $(newDiv).addClass("top-alert col-xs-10 col-sm-7 col-md-6 col-lg-5 col-centered");
         $(newDiv).html(""" + repr(str(word("Your screen is being controlled by an operator."))) + """)
         $(newDiv).attr('id', "controlAlert");
         $(newDiv).css("display", "none");
@@ -2342,6 +2357,10 @@ def index():
       }
       function hide_control(){
         //console.log("You are no longer being controlled");
+        if (! $("body").hasClass("dacontrolled")){
+          return;
+        }
+        $('input[type="submit"], button[type="submit"]').prop("disabled", false);
         $("body").removeClass("dacontrolled");
         $("#controlAlert").html(""" + repr(str(word("The operator is no longer controlling your screen."))) + """);
         setTimeout(function(){
@@ -2421,6 +2440,7 @@ def index():
               hide_control();
               if (daChatStatus != 'on'){
                 if (socket != null && socket.connected){
+                  //console.log('Terminating interview socket because control over');
                   socket.emit('terminate');
                 }
               }
@@ -2508,7 +2528,11 @@ def index():
                 });
                 if (data.clicked){
                     //console.log("Need to click " + data.clicked);
-                    $(data.clicked).click();
+                    $(data.clicked).prop("disabled", false);
+                    $(data.clicked).addClass("click-selected");
+                    setTimeout(function(){
+                      $(data.clicked).click();
+                    }, 200);
                 }
             });
         }
@@ -2517,8 +2541,8 @@ def index():
       var daReloader = null;
       var dadisable = null;
       var daSubmitter = null;
-      var daChatRoles = """ + json.dumps(user_dict['_internal']['chat']['roles']) + """;
-      var daChatPartnerRoles = """ + json.dumps(user_dict['_internal']['chat']['partner_roles']) + """;
+      var daChatRoles = """ + json.dumps(user_dict['_internal']['livehelp']['roles']) + """;
+      var daChatPartnerRoles = """ + json.dumps(user_dict['_internal']['livehelp']['partner_roles']) + """;
       function pushChanges(){
         if (checkinInterval != null){
           clearInterval(checkinInterval);
@@ -2540,10 +2564,10 @@ def index():
           $("body").html(data.body);
           $("body").removeClass();
           $("body").addClass(data.bodyclass);
-          daChatAvailable = data.chat.available;
-          daChatMode = data.chat.mode;
-          daChatRoles = data.chat.roles;
-          daChatPartnerRoles = data.chat.partner_roles;
+          daChatAvailable = data.livehelp.available;
+          daChatMode = data.livehelp.mode;
+          daChatRoles = data.livehelp.roles;
+          daChatPartnerRoles = data.livehelp.partner_roles;
           daInitialize();
           var tempDiv = document.createElement('div');
           tempDiv.innerHTML = data.extra_scripts;
@@ -2613,12 +2637,12 @@ def index():
       //   //daStartCheckingIn();
       // }
       function display_chat(){
-        if (daChatStatus == 'off'){
+        if (daChatStatus == 'off' || daChatStatus == 'observeonly'){
           $("#daChatBox").addClass("invisible");
           $("#daChatAvailable").addClass("invisible");
           $("#daChatOnButton").addClass("invisible");
         }
-        if (daChatStatus != 'off'){
+        else{
           $("#daChatBox").removeClass("invisible");
         }
         if (daChatStatus == 'waiting'){
@@ -2741,6 +2765,7 @@ def index():
               hide_control();
               if (daChatStatus != 'on'){
                 if (socket != null && socket.connected){
+                  //console.log('Terminating interview socket because control is over');
                   socket.emit('terminate');
                 }
               }
@@ -2763,7 +2788,7 @@ def index():
           return;
         }
         var datastring;
-        if ((daChatStatus == 'waiting' || daChatStatus == 'standby' || daChatStatus == 'ringing' || daChatStatus == 'ready' || daChatStatus == 'on') && $("#daform").length > 0 && !daBeingControlled){
+        if ((daChatStatus != 'off') && $("#daform").length > 0 && !daBeingControlled){ // daChatStatus == 'waiting' || daChatStatus == 'standby' || daChatStatus == 'ringing' || daChatStatus == 'ready' || daChatStatus == 'on' || daChatStatus == 'observeonly'
           datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, parameters: JSON.stringify($("#daform").serializeArray())});
         }
         else{
@@ -2833,7 +2858,7 @@ def index():
         $("#daform input, #daform textarea, #daform select").first().each(function(){
           $(this).focus();
           var inputType = $(this).attr('type');
-          if ($(this).prop('tagName') != 'SELECT' && inputType != "checkbox" && inputType != "radio" && inputType != "hidden" && inputType != "submit" && inputType != "file" && inputType != "range"){
+          if ($(this).prop('tagName') != 'SELECT' && inputType != "checkbox" && inputType != "radio" && inputType != "hidden" && inputType != "submit" && inputType != "file" && inputType != "range" && inputType != "number"){
             var strLength = $(this).val().length * 2;
             $(this)[0].setSelectionRange(strLength, strLength);
           }
@@ -2915,11 +2940,17 @@ def index():
         if (daChatAvailable == 'unavailable'){
           daChatStatus = 'off';
         }
-        if (daChatStatus == 'off' && daChatAvailable == 'available'){
+        if (daChatAvailable == 'observeonly'){
+          daChatStatus = 'observeonly';
+        }
+        if ((daChatStatus == 'off' || daChatStatus == 'observeonly') && daChatAvailable == 'available'){
           daChatStatus = 'waiting';
         }
         display_chat();
-        if (daChatStatus == 'ready'){
+        if (daBeingControlled){
+          show_control('fast');
+        }
+        if (daChatStatus == 'ready' || daBeingControlled){
           daInitializeSocket();
         }
         if (true || daInitialized == false){
@@ -2954,9 +2985,6 @@ def index():
         }
         daInitialized = true;
         daShowingHelp = 0;
-        if (daBeingControlled){
-          show_control('fast');
-        }
       }
       $( document ).ready(function(){
         daInitialize();
@@ -2965,6 +2993,7 @@ def index():
         $( window ).unload(function() {
           daStopCheckingIn();
           if (socket != null && socket.connected){
+            //console.log('Terminating interview socket because window unloaded');
             socket.emit('terminate');
           }
         });
@@ -3056,7 +3085,7 @@ def index():
             start_output = standard_header_start
             start_output += "".join(extra_css)
             start_output += '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dabody">\n'
-        output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['chat']) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">\n        <div class="tab-content">\n'
+        output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp']) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">\n        <div class="tab-content">\n'
         if interview_status.question.interview.use_progress_bar:
             output += progress_bar(user_dict['_internal']['progress'])
         output += content + "        </div>\n      </div>\n"
@@ -3117,26 +3146,23 @@ def index():
             end_output = scripts + "\n    " + "".join(extra_scripts) + """\n  </body>\n</html>"""
     #logmessage(output.encode('utf8'))
     #logmessage("Request time interim: " + str(g.request_time()))
-    if current_user.is_anonymous:
-        the_user_id = 't' + str(session['tempuser'])
-    else:
-        the_user_id = current_user.id
     key = 'da:html:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
-    logmessage("Setting html key " + key)
+    #logmessage("Setting html key " + key)
     pipe = r.pipeline()
     pipe.set(key, json.dumps(dict(body=output, extra_scripts=extra_scripts, extra_css=extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after)))
     pipe.expire(key, 60)
     pipe.execute()
-    logmessage("Done setting html key " + key)
-    if session.get('chatstatus', 'off') in ['waiting', 'standby', 'ringing', 'ready', 'on']:
-        inputkey = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+    #logmessage("Done setting html key " + key)
+    #if session.get('chatstatus', 'off') in ['waiting', 'standby', 'ringing', 'ready', 'on']:
+    if user_dict['_internal']['livehelp']['availability'] != 'unavailable':
+        inputkey = 'da:input:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
         r.publish(inputkey, json.dumps(dict(message='newpage', key=key)))
     if is_ajax:
         if 'reload_after' in interview_status.extras:
             reload_after = 1000 * int(interview_status.extras['reload_after'])
         else:
             reload_after = None
-        response = jsonify(action='body', body=output, extra_scripts=extra_scripts, extra_css=extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, chat=user_dict['_internal']['chat'])
+        response = jsonify(action='body', body=output, extra_scripts=extra_scripts, extra_css=extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'])
     else:
         output = start_output + output + end_output
         response = make_response(output.encode('utf8'), '200 OK')
@@ -3510,13 +3536,17 @@ def speak_file():
 
 @app.route('/uploadedfile/<number>.<extension>', methods=['GET'])
 def serve_uploaded_file_with_extension(number, extension):
+    if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
+        privileged = True
+    else:
+        privileged = False
     number = re.sub(r'[^0-9]', '', str(number))
     if S3_ENABLED:
         if not can_access_file_number(number):
             abort(404)
         the_file = SavedFile(number)
     else:
-        file_info = get_info_from_file_number(number)
+        file_info = get_info_from_file_number(number, privileged=privileged)
         if 'path' not in file_info:
             abort(404)
         else:
@@ -3530,7 +3560,11 @@ def serve_uploaded_file_with_extension(number, extension):
 @app.route('/uploadedfile/<number>', methods=['GET'])
 def serve_uploaded_file(number):
     number = re.sub(r'[^0-9]', '', str(number))
-    file_info = get_info_from_file_number(number)
+    if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
+        privileged = True
+    else:
+        privileged = False
+    file_info = get_info_from_file_number(number, privileged=privileged)
     #file_info = get_info_from_file_reference(number)
     if 'path' not in file_info:
         abort(404)
@@ -3544,7 +3578,11 @@ def serve_uploaded_file(number):
 def serve_uploaded_page(number, page):
     number = re.sub(r'[^0-9]', '', str(number))
     page = re.sub(r'[^0-9]', '', str(page))
-    file_info = get_info_from_file_number(number)
+    if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
+        privileged = True
+    else:
+        privileged = False
+    file_info = get_info_from_file_number(number, privileged=privileged)
     if 'path' not in file_info:
         abort(404)
     else:
@@ -3559,7 +3597,11 @@ def serve_uploaded_page(number, page):
 def serve_uploaded_pagescreen(number, page):
     number = re.sub(r'[^0-9]', '', str(number))
     page = re.sub(r'[^0-9]', '', str(page))
-    file_info = get_info_from_file_number(number)
+    if current_user.is_authenticated and current_user.has_role('admin', 'advocate'):
+        privileged = True
+    else:
+        privileged = False
+    file_info = get_info_from_file_number(number, privileged=privileged)
     if 'path' not in file_info:
         logmessage('no access to file number ' + str(number))
         abort(404)
@@ -3632,7 +3674,9 @@ def observer():
     observation_script = """
     <script>
       var daSendChanges = false;
+      var daNoConnectionCount = 0;
       var daConnected = false;
+      var daConfirmed = false;
       var observerChangesInterval = null;
       var daInitialized = false;
       var daShowingHelp = false;
@@ -3641,14 +3685,21 @@ def observer():
       window.turnOnControl = function(){
         //console.log("Turning on control");
         daSendChanges = true;
+        daNoConnectionCount = 0;
         resetPushChanges();
         socket.emit('observerStartControl', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """});
       }
       window.turnOffControl = function(){
         //console.log("Turning off control");
+        if (!daSendChanges){
+          //console.log("Already turned off");
+          return;
+        }
         daSendChanges = false;
+        daConfirmed = false;
         stopPushChanges();
         socket.emit('observerStopControl', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """});
+        return;
       }
       function stopPushChanges(){
         if (observerChangesInterval != null){
@@ -3666,15 +3717,18 @@ def observer():
         if (observerChangesInterval != null){
           clearInterval(observerChangesInterval);
         }
-        if (!daSendChanges || !daConnected){
+        if (!daSendChanges || !daConnected || !daConfirmed){
           return;
         }
         observerChangesInterval = setInterval(pushChanges, 6000);
         socket.emit('observerChanges', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """, parameters: JSON.stringify($("#daform").serializeArray())});
       }
+      function daProcessAjaxError(xhr, status, error){
+        $("body").html(xhr.responseText);
+      }
       function daSubmitter(event){
         event.preventDefault();
-        if (!daSendChanges || !daConnected){
+        if (!daSendChanges || !daConnected || !daConfirmed){
           return false;
         }
         var theId = $(this).attr('id');
@@ -3693,7 +3747,7 @@ def observer():
         else{
           skey = '#' + $(this).parents("form").attr('id') + ' ' + $(this).prop('tagName').toLowerCase() + '[type="submit"]';
         }
-        console.log("Need to click on " + skey);
+        //console.log("Need to click on " + skey);
         if (observerChangesInterval != null){
           clearInterval(observerChangesInterval);
         }
@@ -3817,15 +3871,31 @@ def observer():
                 //console.log("Disconnected socket");
                 //socket = null;
             });
-            socket.on('stopcontrolling', function() {
+            socket.on('stopcontrolling', function(data) {
                 //console.log("Got stopcontrolling");
-                daSendChanges = false;
-                stopPushChanges();
+                //turnOffControl();
+                //daSendChanges = false;
+                //daConfirmed = false;
+                //stopPushChanges();
+                window.parent.stopControlling(data.key);
             });
-            socket.on('abortcontrolling', function() {
+            socket.on('start_being_controlled', function(data) {
+                //console.log("Got start_being_controlled");
+                daConfirmed = true;
+                pushChanges();
+                window.parent.gotConfirmation(data.key);
+            });
+            socket.on('abortcontrolling', function(data) {
                 //console.log("Got abortcontrolling");
-                daSendChanges = false;
-                stopPushChanges();
+                //daSendChanges = false;
+                //daConfirmed = false;
+                //stopPushChanges();
+                window.parent.abortControlling(data.key);
+            });
+            socket.on('noconnection', function(data) {
+                if (daNoConnectionCount++ > 2){
+                    window.parent.stopControlling(data.key);
+                }
             });
             socket.on('newpage', function(incoming) {
                 var data = incoming.obj;
@@ -3964,6 +4034,47 @@ def monitor():
     var updateMonitorInterval = null;
     var daNotificationsEnabled = false;
     var daControlling = Object();
+    window.gotConfirmation = function(key){
+        // console.log("Got confirmation in parent for key " + key);
+        // daControlling[key] = 2;
+        // var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+        // $("#listelement" + skey).find("a").each(function(){
+        //     if ($(this).data('name') == "stopControlling"){
+        //         $(this).removeClass('invisible');
+        //         console.log("Found it");
+        //     }
+        // });
+    }
+    function topMessage(message){
+        var newDiv = document.createElement('div');
+        $(newDiv).addClass("top-alert col-xs-10 col-sm-7 col-md-6 col-lg-5 col-centered");
+        $(newDiv).html(message)
+        $(newDiv).css("display", "none");
+        $(newDiv).appendTo($("body"));
+        $(newDiv).slideDown();
+        setTimeout(function(){
+          $(newDiv).slideUp(300, function(){
+            $(newDiv).remove();
+          });
+        }, 2000);
+    }
+    window.abortControlling = function(key){
+        topMessage(""" + repr(str(word("That screen is already being controlled by another operator"))) + """);
+        stopControlling(key);
+    }
+    window.stopControlling = function(key){
+        // console.log("Got stopControlling in parent for key " + key);
+        // if (daControlling.hasOwnProperty(key)){
+        //   delete daControlling[key];
+        // }
+        var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
+        $("#listelement" + skey).find("a").each(function(){
+            if ($(this).data('name') == "stopControlling"){
+                $(this).click();
+                //console.log("Found it");
+            }
+        });
+    }
     function daOnError(){
         console.log('daOnError');
     }
@@ -4204,7 +4315,9 @@ def monitor():
     }
     function activateChatArea(key){
         var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-        $("#listelement" + skey).addClass("new-message");
+        if (!$("#chatarea" + skey).find('input').first().is(':focus')){
+          $("#listelement" + skey).addClass("new-message");
+        }
         markAsUpdated(key);
         $("#chatarea" + skey).removeClass('invisible');
         $("#chatarea" + skey).find('input, button').prop("disabled", false);
@@ -4236,8 +4349,17 @@ def monitor():
             });
         });
         $(xButton).appendTo($("#session" + skey));
-        $("#iframe" + skey).find('iframe').first().contents().find('body').addClass("dainactive");
         $("#chatarea" + skey).find('input, button').prop("disabled", true);
+        var theIframe = $("#iframe" + skey).find('iframe')[0];
+        if (theIframe){
+            $(theIframe).contents().find('body').addClass("dainactive");
+            if (theIframe.contentWindow && theIframe.contentWindow.turnOffControl){
+                theIframe.contentWindow.turnOffControl();
+            }
+        }
+        if (daControlling.hasOwnProperty(key)){
+            delete daControlling[key];
+        }
         delete daSessions[key];
     }
     function publish_chat_log(uid, yaml_filename, userid, mode, messages){
@@ -4280,7 +4402,7 @@ def monitor():
         var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
         var the_html;
         var wants_to_chat;
-        if (obj.chatstatus == 'waiting' || obj.chatstatus == 'standby' || obj.chatstatus == 'ringing' || obj.chatstatus == 'ready' || obj.chatstatus == 'on'){
+        if (obj.chatstatus != 'off'){ //obj.chatstatus == 'waiting' || obj.chatstatus == 'standby' || obj.chatstatus == 'ringing' || obj.chatstatus == 'ready' || obj.chatstatus == 'on' || obj.chatstatus == 'observeonly'
             wants_to_chat = true;
         }
         if (wants_to_chat){
@@ -4366,7 +4488,7 @@ def monitor():
         theText.innerHTML = the_html;
         var statusLabel = document.createElement('span');
         $(statusLabel).addClass("label label-info chat-status-label");
-        $(statusLabel).html(obj.chatstatus);
+        $(statusLabel).html(obj.chatstatus == 'observeonly' ? 'off' : obj.chatstatus);
         $(statusLabel).appendTo($(sessionDiv));
         if (daUsePhone){
           var phoneButton = document.createElement('a');
@@ -4374,6 +4496,7 @@ def monitor():
           $(phoneIcon).addClass("glyphicon glyphicon-earphone");
           $(phoneIcon).appendTo($(phoneButton));
           $(phoneButton).addClass("label phone");
+          $(phoneButton).data('name', 'phone');
           if (key in daPhonePartners){
             $(phoneButton).addClass("phone-on label-success");
             $(phoneButton).attr('title', daPhoneOnMessage);
@@ -4423,6 +4546,7 @@ def monitor():
         }
         var unblockButton = document.createElement('a');
         $(unblockButton).addClass("label label-info observebutton");
+        $(unblockButton).data('name', 'unblock');
         if (!obj.blocked){
             $(unblockButton).addClass("invisible");
         }
@@ -4436,6 +4560,7 @@ def monitor():
         }
         $(blockButton).html('""" + word("Block") + """');
         $(blockButton).attr('href', '#');
+        $(blockButton).data('name', 'block');
         $(blockButton).appendTo($(sessionDiv));
         $(blockButton).click(function(e){
             $(unblockButton).removeClass("invisible");
@@ -4456,6 +4581,7 @@ def monitor():
         $(joinButton).addClass("label label-warning observebutton");
         $(joinButton).html('""" + word("Join") + """');
         $(joinButton).attr('href', '""" + url_for('visit_interview') + """?' + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
+        $(joinButton).data('name', 'join');
         $(joinButton).attr('target', '_blank');
         $(joinButton).appendTo($(sessionDiv));
         if (wants_to_chat){
@@ -4466,21 +4592,25 @@ def monitor():
             $(openButton).attr('id', 'observe' + key);
             $(openButton).attr('target', 'iframe' + key);
             $(openButton).html('""" + word("Observe") + """');
+            $(openButton).data('name', 'open');
             $(openButton).appendTo($(sessionDiv));
             var stopObservingButton = document.createElement('a');
             $(stopObservingButton).addClass("label label-default observebutton invisible");
             $(stopObservingButton).html('""" + word("Stop Observing") + """');
             $(stopObservingButton).attr('href', '#');
+            $(stopObservingButton).data('name', 'stopObserving');
             $(stopObservingButton).appendTo($(sessionDiv));
             var controlButton = document.createElement('a');
             $(controlButton).addClass("label label-info observebutton");
             $(controlButton).html('""" + word("Control") + """');
             $(controlButton).attr('href', '#');
+            $(controlButton).data('name', 'control');
             $(controlButton).appendTo($(sessionDiv));
             var stopControllingButton = document.createElement('a');
             $(stopControllingButton).addClass("label label-default observebutton invisible");
             $(stopControllingButton).html('""" + word("Stop Controlling") + """');
             $(stopControllingButton).attr('href', '#');
+            $(stopControllingButton).data('name', 'stopControlling');
             $(stopControllingButton).appendTo($(sessionDiv));
             $(controlButton).click(function(event){
                 event.preventDefault();
@@ -4500,19 +4630,20 @@ def monitor():
             });
             $(stopControllingButton).click(function(event){
                 event.preventDefault();
+                var theIframe = $("#iframe" + skey).find('iframe')[0];
+                if (theIframe != null && theIframe.contentWindow && theIframe.contentWindow.turnOffControl){
+                    theIframe.contentWindow.turnOffControl();
+                }
+                else{
+                    console.log("Cannot turn off control");
+                    return false;
+                }
                 //console.log("Stop controlling...");
                 $(this).addClass("invisible");
                 $(controlButton).removeClass("invisible");
                 $(stopObservingButton).removeClass("invisible");
                 if (daControlling.hasOwnProperty(key)){
                     delete daControlling[key];
-                }
-                var theIframe = $("#iframe" + skey).find('iframe')[0];
-                if (theIframe != null && theIframe.contentWindow){
-                    theIframe.contentWindow.turnOffControl();
-                }
-                else{
-                    console.log("Cannot turn off control");
                 }
                 return false;
             });
@@ -4534,7 +4665,7 @@ def monitor():
                 var theIframe = $("#iframe" + skey).find('iframe')[0];
                 if (daControlling.hasOwnProperty(key)){
                     delete daControlling[key];
-                    if (theIframe != null && theIframe.contentWindow){
+                    if (theIframe != null && theIframe.contentWindow && theIframe.contentWindow.turnOffControl){
                         //console.log("Calling turnOffControl in iframe");
                         theIframe.contentWindow.turnOffControl();
                     }
@@ -4618,9 +4749,9 @@ def monitor():
             socket.on('refreshsessions', function(data) {
                 update_monitor();
             });
-            socket.on('abortcontroller', function(data) {
-                console.log("Got abortcontroller message for " + data.key);
-            });
+            // socket.on('abortcontroller', function(data) {
+            //     console.log("Got abortcontroller message for " + data.key);
+            // });
             socket.on('chatready', function(data) {
                 var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
                 //console.log('chatready: ' + key);
@@ -4674,7 +4805,9 @@ def monitor():
                     $("#listelement" + skey).removeClass("new-message");
                   }
                   else{
-                    $("#listelement" + skey).addClass("new-message");
+                    if (!$("#chatarea" + skey).find('input').first().is(':focus')){
+                      $("#listelement" + skey).addClass("new-message");
+                    }
                     if (data.data.hasOwnProperty('temp_user_id')){
                       notifyOperator(key, "chat", """ + repr(str(word("anonymous visitor"))) + """ + ' ' + data.data.temp_user_id + ': ' + data.data.message);
                     }

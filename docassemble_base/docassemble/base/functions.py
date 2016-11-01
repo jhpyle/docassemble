@@ -25,7 +25,7 @@ import tzlocal
 import us
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'objects_from_file', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_chat_status', 'chat_partners_available']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'objects_from_file', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available']
 
 debug = False
 default_dialect = 'us'
@@ -1413,29 +1413,31 @@ def set_task_counter(task, times):
     """Allows you to manually set the number of times the task has been performed."""
     this_thread.internal['tasks'][task] = times
 
-def set_chat_status(availability=None, mode=None, roles=None, partner_roles=None):
-    """Defines whether chat is available, the mode of chat, the roles that
-    the interview user will assume in the live chat system, and the
-    roles of people with which the interview user would like to live
-    chat.
+def set_live_help_status(availability=None, mode=None, partner_roles=None):
+    """Defines whether live help features are available, the mode of chat,
+    the roles that the interview user will assume in the live chat
+    system, and the roles of people with which the interview user
+    would like to live chat.
 
     """
     if availability in ['available', True]:
-        this_thread.internal['chat']['availability'] = 'available'
+        this_thread.internal['livehelp']['availability'] = 'available'
     if availability in ['unavailable', False]:
-        this_thread.internal['chat']['availability'] = 'unavailable'
+        this_thread.internal['livehelp']['availability'] = 'unavailable'
+    if availability in ['observeonly']:
+        this_thread.internal['livehelp']['availability'] = 'observeonly'
     if mode in ['help', 'peer', 'peerhelp']:
-        this_thread.internal['chat']['mode'] = mode
-    if roles is not None:
-        new_roles = set()
-        for parg in roles:
-            if type(parg) is list:
-                plist = parg
-            else:
-                plist = [parg]
-            for arg in plist:
-                new_roles.add(arg)
-        this_thread.internal['chat']['roles'] = list(new_roles)
+        this_thread.internal['livehelp']['mode'] = mode
+    # if roles is not None:
+    #     new_roles = set()
+    #     for parg in roles:
+    #         if type(parg) is list:
+    #             plist = parg
+    #         else:
+    #             plist = [parg]
+    #         for arg in plist:
+    #             new_roles.add(arg)
+    #     this_thread.internal['livehelp']['roles'] = list(new_roles)
     if partner_roles is not None:
         new_roles = set()
         for parg in partner_roles:
@@ -1445,4 +1447,4 @@ def set_chat_status(availability=None, mode=None, roles=None, partner_roles=None
                 plist = [parg]
             for arg in plist:
                 new_roles.add(arg)
-        this_thread.internal['chat']['partner_roles'] = list(new_roles)
+        this_thread.internal['livehelp']['partner_roles'] = list(new_roles)

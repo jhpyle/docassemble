@@ -125,7 +125,7 @@ if S3_ENABLED:
     s3 = docassemble.webapp.amazon.s3object(s3_config)
 else:
     s3 = None
-initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, informed=dict(), chat=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict())
+initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict())
 #else:
 #    initial_dict = dict(_internal=dict(tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
 if 'initial_dict' in daconfig:
@@ -186,9 +186,12 @@ def get_new_file_number(user_code, file_name, yaml_file_name=None):
     # conn.commit()
     # return (indexno)
 
-def get_info_from_file_number(file_number):
+def get_info_from_file_number(file_number, privileged=False):
     result = dict()
-    upload = Uploads.query.filter_by(indexno=file_number, key=session['uid']).first()
+    if privileged:
+        upload = Uploads.query.filter_by(indexno=file_number).first()
+    else:
+        upload = Uploads.query.filter_by(indexno=file_number, key=session['uid']).first()
     if upload:
         result['filename'] = upload.filename
         result['extension'], result['mimetype'] = get_ext_and_mimetype(result['filename'])

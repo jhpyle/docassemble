@@ -9,7 +9,7 @@ modules:
 mandatory: true
 code: |
   multi_user = True
-  set_chat_status(availability='available', mode='peerhelp', partner_roles=['advocate'])
+  set_live_help_status(availability='available', mode='peerhelp', partner_roles=['advocate'])
 ---
 mandatory: true
 question: |
