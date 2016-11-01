@@ -3717,7 +3717,7 @@ def observer():
         if (observerChangesInterval != null){
           clearInterval(observerChangesInterval);
         }
-        if (!daSendChanges || !daConnected || !daConfirmed){
+        if (!daSendChanges || !daConnected){
           return;
         }
         observerChangesInterval = setInterval(pushChanges, 6000);
@@ -3728,7 +3728,7 @@ def observer():
       }
       function daSubmitter(event){
         event.preventDefault();
-        if (!daSendChanges || !daConnected || !daConfirmed){
+        if (!daSendChanges || !daConnected){
           return false;
         }
         var theId = $(this).attr('id');
