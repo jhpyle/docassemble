@@ -235,8 +235,8 @@ def interview_connect():
             return
         
         chat_info = user_dict['_internal']['livehelp']
-        if chat_info['availability'] != 'available':
-            sys.stderr.write("Socket started but chat not available.\n")
+        if chat_info['availability'] == 'unavailable':
+            sys.stderr.write("Socket started but chat is unavailable.\n")
             socketio.emit('terminate', {}, namespace='/interview', room=request.sid)
             return
         sys.stderr.write('chat info is ' + str(chat_info) + "\n")

@@ -3690,7 +3690,7 @@ def observer():
         socket.emit('observerStartControl', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """});
       }
       window.turnOffControl = function(){
-        console.log("Turning off control");
+        //console.log("Turning off control");
         if (!daSendChanges){
           //console.log("Already turned off");
           return;
@@ -3889,7 +3889,7 @@ def observer():
             });
             socket.on('noconnection', function(data) {
                 if (daNoConnectionCount++ > 2){
-                    console.log("no connection!");
+                    //console.log("no connection!");
                     window.parent.stopControlling(data.key);
                 }
             });
@@ -4059,7 +4059,7 @@ def monitor():
         stopControlling(key);
     }
     window.stopControlling = function(key){
-        console.log("Got stopControlling in parent for key " + key);
+        //console.log("Got stopControlling in parent for key " + key);
         // if (daControlling.hasOwnProperty(key)){
         //   delete daControlling[key];
         // }
@@ -4326,7 +4326,7 @@ def monitor():
         $("#listelement" + skey).removeClass("new-message");
     }
     function undraw_session(key){
-        console.log("Undrawing...")
+        //console.log("Undrawing...")
         var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
         var xButton = document.createElement('a');
         var xButtonIcon = document.createElement('i');
@@ -4625,7 +4625,7 @@ def monitor():
                 return false;
             });
             $(stopControllingButton).click(function(event){
-                console.log("Got click on stopControllingButton");
+                //console.log("Got click on stopControllingButton");
                 event.preventDefault();
                 var theIframe = $("#iframe" + skey).find('iframe')[0];
                 if (theIframe != null && theIframe.contentWindow && theIframe.contentWindow.turnOffControl){
@@ -4653,7 +4653,7 @@ def monitor():
                 return true;
             });
             $(stopObservingButton).click(function(e){
-                console.log("Unobserving...");
+                //console.log("Unobserving...");
                 $(this).addClass("invisible");
                 $(openButton).removeClass("invisible");
                 $(controlButton).addClass("invisible");
