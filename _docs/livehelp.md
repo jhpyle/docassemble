@@ -112,7 +112,7 @@ law" area of expertise.
 
 ![monitor-roles]({{ site.baseurl }}/img/monitor-roles.png){: .maybe-full-width }
 
-When an interview author uses [`set_chat_status()`] to enable the chat
+When an interview author uses [`set_live_help_status()`] to enable the chat
 feature, the author indicates which "partner roles," or areas of
 expertise, are required for the interview.  One interview may indicate
 "estates" as a partner role, while another may indicate "family law."
@@ -134,37 +134,44 @@ opportunity to enter their phone number.
 Once a phone number is set, the operator can use the
 [telephone call forwarding] feature.
 
-## List of sessions
+## <a name="sessions"></a>List of sessions
 
 Under "Sessions," the operator will see a list of active interviews
-where the interview author has used [`set_chat_status()`] to enable
+where the interview author has used [`set_live_help_status()`] to enable
 the user and the operator to communicate.
 
-Active sessions for interviews where [`set_chat_status()`] has not
+Active sessions for interviews where [`set_live_help_status()`] has not
 been run will be invisible.
 
 (It is important for interview authors to inform users that operators
 may be monitoring their session.  Interview logic can be used to run
-[`set_chat_status()`] only if and only when the user has consented to
+[`set_live_help_status()`] only if and only when the user has consented to
 monitoring by an operator.)
 
 ![monitor-session-listing]({{ site.baseurl }}/img/monitor-session-listing.png){: .maybe-full-width }
 
 Each session listing consists of:
 
-* A chat status indicator:
-    * ![monitor-indicator-waiting]({{ site.baseurl }}/img/monitor-indicator-waiting.png) means that the user is waiting for available chat
-      partners to appear;
-    * ![monitor-indicator-standby]({{ site.baseurl }}/img/monitor-indicator-standby.png) means that a chat partner is available, but the user
-      has not activated chat;
-    * ![monitor-indicator-on]({{ site.baseurl }}/img/monitor-indicator-on.png) means that the user has activated live chat; and
-    * ![monitor-indicator-offline]({{ site.baseurl }}/img/monitor-indicator-offline.png) means that the user's session has become inactive.
+* A status indicator:
+    * ![monitor-indicator-waiting]({{ site.baseurl }}/img/monitor-indicator-waiting.png)
+      means that the user is waiting for available chat partners to
+      appear;
+    * ![monitor-indicator-standby]({{ site.baseurl }}/img/monitor-indicator-standby.png) 
+      means that a chat partner is available, but the user has not
+      activated chat;
+    * ![monitor-indicator-on]({{ site.baseurl }}/img/monitor-indicator-on.png) 
+      means that the user has activated [live chat]; and
+    * ![monitor-indicator-off]({{ site.baseurl }}/img/monitor-indicator-off.png)
+      means that [live chat] is turned off in the user's interview,
+      but the user's screen can still be [observed] and [controlled].
+    * ![monitor-indicator-offline]({{ site.baseurl }}/img/monitor-indicator-offline.png) 
+      means that the user's session has become inactive.
 * The interview title (as set in the [metadata]).
 * The name of the interviewee, if the user is signed in.
 * Control buttons:
     * ![monitor-button-observe]({{ site.baseurl }}/img/monitor-button-observe.png)
       allows the operator to see a [real-time view](#observe) of the
-      user's screen;
+      user's screen, and then take [control] of the screen if necessary;
     * ![monitor-button-join]({{ site.baseurl }}/img/monitor-button-join.png)
       opens a new tab in the operator's browser, where the operator
       [becomes a co-interviewee](#join) in the on-going interview.
@@ -173,7 +180,7 @@ Each session listing consists of:
       conversation or to prevent the user from initiating one, without
       affecting the operator's availability to other sessions.
 
-When a user is connected with an operator, a live chat conversation
+When a user is connected with an operator, a [live chat] conversation
 area will appear within the session entry.
 
 ![chat-example-05]({{ site.baseurl }}/img/chat-example-05.png){: .maybe-full-width }
@@ -211,7 +218,43 @@ will hide the operator's view of the user's screen.
 Users do not receive any kind of notification when an operator starts
 viewing their screen.  It is up to the interview author to inform the
 user that an operator might be watching.  This can be done before
-[`set_chat_status()`] is called, or at the same time.
+[`set_live_help_status()`] is called, or at the same time.
+
+## <a name="control"></a>Controlling the interview in progress
+
+In addition to [observing] the user's screen, the operator
+can take control and start answering questions on behalf of the user,
+while the user watches what the operator does.
+
+When the operator presses the
+![monitor-button-control]({{ site.baseurl }}/img/monitor-button-control.png)
+button, the user sees a notification like this:
+
+![control-example-controlled]({{ site.baseurl }}/img/control-example-controlled.png){: .maybe-full-width }
+
+While in this mode, the user sees changes that the operator makes to
+the screen in real time.  The buttons on the user's screen are
+disabled, so that the user cannot submit any changes.  (The other
+controls are not disabled, but any changes that the user makes will be
+overwritten.)
+
+Meanwhile, the operator can make changes to the user's page in the
+miniature window:
+
+![monitor-example-with-control]({{ site.baseurl }}/img/monitor-example-with-control.png){: .maybe-full-width }
+
+When the operator presses the
+![monitor-button-stop-controlling]({{ site.baseurl }}/img/monitor-button-stop-controlling.png)
+button, the user regains control of the interview:
+
+![control-example-no-longer-controlled]({{ site.baseurl }}/img/control-example-no-longer-controlled.png){: .maybe-full-width }
+
+Note that whenever the live help [availability] setting for an
+interview is set to `'observeonly'` or `'available'`, then any
+operator can [observe] and [control] the interview without the user's
+consent.  Therefore, when you design interviews, it is important that
+before you call [`set_live_help_status()`] to set the [availability],
+you inform the user that their session may be monitored.
 
 ## <a name="join"></a>Joining the interview in progress
 
@@ -240,7 +283,7 @@ until going to a new screen or reloading the page in the web browser.
 # <a name="chat"></a>Live chat
 
 The live chat system needs to be enabled by the interview using the
-[`set_chat_status()`] function.  Then, depending on whether a chat
+[`set_live_help_status()`] function.  Then, depending on whether a chat
 partner is available, the user will be able to go to the help tab
 and chat with one or more chat partners.
 
@@ -251,12 +294,12 @@ They specify whether or not the user should have the option of using
 [live chat], and the types of people with whom the user should
 be able to chat.
 
-There are two functions that interact with the live chat system:
-[`set_chat_status()`] and [`chat_partners_available()`].
+There are two functions that interact with the [live chat] system:
+[`set_live_help_status()`] and [`chat_partners_available()`].
 
-### The <a name="set_chat_status"></a>`set_chat_status()` function
+### The <a name="set_live_help_status"></a>`set_live_help_status()` function
 
-The `set_chat_status()` function takes three optional keyword arguments
+The `set_live_help_status()` function takes three optional keyword arguments
 in order to control three different settings.
 
 For example:
@@ -266,13 +309,17 @@ For example:
 Omitting a keyword argument simply means that the setting will not be
 affected.
 
-The options for `availability` are:
+<a name="availability"></a>The options for `availability` are:
 
-* `'available'`: the user will be able to use live chat.  Note,
+* `'available'`: the user will be able to use [live chat].  Note,
   however, that unless a potential chat partner is available, users
-  may not see the feature on the screen.
-* `'unavailable'`: the user will not be able to use live chat; they will
-  not see any evidence that the feature exists.
+  may not see the feature on the screen.  Operators will also be able
+  to [observe] and [control] the user's screen.
+* `'unavailable'`: the user will not be able to use [live chat]; they will
+  not see any evidence that the feature exists.  Operators will not
+  see the interview [session] listed in the monitor.
+* `'observeonly'`: the user will not be able to use [live chat], but
+  operators will be able to [observe] and [control] the user's screen.
 
 <a name="mode"></a>The options for `mode` are:
 
@@ -569,12 +616,20 @@ user will not longer see the calling instructions or the phone icon.
 [privileges]: {{ site.baseurl }}/docs/users.html#privileges
 [Privileges List]: {{ site.baseurl }}/docs/users.html#privileges
 [Telephone call forwarding]: #phone
-[`set_chat_status()`]: #set_chat_status
+[`set_live_help_status()`]: #set_live_help_status
 [`chat_partners_available()`]: #chat_partners_available
 [telephone call forwarding]: #phone
 [phone]: #phone
 [metadata]: {{ site.baseurl }}/docs/initial.html#metadata
 [Observe]: #observe
+[observe]: #observe
+[observing]: #observe
+[control]: #control
+[controlling]: #control
+[observed]: #observe
+[controlled]: #control
+[session]: #sessions
+[sessions]: #sessions
 [Join]: #join
 [Block]: #join
 [`multi_user`]: {{ site.baseurl }}/docs/special.html#multi_user
@@ -593,3 +648,4 @@ user will not longer see the calling instructions or the phone icon.
 [`peerhelp`]: #peerhelp mode
 [chat mode]: #mode
 [`mode`]: #mode
+[availability]: #availability
