@@ -3888,8 +3888,9 @@ def observer():
                 window.parent.abortControlling(data.key);
             });
             socket.on('noconnection', function(data) {
+                console.log("no connection 1");
                 if (daNoConnectionCount++ > 2){
-                    //console.log("no connection!");
+                    console.log("no connection!");
                     window.parent.stopControlling(data.key);
                 }
             });
