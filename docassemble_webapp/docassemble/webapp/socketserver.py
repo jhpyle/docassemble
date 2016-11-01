@@ -231,13 +231,13 @@ def interview_connect():
             secret = None
         if user_dict is None:
             sys.stderr.write("user_dict did not exist.\n")
-            terminate_interview_connection()
+            socketio.emit('terminate', {}, namespace='/interview', room=request.sid)
             return
         
         chat_info = user_dict['_internal']['livehelp']
         if chat_info['availability'] != 'available':
             sys.stderr.write("Socket started but chat not available.\n")
-            terminate_interview_connection()
+            socketio.emit('terminate', {}, namespace='/interview', room=request.sid)
             return
         sys.stderr.write('chat info is ' + str(chat_info) + "\n")
         if user_dict['_internal']['livehelp']['mode'] in ['peer', 'peerhelp']:
@@ -253,7 +253,7 @@ def interview_connect():
         channel_up = wait_for_channel(rr, request.sid)
         if not channel_up:
             sys.stderr.write("Channel did not come up.\n")
-            terminate_interview_connection()
+            socketio.emit('terminate', {}, namespace='/interview', room=request.sid)
             return
         lkey = 'da:ready:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         sys.stderr.write("Searching: " + lkey + "\n")
@@ -263,7 +263,7 @@ def interview_connect():
             lkey_exists = False
         if lkey_exists is False and peer_ok is False:
             sys.stderr.write("Key does not exist: " + lkey + ".\n")
-            #terminate_interview_connection()
+            #socketio.emit('terminate', {}, namespace='/interview', room=request.sid)
             #return
         failed_to_find_partner = True
         found_help = False
@@ -272,7 +272,7 @@ def interview_connect():
             sys.stderr.write("partner_keys is: " + str(type(partner_keys)) + " " + str(partner_keys) + "\n")
             if partner_keys is None and not peer_ok:
                 sys.stderr.write("No partner keys: " + lkey + ".\n")
-                terminate_interview_connection()
+                socketio.emit('terminate', {}, namespace='/interview', room=request.sid)
                 return
             rr.delete(lkey)
             for pkey in partner_keys:
@@ -298,7 +298,7 @@ def interview_connect():
                         failed_to_find_partner = False
         if failed_to_find_partner and peer_ok is False:
             sys.stderr.write("Unable to reach any potential chat partners.\n")
-            #terminate_interview_connection()
+            #socketio.emit('terminate', {}, namespace='/interview', room=request.sid)
             #return
         key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         rr.set(key, request.sid)
@@ -431,7 +431,7 @@ def monitor_thread(sid=None, user_id=None):
 @socketio.on('connect', namespace='/monitor')
 def on_monitor_connect():
     if 'monitor' not in session:
-        terminate_monitor_connection()
+        socketio.emit('terminate', {}, namespace='/monitor', room=request.sid)
         return
     sys.stderr.write('Client connected on monitor and will join room monitor\n')
     key = 'da:monitor:' + str(request.sid)
@@ -473,7 +473,7 @@ def terminate_monitor_connection():
 @socketio.on('block', namespace='/monitor')
 def monitor_block(data):
     if 'monitor' not in session:
-        terminate_monitor_connection()
+        socketio.emit('terminate', {}, namespace='/monitor', room=request.sid)
         return
     key = data.get('key', None)
     if key is None:
@@ -491,7 +491,7 @@ def monitor_block(data):
 @socketio.on('unblock', namespace='/monitor')
 def monitor_unblock(data):
     if 'monitor' not in session:
-        terminate_monitor_connection()
+        socketio.emit('terminate', {}, namespace='/monitor', room=request.sid)
         return
     key = data.get('key', None)
     if key is None:
@@ -507,7 +507,7 @@ def monitor_unblock(data):
 @socketio.on('updatemonitor', namespace='/monitor')
 def update_monitor(message):
     if 'monitor' not in session:
-        terminate_monitor_connection()
+        socketio.emit('terminate', {}, namespace='/monitor', room=request.sid)
         return
     #sys.stderr.write('received message from ' + str(request.sid) + "\n")
     available_for_chat = message['available_for_chat']
@@ -660,7 +660,7 @@ def update_monitor(message):
 @socketio.on('chatmessage', namespace='/monitor')
 def monitor_chat_message(data):
     if 'monitor' not in session:
-        terminate_monitor_connection()
+        socketio.emit('terminate', {}, namespace='/monitor', room=request.sid)
         return
     key = data.get('key', None)
     sys.stderr.write("Key is " + str(key) + "\n")
@@ -715,7 +715,7 @@ def monitor_chat_message(data):
 @socketio.on('chat_log', namespace='/monitor')
 def monitor_chat_log(data):
     if 'monitor' not in session:
-        terminate_monitor_connection()
+        socketio.emit('terminate', {}, namespace='/monitor', room=request.sid)
         return
     key = data.get('key', None)
     sys.stderr.write("Key is " + str(key) + "\n")
@@ -795,14 +795,14 @@ def observer_thread(sid=None, key=None):
 @socketio.on('connect', namespace='/observer')
 def on_observer_connect():
     if 'observer' not in session:
-        terminate_observer_connection()
+        socketio.emit('terminate', {}, namespace='/observer', room=request.sid)
         return
     join_room(request.sid)
 
 @socketio.on('observe', namespace='/observer')
 def on_observe(message):
     if 'observer' not in session:
-        terminate_observer_connection()
+        socketio.emit('terminate', {}, namespace='/observer', room=request.sid)
         return
     if request.sid not in threads:
         key = 'da:input:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid'])
@@ -812,7 +812,7 @@ def on_observe(message):
 @socketio.on('observerStartControl', namespace='/observer')
 def start_control(message):
     if 'observer' not in session:
-        terminate_observer_connection()
+        socketio.emit('terminate', {}, namespace='/observer', room=request.sid)
         return
     self_key = 'da:control:sid:' + str(request.sid)
     key = 'da:control:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid'])
@@ -838,7 +838,7 @@ def start_control(message):
 @socketio.on('observerStopControl', namespace='/observer')
 def stop_control(message):
     if 'observer' not in session:
-        terminate_observer_connection()
+        socketio.emit('terminate', {}, namespace='/observer', room=request.sid)
         return
     self_key = 'da:control:sid:' + str(request.sid)
     key = 'da:control:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid'])
@@ -859,7 +859,7 @@ def stop_control(message):
 def observer_changes(message):
     sys.stderr.write('observerChanges\n')
     if 'observer' not in session:
-        terminate_observer_connection()
+        socketio.emit('terminate', {}, namespace='/observer', room=request.sid)
         return
     sid = rr.get('da:interviewsession:uid:' + str(message['uid']) + ':i:' + str(message['i']) + ':userid:' + str(message['userid']))
     if sid is None:
