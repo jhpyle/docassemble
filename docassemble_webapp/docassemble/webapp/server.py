@@ -2386,12 +2386,12 @@ def index():
             }
             return;
         }
-        if (location.protocol === 'http:' || document.location.protocol === 'http:'){
+        // if (location.protocol === 'http:' || document.location.protocol === 'http:'){
             socket = io.connect("http://" + document.domain + "/interview", {path: '/ws/socket.io'});
-        }
-        if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-            socket = io.connect("https://" + document.domain + "/interview" + location.port, {path: '/wss/socket.io'});
-        }
+        // }
+        // if (location.protocol === 'https:' || document.location.protocol === 'https:'){
+        //     socket = io.connect("https://" + document.domain + "/interview" + location.port, {path: '/wss/socket.io'});
+        // }
         if (socket != null){
             socket.on('connect', function() {
                 if (socket == null){
@@ -3851,12 +3851,12 @@ def observer():
             socket.emit('terminate');
           }
         });
-        if (location.protocol === 'http:' || document.location.protocol === 'http:'){
+        // if (location.protocol === 'http:' || document.location.protocol === 'http:'){
             socket = io.connect("http://" + document.domain + "/observer" + location.port, {path: '/ws/socket.io'});
-        }
-        if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-            socket = io.connect("https://" + document.domain + "/observer" + location.port, {path: '/wss/socket.io'});
-        }
+        // }
+        // if (location.protocol === 'https:' || document.location.protocol === 'https:'){
+        //     socket = io.connect("https://" + document.domain + "/observer" + location.port, {path: '/wss/socket.io'});
+        // }
         if (typeof socket !== 'undefined') {
             socket.on('connect', function() {
                 //console.log("Connected!");
@@ -4725,12 +4725,12 @@ def monitor():
         loadSoundBuffer('newmessage', '""" + url_for('static', filename='sounds/notification-click-on.mp3') + """', '""" + url_for('static', filename='sounds/notification-click-on.ogg') + """');
         loadSoundBuffer('newconversation', '""" + url_for('static', filename='sounds/notification-stapler.mp3') + """', '""" + url_for('static', filename='sounds/notification-stapler.ogg') + """');
         loadSoundBuffer('signinout', '""" + url_for('static', filename='sounds/notification-snap.mp3') + """', '""" + url_for('static', filename='sounds/notification-snap.ogg') + """');
-        if (location.protocol === 'http:' || document.location.protocol === 'http:'){
+        // if (location.protocol === 'http:' || document.location.protocol === 'http:'){
             socket = io.connect("http://" + document.domain + "/monitor" + location.port, {path: '/ws/socket.io'});
-        }
-        if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-            socket = io.connect("https://" + document.domain + "/monitor" + location.port, {path: '/wss/socket.io'});
-        }
+        // }
+        // if (location.protocol === 'https:' || document.location.protocol === 'https:'){
+        //     socket = io.connect("https://" + document.domain + "/monitor" + location.port, {path: '/wss/socket.io'});
+        // }
         if (typeof socket !== 'undefined') {
             socket.on('connect', function() {
                 //console.log("Connected!");
