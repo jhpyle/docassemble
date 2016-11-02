@@ -19,7 +19,7 @@ import json
 import eventlet
 import datetime
 import pytz
-import pickle
+import cPickle as pickle
 import re
 import time
 import random

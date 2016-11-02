@@ -33,7 +33,7 @@ comment: |
   interview if the user is logged in and the user has "advocate" as a
   user role.
 
-  The functions in docassemble.base.utl need to know who the user
+  The functions in docassemble.base.util need to know who the user
   is.  The set_info function communicates that information to the
   docassemble.base.util module.  Since the code is paired with the
   "default role" declaration, this code is run as "initial" code,

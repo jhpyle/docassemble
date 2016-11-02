@@ -2,7 +2,7 @@ from docassemble.webapp.core.models import MachineLearning
 from docassemble.webapp.app_and_db import app, db
 from sqlalchemy import or_, and_
 import re
-import pickle
+import cPickle as pickle
 import datetime
 import os
 import yaml

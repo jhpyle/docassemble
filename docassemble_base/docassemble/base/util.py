@@ -374,8 +374,8 @@ class Name(DAObject):
         return hasattr(self, 'text')
     def __str__(self):
         return(self.full())
-    def __repr__(self):
-        return(repr(self.full()))
+#    def __repr__(self):
+#        return(repr(self.full()))
 
 class IndividualName(Name):
     """The name of an Individual."""

@@ -19,7 +19,7 @@ import docassemble.base.interview_cache
 import docassemble.base.parse
 import docassemble.base.util
 import os
-import pickle
+import cPickle as pickle
 import codecs
 #import docassemble.webapp.worker
 

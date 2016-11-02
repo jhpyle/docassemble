@@ -8,8 +8,8 @@ class Court(DAObject):
     """Represents a court of law."""
     def __str__(self):
         return(self.name)
-    def __repr__(self):
-        return(repr(self.name))
+#    def __repr__(self):
+#        return(repr("asdf"))
 
 def _add_person_and_children_of(target, output_list):
     if target not in output_list and target.identified():

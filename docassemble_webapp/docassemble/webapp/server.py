@@ -38,7 +38,7 @@ from docassemble.base.logger import logmessage
 from Crypto.Hash import MD5
 import mimetypes
 import logging
-import pickle
+import cPickle as pickle
 import string
 import random
 import cgi
@@ -1405,6 +1405,7 @@ def standard_html_start(interview_language=DEFAULT_LANGUAGE, reload_after='', de
 
 @app.route("/", methods=['POST', 'GET'])
 def index():
+    #sys.stderr.write("-4\n")
     #seq = Sequence(message_sequence)
     #nextid = connection.execute(seq)
     if 'ajax' in request.form:
@@ -1484,6 +1485,7 @@ def index():
                     message = "Entering a different interview.  To go back to your previous interview, log in to see a list of your interviews."
         if show_flash:
             flash(word(message), 'info')
+    #sys.stderr.write("-3\n")
     if session_parameter is not None:
         logmessage("session parameter is " + str(session_parameter))
         session_id = session_parameter
@@ -1493,12 +1495,17 @@ def index():
         if 'key_logged' in session:
             del session['key_logged']
         need_to_reset = True
+    #sys.stderr.write("-2.9\n")
     if session_id:
         user_code = session_id
         #logmessage("session id is " + str(session_id))
+        #sys.stderr.write("-2.8\n")
         obtain_lock(user_code, yaml_filename)
+        #sys.stderr.write("-2.7\n")
         try:
+            #sys.stderr.write("-2.69\n")
             steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
+            #sys.stderr.write("-2.68\n")
         except:
             release_lock(user_code, yaml_filename)
             user_code, user_dict = reset_session(yaml_filename, secret)
@@ -1508,9 +1515,11 @@ def index():
             if 'key_logged' in session:
                 del session['key_logged']
             need_to_reset = True
+        #sys.stderr.write("-2.6\n")
         if encrypted != is_encrypted:
             encrypted = is_encrypted
             session['encrypted'] = encrypted
+        #sys.stderr.write("-2.5\n")
         # if currentsecret is not None:
         #     try:
         #         steps, user_dict = fetch_user_dict(user_code, yaml_filename, secret=currentsecret)
@@ -1526,6 +1535,7 @@ def index():
         # else:
         #     steps, user_dict = fetch_user_dict(user_code, yaml_filename, secret=secret)
         #     secret_to_use = secret
+        #sys.stderr.write("-2.4\n")
         if user_dict is None:
             logmessage("user_dict was none")
             try:
@@ -1534,10 +1544,12 @@ def index():
                 pass
             del user_code
             del user_dict
+        #sys.stderr.write("-2.3\n")
     try:
         user_dict
         user_code
     except:
+        #sys.stderr.write("-2.2\n")
         logmessage("resetting session")
         user_code, user_dict = reset_session(yaml_filename, secret)
         encrypted = False
@@ -1545,6 +1557,8 @@ def index():
         if 'key_logged' in session:
             del session['key_logged']
         steps = 0
+        #sys.stderr.write("-2.1\n")
+    #sys.stderr.write("-2\n")
     action = None
     if user_dict.get('multi_user', False) is True and encrypted is True:
         encrypted = False
@@ -1585,6 +1599,7 @@ def index():
             if re.match('[A-Za-z_]+', argname):
                 exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)
             need_to_reset = True
+    #sys.stderr.write("-1\n")
     if need_to_reset:
         save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
         # if current_user.is_authenticated:
@@ -1723,6 +1738,7 @@ def index():
     else:
         the_location = None
     should_assemble = False
+    #sys.stderr.write("0\n")
     if something_changed:
         for key in post_data:
             try:
@@ -1731,14 +1747,18 @@ def index():
                     break
             except:
                 logmessage("Bad key: " + str(key))
+    #sys.stderr.write("1\n")
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+    #sys.stderr.write("2\n")
     #logmessage("Getting interview status where action is " + str(action))
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location), tracker=user_dict['_internal']['tracker'])
+    #sys.stderr.write("3\n")
     if should_assemble:
         #logmessage("Reassembling.")
         interview.assemble(user_dict, interview_status)
     #else:
         #logmessage("I am not assembling.")        
+    #sys.stderr.write("3\n")
     changed = False
     error_messages = list()
     if '_the_image' in post_data:
@@ -1767,7 +1787,7 @@ def index():
                 the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ", filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
             else:
                 the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ")"
-            #sys.stderr.write(the_string + "\n")
+            ##sys.stderr.write(the_string + "\n")
             try:
                 exec(the_string, user_dict)
                 changed = True
@@ -2046,12 +2066,15 @@ def index():
     # if '_multiple_choice' in post_data and '_question_name' in post_data and post_data['_question_name'] in interview.questions_by_name and not interview.questions_by_name[post_data['_question_name']].is_generic:
     #     interview_status.populate(interview.questions_by_name[post_data['_question_name']].ask(user_dict, 'None', 'None'))
     # else:
+    #sys.stderr.write("4\n")
     interview.assemble(user_dict, interview_status)
+    #sys.stderr.write("5\n")
     if not interview_status.can_go_back:
         user_dict['_internal']['steps_offset'] = steps
     if len(interview_status.attachments) > 0:
         #logmessage("Updating attachment info")
         update_attachment_info(user_code, user_dict, interview_status, secret)
+    #sys.stderr.write("6\n")
     if interview_status.question.question_type == "restart":
         manual_checkout()
         url_args = user_dict['url_args']
@@ -2138,7 +2161,9 @@ def index():
         del user_dict['_internal']['answers'][interview_status.question.name]
     if changed and interview_status.question.interview.use_progress_bar:
         advance_progress(user_dict)
+    #sys.stderr.write("7\n")
     save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
+    #sys.stderr.write("8\n")
     if user_dict.get('multi_user', False) is True and encrypted is True:
         encrypted = False
         session['encrypted'] = encrypted
@@ -2168,6 +2193,7 @@ def index():
         # $(function () {
         #   $('.tabs a:last').tab('show')
         # })
+    #sys.stderr.write("9\n")
     if current_user.is_anonymous:
         the_user_id = 't' + str(session['tempuser'])
     else:
@@ -3152,6 +3178,7 @@ def index():
     pipe.set(key, json.dumps(dict(body=output, extra_scripts=extra_scripts, extra_css=extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after)))
     pipe.expire(key, 60)
     pipe.execute()
+    #sys.stderr.write("10\n")
     #logmessage("Done setting html key " + key)
     #if session.get('chatstatus', 'off') in ['waiting', 'standby', 'ringing', 'ready', 'on']:
     if user_dict['_internal']['livehelp']['availability'] != 'unavailable':
@@ -3173,25 +3200,34 @@ def index():
         response.set_cookie('visitor_secret', '', expires=0)
     release_lock(user_code, yaml_filename)
     #logmessage("Request time final: " + str(g.request_time()))
+    #sys.stderr.write("11\n")
     return response
 
 if __name__ == "__main__":
     app.run()
 
 def save_user_dict_key(user_code, filename):
+    #sys.stderr.write("20\n")
     the_record = UserDictKeys.query.filter_by(key=user_code, filename=filename, user_id=current_user.id).first()
+    #sys.stderr.write("21\n")
     if the_record:
         found = True
     else:
         found = False
     if not found:
+        #sys.stderr.write("22\n")
         new_record = UserDictKeys(key=user_code, filename=filename, user_id=current_user.id)
+        #sys.stderr.write("23\n")
         db.session.add(new_record)
+        #sys.stderr.write("24\n")
         db.session.commit()
+        #sys.stderr.write("25\n")
     return
 
 def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, encrypt=True, manual_user_id=None):
+    #sys.stderr.write("30\n")
     nowtime = datetime.datetime.utcnow()
+    #sys.stderr.write("31\n")
     user_dict['_internal']['modtime'] = nowtime
     if manual_user_id is not None or (current_user and current_user.is_authenticated and not current_user.is_anonymous):
         if manual_user_id is not None:
@@ -3202,6 +3238,7 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
     else:
         user_dict['_internal']['accesstime'][-1] = nowtime
         the_user_id = None
+    #sys.stderr.write("32\n")
     if changed is True:
         if encrypt:
             new_record = UserDict(modtime=nowtime, key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
@@ -3209,8 +3246,11 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
             new_record = UserDict(modtime=nowtime, key=user_code, dictionary=pack_dictionary(user_dict), filename=filename, user_id=the_user_id, encrypted=False)
         db.session.add(new_record)
         db.session.commit()
+        #sys.stderr.write("33\n")
     else:
+        #sys.stderr.write("34\n")
         max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(UserDict.key == user_code and UserDict.filename == filename).scalar()
+        #sys.stderr.write("35\n")
         if max_indexno is None:
             if encrypt:
                 new_record = UserDict(modtime=nowtime, key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
@@ -3218,17 +3258,25 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
                 new_record = UserDict(modtime=nowtime, key=user_code, dictionary=pack_dictionary(user_dict), filename=filename, user_id=the_user_id, encrypted=False)
             db.session.add(new_record)
             db.session.commit()
+            #sys.stderr.write("36\n")
         else:
+            #sys.stderr.write("37\n")
             for record in UserDict.query.filter_by(key=user_code, filename=filename, indexno=max_indexno).all():
+                #sys.stderr.write("37.5\n")
                 if encrypt:
                     record.dictionary = encrypt_dictionary(user_dict, secret)
+                    #sys.stderr.write("37.6\n")
                     record.modtime = nowtime
+                    #sys.stderr.write("37.7\n")
                     record.encrypted = True
                 else:
                     record.dictionary = pack_dictionary(user_dict)
+                    #sys.stderr.write("37.7\n")
                     record.modtime = nowtime
                     record.encrypted = False                   
+            #sys.stderr.write("38\n")
             db.session.commit()
+    #sys.stderr.write("39\n")
     return
 
 def process_bracket_expression(match):

@@ -4,6 +4,7 @@ from docassemble.base.logger import logmessage
 import re
 import codecs
 import redis
+import sys
 from docassemble.base.filter import file_finder
 #from docassemble.base.error import DANameError
 from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize
@@ -44,6 +45,10 @@ class DAObject(object):
             #logmessage("Found key " + str(key) + " with value " + str(value))
             setattr(self, key, value)
         return
+    # def __setstate__(self, state):
+    #     self.__dict__ = state
+    # def __getstate__(self):
+    #     return self.__dict__
     def __init__(self, *args, **kwargs):
         if len(args):
             thename = args[0]
@@ -65,11 +70,12 @@ class DAObject(object):
     def _map_info(self):
         return None
     def __getattr__(self, thename):
-        if hasattr(self, thename) or thename == "__getstate__" or thename == "__slots__":
+        if hasattr(self, thename) or thename == "__setstate__" or thename == "__getstate__" or thename == "__slots__":
             return(object.__getattribute__(self, thename))
         else:
             var_name = object.__getattribute__(self, 'instanceName') + "." + thename
             raise NameError("name '" + var_name + "' is not defined")
+            #return var_name
     def object_name(self):
         """Returns the instanceName attribute, or, if the instanceName contains attributes, returns a
         phrase.  E.g., case.plaintiff becomes "plaintiff in the case." """
@@ -880,8 +886,8 @@ class DATemplate(DAObject):
         return(self.content)
     def __unicode__(self):
         return unicode(self.__str__())
-    def __repr__(self):
-        return(self.content)
+#    def __repr__(self):
+#        return(self.content)
 
 def selections(*pargs, **kwargs):
     """Packs a list of objects in the appropriate format for including

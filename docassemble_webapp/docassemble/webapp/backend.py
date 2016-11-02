@@ -10,11 +10,13 @@ import docassemble.webapp.database
 import logging
 import urllib
 import tempfile
-import pickle
+import cPickle as pickle
 import codecs
 import string
 import random
+import pprint
 import datetime
+import json
 from Crypto.Cipher import AES
 from dateutil import tz
 
@@ -336,15 +338,39 @@ def unpack_phrase(phrase_string):
     return codecs.decode(phrase_string, 'base64')
 
 def encrypt_dictionary(the_dict, secret):
+    #sys.stderr.write("40\n")
     iv = ''.join(random.choice(string.ascii_letters) for i in range(16))
+    #sys.stderr.write("41\n")
     encrypter = AES.new(secret, AES.MODE_CBC, iv)
+    #sys.stderr.write("42\n")
+    #one = pickleable_objects(the_dict)
+    #sys.stderr.write("43\n")
+    #two = pickle.dumps(one)
+    #sys.stderr.write("44\n")
+    #three = pad(two)
+    #sys.stderr.write("45\n")
+    #four = encrypter.encrypt(three)
+    #sys.stderr.write("46\n")
     return iv + codecs.encode(encrypter.encrypt(pad(pickle.dumps(pickleable_objects(the_dict)))), 'base64').decode()
 
 def pack_dictionary(the_dict):
     return codecs.encode(pickle.dumps(pickleable_objects(the_dict)), 'base64').decode()
 
 def decrypt_dictionary(dict_string, secret):
+    #sys.stderr.write("60\n")
     decrypter = AES.new(secret, AES.MODE_CBC, dict_string[:16])
+    #sys.stderr.write("61\n")
+    #one = codecs.decode(dict_string[16:], 'base64')
+    #sys.stderr.write("62\n")
+    #two = decrypter.decrypt(one)
+    #sys.stderr.write("63\n")
+    #three = unpad(two)
+    #sys.stderr.write("64\n")
+    #four = pickle.loads(three)
+    #sys.stderr.write(pprint.pformat(four, depth=4, indent=4) + "\n")
+    #sys.stderr.write(json.dumps(four) + "\n")
+    #sys.stderr.write("65\n")
+    #return four
     return pickle.loads(unpad(decrypter.decrypt(codecs.decode(dict_string[16:], 'base64'))))
 
 def unpack_dictionary(dict_string):
@@ -360,18 +386,26 @@ def fetch_user_dict(user_code, filename, secret=None):
     user_dict = None
     steps = 0
     encrypted = True
+    #sys.stderr.write("50\n")
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).filter(UserDict.key == user_code and UserDict.filename == filename).subquery()
+    #sys.stderr.write("51\n")
     results = db.session.query(UserDict.dictionary, UserDict.encrypted, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno)
     for d in results:
+        #sys.stderr.write("51.1\n")
         if d.dictionary:
             if d.encrypted:
+                #sys.stderr.write("52\n")
                 user_dict = decrypt_dictionary(d.dictionary, secret)
+                #sys.stderr.write("53\n")
             else:
+                #sys.stderr.write("54\n")
                 user_dict = unpack_dictionary(d.dictionary)
                 encrypted = False
         if d.count:
             steps = d.count
+        #sys.stderr.write("55\n")
         break
+    #sys.stderr.write("56\n")
     return steps, user_dict, encrypted
 
 def fetch_previous_user_dict(user_code, filename, secret):
