@@ -78,6 +78,7 @@ class PlaygroundPackagesForm(Form):
     template_files = SelectMultipleField(word('Template files'))
     module_files = SelectMultipleField(word('Modules'))
     static_files = SelectMultipleField(word('Static files'))
+    sources_files = SelectMultipleField(word('Source files'))
     readme = TextAreaField(word('README file'), default='')
     submit = SubmitField(word('Save'))
     download = SubmitField(word('Download'))

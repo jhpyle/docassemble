@@ -25,7 +25,7 @@ import docassemble.base.parse
 import docassemble.base.pdftk
 import docassemble.base.interview_cache
 import docassemble.webapp.update
-from docassemble.base.standardformatter import as_html, as_sms, signature_html
+from docassemble.base.standardformatter import as_html, as_sms, signature_html, get_choices
 import docassemble.webapp.database
 import tempfile
 import zipfile
@@ -2884,7 +2884,7 @@ def index():
         $("#daform input, #daform textarea, #daform select").first().each(function(){
           $(this).focus();
           var inputType = $(this).attr('type');
-          if ($(this).prop('tagName') != 'SELECT' && inputType != "checkbox" && inputType != "radio" && inputType != "hidden" && inputType != "submit" && inputType != "file" && inputType != "range" && inputType != "number"){
+          if ($(this).prop('tagName') != 'SELECT' && inputType != "checkbox" && inputType != "radio" && inputType != "hidden" && inputType != "submit" && inputType != "file" && inputType != "range" && inputType != "number" && inputType != "date"){
             var strLength = $(this).val().length * 2;
             $(this)[0].setSelectionRange(strLength, strLength);
           }
@@ -3079,6 +3079,7 @@ def index():
         # else:
         #     logmessage("speak_text was not here")
         content = as_html(interview_status, extra_scripts, extra_css, url_for, DEBUG, ROOT, validation_rules)
+        sms_content = as_sms(interview_status)
         if interview_status.using_screen_reader:
             for question_type in ['question', 'help']:
                 #phrase = codecs.encode(to_text(interview_status.screen_reader_text[question_type]).encode('utf-8'), 'base64').decode().replace('\n', '')
@@ -3118,6 +3119,8 @@ def index():
         if DEBUG:
             output += '      <div class="row">' + "\n"
             output += '        <div id="source" class="col-md-12 collapse">' + "\n"
+            output += '          <h3>' + word('SMS version') + '</h3>' + "\n"
+            output += '            <pre style="white-space: pre-wrap;">' + sms_content + '</pre>\n'
             if interview_status.using_screen_reader:
                 output += '          <h3>' + word('Plain text of sections') + '</h3>' + "\n"
                 for question_type in ['question', 'help']:
@@ -7241,25 +7244,59 @@ def sms():
     interview = docassemble.base.interview_cache.get_interview(sess_info['yaml_filename'])
     interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], yaml_filename=sess_info['yaml_filename'], url=None, action=None, arguments=dict()))
     interview.assemble(user_dict, interview_status)
+    false_list = [word('no'), word('n'), word('false'), word('f')]
+    true_list = [word('yes'), word('y'), word('true'), word('t')]
     if accepting_input:
         saveas = None
         if len(interview_status.question.fields):
             saveas = myb64unquote(interview_status.question.fields[0].saveas)
             logmessage("Variable to set is " + str(saveas))
-        if interview_status.question.question_type in ["yesno"]:
-            if inp.lower() in [word('yes')]:
+            field = interview_status.question.fields[0]
+            question = interview_status.question
+            if question.question_type == "settrue":
                 data = 'True'
-            elif inp.lower() in [word('no')]:
-                data = 'False'
+            elif question.question_type in ["yesno"] or field.datatype in ['yesno', 'yesnowide'] or (field.datatype == 'boolean' and field.sign > 0):
+                if inp.lower() in true_list:
+                    data = 'True'
+                elif inp.lower() in false_list:
+                    data = 'False'
+                else:
+                    data = None
+            elif question.question_type in ["yesnomaybe"] or field.datatype in ['yesnomaybe', 'yesnowidemaybe'] or (field.datatype == 'threestate' and field.sign > 0):
+                if inp.lower() in true_list:
+                    data = 'True'
+                elif inp.lower() in false_list:
+                    data = 'False'
+                else:
+                    data = 'None'
+            elif question.question_type in ["noyes"] or field.datatype in ['noyes', 'noyeswide'] or (field.datatype == 'boolean' and field.sign < 0):
+                if inp.lower() in true_list:
+                    data = 'False'
+                elif inp.lower() in false_list:
+                    data = 'True'
+                else:
+                    data = None
+            elif question.question_type in ['noyesmaybe', 'noyesmaybe', 'noyeswidemaybe'] or (field.datatype == 'threestate' and field.sign < 0):
+                if inp.lower() in true_list:
+                    data = 'False'
+                elif inp.lower() in false_list:
+                    data = 'True'
+                else:
+                    data = 'None'
+            elif field.datatype in ['integer']:
+                data = re.sub(r'[^0-9\-\.]', '', data)
+                if data == '':
+                    data = '0'
+                data = "int(" + repr(str(data)) + ")"
+            elif field.datatype in ['number', 'float', 'currency', 'range']:
+                data = re.sub(r'[^0-9\-\.]', '', data)
+                if data == '':
+                    data = '0.0'
+                data = "float(" + repr(str(data)) + ")"
+            elif question.question_type == 'multiple_choice':
+                choices = get_choices(interview_status, field)
             else:
-                data = None
-        if interview_status.question.question_type in ["yesnomaybe"]:
-            if inp.lower() in [word('yes')]:
-                data = 'True'
-            elif inp.lower() in [word('no')]:
-                data = 'False'
-            else:
-                data = 'None'
+                data = repr(str(data))
         if data is None:
             logmessage("Could not process input")
         else:

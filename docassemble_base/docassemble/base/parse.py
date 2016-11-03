@@ -286,6 +286,7 @@ class InterviewStatus(object):
         self.attachments = question_result['attachments']
         self.selectcompute = question_result['selectcompute']
         self.defaults = question_result['defaults']
+        self.defined = question_result['defined']
         self.hints = question_result['hints']
         self.helptexts = question_result['helptexts']
         self.extras = question_result['extras']
@@ -1478,6 +1479,7 @@ class Question:
             decorations = None
         selectcompute = dict()
         defaults = dict()
+        defined = dict()
         hints = dict()
         helptexts = dict()
         extras = dict()
@@ -1598,6 +1600,7 @@ class Question:
                 if hasattr(field, 'saveas'):
                     try:
                         defaults[field.number] = eval(from_safeid(field.saveas), user_dict)
+                        defined[field.number] = True
                     except:
                         if hasattr(field, 'default'):
                             defaults[field.number] = field.default.text(user_dict)
@@ -1623,7 +1626,7 @@ class Question:
                 #logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("name 'role_event' is not defined")
-        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels})
+        return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'defined': defined, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels})
     def processed_attachments(self, user_dict, **kwargs):
         result_list = list()
         items = list()
@@ -2434,7 +2437,7 @@ class Interview:
                             string = "import docassemble.base.core"
                             logmessage("Doing " + string)
                             exec(string, user_dict)
-                            string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + "'" + from_safeid(question.fields[0].saveas) + "', content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ')'
+                            string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + "'" + from_safeid(question.fields[0].saveas) + "', content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ', decorations=' + repr([dec.text(user_dict).rstrip() for dec in question.decorations]) + ')'
                             logmessage("Doing " + string)
                             exec(string, user_dict)
                             #question.mark_as_answered(user_dict)

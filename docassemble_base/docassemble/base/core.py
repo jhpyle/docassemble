@@ -882,6 +882,10 @@ class DATemplate(DAObject):
             self.subject = kwargs['subject']
         else:
             self.subject = ""
+        if 'decorations' in kwargs:
+            self.decorations = kwargs['subject']
+        else:
+            self.decorations = ""
     def __str__(self):
         return(self.content)
     def __unicode__(self):
