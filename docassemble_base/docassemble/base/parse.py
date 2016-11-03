@@ -904,7 +904,7 @@ class Question:
                 if type(item) is dict:
                     the_item = item
                 else:
-                    the_item = {'image': str(item)}
+                    the_item = {'image': str(item.rstrip())}
                 item_to_add = dict()
                 for key, value in the_item.iteritems():
                     item_to_add[key] = TextObject(value, names_used=self.mako_names)
@@ -2437,7 +2437,7 @@ class Interview:
                             string = "import docassemble.base.core"
                             logmessage("Doing " + string)
                             exec(string, user_dict)
-                            string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + "'" + from_safeid(question.fields[0].saveas) + "', content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ')'
+                            string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + "'" + from_safeid(question.fields[0].saveas) + "', content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ', decorations=' + repr([dec['image'].text(user_dict).rstrip() for dec in question.decorations]) + ')'
                             logmessage("Doing " + string)
                             exec(string, user_dict)
                             #question.mark_as_answered(user_dict)
