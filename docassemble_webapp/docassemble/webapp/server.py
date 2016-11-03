@@ -3011,6 +3011,7 @@ def index():
         }
         daInitialized = true;
         daShowingHelp = 0;
+        window.scrollTo(0, 0);
       }
       $( document ).ready(function(){
         daInitialize();
