@@ -1473,7 +1473,7 @@ class Question:
             for decoration_item in self.decorations:
                 processed_item = dict()
                 for key, value in decoration_item.iteritems():
-                    processed_item[key] = value.text(user_dict)
+                    processed_item[key] = value.text(user_dict).strip()
                 decorations.append(processed_item)
         else:
             decorations = None
