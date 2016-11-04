@@ -57,6 +57,7 @@ class SpeakList(db.Model):
     dialect = db.Column(db.String(10))
     upload = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'uploads.indexno', ondelete='CASCADE'))
     encrypted = db.Column(db.Boolean(), nullable=False, server_default='1')
+    digest = db.Column(db.Text())
 
 # class Messages(db.Model):
 #     __tablename__ = dbtableprefix + "messages"

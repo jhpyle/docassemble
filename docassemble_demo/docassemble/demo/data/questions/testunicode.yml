@@ -1,0 +1,39 @@
+metadata:
+  title: Testing unicode
+---
+default language: en
+---
+modules:
+  - docassemble.base.util
+---
+initial: true
+code: |
+  set_language('en')
+---
+mandatory: true
+code: |
+  speak_text = True
+  multi_user = True
+---
+mandatory: true
+code: |
+  if wants_privacy:
+    multi_user = False
+  else:
+    multi_user = True
+---
+question: |
+  Do you want privacy?
+yesno: wants_privacy
+---
+question: |
+  Do you speak Español?
+yesno: bilingual
+---
+question: |
+  % if bilingual:
+  You are bilingual.
+  % else:
+  You do not speak Spanish
+  % endif
+mandatory: true

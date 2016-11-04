@@ -69,7 +69,7 @@ incomplete:
     users to run this interview file directly, you need to add a
     <a target="_blank"
     href="http://docassemble.org/docs/logic.html#mandatory">mandatory
-    code block</a>.
+    code block or question</a>.
 generic error:
   doc: >-
     Your interview has an error.  Click "Save and Run" to see the error.

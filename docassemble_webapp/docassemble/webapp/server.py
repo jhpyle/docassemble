@@ -3076,7 +3076,7 @@ def index():
                 the_dialect = DEFAULT_DIALECT
             for question_type in ['question', 'help']:
                 for audio_format in ['mp3', 'ogg']:
-                    interview_status.screen_reader_links[question_type].append([url_for('speak_file', question=interview_status.question.number, type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
+                    interview_status.screen_reader_links[question_type].append([url_for('speak_file', question=interview_status.question.number, digest='XXXTHEXXX' + question_type + 'XXXHASHXXX', type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
         # else:
         #     logmessage("speak_text was not here")
         content = as_html(interview_status, extra_scripts, extra_css, url_for, DEBUG, ROOT, validation_rules)
@@ -3086,13 +3086,15 @@ def index():
                 #phrase = codecs.encode(to_text(interview_status.screen_reader_text[question_type]).encode('utf-8'), 'base64').decode().replace('\n', '')
                 if question_type not in interview_status.screen_reader_text:
                     continue
-                phrase = to_text(interview_status.screen_reader_text[question_type])
+                phrase = to_text(interview_status.screen_reader_text[question_type]).encode('utf8')
                 #logmessage("Phrase is " + repr(phrase))
                 if encrypted:
-                    the_phrase = encrypt_phrase(phrase.encode('utf8'), secret)
+                    the_phrase = encrypt_phrase(phrase, secret)
                 else:
                     the_phrase = pack_phrase(phrase)
-                existing_entry = SpeakList.query.filter_by(filename=yaml_filename, key=user_code, question=interview_status.question.number, type=question_type, language=the_language, dialect=the_dialect).first()
+                the_hash = MD5.MD5Hash(data=phrase).hexdigest()
+                content = re.sub(r'XXXTHEXXX' + question_type + 'XXXHASHXXX', the_hash, content)
+                existing_entry = SpeakList.query.filter_by(filename=yaml_filename, key=user_code, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect).first()
                 if existing_entry:
                     if existing_entry.encrypted:
                         existing_phrase = decrypt_phrase(existing_entry.phrase, secret)
@@ -3105,7 +3107,7 @@ def index():
                         existing_entry.encrypted = encrypted
                         db.session.commit()
                 else:
-                    new_entry = SpeakList(filename=yaml_filename, key=user_code, phrase=the_phrase, question=interview_status.question.number, type=question_type, language=the_language, dialect=the_dialect, encrypted=encrypted)
+                    new_entry = SpeakList(filename=yaml_filename, key=user_code, phrase=the_phrase, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect, encrypted=encrypted)
                     db.session.add(new_entry)
                     db.session.commit()
         # output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" rel="stylesheet">\n    <link href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
@@ -3533,11 +3535,12 @@ def speak_file():
     file_format = request.args.get('format', None)
     the_language = request.args.get('language', None)
     the_dialect = request.args.get('dialect', None)
+    the_hash = request.args.get('digest', None)
     secret = request.cookies.get('secret', None)
     if file_format not in ['mp3', 'ogg'] or not (filename and key and question and question_type and file_format and the_language and the_dialect):
         logmessage("Could not serve speak file because invalid or missing data was provided: filename " + str(filename) + " and key " + str(key) + " and question number " + str(question) + " and question type " + str(question_type) + " and language " + str(the_language) + " and dialect " + str(the_dialect))
         abort(404)
-    entry = SpeakList.query.filter_by(filename=filename, key=key, question=question, type=question_type, language=the_language, dialect=the_dialect).first()
+    entry = SpeakList.query.filter_by(filename=filename, key=key, question=question, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect).first()
     if not entry:
         logmessage("Could not serve speak file because no entry could be found in speaklist for filename " + str(filename) + " and key " + str(key) + " and question number " + str(question) + " and question type " + str(question_type) + " and language " + str(the_language) + " and dialect " + str(the_dialect))
         abort(404)
@@ -3557,10 +3560,10 @@ def speak_file():
                 phrase = decrypt_phrase(entry.phrase, secret)
             else:
                 phrase = unpack_phrase(entry.phrase)
-            url = "https://api.voicerss.org/"
-            logmessage("Retrieving " + url)
+            url = voicerss_config.get('url', "https://api.voicerss.org/")
+            #logmessage("Retrieving " + url)
             audio_file = SavedFile(new_file_number, extension='mp3', fix=True)
-            audio_file.fetch_url_post(url, dict(key=voicerss_config['key'], src=phrase, hl=str(entry.language) + '-' + str(entry.dialect)))
+            audio_file.fetch_url_post(url, dict(f=voicerss_config.get('format', '16khz_16bit_stereo'), key=voicerss_config['key'], src=phrase, hl=str(entry.language) + '-' + str(entry.dialect)))
             if audio_file.size_in_bytes() > 100:
                 call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', audio_file.path + '.mp3']
                 logmessage("Calling " + " ".join(call_array))

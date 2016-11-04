@@ -2210,7 +2210,7 @@ class Interview:
         seeking = kwargs.get('seeking', list())
         if debug:
             seeking.append({'variable': missingVariable})
-        #logmessage("I don't have " + str(missingVariable))
+        #logmessage("I don't have " + str(missingVariable) + " for language " + str(language))
         if missingVariable in variable_stack:
             raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
         variable_stack.add(missingVariable)
@@ -2579,7 +2579,7 @@ class Interview:
                 #     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 #     new_question.name = "Question_Temp"
                 #     return(new_question.ask(user_dict, 'None', 'None'))
-        raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + missingVariable + "' that could not be found in the question file or in any of the files incorporated by reference into the question file.")
+        raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + missingVariable + "' that could not be found in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.")
 
 class myextract(ast.NodeVisitor):
     def __init__(self):
