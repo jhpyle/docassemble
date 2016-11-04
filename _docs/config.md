@@ -80,6 +80,7 @@ use_progress_bar: false
 default_interview: docassemble.demo:data/questions/questions.yml
 flask_log: /tmp/flask.log
 language: en
+dialect: us
 locale: US.utf8
 default_admin_account:
   nickname: admin
@@ -341,14 +342,22 @@ default_interview: docassemble.demo:data/questions/questions.yml
 [Flask] log file.  Most errors write to the standard web server error
 logs, but there are some that will only write to this log file.
 
-## <a name="language"></a><a name="locale"></a>language and locale
+## <a name="language"></a><a name="dialect"></a><a name="locale"></a>language, dialect, and locale
 
 These directives set the default [language and locale settings] for **docassemble**.
 
 {% highlight yaml %}
 language: en
 locale: US.utf8
+dialect: us
 {% endhighlight %}
+
+The dialect is only relevant for the text-to-speech feature, which is
+controlled by the [special variable `speak_text`].  See the
+[`voicerss`] configuration for more information about configuring this
+feature.  The default dialect is only used as a fallback, in case the
+dialect cannot be determined any other way.  It is better to set the
+dialect using [`set_language()`] or the [`voicerss`] configuration.
 
 ## <a name="default_admin_account"></a>default_admin_account
 
@@ -654,6 +663,11 @@ voicerss:
     fr: fr
 {% endhighlight %}
 
+The `enable` key must be set to `true` in order for the text-to-speech
+feature to work.  The `key` is the [VoiceRSS] API key.  The
+`languages` key refers to a dictionary that associates languages with
+default dialects to be used with that language.
+
 ## <a name="s3"></a>s3
 
 If you are using [Amazon S3] to store shared files, enter your access
@@ -803,3 +817,4 @@ first.
 [enabled]: {{ site.baseurl }}/docs/scheduled.html#enabling
 [`as_datetime()`]: {{ site.baseurl }}/docs/functions.html#as_datetime
 [`pytz`]: http://pytz.sourceforge.net/
+[`speak_text`]: {{ site.baseurl }}/docs/special.html#speak_text

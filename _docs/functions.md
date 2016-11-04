@@ -1195,7 +1195,9 @@ code: |
 {% endhighlight %}
 
 This will set the language to English, and will instruct the
-text-to-speech engine to use an Australian dialect.
+text-to-speech engine to use an Australian dialect.  (The dialect is
+relevant only for the text-to-speech engine, which is controlled by
+the [special variable `speak_text`].)
 
 ## <a name="get_dialect"></a>get_dialect()
 
@@ -2268,3 +2270,4 @@ modules:
 [callback function]: https://en.wikipedia.org/wiki/Callback_(computer_programming)
 [background processes]: #background
 [live chat]: {{ site.baseurl }}/docs/chat.html
+[special variable `speak_text`]: {{ site.baseurl }}/docs/special.html#speak_text

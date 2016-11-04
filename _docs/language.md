@@ -25,10 +25,14 @@ prefix, such as `US.utf8` or `DE.utf8`.  Any locale you use must be
 available on your system.
 
 The functions [`set_language()`] and [`set_locale()`] from
-[`docassemble.base.util`] will change the active language and locale.
+[`docassemble.base.util`] will change the active language, dialect,
+and locale.  (The dialect is relevant only for the text-to-speech
+feature, which is controlled by the [special variable `speak_text`].)
+
 If you write functions that need to know the current language or
-locale, use the [`get_language()`] and [`get_locale()`] function from the
-[`docassemble.base.util`] module.
+locale, use the [`get_language()`] and [`get_locale()`] function from
+the [`docassemble.base.util`] module.  Also note that there is a
+function [`get_dialect()`] for retrieving the dialect.
 
 The [`language`] and [`locale`] settings have the following effects:
 
@@ -70,10 +74,10 @@ The [`language`] and [`locale`] settings have the following effects:
 # Best practices for single-language interviews
 
 If your interview only works in one language, do not set the
-[`language` modifier] for any blocks and do not use
-[`default language`], and do not call [`set_language()`] or
-[`set_locale()`].  Instead, simply make sure that the default language
-and locale in the [configuration] are set to the correct values.
+[`language` modifier] for any blocks, do not use [`default language`],
+and do not call [`set_language()`] or [`set_locale()`].  Instead,
+simply make sure that the default language and locale in the
+[configuration] are set to the correct values.
 
 # Best practices for multi-language interviews
 
@@ -255,3 +259,4 @@ templates in order to enable fonts that support your language.
 [`today()`]: {{ site.baseurl }}/docs/functions.html#today
 [`interview help`]: {{ site.baseurl }}/docs/initial.html#interview help
 [`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
+[special variable `speak_text`]: {{ site.baseurl }}/docs/special.html#speak_text
