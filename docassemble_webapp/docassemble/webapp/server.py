@@ -3080,7 +3080,7 @@ def index():
         # else:
         #     logmessage("speak_text was not here")
         content = as_html(interview_status, extra_scripts, extra_css, url_for, DEBUG, ROOT, validation_rules)
-        sms_content = as_sms(interview_status)
+        #sms_content = as_sms(interview_status)
         if interview_status.using_screen_reader:
             for question_type in ['question', 'help']:
                 #phrase = codecs.encode(to_text(interview_status.screen_reader_text[question_type]).encode('utf-8'), 'base64').decode().replace('\n', '')
@@ -7330,7 +7330,7 @@ def sms():
         user_dict['_internal']['answers'] = dict()
         if interview_status.question.name and interview_status.question.name in user_dict['_internal']['answers']:
             del user_dict['_internal']['answers'][interview_status.question.name]
-        logmessage("sms: " + as_sms(interview_status))
+        #logmessage("sms: " + as_sms(interview_status))
         #twilio_client = TwilioRestClient(tconfig['account sid'], tconfig['auth token'])
         #message = twilio_client.messages.create(to=request.form["From"], from_=request.form["To"], body=as_sms(interview_status))
         if user_dict.get('multi_user', False) is True and encrypted is True:
