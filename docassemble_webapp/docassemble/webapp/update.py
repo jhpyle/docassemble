@@ -30,16 +30,30 @@ def check_for_updates():
     to_uninstall = list()
     uninstalled_packages = dict()
     logmessages = ''
-    for package in Package.query.filter_by(active=True).all():
+    package_by_name = dict()
+    for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
+        if package.name in package_by_name:
+            continue
+        package_by_name[package.name] = package
+    to_cull = list()
+    for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
+        if package.id != package_by_name[package.name].id:
+            to_cull.append(package.id)
+    if len(to_cull):
+        for pid in to_cull:
+            Package.query.filter_by(id=pid).delete()
+        db.session.commit()
+    # packages is what is supposed to be installed
+    for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
         if package.type is not None:
             packages[package.id] = package
             #print "Found a package " + package.name
     for package in Package.query.filter_by(active=False).all():
-        uninstalled_packages[package.id] = package
+        uninstalled_packages[package.id] = package # this is what the database says should be uninstalled
     for install in Install.query.filter_by(hostname=hostname).all():
-        installs[install.package_id] = install
+        installs[install.package_id] = install # this is what the database says in installed on this server
         if install.package_id in uninstalled_packages:
-            to_uninstall.append(uninstalled_packages[install.package_id])
+            to_uninstall.append(uninstalled_packages[install.package_id]) # uninstall if it is installed
     changed = False
     package_owner = dict()
     for auth in PackageAuth.query.filter_by(authtype='owner').all():
@@ -100,7 +114,9 @@ def update_versions():
     for install in Install.query.filter_by(hostname=hostname).all():
         install_by_id[install.package_id] = install
     package_by_name = dict()
-    for package in Package.query.filter_by(active=True).all():
+    for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
+        if package.name in package_by_name:
+            continue
         package_by_name[package.name] = package
     installed_packages = get_installed_distributions()
     for package in installed_packages:
@@ -117,7 +133,9 @@ def add_dependencies(user_id):
     logmessage('add_dependencies: ' + str(user_id))
     from docassemble.base.config import hostname
     package_by_name = dict()
-    for package in Package.query.filter_by(active=True).all():
+    for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
+        if package.name in package_by_name:
+            continue
         package_by_name[package.name] = package
     installed_packages = get_installed_distributions()
     for package in installed_packages:

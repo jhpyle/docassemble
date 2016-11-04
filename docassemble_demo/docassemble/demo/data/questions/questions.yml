@@ -168,6 +168,14 @@ initial: true
 code: |
   # track_location = user.location.status()
   set_language(user.language)
+  if role == 'advocate' and not defined('client.name.first'):
+    welcome_advocate
+---
+event: welcome_advocate
+question: |
+  No role for advocate yet.
+subquestion: |
+  You are an advocate and this interview is not yet ready for you to participate.
 ---
 mandatory: true
 code: |

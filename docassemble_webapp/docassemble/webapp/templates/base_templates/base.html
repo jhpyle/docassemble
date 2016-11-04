@@ -78,6 +78,13 @@
     <script src="{{ url_for('static', filename='app/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='app/jasny-bootstrap.min.js') }}"></script>
+    {%- if request.path in ["/user/sign-in", "/user/register", "/user/forgot-password"] %}
+    <script>
+      $( document ).ready(function(){
+        $("#email").focus();
+      });
+    </script>
+    {%- endif %}
     {{ extra_js }}
   </body>
 </html>

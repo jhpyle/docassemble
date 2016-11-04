@@ -5115,7 +5115,7 @@ def update_package():
             if action == 'uninstall' and the_package.can_uninstall:
                 uninstall_package(target)
             elif action == 'update' and the_package.can_update:
-                existing_package = Package.query.filter_by(name=target, active=True).first()
+                existing_package = Package.query.filter_by(name=target, active=True).order_by(Package.id.desc()).first()
                 if existing_package is not None:
                     if existing_package.type == 'git' and existing_package.giturl is not None:
                         install_git_package(target, existing_package.giturl)
@@ -5173,7 +5173,7 @@ def update_package():
 
 def uninstall_package(packagename):
     logmessage("uninstall_package: " + packagename)
-    existing_package = Package.query.filter_by(name=packagename, active=True).first()
+    existing_package = Package.query.filter_by(name=packagename, active=True).order_by(Package.id.desc()).first()
     if existing_package is None:
         flash(word("Package did not exist"), 'error')
         return
@@ -5191,14 +5191,15 @@ def uninstall_package(packagename):
         flash(word("Uninstall successful"), 'success')
     else:
         flash(word("Uninstall not successful"), 'error')
-    flash('pip log:  ' + str(logmessages), 'info')
+    logmessages = re.sub(r'\n', r'<br>', logmessages)
+    flash('pip log:  ' + Markup(logmessages), 'info')
     logmessage(logmessages)
     logmessage("uninstall_package: done")
     return
 
 def install_zip_package(packagename, file_number):
     logmessage("install_zip_package: " + packagename + " " + str(file_number))
-    existing_package = Package.query.filter_by(name=packagename, active=True).first()
+    existing_package = Package.query.filter_by(name=packagename, active=True).order_by(Package.id.desc()).first()
     if existing_package is None:
         package_auth = PackageAuth(user_id=current_user.id)
         package_entry = Package(name=packagename, package_auth=package_auth, upload=file_number, active=True, type='zip', version=1)
@@ -5223,7 +5224,8 @@ def install_zip_package(packagename, file_number):
         flash(word("Install successful"), 'success')
     else:
         flash(word("Install not successful"), 'error')
-    flash('pip log: ' + str(logmessages), 'info')
+    logmessages = re.sub(r'\n', r'<br>', logmessages)
+    flash('pip log: ' + Markup(logmessages), 'info')
     # pip_log = tempfile.NamedTemporaryFile()
     # commands = ['install', '--quiet', '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, zippath]
     # returnval = pip.main(commands)
@@ -5242,7 +5244,7 @@ def install_git_package(packagename, giturl):
         db.session.add(package_entry)
         db.session.commit()
     else:
-        package_entry = Package.query.filter_by(name=packagename).first()
+        package_entry = Package.query.filter_by(name=packagename).order_by(Package.id.desc()).first()
         if package_entry is not None:
             if package_entry.type == 'zip' and package_entry.upload is not None:
                 SavedFile(package_entry.upload).delete()
@@ -5259,7 +5261,8 @@ def install_git_package(packagename, giturl):
         flash(word("Install successful"), 'success')
     else:
         flash(word("Install not successful"), 'error')
-    flash('pip log: ' + str(logmessages), 'info')
+    logmessages = re.sub(r'\n', r'<br>', logmessages)
+    flash('pip log: ' + Markup(logmessages), 'info')
     # pip_log = tempfile.NamedTemporaryFile()
     # commands = ['install', '--quiet', '--egg', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, 'git+' + giturl + '.git#egg=' + packagename]
     # returnval = pip.main(commands)
@@ -5269,7 +5272,7 @@ def install_git_package(packagename, giturl):
     return
 
 def install_pip_package(packagename, limitation):
-    existing_package = Package.query.filter_by(name=packagename, active=True).first()
+    existing_package = Package.query.filter_by(name=packagename, active=True).order_by(Package.id.desc()).first()
     if existing_package is None:
         package_auth = PackageAuth(user_id=current_user.id)
         package_entry = Package(name=packagename, package_auth=package_auth, limitation=limitation, type='pip')
@@ -5292,7 +5295,8 @@ def install_pip_package(packagename, limitation):
         flash(word("Install successful"), 'success')
     else:
         flash(word("Install not successful"), 'error')
-    flash('pip log: ' + str(logmessages), 'info')
+    logmessages = re.sub(r'\n', r'<br>', logmessages)
+    flash('pip log: ' + Markup(logmessages), 'info')
     # pip_log = tempfile.NamedTemporaryFile()
     # commands = ['install', '--quiet', '--egg', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, 'git+' + giturl + '.git#egg=' + packagename]
     # returnval = pip.main(commands)
@@ -5308,11 +5312,15 @@ def get_package_info():
         is_admin = False
     package_list = list()
     package_auth = dict()
+    seen = dict()
     for auth in PackageAuth.query.all():
         if auth.package_id not in package_auth:
             package_auth[auth.package_id] = dict()
         package_auth[auth.package_id][auth.user_id] = auth.authtype
-    for package in Package.query.filter_by(active=True).order_by(Package.name).all():
+    for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
+        if package.name in seen:
+            continue
+        seen[package.name] = 1
         if package.type is not None:
             if package.type == 'zip':
                 can_update = False
@@ -5670,7 +5678,7 @@ class Fruit(DAObject):
             zf.close()
             saved_file.save()
             saved_file.finalize()
-            existing_package = Package.query.filter_by(name='docassemble.' + pkgname, active=True).first()
+            existing_package = Package.query.filter_by(name='docassemble.' + pkgname, active=True).order_by(Package.id.desc()).first()
             if existing_package is None:
                 package_auth = PackageAuth(user_id=current_user.id)
                 package_entry = Package(name='docassemble.' + pkgname, package_auth=package_auth, upload=file_number, type='zip')
