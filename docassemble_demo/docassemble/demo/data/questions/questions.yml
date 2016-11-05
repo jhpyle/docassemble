@@ -158,6 +158,9 @@ content: |
 
   Thank you for your patience.
 ---
+role:
+  - client
+  - advocate
 mandatory: true
 code: |
   multi_user = False
@@ -166,16 +169,17 @@ code: |
 ---
 initial: true
 code: |
-  # track_location = user.location.status()
-  set_language(user.language)
   if role == 'advocate' and not defined('client.name.first'):
     welcome_advocate
+  # track_location = user.location.status()
+  set_language(user.language)
 ---
+role: advocate
 event: welcome_advocate
 question: |
   No role for advocate yet.
 subquestion: |
-  You are an advocate and this interview is not yet ready for you to participate.
+  You are an advocate and this interview is not yet ready for your participation.
 ---
 mandatory: true
 code: |

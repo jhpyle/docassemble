@@ -2,10 +2,10 @@
 
 {% block content %}
 
-<h1>Privileges</h1>
+<h1>{{ word('Privileges') }}</h1>
 
 {{ privilegelist|safe }}
 
-<p><a href="{{ url_for('add_privilege') }}">Add a new privilege</a></p>
+<p><a href="{{ url_for('add_privilege') }}">{{ word('Add a new privilege') }}</a></p>
 
 {% endblock %}

@@ -21,7 +21,7 @@ def privilege_list():
             output += '<li>' + str(role.name) + '</li>'
             
     output += '</ol>'
-    return render_template('users/rolelist.html', privilegelist=output)
+    return render_template('users/rolelist.html', page_title=word('Privileges'), tab_title=word('Privileges'), privilegelist=output)
 
 @app.route('/userlist', methods=['GET', 'POST'])
 @login_required
@@ -43,7 +43,7 @@ def user_list():
             active_string = ' (account disabled)'
         output += '<li>' + str(name_string) + '<a href="' + url_for('edit_user_profile_page', id=user.id) + '">' + str(user.email) + "</a>" + active_string + "</li>"
     output += '</ol>'
-    return render_template('users/userlist.html', userlist=output)
+    return render_template('users/userlist.html', page_title=word('User List'), tab_title=word('User List'), userlist=output)
 
 @app.route('/privilege/<id>/delete', methods=['GET'])
 @login_required
@@ -110,7 +110,7 @@ def edit_user_profile_page(id):
 
     form.role_id.default = the_role_id
     logmessage("Setting default to " + str(the_role_id))
-    return render_template('users/edit_user_profile_page.html', form=form)
+    return render_template('users/edit_user_profile_page.html', page_title=word('Edit User Profile'), tab_title=word('Edit User Profile'), form=form)
 
 @app.route('/privilege/add', methods=['GET', 'POST'])
 @login_required
@@ -128,7 +128,7 @@ def add_privilege():
         flash(word('The privilege was added.'), 'success')
         return redirect(url_for('privilege_list'))
 
-    return render_template('users/new_role_page.html', form=form)
+    return render_template('users/new_role_page.html', page_title=word('Add Privilege'), tab_title=word('Add Privilege'), form=form)
 
 @app.route('/user/profile', methods=['GET', 'POST'])
 @login_required
@@ -144,4 +144,4 @@ def user_profile_page():
         db.session.commit()
         flash(word('Your information was saved.'), 'success')
         return redirect(url_for('interview_list'))
-    return render_template('users/user_profile_page.html', form=form, debug=debug_status())
+    return render_template('users/user_profile_page.html', page_title=word('User Profile'), tab_title=word('User Profile'), form=form, debug=debug_status())

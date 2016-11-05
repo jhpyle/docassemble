@@ -73,3 +73,9 @@ list:
 dict:
   doc: |
     This is a built-in Python data type that expresses a dictionary or hash data structure.
+str:
+  doc: |
+    This is a built-in Python function that converts an expression to a string.
+len:
+  doc: |
+    This is a built-in Python function that returns the length of a list or other data structure.

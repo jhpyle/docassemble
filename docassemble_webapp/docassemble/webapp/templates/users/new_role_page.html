@@ -3,7 +3,7 @@
 {% block content %}
 {% from "base_templates/form_macros.html" import render_field, render_submit_field %}
 
-<h1>Add Privilege</h1>
+<h1>{{ word('Add Privilege') }}</h1>
 
 <form action="" method="POST" role="form" class="form">
     {{ form.hidden_tag() }}

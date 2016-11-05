@@ -3,9 +3,9 @@
 {% block content %}
 {% from "base_templates/form_macros.html" import render_field, render_submit_field, render_checkbox_field %}
 
-<h1>User Profile</h1>
+<h1>{{ word('User Profile') }}</h1>
 
-<ul class="nav nav-pills"><li><a href="{{ url_for('user.change_password') }}">Change password</a></li>{% if debug and (not current_user.is_anonymous) and (not current_user.has_roles(['admin', 'developer'])) %}<li><a href="{{ url_for('request_developer') }}">Request Developer Account</a></li>{% endif %}</ul>
+<ul class="nav nav-pills"><li><a href="{{ url_for('user.change_password') }}">{{ word('Change password') }}</a></li>{% if debug and (not current_user.is_anonymous) and (not current_user.has_roles(['admin', 'developer'])) %}<li><a href="{{ url_for('request_developer') }}">{{ word('Request Developer Account') }}</a></li>{% endif %}</ul>
 
 <form action="" method="POST" role="form" class="form">
     {{ form.hidden_tag() }}

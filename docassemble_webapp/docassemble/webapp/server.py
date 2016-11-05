@@ -663,7 +663,7 @@ def _endpoint_url(endpoint):
 
 def custom_login():
     #logmessage("Got to login page")
-    user_manager =  current_app.user_manager
+    user_manager = current_app.user_manager
     db_adapter = user_manager.db_adapter
     secret = request.cookies.get('secret', None)
     #logmessage("custom_login: secret is " + str(secret))
@@ -714,10 +714,7 @@ def custom_login():
             return _do_login_user(user, login_form.password.data, secret, login_form.next.data, login_form.remember_me.data)
 
     # Process GET or invalid POST
-    return render_template(user_manager.login_template,
-            form=login_form,
-            login_form=login_form,
-            register_form=register_form)
+    return render_template(user_manager.login_template, page_title=word('Sign In'), tab_title=word('Sign In'), form=login_form, login_form=login_form, register_form=register_form)
 
 def setup_app(app, db):
     from docassemble.webapp.users.forms import MyRegisterForm
@@ -1036,7 +1033,7 @@ def oauth_callback(provider):
 
 @app.route('/user/google-sign-in')
 def google_page():
-    return render_template('flask_user/google_login.html', title="Sign in")
+    return render_template('flask_user/google_login.html', title=word("Sign In"), tab_title=word("Sign In"), page_title=word("Sign in"))
 
 @app.route("/user/post-sign-in", methods=['GET'])
 def post_sign_in():
@@ -1895,7 +1892,7 @@ def index():
                             the_string = file_field + " = docassemble.base.core.DAFileList('" + file_field + "', elements=[" + ", ".join(elements) + "])"
                         else:
                             the_string = file_field + " = None"
-                        logmessage("Doing " + the_string)
+                        #logmessage("Doing " + the_string)
                         try:
                             exec(the_string, user_dict)
                             changed = True
@@ -2019,7 +2016,7 @@ def index():
             #logmessage("key is multiple choice")
             data = "int(" + repr(data) + ")"
         else:
-            logmessage("key is not in datatypes where datatypes is " + str(known_datatypes))
+            #logmessage("key is not in datatypes where datatypes is " + str(known_datatypes))
             data = repr(data)
         if key == "_multiple_choice":
             #interview.assemble(user_dict, interview_status)
@@ -2038,7 +2035,7 @@ def index():
                 the_string = 'if ' + data + ' not in ' + key_to_use + ':\n    ' + key_to_use + '.append(' + data + ')'
         else:
             the_string = key + ' = ' + data
-        logmessage("Doing " + str(the_string))
+        #logmessage("Doing " + str(the_string))
         try:
             exec(the_string, user_dict)
             changed = True
@@ -2247,6 +2244,8 @@ def index():
       var daBeingControlled = """ + being_controlled + """;
       var daInformedChanged = false;
       var daInformed = """ + json.dumps(user_dict['_internal']['informed'].get(user_id_string, dict())) + """;
+      var daShowingSpinner = false;
+      var daSpinnerTimeout = null;
       function userNameString(data){
           if (data.hasOwnProperty('temp_user_id')){
               return """ + repr(str(word("anonymous visitor"))) + """ + ' ' + data.temp_user_id;
@@ -2850,7 +2849,27 @@ def index():
         daStopCheckingIn();
         checkinInterval = setInterval(daCheckin, 6000);
       }
+      function showSpinner(){
+        var newImg = document.createElement('img');
+        $(newImg).attr("src", """ + repr(str(url_for('static', filename='app/loader.gif')))+ """);
+        $(newImg).attr("id", "daSpinner");
+        $(newImg).addClass("da-spinner");
+        $(newImg).appendTo("#question");
+        daShowingSpinner = true;
+      }
+      function hideSpinner(){
+        $("daSpinner").remove();
+        daShowingSpinner = false;
+        daSpinnerTimeout = null;
+      }
       function daInitialize(){
+        if (daSpinnerTimeout != null){
+          clearTimeout(daSpinnerTimeout);
+          daSpinnerTimeout = null;
+        }
+        if (daShowingSpinner){
+          hideSpinner();
+        }
         notYetScrolled = true;
         $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
           if ($(e.target).attr("href") == '#help'){
@@ -3011,7 +3030,15 @@ def index():
         }
         daInitialized = true;
         daShowingHelp = 0;
+        setTimeout(function(){
+          $("#flash .alert-success").hide(300, function(){
+            $(self).remove();
+          });
+        }, 3000);
         window.scrollTo(0, 0);
+        if (daShowingSpinner){
+          hideSpinner();
+        }
       }
       $( document ).ready(function(){
         daInitialize();
@@ -3123,7 +3150,7 @@ def index():
             output += '      <div class="row">' + "\n"
             output += '        <div id="source" class="col-md-12 collapse">' + "\n"
             output += '          <h3>' + word('SMS version') + '</h3>' + "\n"
-            output += '            <pre style="white-space: pre-wrap;">' + sms_content + '</pre>\n'
+            #output += '            <pre style="white-space: pre-wrap;">' + sms_content + '</pre>\n'
             if interview_status.using_screen_reader:
                 output += '          <h3>' + word('Plain text of sections') + '</h3>' + "\n"
                 for question_type in ['question', 'help']:
@@ -3174,6 +3201,18 @@ def index():
             output += '        </div>' + "\n"
             output += '      </div>' + "\n"
         output += '    </div>'
+#         output += """\
+#                        <div class="modal hide" id="please_wait" data-backdrop="static" data-keyboard="false">
+#                            <div class="modal-header">
+#                                <h1>""" + word("Please wait") + """</h1>
+#                            </div>
+#                            <div class="modal-body">
+#                                <div class="progress progress-striped active">
+#                                    <div class="bar" style="width: 100%;"></div>
+#                                </div>
+#                            </div>
+#                        </div>
+# """
         if not is_ajax:
             end_output = scripts + "\n    " + "".join(extra_scripts) + """\n  </body>\n</html>"""
     #logmessage(output.encode('utf8'))
@@ -3398,7 +3437,7 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
         <div class="navbar-header">
 """
     navbar += """\
-          <button type="button" class="navbar-toggle collapsed mynavbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
+          <button id="mobile-toggler" type="button" class="navbar-toggle collapsed mynavbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
             <span class="sr-only">Toggle navigation</span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
@@ -3428,7 +3467,7 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
     navbar += """
         </div>
         <div class="collapse navbar-collapse" id="navbar-collapse">
-          <ul class="nav navbar-nav navbar-left">
+          <ul class="nav navbar-nav navbar-left hidden-xs">
 """
     # if status.question.helptext is None:
     #     navbar += '<li><a href="#help" data-toggle="tab">' + word('Help') + "</a></li>\n"
@@ -3464,7 +3503,7 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
             else:
                 navbar += '            <li><a href="' + url_for('user.login', next=url_for('index')) + '">' + word('Sign in or sign up to save answers') + '</a></li>' + "\n"
         else:
-            navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + current_user.email + '<span class="caret"></span></a><ul class="dropdown-menu">'
+            navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + current_user.email + '<span class="caret"></span></a><ul class="dropdown-menu">'
             if custom_menu:
                 navbar += custom_menu
             if current_user.has_role('admin', 'developer', 'advocate'):
@@ -3476,9 +3515,9 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
                 navbar +='<li><a href="' + url_for('utilities') + '">' + word('Utilities') + '</a></li>'
                 if current_user.has_role('admin'):
                     navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
-                    navbar +='<li><a href="' + url_for('privilege_list') + '">' + word('Privileges List') + '</a></li>'
+                    #navbar +='<li><a href="' + url_for('privilege_list') + '">' + word('Privileges List') + '</a></li>'
                     navbar +='<li><a href="' + url_for('config_page') + '">' + word('Configuration') + '</a></li>'
-            navbar += '<li><a href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a></li><li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li><li><a href="' + url_for('user.logout') + '">' + word('Sign out') + '</a></li></ul></li>'
+            navbar += '<li><a href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a></li><li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li><li><a href="' + url_for('user.logout') + '">' + word('Sign Out') + '</a></li></ul></li>'
     else:
         if custom_menu:
             navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li></ul></li>' + "\n"
@@ -3817,26 +3856,24 @@ def observer():
         $('input[type="submit"]').click(daSubmitter);
         $(".to-labelauty").labelauty({ width: "100%" });
         $(".to-labelauty-icon").labelauty({ label: false });
-        $(function(){ 
-          var navMain = $("#navbar-collapse");
-          navMain.on("click", "a", null, function () {
-            if (!($(this).hasClass("dropdown-toggle"))){
-              navMain.collapse('hide');
-            }
-          });
-          $("#helptoggle").on("click", function(){
-            //console.log("Got to helptoggle");
-            window.scrollTo(0, 0);
-            $(this).removeClass('daactivetext')
-            return true;
-          });
-          $("#sourcetoggle").on("click", function(){
-            $(this).toggleClass("sourceactive");
-          });
-          $('#backToQuestion').click(function(event){
-            event.preventDefault();
-            $('#questionlabel').trigger('click');
-          });
+        var navMain = $("#navbar-collapse");
+        navMain.on("click", "a", null, function () {
+          if (!($(this).hasClass("dropdown-toggle"))){
+            navMain.collapse('hide');
+          }
+        });
+        $("#helptoggle").on("click", function(){
+          //console.log("Got to helptoggle");
+          window.scrollTo(0, 0);
+          $(this).removeClass('daactivetext')
+          return true;
+        });
+        $("#sourcetoggle").on("click", function(){
+          $(this).toggleClass("sourceactive");
+        });
+        $('#backToQuestion').click(function(event){
+          event.preventDefault();
+          $('#questionlabel').trigger('click');
         });
         $(".showif").each(function(){
           var showIfSign = $(this).data('showif-sign');
@@ -5093,7 +5130,7 @@ def monitor():
         })
     });
 </script>"""
-    return render_template('pages/monitor.html', extra_js=Markup(script)), 200
+    return render_template('pages/monitor.html', extra_js=Markup(script), tab_title=word('Monitor'), page_title=word('Monitor')), 200
 
 @app.route('/updatepackage', methods=['GET', 'POST'])
 @login_required
@@ -5169,7 +5206,7 @@ def update_package():
     package_list, package_auth = get_package_info()
     form.pippackage.data = None
     form.giturl.data = None
-    return render_template('pages/update_package.html', form=form, package_list=package_list), 200
+    return render_template('pages/update_package.html', form=form, package_list=package_list, tab_title=word('Update Package'), page_title=word('Update Package')), 200
 
 def uninstall_package(packagename):
     logmessage("uninstall_package: " + packagename)
@@ -5450,7 +5487,7 @@ def create_playground_package():
                 response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return(response)
-    return render_template('pages/create_playground_package.html', form=form, current_package=current_package, package_names=file_list['playgroundpackages']), 200
+    return render_template('pages/create_playground_package.html', form=form, current_package=current_package, package_names=file_list['playgroundpackages'], tab_title=word('Playground Packages'), page_title=word('Playground Packages')), 200
 
 @app.route('/createpackage', methods=['GET', 'POST'])
 @login_required
@@ -5693,7 +5730,7 @@ class Fruit(DAObject):
             response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, attachment_filename=nice_name)
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
             return response
-    return render_template('pages/create_package.html', form=form), 200
+    return render_template('pages/create_package.html', form=form, tab_title=word('Create Package'), page_title=word('Create Package')), 200
 
 def name_of_user(user, include_email=False):
     output = ''
@@ -5735,7 +5772,7 @@ def restart_page():
 """
     next_url = request.args.get('next', url_for('interview_list'))
     extra_meta = """\n    <meta http-equiv="refresh" content="5;URL='""" + next_url + """'">"""
-    return render_template('pages/restart.html', extra_meta=Markup(extra_meta), extra_js=Markup(script))
+    return render_template('pages/restart.html', extra_meta=Markup(extra_meta), extra_js=Markup(script), tab_title=word('Restarting'), page_title=word('Restarting'))
 
 @app.route('/config', methods=['GET', 'POST'])
 @login_required
@@ -5774,7 +5811,7 @@ def config_page():
             content = fp.read().decode('utf8')
     if content is None:
         abort(404)
-    return render_template('pages/config.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = ' + json.dumps(content) + ';\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n    </script>'), form=form), 200
+    return render_template('pages/config.html', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = ' + json.dumps(content) + ';\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n    </script>'), form=form), 200
 
 def flash_as_html(message, message_type="info"):
     output = """
@@ -5987,13 +6024,13 @@ def playground_files():
         edit_header = word('Edit text files')
         after_text = None
     elif (section == "static"):
-        header = word("Static files")
+        header = word("Static Files")
         description = 'Add files here that you want to include in your interviews with "images," "image sets," "[FILE]" or "url_of()."'
         upload_header = word("Upload a static file")
         edit_header = word('Edit text files')
         after_text = None
     elif (section == "sources"):
-        header = word("Source files")
+        header = word("Source Files")
         description = 'Add files here that you want to make available to your interview code, such as word translation files and training data for machine learning.'
         upload_header = word("Upload a source file")
         edit_header = word('Edit source files')
@@ -6015,7 +6052,7 @@ def playground_files():
       scrollBottom();\n"""
     else:
         extra_command = ""
-    return render_template('pages/playgroundfiles.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("file_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "' + mode + '", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#formtwo").trigger("checkform.areYouSure");});\n      $("#formtwo").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#formtwo").bind("submit", function(){daCodeMirror.save(); $("#formtwo").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new)), 200
+    return render_template('pages/playgroundfiles.html', tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("file_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "' + mode + '", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#formtwo").trigger("checkform.areYouSure");});\n      $("#formtwo").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#formtwo").bind("submit", function(){daCodeMirror.save(); $("#formtwo").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new)), 200
 
 @app.route('/playgroundpackages', methods=['GET', 'POST'])
 @login_required
@@ -6137,7 +6174,7 @@ def playground_packages():
         extra_command = "      scrollBottom();\n"
     else:
         extra_command = ""
-    return render_template('pages/playgroundpackages.html', extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this package?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("readme");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names), 200
+    return render_template('pages/playgroundpackages.html', tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this package?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("readme");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names), 200
 
 def public_method(method, the_class):
     if isinstance(method, types.MethodType) and method.__name__ != 'init' and not method.__name__.startswith('_') and method.__name__ in the_class.__dict__:
@@ -6580,6 +6617,11 @@ $( document ).ready(function() {
         $(function () {
           $('[data-toggle="popover"]').popover({trigger: 'hover', html: true})
         });
+        // setTimeout(function(){
+        //   $("#flash .alert-success").hide(300, function(){
+        //     $(self).remove();
+        //   });
+        // }, 3000);
       },
       dataType: 'json'
     });
@@ -6695,7 +6737,7 @@ $( document ).ready(function() {
     example_html.append('        </div>')
     example_html.append('        <div class="col-md-6"><h4>' + word("Preview") + '<a target="_blank" class="label label-primary example-documentation example-hidden" id="example-documentation-link">' + word('View documentation') + '</a></h4><a href="#" target="_blank" id="example-image-link"><img title="' + word('Click to try this interview') + '" class="example_screenshot" id="example-image"></a></div>')
     example_html.append('        <div class="col-md-4 example-source-col"><h4>' + word('Source') + ' <a class="label label-success example-copy">' + word('Insert') + '</a></h4><div id="example-source-before" class="invisible"></div><div id="example-source"></div><div id="example-source-after" class="invisible"></div><div><a class="example-hider" id="show-full-example">' + word("Show context of example") + '</a><a class="example-hider invisible" id="hide-full-example">' + word("Hide context of example") + '</a></div></div>')
-    return render_template('pages/playground.html', page_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, "400px");\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=Markup("\n".join(example_html)), interview_path=interview_path, is_new=str(is_new)), 200
+    return render_template('pages/playground.html', page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, "400px");\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=Markup("\n".join(example_html)), interview_path=interview_path, is_new=str(is_new)), 200
 
 # nameInfo = ' + str(json.dumps(vars_in_use['name_info'])) + ';      
 
@@ -6709,7 +6751,7 @@ $( document ).ready(function() {
 @login_required
 @roles_required(['admin', 'developer'])
 def package_page():
-    return render_template('pages/packages.html'), 200
+    return render_template('pages/packages.html', tab_title=word("Package Management"), page_title=word("Package Management")), 200
 
 def make_image_files(path):
     #logmessage("make_image_files on " + str(path))
@@ -6750,7 +6792,7 @@ def server_error(the_error):
         errmess = '<pre>' + errmess + '</pre>'
     else:
         errmess = '<blockquote>' + errmess + '</blockquote>'
-    return render_template('pages/501.html', error=errmess, logtext=str(the_trace)), 501
+    return render_template('pages/501.html', tab_title=word("Error"), page_title=word("Error"), error=errmess, logtext=str(the_trace)), 501
 
 def trigger_update(except_for=None):
     logmessage("trigger_update: except_for is " + str(except_for))
@@ -6954,7 +6996,7 @@ def logs():
         content = "\n".join(lines)
     else:
         content = "No log files available"
-    return render_template('pages/logs.html', form=form, files=files, current_file=the_file, content=content, default_filter_string=default_filter_string), 200
+    return render_template('pages/logs.html', tab_title=word("Logs"), page_title=word("Logs"), form=form, files=files, current_file=the_file, content=content, default_filter_string=default_filter_string), 200
 
 def call_sync():
     if not USING_SUPERVISOR:
@@ -7006,7 +7048,7 @@ def request_developer():
             except:
                 flash(word('We were unable to submit your request.'), 'error')
         return redirect(url_for('index'))
-    return render_template('users/request_developer.html', form=form)
+    return render_template('users/request_developer.html', tab_title=word("Developer Access"), page_title=word("Developer Access"), form=form)
 
 @app.route('/utilities', methods=['GET', 'POST'])
 @login_required
@@ -7027,7 +7069,7 @@ def utilities():
                 for field, default, pageno, rect, field_type in fields:
                     fields_output += '      "' + field + '": ' + default + "\n"
                 fields_output += "---"
-    return render_template('pages/utilities.html', form=form, fields=fields_output)
+    return render_template('pages/utilities.html', tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output)
 
 def formatted_current_time():
     if current_user.timezone:
@@ -7043,11 +7085,11 @@ def formatted_current_date():
         the_timezone = pytz.timezone(get_default_timezone())
     return datetime.datetime.utcnow().replace(tzinfo=tz.tzutc()).astimezone(the_timezone).strftime("%Y-%m-%d")
 
-@app.route('/save', methods=['GET', 'POST'])
-def save_for_later():
-    if current_user.is_authenticated and not current_user.is_anonymous:
-        return render_template('pages/save_for_later.html', interview=sdf)
-    secret = request.cookies.get('secret', None)
+# @app.route('/save', methods=['GET', 'POST'])
+# def save_for_later():
+#     if current_user.is_authenticated and not current_user.is_anonymous:
+#         return render_template('pages/save_for_later.html', interview=sdf)
+#     secret = request.cookies.get('secret', None)
 
 @app.route('/interviews', methods=['GET', 'POST'])
 @login_required
@@ -7095,7 +7137,7 @@ def interview_list():
         starttime = nice_date_from_utc(dictionary['_internal']['starttime'], timezone=the_timezone)
         modtime = nice_date_from_utc(dictionary['_internal']['modtime'], timezone=the_timezone)
         interviews.append({'interview_info': interview_info, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'title': interview_title})
-    return render_template('pages/interviews.html', interviews=sorted(interviews, key=lambda x: x['dict']['_internal']['starttime']))
+    return render_template('pages/interviews.html', tab_title=word("Interviews"), page_title=word("Interviews"), interviews=sorted(interviews, key=lambda x: x['dict']['_internal']['starttime']))
 
 # @user_logged_in.connect_via(app)
 # def _after_login_hook(sender, user, **extra):
@@ -7113,9 +7155,9 @@ def close_db(error):
     if hasattr(db, 'engine'):
         db.engine.dispose()
 
-@app.route('/webrtc')
-def webrtc():
-    return render_template('pages/webrtc.html')
+# @app.route('/webrtc')
+# def webrtc():
+#     return render_template('pages/webrtc.html', tab_title=word("WebRTC"), page_title=word("WebRTC"))
 
 alphanumeric_only = re.compile('[\W_]+')
 phone_pattern = re.compile(r"^[\d\+\-\(\) ]+$")

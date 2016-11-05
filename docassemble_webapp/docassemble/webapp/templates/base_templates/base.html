@@ -8,7 +8,7 @@
 {%- if request.path == "/user/google-sign-in" and config['USE_GOOGLE_LOGIN'] %}
     <meta name="google-signin-client_id" content="{{ config['OAUTH_CREDENTIALS']['google']['id'] }}">
 {%- endif %}{{ extra_meta }}
-    <title>{{ config['APP_NAME'] }}</title>
+    <title>{% if tab_title %}{{ tab_title }}{% else %}{{ config['APP_NAME'] }}{% endif %}</title>
     <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='app/jasny-bootstrap.min.css') }}" rel="stylesheet">
@@ -18,17 +18,19 @@
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="container-fluid">
         <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+          {%- if not (current_user.is_anonymous and request.path == "/user/sign-in") %}
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
+          {% endif %}
           <a href="{{ url_for('index') }}" class="navbar-brand">{% if page_title %}{{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}</a>
         </div>
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <div class="collapse navbar-collapse" id="navbar-collapse">
           <ul class="nav navbar-nav navbar-right">
             {%- if not current_user.is_anonymous %}
-            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ current_user.email }}<b class="caret"></b></a>
+            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ current_user.email }}<span class="caret"></span></a>
 	      <ul class="dropdown-menu">
 		{%- if current_user.has_roles(['admin', 'developer', 'advocate']) %}
 		<li><a href="{{ url_for('monitor') }}">{{ word('Monitor') }}</a></li>
@@ -40,13 +42,13 @@
 		<li><a href="{{ url_for('utilities') }}">{{ word('Utilities') }}</a></li>
 		  {%- if current_user.has_roles(['admin']) %}
 		<li><a href="{{ url_for('user_list') }}">{{ word('User List') }}</a></li>
-		<li><a href="{{ url_for('privilege_list') }}">{{ word('Privileges List') }}</a></li>
+		{# <li><a href="{{ url_for('privilege_list') }}">{{ word('Privileges List') }}</a></li> #}
 		<li><a href="{{ url_for('config_page') }}">{{ word('Configuration') }}</a></li>
 		  {%- endif %}
 		{%- endif %}
 		<li><a href="{{ url_for('interview_list') }}">{{ word('My Interviews') }}</a></li>
 		<li><a href="{{ url_for('user_profile_page') }}">{{ word('Profile') }}</a></li>
-		<li><a href="{{ url_for('user.logout') }}">{{ word('Sign out') }}</a></li>
+		<li><a href="{{ url_for('user.logout') }}">{{ word('Sign Out') }}</a></li>
 	      </ul>
 	    </li>
             {%- elif request.path != "/login" and request.path != "/user/sign-in" %}
@@ -78,13 +80,18 @@
     <script src="{{ url_for('static', filename='app/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='app/jasny-bootstrap.min.js') }}"></script>
-    {%- if request.path in ["/user/sign-in", "/user/register", "/user/forgot-password"] %}
     <script>
       $( document ).ready(function(){
+        {%- if request.path in ["/user/sign-in", "/user/register", "/user/forgot-password"] %}
         $("#email").focus();
+        {%- endif %}
+        setTimeout(function(){
+          $("#flash .alert-success").hide(300, function(){
+            $(self).remove();
+          });
+        }, 3000);
       });
     </script>
-    {%- endif %}
     {{ extra_js }}
   </body>
 </html>

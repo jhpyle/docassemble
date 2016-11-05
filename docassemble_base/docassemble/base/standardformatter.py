@@ -1117,6 +1117,7 @@ def add_validation(extra_scripts, validation_rules):
             }
           });
         }
+        daSpinnerTimeout = setTimeout(showSpinner, 1000);
         return(false);
       };
       $("#daform").validate(validation_rules);

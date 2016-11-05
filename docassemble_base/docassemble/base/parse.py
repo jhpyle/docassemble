@@ -1441,6 +1441,7 @@ class Question:
             for need_code in self.need:
                 exec(need_code, user_dict)
         question_text = self.content.text(user_dict)
+        #logmessage("Asking " + str(question_text))
         if self.subcontent is not None:
             subquestion = self.subcontent.text(user_dict)
         else:
@@ -1564,15 +1565,15 @@ class Question:
                 if hasattr(field, 'choicetype') and field.choicetype == 'compute':
                     if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio', 'object_checkboxes']:
                         string = "import docassemble.base.core"
-                        logmessage("Doing " + string)
+                        #logmessage("Doing " + string)
                         exec(string, user_dict)                        
-                    logmessage("Doing " + field.selections['sourcecode'])
+                    #logmessage("Doing " + field.selections['sourcecode'])
                     selectcompute[field.number] = process_selections(eval(field.selections['compute'], user_dict))
                 if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio', 'object_checkboxes']:
                     if field.number not in selectcompute:
                         raise DAError("datatype was set to object but no code or selections was provided")
                     string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "] = dict()"
-                    logmessage("Doing " + string)
+                    #logmessage("Doing " + string)
                     try:
                         exec(string, user_dict)
                         for selection in selectcompute[field.number]:
@@ -1580,7 +1581,7 @@ class Question:
                             #logmessage("key is " + str(key))
                             real_key = codecs.decode(key, 'base64').decode('utf-8')
                             string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "][" + repr(key) + "] = " + real_key
-                            logmessage("Doing " + string)
+                            #logmessage("Doing " + string)
                             exec(string, user_dict)
                     except:
                         raise DAError("Failure while processing field with datatype of object")
@@ -2435,14 +2436,14 @@ class Interview:
                             return({'type': 'continue'})
                         if question.question_type == "template":
                             string = "import docassemble.base.core"
-                            logmessage("Doing " + string)
+                            #logmessage("Doing " + string)
                             exec(string, user_dict)
                             if question.decorations is None:
                                 decoration_list = []
                             else:
                                 decoration_list = question.decorations
                             string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + "'" + from_safeid(question.fields[0].saveas) + "', content=" + repr(question.content.text(user_dict).rstrip()) + ', subject=' + repr(question.subcontent.text(user_dict).rstrip()) + ', decorations=' + repr([dec['image'].text(user_dict).rstrip() for dec in decoration_list]) + ')'
-                            logmessage("Doing " + string)
+                            #logmessage("Doing " + string)
                             exec(string, user_dict)
                             #question.mark_as_answered(user_dict)
                             return({'type': 'continue'})

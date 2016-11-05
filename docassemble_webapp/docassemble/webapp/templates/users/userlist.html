@@ -2,7 +2,9 @@
 
 {% block content %}
 
-<h1>Registered Users</h1>
+<h1>{{ word('User List') }}</h1>
+
+<p><a href="{{ url_for('privilege_list') }}">{{ word('Edit Privileges') }}</a></p>
 
 {{ userlist|safe }}
 
