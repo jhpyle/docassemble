@@ -26,8 +26,8 @@ are six privileges defined by default in **docassemble**:
 * advocate
 
 A user who has the "admin" privilege can upgrade the privleges of any
-user by going to the [User List] on the menu, and can add additional
-privileges by going to the [Privileges List].
+user by going to the [User List] on the menu.  The user can add
+additional privileges by going to the [Privileges List].
 
 The "cron" user privilege is used exclusively by the code that runs
 [scheduled tasks].
@@ -82,9 +82,10 @@ given the privileges of "developer" or "admin."
 
 ## <a name="privileges">Privileges List</a>
 
-Administrators can go to the "Privileges List" from the menu.  From
-here, administrators can add new privilege types, or delete privilege
-types that were already created.
+Administrators can go to the "Privileges List" by clicking "Edit
+Privileges" on the [User List] page.  From here, administrators can
+add new privilege types, or delete privilege types that were already
+created.
 
 [country code]: http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
 [special variables]: {{ site.baseurl }}/docs/special.html
