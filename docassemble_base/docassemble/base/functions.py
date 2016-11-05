@@ -63,6 +63,10 @@ def user_logged_in():
         return True
     return False
 
+def interface():
+    """Returns web, sms, cron, or worker, depending on how the interview is being accessed"""
+    return this_thread.current_info.get('interface', None)
+
 def user_privileges():
     """Returns a list of the user's privileges.  For users who are not 
     logged in, this is always ['user']."""

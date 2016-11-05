@@ -18,10 +18,11 @@ interview help:
   content: |
     Answer each question.  At the end, you may be given a document
     that you can save.
-
+    % if interface() == 'web':
     If you see a word written in green text, you can click on it to
     see more information about the word.  You can try this out here 
     to find out more about rhododendron plants.
+    % endif
 comment: |
   An "interview help" block adds text to the "Help" page of every
   question in the interview.  If the question has help text of its

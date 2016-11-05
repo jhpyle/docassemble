@@ -6889,7 +6889,7 @@ def package_static(package, filename):
     response = send_file(the_file, mimetype=str(mimetype))
     return(response)
 
-def current_info(yaml=None, req=None, action=None, location=None):
+def current_info(yaml=None, req=None, action=None, location=None, interface='web'):
     if current_user.is_authenticated and not current_user.is_anonymous:
         ext = dict(email=current_user.email, roles=[role.name for role in current_user.roles], theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization)
     else:
@@ -6900,7 +6900,7 @@ def current_info(yaml=None, req=None, action=None, location=None):
     else:
         url = req.base_url
         secret = req.cookies.get('secret', None)
-    return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'url': url, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}}
+    return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}}
     if action is not None:
         return_val.update(action)
     if location is not None:
@@ -7191,6 +7191,9 @@ def voice():
     if twilio_config is None:
         logmessage("Ignoring call to voice because Twilio not enabled")
         return Response(str(resp), mimetype='text/xml')
+    if 'voice' not in twilio_config['name']['default'] or twilio_config['name']['default']['voice'] in [False, None]:
+        logmessage("Ignoring call to voice because voice feature not enabled")
+        return Response(str(resp), mimetype='text/xml')
     if "AccountSid" not in request.form or request.form["AccountSid"] != twilio_config['name']['default'].get('account sid', None):
         logmessage("Request to voice did not authenticate")
         return Response(str(resp), mimetype='text/xml')
@@ -7246,6 +7249,9 @@ def sms():
     if twilio_config is None:
         logmessage("Ignoring message to sms because Twilio not enabled")
         return Response(str(resp), mimetype='text/xml')
+    if 'sms' not in twilio_config['name']['default'] or twilio_config['name']['default']['sms'] in [False, None]:
+        logmessage("Ignoring message to sms because SMS not enabled")
+        return Response(str(resp), mimetype='text/xml')
     if "AccountSid" not in request.form or request.form["AccountSid"] not in twilio_config['account sid']:
         logmessage("Request to sms did not authenticate")
         return Response(str(resp), mimetype='text/xml')
@@ -7299,10 +7305,31 @@ def sms():
         r.set(key, pickle.dumps(sess_info))
         encrypt_session(secret, user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
     interview = docassemble.base.interview_cache.get_interview(sess_info['yaml_filename'])
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], yaml_filename=sess_info['yaml_filename'], url=None, action=None, arguments=dict()))
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], yaml_filename=sess_info['yaml_filename'], url=None, action=None, interface='sms', arguments=dict()))
     interview.assemble(user_dict, interview_status)
     false_list = [word('no'), word('n'), word('false'), word('f')]
     true_list = [word('yes'), word('y'), word('true'), word('t')]
+    inp_lower = inp.lower()
+    if accepting_input:
+        if inp_lower in [word('exit'), word('quit')]:
+            logmessage("sms: exiting")
+            reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
+            r.delete(key)
+            release_lock(sess_info['uid'], sess_info['yaml_filename'])
+            return Response(str(resp), mimetype='text/xml')
+        if inp_lower in [word('help')]:
+            sms_info = as_sms(interview_status)
+            message = ''
+            if sms_info['help'] is None:
+                message += word('Sorry, no help is available for this question.')
+            else:
+                message += sms_info['help']
+            message += "\n" + word("To read the question again, type question.")
+            resp.message(message)
+            release_lock(sess_info['uid'], sess_info['yaml_filename'])
+            return Response(str(resp), mimetype='text/xml')
+        if inp_lower in [word('question')]:
+            accepting_input = False
     if accepting_input:
         saveas = None
         if len(interview_status.question.fields):
@@ -7313,30 +7340,30 @@ def sms():
             if question.question_type == "settrue":
                 data = 'True'
             elif question.question_type in ["yesno"] or field.datatype in ['yesno', 'yesnowide'] or (field.datatype == 'boolean' and field.sign > 0):
-                if inp.lower() in true_list:
+                if inp_lower in true_list:
                     data = 'True'
-                elif inp.lower() in false_list:
+                elif inp_lower in false_list:
                     data = 'False'
                 else:
                     data = None
             elif question.question_type in ["yesnomaybe"] or field.datatype in ['yesnomaybe', 'yesnowidemaybe'] or (field.datatype == 'threestate' and field.sign > 0):
-                if inp.lower() in true_list:
+                if inp_lower in true_list:
                     data = 'True'
-                elif inp.lower() in false_list:
+                elif inp_lower in false_list:
                     data = 'False'
                 else:
                     data = 'None'
             elif question.question_type in ["noyes"] or field.datatype in ['noyes', 'noyeswide'] or (field.datatype == 'boolean' and field.sign < 0):
-                if inp.lower() in true_list:
+                if inp_lower in true_list:
                     data = 'False'
-                elif inp.lower() in false_list:
+                elif inp_lower in false_list:
                     data = 'True'
                 else:
                     data = None
             elif question.question_type in ['noyesmaybe', 'noyesmaybe', 'noyeswidemaybe'] or (field.datatype == 'threestate' and field.sign < 0):
-                if inp.lower() in true_list:
+                if inp_lower in true_list:
                     data = 'False'
-                elif inp.lower() in false_list:
+                elif inp_lower in false_list:
                     data = 'True'
                 else:
                     data = 'None'
@@ -7362,6 +7389,7 @@ def sms():
                 exec(the_string, user_dict)
             except:
                 logmessage("Failure to set variable with " + the_string)
+                release_lock(sess_info['uid'], sess_info['yaml_filename'])
                 return Response(str(resp), mimetype='text/xml')
         interview.assemble(user_dict, interview_status)
         save_user_dict(sess_info['uid'], user_dict, sess_info['yaml_filename'], secret=sess_info['secret'], encrypt=encrypted)
@@ -7378,6 +7406,7 @@ def sms():
         #logmessage("sms: " + as_sms(interview_status))
         #twilio_client = TwilioRestClient(tconfig['account sid'], tconfig['auth token'])
         #message = twilio_client.messages.create(to=request.form["From"], from_=request.form["To"], body=as_sms(interview_status))
+        resp.message(as_sms(interview_status)['question'])
         if user_dict.get('multi_user', False) is True and encrypted is True:
             encrypted = False
             sess_info['encrypted'] = encrypted

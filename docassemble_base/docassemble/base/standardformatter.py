@@ -72,7 +72,7 @@ bad_list = ['div', 'option']
 
 good_list = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'button', 'textarea', 'note']
 
-def to_text(html_doc):
+def to_text(html_doc, terms):
     output = ""
     soup = BeautifulSoup(html_doc, 'html.parser')
     [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title', 'audio', 'video', 'pre', 'attribution'])]
@@ -87,12 +87,17 @@ def to_text(html_doc):
             words = s.get_text()
         words = re.sub(r'\n\s*', ' ', words, flags=re.DOTALL)
         output += words + "\n"
+    terms = dict()
+    for s in soup.find_all('a'):
+        if s.has_attr('class') and s.attrs['class'][0] == 'daterm' and s.has_attr('data-content'):
+            terms[s.string] = s.attrs['data-content']
     output = re.sub(r'&amp;gt;', '>', output)
     output = re.sub(r'&amp;lt;', '<', output)
     output = re.sub(r'&gt;', '>', output)
     output = re.sub(r'&lt;', '<', output)
     output = re.sub(r'<[^>]+>', '', output)
     output = re.sub(r'\n$', '', output)
+    output = re.sub(r'  +', ' ', output)
     return output
 
 def do_show(element):
@@ -174,11 +179,12 @@ def try_to_abbreviate(label, data):
     return True
 
 def as_sms(status):
-    output = to_text(markdown_to_html(status.questionText, trim=False, status=status, strip_newlines=True))
+    terms = dict()
+    qoutput = to_text(markdown_to_html(status.questionText, trim=False, status=status, strip_newlines=True), terms)
     if status.subquestionText:
-        output += "\n" + to_text(markdown_to_html(status.subquestionText, status=status))
+        qoutput += "\n" + to_text(markdown_to_html(status.subquestionText, status=status), terms)
     if status.question.question_type == 'deadend':
-        return output
+        return dict(question=qoutput, help=houtput)
     if len(status.question.fields):
         field = None
         next_field = None
@@ -190,27 +196,27 @@ def as_sms(status):
                     next_field = the_field
                 continue
         if field is None:
-            return output
+            return dict(question=qoutput, help=houtput)
         label = None
         next_label = ''
         if next_field is not None and hasattr(next_field, 'label') and status.labels[next_field.number] != "no label":
-            next_label = ' (' + word("Next will be") + ' ' + to_text(markdown_to_html(status.labels[next_field.number], trim=False, status=status, strip_newlines=True)) + ')'
+            next_label = ' (' + word("Next will be") + ' ' + to_text(markdown_to_html(status.labels[next_field.number], trim=False, status=status, strip_newlines=True), terms) + ')'
         if hasattr(field, 'label') and status.labels[field.number] != "no label":
-            label = to_text(markdown_to_html(status.labels[field.number], trim=False, status=status, strip_newlines=True))
+            label = to_text(markdown_to_html(status.labels[field.number], trim=False, status=status, strip_newlines=True), terms)
         question = status.question
         if question.question_type == "settrue":
-            output += "\n" + word("Type ok to continue.")
+            qoutput += "\n" + word("Type ok to continue.")
         elif question.question_type in ["yesno", "noyes"] or (hasattr(field, 'datatype') and field.datatype in ['yesno', 'yesnowide', 'noyes', 'noyeswide']):
             if question.question_type == 'fields' and label:
-                output += "\n" + label + ":" + next_label
-            output += "\n" + word("Type [y]es or [n]o.")
+                qoutput += "\n" + label + ":" + next_label
+            qoutput += "\n" + word("Type [y]es or [n]o.")
         elif question.question_type in ["yesnomaybe"] or (hasattr(field, 'datatype') and field.datatype in ['yesnomaybe', 'yesnowidemaybe', 'noyesmaybe', 'noyesmaybe', 'noyeswidemaybe']):
             if question.question_type == 'fields' and label:
-                output += "\n" + label + ":" + next_label
-            output += "\n" + word("Type [y]es, [n]o, or [d]on't know")
+                qoutput += "\n" + label + ":" + next_label
+            qoutput += "\n" + word("Type [y]es, [n]o, or [d]on't know")
         elif question.question_type == 'multiple_choice' or (hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']):
             if question.question_type == 'fields' and label:
-                output += "\n" + label + ":" + next_label
+                qoutput += "\n" + label + ":" + next_label
             choice_list = get_choices(status, field)
             data = dict(startpoint=0, endpoint=1, size=1)
             while True:
@@ -219,61 +225,84 @@ def as_sms(status):
                 data['abb'] = dict()
                 data['label'] = list()
                 for choice in choice_list:
-                    flabel = to_text(markdown_to_html(choice[0], trim=False, status=status, strip_newlines=True))
+                    flabel = to_text(markdown_to_html(choice[0], trim=False, status=status, strip_newlines=True), terms)
                     success = try_to_abbreviate(flabel, data)
                     if not success:
                         break
                 if success:
                     break        
-            output += "\n" + word("Choices:")
+            qoutput += "\n" + word("Choices:")
             if hasattr(field, 'shuffle') and field.shuffle:
                 random.shuffle(data['label'])
             for the_label in data['label']:
-                output += "\n" + the_label
+                qoutput += "\n" + the_label
             if hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']:
-                output += "\n" + word("Type your selection(s), separated by commas, or type none.")
+                qoutput += "\n" + word("Type your selection(s), separated by commas, or type none.")
             else:
                 if len(choice_list) == 1:
-                    output += "\n" + word("Type") + " " + data['keys'][0] + " " + word("to proceed.")
+                    qoutput += "\n" + word("Type") + " " + data['keys'][0] + " " + word("to proceed.")
                 else:
-                    output += "\n" + word("Type your selection.")
+                    qoutput += "\n" + word("Type your selection.")
         elif hasattr(field, 'datatype') and field.datatype == 'range':
             max_string = str(int(status.extras['max'][field.number]))
             min_string = str(int(status.extras['min'][field.number]))
             if label:
-                output += "\n" + label + ":" + next_label
-            output += "\n" + word('Type a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string
+                qoutput += "\n" + label + ":" + next_label
+            qoutput += "\n" + word('Type a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string
         elif hasattr(field, 'datatype') and field.datatype in ['file', 'files', 'camera']:
             if label:
-                output += "\n" + label + ":" + next_label 
-            output += "\n" + word('Please send an image or file.')
+                qoutput += "\n" + label + ":" + next_label 
+            qoutput += "\n" + word('Please send an image or file.')
         elif hasattr(field, 'datatype') and field.datatype in ['camcorder']:
             if label:
-                output += "\n" + label + ":" + next_label
-            output += "\n" + word('Please send a video.')
+                qoutput += "\n" + label + ":" + next_label
+            qoutput += "\n" + word('Please send a video.')
         elif hasattr(field, 'datatype') and field.datatype in ['microphone']:
             if label:
-                output += "\n" + label + ":" + next_label 
-            output += "\n" + word('Please send an audio clip.')
+                qoutput += "\n" + label + ":" + next_label 
+            qoutput += "\n" + word('Please send an audio clip.')
         elif hasattr(field, 'datatype') and field.datatype in ['number', 'currency', 'float', 'integer']:
             if label:
-                output += "\n" + label + ":" + next_label
-            output += "\n" + word('Type a number.')
+                qoutput += "\n" + label + ":" + next_label
+            qoutput += "\n" + word('Type a number.')
         elif hasattr(field, 'datatype') and field.datatype in ['date']:
             if label:
-                output += "\n" + label + ":" + next_label 
-            output += "\n" + word('Type a date.')
+                qoutput += "\n" + label + ":" + next_label 
+            qoutput += "\n" + word('Type a date.')
         elif hasattr(field, 'datatype') and field.datatype in ['email']:
             if label:
-                output += "\n" + label + ":" + next_label
-            output += "\n" + word('Type an e-mail address.')
+                qoutput += "\n" + label + ":" + next_label
+            qoutput += "\n" + word('Type an e-mail address.')
         else:
             if label:
                 if status.extras['required'][field.number]:
-                    output += "\n" + word("Type the") + " " + label + "." + next_label
+                    qoutput += "\n" + word("Type the") + " " + label + "." + next_label
                 else:
-                    output += "\n" + word("Type the") + " " + label + " " + word("or type skip to leave blank.") + next_label
-    return output
+                    qoutput += "\n" + word("Type the") + " " + label + " " + word("or type skip to leave blank.") + next_label
+    if len(status.helpText) or len(terms):
+        houtput = ''
+        for help_section in status.helpText:
+            if houtput != '':
+                houtput += "\n"
+            if help_section['heading'] is not None:
+                houtput += '== ' + help_section['heading'] + ' =='
+            else:
+                houtput += '== ' + word('Help with this question') + ' =='
+            houtput += "\n" + to_text(markdown_to_html(help_section['content'], trim=False, status=status, strip_newlines=True), terms)
+        if len(terms):
+            if houtput != '':
+                houtput += "\n"
+            houtput += word("== Terms used: ==")
+            for term, definition in terms.iteritems():
+                houtput += "\n" + term + ': ' + definition
+        #houtput += "\n" + word("You can type question to read the question again.")
+    else:
+        houtput = None
+    if status.question.helptext is not None:
+        qoutput += "\n" + word("You can type help for additional assistance.")
+    elif len(terms):
+        qoutput += "\n" + word("You can type help to see definitions of terms used in this question.")
+    return dict(question=qoutput, help=houtput)
 
 def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_rules):
     decorations = list()
