@@ -2246,6 +2246,7 @@ def index():
       var daInformed = """ + json.dumps(user_dict['_internal']['informed'].get(user_id_string, dict())) + """;
       var daShowingSpinner = false;
       var daSpinnerTimeout = null;
+      var daSubmitter = null;
       function userNameString(data){
           if (data.hasOwnProperty('temp_user_id')){
               return """ + repr(str(word("anonymous visitor"))) + """ + ' ' + data.temp_user_id;
@@ -2565,7 +2566,6 @@ def index():
       var checkinInterval = null;
       var daReloader = null;
       var dadisable = null;
-      var daSubmitter = null;
       var daChatRoles = """ + json.dumps(user_dict['_internal']['livehelp']['roles']) + """;
       var daChatPartnerRoles = """ + json.dumps(user_dict['_internal']['livehelp']['partner_roles']) + """;
       function pushChanges(){
@@ -2896,9 +2896,11 @@ def index():
         });
         $('#daform button[type="submit"]').click(function(){
           daSubmitter = this;
+          return true;
         });
         $('#daform input[type="submit"]').click(function(){
           daSubmitter = this;
+          return true;
         });
         $("#daform input, #daform textarea, #daform select").first().each(function(){
           $(this).focus();
@@ -3030,6 +3032,7 @@ def index():
         }
         daInitialized = true;
         daShowingHelp = 0;
+        daSubmitter = null;
         setTimeout(function(){
           $("#flash .alert-success").hide(300, function(){
             $(self).remove();

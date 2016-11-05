@@ -1097,6 +1097,12 @@ def add_validation(extra_scripts, validation_rules):
           form.submit();
         }
         else{
+          if (daSubmitter != null){
+            var input = $("<input>")
+              .attr("type", "hidden")
+              .attr("name", daSubmitter.name).val(daSubmitter.value);
+            $("#daform").append($(input));
+          }
           var informed = '';
           if (daInformedChanged){
             informed = '&informed=' + Object.keys(daInformed).join(',');
