@@ -1093,6 +1093,54 @@ class Recipe(DAObject):
 
 If the item was never set, `get_info()` will return `None`.
 
+## <a name="interface"></a>interface()
+
+The `interface()` function returns `'web'` if the user is accessing
+the interview through a web browser and `'sms'` if the user is using
+[SMS].
+
+Sometimes interviews are accessed by background processes.
+`interface()` will return `'cron'` if the interview is being accessed
+by a [scheduled task], and will return `'worker'` if it is being
+accessed by a [background process].
+
+You might want to use this function to provide special instructions to
+users depending on the way they access the interview.  For example,
+the following will show a special instruction screen to users who are
+accessing the interview through [SMS].
+
+{% highlight yaml %}
+---
+mandatory: true
+code: |
+  if interface() == 'sms':
+    sms_instructions
+---
+question: |
+  Instructions
+subquestion: |
+  To leave the interview, type exit.
+field: sms_instructions
+---
+{% endhighlight %}
+
+You can also use `interface()` to distinguish between actual user
+requests and requests that originate from [background processes].
+
+{% highlight yaml %}
+---
+code: |
+  request_counter = 0
+---
+initial: true
+code: |
+  if interface() in ['sms', 'web']:
+    request_counter += 1
+---
+{% endhighlight %}
+
+
+
 ## <a name="user_logged_in"></a>user_logged_in()
 
 The `user_logged_in()` function returns `True` if the user is logged
@@ -2269,5 +2317,6 @@ modules:
 [`background_response_action()`]: #background_response_action
 [callback function]: https://en.wikipedia.org/wiki/Callback_(computer_programming)
 [background processes]: #background
+[background process]: #background
 [live chat]: {{ site.baseurl }}/docs/chat.html
 [special variable `speak_text`]: {{ site.baseurl }}/docs/special.html#speak_text
