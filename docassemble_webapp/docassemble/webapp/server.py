@@ -7263,6 +7263,7 @@ def sms():
         logmessage("sms: request to sms ignored because message had no content")
         return Response(str(resp), mimetype='text/xml')
     inp = request.form['Body'].strip()
+    logmessage("Received >" + inp + "<")
     key = 'da:sms:' + request.form["From"]
     sess_contents = r.get(key)
     if sess_contents is None:
@@ -7332,13 +7333,13 @@ def sms():
     skip_it = False
     changed = False
     if accepting_input:
-        if inp_lower in [word('help')]:
+        if inp_lower in [word('?')]:
             sms_info = as_sms(interview_status)
             message = ''
-            if sms_info['help'] is None:
+            if sms_info['?'] is None:
                 message += word('Sorry, no help is available for this question.')
             else:
-                message += sms_info['help']
+                message += sms_info['?']
             message += "\n" + word("To read the question again, type question.")
             resp.message(message)
             release_lock(sess_info['uid'], sess_info['yaml_filename'])

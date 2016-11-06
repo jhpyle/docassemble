@@ -374,9 +374,9 @@ def as_sms(status):
     else:
         houtput = None
     if status.question.helptext is not None:
-        qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', "\n" + word("Type help for additional assistance.") + 'XXXXMESSAGE_AREAXXXX', qoutput)
+        qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', "\n" + word("Type ? for additional assistance.") + 'XXXXMESSAGE_AREAXXXX', qoutput)
     elif len(terms):
-        qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', "\n" + word("Type help to see definitions of words.") + 'XXXXMESSAGE_AREAXXXX', qoutput)
+        qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', "\n" + word("Type ? to see definitions of words.") + 'XXXXMESSAGE_AREAXXXX', qoutput)
     # if status.question.question_type == 'deadend':
     #     return dict(question=qoutput, help=houtput)
     return dict(question=qoutput, help=houtput, next=next_variable)
