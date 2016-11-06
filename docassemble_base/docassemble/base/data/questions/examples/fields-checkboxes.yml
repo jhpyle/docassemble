@@ -6,7 +6,7 @@ metadata:
 question: |
   Please tell me what you think.
 fields:
-  - "Check the fruits you like": likes_fruit
+  - "Select the fruits you like": likes_fruit
     datatype: checkboxes
     choices:
       - Apples

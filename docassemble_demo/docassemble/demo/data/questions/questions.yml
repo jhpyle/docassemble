@@ -14,10 +14,16 @@ comment: |
   the name of the author.
 ---
 interview help:
-  heading: About this web site
+  heading: |
+    % if interface() == 'sms':
+    About this text messaging service
+    % else:
+    About this web site
+    % endif
   content: |
     Answer each question.  At the end, you may be given a document
     that you can save.
+    
     % if interface() == 'web':
     If you see a word written in green text, you can click on it to
     see more information about the word.  You can try this out here 
@@ -239,6 +245,7 @@ subquestion: |
   **docassemble**'s features.  At the end, you will be provided with a
   fake client letter and a fake pleading.
 
+  % if interface() == 'web':
   In the navigation bar above, you can click "Help" to see the help
   text associated with the interview and with the individual question
   (if any).  If "Help <i class="glyphicon glyphicon-star"></i>"
@@ -249,6 +256,7 @@ subquestion: |
   generate the question.  (Note: the "Source" tab is available because
   this server is configured as a development server; end users would
   not see a "Source" tab.)
+  % endif
 
   % if user.location.known:
   Your current location is ${ user.location }.

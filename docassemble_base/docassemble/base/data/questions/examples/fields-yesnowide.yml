@@ -18,4 +18,7 @@ subquestion: |
   % if likes_peaches:
   You like peaches.
   % endif
+  % if dislikes_pears:
+  You dislike pears.
+  % endif
 mandatory: true

@@ -1,0 +1,44 @@
+metadata:
+  title: Question sequence
+---
+mandatory: true
+question: |
+  Lets think about apples
+fields:
+  - "Are apples good?": question_one_a
+    datatype: yesno
+  - "Your favorite variety": question_one_b
+---
+mandatory: true
+question: |
+  Are peaches good?
+yesno: question_two
+---
+mandatory: true
+question: |
+  Are turnips good?
+yesno: question_three
+---
+mandatory: true
+question: |
+  Is linoleum good?
+yesno: question_four
+---
+mandatory: true
+question: |
+  Are automobiles good?
+yesno: question_five
+---
+mandatory: true
+question: |
+  Is furniture good?
+yesno: question_six
+---
+mandatory: true
+question: |
+  Was this interview good?
+yesno: question_seven
+---
+mandatory: true
+question: |
+  Thanks for answering my questions!

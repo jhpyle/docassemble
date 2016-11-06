@@ -87,10 +87,14 @@ def to_text(html_doc, terms):
             words = s.get_text()
         words = re.sub(r'\n\s*', ' ', words, flags=re.DOTALL)
         output += words + "\n"
-    terms = dict()
     for s in soup.find_all('a'):
         if s.has_attr('class') and s.attrs['class'][0] == 'daterm' and s.has_attr('data-content'):
             terms[s.string] = s.attrs['data-content']
+    output = re.sub(ur'\u201c', '"', output)
+    output = re.sub(ur'\u201d', '"', output)
+    output = re.sub(ur'\u2018', "'", output)
+    output = re.sub(ur'\u2019', "'", output)
+    output = re.sub(ur'\u201b', "'", output)
     output = re.sub(r'&amp;gt;', '>', output)
     output = re.sub(r'&amp;lt;', '<', output)
     output = re.sub(r'&gt;', '>', output)
@@ -126,111 +130,175 @@ def hidden(element):
                 return True
     return False
 
+def get_choices_with_abb(status, field, terms=dict()):
+    choice_list = get_choices(status, field)
+    data = dict()
+    while True:
+        success = True
+        data['keys'] = list()
+        data['abb'] = dict()
+        data['abblower'] = dict()
+        data['label'] = list()
+        for choice in choice_list:
+            flabel = to_text(markdown_to_html(choice[0], trim=False, status=status, strip_newlines=True), terms).strip()
+            success = try_to_abbreviate(choice[0], flabel, data, len(choice_list))
+            if not success:
+                break
+        if success:
+            break        
+    return data, choice_list
+    
 def get_choices(interview_status, field):
-    saveas = myb64unquote(field.saveas)
     question = interview_status.question
     choice_list = list()
-    if saveas is not None:
-        if hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']:
+    if hasattr(field, 'saveas') and field.saveas is not None:
+        saveas = myb64unquote(field.saveas)
+        if interview_status.question.question_type == "multiple_choice":
+            if hasattr(field, 'has_code') and field.has_code:
+                pairlist = list(interview_status.selectcompute[field.number])
+                for pair in pairlist:
+                    choice_list.append([pair[1], saveas, pair[0]])
+            else:
+                for choice in field.choices:
+                    for key in choice:
+                        if key == 'image':
+                            continue
+                        choice_list.append([key, saveas, choice[key]])
+        elif hasattr(field, 'choicetype'):
             if field.choicetype == 'compute':
                 pairlist = list(interview_status.selectcompute[field.number])
-            elif field.choicetype == 'manual':
-                pairlist = list(field.selections)
-            else:
+            elif field.datatype in ['checkboxes', 'object_checkboxes'] and field.choicetype != 'manual':
                 pairlist = list()
-            for pair in pairlist:
-                choice_list.append([pair[1], from_safeid(field.saveas) + "[" + myb64quote(pair[0]) + "]", True])
-        elif hasattr(field, 'has_code') and field.has_code:
-            pairlist = list(interview_status.selectcompute[field.number])
-            for pair in pairlist:
-                choice_list.append([pair[1], saveas, pair[0]])
-        else:
-            for choice in field.choices:
-                for key in choice:
-                    if key == 'image':
-                        continue
-                    choice_list.append([key, saveas, choice[key]])
+            else:
+                pairlist = list(field.selections)
+            #if field.datatype in ['object', 'radio', 'object_radio', 'checkboxes', 'object_checkboxes']:
+            if field.datatype in ['object_checkboxes']:
+                for pair in pairlist:
+                    choice_list.append([pair[1], saveas, from_safeid(pair[0])])
+            elif field.datatype in ['object', 'object_radio']:
+                for pair in pairlist:
+                    choice_list.append([pair[1], saveas, from_safeid(pair[0])])
+            elif field.datatype in ['checkboxes']:
+                for pair in pairlist:
+                    choice_list.append([pair[1], saveas + "[" + repr(pair[0]) + "]", True])
+            else:
+                for pair in pairlist:
+                    choice_list.append([pair[1], saveas, pair[0]])
     else:
         indexno = 0
         for choice in field.choices:
             for key in choice:
                 if key == 'image':
                     continue
-                choice_list.append([key, saveas, indexno])
+                choice_list.append([key, '_internal["answers"][' + repr(question.name) + ']', indexno])
             indexno += 1
     return choice_list
 
-def try_to_abbreviate(label, data):
+def try_to_abbreviate(label, flabel, data, length):
+    if 'size' not in data:
+        data['size'] = 1
+    if 'keys' not in data:
+        data['keys'] = list()
+    if 'abb' not in data:
+        data['abb'] = dict()
+    if 'abblower' not in data:
+        data['abblower'] = dict()
+    if 'label' not in data:
+        data['label'] = list()
+    if length > 8:
+        method = 'fromstart'
+    else:
+        method = 'float'
     startpoint = 0
     endpoint = startpoint + data['size']
-    while endpoint <= len(label):
-        prospective_key = label[startpoint:endpoint]
-        if re.search(r'[^A-Za-z0-9]', prospective_key):
+    prospective_key = flabel
+    while endpoint <= len(flabel):
+        prospective_key = flabel[startpoint:endpoint]
+        if method == 'float' and re.search(r'[^A-Za-z0-9]', prospective_key):
             startpoint += 1
             endpoint = startpoint + data['size']
             continue
-        if prospective_key in data['abb']:
-            data['size'] += 1
-            return False
-        data['abb'][prospective_key] = label
-        data['keys'].append(prospective_key)
-        data['label'].append(label[0:startpoint] + "[" + prospective_key + ']' + label[endpoint:])
-        return True
+        if method == 'fromstart' and re.search(r'[^A-Za-z0-9]$', prospective_key):
+            endpoint += 1
+            continue
+        if prospective_key.lower() in data['abblower']:
+            if method == 'float':
+                data['size'] += 1
+                return False
+            endpoint += 1
+            continue
+        break
+    data['abb'][prospective_key] = label
+    data['abblower'][prospective_key.lower()] = label
+    data['keys'].append(prospective_key)
+    data['label'].append(flabel[0:startpoint] + "[" + prospective_key + ']' + flabel[endpoint:])
     return True
 
 def as_sms(status):
     terms = dict()
+    next_variable = None
     qoutput = to_text(markdown_to_html(status.questionText, trim=False, status=status, strip_newlines=True), terms)
     if status.subquestionText:
         qoutput += "\n" + to_text(markdown_to_html(status.subquestionText, status=status), terms)
-    if status.question.question_type == 'deadend':
-        return dict(question=qoutput, help=houtput)
+        #logmessage("output is: " + repr(qoutput))
+    qoutput += "XXXXMESSAGE_AREAXXXX"
     if len(status.question.fields):
         field = None
         next_field = None
         for the_field in status.question.fields:
-            if the_field.number not in status.defined:
+            if hasattr(the_field, 'datatype'):
+                if the_field.datatype in ['script', 'css']:
+                    continue
+                if the_field.datatype in ['html', 'note'] and field is not None:
+                    continue
+                if the_field.datatype in ['note']:
+                    qoutput += "\n" + to_text(markdown_to_html(status.extras['note'][the_field.number], status=status), terms)
+                    continue
+                if the_field.datatype in ['html']:
+                    qoutput += "\n" + to_text(status.extras['html'][the_field.number].rstrip())
+                    continue
+            #logmessage("field number is " + str(the_field.number))
+            if not hasattr(the_field, 'saveas'):
+                logmessage("as_sms: field has no saveas")
+                continue
+            if the_field.number not in status.current_info['skip']:
+                #logmessage("field is not defined yet")
                 if field is None:
                     field = the_field
                 elif next_field is None:
                     next_field = the_field
                 continue
         if field is None:
-            return dict(question=qoutput, help=houtput)
+            logmessage("as_sms: field seemed to be defined already?")
+            field = status.question.fields[0]
+            #return dict(question=qoutput, help=None, next=next_variable)
         label = None
         next_label = ''
-        if next_field is not None and hasattr(next_field, 'label') and status.labels[next_field.number] != "no label":
-            next_label = ' (' + word("Next will be") + ' ' + to_text(markdown_to_html(status.labels[next_field.number], trim=False, status=status, strip_newlines=True), terms) + ')'
+        if next_field is not None:
+            next_variable = myb64unquote(next_field.saveas)
+            if hasattr(next_field, 'label') and status.labels[next_field.number] not in ["no label", ""]:
+                next_label = ' (' + word("Next will be") + ' ' + to_text(markdown_to_html(status.labels[next_field.number], trim=False, status=status, strip_newlines=True), terms) + ')'
         if hasattr(field, 'label') and status.labels[field.number] != "no label":
             label = to_text(markdown_to_html(status.labels[field.number], trim=False, status=status, strip_newlines=True), terms)
         question = status.question
+        # if hasattr(field, 'datatype'):
+        #     logmessage("as_sms: data type is " + field.datatype)
+        # else:
+        #     logmessage("as_sms: data type is undefined")
         if question.question_type == "settrue":
             qoutput += "\n" + word("Type ok to continue.")
-        elif question.question_type in ["yesno", "noyes"] or (hasattr(field, 'datatype') and field.datatype in ['yesno', 'yesnowide', 'noyes', 'noyeswide']):
+        elif question.question_type in ["yesno", "noyes"] or (hasattr(field, 'datatype') and (field.datatype in ['yesno', 'yesnowide', 'noyes', 'noyeswide'] or (field.datatype == 'boolean' and question.question_type == 'fields'))):
             if question.question_type == 'fields' and label:
                 qoutput += "\n" + label + ":" + next_label
             qoutput += "\n" + word("Type [y]es or [n]o.")
-        elif question.question_type in ["yesnomaybe"] or (hasattr(field, 'datatype') and field.datatype in ['yesnomaybe', 'yesnowidemaybe', 'noyesmaybe', 'noyesmaybe', 'noyeswidemaybe']):
+        elif question.question_type in ["yesnomaybe"] or (hasattr(field, 'datatype') and (field.datatype in ['yesnomaybe', 'yesnowidemaybe', 'noyesmaybe', 'noyesmaybe', 'noyeswidemaybe'] or (field.datatype == 'threestate' and question.question_type == 'fields'))):
             if question.question_type == 'fields' and label:
                 qoutput += "\n" + label + ":" + next_label
             qoutput += "\n" + word("Type [y]es, [n]o, or [d]on't know")
-        elif question.question_type == 'multiple_choice' or (hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']):
+        elif question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ['object', 'checkboxes', 'object_checkboxes']):
             if question.question_type == 'fields' and label:
                 qoutput += "\n" + label + ":" + next_label
-            choice_list = get_choices(status, field)
-            data = dict(startpoint=0, endpoint=1, size=1)
-            while True:
-                success = True
-                data['keys'] = list()
-                data['abb'] = dict()
-                data['label'] = list()
-                for choice in choice_list:
-                    flabel = to_text(markdown_to_html(choice[0], trim=False, status=status, strip_newlines=True), terms)
-                    success = try_to_abbreviate(flabel, data)
-                    if not success:
-                        break
-                if success:
-                    break        
+            data, choice_list = get_choices_with_abb(status, field, terms=terms)
             qoutput += "\n" + word("Choices:")
             if hasattr(field, 'shuffle') and field.shuffle:
                 random.shuffle(data['label'])
@@ -239,10 +307,13 @@ def as_sms(status):
             if hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']:
                 qoutput += "\n" + word("Type your selection(s), separated by commas, or type none.")
             else:
-                if len(choice_list) == 1:
-                    qoutput += "\n" + word("Type") + " " + data['keys'][0] + " " + word("to proceed.")
+                if status.extras['required'][field.number]:
+                    if len(choice_list) == 1:
+                        qoutput += "\n" + word("Type") + " " + data['keys'][0] + " " + word("to proceed.")
+                    else:
+                        qoutput += "\n" + word("Type your selection.")
                 else:
-                    qoutput += "\n" + word("Type your selection.")
+                    qoutput += "\n" + word("Type your selection, or type skip to move on without selecting.")
         elif hasattr(field, 'datatype') and field.datatype == 'range':
             max_string = str(int(status.extras['max'][field.number]))
             min_string = str(int(status.extras['min'][field.number]))
@@ -261,10 +332,14 @@ def as_sms(status):
             if label:
                 qoutput += "\n" + label + ":" + next_label 
             qoutput += "\n" + word('Please send an audio clip.')
-        elif hasattr(field, 'datatype') and field.datatype in ['number', 'currency', 'float', 'integer']:
+        elif hasattr(field, 'datatype') and field.datatype in ['number', 'float', 'integer']:
             if label:
                 qoutput += "\n" + label + ":" + next_label
             qoutput += "\n" + word('Type a number.')
+        elif hasattr(field, 'datatype') and field.datatype in ['currency']:
+            if label:
+                qoutput += "\n" + label + ":" + next_label
+            qoutput += "\n" + word('Type a currency value.')
         elif hasattr(field, 'datatype') and field.datatype in ['date']:
             if label:
                 qoutput += "\n" + label + ":" + next_label 
@@ -285,7 +360,7 @@ def as_sms(status):
             if houtput != '':
                 houtput += "\n"
             if help_section['heading'] is not None:
-                houtput += '== ' + help_section['heading'] + ' =='
+                houtput += '== ' + to_text(markdown_to_html(help_section['heading'], trim=False, status=status, strip_newlines=True), terms) + ' =='
             else:
                 houtput += '== ' + word('Help with this question') + ' =='
             houtput += "\n" + to_text(markdown_to_html(help_section['content'], trim=False, status=status, strip_newlines=True), terms)
@@ -299,10 +374,12 @@ def as_sms(status):
     else:
         houtput = None
     if status.question.helptext is not None:
-        qoutput += "\n" + word("You can type help for additional assistance.")
+        qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', "\n" + word("Type help for additional assistance.") + 'XXXXMESSAGE_AREAXXXX', qoutput)
     elif len(terms):
-        qoutput += "\n" + word("You can type help to see definitions of terms used in this question.")
-    return dict(question=qoutput, help=houtput)
+        qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', "\n" + word("Type help to see definitions of words.") + 'XXXXMESSAGE_AREAXXXX', qoutput)
+    # if status.question.question_type == 'deadend':
+    #     return dict(question=qoutput, help=houtput)
+    return dict(question=qoutput, help=houtput, next=next_variable)
 
 def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_rules):
     decorations = list()

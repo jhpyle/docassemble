@@ -7,6 +7,10 @@ subquestion: |
   Are you doing well?
 yesno: doing_well
 ---
+terms:
+  world: |
+    A planet.
+---
 mandatory: true
 question: |
   % if doing_well:

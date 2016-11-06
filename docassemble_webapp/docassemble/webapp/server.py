@@ -25,7 +25,7 @@ import docassemble.base.parse
 import docassemble.base.pdftk
 import docassemble.base.interview_cache
 import docassemble.webapp.update
-from docassemble.base.standardformatter import as_html, as_sms, signature_html, get_choices
+from docassemble.base.standardformatter import as_html, as_sms, signature_html, get_choices, get_choices_with_abb
 import docassemble.webapp.database
 import tempfile
 import zipfile
@@ -1909,6 +1909,10 @@ def index():
     if '_varnames' in post_data:
         known_varnames = json.loads(myb64unquote(post_data['_varnames']))
     known_variables = dict()
+    if current_user.is_anonymous:
+        the_user_id = 't' + str(session['tempuser'])
+    else:
+        the_user_id = current_user.id
     for orig_key in copy.deepcopy(post_data):
         if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed']:
             continue
@@ -2043,10 +2047,6 @@ def index():
         except Exception as errMess:
             error_messages.append(("error", "Error: " + str(errMess)))
     if 'informed' in request.form:
-        if current_user.is_anonymous:
-            the_user_id = 't' + str(session['tempuser'])
-        else:
-            the_user_id = str(current_user.id)
         user_dict['_internal']['informed'][the_user_id] = dict()
         for key in request.form['informed'].split(','):
             user_dict['_internal']['informed'][the_user_id][key] = 1
@@ -2191,10 +2191,6 @@ def index():
         #   $('.tabs a:last').tab('show')
         # })
     #sys.stderr.write("9\n")
-    if current_user.is_anonymous:
-        the_user_id = 't' + str(session['tempuser'])
-    else:
-        the_user_id = current_user.id
     if not is_ajax:
         scripts = standard_scripts()
         chat_available = user_dict['_internal']['livehelp']['availability']
@@ -7245,25 +7241,26 @@ def digits():
 
 @app.route("/sms", methods=['POST'])
 def sms():
+    special_messages = list()
     resp = twilio.twiml.Response()
     if twilio_config is None:
-        logmessage("Ignoring message to sms because Twilio not enabled")
+        logmessage("sms: ignoring message to sms because Twilio not enabled")
         return Response(str(resp), mimetype='text/xml')
     if 'sms' not in twilio_config['name']['default'] or twilio_config['name']['default']['sms'] in [False, None]:
-        logmessage("Ignoring message to sms because SMS not enabled")
+        logmessage("sms: ignoring message to sms because SMS not enabled")
         return Response(str(resp), mimetype='text/xml')
     if "AccountSid" not in request.form or request.form["AccountSid"] not in twilio_config['account sid']:
-        logmessage("Request to sms did not authenticate")
+        logmessage("sms: request to sms did not authenticate")
         return Response(str(resp), mimetype='text/xml')
     if "To" not in request.form or request.form["To"] not in twilio_config['number']:
-        logmessage("Request to sms ignored because recipient number " + str(request.form.get('To', None)) + " not in configuration, " + str(twilio_config))
+        logmessage("sms: request to sms ignored because recipient number " + str(request.form.get('To', None)) + " not in configuration, " + str(twilio_config))
         return Response(str(resp), mimetype='text/xml')
     tconfig = twilio_config['number'][request.form["To"]]
     if "From" not in request.form or not re.search(r'[0-9]', request.form["From"]):
-        logmessage("Request to sms ignored because unable to determine caller ID")
+        logmessage("sms: request to sms ignored because unable to determine caller ID")
         return Response(str(resp), mimetype='text/xml')
     if "Body" not in request.form:
-        logmessage("Request to sms ignored because message had no content")
+        logmessage("sms: request to sms ignored because message had no content")
         return Response(str(resp), mimetype='text/xml')
     inp = request.form['Body'].strip()
     key = 'da:sms:' + request.form["From"]
@@ -7273,7 +7270,7 @@ def sms():
         if 'dispatch' in tconfig and type(tconfig['dispatch']) is dict:
             if inp.lower() in tconfig['dispatch']:
                 yaml_filename = tconfig['dispatch'][inp.lower()]
-                logmessage("Using interview from dispatch: " + str(yaml_filename))
+                #logmessage("sms: using interview from dispatch: " + str(yaml_filename))
         secret = ''.join(random.choice(string.ascii_letters) for i in range(16))
         uid = get_unique_name(yaml_filename, secret)
         new_temp_user = TempUser()
@@ -7286,37 +7283,55 @@ def sms():
         try:        
             sess_info = pickle.loads(sess_contents)
         except:
-            logmessage("Unable to decode session information")
+            logmessage("sms: unable to decode session information")
             return Response(str(resp), mimetype='text/xml')
         accepting_input = True
+    if inp.lower() in [word('exit'), word('quit')]:
+        logmessage("sms: exiting")
+        reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
+        r.delete(key)
+        return Response(str(resp), mimetype='text/xml')
     obtain_lock(sess_info['uid'], sess_info['yaml_filename'])
     steps, user_dict, is_encrypted = fetch_user_dict(sess_info['uid'], sess_info['yaml_filename'], secret=sess_info['secret'])
     encrypted = sess_info['encrypted']
-    if user_dict.get('multi_user', False) is True and encrypted is True:
-        encrypted = False
-        sess_info['encrypted'] = encrypted
-        is_encrypted = encrypted
-        r.set(key, pickle.dumps(sess_info))
-        decrypt_session(secret, user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
-    if user_dict.get('multi_user', False) is False and encrypted is False:
-        encrypted = True
-        sess_info['encrypted'] = encrypted
-        is_encrypted = encrypted
-        r.set(key, pickle.dumps(sess_info))
-        encrypt_session(secret, user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
-    interview = docassemble.base.interview_cache.get_interview(sess_info['yaml_filename'])
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], yaml_filename=sess_info['yaml_filename'], url=None, action=None, interface='sms', arguments=dict()))
-    interview.assemble(user_dict, interview_status)
+    while True:
+        if user_dict.get('multi_user', False) is True and encrypted is True:
+            encrypted = False
+            sess_info['encrypted'] = encrypted
+            is_encrypted = encrypted
+            r.set(key, pickle.dumps(sess_info))
+            decrypt_session(secret, user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
+        if user_dict.get('multi_user', False) is False and encrypted is False:
+            encrypted = True
+            sess_info['encrypted'] = encrypted
+            is_encrypted = encrypted
+            r.set(key, pickle.dumps(sess_info))
+            encrypt_session(secret, user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
+        interview = docassemble.base.interview_cache.get_interview(sess_info['yaml_filename'])
+        if 'skip' not in user_dict['_internal']:
+            user_dict['_internal']['skip'] = dict()
+        if 'smsgather' in user_dict['_internal']:
+            #logmessage("sms: need to gather " + user_dict['_internal']['smsgather'])
+            sms_variable = user_dict['_internal']['smsgather']
+        else:
+            sms_variable = None
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], yaml_filename=sess_info['yaml_filename'], url=None, action=None, sms_variable=sms_variable, interface='sms', arguments=dict(), skip=user_dict['_internal']['skip']))
+        interview.assemble(user_dict, interview_status)
+        #logmessage("sms: inp is " + inp.lower() + " and steps is " + str(steps) + " and can go back is " + str(interview_status.can_go_back))
+        if inp.lower() in [word('back')] and steps > 1 and interview_status.can_go_back:
+            steps, user_dict, is_encrypted = fetch_previous_user_dict(sess_info['uid'], sess_info['yaml_filename'], secret=sess_info['secret'])
+
+            accepting_input = False
+            inp = ''
+            continue
+        else:
+            break
     false_list = [word('no'), word('n'), word('false'), word('f')]
     true_list = [word('yes'), word('y'), word('true'), word('t')]
     inp_lower = inp.lower()
+    skip_it = False
+    changed = False
     if accepting_input:
-        if inp_lower in [word('exit'), word('quit')]:
-            logmessage("sms: exiting")
-            reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
-            r.delete(key)
-            release_lock(sess_info['uid'], sess_info['yaml_filename'])
-            return Response(str(resp), mimetype='text/xml')
         if inp_lower in [word('help')]:
             sms_info = as_sms(interview_status)
             message = ''
@@ -7333,80 +7348,272 @@ def sms():
     if accepting_input:
         saveas = None
         if len(interview_status.question.fields):
-            saveas = myb64unquote(interview_status.question.fields[0].saveas)
-            logmessage("Variable to set is " + str(saveas))
-            field = interview_status.question.fields[0]
             question = interview_status.question
+            if question.question_type == "fields":
+                field = None
+                next_field = None
+                for the_field in interview_status.question.fields:
+                    if hasattr(the_field, 'datatype') and the_field.datatype in ['html', 'note', 'script', 'css']:
+                        continue
+                    if the_field.number in user_dict['_internal']['skip']:
+                        continue
+                    if field is None:
+                        field = the_field
+                    elif next_field is None:
+                        next_field = the_field
+                    else:
+                        break
+                if field is None:
+                    logmessage("sms: unclear what field is necessary!")
+                    if 'smsgather' in user_dict['_internal']:
+                        del user_dict['_internal']['smsgather']
+                    field = interview_status.question.fields[0]
+                    next_field = None
+                saveas = myb64unquote(field.saveas)
+            else:
+                if hasattr(interview_status.question.fields[0], 'saveas'):
+                    saveas = myb64unquote(interview_status.question.fields[0].saveas)
+                    #logmessage("sms: variable to set is " + str(saveas))
+                else:
+                    saveas = None
+                field = interview_status.question.fields[0]
+                next_field = None
             if question.question_type == "settrue":
                 data = 'True'
-            elif question.question_type in ["yesno"] or field.datatype in ['yesno', 'yesnowide'] or (field.datatype == 'boolean' and field.sign > 0):
+            elif question.question_type in ["yesno"] or (hasattr(field, 'datatype') and (field.datatype in ['yesno', 'yesnowide'] or (hasattr(field, 'datatype') and field.datatype == 'boolean' and (hasattr(field, 'sign') and field.sign > 0)))):
                 if inp_lower in true_list:
                     data = 'True'
                 elif inp_lower in false_list:
                     data = 'False'
                 else:
                     data = None
-            elif question.question_type in ["yesnomaybe"] or field.datatype in ['yesnomaybe', 'yesnowidemaybe'] or (field.datatype == 'threestate' and field.sign > 0):
+            elif question.question_type in ["yesnomaybe"] or (hasattr(field, 'datatype') and (field.datatype in ['yesnomaybe', 'yesnowidemaybe'] or (field.datatype == 'threestate' and (hasattr(field, 'sign') and field.sign > 0)))):
                 if inp_lower in true_list:
                     data = 'True'
                 elif inp_lower in false_list:
                     data = 'False'
                 else:
                     data = 'None'
-            elif question.question_type in ["noyes"] or field.datatype in ['noyes', 'noyeswide'] or (field.datatype == 'boolean' and field.sign < 0):
+            elif question.question_type in ["noyes"] or (hasattr(field, 'datatype') and (field.datatype in ['noyes', 'noyeswide'] or (field.datatype == 'boolean' and (hasattr(field, 'sign') and field.sign < 0)))):
                 if inp_lower in true_list:
                     data = 'False'
                 elif inp_lower in false_list:
                     data = 'True'
                 else:
                     data = None
-            elif question.question_type in ['noyesmaybe', 'noyesmaybe', 'noyeswidemaybe'] or (field.datatype == 'threestate' and field.sign < 0):
+            elif question.question_type in ['noyesmaybe', 'noyesmaybe', 'noyeswidemaybe'] or (hasattr(field, 'datatype') and field.datatype == 'threestate' and (hasattr(field, 'sign') and field.sign < 0)):
                 if inp_lower in true_list:
                     data = 'False'
                 elif inp_lower in false_list:
                     data = 'True'
                 else:
                     data = 'None'
-            elif field.datatype in ['integer']:
-                data = re.sub(r'[^0-9\-\.]', '', data)
-                if data == '':
-                    data = '0'
-                data = "int(" + repr(str(data)) + ")"
-            elif field.datatype in ['number', 'float', 'currency', 'range']:
-                data = re.sub(r'[^0-9\-\.]', '', data)
-                if data == '':
-                    data = '0.0'
-                data = "float(" + repr(str(data)) + ")"
-            elif question.question_type == 'multiple_choice':
-                choices = get_choices(interview_status, field)
+            elif question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio', 'radio', 'checkboxes', 'object_checkboxes']):
+                cdata, choice_list = get_choices_with_abb(interview_status, field)
+                data = None
+                if hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes'] and saveas is not None:
+                    try:
+                        eval(saveas, user_dict)
+                    except:
+                        the_string = saveas + ' = dict()'
+                        #logmessage("sms: doing " + the_string)
+                        try:
+                            exec(the_string, user_dict)
+                            changed = True
+                        except:
+                            logmessage("sms: failed to create checkbox dict")
+                if (inp_lower == word('skip') or (inp_lower == word('none') and hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes'])) and ((hasattr(field, 'disableothers') and field.disableothers) or (hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']) or not (interview_status.extras['required'][field.number] or (question.question_type == 'multiple_choice' and hasattr(field, 'saveas')))):
+                    if hasattr(field, 'datatype'):
+                        if field.datatype in ['object', 'object_radio']:
+                            skip_it = True
+                            data = repr('')
+                        if field.datatype in ['checkboxes', 'object_checkboxes']:
+                            skip_it = True
+                            data = repr('')
+                            for choice in choice_list:
+                                the_string = choice[1] + ' = False'
+                                #logmessage("sms: doing " + str(the_string) + " for skipping checkboxes")
+                                try:
+                                    exec(the_string, user_dict)
+                                    changed = True
+                                except:
+                                    logmessage("sms: failure to set checkbox with " + the_string)
+                        elif field.datatype in ['integer']:
+                            data = '0'
+                        elif field.datatype in ['number', 'float', 'currency', 'range']:
+                            data = '0.0'
+                        else:
+                            data = repr('')
+                    else:
+                        data = repr('')
+                else:
+                    if hasattr(field, 'datatype') and field.datatype in ['object_checkboxes']:
+                        skip_it = True
+                        data = repr('')
+                        true_values = set()
+                        for selection in re.split(r' *[,;] *', inp_lower):
+                            for potential_abb, value in cdata['abblower'].iteritems():
+                                if selection and selection.startswith(potential_abb):
+                                    for choice in choice_list:
+                                        if value == choice[0]:
+                                            true_values.add(choice[1])
+                        for choice in choice_list:
+                            if choice[1] in true_values:
+                                the_string = 'if ' + choice[2] + ' not in ' + saveas + ':\n    ' + saveas + '.append(' + choice[2] + ')'
+                            else:
+                                the_string = 'if ' + choice[2] + ' in ' + saveas + ':\n    ' + saveas + '.remove(' + choice[2] + ')'
+                            logmessage("sms: doing " + str(the_string) + " for object_checkboxes")
+                            try:
+                                exec(the_string, user_dict)
+                                changed = True
+                            except:
+                                logmessage("sms: failure to set checkbox with " + the_string)
+                    elif hasattr(field, 'datatype') and field.datatype in ['checkboxes']:
+                        skip_it = True
+                        data = repr('')
+                        true_values = set()
+                        for selection in re.split(r' *[,;] *', inp_lower):
+                            for potential_abb, value in cdata['abblower'].iteritems():
+                                if selection and selection.startswith(potential_abb):
+                                    for choice in choice_list:
+                                        if value == choice[0]:
+                                            true_values.add(choice[1])
+                        for choice in choice_list:
+                            if choice[1] in true_values:
+                                the_string = choice[1] + ' = True'
+                            else:
+                                the_string = choice[1] + ' = False'
+                            #logmessage("sms: doing " + str(the_string) + " for checkboxes")
+                            try:
+                                exec(the_string, user_dict)
+                                changed = True
+                            except:
+                                logmessage("sms: failure to set checkbox with " + the_string)
+                    else:
+                        #logmessage("sms: user selected " + inp_lower + " and data is " + str(cdata))
+                        for potential_abb, value in cdata['abblower'].iteritems():
+                            if inp_lower.startswith(potential_abb):
+                                #logmessage("sms: user selected " + value)
+                                for choice in choice_list:
+                                    #logmessage("sms: considering " + choice[0])
+                                    if value == choice[0]:
+                                        #logmessage("sms: found a match")
+                                        saveas = choice[1]
+                                        if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio']:
+                                            data = choice[2]
+                                        else:
+                                            data = repr(choice[2])
+                                        break
+                                break
+            elif hasattr(field, 'datatype') and field.datatype in ['integer']:
+                if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
+                    data = repr('')
+                    skip_it = True
+                else:
+                    data = re.sub(r'[^0-9\-\.]', '', inp)
+                    if data == '':
+                        data = '0'
+                    try:
+                        the_value = eval("int(" + repr(data) + ")")
+                        data = "int(" + repr(data) + ")"
+                    except:
+                        data = None
+            elif hasattr(field, 'datatype') and field.datatype in ['range']:
+                if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
+                    data = repr('')
+                    skip_it = True
+                else:
+                    data = re.sub(r'[^0-9\-\.]', '', inp)
+                    try:
+                        the_value = eval("float(" + repr(data) + ")", user_dict)
+                        if the_value > int(interview_status.extras['max'][field.number]) or the_value < int(interview_status.extras['min'][field.number]):
+                            data = None
+                    except:
+                        data = None
+            elif hasattr(field, 'datatype') and field.datatype in ['number', 'float', 'currency']:
+                if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
+                    data = repr('')
+                    skip_it = True
+                else:
+                    data = re.sub(r'[^0-9\-\.]', '', inp)
+                    if data == '':
+                        data = '0.0'
+                    try:
+                        the_value = eval("float(" + repr(data) + ")", user_dict)
+                        data = "float(" + repr(str(data)) + ")"
+                    except:
+                        data = None
             else:
-                data = repr(str(data))
+                if inp_lower == word('skip'):
+                    if interview_status.extras['required'][field.number]:
+                        data = repr(inp)
+                    else:
+                        data = repr('')
+                        skip_it = True
+                else:
+                    data = repr(inp)
+        else:
+            data = None
         if data is None:
-            logmessage("Could not process input")
+            logmessage("sms: could not process input: " + inp)
+            special_messages.append(word("I do not understand what you mean by") + ' "' + inp + '"')
         else:
             the_string = saveas + ' = ' + data
+            logmessage("sms: doing " + str(the_string))
+            #release_lock(sess_info['uid'], sess_info['yaml_filename'])
+            #return Response(str(resp), mimetype='text/xml')
             try:
-                exec(the_string, user_dict)
+                if not skip_it:
+                    exec(the_string, user_dict)
+                    changed = True
+                    if hasattr(field, 'disableothers') and field.disableothers and hasattr(field, 'saveas'):
+                        #logmessage("sms: disabling others")
+                        if 'sms_variable' in interview_status.current_info:
+                            del interview_status.current_info['sms_variable']
+                        if 'smsgather' in user_dict['_internal'] and user_dict['_internal']['smsgather'] == saveas:
+                            #logmessage("sms: deleting " + user_dict['_internal']['smsgather'] + "because disable others")
+                            del user_dict['_internal']['smsgather']
+                if next_field is None:
+                    if 'skip' in user_dict['_internal']:
+                        del user_dict['_internal']['skip']
+                    if 'sms_variable' in interview_status.current_info:
+                        del interview_status.current_info['sms_variable']
+                else:
+                    user_dict['_internal']['skip'][field.number] = True
+                if 'smsgather' in user_dict['_internal'] and user_dict['_internal']['smsgather'] == saveas:
+                    #logmessage("sms: deleting " + user_dict['_internal']['smsgather'])
+                    del user_dict['_internal']['smsgather']
             except:
-                logmessage("Failure to set variable with " + the_string)
+                logmessage("sms: failure to set variable with " + the_string)
                 release_lock(sess_info['uid'], sess_info['yaml_filename'])
                 return Response(str(resp), mimetype='text/xml')
+        if changed and next_field is None and question.name not in user_dict['_internal']['answers']:
+            user_dict['_internal']['answered'].add(question.name)
         interview.assemble(user_dict, interview_status)
-        save_user_dict(sess_info['uid'], user_dict, sess_info['yaml_filename'], secret=sess_info['secret'], encrypt=encrypted)
     if interview_status.question.question_type in ["restart", "exit"]:
-        logmessage("sms: exiting")
+        logmessage("sms: exiting because of restart or exit")
         reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
         r.delete(key)
     else:
         if not interview_status.can_go_back:
             user_dict['_internal']['steps_offset'] = steps
-        user_dict['_internal']['answers'] = dict()
+        #user_dict['_internal']['answers'] = dict()
         if interview_status.question.name and interview_status.question.name in user_dict['_internal']['answers']:
             del user_dict['_internal']['answers'][interview_status.question.name]
         #logmessage("sms: " + as_sms(interview_status))
         #twilio_client = TwilioRestClient(tconfig['account sid'], tconfig['auth token'])
         #message = twilio_client.messages.create(to=request.form["From"], from_=request.form["To"], body=as_sms(interview_status))
-        resp.message(as_sms(interview_status)['question'])
+        sms_info = as_sms(interview_status)
+        qoutput = sms_info['question']
+        if sms_info['next'] is not None:
+            #logmessage("sms: next variable is " + sms_info['next'])
+            user_dict['_internal']['smsgather'] = sms_info['next']
+        if accepting_input or changed or sms_info['next'] is not None:
+            save_user_dict(sess_info['uid'], user_dict, sess_info['yaml_filename'], secret=sess_info['secret'], encrypt=encrypted, changed=changed)
+        for special_message in special_messages:
+            qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', "\n" + special_message + 'XXXXMESSAGE_AREAXXXX', qoutput)
+        qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', '', qoutput)
+        resp.message(qoutput)
         if user_dict.get('multi_user', False) is True and encrypted is True:
             encrypted = False
             sess_info['encrypted'] = encrypted
