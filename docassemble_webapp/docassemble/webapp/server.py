@@ -7241,6 +7241,7 @@ def digits():
 
 @app.route("/sms", methods=['POST'])
 def sms():
+    logmessage("Received: " + str(request.form))
     special_messages = list()
     resp = twilio.twiml.Response()
     if twilio_config is None:
@@ -7263,7 +7264,7 @@ def sms():
         logmessage("sms: request to sms ignored because message had no content")
         return Response(str(resp), mimetype='text/xml')
     inp = request.form['Body'].strip()
-    logmessage("Received >" + inp + "<")
+    #logmessage("Received >" + inp + "<")
     key = 'da:sms:' + request.form["From"]
     sess_contents = r.get(key)
     if sess_contents is None:
@@ -7463,7 +7464,7 @@ def sms():
                                 the_string = 'if ' + choice[2] + ' not in ' + saveas + ':\n    ' + saveas + '.append(' + choice[2] + ')'
                             else:
                                 the_string = 'if ' + choice[2] + ' in ' + saveas + ':\n    ' + saveas + '.remove(' + choice[2] + ')'
-                            logmessage("sms: doing " + str(the_string) + " for object_checkboxes")
+                            #logmessage("sms: doing " + str(the_string) + " for object_checkboxes")
                             try:
                                 exec(the_string, user_dict)
                                 changed = True
@@ -7560,7 +7561,7 @@ def sms():
             special_messages.append(word("I do not understand what you mean by") + ' "' + inp + '"')
         else:
             the_string = saveas + ' = ' + data
-            logmessage("sms: doing " + str(the_string))
+            #logmessage("sms: doing " + str(the_string))
             #release_lock(sess_info['uid'], sess_info['yaml_filename'])
             #return Response(str(resp), mimetype='text/xml')
             try:

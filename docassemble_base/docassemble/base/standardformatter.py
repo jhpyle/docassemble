@@ -194,6 +194,8 @@ def get_choices(interview_status, field):
             indexno += 1
     return choice_list
 
+sms_bad_words = ['cancel', 'end', 'help', 'info', 'quit', 'stop', 'stopall', 'unsubscribe', 'back', 'question', 'exit']
+
 def try_to_abbreviate(label, flabel, data, length):
     if 'size' not in data:
         data['size'] = 1
@@ -216,12 +218,13 @@ def try_to_abbreviate(label, flabel, data, length):
         prospective_key = flabel[startpoint:endpoint]
         if method == 'float' and re.search(r'[^A-Za-z0-9]', prospective_key):
             startpoint += 1
+            data['size'] = 1
             endpoint = startpoint + data['size']
             continue
         if method == 'fromstart' and re.search(r'[^A-Za-z0-9]$', prospective_key):
             endpoint += 1
             continue
-        if prospective_key.lower() in data['abblower']:
+        if prospective_key.lower() in data['abblower'] or prospective_key.lower() in sms_bad_words:
             if method == 'float':
                 data['size'] += 1
                 return False
