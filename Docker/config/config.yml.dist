@@ -18,8 +18,6 @@ oauth:
     enable: false
     id: 23123018240-32239fj28fj4fuhf394h3984eurhfurh.apps.googleusercontent.com
     secret: DGE34gdgerg3GDG545tgdfRf
-hostname: {{DAHOSTNAME}}
-use_https: {{USEHTTPS}}
 secretkey: 28asflwjeifwlfjsd2fejfiefw3g4o87
 password_secretkey: 2f928j3rwjf82498rje9t
 default_title: docassemble

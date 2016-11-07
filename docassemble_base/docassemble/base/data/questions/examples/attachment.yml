@@ -1,0 +1,18 @@
+metadata:
+  title: Allowing documents to be e-mailed
+  documentation: "http://docassemble.org/docs/documents.html#allow emailing"
+---
+question: Your document is ready.
+sets: provide_user_with_document
+attachment:
+  - name: A hello world document
+    valid formats:
+      - pdf
+    filename: Hello_World
+    description: |
+      A document with a classic message
+    content: |
+      Hello, world!
+---
+mandatory: true
+code: provide_user_with_document

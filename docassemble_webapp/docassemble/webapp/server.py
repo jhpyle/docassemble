@@ -7701,15 +7701,7 @@ def sms():
                             continue
                         filename = attachment['filename'] + '.' + doc_format
                         saved_file = savedfile_numbered_file(filename, attachment['file'][doc_format], yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
-                        if daconfig.get('use_https', False):
-                            url = 'https://'
-                        else:
-                            url = 'http://'
-                        url += daconfig.get('hostname', 'localhost')
-                        root = daconfig.get('root', '/')
-                        if root != '/':
-                            url += root
-                        url += url_for('serve_stored_file', uid=sess_info['uid'], number=saved_file.file_number, filename=attachment['filename'], extension=doc_format)
+                        url = request.base_url + url_for('serve_stored_file', uid=sess_info['uid'], number=saved_file.file_number, filename=attachment['filename'], extension=doc_format)
                         #logmessage('sms: url is ' + str(url))
                         m.media(url)
                         media_count += 1
