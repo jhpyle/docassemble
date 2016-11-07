@@ -2,10 +2,13 @@ import os
 import re
 import shutil
 import urllib
+import pycurl
+#import urllib2
 import tempfile
 import mimetypes
 import zipfile
 import datetime
+#import cookielib
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED
@@ -79,7 +82,29 @@ class SavedFile(object):
         filename = kwargs.get('filename', self.filename)
         if not self.fixed:
             self.fix()
-        urllib.urlretrieve(url, os.path.join(self.directory, filename))
+        cookiefile = tempfile.NamedTemporaryFile(suffix='.txt')
+        f = open(os.path.join(self.directory, filename), 'wb')
+        c = pycurl.Curl()
+        c.setopt(c.URL, url)
+        c.setopt(c.FOLLOWLOCATION, True)
+        c.setopt(c.WRITEDATA, f)
+        c.setopt(pycurl.USERAGENT, 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Safari/537.36')
+        c.setopt(pycurl.COOKIEFILE, cookiefile.name)
+        c.perform()
+        c.close()
+        # cookiejar = cookielib.LWPCookieJar()
+        # opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
+        # response = opener.open(url)
+        # f = open(os.path.join(self.directory, filename), 'wb')
+        # block_sz = 8192
+        # while True:
+        #     buffer = u.read(block_sz)
+        #     if not buffer:
+        #         break
+
+        #     f.write(buffer)
+        # f.close()
+        #urllib.urlretrieve(url, os.path.join(self.directory, filename))
         self.save()
         return
     def fetch_url_post(self, url, post_args, **kwargs):

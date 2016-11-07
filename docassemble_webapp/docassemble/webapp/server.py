@@ -7310,6 +7310,7 @@ def sms():
         reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
         r.delete(key)
         return Response(str(resp), mimetype='text/xml')
+    session['uid'] = sess_info['uid']
     obtain_lock(sess_info['uid'], sess_info['yaml_filename'])
     steps, user_dict, is_encrypted = fetch_user_dict(sess_info['uid'], sess_info['yaml_filename'], secret=sess_info['secret'])
     encrypted = sess_info['encrypted']
@@ -7361,6 +7362,8 @@ def sms():
             message += "\n" + word("To read the question again, type question.")
             resp.message(message)
             release_lock(sess_info['uid'], sess_info['yaml_filename'])
+            if 'uid' in session:
+                del session['uid']
             return Response(str(resp), mimetype='text/xml')
         if inp_lower in [word('question')]:
             accepting_input = False
@@ -7412,6 +7415,7 @@ def sms():
                             break
                         if fileindex >= num_media or 'MediaUrl' + str(fileindex) not in request.form:
                             break
+                        #logmessage("mime type is" + request.form.get('MediaContentType' + str(fileindex), 'Unknown'))
                         mimetype = request.form.get('MediaContentType' + str(fileindex), 'image/jpeg')
                         extension = re.sub(r'\.', r'', mimetypes.guess_extension(mimetype))
                         if extension == 'jpe':
@@ -7419,8 +7423,10 @@ def sms():
                         filename = 'file' + '.' + extension
                         file_number = get_new_file_number(sess_info['uid'], filename, yaml_file_name=sess_info['yaml_filename'])
                         saved_file = SavedFile(file_number, extension=extension, fix=True)
-                        saved_file.fetch_url(request.form['MediaUrl' + str(fileindex)])
-                        process_file(saved_file, extension)
+                        the_url = request.form['MediaUrl' + str(fileindex)]
+                        #logmessage("Fetching from >" + the_url + "<")
+                        saved_file.fetch_url(the_url)
+                        process_file(saved_file, saved_file.path, mimetype, extension)
                         files_to_process.append((filename, file_number, mimetype, extension))
                         fileindex += 1
                     if len(files_to_process) > 0:
@@ -7432,6 +7438,7 @@ def sms():
                         the_string = saveas + " = docassemble.base.core.DAFileList('" + saveas + "', elements=[" + ", ".join(elements) + "])"
                         logmessage("sms: doing " + the_string)
                         try:
+                            exec('import docassemble.base.core', user_dict)
                             exec(the_string, user_dict)
                             changed = True
                             steps += 1
@@ -7439,6 +7446,7 @@ def sms():
                             logmessage("sms: error: " + str(errMess))
                             special_messages.append(word("Error") + ": " + str(errMess))
                         skip_it = True
+                        data = repr('')
                     else:
                         data = None
                         if interview_status.extras['required'][field.number]:
@@ -7649,6 +7657,8 @@ def sms():
             except:
                 logmessage("sms: failure to set variable with " + the_string)
                 release_lock(sess_info['uid'], sess_info['yaml_filename'])
+                if 'uid' in session:
+                    del session['uid']
                 return Response(str(resp), mimetype='text/xml')
         if changed and next_field is None and question.name not in user_dict['_internal']['answers']:
             user_dict['_internal']['answered'].add(question.name)
@@ -7709,6 +7719,8 @@ def sms():
             resp.message(qoutput)
     release_lock(sess_info['uid'], sess_info['yaml_filename'])
     #logmessage(str(request.form))
+    if 'uid' in session:
+        del session['uid']
     return Response(str(resp), mimetype='text/xml')
 
 docassemble.base.functions.set_chat_partners_available(chat_partners_available)
