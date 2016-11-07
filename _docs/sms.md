@@ -76,13 +76,30 @@ action will be taken:
 
 * `?` shows the help for the question ([`help`]) and/or the interview
 ([`interview help`]).  The definition of [`terms`] is included.
-* `question` sends the question again.
+* `question` shows the question again.
 * `exit` deletes the interview session.  Nothing is returned.  This
   allows the user to start a different interview by texting a
   [`dispatch`] keyword.
 * `back` goes back one page.
-* `skip` is an option for questions that ask for non-required fields
-  or checkboxes
+* `skip` is an option for questions that ask for non-required fields.
+* `none` is an option for checkbox questions.
+
+# What works and what does not
+
+The text messaging interface can receive document uploads ([`file`],
+[`files`], etc.) and send attachments ([`attachment`],
+[`attachments`]) through [MMS].  However, it cannot handle
+[`signature`] blocks.  All other methods of [setting variables] are
+supported.
+
+Since text messages are plain text, the text messaging interface
+cannot handle [decorations], [inline images], [emoji], or [markup] such as bold,
+italics, etc.
+
+The [`terms`] feature is supported.  Users can send `?` to read the
+definitions of terms.
+
+The [live help] features are not supported.
 
 # How to write SMS-friendly interviews
 
@@ -112,10 +129,16 @@ include:
 For more information about this limitation, see
 _[Industry standards for U.S. short code HELP and STOP]_.
 
+[`signature`]: {{ site.baseurl }}/docs/fields.html#signature
+[`file`]: {{ site.baseurl }}/docs/fields.html#file
+[`files`]: {{ site.baseurl }}/docs/fields.html#files
+[`attachment`]: {{ site.baseurl }}/docs/documents.html#attachment
+[`attachments`]: {{ site.baseurl }}/docs/documents.html#attachments
 [Industry standards for U.S. short code HELP and STOP]: https://support.twilio.com/hc/en-us/articles/223182208-Industry-standards-for-U-S-short-code-HELP-and-STOP
 [`interface()`]: {{ site.baseurl }}/docs/functions.html#interface
 [`interface()` function]: {{ site.baseurl }}/docs/functions.html#interface
 [SMS]: https://en.wikipedia.org/wiki/Short_Message_Service
+[MMS]: https://en.wikipedia.org/wiki/Multimedia_Messaging_Service
 [call forwarding]: {{ site.baseurl }}/docs/livehelp.html#phone setup
 [configuration]: {{ site.baseurl }}/docs/config.html
 [Twilio]: https://twilio.com
@@ -124,3 +147,9 @@ _[Industry standards for U.S. short code HELP and STOP]_.
 [`interview help`]: {{ site.baseurl }}/docs/initial.html#interview help
 [`help`]: {{ site.baseurl }}/docs/modifiers.html#help
 [`dispatch`]: #dispatch
+[live help]: {{ site.baseurl }}/docs/livehelp.html
+[decorations]: {{ site.baseurl }}/docs/modifiers.html#decoration
+[markup]: {{ site.baseurl }}/docs/markup.html
+[inline images]: {{ site.baseurl }}/docs/markup.html#inserting images
+[emoji]: {{ site.baseurl }}/docs/markup.html#emoji
+[setting variables]: {{ site.baseurl }}/docs/fields.html

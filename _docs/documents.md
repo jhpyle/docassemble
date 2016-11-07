@@ -4,7 +4,7 @@ title: Attaching documents to questions
 short_title: Documents
 ---
 
-# <a name="attachments"></a>The `attachments` statement
+# <a name="attachment"></a><a name="attachments"></a>The `attachments` statement
 
 The `attachments` statement (which can also be written `attachment`)
 provides documents to the user.  Users can preview, download, and/or
