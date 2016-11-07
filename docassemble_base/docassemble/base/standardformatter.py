@@ -323,34 +323,62 @@ def as_sms(status):
             if label:
                 qoutput += "\n" + label + ":" + next_label
             qoutput += "\n" + word('Type a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string
-        elif hasattr(field, 'datatype') and field.datatype in ['file', 'files', 'camera']:
+        elif hasattr(field, 'datatype') and field.datatype in ['file', 'camera']:
             if label:
                 qoutput += "\n" + label + ":" + next_label 
-            qoutput += "\n" + word('Please send an image or file.')
+                if status.extras['required'][field.number]:
+                    qoutput += "\n" + word('Please send an image or file.')
+                else:
+                    qoutput += "\n" + word('Please send an image or file, or type skip.')                    
+        elif hasattr(field, 'datatype') and field.datatype in ['files']:
+            if label:
+                qoutput += "\n" + label + ":" + next_label 
+            if status.extras['required'][field.number]:
+                qoutput += "\n" + word('Please send one or more images.')
+            else:
+                qoutput += "\n" + word('Please send one or more images, or type skip.')
         elif hasattr(field, 'datatype') and field.datatype in ['camcorder']:
             if label:
                 qoutput += "\n" + label + ":" + next_label
-            qoutput += "\n" + word('Please send a video.')
+            if status.extras['required'][field.number]:
+                qoutput += "\n" + word('Please send a video.')
+            else:
+                qoutput += "\n" + word('Please send a video, or type skip.')
         elif hasattr(field, 'datatype') and field.datatype in ['microphone']:
             if label:
                 qoutput += "\n" + label + ":" + next_label 
-            qoutput += "\n" + word('Please send an audio clip.')
+            if status.extras['required'][field.number]:
+                qoutput += "\n" + word('Please send an audio clip.')
+            else:
+                qoutput += "\n" + word('Please send an audio clip, or type skip.')
         elif hasattr(field, 'datatype') and field.datatype in ['number', 'float', 'integer']:
             if label:
                 qoutput += "\n" + label + ":" + next_label
-            qoutput += "\n" + word('Type a number.')
+            if status.extras['required'][field.number]:
+                qoutput += "\n" + word('Type a number.')
+            else:
+                qoutput += "\n" + word('Type a number, or type skip.')
         elif hasattr(field, 'datatype') and field.datatype in ['currency']:
             if label:
                 qoutput += "\n" + label + ":" + next_label
-            qoutput += "\n" + word('Type a currency value.')
+            if status.extras['required'][field.number]:
+                qoutput += "\n" + word('Type a currency value.')
+            else:
+                qoutput += "\n" + word('Type a currency value, or type skip.')
         elif hasattr(field, 'datatype') and field.datatype in ['date']:
             if label:
                 qoutput += "\n" + label + ":" + next_label 
-            qoutput += "\n" + word('Type a date.')
+            if status.extras['required'][field.number]:
+                qoutput += "\n" + word('Type a date.')
+            else:
+                qoutput += "\n" + word('Type a date, or type skip.')
         elif hasattr(field, 'datatype') and field.datatype in ['email']:
             if label:
                 qoutput += "\n" + label + ":" + next_label
-            qoutput += "\n" + word('Type an e-mail address.')
+            if status.extras['required'][field.number]:
+                qoutput += "\n" + word('Type an e-mail address.')
+            else:
+                qoutput += "\n" + word('Type an e-mail address, or type skip.')
         else:
             if label:
                 if status.extras['required'][field.number]:
@@ -380,8 +408,14 @@ def as_sms(status):
         qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', "\n" + word("Type ? for additional assistance.") + 'XXXXMESSAGE_AREAXXXX', qoutput)
     elif len(terms):
         qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', "\n" + word("Type ? to see definitions of words.") + 'XXXXMESSAGE_AREAXXXX', qoutput)
+    
     # if status.question.question_type == 'deadend':
     #     return dict(question=qoutput, help=houtput)
+    if len(status.attachments) > 0:
+        if len(status.attachments) > 1:
+            qoutput += "\n" + word("Your documents are attached.")
+        else:
+            qoutput += "\n" + word("Your document is attached.")
     return dict(question=qoutput, help=houtput, next=next_variable)
 
 def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_rules):

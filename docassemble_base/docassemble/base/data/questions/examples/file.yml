@@ -1,0 +1,14 @@
+metadata:
+  title: File upload
+---
+question: |
+  Please upload a file
+fields:
+  - File: the_file
+    datatype: file
+---
+mandatory: true
+question: |
+  Here is the file you uploaded
+subquestion: |
+  ${ the_file }

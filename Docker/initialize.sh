@@ -84,6 +84,8 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 	-e 's/{{RABBITMQ}}/'"${RABBITMQ:-null}"'/' \
 	-e 's/{{EC2}}/'"${EC2:-false}"'/' \
 	-e 's/{{LOGSERVER}}/'"${LOGSERVER:-null}"'/' \
+	-e 's/{{DAHOSTNAME}}/'"${DAHOSTNAME:-localhost}"'/' \
+	-e 's/{{USEHTTPS}}/'"${USEHTTPS:-false}"'/' \
 	$DA_CONFIG_FILE_DIST > $DA_CONFIG_FILE || exit 1
 fi
 chown www-data.www-data $DA_CONFIG_FILE

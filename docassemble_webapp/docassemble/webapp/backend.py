@@ -79,13 +79,25 @@ alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
 app.config['SQLALCHEMY_DATABASE_URI'] = alchemy_connect_string
 app.secret_key = daconfig.get('secretkey', '38ihfiFehfoU34mcq_4clirglw3g4o87')
 
-def save_numbered_file(filename, orig_path, yaml_file_name=None):
-    file_number = get_new_file_number(session['uid'], filename, yaml_file_name=yaml_file_name)
+def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
+    if uid is None:
+        uid = session['uid']
+    file_number = get_new_file_number(uid, filename, yaml_file_name=yaml_file_name)
     extension, mimetype = get_ext_and_mimetype(filename)
     new_file = SavedFile(file_number, extension=extension, fix=True)
     new_file.copy_from(orig_path)
     new_file.save(finalize=True)
     return(file_number, extension, mimetype)
+
+def savedfile_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
+    if uid is None:
+        uid = session['uid']
+    file_number = get_new_file_number(uid, filename, yaml_file_name=yaml_file_name)
+    extension, mimetype = get_ext_and_mimetype(filename)
+    new_file = SavedFile(file_number, extension=extension, fix=True)
+    new_file.copy_from(orig_path)
+    new_file.save(finalize=True)
+    return new_file
 
 def get_mail_variable(*args, **kwargs):
     return mail
@@ -169,8 +181,10 @@ def absolute_filename(the_file):
 docassemble.base.parse.set_absolute_filename(absolute_filename)
 #logmessage("Server started")
 
-def can_access_file_number(file_number):
-    upload = Uploads.query.filter_by(indexno=file_number, key=session['uid']).first()
+def can_access_file_number(file_number, uid=None):
+    if uid is None:
+        uid = session['uid']
+    upload = Uploads.query.filter_by(indexno=file_number, key=uid).first()
     if upload:
         return True
     return False

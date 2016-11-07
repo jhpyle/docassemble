@@ -65,7 +65,7 @@ from simplekv.memory.redisstore import RedisStore
 #from simplekv.db.sql import SQLAlchemyStore
 from sqlalchemy import create_engine, MetaData, Sequence, or_, and_
 from docassemble.webapp.app_and_db import app, db
-from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log
+from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, Messages
 from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock, TempUser, ChatLog
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
@@ -1831,49 +1831,9 @@ def index():
                             file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
                             extension, mimetype = get_ext_and_mimetype(filename)
                             saved_file = SavedFile(file_number, extension=extension, fix=True)
-                            if extension == "jpg" and daconfig.get('imagemagick', 'convert') is not None:
-                                unrotated = tempfile.NamedTemporaryFile(suffix=".jpg")
-                                rotated = tempfile.NamedTemporaryFile(suffix=".jpg")
-                                the_file.save(unrotated.name)
-                                call_array = [daconfig.get('imagemagick', 'convert'), str(unrotated.name), '-auto-orient', '-density', '300', 'jpeg:' + rotated.name]
-                                result = call(call_array)
-                                if result == 0:
-                                    saved_file.copy_from(rotated.name)
-                                else:
-                                    saved_file.copy_from(unrotated.name)
-                            else:
-                                the_file.save(saved_file.path)
-                                saved_file.save()
-                            if mimetype == 'video/quicktime' and daconfig.get('avconv', 'avconv') is not None:
-                                call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', saved_file.path + '.ogv']
-                                result = call(call_array)
-                                call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-vcodec', 'copy', '-acodec', 'copy', saved_file.path + '.mp4']
-                                result = call(call_array)
-                            if mimetype == 'video/mp4' and daconfig.get('avconv', 'avconv') is not None:
-                                call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', saved_file.path + '.ogv']
-                                result = call(call_array)
-                            if mimetype == 'video/ogg' and daconfig.get('avconv', 'avconv') is not None:
-                                call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-c:v', 'libx264', '-preset', 'veryslow', '-crf', '22', '-c:a', 'libmp3lame', '-qscale:a', '2', '-ac', '2', '-ar', '44100', saved_file.path + '.mp4']
-                                result = call(call_array)
-                            if mimetype == 'audio/mpeg' and daconfig.get('pacpl', 'pacpl') is not None:
-                                call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', saved_file.path + '.' + extension]
-                                result = call(call_array)
-                            if mimetype == 'audio/ogg' and daconfig.get('pacpl', 'pacpl') is not None:
-                                call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'mp3', saved_file.path + '.' + extension]
-                                result = call(call_array)
-                            if mimetype in ['audio/3gpp'] and daconfig.get('avconv', 'avconv') is not None:
-                                call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, saved_file.path + '.ogg']
-                                result = call(call_array)
-                                call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, saved_file.path + '.mp3']
-                                result = call(call_array)
-                            if mimetype in ['audio/x-wav', 'audio/wav'] and daconfig.get('pacpl', 'pacpl') is not None:
-                                call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'mp3', saved_file.path + '.' + extension]
-                                result = call(call_array)
-                                call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', saved_file.path + '.' + extension]
-                                result = call(call_array)
-                            if extension == "pdf":
-                                make_image_files(saved_file.path)
-                            saved_file.finalize()
+                            temp_file = tempfile.NamedTemporaryFile(suffix='.' + extension)
+                            the_file.save(temp_file.name)
+                            process_file(saved_file, temp_file.name, mimetype, extension)
                             files_to_process.append((filename, file_number, mimetype, extension))
                         try:
                             file_field = from_safeid(orig_file_field)
@@ -3250,6 +3210,51 @@ def index():
 if __name__ == "__main__":
     app.run()
 
+def process_file(saved_file, orig_file, mimetype, extension):
+    if extension == "jpg" and daconfig.get('imagemagick', 'convert') is not None:
+        unrotated = tempfile.NamedTemporaryFile(suffix=".jpg")
+        rotated = tempfile.NamedTemporaryFile(suffix=".jpg")
+        shutil.move(orig_file, unrotated.name)
+        call_array = [daconfig.get('imagemagick', 'convert'), str(unrotated.name), '-auto-orient', '-density', '300', 'jpeg:' + rotated.name]
+        result = call(call_array)
+        if result == 0:
+            saved_file.copy_from(rotated.name)
+        else:
+            saved_file.copy_from(unrotated.name)
+    else:
+        shutil.move(orig_file, saved_file.path)
+        saved_file.save()
+    if mimetype == 'video/quicktime' and daconfig.get('avconv', 'avconv') is not None:
+        call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', saved_file.path + '.ogv']
+        result = call(call_array)
+        call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-vcodec', 'copy', '-acodec', 'copy', saved_file.path + '.mp4']
+        result = call(call_array)
+    if mimetype == 'video/mp4' and daconfig.get('avconv', 'avconv') is not None:
+        call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', saved_file.path + '.ogv']
+        result = call(call_array)
+    if mimetype == 'video/ogg' and daconfig.get('avconv', 'avconv') is not None:
+        call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-c:v', 'libx264', '-preset', 'veryslow', '-crf', '22', '-c:a', 'libmp3lame', '-qscale:a', '2', '-ac', '2', '-ar', '44100', saved_file.path + '.mp4']
+        result = call(call_array)
+    if mimetype == 'audio/mpeg' and daconfig.get('pacpl', 'pacpl') is not None:
+        call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', saved_file.path + '.' + extension]
+        result = call(call_array)
+    if mimetype == 'audio/ogg' and daconfig.get('pacpl', 'pacpl') is not None:
+        call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'mp3', saved_file.path + '.' + extension]
+        result = call(call_array)
+    if mimetype in ['audio/3gpp'] and daconfig.get('avconv', 'avconv') is not None:
+        call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, saved_file.path + '.ogg']
+        result = call(call_array)
+        call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, saved_file.path + '.mp3']
+        result = call(call_array)
+    if mimetype in ['audio/x-wav', 'audio/wav'] and daconfig.get('pacpl', 'pacpl') is not None:
+        call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'mp3', saved_file.path + '.' + extension]
+        result = call(call_array)
+        call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', saved_file.path + '.' + extension]
+        result = call(call_array)
+    if extension == "pdf":
+        make_image_files(saved_file.path)
+    saved_file.finalize()
+    
 def save_user_dict_key(user_code, filename):
     #sys.stderr.write("20\n")
     the_record = UserDictKeys.query.filter_by(key=user_code, filename=filename, user_id=current_user.id).first()
@@ -3626,6 +3631,18 @@ def speak_file():
         abort(404)
     response = send_file(the_path, mimetype=audio_mimetype_table[file_format])
     return(response)
+
+@app.route('/storedfile/<uid>/<number>/<filename>.<extension>', methods=['GET'])
+def serve_stored_file(uid, number, filename, extension):
+    number = re.sub(r'[^0-9]', '', str(number))
+    if not can_access_file_number(number, uid=uid):
+        abort(404)
+    file_info = get_info_from_file_number(number, privileged=True)
+    if 'path' not in file_info:
+        abort(404)
+    else:
+        response = send_file(file_info['path'], mimetype=file_info['mimetype'])
+        return(response)
 
 @app.route('/uploadedfile/<number>.<extension>', methods=['GET'])
 def serve_uploaded_file_with_extension(number, extension):
@@ -7382,6 +7399,50 @@ def sms():
                 next_field = None
             if question.question_type == "settrue":
                 data = 'True'
+            elif question.question_type in ["file", "files"]:
+                if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
+                    skip_it = True
+                    data = repr('')
+                else:
+                    files_to_process = list()
+                    num_media = int(request.form.get('NumMedia', '0'))
+                    fileindex = 0
+                    while True:
+                        if question.question_type == "file" and fileindex > 0:
+                            break
+                        if fileindex >= num_media or 'MediaUrl' + str(fileindex) not in request.form:
+                            break
+                        mimetype = request.form.get('MediaContentType' + str(fileindex), 'image/jpeg')
+                        extension = re.sub(r'\.', r'', mimetypes.guess_extension(mimetype))
+                        if extension == 'jpe':
+                            extension = 'jpg'
+                        filename = 'file' + '.' + extension
+                        file_number = get_new_file_number(sess_info['uid'], filename, yaml_file_name=sess_info['yaml_filename'])
+                        saved_file = SavedFile(file_number, extension=extension, fix=True)
+                        saved_file.fetch_url(request.form['MediaUrl' + str(fileindex)])
+                        process_file(saved_file, extension)
+                        files_to_process.append((filename, file_number, mimetype, extension))
+                        fileindex += 1
+                    if len(files_to_process) > 0:
+                        elements = list()
+                        indexno = 0
+                        for (filename, file_number, mimetype, extension) in files_to_process:
+                            elements.append("docassemble.base.core.DAFile('" + saveas + "[" + str(indexno) + "]', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')")
+                            indexno += 1
+                        the_string = saveas + " = docassemble.base.core.DAFileList('" + saveas + "', elements=[" + ", ".join(elements) + "])"
+                        logmessage("sms: doing " + the_string)
+                        try:
+                            exec(the_string, user_dict)
+                            changed = True
+                            steps += 1
+                        except Exception as errMess:
+                            logmessage("sms: error: " + str(errMess))
+                            special_messages.append(word("Error") + ": " + str(errMess))
+                        skip_it = True
+                    else:
+                        data = None
+                        if interview_status.extras['required'][field.number]:
+                            special_messages.append(word("You must attach a file."))
             elif question.question_type in ["yesno"] or (hasattr(field, 'datatype') and (field.datatype in ['yesno', 'yesnowide'] or (hasattr(field, 'datatype') and field.datatype == 'boolean' and (hasattr(field, 'sign') and field.sign > 0)))):
                 if inp_lower in true_list:
                     data = 'True'
@@ -7615,7 +7676,6 @@ def sms():
         for special_message in special_messages:
             qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', "\n" + special_message + 'XXXXMESSAGE_AREAXXXX', qoutput)
         qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', '', qoutput)
-        resp.message(qoutput)
         if user_dict.get('multi_user', False) is True and encrypted is True:
             encrypted = False
             sess_info['encrypted'] = encrypted
@@ -7628,6 +7688,33 @@ def sms():
             is_encrypted = encrypted
             r.set(key, pickle.dumps(sess_info))
             encrypt_session(secret, user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
+        if len(interview_status.attachments) > 0:
+            with resp.message(qoutput) as m:
+                media_count = 0
+                for attachment in interview_status.attachments:
+                    if media_count >= 9:
+                        break
+                    for doc_format in attachment['formats_to_use']:
+                        if media_count >= 9:
+                            break
+                        if doc_format not in ['pdf', 'rtf']:
+                            continue
+                        filename = attachment['filename'] + '.' + doc_format
+                        saved_file = savedfile_numbered_file(filename, attachment['file'][doc_format], yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
+                        if daconfig.get('use_https', False):
+                            url = 'https://'
+                        else:
+                            url = 'http://'
+                        url += daconfig.get('hostname', 'localhost')
+                        root = daconfig.get('root', '/')
+                        if root != '/':
+                            url += root
+                        url += url_for('serve_stored_file', uid=sess_info['uid'], number=saved_file.file_number, filename=attachment['filename'], extension=doc_format)
+                        #logmessage('sms: url is ' + str(url))
+                        m.media(url)
+                        media_count += 1
+        else:
+            resp.message(qoutput)
     release_lock(sess_info['uid'], sess_info['yaml_filename'])
     #logmessage(str(request.form))
     return Response(str(resp), mimetype='text/xml')
