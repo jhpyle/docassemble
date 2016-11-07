@@ -7399,7 +7399,7 @@ def sms():
                 next_field = None
             if question.question_type == "settrue":
                 data = 'True'
-            elif question.question_type in ["file", "files"]:
+            elif hasattr(field, 'datatype') and field.datatype in ["file", "files"]:
                 if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
                     skip_it = True
                     data = repr('')
@@ -7408,7 +7408,7 @@ def sms():
                     num_media = int(request.form.get('NumMedia', '0'))
                     fileindex = 0
                     while True:
-                        if question.question_type == "file" and fileindex > 0:
+                        if field.datatype == "file" and fileindex > 0:
                             break
                         if fileindex >= num_media or 'MediaUrl' + str(fileindex) not in request.form:
                             break
