@@ -93,8 +93,11 @@ The text messaging interface can receive document uploads ([`file`],
 supported.
 
 Since text messages are plain text, the text messaging interface
-cannot handle [decorations], [inline images], [emoji], or [markup] such as bold,
-italics, etc.
+cannot handle [decorations], [inline images], [emoji], or [markup]
+such as bold, italics, etc.  Nor can it handle interaction with the
+user through the menu ([`action_menu_item()`]) or through links
+([`url_action()`]).  The [`reload` modifier] is not supported, but
+users can manually "reload" the screen by typing `question`.
 
 The [`terms`] feature is supported.  Users can send `?` to read the
 definitions of terms.
@@ -153,3 +156,6 @@ _[Industry standards for U.S. short code HELP and STOP]_.
 [inline images]: {{ site.baseurl }}/docs/markup.html#inserting images
 [emoji]: {{ site.baseurl }}/docs/markup.html#emoji
 [setting variables]: {{ site.baseurl }}/docs/fields.html
+[`action_menu_item()`]: {{ site.baseurl }}/docs/functions.html#action_menu_item
+[`url_action()`]: {{ site.baseurl }}/docs/functions.html#url_action
+[`reload` modifier]: {{ site.baseurl }}/docs/modifiers.html#reload
