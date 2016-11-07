@@ -7320,13 +7320,13 @@ def sms():
             sess_info['encrypted'] = encrypted
             is_encrypted = encrypted
             r.set(key, pickle.dumps(sess_info))
-            decrypt_session(secret, user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
+            decrypt_session(sess_info['secret'], user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
         if user_dict.get('multi_user', False) is False and encrypted is False:
             encrypted = True
             sess_info['encrypted'] = encrypted
             is_encrypted = encrypted
             r.set(key, pickle.dumps(sess_info))
-            encrypt_session(secret, user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
+            encrypt_session(sess_info['secret'], user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
         interview = docassemble.base.interview_cache.get_interview(sess_info['yaml_filename'])
         if 'skip' not in user_dict['_internal']:
             user_dict['_internal']['skip'] = dict()
@@ -7335,7 +7335,7 @@ def sms():
             sms_variable = user_dict['_internal']['smsgather']
         else:
             sms_variable = None
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], yaml_filename=sess_info['yaml_filename'], url=None, action=None, sms_variable=sms_variable, interface='sms', arguments=dict(), skip=user_dict['_internal']['skip']))
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=request.url_root, sms_variable=sms_variable, skip=user_dict['_internal']['skip']))
         interview.assemble(user_dict, interview_status)
         #logmessage("sms: inp is " + inp.lower() + " and steps is " + str(steps) + " and can go back is " + str(interview_status.can_go_back))
         if inp.lower() in [word('back')] and steps > 1 and interview_status.can_go_back:
@@ -7402,7 +7402,7 @@ def sms():
                 next_field = None
             if question.question_type == "settrue":
                 data = 'True'
-            elif hasattr(field, 'datatype') and field.datatype in ["file", "files"]:
+            elif hasattr(field, 'datatype') and field.datatype in ["file", "files", "camera", "camcorder", "microphone"]:
                 if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
                     skip_it = True
                     data = repr('')
