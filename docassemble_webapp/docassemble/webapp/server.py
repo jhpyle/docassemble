@@ -330,6 +330,8 @@ docassemble.base.util.set_user_id_function(user_id_dict)
 
 docassemble.base.parse.set_url_finder(get_url_from_file_reference)
 
+docassemble.base.parse.set_url_for(url_for)
+
 def get_documentation_dict():
     documentation = get_info_from_file_reference('docassemble.base:data/questions/documentation.yml')
     if 'fullpath' in documentation and documentation['fullpath'] is not None:
@@ -397,6 +399,8 @@ if 'twilio' in daconfig:
 else:
     twilio_config = None
 
+docassemble.base.util.set_twilio_config(twilio_config)
+    
 APPLICATION_NAME = 'docassemble'
 app.config['USE_GOOGLE_LOGIN'] = False
 app.config['USE_FACEBOOK_LOGIN'] = False
@@ -6910,11 +6914,13 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
         ext = dict(email=None, theid=session.get('tempuser', None), roles=list())
     if req is None:
         url = 'http://localhost'
+        url_root = 'http://localhost'
         secret = None
     else:
         url = req.base_url
+        url_root = req.url_root
         secret = req.cookies.get('secret', None)
-    return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}}
+    return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}}
     if action is not None:
         return_val.update(action)
     if location is not None:
@@ -7342,7 +7348,7 @@ def sms():
         #     action_manual = True
         # else:
         #     action_manual = False
-        ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=request.url_root, sms_variable=sms_variable, skip=user_dict['_internal']['skip'])
+        ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=request.base_url, url_root=request.url_root, sms_variable=sms_variable, skip=user_dict['_internal']['skip'])
         if action is not None:
             #logmessage("Setting action to " + str(action))
             ci.update(action)

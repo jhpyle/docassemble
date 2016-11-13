@@ -52,6 +52,9 @@ def set_url_finder(func):
     docassemble.base.filter.set_url_finder(func)
     docassemble.base.functions.set_url_finder(func)
 
+def set_url_for(func):
+    docassemble.base.filter.set_url_for(func)
+
 def set_file_finder(func):
     docassemble.base.filter.set_file_finder(func)
 

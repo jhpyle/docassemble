@@ -1,0 +1,30 @@
+metadata:
+  title: Send SMS message
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  client: Individual
+---
+question: |
+  Please upload a file
+fields:
+  - File: the_file
+    datatype: file
+---
+code: |
+  client.mobile_number = "215-391-9686"
+  client.name.first = "Jonathan"
+  client.name.last = "Pyle"
+  message_sent = send_sms(to=client, body="Hello world", attachments=the_file)
+---
+mandatory: true
+question: |
+  Result
+subquestion: |
+  % if message_sent:
+  The SMS message was sent.
+  % else:
+  There was a problem sending the SMS message.
+  % endif

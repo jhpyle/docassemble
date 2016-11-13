@@ -1,5 +1,6 @@
 debug: false
 root: /
+url root: {{URLROOT}}
 exitpage: /
 db:
   prefix: {{DBPREFIX}}

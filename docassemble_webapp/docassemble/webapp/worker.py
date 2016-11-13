@@ -50,14 +50,14 @@ def initialize_db():
     #sys.stderr.write("initialized db")
 
 @workerapp.task
-def background_action(yaml_filename, user_info, session_code, secret, url, action):
+def background_action(yaml_filename, user_info, session_code, secret, url, url_root, action):
     if w is None:
         initialize_db()
     with w.flaskapp.app_context():
         #sys.stderr.write("Got to background action in worker where action is " + str(action) + " and yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + "\n")
         w.set_request_active(False)
         interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, action=action['action'], interface='worker', arguments=action['arguments']))
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, action=action['action'], interface='worker', arguments=action['arguments']))
         #sys.stderr.write("Calling fetch_user_dict with " + str(session_code) + " " + str(yaml_filename) + " " + str(secret) + "\n")
         steps, user_dict, is_encrypted = w.fetch_user_dict(session_code, yaml_filename, secret=secret)
         # if 'answer' in user_dict:
@@ -90,7 +90,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, actio
         if interview_status.question.question_type == "backgroundresponseaction":
             #sys.stderr.write("Got backgroundresponseaction in worker\n")
             new_action = interview_status.question.action
-            interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, interface='worker', action=new_action['action'], arguments=new_action['arguments']))
+            interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, interface='worker', action=new_action['action'], arguments=new_action['arguments']))
             w.obtain_lock(session_code, yaml_filename)
             steps, user_dict, is_encrypted = w.fetch_user_dict(session_code, yaml_filename, secret=secret)
             try:

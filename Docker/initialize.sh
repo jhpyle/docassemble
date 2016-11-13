@@ -35,6 +35,23 @@ else
     CRONRUNNING=false
 fi
 
+if [ "${USEHTTPS:-false}" == "false" ]; then
+    URLROOT="http://"
+else
+    URLROOT="https://"
+fi
+
+if [ "${DAHOSTNAME:-none}" != "none" ]; then
+    URLROOT="${URLROOT}${DAHOSTNAME}"
+else
+    if [ "${EC2:-false}" == "true" ]; then
+	PUBLIC_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/public-hostname`
+    else
+	PUBLIC_HOSTNAME=`hostname --fqdn`
+    fi
+    URLROOT="${URLROOT}${PUBLIC_HOSTNAME}"
+fi
+    
 if [ "${S3ENABLE:-null}" == "null" ] && [ "${S3BUCKET:-null}" != "null" ]; then
     export S3ENABLE=true
 fi
@@ -84,6 +101,7 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 	-e 's/{{RABBITMQ}}/'"${RABBITMQ:-null}"'/' \
 	-e 's/{{EC2}}/'"${EC2:-false}"'/' \
 	-e 's/{{LOGSERVER}}/'"${LOGSERVER:-null}"'/' \
+	-e 's/{{URLROOT}}/'"${URLROOT:-null}"'/' \
 	$DA_CONFIG_FILE_DIST > $DA_CONFIG_FILE || exit 1
 fi
 chown www-data.www-data $DA_CONFIG_FILE

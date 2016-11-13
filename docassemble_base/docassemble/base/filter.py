@@ -12,6 +12,7 @@ import tempfile
 import docassemble.base.functions
 from docassemble.base.pandoc import Pandoc
 from mdx_smartypants import SmartypantsExt
+from bs4 import BeautifulSoup
 
 from docassemble.base.logger import logmessage
 from rtfng.object.picture import Image
@@ -110,6 +111,16 @@ url_finder = blank_url_finder
 def set_url_finder(func):
     global url_finder
     url_finder = func
+    return
+
+def blank_url_for(*args, **kwargs):
+    return('about:blank')
+
+url_for = blank_url_for
+
+def set_url_for(func):
+    global url_for
+    url_for = func
     return
 
 rtf_spacing = {'single': '\\sl0 ', 'oneandahalf': '\\sl360\\slmult1 ', 'double': '\\sl480\\slmult1 ', 'triple': '\\sl720\\slmult1 '}
@@ -1102,3 +1113,71 @@ def get_video_urls(the_video, question=None):
                 url = url_finder(full_file, question=question)
                 output.append([url, mimetype])
     return output
+
+def to_text(html_doc, terms, links, status):
+    #url = status.current_info.get('url', 'http://localhost')
+    #logmessage("url is " + str(url))
+    output = ""
+    #logmessage("to_text: html doc is " + str(html_doc))
+    soup = BeautifulSoup(html_doc, 'html.parser')
+    [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title', 'audio', 'video', 'pre', 'attribution'])]
+    [s.extract() for s in soup.find_all(hidden)]
+    [s.extract() for s in soup.find_all('div', {'class': 'invisible'})]
+    for s in soup.find_all(do_show):
+        if s.name in ['input', 'textarea', 'img'] and s.has_attr('alt'):
+            words = s.attrs['alt']
+            if s.has_attr('placeholder'):
+                words += ", " + s.attrs['placeholder']
+        else:
+            words = s.get_text()
+        words = re.sub(r'\n\s*', ' ', words, flags=re.DOTALL)
+        output += words + "\n"
+    for s in soup.find_all('a'):
+        if s.has_attr('class') and s.attrs['class'][0] == 'daterm' and s.has_attr('data-content'):
+            terms[s.string] = s.attrs['data-content']
+        elif s.has_attr('href'):# and (s.attrs['href'].startswith(url) or s.attrs['href'].startswith('?')):
+            #logmessage("Adding a link: " + s.attrs['href'])
+            links.append((s.attrs['href'], s.get_text()))
+    output = re.sub(ur'\u201c', '"', output)
+    output = re.sub(ur'\u201d', '"', output)
+    output = re.sub(ur'\u2018', "'", output)
+    output = re.sub(ur'\u2019', "'", output)
+    output = re.sub(ur'\u201b', "'", output)
+    output = re.sub(r'&amp;gt;', '>', output)
+    output = re.sub(r'&amp;lt;', '<', output)
+    output = re.sub(r'&gt;', '>', output)
+    output = re.sub(r'&lt;', '<', output)
+    output = re.sub(r'<[^>]+>', '', output)
+    output = re.sub(r'\n$', '', output)
+    output = re.sub(r'  +', ' ', output)
+    return output
+
+bad_list = ['div', 'option']
+
+good_list = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'button', 'textarea', 'note']
+
+def do_show(element):
+    if re.match('<!--.*-->', str(element), re.DOTALL):
+        return False
+    if element.name in ['option'] and element.has_attr('selected'):
+        return True    
+    if element.name in bad_list:
+        return False
+    if element.name in ['img', 'input'] and element.has_attr('alt'):
+        return True
+    if element.name in good_list:
+        return True
+    if element.parent and element.parent.name in good_list:
+        return False
+    if element.string:
+        return True
+    if re.match(r'\s+', element.get_text()):
+        return False
+    return False
+
+def hidden(element):
+    if element.name == 'input':
+        if element.has_attr('type'):
+            if element.attrs['type'] == 'hidden':
+                return True
+    return False

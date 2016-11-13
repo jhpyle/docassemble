@@ -23,14 +23,22 @@ import yaml
 import sys
 import tzlocal
 import us
+import pycountry
+import phonenumbers
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'objects_from_file', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'objects_from_file', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid']
 
 debug = False
 default_dialect = 'us'
 default_language = 'en'
 default_locale = 'US.utf8'
+default_country = 'US'
+
+alpha_2_to_name = dict()
+for country in pycountry.countries:
+    alpha_2_to_name[country.alpha_2] = country.name
+
 try:
     default_timezone = tzlocal.get_localzone().zone
 except:
@@ -42,6 +50,7 @@ newlines = re.compile(r'[\r\n]+')
 class ThreadVariables(threading.local):
     language = default_language
     dialect = default_dialect
+    country = default_country
     locale = default_locale
     user = None
     role = 'user'
@@ -62,6 +71,10 @@ def user_logged_in():
     if this_thread.current_info['user']['is_authenticated']:
         return True
     return False
+
+def country_name(country_code):
+    """Given a two-digit country code, returns the country name."""
+    return pycountry.countries.get(alpha_2=country_code).name
 
 def interface():
     """Returns web, sms, cron, or worker, depending on how the interview is being accessed"""
@@ -386,7 +399,7 @@ def background_action(action, **kwargs):
 
 def worker_caller(func, action):
     #sys.stderr.write("Got to worker_caller in functions\n")
-    return func.delay(this_thread.current_info['yaml_filename'], this_thread.current_info['user'], this_thread.current_info['session'], this_thread.current_info['secret'], this_thread.current_info['url'], action)
+    return func.delay(this_thread.current_info['yaml_filename'], this_thread.current_info['user'], this_thread.current_info['session'], this_thread.current_info['secret'], this_thread.current_info['url'], this_thread.current_info['url_root'], action)
 
 def null_chat_partners(*pargs, **kwargs):
     return (dict(peer=0, help=0))
@@ -497,6 +510,11 @@ def set_default_dialect(dialect):
     default_dialect = dialect
     return
 
+def set_default_country(country):
+    global default_country
+    default_country = country
+    return
+
 def set_default_timezone(timezone):
     global default_timezone
     default_timezone = timezone
@@ -536,6 +554,15 @@ def set_language(lang, dialect=None):
 def get_language():
     """Returns the current language (e.g., "en")."""
     return this_thread.language
+
+def set_country(country):
+    """Sets the current country (e.g., "US")."""
+    this_thread.country = country
+    return
+
+def get_country():
+    """Returns the current country (e.g., "US")."""
+    return this_thread.country
 
 def get_dialect():
     """Returns the current dialect."""
@@ -1452,3 +1479,27 @@ def set_live_help_status(availability=None, mode=None, partner_roles=None):
             for arg in plist:
                 new_roles.add(arg)
         this_thread.internal['livehelp']['partner_roles'] = list(new_roles)
+
+def phone_number_in_e164(number, country=None):
+    """Given a phone number and a country code, returns the number in
+    E.164 format.  Returns None if the number could not be so formatted."""
+    if country is None:
+        country = get_country()
+    try:
+        pn = phonenumbers.parse(number, country)
+        output = phonenumbers.format_number(pn, phonenumbers.PhoneNumberFormat.E164)
+    except:
+        return None
+    return output
+        
+def phone_number_is_valid(number, country=None):
+    """Given a phone number and a country code, returns True if the phone number is valid, otherwise False."""
+    if country is None:
+        country = get_country()
+    try:
+        pn = phonenumbers.parse(number, country)
+    except:
+        return False
+    if phonenumbers.is_possible_number(pn) and phonenumbers.is_valid_number(pn):
+        return True
+    return False
