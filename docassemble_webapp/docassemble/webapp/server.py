@@ -1,5 +1,6 @@
 from twilio.util import TwilioCapability
 from twilio.rest import TwilioRestClient
+from PIL import Image
 import twilio.twiml
 import socket
 import copy
@@ -7258,7 +7259,7 @@ def digits():
 
 @app.route("/sms", methods=['POST'])
 def sms():
-    logmessage("Received: " + str(request.form))
+    #logmessage("Received: " + str(request.form))
     special_messages = list()
     resp = twilio.twiml.Response()
     if twilio_config is None:
@@ -7314,6 +7315,8 @@ def sms():
     obtain_lock(sess_info['uid'], sess_info['yaml_filename'])
     steps, user_dict, is_encrypted = fetch_user_dict(sess_info['uid'], sess_info['yaml_filename'], secret=sess_info['secret'])
     encrypted = sess_info['encrypted']
+    action = None
+    action_performed = False
     while True:
         if user_dict.get('multi_user', False) is True and encrypted is True:
             encrypted = False
@@ -7335,12 +7338,58 @@ def sms():
             sms_variable = user_dict['_internal']['smsgather']
         else:
             sms_variable = None
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=request.url_root, sms_variable=sms_variable, skip=user_dict['_internal']['skip']))
+        # if action is not None:
+        #     action_manual = True
+        # else:
+        #     action_manual = False
+        ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=request.url_root, sms_variable=sms_variable, skip=user_dict['_internal']['skip'])
+        if action is not None:
+            #logmessage("Setting action to " + str(action))
+            ci.update(action)
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
         interview.assemble(user_dict, interview_status)
+        if action is not None:
+            sess_info['question'] = interview_status.question.name
+            r.set(key, pickle.dumps(sess_info))
+        elif 'question' in sess_info and sess_info['question'] != interview_status.question.name:
+            logmessage("blanking the input because question changed")
+            if inp not in [word('?'), word('back'), word('question'), word('exit')]:
+                inp = 'question'
+
         #logmessage("sms: inp is " + inp.lower() + " and steps is " + str(steps) + " and can go back is " + str(interview_status.can_go_back))
+        m = re.search(r'^(' + word('menu') + '|' + word('link') + ')([0-9]+)', inp.lower())
+        if m:
+            #logmessage("Got " + inp)
+            arguments = dict()
+            selection_type = m.group(1)
+            selection_number = int(m.group(2)) - 1
+            links = list()
+            menu_items = list()
+            sms_info = as_sms(interview_status, links=links, menu_items=menu_items)
+            target_url = None
+            if selection_type == word('menu') and selection_number < len(menu_items):
+                (target_url, label) = menu_items[selection_number]
+            if selection_type == word('link') and selection_number < len(links):
+                (target_url, label) = links[selection_number]
+            if target_url is not None:
+                uri_params = re.sub(r'^[\?]*\?', r'', target_url)
+                for statement in re.split(r'&', uri_params):
+                    parts = re.split(r'=', statement)
+                    arguments[parts[0]] = parts[1]
+            if 'action' in arguments:
+                #logmessage(myb64unquote(urllib.unquote(arguments['action'])))
+                action = json.loads(myb64unquote(urllib.unquote(arguments['action'])))
+                #logmessage("Action is " + str(action))
+                action_performed = True
+                accepting_input = False
+                inp = ''
+                continue
+            break
         if inp.lower() in [word('back')] and steps > 1 and interview_status.can_go_back:
             steps, user_dict, is_encrypted = fetch_previous_user_dict(sess_info['uid'], sess_info['yaml_filename'], secret=sess_info['secret'])
-
+            if 'question' in sess_info:
+                del sess_info['question']
+                r.set(key, pickle.dumps(sess_info))
             accepting_input = False
             inp = ''
             continue
@@ -7355,10 +7404,10 @@ def sms():
         if inp_lower in [word('?')]:
             sms_info = as_sms(interview_status)
             message = ''
-            if sms_info['?'] is None:
+            if sms_info['help'] is None:
                 message += word('Sorry, no help is available for this question.')
             else:
-                message += sms_info['?']
+                message += sms_info['help']
             message += "\n" + word("To read the question again, type question.")
             resp.message(message)
             release_lock(sess_info['uid'], sess_info['yaml_filename'])
@@ -7401,7 +7450,33 @@ def sms():
                 field = interview_status.question.fields[0]
                 next_field = None
             if question.question_type == "settrue":
-                data = 'True'
+                if inp_lower in [word('ok')]:
+                    data = 'True'
+                else:
+                    data = None
+            elif question.question_type == 'signature':
+                filename = 'canvas.png'
+                extension = 'png'
+                mimetype = 'image/png'
+                temp_image_file = tempfile.NamedTemporaryFile(suffix='.' + extension)
+                #image = Image()
+                # Save blank PNG 200x50 to temp_image_file.name
+                saved_file = savedfile_numbered_file(filename, temp_image_file.name, yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
+                if inp_lower in [word('x')]:
+                    the_string = saveas + "docassemble.base.core.DAFile('" + saveas + "', filename='" + str(filename) + "', number=" + str(saved_file.file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
+                    logmessage("sms: doing " + the_string)
+                    try:
+                        exec('import docassemble.base.core', user_dict)
+                        exec(the_string, user_dict)
+                        changed = True
+                        steps += 1
+                    except Exception as errMess:
+                        logmessage("sms: error: " + str(errMess))
+                        special_messages.append(word("Error") + ": " + str(errMess))
+                    skip_it = True
+                    data = repr('')
+                else:
+                    data = None
             elif hasattr(field, 'datatype') and field.datatype in ["file", "files", "camera", "camcorder", "microphone"]:
                 if inp_lower == word('skip') and not interview_status.extras['required'][field.number]:
                     skip_it = True
@@ -7663,6 +7738,8 @@ def sms():
         if changed and next_field is None and question.name not in user_dict['_internal']['answers']:
             user_dict['_internal']['answered'].add(question.name)
         interview.assemble(user_dict, interview_status)
+        sess_info['question'] = interview_status.question.name
+        r.set(key, pickle.dumps(sess_info))
     if interview_status.question.question_type in ["restart", "exit"]:
         logmessage("sms: exiting because of restart or exit")
         reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
@@ -7676,12 +7753,13 @@ def sms():
         #logmessage("sms: " + as_sms(interview_status))
         #twilio_client = TwilioRestClient(tconfig['account sid'], tconfig['auth token'])
         #message = twilio_client.messages.create(to=request.form["From"], from_=request.form["To"], body=as_sms(interview_status))
+        #logmessage("calling as_sms")
         sms_info = as_sms(interview_status)
         qoutput = sms_info['question']
         if sms_info['next'] is not None:
             #logmessage("sms: next variable is " + sms_info['next'])
             user_dict['_internal']['smsgather'] = sms_info['next']
-        if accepting_input or changed or sms_info['next'] is not None:
+        if accepting_input or changed or action_performed or sms_info['next'] is not None:
             save_user_dict(sess_info['uid'], user_dict, sess_info['yaml_filename'], secret=sess_info['secret'], encrypt=encrypted, changed=changed)
         for special_message in special_messages:
             qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', "\n" + special_message + 'XXXXMESSAGE_AREAXXXX', qoutput)

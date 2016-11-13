@@ -2023,6 +2023,9 @@ class Interview:
             elif var in user_dict:
                 #logmessage("doing non-exec del")
                 del user_dict[var]
+        # if 'action_manual' in interview_status.current_info and interview_status.current_info['action_manual']:
+        #     exec('import docassemble.base.util')
+        #     exec('docassemble.base.util.process_action()')
         while True:
             try:
                 if 'sms_variable' in interview_status.current_info and interview_status.current_info['sms_variable'] is not None:

@@ -1,4 +1,4 @@
-from docassemble.base.functions import word, currency_symbol, url_action
+from docassemble.base.functions import word, currency_symbol, url_action, comma_and_list
 import docassemble.base.filter
 from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote
 from docassemble.base.parse import Question, debug
@@ -72,8 +72,11 @@ bad_list = ['div', 'option']
 
 good_list = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'button', 'textarea', 'note']
 
-def to_text(html_doc, terms):
+def to_text(html_doc, terms, links, status):
+    #url = status.current_info.get('url', 'http://localhost')
+    #logmessage("url is " + str(url))
     output = ""
+    #logmessage("to_text: html doc is " + str(html_doc))
     soup = BeautifulSoup(html_doc, 'html.parser')
     [s.extract() for s in soup(['style', 'script', '[document]', 'head', 'title', 'audio', 'video', 'pre', 'attribution'])]
     [s.extract() for s in soup.find_all(hidden)]
@@ -90,6 +93,9 @@ def to_text(html_doc, terms):
     for s in soup.find_all('a'):
         if s.has_attr('class') and s.attrs['class'][0] == 'daterm' and s.has_attr('data-content'):
             terms[s.string] = s.attrs['data-content']
+        elif s.has_attr('href'):# and (s.attrs['href'].startswith(url) or s.attrs['href'].startswith('?')):
+            #logmessage("Adding a link: " + s.attrs['href'])
+            links.append((s.attrs['href'], s.get_text()))
     output = re.sub(ur'\u201c', '"', output)
     output = re.sub(ur'\u201d', '"', output)
     output = re.sub(ur'\u2018', "'", output)
@@ -130,7 +136,11 @@ def hidden(element):
                 return True
     return False
 
-def get_choices_with_abb(status, field, terms=dict()):
+def get_choices_with_abb(status, field, terms=None, links=None):
+    if terms is None:
+        terms = dict()
+    if links is None:
+        links = list()
     choice_list = get_choices(status, field)
     data = dict()
     while True:
@@ -140,7 +150,7 @@ def get_choices_with_abb(status, field, terms=dict()):
         data['abblower'] = dict()
         data['label'] = list()
         for choice in choice_list:
-            flabel = to_text(markdown_to_html(choice[0], trim=False, status=status, strip_newlines=True), terms).strip()
+            flabel = to_text(markdown_to_html(choice[0], trim=False, status=status, strip_newlines=True), terms, links, status).strip()
             success = try_to_abbreviate(choice[0], flabel, data, len(choice_list))
             if not success:
                 break
@@ -218,7 +228,7 @@ def try_to_abbreviate(label, flabel, data, length):
         prospective_key = flabel[startpoint:endpoint]
         if method == 'float' and re.search(r'[^A-Za-z0-9]', prospective_key):
             startpoint += 1
-            data['size'] = 1
+            #data['size'] = 1
             endpoint = startpoint + data['size']
             continue
         if method == 'fromstart' and re.search(r'[^A-Za-z0-9]$', prospective_key):
@@ -237,12 +247,23 @@ def try_to_abbreviate(label, flabel, data, length):
     data['label'].append(flabel[0:startpoint] + "[" + prospective_key + ']' + flabel[endpoint:])
     return True
 
-def as_sms(status):
+def as_sms(status, links=None, menu_items=None):
+    if links is None:
+        links = list()
+    if menu_items is None:
+        menu_items = list()    
     terms = dict()
+    #logmessage("length of links is " + str(len(links)))
+    links_len = 0
+    menu_items_len = 0
     next_variable = None
-    qoutput = to_text(markdown_to_html(status.questionText, trim=False, status=status, strip_newlines=True), terms)
+    qoutput = ''
+    if status.question.question_type == 'signature':
+        qoutput += word('Sign Your Name') + "\n"
+    #logmessage("The question is " + status.questionText)
+    qoutput += to_text(markdown_to_html(status.questionText, trim=False, status=status, strip_newlines=True), terms, links, status)
     if status.subquestionText:
-        qoutput += "\n" + to_text(markdown_to_html(status.subquestionText, status=status), terms)
+        qoutput += "\n" + to_text(markdown_to_html(status.subquestionText, status=status), terms, links, status)
         #logmessage("output is: " + repr(qoutput))
     qoutput += "XXXXMESSAGE_AREAXXXX"
     if len(status.question.fields):
@@ -255,7 +276,7 @@ def as_sms(status):
                 if the_field.datatype in ['html', 'note'] and field is not None:
                     continue
                 if the_field.datatype in ['note']:
-                    qoutput += "\n" + to_text(markdown_to_html(status.extras['note'][the_field.number], status=status), terms)
+                    qoutput += "\n" + to_text(markdown_to_html(status.extras['note'][the_field.number], status=status), terms, links, status)
                     continue
                 if the_field.datatype in ['html']:
                     qoutput += "\n" + to_text(status.extras['html'][the_field.number].rstrip())
@@ -280,9 +301,9 @@ def as_sms(status):
         if next_field is not None:
             next_variable = myb64unquote(next_field.saveas)
             if hasattr(next_field, 'label') and status.labels[next_field.number] not in ["no label", ""]:
-                next_label = ' (' + word("Next will be") + ' ' + to_text(markdown_to_html(status.labels[next_field.number], trim=False, status=status, strip_newlines=True), terms) + ')'
+                next_label = ' (' + word("Next will be") + ' ' + to_text(markdown_to_html(status.labels[next_field.number], trim=False, status=status, strip_newlines=True), terms, links, status) + ')'
         if hasattr(field, 'label') and status.labels[field.number] != "no label":
-            label = to_text(markdown_to_html(status.labels[field.number], trim=False, status=status, strip_newlines=True), terms)
+            label = to_text(markdown_to_html(status.labels[field.number], trim=False, status=status, strip_newlines=True), terms, links, status)
         question = status.question
         # if hasattr(field, 'datatype'):
         #     logmessage("as_sms: data type is " + field.datatype)
@@ -301,7 +322,7 @@ def as_sms(status):
         elif question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ['object', 'checkboxes', 'object_checkboxes']):
             if question.question_type == 'fields' and label:
                 qoutput += "\n" + label + ":" + next_label
-            data, choice_list = get_choices_with_abb(status, field, terms=terms)
+            data, choice_list = get_choices_with_abb(status, field, terms=terms, links=links)
             qoutput += "\n" + word("Choices:")
             if hasattr(field, 'shuffle') and field.shuffle:
                 random.shuffle(data['label'])
@@ -317,6 +338,10 @@ def as_sms(status):
                         qoutput += "\n" + word("Type your selection.")
                 else:
                     qoutput += "\n" + word("Type your selection, or type skip to move on without selecting.")
+        elif question.question_type == 'signature':
+            if status.underText:
+                qoutput += "\n__________________________\n" + to_text(markdown_to_html(status.underText, trim=False, status=status, strip_newlines=True), terms, links, status)
+            qoutput += "\n" + word('Type x to sign your name electronically')
         elif hasattr(field, 'datatype') and field.datatype == 'range':
             max_string = str(int(status.extras['max'][field.number]))
             min_string = str(int(status.extras['min'][field.number]))
@@ -385,30 +410,87 @@ def as_sms(status):
                     qoutput += "\n" + word("Type the") + " " + label + "." + next_label
                 else:
                     qoutput += "\n" + word("Type the") + " " + label + " " + word("or type skip to leave blank.") + next_label
-    if len(status.helpText) or len(terms):
+    if 'menu_items' in status.extras and type(status.extras['menu_items']) is list:
+        for menu_item in status.extras['menu_items']:
+            if type(menu_item) is dict and 'url' in menu_item and 'label' in menu_item:
+                menu_items.append((menu_item['url'], menu_item['label']))
+    if len(links):
+        indexno = 1
+        qoutput_add = "\n" + word("== Links ==")
+        seen = dict()
+        for (href, label) in links:
+            if label in seen and href in seen[label]:
+                continue
+            if label not in seen:
+                seen[label] = set()
+            seen[label].add(href)
+            if re.search(r'action=', href):
+                qoutput_add += "\n* " + label + ": [" + word('link') + str(indexno) + ']'
+                indexno += 1
+            else:
+                qoutput_add += "\n* " + label + ": " + href
+        if indexno == 2:
+            qoutput_add += "\n" + word("You can type link1 to visit the link")
+        else:
+            qoutput_add += "\n" + word("You can type link1, etc. to visit a link")
+        qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', qoutput_add + r'XXXXMESSAGE_AREAXXXX', qoutput)
+        links_len = len(links)
+        links_orig = list(links)
+        while len(links):
+            links.pop()
+        for (href, label) in links_orig:
+            if re.search(r'action=', href):
+                links.append((href, label))
+    if len(status.helpText) or len(terms) or len(menu_items):
         houtput = ''
         for help_section in status.helpText:
             if houtput != '':
                 houtput += "\n"
             if help_section['heading'] is not None:
-                houtput += '== ' + to_text(markdown_to_html(help_section['heading'], trim=False, status=status, strip_newlines=True), terms) + ' =='
+                houtput += '== ' + to_text(markdown_to_html(help_section['heading'], trim=False, status=status, strip_newlines=True), terms, links, status) + ' =='
             else:
                 houtput += '== ' + word('Help with this question') + ' =='
-            houtput += "\n" + to_text(markdown_to_html(help_section['content'], trim=False, status=status, strip_newlines=True), terms)
+            houtput += "\n" + to_text(markdown_to_html(help_section['content'], trim=False, status=status, strip_newlines=True), terms, links, status)
         if len(terms):
             if houtput != '':
                 houtput += "\n"
             houtput += word("== Terms used: ==")
             for term, definition in terms.iteritems():
                 houtput += "\n" + term + ': ' + definition
+        if len(menu_items):
+            indexno = 1
+            if houtput != '':
+                houtput += "\n"
+            houtput += word("== Menu: ==")
+            for (href, label) in menu_items:
+                if re.search(r'action=', href):
+                    houtput += "\n* " + label + ": [" + word('menu') + str(indexno) + ']'
+                    indexno += 1
+                else:
+                    houtput += "\n* " + label + ": " + href
+            if indexno == 2:
+                houtput += "\n" + word("You can type menu1 to select the menu item")
+            else:
+                houtput += "\n" + word("You can type menu1, etc. to select a menu item")
+            menu_items_len = len(menu_items)
+            menu_items_orig = list(menu_items)
+            while len(menu_items):
+                menu_items.pop()
+            for (href, label) in menu_items_orig:
+                if re.search(r'action=', href):
+                    menu_items.append((href, label))
         #houtput += "\n" + word("You can type question to read the question again.")
     else:
         houtput = None
     if status.question.helptext is not None:
         qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', "\n" + word("Type ? for additional assistance.") + 'XXXXMESSAGE_AREAXXXX', qoutput)
-    elif len(terms):
-        qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', "\n" + word("Type ? to see definitions of words.") + 'XXXXMESSAGE_AREAXXXX', qoutput)
-    
+    elif len(terms) or menu_items_len:
+        items = list()
+        if len(terms):
+            items.append(word("definitions of words"))
+        if menu_items_len:
+            items.append(word("menu items"))
+        qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', "\n" + word("Type ? to see") + " " + comma_and_list(items) + "." + 'XXXXMESSAGE_AREAXXXX', qoutput)
     # if status.question.question_type == 'deadend':
     #     return dict(question=qoutput, help=houtput)
     if len(status.attachments) > 0:

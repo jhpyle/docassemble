@@ -22,12 +22,12 @@ question: |
 subquestion: |
   You have ${ fishes['blue'] } blue
   fishes.
-  [Add]( ${ url_action('add',
+  [Add blue fish]( ${ url_action('add',
     color='blue') } )
 
-  You have ${ fishes['red'] } blue
+  You have ${ fishes['red'] } red
   fishes.
-  [Add]( ${ url_action('add',
+  [Add red fish]( ${ url_action('add',
     color='red') } )
 field: info_is_verified
 ---
