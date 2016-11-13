@@ -10,6 +10,7 @@ from decimal import Decimal
 import sys
 #sys.stderr.write("importing async mail now from util\n")
 from docassemble.base.filter import file_finder, url_finder, markdown_to_html, async_mail, to_text
+import docassemble.base.filter
 import dateutil
 import dateutil.parser
 import json
