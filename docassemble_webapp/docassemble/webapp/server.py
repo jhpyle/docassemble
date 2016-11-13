@@ -327,9 +327,7 @@ def user_id_dict():
     return output
 
 docassemble.base.util.set_user_id_function(user_id_dict)
-
 docassemble.base.parse.set_url_finder(get_url_from_file_reference)
-
 docassemble.base.parse.set_url_for(url_for)
 
 def get_documentation_dict():

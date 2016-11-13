@@ -9,7 +9,7 @@ from docassemble.base.core import DAObject, DAList, DADict, DAFile, DAFileCollec
 from decimal import Decimal
 import sys
 #sys.stderr.write("importing async mail now from util\n")
-from docassemble.base.filter import file_finder, url_finder, markdown_to_html, async_mail, to_text, url_for
+from docassemble.base.filter import file_finder, url_finder, markdown_to_html, async_mail, to_text
 import dateutil
 import dateutil.parser
 import json
@@ -946,7 +946,7 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
         if success:
             for the_attachment in attachment_list:
                 if the_attachment.ok:
-                    url = url_start + url_for('serve_stored_file', uid=this_thread.current_info['session'], number=the_attachment.number, filename=the_attachment.filename, extension=the_attachment.extension)
+                    url = url_start + docassemble.base.filter.url_for('serve_stored_file', uid=this_thread.current_info['session'], number=the_attachment.number, filename=the_attachment.filename, extension=the_attachment.extension)
                     media.append(url)
     twilio_client = TwilioRestClient(tconfig['account sid'], tconfig['auth token'])
     for recipient in to:
