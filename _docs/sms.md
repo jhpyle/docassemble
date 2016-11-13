@@ -88,19 +88,25 @@ action will be taken:
 
 The text messaging interface can receive document uploads ([`file`],
 [`files`], etc.) and send attachments ([`attachment`],
-[`attachments`]) through [MMS].  However, it cannot handle
-[`signature`] blocks.  All other methods of [setting variables] are
-supported.
+[`attachments`]) through [MMS].  It handles [`signature`] blocks by
+asking the user to type `x`, and then setting the field to a blank
+image.  All other methods of [setting variables] are supported.
 
 Since text messages are plain text, the text messaging interface
 cannot handle [decorations], [inline images], [emoji], or [markup]
-such as bold, italics, etc.  Nor can it handle interaction with the
-user through the menu ([`action_menu_item()`]) or through links
-([`url_action()`]).  The [`reload` modifier] is not supported, but
-users can manually "reload" the screen by typing `question`.
+such as bold, italics, etc.
+
+Interaction with the user through the menu ([`action_menu_item()`])
+and through links ([`url_action()`]) is supported.  Menu items are
+listed on the help screen, while links are listed after each question.
+Users can type `menu1` to select the first menu item, and `link1` to
+visit the first [`url_action()`] link.
 
 The [`terms`] feature is supported.  Users can send `?` to read the
 definitions of terms.
+
+The [`reload` modifier] is not supported, but users can manually
+"reload" the screen by typing `question`.
 
 The [live help] features are not supported.
 

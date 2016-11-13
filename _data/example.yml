@@ -23,12 +23,12 @@
   subquestion: |
     You have ${ fishes['blue'] } blue
     fishes.
-    [Add]( ${ url_action('add',
+    [Add blue fish]( ${ url_action('add',
       color='blue') } )
 
-    You have ${ fishes['red'] } blue
+    You have ${ fishes['red'] } red
     fishes.
-    [Add]( ${ url_action('add',
+    [Add red fish]( ${ url_action('add',
       color='red') } )
   field: info_is_verified
   ---
@@ -124,6 +124,20 @@
   ---
 "as-datetime": "---\nquestion: |\n  The Delorean will go back in time to \n  ${ as_datetime('11/5/1955').year\
   \ }.\nmandatory: true\n---"
+"attachment": |-
+  ---
+  question: Your document is ready.
+  sets: provide_user_with_document
+  attachment:
+    - name: A hello world document
+      valid formats:
+        - pdf
+      filename: Hello_World
+      description: |
+        A document with a classic message
+      content: |
+        Hello, world!
+  ---
 "audio": |-
   ---
   audio: schumann-clip-1.mp3
@@ -780,7 +794,7 @@
   question: |
     Please tell me what you think.
   fields:
-    - "Check the fruits you like": likes_fruit
+    - "Select the fruits you like": likes_fruit
       datatype: checkboxes
       choices:
         - Apples
@@ -871,6 +885,14 @@
       datatype: yesnowide
     - Pears: dislikes_pears
       datatype: noyeswide
+  ---
+"file": |-
+  ---
+  question: |
+    Please upload a file
+  fields:
+    - File: the_file
+      datatype: file
   ---
 "flushleft": "---\nmandatory: true\nquestion: |\n  Here is your document.\nsubquestion:\
   \ |\n  It demonstrates the flush left environment.\nattachments:\n  - name: A test\
@@ -1839,6 +1861,16 @@
     swallow?
   fields:
     - Velocity: swallow_velocity
+  ---
+"question-sequence": |-
+  ---
+  mandatory: true
+  question: |
+    Lets think about apples
+  fields:
+    - "Are apples good?": question_one_a
+      datatype: yesno
+    - "Your favorite variety": question_one_b
   ---
 "radio-list": |-
   ---
