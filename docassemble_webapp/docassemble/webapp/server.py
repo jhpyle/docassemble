@@ -2187,6 +2187,7 @@ def index():
         else:
             being_controlled = 'false'
         scripts += """    <script type="text/javascript" charset="utf-8">
+      var map_info = null;
       var socket = null;
       var foobar = null;
       var chatHistory = [];
@@ -2539,6 +2540,16 @@ def index():
         //console.log("Status was: " + status);
         $("body").html(xhr.responseText);
       }
+      function addScriptToHead(src){
+        var head = document.getElementsByTagName("head")[0];
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = src;
+        script.async = true;
+        script.defer = true;
+        head.appendChild(script);
+        //console.log("All done");
+      }
       function daProcessAjax(data, form){
         daInformedChanged = false;
         if (dadisable != null){
@@ -2557,7 +2568,14 @@ def index():
           tempDiv.innerHTML = data.extra_scripts;
           var scripts = tempDiv.getElementsByTagName('script');
           for (var i = 0; i < scripts.length; i++){
-            eval(scripts[i].innerHTML);
+            //console.log("Found one script");
+            if (scripts[i].src != ""){
+              //console.log("Added script to head");
+              addScriptToHead(scripts[i].src);
+            }
+            else{
+              eval(scripts[i].innerHTML);
+            }
           }
           for (var i = 0; i < data.extra_css.length; i++){
             $("head").append(data.extra_css[i]);
@@ -2572,6 +2590,7 @@ def index():
           if (data.reload_after != null){
             daReloader = setTimeout(function(){location.reload();}, data.reload_after);
           }
+          daUpdateHeight();
         }
         else if (data.action == 'redirect'){
           window.location = data.url;
@@ -3014,6 +3033,75 @@ def index():
           }
         });
       });
+      $(window).ready(daUpdateHeight);
+      $(window).resize(daUpdateHeight);
+      function daUpdateHeight(){
+        $(".googleMap").each(function(){
+          var size = $( this ).width();
+          $( this ).css('height', size);
+        });
+      }
+      function daAddMap(map_num, center_lat, center_lon){
+        var map = new google.maps.Map(document.getElementById("map" + map_num), {
+          zoom: 11,
+          center: new google.maps.LatLng(center_lat, center_lon),
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        });
+        var infowindow = new google.maps.InfoWindow();
+        return({map: map, infowindow: infowindow});
+      }
+      function daAddMarker(map, marker_info, show_marker){
+        var marker;
+        if (marker_info.icon){
+          if (marker_info.icon.path){
+            marker_info.icon.path = google.maps.SymbolPath[marker_info.icon.path];
+          }
+        }
+        else{
+          marker_info.icon = null;
+        }
+        marker = new google.maps.Marker({
+          position: new google.maps.LatLng(marker_info.latitude, marker_info.longitude),
+          map: map.map,
+          icon: marker_info.icon
+        });
+        if(marker_info.info){
+          google.maps.event.addListener(marker, 'click', (function(marker, info) {
+            return function() {
+              map.infowindow.setContent(info);
+              map.infowindow.open(map.map, marker);
+            }
+          })(marker, marker_info.info));
+        }
+        if(show_marker){
+          map.infowindow.setContent(marker_info.info);
+          map.infowindow.open(map.map, marker);
+        }
+        return marker;
+      }
+      function daInitMap(){
+        maps = [];
+        map_info_length = map_info.length;
+        for (var i = 0; i < map_info_length; i++){
+          the_map = map_info[i];
+          var bounds = new google.maps.LatLngBounds();
+          maps[i] = daAddMap(i, the_map.center.latitude, the_map.center.longitude);
+          marker_length = the_map.markers.length;
+          if (marker_length == 1){
+            show_marker = true
+          }
+          else{
+            show_marker = false
+          }
+          for (var j = 0; j < marker_length; j++){
+            var new_marker = daAddMarker(maps[i], the_map.markers[j], show_marker);
+            bounds.extend(new_marker.getPosition());
+          }
+          if (marker_length > 1){
+            maps[i].map.fitBounds(bounds);
+          }
+        }
+      }
     </script>"""
     if interview_status.question.language != '*':
         interview_language = interview_status.question.language
@@ -6368,13 +6456,13 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
                 content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
             if len(name_info[var]['methods']):
                 content += '&nbsp;<a class="dashowmethods" role="button" data-showhide="XMETHODX' + var + '" title="' + word('Methods') + '"><i class="glyphicon glyphicon-cog"></i></a>'
-                content += '<table class="invisible" id="XMETHODX' + var + '"><tbody>'
+                content += '<div style="display: none;" id="XMETHODX' + var + '"><table><tbody>'
                 for method_info in name_info[var]['methods']:
                     content += '<tr><td><a data-name="' + noquote(method_info['name']) + '" data-insert="' + noquote(method_info['insert']) + '" class="label label-warning playground-variable">' + method_info['tag'] + '</a>'
                     if method_info['doc']:
                         content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + method_info['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + noquote(method_info['name']) + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
                     content += '</td></tr>'
-                content += '</tbody></table>'
+                content += '</tbody></table></div>'
             content += '</td></tr>'
     if len(modules):
         content += '\n                  <tr><td><h4>Modules defined' + infobutton('modules') + '</h4></td></tr>'
@@ -6571,9 +6659,11 @@ function activateExample(id){
   if (info['documentation'] != null){
     $("#example-documentation-link").attr("href", info['documentation']);
     $("#example-documentation-link").removeClass("example-hidden");
+    //$("#example-documentation-link").slideUp();
   }
   else{
     $("#example-documentation-link").addClass("example-hidden");
+    //$("#example-documentation-link").slideDown();
   }
   $(".example-list").addClass("example-hidden");
   $(".example-link").removeClass("example-active");
@@ -6583,6 +6673,7 @@ function activateExample(id){
       $(this).addClass("example-active");
       $(this).parent().addClass("active");
       $(this).parents(".example-list").removeClass("example-hidden");
+      //$(this).parents(".example-list").slideDown();
     }
   });
   $("#hide-full-example").addClass("invisible");
@@ -6609,7 +6700,7 @@ $( document ).ready(function() {
         //console.log("foobar1")
         $("#daplaygroundtable").html(data.variables_html)
         $(function () {
-          $('[data-toggle="popover"]').popover({trigger: 'hover', html: true})
+          $('[data-toggle="popover"]').popover({trigger: 'click', html: true})
         });
         //console.log("foobar2")
       },
@@ -6634,7 +6725,7 @@ $( document ).ready(function() {
         window.open(data.url, '_blank');
         $("#form").trigger("reinitialize.areYouSure")
         $(function () {
-          $('[data-toggle="popover"]').popover({trigger: 'hover', html: true})
+          $('[data-toggle="popover"]').popover({trigger: 'click', html: true})
         });
         // setTimeout(function(){
         //   $("#flash .alert-success").hide(300, function(){
@@ -6667,7 +6758,8 @@ $( document ).ready(function() {
 
   $(".dashowmethods").on("click", function(event){
     var target_id = $(this).data("showhide");
-    $("#" + target_id).toggleClass("invisible");
+    //$("#" + target_id).toggleClass("invisible");
+    $("#" + target_id).slideToggle();
   });
 
   $(".example-link").on("click", function(){
@@ -6710,6 +6802,7 @@ $( document ).ready(function() {
         return;
       }
       $(".example-list").addClass("example-hidden");
+      //$(".example-list").slideUp();
       var new_link = $(this).parent().find("a.example-link").first();
       if (new_link.length){
         var id = new_link.data("example");
@@ -6719,7 +6812,7 @@ $( document ).ready(function() {
   });
 
   $(function () {
-    $('[data-toggle="popover"]').popover({trigger: 'hover', html: true})
+    $('[data-toggle="popover"]').popover({trigger: 'click', html: true})
   });
 
   $("#show-full-example").on("click", function(){
@@ -7217,7 +7310,7 @@ def voice():
         return Response(str(resp), mimetype='text/xml')
     for item in request.form:
         logmessage("Item " + str(item) + " is " + str(request.form[item]))
-    with resp.gather(action="/digits", finishOnKey='#', method="POST", timeout=10, numDigits=5) as g:
+    with resp.gather(action=daconfig.get('root', '/') + "digits", finishOnKey='#', method="POST", timeout=10, numDigits=5) as g:
         g.say(word("Please enter the four digit code, followed by the pound sign."))
 
     # twilio_config = daconfig.get('twilio', None)

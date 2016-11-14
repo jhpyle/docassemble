@@ -1151,80 +1151,11 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
     if len(status.maps):
         map_js = """\
     <script>
-      $(window).ready(daUpdateHeight);
-      $(window).resize(daUpdateHeight);
-      function daUpdateHeight(){
-        $(".googleMap").each(function(){
-          var size = $( this ).width();
-          $( this ).css('height', size);
-        });
-      }
-      function daAddMap(map_num, center_lat, center_lon){
-        var map = new google.maps.Map(document.getElementById("map" + map_num), {
-          zoom: 11,
-          center: new google.maps.LatLng(center_lat, center_lon),
-          mapTypeId: google.maps.MapTypeId.ROADMAP
-        });
-        var infowindow = new google.maps.InfoWindow();
-        return({map: map, infowindow: infowindow});
-      }
-      function daAddMarker(map, marker_info, show_marker){
-        var marker;
-        if (marker_info.icon){
-          if (marker_info.icon.path){
-            marker_info.icon.path = google.maps.SymbolPath[marker_info.icon.path];
-          }
-        }
-        else{
-          marker_info.icon = null;
-        }
-        marker = new google.maps.Marker({
-          position: new google.maps.LatLng(marker_info.latitude, marker_info.longitude),
-          map: map.map,
-          icon: marker_info.icon
-        });
-        if(marker_info.info){
-          google.maps.event.addListener(marker, 'click', (function(marker, info) {
-            return function() {
-              map.infowindow.setContent(info);
-              map.infowindow.open(map.map, marker);
-            }
-          })(marker, marker_info.info));
-        }
-        if(show_marker){
-          map.infowindow.setContent(marker_info.info);
-          map.infowindow.open(map.map, marker);
-        }
-        return marker;
-      }
-      function daInitMap(){
-        maps = [];
-        map_info = [""" + ", ".join(status.maps) + """];
-        map_info_length = map_info.length;
-        for (var i = 0; i < map_info_length; i++){
-          the_map = map_info[i];
-          var bounds = new google.maps.LatLngBounds();
-          maps[i] = daAddMap(i, the_map.center.latitude, the_map.center.longitude);
-          marker_length = the_map.markers.length;
-          if (marker_length == 1){
-            show_marker = true
-          }
-          else{
-            show_marker = false
-          }
-          for (var j = 0; j < marker_length; j++){
-            var new_marker = daAddMarker(maps[i], the_map.markers[j], show_marker);
-            bounds.extend(new_marker.getPosition());
-          }
-          if (marker_length > 1){
-            maps[i].map.fitBounds(bounds);
-          }
-        }
-      }
+      map_info = [""" + ", ".join(status.maps) + """];
     </script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?signed_in=true&callback=daInitMap"></script>
 """
         extra_scripts.append(map_js)
+        extra_scripts.append('<script async defer src="https://maps.googleapis.com/maps/api/js?signed_in=true&callback=daInitMap"></script>')
     return master_output
 
 def add_validation(extra_scripts, validation_rules):

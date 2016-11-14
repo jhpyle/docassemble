@@ -1,0 +1,22 @@
+metadata:
+  title: Country selection
+  example start: 2
+  example end: 3
+  documentation: "http://docassemble.org/docs/functions.html#countries_list"
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  Where do you live?
+fields:
+  - Country: user_country
+    code: countries_list()
+    default: US
+---
+mandatory: true
+question: |
+  You live in
+  ${ country_name(user_country) },
+  which is abbreviated
+  ${ user_country }.

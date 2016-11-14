@@ -4,7 +4,7 @@ import pytz
 from twilio.rest import TwilioRestClient
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
-from docassemble.base.functions import comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, value, message, response, command, single_paragraph, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, objects_from_file, this_thread, static_image, action_arguments, action_argument, default_timezone, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid
+from docassemble.base.functions import comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, value, message, response, command, single_paragraph, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, objects_from_file, this_thread, static_image, action_arguments, action_argument, default_timezone, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name
 from docassemble.base.core import DAObject, DAList, DADict, DAFile, DAFileCollection, DAFileList, DATemplate, selections
 from decimal import Decimal
 import sys
@@ -21,7 +21,7 @@ import re
 import phonenumbers
 from bs4 import BeautifulSoup
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'email_string', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'format_date', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'DARedis', 'SimpleTextMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'email_string', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'format_date', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'DARedis', 'SimpleTextMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name']
 
 class DummyObject(object):
     def __init__(self, *pargs, **kwargs):
@@ -911,20 +911,23 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
     if type(to) is not list:
         to = [to]
     if len(to) == 0:
+        logmessage("send_sms: no recipients identified")
         return False
-    if template is not None:
-        body_html = '<html><body>' + markdown_to_html(template.content) + '</body></html>'
-        if body is None:
-            body = BeautifulSoup(body_html, "html.parser").get_text('\n')
+    if template is not None and body is None:
+        body_html = '<html><body>'
+        if template.subject is not None:
+            body_html += markdown_to_html(template.subject)
+        body_html += markdown_to_html(template.content) + '</body></html>'
+        body = BeautifulSoup(body_html, "html.parser").get_text('\n')
     if body is None:
         body = word("blank message")
-    success = True
     if this_thread.current_info['url_root'] is not None:
         url_start = re.sub(r'/$', r'', this_thread.current_info['url_root'])
     else:
         url_start = get_config('url root')
         if url_start is None:
             url_start = 'http://localhost'
+    success = True
     media = list()
     for attachment in attachments:
         attachment_list = list()
@@ -937,30 +940,42 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
             if subattachment is not None:
                 attachment_list.append(subattachment)
             else:
+                logmessage("send_sms: could not find file to attach in DAFileCollection.")
                 success = False
         elif type(attachment) is DAFile:
             attachment_list.append(attachment)
         elif type(attachment) is DAFileList:
             attachment_list.extend(attachment.elements)
+        elif type(attachment) in [str, unicode] and re.search(r'^https?://', attachment):
+            attachment_list.append(attachment)
         else:
+            logmessage("send_sms: attachment " + str(attachment) + " is not valid.")
             success = False
         if success:
             for the_attachment in attachment_list:
-                if the_attachment.ok:
+                if type(the_attachment) is DAFile and the_attachment.ok:
                     url = url_start + docassemble.base.filter.url_for('serve_stored_file', uid=this_thread.current_info['session'], number=the_attachment.number, filename=the_attachment.filename, extension=the_attachment.extension)
                     media.append(url)
-    twilio_client = TwilioRestClient(tconfig['account sid'], tconfig['auth token'])
-    for recipient in to:
-        phone_number = phone_string(recipient)
-        if phone_number is not None:
-            try:
-                if len(media):
-                    message = twilio_client.messages.create(to=phone_number, from_=tconfig['number'], body=body, media_url=media)
-                else:
-                    message = twilio_client.messages.create(to=phone_number, from_=tconfig['number'], body=body)
-            except Exception as errstr:
-                logmessage("send_sms: failed to send message: " + str(errstr))
-                return False
+                elif type(the_attachment) in [str, unicode]:
+                    media.append(the_attachment)
+    if len(media) > 10:
+        logmessage("send_sms: more than 10 attachments were provided; not sending message")
+        success = False
+    if success:
+        twilio_client = TwilioRestClient(tconfig['account sid'], tconfig['auth token'])
+        for recipient in to:
+            phone_number = phone_string(recipient)
+            if phone_number is not None:
+                try:
+                    if len(media):
+                        message = twilio_client.messages.create(to=phone_number, from_=tconfig['number'], body=body, media_url=media)
+                    else:
+                        message = twilio_client.messages.create(to=phone_number, from_=tconfig['number'], body=body)
+                except Exception as errstr:
+                    logmessage("send_sms: failed to send message: " + str(errstr))
+                    return False
+    if success and task is not None:
+        mark_task_as_performed(task)
     return True
 
 def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, attachments=None):

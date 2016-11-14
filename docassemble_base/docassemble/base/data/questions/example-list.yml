@@ -106,6 +106,7 @@
     - qr-code
     - url-of
     - set-language
+    - country
     - defined
     - value
     - exit
