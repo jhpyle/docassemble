@@ -163,17 +163,23 @@ answers, make a legal judgment, and then the client would receive the
 legal advice.  In a divorce application, both spouses could answer
 questions about their situation, and the interview could suggest a
 compromise.
+* **Live help** The [live help] features enable you or your operators
+to provide assistance to users in real time using chat,
+screen-sharing, and/or telephonic connection.
+* **Text message interface** Your interviews can be available not only
+through a web browser, but also through a [text messaging interface],
+for those of your users without computers or smartphones.
 * **Interview sessions spanning months** **docassemble** interviews do
 not have to end the day the interviewee starts the interview.  The
 interview and its answers can persist for months, and the interview
 could guide the interviewee through a long legal process.  The
 interview can [check in] on an hourly, daily, weekly, or monthly basis
-for the purpose of checking on-line dockets or sending e-mails.  For
-example, in a divorce application, the interview could produce a
-divorce petition and then check in with the user five days later to
-make sure service of process was carried out.  Then the interview
-could check in months later to offer to help with the next stage of
-the divorce process.
+for the purpose of checking on-line dockets or sending e-mails or text
+messages.  For example, in a divorce application, the interview could
+produce a divorce petition and then check in with the user five days
+later to make sure service of process was carried out.  Then the
+interview could check in months later to offer to help with the next
+stage of the divorce process.
 * **Code that runs in the background** By bringing the full power of
 [Python] into an interview, **docassemble** enables interviews to
 conduct factual research on behalf of users.  For example, the
@@ -491,3 +497,5 @@ the same interview on a single server.
 [run in the background]: {{ site.baseurl }}/docs/functions.html#background
 [machine learning]: {{ site.baseurl }}/docs/ml.html
 [check in]: {{ site.baseurl }}/docs/scheduled.html
+[live help]: {{ site.baseurl }}/docs/livehelp.html
+[text messaging interface]: {{ site.baseurl }}/docs/sms.html

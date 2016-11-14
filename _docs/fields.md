@@ -115,10 +115,10 @@ item.
 
 {% include side-by-side.html demo="buttons-code-list" %}
 
-Note that the [Python] code needs to return key-value pairs ([Python
-dictionaries]) where the key is what the variable should be set to and
-the value is the button label.  This is different from the [YAML]
-syntax.
+Note that the [Python] code needs to return a list of key-value pairs
+([Python dictionaries]) where the key is what the variable should be
+set to and the value is the button label.  This is different from the
+[YAML] syntax.
 
 This is equivalent to:
 

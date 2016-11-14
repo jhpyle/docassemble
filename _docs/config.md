@@ -122,6 +122,24 @@ Set this to `/` if the [WSGI] application runs from the root of the
 domain.  If your server runs from url path `/da/`, set `root` to
 `/da/`.  Always use a trailing slash.
 
+## <a name="url root"></a>url root
+
+The optional directive `url root` indicates how the web application
+can be accessed from the outside world.
+
+{% highlight yaml %}
+url root: http://example.com
+{% endhighlight %}
+
+This is normally not necessary because the URL is usually provided to
+the web application with every HTTP request.
+
+However, there are some circumstances when **docassemble** code runs
+outside the context of an HTTP request.  For example, if you have a
+[scheduled task] that uses [`send_sms()`] to send a text message with
+a media attachment, the URL for the media attachment will be unknown
+unless it is set in the configuration.
+
 ## <a name="exitpage"></a>exitpage
 
 This is the default URL to which the user should be directed after
@@ -359,6 +377,16 @@ feature.  The default dialect is only used as a fallback, in case the
 dialect cannot be determined any other way.  It is better to set the
 dialect using [`set_language()`] or the [`voicerss`] configuration.
 
+## <a name="country"></a>country
+
+This directive sets the default country for **docassemble**.
+
+{% highlight yaml %}
+country: US
+{% endhighlight %}
+
+The country is primarily relevant for interpreting telephone numbers.
+
 ## <a name="default_admin_account"></a>default_admin_account
 
 These settings are only used by the setup script [`create_tables.py`] in
@@ -542,6 +570,101 @@ oauth:
 {% endhighlight %}
 
 You can disable these login methods by setting `enable` to false.
+
+## <a name="twilio"></a>Twilio configuration
+
+There are several features of **docassemble** that involve integration
+with the [Twilio] service, including the [`send_sms()`] function for
+sending text messages, the [text messaging interface] for interacting
+with interviewees through text messaging, and the [call forwarding]
+feature for connecting interviewees with operators over the phone.
+
+These features are enabled using a `twilio` configuration directive.
+Here is an example:
+
+{% highlight yaml %}
+twilio:
+  sms: true
+  voice: true
+  account sid: ACfad8e668d876f5473fb232a311243b58
+  auth token: auth token: 87559c7a427c25e34e20c654e8b05234
+  caller id: "+12762410114"
+  dispatch:
+    color: docassemble.base:data/questions/examples/buttons-code-color.yml
+    doors: docassemble.base:data/questions/examples/doors.yml
+  default interview: docassemble.demo:data/questions/questions.yml
+{% endhighlight %}
+
+The `sms: true` line tells **docassemble** that you intend to use the
+text messaging features.
+
+The `voice: true` line tells **docassemble** that you intend to use the
+[call forwarding] feature.
+
+The `account sid` is a value you copy and paste from your [Twilio]
+account dashboard.
+
+The `auth token` is another value you copy and paste from your
+[Twilio] account dashboard.  This is only necessary if you intend to
+use the [`send_sms()`] function.
+
+The `caller id` is the phone number you purchased.  The phone number
+must be written in [E.164] format.  This is the phone number with
+which your users will exchange [SMS] messages.
+
+The `dispatch` configuration allows you to direct users to different
+interviews.  For example, with the above configuration, you can tell
+your prospective users to "text 'color' to 276-241-0114."  Users who
+initiate a conversation by sending the SMS message "help" to the
+[Twilio] phone number will be started into the
+`docassemble.base:data/questions/examples/sms.yml` interview.
+
+### Multiple Twilio configurations
+
+You can use multiple Twilio configurations on the same server.  You
+might wish to do this if you want to advertise more than one [Twilio]
+number to your users.  You can do this by specifying the `twilio`
+directive as a list of dictionaries, and giving each dictionary a
+`name`.  In this example, there are two configurations, one named
+`default`, and one named `bankruptcy`:
+
+{% highlight yaml %}
+twilio:
+  - name: default
+    sms: true
+    voice: true
+    account sid: ACfad8e668d876f5473fb232a311243b58
+    auth token: auth token: 87559c7a427c25e34e20c654e8b05234
+    caller id: "+12762410114"
+    default interview: docassemble.base:data/questions/examples/sms.yml
+    dispatch:
+      color: docassemble.base:data/questions/examples/buttons-code-color.yml
+      doors: docassemble.base:data/questions/examples/doors.yml
+    default interview: docassemble.demo:data/questions/questions.yml
+  - name: bankruptcy
+    sms: true
+    voice: false
+    account sid: ACfad8e668d876f5473fb232a311243b58
+    auth token: auth token: 87559c7a427c25e34e20c654e8b05234
+    caller id: "+12768571217"
+    default interview: docassemble.bankruptcy:data/questions/bankruptcy.yml
+    dispatch:
+      adversary: docassemble.base:data/questions/adversary-case.yml
+      chapter7: docassemble.base:data/questions/bankruptcy.yml
+{% endhighlight %}
+
+When you call [`send_sms()`], you can indicate which configuration
+should be used:
+
+{% highlight python %}
+send_sms(to='202-943-0949', body='Hi there!', config='bankruptcy')
+{% endhighlight %}
+
+This will cause the message to be sent from 276-857-1217.
+
+If no configuration is named `default`, the first configuration will
+be used as the default.  The [call forwarding] feature uses the
+default configuration.
 
 ## Pre-defined variables for all interviews
 
@@ -745,7 +868,7 @@ modules:
   - docassemble.base.util
 ---
 code: |
-  twilio_api_key = get_config('twilio api key')
+  trello_api_key = get_config('trello api key')
 {% endhighlight %}
 
 [`get_config()`] will return `None` if you ask it for a value that does
@@ -814,7 +937,12 @@ first.
 [LibreOffice]: https://www.libreoffice.org/
 [`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
 [scheduled tasks]: {{ site.baseurl }}/docs/scheduled.html
+[scheduled task]: {{ site.baseurl }}/docs/scheduled.html
 [enabled]: {{ site.baseurl }}/docs/scheduled.html#enabling
 [`as_datetime()`]: {{ site.baseurl }}/docs/functions.html#as_datetime
 [`pytz`]: http://pytz.sourceforge.net/
 [`speak_text`]: {{ site.baseurl }}/docs/special.html#speak_text
+[call forwarding]: {{ site.baseurl }}/docs/livehelp.html#phone
+[`send_sms()`]: {{ site.baseurl }}/docs/functions.html#send_sms
+[text messaging interface]: {{ site.baseurl }}/docs/sms.html
+[Twilio]: https://twilio.com

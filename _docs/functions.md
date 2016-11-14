@@ -1252,6 +1252,17 @@ the [special variable `speak_text`].)
 Returns the current dialect, as set by the `dialect` keyword argument
 to the `set_language()` function.
 
+## <a name="get_country"></a>get_country()
+
+Returns the current country as a two-digit country code.  The default
+country is `'US'`, unless a different default is set using the
+[`country` configuration setting].
+
+## <a name="set_country"></a>set_country()
+
+Sets the current country.  Expects a two-digit, uppercase country code
+such as `'US'`, `'GB'`, or `'DE'`.
+
 ## <a name="get_locale"></a>get_locale()
 
 If the locale is set to `US.utf8`, `get_locale()` returns `US.utf8`.
@@ -1305,6 +1316,26 @@ code: |
   docassemble.base.util.update_locale()
 ---
 {% endhighlight %}
+
+## <a name="countries_list"></a><a name="country_name"></a>countries_list() and country_name()
+
+The `countries_list()` function returns a list of dictionaries, where
+each dictionary contains a single key-value pair mapping a two-letter,
+capitalized country abbreviation to the name of the country (in
+English).  This function is primarily useful when asking a user to
+specify his or her country.
+
+The `country_name()` function returns the name of a country (in
+English) based on the two-letter, capitalized country abbreviation.
+
+{% include side-by-side.html demo="country" %}
+
+The data come from the [`pycountry` package].
+
+When working with countries, it is a good idea to store country names
+in this two-letter, capitalized format.  The country code is used by
+the [`send_sms()`] function to determine the appropriate universal
+formatting of phone numbers.
 
 # Access time functions
 
@@ -1518,6 +1549,26 @@ The available keyword arguments are:
 
 This function is a direct wrapper around
 [`dateutil.relativedelta.relativedelta`].
+
+# <a name="phone"></a>Functions for working with phone numbers
+
+## <a name="phone_number_in_e164"></a>phone_number_in_e164()
+
+The `phone_number_in_e164()` function takes a phone number and formats
+it into [E.164] format.  It takes an optional keyword argument
+`country` that is used to determine the country code for the phone
+number.  If `country` is not provided, the [`get_country()`] function
+is used to determine the applicable country.
+
+## <a name="phone_number_is_valid"></a>phone_number_is_valid()
+
+The `phone_number_is_valid()` function takes a phone number and
+returns `True` or `False` depending on whether the phone number is
+valid.  It takes an optional keyword argument `country` that is used
+to determine the country whose phone number standards should be used
+to determine the validity of the phone number.  If `country` is not
+provided, the [`get_country()`] function is used to determine the
+applicable country.
 
 # <a name="tasks"></a>Functions for tracking tasks
 
@@ -1962,7 +2013,7 @@ The `send_email()` function sends an e-mail using [Flask-Mail].  All
 of its arguments are [keyword arguments], the defaults of which are:
 
 {% highlight python %}
-send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, attachments=[])
+send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, attachments=None)
 {% endhighlight %}
 
 This function is integrated with other classes in
@@ -2057,6 +2108,73 @@ content: |
   Your friend
 ---
 {% endhighlight %}
+
+## <a name="send_sms"></a>send_sms()
+
+The `send_sms()` function is similar to `send_email()`, except it
+sends a text message (also known as an [SMS] message).  This requires
+a [Twilio] account.
+
+All of its arguments are [keyword arguments], the defaults of which
+are:
+
+{% highlight python %}
+send_sms(to=None, body=None, template=None, task=None, attachments=None, config='default')
+{% endhighlight %}
+
+This function is integrated with other classes in
+[`docassemble.base.util`] and [`docassemble.base.core`].
+
+* `to` expects a [list] of recipients.  The list can consist of
+  [`Individual`]s (or any other [`Person`]s), objects of type
+  [`phonenumbers.PhoneNumber`], or a simple string containing a phone number.
+* `body` expects text, or `None`.  If provided, it will be the content
+  of the message.  Markdown will be converted to plain text.
+* `template` expects a [`DATemplate`] object, or `None`.  These
+  templates can be created in an interview file using the `template`
+  directive.  The "subject" of the template, if provided, will be the first
+  line of the message.
+* `task` expects the name of a [task].  If this argument is provided,
+  and if sending the text message is successful, the task will be
+  marked as having been performed (i.e., [`mark_task_as_performed()`]
+  will be called).  Alternatively, you can handle this in your own
+  code, but you might find it convenient to let the `send_email()`
+  function handle it for you.
+* `attachments` expects a [list] of [`DAFile`] objects, [`DAFileList`]
+  objects, [`DAFileCollection`] objects, or ordinary URLs.  If
+  provided, the message will be an [MMS] message containing the
+  attached files.  No more than 10 attachments may be added.  You can
+  include:
+  * Images generated by `signature` blocks (objects of class
+  [`DAFile`]);
+  * File uploads generated by including [fields] of `datatype: file` or
+  `datatype: files` in a [`question`] (objects of class [`DAFileList`]);
+  * [Documents] generated by [`attachments`] to a [`question`] for which a
+  `variable` was provided (objects of class [`DAFileCollection`]).
+
+When the recipients are [`Individual`]s or [`Person`]s, the
+`mobile_number` attribute will be used, but only if it already exists.
+Otherwise, the `phone_number` attribute will be used, and sought if it
+is not already defined.
+
+Note that [Twilio] expects the phone number to be expressed in [E.164]
+format, which includes the country code (e.g., 1 for the United
+States).  However, users do not typically write phone numbers in such
+a way.  Therefore, the [`phonenumbers`] package is used to convert
+phone numbers to [E.164] based on the applicable country.  If an
+[`Individual`] or [`Person`] is the recipient, the `country`
+attribute, if it exists, will be used to determine the country.
+Otherwise, the [`get_country()`] function is used to determine the
+applicable country.  Your interview can use [`set_country()`] in
+[`initial`] code to set a default country, or you can set a default on
+a server level by setting the [`country` configuration directive].
+The country must be specified as a two-letter, capitalized
+abbreviation.
+
+`send_sms()` returns `False` if an error prevented the message from
+being sent; otherwise it returns `True`.
+
+See the [`twilio` configuration directive] for information about how to configure that `send_sms()` will use.
 
 ## <a name="prevent_going_back"></a>prevent_going_back()
 
@@ -2320,3 +2438,16 @@ modules:
 [background process]: #background
 [live chat]: {{ site.baseurl }}/docs/chat.html
 [special variable `speak_text`]: {{ site.baseurl }}/docs/special.html#speak_text
+[`country` configuration setting]: {{ site.baseurl }}/docs/config.html#country
+[SMS]: https://en.wikipedia.org/wiki/Short_Message_Service
+[MMS]: https://en.wikipedia.org/wiki/Multimedia_Messaging_Service
+[Twilio]: https://twilio.com
+[E.164]: https://support.twilio.com/hc/en-us/articles/223183008-Formatting-International-Phone-Numbers
+[`phonenumbers.PhoneNumber`]: https://github.com/daviddrysdale/python-phonenumbers
+[`twilio` configuration directive]: {{ site.baseurl }}/docs/config.html#twilio
+[`phonenumbers`]: https://github.com/daviddrysdale/python-phonenumbers
+[`get_country()`]: #get_country
+[`set_country()`]: #set_country
+[`country` configuration directive]: {{ site.baseurl }}/docs/config.html#country
+[`pycountry` package]: https://pypi.python.org/pypi/pycountry
+[`send_sms()`]: #send_sms

@@ -556,11 +556,11 @@ Then, in your **docassemble** [configuration], add lines like:
 twilio:
   voice: true
   account sid: ACfad8e668d876f5473fb232a311243b58
-  caller id: "+12762410114"
+  number: "+12762410114"
 {% endhighlight %}
 
 where `account sid` is the value you copy and paste from your [Twilio]
-account dashboard, and `caller id` is the phone number you purchased.
+account dashboard, and `number` is the phone number you purchased.
 The phone number must be written in [E.164] format.
 
 ## Set phone number for the operator
