@@ -7,6 +7,16 @@ modules:
 objects:
   client: Individual
 ---
+template: my_message
+subject: Hello, world!
+content: |
+  Hi there, planet.
+---
+question: |
+  What is your phone number?
+fields:
+  - Number: client.phone_number
+---
 question: |
   Please upload a file
 fields:
@@ -14,10 +24,9 @@ fields:
     datatype: file
 ---
 code: |
-  client.mobile_number = "215-391-9686"
-  client.name.first = "Jonathan"
-  client.name.last = "Pyle"
-  message_sent = send_sms(to=client, body="Hello world", attachments=the_file)
+  client.name.first = "John"
+  client.name.last = "Doe"
+  message_sent = send_sms(to=client, template=my_message)
 ---
 mandatory: true
 question: |

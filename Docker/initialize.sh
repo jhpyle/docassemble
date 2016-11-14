@@ -36,9 +36,9 @@ else
 fi
 
 if [ "${USEHTTPS:-false}" == "false" ]; then
-    URLROOT="http://"
+    URLROOT="http:\\/\\/"
 else
-    URLROOT="https://"
+    URLROOT="https:\\/\\/"
 fi
 
 if [ "${DAHOSTNAME:-none}" != "none" ]; then
