@@ -1,0 +1,30 @@
+metadata:
+  title: Salutation
+  documentation: "http://docassemble.org/docs/object.html#Individual.salutation"
+  example start: 3
+  example end: 4
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - client: Individual
+---
+template: letter_to_client
+content: |
+  Dear ${ client.salutation() } ${ client.name.last }:
+
+  I hope this letter finds you well.
+
+  Blah, blah, blah.
+---
+code: |
+  client.name.first = "John"
+  client.name.last = "Smith"
+  client.gender = "male"
+---
+mandatory: true
+question: |
+  Client letter
+subquestion: |
+  ${ letter_to_client }

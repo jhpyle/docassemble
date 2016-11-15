@@ -1,0 +1,37 @@
+metadata:
+  title: The lastfirst method
+  documentation: "http://docassemble.org/docs/object.html#Name.lastfirst"
+  example start: 2
+  example end: 4
+---
+modules:
+  - docassemble.base.legal
+---
+template: client_letter
+content: |
+  We need to be prepared to bring a lawsuit against the following:
+
+  % for party in enemy:
+  * ${ party.name.lastfirst() }
+  % endfor
+---
+objects:
+  enemy: PartyList
+---
+mandatory: true
+code: |
+  enemy.appendObject(Individual)
+  enemy[0].name.first = "Darth"
+  enemy[0].name.last = "Vader"
+  enemy.appendObject(Person)
+  enemy[1].name.text = "Death Star Corporation"
+  enemy.appendObject(Individual)
+  enemy[2].name.first = "Kylo"
+  enemy[2].name.last = "Ren"
+  enemy.gathered = True
+---
+mandatory: true
+question: |
+  Client Letter
+subquestion: |
+  ${ client_letter }

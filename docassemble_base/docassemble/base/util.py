@@ -611,7 +611,7 @@ class Person(DAObject):
         else:
             return(does_a_b(self.name, the_verb, **kwargs))
     def did_question(self, the_verb, **kwargs):
-        """Given a verb like "eat," returns "do you eat" or "does John Smith eat,"
+        """Given a verb like "eat," returns "did you eat" or "did John Smith eat,"
         depending on whether the person is the user."""
         if self == this_thread.user:
             return(did_you(the_verb, **kwargs))

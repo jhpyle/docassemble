@@ -1,0 +1,34 @@
+metadata:
+  title: DADict
+  documentation: "http://docassemble.org/docs/object.html#DADict"
+  example start: 1
+  example end: 5
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  - player: DADict
+---
+mandatory: true
+code: |
+  player.initializeObject('trustee', DAObject)
+  player.initializeObject('beneficiary', DAObject)
+  player.initializeObject('grantor', DAObject)
+---
+mandatory: true
+question: The players
+subquestion: |
+  % for type in player:
+  ${ player[type].firstname }
+  ${ player[type].lastname } is here.
+
+  % endfor
+---
+generic object: DAObject
+question: |
+  What is
+  ${ x[i].object_possessive('name') }?
+fields:
+  - First Name: x[i].firstname
+  - Last Name: x[i].lastname

@@ -1,6 +1,6 @@
 metadata:
   title: Dead end question
-  documentation: "http://docassemble.org/docs/fields.html#sets"
+  documentation: "http://docassemble.org/docs/fields.html#ending screens"
 ---
 question: |
   You have reached the end of the interview.

@@ -1,6 +1,6 @@
 metadata:
   title: Exit or restart
-  documentation: "http://docassemble.org/docs/fields.html#sets special"
+  documentation: "http://docassemble.org/docs/fields.html#special buttons"
 ---
 question: We are all done.
 buttons:
