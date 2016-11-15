@@ -835,38 +835,7 @@ element that is a new **docassemble** object, you need to call the
 
 For example:
 
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.core
----
-objects:
-  - player: DADict
----
-mandatory: true
-code: |
-  player.initializeObject('trustee', DAObject)
-  player.initializeObject('beneficiary', DAObject)
-  player.initializeObject('grantor', DAObject)
----
-mandatory: true
-question: The players
-subquestion: |
-  % for type in player:
-  ${ player[type].firstname } ${ player[type].lastname } is here.
-
-  % endfor
----
-generic object: DAObject
-question: |
-  What is ${ x[i].object_possessive('name') }?
-fields:
-  - First Name: x[i].firstname
-  - Last Name: x[i].lastname
----
-{% endhighlight %}
-
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testdadict.yml){:target="_blank"}.)
+{% include side-by-side.html demo="dadict" %}
 
 The `DADict` uses the following attributes:
 
@@ -888,7 +857,7 @@ the following attributes:
 markup that displays the file as an image.  This method takes an
 optional keyword argument, `width`.
 
-When included in a template, a `DAFile` object will effectively
+When included in a [Mako] template, a `DAFile` object will effectively
 call `show()` on itself.
 
 ## <a name="DAFileCollection"></a>DAFileCollection
@@ -916,7 +885,7 @@ containing the file or files uploaded.
 inserts markup that displays each file as an image.  This method takes
 an optional keyword argument, `width`.
 
-When included in a template, a `DAFileList` object will effectively
+When included in a [Mako] template, a `DAFileList` object will effectively
 call `show()` on itself.
 
 ## <a name="DATemplate"></a>DATemplate
@@ -956,12 +925,124 @@ then you will create an object with the following built-in attributes:
 * `opponent.address` (object of class [`Address`])
 * `opponent.location` (object of class [`LatitudeLongitude`])
 
-Referring to a `Person` in the context of a template will return the
-output of `.name.full()`.
+Referring to a `Person` in the context of a [Mako] template will
+return the output of `.name.full()`.
 
 The following attributes are also used, but undefined by default:
 
-* `email`
+* `email` (see [`.email_address()`] and [`send_email()`])
+* `phone_number` (see [`.sms_number()`] and [`send_sms()`] )
+* `mobile_number` (see [`.sms_number()`] and [`send_sms()`])
+
+The following methods can be used:
+
+### <a name="Person.possessive"></a>`.possessive()`
+
+Calling `defendant.possessive('fish')` returns "ABC Corporation's fish" or
+"your fish" depending on whether `defendant` is the user.
+  
+### <a name="Person.identified"></a>`.identified()`
+
+Calling `defendant.identified()` returns `True` if `defendant.name.text`
+has been defined.  The
+[version for `Individual`s](#Individual.identified)
+is different.
+
+### <a name="Person.pronoun_objective"></a>`.pronoun_objective()`
+
+Calling `defendant.pronoun_objective()` returns "it," while calling
+`defendant.pronoun_objective(capitalize=True)` returns "It."
+
+### <a name="Person.object_possessive"></a>`.object_possessive()`
+
+Calling `defendant.object_possessive('fish')` returns "defendant's
+fish."
+
+### <a name="Person.is_are_you"></a>`.is_are_you()`
+
+Calling `defendant.is_are_you()` returns "are you" if `defendant` is
+the user, and otherwise returns "is defendant."  Calling
+`defendant.is_are_you(capitalize=True)` returns "Are you" or "Is
+defendant."
+
+### <a name="Person.is_user"></a>`.is_user()`
+
+Calling `defendant.is_user()` returns `True` if the `defendant` is the
+user, and otherwise returns `False`.
+
+### <a name="Person.address_block"></a>`.address_block()`
+
+Calling `defendant.address_block()` will return the name followed by
+the address, in a format suitable for inclusion in a document.  For example:
+
+{% highlight text %}
+[FLUSHLEFT] ABC Corporation [NEWLINE] 1500 Market Street [NEWLINE] Philadelphia, PA 19102
+{% endhighlight %}
+
+See [markup] for more information about how this will appear in documents.
+
+### <a name="Person.do_question"></a>`.do_question()`
+
+Calling `defendant.do_question('testify')` returns "do you testify" if
+the defendant is the user, or otherwise it uses the defendant's name,
+as in "does ABC Corporation testify."
+
+### <a name="Person.did_question"></a>`.did_question()`
+
+Calling `defendant.did_question('testify')` returns "did you testify" if
+the defendant is the user, or otherwise it uses the defendant's name,
+as in "did ABC Corporation testify."
+
+### <a name="Person.does_verb"></a>`.does_verb()`
+
+Calling `defendant.does_verb('testify')` returns "testify" if the
+defendant is the user, but otherwise returns "testifies."  The method
+accepts the optional keyword arguments `present` and `past`, which are
+expected to be set to `True` or `False`.  For example,
+`defendant.does_verb('testify', past=True)` will return "testified."
+
+### <a name="Person.did_verb"></a>`.did_verb()`
+
+The `.did_verb()` method is like the
+[`.does_verb()`](#Person.does_verb) method, except that it conjugates
+the verb into the past tense.
+
+### <a name="Person.email_address"></a>`.email_address()`
+
+Calling `defendant.email_address()` will return the person's name
+followed by the person's e-mail address, in the standard e-mail
+format.  E.g., `'ABC Corporation <info@abc.com>'`.
+
+### <a name="Person.sms_number"></a>`.sms_number()`
+
+Calling `defendant.sms_number()` will return `defendant.mobile_number`
+if the `.mobile_number` attribute exists; it will not cause
+the question to be asked.  If the `.mobile_number` attribute does not
+exist, it will use `defendant.phone_number`.
+
+The method formats the phone number in [E.164] format.  It will make
+use of `defendant.country` to format the phone number, since the
+[E.164] format contains the international country code of the phone
+number.  If the `.country` attribute is not defined, the method will
+call [`get_country()`].  The `.country` attribute is expected to be a
+two-letter, capitalized abbreviation of a country.  It is a good idea
+to set the attribute using 
+
+### <a name="Organization"></a>Organization
+
+An `Organization` is a subclass of [`Person`].  It has the attribute
+`.office`, which is an object of type [`OfficeList`].
+
+It uses the following attributes, which by default are not defined:
+
+* `handles`: refers to a list of problems the organization handles.
+* `serves`: refers to a list of counties the organization serves.
+
+<a name="Organization.will_handle"></a>The `.will_handle()` method
+returns `True` or `False` depending on whether the organization serves
+a given county or handles a given problem.  It takes two optional
+keyword arguments: `problem` and `county`.  For example, you could
+call `agency.will_handle(problem='Divorce', county='Hampshire County')`.
 
 ### <a name="Individual"></a>Individual
 
@@ -1034,7 +1115,7 @@ When you are writing questions in an interview, you may find yourself
 in this position:
 
 * You are asking for the name of a person;
-* That person whose name you need may the the user;
+* That person whose name you need may be the user;
 * The user may be logged in;
 * The user, if logged in, may have already provided his or her name on
 the user profile page; and
@@ -1075,20 +1156,10 @@ If the individual's name is "Adam Smith," this returns "Adam Smith's."
 
 ### <a name="Individual.salutation"></a>`.salutation()`
 
-Depending on the `gender` attribute, returns "Mr." or "Ms."
+Depending on the `gender` attribute, the `.salutation()` method
+returns "Mr." or "Ms."
 
-{% highlight yaml %}
----
-template: letter_to_client
-content: |
-  Dear ${ client.salutation() } ${ client.name.last }:
-
-  I hope this letter finds you well.
-
-  Blah, blah, blah.
----
-{% endhighlight %}
-
+{% include side-by-side.html demo="salutation" %}
 
 ### <a name="Individual.pronoun_possessive"></a>`.pronoun_possessive()`
 
@@ -1150,60 +1221,22 @@ Objects of the basic [`Name`] class have just one attribute, `text`.
 To set the name of a [`Person`] called `company`, for example, you can
 do something like this:
 
-{% highlight yaml %}
----
-question: |
-  What is the name of the company?
-fields:
-  - Company name: company.name.text
----
-{% endhighlight %}
+{% include side-by-side.html demo="name-company-question" %}
 
 There are multiple ways to refer to the name of an object, but the
 best way is to write something like this:
 
-{% highlight yaml %}
----
-question: |
-  Do you wish to sue ${ company }?
-yesno: user_wants_to_sue
----
-{% endhighlight %}
+{% include side-by-side.html demo="name-company" %}
 
 Multiple ways of referring to the name of a [`Person`] are illustrated
 in the following interview:
 
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.legal
----
-objects:
-  - opponent: Person
----
-question: |
-  What are you fighting?
-field: opponent.name.text
-choices:
-  - the Empire
-  - the Rebel Alliance
----
-mandatory: true
-question: |
-  You are fighting ${ opponent.name.full() }.
-subquestion: |
-  Your enemy is ${ opponent.name }.
-
-  Your opponent is ${ opponent }.
----
-{% endhighlight %}
-
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testperson.yml){:target="_blank"}.)
+{% include side-by-side.html demo="name" %}
 
 Note that `${ opponent.name.full() }`, `${ opponent.name }`, and `${
-opponent }` all return the same thing.  This is because a [`Person`] in
-the context of a template returns `.name.full()`, and a [`Name`] returns
-`.full()`.
+opponent }` all return the same thing.  This is because a [`Person`]
+in the context of a [Mako] template returns `.name.full()`, and a
+[`Name`] returns `.full()`.
 
 The reason a name is not just a piece of text, but rather an object
 with attributes like `text` and methods like `.full()`, is that some
@@ -1227,17 +1260,7 @@ methods all return the same thing -- the `.text` attribute.  This is
 useful because you can write things like this, which lists the names
 of the parties in a bullet-point list:
 
-{% highlight yaml %}
----
-template: client_letter
-content: |
-  We need to be prepared to bring a lawsuit against the following:
-
-  % for party in enemy:
-  * ${ party.lastfirst() }
-  % endfor
----
-{% endhighlight %}
+{% include side-by-side.html demo="lastfirst" %}
 
 In this template, the author does not need to worry about which
 parties are companies and which parties are individuals; the name will
@@ -1266,13 +1289,13 @@ be text:
 * `last`
 * `suffix`
 
-In the context of a template, a reference to an `IndividualName` on
+In the context of a [Mako] template, a reference to an `IndividualName` on
 its own will return `.full()`
 
 The `full()` method attempts to form a full name from these
 components.  Only `first` is required, however.  This means that if
-you refer to an `IndividualName` in a template, e.g., by writing `${
-applicant.name }`, **docassemble** will attempt to return
+you refer to an `IndividualName` in a [Mako] template, e.g., by
+writing `${ applicant.name }`, **docassemble** will attempt to return
 `applicant.name.full()`, and if `applicant.name.first` has not been
 defined yet, **docassemble** will look for a question that defines
 `applicant.name.first`.
@@ -1297,7 +1320,7 @@ An `Address` has the following text attributes:
 It also has an attribute `location`, which is a [`LatitudeLongitude`]
 object representing the GPS coordinates of the address.
 
-If you refer to an address in a template, it returns `.block()`.
+If you refer to an address in a [Mako] template, it returns `.block()`.
 
 <a name="Address.block"></a>
 The `.block()` method returns a formatted address.  All attributes
@@ -1307,6 +1330,14 @@ except `unit` are required.
 The `.geolocate()` method determines the latitude and longitude of the
 address and stores it in the attribute `location`, which is a
 [`LatitudeLongitude`] object.
+
+<a name="Address.line_one"></a>
+The `.line_one()` method returns the first line of the address,
+including the unit, if the unit is defined.
+
+<a name="Address.line_two"></a>
+The `.line_two()` method returns the second line of the address,
+consisting of the city, state, and zip code.
 
 ## <a name="LatitudeLongitude"></a>LatitudeLongitude
 
@@ -1466,7 +1497,7 @@ to the user's situation before the value itself is requested.
 you can use the `.amount()` method.  If the `.exists` attribute is
 `False`, it will return zero without asking for the `.value`.
 
-Referring to a `Value` in a template will show the `.amount()`.  The
+Referring to a `Value` in a [Mako] template will show the `.amount()`.  The
 value of `.amount()` is also returned when you pass a `Value` to the
 [`currency()`] function.  For example:
 
@@ -1533,7 +1564,7 @@ the `.value`.  By default, it returns the value for the period 1
 (e.g., in the example above, period of 1 represents a year).  That is,
 it will return the `.value` multiplied by the `.period`.
 
-Referring to a `PeriodicValue` in a template will show the
+Referring to a `PeriodicValue` in a [Mako] template will show the
 `.amount()`.  The value of `.amount()` is also returned when you pass
 a `PeriodicValue` to the [`currency()`] function.
 
@@ -1585,7 +1616,7 @@ The `FinancialList` has three methods:
   For example, you may want to use this to say something like "So far,
   you have told me about assets totaling $45,000."
 
-In the context of a template, a `FinancialList` returns the result of
+In the context of a [Mako] template, a `FinancialList` returns the result of
 `.total()`.
 
 Note that a `FinancialList` is a [`DAObject`] but not a [`DAList`].  It
@@ -1637,7 +1668,7 @@ fields:
 (Additional questions asking about the value of asset items are
 omitted.)
 
-1. The inclusion of `user.asset` in a template returns the value of
+1. The inclusion of `user.asset` in a [Mako] template returns the value of
 `user.asset.total()`.
 2. The `.total()` method checks to see if `user.asset.gathered` is
 `True`.  Since `user.asset.gathered` is initially undefined, this
@@ -1674,16 +1705,16 @@ The `PeriodicFinancialList` has three methods:
 
 * `.new(item_name)`: gives the `PeriodicFinancialList` a new attribute with
   the name `item_name` and the object type `PeriodicValue`.
-* `.total()`: tallies up the total annual value of all `PeriodicValue`s in the list
+* <a name="PeriodicFinancialList.total"></a>`.total()`: tallies up the total annual value of all `PeriodicValue`s in the list
   for which the `exists` attribute is `True`.
-* `.total_gathered()`: does what `.total()` does, except it does not
+* <a name="PeriodicFinancialList.total_gathered"></a>`.total_gathered()`: does what `.total()` does, except it does not
   require `.gathered` to be `True`, which means that a reference to
   `.total_gathered()` can be used in the midst of the process of
   gathering the list of items.  For example, you may want to use this
   to say something like "So far, you have told me about income
   totaling $56,000 per year."
 
-In the context of a template, a `PeriodicFinancialList` returns `.total()`.
+In the context of a [Mako] template, a `PeriodicFinancialList` returns `.total()`.
 
 ### <a name="Income"></a>Income
 
@@ -1732,6 +1763,11 @@ fields:
 ### <a name="Expense"></a>Expense
 
 `Expense` is a [`PeriodicFinancialList`] representing a person's expenses.
+
+## <a name="OfficeList"></a>OfficeList
+
+An `OfficeList` object is a type of [`DAList`], the elements of which are expected to be
+[`Address`] objects.  It is used in [`Organization`] objects.
 
 # Classes for special purposes
 
@@ -2020,3 +2056,10 @@ and not an instance of the `Attorney` class.
 [`comma_and_list()`]: {{ site.baseurl }}/docs/functions.html#comma_and_list
 [`user_lat_lon()`]: {{ site.baseurl }}/docs/functions.html#user_lat_lon
 [`sets`]: {{ site.baseurl }}/docs/fields.html#sets
+[`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
+[`send_sms()`]: {{ site.baseurl }}/docs/functions.html#send_sms
+[E.164]: https://support.twilio.com/hc/en-us/articles/223183008-Formatting-International-Phone-Numbers
+[`get_country()`]: {{ site.baseurl }}/docs/functions.html#get_country
+[`.sms_number()`]: #Person.sms_number
+[`.email_address()`]: #Person.email_address
+[`OfficeList`]: #OfficeList

@@ -517,6 +517,22 @@
   modules:
     - docassemble.base.util
   ---
+"country": |-
+  ---
+  question: |
+    Where do you live?
+  fields:
+    - Country: user_country
+      code: countries_list()
+      default: US
+  ---
+  mandatory: true
+  question: |
+    You live in
+    ${ country_name(user_country) },
+    which is abbreviated
+    ${ user_country }.
+  ---
 "currency": |-
   ---
   question: |
@@ -536,6 +552,37 @@
     already invaded England.
     % endif
   mandatory: true
+  ---
+"dadict": |-
+  ---
+  modules:
+    - docassemble.base.core
+  ---
+  objects:
+    - player: DADict
+  ---
+  mandatory: true
+  code: |
+    player.initializeObject('trustee', DAObject)
+    player.initializeObject('beneficiary', DAObject)
+    player.initializeObject('grantor', DAObject)
+  ---
+  mandatory: true
+  question: The players
+  subquestion: |
+    % for type in player:
+    ${ player[type].firstname }
+    ${ player[type].lastname } is here.
+
+    % endfor
+  ---
+  generic object: DAObject
+  question: |
+    What is
+    ${ x[i].object_possessive('name') }?
+  fields:
+    - First Name: x[i].firstname
+    - Last Name: x[i].lastname
   ---
 "dalist": |-
   ---
@@ -1052,8 +1099,26 @@
   ---
 "generic-object-phone-number": |-
   ---
-  modules:
-    - docassemble.base.util
+  objects:
+    - grantor: Individual
+    - grantee: Individual
+    - trustee: Individual
+  ---
+  generic object: Individual
+  question: |
+    What is
+    ${ x.object_possessive('name') }?
+  fields:
+    - First Name: x.name.first
+      default: ${ x.first_name_hint() }
+    - Middle Name: x.name.middle
+      required: False
+    - Last Name: x.name.last
+      default: ${ x.last_name_hint() }
+    - Suffix: x.name.suffix
+      required: False
+      code: |
+        name_suffix()
   ---
 "get-default-timezone": |-
   ---
@@ -1266,6 +1331,31 @@
   ---
 "language": "---\nlanguage: es\nquestion: |\n  \xBFCu\xE1l es el significado de la\
   \ vida?\nfields:\n  - Significado de la Vida: meaning_life\n---"
+"lastfirst": |-
+  ---
+  template: client_letter
+  content: |
+    We need to be prepared to bring a lawsuit against the following:
+
+    % for party in enemy:
+    * ${ party.name.lastfirst() }
+    % endfor
+  ---
+  objects:
+    enemy: PartyList
+  ---
+  mandatory: true
+  code: |
+    enemy.appendObject(Individual)
+    enemy[0].name.first = "Darth"
+    enemy[0].name.last = "Vader"
+    enemy.appendObject(Person)
+    enemy[1].name.text = "Death Star Corporation"
+    enemy.appendObject(Individual)
+    enemy[2].name.first = "Kylo"
+    enemy[2].name.last = "Ren"
+    enemy.gathered = True
+  ---
 "leave": |-
   ---
   mandatory: true
@@ -1477,6 +1567,36 @@
   fields:
     - Value: target_variable
       datatype: currency
+  ---
+"name": |-
+  ---
+  question: |
+    What are you fighting?
+  field: opponent.name.text
+  choices:
+    - the Empire
+    - the Rebel Alliance
+  ---
+  mandatory: true
+  question: |
+    You are fighting
+    ${ opponent.name.full() }.
+  subquestion: |
+    Your enemy is ${ opponent.name }.
+
+    Your opponent is ${ opponent }.
+  ---
+"name-company": |-
+  ---
+  question: |
+    Do you wish to sue ${ company }?
+  yesno: user_wants_to_sue
+  ---
+"name-company-question": |-
+  ---
+  question: |
+    Do you wish to sue ${ company }?
+  yesno: user_wants_to_sue
   ---
 "need": |-
   ---
@@ -2086,6 +2206,21 @@
         You indicated you liked
         ${ fungi }.
   ---
+"salutation": |-
+  ---
+  template: letter_to_client
+  content: |
+    Dear ${ client.salutation() } ${ client.name.last }:
+
+    I hope this letter finds you well.
+
+    Blah, blah, blah.
+  ---
+  code: |
+    client.name.first = "John"
+    client.name.last = "Smith"
+    client.gender = "male"
+  ---
 "sample-function": |-
   ---
   modules:
@@ -2095,6 +2230,11 @@
   question: |
     The number after 3 is
     ${ plus_one(3) }.
+  ---
+"send-sms": |-
+  ---
+  modules:
+    - docassemble.base.util
   ---
 "set-language": "---\ninitial: true\ncode: |\n  set_language(language)\n---\nquestion:\
   \ |\n  What language do you speak?\nfield: language\nchoices:\n  - English: en\n\
