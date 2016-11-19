@@ -289,8 +289,11 @@ if [[ $CONTAINERROLE =~ .*:(log):.* ]] && [ "$APACHERUNNING" = false ]; then
     a2ensite docassemble-log
 fi
 
-if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ "$APACHERUNNING" = false ]; then
-    supervisorctl --serverurl http://localhost:9001 start apache2
+if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
+    supervisorctl --serverurl http://localhost:9001 start websockets
+    if [ "$APACHERUNNING" = false ]; then
+	supervisorctl --serverurl http://localhost:9001 start apache2
+    fi
 fi
 
 su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.register $DA_CONFIG_FILE" www-data

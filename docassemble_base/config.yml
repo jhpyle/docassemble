@@ -1,12 +1,13 @@
 debug: false
-root: /da/
+root: /
+url root: http://localhost
 exitpage: /
 db:
   prefix: postgresql+psycopg2://
   name: docassemble
-  user: null
-  password: null
-  host: null
+  user: docassemble
+  password: abc123
+  host: localhost
   port: null
   table_prefix: null
 oauth:
@@ -19,20 +20,19 @@ oauth:
     id: 23123018240-32239fj28fj4fuhf394h3984eurhfurh.apps.googleusercontent.com
     secret: DGE34gdgerg3GDG545tgdfRf
 secretkey: 28asflwjeifwlfjsd2fejfiefw3g4o87
-appname: docassemble
-brandname: docassemble
+password_secretkey: 2f928j3rwjf82498rje9t
+default_title: docassemble
+default_short_title: doc
+packagecache: /tmp/docassemble-cache
 uploads: /usr/share/docassemble/files
 packages: /usr/share/docassemble/local
-packagecache: /usr/share/docassemble/cache
 webapp: /usr/share/docassemble/webapp/docassemble.wsgi
 certs: /usr/share/docassemble/certs
 mail:
+  username: null
+  password: null
+  server: localhost
   default_sender: '"Administrator" <no-reply@example.com>'
-use_progress_bar: false
-imagemagick: convert
-pdftoppm: pdftoppm
-pacpl: pacpl
-avconv: avconv
 default_interview: docassemble.demo:data/questions/questions.yml
 flask_log: /tmp/flask.log
 language: en

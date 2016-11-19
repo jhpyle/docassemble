@@ -9,7 +9,7 @@
         XSendFile on
         XSendFilePath /usr
         XSendFilePath /tmp
-	RewriteEngine On
+        RewriteEngine On
         RewriteCond %{REQUEST_URI}      ^/wss/socket.io         [NC]
         RewriteCond %{QUERY_STRING}     transport=websocket     [NC]
         RewriteRule /wss/(.*)           ws://localhost:5000/$1 [P,L]
