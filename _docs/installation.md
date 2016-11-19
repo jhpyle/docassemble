@@ -116,6 +116,12 @@ The authentication keys for these services can be set up in the
 
 ## Underlying packages
 
+Before installing packages, update the package lists.
+
+{% highlight bash %}
+sudo apt-get update
+{% endhighlight %}
+
 The following [dependencies] can be installed from [Debian] or
 [Ubuntu] packages:
 
@@ -182,7 +188,7 @@ update-locale LANG=en_US.UTF-8
 On [Ubuntu], you may need to do `sudo apt-get install
 language-pack-en` (or other package appropriate for your locale).
 
-## Installing **docassemble** itself
+# Installing **docassemble** itself
 
 The recommended way to install **docassemble** is to create a
 [Python virtual environment] with ownership permissions set to the web
@@ -320,16 +326,12 @@ sudo cp ./docassemble/Docker/cron/docassemble-cron-weekly.sh /etc/cron.weekly/do
 sudo cp ./docassemble/Docker/cron/docassemble-cron-daily.sh /etc/cron.daily/docassemble
 sudo cp ./docassemble/Docker/cron/docassemble-cron-hourly.sh /etc/cron.hourly/docassemble
 sudo cp ./docassemble/Docker/docassemble.conf /etc/apache2/conf-available/
-{% endhighlight %}
-
-The `docassemble.conf` file contains instructions for [Apache] to use
-the virtual environment to run the **docassemble** web application.
-
-Install the [supervisor] configuration file:
-
-{% highlight bash %}
 sudo cp ./docassemble/Docker/docassemble-supervisor.conf /etc/supervisor/conf.d/docassemble.conf
 {% endhighlight %}
+
+The `/etc/apache2/conf-available/docassemble.conf` file contains
+instructions for [Apache] to use the virtual environment to run the
+**docassemble** web application.
 
 # Setting up the web server
 
@@ -531,15 +533,6 @@ the log server:
 
 {% highlight yaml %}
 destination d_net { tcp("log.example.local" port(514) log_fifo_size(1000)); };
-{% endhighlight %}
-
-# Cleaning up
-
-For security reasons, you should undo the `chsh` command you issued at
-the beginning of the process:
-
-{% highlight bash %}
-sudo chsh -s /usr/sbin/nologin www-data
 {% endhighlight %}
 
 # Connecting to other external services
