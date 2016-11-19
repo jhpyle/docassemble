@@ -97,11 +97,11 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 	-e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY:-null}"'/' \
 	-e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY:-null}"'/' \
 	-e 's/{{S3BUCKET}}/'"${S3BUCKET:-null}"'/' \
-	-e 's/{{REDIS}}/'"${REDIS:-null}"'/' \
-	-e 's/{{RABBITMQ}}/'"${RABBITMQ:-null}"'/' \
+	-e 's@{{REDIS}}@'"${REDIS:-null}"'@' \
+	-e 's#{{RABBITMQ}}#'"${RABBITMQ:-null}"'#' \
 	-e 's/{{EC2}}/'"${EC2:-false}"'/' \
 	-e 's/{{LOGSERVER}}/'"${LOGSERVER:-null}"'/' \
-	-e 's/{{URLROOT}}/'"${URLROOT:-null}"'/' \
+	-e 's@{{URLROOT}}@'"${URLROOT:-null}"'@' \
 	$DA_CONFIG_FILE_DIST > $DA_CONFIG_FILE || exit 1
 fi
 chown www-data.www-data $DA_CONFIG_FILE

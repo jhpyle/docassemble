@@ -7556,12 +7556,12 @@ def sms():
                 extension = 'png'
                 mimetype = 'image/png'
                 temp_image_file = tempfile.NamedTemporaryFile(suffix='.' + extension)
-                #image = Image()
-                # Save blank PNG 200x50 to temp_image_file.name
+                image = Image.new("RGBA", (200, 50))
+                image.save(temp_image_file.name, 'PNG')
                 saved_file = savedfile_numbered_file(filename, temp_image_file.name, yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
                 if inp_lower in [word('x')]:
-                    the_string = saveas + "docassemble.base.core.DAFile('" + saveas + "', filename='" + str(filename) + "', number=" + str(saved_file.file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
-                    logmessage("sms: doing " + the_string)
+                    the_string = saveas + " = docassemble.base.core.DAFile('" + saveas + "', filename='" + str(filename) + "', number=" + str(saved_file.file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
+                    #logmessage("sms: doing " + the_string)
                     try:
                         exec('import docassemble.base.core', user_dict)
                         exec(the_string, user_dict)

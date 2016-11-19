@@ -99,7 +99,7 @@ def check_for_updates():
                 db.session.add(install)
             db.session.commit()
             update_versions()
-            add_dependencies(package_owner[package.id])
+            add_dependencies(package_owner.get(package.id, 1))
             update_versions()
         else:
             ok = False

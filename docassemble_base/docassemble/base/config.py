@@ -91,7 +91,7 @@ def load(**kwargs):
                     daconfig['log server'] = 'localhost'
                 else:
                     daconfig['log server'] = the_host
-        if 'redis' not in daconfig or daconfig['rabbitmq'] is None:
+        if 'redis' not in daconfig or daconfig['redis'] is None:
             key = s3.get_key('hostname-redis')
             if key.exists():
                 the_host = key.get_contents_as_string()
