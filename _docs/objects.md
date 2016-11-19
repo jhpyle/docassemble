@@ -296,7 +296,7 @@ Normally in [Python] you can use global variables to keep track of
 information that your methods need to know but that is not passed in
 arguments to the methods.  For example, if you wanted to keep track of
 whether to use Celsius or Fahrenheit when talking about temperatures,
-you could do:
+you might be tempted to write:
 
 {% highlight python %}
 from docassemble.base.core import DAObject
@@ -320,7 +320,8 @@ text.  Here, it is necessary because `self.oven_temperature` may be a
 number, and [Python] will complain if you ask it to "add" text to a
 number.)
 
-Then you could change the `temperature_type` from an interview:
+Then you to change the `temperature_type` from an interview, you might
+write:
 
 {% highlight yaml %}
 ---
@@ -336,7 +337,8 @@ code: |
 ...
 {% endhighlight %}
 
-This works because the `modules` block loads all the names from
+This would be effective at changing the `temperature_type` variable
+because the `modules` block loads all the names from
 `docassemble.cooking.objects` into the variable store of the
 interview, including `temperature_type`.
 
@@ -346,12 +348,14 @@ be advised to turn their ovens to 350 degrees Celsius, which would
 scorch the food.  This is because the variable `temperature_type`
 exists at the level of the web server process, and the process might
 be supporting several users simultaneously (in different "threads" of
-the process).  Between the time one thread sets `temperature_type` to
+the process).  Between the time one user sets `temperature_type` to
 `Fahrenheit` and tries to use it, another user inside the same process
 might set `temperature_type` to `Celsius`.
 
-The simplest way to get around this problem is to use the [`set_info()`]
-and [`get_info()`] functions from [`docassemble.base.util`]:
+Therefore, it is important that you do not use global variables when
+you write your own classes.  The simplest way to get around this
+problem is to use the [`set_info()`] and [`get_info()`] functions from
+[`docassemble.base.util`]:
 
 {% highlight python %}
 from docassemble.base.core import DAObject
@@ -369,7 +373,9 @@ class Recipe(DAObject):
             return str(self.oven_temperature) + ' K'
 {% endhighlight %}
 
-Then from your interview you can bring in [`docassemble.base.util`] and run [`set_info()`]:
+Then from your interview you can include [`docassemble.base.util`] as
+one of the [`modules`] and then run [`set_info()`] in [`initial`]
+code:
 
 {% highlight yaml %}
 ---
@@ -388,8 +394,14 @@ code: |
 ...
 {% endhighlight %}
 
-Alternatively, you can do what [`docassemble.base.util`] does and use
-Python's [threading module] to store global variables.
+The values set by [`set_info()`] are forgotten after the user's screen
+is prepared.  Therefore, it is necessary to run [`set_info()`] in an
+[`initial`] code block so that values like `temperature_type` are put
+in place before they are needed.
+
+If you are an advanced programmer, you can do what
+[`docassemble.base.util`] does and use Python's [threading module] to
+store global variables.
 
 {% highlight python %}
 from docassemble.base.core import DAObject
@@ -509,12 +521,14 @@ have special attributes that allow their attributes to be set by
 **docassemble** questions.  If `fruit` is an ordinary [Python object]
 and you refer to `fruit.seeds` when `seeds` is not an existing
 attribute of `fruit`, [Python] will generate an [AttributeError].  But
-if `fruit` is a `DAObject`, **docassemble** will ask a question that
-offers to define `fruit.seeds`, or ask a `generic object` question for
-object `DAObject` that offers to define `x.seeds`.
+if `fruit` is a `DAObject`, **docassemble** will be able to intercept
+that error and ask a question that offers to define `fruit.seeds`, or
+ask a `generic object` question for object `DAObject` that offers to
+define `x.seeds`.
 
-If you wish to add an attribute to a `DAObject` that is an instance
-`DAObject`, you may need to use the `initializeAttribute()` method.
+If you wish to add an attribute to a `DAObject`, where the attribute
+itself is a `DAObject`, you may need to use the
+`initializeAttribute()` method rather than using the `=` operator.
 
 Suppose you try the following:
 

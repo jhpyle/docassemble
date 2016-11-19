@@ -69,7 +69,7 @@ service docker start
 run the image by doing:
 
 {% highlight bash %}
-docker run -d -p 80:80 -p 443:443 -p 9001:9001 jhpyle/docassemble
+docker run -d -p 80:80 jhpyle/docassemble
 {% endhighlight %}
 
 Or, if you are already using port 80 on your machine, use something
@@ -242,6 +242,7 @@ docker run --env-file=env.list \
 -v certs:/usr/share/docassemble/certs \
 -v daconfig:/usr/share/docassemble/config \
 -v dabackup:/usr/share/docassemble/backup \
+-v redis:/var/lib/redis/ \
 -v letsencrypt:/etc/letsencrypt \
 -v apache:/etc/apache2/sites-available \
 -d -p 80:80 -p 443:443 jhpyle/docassemble
@@ -515,7 +516,7 @@ Or push it to [Docker Hub]:
 docker push yourdockerhubusername/mydocassemble
 {% endhighlight %}
 
-# Upgrading a docker image
+# Upgrading docassemble when using Docker
 
 As new versions of **docassemble** become available, you can obtain
 the latest version by running:
@@ -526,6 +527,28 @@ docker pull jhpyle/docassemble
 
 Then, subsequent commands will use the latest **docassemble** image.
 
+When you are using [Docker] to run **docassemble**, you can upgrade
+**docassemble** to the newest version simply by running `docker stop`
+and `docker rm` on the **docassemble** container.  However, this
+will delete all of the data on the server unless you have set up a
+system for saving your data.
+
+The best way to maintain your data is to use [Amazon S3].  If [S3] is
+configured, then when `docker stop` is run, **docassemble** will
+backup the SQL database, the [Redis] database, the [configuration],
+and your uploaded files to your [S3] bucket.  Then, when you issue a
+`docker run` command with information about your [S3] bucket,
+**docassemble** will make restore from the backup.
+
+The next best way to maintain your data is to use
+[persistent volumes].  The downsides are:
+
+* If the [PostgreSQL] version changes from one [Docker] image to
+another, the new container will not be able to use the [PostgreSQL]
+data stored in the persistent volume.
+* The `docker run` command is much longer
+
+[Redis]: http://redis.io/
 [Docker installation instructions for Windows]: https://docs.docker.com/engine/installation/windows/
 [Docker installation instructions for OS X]: https://docs.docker.com/engine/installation/mac/
 [Docker]: https://www.docker.com/

@@ -4,6 +4,32 @@ title: Requirements
 short_title: Requirements
 ---
 
+The **docassemble** application is modular.  There is a core [Python]
+module, [`docassemble.base`], that parses interviews and determines
+what question should be asked next, and there is a separate [Python]
+module, [`docassemble.webapp`], that contains the code for the web
+application and the [text messaging interface].
+
+For all of the features of **docassemble** to be available, several
+other applications need to run concurrently, including:
+
+* A web server;
+* A SQL server;
+* A [redis] server, multiple databases of which are used;
+* A [rabbitmq] server;
+* A [Celery] background process;
+* A [cron] background process that invokes **docassemble** scripts at
+hourly, daily, weekly, and monthly intervals;
+* A [syslogng] background process that pushes log file entries to a
+  central location;
+* A watchdog background process that terminates any web application
+processes that are stuck in an infinite loop; and
+* A [supervisor] background process that orchestrates these applications.
+
+It is highly recommended, therefore, that you not try to install
+**docassemble** manually, but rather that you install [Docker] and run
+**docassemble** from its [Docker image].
+
 The core **docassemble** module ([`docassemble.base`]) depends on:
 
 * [Mako Templates for Python](http://www.makotemplates.org/) - for
@@ -82,3 +108,8 @@ To run the demo question file (`docassemble.demo`) you will need:
 [SQLAlchemy]: http://www.sqlalchemy.org/
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation#docassemble.base
 [`docassemble.webapp`]: {{ site.baseurl }}/docs/installation.html#docassemble.webapp
+[Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
+[text messaging interface]: {{ site.baseurl }}/docs/sms.html
+[Celery]: http://www.celeryproject.org/
+[Docker image]: {{ site.baseurl }}/docs/docker.html
+[Docker]: https://www.docker.com/

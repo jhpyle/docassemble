@@ -194,7 +194,7 @@ Packages can be installed in three different ways:
 Packages will be installed using the [pip] package manager.  A log
 of the output of [pip] will be shown.
 
-## Updating Python packages
+## <a name="updating"></a>Updating Python packages
 
 To upgrade a package that you installed from a GitHub URL or from
 [PyPI], you can click the "Update" button next to the package name on
