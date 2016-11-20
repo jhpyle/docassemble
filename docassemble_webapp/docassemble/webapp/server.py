@@ -2384,7 +2384,7 @@ def index():
             socket = io.connect("http://" + document.domain + "/interview", {path: '/ws/socket.io'});
         }
         if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-            socket = io.connect("https://" + document.domain + "/interview" + location.port, {path: '/wss/socket.io'});
+            socket = io.connect("https://" + document.domain + "/interview" + location.port, {path: '/ws/socket.io'});
         }
         if (socket != null){
             socket.on('connect', function() {
@@ -4062,7 +4062,7 @@ def observer():
             socket = io.connect("http://" + document.domain + "/observer" + location.port, {path: '/ws/socket.io'});
         }
         if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-            socket = io.connect("https://" + document.domain + "/observer" + location.port, {path: '/wss/socket.io'});
+            socket = io.connect("https://" + document.domain + "/observer" + location.port, {path: '/ws/socket.io'});
         }
         if (typeof socket !== 'undefined') {
             socket.on('connect', function() {
@@ -4936,7 +4936,7 @@ def monitor():
             socket = io.connect("http://" + document.domain + "/monitor" + location.port, {path: '/ws/socket.io'});
         }
         if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-            socket = io.connect("https://" + document.domain + "/monitor" + location.port, {path: '/wss/socket.io'});
+            socket = io.connect("https://" + document.domain + "/monitor" + location.port, {path: '/ws/socket.io'});
         }
         if (typeof socket !== 'undefined') {
             socket.on('connect', function() {
@@ -5497,7 +5497,7 @@ def get_package_info():
 #             socket = io.connect("http://" + document.domain + "/interview", {path: '/ws/socket.io'});
 #         }
 #         if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-#             socket = io.connect("https://" + document.domain + "/interview" + location.port, {path: '/wss/socket.io'});
+#             socket = io.connect("https://" + document.domain + "/interview" + location.port, {path: '/ws/socket.io'});
 #         }
 #         if (typeof socket !== 'undefined') {
 #             socket.on('connect', function() {
