@@ -20,6 +20,10 @@ def main():
                 key = s3.get_key('hostname-' + role)
                 if key.exists():
                     key.delete()
+                if role == 'rabbitmq':
+                    key_two = s3.get_key('ip-rabbitmq')
+                    if key_two.exists():
+                        key_two.delete()
 
 if __name__ == "__main__":
     main()

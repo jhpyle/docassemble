@@ -14,6 +14,7 @@ import docassemble.base.interview_cache
 import docassemble.base.parse
 from celery import Celery
 import sys
+import socket
 
 class WorkerController(object):
     pass
@@ -23,7 +24,7 @@ if backend is None:
     backend = 'redis://localhost'
 broker = daconfig.get('rabbitmq', None)
 if broker is None:
-    broker = 'amqp://guest@localhost//'
+    broker = 'amqp://guest@' + socket.gethostname() + '//'
     
 workerapp = Celery('docassemble.webapp.worker', backend=backend, broker=broker)
 workerapp.conf.update(
