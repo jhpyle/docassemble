@@ -240,10 +240,10 @@ if [[ $CONTAINERROLE =~ .*:(all|web|celery):.* ]]; then
     su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.update $DA_CONFIG_FILE" www-data || exit 1
 fi
 
-if su -c "source /usr/share/docassemble/local/bin/activate && celery -A docassemble.webapp.worker status" www-data &> /dev/null; then
-    CELERYRUNNING=true
+if su -c "source /usr/share/docassemble/local/bin/activate && celery -A docassemble.webapp.worker status" www-data 2>&1 | grep -q `hostname`; then
+    CELERYRUNNING=true;
 else
-    CELERYRUNNING=false
+    CELERYRUNNING=false;
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" = false ]; then
@@ -289,9 +289,11 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
     fi
     if [ "${S3ENABLE:-false}" == "true" ]; then
 	cd /
-	rm -f /tmp/letsencrypt.tar.gz
-	tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
-	s3cmd -q put /tmp/letsencrypt.tar.gz 's3://'${S3BUCKET}/letsencrypt.tar.gz 
+	if [ "${USELETSENCRYPT:-none}" != "none" ]; then
+	    rm -f /tmp/letsencrypt.tar.gz
+	    tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
+	    s3cmd -q put /tmp/letsencrypt.tar.gz 's3://'${S3BUCKET}/letsencrypt.tar.gz
+	fi
 	s3cmd -q sync /etc/apache2/sites-available/ 's3://'${S3BUCKET}/apache/
     fi
 fi
