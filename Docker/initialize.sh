@@ -35,7 +35,7 @@ else
     CRONRUNNING=false
 fi
 
-if [ "${USEHTTPS:-false}" == "false" ]; then
+if [ "${USEHTTPS:-false}" == "false" ] && [ "${BEHINDHTTPSLOADBALANCER:-false}" == "false" ]; then
     URLROOT="http:\\/\\/"
 else
     URLROOT="https:\\/\\/"
@@ -112,14 +112,25 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 	-e 's/{{S3BUCKET}}/'"${S3BUCKET:-null}"'/' \
 	-e 's@{{REDIS}}@'"${REDIS:-null}"'@' \
 	-e 's#{{RABBITMQ}}#'"${RABBITMQ:-null}"'#' \
+	-e 's@{{TIMEZONE}}@'"${TIMEZONE:-null}"'@' \
 	-e 's/{{EC2}}/'"${EC2:-false}"'/' \
+	-e 's/{{USEHTTPS}}/'"${USEHTTPS:-false}"'/' \
+	-e 's/{{USELETSENCRYPT}}/'"${USELETSENCRYPT:-false}"'/' \
+	-e 's/{{LETSENCRYPTEMAIL}}/'"${LETSENCRYPTEMAIL:-null}"'/' \
 	-e 's/{{LOGSERVER}}/'"${LOGSERVER:-null}"'/' \
+	-e 's/{{DAHOSTNAME}}/'"${DAHOSTNAME:-null}"'/' \
+	-e 's/{{LOCALE}}/'"${LOCALE:-null}"'/' \
 	-e 's@{{URLROOT}}@'"${URLROOT:-null}"'@' \
+	-e 's/{{BEHINDHTTPSLOADBALANCER}}/'"${BEHINDHTTPSLOADBALANCER:-false}"'/' \
 	$DA_CONFIG_FILE_DIST > $DA_CONFIG_FILE || exit 1
 fi
 chown www-data.www-data $DA_CONFIG_FILE
 
 source /dev/stdin < <(su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
+
+if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(s3cmd ls s3://${S3BUCKET}/config.yml) ]]; then
+    s3cmd -q put $DA_CONFIG_FILE s3://${S3BUCKET}/config.yml
+fi
 
 if [ "${EC2:-false}" == "true" ]; then
     export LOCAL_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/local-hostname`
@@ -161,6 +172,16 @@ set -- $LOCALE
 DA_LANGUAGE=$1
 grep -q "^$LOCALE" /etc/locale.gen || { echo $LOCALE >> /etc/locale.gen && locale-gen ; }
 update-locale LANG=$DA_LANGUAGE
+
+if [ -n "$OTHERLOCALES" ]; then
+    NEWLOCALE=false
+    for LOCALETOSET in "${OTHERLOCALES[@]}"; do
+	grep -q "^$LOCALETOSET" /etc/locale.gen || { echo $LOCALETOSET >> /etc/locale.gen; NEWLOCALE=true; }
+    done
+    if [ "$NEWLOCALE" = true ]; then
+	locale-gen
+    fi
+fi
 
 if [ "${TIMEZONE:-undefined}" != "undefined" ]; then
     echo $TIMEZONE > /etc/timezone

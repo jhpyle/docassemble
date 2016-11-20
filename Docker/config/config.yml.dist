@@ -37,6 +37,8 @@ default_interview: docassemble.demo:data/questions/questions.yml
 flask_log: /tmp/flask.log
 language: en
 locale: US.utf8
+os locale: {{LOCALE}}
+timezone: {{TIMEZONE}}
 redis: {{REDIS}}
 rabbitmq: {{RABBITMQ}}
 default_admin_account:
@@ -57,5 +59,10 @@ s3:
   bucket: {{S3BUCKET}}
 ec2: {{EC2}}
 log server: {{LOGSERVER}}
+use https: {{USEHTTPS}}
+use lets encrypt: {{USELETSENCRYPT}}
+lets encrypt email: {{LETSENCRYPTEMAIL}}
+behind https load balancer: {{BEHINDHTTPSLOADBALANCER}}
+external hostname: {{DAHOSTNAME}}
 words:
   - docassemble.base:data/sources/us-words.yml

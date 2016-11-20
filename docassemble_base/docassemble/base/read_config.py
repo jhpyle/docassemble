@@ -7,6 +7,13 @@ if __name__ == "__main__":
         print('export TIMEZONE="' + str(daconfig['timezone']) + '"')
     if 'os locale' in daconfig and daconfig['os locale'] is not None:
         print('export LOCALE="' + str(daconfig['os locale']) + '"')
+    if 'other os locales' in daconfig and type(daconfig['other os locales']) is list:
+        print('declare -a OTHERLOCALES')
+        print('export OTHERLOCALES')
+        indexno = 0
+        for locale in daconfig['other locales']:
+            print('OTHERLOCALES[' + str(indexno) + ']=' + repr(str(locale)))
+            indexno += 1
     if 'db' in daconfig:
         if 'prefix' in daconfig['db'] and daconfig['db']['prefix'] is not None:
             print('export DBPREFIX="' + str(daconfig['db']['prefix']) + '"')

@@ -50,7 +50,8 @@ import json
 import base64
 import requests
 import redis
-from flask import make_response, abort, render_template, request, session, send_file, redirect, url_for, current_app, get_flashed_messages, flash, Markup, jsonify, Response, g
+from flask import make_response, abort, render_template, request, session, send_file, redirect, current_app, get_flashed_messages, flash, Markup, jsonify, Response, g
+from flask import url_for as flask_url_for
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
 from flask_user import login_required, roles_required, UserManager, SQLAlchemyAdapter
 from flask_user.forms import LoginForm
@@ -77,6 +78,7 @@ import yaml
 import inspect
 from subprocess import call, Popen, PIPE
 DEBUG = daconfig.get('debug', False)
+HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 from pygments import highlight
 from pygments.lexers import YamlLexer
 from pygments.formatters import HtmlFormatter
@@ -226,6 +228,12 @@ else:
 
 connect_string = docassemble.webapp.database.connection_string()
 alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
+
+def url_for(*pargs, **kwargs):
+    if HTTP_TO_HTTPS:
+        kwargs['_external'] = True
+        kwargs['_scheme'] = 'https'
+    return flask_url_for(*pargs, **kwargs)
 
 def my_default_url(error, endpoint, values):
     return url_for('index')
