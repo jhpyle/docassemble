@@ -7913,6 +7913,6 @@ r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
 if not in_celery:
     import docassemble.webapp.worker
     #sys.stderr.write("calling set worker now\n")
-    docassemble.base.functions.set_worker(docassemble.webapp.worker.background_action)
+    docassemble.base.functions.set_worker(docassemble.webapp.worker.background_action, docassemble.webapp.worker.convert)
 import docassemble.webapp.machinelearning
 docassemble.base.util.set_knn_machine_learner(docassemble.webapp.machinelearning.SimpleTextMachineLearner)

@@ -13,6 +13,7 @@ from docassemble.base.config import daconfig
 import docassemble.base.interview_cache
 import docassemble.base.parse
 from celery import Celery
+from celery.result import result_from_tuple
 import sys
 import socket
 
@@ -24,16 +25,20 @@ if backend is None:
     backend = 'redis://localhost'
 broker = daconfig.get('rabbitmq', None)
 if broker is None:
-    broker = 'amqp://guest@' + socket.gethostname() + '//'
-    
+    broker = 'pyamqp://guest@' + socket.gethostname() + '//'
+
+#sys.stderr.write("backend is " + str(backend) + "\n")
+#sys.stderr.write("broker is " + str(broker) + "\n")
+
 workerapp = Celery('docassemble.webapp.worker', backend=backend, broker=broker)
 workerapp.conf.update(
-    CELERY_TASK_SERIALIZER='pickle',
-    CELERY_ACCEPT_CONTENT=['pickle'],
-    CELERY_RESULT_SERIALIZER='pickle',
-    CELERY_TIMEZONE=daconfig.get('timezone', 'America/New_York'),
-    CELERY_ENABLE_UTC=True
+    task_serializer='pickle',
+    accept_content=['pickle'],
+    result_serializer='pickle',
+    timezone=daconfig.get('timezone', 'America/New_York'),
+    enable_utc=True,
 )
+#workerapp.config_from_object('docassemble.webapp.celeryconfig')
 
 w = None
 
@@ -49,6 +54,13 @@ def initialize_db():
     w.obtain_lock = obtain_lock
     w.release_lock = release_lock
     #sys.stderr.write("initialized db")
+
+# @workerapp.task
+# def add(x, y):
+#     return x + y
+
+def convert(obj):
+    return result_from_tuple(obj.as_tuple(), app=workerapp)
 
 @workerapp.task
 def background_action(yaml_filename, user_info, session_code, secret, url, url_root, action):

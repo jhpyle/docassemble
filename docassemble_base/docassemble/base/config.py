@@ -102,7 +102,7 @@ def load(**kwargs):
             key = s3.get_key('hostname-rabbitmq')
             if key.exists():
                 the_host = key.get_contents_as_string()
-                daconfig['rabbitmq'] = 'amqp://guest@' + str(the_host) + '//'
+                daconfig['rabbitmq'] = 'pyamqp://guest@' + str(the_host) + '//'
     loaded = True
     return
 

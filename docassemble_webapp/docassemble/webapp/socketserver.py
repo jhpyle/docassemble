@@ -56,7 +56,7 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
         the_timezone = pytz.timezone(person.timezone)
     else:
         the_timezone = pytz.timezone(get_default_timezone())
-    r = redis.StrictRedis()
+    r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
 
     partners = set()
     pubsub = r.pubsub()
@@ -355,7 +355,7 @@ def monitor_thread(sid=None, user_id=None):
         the_timezone = pytz.timezone(person.timezone)
     else:
         the_timezone = pytz.timezone(get_default_timezone())
-    r = redis.StrictRedis()
+    r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
     listening_sids = set()
     pubsub = r.pubsub()
     pubsub.subscribe(['da:monitor', sid])
@@ -758,7 +758,7 @@ def monitor_chat_log(data):
 
 def observer_thread(sid=None, key=None):
     sys.stderr.write("Started observer thread\n")
-    r = redis.StrictRedis()
+    r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
     pubsub = r.pubsub()
     pubsub.subscribe([key, sid])
     for item in pubsub.listen():

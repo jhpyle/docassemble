@@ -384,6 +384,8 @@ def null_worker(*pargs, **kwargs):
 
 bg_action = null_worker()
 
+worker_convert = null_worker()
+
 def background_response(*pargs, **kwargs):
     """Finishes a background task"""
     raise BackgroundResponseError(*pargs, **kwargs)
@@ -397,9 +399,17 @@ def background_action(action, **kwargs):
     #sys.stderr.write("Got to background_action in functions\n")
     return(bg_action(action, **kwargs))
 
+class MyAsyncResult(object):
+    def ready(self):
+        return worker_convert(self.obj).ready()
+    def get(self):
+        return worker_convert(self.obj).get()
+
 def worker_caller(func, action):
     #sys.stderr.write("Got to worker_caller in functions\n")
-    return func.delay(this_thread.current_info['yaml_filename'], this_thread.current_info['user'], this_thread.current_info['session'], this_thread.current_info['secret'], this_thread.current_info['url'], this_thread.current_info['url_root'], action)
+    result = MyAsyncResult()
+    result.obj = func.delay(this_thread.current_info['yaml_filename'], this_thread.current_info['user'], this_thread.current_info['session'], this_thread.current_info['secret'], this_thread.current_info['url'], this_thread.current_info['url_root'], action)
+    return result
 
 def null_chat_partners(*pargs, **kwargs):
     return (dict(peer=0, help=0))
@@ -411,13 +421,14 @@ def set_chat_partners_available(func):
     chat_partners_available_func = func
     return
 
-def set_worker(func):
+def set_worker(func, func_two):
     #sys.stderr.write("Got to set_worker in functions\n")
     def new_func(action, **kwargs):
-        #sys.stderr.write("Got to actual new func\n")
         return worker_caller(func, {'action': action, 'arguments': kwargs})
     global bg_action
     bg_action = new_func
+    global worker_convert
+    worker_convert = func_two
     #sys.stderr.write("Just set bg_action\n")
     return
 
