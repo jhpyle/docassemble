@@ -140,6 +140,12 @@
   ---
 "attachment-code": |-
   ---
+  mandatory: true
+  question: |
+    Here are your documents!
+  attachment code: |
+    [doc_one, doc_two, doc_three]
+  ---
   attachment:
     name: The first document
     filename: document_one
@@ -169,12 +175,6 @@
     variable name: doc_three
     content: |
       Hello, world number three!
-  ---
-  mandatory: true
-  question: |
-    Here are your documents!
-  attachment code: |
-    [doc_one, doc_two, doc_three]
   ---
 "audio": |-
   ---
