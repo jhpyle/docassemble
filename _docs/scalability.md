@@ -4,13 +4,11 @@ title: Scalability of docassemble
 short_title: Scalability
 ---
 
-**docassemble** is easily scalable.  It does not store any user
-information in memory or in an in-memory cache.  Rather, it uses a SQL
-database (accessed through [SQLAlchemy]) to store user answers and a
-file store (filesystem or [Amazon S3]) to store user documents.  As a
-result, a cluster of servers can serve responses to client browsers if
-each cluster member is configured to point to the same SQL database
-and use the same file store.
+The **docassemble** web application is easily scalable.  Its SQL
+database (accessed through [SQLAlchemy]), [Redis] system and
+[RabbitMQ] system can be centralized, and [Amazon S3] can be used
+instead of the file system to store user documents.  As a result, a
+cluster of web servers can serve responses to client browsers.
 
 # Quick start
 
@@ -21,15 +19,17 @@ recommended method:
 1. Get an [Amazon Web Services] account.
 2. Go to [Amazon S3] and obtain an access key and a secret access
 key.  Create a bucket.
+3. Go to [EC2] and start up an [ECS]-optimized instance.  Go to
+Community AMIs, search for "ecs-optimized" and pick the most recent
+AMI.  (As of this writing, the most recent is
+"amzn-ami-2016.09.b-amazon-ecs-optimized.")
 3. Go to [EC2 Container Service].
-4. Create a Task Definition called `docassemble-sql` using the [JSON]
+4. Create a Task Definition called `docassemble-backend` using the [JSON]
 configuration below.  Edit the `TIMEZONE`.
-5. Create a Task Definition called `docassemble-log` using the [JSON]
-configuration below.  Edit the `TIMEZONE`.
-6. Create a Service called `sql-service` that uses the task definition
-`docassemble-sql`.  Edit the `TIMEZONE`.  Set the number of tasks
-to 1.  Do not choose an Elastic Load Balancer.  Deploy `sql-service`
-on an [EC2] instance.  Make note of the "Private IP" of the instance.
+5. Create a Service called `backend-service` that uses the task
+definition `docassemble-backend`.  Set the number of tasks to 1.  Do
+not choose an Elastic Load Balancer.  Deploy `backend-service` on an
+[EC2] instance.  Make note of the "Private IP" of the instance.
 7. Create a Service called `log-service` that uses the task definition
 `docassemble-log`.  Set the number of tasks to 1.  Do not
 choose an Elastic Load Balancer.  Deploy `log-service` on an [EC2]
@@ -58,6 +58,23 @@ have room to run.
 14. Create an [Auto Scaling Group] for the `docassemble-app` task so
 that any number of instances (up to a limit) can support the
 `docassemble-app` task.
+
+Go to [VPC] and copy the CIDR of the network.
+
+Go to [EC2] and create a new security group.  Allow all traffic from
+the CIDR of your [VPC].
+
+Create a Launch Configuration
+
+Set the "IAM role" to the IAM role you created earlier.
+
+Set the security group to the security group you created earlier.
+
+Create an Auto Scaling Group
+
+Connect it with the launch configuration you created earlier.
+
+Set the number of instances to 2.
 
 Here is the task definition for `docassemble-sql`:
 
@@ -294,18 +311,22 @@ Here is the task definition for `docassemble-app`:
 
 # Combining roles
 
-Here is the task definition for `docassemble-sql-log-redis-rabbitmq`:
+Here is the task definition for `docassemble-backend`:
 
 {% highlight json %}
 {
-  "family": "docassemble-sql-log-redis-rabbitmq",
+  "family": "docassemble-backend",
   "containerDefinitions": [
     {
-      "name": "docassemble-sql-log-redis-rabbitmq",
+      "name": "docassemble-backend",
       "image": "jhpyle/docassemble",
       "cpu": 1,
       "memory": 900,
       "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080
+        },
         {
           "containerPort": 5432,
           "hostPort": 5432
@@ -346,97 +367,37 @@ Here is the task definition for `docassemble-sql-log-redis-rabbitmq`:
           "value": "sql:log:redis:rabbitmq"
         },
         {
+          "name": "DAHOSTNAME",
+          "value": "hosted.docassemble.org"
+        },
+        {
+          "name": "EC2",
+          "value": "true"
+        },
+        {
+          "name": "BEHINDHTTPSLOADBALANCER",
+          "value": "true"
+        },
+        {
           "name": "S3BUCKET",
           "value": "hosted-docassemble-org"
         }
       ],
-      "mountPoints": [
-        {
-          "sourceVolume": "pgetc",
-          "containerPath": "/etc/postgresql"
-        },
-        {
-          "sourceVolume": "pglog",
-          "containerPath": "/var/log/postgresql"
-        },
-        {
-          "sourceVolume": "pglib",
-          "containerPath": "/var/lib/postgresql"
-        },
-        {
-          "sourceVolume": "pgrun",
-          "containerPath": "/var/run/postgresql"
-        },
-        {
-          "sourceVolume": "dalog",
-          "containerPath": "/usr/share/docassemble/log"
-        },
-        {
-          "sourceVolume": "daconfig",
-          "containerPath": "/usr/share/docassemble/config"
-        },
-        {
-          "sourceVolume": "dabackup",
-          "containerPath": "/usr/share/docassemble/backup"
-        }
-      ]
+      "mountPoints": []
     }
   ],
-  "volumes": [
-    {
-      "name": "pgetc",
-      "host": {
-        "sourcePath": "/ecs/pgetc"
-      }
-    },
-    {
-      "name": "pglog",
-      "host": {
-        "sourcePath": "/ecs/pglog"
-      }
-    },
-    {
-      "name": "pglib",
-      "host": {
-        "sourcePath": "/ecs/pglib"
-      }
-    },
-    {
-      "name": "pgrun",
-      "host": {
-        "sourcePath": "/ecs/pgrun"
-      }
-    },
-    {
-      "name": "dalog",
-      "host": {
-        "sourcePath": "/ecs/dalog"
-      }
-    },
-    {
-      "name": "daconfig",
-      "host": {
-        "sourcePath": "/ecs/daconfig"
-      }
-    },
-    {
-      "name": "dabackup",
-      "host": {
-        "sourcePath": "/ecs/dabackup"
-      }
-    }
-  ]
+  "volumes": []
 }
 {% endhighlight %}
 
-Here is the task definition for `docassemble-web-celery`:
+Here is the task definition for `docassemble-app`:
 
 {% highlight json %}
 {
-  "family": "docassemble-web-celery",
+  "family": "docassemble-app",
   "containerDefinitions": [
     {
-      "name": "docassemble-web-celery",
+      "name": "docassemble-app",
       "image": "jhpyle/docassemble",
       "cpu": 1,
       "memory": 900,
@@ -444,10 +405,6 @@ Here is the task definition for `docassemble-web-celery`:
         {
           "containerPort": 80,
           "hostPort": 80
-        },
-        {
-          "containerPort": 443,
-          "hostPort": 443
         },
         {
           "containerPort": 9001,
@@ -465,82 +422,10 @@ Here is the task definition for `docassemble-web-celery`:
           "value": "hosted-docassemble-org"
         }
       ],
-      "mountPoints": [
-        {
-          "sourceVolume": "dafiles",
-          "containerPath": "/usr/share/docassemble/files"
-        },
-        {
-          "sourceVolume": "certs",
-          "containerPath": "/usr/share/docassemble/certs"
-        },
-        {
-          "sourceVolume": "dalog",
-          "containerPath": "/usr/share/docassemble/log"
-        },
-        {
-          "sourceVolume": "daconfig",
-          "containerPath": "/usr/share/docassemble/config"
-        },
-        {
-          "sourceVolume": "dabackup",
-          "containerPath": "/usr/share/docassemble/backup"
-        },
-        {
-          "sourceVolume": "letsencrypt",
-          "containerPath": "/etc/letsencrypt"
-        },
-        {
-          "sourceVolume": "apache",
-          "containerPath": "/etc/apache2/sites-available"
-        }
-      ]
+      "mountPoints": []
     }
   ],
-  "volumes": [
-    {
-      "name": "dafiles",
-      "host": {
-        "sourcePath": "/ecs/dafiles"
-      }
-    },
-    {
-      "name": "certs",
-      "host": {
-        "sourcePath": "/ecs/certs"
-      }
-    },
-    {
-      "name": "dalog",
-      "host": {
-        "sourcePath": "/ecs/dalog"
-      }
-    },
-    {
-      "name": "daconfig",
-      "host": {
-        "sourcePath": "/ecs/daconfig"
-      }
-    },
-    {
-      "name": "dabackup",
-      "host": {
-        "sourcePath": "/ecs/dabackup"
-      }
-    },
-    {
-      "name": "letsencrypt",
-      "host": {
-        "sourcePath": "/ecs/letsencrypt"
-      }
-    },
-    {
-      "name": "apache",
-      "host": {
-        "sourcePath": "/ecs/apache"
-      }
-    }
-  ]
+  "volumes": []
 }
 {% endhighlight %}
 

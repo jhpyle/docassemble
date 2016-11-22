@@ -117,10 +117,10 @@ features:
 
 ## <a name="root"></a>root
 
-This depends on how you configured your web server during [installation].
-Set this to `/` if the [WSGI] application runs from the root of the
-domain.  If your server runs from url path `/da/`, set `root` to
-`/da/`.  Always use a trailing slash.
+This depends on how you configured your web server during
+[installation].  Set this to `/` if the [WSGI] application runs from
+the root of the domain (the default).  If your server runs from url
+path `/da/`, set `root` to `/da/`.  Always use a trailing slash.
 
 ## <a name="url root"></a>url root
 
@@ -131,8 +131,9 @@ can be accessed from the outside world.
 url root: http://example.com
 {% endhighlight %}
 
-This is normally not necessary because the URL is usually provided to
-the web application with every HTTP request.
+It is normally not necessary for **docassemble** to know how it is
+being accessed from the web, because the URL is provided to the web
+application with every HTTP request.
 
 However, there are some circumstances when **docassemble** code runs
 outside the context of an HTTP request.  For example, if you have a
@@ -856,6 +857,32 @@ this host instead of writing them to
 `/usr/share/docassemble/log/docassemble.log` (or whatever other
 directory is set in `log`).
 
+## <a name="redis"></a>Redis server
+
+By default, **docassemble** assumes that the [Redis] server is located
+on the same server as the web server.  You can designate a different
+[Redis] server by setting the `redis` directive:
+
+{% highlight yaml %}
+redis: redis://192.168.0.2
+{% endhighlight %}
+
+The `redis` directive needs to be written in the form of a
+[redis URI].
+
+## <a name="rabbitmq"></a>RabbitMQ server
+
+By default, **docassemble** assumes that the [RabbitMQ] server is located
+on the same server as the web server.  You can designate a different
+[RabbitMQ] server by setting the `rabbitmq` directive:
+
+{% highlight yaml %}
+rabbitmq: amqp://guest@192.168.0.2//
+{% endhighlight %}
+
+The `rabbitmq` directive needs to be written in the form of an [AMQP
+URI].
+
 # <a name="get_config"></a>Using your own configuration variables
 
 Feel free to use the configuration file to pass your own variables to
@@ -946,3 +973,7 @@ first.
 [`send_sms()`]: {{ site.baseurl }}/docs/functions.html#send_sms
 [text messaging interface]: {{ site.baseurl }}/docs/sms.html
 [Twilio]: https://twilio.com
+[Redis]: http://redis.io/
+[RabbitMQ]: https://www.rabbitmq.com/
+[AMQP URI]: https://www.rabbitmq.com/uri-spec.html
+[redis URI]: https://www.iana.org/assignments/uri-schemes/prov/redis

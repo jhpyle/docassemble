@@ -53,9 +53,7 @@ for LaTeX on Mac, and [MiKTeX] for LaTeX on Windows.)
 For instructions on installing **docassemble** in a multi-server
 arrangement, see the [scalability] section.
 
-# Requirements
-
-## Application structure
+# Overview of application structure
 
 Although **docassemble** is a [Python] application, it requires more
 than a `pip install` to install.
@@ -99,9 +97,9 @@ applications are running.)
 
 It is highly recommended that you run **docassemble** over HTTPS,
 since the web application uses a password system, and because your
-users' answers to interview questions may be confidential.  The
+users' answers to interview questions may be confidential.  (The
 [Docker] startup process can be configured to use [Let's Encrypt] and
-to automatically renew the SSL certificates.
+to automatically renew the SSL certificates.)
 
 Finally, some of **docassemble**'s features depend on the following
 services:
@@ -114,7 +112,7 @@ services:
 The authentication keys for these services can be set up in the
 [configuration].
 
-## Underlying packages
+# Installing underlying packages
 
 Before installing packages, update the package lists.
 
@@ -138,7 +136,8 @@ sudo apt-get install apt-utils tzdata python python-dev wget unzip \
   libjpeg-dev zlib1g-dev libpq-dev logrotate tmpreaper cron pdftk \
   fail2ban libxml2 libxslt1.1 libxml2-dev libxslt1-dev \
   libcurl4-openssl-dev libssl-dev redis-server rabbitmq-server \
-  libreoffice libtool libtool-bin pacpl syslog-ng rsync s3cmd curl mktemp
+  libreoffice libtool libtool-bin pacpl syslog-ng rsync s3cmd \
+  curl mktemp dnsutils
 {% endhighlight %}
 
 **docassemble** depends on version 5.0.1 or later of the
@@ -326,14 +325,17 @@ sudo cp ./docassemble/Docker/cron/docassemble-cron-weekly.sh /etc/cron.weekly/do
 sudo cp ./docassemble/Docker/cron/docassemble-cron-daily.sh /etc/cron.daily/docassemble
 sudo cp ./docassemble/Docker/cron/docassemble-cron-hourly.sh /etc/cron.hourly/docassemble
 sudo cp ./docassemble/Docker/docassemble.conf /etc/apache2/conf-available/
+sudo cp ./docassemble/Docker/docassemble-site.conf /etc/apache2/sites-available/docassemble.conf
 sudo cp ./docassemble/Docker/docassemble-supervisor.conf /etc/supervisor/conf.d/docassemble.conf
 {% endhighlight %}
 
 The `/etc/apache2/conf-available/docassemble.conf` file contains
 instructions for [Apache] to use the virtual environment to run the
-**docassemble** web application.
+**docassemble** web application.  The
+`/etc/apache2/sites-available/docassemble.conf` file contains [Apache]
+site configuration directives for the **docassemble** web application.
 
-# Setting up the web server
+# Setting up the web application
 
 Enable the [Apache] [wsgi], [xsendfile], [rewrite], [proxy], [proxy_http],
 and [proxy_wstunnel] modules, if they are not already enabled, by
@@ -358,9 +360,16 @@ sudo vi /usr/share/docassemble/config/config.yml
 
 At the very least, you should edit the `secretkey` and
 `password_secretkey` values and set them to something random and
-unique to your site.
+unique to your site.  By default, **docassemble** is available at the
+root of your site.  That is, if your domain is `example.com`,
+**docassemble** will be available at `http://example.com` or
+`https://example.com`.  If you would like it to be available at
+`http://example.com/docassemble`, you will need to change the [`root`]
+directive to `/docassemble/` and the [`url root`] directive to
+`http://example.com/docassemble`.
 
-Make sure that everything can be read and written by the web server:
+Make sure that everything in the **docassemble** directory can be read
+and written by the web server:
 
 {% highlight bash %}
 sudo chown -R www-data.www-data /usr/share/docassemble
@@ -369,95 +378,50 @@ sudo chown -R www-data.www-data /usr/share/docassemble
 The [configuration] file needs to be readable and writeable by the web
 server so that you can edit it through the web application.
 
-Edit `/etc/apache2/sites-available/000-default.conf` and set it to something like
-the following:
+Then, edit the [Apache] site configuration and make any changes you
+need to make so that **docassemble** can coexist with your other web
+applications.  You should edit at least the `ServerAdmin` and
+`ServerName` lines.  If you changed the [`root`] directive in the
+[configuration], edit the `WSGIScriptAlias` lines in the [Apache] site
+configuration.
 
-{% highlight text %}
-<VirtualHost *:80>
-    ServerAdmin webmaster@localhost
-    ServerName docassemble.example.com
-    DocumentRoot /var/www/html
-    <IfModule mod_ssl.c>
-	RewriteEngine On
-	RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
-    </IfModule>
-    RewriteEngine On
-    RewriteCond %{REQUEST_URI}     ^/ws/socket.io         [NC]
-    RewriteCond %{QUERY_STRING}    transport=websocket    [NC]
-    RewriteRule /ws/(.*)           ws://localhost:5000/$1 [P,L]
-    ProxyPass /ws/ http://localhost:5000/
-    ProxyPassReverse /ws/ http://localhost:5000/
-    <IfModule !mod_ssl.c>
-	XSendFile on
-	XSendFilePath /usr
-	XSendFilePath /tmp
-	WSGIDaemonProcess docassemble.webserver user=www-data group=www-data threads=5
-	WSGIScriptAlias / /usr/share/docassemble/webapp/docassemble.wsgi
-	<Directory /usr/share/docassemble/webapp>
-	    WSGIProcessGroup docassemble.webserver
-	    WSGIApplicationGroup %{GLOBAL}
-	    AllowOverride none
-	    Require all granted
-	</Directory>
-    </IfModule>
-    Alias /robots.txt /var/www/html/robots.txt
-    Alias /favicon.ico /var/www/html/favicon.ico
-    ErrorLog /var/log/apache2/error.log
-    CustomLog /var/log/apache2/access.log combined
-</VirtualHost>
-<IfModule mod_ssl.c>
-    <VirtualHost *:443>
-        ServerAdmin webmaster@example.com
-        ServerName docassemble.example.com
-        SSLEngine on
-        SSLCertificateFile /etc/ssl/docassemble/docassemble.crt
-        SSLCertificateKeyFile /etc/ssl/docassemble/docassemble.key 
-        SSLCertificateChainFile /etc/ssl/docassemble/docassemble.ca.pem
-        XSendFile on
-        XSendFilePath /usr
-        XSendFilePath /tmp
-        RewriteEngine On
-        RewriteCond %{REQUEST_URI}      ^/wss/socket.io         [NC]
-        RewriteCond %{QUERY_STRING}     transport=websocket     [NC]
-        RewriteRule /wss/(.*)           ws://localhost:5000/$1 [P,L]
-        ProxyPass /wss/ http://localhost:5000/
-        ProxyPassReverse /wss/ http://localhost:5000/
-        WSGIDaemonProcess docassemble.webserver user=www-data group=www-data threads=5
-        WSGIScriptAlias / /usr/share/docassemble/webapp/docassemble.wsgi
-        <Directory /usr/share/docassemble/webapp>
-            WSGIProcessGroup docassemble.webserver
-            WSGIApplicationGroup %{GLOBAL}
-            AllowOverride none
-            Require all granted
-        </Directory>
-        Alias /robots.txt /var/www/html/robots.txt
-        Alias /favicon.ico /var/www/html/favicon.ico
-        ErrorLog /var/log/apache2/error.log
-        CustomLog /var/log/apache2/access.log combined
-    </VirtualHost>
-</IfModule>
+{% highlight bash %}
+sudo vi /etc/apache2/sites-available/docassemble.conf
 {% endhighlight %}
 
-You should edit at least the `ServerAdmin` and `ServerName` lines.
+If your **docassemble** interviews are not thread-safe, for example
+because different interviews on your server use different locales,
+change `threads=5` to `processes=5 threads=1`.  This will cause
+[Apache] to run [WSGI] in a "prefork" configuration.  This is slower
+than the multi-thread configuration.  See [`update_locale()`] for more
+information about **docassemble** and thread safety.
 
-Note that the HTTPS configuration refers to SSL certificates located
-in `/etc/ssl/docassemble/`.  If you do not have certificates yet, you
-can put some self-signed certificates there, just so [Apache] doesn't
-fail to start for the reason that these files are non-existent:
+Note that the HTTPS part of the configuration refers to SSL
+certificates located in `/etc/ssl/docassemble/`.  If you do not have
+certificates yet, you can put some self-signed certificates there,
+just so [Apache] doesn't fail to start for the reason that these files
+are non-existent:
 
 {% highlight bash %}
 sudo mkdir -p /etc/ssl/docassemble/
 sudo cp ./docassemble/Docker/ssl/* /etc/ssl/docassemble/
 {% endhighlight %}
 
-Finally, enable the `docassemble.conf` [Apache] configuration file
-that you installed earlier, which ensures that the [WSGI] application
-(the `docassemble.webserver` application referenced in the [Apache]
-configuration file) runs using the [Python] virtual environment that
-you set up.
+Finally, enable the [Apache] configuration files that you installed
+earlier.
 
-{% highlight text %}
+{% highlight bash %}
 sudo a2enconf docassemble
+sudo a2ensite docassemble
+{% endhighlight %}
+
+If you did not change the [`root`] directive in the [configuration],
+you should make sure the default [Apache] site configuration is
+disabled, or else it will conflict with the **docassemble** site
+configuration:
+
+{% highlight bash %}
+sudo a2dissite 000-default
 {% endhighlight %}
 
 Note that the [Apache] configuration file will forward HTTP to HTTPS
@@ -474,16 +438,6 @@ and if you wish to use plain HTTP, run
 sudo a2dismod ssl
 {% endhighlight %}
 
-If there are other applications sharing the [Apache] web server, you
-can change the configuration to do what you want.
-
-If your **docassemble** interviews are not thread-safe, for example
-because different interviews on your server use different locales,
-change `threads=5` to `processes=5 threads=1`.  This will cause
-[Apache] to run [WSGI] in a "prefork" configuration.  This is slower
-than the multi-thread configuration.  See [`update_locale()`] for more
-information about **docassemble** and thread safety.
-
 # Setting up the SQL server
 
 `docassemble` uses a SQL database.  These instructions assume you are
@@ -495,10 +449,10 @@ echo "create role docassemble with login password 'abc123'; create database doca
 sudo -H -u www-data bash -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.create_tables"
 {% endhighlight %}
 
-Note that these commands create a "role" in the database server called
-`docassemble` with the password `abc123`, and note that the
+Note that these commands create a "role" in the [PostgreSQL] server
+called `docassemble` with the password `abc123`, and note that the
 [configuration] file, `/usr/share/docassemble/config/config.yml`,
-contains these same values under the `db` directive.
+contains these same values under the [`db`] directive.
 
 (If you decide to store your [configuration] file in a location other
 than `/usr/share/docassemble/config/config.yml`, note that the
@@ -554,8 +508,27 @@ mail server.
 
 # Start the server and background processes
 
-Finally, restart [Apache] and [supervisor] (which we are assuming are
-already running):
+Before starting **docassemble**, make sure that [Redis] and [RabbitMQ]
+are already running.
+
+To check [Redis], do:
+
+{% highlight bash %}
+redis-cli ping
+{% endhighlight %}
+
+If it does not respond with `PONG`, then there is a problem with [Redis].
+
+To check [RabbitMQ], do:
+
+{% highlight bash %}
+sudo rabbitmqctl status
+{% endhighlight %}
+
+If it responds with "Error: unable to connect to node . . ." then
+there is a problem with [RabbitMQ].
+
+Finally, restart [Apache] and [supervisor]:
 
 {% highlight bash %}
 sudo /etc/init.d/apache2 restart
@@ -571,74 +544,6 @@ sudo systemctl restart supervisor.service
 
 You will find **docassemble** running at http://example.com/da.
 
-# Using different web servers and/or SQL database backends
-
-**docassemble** is not dependent on [Apache] or [PostgreSQL].  Other web
-servers that can host Python [WSGI] applications (e.g., [nginx] with
-[uWSGI]) could be used.
-
-**docassemble** uses [SQLAlchemy] to communicate with the SQL back
-end, so you can edit the [configuration] to point to another type of
-database system, if supported by [SQLAlchemy].  **docassemble** does
-not do fancy things with SQL, so most backends should work without a
-problem.  Any backend that you use must support column definitions
-with `server_default=db.func.now()`.
-
-# Upgrading **docassemble**
-
-To upgrade a local installation of **docassemble** and its
-dependencies, do the following.  (This assumes that in the past you
-cloned **docassemble** into the directory `docassemble` in the current
-directory.)
-
-{% highlight bash %}
-cd docassemble
-git pull
-sudo su www-data
-source /usr/share/docassemble/local/bin/activate
-pip install --upgrade \
-'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
-./docassemble \
-./docassemble_base \
-./docassemble_demo \
-./docassemble_webapp
-exit
-{% endhighlight %}
-
-If you get any errors while upgrading, try doing the following first:
-
-{% highlight bash %}
-sudo su www-data
-source /usr/share/docassemble/local/bin/activate
-pip uninstall docassemble
-pip uninstall docassemble.base
-pip uninstall docassemble.demo
-pip uninstall docassemble.webapp
-{% endhighlight %}
-
-Sometimes, new versions of docassemble require additional database
-tables or additional columns in tables.  Normally, the installation
-script will take care of these issues, but if there are problems, you
-can reset your database by following these steps.
-
-First, if you are running the web server on the same machine that is
-running the database server, stop the web server.  E.g., if you are using [Docker]:
-
-{% highlight bash %}
-supervisorctl stop apache2
-{% endhighlight %}
-
-Then run the following commands as root:
-
-{% highlight bash %}
-su -c "dropdb docassemble" postgres
-su -c "createdb -O docassemble docassemble" postgres
-su -c "/usr/share/docassemble/local/bin/python -m docassemble.webapp.create_tables" www-data
-rm -rf /usr/share/docassemble/files/0*
-{% endhighlight %}
-
-Then, restart the web server again.
-
 # Debugging problems
 
 Log files to check include:
@@ -653,8 +558,9 @@ every time)
 If you get an error in the browser that looks like a standard [Apache]
 error message, look in `/var/log/apache2/error.log`.  If you get an
 abbreviated message, the error message could be in `/tmp/flask.log`.
-Usually, however, the error message will appear in the web browser.
-To get the context of an error, log in as a developer and check the
+If there is a problem with the coding of an interview, the error
+message will typically appear in the web browser.  To get the context
+of an error, log in to **docassemble** as a developer and check the
 Logs from the main menu.  The main **docassemble** log file is in
 `/usr/share/docassemble/log/docassemble.log`.
 
@@ -762,6 +668,86 @@ source /usr/share/docassemble/local/bin/activate
 If you encounter any errors, please register an "issue" on the
 **docassemble** [issues page]({{ site.github.repository_url }}/issues).
 
+# Using different web servers and/or SQL database backends
+
+**docassemble** is not dependent on [Apache] or [PostgreSQL].  Other web
+servers that can host Python [WSGI] applications (e.g., [nginx] with
+[uWSGI]) could be used.
+
+**docassemble** uses [SQLAlchemy] to communicate with the SQL back
+end, so you can edit the [configuration] to point to another type of
+database system, if supported by [SQLAlchemy].  **docassemble** does
+not do fancy things with SQL, so most backends should work without a
+problem.  Any backend that you use must support column definitions
+with `server_default=db.func.now()`.
+
+# Running services on different machines
+
+You can run the SQL server, [Redis], and [RabbitMQ] services on a
+different machine.  Just edit the [`db`], [`redis`], and [`rabbitmq`]
+directives in the [configuration].
+
+For instructions on installing **docassemble** in a multi-server
+arrangement, see the [scalability] section.
+
+# Upgrading **docassemble**
+
+To upgrade a local installation of **docassemble** and its
+dependencies, do the following.  (This assumes that in the past you
+cloned **docassemble** into the directory `docassemble` in the current
+directory.)
+
+{% highlight bash %}
+cd docassemble
+git pull
+sudo su www-data
+source /usr/share/docassemble/local/bin/activate
+pip install --upgrade \
+'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
+./docassemble \
+./docassemble_base \
+./docassemble_demo \
+./docassemble_webapp
+exit
+{% endhighlight %}
+
+If you get any errors while upgrading, try doing the following first:
+
+{% highlight bash %}
+sudo su www-data
+source /usr/share/docassemble/local/bin/activate
+pip uninstall docassemble
+pip uninstall docassemble.base
+pip uninstall docassemble.demo
+pip uninstall docassemble.webapp
+{% endhighlight %}
+
+Sometimes, new versions of docassemble require additional database
+tables or additional columns in tables.  Normally, the installation
+script will take care of these issues, but if there are problems, you
+can reset your database by following these steps.
+
+Run the following commands as root:
+
+{% highlight bash %}
+su -c "dropdb docassemble" postgres
+su -c "createdb -O docassemble docassemble" postgres
+su -c "/usr/share/docassemble/local/bin/python -m docassemble.webapp.create_tables" www-data
+rm -rf /usr/share/docassemble/files/0*
+{% endhighlight %}
+
+Then, restart [Apache] and [supervisor].
+
+{% highlight bash %}
+sudo systemctl restart apache2.service
+sudo systemctl restart supervisor.service
+{% endhighlight %}
+
+Other times, a **docassemble** upgrade involves changes to the
+[Apache] configuration, [supervisor] configuration, or auxillary
+files.  In this case, you will need to manually reinstall
+**docassemble**.
+
 [dependencies]: {{ site.baseurl }}/docs/requirements.html
 [install it using Docker]: {{ site.baseurl }}/docs/docker.html
 [Docker]: {{ site.baseurl }}/docs/docker.html
@@ -770,6 +756,11 @@ If you encounter any errors, please register an "issue" on the
 [Nodebox English Linguistics library]: https://www.nodebox.net/code/index.php/Linguistics
 [site.USER_BASE]: https://pythonhosted.org/setuptools/easy_install.html#custom-installation-locations
 [configuration]: {{ site.baseurl }}/docs/config.html
+[`root`]: {{ site.baseurl }}/docs/config.html#root
+[`url root`]: {{ site.baseurl }}/docs/config.html#url root
+[`db`]: {{ site.baseurl }}/docs/config.html#db
+[`redis`]: {{ site.baseurl }}/docs/config.html#redis
+[`rabbitmq`]: {{ site.baseurl }}/docs/config.html#rabbitmq
 [Perl Audio Converter]: http://vorzox.wix.com/pacpl
 [pacpl]: http://vorzox.wix.com/pacpl
 [ffmpeg]: https://www.ffmpeg.org/
