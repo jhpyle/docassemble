@@ -847,6 +847,8 @@ class DAFileCollection(DAObject):
     feature generates objects of this type.
 
     """
+    def init(self, **kwargs):
+        self.info = dict()
     pass
 
 class DAFileList(DAList):

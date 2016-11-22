@@ -6,6 +6,7 @@
     - alignment
     - single-spacing
     - formatting
+    - attachment-code
     - allow-emailing-false
 - Fields:
     - text-field

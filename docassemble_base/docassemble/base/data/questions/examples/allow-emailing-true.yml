@@ -1,6 +1,8 @@
 metadata:
   title: Allowing documents to be e-mailed
   documentation: "http://docassemble.org/docs/documents.html#allow emailing"
+  example start: 1
+  example end: 1
 ---
 question: Your document is ready.
 sets: provide_user_with_document

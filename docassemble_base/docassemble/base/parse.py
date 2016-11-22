@@ -418,6 +418,7 @@ class Question:
         self.decorations = None
         self.audiovideo = None
         self.allow_emailing = True
+        self.compute_attachment = None
         self.can_go_back = True
         self.fields_used = set()
         self.names_used = set()
@@ -769,6 +770,10 @@ class Question:
             self.attachments = self.process_attachment_list(data['attachment'])
         elif 'attachments' in data:
             self.attachments = self.process_attachment_list(data['attachments'])
+        elif 'attachment code' in data:
+            self.process_attachment_code(data['attachment code'])
+        elif 'attachments code' in data:
+            self.process_attachment_code(data['attachments code'])
         if 'allow emailing' in data:
             self.allow_emailing = data['allow emailing']
         # if 'role' in data:
@@ -1310,12 +1315,18 @@ class Question:
         return word("No")
     def maybe(self):
         return word("I don't know")
+    def process_attachment_code(self, sourcecode):
+        try:
+            self.compute_attachment = compile(sourcecode, '', 'eval')
+            self.sourcecode = sourcecode
+        except:
+            logmessage("Compile error in code:\n" + unicode(sourcecode) + "\n" + str(sys.exc_info()[0]))
+            raise
     def process_attachment_list(self, target):
         if type(target) is list:
             return(list(map((lambda x: self.process_attachment(x)), target)))
         else:
             return([self.process_attachment(target)])
-
     def process_attachment(self, target):
         metadata = dict()
         variable_name = str()
@@ -1636,6 +1647,12 @@ class Question:
         items = list()
         for x in self.attachments:
             items.append([x, self.prepare_attachment(x, user_dict, **kwargs)])
+        if self.compute_attachment is not None:
+            computed_attachment_list = eval(self.compute_attachment, user_dict)
+            if type(computed_attachment_list) is list:
+                for x in computed_attachment_list:
+                    if str(type(x)) == "<class 'docassemble.base.core.DAFileCollection'>" and 'attachment' in x.info:
+                        items.append([x.info['attachment'], self.prepare_attachment(x.info['attachment'], user_dict, **kwargs)])
         for item in items:
             result_list.append(self.finalize_attachment(item[0], item[1], user_dict))
         return result_list
@@ -1749,16 +1766,21 @@ class Question:
             elif doc_format in ['html']:
                 result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True, question=self)
         if attachment['variable_name']:
-            string = attachment['variable_name'] + " = DAFileCollection('" + attachment['variable_name'] + "')"
+            string = "import docassemble.base.core"
+            exec(string, user_dict)                        
+            string = attachment['variable_name'] + " = docassemble.base.core.DAFileCollection('" + attachment['variable_name'] + "')"
             #logmessage("Executing " + string + "\n")
             exec(string, user_dict)
+            user_dict['_attachment_info'] = dict(name=attachment['name'].text(user_dict), filename=attachment['filename'].text(user_dict), description=attachment['description'].text(user_dict), attachment=attachment)
+            exec(attachment['variable_name'] + '.info = _attachment_info', user_dict)
+            del user_dict['_attachment_info']
             for doc_format in result['file']:
                 variable_string = attachment['variable_name'] + '.' + doc_format
                 filename = result['filename'] + '.' + doc_format
                 file_number, extension, mimetype = save_numbered_file(filename, result['file'][doc_format], yaml_file_name=self.interview.source.path)
                 if file_number is None:
                     raise Exception("Could not save numbered file")
-                string = variable_string + " = DAFile('" + variable_string + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
+                string = variable_string + " = docassemble.base.core.DAFile('" + variable_string + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
                 #logmessage("Executing " + string + "\n")
                 exec(string, user_dict)
         return(result)

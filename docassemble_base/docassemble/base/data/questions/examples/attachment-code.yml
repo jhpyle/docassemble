@@ -1,0 +1,41 @@
+metadata:
+  title: Computed attachment list
+  example start: 1
+  example end: 4
+  documentation: "http://docassemble.org/docs/documents.html#attachment code"
+---
+attachment:
+  name: The first document
+  filename: document_one
+  description: |
+    This is the first document
+    of a series.
+  variable name: doc_one
+  content: |
+    Hello, world number one!
+---
+attachment:
+  name: The second document
+  filename: document_two
+  description: |
+    This is the second document
+    of a series.
+  variable name: doc_two
+  content: |
+    Hello, world number two!
+---
+attachment:
+  name: The third document
+  filename: document_three
+  description: |
+    This is the third document
+    of a series.
+  variable name: doc_three
+  content: |
+    Hello, world number three!
+---
+mandatory: true
+question: |
+  Here are your documents!
+attachment code: |
+  [doc_one, doc_two, doc_three]
