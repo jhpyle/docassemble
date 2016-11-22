@@ -2,3 +2,13 @@ en:
   First subdivision: State
   Second subdivision: County
   Third subdivision: Municipality
+  "/monitor": the Monitor
+  "/logs": the Logs
+  "/packages": Package Management
+  "/playground": the Playground
+  "/utilities": the Utilities
+  "/userlist": the User List
+  "/config": the Configuration
+  "/interviews": the list of interviews
+  "/user/profile": your user profile
+  "/updatepackages": the package update page

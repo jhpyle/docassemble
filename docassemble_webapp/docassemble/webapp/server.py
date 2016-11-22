@@ -733,6 +733,14 @@ def custom_login():
     # Process GET or invalid POST
     return render_template(user_manager.login_template, page_title=word('Sign In'), tab_title=word('Sign In'), form=login_form, login_form=login_form, register_form=register_form)
 
+def unauthenticated():
+    flash(word("You need to log in before you can access") + " " + word(request.path), 'error')
+    return redirect(url_for('user.login', next=fix_http(request.path)))
+
+def unauthorized():
+    flash(word("You are not authorized to access") + " " + word(request.path), 'error')
+    return redirect(url_for('user.login', next=fix_http(request.path)))
+
 def setup_app(app, db):
     from docassemble.webapp.users.forms import MyRegisterForm
     from docassemble.webapp.users.views import user_profile_page
@@ -740,16 +748,13 @@ def setup_app(app, db):
     #from docassemble.webapp.pages import views
     #from docassemble.webapp.users import views
     db_adapter = SQLAlchemyAdapter(db, User, UserAuthClass=UserAuth)
-    user_manager = UserManager(db_adapter, app, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, login_view_function=custom_login)
+    user_manager = UserManager(db_adapter, app, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, login_view_function=custom_login, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated)
     return(app)
 
 setup_app(app, db)
 lm = LoginManager(app)
 lm.login_view = 'user.login'
 
-@lm.unauthorized_handler
-def unauthorized():
-    return redirect(url_for('user.login', next=fix_http(request.url)))
 
 supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
 if supervisor_url:
@@ -1078,6 +1083,10 @@ def exit():
 def cleanup_sessions():
     kv_session.cleanup_sessions()
     return render_template('base_templates/blank.html')
+
+@app.route("/health_check", methods=['GET'])
+def health_check():
+    return render_template('pages/health_check.html', content="OK")
 
 def add_timestamps(the_dict, manual_user_id=None):
     nowtime = datetime.datetime.utcnow()
