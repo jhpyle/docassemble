@@ -229,6 +229,12 @@ else:
 connect_string = docassemble.webapp.database.connection_string()
 alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
 
+def fix_http(url):
+    if HTTP_TO_HTTPS:
+        return re.sub(r'^http:', 'https:', url)
+    else:
+        return url
+
 def url_for(*pargs, **kwargs):
     if HTTP_TO_HTTPS:
         kwargs['_external'] = True
@@ -740,6 +746,10 @@ def setup_app(app, db):
 setup_app(app, db)
 lm = LoginManager(app)
 lm.login_view = 'user.login'
+
+@lm.unauthorized_handler
+def unauthorized():
+    return redirect(url_for('user.login', next=fix_http(request.url)))
 
 supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
 if supervisor_url:
