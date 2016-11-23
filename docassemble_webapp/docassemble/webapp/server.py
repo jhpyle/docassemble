@@ -672,12 +672,6 @@ def _do_login_user(user, password, secret, next, remember_me=False):
     response.set_cookie('secret', newsecret)
     return response
 
-def _endpoint_url(endpoint):
-    url = '/'
-    if endpoint:
-        url = url_for(endpoint)
-    return url
-
 def custom_login():
     #logmessage("Got to login page")
     user_manager = current_app.user_manager
@@ -735,11 +729,11 @@ def custom_login():
 
 def unauthenticated():
     flash(word("You need to log in before you can access") + " " + word(request.path), 'error')
-    return redirect(url_for('user.login', next=fix_http(request.path)))
+    return redirect(url_for('user.login', next=fix_http(request.url)))
 
 def unauthorized():
     flash(word("You are not authorized to access") + " " + word(request.path), 'error')
-    return redirect(url_for('user.login', next=fix_http(request.path)))
+    return redirect(url_for('user.login', next=fix_http(request.url)))
 
 def setup_app(app, db):
     from docassemble.webapp.users.forms import MyRegisterForm
