@@ -9,7 +9,7 @@ from docassemble.base.functions import word
 from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, KVStore
-from docassemble.webapp.users.models import User, UserAuth, Role, UserRoles, UserDict, UserDictKeys, UserDictLock, TempUser, ChatLog
+from docassemble.webapp.users.models import User, UserAuth, Role, UserRoles, UserDict, UserDictKeys, TempUser, ChatLog # UserDictLock
 from docassemble.webapp.update import get_installed_distributions
 from sqlalchemy import create_engine, MetaData
 import docassemble.webapp.database

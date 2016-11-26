@@ -59,12 +59,12 @@ class UserDictKeys(db.Model):
     key = db.Column(db.String(250))
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
 
-class UserDictLock(db.Model):
-    __tablename__ = dbtableprefix + "userdictlock"
-    indexno = db.Column(db.Integer(), primary_key=True)
-    filename = db.Column(db.Text())
-    key = db.Column(db.String(250))
-    #locktime = db.Column(db.DateTime(), server_default=db.func.now())
+# class UserDictLock(db.Model):
+#     __tablename__ = dbtableprefix + "userdictlock"
+#     indexno = db.Column(db.Integer(), primary_key=True)
+#     filename = db.Column(db.Text())
+#     key = db.Column(db.String(250))
+#     #locktime = db.Column(db.DateTime(), server_default=db.func.now())
 
 class TempUser(db.Model):
     __tablename__ = dbtableprefix + 'tempuser'

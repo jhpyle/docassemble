@@ -65,11 +65,11 @@ from rauth import OAuth1Service, OAuth2Service
 from flask_kvsession import KVSessionExtension
 from simplekv.memory.redisstore import RedisStore
 #from simplekv.db.sql import SQLAlchemyStore
-from sqlalchemy import create_engine, MetaData, Sequence, or_, and_
+from sqlalchemy import or_, and_
 from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, Messages
-from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, UserDictLock, TempUser, ChatLog
+from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, TempUser, ChatLog # UserDictLock
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, hostname, in_celery
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -246,8 +246,8 @@ def my_default_url(error, endpoint, values):
 
 app.handle_url_build_error = my_default_url
 
-engine = create_engine(alchemy_connect_string, convert_unicode=True)
-metadata = MetaData(bind=engine)
+#engine = create_engine(alchemy_connect_string, convert_unicode=True)
+#metadata = MetaData(bind=engine)
 #store = SQLAlchemyStore(engine, metadata, 'kvstore')
 
 redis_host = daconfig.get('redis', None)
@@ -3523,10 +3523,12 @@ def update_attachment_info(the_user_code, the_user_dict, the_interview_status, s
 
 def obtain_lock(user_code, filename):
     #logmessage("Obtain lock: " + str(user_code) + " " + str(filename))
+    key = 'da:lock:' + user_code + ':' + filename
     found = False
     count = 4
     while count > 0:
-        record = UserDictLock.query.filter_by(key=user_code, filename=filename).first()
+        #record = UserDictLock.query.filter_by(key=user_code, filename=filename).first()
+        record = r.get(key)
         if record:
             time.sleep(1.0)
         else:
@@ -3536,15 +3538,19 @@ def obtain_lock(user_code, filename):
         count -= 1
     if found:
         release_lock(user_code, filename)
-    new_record = UserDictLock(key=user_code, filename=filename)
-    db.session.add(new_record)
-    db.session.commit()
+    #new_record = UserDictLock(key=user_code, filename=filename)
+    #db.session.add(new_record)
+    #db.session.commit()
+    pipe = r.pipeline()
+    pipe.set(key, 1)
+    pipe.expire(key, 4)
     
 def release_lock(user_code, filename):
     #logmessage("Release lock: " + str(user_code) + " " + str(filename))
-    UserDictLock.query.filter_by(key=user_code, filename=filename).delete()
-    db.session.commit()
-
+    #UserDictLock.query.filter_by(key=user_code, filename=filename).delete()
+    #db.session.commit()
+    key = 'da:lock:' + user_code + ':' + filename
+    r.delete(key)
 
 def make_navbar(status, page_title, page_short_title, steps, show_login, chat_info):
     navbar = """\
@@ -7285,10 +7291,10 @@ def interview_list():
 #     response.set_cookie('secret', newsecret)
 #     return response
 
-@app.teardown_appcontext
-def close_db(error):
-    if hasattr(db, 'engine'):
-        db.engine.dispose()
+# @app.teardown_appcontext
+# def close_db(error):
+#     if hasattr(db, 'engine'):
+#         db.engine.dispose()
 
 # @app.route('/webrtc')
 # def webrtc():
