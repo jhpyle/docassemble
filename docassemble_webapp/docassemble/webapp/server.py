@@ -6957,11 +6957,11 @@ def restart_on(host):
         the_url = host.url
     if re.search(r':(web|all):', host.role):
         args = [SUPERVISORCTL, '-s', the_url, 'start reset']
-    result = call(args)
-    if result == 0:
-        logmessage("restart_on: sent reset to " + str(host.hostname))
-    else:
-        logmessage("restart_on: call to supervisorctl with reset on " + str(host.hostname) + " was not successful")
+        result = call(args)
+        if result == 0:
+            logmessage("restart_on: sent reset to " + str(host.hostname))
+        else:
+            logmessage("restart_on: call to supervisorctl with reset on " + str(host.hostname) + " was not successful")
     # if re.search(r':(celery|all):', host.role):
     #     args = [SUPERVISORCTL, '-s', the_url, 'restart celery']
     # result = call(args)
