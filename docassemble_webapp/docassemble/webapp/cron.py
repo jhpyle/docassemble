@@ -131,3 +131,6 @@ if __name__ == "__main__":
         clear_old_interviews()
     with app.app_context():
         run_cron(cron_type)
+    db.engine.dispose()
+    sys.exit(0)
+

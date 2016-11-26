@@ -6,6 +6,7 @@ import socket
 import tempfile
 import threading
 import subprocess
+import xmlrpclib
 
 from distutils.version import LooseVersion
 if __name__ == "__main__":
@@ -13,8 +14,30 @@ if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)
 from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.packages.models import Package, Install, PackageAuth
+from docassemble.webapp.core.models import Supervisors
 from docassemble.base.logger import logmessage
 from docassemble.webapp.files import SavedFile
+
+supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
+if supervisor_url:
+    USING_SUPERVISOR = True
+else:
+    USING_SUPERVISOR = False
+
+def remove_inactive_hosts():
+    if USING_SUPERVISOR:
+        to_delete = set()
+        for host in Supervisors.query.all():
+            if host.hostname == hostname:
+                continue
+            try:
+                socket.gethostbyname(host.hostname)
+                server = xmlrpclib.Server(host.url + '/RPC2')
+                result = server.supervisor.getState()
+            except:
+                to_delete.add(host.id)
+        for id_to_delete in to_delete:
+            Supervisors.query.filter_by(id=id_to_delete).delete()
 
 def check_for_updates():
     logmessage("check_for_update: starting")
@@ -226,6 +249,7 @@ if __name__ == "__main__":
     import docassemble.webapp.database
     app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
     check_for_updates()
+    remove_inactive_hosts()
     from docassemble.base.config import daconfig
     logmessage("update: touched wsgi file")
     wsgi_file = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
