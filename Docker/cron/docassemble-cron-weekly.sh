@@ -2,6 +2,15 @@
 
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 
+if [ "${S3ENABLE:-null}" == "null" ] && [ "${S3BUCKET:-null}" != "null" ]; then
+    export S3ENABLE=true
+fi
+
+if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "${S3ACCESSKEY:-null}" != "null" ] && [ "${S3SECRETACCESSKEY:-null}" != "null" ]; then
+    export AWS_ACCESS_KEY_ID=$S3ACCESSKEY
+    export AWS_SECRET_ACCESS_KEY=$S3SECRETACCESSKEY
+fi
+
 if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
     /usr/share/docassemble/webapp/run-cron.sh cron_weekly
 fi
@@ -15,6 +24,15 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 		./letsencrypt-auto renew
 		/etc/init.d/apache2 stop
 		supervisorctl --serverurl http://localhost:9001 start apache2
+		if [ "${S3ENABLE:-false}" == "true" ]; then
+		    cd /
+		    if [ "${USELETSENCRYPT:-none}" != "none" ]; then
+			rm -f /tmp/letsencrypt.tar.gz
+			tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
+			s3cmd -q put /tmp/letsencrypt.tar.gz 's3://'${S3BUCKET}/letsencrypt.tar.gz
+		    fi
+		    s3cmd -q sync /etc/apache2/sites-available/ 's3://'${S3BUCKET}/apache/
+		fi
 	    fi
 	fi
     fi

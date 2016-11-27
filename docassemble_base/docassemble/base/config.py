@@ -71,7 +71,7 @@ def load(**kwargs):
             sys.stderr.write("Could not get hostname from ec2\n")
             sys.exit(1)
     else:
-        hostname = socket.gethostname()
+        hostname = os.getenv('SERVERHOSTNAME', socket.gethostname())
     if S3_ENABLED:
         import docassemble.webapp.amazon
         s3 = docassemble.webapp.amazon.s3object(s3_config)

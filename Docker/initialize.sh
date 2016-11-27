@@ -183,6 +183,15 @@ if [ -n "$OTHERLOCALES" ]; then
     fi
 fi
 
+if [ -n "$PACKAGES" ]; then
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get clean
+    apt-get update
+    for PACKAGE in "${PACKAGES[@]}"; do
+	apt-get -q -y install $PACKAGE
+    done
+fi
+
 if [ "${TIMEZONE:-undefined}" != "undefined" ]; then
     echo $TIMEZONE > /etc/timezone
     dpkg-reconfigure -f noninteractive tzdata
@@ -271,7 +280,7 @@ if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" = false ]; t
     supervisorctl --serverurl http://localhost:9001 start celery
 fi
 
-if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
+if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ "$APACHERUNNING" = false ]; then
     rm -f /etc/apache2/ports.conf
 fi
 

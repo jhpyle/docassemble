@@ -1,0 +1,128 @@
+#!/usr/bin/env python
+
+# Before running this script, make sure boto3 is installed:
+# sudo apt-get install python-boto3
+# or
+# sudo pip install boto3
+
+import boto3
+import time
+import sys
+import copy
+ec2 = boto3.client('ec2')
+ecs = boto3.client('ecs')
+elb = boto3.client('elbv2')
+autoscale = boto3.client('autoscaling')
+
+def available_instances():
+    instances = list()
+    statuses = ec2.describe_instance_status()
+    for status in statuses['InstanceStatuses']:
+        if status['InstanceStatus']['Status'] == 'ok' and status['SystemStatus']['Status'] == 'ok':
+            instances.append(status['InstanceId'])
+    return instances
+
+def instances_for_service(service):
+    instances = list()
+    for taskarn in ecs.list_tasks(serviceName=service).get('taskArns', list()):
+        for item in ecs.describe_tasks(tasks=[taskarn]).get('tasks', list()):
+            for instance in ecs.describe_container_instances(containerInstances=[item['containerInstanceArn']]).get('containerInstances', list()):
+                instances.append(instance['ec2InstanceId'])
+    return instances
+
+def get_target_groups():
+    result = dict()
+    for tg in elb.describe_target_groups().get('TargetGroups', list()):
+        result[tg['TargetGroupName']] = tg['TargetGroupArn']
+    return result
+
+def get_registered_targets(targetgroup):
+    instances = list()
+    for target in elb.describe_target_health(TargetGroupArn=targetgroup).get('TargetHealthDescriptions', list()):
+        instances.append(target['Target']['Id'])
+    return instances
+
+def get_service_status(servicename):
+    return ecs.describe_services(services=[servicename])['services'][0]
+
+def update_desired_count(service, desired_count):
+    ecs.update_service(service=service, desiredCount=desired_count)
+    while True:
+        result = get_service_status(service)
+        if result['desiredCount'] != result['runningCount']:
+            time.sleep(2)
+        else:
+            break
+
+def fix_web_sockets():
+    target_groups_arns = get_target_groups()
+    web_servers = get_registered_targets(target_groups_arns['daapp'])
+    web_sockets_servers = get_registered_targets(target_groups_arns['dawebsockets'])
+    for server in web_servers:
+        if server not in web_sockets_servers:
+            elb.register_targets(TargetGroupArn=target_groups_arns['dawebsockets'], Targets=[{'Id': server}])
+
+def start_up(the_count=1):
+    update_ec2_instances(the_count + 1)
+    update_desired_count('backend', 1)
+    update_desired_count('daapp', the_count)
+    fix_web_sockets()
+
+def shut_down():
+    update_desired_count('daapp', 0)
+    update_desired_count('backend', 0)
+    update_ec2_instances(0)
+
+def connect_string(service):
+    for instance_id in instances_for_service(service):
+        print "ssh -i oregon.pem ec2-user@" + ec2.describe_instances(InstanceIds=[instance_id])['Reservations'][0]['Instances'][0]['PublicDnsName']
+
+def update_ec2_instances(desired_count):
+    autoscale.set_desired_capacity(AutoScalingGroupName='daapp', DesiredCapacity=desired_count)
+    while True:
+        result = autoscale.describe_auto_scaling_groups(AutoScalingGroupNames=['daapp'])['AutoScalingGroups'][0]
+        if result['DesiredCapacity'] != len(result['Instances']):
+            time.sleep(2)
+        else:
+            break
+    while True:
+        if len(available_instances()) < desired_count:
+            time.sleep(2)
+        else:
+            break
+
+def shutdown_unused_ec2_instances():
+    all_instances = available_instances()
+    used_instances = list()
+    used_instances.extend(instances_for_service('backend'))
+    used_instances.extend(instances_for_service('daapp'))
+    for instance in all_instances:
+        if instance in used_instances:
+            continue
+        autoscale.terminate_instance_in_auto_scaling_group(InstanceId=instance, ShouldDecrementDesiredCapacity=True)
+    while True:
+        result = autoscale.describe_auto_scaling_groups(AutoScalingGroupNames=['daapp'])['AutoScalingGroups'][0]
+        if result['DesiredCapacity'] != len(result['Instances']):
+            time.sleep(2)
+        else:
+            break
+
+dispatch = dict(shutdown_unused_ec2_instances=shutdown_unused_ec2_instances, update_ec2_instances=update_ec2_instances, connect_string=connect_string, shut_down=shut_down, start_up=start_up, fix_web_sockets=fix_web_sockets, update_desired_count=update_desired_count)
+
+arguments = copy.deepcopy(sys.argv)
+
+this_file = arguments.pop(0)
+
+def error_message():
+    print "usage: " + str(this_file) + " <command>\nThe <command> can be one of: " + ', '.join(dispatch.keys())
+
+if len(arguments) == 0:
+    error_message()
+    sys.exit(1)
+
+command = arguments.pop(0)
+if command not in dispatch:
+    error_message()
+    sys.exit(1)
+
+dispatch[command](*arguments)

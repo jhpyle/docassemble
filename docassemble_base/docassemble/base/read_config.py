@@ -1,4 +1,8 @@
 import sys
+import os
+import re
+separator = re.compile(r' *[,;] *')
+
 if __name__ == "__main__":
     import docassemble.base.config
     docassemble.base.config.load(arguments=sys.argv)
@@ -14,6 +18,31 @@ if __name__ == "__main__":
         for locale in daconfig['other locales']:
             print('OTHERLOCALES[' + str(indexno) + ']=' + repr(str(locale)))
             indexno += 1
+    else:
+        other_locales_variable = os.getenv('OTHERLOCALES', None)
+        if other_locales_variable is not None and other_locales_variable != 'null':
+            print('declare -a OTHERLOCALES')
+            print('export OTHERLOCALES')
+            indexno = 0
+            for locale in map(lambda x: x.strip(), separator.split(other_locales_variable)):
+                print('OTHERLOCALES[' + str(indexno) + ']=' + repr(str(locale)))
+                indexno += 1
+    if 'packages' in daconfig and type(daconfig['packages']) is list:
+        print('declare -a PACKAGES')
+        print('export PACKAGES')
+        indexno = 0
+        for package in daconfig['packages']:
+            print('PACKAGES[' + str(indexno) + ']=' + repr(str(package)))
+            indexno += 1
+    else:
+        other_packages_variable = os.getenv('PACKAGES', None)
+        if packages_variable is not None and packages_variable != 'null':
+            print('declare -a PACKAGES')
+            print('export PACKAGES')
+            indexno = 0
+            for package in map(lambda x: x.strip(), separator.split(packages_variable)):
+                print('PACKAGES[' + str(indexno) + ']=' + repr(str(package)))
+                indexno += 1
     if 'db' in daconfig:
         if 'prefix' in daconfig['db'] and daconfig['db']['prefix'] is not None:
             print('export DBPREFIX="' + str(daconfig['db']['prefix']) + '"')
