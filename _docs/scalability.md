@@ -58,13 +58,13 @@ cluster) running two services: "backend" and "app."
 
 The "backend" service consists of a single "task," where the task is
 defined as a single [Docker] "container" running the "image"
-`jhpyle/docassemble` with the environment variable `CONTAINERROLE` set
+`jhpyle/docassemble` with the environment variable [`CONTAINERROLE`] set
 to `sql:redis:rabbitmq:log`.  You will ask for one of these services
 to run (i.e. the "desired count" of this service is set to 1).
 
 The "app" service consists of a single "task," where the task is
 defined as a single [Docker] "container" running the "image"
-`jhpyle/docassemble` with the environment variable `CONTAINERROLE` set
+`jhpyle/docassemble` with the environment variable [`CONTAINERROLE`] set
 to `web:celery`.  You will ask for two of these services to run
 (i.e. the "desired count" of this service is set to 2).  (You will be
 able to change this count in the future.)
@@ -205,20 +205,22 @@ be given the `docassembleInstanceRole` [IAM] role.
 
 Go to [VPC Console] and inspect the description of the default [VPC].
 (If you have more than one [VPC], look for the [VPC] where "Default
-VPC" is "Yes.")  Make a note of the [VPC CIDR] address for the VPC, which will be
-something like `172.68.0.0/16` or `10.1.0.0/16`.
+VPC" is "Yes.")  Make a note of the [VPC CIDR] address for the VPC,
+which will be something like `172.68.0.0/16` or `10.1.0.0/16`.
 
 Go to the [EC2 Console] and set up a new [Security Group] called
 `docassembleSg` with permissions on port 22 (SSH) for all addresses,
-and all traffic for the CIDR address you noted.
+and all traffic for the [CIDR] address you noted.  This will provide
+the "firewall rules" for your servers, so that you can connect to them
+via SSH and so that they can communicate among each other.
 
 Go to the "Launch Configuration" section of the [EC2 Console] and
 create a new [Launch Configuration] called `docassembleLc`.  When it
-asks what [AMI] you want to use, go to Community AMIs, search for the
-keyword "ecs-optimized" and pick the most recent AMI that comes up.
-The AMIs will not be listed in any useful order, so you have to look
-carefully at the names, which contain the dates the AMIs were created.
-As of this writing, the most recent ECS-optimzed AMI is
+asks what [AMI] you want to use, go to "Community AMIs," search for
+the keyword "ecs-optimized" and pick the most recent [AMI] that comes
+up.  The [AMI]s will not be listed in any useful order, so you have to
+look carefully at the names, which contain the dates the [AMI]s were
+created.  As of this writing, the most recent ECS-optimzed [AMI] is
 "amzn-ami-2016.09.b-amazon-ecs-optimized."  Set the "IAM role" of the
 [Launch Configuration] to `docassembleInstanceRole`, the [IAM] role
 you created earlier.  Set the security group to `docassembleSg`, the
@@ -226,15 +228,105 @@ you created earlier.  Set the security group to `docassembleSg`, the
 
 Then go to the "Auto Scaling Groups" section of the [EC2 Console] and
 create a new [Auto Scaling Group] called `docassembleAsg`.  Connect it
-with `docassembleSg`, the [Launch Configuration] you just created.
+with `docassembleLc`, the [Launch Configuration] you just created.
 Use a fixed number of instances without scaling in response to
-[CloudWatch] alarms.  Set the number of instances to 3.
+[CloudWatch] alarms.  Set the number of instances to 3.  Once the
+[Auto Scaling Group] is saved, [AWS] should start running three [EC2]
+instances.  Since you chose an [ECS]-optimized AMI, the instances
+should automatically register with your [ECS] cluster.
+
+The next step is to create an [Application Load Balancer].  The load
+balancer will accept HTTPS requests from the outside world and forward
+them to the application servers as HTTP requests.  It will forward two
+types of requests: regular HTTP requests and [WebSocket] requests.
+(The [live help] features of **docassemble** use the [WebSocket]
+protocol for real time communication between operators and users.)
+The [Application Load Balancer] needs to treat [WebSocket] requests
+differently.  While regular [HTTP] requests can be forwarded randomly
+to any application server, [WebSocket] requests for a given session
+need to be forwarded to the same server every time.
+
+To set up the [Application Load Balancer], first you need to create a
+[Security Group] that will allow communication from the outside world
+through HTTPS.  Go to the "Security Groups" section of the
+[EC2 Console] and create a new [Security Group].  Set the "Security
+group name" to `docassembleLbSg` and set the "Description" to
+"docassemble load balancer security group."  Attach it to your default
+[VPC].  Add one "Inbound" rule, setting "Type" to HTTPS and "Source"
+to "Anywhere."
+
+Then go to the "Target Groups" section of the [EC2 Console] and create
+a new "Target Group."  Set the "Target group name" to `web`, set the
+"Protocol" to HTTP, set the "Port" to 80, and set the "VPC" to your
+default [VPC].  Under "Health check settings," set the "Protocol" to
+HTTP and the "Path" to `/health_check`.  The "health check" is the
+load balancer's way of telling whether a web server is healthy.  The
+path `/health_check` on a **docassemble** web server is a page that
+responds with a simple "OK."  (All the load balancer cares about is
+whether the page returns an [HTTP success code] or not.)
+
+Once that "Target Group" is created, create a second "Target Group"
+called `websocket` with the same settings.  Then, once the `websocket`
+"Target Group" is created, do Actions -> Edit Attributes on it, and
+under "Stickiness," select "Enable load balancer generated cookie
+stickiness."  Keep other settings at their defaults.
+
+Then go to the "Load Balancers" section of the [EC2 Console] and
+create a "Load Balancer."  Select "Application Load Balancer" as the
+type of load balancer.
+
+On the "Configure Load Balancer" page, set the name to
+`docassembleLb`.  Under "Listeners," set the "Load Balancer Protocol"
+to HTTPS, using port 443.  Under "Availability Zones," make sure your
+default [VPC] is selected.  Then select all of the "available subnets"
+by clicking the plus buttons next to each one.  (If it gives you any
+trouble about adding subnets, just add as many subnets as it will let
+you add.)
+
+On the "Configure Security Settings" page, it will ask about SSL
+certificates and security policies.  Accept all of the defaults.  This
+should result in [Amazon] creating an SSL certificate for you.
+
+On the "Configure Security Groups" page, select the `docassembleLbSg`
+[Security Group] you created earlier.
+
+On the "Configure Routing" page, set "Target group" to "Existing
+target group" and select `web` as the "Name" of the Target Group.
+
+Skip past the "Register Targets" page.  On the "Review" page, click
+"Create" to create the Load Balancer.
+
+Once the `docassembleLb` load balancer is created, you need to make a
+manual change to it so that it will use the `websocket` "Target Group"
+you created earlier.  To do this, go to the "Listeners" tab, and open
+up the HTTPS rule by clicking the right arrow icon.  Click "Add rule."
+For the "Path pattern," enter `/ws/*`.  Under "Target group name,"
+select `websocket`.  Keep "Priority" as 1.  Then click "Save."
+
+Now the `docassembleLb` load balancer will listen to 443 and act on
+requests according to two "Rules."  The first rule says that if the
+path of the HTTPS request starts with `/ws/`, which is
+**docassemble**'s path for [WebSocket] communication, then the request
+will be forwarded using the `websocket` "Target Group," which has the
+"stickiness" feature enabled.  The second rule says that all other
+traffic will use the `web` "Target Group," for which "stickiness" is
+not enabled.
+
+Finally, go to the "Description" tab for the `docassembleLb` load
+balancer and make note of the "DNS name."  It will be something like
+`docassemblelb-174526082.us-west-1.elb.amazonaws.com`.
+
+Edit the [DNS] configuration of your domain and create a [CNAME] that
+maps the [DNS] name that your users will use (e.g.,
+`docassemble.example.com`) to the [DNS] name of the load balancer
+(e.g., `docassemblelb-174526082.us-west-1.elb.amazonaws.com`).  This
+will allow your users to connect to the load balancer.
 
 Then go to the [ECS Console].
 
 Create a [Task Definition] called `backend` using the [JSON]
-configuration below.  Edit the `TIMEZONE`, `DAHOSTNAME`, and
-`S3BUCKET` environment variables.
+configuration below.  Edit the [`TIMEZONE`], [`DAHOSTNAME`], and
+[`S3BUCKET`] environment variables.
 
 {% highlight json %}
 {
@@ -302,6 +394,10 @@ configuration below.  Edit the `TIMEZONE`, `DAHOSTNAME`, and
           "value": "true"
         },
         {
+          "name": "TIMEZONE",
+          "value": "America/New_York"
+        },
+        {
           "name": "S3BUCKET",
           "value": "docassemble-example-com"
         }
@@ -313,9 +409,9 @@ configuration below.  Edit the `TIMEZONE`, `DAHOSTNAME`, and
 }
 {% endhighlight %}
 
-The `CONTAINERROLE` variable indicates that this server will serve the
+The [`CONTAINERROLE`] variable indicates that this server will serve the
 functions of SQL, [Redis], [RabbitMQ], and log message aggregation.
-The `DAHOSTNAME` variable indicates the hostname at which the user
+The [`DAHOSTNAME`] variable indicates the hostname at which the user
 will access the **docassemble** application.  The `EC2` variable
 instructs **docassemble** that it will be running on [EC2], which
 means that the server needs to use a special method of obtaining its
@@ -334,7 +430,7 @@ take some time for the image to download and start.  In the meantime,
 the [ECS Console] should show one "pending task."
 
 Next, create a [Task Definition] called `app` using the [JSON]
-configuration below.  Edit the `S3BUCKET` environment variables.
+configuration below.  Edit the [`S3BUCKET`] environment variable.
 
 {% highlight json %}
 {
@@ -373,31 +469,32 @@ configuration below.  Edit the `S3BUCKET` environment variables.
 }
 {% endhighlight %}
 
-Create a Service called `app` that uses the task definition
-`docassemble-app`.  Set the number of tasks to 1 and use the [Elastic Load
-Balancer] you just created.
-11. Set up the security groups on the [Elastic Load Balancer] and the
-[VPC] so that the instances within the [VPC] can send any traffic among
-each other, but that only HTTP (or HTTPS) is open to the outside world.
-12. Decide what URL you want users to use, and edit your DNS to add a
-CNAME pointing from that URL to the URL of the load balancer.
-13. Create a sufficient number of [EC2] instances so that the
-`docassemble-sql`, `docassemble-log`, and `docassemble-app` tasks all
-have room to run.
-14. Create an [Auto Scaling Group] for the `docassemble-app` task so
-that any number of instances (up to a limit) can support the
-`docassemble-app` task.
+Create a Service called `app` that uses the task definition `app`.
+Set the "Number of tasks" to 2.  Under "Elastic load balancing," click
+the "Configure ELB" button.  Set "ELB type" to "Elastic Load
+Balancer."  The "IAM role for service" should be `ecsServiceRole`, an
+[IAM] role that [ECS] creates for you automatically.  Set "ELB Name"
+to `docassembleLb`, the name of the [Application Load Balancer] you
+created earlier.  Under "Container to load balance," select
+"app:80:80" and click "Add to ELB."  Set the "Target group name" to
+`web`, the "Target Group" you created earlier.  Then click "Save."
 
-Go to [VPC] and copy the CIDR of the network.
+Just one more thing needs to be done to make the **docassemble**
+server fully functional: you need to associate the `websocket` "Target
+Group" with the same [EC2] instances that are associated with the
+`web` "Target Group."  (Unfortunately, this is not something that the
+[ECS] system can do automatically yet.)  To fix this, go to the
+[EC2 Console].
 
-Go to [EC2] and create a new security group.  Allow all traffic from
-the CIDR of your [VPC].
+# Single-server configuration on EC2 Container Service
 
+You can use [EC2] to run **docassemble** in a single-server
+arrangement.  (It is not particularly "scalable" to do so, but you
+might find it convenient.)
 
-
-
-
-## All in one
+To do so, start one [EC2] instance with an [ECS]-optimized [AMI], and
+then go to the [ECS Console] and set up a "service" that runs a single
+"task" with a [Task Definition] like the following.
 
 {% highlight json %}
 {
@@ -433,6 +530,14 @@ the CIDR of your [VPC].
           "value": "true"
         },
         {
+          "name": "USELETSENCRYPT",
+          "value": "true"
+        },
+        {
+          "name": "LETSENCRYPTEMAIL",
+          "value": "admin@example.com"
+        },
+        {
           "name": "S3BUCKET",
           "value": "docassemble-example-com"
         }
@@ -442,6 +547,8 @@ the CIDR of your [VPC].
 }
 {% endhighlight %}
 
+Edit [`DAHOSTNAME`], [`LETSENCRYPTEMAIL`], and [`S3BUCKET`].  Note
+that [`CONTAINERROLE`] is not specified, but it will default to `all`.
 
 # Alternative method without using EC2 Container Service
 
@@ -718,3 +825,7 @@ s3:
 [container instances]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_instances.html
 [fully-qualified domain name]: https://en.wikipedia.org/wiki/Fully_qualified_domain_name
 [multi-server arrangement]: {{ site.baseurl }}/docs/docker.html#multi server arrangement
+[WebSocket]: https://en.wikipedia.org/wiki/WebSocket
+[`CONTAINERROLE`]: #CONTAINERROLE
+[`S3BUCKET`]: #S3BUCKET
+[HTTP success code]: https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success

@@ -12,13 +12,6 @@ that communicate with a central SQL server.  For information about how
 to install **docassemble** in a multi-server arrangement on
 [EC2 Container Service] ("[ECS]"), see the [scalability] section.
 
-# Prerequisites
-
-Make sure you have at least 12GB of storage space.  (**docassemble**
-has a lot of large dependencies.)  At the end of installation, only
-about 4GB will be taken up, but the build and installation processes
-require more storage than that to be available.
-
 # Installing Docker
 
 If you have a Windows PC, follow the [Docker installation instructions for Windows]{:target="_blank"}.
@@ -45,32 +38,17 @@ The last line allows the non-root user to run [Docker].  You may need to
 log out and log back in again for the new user permission to take
 effect.
 
-To start [Docker], do:
+Docker will probably start automatically after it is installed.  On Linux, you many need to do `sudo /etc/init.d/docker start`, `sudo systemctl start docker`, or `sudo service docker start`.
 
-{% highlight bash %}
-sudo /etc/init.d/docker start
-{% endhighlight %}
+# <a name="single server arrangement"></a>Quick start
 
-or, on systemd,
+Once [Docker] is installed, you can install and run **docassemble** from the command line.
 
-{% highlight bash %}
-systemctl start docker
-{% endhighlight %}
+To get a command line on Windows, run [Windows PowerShell].
 
-or, on upstart,
+To get a command line on a Mac, launch the [Terminal] application.
 
-{% highlight bash %}
-service docker start
-{% endhighlight %}
-
-# <a name="single server arrangement"></a>Single-server arrangement
-
-**docassemble** is [available on Docker Hub].  You can download and
-run the image from the command line.
-
-To get a command line on [Windows], run [Windows PowerShell].
-
-To get a command line on a Mac, run [Terminal].
+## Starting
 
 From the command line, simply enter:
 
@@ -78,36 +56,32 @@ From the command line, simply enter:
 docker run -d -p 80:80 jhpyle/docassemble
 {% endhighlight %}
 
-Or, if you are already using port 80 on your machine, use something
-like `-p 8080:80` instead.
+The [`docker run`] command will download and run **docassemble**,
+making the application available on the standard HTTP port (port 80)
+of your machine.
 
-The image, which is about 2.4GB in size, is an [automated build] based
-on the "master" branch of the [docassemble repository].
+It will take several minutes for **docassemble** to download, and once
+the [`docker run`] command finishes, **docassemble** will start to
+run.  After a few minutes, you can point your web browser to the
+hostname of the machine that is running [Docker].  If you are running
+[Docker] on your own computer, this address is probably
+http://localhost.
 
-You can then connect to the container by pointing your web browser to
-the IP address or hostname of the machine that is running [Docker]
-(usually http://localhost).
+Using the web browser, you can log in using the default username
+("admin@admin.com") and password ("password"), and make changes to the
+configuration from the menu.
 
-You can log in using the default username ("admin@admin.com") and
-password ("password"), and make changes to the configuration from the
-menu.
+If you are already using port 80 on your machine, call [`docker run`]
+using `-p 8080:80` instead of `-p 80:80`.
 
-You should not need to connect to the running container in order to
-get it to work.  However, you might want to gain access to the running
-container for some reason.  To do so, you can run:
+In the [`docker run`] command, the `-d` flag means that the container
+will run in the background.  The `-p` flag maps a port on the host
+machine to a port on the [Docker] container.  The `jhpyle/docassemble`
+tag refers to an image that is [hosted on Docker Hub].  The image is
+about 2.4GB in size.  It is an [automated build] based on the "master"
+branch of the [docassemble repository] on [GitHub].
 
-{% highlight bash %}
-docker exec -t -i <containerid> /bin/bash
-{% endhighlight %}
-
-You can find out the ID of the running container by doing `docker ps`.
-
-Log files on the container that you might wish to check include:
-
-* `/var/log/supervisor/initialize-stderr---supervisor-*.log`
-* `/var/log/supervisor/postgres-stderr---supervisor-*.log`
-* `/var/log/apache2/error.log`
-* `/usr/share/docassemble/log/docassemble.log`
+## Shutting down
 
 Make sure to cleanly shut down the container by running:
 
@@ -120,160 +94,141 @@ server may become corrupted if [PostgreSQL] is not gracefully shut down.
 
 By default, [Docker] gives containers ten seconds to shut down before
 forcibly shutting them down, but sometimes [PostgreSQL] takes a little
-longer than ten seconds, so it is a good idea to give the container
-plenty of time to shut down gracefully.  The `-t 60` means that [Docker]
-will wait up to 60 seconds before forcibly shutting down the
-container.  Usually the container will shut down in about ten seconds.
+longer than ten seconds to shut down, so it is a good idea to give the
+container plenty of time to shut down gracefully.  The `-t 60` means
+that [Docker] will wait up to 60 seconds before forcibly shutting down
+the container.  Usually the container will shut down in about ten
+seconds.
 
 To see a list of stopped containers, run `docker ps -a`.  To remove a
 container, run `docker rm <containerid>`.
 
-## <a name="configuration options"></a>Configuration options
+## Troubleshooting
 
-The **docassemble** [Docker] installation is configurable with
-environment variables.  From the [Docker] command line, these variables
-can be included with the `--env-file=env.list` option, where
-`env.list` is a text file containing variable definitions in standard
-shell script format.  When running **docassemble** in [ECS], these
-variables are specified in [JSON] text that is provided through the
-web interface.  (See the [scalability] section for more information
-about [ECS].)
+You should not need to access the running container in order to get
+**docassemble** to work.  However, you might want to gain access to
+the running container for some reason.
 
-Here is a sample `env.list` file:
+To do so, find out the ID of the running container by doing
+[`docker ps`].  You will see output like the following:
 
 {% highlight text %}
-DAHOSTNAME=legalhelp.com
-LOCALE=en_US.UTF-8 UTF-8
-TIMEZONE=America/New_York
-USEHTTPS=true
-USELETSENCRYPT=true
-LETSENCRYPTEMAIL=admin@legalhelp.com
+CONTAINER ID  IMAGE  COMMAND  CREATED  STATUS  PORTS  NAMES
+e4fa52ba540e  jhpyle/docassemble  "/usr/bin/supervisord" ...
 {% endhighlight %}
 
-This will cause the [Apache] configuration file to use legalhelp.com as
-the `ServerName`.  The `LOCALE` is appended to `/etc/locale.gen` and
-`locale-gen` and `update-locale` are run.  The `TIMEZONE` is stored in
-`/etc/timezone` and `dpkg-reconfigure -f noninteractive tzdata` is run.
+The ID is in the first column.  Then run:
 
-The available environment variables include:
+{% highlight bash %}
+docker exec -t -i e4fa52ba540e /bin/bash
+{% endhighlight %}
 
-* <a name="CONTAINERROLE"></a>`CONTAINERROLE`: either `all` or a
-  colon-separated list of services (e.g. `web:celery`,
-  `sql:log:redis`, etc.).  The options are:
-  * `all`: the [Docker] container will run all of the services of
-    **docassemble** on a single container.
-  * `web`: The [Docker] container will serve as a web server.
-  * `celery`: The [Docker] container will serve as a [Celery] node.
-  * `sql`: The [Docker] container will run the central [PostgreSQL] service.
-  * `redis`: The [Docker] container will run the central [Redis] service.
-  * `rabbitmq`: The [Docker] container will run the central [RabbitMQ] service.
-  * `log`: The [Docker] container will run the central log aggregation service.
-* <a name="DBHOST"></a>`DBHOST`: The hostname of the [PostgreSQL] server.  Keep undefined
-  or set to `null` in order to use the [PostgreSQL] server on the same
-  host.  This environment variable, along with others that begin with
-  `DB`, populates values in [db] section of the [configuration] file.
-* <a name="DBNAME"></a>`DBNAME`: The name of the [PostgreSQL] database.  Default is `docassemble`.
-* <a name="DBUSER"></a>`DBUSER`: The username for connecting to the [PostgreSQL] server.
-  Default is `docassemble`.
-* <a name="DBPASSWORD"></a>`DBPASSWORD`: The password for connecting to the SQL server.
-  Default is `abc123`.
-* <a name="DBPREFIX"></a>`DBPREFIX`: This sets the prefix for the database specifier.  The
-  default is `postgresql+psycopg2://`.
-* <a name="DBPORT"></a>`DBPORT`: This sets the port that **docassemble** will use to access
-  the SQL server.
-* <a name="DBTABLEPREFIX"></a>`DBTABLEPREFIX`: This allows multiple separate **docassemble**
-  implementations to share the same SQL database.  The value is a
-  prefix to be added to each table in the database.
-* `EC2`: Set this to `true` if you are running [Docker] on [EC2].
-  This allows **docassemble** to determine the hostname of the server
-  on which it is running.  This populates the [ec2] setting in the
-  [configuration].
-* `USEHTTPS`: Set this to `true` if you would like **docassemble** to
-  communicate with the browser using encryption.  See [HTTPS] for more
-  information.  Defaults to `false`.
-* `DAHOSTNAME`: Set this to the hostname by which web browsers can find
-  **docassemble**.  This is necessary for [HTTPS] to function.
-* `USELETSENCRYPT`: Set this to `true` if you are
-  [using Let's Encrypt].  The default is `false`.
-* `LETSENCRYPTEMAIL`: Set this to the e-mail address you use with
-  [Let's Encrypt].
-* `LOCALE`: You can use this to enable a locale on the server.  When
-  the server starts, the value of `LOCALE` is appended to
-  `/etc/locale.gen` and `locale-gen` and `update-locale` are run.
-* <a name="LOGSERVER"></a>`LOGSERVER`: This is used in the [multi-server arrangement] where
-  there is a separate server for collecting log messages.  The default
-  is `none`, which causes the server to run [Syslog-ng].
-* <a name="REDIS"></a>`REDIS`: If you are running **docassemble** in a
-  multi-server configuration, set this to the host name at which the
-  [Redis] server can be accessed.
-* <a name="RABBITMQ"></a>`RABBITMQ`: If you are running **docassemble** in a multi-server
-  configuration, set this to the host name at which the [RabbitMQ]
-  server can be accessed.  Note that [RabbitMQ] is very particular
-  about hostnames.  If the [RabbitMQ] server is running on a machine
-  on which the `hostname` command evaluates to `abc`, then your
-  application servers will need to set `RABBITMQ` to `abc` and nothing
-  else.  It is up to you to make sure that `abc` resolves to an IP
-  address.  Note that if you run **docassemble** using the
-  instructions in the [scalability] section, you do not need to worry
-  about this.
-* `SERVERHOSTNAME`: If you are running **docassemble** in a
-  multi-server configuration, and you are starting an application
-  server, set this to the hostname of the [Docker] host.
-  **docassemble** will forward this address to the central server.  In
-  a multi-server configuration, all **docassemble** application
-  servers need to be able to communicate with each other on port 9001
-  (the [supervisor] port).  This is necessary for sending signals that
-  cause the application servers to install new versions of packages,
-  so that all servers are running the same software.  Note that you do
-  not need to worry about `SERVERHOSTNAME` this if you are using
-  [EC2].
-* `URLROOT`: If users access **docassemble** at
-  https://docassemble.example.com, set `URLROOT` to
-  `https://docassemble.example.com`.
-* `BEHINDHTTPSLOADBALANCER`: Set this to `true` if a load balancer is
-  in use and the load balancer accepts connections in HTTPS but
-  forwards them to web servers as HTTP.  This lets **docassemble**
-  know that when it forms URLs, it should use the `https` scheme even
-  though requests appear to be coming in as HTTP requests.
-* `S3ENABLE`: Set this to `true` if you are using [S3] as a repository
-  for uploaded files, [Playground] files, the [configuration] file,
-  and other information.  This environment variable, along with others
-  that begin with `S3`, populates values in [s3] section of the
-  [configuration] file.  If this is unset, but [`S3BUCKET`] is set, it
-  will be assumed to be `true`.
-* <a name="S3BUCKET"></a>`S3BUCKET`: If you are using [S3], set this
-  to the bucket name.  Note that **docassemble** will not create the
-  bucket for you.  You will need to create it for yourself beforehand.
-* <a name="S3ACCESSKEY"></a>`S3ACCESSKEY`: If you are using [S3], set
-  this to the [S3] access key.  You can ignore this environment
-  variable if you are using [EC2] with an [IAM] role that allows
-  access to your [S3] bucket.
-* <a name="S3SECRETACCESSKEY"></a>`S3SECRETACCESSKEY`: If you are
-  using [S3], set this to the [S3] access secret.  You can ignore this
-  environment variable if you are using [EC2] with an [IAM] role that
-  allows access to your [S3] bucket.
-* `TIMEZONE`: You can use this to set the time zone of the server.
-  The value of the variable is stored in `/etc/timezone` and
-  `dpkg-reconfigure -f noninteractive tzdata` is run in order to set
-  the system time zone.  The default is `America/New_York`.
+using your own ID in place of `e4fa52ba540e`.  This will give you a
+command prompt within the running container.
 
-Note that if you use [persistent volumes] and/or [S3], launching a new
-**docassemble** container with different variables is not necessarily
-going to change the way **docassemble** works.  For example:
+Log files on the container that you might wish to check include:
 
-* If `USEHTTPS` is `true` and `USELETSENCRYPT` is `true`, then the
-  [Apache] configuration files, if stored on a persistent volume, will
-  not be overwritten if they already exist when a new container starts
-  up.  So if you are using [Let's Encrypt] and you want to change the
-  `DAHOSTNAME`, run `docker volume rm letsencrypt` to remove the
-  [Let's Encrypt] configuration before running a new container.
-* If `S3ENABLE` is `true`, then on startup, the container will
-  retrieve the configuration file from [S3] and use it as the
-  configuration of **docassemble**, all before the web server even
-  starts.  Therefore, if you are using [S3], the environment variables
-  to set the database configuration ([db]) will have no effect.  To
-  edit the database access information, edit the configuration file
-  that exists on [S3].
+* `/var/log/supervisor/initialize-stderr---supervisor-*.log`
+* `/var/log/supervisor/postgres-stderr---supervisor-*.log`
+* `/var/log/apache2/error.log`
+* `/usr/share/docassemble/log/docassemble.log`
+
+Enter `exit` to leave the container and get back to your standard
+command prompt.
+
+# <a name="data storage"></a>Data storage
+
+[Docker] containers are volatile.  They are designed to be run, turned
+off, and destroyed.  When using [Docker], the best way to upgrade
+**docassemble** to a new version is to destroy and rebuild your
+containers.
+
+But what about your data?  If you run **docassemble**, you are
+accumulating valuable data in SQL, in files, and in [Redis].  If your
+data are stored on the [Docker] container, they will be destroyed by
+[`docker rm`].
+
+There are two ways around this problem.  The first, and most
+preferable solution, is to get an account on [Amazon Web Services],
+create an [S3 bucket] for your data, and then when you launch your
+container, set the [`S3BUCKET`] and associated
+[environment variables].  When [`docker stop`] is run, **docassemble**
+will backup the SQL database, the [Redis] database, the
+[configuration], and your uploaded files to your [S3 bucket].  Then,
+when you issue a [`docker run`] command with [environment variables]
+pointing **docassemble** to your [S3 bucket], **docassemble** will
+make restore from the backup.  You can [`docker rm`] your container
+
+The second way is to use [persistent volumes], which is a feature of
+[Docker].  This will store the data in directories on the [Docker]
+host, so that when you destroy the container, these directories will
+be untouched, and when you start up a new container, it will use the
+saved directories.
+
+These two options are explained in the following subsections.
+
+## <a name="persistent s3"></a>Using S3
+
+To use [S3] for persistent storage, sign up with
+[Amazon Web Services], go to the [S3 Console], click "Create Bucket,"
+and pick a name.  If your site is at docassemble.example.com, a good
+name for the bucket is `docassemble-example-com`.  (Client software
+will have trouble accessing your bucket if it contains `.`
+characters.)  Under "Region," pick the region nearest you.
+
+Then you need to obtain an access key and a secret access key for
+[S3].  To obtain these credentials, go to [IAM Console] and create a
+user with "programmatic access."  Under "Attach existing policies
+directly," find the policy called `AmazonS3FullAccess` and attach it
+to the user.
+
+When you run a **docassemble** [Docker] container, set the
+[configuration options]<span></span> [`S3BUCKET`], [`S3ACCESSKEY`],
+and [`S3SECRETACCESSKEY`].
+
+Note that if you run **docassemble** on [EC2], you can launch your
+[EC2] instances with an [IAM] role that allows **docassemble** to
+access to an [S3] bucket without the necessity of setting
+[`S3ACCESSKEY`] and [`S3SECRETACCESSKEY`].  In this case, the only
+environment variable you need to pass is [`S3BUCKET`].
+
+These secret access keys will become available to all developers who
+use your **docassemble** server, since they are in the configuration
+file.  If you want to limit access to a particular bucket, you do not
+have to use the `AmazonS3FullAccess` policy when obtaining [S3]
+credentials.  Instead, you can create your own policy with the
+following definition:
+
+{% highlight json %}
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::docassemble-example-com"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::docassemble-example-com/*"
+            ]
+        }
+    ]
+}
+{% endhighlight %}
+
+Replace `docassemble-example-com` in the above text with the name of
+your [S3] bucket.
 
 ## <a name="persistent"></a>Using persistent volumes
 
@@ -313,36 +268,218 @@ An advantage of using persistent volumes is that you can completely
 replace the **docassemble** container and rebuild it from scratch, and
 when you `run` the `jhpyle/docassemble` image again, docassemble will
 keep running where it left off.  This also facilitates backing up a
-**docassemble** server that runs on Docker.  For example, here is a
-script that backs up the **docassemble** implementation running on a
-remote server, `dev.docassemble.org`:
+**docassemble** server that runs on [Docker].  For example, here is a
+script that backs up all of the **docassemble** volumes running on a
+remote server, `docassemble.example.com`:
 
 {% highlight bash %}
-rsync -au --rsync-path="sudo rsync" dev.docassemble.org:/var/lib/docker/volumes /root/my-backup-directory
+rsync -au --rsync-path="sudo rsync" docassemble.example.com:/var/lib/docker/volumes /root/my-backup-directory
 {% endhighlight %}
 
 Note: for this to run unattended, you need to edit `~/.ssh/config` to
 indicate where the identity file is located:
 
 {% highlight text %}
-Host dev.docassemble.org
-    HostName dev.docassemble.org
+Host docassemble.example.com
+    HostName docassemble.example.com
     User ec2-user
     IdentityFile /root/ec2-user.pem
 {% endhighlight %}
 
-## Cleaning up after multiple builds
+Ultimately, however, the better [data storage] solution is to
+[use S3].  One of the downsides of storing the SQL server data on a
+persistent volume is that if the [PostgreSQL] version changes between
+one **docassemble** image and the next, the new container will not be
+able to use the [PostgreSQL] data stored in the persistent volume.
+The [S3] system, by contrast, uses "dump" and "restore" operations to
+save the SQL database.  Also, the [`docker run`] command is much
+shorter when [S3] is used.
 
-If you build docker images, you may find your disk space being used
-up.  These three lines will stop all containers, remove all
-containers, and then remove all of the images that [Docker] created
-during the build process.
+# <a name="configuration options"></a>Configuration options
 
-{% highlight bash %}
-docker stop $(docker ps -a -q)
-docker rm $(docker ps -a -q)
-docker rmi $(docker images | grep "^<none>" | awk "{print $3}")
+The **docassemble** [Docker] installation is configurable with
+environment variables.  From the [Docker] command line, these
+variables can be included with the `--env-file=env.list` option, where
+`env.list` is a text file containing variable definitions in standard
+shell script format.  When running **docassemble** in [ECS], these
+variables are specified in [JSON] text that is entered into the web
+interface.  (See the [scalability] section for more information about
+using [ECS].)
+
+Here is a sample `env.list` file:
+
+{% highlight text %}
+DAHOSTNAME=docassemble.example.com
+LOCALE=en_US.UTF-8 UTF-8
+TIMEZONE=America/New_York
+USEHTTPS=true
+USELETSENCRYPT=true
+LETSENCRYPTEMAIL=admin@example.com
 {% endhighlight %}
+
+This will cause the [Apache] configuration file to use
+docassemble.example.com as the `ServerName` and use [HTTPS] with
+certificates hosted on [Let's Encrypt].  During startup, the `LOCALE`
+will be appended to `/etc/locale.gen` and `locale-gen` and
+`update-locale` will be run.  The `TIMEZONE` will be stored in
+`/etc/timezone` and `dpkg-reconfigure -f noninteractive tzdata` will set the system timezone.
+
+The available environment variables include:
+
+* <a name="CONTAINERROLE"></a>`CONTAINERROLE`: either `all` or a
+  colon-separated list of services (e.g. `web:celery`,
+  `sql:log:redis`, etc.).  The options are:
+  * `all`: the [Docker] container will run all of the services of
+    **docassemble** on a single container.
+  * `web`: The [Docker] container will serve as a web server.
+  * `celery`: The [Docker] container will serve as a [Celery] node.
+  * `sql`: The [Docker] container will run the central [PostgreSQL] service.
+  * `redis`: The [Docker] container will run the central [Redis] service.
+  * `rabbitmq`: The [Docker] container will run the central [RabbitMQ] service.
+  * `log`: The [Docker] container will run the central log aggregation service.
+* <a name="SERVERHOSTNAME"></a>`SERVERHOSTNAME`: If you are running
+  **docassemble** in a [multi-server arrangement], and you are
+  starting an application server, set this to the hostname of the
+  [Docker] host.  **docassemble** will forward this address to the
+  central server.  In a [multi-server arrangement], all
+  **docassemble** application servers need to be able to communicate
+  with each other on port 9001 (the [supervisor] port).  This is
+  necessary for sending signals that cause the application servers to
+  install new versions of packages, so that all servers are running
+  the same software.  Note that you do not need to worry about
+  `SERVERHOSTNAME` this if you are using [EC2].
+* <a name="DBHOST"></a>`DBHOST`: The hostname of the [PostgreSQL]
+  server.  Keep undefined or set to `null` in order to use the
+  [PostgreSQL] server on the same host.  This environment variable,
+  along with others that begin with `DB`, populates values in
+  [`db` section] of the [configuration] file.
+* <a name="DBNAME"></a>`DBNAME`: The name of the [PostgreSQL]
+  database.  Default is `docassemble`.
+* <a name="DBUSER"></a>`DBUSER`: The username for connecting to the
+  [PostgreSQL] server.  Default is `docassemble`.
+* <a name="DBPASSWORD"></a>`DBPASSWORD`: The password for connecting
+  to the SQL server.  Default is `abc123`.
+* <a name="DBPREFIX"></a>`DBPREFIX`: This sets the prefix for the
+  database specifier.  The default is `postgresql+psycopg2://`.
+* <a name="DBPORT"></a>`DBPORT`: This sets the port that
+  **docassemble** will use to access the SQL server.
+* <a name="DBTABLEPREFIX"></a>`DBTABLEPREFIX`: This allows multiple
+  separate **docassemble** implementations to share the same SQL
+  database.  The value is a prefix to be added to each table in the
+  database.
+* <a name="EC2"></a>`EC2`: Set this to `true` if you are running [Docker] on [EC2].
+  This allows **docassemble** to determine the hostname of the server
+  on which it is running.  See the [`ec2`] configuration directive.
+* <a name="USEHTTPS"></a>`USEHTTPS`: Set this to `true` if you would like **docassemble** to
+  communicate with the browser using encryption.  Read the [HTTPS]
+  section for more information.  Defaults to `false`.  See the
+  [`use https`] configuration directive.
+* <a name="DAHOSTNAME"></a>`DAHOSTNAME`: Set this to the hostname by which web browsers can
+  find **docassemble**.  This is necessary for [HTTPS] to
+  function. See the [`external hostname`] configuration directive.
+* <a name="USELETSENCRYPT"></a>`USELETSENCRYPT`: Set this to `true` if you are
+  [using Let's Encrypt].  The default is `false`.  See the
+  [`use lets encrypt`] configuration directive.
+* <a name="LETSENCRYPTEMAIL"></a>`LETSENCRYPTEMAIL`: Set this to the e-mail address you use with
+  [Let's Encrypt].  See the [`lets encrypt email`] configuration
+  directive.
+* <a name="LOGSERVER"></a>`LOGSERVER`: This is used in the
+  [multi-server arrangement] where there is a separate server for
+  collecting log messages.  The default is `none`, which causes the
+  server to run [Syslog-ng].  See the [`log server`] configuration
+  directive.
+* <a name="REDIS"></a>`REDIS`: If you are running **docassemble** in a
+  [multi-server arrangement], set this to the host name at which the
+  [Redis] server can be accessed.  See the [`redis`] configuration
+  directive.
+* <a name="RABBITMQ"></a>`RABBITMQ`: If you are running
+  **docassemble** in a [multi-server arrangement], set this to the host
+  name at which the [RabbitMQ] server can be accessed.  Note that
+  [RabbitMQ] is very particular about hostnames.  If the [RabbitMQ]
+  server is running on a machine on which the `hostname` command
+  evaluates to `abc`, then your application servers will need to set
+  `RABBITMQ` to `abc` and nothing else.  It is up to you to make sure
+  that `abc` resolves to an IP address.  Note that if you run
+  **docassemble** using the instructions in the [scalability] section,
+  you do not need to worry about this.  See the [`rabbitmq`]
+  configuration directive.
+* <a name="URLROOT"></a>`URLROOT`: If users access **docassemble** at
+  https://docassemble.example.com, set `URLROOT` to
+  `https://docassemble.example.com`.  See the [`url root`]
+  configuration directive.
+* <a name="BEHINDHTTPSLOADBALANCER"></a>`BEHINDHTTPSLOADBALANCER`: Set
+  this to `true` if a load balancer is in use and the load balancer
+  accepts connections in HTTPS but forwards them to web servers as
+  HTTP.  This lets **docassemble** know that when it forms URLs, it
+  should use the `https` scheme even though requests appear to be
+  coming in as HTTP requests.  See the [`behind https load balancer`]
+  configuration directive.
+* <a name="S3ENABLE"></a>`S3ENABLE`: Set this to `true` if you are
+  using [S3] as a repository for uploaded files, [Playground] files,
+  the [configuration] file, and other information.  This environment
+  variable, along with others that begin with `S3`, populates values
+  in [`s3` section] of the [configuration] file.  If this is unset,
+  but [`S3BUCKET`] is set, it will be assumed to be `true`.
+* <a name="S3BUCKET"></a>`S3BUCKET`: If you are using [S3], set this
+  to the bucket name.  Note that **docassemble** will not create the
+  bucket for you.  You will need to create it for yourself beforehand.
+* <a name="S3ACCESSKEY"></a>`S3ACCESSKEY`: If you are using [S3], set
+  this to the [S3] access key.  You can ignore this environment
+  variable if you are using [EC2] with an [IAM] role that allows
+  access to your [S3] bucket.
+* <a name="S3SECRETACCESSKEY"></a>`S3SECRETACCESSKEY`: If you are
+  using [S3], set this to the [S3] access secret.  You can ignore this
+  environment variable if you are using [EC2] with an [IAM] role that
+  allows access to your [S3] bucket.
+* <a name="TIMEZONE"></a>`TIMEZONE`: You can use this to set the time
+  zone of the server.  The value of the variable is stored in
+  `/etc/timezone` and `dpkg-reconfigure -f noninteractive tzdata` is
+  run in order to set the system time zone.  The default is
+  `America/New_York`.  See the [`timezone`] configuration directive.
+* <a name="LOCALE"></a>`LOCALE`: You can use this to enable a locale
+  on the server.  When the server starts, the value of `LOCALE` is
+  appended to `/etc/locale.gen` and `locale-gen` and `update-locale`
+  are run.  The default is `en_US.UTF-8 UTF-8`.  See the [`os locale`]
+  configuration directive.
+* <a name="OTHERLOCALES"></a>`OTHERLOCALES`: You can use this to set
+  up other locales on the system besides the default locale.  Set this
+  to a comma separated list of locales.  The values need to match
+  entries in [Debian]'s `/etc/locale.gen`.  See the
+  [`other os locales`] configuration directive.
+* <a name="PACKAGES"></a>`PACKAGES`: If your interviews use code that
+  depends on certain [Debian] packages being installed, you can
+  provide a comma-separated list of [Debian] packages in the
+  `PACKAGES` environment variable.  The packages will be installed
+  when the image is run.  See the [`packages`] configuration
+  directive.
+
+Note that if you use [persistent volumes] and/or [S3], launching a new
+**docassemble** container with different variables is not necessarily
+going to change the way **docassemble** works.
+
+For example, if [`USEHTTPS`] is `true` and [`USELETSENCRYPT`] is `true`,
+then the [Apache] configuration files, if stored on a persistent
+volume, will not be overwritten if they already exist when a new
+container starts up.  So if you had been using [Let's Encrypt], but
+then you decide to change the [`DAHOSTNAME`], you will need to delete
+the saved configuration before running a new container.  If using
+persistent volumes, you can run `docker volume rm letsencrypt` and
+`docker volume rm apache` to remove the [Let's Encrypt] and [Apache]
+configuration files.  If using [S3], you can go to the [S3 Console]
+and delete the "Apache" folder and the "letsencrypt.tar.gz" file.
+  
+Also, if a configuration file exists on [S3] (`config.yml`) or in a
+persistent volume (`/usr/share/docassemble/config/config.yml`), then
+the values in that configuration will take precedence over the
+corresponding environment variables that are passed to [Docker].  Once
+a configuration file exists, you should make changes to the
+configuration file rather than passing environment variables to
+[Docker].  However, note that you always need to pass [`S3BUCKET`] if
+your configuration is on [S3]; otherwise your container will not know
+where to find the configuration.  Also, there are some environment
+variables that do not exist in the configuration file because they are
+server-specific.  These include [`CONTAINERROLE`] and
+[`SERVERHOSTNAME`].
 
 # <a name="multi server arrangement"></a>Multi-server arrangement
 
@@ -442,72 +579,22 @@ system.  This directory contains the configuration, SSL certificates,
 file systems present problems.
 
 A preferable way to share files is with [Amazon S3], which
-**docassemble** supports.  Go to the [S3 Console] and create a bucket.
-
-Then obtain an access key and a secret access key for [S3], if you
-don't have them already.  To obtain these credentials, go to
-[IAM Console] and create a user with "programmatic access."  Under
-"Attach existing policies directly," find the policy called
-`AmazonS3FullAccess` and attach it to the user.
-
-When you run a **docassemble** [Docker] container, set the
-[configuration options]<span></span> [`S3BUCKET`], [`S3ACCESSKEY`],
-and [`S3SECRETACCESSKEY`].
-
-Note that if you run **docassemble** on [EC2], you can launch your
-[EC2] instances with an [IAM] role that allows **docassemble** to access to
-an [S3] bucket without the necessity of setting [`S3ACCESSKEY`]
-and [`S3SECRETACCESSKEY`].
-
-Note that these secret access keys will become available to all
-developers who use **docassemble**.  If you want to limit access to a
-particular bucket, you do not have to use the `AmazonS3FullAccess`
-policy when obtaining [S3] credentials.  Instead, you can create your
-own policy with the following definition:
-
-{% highlight json %}
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:ListBucket"
-            ],
-            "Resource": [
-                "arn:aws:s3:::docassemble-example-com"
-            ]
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:PutObject",
-                "s3:GetObject",
-                "s3:DeleteObject"
-            ],
-            "Resource": [
-                "arn:aws:s3:::docassemble-example-com/*"
-            ]
-        }
-    ]
-}
-{% endhighlight %}
-
-Replace `docassemble-example-com` in the above text with the name of
-your [S3] bucket.
+**docassemble** supports.  See the [using S3] section for instructions
+on setting this up.
 
 ## Configuration file
 
-Note that when you use [S3] to share files, **docassemble** will copy
-the `config.yml` file out of [S3] on startup, and save `config.yml` to
-[S3] whenever the configuration is modified.
+Note that when you use [S3] for [data storage], **docassemble** will
+copy the `config.yml` file out of [S3] on startup, and save
+`config.yml` to [S3] whenever the configuration is modified.
 
 This means that as long as there is a `config.yml` file on [S3] with
 the configuration you want, you can start **docassemble** containers
 without specifying a lot of [configuration options]; you simply have
 to refer to the [S3] bucket, and **docassemble** will take it from
-there.  For example:
+there.  For example, to run a central server, you can do:
 
+{% highlight bash %}
 docker run \
 -e CONTAINERROLE=sql:log:redis:rabbitmq \
 -e S3BUCKET=docassemble-example-com \
@@ -517,6 +604,9 @@ docker run \
 -p 6379:6379 -p 4369:4369 -p 5671:5671 \
 -p 5672:5672 -p 25672:25672 -p 9001:9001 \
 jhpyle/docassemble
+{% endhighlight %}
+
+To run an application server, you can do:
 
 {% highlight bash %}
 docker run \
@@ -753,6 +843,19 @@ Or push it to [Docker Hub]:
 docker push yourdockerhubusername/mydocassemble
 {% endhighlight %}
 
+# Cleaning up after multiple builds
+
+If you build docker images, you may find your disk space being used
+up.  These three lines will stop all containers, remove all
+containers, and then remove all of the images that [Docker] created
+during the build process.
+
+{% highlight bash %}
+docker stop $(docker ps -a -q)
+docker rm $(docker ps -a -q)
+docker rmi $(docker images | grep "^<none>" | awk "{print $3}")
+{% endhighlight %}
+
 # Upgrading docassemble when using Docker
 
 As new versions of **docassemble** become available, you can obtain
@@ -765,25 +868,8 @@ docker pull jhpyle/docassemble
 Then, subsequent commands will use the latest **docassemble** image.
 
 When you are using [Docker] to run **docassemble**, you can upgrade
-**docassemble** to the newest version simply by running `docker stop`
-and `docker rm` on the **docassemble** container.  However, this
-will delete all of the data on the server unless you have set up a
-system for saving your data.
-
-The best way to maintain your data is to use [Amazon S3].  If [S3] is
-configured, then when `docker stop` is run, **docassemble** will
-backup the SQL database, the [Redis] database, the [configuration],
-and your uploaded files to your [S3] bucket.  Then, when you issue a
-`docker run` command with information about your [S3] bucket,
-**docassemble** will make restore from the backup.
-
-The next best way to maintain your data is to use
-[persistent volumes].  The downsides are:
-
-* If the [PostgreSQL] version changes from one [Docker] image to
-another, the new container will not be able to use the [PostgreSQL]
-data stored in the persistent volume.
-* The `docker run` command is much longer
+**docassemble** to the newest version simply by running [`docker stop`]
+and [`docker rm`] on the **docassemble** container.  Note that [`docker rm`] will delete all of the data on the server unless you are using a [data storage] system.
 
 [Redis]: http://redis.io/
 [Docker installation instructions for Windows]: https://docs.docker.com/engine/installation/windows/
@@ -795,11 +881,11 @@ data stored in the persistent volume.
 [Amazon Linux]: https://aws.amazon.com/amazon-linux-ami/
 [EC2]: https://aws.amazon.com/ec2/
 [single-server arrangement]: #single server arrangement
-[multi-server arrangement]: {{ site.baseurl }}/docs/scalability.html
+[multi-server arrangement]: #multi server arrangement
 [EC2 Container Service]: https://aws.amazon.com/ecs/
 [S3]: https://aws.amazon.com/s3/
 [supervisor]: http://supervisord.org/
-[available on Docker Hub]: https://hub.docker.com/r/jhpyle/docassemble/
+[hosted on Docker Hub]: https://hub.docker.com/r/jhpyle/docassemble/
 [Docker Hub]: https://hub.docker.com/
 [scalability]: {{ site.baseurl }}/docs/scalability.html
 [Amazon S3]: https://aws.amazon.com/s3/
@@ -828,7 +914,6 @@ data stored in the persistent volume.
 [`docassemble/Docker/run-rabbitmq.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-rabbitmq.sh
 [`docassemble/Docker/run-redis.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-redis.sh
 [`docassemble/Docker/sync.sh`]: {{ site.github.repository_url }}/blob/master/Docker/sync.sh
-[`docker run`]: https://docs.docker.com/engine/reference/run/
 [ECS]: https://aws.amazon.com/ecs/
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [PostgreSQL]: http://www.postgresql.org/
@@ -842,9 +927,8 @@ data stored in the persistent volume.
 [persistent volumes]: #persistent
 [persistent volume]: #persistent
 [configuration]: {{ site.baseurl }}/docs/config.html
-[db]: {{ site.baseurl }}/docs/config.html#db
-[s3]: {{ site.baseurl }}/docs/config.html#s3
-[ec2]: {{ site.baseurl }}/docs/config.html#ec2
+[`db` section]: {{ site.baseurl }}/docs/config.html#db
+[`s3` section]: {{ site.baseurl }}/docs/config.html#s3
 [Build your own private image]: #build
 [Redis]: http://redis.io/
 [RabbitMQ]: https://www.rabbitmq.com/
@@ -875,7 +959,38 @@ data stored in the persistent volume.
 [`S3ACCESSKEY`]: #S3ACCESSKEY
 [`S3SECRETACCESSKEY`]: #S3SECRETACCESSKEY
 [`CONTAINERROLE`]: #CONTAINERROLE
+[`SERVERHOSTNAME`]: #SERVERHOSTNAME
+[`DAHOSTNAME`]: #DAHOSTNAME
+[`USEHTTPS`]: #USEHTTPS
+[`USELETSENCRYPT`]: #USELETSENCRYPT
 [Celery]: http://www.celeryproject.org/
 [background processes]: {{ site.baseurl }}/docs/functions.html#background
 [Windows PowerShell]: https://en.wikipedia.org/wiki/PowerShell
 [Terminal]: https://en.wikipedia.org/wiki/Terminal_(macOS)
+[`timezone`]: {{ site.baseurl }}/docs/config.html#timezone
+[`os locale`]: {{ site.baseurl }}/docs/config.html#os locale
+[`other os locales`]: {{ site.baseurl }}/docs/config.html#other os locales
+[`packages`]: {{ site.baseurl }}/docs/config.html#packages
+[`behind https load balancer`]: {{ site.baseurl }}/docs/config.html#behind https load balancer
+[`rabbitmq`]: {{ site.baseurl }}/docs/config.html#rabbitmq
+[`redis`]: {{ site.baseurl }}/docs/config.html#redis
+[`log server`]: {{ site.baseurl }}/docs/config.html#log server
+[`lets encrypt email`]: {{ site.baseurl }}/docs/config.html#lets encrypt email
+[`use lets encrypt`]: {{ site.baseurl }}/docs/config.html#use lets encrypt
+[`external hostname`]: {{ site.baseurl }}/docs/config.html#external hostname
+[`use https`]: {{ site.baseurl }}/docs/config.html#use https
+[`ec2`]: {{ site.baseurl }}/docs/config.html#ec2
+[`packages`]: {{ site.baseurl }}/docs/config.html#packages
+[`url root`]: {{ site.baseurl }}/docs/config.html#url root
+[Debian]: https://www.debian.org/
+[using S3]: #persistent s3
+[use S3]: #persistent s3
+[environment variables]: #configuration options
+[GitHub]: https://github.com
+[data storage]: #data storage
+[`docker stop`]: https://docs.docker.com/engine/reference/commandline/stop/
+[`docker rm`]: https://docs.docker.com/engine/reference/commandline/rm/
+[`docker run`]: https://docs.docker.com/engine/reference/commandline/run/
+[`docker ps`]: https://docs.docker.com/engine/reference/commandline/ps/
+[Amazon Web Services]: https://aws.amazon.com
+[S3 bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html

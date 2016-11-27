@@ -388,6 +388,30 @@ country: US
 
 The country is primarily relevant for interpreting telephone numbers.
 
+## <a name="os locale"></a>os locale
+
+If you are using [Docker], the `os locale` directive will set the
+default operating system locale.
+
+{% highlight yaml %}
+os locale: en_US.UTF-8 UTF-8
+{% endhighlight %}
+
+## <a name="other os locales"></a>other os locales
+
+If your interviews use locale and language settings that your
+operating system does not support, you will get an error.
+
+On [Docker], you can enable locales other than the [`os locale`] in
+the operating system by providing a list of locales to the `other os
+locales` directive:
+
+{% highlight yaml %}
+other os locales:
+  - en_GB.UTF-8 UTF-8
+  - es_MX.UTF-8 UTF-8
+{% endhighlight %}
+
 ## <a name="default_admin_account"></a>default_admin_account
 
 These settings are only used by the setup script [`create_tables.py`] in
@@ -983,3 +1007,4 @@ first.
 [RabbitMQ]: https://www.rabbitmq.com/
 [AMQP URI]: https://www.rabbitmq.com/uri-spec.html
 [redis URI]: https://www.iana.org/assignments/uri-schemes/prov/redis
+[`os locale`]: #os locale
