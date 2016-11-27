@@ -718,7 +718,7 @@ substantive content.
 
 [Mako]: http://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
-[YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
+[YAML]: https://en.wikipedia.org/wiki/YAML
 [Pandoc]: http://johnmacfarlane.net/pandoc/
 [graphicx]: https://en.wikibooks.org/wiki/LaTeX/Importing_Graphics#The_graphicx_package
 [geometry]: https://www.ctan.org/pkg/geometry?lang=en

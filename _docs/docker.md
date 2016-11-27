@@ -865,7 +865,8 @@ the latest version by running:
 docker pull jhpyle/docassemble
 {% endhighlight %}
 
-Then, subsequent commands will use the latest **docassemble** image.
+Then, subsequent [`docker run`] and [`docker build`] commands will use
+the latest **docassemble** image.
 
 When you are using [Docker] to run **docassemble**, you can upgrade
 **docassemble** to the newest version simply by running [`docker stop`]
@@ -991,6 +992,7 @@ and [`docker rm`] on the **docassemble** container.  Note that [`docker rm`] wil
 [`docker stop`]: https://docs.docker.com/engine/reference/commandline/stop/
 [`docker rm`]: https://docs.docker.com/engine/reference/commandline/rm/
 [`docker run`]: https://docs.docker.com/engine/reference/commandline/run/
+[`docker build`]: https://docs.docker.com/engine/reference/commandline/build/
 [`docker ps`]: https://docs.docker.com/engine/reference/commandline/ps/
 [Amazon Web Services]: https://aws.amazon.com
 [S3 bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html

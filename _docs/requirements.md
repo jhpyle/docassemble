@@ -100,7 +100,7 @@ The web application ([`docassemble.webapp`]) depends on:
 
 To run the demo question file (`docassemble.demo`) you will need:
 
-* [DateUtil](https://moin.conectiva.com.br/DateUtil) - used in the
+* [DateUtil](https://dateutil.readthedocs.io/en/stable/) - used in the
   demo file to calculate whether an injury took place within the
   statute of limitations period
 

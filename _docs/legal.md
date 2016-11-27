@@ -186,7 +186,7 @@ including `pleading.caption()` will require the following:
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
 [`DAFileList`]: {{ site.baseurl }}/docs/objects.html#DAFileList
 [`DAFileCollection`]: {{ site.baseurl }}/docs/objects.html#DAFileCollection
-[`attachments`]: {{ site.baseurl }}/docs/document.html#attachments
+[`attachments`]: {{ site.baseurl }}/docs/documents.html#attachments
 [`objects`]: {{ site.baseurl }}/docs/initial.html#objects
 [`default role`]: {{ site.baseurl }}/docs/initial.html#default role
 [`Individual`]: #Individual

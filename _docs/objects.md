@@ -2014,7 +2014,7 @@ and not an instance of the `Attorney` class.
 [`Person`]: #Person
 [`Value`]: #Value
 [`age_in_years()`]: #Individual.age_in_years
-[`attachments`]: {{ site.baseurl }}/docs/document.html#attachments
+[`attachments`]: {{ site.baseurl }}/docs/documents.html#attachments
 [`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
 [`code`]: {{ site.baseurl }}/docs/code.html
 [`currency()`]: {{ site.baseurl }}/docs/functions.html#currency

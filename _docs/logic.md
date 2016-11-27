@@ -450,7 +450,7 @@ came back from asking whether the user has a car.
 [`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
 [`interview help`]: {{ site.baseurl }}/docs/initial.html#interview help
 [`default role`]: {{ site.baseurl }}/docs/initial.html#default role
-[`template`]: {{ site.baseurl }}/docs/templates.html
+[`template`]: {{ site.baseurl }}/docs/template.html
 [`event`]: {{ site.baseurl }}/docs/fields.html#event
 [`url_action()`]: {{ site.baseurl }}/docs/functions.html#url_action
 [`process_action()`]: {{ site.baseurl }}/docs/functions.html#process_action

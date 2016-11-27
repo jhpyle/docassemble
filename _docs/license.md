@@ -76,4 +76,4 @@ so this danger will only arise if you install additional modules.
 [Pandoc]: http://johnmacfarlane.net/pandoc/
 [LaTeX]: http://www.latex-project.org/
 [PDFtk]: https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/
-[ImageMagick]: http://http://www.imagemagick.org/
+[ImageMagick]: http://www.imagemagick.org/

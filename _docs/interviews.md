@@ -226,8 +226,8 @@ There are three ways to author your own interviews:
    [GitHub]).
 
 [GitHub]: https://github.com/
-[package]: {{ site.baseurl }}/packages.html
-[playground]: {{ site.baseurl }}/playground.html
+[package]: {{ site.baseurl }}/docs/packages.html
+[playground]: {{ site.baseurl }}/docs/playground.html
 [demonstration page]: {{ site.baseurl }}/demo.html
 [tutorial]: {{ site.baseurl }}/docs/helloworld.html
 [configuration]: {{ site.baseurl }}/docs/config.html

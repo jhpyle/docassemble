@@ -242,7 +242,7 @@ There are some built-in variable names with special meaning:
 [functions]: {{ site.baseurl }}/docs/functions.html
 [`url_action()`]: {{ site.baseurl }}/docs/functions.html#url_action
 [`process_action()`]: {{ site.baseurl }}/docs/functions.html#process_action
-[`question`]: {{ site.baseurl }}/docs/questionss.html#question
+[`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`role_event`]: {{ site.baseurl }}/docs/roles.html
 [`voicerss`]: {{ site.baseurl }}/docs/config.html#voicerss
 [`code`]: {{ site.baseurl }}/docs/code.html

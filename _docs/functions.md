@@ -2321,7 +2321,7 @@ modules:
 [`LatitudeLongitude`]: {{ site.baseurl }}/docs/objects.html#LatitudeLongitude
 [`Organization`]: {{ site.baseurl }}/docs/objects.html#Organization
 [`Person`]: {{ site.baseurl }}/docs/objects.html#Person
-[`attachments`]: {{ site.baseurl }}/docs/document.html#attachments
+[`attachments`]: {{ site.baseurl }}/docs/documents.html#attachments
 [`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
 [`code`]: {{ site.baseurl }}/docs/code.html
 [`currency()`]: #currency
@@ -2411,7 +2411,7 @@ modules:
 [QR code]: https://en.wikipedia.org/wiki/QR_code
 [Profile page]: {{ site.baseurl }}/docs/users.html#profile
 [country code]: http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
-[`task_performed()`]: "http://docassemble.org/docs/functions.html#task_performed"
+[`task_performed()`]: {{ site.baseurl }}/docs/functions.html#task_performed
 [`task_not_yet_performed()`]: #task_not_yet_performed
 [`mark_task_as_performed()`]: #mark_task_as_performed
 [`times_task_performed()`]: #times_task_performed
@@ -2436,7 +2436,7 @@ modules:
 [callback function]: https://en.wikipedia.org/wiki/Callback_(computer_programming)
 [background processes]: #background
 [background process]: #background
-[live chat]: {{ site.baseurl }}/docs/chat.html
+[live chat]: {{ site.baseurl }}/docs/livehelp.html
 [special variable `speak_text`]: {{ site.baseurl }}/docs/special.html#speak_text
 [`country` configuration setting]: {{ site.baseurl }}/docs/config.html#country
 [SMS]: https://en.wikipedia.org/wiki/Short_Message_Service

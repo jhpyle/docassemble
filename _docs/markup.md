@@ -280,6 +280,6 @@ See also the [`qr_code()`] function, which allows you to insert the
 [`interview help`]: {{ site.baseurl }}/docs/initial.html#interview help
 [`show()`]: {{ site.baseurl }}/docs/objects.html#DAFile.show
 [`image sets`]: {{ site.baseurl }}/docs/initial.html#image sets
-[`audio`]: {{ site.baseurl }}/docs/modifier.html#audio
-[`video`]: {{ site.baseurl }}/docs/modifier.html#video
+[`audio`]: {{ site.baseurl }}/docs/modifiers.html#audio
+[`video`]: {{ site.baseurl }}/docs/modifiers.html#video
 [`qr_code()`]: {{ site.baseurl }}/docs/functions.html#qr_code

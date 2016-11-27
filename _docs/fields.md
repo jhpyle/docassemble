@@ -859,7 +859,7 @@ why this needs to be done manually as opposed to automatically:
    necessarily the most logical way to present the information for
    editing.
 
-[configuration]: {{ site.baseurl }}/docs/configuration.html
+[configuration]: {{ site.baseurl }}/docs/config.html
 [select]: http://www.w3schools.com/tags/tag_select.asp
 [placeholder]: http://www.w3schools.com/tags/att_input_placeholder.asp
 [code blocks]: {{ site.baseurl }}/docs/code.html
