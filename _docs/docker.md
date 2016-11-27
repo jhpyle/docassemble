@@ -21,9 +21,9 @@ require more storage than that to be available.
 
 # Installing Docker
 
-If you have a Mac, follow the [Docker installation instructions for OS X]{:target="_blank"}.
-
 If you have a Windows PC, follow the [Docker installation instructions for Windows]{:target="_blank"}.
+
+If you have a Mac, follow the [Docker installation instructions for OS X]{:target="_blank"}.
 
 On [Amazon Linux] (assuming the username `ec2-user`):
 
@@ -66,7 +66,13 @@ service docker start
 # <a name="single server arrangement"></a>Single-server arrangement
 
 **docassemble** is [available on Docker Hub].  You can download and
-run the image by doing:
+run the image from the command line.
+
+To get a command line on [Windows], run [Windows PowerShell].
+
+To get a command line on a Mac, run [Terminal].
+
+From the command line, simply enter:
 
 {% highlight bash %}
 docker run -d -p 80:80 jhpyle/docassemble
@@ -79,7 +85,9 @@ The image, which is about 2.4GB in size, is an [automated build] based
 on the "master" branch of the [docassemble repository].
 
 You can then connect to the container by pointing your web browser to
-the IP address or hostname of the machine that is running [Docker].
+the IP address or hostname of the machine that is running [Docker]
+(usually http://localhost).
+
 You can log in using the default username ("admin@admin.com") and
 password ("password"), and make changes to the configuration from the
 menu.
@@ -94,7 +102,7 @@ docker exec -t -i <containerid> /bin/bash
 
 You can find out the ID of the running container by doing `docker ps`.
 
-Log files you might wish to check include:
+Log files on the container that you might wish to check include:
 
 * `/var/log/supervisor/initialize-stderr---supervisor-*.log`
 * `/var/log/supervisor/postgres-stderr---supervisor-*.log`
@@ -120,7 +128,7 @@ container.  Usually the container will shut down in about ten seconds.
 To see a list of stopped containers, run `docker ps -a`.  To remove a
 container, run `docker rm <containerid>`.
 
-## Configuration options
+## <a name="configuration options"></a>Configuration options
 
 The **docassemble** [Docker] installation is configurable with
 environment variables.  From the [Docker] command line, these variables
@@ -149,27 +157,31 @@ the `ServerName`.  The `LOCALE` is appended to `/etc/locale.gen` and
 
 The available environment variables include:
 
-* `CONTAINERROLE`: options are:
-  * `all`: the [Docker] container will serve as the [PostgreSQL] server as
-    well as the sole application server.
-  * `webserver`: The [Docker] container will not start a [PostgreSQL]
-    server, but will use the database specified in the `DBHOST` variable.
-* `DBHOST`: The hostname of the [PostgreSQL] server.  Keep undefined
+* <a name="CONTAINERROLE"></a>`CONTAINERROLE`: either `all` or a
+  colon-separated list of services (e.g. `web:celery`,
+  `sql:log:redis`, etc.).  The options are:
+  * `all`: the [Docker] container will run all of the services of
+    **docassemble** on a single container.
+  * `web`: The [Docker] container will serve as a web server.
+  * `celery`: The [Docker] container will serve as a [Celery] node.
+  * `sql`: The [Docker] container will run the central [PostgreSQL] service.
+  * `redis`: The [Docker] container will run the central [Redis] service.
+  * `rabbitmq`: The [Docker] container will run the central [RabbitMQ] service.
+  * `log`: The [Docker] container will run the central log aggregation service.
+* <a name="DBHOST"></a>`DBHOST`: The hostname of the [PostgreSQL] server.  Keep undefined
   or set to `null` in order to use the [PostgreSQL] server on the same
   host.  This environment variable, along with others that begin with
   `DB`, populates values in [db] section of the [configuration] file.
-* `DBNAME`: The name of the [PostgreSQL] database.  Default is `docassemble`.
-* `DBUSER`: The username for connecting to the [PostgreSQL] server.
-  Default is `null` because the default is for **docassemble** to
-  connect to the database using "peer" authentication using the role
-  `www-data` (which is the username of the [Apache] process).
-* `DBPASSWORD`: The password for connecting to the SQL server.
-  Default is `null`.
-* `DBPREFIX`: This sets the prefix for the database specifier.  The
+* <a name="DBNAME"></a>`DBNAME`: The name of the [PostgreSQL] database.  Default is `docassemble`.
+* <a name="DBUSER"></a>`DBUSER`: The username for connecting to the [PostgreSQL] server.
+  Default is `docassemble`.
+* <a name="DBPASSWORD"></a>`DBPASSWORD`: The password for connecting to the SQL server.
+  Default is `abc123`.
+* <a name="DBPREFIX"></a>`DBPREFIX`: This sets the prefix for the database specifier.  The
   default is `postgresql+psycopg2://`.
-* `DBPORT`: This sets the port that **docassemble** will use to access
+* <a name="DBPORT"></a>`DBPORT`: This sets the port that **docassemble** will use to access
   the SQL server.
-* `DBTABLEPREFIX`: This allows multiple separate **docassemble**
+* <a name="DBTABLEPREFIX"></a>`DBTABLEPREFIX`: This allows multiple separate **docassemble**
   implementations to share the same SQL database.  The value is a
   prefix to be added to each table in the database.
 * `EC2`: Set this to `true` if you are running [Docker] on [EC2].
@@ -188,29 +200,68 @@ The available environment variables include:
 * `LOCALE`: You can use this to enable a locale on the server.  When
   the server starts, the value of `LOCALE` is appended to
   `/etc/locale.gen` and `locale-gen` and `update-locale` are run.
-* `LOGSERVER`: This is used in the [multi-server arrangement] where
+* <a name="LOGSERVER"></a>`LOGSERVER`: This is used in the [multi-server arrangement] where
   there is a separate server for collecting log messages.  The default
   is `none`, which causes the server to run [Syslog-ng].
+* <a name="REDIS"></a>`REDIS`: If you are running **docassemble** in a
+  multi-server configuration, set this to the host name at which the
+  [Redis] server can be accessed.
+* <a name="RABBITMQ"></a>`RABBITMQ`: If you are running **docassemble** in a multi-server
+  configuration, set this to the host name at which the [RabbitMQ]
+  server can be accessed.  Note that [RabbitMQ] is very particular
+  about hostnames.  If the [RabbitMQ] server is running on a machine
+  on which the `hostname` command evaluates to `abc`, then your
+  application servers will need to set `RABBITMQ` to `abc` and nothing
+  else.  It is up to you to make sure that `abc` resolves to an IP
+  address.  Note that if you run **docassemble** using the
+  instructions in the [scalability] section, you do not need to worry
+  about this.
+* `SERVERHOSTNAME`: If you are running **docassemble** in a
+  multi-server configuration, and you are starting an application
+  server, set this to the hostname of the [Docker] host.
+  **docassemble** will forward this address to the central server.  In
+  a multi-server configuration, all **docassemble** application
+  servers need to be able to communicate with each other on port 9001
+  (the [supervisor] port).  This is necessary for sending signals that
+  cause the application servers to install new versions of packages,
+  so that all servers are running the same software.  Note that you do
+  not need to worry about `SERVERHOSTNAME` this if you are using
+  [EC2].
+* `URLROOT`: If users access **docassemble** at
+  https://docassemble.example.com, set `URLROOT` to
+  `https://docassemble.example.com`.
+* `BEHINDHTTPSLOADBALANCER`: Set this to `true` if a load balancer is
+  in use and the load balancer accepts connections in HTTPS but
+  forwards them to web servers as HTTP.  This lets **docassemble**
+  know that when it forms URLs, it should use the `https` scheme even
+  though requests appear to be coming in as HTTP requests.
 * `S3ENABLE`: Set this to `true` if you are using [S3] as a repository
-  for uploaded files, [Playground] files, and the [configuration]
-  file.  This environment variable, along with others that begin with
-  `S3`, populates values in [s3] section of the [configuration] file.
-* `S3ACCESSKEY`: If you are using [S3], set this to the [S3] access key.
-* `S3SECRETACCESSKEY`: If you are using [S3], set this to the [S3]
-  access secret.
-* `S3BUCKET`: If you are using [S3], set this to the bucket name.
-  Note that **docassemble** will not create the bucket for you.  You
-  will need to create it for yourself beforehand.
+  for uploaded files, [Playground] files, the [configuration] file,
+  and other information.  This environment variable, along with others
+  that begin with `S3`, populates values in [s3] section of the
+  [configuration] file.  If this is unset, but [`S3BUCKET`] is set, it
+  will be assumed to be `true`.
+* <a name="S3BUCKET"></a>`S3BUCKET`: If you are using [S3], set this
+  to the bucket name.  Note that **docassemble** will not create the
+  bucket for you.  You will need to create it for yourself beforehand.
+* <a name="S3ACCESSKEY"></a>`S3ACCESSKEY`: If you are using [S3], set
+  this to the [S3] access key.  You can ignore this environment
+  variable if you are using [EC2] with an [IAM] role that allows
+  access to your [S3] bucket.
+* <a name="S3SECRETACCESSKEY"></a>`S3SECRETACCESSKEY`: If you are
+  using [S3], set this to the [S3] access secret.  You can ignore this
+  environment variable if you are using [EC2] with an [IAM] role that
+  allows access to your [S3] bucket.
 * `TIMEZONE`: You can use this to set the time zone of the server.
   The value of the variable is stored in `/etc/timezone` and
   `dpkg-reconfigure -f noninteractive tzdata` is run in order to set
-  the system time zone.
+  the system time zone.  The default is `America/New_York`.
 
 Note that if you use [persistent volumes] and/or [S3], launching a new
 **docassemble** container with different variables is not necessarily
 going to change the way **docassemble** works.  For example:
 
-* If `HTTPS` is `true` and `USELETSENCRYPT` is `true`, then the
+* If `USEHTTPS` is `true` and `USELETSENCRYPT` is `true`, then the
   [Apache] configuration files, if stored on a persistent volume, will
   not be overwritten if they already exist when a new container starts
   up.  So if you are using [Let's Encrypt] and you want to change the
@@ -293,87 +344,200 @@ docker rm $(docker ps -a -q)
 docker rmi $(docker images | grep "^<none>" | awk "{print $3}")
 {% endhighlight %}
 
-# Multi-server arrangement
+# <a name="multi server arrangement"></a>Multi-server arrangement
 
-To run **docassemble** in a [multi-server arrangement] using [Docker],
-you need to:
+## Services on different machines
 
-1. Start a container that will provide the SQL server;
-2. Start a container that will provide the log server;
-3. Start one or more other containers that will handle the
-**docassemble** application and web server.
+The **docassemble** application consists of several services, some of
+which are singular and some of which can be plural.
 
-These containers can be on separate hosts.
+The singular services include:
 
-The containers need to have a way to share files with one another.
-The best way to do this is with [Amazon S3].  Before proceeding, go to
-[Amazon S3] and obtain an access key and a secret access key.  Then
-create a bucket and remember the name of the bucket.
+* SQL
+* [Redis]
+* [RabbitMQ] for coordinating [background processes]
+* The **docassemble** log message aggregator
 
-First, go to the machine that will host the SQL server.  To start the
-SQL server, do:
+The (potentially) plural services include:
+
+* Web servers
+* [Celery] nodes
+
+The **docassemble** [Docker] container will run any subset of these
+six services, depending on the value of the environment variable
+[`CONTAINERROLE`], which is passed to the container at startup.  In a
+single-server arrangement ([`CONTAINERROLE`] = `all`, or left
+undefined), the container runs all of the services (except the log
+message aggregator, which is not necessary in the case of a
+single-server arrangement).
+
+You can run **docassemble** in a [multi-server arrangement] using
+[Docker] by running the **docassemble** image on different hosts using
+different [configuration options].
+
+In a multi-server arrangement, you can have one machine run SQL,
+another machine run [Redis] and [RabbitMQ], and any number of machines
+run web servers and [Celery] nodes.  You can decide how to allocate
+services to different machines.  For example, you might want to run
+central tasks on a powerful server, while running many web servers on
+less powerful machines.
+
+Since the SQL, [Redis], and [RabbitMQ] services are standard services,
+they do not have to be run from **docassemble** [Docker] containers.
+
+To change the SQL server that **docassemble** uses, edit the
+[`DBHOST`], [`DBNAME`], [`DBUSER`], [`DBPASSWORD`], [`DBPREFIX`],
+[`DBPORT`], and [`DBTABLEPREFIX`] [configuration options].
+
+To change the [Redis] server that **docassemble** uses, edit the
+[`REDIS`] [configuration option].
+
+To change the [RabbitMQ] server that **docassemble** uses, edit the
+[`RABBITMQ`] [configuration option].
+
+## Port opening
+
+Note that for every service that a [Docker] container provides,
+appropriate ports need to be forwarded from the [Docker] host machine
+to the container.
+
+* Regardless of the [`CONTAINERROLE`], port 9001 needs to be forwarded
+  so that the container can be controlled via [supervisor].
+* If [`CONTAINERROLE`] includes `sql`: forward port 5432 ([Postgresql])
+* If [`CONTAINERROLE`] includes `web`: forward ports 80 (HTTP) and 443 (HTTPS)
+* If [`CONTAINERROLE`] includes `log`: forward ports 514 ([Syslog-ng])
+  and 8080 (custom web server)
+* If [`CONTAINERROLE`] includes `redis`: forward port 6379 ([Redis])
+* If [`CONTAINERROLE`] includes `rabbitmq`: forward ports 4369, 5671,
+  5672, and 25672 ([RabbitMQ]).
+
+For example:
 
 {% highlight bash %}
-docker run -d -p 5432:5432 jhpyle/docassemble-sql
+docker run \
+-e CONTAINERROLE=sql:redis \
+...
+-d -p 5432:5432 -p 6379:6379 -p 9001:9001 \
+jhpyle/docassemble
 {% endhighlight %}
-
-Note the IP address or hostname of the [Docker] host on the local
-network.  You will need to feed this address, and other information,
-to the [Docker] container that responds to web requests.
-
-Now go to the machine that will run your log server (if different).
-To start the log server, do:
 
 {% highlight bash %}
-docker run -d -p 514:514 -p 8080:80 jhpyle/docassemble-log
+docker run \
+-e CONTAINERROLE=web:celery \
+...
+-d -p 80:80 -p 443:443 -p 9001:9001 \
+jhpyle/docassemble
 {% endhighlight %}
 
-Note the IP address or hostname of this server as well.
+## File sharing
 
-Now go to the machine that will run your application server (if different).
+If you run multiple **docassemble** [Docker] containers on different
+machines, the containers will need to have a way to share files with
+one another.
 
-Plug the IP addresses or hostnames for the SQL server and log server
-into a file called `env.list`, along with your [S3] information:
+One way to share files among containers is to make
+`/usr/share/docassemble/` a [persistent volume] on a network file
+system.  This directory contains the configuration, SSL certificates,
+[Python virtual environment], and uploaded files.  However, network
+file systems present problems.
 
-{% highlight text %}
-CONTAINERROLE=webserver
-DBNAME=docassemble
-DBUSER=docassemble
-DBPASSWORD=abc123
-DBHOST=192.168.0.56
-USEHTTPS=false
-DAHOSTNAME=host.example.com
-USELETSENCRYPT=false
-LETSENCRYPTEMAIL=admin@admin.com
-S3ENABLE=true
-S3ACCESSKEY=FWIEJFIJIDGISEJFWOEF
-S3SECRETACCESSKEY=RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
-S3BUCKET=yourbucketname
-EC2=false
-TIMEZONE=America/New_York
-LOGSERVER=192.168.0.57
+A preferable way to share files is with [Amazon S3], which
+**docassemble** supports.  Go to the [S3 Console] and create a bucket.
+
+Then obtain an access key and a secret access key for [S3], if you
+don't have them already.  To obtain these credentials, go to
+[IAM Console] and create a user with "programmatic access."  Under
+"Attach existing policies directly," find the policy called
+`AmazonS3FullAccess` and attach it to the user.
+
+When you run a **docassemble** [Docker] container, set the
+[configuration options]<span></span> [`S3BUCKET`], [`S3ACCESSKEY`],
+and [`S3SECRETACCESSKEY`].
+
+Note that if you run **docassemble** on [EC2], you can launch your
+[EC2] instances with an [IAM] role that allows **docassemble** to access to
+an [S3] bucket without the necessity of setting [`S3ACCESSKEY`]
+and [`S3SECRETACCESSKEY`].
+
+Note that these secret access keys will become available to all
+developers who use **docassemble**.  If you want to limit access to a
+particular bucket, you do not have to use the `AmazonS3FullAccess`
+policy when obtaining [S3] credentials.  Instead, you can create your
+own policy with the following definition:
+
+{% highlight json %}
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::docassemble-example-com"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::docassemble-example-com/*"
+            ]
+        }
+    ]
+}
 {% endhighlight %}
 
-The address for the SQL server is `DBHOST`.  The address for the log
-server is `LOGSERVER`.
+Replace `docassemble-example-com` in the above text with the name of
+your [S3] bucket.
 
-Then start the application server:
+## Configuration file
+
+Note that when you use [S3] to share files, **docassemble** will copy
+the `config.yml` file out of [S3] on startup, and save `config.yml` to
+[S3] whenever the configuration is modified.
+
+This means that as long as there is a `config.yml` file on [S3] with
+the configuration you want, you can start **docassemble** containers
+without specifying a lot of [configuration options]; you simply have
+to refer to the [S3] bucket, and **docassemble** will take it from
+there.  For example:
+
+docker run \
+-e CONTAINERROLE=sql:log:redis:rabbitmq \
+-e S3BUCKET=docassemble-example-com \
+-e S3ACCESSKEY=FWIEJFIJIDGISEJFWOEF \
+-e S3SECRETACCESSKEY=RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG \
+-d -p 80:8080 -p 5432:5432 -p 514:514 \
+-p 6379:6379 -p 4369:4369 -p 5671:5671 \
+-p 5672:5672 -p 25672:25672 -p 9001:9001 \
+jhpyle/docassemble
 
 {% highlight bash %}
-docker run --env-file=env.list -d -p 80:80 -p 443:443 -p 9001:9001 jhpyle/docassemble
+docker run \
+-e CONTAINERROLE=web:celery \
+-e S3BUCKET=docassemble-example-com \
+-e S3ACCESSKEY=FWIEJFIJIDGISEJFWOEF \
+-e S3SECRETACCESSKEY=RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG \
+-d -p 80:80 -p 443:443 -p 9001:9001 \
+jhpyle/docassemble
 {% endhighlight %}
-
-You can start multiple application servers in this way.
-
-Port 9001 is opened so that application servers can coordinate with
-one another.  For example, if one of the servers updates the
-configuration, it can send a message to all of the other servers,
-instructing them to retrieve the new configuration.
-
-See [scalability of docassemble] for more information about running
-**docassemble** in a multi-server arrangement.
 
 # <a name="https"></a>Using HTTPS
+
+If you are running **docassemble** on [EC2], the easiest way to enable
+HTTPS support is to set up an [Application Load Balancer] that accepts
+connections in HTTPS format and forwards them to the web servers in
+HTTP format.  In this configuration [Amazon] takes care of creating
+and hosting the necessary SSL certificates.
+
+If you are not using a [load balancer], you can use HTTPS either by
+setting up [Let's Encrypt] or by providing your own certificates.
 
 ## <a name="letsencrypt"></a>With Let's Encrypt
 
@@ -395,11 +559,10 @@ For example, your `env.list` may look like:
 
 {% highlight text %}
 CONTAINERROLE=all
-DBNAME=docassemble
 USEHTTPS=true
-DAHOSTNAME=host.example.com
+DAHOSTNAME=docassemble.example.com
 USELETSENCRYPT=true
-LETSENCRYPTEMAIL=admin@admin.com
+LETSENCRYPTEMAIL=admin@example.com
 TIMEZONE=America/New_York
 {% endhighlight %}
 
@@ -414,14 +577,11 @@ the certificates.
 
 ## Without Let's Encrypt
 
-See [using HTTPS] for instructions on setting up HTTPS without using
-[Let's Encrypt].
-
 Using your own SSL certificates with [Docker] requires that your SSL
-certificates reside within each container.  There are three ways to
+certificates reside within each container.  There are several ways to
 accomplish this:
 
-* Use [S3], as explained in the [using HTTPS] section.
+* Use [S3] and upload the certificates to your bucket.
 * Use [persistent volumes] and copy the SSL certificate files
   (`docassemble.key`, `docassemble.crt`, and `docassemble.ca.pem`)
   into the volume for `/usr/share/docassemble/certs` before starting
@@ -430,6 +590,62 @@ accomplish this:
   placed in `Docker/docassemble.key`, `Docker/docassemble.crt`, and
   `Docker/docassemble.ca.pem`.  During the build process, these files
   will be copied into `/usr/share/docassemble/certs`.
+
+The default Apache configuration file expects SSL certificates to be
+located in the following files:
+
+{% highlight text %}
+SSLCertificateFile /etc/ssl/docassemble/docassemble.crt
+SSLCertificateKeyFile /etc/ssl/docassemble/docassemble.key 
+SSLCertificateChainFile /etc/ssl/docassemble/docassemble.ca.pem
+{% endhighlight %}
+
+The meaning of these files is as follows:
+
+* `docassemble.crt`: this file is generated by your certificate
+  authority when you submit a certificate signing request.
+* `docassemble.key`: this file is generated at the time you create
+  your certificate signing request.
+* `docassemble.ca.pem`: this file is generated by your certificate
+  authority.  It is variously known as the "chain file"
+  or the "root bundle."
+
+In order to make sure that these files are replicated on every web
+server, the [supervisor] will run the
+`docassemble.webapp.install_certs` module before starting the web
+server.
+
+If you are using [S3], this module will copy the files from the
+`certs/` prefix in your bucket to `/etc/ssl/docassemble`.  You can use
+the [S3 Console] to create a folder called `certs` and upload your
+certificate files into that folder.
+
+If you are not using [S3], the `docassemble.webapp.install_certs`
+module will copy the files from `/usr/share/docassemble/certs` to
+`/etc/ssl/docassemble`.
+
+There are two ways that you can put your own certificate files into
+the `/usr/share/docassemble/certs` directory.  The first way is to
+[create your own Docker image] of **docassemble** and put your
+certificates into the `Docker/ssl` directory.  The contents of this
+directory are copied into `/usr/share/docassemble/certs` during the
+build process.
+
+The second way is to use [persistent volumes].  If you have a
+persistent volume called `certs` for the directory
+`/usr/share/docassemble/certs`, then you can run `docker volume
+inspect certs` to get the directory on the [Docker] host corresponding
+to this directory, and you can copy the SSL certificate files into
+that directory before starting the container.
+
+Note that the files need to be called `docassemble.crt`,
+`docassemble.key`, and `docassemble.ca.pem`, because this is what the
+standard web server configuration expects.
+
+If you want to use different filesystem or S3 locations, the
+`docassemble.webapp.install_certs` can be configured to use different
+locations.  See the [configuration] variables [`certs`] and
+[`cert_install_directory`].
 
 # <a name="build"></a>Creating your own Docker image
 
@@ -459,29 +675,43 @@ files:
   Debian mirror; the standard "httpredir" mirror can lead to random
   packages not being downloaded, depending on which mirrors it chooses
   to use.
-* <span></span>[`docassemble/Docker/config.yml`]: you probably do not need to change
+* <span></span>[`docassemble/Docker/config/config.yml.dist`]: you probably do not need to change
   this; it is a template that is updated based on the contents of the
   `--env-file` passed to [`docker run`].  Once your server is up and
   running you can change the rest of the configuration in the web
   application.
-* <span></span>[`docassemble/Docker/initialize.sh`]: this script updates `config.yml`
-  based on the environment variables; retrieves a new version of
-  `config.yml` from [S3], if available; if `CONTAINERROLE` is not set
-  to `webserver`, starts the [PostgreSQL] server and initializes the
-  database if it does not exist; creates the tables in the database if
-  they do not already exist; copies SSL certificates from [S3] or
-  `/usr/share/docassemble/certs` if [S3] is enabled; enables the
-  [Apache] `mod_ssl` if `USEHTTPS` is `true` and otherwise disables it;
-  runs the Let's Encrypt utility if `USELETSENCRYPT` is `true` and the
-  utility has not been run yet; and starts [Apache].
-* <span></span>[`docassemble/Docker/apache.conf`]: note that if `mod_ssl` is enabled,
-  HTTP will merely redirect to HTTPS.
-* <span></span>[`docassemble/Docker/docassemble.crt`]: SSL certificate for HTTPS.
-* <span></span>[`docassemble/Docker/docassemble.key`]: SSL certificate for HTTPS.
-* <span></span>[`docassemble/Docker/docassemble.ca.pem`]: SSL certificate for HTTPS.
+* <span></span>[`docassemble/Docker/initialize.sh`]: this script
+  updates `config.yml` based on the environment variables; retrieves a
+  new version of `config.yml` from [S3], if available; if
+  [`CONTAINERROLE`] is not set to `webserver`, starts the [PostgreSQL]
+  server and initializes the database if it does not exist; creates
+  the tables in the database if they do not already exist; copies SSL
+  certificates from [S3] or `/usr/share/docassemble/certs` if [S3] is
+  not enabled; enables the [Apache] `mod_ssl` if `USEHTTPS` is `true`
+  and otherwise disables it; runs the [Let's Encrypt] utility if
+  `USELETSENCRYPT` is `true` and the utility has not been run yet; and
+  starts [Apache].
+* <span></span>[`docassemble/Docker/config/docassemble-http.conf`]:
+  [Apache] configuration file for handling HTTP requests.
+  Note that if `mod_ssl` is enabled, HTTP will merely redirect to
+  HTTPS.
+* <span></span>[`docassemble/Docker/config/docassemble-ssl.conf`]:
+  [Apache] configuration file for handling HTTPS requests.
+* <span></span>[`docassemble/Docker/config/docassemble-log.conf`]:
+  [Apache] configuration file for handling requests on port 8080.
+  This is enabled if the [`CONTAINERROLE`] includes `log`.
+* <span></span>[`docassemble/Docker/ssl/docassemble.crt`]: SSL certificate for HTTPS.
+* <span></span>[`docassemble/Docker/ssl/docassemble.key`]: SSL certificate for HTTPS.
+* <span></span>[`docassemble/Docker/ssl/docassemble.ca.pem`]: SSL certificate for HTTPS.
 * <span></span>[`docassemble/Docker/docassemble.conf`]: [Apache] configuration file
   that causes [Apache] to use the [Python virtualenv].
 * <span></span>[`docassemble/Docker/docassemble-supervisor.conf`]: [supervisor]
+  configuration file.
+* <span></span>[`docassemble/Docker/docassemble-syslog-ng.conf`]: [Syslog-ng]
+  configuration file used when [`CONTAINERROLE`] does not include `log`.
+* <span></span>[`docassemble/Docker/syslog-ng.conf`]: [Syslog-ng]
+  configuration file used when [`CONTAINERROLE`] includes `log`.
+* <span></span>[`docassemble/Docker/rabbitmq.config`]: [RabbitMQ]
   configuration file.
 * <span></span>[`docassemble/Docker/docassemble.wsgi`]: WSGI server file called by
   [Apache].
@@ -491,11 +721,18 @@ files:
 * <span></span>[`docassemble/Docker/apache.logrotate`]: This replaces the standard
   apache logrotate configuration.  It does not compress old log files,
   so that it is easier to view them in the web application.
+* <span></span>[`docassemble/Docker/run-apache.sh`]: This is a script
+  that is run by [supervisor] to start the [Apache] server.
+* <span></span>[`docassemble/Docker/run-cron.sh`]: This is a script
+  that is run by [supervisor] to start the [cron] daemon.
 * <span></span>[`docassemble/Docker/run-postgresql.sh`]: This is a script that is
-  run by [supervisor] to start the [PostgreSQL] server in a
-  single-server configuration.
-* <span></span>[`docassemble/Docker/docassemble-syslogng.conf`]: The configuration
-  for sending [Apache] and supervisor logs to the central log server.
+  run by [supervisor] to start the [PostgreSQL] server.
+* <span></span>[`docassemble/Docker/run-rabbitmq.sh`]: This is a script that is
+  run by [supervisor] to start the [RabbitMQ] server.
+* <span></span>[`docassemble/Docker/run-redis.sh`]: This is a script that is
+  run by [supervisor] to start the [Redis] server.
+* <span></span>[`docassemble/Docker/sync.sh`]: This is a script that is
+  run by [supervisor] to synchronize log files.
 
 To build the image, run:
 
@@ -569,19 +806,28 @@ data stored in the persistent volume.
 [using HTTPS]: {{ site.baseurl }}/docs/scalability.html#ssl
 [docassemble repository]: {{ site.github.repository_url }}
 [`docassemble/Dockerfile`]: {{ site.github.repository_url }}/blob/master/Dockerfile
-[`docassemble/Docker/config.yml`]: {{ site.github.repository_url }}/blob/master/Docker/config.yml
+[`docassemble/Docker/config/config.yml.dist`]: {{ site.github.repository_url }}/blob/master/Docker/config/config.yml.dist
 [`docassemble/Docker/initialize.sh`]: {{ site.github.repository_url }}/blob/master/Docker/initialize.sh
-[`docassemble/Docker/apache.conf`]: {{ site.github.repository_url }}/blob/master/Docker/apache.conf
-[`docassemble/Docker/docassemble.crt`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble.crt
-[`docassemble/Docker/docassemble.key`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble.key
-[`docassemble/Docker/docassemble.ca.pem`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble.ca.pem
+[`docassemble/Docker/config/docassemble-http.conf`]: {{ site.github.repository_url }}/blob/master/Docker/config/docassemble-http.conf
+[`docassemble/Docker/config/docassemble-ssl.conf`]: {{ site.github.repository_url }}/blob/master/Docker/config/docassemble-ssl.conf
+[`docassemble/Docker/config/docassemble-log.conf`]: {{ site.github.repository_url }}/blob/master/Docker/config/docassemble-log.conf
+[`docassemble/Docker/ssl/docassemble.crt`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/docassemble.crt
+[`docassemble/Docker/ssl/docassemble.key`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/docassemble.key
+[`docassemble/Docker/ssl/docassemble.ca.pem`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/docassemble.ca.pem
 [`docassemble/Docker/docassemble.conf`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble.conf
 [`docassemble/Docker/docassemble-supervisor.conf`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble-supervisor.conf
+[`docassemble/Docker/docassemble-syslog-ng.conf`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble-syslog-ng.conf
+[`docassemble/Docker/syslog-ng.conf`]: {{ site.github.repository_url }}/blob/master/Docker/syslog-ng.conf
+[`docassemble/Docker/rabbitmq.config`]: {{ site.github.repository_url }}/blob/master/Docker/rabbitmq.config
 [`docassemble/Docker/docassemble.wsgi`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble.wsgi
 [`docassemble/Docker/docassemble.logrotate`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble.logrotate
 [`docassemble/Docker/apache.logrotate`]: {{ site.github.repository_url }}/blob/master/Docker/apache.logrotate
 [`docassemble/Docker/run-postgresql.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-postgresql.sh
-[`docassemble/Docker/docassemble-syslogng.conf`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble-syslogng.conf
+[`docassemble/Docker/run-apache.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-apache.sh
+[`docassemble/Docker/run-cron.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-cron.sh
+[`docassemble/Docker/run-rabbitmq.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-rabbitmq.sh
+[`docassemble/Docker/run-redis.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-redis.sh
+[`docassemble/Docker/sync.sh`]: {{ site.github.repository_url }}/blob/master/Docker/sync.sh
 [`docker run`]: https://docs.docker.com/engine/reference/run/
 [ECS]: https://aws.amazon.com/ecs/
 [JSON]: https://en.wikipedia.org/wiki/JSON
@@ -594,8 +840,42 @@ data stored in the persistent volume.
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [Syslog-ng]: https://en.wikipedia.org/wiki/Syslog-ng
 [persistent volumes]: #persistent
+[persistent volume]: #persistent
 [configuration]: {{ site.baseurl }}/docs/config.html
 [db]: {{ site.baseurl }}/docs/config.html#db
 [s3]: {{ site.baseurl }}/docs/config.html#s3
 [ec2]: {{ site.baseurl }}/docs/config.html#ec2
 [Build your own private image]: #build
+[Redis]: http://redis.io/
+[RabbitMQ]: https://www.rabbitmq.com/
+[Application Load Balancer]: https://aws.amazon.com/elasticloadbalancing/applicationloadbalancer/
+[IAM]: https://aws.amazon.com/iam/
+[Amazon]: https://amazon.com
+[load balancer]: https://en.wikipedia.org/wiki/Load_balancing_(computing)
+[S3 Console]: https://console.aws.amazon.com/s3/home
+[IAM Console]: https://console.aws.amazon.com/iam
+[create your own Docker image]: #build
+[`certs`]: {{ site.baseurl }}/docs/config.html#certs
+[`cert_install_directory`]: {{ site.baseurl }}/docs/config.html#cert_install_directory
+[cron]: https://en.wikipedia.org/wiki/Cron
+[Python virtual environment]: http://docs.python-guide.org/en/latest/dev/virtualenvs/
+[configuration options]: #configuration options
+[configuration option]: #configuration options
+[`DBHOST`]: #DBHOST
+[`DBNAME`]: #DBNAME
+[`DBUSER`]: #DBUSER
+[`DBPASSWORD`]: #DBPASSWORD
+[`DBPREFIX`]: #DBPREFIX
+[`DBPORT`]: #DBPORT
+[`DBTABLEPREFIX`]: #DBTABLEPREFIX
+[`REDIS`]: #REDIS
+[`RABBITMQ`]: #RABBITMQ
+[`LOGSERVER`]: #LOGSERVER
+[`S3BUCKET`]: #S3BUCKET
+[`S3ACCESSKEY`]: #S3ACCESSKEY
+[`S3SECRETACCESSKEY`]: #S3SECRETACCESSKEY
+[`CONTAINERROLE`]: #CONTAINERROLE
+[Celery]: http://www.celeryproject.org/
+[background processes]: {{ site.baseurl }}/docs/functions.html#background
+[Windows PowerShell]: https://en.wikipedia.org/wiki/PowerShell
+[Terminal]: https://en.wikipedia.org/wiki/Terminal_(macOS)

@@ -841,6 +841,12 @@ can change the URL that **docassemble** uses by setting the
 ec2_ip_url: http://169.254.169.254/latest/meta-data/local-ipv4
 {% endhighlight %}
 
+## <a name="external hostname"></a>external hostname
+
+The `external hostname` is the hostname by which users will access
+**docassemble**.  This variable is only used if **docassemble** is
+running on [Docker].
+
 ## <a name="cert_install_directory"></a>cert_install_directory
 
 By default, this is `/etc/ssl/docassemble`, but you can change it to

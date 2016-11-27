@@ -4,321 +4,244 @@ title: Scalability of docassemble
 short_title: Scalability
 ---
 
-The **docassemble** web application is easily scalable.  Its SQL
-database (accessed through [SQLAlchemy]), [Redis] system and
-[RabbitMQ] system can be centralized, and [Amazon S3] can be used
-instead of the file system to store user documents.  As a result, a
-cluster of web servers can serve responses to client browsers.
+**docassemble** can easily be scaled in the cloud.  A cluster of web
+servers can serve responses to client browsers, while communicating
+with centralized services.  The limit to scalability will then be a
+question of how responsive a single SQL server can be and how
+responsive a single [Redis] server can be.
 
 # Quick start
 
-If you want to run **docassemble** in a multi-server arrangement,
-there are a variety of ways to do so, but the following is the
-recommended method:
+If you want to run **docassemble** in a scalable
+[multi-server arrangement], there are a variety of ways to do so, but
+the following is the recommended way to get started.  It takes
+advantage of the many features of [Amazon Web Services] ([AWS]).
 
-1. Get an [Amazon Web Services] account.
-2. Go to [Amazon S3] and obtain an access key and a secret access
-key.  Create a bucket.
-3. Go to [EC2] and start up an [ECS]-optimized instance.  Go to
-Community AMIs, search for "ecs-optimized" and pick the most recent
-AMI.  (As of this writing, the most recent is
-"amzn-ami-2016.09.b-amazon-ecs-optimized.")
-3. Go to [EC2 Container Service].
-4. Create a Task Definition called `docassemble-backend` using the [JSON]
-configuration below.  Edit the `TIMEZONE`.
-5. Create a Service called `backend-service` that uses the task
-definition `docassemble-backend`.  Set the number of tasks to 1.  Do
-not choose an Elastic Load Balancer.  Deploy `backend-service` on an
-[EC2] instance.  Make note of the "Private IP" of the instance.
-7. Create a Service called `log-service` that uses the task definition
-`docassemble-log`.  Set the number of tasks to 1.  Do not
-choose an Elastic Load Balancer.  Deploy `log-service` on an [EC2]
-instance.  Make note of the "Private IP" of the instance.
-8. Create a Task Definition called `docassemble-app` using the [JSON]
-configuration below.  Substitute the "Private IP" of the instance
-running `docassemble-sql` for `DBHOST`.  Substitute the "Private IP"
-of the instance running `docassemble-log` for `LOGSERVER`.  (Or, use
-[Amazon Route 53] to create a Private Hosted Zone for the [VPC] with
-CNAME entries mapping the "Private IP"s of the instances running
-`docassemble-sql` and `docassemble-log` to names.)  Substitute your
-[Amazon S3] credentials and bucket name (`S3ACCESSKEY`, `S3SECRETACCESSKEY`,
-`S3SECRETACCESSKEY`, and `S3BUCKET`).
-9. Create an [Elastic Load Balancer] in [EC2].
-10. Create a Service called `app-service` that uses the task definition
-`docassemble-app`.  Set the number of tasks to 1 and use the [Elastic Load
-Balancer] you just created.
-11. Set up the security groups on the [Elastic Load Balancer] and the
-[VPC] so that the instances within the [VPC] can send any traffic among
-each other, but that only HTTP (or HTTPS) is open to the outside world.
-12. Decide what URL you want users to use, and edit your DNS to add a
-CNAME pointing from that URL to the URL of the load balancer.
-13. Create a sufficient number of [EC2] instances so that the
-`docassemble-sql`, `docassemble-log`, and `docassemble-app` tasks all
-have room to run.
-14. Create an [Auto Scaling Group] for the `docassemble-app` task so
-that any number of instances (up to a limit) can support the
-`docassemble-app` task.
+## Overview
 
-Go to [VPC] and copy the CIDR of the network.
+In this example, one server will perform central functions (SQL,
+[Redis], [RabbitMQ], and log message aggregation) and two separate
+servers will act as application servers.  The application servers will
+act as web servers, receiving requests that are distributed by a
+[load balancer].  These servers will also operate as [Celery] nodes,
+running [background processes] for **docassemble** interviews.  All
+three of the servers will be [EC2] virtual machines situated within a
+private network on [AWS] called a [Virtual Private Cloud] ([VPC]).
 
-Go to [EC2] and create a new security group.  Allow all traffic from
-the CIDR of your [VPC].
+Users will point their browsers at a URL like
+`https://docassemble.example.com`, where the [DNS] entry for
+`docassemble.example.com` is a [CNAME] that points to an
+[Application Load Balancer] (at an address like
+`myloadbalancer-198225082.us-west-1.elb.amazonaws.com`).  The
+[Application Load Balancer] will take care of generating and serving
+SSL certificates for the encrypted connection.
 
-Create a Launch Configuration
+The [Application Load Balancer] will convert the HTTPS requests into
+HTTP requests and send them to the web servers.  From the perspective
+of the web servers, all incoming requests will use the HTTP scheme.
+But from the perspective of the web browser, the web site uses the
+HTTPS scheme.
 
-Set the "IAM role" to the IAM role you created earlier.
+Within the [VPC], the web servers will communicate with the central
+server using a variety of TCP ports.
 
-Set the security group to the security group you created earlier.
+The three servers will all be part of an [Auto Scaling Group].  This
+means that as more people use your site, you can expand beyond two web
+servers to any number of web servers.
 
-Create an Auto Scaling Group
+The software will be deployed on the servers by the
+[EC2 Container Service] ([ECS]).  [ECS] is [Amazon]'s system for
+automatically deploying [Docker] containers on [EC2] instances.
 
-Connect it with the launch configuration you created earlier.
+In the vocabulary of [ECS], there will be one "[cluster]" (the default
+cluster) running two services: "backend" and "app."
 
-Set the number of instances to 2.
+The "backend" service consists of a single "task," where the task is
+defined as a single [Docker] "container" running the "image"
+`jhpyle/docassemble` with the environment variable `CONTAINERROLE` set
+to `sql:redis:rabbitmq:log`.  You will ask for one of these services
+to run (i.e. the "desired count" of this service is set to 1).
 
-Here is the task definition for `docassemble-sql`:
+The "app" service consists of a single "task," where the task is
+defined as a single [Docker] "container" running the "image"
+`jhpyle/docassemble` with the environment variable `CONTAINERROLE` set
+to `web:celery`.  You will ask for two of these services to run
+(i.e. the "desired count" of this service is set to 2).  (You will be
+able to change this count in the future.)
+
+The result of this configuration will be that three [EC2] virtual
+machines will exist, all of which will be running [Docker].  Each
+virtual machine will "run" the same [Docker] container, except that
+the "backend" instance will run with different environment variables
+than the "app" instances.
+
+To shutdown your **docassemble** setup, you would first edit the "app"
+service and set the "count" to zero.  Then, after a few minutes, the
+[Docker] containers will stop.  Once the "app" services are no longer
+running, you will then do the same with the "backend" service.  Then,
+if you want to turn off your [EC2] virtual machines, you would edit
+the [Auto Scaling Group] and set the desired number of instances to zero.
+
+You can then restart your **docassemble** system and it will pick up
+exactly where it left off.  This is because **docassemble** will back
+up SQL, [Redis], and other information to [S3] when the containers
+shut down, and restore from the backups when they start up again.  To
+restart, you would edit the [Auto Scaling Group] to set the desired
+number of instances to 3.  When they are up and running, you would
+then update the "backend" service and set the "desired count" to 1.
+Once that service is up and running, you would update the "app"
+service and set the "desired count" to 2.
+
+## Setup instructions
+
+The following instructions will guide you through the process of using
+[AWS] to set up a **docassemble** installation.  [AWS] itself is
+beyond the scope of this documentation.  If you have never used [AWS]
+before, you are encouraged to consult the [AWS] documentation.
+
+These instructions assume that you own a [domain name] and can add
+[DNS] entries for the domain.  (If you do not have a [domain name],
+you can purchase one from a site like [GoDaddy] or [Google Domains].)
+In this example, we will use `docassemble.example.com` as the example
+hostname, but you will need to replace this with whatever hostname you
+are going to use.
+
+First, sign up for an [Amazon Web Services] account.
+
+Log in to the [AWS Console].  If you have not used [ECS] before,
+navigate to the service called "EC2 Container Service" and click "Get
+Started" to follow the steps of the introductory "wizard."  Check the
+option for "deploy a sample application onto an Amazon ECS Cluster."
+Follow the default selections.  The wizard will create a [cluster]
+called "default," an [IAM] role called `ecsInstanceRole`, and several
+resources, including a [CloudFormation] stack, an [Internet Gateway],
+[VPC], a [Route Table], a [VPC Attached Gateway], two [subnets], a
+[Security Group] for an [Elastic Load Balancer], a [Security Group]
+for [ECS] instances, a [Launch Configuration], and an
+[Auto Scaling Group].
+
+Most of what the wizard creates is not needed and should be deleted.
+The running [EC2] instance may also cost you money.  To delete the
+unnecessary resources:
+
+1. Go to the [ECS Console], find the service "sample-webapp," update
+it, and set the "Number of tasks" to 0.  Then you can delete
+"sample-webapp."  Also go into "Task Definitions" and delete the one
+[Task Definition] there.
+2. Go to the [EC2 Console], go into the "Instances" section, and change
+the "Instance State" of the one running instance to "Terminate."
+3. Then go into the "Auto Scaling Groups" section and delete the one
+[Auto Scaling Group].
+4. Then go into the "Launch Configurations" section and delete the one
+[Launch Configuration].
+5. Then go to the [VPC Console], select the [VPC] for which "Default
+VPC" is "No," and delete it.  (Be careful not to delete the default
+VPC!)
+
+Next, we need to create an [S3] "bucket" in which your **docassemble**
+system can store files, backups, and other things.  To do this, go to
+the [S3 Console], click "Create Bucket," and pick a name.  If your
+site is at docassemble.example.com, a good name for the bucket is
+`docassemble-example-com`.  (Client software will have trouble
+accessing your bucket if it contains `.` characters.)  Under "Region,"
+pick the region nearest you.
+
+Next, we need to create an [IAM] role for the [EC2] instances that
+will run **docassemble**.  This role will empower the server to
+operate on [ECS] and to access the [S3] "bucket" you created.  To do
+this, go to the [IAM Console] and go to "Roles" -> "Create New Role."
+Call your new role "docassembleInstanceRole" or some other name of
+your choosing.  Under "AWS Service Roles," select "Amazon EC2 Role for
+EC2 Container Service."  On the "Attach Policy" screen, check the
+checkbox next to "AmazonEC2ContainerServiceforEC2Role," and continue
+on to create the role.
+
+Once the role is created, go into the "Inline Policies" area of the
+role and create a new inline policy.  Select "Custom Policy," enter a
+"Policy Name" like "S3DocassembleExampleCom," and set the "Policy
+Document" to the following (substituting the name of the bucket you
+created in place of `docassemble-example-com` in the two places it
+appears):
 
 {% highlight json %}
 {
-  "family": "docassemble-sql",
-  "containerDefinitions": [
-    {
-      "name": "docassemble-sql",
-      "image": "jhpyle/docassemble",
-      "cpu": 1,
-      "memory": 900,
-      "portMappings": [
+    "Version": "2012-10-17",
+    "Statement": [
         {
-          "containerPort": 5432,
-          "hostPort": 5432
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::docassemble-example-com"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::docassemble-example-com/*"
+            ]
         }
-      ],
-      "essential": true,
-      "environment": [
-        {
-          "name": "CONTAINERROLE",
-          "value": "sql"
-        },
-        {
-          "name": "S3ENABLE",
-          "value": "true"
-        },
-        {
-          "name": "S3BUCKET",
-          "value": "yourbucketname"
-        },
-        {
-          "name": "TIMEZONE",
-          "value": "America/New_York"
-        }
-      ],
-      "mountPoints": [
-        {
-          "sourceVolume": "pgetc",
-          "containerPath": "/etc/postgresql"
-        },
-        {
-          "sourceVolume": "pglog",
-          "containerPath": "/var/log/postgresql"
-        },
-        {
-          "sourceVolume": "pglib",
-          "containerPath": "/var/lib/postgresql"
-        },
-        {
-          "sourceVolume": "pgrun",
-          "containerPath": "/var/run/postgresql"
-        }
-      ]
-    }
-  ],
-  "volumes": [
-    {
-      "name": "pgetc",
-      "host": {
-        "sourcePath": "/ecs/pgetc"
-      }
-    },
-    {
-      "name": "pglog",
-      "host": {
-        "sourcePath": "/ecs/pglog"
-      }
-    },
-    {
-      "name": "pglib",
-      "host": {
-        "sourcePath": "/ecs/pglib"
-      }
-    },
-    {
-      "name": "pgrun",
-      "host": {
-        "sourcePath": "/ecs/pgrun"
-      }
-    }
-  ]
+    ]
 }
 {% endhighlight %}
 
-Here is the task definition for `docassemble-log`:
+(Note that instead of creating an inline policy that limits access to
+a particular bucket, you could attach the "AmazonS3FullAccess" policy
+to the role and give [EC2] instances full access to all of your
+account's [S3] buckets.)
+
+This inline policy allows any application running on a machine given
+the `docassembleInstanceRole` role to access your [S3] bucket.  This
+saves you from having to include long and complicated secret keys in
+the environment variables you pass to **docassemble** [Docker]
+containers.  All of the [EC2] instances you create in later steps will
+be given the `docassembleInstanceRole` [IAM] role.
+
+Go to [VPC Console] and inspect the description of the default [VPC].
+(If you have more than one [VPC], look for the [VPC] where "Default
+VPC" is "Yes.")  Make a note of the [VPC CIDR] address for the VPC, which will be
+something like `172.68.0.0/16` or `10.1.0.0/16`.
+
+Go to the [EC2 Console] and set up a new [Security Group] called
+`docassembleSg` with permissions on port 22 (SSH) for all addresses,
+and all traffic for the CIDR address you noted.
+
+Go to the "Launch Configuration" section of the [EC2 Console] and
+create a new [Launch Configuration] called `docassembleLc`.  When it
+asks what [AMI] you want to use, go to Community AMIs, search for the
+keyword "ecs-optimized" and pick the most recent AMI that comes up.
+The AMIs will not be listed in any useful order, so you have to look
+carefully at the names, which contain the dates the AMIs were created.
+As of this writing, the most recent ECS-optimzed AMI is
+"amzn-ami-2016.09.b-amazon-ecs-optimized."  Set the "IAM role" of the
+[Launch Configuration] to `docassembleInstanceRole`, the [IAM] role
+you created earlier.  Set the security group to `docassembleSg`, the
+[Security Group] you created earlier.
+
+Then go to the "Auto Scaling Groups" section of the [EC2 Console] and
+create a new [Auto Scaling Group] called `docassembleAsg`.  Connect it
+with `docassembleSg`, the [Launch Configuration] you just created.
+Use a fixed number of instances without scaling in response to
+[CloudWatch] alarms.  Set the number of instances to 3.
+
+Then go to the [ECS Console].
+
+Create a [Task Definition] called `backend` using the [JSON]
+configuration below.  Edit the `TIMEZONE`, `DAHOSTNAME`, and
+`S3BUCKET` environment variables.
 
 {% highlight json %}
 {
-  "family": "docassemble-log",
+  "family": "backend",
   "containerDefinitions": [
     {
-      "name": "docassemble-log",
-      "image": "jhpyle/docassemble",
-      "cpu": 1,
-      "memory": 300,
-      "portMappings": [
-        {
-          "containerPort": 514,
-          "hostPort": 514
-        },
-        {
-          "containerPort": 8080,
-          "hostPort": 8080
-        }
-      ],
-      "essential": true,
-      "environment": [
-        {
-          "name": "CONTAINERROLE",
-          "value": "log"
-        },
-        {
-          "name": "TIMEZONE",
-          "value": "America/New_York"
-        }
-      ],
-      "mountPoints": [
-        {
-          "sourceVolume": "dalog",
-          "containerPath": "/usr/share/docassemble/log"
-        }
-      ]
-    }
-  ],
-  "volumes": [
-    {
-      "name": "dalog",
-      "host": {
-        "sourcePath": "/ecs/dalog"
-      }
-    }
-  ]
-}
-{% endhighlight %}
-
-Here is the task definition for `docassemble-app`:
-
-{% highlight json %}
-{
-  "family": "docassemble-app",
-  "containerDefinitions": [
-    {
-      "name": "docassemble-app",
-      "image": "jhpyle/docassemble",
-      "memory": 900,
-      "cpu": 1,
-      "portMappings": [
-        {
-          "containerPort": 80,
-          "hostPort": 80
-        },
-        {
-          "containerPort": 443,
-          "hostPort": 443
-        },
-        {
-          "containerPort": 9001,
-          "hostPort": 9001
-        }
-      ],
-      "essential": true,
-      "environment": [
-        {
-          "name": "CONTAINERROLE",
-          "value": "webserver"
-        },
-        {
-          "name": "DBNAME",
-          "value": "docassemble"
-        },
-        {
-          "name": "DBUSER",
-          "value": "docassemble"
-        },
-        {
-          "name": "DBPASSWORD",
-          "value": "abc123"
-        },
-        {
-          "name": "DBHOST",
-          "value": "sql.docassemble.local"
-        },
-        {
-          "name": "LOGSERVER",
-          "value": "log.docassemble.local"
-        },
-        {
-          "name": "S3ENABLE",
-          "value": "true"
-        },
-        {
-          "name": "S3ACCESSKEY",
-          "value": "FWIEJFIJIDGISEJFWOEF"
-        },
-        {
-          "name": "S3SECRETACCESSKEY",
-          "value": "RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG"
-        },
-        {
-          "name": "S3BUCKET",
-          "value": "yourbucketname"
-        },
-        {
-          "name": "EC2",
-          "value": "true"
-        },
-        {
-          "name": "TIMEZONE",
-          "value": "America/New_York"
-        },
-        {
-          "name": "USEHTTPS",
-          "value": "false"
-        },
-        {
-          "name": "USELETSENCRYPT",
-          "value": "false"
-        },
-        {
-          "name": "LETSENCRYPTEMAIL",
-          "value": "admin@admin.com"
-        },
-        {
-          "name": "DAHOSTNAME",
-          "value": "host.example.com"
-        }
-      ]
-    }
-  ]
-}
-{% endhighlight %}
-
-# Combining roles
-
-Here is the task definition for `docassemble-backend`:
-
-{% highlight json %}
-{
-  "family": "docassemble-backend",
-  "containerDefinitions": [
-    {
-      "name": "docassemble-backend",
+      "name": "backend",
       "image": "jhpyle/docassemble",
       "cpu": 1,
       "memory": 900,
@@ -364,11 +287,11 @@ Here is the task definition for `docassemble-backend`:
       "environment": [
         {
           "name": "CONTAINERROLE",
-          "value": "sql:log:redis:rabbitmq"
+          "value": "sql:redis:rabbitmq:log"
         },
         {
           "name": "DAHOSTNAME",
-          "value": "hosted.docassemble.org"
+          "value": "docassemble.example.com"
         },
         {
           "name": "EC2",
@@ -380,7 +303,7 @@ Here is the task definition for `docassemble-backend`:
         },
         {
           "name": "S3BUCKET",
-          "value": "hosted-docassemble-org"
+          "value": "docassemble-example-com"
         }
       ],
       "mountPoints": []
@@ -390,14 +313,35 @@ Here is the task definition for `docassemble-backend`:
 }
 {% endhighlight %}
 
-Here is the task definition for `docassemble-app`:
+The `CONTAINERROLE` variable indicates that this server will serve the
+functions of SQL, [Redis], [RabbitMQ], and log message aggregation.
+The `DAHOSTNAME` variable indicates the hostname at which the user
+will access the **docassemble** application.  The `EC2` variable
+instructs **docassemble** that it will be running on [EC2], which
+means that the server needs to use a special method of obtaining its
+own [fully-qualified domain name].
+
+Then, check the [ECS Console] and look at the `default` [cluster].
+There should be three [container instances] available.  (If not,
+something is wrong with the [Auto Scaling Group] you created, or
+perhaps the instances are still starting up.)
+
+Then, create a Service called `backend` that uses the task definition
+you just created.  Set the number of tasks to 1.  Do not choose an
+[Elastic Load Balancer].  This will cause the **docassemble** [Docker]
+image to be installed on one of the [container instances].  It will
+take some time for the image to download and start.  In the meantime,
+the [ECS Console] should show one "pending task."
+
+Next, create a [Task Definition] called `app` using the [JSON]
+configuration below.  Edit the `S3BUCKET` environment variables.
 
 {% highlight json %}
 {
-  "family": "docassemble-app",
+  "family": "app",
   "containerDefinitions": [
     {
-      "name": "docassemble-app",
+      "name": "app",
       "image": "jhpyle/docassemble",
       "cpu": 1,
       "memory": 900,
@@ -419,7 +363,7 @@ Here is the task definition for `docassemble-app`:
         },
         {
           "name": "S3BUCKET",
-          "value": "hosted-docassemble-org"
+          "value": "docassemble-example-com"
         }
       ],
       "mountPoints": []
@@ -428,6 +372,30 @@ Here is the task definition for `docassemble-app`:
   "volumes": []
 }
 {% endhighlight %}
+
+Create a Service called `app` that uses the task definition
+`docassemble-app`.  Set the number of tasks to 1 and use the [Elastic Load
+Balancer] you just created.
+11. Set up the security groups on the [Elastic Load Balancer] and the
+[VPC] so that the instances within the [VPC] can send any traffic among
+each other, but that only HTTP (or HTTPS) is open to the outside world.
+12. Decide what URL you want users to use, and edit your DNS to add a
+CNAME pointing from that URL to the URL of the load balancer.
+13. Create a sufficient number of [EC2] instances so that the
+`docassemble-sql`, `docassemble-log`, and `docassemble-app` tasks all
+have room to run.
+14. Create an [Auto Scaling Group] for the `docassemble-app` task so
+that any number of instances (up to a limit) can support the
+`docassemble-app` task.
+
+Go to [VPC] and copy the CIDR of the network.
+
+Go to [EC2] and create a new security group.  Allow all traffic from
+the CIDR of your [VPC].
+
+
+
+
 
 ## All in one
 
@@ -453,8 +421,20 @@ Here is the task definition for `docassemble-app`:
       "essential": true,
       "environment": [
         {
+          "name": "DAHOSTNAME",
+          "value": "docassemble.example.com"
+        },
+        {
+          "name": "EC2",
+          "value": "true"
+        },
+        {
+          "name": "USEHTTPS",
+          "value": "true"
+        },
+        {
           "name": "S3BUCKET",
-          "value": "hosted-docassemble-org"
+          "value": "docassemble-example-com"
         }
       ]
     }
@@ -499,7 +479,7 @@ similar to the example below.  Substitute your own values for
 `DBHOST`, `LOGSERVER`, `S3ACCESSKEY`, `S3SECRETACCESSKEY`, and `S3BUCKET`.
 9. Run `docker run --env-file=env.list -d -p 80:80 -p 443:443 -p
 9001:9001 jhpyle/docassemble`
-10. Edit the [security group] on the second instance to allow HTTP
+10. Edit the [Security Group] on the second instance to allow HTTP
 traffic from anywhere.
 11. Point your browser to the "Public IP" of the second instance.  A
 **docassemble** interview should appear.
@@ -658,73 +638,6 @@ the outside world, you will need to explain to Amazon what your
 purposes for sending e-mail are, and explain your policy of dealing
 with replies and bounce-backs.
 
-# <a name="ssl"></a>Using HTTPS
-
-Note: using Let's Encrypt for HTTPS does not currently work in a
-multi-server arrangement, though it does work for a single-server
-arrangement.
-
-The default Apache configuration file expects SSL certificates to be
-located in the following files:
-
-{% highlight text %}
-SSLCertificateFile /etc/ssl/docassemble/docassemble.crt
-SSLCertificateKeyFile /etc/ssl/docassemble/docassemble.key 
-SSLCertificateChainFile /etc/ssl/docassemble/docassemble.ca.pem
-{% endhighlight %}
-
-The meaning of these files is as follows:
-
-* `docassemble.crt`: this file is generated by your certificate
-  authority when you submit a certificate signing request.
-* `docassemble.key`: this file is generated at the time you create
-  your certificate signing request.
-* `docassemble.ca.pem`: this file is generated by your certificate
-  authority.  It is variously known as the "chain file"
-  or the "root bundle."
-
-In order to make sure that these files are replicated on every web
-server, the [supervisor] will run the
-`docassemble.webapp.install_certs` module before running the web
-server.
-
-If you are using S3, this module will copy the files from the `certs/`
-prefix in your bucket to `/etc/ssl/docassemble`.
-
-If you are not using S3, this module will copy the files from
-`/usr/share/docassemble/certs` to `/etc/ssl/docassemble`.  You will
-want to [create your own Docker image] of **docassemble** if you want
-to install certificates this way.
-
-The files need to be called `docassemble.crt`, `docassemble.key`, and
-`docassemble.ca.pem`, or whatever the web server configuration
-expects.
-
-First, obtain your SSL certificate files.  Name them
-`docassemble.crt`, `docassemble.key`, and `docassemble.ca.pem`.
-
-If you have enabled `s3` in the [configuration], copy the certificate
-files to the `certs/` prefix of the `bucket` you configured:
-
-{% highlight bash %}
-s3cmd --access_key=YOURACCESSKEY --secret_key=YOURSECRETKEY put yourserver.crt s3://yourbucket/certs/docassemble.crt
-s3cmd --access_key=YOURACCESSKEY --secret_key=YOURSECRETKEY put yourserver.key s3://yourbucket/certs/docassemble.key
-s3cmd --access_key=YOURACCESSKEY --secret_key=YOURSECRETKEY put yourserver.ca.pem s3://yourbucket/certs/docassemble.ca.pem
-{% endhighlight %}
-
-If you do not have the s3cmd utility, install it:
-
-{% highlight bash %}
-apt-get install s3cmd
-{% endhighlight %}
-
-If you did not enable `s3`, just copy `docassemble.crt`, `docassemble.key`, and
-`docassemble.ca.pem` to `/usr/share/docassemble/certs` on each web
-server instance.
-
-If you need to use different filesystem or S3 locations, you can edit
-the [configuration] variables [`certs`] and [`cert_install_directory`].
-
 # Using S3 without passing access keys in the configuration
 
 If you are running **docassemble** on an [EC2] instance, or on a
@@ -744,8 +657,6 @@ s3:
 [Apache]: https://en.wikipedia.org/wiki/Apache_HTTP_Server
 [Apache configuration]: {{ site.baseurl }}/docs/installation.html
 [configuration]: {{ site.baseurl }}/docs/config.html
-[`certs`]: {{ site.baseurl }}/docs/config.html#certs
-[`cert_install_directory`]: {{ site.baseurl }}/docs/config.html#cert_install_directory
 [installation]: {{ site.baseurl }}/docs/installation.html
 [SQLAlchemy]: http://www.sqlalchemy.org/
 [S3]: https://aws.amazon.com/s3/
@@ -755,17 +666,55 @@ s3:
 [Amazon SES]: https://aws.amazon.com/ses/
 [Amazon Linux]: https://aws.amazon.com/amazon-linux-ami/
 [Amazon Web Services]: https://aws.amazon.com
+[AWS]: https://aws.amazon.com
 [Docker]: {{ site.baseurl }}/docs/docker.html
 [Amazon's Docker instructions]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/docker-basics.html
 [Virtual Private Cloud]: https://aws.amazon.com/vpc/
 [VPC]: https://aws.amazon.com/vpc/
 [Amazon Route 53]: https://aws.amazon.com/route53/
-[security group]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html
+[Security Group]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html
 [supervisor]: http://supervisord.org/
-[EC2 Container Service]: https://aws.amazon.com/ecs/
+[EC2 Container Service]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html
+[ECS]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html
 [Elastic Load Balancer]: https://aws.amazon.com/elasticloadbalancing/
 [Auto Scaling Group]: http://docs.aws.amazon.com/AutoScaling/latest/DeveloperGuide/AutoScalingGroup.html
 [create your own Docker image]: {{ site.baseurl }}/docs/docker.html#build
 [using Docker]: {{ site.baseurl }}/docs/docker.html#build
 [`create_tables`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/create_tables.py
 [JSON]: https://en.wikipedia.org/wiki/JSON
+[Redis]: http://redis.io/
+[RabbitMQ]: https://www.rabbitmq.com/
+[background processes]: {{ site.baseurl }}/docs/functions.html#background
+[live help]: {{ site.baseurl }}/docs/livehelp.html
+[Celery]: http://www.celeryproject.org/
+[DNS]: https://en.wikipedia.org/wiki/Domain_Name_System
+[load balancer]: https://en.wikipedia.org/wiki/Load_balancing_(computing)
+[CNAME]: https://en.wikipedia.org/wiki/CNAME_record
+[AMI]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html
+[VPC CIDR]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html
+[autoscaling tutorial]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cloudwatch_alarm_autoscaling.html
+[Application Load Balancer]: https://aws.amazon.com/elasticloadbalancing/applicationloadbalancer/
+[cluster]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_clusters.html
+[DNS server]: https://en.wikipedia.org/wiki/Domain_Name_System
+[domain name]: https://en.wikipedia.org/wiki/Domain_name
+[GoDaddy]: https://www.godaddy.com/
+[Google Domains]: https://domains.google.com/
+[AWS Console]: https://aws.amazon.com/console/
+[S3 Console]: https://console.aws.amazon.com/s3/home
+[IAM Console]: https://console.aws.amazon.com/iam
+[ECS Console]: https://console.aws.amazon.com/ecs/home
+[VPC Console]: https://console.aws.amazon.com/vpc/home
+[Launch Configuration]: http://docs.aws.amazon.com/autoscaling/latest/userguide/LaunchConfiguration.html
+[CloudFormation]: https://aws.amazon.com/cloudformation/
+[Internet Gateway]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Internet_Gateway.html
+[Route Table]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html
+[VPC Attached Gateway]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Internet_Gateway.html#Add_IGW_Attach_Gateway
+[subnets]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html
+[Task Definition]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_defintions.html
+[Amazon]: https://amazon.com
+[IAM]: https://aws.amazon.com/iam/
+[CloudWatch]: https://aws.amazon.com/cloudwatch/
+[container instance]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_instances.html
+[container instances]: http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_instances.html
+[fully-qualified domain name]: https://en.wikipedia.org/wiki/Fully_qualified_domain_name
+[multi-server arrangement]: {{ site.baseurl }}/docs/docker.html#multi server arrangement
