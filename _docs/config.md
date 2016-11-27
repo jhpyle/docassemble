@@ -500,7 +500,7 @@ deleted through [scheduled tasks].
 
 ## <a name="imagemagick"></a><a name="pdftoppm"></a>Image conversion
 
-By default, **docassemble** assumes that you have ImageMagick and
+By default, **docassemble** assumes that you have [ImageMagick] and
 pdftoppm installed on your system, and that they are accessible
 through the commands `convert` and `pdftoppm`, respectively.  If you
 do not have these applications on your system, you need to set the
@@ -943,7 +943,7 @@ first.
 
 [VoiceRSS]: http://www.voicerss.org/
 [Flask]: http://flask.pocoo.org/
-[YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
+[YAML]: https://en.wikipedia.org/wiki/YAML
 [LaTeX]: http://www.latex-project.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
 [installation]: {{ site.baseurl }}/docs/installation.html
@@ -1008,3 +1008,4 @@ first.
 [AMQP URI]: https://www.rabbitmq.com/uri-spec.html
 [redis URI]: https://www.iana.org/assignments/uri-schemes/prov/redis
 [`os locale`]: #os locale
+[ImageMagick]: http://www.imagemagick.org/

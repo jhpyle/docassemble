@@ -236,7 +236,7 @@ more information, see [`event`], [`url_action()`],
 [role]: {{ site.baseurl }}/docs/roles.html
 [Mako]: http://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
-[YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
+[YAML]: https://en.wikipedia.org/wiki/YAML
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [code blocks]: {{ site.baseurl }}/docs/code.html
 [interview logic]: {{ site.baseurl }}/docs/logic.html

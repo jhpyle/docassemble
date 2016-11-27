@@ -440,7 +440,7 @@ came back from asking whether the user has a car.
 
 [roles]: {{ site.baseurl }}/docs/roles.html
 [Setting Variables]: {{ site.baseurl }}/docs/fields.html
-[YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
+[YAML]: https://en.wikipedia.org/wiki/YAML
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
 [`code`]: {{ site.baseurl }}/docs/code.html

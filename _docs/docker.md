@@ -781,13 +781,13 @@ files:
   and otherwise disables it; runs the [Let's Encrypt] utility if
   `USELETSENCRYPT` is `true` and the utility has not been run yet; and
   starts [Apache].
-* <span></span>[`docassemble/Docker/config/docassemble-http.conf`]:
+* <span></span>[`docassemble/Docker/config/docassemble-http.conf.dist`]:
   [Apache] configuration file for handling HTTP requests.
   Note that if `mod_ssl` is enabled, HTTP will merely redirect to
   HTTPS.
-* <span></span>[`docassemble/Docker/config/docassemble-ssl.conf`]:
+* <span></span>[`docassemble/Docker/config/docassemble-ssl.conf.dist`]:
   [Apache] configuration file for handling HTTPS requests.
-* <span></span>[`docassemble/Docker/config/docassemble-log.conf`]:
+* <span></span>[`docassemble/Docker/config/docassemble-log.conf.dist`]:
   [Apache] configuration file for handling requests on port 8080.
   This is enabled if the [`CONTAINERROLE`] includes `log`.
 * <span></span>[`docassemble/Docker/ssl/docassemble.crt`]: SSL certificate for HTTPS.
@@ -895,9 +895,9 @@ and [`docker rm`] on the **docassemble** container.  Note that [`docker rm`] wil
 [`docassemble/Dockerfile`]: {{ site.github.repository_url }}/blob/master/Dockerfile
 [`docassemble/Docker/config/config.yml.dist`]: {{ site.github.repository_url }}/blob/master/Docker/config/config.yml.dist
 [`docassemble/Docker/initialize.sh`]: {{ site.github.repository_url }}/blob/master/Docker/initialize.sh
-[`docassemble/Docker/config/docassemble-http.conf`]: {{ site.github.repository_url }}/blob/master/Docker/config/docassemble-http.conf
-[`docassemble/Docker/config/docassemble-ssl.conf`]: {{ site.github.repository_url }}/blob/master/Docker/config/docassemble-ssl.conf
-[`docassemble/Docker/config/docassemble-log.conf`]: {{ site.github.repository_url }}/blob/master/Docker/config/docassemble-log.conf
+[`docassemble/Docker/config/docassemble-http.conf.dist`]: {{ site.github.repository_url }}/blob/master/Docker/config/docassemble-http.conf.dist
+[`docassemble/Docker/config/docassemble-ssl.conf.dist`]: {{ site.github.repository_url }}/blob/master/Docker/config/docassemble-ssl.conf.dist
+[`docassemble/Docker/config/docassemble-log.conf.dist`]: {{ site.github.repository_url }}/blob/master/Docker/config/docassemble-log.conf.dist
 [`docassemble/Docker/ssl/docassemble.crt`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/docassemble.crt
 [`docassemble/Docker/ssl/docassemble.key`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/docassemble.key
 [`docassemble/Docker/ssl/docassemble.ca.pem`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/docassemble.ca.pem

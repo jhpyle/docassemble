@@ -230,7 +230,7 @@ templates in order to enable fonts that support your language.
 [interview logic]: {{ site.baseurl}}/docs/logic.html
 [code blocks]: {{ site.baseurl}}/docs/code.html
 [questions]: {{ site.baseurl}}/docs/questions.html
-[configuration]: {{ site.baseurl }}/docs/configuration.html
+[configuration]: {{ site.baseurl }}/docs/config.html
 [modifier]: {{ site.baseurl }}/docs/modifiers.html
 [functions]: {{ site.baseurl }}/docs/functions.html
 [Unicode]: https://en.wikipedia.org/wiki/Unicode

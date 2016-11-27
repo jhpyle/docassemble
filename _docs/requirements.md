@@ -81,7 +81,7 @@ The web application ([`docassemble.webapp`]) depends on:
   number of pages in a PDF upload
 * [pdftoppm](http://www.foolabs.com/xpdf/download.html) - for
   converting PDF files into page images
-* [ImageMagick](http://http://www.imagemagick.org/) - needed for
+* [ImageMagick](http://www.imagemagick.org/) - needed for
   adjusting the rotation of user-supplied JPEGs; the web app will not
   fail if it is missing
 * [Perl Audio Converter](http://vorzox.wix.com/pacpl) - for converting
