@@ -209,10 +209,12 @@ VPC" is "Yes.")  Make a note of the [VPC CIDR] address for the VPC,
 which will be something like `172.68.0.0/16` or `10.1.0.0/16`.
 
 Go to the [EC2 Console] and set up a new [Security Group] called
-`docassembleSg` with permissions on port 22 (SSH) for all addresses,
-and all traffic for the [CIDR] address you noted.  This will provide
-the "firewall rules" for your servers, so that you can connect to them
-via SSH and so that they can communicate among each other.
+`docassembleSg` with two rules.  One rule should allow traffic of
+"Type" SSH from "Source" Anywhere.  The other rule should allow "All
+traffic" from "Source" Custom IP, where the address is the [CIDR]
+address you noted.  This will provide the "firewall rules" for your
+servers so that you can connect to them via SSH and so that they can
+communicate among each other.
 
 Go to the "Launch Configuration" section of the [EC2 Console] and
 create a new [Launch Configuration] called `docassembleLc`.  When it
@@ -229,8 +231,8 @@ you created earlier.  Set the security group to `docassembleSg`, the
 Then go to the "Auto Scaling Groups" section of the [EC2 Console] and
 create a new [Auto Scaling Group] called `docassembleAsg`.  Connect it
 with `docassembleLc`, the [Launch Configuration] you just created.
-Use a fixed number of instances without scaling in response to
-[CloudWatch] alarms.  Set the number of instances to 3.  Once the
+Use a fixed number of instances without scaling policies that respond
+to [CloudWatch] alarms.  Set the number of instances to 3.  Once the
 [Auto Scaling Group] is saved, [AWS] should start running three [EC2]
 instances.  Since you chose an [ECS]-optimized AMI, the instances
 should automatically register with your [ECS] cluster.
@@ -484,7 +486,47 @@ server fully functional: you need to associate the `websocket` "Target
 Group" with the same [EC2] instances that are associated with the
 `web` "Target Group."  (Unfortunately, this is not something that the
 [ECS] system can do automatically yet.)  To fix this, go to the
-[EC2 Console].
+[EC2 Console], go to the "Target Groups" section, select the
+`web` Target Group, go to the "Targets" tab, and note the Instance IDs
+of the "Registered Instances."  Now de-select `web`, select
+`websocket`, and click the "Edit" button within the "Targets" tab.  On
+the "Register and deregister instances" page that appears, select the
+instances you just noted and click the "Add to registered" button.
+
+### Controlling AWS from the command line
+
+In the **docassemble** [GitHub repository], there is a command-line
+utility called [`da-cli`] (which is short for "**docassemble** command
+line interface") that you can use to manage your multi-server
+configuration on [AWS].
+
+It depends on the [boto3] library, so you may need to run `sudo pip
+install boto3` in order for it to work.
+
+* `da-cli start_up 2` - bring up two `app` services and one `backend`
+  service after bringing up three [EC2] instances with the
+  `docassembleAsg` [Auto Scaling Group].  It also registers the
+  appropriate instances for the `websocket` Target Group.
+* `da-cli shut_down` - bring the count of the `app` and `backend`
+  services down to zero, then bring the `docassembleAsg`
+  [Auto Scaling Group] count down to zero.
+* `da-cli shutdown_unused_ec2_instances` - finds [EC2] instances in
+  the `docassembleAsg` [Auto Scaling Group] that are not being used to
+  host a service, and terminates them.
+* `da-cli update_ec2_instances 4` - increases the `docassembleAsg`
+  [Auto Scaling Group] count to 4 and waits for the instances to
+  become available.
+* `da-cli connect_string app` - prints a command that you can use to
+  SSH to each [EC2] instance running the service `app`.
+* `da-cli fix_web_sockets` - registers target instances for the
+  `websocket` Target Group.
+* `da-cli update_desired_count app 4` - increases the desired count
+  for the `app` service to 4.
+
+If your [AWS] resources go by names different from those in the above
+setup instructions, you can easily edit the `da-cli` script, which is
+a simple [Python] module.  The things you can do in the [AWS] web
+interface can be done using the [boto3] library.
 
 # Single-server configuration on EC2 Container Service
 
@@ -829,3 +871,6 @@ s3:
 [`CONTAINERROLE`]: #CONTAINERROLE
 [`S3BUCKET`]: #S3BUCKET
 [HTTP success code]: https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success
+[GitHub repository]: {{ site.github.repository_url }}
+[boto3]: https://boto3.readthedocs.io/en/latest/
+[`da-cli`]: {{ site.github.repository_url }}/blob/master/da-cli
