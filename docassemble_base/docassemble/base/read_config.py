@@ -27,11 +27,11 @@ if __name__ == "__main__":
             for locale in map(lambda x: x.strip(), separator.split(other_locales_variable)):
                 print('OTHERLOCALES[' + str(indexno) + ']=' + repr(str(locale)))
                 indexno += 1
-    if 'packages' in daconfig and type(daconfig['packages']) is list:
+    if 'debian packages' in daconfig and type(daconfig['debian packages']) is list:
         print('declare -a PACKAGES')
         print('export PACKAGES')
         indexno = 0
-        for package in daconfig['packages']:
+        for package in daconfig['debian packages']:
             print('PACKAGES[' + str(indexno) + ']=' + repr(str(package)))
             indexno += 1
     else:

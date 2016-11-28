@@ -249,9 +249,9 @@ if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "$OTHERLOGSERVER" = true ]; then
     if [ -d /etc/syslog-ng ]; then
 	if [ "$OTHERLOGSERVER" = true ]; then
 	    cp /usr/share/docassemble/webapp/syslog-ng-docker.conf /etc/syslog-ng/syslog-ng.conf
-	    cp /usr/share/docassemble/webapp/docassemble-syslog-ng.conf /etc/syslog-ng/conf.d/docassemble
+	    cp /usr/share/docassemble/webapp/docassemble-syslog-ng.conf /etc/syslog-ng/conf.d/docassemble.conf
 	else
-	    rm -f /etc/syslog-ng/conf.d/docassemble
+	    rm -f /etc/syslog-ng/conf.d/docassemble.conf
 	    cp /usr/share/docassemble/webapp/syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
 	fi
 	supervisorctl --serverurl http://localhost:9001 start syslogng
