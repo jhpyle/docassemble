@@ -267,7 +267,7 @@ See also the [`qr_code()`] function, which allows you to insert the
 [modifiers]: {{ site.baseurl }}/docs/modifiers.html
 [Mako]: http://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
-[YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
+[YAML]: https://en.wikipedia.org/wiki/YAML
 [mark up]: https://en.wikipedia.org/wiki/Markup_language
 [Pandoc]: http://johnmacfarlane.net/pandoc/
 [YouTube]: https://www.youtube.com/
