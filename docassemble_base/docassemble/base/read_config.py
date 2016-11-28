@@ -35,7 +35,7 @@ if __name__ == "__main__":
             print('PACKAGES[' + str(indexno) + ']=' + repr(str(package)))
             indexno += 1
     else:
-        other_packages_variable = os.getenv('PACKAGES', None)
+        packages_variable = os.getenv('PACKAGES', None)
         if packages_variable is not None and packages_variable != 'null':
             print('declare -a PACKAGES')
             print('export PACKAGES')
