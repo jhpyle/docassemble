@@ -18,7 +18,6 @@ from docassemble.webapp.server import User, UserDict, logmessage, unpack_diction
 import docassemble.base.interview_cache
 import docassemble.base.parse
 import docassemble.base.util
-import os
 import cPickle as pickle
 import codecs
 #import docassemble.webapp.worker

@@ -5,6 +5,13 @@
 # or
 # sudo pip install boto3
 
+serviceApp = 'app'
+serviceBackend = 'backend'
+targetGroupWeb = 'web'
+targetGroupWebSocket = 'websocket'
+autoScalingGroup = 'docassembleAsg'
+keyPair = 'ec2.pem'
+
 import boto3
 import time
 import sys
@@ -56,31 +63,31 @@ def update_desired_count(service, desired_count):
 
 def fix_web_sockets():
     target_groups_arns = get_target_groups()
-    web_servers = get_registered_targets(target_groups_arns['daapp'])
-    web_sockets_servers = get_registered_targets(target_groups_arns['dawebsockets'])
+    web_servers = get_registered_targets(target_groups_arns[targetGroupWeb])
+    web_sockets_servers = get_registered_targets(target_groups_arns[targetGroupWebSocket])
     for server in web_servers:
         if server not in web_sockets_servers:
-            elb.register_targets(TargetGroupArn=target_groups_arns['dawebsockets'], Targets=[{'Id': server}])
+            elb.register_targets(TargetGroupArn=target_groups_arns[targetGroupWebSocket], Targets=[{'Id': server}])
 
 def start_up(the_count=1):
     update_ec2_instances(the_count + 1)
-    update_desired_count('backend', 1)
-    update_desired_count('daapp', the_count)
+    update_desired_count(serviceBackend, 1)
+    update_desired_count(serviceApp, the_count)
     fix_web_sockets()
 
 def shut_down():
-    update_desired_count('daapp', 0)
-    update_desired_count('backend', 0)
+    update_desired_count(serviceApp, 0)
+    update_desired_count(serviceBackend, 0)
     update_ec2_instances(0)
 
 def connect_string(service):
     for instance_id in instances_for_service(service):
-        print "ssh -i oregon.pem ec2-user@" + ec2.describe_instances(InstanceIds=[instance_id])['Reservations'][0]['Instances'][0]['PublicDnsName']
+        print "ssh -i " + keyPair + " ec2-user@" + ec2.describe_instances(InstanceIds=[instance_id])['Reservations'][0]['Instances'][0]['PublicDnsName']
 
 def update_ec2_instances(desired_count):
-    autoscale.set_desired_capacity(AutoScalingGroupName='daapp', DesiredCapacity=desired_count)
+    autoscale.set_desired_capacity(AutoScalingGroupName=autoScalingGroup, DesiredCapacity=desired_count)
     while True:
-        result = autoscale.describe_auto_scaling_groups(AutoScalingGroupNames=['daapp'])['AutoScalingGroups'][0]
+        result = autoscale.describe_auto_scaling_groups(AutoScalingGroupNames=[autoScalingGroup])['AutoScalingGroups'][0]
         if result['DesiredCapacity'] != len(result['Instances']):
             time.sleep(2)
         else:
@@ -94,14 +101,14 @@ def update_ec2_instances(desired_count):
 def shutdown_unused_ec2_instances():
     all_instances = available_instances()
     used_instances = list()
-    used_instances.extend(instances_for_service('backend'))
-    used_instances.extend(instances_for_service('daapp'))
+    used_instances.extend(instances_for_service(serviceBackend))
+    used_instances.extend(instances_for_service(serviceApp))
     for instance in all_instances:
         if instance in used_instances:
             continue
         autoscale.terminate_instance_in_auto_scaling_group(InstanceId=instance, ShouldDecrementDesiredCapacity=True)
     while True:
-        result = autoscale.describe_auto_scaling_groups(AutoScalingGroupNames=['daapp'])['AutoScalingGroups'][0]
+        result = autoscale.describe_auto_scaling_groups(AutoScalingGroupNames=[autoScalingGroup])['AutoScalingGroups'][0]
         if result['DesiredCapacity'] != len(result['Instances']):
             time.sleep(2)
         else:

@@ -7115,7 +7115,7 @@ def logs():
         h = httplib2.Http()
         resp, content = h.request("http://" + LOGSERVER + ':8080', "GET")
         if int(resp['status']) >= 200 and int(resp['status']) < 300:
-            files = content.split("\n")
+            files = [f for f in content.split("\n") if f != '' and f is not None]
         else:
             abort(404)
         if len(files):

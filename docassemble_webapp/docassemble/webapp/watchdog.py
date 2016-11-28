@@ -7,7 +7,10 @@ while True:
     busy_now = set()
     no_longer_busy = set()
     for pid in psutil.pids():
-        p = psutil.Process(pid)
+        try:
+            p = psutil.Process(pid)
+        except:
+            continue
         if p.name() == 'apache2' and p.cpu_times().user > 30.0 and p.cpu_percent(interval=1.0) > 90.0:
             busy_now.add(pid)
     for pid in busy_pids:
@@ -17,8 +20,11 @@ while True:
         busy_pids.discard(pid)
     for pid in busy_now:
         if pid in busy_pids:
-            p = psutil.Process(pid)
-            p.kill()
+            try:
+                p = psutil.Process(pid)
+                p.kill()
+            except:
+                pass
             busy_pids.discard(pid)
         else:
             busy_pids.add(pid)

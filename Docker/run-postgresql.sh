@@ -1,9 +1,13 @@
 #!/bin/bash
 
+export DA_CONFIG_FILE=/usr/share/docassemble/config/config.yml
+
 chown -R postgres.postgres /etc/postgresql
 chown -R postgres.postgres /var/lib/postgresql
 chown -R postgres.postgres /var/run/postgresql
 chown -R postgres.postgres /var/log/postgresql
+
+source /dev/stdin < <(su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
 
 if [ "${S3ENABLE:-null}" == "null" ] && [ "${S3BUCKET:-null}" != "null" ]; then
     export S3ENABLE=true
