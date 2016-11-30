@@ -450,7 +450,7 @@ The available environment variables include:
   depends on certain [Debian] packages being installed, you can
   provide a comma-separated list of [Debian] packages in the
   `PACKAGES` environment variable.  The packages will be installed
-  when the image is run.  See the [`packages`] configuration
+  when the image is run.  See the [`debian packages`] configuration
   directive.
 
 Note that if you use [persistent volumes] and/or [S3], launching a new
@@ -494,6 +494,7 @@ The singular services include:
 * [Redis]
 * [RabbitMQ] for coordinating [background processes]
 * The **docassemble** log message aggregator
+* A [cron] service that runs [scheduled tasks] and housekeeping functions
 
 The (potentially) plural services include:
 
@@ -566,7 +567,7 @@ docker run \
 jhpyle/docassemble
 {% endhighlight %}
 
-## File sharing
+## <a name="file sharing"></a>File sharing
 
 If you run multiple **docassemble** [Docker] containers on different
 machines, the containers will need to have a way to share files with
@@ -596,7 +597,7 @@ there.  For example, to run a central server, you can do:
 
 {% highlight bash %}
 docker run \
--e CONTAINERROLE=sql:log:redis:rabbitmq \
+-e CONTAINERROLE=sql:redis:rabbitmq:log:cron \
 -e S3BUCKET=docassemble-example-com \
 -e S3ACCESSKEY=FWIEJFIJIDGISEJFWOEF \
 -e S3SECRETACCESSKEY=RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG \
@@ -971,7 +972,6 @@ and [`docker rm`] on the **docassemble** container.  Note that [`docker rm`] wil
 [`timezone`]: {{ site.baseurl }}/docs/config.html#timezone
 [`os locale`]: {{ site.baseurl }}/docs/config.html#os locale
 [`other os locales`]: {{ site.baseurl }}/docs/config.html#other os locales
-[`packages`]: {{ site.baseurl }}/docs/config.html#packages
 [`behind https load balancer`]: {{ site.baseurl }}/docs/config.html#behind https load balancer
 [`rabbitmq`]: {{ site.baseurl }}/docs/config.html#rabbitmq
 [`redis`]: {{ site.baseurl }}/docs/config.html#redis
@@ -981,7 +981,7 @@ and [`docker rm`] on the **docassemble** container.  Note that [`docker rm`] wil
 [`external hostname`]: {{ site.baseurl }}/docs/config.html#external hostname
 [`use https`]: {{ site.baseurl }}/docs/config.html#use https
 [`ec2`]: {{ site.baseurl }}/docs/config.html#ec2
-[`packages`]: {{ site.baseurl }}/docs/config.html#packages
+[`debian packages`]: {{ site.baseurl }}/docs/config.html#debian packages
 [`url root`]: {{ site.baseurl }}/docs/config.html#url root
 [Debian]: https://www.debian.org/
 [using S3]: #persistent s3
@@ -996,3 +996,4 @@ and [`docker rm`] on the **docassemble** container.  Note that [`docker rm`] wil
 [`docker ps`]: https://docs.docker.com/engine/reference/commandline/ps/
 [Amazon Web Services]: https://aws.amazon.com
 [S3 bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
+[scheduled tasks]: {{ site.baseurl }}/docs/scheduled.html

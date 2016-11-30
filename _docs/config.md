@@ -194,8 +194,8 @@ bar of interviews that do not specify these titles in their
 ## <a name="uploads"></a>uploads
 
 This is the directory in which uploaded files are stored.  If you are
-using a [multi-server arrangement], this needs to point to a central
-network drive.
+using a [multi-server arrangement] and not using [S3], this needs to
+point to a central network drive.
 
 ## <a name="packages"></a>packages
 
@@ -203,15 +203,15 @@ This is the directory in which **docassemble** extension packages are
 installed.  The PYTHONUSERBASE environment variable is set to this
 value and [pip] is called with `--install-option=--user`.  When Python
 looks for packages, it will look here.  This is normally `~/.local`,
-but it is a good practice to avoid using the web server user's home
-directory.
+but it is changed to the value of this directive.  The default value
+is `/usr/share/docassemble/local`.
 
 ## <a name="packagecache"></a>packagecache
 
 When [pip] runs, it needs a directory in which to cache files.  The
 XDG_CACHE_HOME environment variable is set to this value.  This is
-normally `~/.cache`, but it is a good practice to avoid using the web
-server user's home directory.
+normally `~/.cache`, but it is changed to the value of this directive.
+The default value is `/usr/share/docassemble/cache`.
 
 On Mac and Windows, make sure that the web server user has a home
 directory to which [pip] can write.  (See pip/utils/appdirs.py.)
@@ -223,11 +223,6 @@ This is the path to the [WSGI] file loaded by the web server.
 **docassemble** needs to know this filename because the server needs
 to reset itself after an add-on package is updated.  This happens by
 "touch"ing (updating the modification time of) the [WSGI] file.
-
-If you are using a [multi-server arrangement], the [WSGI] file needs to be
-stored on a central network drive.  When a package is updated, all
-servers need to reset, not just the server that happened to process
-the package update.
 
 ## <a name="certs"></a>certs
 
@@ -412,6 +407,20 @@ other os locales:
   - es_MX.UTF-8 UTF-8
 {% endhighlight %}
 
+## <a name="debian packages"></a>debian packages
+
+On [Docker], you can ensure that particular [Debian] packages are
+installed by providing a list of packages to the `debian packages`
+directive:
+
+{% highlight yaml %}
+debian packages:
+  - r-base
+  - r-cran-effects
+{% endhighlight %}
+
+These packages will be installed when the [Docker] container starts.
+
 ## <a name="default_admin_account"></a>default_admin_account
 
 These settings are only used by the setup script [`create_tables.py`] in
@@ -461,6 +470,11 @@ display in the web browser.
 
 If set to false, users will not see a "Sign in" link in the
 upper-right-hand corner of the web app.
+
+## <a name="allow_registration"></a>allow_registration
+
+If set to false, users will not be allowed to register to become users
+of the site.
 
 ## <a name="xsendfile"></a>xsendfile
 
@@ -972,7 +986,7 @@ first.
 [Google Maps Geocoding API]: https://developers.google.com/maps/documentation/geocoding/intro
 [Amazon EC2]: https://aws.amazon.com/ec2/
 [EC2]: https://aws.amazon.com/ec2/
-[Docker]: https://www.docker.com/
+[Docker]: {{ site.baseurl }}/docs/docker.html
 [fully qualified domain name]: https://en.wikipedia.org/wiki/Fully_qualified_domain_name
 [`exit`]: {{ site.baseurl }}/docs/questions.html#exit
 [`leave`]: {{ site.baseurl }}/docs/questions.html#leave
@@ -989,6 +1003,7 @@ first.
 [`create_tables.py`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/create_tables.py
 [`docassemble.wsgi`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble.wsgi
 [`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
+[`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
 [`root`]: #root
 [Pandoc]: http://johnmacfarlane.net/pandoc/
 [LibreOffice]: https://www.libreoffice.org/
@@ -1009,3 +1024,7 @@ first.
 [redis URI]: https://www.iana.org/assignments/uri-schemes/prov/redis
 [`os locale`]: #os locale
 [ImageMagick]: http://www.imagemagick.org/
+[Debian]: https://www.debian.org/
+[`voicerss`]: #voicerss
+[E.164]: https://support.twilio.com/hc/en-us/articles/223183008-Formatting-International-Phone-Numbers
+[SMS]: https://en.wikipedia.org/wiki/Short_Message_Service

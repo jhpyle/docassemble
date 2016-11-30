@@ -59,7 +59,7 @@ cluster) running two services: "backend" and "app."
 The "backend" service consists of a single "task," where the task is
 defined as a single [Docker] "container" running the "image"
 `jhpyle/docassemble` with the environment variable [`CONTAINERROLE`] set
-to `sql:redis:rabbitmq:log`.  You will ask for one of these services
+to `sql:redis:rabbitmq:log:cron`.  You will ask for one of these services
 to run (i.e. the "desired count" of this service is set to 1).
 
 The "app" service consists of a single "task," where the task is
@@ -92,7 +92,7 @@ then update the "backend" service and set the "desired count" to 1.
 Once that service is up and running, you would update the "app"
 service and set the "desired count" to 2.
 
-## Setup instructions
+## Instructions
 
 The following instructions will guide you through the process of using
 [AWS] to set up a **docassemble** installation.  [AWS] itself is
@@ -381,7 +381,7 @@ configuration below.  Edit the [`TIMEZONE`], [`DAHOSTNAME`], and
       "environment": [
         {
           "name": "CONTAINERROLE",
-          "value": "sql:redis:rabbitmq:log"
+          "value": "sql:redis:rabbitmq:log:cron"
         },
         {
           "name": "DAHOSTNAME",
@@ -501,7 +501,8 @@ line interface") that you can use to manage your multi-server
 configuration on [AWS].
 
 It depends on the [boto3] library, so you may need to run `sudo pip
-install boto3` in order for it to work.
+install boto3` in order for it to work.  You need to initialize
+[boto3] by running `aws configure`.
 
 * `da-cli start_up 2` - bring up two `app` services and one `backend`
   service after bringing up three [EC2] instances with the
@@ -592,94 +593,125 @@ then go to the [ECS Console] and set up a "service" that runs a single
 Edit [`DAHOSTNAME`], [`LETSENCRYPTEMAIL`], and [`S3BUCKET`].  Note
 that [`CONTAINERROLE`] is not specified, but it will default to `all`.
 
-# Alternative method without using EC2 Container Service
+# How it works
 
-1. Get an [Amazon Web Services] account.
-2. Go to [Amazon S3] and obtain an access key and a secret access
-key.  Create a bucket.
-3. Go to [Amazon EC2] and launch three [Amazon Linux] instances in the
-same [Virtual Private Cloud] ([VPC]).
-4. Edit your [VPC] so that "DNS Resolution" Yes and "DNS Hostnames" is
-   Yes.
-5. Install [Docker] in all three instances: `sudo yum -y update && sudo yum
--y install docker && sudo usermod -a -G docker ec2-user`.  Then log
-out and log back in again.  See [Amazon's Docker instructions] for
-more information.
-6. In the first [EC2] instance, start a PostgreSQL container using the
-official **docassemble** [Docker] image: `docker run -d -p 5432:5432
-jhpyle/docassemble-sql`.
-7. In the second [EC2] instance, start a log container using the
-official **docassemble** [Docker] image: `docker run -d -p 514:514 -p
-8080:80 jhpyle/docassemble-log`.
-7. Note the "Private DNS" hostname of these instances.  Then go to
-[Amazon Route 53] and create a Hosted Zone with the type "Private
-Hosted Zone for Amazon VPC."  Use a domain like `docassemble.local` or
-whatever you want (this is purely internal).  Create a CNAME that maps
-`sql.docassemble.local` (or other name of your choosing) to the
-"Private DNS" hostname of the instance running the SQL server.  This
-is so that the application servers can locate the SQL server by
-`sql.docassemble.local`.  Alternatively, you could forget about
-[Amazon Route 53] and just use the "Private IP" address of the SQL
-instance in place of the hostname, but it is nicer to be able to use
-DNS, in case the underlying IP address ever changes.
-8. Do the same for the log server (`log.docassemble.local`).
-8. Go to the third [EC2] instance and create a file called `env.list`
-similar to the example below.  Substitute your own values for
-`DBHOST`, `LOGSERVER`, `S3ACCESSKEY`, `S3SECRETACCESSKEY`, and `S3BUCKET`.
-9. Run `docker run --env-file=env.list -d -p 80:80 -p 443:443 -p
-9001:9001 jhpyle/docassemble`
-10. Edit the [Security Group] on the second instance to allow HTTP
-traffic from anywhere.
-11. Point your browser to the "Public IP" of the second instance.  A
-**docassemble** interview should appear.
-12. You can create as many additional instances as you want and deploy
-**docassemble** on them by repeating steps 8-9.  Make sure these new
-instances use the same security group, so you don't have to repeat
-step 10.
-13. Add the instances (other than the SQL and log server instances) to a load
-balancer.
-
-Here is an example `env.list` file:
-
-{% highlight text %}
-CONTAINERROLE=webserver
-DBNAME=docassemble
-DBUSER=docassemble
-DBPASSWORD=abc123
-DBHOST=sql.docassemble.local
-LOGSERVER=log.docassemble.local
-S3ENABLE=true
-S3ACCESSKEY=FWIEJFIJIDGISEJFWOEF
-S3SECRETACCESSKEY=RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
-S3BUCKET=yourbucketname
-EC2=true
-{% endhighlight %}
-
-# Explanation
-
-Each server's [configuration] is defined in
+Each **docassemble** application server reads its [configuration] from
 `/usr/share/docassemble/config.yml`.  The default configuration for
-the SQL connection is:
+connecting to the central SQL database is:
 
 {% highlight yaml %}
 db:
   prefix: postgresql+psycopg2://
   name: docassemble
-  user: null
-  password: null
-  host: null
-  port: null
+  user: docassemble
+  password: abc123
+  host: localhost
 {% endhighlight %}
 
-This will cause **docassemble** to connect to PostgreSQL on the local
-machine with peer authentication and use the database "docassemble."
-This configuration can be modified to connect to a remote server.
+This will cause **docassemble** to connect to [PostgreSQL] on the
+local machine as the user "docassemble" and open the database
+"docassemble."  This configuration can be modified to connect to a
+remote server.  If you use a remote SQL server that is not a [Docker]
+container running the [`CONTAINERROLE`] `sql`, then you need to make
+sure that you create the user and database first, and give permission
+to the user to create tables in the database.
+
+By default, the [Redis] server is assumed to be found at
+`redis://localhost` and the [RabbitMQ] server at
+`pyamqp://guest@your.hostname.local//`, where `your.hostname.local` is
+the value of [`socket.gethostname()`].  However, you can modify the
+locations of the [Redis] server and [RabbitMQ] server in the
+[configuration] using the [`redis`] and [`rabbitmq`] directives:
+
+{% highlight yaml %}
+redis: redis://redis.example.local
+rabbitmq: pyamqp://guest@rabbit.example.local//'
+{% endhighlight %}
+
+## Log file aggregation
+
+In a multi-server configuration, log files can be centralized and
+aggregated by using [Syslog-ng] on the application servers to forward
+local log files to port 514 on a central server, which in turn runs
+[Syslog-ng] to listen to port 514 and write what it hears to files in
+`/usr/share/docassemble/log`.  The hostname of this central server is
+set using the [`log server`] directive in the [configuration]:
+
+{% highlight yaml %}
+log server: log.example.local
+{% endhighlight %}
+
+If this directive is set, **docassemble** will write its own log
+messages to port 514 on the central server rather than appending to
+`/usr/share/docassemble/log/docassemble.log`.
+
+When [`log server`] is set, the "Logs" page of the web interface will
+call http://log.example.local:8080/ to get a list of available log
+files, and will retrieve the content of files by accessing URLs like
+http://log.example.local:8080/docassemble.log.
+
+The following files make this possible:
+
+* [`Docker/cgi-bin/index.sh`] - CGI script that should be copied to
+  `/usr/lib/cgi-bin/`.
+* [`Docker/config/docassemble-log.conf.dist`] - template for an
+  [Apache] site configuration file that connects port 8080 to the
+  `index.sh` CGI script above.
+* [`Docker/docassemble-syslog-ng.conf`] - on application servers, this
+  is copied into `/etc/syslog-ng/conf.d/docassemble`.  It depends on
+  an environment variable `LOGSERVER` which should be set to the
+  hostname of the central log server (e.g., `log.example.local`).  It
+  causes log messages to be forwarded to port 514 on the central log
+  server.  Note that [Syslog-ng] needs to run in an environment where
+  the `LOGSERVER` environment variable is defined, or the file needs
+  to be edited to include the hostname explicitly.
+* [`Docker/syslog-ng.conf`] - on the central log server, this is
+  copied to `/etc/syslog-ng/syslog-ng.conf`.  It causes [Syslog-ng] to
+  listen to port 514 and copy messages to files in
+  `/usr/share/docassemble/log/`.
+
+## Auto-discovery of services
+
+If you use [S3], you can can use **docassemble** in a multi-server
+configuration without manually specifying the hostnames of central
+services in the [configuration] file.
+
+If any of the following [configuration] directives are `null` or
+undefined, and [S3] is enabled, then a **docassemble** application
+server will try to "autodiscover" the hostname of the service.
+
+* [`host`] in the [`db`] section
+* [`redis`]
+* [`rabbitmq`]
+* [`log server`]
+
+**docassemble** will look for keys in the [S3 bucket] called:
+
+* `hostname-sql`
+* `hostname-redis`
+* `hostname-rabbitmq`
+* `hostname-log`
+
+If a key is defined, **docassemble** will assume that the value is a
+hostname, and will set the corresponding [configuration] variable
+appropriately (e.g., by adding a `redis://` prefix to the [Redis]
+hostname).
+
+The [Docker] initialization script runs the
+[`docassemble.webapp.s3register`] module, which writes the hostname to
+the appropriate [S3] keys depending on the value of the environment
+variable `CONTAINERROLE`.
+
+## File sharing
 
 Configuring a cluster of **docassemble** servers requires centralizing
 the location of uploaded files, either by using an [Amazon S3] bucket
-(the `s3` [configuration] setting) or by making the uploaded file
-directory a network drive mount (the `uploads` [configuration]
+(the [`s3` configuration setting]) or by making the uploaded file
+directory a network drive mount (the [`uploads`] configuration
 setting).
+
+For more information about using [S3] for file sharing, see the
+[file sharing] and [data storage] sections of the [Docker] page.
 
 The default location of uploaded user files is defined by the
 `uploads` [configuration] setting:
@@ -701,7 +733,7 @@ s3:
 
 When developers install new Python packages, the packages are unpacked
 in `/usr/share/docassemble/local` (controlled by [configuration]
-variable `packages`).
+variable [`packages`]).
 
 The web server will restart, and re-read its Python source code, if
 the modification time on the WSGI file,
@@ -853,6 +885,7 @@ s3:
 [IAM Console]: https://console.aws.amazon.com/iam
 [ECS Console]: https://console.aws.amazon.com/ecs/home
 [VPC Console]: https://console.aws.amazon.com/vpc/home
+[EC2 Console]: https://console.aws.amazon.com/ec2/home
 [Launch Configuration]: http://docs.aws.amazon.com/autoscaling/latest/userguide/LaunchConfiguration.html
 [CloudFormation]: https://aws.amazon.com/cloudformation/
 [Internet Gateway]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Internet_Gateway.html
@@ -874,3 +907,16 @@ s3:
 [GitHub repository]: {{ site.github.repository_url }}
 [boto3]: https://boto3.readthedocs.io/en/latest/
 [`da-cli`]: {{ site.github.repository_url }}/blob/master/da-cli
+[`socket.gethostname()`]: https://docs.python.org/2/library/socket.html#socket.gethostname
+[Syslog-ng]: https://en.wikipedia.org/wiki/Syslog-ng
+[`rabbitmq`]: {{ site.baseurl }}/docs/config.html#rabbitmq
+[`redis`]: {{ site.baseurl }}/docs/config.html#redis
+[`packages`]: {{ site.baseurl }}/docs/config.html#packages
+[`uploads`]: {{ site.baseurl }}/docs/config.html#uploads
+[`s3` configuration setting]: {{ site.baseurl }}/docs/config.html#s3
+[`Docker/config/docassemble-log.conf.dist`]: {{ site.github.repository_url }}/blob/master/Docker/config/docassemble-log.conf.dist
+[`Docker/docassemble-syslog-ng.conf`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble-syslog-ng.conf
+[`Docker/syslog-ng.conf`]: {{ site.github.repository_url }}/blob/master/Docker/syslog-ng.conf
+[`Docker/cgi-bin/index.sh`]: {{ site.github.repository_url }}/blob/master/Docker/cgi-bin/index.sh
+[file sharing]: {{ site.baseurl }}/docs/docker.html#file sharing
+[data storage]: {{ site.baseurl }}/docs/docker.html#data storage
