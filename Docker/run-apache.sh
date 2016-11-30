@@ -1,10 +1,11 @@
 #!/bin/bash
 
 function stopfunc {
-    sleep 3
+    /usr/sbin/apache2ctl stop
     exit 0
 }
 
 trap stopfunc SIGINT SIGTERM
 
-/usr/sbin/apache2ctl -DFOREGROUND
+/usr/sbin/apache2ctl -DFOREGROUND &
+wait %1

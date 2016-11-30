@@ -7,7 +7,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     social_id = db.Column(db.String(64), nullable=False, unique=True)
     nickname = db.Column(db.String(64), nullable=False)
-    email = db.Column(db.String(64), nullable=True, unique=True)
+    email = db.Column(db.String(255), nullable=True, unique=True)
     confirmed_at = db.Column(db.DateTime())
     active = db.Column('active', db.Boolean(), nullable=False, server_default='0')
     first_name = db.Column(db.String(50), nullable=False, server_default='')
@@ -83,3 +83,12 @@ class ChatLog(db.Model):
     open_to_peer = db.Column(db.Boolean(), nullable=False, server_default='0')
     encrypted = db.Column(db.Boolean(), nullable=False, server_default='1')
     modtime = db.Column(db.DateTime())
+
+class UserInvitation(db.Model):
+    __tablename__ = 'user_invite'
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(255), nullable=False)
+    # save the user of the invitee
+    invited_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    # token used for registration page to identify user registering
+    token = db.Column(db.String(100), nullable=False, server_default='')

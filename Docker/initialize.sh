@@ -12,7 +12,13 @@ else
 fi
 
 if [ -f /var/run/apache2/apache2.pid ]; then
-    APACHERUNNING=true
+    APACHE_PID=$(</var/run/apache2/apache2.pid)
+    if kill -0 $APACHE_PID &> /dev/null; then
+	APACHERUNNING=true
+    else
+	rm -f /var/run/apache2/apache2.pid
+	APACHERUNNING=false
+    fi
 else
     APACHERUNNING=false
 fi
@@ -30,7 +36,13 @@ else
 fi
 
 if [ -f /var/run/crond.pid ]; then
-    CRONRUNNING=true
+    CRON_PID=$(</var/run/crond.pid)
+    if kill -0 $CRON_PID &> /dev/null; then
+	CRONRUNNING=true
+    else
+	rm -f /var/run/crond.pid
+	CRONRUNNING=false
+    fi
 else
     CRONRUNNING=false
 fi
@@ -222,6 +234,9 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
     if [ -z "$dbexists" ]; then
 	echo "create database "${DBNAME:-docassemble}" owner "${DBUSER:-docassemble}";" | su -c psql postgres || exit 1
     fi
+fi
+
+if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
     su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.create_tables $DA_CONFIG_FILE" www-data
 fi
 
@@ -266,9 +281,7 @@ if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]] && [ "$RABBITMQRUNNING" = false 
     supervisorctl --serverurl http://localhost:9001 start rabbitmq
 fi
 
-if [[ $CONTAINERROLE =~ .*:(all|web|celery):.* ]]; then
-    su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.update $DA_CONFIG_FILE" www-data || exit 1
-fi
+su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.update $DA_CONFIG_FILE" www-data || exit 1
 
 if su -c "source /usr/share/docassemble/local/bin/activate && celery -A docassemble.webapp.worker status" www-data 2>&1 | grep -q `hostname`; then
     CELERYRUNNING=true;
@@ -356,6 +369,9 @@ function deregister {
 	    s3cmd -q sync /usr/share/docassemble/log/ s3://${S3BUCKET}/log/
 	fi
     fi
+    echo "finished shutting down initialize" >&2
+    kill %1
+    exit 0
 }
 
 trap deregister SIGINT SIGTERM

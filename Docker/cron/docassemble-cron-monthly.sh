@@ -2,6 +2,6 @@
 
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 
-if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
+if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
     /usr/share/docassemble/webapp/run-cron.sh cron_monthly
 fi

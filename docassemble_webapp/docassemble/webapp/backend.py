@@ -65,7 +65,10 @@ app.config['USER_AFTER_LOGIN_ENDPOINT'] = 'interview_list'
 app.config['USER_AFTER_LOGOUT_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_REGISTER_ENDPOINT'] = 'interview_list'
 app.config['USER_AFTER_RESEND_CONFIRM_EMAIL_ENDPOINT'] = 'user.login'
-app.config['USER_AFTER_RESET_PASSWORD_ENDPOINT'] = 'user.login' 
+app.config['USER_AFTER_RESET_PASSWORD_ENDPOINT'] = 'user.login'
+if not daconfig.get('allow_registration', True):
+    app.config['USER_ENABLE_INVITATION'] = True
+    app.config['USER_REQUIRE_INVITATION'] = True
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['USE_X_SENDFILE'] = daconfig.get('xsendfile', True)
 #app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0

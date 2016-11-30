@@ -69,7 +69,7 @@ from sqlalchemy import or_, and_
 from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, Messages
-from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, TempUser, ChatLog # UserDictLock
+from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, TempUser, ChatLog, UserInvitation # UserDictLock
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, hostname, in_celery
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -216,6 +216,7 @@ except ImportError:
 
 #USE_PROGRESS_BAR = daconfig.get('use_progress_bar', True)
 SHOW_LOGIN = daconfig.get('show_login', True)
+ALLOW_REGISTRATION = daconfig.get('allow_registration', True)
 #USER_PACKAGES = daconfig.get('user_packages', '/var/lib/docassemble/dist-packages')
 #sys.path.append(USER_PACKAGES)
 #if USE_PROGRESS_BAR:
@@ -742,13 +743,13 @@ def setup_app(app, db):
     #from docassemble.webapp.pages import views
     #from docassemble.webapp.users import views
     db_adapter = SQLAlchemyAdapter(db, User, UserAuthClass=UserAuth)
+    db_adapter.UserInvitationClass = UserInvitation
     user_manager = UserManager(db_adapter, app, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, login_view_function=custom_login, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated)
     return(app)
 
 setup_app(app, db)
 lm = LoginManager(app)
 lm.login_view = 'user.login'
-
 
 supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
 if supervisor_url:
@@ -3617,13 +3618,17 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
             custom_menu = False
     else:
         custom_menu = False
+    if ALLOW_REGISTRATION:
+        sign_in_text = word('Sign in or sign up to save answers')
+    else:
+        sign_in_text = word('Sign in to save answers')
     if show_login:
         if current_user.is_anonymous:
             #logmessage("is_anonymous is " + str(current_user.is_anonymous))
             if custom_menu:
-                navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('user.login', next=url_for('index')) + '">' + word('Sign in or sign up to save answers') + '</a></li></ul></li>' + "\n"
+                navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('user.login', next=url_for('index')) + '">' + sign_in_text + '</a></li></ul></li>' + "\n"
             else:
-                navbar += '            <li><a href="' + url_for('user.login', next=url_for('index')) + '">' + word('Sign in or sign up to save answers') + '</a></li>' + "\n"
+                navbar += '            <li><a href="' + url_for('user.login', next=url_for('index')) + '">' + sign_in_text + '</a></li>' + "\n"
         else:
             navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + current_user.email + '<span class="caret"></span></a><ul class="dropdown-menu">'
             if custom_menu:

@@ -11,7 +11,7 @@ if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "
     export AWS_SECRET_ACCESS_KEY=$S3SECRETACCESSKEY
 fi
 
-if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]]; then
+if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
     /usr/share/docassemble/webapp/run-cron.sh cron_weekly
 fi
 
