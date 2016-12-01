@@ -22,20 +22,10 @@ import types
 import pkg_resources
 import babel.dates
 import pytz
-import docassemble.base.parse
-import docassemble.base.pdftk
-import docassemble.base.interview_cache
-import docassemble.webapp.update
-from docassemble.base.standardformatter import as_html, as_sms, signature_html, get_choices, get_choices_with_abb
-import docassemble.webapp.database
+import httplib2
 import tempfile
 import zipfile
 import traceback
-from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
-from docassemble.webapp.screenreader import to_text
-from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
-from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone
-from docassemble.base.logger import logmessage
 from Crypto.Hash import MD5
 import mimetypes
 import logging
@@ -50,33 +40,14 @@ import json
 import base64
 import requests
 import redis
-from flask import make_response, abort, render_template, request, session, send_file, redirect, current_app, get_flashed_messages, flash, Markup, jsonify, Response, g
-from flask import url_for as flask_url_for
-from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
-from flask_user import login_required, roles_required, UserManager, SQLAlchemyAdapter
-from flask_user.forms import LoginForm
-from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_registered, user_reset_password
-from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm
-from flask_mail import Mail, Message
-import flask_user.signals
-import httplib2
-from werkzeug import secure_filename, FileStorage
-from rauth import OAuth1Service, OAuth2Service
-from flask_kvsession import KVSessionExtension
-from simplekv.memory.redisstore import RedisStore
-#from simplekv.db.sql import SQLAlchemyStore
-from sqlalchemy import or_, and_
-from docassemble.webapp.app_and_db import app, db
-from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file
-from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, Messages
-from docassemble.webapp.users.models import UserAuthModel, UserModel, Role, UserDict, UserDictKeys, UserRoles, TempUser, ChatLog, MyUserInvitation # UserDictLock
-from docassemble.webapp.packages.models import Package, PackageAuth, Install
-from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, hostname, in_celery
-from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
-import docassemble.base.util
+import docassemble.base.parse
+import docassemble.base.pdftk
+import docassemble.base.interview_cache
+import docassemble.webapp.update
 import yaml
 import inspect
 from subprocess import call, Popen, PIPE
+from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, hostname, in_celery
 DEBUG = daconfig.get('debug', False)
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 from pygments import highlight
@@ -121,7 +92,6 @@ code: |
     benefits = "Medicaid"
 """
 
-app.debug = False
 
 ok_mimetypes = {"application/javascript": "javascript", "text/x-python": "python", "application/json": "json"}
 ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown", 'py': "python", "json": "json"}
@@ -178,7 +148,7 @@ if not voicerss_config or ('enable' in voicerss_config and not voicerss_config['
 else:
     VOICERSS_ENABLED = True
 ROOT = daconfig.get('root', '/')
-#app.logger.warning("default sender is " + app.config['MAIL_DEFAULT_SENDER'] + "\n")
+#app.logger.warning("default sender is " + current_app.config['MAIL_DEFAULT_SENDER'] + "\n")
 exit_page = daconfig.get('exitpage', 'http://docassemble.org')
 
 SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
@@ -227,8 +197,8 @@ else:
     LOGFILE = daconfig.get('flask_log', '/tmp/flask.log')
 #APACHE_LOGFILE = daconfig.get('apache_log', '/var/log/apache2/error.log')
 
-connect_string = docassemble.webapp.database.connection_string()
-alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
+#connect_string = docassemble.webapp.database.connection_string()
+#alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
 
 def fix_http(url):
     if HTTP_TO_HTTPS:
@@ -245,21 +215,10 @@ def url_for(*pargs, **kwargs):
 def my_default_url(error, endpoint, values):
     return url_for('index')
 
-app.handle_url_build_error = my_default_url
 
 #engine = create_engine(alchemy_connect_string, convert_unicode=True)
 #metadata = MetaData(bind=engine)
 #store = SQLAlchemyStore(engine, metadata, 'kvstore')
-
-redis_host = daconfig.get('redis', None)
-if redis_host is None:
-    redis_host = 'redis://localhost'
-
-docassemble.base.util.set_redis_server(redis_host)
-
-store = RedisStore(redis.StrictRedis(host=docassemble.base.util.redis_server, db=1))
-
-kv_session = KVSessionExtension(store, app)
 
 def get_url_from_file_reference(file_reference, **kwargs):
     file_reference = str(file_reference)
@@ -341,10 +300,6 @@ def user_id_dict():
     output[-1] = anon
     return output
 
-docassemble.base.util.set_user_id_function(user_id_dict)
-docassemble.base.parse.set_url_finder(get_url_from_file_reference)
-docassemble.base.parse.set_url_for(url_for)
-
 def get_documentation_dict():
     documentation = get_info_from_file_reference('docassemble.base:data/questions/documentation.yml')
     if 'fullpath' in documentation and documentation['fullpath'] is not None:
@@ -372,14 +327,6 @@ def get_title_documentation():
             return(yaml.load(content))
     return(None)
 
-title_documentation = get_title_documentation()
-documentation_dict = get_documentation_dict()
-base_name_info = get_name_info()
-for val in base_name_info:
-    base_name_info[val]['name'] = val
-    base_name_info[val]['insert'] = val
-    if 'show' not in base_name_info[val]:
-        base_name_info[val]['show'] = False
 
 key_requires_preassembly = re.compile('^(x\.|x\[|_multiple_choice)')
 match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
@@ -412,41 +359,11 @@ if 'twilio' in daconfig:
 else:
     twilio_config = None
 
-docassemble.base.util.set_twilio_config(twilio_config)
     
 APPLICATION_NAME = 'docassemble'
-app.config['USE_GOOGLE_LOGIN'] = False
-app.config['USE_FACEBOOK_LOGIN'] = False
-if 'oauth' in daconfig:
-    app.config['OAUTH_CREDENTIALS'] = daconfig['oauth']
-    if 'google' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['google'] and daconfig['oauth']['google']['enable'] is False):
-        app.config['USE_GOOGLE_LOGIN'] = True
-    if 'facebook' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enable'] is False):
-        app.config['USE_FACEBOOK_LOGIN'] = True
-
-password_secret_key = daconfig.get('password_secretkey', app.secret_key)
-#app.secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits)
+#current_app.secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits)
 #                         for x in xrange(32))
 
-word_file_list = daconfig.get('words', list())
-if type(word_file_list) is not list:
-    word_file_list = [word_file_list]
-for word_file in word_file_list:
-    sys.stderr.write("Reading from " + str(word_file) + "\n")
-    file_info = get_info_from_file_reference(word_file)
-    if 'fullpath' in file_info and file_info['fullpath'] is not None:
-        with open(file_info['fullpath'], 'rU') as stream:
-            for document in yaml.load_all(stream):
-                if document and type(document) is dict:
-                    for lang, words in document.iteritems():
-                        if type(words) is dict:
-                            docassemble.base.functions.update_word_collection(lang, words)
-                        else:
-                            sys.stderr.write("Error reading " + str(word_file) + ": words not in dictionary form.\n")
-                else:
-                    sys.stderr.write("Error reading " + str(word_file) + ": yaml file not in dictionary form.\n")
-    else:
-        sys.stderr.write("Error reading " + str(word_file) + ": yaml file not found.\n")
         
 def logout():
     secret = request.cookies.get('secret', None)
@@ -744,20 +661,106 @@ def unauthorized():
     flash(word("You are not authorized to access") + " " + word(request.path), 'error')
     return redirect(url_for('user.login', next=fix_http(request.url)))
 
-def setup_app(app, db):
+def setup_app():
+    from docassemble.webapp.app_and_db import app
+    from docassemble.webapp.db_only import db
+    import docassemble.webapp.backend
     from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm
     from docassemble.webapp.users.views import user_profile_page
-    #from docassemble.webapp.users import models
-    #from docassemble.webapp.pages import views
-    #from docassemble.webapp.users import views
+    from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation
+    from flask_login import LoginManager
+    from flask_user import UserManager, SQLAlchemyAdapter
     db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel)
     db_adapter.UserInvitationClass = MyUserInvitation
     user_manager = UserManager(db_adapter, app, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, login_view_function=custom_login, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated)
-    return(app)
+    lm = LoginManager(app)
+    lm.login_view = 'user.login'
+    return(db, app, lm)
 
-setup_app(app, db)
-lm = LoginManager(app)
-lm.login_view = 'user.login'
+db, app, lm = setup_app()
+
+from flask import make_response, abort, render_template, request, session, send_file, redirect, current_app, get_flashed_messages, flash, Markup, jsonify, Response, g
+from flask import url_for as flask_url_for
+from flask_login import login_user, logout_user, current_user
+from flask_user import login_required, roles_required
+from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_registered, user_reset_password
+from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm
+from flask_mail import Mail, Message
+import flask_user.signals
+from werkzeug import secure_filename, FileStorage
+from rauth import OAuth1Service, OAuth2Service
+from flask_kvsession import KVSessionExtension
+from simplekv.memory.redisstore import RedisStore
+#from simplekv.db.sql import SQLAlchemyStore
+from sqlalchemy import or_, and_
+from docassemble.base.standardformatter import as_html, as_sms, signature_html, get_choices, get_choices_with_abb
+from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
+from docassemble.webapp.screenreader import to_text
+from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
+from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone
+from docassemble.base.logger import logmessage
+from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file
+from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, Messages
+from docassemble.webapp.packages.models import Package, PackageAuth, Install
+from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
+import docassemble.base.util
+docassemble.base.util.set_user_id_function(user_id_dict)
+docassemble.base.parse.set_url_finder(get_url_from_file_reference)
+docassemble.base.parse.set_url_for(url_for)
+
+docassemble.base.util.set_twilio_config(twilio_config)
+
+title_documentation = get_title_documentation()
+documentation_dict = get_documentation_dict()
+base_name_info = get_name_info()
+for val in base_name_info:
+    base_name_info[val]['name'] = val
+    base_name_info[val]['insert'] = val
+    if 'show' not in base_name_info[val]:
+        base_name_info[val]['show'] = False
+
+word_file_list = daconfig.get('words', list())
+if type(word_file_list) is not list:
+    word_file_list = [word_file_list]
+for word_file in word_file_list:
+    #sys.stderr.write("Reading from " + str(word_file) + "\n")
+    file_info = get_info_from_file_reference(word_file)
+    if 'fullpath' in file_info and file_info['fullpath'] is not None:
+        with open(file_info['fullpath'], 'rU') as stream:
+            for document in yaml.load_all(stream):
+                if document and type(document) is dict:
+                    for lang, words in document.iteritems():
+                        if type(words) is dict:
+                            docassemble.base.functions.update_word_collection(lang, words)
+                        else:
+                            sys.stderr.write("Error reading " + str(word_file) + ": words not in dictionary form.\n")
+                else:
+                    sys.stderr.write("Error reading " + str(word_file) + ": yaml file not in dictionary form.\n")
+    else:
+        sys.stderr.write("Error reading " + str(word_file) + ": yaml file not found.\n")
+
+redis_host = daconfig.get('redis', None)
+if redis_host is None:
+    redis_host = 'redis://localhost'
+
+docassemble.base.util.set_redis_server(redis_host)
+
+store = RedisStore(redis.StrictRedis(host=docassemble.base.util.redis_server, db=1))
+
+kv_session = KVSessionExtension(store, app)
+
+app.debug = False
+app.handle_url_build_error = my_default_url
+app.config['USE_GOOGLE_LOGIN'] = False
+app.config['USE_FACEBOOK_LOGIN'] = False
+if 'oauth' in daconfig:
+    app.config['OAUTH_CREDENTIALS'] = daconfig['oauth']
+    if 'google' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['google'] and daconfig['oauth']['google']['enable'] is False):
+        app.config['USE_GOOGLE_LOGIN'] = True
+    if 'facebook' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enable'] is False):
+        app.config['USE_FACEBOOK_LOGIN'] = True
+
+password_secret_key = daconfig.get('password_secretkey', app.secret_key)
 
 supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
 if supervisor_url:
@@ -820,7 +823,6 @@ def copy_playground_modules():
         with open(os.path.join(local_dir, '__init__.py'), 'a') as the_file:
             the_file.write(init_py_file)
 
-copy_playground_modules()
 #sys.path.append(PLAYGROUND_MODULES_DIRECTORY)
 
 # END OF INITIALIZATION
@@ -1060,11 +1062,11 @@ def oauth_callback(provider):
 #     msg.html = "<p>Testing, testing.  Someone used the login page.</p>"
 #     mail.send(msg)
 #     form = LoginForm()
-#     return render_template('myflask_user/login.html', form=form, login_form=form, title="Sign in")
+#     return render_template('flask_user/login.html', form=form, login_form=form, title="Sign in")
 
 @app.route('/user/google-sign-in')
 def google_page():
-    return render_template('myflask_user/google_login.html', title=word("Sign In"), tab_title=word("Sign In"), page_title=word("Sign in"))
+    return render_template('flask_user/google_login.html', title=word("Sign In"), tab_title=word("Sign In"), page_title=word("Sign in"))
 
 @app.route("/user/post-sign-in", methods=['GET'])
 def post_sign_in():
@@ -7959,3 +7961,6 @@ if not in_celery:
     docassemble.base.functions.set_worker(docassemble.webapp.worker.background_action, docassemble.webapp.worker.convert)
 import docassemble.webapp.machinelearning
 docassemble.base.util.set_knn_machine_learner(docassemble.webapp.machinelearning.SimpleTextMachineLearner)
+from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, UserDictKeys, TempUser, ChatLog
+with app.app_context():
+    copy_playground_modules()

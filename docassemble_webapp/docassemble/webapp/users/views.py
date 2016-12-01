@@ -1,7 +1,8 @@
-from flask import redirect, render_template, render_template_string, request, flash
+from docassemble.webapp.app_and_db import app
+from docassemble.webapp.db_only import db
+from flask import redirect, render_template, render_template_string, request, flash, current_app
 from flask import url_for as flask_url_for
 from flask_user import current_user, login_required, roles_required, emails
-from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, MyRegisterForm, MyInviteForm, NewPrivilegeForm
 from docassemble.webapp.users.models import UserAuthModel, UserModel, Role, MyUserInvitation
 from docassemble.base.functions import word, debug_status, get_default_timezone
@@ -166,7 +167,7 @@ def _endpoint_url(endpoint):
 @roles_required('admin')
 def invite():
     """ Allows users to send invitations to register an account """
-    user_manager = app.user_manager
+    user_manager = current_app.user_manager
 
     next = request.args.get('next',
                             _endpoint_url(user_manager.after_invite_endpoint))
@@ -223,10 +224,10 @@ def invite():
             return redirect(url_for('invite'))
         # signals \
         #     .user_sent_invitation \
-        #     .send(app._get_current_object(), user_invite=user_invite,
+        #     .send(current_app._get_current_object(), user_invite=user_invite,
         #           form=invite_form)
 
         flash(word('Invitation has been sent.'), 'success')
         return redirect(next)
 
-    return render_template('myflask_user/invite.html', form=invite_form)
+    return render_template('flask_user/invite.html', form=invite_form)

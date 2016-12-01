@@ -1,9 +1,10 @@
-from docassemble.webapp.app_and_db import app, db
+from docassemble.webapp.app_and_db import app
+from docassemble.webapp.db_only import db
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, dbtableprefix, hostname, in_celery
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.webapp.core.models import Uploads
 from docassemble.base.logger import logmessage
-from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys, ChatLog
+from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList
 from sqlalchemy import or_, and_
 import docassemble.webapp.database
@@ -26,7 +27,7 @@ import re
 import os
 import sys
 import pyPdf
-from flask import session
+from flask import session, current_app
 from flask_mail import Mail, Message
 from PIL import Image
 import xml.etree.ElementTree as ET
@@ -345,7 +346,7 @@ def unpad(the_string):
     return the_string[0:-ord(the_string[-1])]
 
 def encrypt_phrase(phrase, secret):
-    iv = app.secret_key[:16]
+    iv = current_app.secret_key[:16]
     encrypter = AES.new(secret, AES.MODE_CBC, iv)
     return iv + codecs.encode(encrypter.encrypt(pad(phrase)), 'base64').decode()
 

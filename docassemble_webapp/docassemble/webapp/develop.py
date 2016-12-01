@@ -1,4 +1,4 @@
-from flask_wtf import Form
+from flask_wtf import FlaskForm
 from flask_wtf.file import FileField
 from docassemble.base.functions import word
 from wtforms import validators, ValidationError, StringField, SubmitField, TextAreaField, SelectMultipleField, SelectField
@@ -13,28 +13,28 @@ def validate_package_name(form, field):
     if re.search('[^A-Za-z0-9]', field.data):
         raise ValidationError(word('Valid characters are: A-Z, a-z, 0-9'))
 
-class CreatePackageForm(Form):
+class CreatePackageForm(FlaskForm):
     name = StringField(word('Package name'), validators=[
         validators.Required(word('Package name is required')), validate_name])
     submit = SubmitField(word('Get template'))
 
-class CreatePlaygroundPackageForm(Form):
+class CreatePlaygroundPackageForm(FlaskForm):
     name = SelectField(word('Package'), validators=[
         validators.Required(word('Package name is required')), validate_name])
     submit = SubmitField(word('Get package'))
 
-class UpdatePackageForm(Form):
+class UpdatePackageForm(FlaskForm):
     giturl = StringField(word('GitHub URL'))
     zipfile = FileField(word('Zip File'))
     pippackage = StringField(word('Package on PyPI'))
     submit = SubmitField(word('Update'))
 
-class ConfigForm(Form):
+class ConfigForm(FlaskForm):
     config_content = TextAreaField(word('Configuration YAML'))
     submit = SubmitField(word('Save'))
     cancel = SubmitField(word('Cancel'))
 
-class PlaygroundForm(Form):
+class PlaygroundForm(FlaskForm):
     original_playground_name = StringField(word('Original Name'))
     playground_name = StringField(word('Name'), [validators.Length(min=1, max=255)])
     playground_content = TextAreaField(word('Playground YAML'))
@@ -42,22 +42,22 @@ class PlaygroundForm(Form):
     run = SubmitField(word('Save and Run'))
     delete = SubmitField(word('Delete'))
 
-class LogForm(Form):
+class LogForm(FlaskForm):
     filter_string = StringField(word('Filter For'))
     file_name = StringField(word('File Name'))
     submit = SubmitField(word('Apply'))
     clear = SubmitField(word('Clear'))
 
-class Utilities(Form):
+class Utilities(FlaskForm):
     pdffile = FileField(word('PDF File'))
     scan = SubmitField(word('Scan'))
     
-class PlaygroundFilesForm(Form):
+class PlaygroundFilesForm(FlaskForm):
     section = StringField(word('Section'))
     uploadfile = FileField(word('File to upload'))
     submit = SubmitField(word('Upload'))
 
-class PlaygroundFilesEditForm(Form):
+class PlaygroundFilesEditForm(FlaskForm):
     section = StringField(word('Section'))
     original_file_name = StringField(word('Original Name'))
     file_name = StringField(word('Name'), [validators.Length(min=1, max=255)])
@@ -65,7 +65,7 @@ class PlaygroundFilesEditForm(Form):
     submit = SubmitField(word('Save'))
     delete = SubmitField(word('Delete'))
 
-class PlaygroundPackagesForm(Form):
+class PlaygroundPackagesForm(FlaskForm):
     original_file_name = StringField(word('Original Name'))
     file_name = StringField(word('Package Name'), validators=[validators.Length(min=1, max=50),
         validators.Required(word('Package Name is required')), validate_package_name])

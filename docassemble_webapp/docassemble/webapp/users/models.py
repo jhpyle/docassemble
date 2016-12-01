@@ -1,5 +1,5 @@
+from docassemble.webapp.db_only import db
 from flask_user import UserMixin
-from docassemble.webapp.app_and_db import db
 from docassemble.base.config import daconfig, dbtableprefix
 
 class UserModel(db.Model, UserMixin):

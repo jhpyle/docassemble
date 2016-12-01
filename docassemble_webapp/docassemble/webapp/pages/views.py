@@ -2,10 +2,9 @@
 #
 # Authors: Ling Thio <ling.thio@gmail.com>
 
-from flask import render_template
-from flask_user import login_required, roles_required
-
 from docassemble.webapp.app_and_db import app
+from flask import render_template, current_app
+from flask_user import login_required, roles_required
 
 # The Member page is accessible to authenticated users (users that have logged in)
 @app.route('/member')

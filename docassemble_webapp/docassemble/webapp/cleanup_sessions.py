@@ -1,10 +1,10 @@
 import sys
+from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, dbtableprefix, hostname, in_celery
+from docassemble.webapp.app_and_db import app
 from flask_kvsession import KVSessionExtension
 from simplekv.memory.redisstore import RedisStore
 import docassemble.base.config
 docassemble.base.config.load(arguments=sys.argv)
-from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, dbtableprefix, hostname, in_celery
-from docassemble.webapp.app_and_db import app, db
 import docassemble.base.util
 import redis
 

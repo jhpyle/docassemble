@@ -1,5 +1,5 @@
 from flask_user.forms import RegisterForm
-from flask_wtf import Form
+from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, validators
 from wtforms.validators import DataRequired, Email
 
@@ -19,12 +19,12 @@ def length_two(form, field):
     if len(field.data) != 2:
         raise ValidationError(word('Must be a two-letter code'))
 
-class NewPrivilegeForm(Form):
+class NewPrivilegeForm(FlaskForm):
     name = StringField(word('Name of new privilege'), validators=[
         DataRequired(word('Name of new privilege is required'))])
     submit = SubmitField(word('Add'))
 
-class UserProfileForm(Form):
+class UserProfileForm(FlaskForm):
     first_name = StringField(word('First name'), validators=[
         DataRequired(word('First name is required'))])
     last_name = StringField(word('Last name'), validators=[
@@ -42,11 +42,11 @@ class EditUserProfileForm(UserProfileForm):
     role_id = SelectMultipleField(word('Privileges'), coerce=int)
     active = BooleanField(word('Active'))
 
-class RequestDeveloperForm(Form):
+class RequestDeveloperForm(FlaskForm):
     reason = StringField(word('Reason for needing developer account (optional)'))
     submit = SubmitField(word('Submit'))
 
-class MyInviteForm(Form):
+class MyInviteForm(FlaskForm):
     email = StringField(word('E-mail'), validators=[
         validators.Required(word('E-mail is required')),
         validators.Email(word('Invalid E-mail'))])

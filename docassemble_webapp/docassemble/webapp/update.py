@@ -12,7 +12,8 @@ from distutils.version import LooseVersion
 if __name__ == "__main__":
     import docassemble.base.config
     docassemble.base.config.load(arguments=sys.argv)
-from docassemble.webapp.app_and_db import app, db
+from docassemble.webapp.app_and_db import app
+from docassemble.webapp.db_only import db
 from docassemble.webapp.packages.models import Package, Install, PackageAuth
 from docassemble.webapp.core.models import Supervisors
 from docassemble.base.logger import logmessage

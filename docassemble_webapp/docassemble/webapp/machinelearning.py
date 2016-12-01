@@ -1,5 +1,5 @@
 from docassemble.webapp.core.models import MachineLearning
-from docassemble.webapp.app_and_db import app, db
+from docassemble.webapp.db_only import db
 from sqlalchemy import or_, and_
 import re
 import cPickle as pickle
