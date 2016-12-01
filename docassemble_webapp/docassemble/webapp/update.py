@@ -248,15 +248,16 @@ def get_installed_distributions():
     return results
 
 if __name__ == "__main__":
-    import docassemble.webapp.database
-    app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
-    check_for_updates()
-    remove_inactive_hosts()
-    from docassemble.base.config import daconfig
-    logmessage("update: touched wsgi file")
-    wsgi_file = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
-    if os.path.isfile(wsgi_file):
-        with open(wsgi_file, 'a'):
-            os.utime(wsgi_file, None)
-    db.engine.dispose()
+    #import docassemble.webapp.database
+    with app.app_context():
+        #app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
+        check_for_updates()
+        remove_inactive_hosts()
+        from docassemble.base.config import daconfig
+        logmessage("update: touched wsgi file")
+        wsgi_file = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
+        if os.path.isfile(wsgi_file):
+            with open(wsgi_file, 'a'):
+                os.utime(wsgi_file, None)
+        db.engine.dispose()
     sys.exit(0)

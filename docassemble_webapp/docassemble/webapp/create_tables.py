@@ -13,14 +13,15 @@ from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supe
 from docassemble.webapp.users.models import UserModel, UserAuthModel, Role, UserRoles, UserDict, UserDictKeys, TempUser, ChatLog # UserDictLock
 from docassemble.webapp.update import get_installed_distributions
 from sqlalchemy import create_engine, MetaData
-import docassemble.webapp.database
+#import docassemble.webapp.database
 import random
 import string
 from flask_user import UserManager, SQLAlchemyAdapter
 
-if __name__ == "__main__":
-    app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
-    app.secret_key = daconfig.get('secretkey', '28ihfiFehfoU34mcq_4clirglw3g4o87')
+# if __name__ == "__main__":
+#     with app.app_context():
+#         app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
+#         app.secret_key = daconfig.get('secretkey', '28ihfiFehfoU34mcq_4clirglw3g4o87')
 
 def get_role(db, name):
     the_role = Role.query.filter_by(name=word(name)).first()
@@ -86,7 +87,8 @@ def populate_tables():
     return
 
 if __name__ == "__main__":
-    #db.drop_all()
-    db.create_all()
-    populate_tables()
-    db.engine.dispose()
+    with app.app_context():
+        #db.drop_all()
+        db.create_all()
+        populate_tables()
+        db.engine.dispose()
