@@ -3,7 +3,7 @@ from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, 
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.webapp.core.models import Uploads
 from docassemble.base.logger import logmessage
-from docassemble.webapp.users.models import User, ChatLog, UserDict, UserDictKeys, ChatLog
+from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys, ChatLog
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList
 from sqlalchemy import or_, and_
 import docassemble.webapp.database
@@ -18,6 +18,7 @@ import pprint
 import datetime
 import json
 from Crypto.Cipher import AES
+from Crypto import Random
 from dateutil import tz
 
 import docassemble.base.parse
@@ -66,8 +67,9 @@ app.config['USER_AFTER_LOGOUT_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_REGISTER_ENDPOINT'] = 'interview_list'
 app.config['USER_AFTER_RESEND_CONFIRM_EMAIL_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_RESET_PASSWORD_ENDPOINT'] = 'user.login'
+app.config['USER_INVITE_URL'] = '/user/invite'
+app.config['USER_ENABLE_INVITATION'] = True
 if not daconfig.get('allow_registration', True):
-    app.config['USER_ENABLE_INVITATION'] = True
     app.config['USER_REQUIRE_INVITATION'] = True
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['USE_X_SENDFILE'] = daconfig.get('xsendfile', True)
@@ -351,7 +353,7 @@ def pack_phrase(phrase):
     return codecs.encode(phrase, 'base64').decode()
 
 def decrypt_phrase(phrase_string, secret):
-    decrypter = AES.new(secret, AES.MODE_CBC, phrase_string[:16])
+    decrypter = AES.new(secret, AES.MODE_CBC, str(phrase_string[:16]))
     return unpad(decrypter.decrypt(codecs.decode(phrase_string[16:], 'base64')))
 
 def unpack_phrase(phrase_string):
@@ -360,7 +362,11 @@ def unpack_phrase(phrase_string):
 def encrypt_dictionary(the_dict, secret):
     #sys.stderr.write("40\n")
     iv = ''.join(random.choice(string.ascii_letters) for i in range(16))
+    #iv = Random.new().read(AES.block_size)
     #sys.stderr.write("41\n")
+    #sys.stderr.write("iv is " + str(iv) + "\n")
+    #sys.stderr.write("block size is " + str(AES.block_size) + "\n")
+    #sys.stderr.write("secret is " + str(repr(secret)) + "\n")
     encrypter = AES.new(secret, AES.MODE_CBC, iv)
     #sys.stderr.write("42\n")
     #one = pickleable_objects(the_dict)
@@ -378,7 +384,8 @@ def pack_dictionary(the_dict):
 
 def decrypt_dictionary(dict_string, secret):
     #sys.stderr.write("60\n")
-    decrypter = AES.new(secret, AES.MODE_CBC, dict_string[:16])
+    #sys.stderr.write("secret is " + str(repr(secret)) + "\n")
+    decrypter = AES.new(secret, AES.MODE_CBC, str(dict_string[:16]))
     #sys.stderr.write("61\n")
     #one = codecs.decode(dict_string[16:], 'base64')
     #sys.stderr.write("62\n")
@@ -461,7 +468,7 @@ def reset_user_dict(user_code, filename):
 def get_person(user_id, cache):
     if user_id in cache:
         return cache[user_id]
-    for record in User.query.filter_by(id=user_id):
+    for record in UserModel.query.filter_by(id=user_id):
         cache[record.id] = record
         return record
     return None
@@ -499,7 +506,7 @@ def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, se
                 try:
                     message = decrypt_phrase(record.message, secret)
                 except:
-                    sys.stderr.write("Could not decrypt phrase with secret " + str(secret) + "\n")
+                    sys.stderr.write("Could not decrypt phrase with secret " + secret + "\n")
                     continue
             else:
                 message = unpack_phrase(record.message)
@@ -532,7 +539,7 @@ def get_chat_log(chat_mode, yaml_filename, session_id, user_id, temp_user_id, se
                 try:
                     message = decrypt_phrase(record.message, secret)
                 except:
-                    sys.stderr.write("Could not decrypt phrase with secret " + str(secret) + "\n")
+                    sys.stderr.write("Could not decrypt phrase with secret " + secret + "\n")
                     continue
             else:
                 message = unpack_phrase(record.message)

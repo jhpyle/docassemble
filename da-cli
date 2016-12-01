@@ -5,21 +5,17 @@
 # or
 # sudo pip install boto3
 
+keyPair = 'ec2.pem'
 serviceApp = 'app'
 serviceBackend = 'backend'
 targetGroupWeb = 'web'
 targetGroupWebSocket = 'websocket'
 autoScalingGroup = 'docassembleAsg'
-keyPair = 'ec2.pem'
 
 import boto3
 import time
 import sys
 import copy
-ec2 = boto3.client('ec2')
-ecs = boto3.client('ecs')
-elb = boto3.client('elbv2')
-autoscale = boto3.client('autoscaling')
 
 def available_instances():
     instances = list()
@@ -131,5 +127,10 @@ command = arguments.pop(0)
 if command not in dispatch:
     error_message()
     sys.exit(1)
+
+ec2 = boto3.client('ec2')
+ecs = boto3.client('ecs')
+elb = boto3.client('elbv2')
+autoscale = boto3.client('autoscaling')
 
 dispatch[command](*arguments)

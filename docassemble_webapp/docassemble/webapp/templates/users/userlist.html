@@ -4,7 +4,7 @@
 
 <h1>{{ word('User List') }}</h1>
 
-<p><a href="{{ url_for('privilege_list') }}">{{ word('Edit Privileges') }}</a></p>
+<p><a href="{{ url_for('privilege_list') }}">{{ word('Edit Privileges') }}</a> | <a href="{{ url_for('invite') }}">{{ word('Invite a user') }}</a></p>
 
 {{ userlist|safe }}
 

@@ -1,5 +1,7 @@
 #! /bin/bash
 
+# alter table "user" add column password varchar(255) default 'x';
+
 export DA_CONFIG_FILE_DIST=/usr/share/docassemble/config/config.yml.dist
 export DA_CONFIG_FILE=/usr/share/docassemble/config/config.yml
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
@@ -234,6 +236,7 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
     if [ -z "$dbexists" ]; then
 	echo "create database "${DBNAME:-docassemble}" owner "${DBUSER:-docassemble}";" | su -c psql postgres || exit 1
     fi
+    psql -c 'select password from "user" limit 0' docassemble &> /dev/null || echo "alter table \"user\" add column password varchar(255) default 'x';" | su -c psql ${DBNAME:-docassemble}
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then

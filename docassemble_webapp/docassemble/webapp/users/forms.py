@@ -1,6 +1,6 @@
 from flask_user.forms import RegisterForm
 from flask_wtf import Form
-from wtforms import StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, validators
+from wtforms import StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, validators
 from wtforms.validators import DataRequired, Email
 
 from docassemble.base.functions import word
@@ -45,3 +45,11 @@ class EditUserProfileForm(UserProfileForm):
 class RequestDeveloperForm(Form):
     reason = StringField(word('Reason for needing developer account (optional)'))
     submit = SubmitField(word('Submit'))
+
+class MyInviteForm(Form):
+    email = StringField(word('E-mail'), validators=[
+        validators.Required(word('E-mail is required')),
+        validators.Email(word('Invalid E-mail'))])
+    role_id = SelectField(word('Role'))
+    next = HiddenField()
+    submit = SubmitField(word('Invite'))

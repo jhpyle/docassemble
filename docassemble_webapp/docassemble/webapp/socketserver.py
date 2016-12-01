@@ -10,7 +10,7 @@ docassemble.base.config.load(filename="/usr/share/docassemble/config/config.yml"
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, dbtableprefix, hostname, in_celery
 from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, nice_utc_date, nice_date_from_utc, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase
-from docassemble.webapp.users.models import User, ChatLog
+from docassemble.webapp.users.models import UserModel, ChatLog
 import docassemble.webapp.database
 from docassemble.base.functions import get_default_timezone, word
 import docassemble.base.util
@@ -50,7 +50,7 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
         person = None
         user_is_temp = True
     else:
-        person = User.query.filter_by(id=user_id).first()
+        person = UserModel.query.filter_by(id=user_id).first()
         user_is_temp = False
     if person is not None and person.timezone is not None:
         the_timezone = pytz.timezone(person.timezone)
@@ -187,7 +187,7 @@ def chat_message(data):
     db.session.add(record)
     db.session.commit()
     if user_id is not None:
-        person = User.query.filter_by(id=user_id).first()
+        person = UserModel.query.filter_by(id=user_id).first()
     else:
         person = None
     modtime = nice_utc_date(nowtime)
@@ -348,7 +348,7 @@ def get_dict_encrypt():
 def monitor_thread(sid=None, user_id=None):
     sys.stderr.write("Started monitor thread for " + str(sid) + " who is " + str(user_id) + "\n")
     if user_id is not None:
-        person = User.query.filter_by(id=user_id).first()
+        person = UserModel.query.filter_by(id=user_id).first()
     else:
         person = None
     if person is not None and person.timezone is not None:
@@ -399,7 +399,7 @@ def monitor_thread(sid=None, user_id=None):
                     if str(data['userid']).startswith('t'):
                         name = word("anonymous visitor") + ' ' + str(data['userid'])[1:]
                     else:
-                        person = User.query.filter_by(id=data['userid']).first()
+                        person = UserModel.query.filter_by(id=data['userid']).first()
                         if person.first_name:
                             name = str(person.first_name) + ' ' + str(person.last_name)
                         else:
@@ -692,7 +692,7 @@ def monitor_chat_message(data):
     else:
         message = pack_phrase(data['data'])
     user_id = session.get('user_id', None)
-    person = User.query.filter_by(id=user_id).first()
+    person = UserModel.query.filter_by(id=user_id).first()
     chat_mode = user_dict['_internal']['livehelp']['mode']
     m = re.match('t([0-9]+)', chat_user_id)
     if m:

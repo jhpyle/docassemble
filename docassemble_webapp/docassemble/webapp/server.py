@@ -69,7 +69,7 @@ from sqlalchemy import or_, and_
 from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, Messages
-from docassemble.webapp.users.models import UserAuth, User, Role, UserDict, UserDictKeys, UserRoles, TempUser, ChatLog, UserInvitation # UserDictLock
+from docassemble.webapp.users.models import UserAuthModel, UserModel, Role, UserDict, UserDictKeys, UserRoles, TempUser, ChatLog, MyUserInvitation # UserDictLock
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, hostname, in_celery
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -329,7 +329,7 @@ class FakeRole(object):
     pass
 def user_id_dict():
     output = dict()
-    for user in User.query.all():
+    for user in UserModel.query.all():
         output[user.id] = user
     anon = FakeUser()
     anon_role = FakeRole()
@@ -454,6 +454,7 @@ def logout():
         secret = ''.join(random.choice(string.ascii_letters) for i in range(16))
         set_cookie = True
     else:
+        secret = str(secret)
         set_cookie = False
     user_manager = current_app.user_manager
     flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
@@ -617,6 +618,11 @@ def substitute_secret(oldsecret, newsecret):
         db.session.commit()
     return newsecret
 
+def MD5Hash(data=''):
+    h = MD5.new()
+    h.update(data)
+    return h
+
 def _do_login_user(user, password, secret, next, remember_me=False):
     # User must have been authenticated
     if not user:
@@ -667,7 +673,7 @@ def _do_login_user(user, password, secret, next, remember_me=False):
     # Prepare one-time system message
     flash(word('You have signed in successfully.'), 'success')
 
-    newsecret = substitute_secret(secret, pad_to_16(MD5.MD5Hash(data=password).hexdigest()))
+    newsecret = substitute_secret(secret, pad_to_16(MD5Hash(data=password).hexdigest()))
     # Redirect to 'next' URL
     response = redirect(next)
     response.set_cookie('secret', newsecret)
@@ -678,6 +684,8 @@ def custom_login():
     user_manager = current_app.user_manager
     db_adapter = user_manager.db_adapter
     secret = request.cookies.get('secret', None)
+    if secret is not None:
+        secret = str(secret)
     #logmessage("custom_login: secret is " + str(secret))
     next = request.args.get('next', _endpoint_url(user_manager.after_login_endpoint))
     reg_next = request.args.get('reg_next', _endpoint_url(user_manager.after_register_endpoint))
@@ -737,13 +745,13 @@ def unauthorized():
     return redirect(url_for('user.login', next=fix_http(request.url)))
 
 def setup_app(app, db):
-    from docassemble.webapp.users.forms import MyRegisterForm
+    from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm
     from docassemble.webapp.users.views import user_profile_page
     #from docassemble.webapp.users import models
     #from docassemble.webapp.pages import views
     #from docassemble.webapp.users import views
-    db_adapter = SQLAlchemyAdapter(db, User, UserAuthClass=UserAuth)
-    db_adapter.UserInvitationClass = UserInvitation
+    db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel)
+    db_adapter.UserInvitationClass = MyUserInvitation
     user_manager = UserManager(db_adapter, app, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, login_view_function=custom_login, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated)
     return(app)
 
@@ -798,7 +806,7 @@ else:
 
 def copy_playground_modules():
     devs = list()
-    for user in User.query.filter_by(active=True).all():
+    for user in UserModel.query.filter_by(active=True).all():
         for role in user.roles:
             if role.name == 'admin' or role.name == 'developer':
                 devs.append(user.id)
@@ -884,7 +892,7 @@ def get_examples():
 
 @lm.user_loader
 def load_user(id):
-    return User.query.get(int(id))
+    return UserModel.query.get(int(id))
 
 class OAuthSignIn(object):
     providers = None
@@ -1021,11 +1029,11 @@ def oauth_callback(provider):
     if social_id is None:
         flash(word('Authentication failed.'), 'error')
         return redirect(url_for('interview_list'))
-    user = User.query.filter_by(social_id=social_id).first()
+    user = UserModel.query.filter_by(social_id=social_id).first()
     if not user:
-        user = User.query.filter_by(email=email).first()
+        user = UserModel.query.filter_by(email=email).first()
     if not user:
-        user = User(social_id=social_id, nickname=username, email=email, active=True)
+        user = UserModel(social_id=social_id, nickname=username, email=email, active=True)
         db.session.add(user)
         db.session.commit()
     login_user(user, remember=False)
@@ -1033,7 +1041,9 @@ def oauth_callback(provider):
         save_user_dict_key(session['uid'], session['i'])
         session['key_logged'] = True 
     secret = request.cookies.get('secret', None)
-    newsecret = substitute_secret(secret, pad_to_16(MD5.MD5Hash(data=social_id+password_secret_key).hexdigest()))
+    if secret is not None:
+        secret = str(secret)
+    newsecret = substitute_secret(secret, pad_to_16(MD5Hash(data=social_id+password_secret_key).hexdigest()))
     if not current_user.is_anonymous:
         #update_user_id(session['uid'])
         flash(word('Welcome!  You are logged in as ') + email, 'success')
@@ -1195,6 +1205,8 @@ def checkin():
         secret = request.cookies['visitor_secret']
     else:
         secret = request.cookies.get('secret', None)
+    if secret is not None:
+        secret = str(secret)
     #session_cookie_id = request.cookies.get('session', None)
     if session_id is None or yaml_filename is None:
         return jsonify(success=False)
@@ -1460,6 +1472,7 @@ def index():
         secret = ''.join(random.choice(string.ascii_letters) for i in range(16))
         set_cookie = True
     else:
+        secret = str(secret)
         set_cookie = False
     yaml_filename = session.get('i', default_yaml_filename)
     steps = 0
@@ -3191,7 +3204,7 @@ def index():
                     the_phrase = encrypt_phrase(phrase, secret)
                 else:
                     the_phrase = pack_phrase(phrase)
-                the_hash = MD5.MD5Hash(data=phrase).hexdigest()
+                the_hash = MD5Hash(data=phrase).hexdigest()
                 content = re.sub(r'XXXTHEXXX' + question_type + 'XXXHASHXXX', the_hash, content)
                 existing_entry = SpeakList.query.filter_by(filename=yaml_filename, key=user_code, question=interview_status.question.number, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect).first()
                 if existing_entry:
@@ -3411,7 +3424,7 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
         #sys.stderr.write("33\n")
     else:
         #sys.stderr.write("34\n")
-        max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(UserDict.key == user_code and UserDict.filename == filename).scalar()
+        max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(UserDict.key == user_code, UserDict.filename == filename).scalar()
         #sys.stderr.write("35\n")
         if max_indexno is None:
             if encrypt:
@@ -3703,6 +3716,8 @@ def speak_file():
     the_dialect = request.args.get('dialect', None)
     the_hash = request.args.get('digest', None)
     secret = request.cookies.get('secret', None)
+    if secret is not None:
+        secret = str(secret)
     if file_format not in ['mp3', 'ogg'] or not (filename and key and question and question_type and file_format and the_language and the_dialect):
         logmessage("Could not serve speak file because invalid or missing data was provided: filename " + str(filename) + " and key " + str(key) + " and question number " + str(question) + " and question type " + str(question_type) + " and language " + str(the_language) + " and dialect " + str(the_dialect))
         abort(404)
@@ -7043,6 +7058,8 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
         url = req.base_url
         url_root = req.url_root
         secret = req.cookies.get('secret', None)
+    if secret is not None:
+        secret = str(secret)
     return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}}
     if action is not None:
         return_val.update(action)
@@ -7173,7 +7190,7 @@ def request_developer():
     form = RequestDeveloperForm(request.form, current_user)
     recipients = list()
     if request.method == 'POST':
-        for user in User.query.filter_by(active=True).all():
+        for user in UserModel.query.filter_by(active=True).all():
             for role in user.roles:
                 if role.name == 'admin':
                     recipients.append(user.email)
@@ -7245,6 +7262,8 @@ def interview_list():
     else:
         the_timezone = pytz.timezone(get_default_timezone())
     secret = request.cookies.get('secret', None)
+    if secret is not None:
+        secret = str(secret)
     #logmessage("interview_list: secret is " + str(secret))
     if 'action' in request.args and request.args.get('action') == 'delete':
         yaml_file = request.args.get('filename', None)
@@ -7290,7 +7309,7 @@ def interview_list():
 #     if 'i' in session and 'uid' in session:
 #         save_user_dict_key(session['uid'], session['i'])
 #         session['key_logged'] = True 
-#     newsecret = substitute_secret(secret, pad_to_16(MD5.MD5Hash(data=password).hexdigest()))
+#     newsecret = substitute_secret(secret, pad_to_16(MD5Hash(data=password).hexdigest()))
 #     # Redirect to 'next' URL
 #     response = redirect(next)
 #     response.set_cookie('secret', newsecret)

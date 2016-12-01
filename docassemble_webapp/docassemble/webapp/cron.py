@@ -14,7 +14,7 @@ if __name__ == "__main__":
         remaining_arguments.append(arguments.pop(0))
     import docassemble.base.config
     docassemble.base.config.load(arguments=remaining_arguments)
-from docassemble.webapp.server import User, UserDict, logmessage, unpack_dictionary, db, set_request_active, fetch_user_dict, save_user_dict, fresh_dictionary, reset_user_dict, obtain_lock, release_lock, app
+from docassemble.webapp.server import UserModel, UserDict, logmessage, unpack_dictionary, db, set_request_active, fetch_user_dict, save_user_dict, fresh_dictionary, reset_user_dict, obtain_lock, release_lock, app
 import docassemble.base.interview_cache
 import docassemble.base.parse
 import docassemble.base.util
@@ -25,7 +25,7 @@ import codecs
 set_request_active(False)
 
 def get_cron_user():
-    for user in User.query.all():
+    for user in UserModel.query.all():
         for role in user.roles:
             if role.name == 'cron':
                 return(user)

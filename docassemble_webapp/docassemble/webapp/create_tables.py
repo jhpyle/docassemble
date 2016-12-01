@@ -9,7 +9,7 @@ from docassemble.base.functions import word
 from docassemble.webapp.app_and_db import app, db
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, KVStore
-from docassemble.webapp.users.models import User, UserAuth, Role, UserRoles, UserDict, UserDictKeys, TempUser, ChatLog # UserDictLock
+from docassemble.webapp.users.models import UserModel, UserAuthModel, Role, UserRoles, UserDict, UserDictKeys, TempUser, ChatLog # UserDictLock
 from docassemble.webapp.update import get_installed_distributions
 from sqlalchemy import create_engine, MetaData
 import docassemble.webapp.database
@@ -30,11 +30,11 @@ def get_role(db, name):
     return the_role
 
 def get_user(db, role, defaults):
-    the_user = User.query.filter_by(nickname=word(defaults['nickname'])).first()
+    the_user = UserModel.query.filter_by(nickname=word(defaults['nickname'])).first()
     if the_user:
         return the_user
-    user_auth = UserAuth(password=app.user_manager.hash_password(defaults.get('password', 'password')))
-    the_user = User(
+    user_auth = UserAuthModel(password=app.user_manager.hash_password(defaults.get('password', 'password')))
+    the_user = UserModel(
         active=defaults.get('active', True),
         nickname=defaults['nickname'],
         social_id='local$' + ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32)),
@@ -54,7 +54,7 @@ def get_user(db, role, defaults):
     return the_user
 
 def populate_tables():
-    user_manager = UserManager(SQLAlchemyAdapter(db, User, UserAuthClass=UserAuth), app)
+    user_manager = UserManager(SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel), app)
     admin_defaults = daconfig.get('default_admin_account', {'nickname': 'admin', 'email': 'admin@admin.com', 'first_name': 'System', 'last_name': 'Administrator'})
     cron_defaults = daconfig.get('default_cron_account', {'nickname': 'cron', 'email': 'cron@admin.com', 'first_name': 'Cron', 'last_name': 'User'})
     cron_defaults['active'] = False
