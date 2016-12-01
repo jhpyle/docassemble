@@ -671,7 +671,7 @@ def setup_app():
     from flask_login import LoginManager
     from flask_user import UserManager, SQLAlchemyAdapter
     db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel)
-    db_adapter.UserInvitationClass = MyUserInvitation
+    #db_adapter.UserInvitationClass = MyUserInvitation
     user_manager = UserManager(db_adapter, app, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, login_view_function=custom_login, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated)
     lm = LoginManager(app)
     lm.login_view = 'user.login'
