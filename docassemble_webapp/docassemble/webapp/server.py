@@ -1060,11 +1060,11 @@ def oauth_callback(provider):
 #     msg.html = "<p>Testing, testing.  Someone used the login page.</p>"
 #     mail.send(msg)
 #     form = LoginForm()
-#     return render_template('flask_user/login.html', form=form, login_form=form, title="Sign in")
+#     return render_template('myflask_user/login.html', form=form, login_form=form, title="Sign in")
 
 @app.route('/user/google-sign-in')
 def google_page():
-    return render_template('flask_user/google_login.html', title=word("Sign In"), tab_title=word("Sign In"), page_title=word("Sign in"))
+    return render_template('myflask_user/google_login.html', title=word("Sign In"), tab_title=word("Sign In"), page_title=word("Sign in"))
 
 @app.route("/user/post-sign-in", methods=['GET'])
 def post_sign_in():

@@ -229,4 +229,4 @@ def invite():
         flash(word('Invitation has been sent.'), 'success')
         return redirect(next)
 
-    return render_template('flask_user/invite.html', form=invite_form)
+    return render_template('myflask_user/invite.html', form=invite_form)
