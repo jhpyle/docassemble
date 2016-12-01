@@ -28,6 +28,7 @@ app.config['USER_AUTO_LOGIN_AFTER_RESET_PASSWORD'] = False
 app.config['USER_AFTER_FORGOT_PASSWORD_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_CHANGE_PASSWORD_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_CHANGE_USERNAME_ENDPOINT'] = 'user.login'
+app.config['USER_INVITE_ENDPOINT'] = 'user_list'
 app.config['USER_AFTER_CONFIRM_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_FORGOT_PASSWORD_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_LOGIN_ENDPOINT'] = 'interview_list'

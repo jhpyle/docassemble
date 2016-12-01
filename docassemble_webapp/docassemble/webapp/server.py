@@ -1,7 +1,7 @@
 from twilio.util import TwilioCapability
 from twilio.rest import TwilioRestClient
-from PIL import Image
 import twilio.twiml
+from PIL import Image
 import socket
 import copy
 import threading
@@ -40,19 +40,17 @@ import json
 import base64
 import requests
 import redis
-import docassemble.base.parse
-import docassemble.base.pdftk
-import docassemble.base.interview_cache
-import docassemble.webapp.update
 import yaml
 import inspect
 from subprocess import call, Popen, PIPE
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, hostname, in_celery
-DEBUG = daconfig.get('debug', False)
-HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 from pygments import highlight
 from pygments.lexers import YamlLexer
 from pygments.formatters import HtmlFormatter
+
+DEBUG = daconfig.get('debug', False)
+HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
+request_active = True
 
 default_playground_yaml = """metadata:
   title: Default playground interview
@@ -92,11 +90,12 @@ code: |
     benefits = "Medicaid"
 """
 
-
 ok_mimetypes = {"application/javascript": "javascript", "text/x-python": "python", "application/json": "json"}
 ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown", 'py': "python", "json": "json"}
 default_yaml_filename = daconfig.get('default_interview', 'docassemble.demo:data/questions/questions.yml')
 
+alphanumeric_only = re.compile('[\W_]+')
+phone_pattern = re.compile(r"^[\d\+\-\(\) ]+$")
 document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
 fix_tabs = re.compile(r'\t')
 fix_initial = re.compile(r'^---\n')
@@ -105,6 +104,12 @@ lt_match = re.compile(r'<')
 gt_match = re.compile(r'>')
 amp_match = re.compile(r'&')
 extraneous_var = re.compile(r'^x\.|^x\[')
+key_requires_preassembly = re.compile('^(x\.|x\[|_multiple_choice)')
+match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
+match_invalid_key = re.compile('[^A-Za-z0-9_\[\].\'\%\- =]')
+match_brackets = re.compile('\[\'.*\'\]$')
+match_inside_and_outside_brackets = re.compile('(.*)(\[\'[^\]]+\'\])$')
+match_inside_brackets = re.compile('\[\'([^\]]+)\'\]')
 
 if 'mail' not in daconfig:
     daconfig['mail'] = dict()
@@ -119,6 +124,13 @@ DEFAULT_LOCALE = daconfig.get('locale', 'US.utf8')
 DEFAULT_DIALECT = daconfig.get('dialect', 'us')
 LOGSERVER = daconfig.get('log server', None)
 #message_sequence = dbtableprefix + 'message_id_seq'
+
+if os.environ.get('SUPERVISOR_SERVER_URL', None):
+    USING_SUPERVISOR = True
+    #sys.stderr.write("Using supervisor and hostname is " + str(hostname) + "\n")
+else:
+    USING_SUPERVISOR = False
+    #sys.stderr.write("Not using supervisor and hostname is " + str(hostname) + "\n")
 
 audio_mimetype_table = {'mp3': 'audio/mpeg', 'ogg': 'audio/ogg'}
 
@@ -160,20 +172,6 @@ FULL_PACKAGE_DIRECTORY = os.path.join(PACKAGE_DIRECTORY, 'lib', 'python2.7', 'si
 LOG_DIRECTORY = daconfig.get('log', '/usr/share/docassemble/log')
 #PLAYGROUND_MODULES_DIRECTORY = daconfig.get('playground_modules', )
 
-for path in [FULL_PACKAGE_DIRECTORY, PACKAGE_CACHE, UPLOAD_DIRECTORY, LOG_DIRECTORY]: #, os.path.join(PLAYGROUND_MODULES_DIRECTORY, 'docassemble')
-    if not os.path.isdir(path):
-        try:
-            os.makedirs(path)
-        except:
-            print "Could not create path: " + path
-            sys.exit(1)
-    if not os.access(path, os.W_OK):
-        print "Unable to create files in directory: " + path
-        sys.exit(1)
-if not os.access(WEBAPP_PATH, os.W_OK):
-    print "Unable to modify the timestamp of the WSGI file: " + WEBAPP_PATH
-    sys.exit(1)
-
 init_py_file = """try:
     __import__('pkg_resources').declare_namespace(__name__)
 except ImportError:
@@ -214,7 +212,6 @@ def url_for(*pargs, **kwargs):
 
 def my_default_url(error, endpoint, values):
     return url_for('index')
-
 
 #engine = create_engine(alchemy_connect_string, convert_unicode=True)
 #metadata = MetaData(bind=engine)
@@ -282,10 +279,6 @@ def get_url_from_file_reference(file_reference, **kwargs):
         url = fileroot + 'packagestatic/' + parts[0] + '/' + parts[1] + extn
     return(url)
 
-class FakeUser(object):
-    pass
-class FakeRole(object):
-    pass
 def user_id_dict():
     output = dict()
     for user in UserModel.query.all():
@@ -327,43 +320,8 @@ def get_title_documentation():
             return(yaml.load(content))
     return(None)
 
-
-key_requires_preassembly = re.compile('^(x\.|x\[|_multiple_choice)')
-match_invalid = re.compile('[^A-Za-z0-9_\[\].\'\%\-=]')
-match_invalid_key = re.compile('[^A-Za-z0-9_\[\].\'\%\- =]')
-match_brackets = re.compile('\[\'.*\'\]$')
-match_inside_and_outside_brackets = re.compile('(.*)(\[\'[^\]]+\'\])$')
-match_inside_brackets = re.compile('\[\'([^\]]+)\'\]')
-
-if 'twilio' in daconfig:
-    twilio_config = dict()
-    twilio_config['account sid'] = dict()
-    twilio_config['number'] = dict()
-    twilio_config['name'] = dict()
-    if type(daconfig['twilio']) is not list:
-        config_list = [daconfig['twilio']]
-    else:
-        config_list = daconfig['twilio']
-    for tconfig in config_list:
-        if type(tconfig) is dict and 'account sid' in tconfig and 'number' in tconfig:
-            twilio_config['account sid'][unicode(tconfig['account sid'])] = 1
-            twilio_config['number'][unicode(tconfig['number'])] = tconfig
-            if 'default' not in twilio_config['name']:
-                twilio_config['name']['default'] = tconfig
-            if 'name' in tconfig:
-                twilio_config['name'][tconfig['name']] = tconfig
-        else:
-            logmessage("Improper setup in twilio configuration")    
-    if 'default' not in twilio_config['name']:
-        twilio_config = None
-else:
-    twilio_config = None
-
-    
-APPLICATION_NAME = 'docassemble'
 #current_app.secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits)
 #                         for x in xrange(32))
-
         
 def logout():
     secret = request.cookies.get('secret', None)
@@ -661,23 +619,25 @@ def unauthorized():
     flash(word("You are not authorized to access") + " " + word(request.path), 'error')
     return redirect(url_for('user.login', next=fix_http(request.url)))
 
-def setup_app():
-    from docassemble.webapp.app_and_db import app
-    from docassemble.webapp.db_only import db
-    import docassemble.webapp.setup
-    from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm
-    from docassemble.webapp.users.views import user_profile_page
-    from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation
-    from flask_login import LoginManager
-    from flask_user import UserManager, SQLAlchemyAdapter
-    db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
-    #db_adapter.UserInvitationClass = MyUserInvitation
-    user_manager = UserManager(db_adapter, app, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, login_view_function=custom_login, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated)
-    lm = LoginManager(app)
-    lm.login_view = 'user.login'
-    return(db, app, lm)
+#def setup_app():
+from docassemble.webapp.app_and_db import app
+from docassemble.webapp.db_only import db
+import docassemble.webapp.setup
+from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm
+from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation
+from flask_user import UserManager, SQLAlchemyAdapter
+db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
+#db_adapter.UserInvitationClass = MyUserInvitation
+from docassemble.webapp.users.views import user_profile_page
+user_manager = UserManager(db_adapter, None, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, login_view_function=custom_login, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated)
+user_manager.init_app(app)
+from flask_login import LoginManager
+lm = LoginManager()
+lm.init_app(app)
+lm.login_view = 'user.login'
+#    return(db, app, lm)
 
-db, app, lm = setup_app()
+#db, app, lm = setup_app()
 
 from flask import make_response, abort, render_template, request, session, send_file, redirect, current_app, get_flashed_messages, flash, Markup, jsonify, Response, g
 from flask import url_for as flask_url_for
@@ -693,6 +653,10 @@ from flask_kvsession import KVSessionExtension
 from simplekv.memory.redisstore import RedisStore
 #from simplekv.db.sql import SQLAlchemyStore
 from sqlalchemy import or_, and_
+import docassemble.base.parse
+import docassemble.base.pdftk
+import docassemble.base.interview_cache
+import docassemble.webapp.update
 from docassemble.base.standardformatter import as_html, as_sms, signature_html, get_choices, get_choices_with_abb
 from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
 from docassemble.webapp.screenreader import to_text
@@ -704,40 +668,6 @@ from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supe
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
 import docassemble.base.util
-docassemble.base.util.set_user_id_function(user_id_dict)
-docassemble.base.parse.set_url_finder(get_url_from_file_reference)
-docassemble.base.parse.set_url_for(url_for)
-
-docassemble.base.util.set_twilio_config(twilio_config)
-
-title_documentation = get_title_documentation()
-documentation_dict = get_documentation_dict()
-base_name_info = get_name_info()
-for val in base_name_info:
-    base_name_info[val]['name'] = val
-    base_name_info[val]['insert'] = val
-    if 'show' not in base_name_info[val]:
-        base_name_info[val]['show'] = False
-
-word_file_list = daconfig.get('words', list())
-if type(word_file_list) is not list:
-    word_file_list = [word_file_list]
-for word_file in word_file_list:
-    #sys.stderr.write("Reading from " + str(word_file) + "\n")
-    file_info = get_info_from_file_reference(word_file)
-    if 'fullpath' in file_info and file_info['fullpath'] is not None:
-        with open(file_info['fullpath'], 'rU') as stream:
-            for document in yaml.load_all(stream):
-                if document and type(document) is dict:
-                    for lang, words in document.iteritems():
-                        if type(words) is dict:
-                            docassemble.base.functions.update_word_collection(lang, words)
-                        else:
-                            sys.stderr.write("Error reading " + str(word_file) + ": words not in dictionary form.\n")
-                else:
-                    sys.stderr.write("Error reading " + str(word_file) + ": yaml file not in dictionary form.\n")
-    else:
-        sys.stderr.write("Error reading " + str(word_file) + ": yaml file not found.\n")
 
 redis_host = daconfig.get('redis', None)
 if redis_host is None:
@@ -760,34 +690,10 @@ if 'oauth' in daconfig:
     if 'facebook' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enable'] is False):
         app.config['USE_FACEBOOK_LOGIN'] = True
 
-password_secret_key = daconfig.get('password_secretkey', app.secret_key)
-
-supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
-if supervisor_url:
-    USING_SUPERVISOR = True
-    #sys.stderr.write("Using supervisor and hostname is " + str(hostname) + "\n")
-else:
-    USING_SUPERVISOR = False
-    #sys.stderr.write("Not using supervisor and hostname is " + str(hostname) + "\n")
-
-sys_logger = logging.getLogger('docassemble')
-sys_logger.setLevel(logging.DEBUG)
-
-if LOGSERVER is None:
-    docassemble_log_handler = logging.FileHandler(filename=os.path.join(LOG_DIRECTORY, 'docassemble.log'))
-    sys_logger.addHandler(docassemble_log_handler)
-else:
-    import logging.handlers
-    handler = logging.handlers.SysLogHandler(address=(LOGSERVER, 514), socktype=socket.SOCK_STREAM)
-    sys_logger.addHandler(handler)
-
-request_active = True
-
 def set_request_active(value):
     global request_active
     request_active = value
 
-LOGFORMAT = 'docassemble: ip=%(clientip)s i=%(yamlfile)s uid=%(session)s user=%(user)s %(message)s'
 def syslog_message(message):
     message = re.sub(r'\n', ' ', message)
     if current_user and current_user.is_authenticated and not current_user.is_anonymous:
@@ -802,11 +708,6 @@ def syslog_message(message):
 def syslog_message_with_timestamp(message):
     syslog_message(time.strftime("%Y-%m-%d %H:%M:%S") + " " + message)
     
-if LOGSERVER is None:
-    docassemble.base.logger.set_logmessage(syslog_message_with_timestamp)
-else:
-    docassemble.base.logger.set_logmessage(syslog_message)
-
 def copy_playground_modules():
     devs = list()
     for user in UserModel.query.filter_by(active=True).all():
@@ -822,10 +723,6 @@ def copy_playground_modules():
         shutil.copytree(mod_dir.directory, local_dir)
         with open(os.path.join(local_dir, '__init__.py'), 'a') as the_file:
             the_file.write(init_py_file)
-
-#sys.path.append(PLAYGROUND_MODULES_DIRECTORY)
-
-# END OF INITIALIZATION
 
 def proc_example_list(example_list, examples):
     for example in example_list:
@@ -892,9 +789,1057 @@ def get_examples():
     #logmessage("Examples: " + str(examples))
     return(examples)
 
-@lm.user_loader
-def load_user(id):
-    return UserModel.query.get(int(id))
+def add_timestamps(the_dict, manual_user_id=None):
+    nowtime = datetime.datetime.utcnow()
+    the_dict['_internal']['starttime'] = nowtime 
+    the_dict['_internal']['modtime'] = nowtime
+    if manual_user_id is not None or (current_user and current_user.is_authenticated and not current_user.is_anonymous):
+        if manual_user_id is not None:
+            the_user_id = manual_user_id
+        else:
+            the_user_id = current_user.id
+        the_dict['_internal']['accesstime'][the_user_id] = nowtime
+    else:
+        the_dict['_internal']['accesstime'][-1] = nowtime
+    return
+
+def fresh_dictionary():
+    the_dict = copy.deepcopy(initial_dict)
+    add_timestamps(the_dict)
+    return the_dict    
+
+def manual_checkout():
+    session_id = session.get('uid', None)
+    yaml_filename = session.get('i', None)
+    if session_id is None or yaml_filename is None:
+        return
+    if current_user.is_anonymous:
+        the_user_id = 't' + str(session.get('tempuser', None))
+    else:
+        the_user_id = current_user.id
+    endpart = ':uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+    #logmessage("Checking out from " + endpart)
+    pipe = r.pipeline()
+    pipe.expire('da:session' + endpart, 12)
+    pipe.expire('da:html' + endpart, 12)
+    pipe.expire('da:interviewsession' + endpart, 12)
+    pipe.expire('da:ready' + endpart, 12)
+    pipe.expire('da:block' + endpart, 12)
+    pipe.execute()
+    #r.publish('da:monitor', json.dumps(dict(messagetype='refreshsessions')))
+    #logmessage("Done checking out from " + endpart)
+    return
+
+def chat_partners_available(session_id, yaml_filename, the_user_id, mode, partner_roles):
+    key = 'da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+    if mode in ['peer', 'peerhelp']:
+        peer_ok = True
+    else:
+        peer_ok = False
+    if mode in ['help', 'peerhelp']:
+        help_ok = True
+    else:
+        help_ok = False
+    potential_partners = set()
+    if help_ok and len(partner_roles) and not r.exists('da:block:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)):
+        chat_session_key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+        for role in partner_roles:
+            for the_key in r.keys('da:monitor:role:' + role + ':userid:*'):
+                user_id = re.sub(r'^.*:userid:', '', the_key)
+                potential_partners.add(user_id)
+        for the_key in r.keys('da:monitor:chatpartners:*'):
+            user_id = re.sub(r'^.*chatpartners:', '', the_key)
+            if user_id not in potential_partners:
+                for chat_key in r.hgetall(the_key):
+                    if chat_key == chat_session_key:
+                        potential_partners.add(user_id)
+    num_peer = 0
+    if peer_ok:
+        for sess_key in r.keys('da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:*'):
+            if sess_key != key:
+                num_peer += 1
+    result = ChatPartners()
+    result.peer = num_peer
+    result.help = len(potential_partners)
+    #return (dict(peer=num_peer, help=len(potential_partners)))
+    return result
+    
+def do_redirect(url, is_ajax):
+    if is_ajax:
+        return jsonify(action='redirect', url=url)
+    else:
+        return redirect(url)
+
+def standard_scripts():
+    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/signature.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>\n'
+    
+def standard_html_start(interview_language=DEFAULT_LANGUAGE, reload_after='', debug=False):
+    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">' + reload_after + '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/css/bootstrap-slider.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet">'
+    if debug:
+        output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
+    return output
+
+def process_file(saved_file, orig_file, mimetype, extension):
+    if extension == "jpg" and daconfig.get('imagemagick', 'convert') is not None:
+        unrotated = tempfile.NamedTemporaryFile(suffix=".jpg")
+        rotated = tempfile.NamedTemporaryFile(suffix=".jpg")
+        shutil.move(orig_file, unrotated.name)
+        call_array = [daconfig.get('imagemagick', 'convert'), str(unrotated.name), '-auto-orient', '-density', '300', 'jpeg:' + rotated.name]
+        result = call(call_array)
+        if result == 0:
+            saved_file.copy_from(rotated.name)
+        else:
+            saved_file.copy_from(unrotated.name)
+    else:
+        shutil.move(orig_file, saved_file.path)
+        saved_file.save()
+    if mimetype == 'video/quicktime' and daconfig.get('avconv', 'avconv') is not None:
+        call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', saved_file.path + '.ogv']
+        result = call(call_array)
+        call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-vcodec', 'copy', '-acodec', 'copy', saved_file.path + '.mp4']
+        result = call(call_array)
+    if mimetype == 'video/mp4' and daconfig.get('avconv', 'avconv') is not None:
+        call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', saved_file.path + '.ogv']
+        result = call(call_array)
+    if mimetype == 'video/ogg' and daconfig.get('avconv', 'avconv') is not None:
+        call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-c:v', 'libx264', '-preset', 'veryslow', '-crf', '22', '-c:a', 'libmp3lame', '-qscale:a', '2', '-ac', '2', '-ar', '44100', saved_file.path + '.mp4']
+        result = call(call_array)
+    if mimetype == 'audio/mpeg' and daconfig.get('pacpl', 'pacpl') is not None:
+        call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', saved_file.path + '.' + extension]
+        result = call(call_array)
+    if mimetype == 'audio/ogg' and daconfig.get('pacpl', 'pacpl') is not None:
+        call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'mp3', saved_file.path + '.' + extension]
+        result = call(call_array)
+    if mimetype in ['audio/3gpp'] and daconfig.get('avconv', 'avconv') is not None:
+        call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, saved_file.path + '.ogg']
+        result = call(call_array)
+        call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, saved_file.path + '.mp3']
+        result = call(call_array)
+    if mimetype in ['audio/x-wav', 'audio/wav'] and daconfig.get('pacpl', 'pacpl') is not None:
+        call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'mp3', saved_file.path + '.' + extension]
+        result = call(call_array)
+        call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', saved_file.path + '.' + extension]
+        result = call(call_array)
+    if extension == "pdf":
+        make_image_files(saved_file.path)
+    saved_file.finalize()
+    
+def save_user_dict_key(user_code, filename):
+    #sys.stderr.write("20\n")
+    the_record = UserDictKeys.query.filter_by(key=user_code, filename=filename, user_id=current_user.id).first()
+    #sys.stderr.write("21\n")
+    if the_record:
+        found = True
+    else:
+        found = False
+    if not found:
+        #sys.stderr.write("22\n")
+        new_record = UserDictKeys(key=user_code, filename=filename, user_id=current_user.id)
+        #sys.stderr.write("23\n")
+        db.session.add(new_record)
+        #sys.stderr.write("24\n")
+        db.session.commit()
+        #sys.stderr.write("25\n")
+    return
+
+def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, encrypt=True, manual_user_id=None):
+    #sys.stderr.write("30\n")
+    nowtime = datetime.datetime.utcnow()
+    #sys.stderr.write("31\n")
+    user_dict['_internal']['modtime'] = nowtime
+    if manual_user_id is not None or (current_user and current_user.is_authenticated and not current_user.is_anonymous):
+        if manual_user_id is not None:
+            the_user_id = manual_user_id
+        else:
+            the_user_id = current_user.id
+        user_dict['_internal']['accesstime'][the_user_id] = nowtime
+    else:
+        user_dict['_internal']['accesstime'][-1] = nowtime
+        the_user_id = None
+    #sys.stderr.write("32\n")
+    if changed is True:
+        if encrypt:
+            new_record = UserDict(modtime=nowtime, key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
+        else:
+            new_record = UserDict(modtime=nowtime, key=user_code, dictionary=pack_dictionary(user_dict), filename=filename, user_id=the_user_id, encrypted=False)
+        db.session.add(new_record)
+        db.session.commit()
+        #sys.stderr.write("33\n")
+    else:
+        #sys.stderr.write("34\n")
+        max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(UserDict.key == user_code, UserDict.filename == filename).scalar()
+        #sys.stderr.write("35\n")
+        if max_indexno is None:
+            if encrypt:
+                new_record = UserDict(modtime=nowtime, key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
+            else:
+                new_record = UserDict(modtime=nowtime, key=user_code, dictionary=pack_dictionary(user_dict), filename=filename, user_id=the_user_id, encrypted=False)
+            db.session.add(new_record)
+            db.session.commit()
+            #sys.stderr.write("36\n")
+        else:
+            #sys.stderr.write("37\n")
+            for record in UserDict.query.filter_by(key=user_code, filename=filename, indexno=max_indexno).all():
+                #sys.stderr.write("37.5\n")
+                if encrypt:
+                    record.dictionary = encrypt_dictionary(user_dict, secret)
+                    #sys.stderr.write("37.6\n")
+                    record.modtime = nowtime
+                    #sys.stderr.write("37.7\n")
+                    record.encrypted = True
+                else:
+                    record.dictionary = pack_dictionary(user_dict)
+                    #sys.stderr.write("37.7\n")
+                    record.modtime = nowtime
+                    record.encrypted = False                   
+            #sys.stderr.write("38\n")
+            db.session.commit()
+    #sys.stderr.write("39\n")
+    return
+
+def process_bracket_expression(match):
+    #return("[" + repr(urllib.unquote(match.group(1)).encode('unicode_escape')) + "]")
+    try:
+        inner = codecs.decode(match.group(1), 'base64').decode('utf-8')
+    except:
+        inner = match.group(1)
+    return("[" + repr(inner) + "]")
+
+def myb64unquote(the_string):
+    return(codecs.decode(the_string, 'base64').decode('utf-8'))
+
+def safeid(text):
+    return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
+
+def from_safeid(text):
+    #logmessage("from_safeid: " + str(text))
+    return(codecs.decode(text, 'base64').decode('utf-8'))
+
+def progress_bar(progress):
+    if progress == 0:
+        return('');
+    return('<div class="row"><div class="col-lg-6 col-md-8 col-sm-10"><div class="progress"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;"></div></div></div></div>\n')
+
+def get_unique_name(filename, secret):
+    nowtime = datetime.datetime.utcnow()
+    while True:
+        newname = ''.join(random.choice(string.ascii_letters) for i in range(32))
+        obtain_lock(newname, filename)
+        existing_key = UserDict.query.filter_by(key=newname).first()
+        if existing_key:
+            release_lock(newname, filename)
+            continue
+        # cur = conn.cursor()
+        # cur.execute("SELECT key from userdict where key=%s", [newname])
+        # if cur.fetchone():
+        #     #logmessage("Key already exists in database")
+        #     continue
+        new_user_dict = UserDict(modtime=nowtime, key=newname, filename=filename, dictionary=encrypt_dictionary(fresh_dictionary(), secret))
+        db.session.add(new_user_dict)
+        db.session.commit()
+        # cur.execute("INSERT INTO userdict (key, filename, dictionary) values (%s, %s, %s);", [newname, filename, codecs.encode(pickle.dumps(initial_dict.copy()), 'base64').decode()])
+        # conn.commit()
+        return newname
+
+# def update_user_id(the_user_code):
+#     if current_user.id is not None and the_user_code is not None:
+#         cur = conn.cursor()
+#         cur.execute("UPDATE userdict set user_id=%s where key=%s", [current_user.id, the_user_code])
+#         conn.commit()
+#     return
+    
+def get_attachment_info(the_user_code, question_number, filename, secret):
+    the_user_dict = None
+    existing_entry = Attachments.query.filter_by(key=the_user_code, question=question_number, filename=filename).first()
+    if existing_entry and existing_entry.dictionary:
+        #the_user_dict = pickle.loads(codecs.decode(existing_entry.dictionary, 'base64'))
+        if existing_entry.encrypted:
+            the_user_dict = decrypt_dictionary(existing_entry.dictionary, secret)
+        else:
+            the_user_dict = unpack_dictionary(existing_entry.dictionary)
+    # cur = conn.cursor()
+    # cur.execute("select dictionary from attachments where key=%s and question=%s and filename=%s", [the_user_code, question_number, filename])
+    # for d in cur:
+    #     if d[0]:
+    #         the_user_dict = pickle.loads(codecs.decode(d[0], 'base64'))
+    #     break
+    # conn.commit()
+    return the_user_dict
+
+def update_attachment_info(the_user_code, the_user_dict, the_interview_status, secret, encrypt=True):
+    #logmessage("Got to update_attachment_info")
+    Attachments.query.filter_by(key=the_user_code, question=the_interview_status.question.number, filename=the_interview_status.question.interview.source.path).delete()
+    db.session.commit()
+    if encrypt:
+        new_attachment = Attachments(key=the_user_code, dictionary=encrypt_dictionary(the_user_dict, secret), question = the_interview_status.question.number, filename=the_interview_status.question.interview.source.path, encrypted=True)
+    else:
+        new_attachment = Attachments(key=the_user_code, dictionary=pack_dictionary(the_user_dict), question = the_interview_status.question.number, filename=the_interview_status.question.interview.source.path, encrypted=False)
+    db.session.add(new_attachment)
+    db.session.commit()
+    return
+
+def obtain_lock(user_code, filename):
+    #logmessage("Obtain lock: " + str(user_code) + " " + str(filename))
+    key = 'da:lock:' + user_code + ':' + filename
+    found = False
+    count = 4
+    while count > 0:
+        #record = UserDictLock.query.filter_by(key=user_code, filename=filename).first()
+        record = r.get(key)
+        if record:
+            time.sleep(1.0)
+        else:
+            found = False
+            break
+        found = True
+        count -= 1
+    if found:
+        release_lock(user_code, filename)
+    #new_record = UserDictLock(key=user_code, filename=filename)
+    #db.session.add(new_record)
+    #db.session.commit()
+    pipe = r.pipeline()
+    pipe.set(key, 1)
+    pipe.expire(key, 4)
+    
+def release_lock(user_code, filename):
+    #logmessage("Release lock: " + str(user_code) + " " + str(filename))
+    #UserDictLock.query.filter_by(key=user_code, filename=filename).delete()
+    #db.session.commit()
+    key = 'da:lock:' + user_code + ':' + filename
+    r.delete(key)
+
+def make_navbar(status, page_title, page_short_title, steps, show_login, chat_info):
+    navbar = """\
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container-fluid">
+        <div class="navbar-header">
+"""
+    navbar += """\
+          <button id="mobile-toggler" type="button" class="navbar-toggle collapsed mynavbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+"""
+    if status.question.can_go_back and steps > 1:
+        navbar += """\
+          <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="_back_one" value="1"><button class="dabackicon" type="submit"><i class="glyphicon glyphicon-chevron-left dalarge"></i></button></form></span>
+"""
+    navbar += """\
+          <a href="#question" data-toggle="tab" class="navbar-brand"><span class="hidden-xs">""" + status.question.interview.get_title().get('full', page_title) + """</span><span class="visible-xs-block">""" + status.question.interview.get_title().get('short', page_short_title) + """</span></a>
+          <a class="invisible" id="questionlabel" href="#question" data-toggle="tab">""" + word('Question') + """</a>
+"""
+    help_message = word("Help is available")
+    extra_help_message = word("Help is available for this question")
+    phone_message = word("Phone help is available")
+    chat_message = word("Live chat is available")
+    source_message = word("How this question came to be asked")
+    if len(status.helpText):
+        if status.question.helptext is None:
+            navbar += '          <a title="' + help_message + '" class="mynavbar-text" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + '</a> <a title="' + phone_message + '" id="daPhoneAvailable" class="mynavbar-icon invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-earphone chat-active"></i></a> <a title="' + chat_message + '" id="daChatAvailable" class="mynavbar-icon invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-comment"></i></a>'
+        else:
+            navbar += '          <a title="' + extra_help_message + '" class="mynavbar-text daactivetext" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i></a> <a title="' + phone_message + '" id="daPhoneAvailable" class="mynavbar-icon daactivetext invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-earphone chat-active"></i></a> <a title="' + chat_message + '" id="daChatAvailable" class="mynavbar-icon daactivetext invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-comment"></i></a>'
+    elif chat_info['availability'] == 'available':
+        navbar += '          <a title="' + phone_message + '" id="daPhoneAvailable" class="mynavbar-icon invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-earphone chat-active"></i></a> <a title="' + chat_message + '" id="daChatAvailable" class="mynavbar-icon invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-comment"></i></a>'
+    navbar += """
+        </div>
+        <div class="collapse navbar-collapse" id="navbar-collapse">
+          <ul class="nav navbar-nav navbar-left hidden-xs">
+"""
+    # if status.question.helptext is None:
+    #     navbar += '<li><a href="#help" data-toggle="tab">' + word('Help') + "</a></li>\n"
+    # else:
+    #     navbar += '<li><a class="daactivetext" href="#help" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i>' + "</a></li>\n"
+    if DEBUG:
+        navbar += """\
+            <li><a class="no-outline" title=""" + repr(str(source_message)) + """ id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">""" + word('Source') + """</a></li>
+"""
+    navbar += """\
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+"""
+    if 'menu_items' in status.extras:
+        if type(status.extras['menu_items']) is not list:
+            custom_menu += '<li>' + word("Error: menu_items is not a Python list") + '</li>'
+        elif len(status.extras['menu_items']):
+            custom_menu = ""
+            for menu_item in status.extras['menu_items']:
+                if not (type(menu_item) is dict and 'url' in menu_item and 'label' in menu_item):
+                    custom_menu += '<li>' + word("Error: menu item is not a Python dict with keys of url and label") + '</li>'
+                else:
+                    custom_menu += '<li><a href="' + menu_item['url'] + '">' + menu_item['label'] + '</a></li>'
+        else:
+            custom_menu = False
+    else:
+        custom_menu = False
+    if ALLOW_REGISTRATION:
+        sign_in_text = word('Sign in or sign up to save answers')
+    else:
+        sign_in_text = word('Sign in to save answers')
+    if show_login:
+        if current_user.is_anonymous:
+            #logmessage("is_anonymous is " + str(current_user.is_anonymous))
+            if custom_menu:
+                navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('user.login', next=url_for('index')) + '">' + sign_in_text + '</a></li></ul></li>' + "\n"
+            else:
+                navbar += '            <li><a href="' + url_for('user.login', next=url_for('index')) + '">' + sign_in_text + '</a></li>' + "\n"
+        else:
+            navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + current_user.email + '<span class="caret"></span></a><ul class="dropdown-menu">'
+            if custom_menu:
+                navbar += custom_menu
+            if current_user.has_role('admin', 'developer', 'advocate'):
+                navbar +='<li><a href="' + url_for('monitor') + '">' + word('Monitor') + '</a></li>'
+            if current_user.has_role('admin', 'developer'):
+                navbar +='<li><a href="' + url_for('package_page') + '">' + word('Package Management') + '</a></li>'
+                navbar +='<li><a href="' + url_for('logs') + '">' + word('Logs') + '</a></li>'
+                navbar +='<li><a href="' + url_for('playground_page') + '">' + word('Playground') + '</a></li>'
+                navbar +='<li><a href="' + url_for('utilities') + '">' + word('Utilities') + '</a></li>'
+                if current_user.has_role('admin'):
+                    navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
+                    #navbar +='<li><a href="' + url_for('privilege_list') + '">' + word('Privileges List') + '</a></li>'
+                    navbar +='<li><a href="' + url_for('config_page') + '">' + word('Configuration') + '</a></li>'
+            navbar += '<li><a href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a></li><li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li><li><a href="' + url_for('user.logout') + '">' + word('Sign Out') + '</a></li></ul></li>'
+    else:
+        if custom_menu:
+            navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li></ul></li>' + "\n"
+        else:
+            navbar += '            <li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li>'
+    navbar += """\
+          </ul>
+        </div>
+      </div>
+    </div>
+"""
+    return(navbar)
+
+def delete_session():
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id']:
+        if key in session:
+            del session[key]
+    return
+
+def reset_session(yaml_filename, secret):
+    session['i'] = yaml_filename
+    session['uid'] = get_unique_name(yaml_filename, secret)
+    if 'key_logged' in session:
+        del session['key_logged']
+    if 'action' in session:
+        del session['action']
+    user_code = session['uid']
+    #logmessage("User code is now " + str(user_code))
+    user_dict = fresh_dictionary()
+    return(user_code, user_dict)
+
+def _endpoint_url(endpoint):
+    url = url_for('index')
+    if endpoint:
+        url = url_for(endpoint)
+    return url
+
+def user_can_edit_package(pkgname=None, giturl=None):
+    if pkgname is not None:
+        results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(Package.name == pkgname)
+        if results.count() == 0:
+            return(True)
+        for d in results:
+            if d.user_id == current_user.id:
+                return True
+    if giturl is not None:
+        results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(Package.giturl == giturl)
+        if results.count() == 0:
+            return(True)
+        for d in results:
+            if d.user_id == current_user.id:
+                return True
+    return(False)
+
+def uninstall_package(packagename):
+    logmessage("uninstall_package: " + packagename)
+    existing_package = Package.query.filter_by(name=packagename, active=True).order_by(Package.id.desc()).first()
+    if existing_package is None:
+        flash(word("Package did not exist"), 'error')
+        return
+    the_upload_number = existing_package.upload
+    the_package_type = existing_package.type
+    for package in Package.query.filter_by(name=packagename, active=True).all():
+        package.active = False
+    db.session.commit()
+    ok, logmessages = docassemble.webapp.update.check_for_updates()
+    if ok:
+        if the_package_type == 'zip' and the_upload_number is not None:
+            SavedFile(the_upload_number).delete()
+        trigger_update(except_for=hostname)
+        restart_this()
+        flash(word("Uninstall successful"), 'success')
+    else:
+        flash(word("Uninstall not successful"), 'error')
+    logmessages = re.sub(r'\n', r'<br>', logmessages)
+    flash('pip log:  ' + Markup(logmessages), 'info')
+    logmessage(logmessages)
+    logmessage("uninstall_package: done")
+    return
+
+def install_zip_package(packagename, file_number):
+    logmessage("install_zip_package: " + packagename + " " + str(file_number))
+    existing_package = Package.query.filter_by(name=packagename, active=True).order_by(Package.id.desc()).first()
+    if existing_package is None:
+        package_auth = PackageAuth(user_id=current_user.id)
+        package_entry = Package(name=packagename, package_auth=package_auth, upload=file_number, active=True, type='zip', version=1)
+        db.session.add(package_auth)
+        db.session.add(package_entry)
+    else:
+        if existing_package.type == 'zip' and existing_package.upload is not None and existing_package.upload != file_number:
+            SavedFile(existing_package.upload).delete()
+        existing_package.upload = file_number
+        existing_package.active = True
+        existing_package.limitation = None
+        existing_package.type = 'zip'
+        existing_package.version += 1
+    db.session.commit()
+    #logmessage("Going into check for updates now")
+    ok, logmessages = docassemble.webapp.update.check_for_updates()
+    #logmessage("Returned from check for updates")
+    #logmessage('pip log: ' + str(logmessages), 'info')
+    if ok:
+        trigger_update(except_for=hostname)
+        restart_this()
+        flash(word("Install successful"), 'success')
+    else:
+        flash(word("Install not successful"), 'error')
+    logmessages = re.sub(r'\n', r'<br>', logmessages)
+    flash('pip log: ' + Markup(logmessages), 'info')
+    # pip_log = tempfile.NamedTemporaryFile()
+    # commands = ['install', '--quiet', '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, zippath]
+    # returnval = pip.main(commands)
+    # if returnval > 0:
+    #     with open(pip_log.name) as x:
+    #         logfilecontents = x.read()
+    #         flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + '</pre>', 'error')
+    return
+
+def install_git_package(packagename, giturl):
+    logmessage("install_git_package: " + packagename + " " + str(giturl))
+    if Package.query.filter_by(name=packagename, active=True).first() is None and Package.query.filter_by(giturl=giturl, active=True).first() is None:
+        package_auth = PackageAuth(user_id=current_user.id)
+        package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth, version=1, active=True, type='git')
+        db.session.add(package_auth)
+        db.session.add(package_entry)
+        db.session.commit()
+    else:
+        package_entry = Package.query.filter_by(name=packagename).order_by(Package.id.desc()).first()
+        if package_entry is not None:
+            if package_entry.type == 'zip' and package_entry.upload is not None:
+                SavedFile(package_entry.upload).delete()
+            package_entry.version += 1
+            package_entry.giturl = giturl
+            package_entry.upload = None
+            package_entry.limitation = None
+            package_entry.type = 'git'
+            db.session.commit()
+    ok, logmessages = docassemble.webapp.update.check_for_updates()
+    if ok:
+        trigger_update(except_for=hostname)
+        restart_this()
+        flash(word("Install successful"), 'success')
+    else:
+        flash(word("Install not successful"), 'error')
+    logmessages = re.sub(r'\n', r'<br>', logmessages)
+    flash('pip log: ' + Markup(logmessages), 'info')
+    # pip_log = tempfile.NamedTemporaryFile()
+    # commands = ['install', '--quiet', '--egg', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, 'git+' + giturl + '.git#egg=' + packagename]
+    # returnval = pip.main(commands)
+    # if returnval > 0:
+    #     with open(pip_log.name) as x: logfilecontents = x.read()
+    #     flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + "</pre>", 'error')
+    return
+
+def install_pip_package(packagename, limitation):
+    existing_package = Package.query.filter_by(name=packagename, active=True).order_by(Package.id.desc()).first()
+    if existing_package is None:
+        package_auth = PackageAuth(user_id=current_user.id)
+        package_entry = Package(name=packagename, package_auth=package_auth, limitation=limitation, type='pip')
+        db.session.add(package_auth)
+        db.session.add(package_entry)
+        db.session.commit()
+    else:
+        if existing_package.type == 'zip' and existing_package.upload is not None:
+            SavedFile(existing_package.upload).delete()
+        existing_package.version += 1
+        existing_package.type = 'pip'
+        existing_package.limitation = limitation
+        existing_package.giturl = None
+        existing_package.upload = None
+        db.session.commit()
+    ok, logmessages = docassemble.webapp.update.check_for_updates()
+    if ok:
+        trigger_update(except_for=hostname)
+        restart_this()
+        flash(word("Install successful"), 'success')
+    else:
+        flash(word("Install not successful"), 'error')
+    logmessages = re.sub(r'\n', r'<br>', logmessages)
+    flash('pip log: ' + Markup(logmessages), 'info')
+    # pip_log = tempfile.NamedTemporaryFile()
+    # commands = ['install', '--quiet', '--egg', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, 'git+' + giturl + '.git#egg=' + packagename]
+    # returnval = pip.main(commands)
+    # if returnval > 0:
+    #     with open(pip_log.name) as x: logfilecontents = x.read()
+    #     flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + "</pre>", 'error')
+    return
+
+def get_package_info():
+    if current_user.has_role('admin'):
+        is_admin = True
+    else:
+        is_admin = False
+    package_list = list()
+    package_auth = dict()
+    seen = dict()
+    for auth in PackageAuth.query.all():
+        if auth.package_id not in package_auth:
+            package_auth[auth.package_id] = dict()
+        package_auth[auth.package_id][auth.user_id] = auth.authtype
+    for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
+        if package.name in seen:
+            continue
+        seen[package.name] = 1
+        if package.type is not None:
+            if package.type == 'zip':
+                can_update = False
+            else:
+                can_update = True
+            if is_admin or (package.id in package_auth and current_user.id in package_auth[package.id]):
+                can_uninstall = True
+            else:
+                can_uninstall = False
+            if package.core:
+                can_uninstall = False
+                can_update = is_admin
+            package_list.append(Object(package=package, can_update=can_update, can_uninstall=can_uninstall))
+    return package_list, package_auth
+
+def name_of_user(user, include_email=False):
+    output = ''
+    if user.first_name:
+        output += ''
+        if user.last_name:
+            output += ' '
+    if user.last_name:
+        output += user.last_name
+    if include_email and user.email:
+        if output:
+            output += ', '
+        output += user.email
+    return output
+
+def flash_as_html(message, message_type="info"):
+    output = """
+        <div class="alert alert-""" + str(message_type) + """"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>""" + str(message) + """</div>
+"""
+    return output
+
+def make_example_html(examples, first_id, example_html, data_dict):
+    example_html.append('          <ul class="nav nav-pills nav-stacked example-list example-hidden">\n')
+    for example in examples:
+        if 'list' in example:
+            example_html.append('          <li><a class="example-heading">' + example['title'] + '</a>')
+            make_example_html(example['list'], first_id, example_html, data_dict)
+            example_html.append('          </li>')
+            continue
+        #logmessage("Doing example with id " + str(example['id']))
+        if len(first_id) == 0:
+            first_id.append(example['id'])
+        example_html.append('            <li><a class="example-link" data-example="' + example['id'] + '">' + example['title'] + '</a></li>')
+        data_dict[example['id']] = example
+    example_html.append('          </ul>')
+
+def public_method(method, the_class):
+    if isinstance(method, types.MethodType) and method.__name__ != 'init' and not method.__name__.startswith('_') and method.__name__ in the_class.__dict__:
+        return True
+    return False
+
+def noquote(string):
+    if string is None:
+        return string
+    string = noquote_match.sub('&quot;', string)
+    string = lt_match.sub('&lt;', string)
+    string = gt_match.sub('&gt;', string)
+    string = amp_match.sub('&amp;', string)
+    return string
+    # if string is None:
+    #     return None
+    # newstring = json.dumps(string.replace('\n', ' ').rstrip())
+    # return newstring[1:-1]
+
+def infobutton(title):
+    docstring = ''
+    if 'doc' in title_documentation[title]:
+        docstring += noquote(title_documentation[title]['doc']) + "<br>"
+    if 'url' in title_documentation[title]:
+        docstring += "<a target='_blank' href='" + title_documentation[title]['url'] + "'>" + word("View documentation") + "</a>"
+    return '&nbsp;<a class="daquestionsign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + docstring + '" title="' + word("Help") + '" data-selector="true" data-title="' + noquote(title_documentation[title].get('title', title)) + '"><i class="glyphicon glyphicon-question-sign"></i></a>'
+    
+def get_vars_in_use(interview, interview_status, debug_mode=False):
+    user_dict = fresh_dictionary()
+    has_no_endpoint = False
+    if debug_mode:
+        has_error = True
+        error_message = "Not checking variables because in debug mode."
+        error_type = Exception
+    else:
+        try:
+            interview.assemble(user_dict, interview_status)
+            has_error = False
+        except Exception as errmess:
+            has_error = True
+            error_message = str(errmess)
+            error_type = type(errmess)
+            logmessage("Failed assembly with error type " + str(error_type) + " and message: " + error_message)
+    fields_used = set()
+    names_used = set()
+    names_used.update(interview.names_used)
+    for question in interview.questions_list:
+        names_used.update(question.mako_names)
+        names_used.update(question.names_used)
+        names_used.update(question.fields_used)
+        fields_used.update(question.fields_used)
+    for val in interview.questions:
+        names_used.add(val)
+        fields_used.add(val)
+    functions = set()
+    modules = set()
+    classes = set()
+    name_info = copy.deepcopy(base_name_info)
+    area = SavedFile(current_user.id, fix=True, section='playgroundtemplate')
+    templates = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
+    area = SavedFile(current_user.id, fix=True, section='playgroundstatic')
+    static = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
+    area = SavedFile(current_user.id, fix=True, section='playgroundsources')
+    sources = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
+    area = SavedFile(current_user.id, fix=True, section='playgroundmodules')
+    avail_modules = sorted([re.sub(r'.py$', '', f) for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
+    for val in user_dict:
+        #logmessage("Found val " + str(val) + " of type " + str(type(user_dict[val])))
+        if type(user_dict[val]) is types.FunctionType:
+            functions.add(val)
+            name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + str(inspect.formatargspec(*inspect.getargspec(user_dict[val])))}
+        elif type(user_dict[val]) is types.ModuleType:
+            modules.add(val)
+            name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val)}
+        # elif type(user_dict[val]) is types.ClassType:
+        #     classes.add(val)
+        #     name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val)}
+        elif type(user_dict[val]) is types.TypeType or type(user_dict[val]) is types.ClassType:
+            classes.add(val)
+            bases = list()
+            for x in list(user_dict[val].__bases__):
+                if x.__name__ != 'DAObject':
+                    bases.append(x.__name__)
+            methods = inspect.getmembers(user_dict[val], predicate=lambda x: public_method(x, user_dict[val]))
+            method_list = list()
+            for name, value in methods:
+                method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': noquote(inspect.getdoc(value)), 'tag': '.' + str(name) + str(inspect.formatargspec(*inspect.getargspec(value)))})
+            #logmessage("Defining name_info for " + str(val))
+            name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'bases': bases, 'methods': method_list}
+    for val in docassemble.base.functions.pickleable_objects(user_dict):
+        names_used.add(val)
+        if val not in name_info:
+            name_info[val] = dict()
+        #name_info[val]['type'] = type(user_dict[val]).__name__
+        name_info[val]['type'] = user_dict[val].__class__.__name__
+    for var in base_name_info:
+        if base_name_info[var]['show']:
+            names_used.add(var)
+    names_used = set([i for i in names_used if not extraneous_var.search(i)])
+    for var in ['_internal']:
+        names_used.discard(var)
+    view_doc_text = word("View documentation")
+    word_documentation = word("Documentation")
+    for var in documentation_dict:
+        if var not in name_info:
+            name_info[var] = dict()
+        if 'doc' in name_info[var] and name_info[var]['doc'] is not None:
+            name_info[var]['doc'] += '<br>'
+        else:
+            name_info[var]['doc'] = ''
+        name_info[var]['doc'] += "<a target='_blank' href='" + documentation_dict[var] + "'>" + view_doc_text + "</a>"
+    for var in name_info:
+        if 'methods' in name_info[var]:
+            for method in name_info[var]['methods']:
+                if var + '.' + method['name'] in documentation_dict:
+                    if method['doc'] is None:
+                        method['doc'] = ''
+                    else:
+                        method['doc'] += '<br>'
+                    method['doc'] += "<a target='_blank' href='" + documentation_dict[var + '.' + method['name']] + "'>" + view_doc_text + "</a>"                
+    content = ''
+    if has_error:
+        error_style = 'danger'
+        if error_type is DAErrorNoEndpoint:
+            error_style = 'warning'
+            message_to_use = title_documentation['incomplete']['doc']
+        elif error_type is DAErrorMissingVariable:
+            message_to_use = error_message
+        else:
+            message_to_use = title_documentation['generic error']['doc']
+        content += '\n                  <tr><td class="playground-warning-box"><div class="alert alert-' + error_style + '">' + message_to_use + '</div></td></tr>'
+    # content += '\n                  <tr><td><h4>From</h4></td></tr>'
+    # content += '\n                  <tr><td><select>'
+    # for the_file in files:
+    #     content += '<option '
+    #     if the_file == current_file:
+    #         content += "selected "
+    #     content += 'value="' + the_file + '">' + str(the_file) + '</option>'
+    # content += '</select></td></tr>'
+    names_used = names_used.difference( functions | classes | modules | set(avail_modules) )
+    undefined_names = names_used.difference(fields_used | set(base_name_info.keys()) )
+    for var in ['_internal']:
+        undefined_names.discard(var)
+    names_used = names_used.difference( undefined_names )
+    if len(undefined_names):
+        content += '\n                  <tr><td><h4>Undefined names' + infobutton('undefined') + '</h4></td></tr>'
+        for var in sorted(undefined_names):
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-danger playground-variable">' + var + '</a></td></tr>'
+    if len(names_used):
+        content += '\n                  <tr><td><h4>Variables' + infobutton('variables') + '</h4></td></tr>'
+        for var in sorted(names_used):
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + var + '</a>'
+            if var in name_info and 'type' in name_info[var] and name_info[var]['type']:
+                content +='&nbsp;<span data-ref="' + noquote(name_info[var]['type']) + '" class="daparenthetical">(' + name_info[var]['type'] + ')</span>'
+            if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
+                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
+            content += '</td></tr>'
+    if len(functions):
+        content += '\n                  <tr><td><h4>Functions' + infobutton('functions') + '</h4></td></tr>'
+        for var in sorted(functions):
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-warning playground-variable">' + name_info[var]['tag'] + '</a>'
+            if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
+                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
+            content += '</td></tr>'
+    if len(classes):
+        content += '\n                  <tr><td><h4>Classes' + infobutton('classes') + '</h4></td></tr>'
+        for var in sorted(classes):
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-info playground-variable">' + name_info[var]['name'] + '</a>'
+            if name_info[var]['bases']:
+                content += '&nbsp;<span data-ref="' + noquote(name_info[var]['bases'][0]) + '" class="daparenthetical">(' + name_info[var]['bases'][0] + ')</span>'
+            if name_info[var]['doc']:
+                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
+            if len(name_info[var]['methods']):
+                content += '&nbsp;<a class="dashowmethods" role="button" data-showhide="XMETHODX' + var + '" title="' + word('Methods') + '"><i class="glyphicon glyphicon-cog"></i></a>'
+                content += '<div style="display: none;" id="XMETHODX' + var + '"><table><tbody>'
+                for method_info in name_info[var]['methods']:
+                    content += '<tr><td><a data-name="' + noquote(method_info['name']) + '" data-insert="' + noquote(method_info['insert']) + '" class="label label-warning playground-variable">' + method_info['tag'] + '</a>'
+                    if method_info['doc']:
+                        content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + method_info['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + noquote(method_info['name']) + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
+                    content += '</td></tr>'
+                content += '</tbody></table></div>'
+            content += '</td></tr>'
+    if len(modules):
+        content += '\n                  <tr><td><h4>Modules defined' + infobutton('modules') + '</h4></td></tr>'
+        for var in sorted(modules):
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-success playground-variable">' + name_info[var]['name'] + '</a>'
+            if name_info[var]['doc']:
+                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + noquote(var) + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
+            content += '</td></tr>'
+    if len(avail_modules):
+        content += '\n                  <tr><td><h4>Modules available in Playground' + infobutton('playground_modules') + '</h4></td></tr>'
+        for var in avail_modules:
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert=".' + noquote(var) + '" class="label label-success playground-variable">.' + noquote(var) + '</a>'
+            content += '</td></tr>'
+    if len(templates):
+        content += '\n                  <tr><td><h4>Templates' + infobutton('templates') + '</h4></td></tr>'
+        for var in templates:
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-default playground-variable">' + noquote(var) + '</a>'
+            content += '</td></tr>'
+    if len(static):
+        content += '\n                  <tr><td><h4>Static files' + infobutton('static') + '</h4></td></tr>'
+        for var in static:
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-default playground-variable">' + noquote(var) + '</a>'
+            content += '</td></tr>'
+    if len(sources):
+        content += '\n                  <tr><td><h4>Source files' + infobutton('sources') + '</h4></td></tr>'
+        for var in sources:
+            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-default playground-variable">' + noquote(var) + '</a>'
+            content += '</td></tr>'
+    if len(interview.images):
+        content += '\n                  <tr><td><h4>Decorations' + infobutton('decorations') + '</h4></td></tr>'
+        for var in sorted(interview.images):
+            content += '\n                  <tr><td><img class="daimageicon" src="' + get_url_from_file_reference(interview.images[var].get_reference()) + '">&nbsp;<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + noquote(var) + '</a>'
+            content += '</td></tr>'
+    return content
+
+def make_image_files(path):
+    #logmessage("make_image_files on " + str(path))
+    if PDFTOPPM_COMMAND is not None:
+        args = [PDFTOPPM_COMMAND, '-r', str(PNG_RESOLUTION), '-png', path, path + 'page']
+        result = call(args)
+        if result > 0:
+            raise DAError("Call to pdftoppm failed")
+        args = [PDFTOPPM_COMMAND, '-r', str(PNG_SCREEN_RESOLUTION), '-png', path, path + 'screen']
+        result = call(args)
+        if result > 0:
+            raise DAError("Call to pdftoppm failed")
+    return
+
+def trigger_update(except_for=None):
+    logmessage("trigger_update: except_for is " + str(except_for))
+    if USING_SUPERVISOR:
+        for host in Supervisors.query.all():
+            if host.url and not (except_for and host.hostname == except_for):
+                if host.hostname == hostname:
+                    the_url = 'http://localhost:9001'
+                else:
+                    the_url = host.url
+                args = [SUPERVISORCTL, '-s', the_url, 'start update']
+                result = call(args)
+                if result == 0:
+                    logmessage("trigger_update: sent reset to " + str(host.hostname))
+                else:
+                    logmessage("trigger_update: call to supervisorctl on " + str(host.hostname) + " was not successful")
+    return
+
+def restart_on(host):
+    if host.hostname == hostname:
+        the_url = 'http://localhost:9001'
+    else:
+        the_url = host.url
+    if re.search(r':(web|all):', host.role):
+        args = [SUPERVISORCTL, '-s', the_url, 'start reset']
+        result = call(args)
+        if result == 0:
+            logmessage("restart_on: sent reset to " + str(host.hostname))
+        else:
+            logmessage("restart_on: call to supervisorctl with reset on " + str(host.hostname) + " was not successful")
+    # if re.search(r':(celery|all):', host.role):
+    #     args = [SUPERVISORCTL, '-s', the_url, 'restart celery']
+    # result = call(args)
+    # if result == 0:
+    #     logmessage("restart_on: sent restart celery to " + str(host.hostname))
+    # else:
+    #     logmessage("restart_on: call to supervisorctl with restart celery on " + str(host.hostname) + " was not successful")
+    return
+
+def restart_all():
+    restart_others()
+    restart_this()
+    return
+
+def restart_this():
+    if USING_SUPERVISOR:
+        for host in Supervisors.query.all():
+            if host.url:
+                logmessage("restart_this: considering " + str(host.hostname) + "against " + str(hostname))
+                if host.hostname == hostname:
+                    restart_on(host)
+            else:
+                logmessage("restart_this: unable to get host url")
+    else:
+        logmessage("restart_this: touched wsgi file")
+        wsgi_file = WEBAPP_PATH
+        if os.path.isfile(wsgi_file):
+            with open(wsgi_file, 'a'):
+                os.utime(wsgi_file, None)
+    return
+
+def restart_others():
+    logmessage("Got to restart_others")
+    if USING_SUPERVISOR:
+        for host in Supervisors.query.all():
+            if host.url:
+                if host.hostname != hostname:
+                    restart_on(host)
+            else:
+                logmessage("restart_others: unable to get host url")
+    return
+
+def current_info(yaml=None, req=None, action=None, location=None, interface='web'):
+    if current_user.is_authenticated and not current_user.is_anonymous:
+        ext = dict(email=current_user.email, roles=[role.name for role in current_user.roles], theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization)
+    else:
+        ext = dict(email=None, theid=session.get('tempuser', None), roles=list())
+    if req is None:
+        url = 'http://localhost'
+        url_root = 'http://localhost'
+        secret = None
+    else:
+        url = req.base_url
+        url_root = req.url_root
+        secret = req.cookies.get('secret', None)
+    if secret is not None:
+        secret = str(secret)
+    return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}}
+    if action is not None:
+        return_val.update(action)
+    if location is not None:
+        ext['location'] = location
+    else:
+        ext['location'] = None
+    return_val['user'].update(ext)
+    return(return_val)
+
+def html_escape(text):
+    text = re.sub('&', '&amp;', text)
+    text = re.sub('<', '&lt;', text)
+    text = re.sub('>', '&gt;', text)
+    return text;
+
+def indent_by(text, num):
+    if not text:
+        return ""
+    return (" " * num) + re.sub(r'\n', "\n" + (" " * num), text).rstrip() + "\n"
+
+# def indent_by(text, num):
+#     return (" " * num) + re.sub(r'\n', "\n" + (" " * num), text).rstrip() + "\n"
+    
+def call_sync():
+    if not USING_SUPERVISOR:
+        return
+    args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'sync']
+    result = call(args)
+    if result == 0:
+        logmessage("logs: sent message to " + hostname)
+    else:
+        logmessage("logs: call to supervisorctl on " + hostname + " was not successful")
+        abort(404)
+    in_process = 1
+    counter = 10
+    check_args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'status', 'sync']
+    while in_process == 1 and counter > 0:
+        output, err = Popen(check_args, stdout=PIPE, stderr=PIPE).communicate()
+        if not re.search(r'RUNNING', output):
+            in_process = 0
+        else:
+            time.sleep(1)
+        counter -= 1
+    return
+
+def formatted_current_time():
+    if current_user.timezone:
+        the_timezone = pytz.timezone(current_user.timezone)
+    else:
+        the_timezone = pytz.timezone(get_default_timezone())
+    return datetime.datetime.utcnow().replace(tzinfo=tz.tzutc()).astimezone(the_timezone).strftime('%H:%M:%S %Z')
+
+def formatted_current_date():
+    if current_user.timezone:
+        the_timezone = pytz.timezone(current_user.timezone)
+    else:
+        the_timezone = pytz.timezone(get_default_timezone())
+    return datetime.datetime.utcnow().replace(tzinfo=tz.tzutc()).astimezone(the_timezone).strftime("%Y-%m-%d")
+
+class Object(object):
+    def __init__(self, **kwargs):
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
+    pass
+
+class FakeUser(object):
+    pass
+
+class FakeRole(object):
+    pass
 
 class OAuthSignIn(object):
     providers = None
@@ -1015,6 +1960,10 @@ class FacebookSignIn(OAuthSignIn):
 #         username = me.get('screen_name')
 #         return social_id, username, None   # Twitter does not provide email
 
+@lm.user_loader
+def load_user(id):
+    return UserModel.query.get(int(id))
+
 @app.route('/authorize/<provider>', methods=['POST', 'GET'])
 def oauth_authorize(provider):
     if not current_user.is_anonymous:
@@ -1095,47 +2044,6 @@ def cleanup_sessions():
 def health_check():
     return render_template('pages/health_check.html', content="OK")
 
-def add_timestamps(the_dict, manual_user_id=None):
-    nowtime = datetime.datetime.utcnow()
-    the_dict['_internal']['starttime'] = nowtime 
-    the_dict['_internal']['modtime'] = nowtime
-    if manual_user_id is not None or (current_user and current_user.is_authenticated and not current_user.is_anonymous):
-        if manual_user_id is not None:
-            the_user_id = manual_user_id
-        else:
-            the_user_id = current_user.id
-        the_dict['_internal']['accesstime'][the_user_id] = nowtime
-    else:
-        the_dict['_internal']['accesstime'][-1] = nowtime
-    return
-
-def fresh_dictionary():
-    the_dict = copy.deepcopy(initial_dict)
-    add_timestamps(the_dict)
-    return the_dict    
-
-def manual_checkout():
-    session_id = session.get('uid', None)
-    yaml_filename = session.get('i', None)
-    if session_id is None or yaml_filename is None:
-        return
-    if current_user.is_anonymous:
-        the_user_id = 't' + str(session.get('tempuser', None))
-    else:
-        the_user_id = current_user.id
-    endpart = ':uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-    #logmessage("Checking out from " + endpart)
-    pipe = r.pipeline()
-    pipe.expire('da:session' + endpart, 12)
-    pipe.expire('da:html' + endpart, 12)
-    pipe.expire('da:interviewsession' + endpart, 12)
-    pipe.expire('da:ready' + endpart, 12)
-    pipe.expire('da:block' + endpart, 12)
-    pipe.execute()
-    #r.publish('da:monitor', json.dumps(dict(messagetype='refreshsessions')))
-    #logmessage("Done checking out from " + endpart)
-    return
-
 @app.route("/checkout", methods=['POST', 'GET'])
 def checkout():
     try:
@@ -1164,40 +2072,6 @@ def restart_ajax():
 
 class ChatPartners(object):
     pass
-    
-def chat_partners_available(session_id, yaml_filename, the_user_id, mode, partner_roles):
-    key = 'da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-    if mode in ['peer', 'peerhelp']:
-        peer_ok = True
-    else:
-        peer_ok = False
-    if mode in ['help', 'peerhelp']:
-        help_ok = True
-    else:
-        help_ok = False
-    potential_partners = set()
-    if help_ok and len(partner_roles) and not r.exists('da:block:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)):
-        chat_session_key = 'da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-        for role in partner_roles:
-            for the_key in r.keys('da:monitor:role:' + role + ':userid:*'):
-                user_id = re.sub(r'^.*:userid:', '', the_key)
-                potential_partners.add(user_id)
-        for the_key in r.keys('da:monitor:chatpartners:*'):
-            user_id = re.sub(r'^.*chatpartners:', '', the_key)
-            if user_id not in potential_partners:
-                for chat_key in r.hgetall(the_key):
-                    if chat_key == chat_session_key:
-                        potential_partners.add(user_id)
-    num_peer = 0
-    if peer_ok:
-        for sess_key in r.keys('da:session:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:*'):
-            if sess_key != key:
-                num_peer += 1
-    result = ChatPartners()
-    result.peer = num_peer
-    result.help = len(potential_partners)
-    #return (dict(peer=num_peer, help=len(potential_partners)))
-    return result
     
 @app.route("/checkin", methods=['POST', 'GET'])
 def checkin():
@@ -1418,21 +2292,6 @@ def checkin():
         else:
             return jsonify(success=True, chat_status=chatstatus, phone=call_forwarding_message, observerControl=observer_control)
     return jsonify(success=False)
-
-def do_redirect(url, is_ajax):
-    if is_ajax:
-        return jsonify(action='redirect', url=url)
-    else:
-        return redirect(url)
-
-def standard_scripts():
-    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/signature.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>\n'
-    
-def standard_html_start(interview_language=DEFAULT_LANGUAGE, reload_after='', debug=False):
-    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">' + reload_after + '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/css/bootstrap-slider.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet">'
-    if debug:
-        output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
-    return output
 
 # @app.before_request
 # def before_request():
@@ -3335,344 +4194,6 @@ def index():
     #sys.stderr.write("11\n")
     return response
 
-if __name__ == "__main__":
-    app.run()
-
-def process_file(saved_file, orig_file, mimetype, extension):
-    if extension == "jpg" and daconfig.get('imagemagick', 'convert') is not None:
-        unrotated = tempfile.NamedTemporaryFile(suffix=".jpg")
-        rotated = tempfile.NamedTemporaryFile(suffix=".jpg")
-        shutil.move(orig_file, unrotated.name)
-        call_array = [daconfig.get('imagemagick', 'convert'), str(unrotated.name), '-auto-orient', '-density', '300', 'jpeg:' + rotated.name]
-        result = call(call_array)
-        if result == 0:
-            saved_file.copy_from(rotated.name)
-        else:
-            saved_file.copy_from(unrotated.name)
-    else:
-        shutil.move(orig_file, saved_file.path)
-        saved_file.save()
-    if mimetype == 'video/quicktime' and daconfig.get('avconv', 'avconv') is not None:
-        call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', saved_file.path + '.ogv']
-        result = call(call_array)
-        call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-vcodec', 'copy', '-acodec', 'copy', saved_file.path + '.mp4']
-        result = call(call_array)
-    if mimetype == 'video/mp4' and daconfig.get('avconv', 'avconv') is not None:
-        call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-vcodec', 'libtheora', '-acodec', 'libvorbis', saved_file.path + '.ogv']
-        result = call(call_array)
-    if mimetype == 'video/ogg' and daconfig.get('avconv', 'avconv') is not None:
-        call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, '-c:v', 'libx264', '-preset', 'veryslow', '-crf', '22', '-c:a', 'libmp3lame', '-qscale:a', '2', '-ac', '2', '-ar', '44100', saved_file.path + '.mp4']
-        result = call(call_array)
-    if mimetype == 'audio/mpeg' and daconfig.get('pacpl', 'pacpl') is not None:
-        call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', saved_file.path + '.' + extension]
-        result = call(call_array)
-    if mimetype == 'audio/ogg' and daconfig.get('pacpl', 'pacpl') is not None:
-        call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'mp3', saved_file.path + '.' + extension]
-        result = call(call_array)
-    if mimetype in ['audio/3gpp'] and daconfig.get('avconv', 'avconv') is not None:
-        call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, saved_file.path + '.ogg']
-        result = call(call_array)
-        call_array = [daconfig.get('avconv', 'avconv'), '-i', saved_file.path + '.' + extension, saved_file.path + '.mp3']
-        result = call(call_array)
-    if mimetype in ['audio/x-wav', 'audio/wav'] and daconfig.get('pacpl', 'pacpl') is not None:
-        call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'mp3', saved_file.path + '.' + extension]
-        result = call(call_array)
-        call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', saved_file.path + '.' + extension]
-        result = call(call_array)
-    if extension == "pdf":
-        make_image_files(saved_file.path)
-    saved_file.finalize()
-    
-def save_user_dict_key(user_code, filename):
-    #sys.stderr.write("20\n")
-    the_record = UserDictKeys.query.filter_by(key=user_code, filename=filename, user_id=current_user.id).first()
-    #sys.stderr.write("21\n")
-    if the_record:
-        found = True
-    else:
-        found = False
-    if not found:
-        #sys.stderr.write("22\n")
-        new_record = UserDictKeys(key=user_code, filename=filename, user_id=current_user.id)
-        #sys.stderr.write("23\n")
-        db.session.add(new_record)
-        #sys.stderr.write("24\n")
-        db.session.commit()
-        #sys.stderr.write("25\n")
-    return
-
-def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, encrypt=True, manual_user_id=None):
-    #sys.stderr.write("30\n")
-    nowtime = datetime.datetime.utcnow()
-    #sys.stderr.write("31\n")
-    user_dict['_internal']['modtime'] = nowtime
-    if manual_user_id is not None or (current_user and current_user.is_authenticated and not current_user.is_anonymous):
-        if manual_user_id is not None:
-            the_user_id = manual_user_id
-        else:
-            the_user_id = current_user.id
-        user_dict['_internal']['accesstime'][the_user_id] = nowtime
-    else:
-        user_dict['_internal']['accesstime'][-1] = nowtime
-        the_user_id = None
-    #sys.stderr.write("32\n")
-    if changed is True:
-        if encrypt:
-            new_record = UserDict(modtime=nowtime, key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
-        else:
-            new_record = UserDict(modtime=nowtime, key=user_code, dictionary=pack_dictionary(user_dict), filename=filename, user_id=the_user_id, encrypted=False)
-        db.session.add(new_record)
-        db.session.commit()
-        #sys.stderr.write("33\n")
-    else:
-        #sys.stderr.write("34\n")
-        max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(UserDict.key == user_code, UserDict.filename == filename).scalar()
-        #sys.stderr.write("35\n")
-        if max_indexno is None:
-            if encrypt:
-                new_record = UserDict(modtime=nowtime, key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
-            else:
-                new_record = UserDict(modtime=nowtime, key=user_code, dictionary=pack_dictionary(user_dict), filename=filename, user_id=the_user_id, encrypted=False)
-            db.session.add(new_record)
-            db.session.commit()
-            #sys.stderr.write("36\n")
-        else:
-            #sys.stderr.write("37\n")
-            for record in UserDict.query.filter_by(key=user_code, filename=filename, indexno=max_indexno).all():
-                #sys.stderr.write("37.5\n")
-                if encrypt:
-                    record.dictionary = encrypt_dictionary(user_dict, secret)
-                    #sys.stderr.write("37.6\n")
-                    record.modtime = nowtime
-                    #sys.stderr.write("37.7\n")
-                    record.encrypted = True
-                else:
-                    record.dictionary = pack_dictionary(user_dict)
-                    #sys.stderr.write("37.7\n")
-                    record.modtime = nowtime
-                    record.encrypted = False                   
-            #sys.stderr.write("38\n")
-            db.session.commit()
-    #sys.stderr.write("39\n")
-    return
-
-def process_bracket_expression(match):
-    #return("[" + repr(urllib.unquote(match.group(1)).encode('unicode_escape')) + "]")
-    try:
-        inner = codecs.decode(match.group(1), 'base64').decode('utf-8')
-    except:
-        inner = match.group(1)
-    return("[" + repr(inner) + "]")
-
-def myb64unquote(the_string):
-    return(codecs.decode(the_string, 'base64').decode('utf-8'))
-
-def safeid(text):
-    return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
-
-def from_safeid(text):
-    #logmessage("from_safeid: " + str(text))
-    return(codecs.decode(text, 'base64').decode('utf-8'))
-
-def progress_bar(progress):
-    if progress == 0:
-        return('');
-    return('<div class="row"><div class="col-lg-6 col-md-8 col-sm-10"><div class="progress"><div class="progress-bar" role="progressbar" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + str(progress) + '%;"></div></div></div></div>\n')
-
-def get_unique_name(filename, secret):
-    nowtime = datetime.datetime.utcnow()
-    while True:
-        newname = ''.join(random.choice(string.ascii_letters) for i in range(32))
-        obtain_lock(newname, filename)
-        existing_key = UserDict.query.filter_by(key=newname).first()
-        if existing_key:
-            release_lock(newname, filename)
-            continue
-        # cur = conn.cursor()
-        # cur.execute("SELECT key from userdict where key=%s", [newname])
-        # if cur.fetchone():
-        #     #logmessage("Key already exists in database")
-        #     continue
-        new_user_dict = UserDict(modtime=nowtime, key=newname, filename=filename, dictionary=encrypt_dictionary(fresh_dictionary(), secret))
-        db.session.add(new_user_dict)
-        db.session.commit()
-        # cur.execute("INSERT INTO userdict (key, filename, dictionary) values (%s, %s, %s);", [newname, filename, codecs.encode(pickle.dumps(initial_dict.copy()), 'base64').decode()])
-        # conn.commit()
-        return newname
-
-# def update_user_id(the_user_code):
-#     if current_user.id is not None and the_user_code is not None:
-#         cur = conn.cursor()
-#         cur.execute("UPDATE userdict set user_id=%s where key=%s", [current_user.id, the_user_code])
-#         conn.commit()
-#     return
-    
-def get_attachment_info(the_user_code, question_number, filename, secret):
-    the_user_dict = None
-    existing_entry = Attachments.query.filter_by(key=the_user_code, question=question_number, filename=filename).first()
-    if existing_entry and existing_entry.dictionary:
-        #the_user_dict = pickle.loads(codecs.decode(existing_entry.dictionary, 'base64'))
-        if existing_entry.encrypted:
-            the_user_dict = decrypt_dictionary(existing_entry.dictionary, secret)
-        else:
-            the_user_dict = unpack_dictionary(existing_entry.dictionary)
-    # cur = conn.cursor()
-    # cur.execute("select dictionary from attachments where key=%s and question=%s and filename=%s", [the_user_code, question_number, filename])
-    # for d in cur:
-    #     if d[0]:
-    #         the_user_dict = pickle.loads(codecs.decode(d[0], 'base64'))
-    #     break
-    # conn.commit()
-    return the_user_dict
-
-def update_attachment_info(the_user_code, the_user_dict, the_interview_status, secret, encrypt=True):
-    #logmessage("Got to update_attachment_info")
-    Attachments.query.filter_by(key=the_user_code, question=the_interview_status.question.number, filename=the_interview_status.question.interview.source.path).delete()
-    db.session.commit()
-    if encrypt:
-        new_attachment = Attachments(key=the_user_code, dictionary=encrypt_dictionary(the_user_dict, secret), question = the_interview_status.question.number, filename=the_interview_status.question.interview.source.path, encrypted=True)
-    else:
-        new_attachment = Attachments(key=the_user_code, dictionary=pack_dictionary(the_user_dict), question = the_interview_status.question.number, filename=the_interview_status.question.interview.source.path, encrypted=False)
-    db.session.add(new_attachment)
-    db.session.commit()
-    return
-
-def obtain_lock(user_code, filename):
-    #logmessage("Obtain lock: " + str(user_code) + " " + str(filename))
-    key = 'da:lock:' + user_code + ':' + filename
-    found = False
-    count = 4
-    while count > 0:
-        #record = UserDictLock.query.filter_by(key=user_code, filename=filename).first()
-        record = r.get(key)
-        if record:
-            time.sleep(1.0)
-        else:
-            found = False
-            break
-        found = True
-        count -= 1
-    if found:
-        release_lock(user_code, filename)
-    #new_record = UserDictLock(key=user_code, filename=filename)
-    #db.session.add(new_record)
-    #db.session.commit()
-    pipe = r.pipeline()
-    pipe.set(key, 1)
-    pipe.expire(key, 4)
-    
-def release_lock(user_code, filename):
-    #logmessage("Release lock: " + str(user_code) + " " + str(filename))
-    #UserDictLock.query.filter_by(key=user_code, filename=filename).delete()
-    #db.session.commit()
-    key = 'da:lock:' + user_code + ':' + filename
-    r.delete(key)
-
-def make_navbar(status, page_title, page_short_title, steps, show_login, chat_info):
-    navbar = """\
-    <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="container-fluid">
-        <div class="navbar-header">
-"""
-    navbar += """\
-          <button id="mobile-toggler" type="button" class="navbar-toggle collapsed mynavbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-"""
-    if status.question.can_go_back and steps > 1:
-        navbar += """\
-          <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="_back_one" value="1"><button class="dabackicon" type="submit"><i class="glyphicon glyphicon-chevron-left dalarge"></i></button></form></span>
-"""
-    navbar += """\
-          <a href="#question" data-toggle="tab" class="navbar-brand"><span class="hidden-xs">""" + status.question.interview.get_title().get('full', page_title) + """</span><span class="visible-xs-block">""" + status.question.interview.get_title().get('short', page_short_title) + """</span></a>
-          <a class="invisible" id="questionlabel" href="#question" data-toggle="tab">""" + word('Question') + """</a>
-"""
-    help_message = word("Help is available")
-    extra_help_message = word("Help is available for this question")
-    phone_message = word("Phone help is available")
-    chat_message = word("Live chat is available")
-    source_message = word("How this question came to be asked")
-    if len(status.helpText):
-        if status.question.helptext is None:
-            navbar += '          <a title="' + help_message + '" class="mynavbar-text" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + '</a> <a title="' + phone_message + '" id="daPhoneAvailable" class="mynavbar-icon invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-earphone chat-active"></i></a> <a title="' + chat_message + '" id="daChatAvailable" class="mynavbar-icon invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-comment"></i></a>'
-        else:
-            navbar += '          <a title="' + extra_help_message + '" class="mynavbar-text daactivetext" href="#help" id="helptoggle" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i></a> <a title="' + phone_message + '" id="daPhoneAvailable" class="mynavbar-icon daactivetext invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-earphone chat-active"></i></a> <a title="' + chat_message + '" id="daChatAvailable" class="mynavbar-icon daactivetext invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-comment"></i></a>'
-    elif chat_info['availability'] == 'available':
-        navbar += '          <a title="' + phone_message + '" id="daPhoneAvailable" class="mynavbar-icon invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-earphone chat-active"></i></a> <a title="' + chat_message + '" id="daChatAvailable" class="mynavbar-icon invisible" href="#help" data-toggle="tab"><i class="glyphicon glyphicon-comment"></i></a>'
-    navbar += """
-        </div>
-        <div class="collapse navbar-collapse" id="navbar-collapse">
-          <ul class="nav navbar-nav navbar-left hidden-xs">
-"""
-    # if status.question.helptext is None:
-    #     navbar += '<li><a href="#help" data-toggle="tab">' + word('Help') + "</a></li>\n"
-    # else:
-    #     navbar += '<li><a class="daactivetext" href="#help" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i>' + "</a></li>\n"
-    if DEBUG:
-        navbar += """\
-            <li><a class="no-outline" title=""" + repr(str(source_message)) + """ id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">""" + word('Source') + """</a></li>
-"""
-    navbar += """\
-          </ul>
-          <ul class="nav navbar-nav navbar-right">
-"""
-    if 'menu_items' in status.extras:
-        if type(status.extras['menu_items']) is not list:
-            custom_menu += '<li>' + word("Error: menu_items is not a Python list") + '</li>'
-        elif len(status.extras['menu_items']):
-            custom_menu = ""
-            for menu_item in status.extras['menu_items']:
-                if not (type(menu_item) is dict and 'url' in menu_item and 'label' in menu_item):
-                    custom_menu += '<li>' + word("Error: menu item is not a Python dict with keys of url and label") + '</li>'
-                else:
-                    custom_menu += '<li><a href="' + menu_item['url'] + '">' + menu_item['label'] + '</a></li>'
-        else:
-            custom_menu = False
-    else:
-        custom_menu = False
-    if ALLOW_REGISTRATION:
-        sign_in_text = word('Sign in or sign up to save answers')
-    else:
-        sign_in_text = word('Sign in to save answers')
-    if show_login:
-        if current_user.is_anonymous:
-            #logmessage("is_anonymous is " + str(current_user.is_anonymous))
-            if custom_menu:
-                navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('user.login', next=url_for('index')) + '">' + sign_in_text + '</a></li></ul></li>' + "\n"
-            else:
-                navbar += '            <li><a href="' + url_for('user.login', next=url_for('index')) + '">' + sign_in_text + '</a></li>' + "\n"
-        else:
-            navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + current_user.email + '<span class="caret"></span></a><ul class="dropdown-menu">'
-            if custom_menu:
-                navbar += custom_menu
-            if current_user.has_role('admin', 'developer', 'advocate'):
-                navbar +='<li><a href="' + url_for('monitor') + '">' + word('Monitor') + '</a></li>'
-            if current_user.has_role('admin', 'developer'):
-                navbar +='<li><a href="' + url_for('package_page') + '">' + word('Package Management') + '</a></li>'
-                navbar +='<li><a href="' + url_for('logs') + '">' + word('Logs') + '</a></li>'
-                navbar +='<li><a href="' + url_for('playground_page') + '">' + word('Playground') + '</a></li>'
-                navbar +='<li><a href="' + url_for('utilities') + '">' + word('Utilities') + '</a></li>'
-                if current_user.has_role('admin'):
-                    navbar +='<li><a href="' + url_for('user_list') + '">' + word('User List') + '</a></li>'
-                    #navbar +='<li><a href="' + url_for('privilege_list') + '">' + word('Privileges List') + '</a></li>'
-                    navbar +='<li><a href="' + url_for('config_page') + '">' + word('Configuration') + '</a></li>'
-            navbar += '<li><a href="' + url_for('interview_list') + '">' + word('My Interviews') + '</a></li><li><a href="' + url_for('user_profile_page') + '">' + word('Profile') + '</a></li><li><a href="' + url_for('user.logout') + '">' + word('Sign Out') + '</a></li></ul></li>'
-    else:
-        if custom_menu:
-            navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li></ul></li>' + "\n"
-        else:
-            navbar += '            <li><a href="' + url_for('exit') + '">' + word('Exit') + '</a></li>'
-    navbar += """\
-          </ul>
-        </div>
-      </div>
-    </div>
-"""
-    return(navbar)
-
 @app.context_processor
 def utility_processor():
     def word(text):
@@ -3680,30 +4201,6 @@ def utility_processor():
     def random_social():
         return 'local$' + ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
     return dict(random_social=random_social, word=word)
-
-def delete_session():
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id']:
-        if key in session:
-            del session[key]
-    return
-
-def reset_session(yaml_filename, secret):
-    session['i'] = yaml_filename
-    session['uid'] = get_unique_name(yaml_filename, secret)
-    if 'key_logged' in session:
-        del session['key_logged']
-    if 'action' in session:
-        del session['action']
-    user_code = session['uid']
-    #logmessage("User code is now " + str(user_code))
-    user_dict = fresh_dictionary()
-    return(user_code, user_dict)
-
-def _endpoint_url(endpoint):
-    url = url_for('index')
-    if endpoint:
-        url = url_for(endpoint)
-    return url
 
 @app.route('/speakfile', methods=['GET'])
 def speak_file():
@@ -3863,29 +4360,6 @@ def serve_uploaded_pagescreen(number, page):
         else:
             logmessage('path ' + filename + ' is not a file')
             abort(404)
-
-def user_can_edit_package(pkgname=None, giturl=None):
-    if pkgname is not None:
-        results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(Package.name == pkgname)
-        if results.count() == 0:
-            return(True)
-        for d in results:
-            if d.user_id == current_user.id:
-                return True
-    if giturl is not None:
-        results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(Package.giturl == giturl)
-        if results.count() == 0:
-            return(True)
-        for d in results:
-            if d.user_id == current_user.id:
-                return True
-    return(False)
-
-class Object(object):
-    def __init__(self, **kwargs):
-        for key, value in kwargs.iteritems():
-            setattr(self, key, value)
-    pass
 
 @app.route('/visit_interview', methods=['GET', 'POST'])
 @login_required
@@ -5364,171 +5838,6 @@ def update_package():
     form.giturl.data = None
     return render_template('pages/update_package.html', form=form, package_list=package_list, tab_title=word('Update Package'), page_title=word('Update Package')), 200
 
-def uninstall_package(packagename):
-    logmessage("uninstall_package: " + packagename)
-    existing_package = Package.query.filter_by(name=packagename, active=True).order_by(Package.id.desc()).first()
-    if existing_package is None:
-        flash(word("Package did not exist"), 'error')
-        return
-    the_upload_number = existing_package.upload
-    the_package_type = existing_package.type
-    for package in Package.query.filter_by(name=packagename, active=True).all():
-        package.active = False
-    db.session.commit()
-    ok, logmessages = docassemble.webapp.update.check_for_updates()
-    if ok:
-        if the_package_type == 'zip' and the_upload_number is not None:
-            SavedFile(the_upload_number).delete()
-        trigger_update(except_for=hostname)
-        restart_this()
-        flash(word("Uninstall successful"), 'success')
-    else:
-        flash(word("Uninstall not successful"), 'error')
-    logmessages = re.sub(r'\n', r'<br>', logmessages)
-    flash('pip log:  ' + Markup(logmessages), 'info')
-    logmessage(logmessages)
-    logmessage("uninstall_package: done")
-    return
-
-def install_zip_package(packagename, file_number):
-    logmessage("install_zip_package: " + packagename + " " + str(file_number))
-    existing_package = Package.query.filter_by(name=packagename, active=True).order_by(Package.id.desc()).first()
-    if existing_package is None:
-        package_auth = PackageAuth(user_id=current_user.id)
-        package_entry = Package(name=packagename, package_auth=package_auth, upload=file_number, active=True, type='zip', version=1)
-        db.session.add(package_auth)
-        db.session.add(package_entry)
-    else:
-        if existing_package.type == 'zip' and existing_package.upload is not None and existing_package.upload != file_number:
-            SavedFile(existing_package.upload).delete()
-        existing_package.upload = file_number
-        existing_package.active = True
-        existing_package.limitation = None
-        existing_package.type = 'zip'
-        existing_package.version += 1
-    db.session.commit()
-    #logmessage("Going into check for updates now")
-    ok, logmessages = docassemble.webapp.update.check_for_updates()
-    #logmessage("Returned from check for updates")
-    #logmessage('pip log: ' + str(logmessages), 'info')
-    if ok:
-        trigger_update(except_for=hostname)
-        restart_this()
-        flash(word("Install successful"), 'success')
-    else:
-        flash(word("Install not successful"), 'error')
-    logmessages = re.sub(r'\n', r'<br>', logmessages)
-    flash('pip log: ' + Markup(logmessages), 'info')
-    # pip_log = tempfile.NamedTemporaryFile()
-    # commands = ['install', '--quiet', '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, zippath]
-    # returnval = pip.main(commands)
-    # if returnval > 0:
-    #     with open(pip_log.name) as x:
-    #         logfilecontents = x.read()
-    #         flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + '</pre>', 'error')
-    return
-
-def install_git_package(packagename, giturl):
-    logmessage("install_git_package: " + packagename + " " + str(giturl))
-    if Package.query.filter_by(name=packagename, active=True).first() is None and Package.query.filter_by(giturl=giturl, active=True).first() is None:
-        package_auth = PackageAuth(user_id=current_user.id)
-        package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth, version=1, active=True, type='git')
-        db.session.add(package_auth)
-        db.session.add(package_entry)
-        db.session.commit()
-    else:
-        package_entry = Package.query.filter_by(name=packagename).order_by(Package.id.desc()).first()
-        if package_entry is not None:
-            if package_entry.type == 'zip' and package_entry.upload is not None:
-                SavedFile(package_entry.upload).delete()
-            package_entry.version += 1
-            package_entry.giturl = giturl
-            package_entry.upload = None
-            package_entry.limitation = None
-            package_entry.type = 'git'
-            db.session.commit()
-    ok, logmessages = docassemble.webapp.update.check_for_updates()
-    if ok:
-        trigger_update(except_for=hostname)
-        restart_this()
-        flash(word("Install successful"), 'success')
-    else:
-        flash(word("Install not successful"), 'error')
-    logmessages = re.sub(r'\n', r'<br>', logmessages)
-    flash('pip log: ' + Markup(logmessages), 'info')
-    # pip_log = tempfile.NamedTemporaryFile()
-    # commands = ['install', '--quiet', '--egg', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, 'git+' + giturl + '.git#egg=' + packagename]
-    # returnval = pip.main(commands)
-    # if returnval > 0:
-    #     with open(pip_log.name) as x: logfilecontents = x.read()
-    #     flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + "</pre>", 'error')
-    return
-
-def install_pip_package(packagename, limitation):
-    existing_package = Package.query.filter_by(name=packagename, active=True).order_by(Package.id.desc()).first()
-    if existing_package is None:
-        package_auth = PackageAuth(user_id=current_user.id)
-        package_entry = Package(name=packagename, package_auth=package_auth, limitation=limitation, type='pip')
-        db.session.add(package_auth)
-        db.session.add(package_entry)
-        db.session.commit()
-    else:
-        if existing_package.type == 'zip' and existing_package.upload is not None:
-            SavedFile(existing_package.upload).delete()
-        existing_package.version += 1
-        existing_package.type = 'pip'
-        existing_package.limitation = limitation
-        existing_package.giturl = None
-        existing_package.upload = None
-        db.session.commit()
-    ok, logmessages = docassemble.webapp.update.check_for_updates()
-    if ok:
-        trigger_update(except_for=hostname)
-        restart_this()
-        flash(word("Install successful"), 'success')
-    else:
-        flash(word("Install not successful"), 'error')
-    logmessages = re.sub(r'\n', r'<br>', logmessages)
-    flash('pip log: ' + Markup(logmessages), 'info')
-    # pip_log = tempfile.NamedTemporaryFile()
-    # commands = ['install', '--quiet', '--egg', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, 'git+' + giturl + '.git#egg=' + packagename]
-    # returnval = pip.main(commands)
-    # if returnval > 0:
-    #     with open(pip_log.name) as x: logfilecontents = x.read()
-    #     flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + "</pre>", 'error')
-    return
-
-def get_package_info():
-    if current_user.has_role('admin'):
-        is_admin = True
-    else:
-        is_admin = False
-    package_list = list()
-    package_auth = dict()
-    seen = dict()
-    for auth in PackageAuth.query.all():
-        if auth.package_id not in package_auth:
-            package_auth[auth.package_id] = dict()
-        package_auth[auth.package_id][auth.user_id] = auth.authtype
-    for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
-        if package.name in seen:
-            continue
-        seen[package.name] = 1
-        if package.type is not None:
-            if package.type == 'zip':
-                can_update = False
-            else:
-                can_update = True
-            if is_admin or (package.id in package_auth and current_user.id in package_auth[package.id]):
-                can_uninstall = True
-            else:
-                can_uninstall = False
-            if package.core:
-                can_uninstall = False
-                can_update = is_admin
-            package_list.append(Object(package=package, can_update=can_update, can_uninstall=can_uninstall))
-    return package_list, package_auth
-
 # @app.route('/testws', methods=['GET', 'POST'])
 # def test_websocket():
 #     script = '<script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>' + """<script type="text/javascript" charset="utf-8">
@@ -5888,20 +6197,6 @@ class Fruit(DAObject):
             return response
     return render_template('pages/create_package.html', form=form, tab_title=word('Create Package'), page_title=word('Create Package')), 200
 
-def name_of_user(user, include_email=False):
-    output = ''
-    if user.first_name:
-        output += ''
-        if user.last_name:
-            output += ' '
-    if user.last_name:
-        output += user.last_name
-    if include_email and user.email:
-        if output:
-            output += ', '
-        output += user.email
-    return output
-
 @app.route('/restart', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin', 'developer'])
@@ -5968,27 +6263,6 @@ def config_page():
     if content is None:
         abort(404)
     return render_template('pages/config.html', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = ' + json.dumps(content) + ';\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n    </script>'), form=form), 200
-
-def flash_as_html(message, message_type="info"):
-    output = """
-        <div class="alert alert-""" + str(message_type) + """"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>""" + str(message) + """</div>
-"""
-    return output
-
-def make_example_html(examples, first_id, example_html, data_dict):
-    example_html.append('          <ul class="nav nav-pills nav-stacked example-list example-hidden">\n')
-    for example in examples:
-        if 'list' in example:
-            example_html.append('          <li><a class="example-heading">' + example['title'] + '</a>')
-            make_example_html(example['list'], first_id, example_html, data_dict)
-            example_html.append('          </li>')
-            continue
-        #logmessage("Doing example with id " + str(example['id']))
-        if len(first_id) == 0:
-            first_id.append(example['id'])
-        example_html.append('            <li><a class="example-link" data-example="' + example['id'] + '">' + example['title'] + '</a></li>')
-        data_dict[example['id']] = example
-    example_html.append('          </ul>')
 
 @app.route('/playgroundstatic/<userid>/<filename>', methods=['GET'])
 def playground_static(userid, filename):
@@ -6331,221 +6605,6 @@ def playground_packages():
     else:
         extra_command = ""
     return render_template('pages/playgroundpackages.html', tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this package?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("readme");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names), 200
-
-def public_method(method, the_class):
-    if isinstance(method, types.MethodType) and method.__name__ != 'init' and not method.__name__.startswith('_') and method.__name__ in the_class.__dict__:
-        return True
-    return False
-
-def noquote(string):
-    if string is None:
-        return string
-    string = noquote_match.sub('&quot;', string)
-    string = lt_match.sub('&lt;', string)
-    string = gt_match.sub('&gt;', string)
-    string = amp_match.sub('&amp;', string)
-    return string
-    # if string is None:
-    #     return None
-    # newstring = json.dumps(string.replace('\n', ' ').rstrip())
-    # return newstring[1:-1]
-
-def infobutton(title):
-    docstring = ''
-    if 'doc' in title_documentation[title]:
-        docstring += noquote(title_documentation[title]['doc']) + "<br>"
-    if 'url' in title_documentation[title]:
-        docstring += "<a target='_blank' href='" + title_documentation[title]['url'] + "'>" + word("View documentation") + "</a>"
-    return '&nbsp;<a class="daquestionsign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + docstring + '" title="' + word("Help") + '" data-selector="true" data-title="' + noquote(title_documentation[title].get('title', title)) + '"><i class="glyphicon glyphicon-question-sign"></i></a>'
-    
-def get_vars_in_use(interview, interview_status, debug_mode=False):
-    user_dict = fresh_dictionary()
-    has_no_endpoint = False
-    if debug_mode:
-        has_error = True
-        error_message = "Not checking variables because in debug mode."
-        error_type = Exception
-    else:
-        try:
-            interview.assemble(user_dict, interview_status)
-            has_error = False
-        except Exception as errmess:
-            has_error = True
-            error_message = str(errmess)
-            error_type = type(errmess)
-            logmessage("Failed assembly with error type " + str(error_type) + " and message: " + error_message)
-    fields_used = set()
-    names_used = set()
-    names_used.update(interview.names_used)
-    for question in interview.questions_list:
-        names_used.update(question.mako_names)
-        names_used.update(question.names_used)
-        names_used.update(question.fields_used)
-        fields_used.update(question.fields_used)
-    for val in interview.questions:
-        names_used.add(val)
-        fields_used.add(val)
-    functions = set()
-    modules = set()
-    classes = set()
-    name_info = copy.deepcopy(base_name_info)
-    area = SavedFile(current_user.id, fix=True, section='playgroundtemplate')
-    templates = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
-    area = SavedFile(current_user.id, fix=True, section='playgroundstatic')
-    static = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
-    area = SavedFile(current_user.id, fix=True, section='playgroundsources')
-    sources = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
-    area = SavedFile(current_user.id, fix=True, section='playgroundmodules')
-    avail_modules = sorted([re.sub(r'.py$', '', f) for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
-    for val in user_dict:
-        #logmessage("Found val " + str(val) + " of type " + str(type(user_dict[val])))
-        if type(user_dict[val]) is types.FunctionType:
-            functions.add(val)
-            name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + str(inspect.formatargspec(*inspect.getargspec(user_dict[val])))}
-        elif type(user_dict[val]) is types.ModuleType:
-            modules.add(val)
-            name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val)}
-        # elif type(user_dict[val]) is types.ClassType:
-        #     classes.add(val)
-        #     name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val)}
-        elif type(user_dict[val]) is types.TypeType or type(user_dict[val]) is types.ClassType:
-            classes.add(val)
-            bases = list()
-            for x in list(user_dict[val].__bases__):
-                if x.__name__ != 'DAObject':
-                    bases.append(x.__name__)
-            methods = inspect.getmembers(user_dict[val], predicate=lambda x: public_method(x, user_dict[val]))
-            method_list = list()
-            for name, value in methods:
-                method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': noquote(inspect.getdoc(value)), 'tag': '.' + str(name) + str(inspect.formatargspec(*inspect.getargspec(value)))})
-            #logmessage("Defining name_info for " + str(val))
-            name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'bases': bases, 'methods': method_list}
-    for val in docassemble.base.functions.pickleable_objects(user_dict):
-        names_used.add(val)
-        if val not in name_info:
-            name_info[val] = dict()
-        #name_info[val]['type'] = type(user_dict[val]).__name__
-        name_info[val]['type'] = user_dict[val].__class__.__name__
-    for var in base_name_info:
-        if base_name_info[var]['show']:
-            names_used.add(var)
-    names_used = set([i for i in names_used if not extraneous_var.search(i)])
-    for var in ['_internal']:
-        names_used.discard(var)
-    view_doc_text = word("View documentation")
-    word_documentation = word("Documentation")
-    for var in documentation_dict:
-        if var not in name_info:
-            name_info[var] = dict()
-        if 'doc' in name_info[var] and name_info[var]['doc'] is not None:
-            name_info[var]['doc'] += '<br>'
-        else:
-            name_info[var]['doc'] = ''
-        name_info[var]['doc'] += "<a target='_blank' href='" + documentation_dict[var] + "'>" + view_doc_text + "</a>"
-    for var in name_info:
-        if 'methods' in name_info[var]:
-            for method in name_info[var]['methods']:
-                if var + '.' + method['name'] in documentation_dict:
-                    if method['doc'] is None:
-                        method['doc'] = ''
-                    else:
-                        method['doc'] += '<br>'
-                    method['doc'] += "<a target='_blank' href='" + documentation_dict[var + '.' + method['name']] + "'>" + view_doc_text + "</a>"                
-    content = ''
-    if has_error:
-        error_style = 'danger'
-        if error_type is DAErrorNoEndpoint:
-            error_style = 'warning'
-            message_to_use = title_documentation['incomplete']['doc']
-        elif error_type is DAErrorMissingVariable:
-            message_to_use = error_message
-        else:
-            message_to_use = title_documentation['generic error']['doc']
-        content += '\n                  <tr><td class="playground-warning-box"><div class="alert alert-' + error_style + '">' + message_to_use + '</div></td></tr>'
-    # content += '\n                  <tr><td><h4>From</h4></td></tr>'
-    # content += '\n                  <tr><td><select>'
-    # for the_file in files:
-    #     content += '<option '
-    #     if the_file == current_file:
-    #         content += "selected "
-    #     content += 'value="' + the_file + '">' + str(the_file) + '</option>'
-    # content += '</select></td></tr>'
-    names_used = names_used.difference( functions | classes | modules | set(avail_modules) )
-    undefined_names = names_used.difference(fields_used | set(base_name_info.keys()) )
-    for var in ['_internal']:
-        undefined_names.discard(var)
-    names_used = names_used.difference( undefined_names )
-    if len(undefined_names):
-        content += '\n                  <tr><td><h4>Undefined names' + infobutton('undefined') + '</h4></td></tr>'
-        for var in sorted(undefined_names):
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-danger playground-variable">' + var + '</a></td></tr>'
-    if len(names_used):
-        content += '\n                  <tr><td><h4>Variables' + infobutton('variables') + '</h4></td></tr>'
-        for var in sorted(names_used):
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + var + '</a>'
-            if var in name_info and 'type' in name_info[var] and name_info[var]['type']:
-                content +='&nbsp;<span data-ref="' + noquote(name_info[var]['type']) + '" class="daparenthetical">(' + name_info[var]['type'] + ')</span>'
-            if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
-                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
-            content += '</td></tr>'
-    if len(functions):
-        content += '\n                  <tr><td><h4>Functions' + infobutton('functions') + '</h4></td></tr>'
-        for var in sorted(functions):
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-warning playground-variable">' + name_info[var]['tag'] + '</a>'
-            if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
-                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
-            content += '</td></tr>'
-    if len(classes):
-        content += '\n                  <tr><td><h4>Classes' + infobutton('classes') + '</h4></td></tr>'
-        for var in sorted(classes):
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-info playground-variable">' + name_info[var]['name'] + '</a>'
-            if name_info[var]['bases']:
-                content += '&nbsp;<span data-ref="' + noquote(name_info[var]['bases'][0]) + '" class="daparenthetical">(' + name_info[var]['bases'][0] + ')</span>'
-            if name_info[var]['doc']:
-                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
-            if len(name_info[var]['methods']):
-                content += '&nbsp;<a class="dashowmethods" role="button" data-showhide="XMETHODX' + var + '" title="' + word('Methods') + '"><i class="glyphicon glyphicon-cog"></i></a>'
-                content += '<div style="display: none;" id="XMETHODX' + var + '"><table><tbody>'
-                for method_info in name_info[var]['methods']:
-                    content += '<tr><td><a data-name="' + noquote(method_info['name']) + '" data-insert="' + noquote(method_info['insert']) + '" class="label label-warning playground-variable">' + method_info['tag'] + '</a>'
-                    if method_info['doc']:
-                        content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + method_info['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + noquote(method_info['name']) + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
-                    content += '</td></tr>'
-                content += '</tbody></table></div>'
-            content += '</td></tr>'
-    if len(modules):
-        content += '\n                  <tr><td><h4>Modules defined' + infobutton('modules') + '</h4></td></tr>'
-        for var in sorted(modules):
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-success playground-variable">' + name_info[var]['name'] + '</a>'
-            if name_info[var]['doc']:
-                content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + noquote(var) + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
-            content += '</td></tr>'
-    if len(avail_modules):
-        content += '\n                  <tr><td><h4>Modules available in Playground' + infobutton('playground_modules') + '</h4></td></tr>'
-        for var in avail_modules:
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert=".' + noquote(var) + '" class="label label-success playground-variable">.' + noquote(var) + '</a>'
-            content += '</td></tr>'
-    if len(templates):
-        content += '\n                  <tr><td><h4>Templates' + infobutton('templates') + '</h4></td></tr>'
-        for var in templates:
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-default playground-variable">' + noquote(var) + '</a>'
-            content += '</td></tr>'
-    if len(static):
-        content += '\n                  <tr><td><h4>Static files' + infobutton('static') + '</h4></td></tr>'
-        for var in static:
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-default playground-variable">' + noquote(var) + '</a>'
-            content += '</td></tr>'
-    if len(sources):
-        content += '\n                  <tr><td><h4>Source files' + infobutton('sources') + '</h4></td></tr>'
-        for var in sources:
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-default playground-variable">' + noquote(var) + '</a>'
-            content += '</td></tr>'
-    if len(interview.images):
-        content += '\n                  <tr><td><h4>Decorations' + infobutton('decorations') + '</h4></td></tr>'
-        for var in sorted(interview.images):
-            content += '\n                  <tr><td><img class="daimageicon" src="' + get_url_from_file_reference(interview.images[var].get_reference()) + '">&nbsp;<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + noquote(var) + '</a>'
-            content += '</td></tr>'
-    return content
 
 @app.route('/playground', methods=['GET', 'POST'])
 @login_required
@@ -6914,19 +6973,6 @@ $( document ).ready(function() {
 def package_page():
     return render_template('pages/packages.html', tab_title=word("Package Management"), page_title=word("Package Management")), 200
 
-def make_image_files(path):
-    #logmessage("make_image_files on " + str(path))
-    if PDFTOPPM_COMMAND is not None:
-        args = [PDFTOPPM_COMMAND, '-r', str(PNG_RESOLUTION), '-png', path, path + 'page']
-        result = call(args)
-        if result > 0:
-            raise DAError("Call to pdftoppm failed")
-        args = [PDFTOPPM_COMMAND, '-r', str(PNG_SCREEN_RESOLUTION), '-png', path, path + 'screen']
-        result = call(args)
-        if result > 0:
-            raise DAError("Call to pdftoppm failed")
-    return
-
 @app.errorhandler(Exception)
 def server_error(the_error):
     errmess = unicode(the_error)
@@ -6955,77 +7001,6 @@ def server_error(the_error):
         errmess = '<blockquote>' + errmess + '</blockquote>'
     return render_template('pages/501.html', tab_title=word("Error"), page_title=word("Error"), error=errmess, logtext=str(the_trace)), 501
 
-def trigger_update(except_for=None):
-    logmessage("trigger_update: except_for is " + str(except_for))
-    if USING_SUPERVISOR:
-        for host in Supervisors.query.all():
-            if host.url and not (except_for and host.hostname == except_for):
-                if host.hostname == hostname:
-                    the_url = 'http://localhost:9001'
-                else:
-                    the_url = host.url
-                args = [SUPERVISORCTL, '-s', the_url, 'start update']
-                result = call(args)
-                if result == 0:
-                    logmessage("trigger_update: sent reset to " + str(host.hostname))
-                else:
-                    logmessage("trigger_update: call to supervisorctl on " + str(host.hostname) + " was not successful")
-    return
-
-def restart_on(host):
-    if host.hostname == hostname:
-        the_url = 'http://localhost:9001'
-    else:
-        the_url = host.url
-    if re.search(r':(web|all):', host.role):
-        args = [SUPERVISORCTL, '-s', the_url, 'start reset']
-        result = call(args)
-        if result == 0:
-            logmessage("restart_on: sent reset to " + str(host.hostname))
-        else:
-            logmessage("restart_on: call to supervisorctl with reset on " + str(host.hostname) + " was not successful")
-    # if re.search(r':(celery|all):', host.role):
-    #     args = [SUPERVISORCTL, '-s', the_url, 'restart celery']
-    # result = call(args)
-    # if result == 0:
-    #     logmessage("restart_on: sent restart celery to " + str(host.hostname))
-    # else:
-    #     logmessage("restart_on: call to supervisorctl with restart celery on " + str(host.hostname) + " was not successful")
-    return
-
-def restart_all():
-    restart_others()
-    restart_this()
-    return
-
-def restart_this():
-    if USING_SUPERVISOR:
-        for host in Supervisors.query.all():
-            if host.url:
-                logmessage("restart_this: considering " + str(host.hostname) + "against " + str(hostname))
-                if host.hostname == hostname:
-                    restart_on(host)
-            else:
-                logmessage("restart_this: unable to get host url")
-    else:
-        logmessage("restart_this: touched wsgi file")
-        wsgi_file = WEBAPP_PATH
-        if os.path.isfile(wsgi_file):
-            with open(wsgi_file, 'a'):
-                os.utime(wsgi_file, None)
-    return
-
-def restart_others():
-    logmessage("Got to restart_others")
-    if USING_SUPERVISOR:
-        for host in Supervisors.query.all():
-            if host.url:
-                if host.hostname != hostname:
-                    restart_on(host)
-            else:
-                logmessage("restart_others: unable to get host url")
-    return
-
 # @app.route('/testpost', methods=['GET', 'POST'])
 # def test_post():
 #     errmess = "Hello, " + str(request.method) + "!"
@@ -7047,45 +7022,6 @@ def package_static(package, filename):
     response = send_file(the_file, mimetype=str(mimetype))
     return(response)
 
-def current_info(yaml=None, req=None, action=None, location=None, interface='web'):
-    if current_user.is_authenticated and not current_user.is_anonymous:
-        ext = dict(email=current_user.email, roles=[role.name for role in current_user.roles], theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization)
-    else:
-        ext = dict(email=None, theid=session.get('tempuser', None), roles=list())
-    if req is None:
-        url = 'http://localhost'
-        url_root = 'http://localhost'
-        secret = None
-    else:
-        url = req.base_url
-        url_root = req.url_root
-        secret = req.cookies.get('secret', None)
-    if secret is not None:
-        secret = str(secret)
-    return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}}
-    if action is not None:
-        return_val.update(action)
-    if location is not None:
-        ext['location'] = location
-    else:
-        ext['location'] = None
-    return_val['user'].update(ext)
-    return(return_val)
-
-def html_escape(text):
-    text = re.sub('&', '&amp;', text)
-    text = re.sub('<', '&lt;', text)
-    text = re.sub('>', '&gt;', text)
-    return text;
-
-def indent_by(text, num):
-    if not text:
-        return ""
-    return (" " * num) + re.sub(r'\n', "\n" + (" " * num), text).rstrip() + "\n"
-
-# def indent_by(text, num):
-#     return (" " * num) + re.sub(r'\n', "\n" + (" " * num), text).rstrip() + "\n"
-    
 # @app.route('/twiliotest', methods=['GET', 'POST'])
 # def twilio_test():
 #     account_sid = "ACfad8e668b5f9e15d499ab823523b9358"
@@ -7163,28 +7099,6 @@ def logs():
         content = "No log files available"
     return render_template('pages/logs.html', tab_title=word("Logs"), page_title=word("Logs"), form=form, files=files, current_file=the_file, content=content, default_filter_string=default_filter_string), 200
 
-def call_sync():
-    if not USING_SUPERVISOR:
-        return
-    args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'sync']
-    result = call(args)
-    if result == 0:
-        logmessage("logs: sent message to " + hostname)
-    else:
-        logmessage("logs: call to supervisorctl on " + hostname + " was not successful")
-        abort(404)
-    in_process = 1
-    counter = 10
-    check_args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'status', 'sync']
-    while in_process == 1 and counter > 0:
-        output, err = Popen(check_args, stdout=PIPE, stderr=PIPE).communicate()
-        if not re.search(r'RUNNING', output):
-            in_process = 0
-        else:
-            time.sleep(1)
-        counter -= 1
-    return
-
 @app.route('/reqdev', methods=['GET', 'POST'])
 @login_required
 def request_developer():
@@ -7235,20 +7149,6 @@ def utilities():
                     fields_output += '      "' + field + '": ' + default + "\n"
                 fields_output += "---"
     return render_template('pages/utilities.html', tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output)
-
-def formatted_current_time():
-    if current_user.timezone:
-        the_timezone = pytz.timezone(current_user.timezone)
-    else:
-        the_timezone = pytz.timezone(get_default_timezone())
-    return datetime.datetime.utcnow().replace(tzinfo=tz.tzutc()).astimezone(the_timezone).strftime('%H:%M:%S %Z')
-
-def formatted_current_date():
-    if current_user.timezone:
-        the_timezone = pytz.timezone(current_user.timezone)
-    else:
-        the_timezone = pytz.timezone(get_default_timezone())
-    return datetime.datetime.utcnow().replace(tzinfo=tz.tzutc()).astimezone(the_timezone).strftime("%Y-%m-%d")
 
 # @app.route('/save', methods=['GET', 'POST'])
 # def save_for_later():
@@ -7325,9 +7225,6 @@ def interview_list():
 # @app.route('/webrtc')
 # def webrtc():
 #     return render_template('pages/webrtc.html', tab_title=word("WebRTC"), page_title=word("WebRTC"))
-
-alphanumeric_only = re.compile('[\W_]+')
-phone_pattern = re.compile(r"^[\d\+\-\(\) ]+$")
 
 @app.route('/webrtc_token', methods=['GET'])
 def webrtc_token():
@@ -7951,7 +7848,101 @@ def sms():
         del session['uid']
     return Response(str(resp), mimetype='text/xml')
 
+for path in [FULL_PACKAGE_DIRECTORY, PACKAGE_CACHE, UPLOAD_DIRECTORY, LOG_DIRECTORY]: #, os.path.join(PLAYGROUND_MODULES_DIRECTORY, 'docassemble')
+    if not os.path.isdir(path):
+        try:
+            os.makedirs(path)
+        except:
+            print "Could not create path: " + path
+            sys.exit(1)
+    if not os.access(path, os.W_OK):
+        print "Unable to create files in directory: " + path
+        sys.exit(1)
+if not os.access(WEBAPP_PATH, os.W_OK):
+    print "Unable to modify the timestamp of the WSGI file: " + WEBAPP_PATH
+    sys.exit(1)
+
+docassemble.base.util.set_user_id_function(user_id_dict)
+docassemble.base.parse.set_url_finder(get_url_from_file_reference)
+docassemble.base.parse.set_url_for(url_for)
+#APPLICATION_NAME = 'docassemble'
+
+if 'twilio' in daconfig:
+    twilio_config = dict()
+    twilio_config['account sid'] = dict()
+    twilio_config['number'] = dict()
+    twilio_config['name'] = dict()
+    if type(daconfig['twilio']) is not list:
+        config_list = [daconfig['twilio']]
+    else:
+        config_list = daconfig['twilio']
+    for tconfig in config_list:
+        if type(tconfig) is dict and 'account sid' in tconfig and 'number' in tconfig:
+            twilio_config['account sid'][unicode(tconfig['account sid'])] = 1
+            twilio_config['number'][unicode(tconfig['number'])] = tconfig
+            if 'default' not in twilio_config['name']:
+                twilio_config['name']['default'] = tconfig
+            if 'name' in tconfig:
+                twilio_config['name'][tconfig['name']] = tconfig
+        else:
+            logmessage("Improper setup in twilio configuration")    
+    if 'default' not in twilio_config['name']:
+        twilio_config = None
+else:
+    twilio_config = None
+    
+docassemble.base.util.set_twilio_config(twilio_config)
+
+title_documentation = get_title_documentation()
+documentation_dict = get_documentation_dict()
+base_name_info = get_name_info()
+for val in base_name_info:
+    base_name_info[val]['name'] = val
+    base_name_info[val]['insert'] = val
+    if 'show' not in base_name_info[val]:
+        base_name_info[val]['show'] = False
+
+word_file_list = daconfig.get('words', list())
+if type(word_file_list) is not list:
+    word_file_list = [word_file_list]
+for word_file in word_file_list:
+    #sys.stderr.write("Reading from " + str(word_file) + "\n")
+    file_info = get_info_from_file_reference(word_file)
+    if 'fullpath' in file_info and file_info['fullpath'] is not None:
+        with open(file_info['fullpath'], 'rU') as stream:
+            for document in yaml.load_all(stream):
+                if document and type(document) is dict:
+                    for lang, words in document.iteritems():
+                        if type(words) is dict:
+                            docassemble.base.functions.update_word_collection(lang, words)
+                        else:
+                            sys.stderr.write("Error reading " + str(word_file) + ": words not in dictionary form.\n")
+                else:
+                    sys.stderr.write("Error reading " + str(word_file) + ": yaml file not in dictionary form.\n")
+    else:
+        sys.stderr.write("Error reading " + str(word_file) + ": yaml file not found.\n")
+
 docassemble.base.functions.set_chat_partners_available(chat_partners_available)
+
+password_secret_key = daconfig.get('password_secretkey', app.secret_key)
+
+sys_logger = logging.getLogger('docassemble')
+sys_logger.setLevel(logging.DEBUG)
+
+LOGFORMAT = 'docassemble: ip=%(clientip)s i=%(yamlfile)s uid=%(session)s user=%(user)s %(message)s'
+
+if LOGSERVER is None:
+    docassemble_log_handler = logging.FileHandler(filename=os.path.join(LOG_DIRECTORY, 'docassemble.log'))
+    sys_logger.addHandler(docassemble_log_handler)
+else:
+    import logging.handlers
+    handler = logging.handlers.SysLogHandler(address=(LOGSERVER, 514), socktype=socket.SOCK_STREAM)
+    sys_logger.addHandler(handler)
+    
+if LOGSERVER is None:
+    docassemble.base.logger.set_logmessage(syslog_message_with_timestamp)
+else:
+    docassemble.base.logger.set_logmessage(syslog_message)
 
 r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
 
@@ -7964,3 +7955,7 @@ docassemble.base.util.set_knn_machine_learner(docassemble.webapp.machinelearning
 from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, UserDictKeys, TempUser, ChatLog
 with app.app_context():
     copy_playground_modules()
+
+if __name__ == "__main__":
+    app.run()
+

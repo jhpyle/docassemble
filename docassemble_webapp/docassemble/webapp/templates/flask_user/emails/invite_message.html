@@ -2,9 +2,9 @@
 
 {% block message %}
 
-<p>You have been invited to join {{ app_name }}!</p>
+<p>{{ word('You have been invited to join') }} {{ app_name }}.</p>
 
-<p>To register an account, please click on the link below:<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<a href="{{ accept_invite_link }}">Join {{ app_name }}</a>.</p>
+<p>{{ word('Please click on the link below.') }}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="{{ accept_invite_link }}">{{ word('Register for an account on') }} {{ app_name }}</a>.</p>
 
 {% endblock %}
