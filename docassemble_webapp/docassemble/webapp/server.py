@@ -620,17 +620,28 @@ def unauthorized():
     return redirect(url_for('user.login', next=fix_http(request.url)))
 
 #def setup_app():
+sys.stderr.write("Calling app\n")
 from docassemble.webapp.app_and_db import app
+sys.stderr.write("Calling db\n")
 from docassemble.webapp.db_only import db
+sys.stderr.write("Calling setup\n")
 import docassemble.webapp.setup
+sys.stderr.write("Importing MyRegisterForm and MyInviteForm\n")
 from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm
+sys.stderr.write("Importing UserModel, UserAuthModel, and MyUserInvitation\n")
 from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation
+sys.stderr.write("Importing UserManager, SQLAlchemyAdapter\n")
 from flask_user import UserManager, SQLAlchemyAdapter
+sys.stderr.write("Calling SQLAlchemyAdapter\n")
 db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
 #db_adapter.UserInvitationClass = MyUserInvitation
+sys.stderr.write("Importing user_profile_page\n")
 from docassemble.webapp.users.views import user_profile_page
+sys.stderr.write("Calling UserManager\n")
 user_manager = UserManager(db_adapter, None, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, login_view_function=custom_login, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated)
+sys.stderr.write("Calling user_manager.init_app\n")
 user_manager.init_app(app)
+sys.stderr.write("Calling LoginManager\n")
 from flask_login import LoginManager
 lm = LoginManager()
 lm.init_app(app)
