@@ -664,7 +664,7 @@ def unauthorized():
 def setup_app():
     from docassemble.webapp.app_and_db import app
     from docassemble.webapp.db_only import db
-    import docassemble.webapp.backend
+    import docassemble.webapp.setup
     from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm
     from docassemble.webapp.users.views import user_profile_page
     from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation
