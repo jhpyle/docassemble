@@ -358,6 +358,14 @@ if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ "$APACHERUNNING" = false ]; 
     supervisorctl --serverurl http://localhost:9001 start apache2
 fi
 
+if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
+    if [ "${USEHTTPS:-false}" == "false" ]; then
+	curl -s http://localhost/health_check > /dev/null
+    else
+	curl -s -k https://localhost/health_check > /dev/null
+    fi
+fi
+
 su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.register $DA_CONFIG_FILE" www-data
 
 if [ "$CRONRUNNING" = false ]; then

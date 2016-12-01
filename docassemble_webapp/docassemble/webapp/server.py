@@ -1,52 +1,5 @@
-from twilio.util import TwilioCapability
-from twilio.rest import TwilioRestClient
-import twilio.twiml
-from PIL import Image
-import socket
-import copy
-import threading
-import urllib
-import urllib2
-import os
-import tailer
-import sys
-import datetime
-from dateutil import tz
-import time
-import pip.utils.logging
-import pip
-import shutil
-import codecs
-import weakref
-import types
-import pkg_resources
-import babel.dates
-import pytz
-import httplib2
-import tempfile
-import zipfile
-import traceback
-from Crypto.Hash import MD5
-import mimetypes
-import logging
-import cPickle as pickle
-import string
-import random
-import cgi
-import Cookie
 import re
-import urlparse
-import json
-import base64
-import requests
-import redis
-import yaml
-import inspect
-from subprocess import call, Popen, PIPE
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, hostname, in_celery
-from pygments import highlight
-from pygments.lexers import YamlLexer
-from pygments.formatters import HtmlFormatter
 
 DEBUG = daconfig.get('debug', False)
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
@@ -197,6 +150,220 @@ else:
 
 #connect_string = docassemble.webapp.database.connection_string()
 #alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
+        
+def logout():
+    secret = request.cookies.get('secret', None)
+    if secret is None:
+        secret = ''.join(random.choice(string.ascii_letters) for i in range(16))
+        set_cookie = True
+    else:
+        secret = str(secret)
+        set_cookie = False
+    user_manager = current_app.user_manager
+    flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
+    logout_user()
+    delete_session()
+    flash(word('You have signed out successfully.'), 'success')
+    next = request.args.get('next', _endpoint_url(user_manager.after_logout_endpoint))
+    response = redirect(next)
+    if set_cookie:
+        response.set_cookie('secret', secret)
+    return response
+
+def custom_login():
+    #logmessage("Got to login page")
+    user_manager = current_app.user_manager
+    db_adapter = user_manager.db_adapter
+    secret = request.cookies.get('secret', None)
+    if secret is not None:
+        secret = str(secret)
+    #logmessage("custom_login: secret is " + str(secret))
+    next = request.args.get('next', _endpoint_url(user_manager.after_login_endpoint))
+    reg_next = request.args.get('reg_next', _endpoint_url(user_manager.after_register_endpoint))
+
+    # Immediately redirect already logged in users
+    if _call_or_get(current_user.is_authenticated) and user_manager.auto_login_at_login:
+        return redirect(next)
+
+    # Initialize form
+    login_form = user_manager.login_form(request.form)          # for login.html
+    register_form = user_manager.register_form()                # for login_or_register.html
+    if request.method != 'POST':
+        login_form.next.data     = register_form.next.data = next
+        login_form.reg_next.data = register_form.reg_next.data = reg_next
+
+    # Process valid POST
+    if request.method == 'POST':
+        try:
+            login_form.validate()
+        except:
+            logmessage("Got an error when validating login")
+            pass
+    if request.method == 'POST' and login_form.validate():
+        # Retrieve User
+        user = None
+        user_email = None
+        if user_manager.enable_username:
+            # Find user record by username
+            user = user_manager.find_user_by_username(login_form.username.data)
+            user_email = None
+            # Find primary user_email record
+            if user and db_adapter.UserEmailClass:
+                user_email = db_adapter.find_first_object(db_adapter.UserEmailClass,
+                        user_id=int(user.get_id()),
+                        is_primary=True,
+                        )
+            # Find user record by email (with form.username)
+            if not user and user_manager.enable_email:
+                user, user_email = user_manager.find_user_by_email(login_form.username.data)
+        else:
+            # Find user by email (with form.email)
+            user, user_email = user_manager.find_user_by_email(login_form.email.data)
+
+        if user:
+            # Log user in
+            return _do_login_user(user, login_form.password.data, secret, login_form.next.data, login_form.remember_me.data)
+
+    # Process GET or invalid POST
+    return render_template(user_manager.login_template, page_title=word('Sign In'), tab_title=word('Sign In'), form=login_form, login_form=login_form, register_form=register_form)
+
+def unauthenticated():
+    flash(word("You need to log in before you can access") + " " + word(request.path), 'error')
+    return redirect(url_for('user.login', next=fix_http(request.url)))
+
+def unauthorized():
+    flash(word("You are not authorized to access") + " " + word(request.path), 'error')
+    return redirect(url_for('user.login', next=fix_http(request.url)))
+
+#def setup_app():
+sys.stderr.write("Calling app\n")
+from docassemble.webapp.app_and_db import app
+sys.stderr.write("Calling db\n")
+from docassemble.webapp.db_only import db
+sys.stderr.write("Calling setup\n")
+import docassemble.webapp.setup
+sys.stderr.write("Importing MyRegisterForm and MyInviteForm\n")
+from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm
+sys.stderr.write("Importing UserModel, UserAuthModel, and MyUserInvitation\n")
+from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation
+sys.stderr.write("Importing UserManager, SQLAlchemyAdapter\n")
+from flask_user import UserManager, SQLAlchemyAdapter
+sys.stderr.write("Calling SQLAlchemyAdapter\n")
+db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
+#db_adapter.UserInvitationClass = MyUserInvitation
+sys.stderr.write("Importing user_profile_page\n")
+from docassemble.webapp.users.views import user_profile_page
+sys.stderr.write("Calling UserManager\n")
+#logout, custom_login, unauthorized, unauthenticated
+user_manager = UserManager(db_adapter, None, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, login_view_function=custom_login, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated)
+sys.stderr.write("Calling user_manager.init_app\n")
+user_manager.init_app(app)
+sys.stderr.write("Calling LoginManager\n")
+from flask_login import LoginManager
+lm = LoginManager()
+lm.init_app(app)
+lm.login_view = 'user.login'
+#    return(db, app, lm)
+
+#db, app, lm = setup_app()
+
+from twilio.util import TwilioCapability
+from twilio.rest import TwilioRestClient
+import twilio.twiml
+from PIL import Image
+import socket
+import copy
+import threading
+import urllib
+import urllib2
+import os
+import tailer
+import sys
+import datetime
+from dateutil import tz
+import time
+import pip.utils.logging
+import pip
+import shutil
+import codecs
+import weakref
+import types
+import pkg_resources
+import babel.dates
+import pytz
+import httplib2
+import tempfile
+import zipfile
+import traceback
+from Crypto.Hash import MD5
+import mimetypes
+import logging
+import cPickle as pickle
+import string
+import random
+import cgi
+import Cookie
+import urlparse
+import json
+import base64
+import requests
+import redis
+import yaml
+import inspect
+from subprocess import call, Popen, PIPE
+from pygments import highlight
+from pygments.lexers import YamlLexer
+from pygments.formatters import HtmlFormatter
+from flask import make_response, abort, render_template, request, session, send_file, redirect, current_app, get_flashed_messages, flash, Markup, jsonify, Response, g
+from flask import url_for as flask_url_for
+from flask_login import login_user, logout_user, current_user
+from flask_user import login_required, roles_required
+from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_registered, user_reset_password
+from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm
+from flask_mail import Mail, Message
+import flask_user.signals
+from werkzeug import secure_filename, FileStorage
+from rauth import OAuth1Service, OAuth2Service
+from flask_kvsession import KVSessionExtension
+from simplekv.memory.redisstore import RedisStore
+#from simplekv.db.sql import SQLAlchemyStore
+from sqlalchemy import or_, and_
+import docassemble.base.parse
+import docassemble.base.pdftk
+import docassemble.base.interview_cache
+import docassemble.webapp.update
+from docassemble.base.standardformatter import as_html, as_sms, signature_html, get_choices, get_choices_with_abb
+from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
+from docassemble.webapp.screenreader import to_text
+from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
+from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone
+from docassemble.base.logger import logmessage
+from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file
+from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, Messages
+from docassemble.webapp.packages.models import Package, PackageAuth, Install
+from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
+import docassemble.base.util
+
+redis_host = daconfig.get('redis', None)
+if redis_host is None:
+    redis_host = 'redis://localhost'
+
+docassemble.base.util.set_redis_server(redis_host)
+
+store = RedisStore(redis.StrictRedis(host=docassemble.base.util.redis_server, db=1))
+
+kv_session = KVSessionExtension(store, app)
+
+app.debug = False
+app.handle_url_build_error = my_default_url
+app.config['USE_GOOGLE_LOGIN'] = False
+app.config['USE_FACEBOOK_LOGIN'] = False
+if 'oauth' in daconfig:
+    app.config['OAUTH_CREDENTIALS'] = daconfig['oauth']
+    if 'google' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['google'] and daconfig['oauth']['google']['enable'] is False):
+        app.config['USE_GOOGLE_LOGIN'] = True
+    if 'facebook' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enable'] is False):
+        app.config['USE_FACEBOOK_LOGIN'] = True
 
 def fix_http(url):
     if HTTP_TO_HTTPS:
@@ -322,25 +489,6 @@ def get_title_documentation():
 
 #current_app.secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits)
 #                         for x in xrange(32))
-        
-def logout():
-    secret = request.cookies.get('secret', None)
-    if secret is None:
-        secret = ''.join(random.choice(string.ascii_letters) for i in range(16))
-        set_cookie = True
-    else:
-        secret = str(secret)
-        set_cookie = False
-    user_manager = current_app.user_manager
-    flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
-    logout_user()
-    delete_session()
-    flash(word('You have signed out successfully.'), 'success')
-    next = request.args.get('next', _endpoint_url(user_manager.after_logout_endpoint))
-    response = redirect(next)
-    if set_cookie:
-        response.set_cookie('secret', secret)
-    return response
 
 def _call_or_get(function_or_property):
     return function_or_property() if callable(function_or_property) else function_or_property
@@ -553,153 +701,6 @@ def _do_login_user(user, password, secret, next, remember_me=False):
     response = redirect(next)
     response.set_cookie('secret', newsecret)
     return response
-
-def custom_login():
-    #logmessage("Got to login page")
-    user_manager = current_app.user_manager
-    db_adapter = user_manager.db_adapter
-    secret = request.cookies.get('secret', None)
-    if secret is not None:
-        secret = str(secret)
-    #logmessage("custom_login: secret is " + str(secret))
-    next = request.args.get('next', _endpoint_url(user_manager.after_login_endpoint))
-    reg_next = request.args.get('reg_next', _endpoint_url(user_manager.after_register_endpoint))
-
-    # Immediately redirect already logged in users
-    if _call_or_get(current_user.is_authenticated) and user_manager.auto_login_at_login:
-        return redirect(next)
-
-    # Initialize form
-    login_form = user_manager.login_form(request.form)          # for login.html
-    register_form = user_manager.register_form()                # for login_or_register.html
-    if request.method != 'POST':
-        login_form.next.data     = register_form.next.data = next
-        login_form.reg_next.data = register_form.reg_next.data = reg_next
-
-    # Process valid POST
-    if request.method == 'POST':
-        try:
-            login_form.validate()
-        except:
-            logmessage("Got an error when validating login")
-            pass
-    if request.method == 'POST' and login_form.validate():
-        # Retrieve User
-        user = None
-        user_email = None
-        if user_manager.enable_username:
-            # Find user record by username
-            user = user_manager.find_user_by_username(login_form.username.data)
-            user_email = None
-            # Find primary user_email record
-            if user and db_adapter.UserEmailClass:
-                user_email = db_adapter.find_first_object(db_adapter.UserEmailClass,
-                        user_id=int(user.get_id()),
-                        is_primary=True,
-                        )
-            # Find user record by email (with form.username)
-            if not user and user_manager.enable_email:
-                user, user_email = user_manager.find_user_by_email(login_form.username.data)
-        else:
-            # Find user by email (with form.email)
-            user, user_email = user_manager.find_user_by_email(login_form.email.data)
-
-        if user:
-            # Log user in
-            return _do_login_user(user, login_form.password.data, secret, login_form.next.data, login_form.remember_me.data)
-
-    # Process GET or invalid POST
-    return render_template(user_manager.login_template, page_title=word('Sign In'), tab_title=word('Sign In'), form=login_form, login_form=login_form, register_form=register_form)
-
-def unauthenticated():
-    flash(word("You need to log in before you can access") + " " + word(request.path), 'error')
-    return redirect(url_for('user.login', next=fix_http(request.url)))
-
-def unauthorized():
-    flash(word("You are not authorized to access") + " " + word(request.path), 'error')
-    return redirect(url_for('user.login', next=fix_http(request.url)))
-
-#def setup_app():
-sys.stderr.write("Calling app\n")
-from docassemble.webapp.app_and_db import app
-sys.stderr.write("Calling db\n")
-from docassemble.webapp.db_only import db
-sys.stderr.write("Calling setup\n")
-import docassemble.webapp.setup
-sys.stderr.write("Importing MyRegisterForm and MyInviteForm\n")
-from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm
-sys.stderr.write("Importing UserModel, UserAuthModel, and MyUserInvitation\n")
-from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation
-sys.stderr.write("Importing UserManager, SQLAlchemyAdapter\n")
-from flask_user import UserManager, SQLAlchemyAdapter
-sys.stderr.write("Calling SQLAlchemyAdapter\n")
-db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
-#db_adapter.UserInvitationClass = MyUserInvitation
-sys.stderr.write("Importing user_profile_page\n")
-from docassemble.webapp.users.views import user_profile_page
-sys.stderr.write("Calling UserManager\n")
-user_manager = UserManager(db_adapter, None, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, login_view_function=custom_login, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated)
-sys.stderr.write("Calling user_manager.init_app\n")
-user_manager.init_app(app)
-sys.stderr.write("Calling LoginManager\n")
-from flask_login import LoginManager
-lm = LoginManager()
-lm.init_app(app)
-lm.login_view = 'user.login'
-#    return(db, app, lm)
-
-#db, app, lm = setup_app()
-
-from flask import make_response, abort, render_template, request, session, send_file, redirect, current_app, get_flashed_messages, flash, Markup, jsonify, Response, g
-from flask import url_for as flask_url_for
-from flask_login import login_user, logout_user, current_user
-from flask_user import login_required, roles_required
-from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_registered, user_reset_password
-from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm
-from flask_mail import Mail, Message
-import flask_user.signals
-from werkzeug import secure_filename, FileStorage
-from rauth import OAuth1Service, OAuth2Service
-from flask_kvsession import KVSessionExtension
-from simplekv.memory.redisstore import RedisStore
-#from simplekv.db.sql import SQLAlchemyStore
-from sqlalchemy import or_, and_
-import docassemble.base.parse
-import docassemble.base.pdftk
-import docassemble.base.interview_cache
-import docassemble.webapp.update
-from docassemble.base.standardformatter import as_html, as_sms, signature_html, get_choices, get_choices_with_abb
-from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
-from docassemble.webapp.screenreader import to_text
-from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
-from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone
-from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file
-from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, Messages
-from docassemble.webapp.packages.models import Package, PackageAuth, Install
-from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
-import docassemble.base.util
-
-redis_host = daconfig.get('redis', None)
-if redis_host is None:
-    redis_host = 'redis://localhost'
-
-docassemble.base.util.set_redis_server(redis_host)
-
-store = RedisStore(redis.StrictRedis(host=docassemble.base.util.redis_server, db=1))
-
-kv_session = KVSessionExtension(store, app)
-
-app.debug = False
-app.handle_url_build_error = my_default_url
-app.config['USE_GOOGLE_LOGIN'] = False
-app.config['USE_FACEBOOK_LOGIN'] = False
-if 'oauth' in daconfig:
-    app.config['OAUTH_CREDENTIALS'] = daconfig['oauth']
-    if 'google' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['google'] and daconfig['oauth']['google']['enable'] is False):
-        app.config['USE_GOOGLE_LOGIN'] = True
-    if 'facebook' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enable'] is False):
-        app.config['USE_FACEBOOK_LOGIN'] = True
 
 def set_request_active(value):
     global request_active

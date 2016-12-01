@@ -49,7 +49,7 @@ def get_service_status(servicename):
     return ecs.describe_services(services=[servicename])['services'][0]
 
 def update_desired_count(service, desired_count):
-    ecs.update_service(service=service, desiredCount=desired_count)
+    ecs.update_service(service=service, desiredCount=int(desired_count))
     while True:
         result = get_service_status(service)
         if result['desiredCount'] != result['runningCount']:
@@ -81,7 +81,7 @@ def connect_string(service):
         print "ssh -i " + keyPair + " ec2-user@" + ec2.describe_instances(InstanceIds=[instance_id])['Reservations'][0]['Instances'][0]['PublicDnsName']
 
 def update_ec2_instances(desired_count):
-    autoscale.set_desired_capacity(AutoScalingGroupName=autoScalingGroup, DesiredCapacity=desired_count)
+    autoscale.set_desired_capacity(AutoScalingGroupName=autoScalingGroup, DesiredCapacity=int(desired_count))
     while True:
         result = autoscale.describe_auto_scaling_groups(AutoScalingGroupNames=[autoScalingGroup])['AutoScalingGroups'][0]
         if result['DesiredCapacity'] != len(result['Instances']):
@@ -89,7 +89,7 @@ def update_ec2_instances(desired_count):
         else:
             break
     while True:
-        if len(available_instances()) < desired_count:
+        if len(available_instances()) < int(desired_count):
             time.sleep(2)
         else:
             break
