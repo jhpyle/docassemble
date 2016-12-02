@@ -232,7 +232,9 @@ def custom_login():
 
 def unauthenticated():
     flash(word("You need to log in before you can access") + " " + word(request.path), 'error')
-    return redirect(url_for('user.login', next=fix_http(request.url)))
+    the_url = url_for('user.login', next=fix_http(request.url))
+    #sys.stderr.write("responding with " + the_url)
+    return redirect(the_url)
 
 def unauthorized():
     flash(word("You are not authorized to access") + " " + word(request.path), 'error')
@@ -261,9 +263,9 @@ db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserI
 from docassemble.webapp.users.views import user_profile_page
 #sys.stderr.write("Calling UserManager\n")
 #logout, custom_login, unauthorized, unauthenticated
-user_manager = UserManager(db_adapter, None, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, login_view_function=custom_login, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated)
+user_manager = UserManager()
 #sys.stderr.write("Calling user_manager.init_app\n")
-user_manager.init_app(app)
+user_manager.init_app(app, db_adapter=db_adapter, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, login_view_function=custom_login, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated)
 #sys.stderr.write("Calling LoginManager\n")
 from flask_login import LoginManager
 lm = LoginManager()
@@ -276,8 +278,11 @@ lm.login_view = 'user.login'
 def _force_https():
     from flask import _request_ctx_stack
     if _request_ctx_stack is not None:
+        #sys.stderr.write("changing scheme\n")
         reqctx = _request_ctx_stack.top
         reqctx.url_adapter.url_scheme = 'https'
+    #else:
+    #    sys.stderr.write("could not change scheme\n")
 
 if HTTP_TO_HTTPS:
     app.before_request(_force_https)
@@ -327,7 +332,7 @@ from pygments import highlight
 from pygments.lexers import YamlLexer
 from pygments.formatters import HtmlFormatter
 from flask import make_response, abort, render_template, request, session, send_file, redirect, current_app, get_flashed_messages, flash, Markup, jsonify, Response, g
-from flask import url_for as url_for
+from flask import url_for
 from flask_login import login_user, logout_user, current_user
 from flask_user import login_required, roles_required
 from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_registered, user_reset_password
@@ -2467,7 +2472,7 @@ def index():
         user_code
     except:
         #sys.stderr.write("-2.2\n")
-        logmessage("resetting session")
+        #logmessage("resetting session")
         user_code, user_dict = reset_session(yaml_filename, secret)
         encrypted = False
         session['encrypted'] = encrypted

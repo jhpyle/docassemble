@@ -210,10 +210,9 @@ def invite():
 
         user_invite.token = token
         db.session.commit()
-
         try:
             # Send 'invite' email
-            logmessage("Trying to send e-mail")
+            logmessage("Trying to send e-mail to " + str(user_invite.email))
             emails.send_invite_email(user_invite, accept_invite_link)
         except Exception as e:
             logmessage("Failed to send e-mail")

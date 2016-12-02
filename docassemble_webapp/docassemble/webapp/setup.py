@@ -38,6 +38,7 @@ app.config['USER_AFTER_RESEND_CONFIRM_EMAIL_ENDPOINT'] = 'user.login'
 app.config['USER_AFTER_RESET_PASSWORD_ENDPOINT'] = 'user.login'
 app.config['USER_INVITE_URL'] = '/user/invite'
 app.config['USER_ENABLE_INVITATION'] = True
+app.config['USER_INVITE_EMAIL_TEMPLATE'] = 'flask_user/emails/invite'
 if not daconfig.get('allow_registration', True):
     app.config['USER_REQUIRE_INVITATION'] = True
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
