@@ -276,7 +276,11 @@ lm.login_view = 'user.login'
 #db, app, lm = setup_app()
 
 def _force_https():
-    from flask import _request_ctx_stack
+    from flask import _request_ctx_stack, _app_ctx_stack
+    if _app_ctx_stack is not None:
+        #sys.stderr.write("changing scheme\n")
+        appctx = _app_ctx_stack.top
+        appctx.url_adapter.url_scheme = 'https'
     if _request_ctx_stack is not None:
         #sys.stderr.write("changing scheme\n")
         reqctx = _request_ctx_stack.top
@@ -285,6 +289,7 @@ def _force_https():
     #    sys.stderr.write("could not change scheme\n")
 
 if HTTP_TO_HTTPS:
+    
     app.before_request(_force_https)
 
 from twilio.util import TwilioCapability

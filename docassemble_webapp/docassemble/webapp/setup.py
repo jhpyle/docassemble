@@ -13,6 +13,7 @@ app.config['MAIL_USE_TLS'] = daconfig['mail'].get('use_tls', True)
 #app.config['ADMINS'] = [daconfig.get('admin_address', None)]
 app.config['APP_SYSTEM_ERROR_SUBJECT_LINE'] = app.config['APP_NAME'] + " system error"
 app.config['APPLICATION_ROOT'] = daconfig.get('root', '/')
+app.config['SERVER_NAME'] = daconfig.get('external hostname', 'localhost')
 app.config['CSRF_ENABLED'] = False
 app.config['USER_APP_NAME'] = app.config['APP_NAME']
 app.config['USER_SEND_PASSWORD_CHANGED_EMAIL'] = False
@@ -43,6 +44,8 @@ if not daconfig.get('allow_registration', True):
     app.config['USER_REQUIRE_INVITATION'] = True
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['USE_X_SENDFILE'] = daconfig.get('xsendfile', True)
+if daconfig.get('behind https load balancer', False) or daconfig.get('use https', False):
+    app.config['PREFERRED_URL_SCHEME'] = 'https'
 #app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 connect_string = docassemble.webapp.database.connection_string()
 alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()

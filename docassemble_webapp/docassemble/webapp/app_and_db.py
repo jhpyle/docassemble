@@ -1,4 +1,5 @@
 #import sys
+from werkzeug.contrib.fixers import ProxyFix
 from flask import Flask
 
 def create_app():
