@@ -1,4 +1,7 @@
 import re
+import os
+import sys
+import tempfile
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, hostname, in_celery
 
 DEBUG = daconfig.get('debug', False)
@@ -235,6 +238,9 @@ def unauthorized():
     flash(word("You are not authorized to access") + " " + word(request.path), 'error')
     return redirect(url_for('user.login', next=fix_http(request.url)))
 
+def my_default_url(error, endpoint, values):
+    return url_for('index')
+
 #def setup_app():
 sys.stderr.write("Calling app\n")
 from docassemble.webapp.app_and_db import app
@@ -276,9 +282,7 @@ import copy
 import threading
 import urllib
 import urllib2
-import os
 import tailer
-import sys
 import datetime
 from dateutil import tz
 import time
@@ -292,7 +296,6 @@ import pkg_resources
 import babel.dates
 import pytz
 import httplib2
-import tempfile
 import zipfile
 import traceback
 from Crypto.Hash import MD5
@@ -376,9 +379,6 @@ def url_for(*pargs, **kwargs):
         kwargs['_external'] = True
         kwargs['_scheme'] = 'https'
     return flask_url_for(*pargs, **kwargs)
-
-def my_default_url(error, endpoint, values):
-    return url_for('index')
 
 #engine = create_engine(alchemy_connect_string, convert_unicode=True)
 #metadata = MetaData(bind=engine)
@@ -4107,7 +4107,7 @@ def index():
         if DEBUG:
             output += '      <div class="row">' + "\n"
             output += '        <div id="source" class="col-md-12 collapse">' + "\n"
-            output += '          <h3>' + word('SMS version') + '</h3>' + "\n"
+            #output += '          <h3>' + word('SMS version') + '</h3>' + "\n"
             #output += '            <pre style="white-space: pre-wrap;">' + sms_content + '</pre>\n'
             if interview_status.using_screen_reader:
                 output += '          <h3>' + word('Plain text of sections') + '</h3>' + "\n"

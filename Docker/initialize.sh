@@ -387,5 +387,6 @@ function deregister {
 
 trap deregister SIGINT SIGTERM
 
+echo "initialize finished" >&2
 sleep infinity &
 wait %1
