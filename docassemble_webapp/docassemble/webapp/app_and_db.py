@@ -15,7 +15,7 @@ def create_app():
     from docassemble.webapp.db_only import db
     #sys.stderr.write("Setting up app\n")
     db.init_app(app)
-    ProxyFix(app)
+    app.wsgi_app = ProxyFix(app.wsgi_app)
     return app
 
 app = create_app()
