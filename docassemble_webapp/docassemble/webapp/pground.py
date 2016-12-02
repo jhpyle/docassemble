@@ -336,7 +336,7 @@ class Playground(PlaygroundSection):
     def __init__(self):
         return super(Playground, self).__init__()
     def interview_url(self, filename):
-        return self.current_info['url'] + '?i=docassemble.playground' + str(self.user_id) + ":" + filename
+        return self.current_info['url'] + '?i=docassemble.pground' + str(self.user_id) + ":" + filename
     def write_package(self, pkgname, info):
         the_yaml = yaml.safe_dump(info, default_flow_style=False, default_style = '|')
         pg_packages = PlaygroundSection('packages')
@@ -358,10 +358,10 @@ class Playground(PlaygroundSection):
         file_number, extension, mimetype = docassemble.base.parse.save_numbered_file('docassemble-' + str(pkgname) + '.zip', zip_file.name)
         return file_number
     def variables_from(self, content):
-        interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=self.area.directory, path="docassemble.playground" + str(self.user_id) + ":_temp.yml", package='docassemble.playground' + str(self.user_id), testing=True)
+        interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=self.area.directory, path="docassemble.pground" + str(self.user_id) + ":_temp.yml", package='docassemble.pground' + str(self.user_id), testing=True)
         interview = interview_source.get_interview()
         temp_current_info = copy.deepcopy(self.current_info)
-        temp_current_info['yaml_filename'] = "docassemble.playground" + str(self.user_id) + ":_temp.yml"
+        temp_current_info['yaml_filename'] = "docassemble.pground" + str(self.user_id) + ":_temp.yml"
         interview_status = docassemble.base.parse.InterviewStatus(current_info=temp_current_info)
         user_dict = docassemble.base.parse.get_initial_dict()
         user_dict['_internal']['starttime'] = datetime.datetime.utcnow()

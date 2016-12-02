@@ -236,7 +236,7 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
     if [ -z "$dbexists" ]; then
 	echo "create database "${DBNAME:-docassemble}" owner "${DBUSER:-docassemble}";" | su -c psql postgres || exit 1
     fi
-    psql -c 'select password from "user" limit 0' docassemble &> /dev/null || echo "alter table \"user\" add column password varchar(255) default 'x';" | su -c psql ${DBNAME:-docassemble}
+    su -c "psql -c 'select password from \"user\" limit 0' docassemble" postgres &> /dev/null || echo "alter table \"user\" add column password varchar(255) default 'x';" | su -c "psql docassemble" postgres
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
@@ -360,9 +360,13 @@ fi
 
 if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
     if [ "${USEHTTPS:-false}" == "false" ]; then
-	curl -s http://localhost/health_check > /dev/null
+	curl -s http://localhost/ > /dev/null
     else
-	curl -s -k https://localhost/health_check > /dev/null
+	curl -s -k https://localhost/ > /dev/null
+    fi
+    if [ "$APACHERUNNING" = false ]; then
+	supervisorctl --serverurl http://localhost:9001 stop apache2
+	supervisorctl --serverurl http://localhost:9001 start apache2
     fi
 fi
 

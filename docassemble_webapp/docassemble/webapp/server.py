@@ -242,29 +242,29 @@ def my_default_url(error, endpoint, values):
     return url_for('index')
 
 #def setup_app():
-sys.stderr.write("Calling app\n")
+#sys.stderr.write("Calling app\n")
 from docassemble.webapp.app_and_db import app
-sys.stderr.write("Calling db\n")
+#sys.stderr.write("Calling db\n")
 from docassemble.webapp.db_only import db
-sys.stderr.write("Calling setup\n")
+#sys.stderr.write("Calling setup\n")
 import docassemble.webapp.setup
-sys.stderr.write("Importing MyRegisterForm and MyInviteForm\n")
+#sys.stderr.write("Importing MyRegisterForm and MyInviteForm\n")
 from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm
-sys.stderr.write("Importing UserModel, UserAuthModel, and MyUserInvitation\n")
+#sys.stderr.write("Importing UserModel, UserAuthModel, and MyUserInvitation\n")
 from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation
-sys.stderr.write("Importing UserManager, SQLAlchemyAdapter\n")
+#sys.stderr.write("Importing UserManager, SQLAlchemyAdapter\n")
 from flask_user import UserManager, SQLAlchemyAdapter
-sys.stderr.write("Calling SQLAlchemyAdapter\n")
+#sys.stderr.write("Calling SQLAlchemyAdapter\n")
 db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
 #db_adapter.UserInvitationClass = MyUserInvitation
-sys.stderr.write("Importing user_profile_page\n")
+#sys.stderr.write("Importing user_profile_page\n")
 from docassemble.webapp.users.views import user_profile_page
-sys.stderr.write("Calling UserManager\n")
+#sys.stderr.write("Calling UserManager\n")
 #logout, custom_login, unauthorized, unauthenticated
 user_manager = UserManager(db_adapter, None, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, login_view_function=custom_login, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated)
-sys.stderr.write("Calling user_manager.init_app\n")
+#sys.stderr.write("Calling user_manager.init_app\n")
 user_manager.init_app(app)
-sys.stderr.write("Calling LoginManager\n")
+#sys.stderr.write("Calling LoginManager\n")
 from flask_login import LoginManager
 lm = LoginManager()
 lm.init_app(app)
@@ -272,6 +272,15 @@ lm.login_view = 'user.login'
 #    return(db, app, lm)
 
 #db, app, lm = setup_app()
+
+def _force_https():
+    from flask import _request_ctx_stack
+    if _request_ctx_stack is not None:
+        reqctx = _request_ctx_stack.top
+        reqctx.url_adapter.url_scheme = 'https'
+
+if HTTP_TO_HTTPS:
+    app.before_request(_force_https)
 
 from twilio.util import TwilioCapability
 from twilio.rest import TwilioRestClient
@@ -318,7 +327,7 @@ from pygments import highlight
 from pygments.lexers import YamlLexer
 from pygments.formatters import HtmlFormatter
 from flask import make_response, abort, render_template, request, session, send_file, redirect, current_app, get_flashed_messages, flash, Markup, jsonify, Response, g
-from flask import url_for as flask_url_for
+from flask import url_for as url_for
 from flask_login import login_user, logout_user, current_user
 from flask_user import login_required, roles_required
 from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_registered, user_reset_password
@@ -374,11 +383,11 @@ def fix_http(url):
     else:
         return url
 
-def url_for(*pargs, **kwargs):
-    if HTTP_TO_HTTPS:
-        kwargs['_external'] = True
-        kwargs['_scheme'] = 'https'
-    return flask_url_for(*pargs, **kwargs)
+# def url_for(*pargs, **kwargs):
+#     if HTTP_TO_HTTPS:
+#         kwargs['_external'] = True
+#         kwargs['_scheme'] = 'https'
+#     return flask_url_for(*pargs, **kwargs)
 
 #engine = create_engine(alchemy_connect_string, convert_unicode=True)
 #metadata = MetaData(bind=engine)
@@ -2369,7 +2378,7 @@ def index():
         if old_yaml_filename is not None:
             if old_yaml_filename != yaml_filename:
                 session['i'] = yaml_filename
-                if request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base"):
+                if request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.pground") and not yaml_filename.startswith("docassemble.base"):
                     show_flash = True
         if session_parameter is None:
             if show_flash:
@@ -6680,7 +6689,7 @@ def playground_page():
         active_file = post_data['variablefile']
         if post_data['variablefile'] in files:
             session['variablefile'] = active_file
-            interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + active_file)
+            interview_source = docassemble.base.parse.interview_source_from_string('docassemble.pground' + str(current_user.id) + ':' + active_file)
             interview_source.set_testing(True)
         else:
             if active_file == '':
@@ -6688,9 +6697,9 @@ def playground_page():
             content = ''
             if form.playground_content.data:
                 content = form.playground_content.data
-            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
+            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.pground" + str(current_user.id) + ":" + active_file, testing=True)
         interview = interview_source.get_interview()
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.pground' + str(current_user.id) + ':' + active_file, req=request, action=None))
         variables_html = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
         return jsonify(variables_html=variables_html)
     if request.method == 'POST' and the_file != '' and form.validate():
@@ -6714,7 +6723,7 @@ def playground_page():
             with open(filename, 'w') as fp:
                 fp.write(form.playground_content.data.encode('utf8'))
             for a_file in files:
-                docassemble.base.interview_cache.clear_cache('docassemble.playground' + str(current_user.id) + ':' + a_file)
+                docassemble.base.interview_cache.clear_cache('docassemble.pground' + str(current_user.id) + ':' + a_file)
                 a_filename = os.path.join(playground.directory, a_file)
                 if a_filename != filename and os.path.isfile(a_filename):
                     with open(a_filename, 'a'):
@@ -6724,12 +6733,12 @@ def playground_page():
                 flash(word('Saved at') + ' ' + the_time + '.', 'success')
             else:
                 flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Running in other tab.'), message_type='success')
-                interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + the_file)
+                interview_source = docassemble.base.parse.interview_source_from_string('docassemble.pground' + str(current_user.id) + ':' + the_file)
                 interview_source.set_testing(True)
                 interview = interview_source.get_interview()
-                interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
+                interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.pground' + str(current_user.id) + ':' + active_file, req=request, action=None))
                 variables_html = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
-                return jsonify(url=url_for('index', i='docassemble.playground' + str(current_user.id) + ':' + the_file), variables_html=variables_html, flash_message=flash_message)
+                return jsonify(url=url_for('index', i='docassemble.pground' + str(current_user.id) + ':' + the_file), variables_html=variables_html, flash_message=flash_message)
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
     interview_path = None
@@ -6742,9 +6751,9 @@ def playground_page():
                 #form.playground_content.data = content
     if active_file != '':
         is_fictitious = False
-        interview_path = 'docassemble.playground' + str(current_user.id) + ':' + active_file
+        interview_path = 'docassemble.pground' + str(current_user.id) + ':' + active_file
         if is_default:
-            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
+            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.pground" + str(current_user.id) + ":" + active_file, testing=True)
         else:
             interview_source = docassemble.base.parse.interview_source_from_string(interview_path)
             interview_source.set_testing(True)
@@ -6753,11 +6762,11 @@ def playground_page():
         active_file = 'test.yml'
         if form.playground_content.data:
             content = re.sub(r'\r', '', form.playground_content.data)
-            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
+            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.pground" + str(current_user.id) + ":" + active_file, testing=True)
         else:
-            interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
+            interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path="docassemble.pground" + str(current_user.id) + ":" + active_file, testing=True)
     interview = interview_source.get_interview()
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.pground' + str(current_user.id) + ':' + active_file, req=request, action=None))
     variables_html = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
     pulldown_files = list(files)
     if is_fictitious or is_new or is_default:
@@ -6802,7 +6811,7 @@ function activateExample(id){
   $("#example-source-after").addClass("invisible");
 }
 
-interviewBaseUrl = '""" + url_for('index', i='docassemble.playground' + str(current_user.id) + ':.yml') + """';
+interviewBaseUrl = '""" + url_for('index', i='docassemble.pground' + str(current_user.id) + ':.yml') + """';
 
 function updateRunLink(){
   $("#daRunButton").attr("href", interviewBaseUrl.replace('.yml', $("#daVariables").val()));

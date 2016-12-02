@@ -111,7 +111,7 @@ docassemble.base.parse.set_initial_dict(initial_dict)
 from docassemble.base.functions import pickleable_objects
 
 def absolute_filename(the_file):
-    match = re.match(r'^docassemble.playground([0-9]+):(.*)', the_file)
+    match = re.match(r'^docassemble.pground([0-9]+):(.*)', the_file)
     #logmessage("absolute_filename call: " + the_file)
     if match:
         filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(2))

@@ -1,7 +1,7 @@
 from docassemble.webapp.app_and_db import app
 from docassemble.webapp.db_only import db
 from flask import redirect, render_template, render_template_string, request, flash, current_app
-from flask import url_for as flask_url_for
+from flask import url_for as url_for
 from flask_user import current_user, login_required, roles_required, emails
 from docassemble.webapp.users.forms import UserProfileForm, EditUserProfileForm, MyRegisterForm, MyInviteForm, NewPrivilegeForm
 from docassemble.webapp.users.models import UserAuthModel, UserModel, Role, MyUserInvitation
@@ -15,11 +15,11 @@ import pytz
 
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 
-def url_for(*pargs, **kwargs):
-    if HTTP_TO_HTTPS:
-        kwargs['_external'] = True
-        kwargs['_scheme'] = 'https'
-    return flask_url_for(*pargs, **kwargs)
+# def url_for(*pargs, **kwargs):
+#     if HTTP_TO_HTTPS:
+#         kwargs['_external'] = True
+#         kwargs['_scheme'] = 'https'
+#     return flask_url_for(*pargs, **kwargs)
 
 @app.route('/privilegelist', methods=['GET', 'POST'])
 @login_required

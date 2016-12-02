@@ -34,7 +34,7 @@ def set_libreoffice_path(path):
 #  - \newenvironment{allcaps}{\startallcaps}{}
 #  - \def\startallcaps#1\end{\uppercase{#1}\end}
 
-class Pandoc(object):
+class MyPandoc(object):
     def __init__(self):
         self.input_content = None
         self.output_content = None

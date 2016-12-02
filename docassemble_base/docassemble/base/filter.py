@@ -10,7 +10,7 @@ import qrcode.image.svg
 import StringIO
 import tempfile
 import docassemble.base.functions
-from docassemble.base.pandoc import Pandoc
+from docassemble.base.pandoc import MyPandoc
 from mdx_smartypants import SmartypantsExt
 from bs4 import BeautifulSoup
 
@@ -893,7 +893,7 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
     a = html_filter(unicode(a), status=status, question=question)
     #logmessage("before: " + a)
     if use_pandoc:
-        converter = Pandoc()
+        converter = MyPandoc()
         converter.output_format = 'html'
         #logmessage("input was:\n" + repr(a))
         converter.input_content = a

@@ -19,8 +19,8 @@ from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint
 import docassemble.base.functions
 from docassemble.base.functions import pickleable_objects, word, get_language
 from docassemble.base.logger import logmessage
-from docassemble.base.pandoc import Pandoc
-from docassemble.base.mako.template import Template
+from docassemble.base.pandoc import MyPandoc
+from docassemble.base.mako.template import Template as MakoTemplate
 from types import CodeType, NoneType
 
 debug = False
@@ -311,7 +311,7 @@ class TextObject(object):
     def __init__(self, x, names_used=set()):
         self.original_text = x
         if match_mako.search(x):
-            self.template = Template(x, strict_undefined=True, input_encoding='utf-8', names_used=names_used)
+            self.template = MakoTemplate(x, strict_undefined=True, input_encoding='utf-8', names_used=names_used)
             self.uses_mako = True
         else:
             self.uses_mako = False
@@ -1733,7 +1733,7 @@ class Question:
                 if 'fields' in attachment['options']:
                     result['file'][doc_format] = docassemble.base.pdftk.fill_template(attachment['options']['pdf_template_file'], data_strings=result['data_strings'], images=result['images'])
                 else:
-                    converter = Pandoc()
+                    converter = MyPandoc()
                     converter.output_format = doc_format
                     converter.input_content = result['markdown'][doc_format]
                     if 'initial_yaml' in attachment['options']:
