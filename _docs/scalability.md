@@ -257,15 +257,19 @@ group name" to `docassembleLbSg` and set the "Description" to
 [VPC].  Add one "Inbound" rule, setting "Type" to HTTPS and "Source"
 to "Anywhere."
 
-Then go to the "Target Groups" section of the [EC2 Console] and create
-a new "Target Group."  Set the "Target group name" to `web`, set the
-"Protocol" to HTTP, set the "Port" to 80, and set the "VPC" to your
-default [VPC].  Under "Health check settings," set the "Protocol" to
-HTTP and the "Path" to `/health_check`.  The "health check" is the
-load balancer's way of telling whether a web server is healthy.  The
-path `/health_check` on a **docassemble** web server is a page that
-responds with a simple "OK."  (All the load balancer cares about is
-whether the page returns an [HTTP success code] or not.)
+Then go to the "Load Balancing" -> "Target Groups" section of the
+[EC2 Console] and create a new "Target Group."  Set the "Target group
+name" to `web`, set the "Protocol" to HTTP, set the "Port" to 80, and
+set the "VPC" to your default [VPC].  Under "Health check settings,"
+set the "Protocol" to HTTP and the "Path" to `/health_check`.  The
+"health check" is the load balancer's way of telling whether a web
+server is healthy.  The path `/health_check` on a **docassemble** web
+server is a page that responds with a simple "OK."  (All the load
+balancer cares about is whether the page returns an
+[HTTP success code] or not.)  Under "Advanced health check settings,"
+set the "Healthy threshold" to 10, "Unhealthy threshold" to 2,
+"Timeout" to 10 seconds, "Interval" to 120 seconds, and keep other
+settings at their defaults.
 
 Once that "Target Group" is created, create a second "Target Group"
 called `websocket` with the same settings.  Then, once the `websocket`

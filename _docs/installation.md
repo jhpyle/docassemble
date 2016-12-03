@@ -438,7 +438,7 @@ and if you wish to use plain HTTP, run
 sudo a2dismod ssl
 {% endhighlight %}
 
-# Setting up the SQL server
+# <a name="setup"></a>Setting up the SQL server
 
 `docassemble` uses a SQL database.  These instructions assume you are
 using [PostgreSQL].  Set up the database by running the following

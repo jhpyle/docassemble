@@ -47,7 +47,8 @@ You can also change these defaults during [installation] by editing the
 [`docassemble.webapp`] package.
 
 Users can log in with Facebook or Google.  This requires obtaining API
-keys with those companies.  See [configuration] for details.
+keys with those companies.  See the documentation for the [`oauth`]
+configuration directive for details.
 
 If you do not want your users to be able to log in, you can hide the
 Login button by setting the [`show_login`] setting in the
@@ -87,12 +88,36 @@ Privileges" on the [User List] page.  From here, administrators can
 add new privilege types, or delete privilege types that were already
 created.
 
+## <a name="invite">Invite User</a>
+
+Administrators can invite people to register by clicking "Invite a
+user" on the [User List] page.  **docassemble** will send an e-mail
+with a link that the person can click on to register.  If
+[`allow_registration`] is set to `false`, this is the only way that
+users can register on the site.
+
+The administrator can select the role that the user will be assigned
+when he or she registers.
+
+The name of the site that is mentioned in the e-mail can be configured
+with the [`appname`] directive.  If the [`appname`] is
+`MyDocassemble`, the e-mail will look like this:
+
+> You have been invited to join MyDocassemble.
+> 
+> To register for an account, please click on the link below.
+> 
+> https://mydocassemble.example.com/user/register?token=Vi7kc6ClSffW5RDKx9Coeg.CySLUQ.dJOwakdJ7F3aluWwr7SYwLAvt18
+>
+> -- MyDocassemble 
+
 [country code]: http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
 [special variables]: {{ site.baseurl }}/docs/special.html
 [configuration]: {{ site.baseurl }}/docs/config.html
 [installation]: {{ site.baseurl }}/docs/installation.html
 [roles]: {{ site.baseurl }}/docs/roles.html
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[`oauth`]: {{ site.baseurl }}/docs/config.html#oauth
 [`show_login`]: {{ site.baseurl }}/docs/config.html#show_login
 [`docassemble.webapp`]: {{ site.baseurl }}/docs/installation.html#docassemble.webapp
 [`create_tables.py`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/create_tables.py
@@ -101,3 +126,5 @@ created.
 [Privileges List]: #profile
 [scheduled tasks]: {{ site.baseurl }}/docs/scheduled.html
 [`user_info()`]: {{ site.baseurl }}/docs/functions.html#user_info
+[`allow_registration`]: {{ site.baseurl }}/docs/config.html#allow_registration
+[`appname`]: {{ site.baseurl }}/docs/config.html#appname
