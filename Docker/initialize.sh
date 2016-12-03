@@ -241,6 +241,7 @@ fi
 
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
     su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.create_tables $DA_CONFIG_FILE" www-data
+    python /usr/share/docassemble/webapp/fix-postgresql-tables.py
 fi
 
 if [ -f /etc/syslog-ng/syslog-ng.conf ] && [ ! -f /usr/share/docassemble/webapp/syslog-ng-orig.conf ]; then

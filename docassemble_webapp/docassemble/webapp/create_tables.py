@@ -9,19 +9,13 @@ from docassemble.base.functions import word
 from docassemble.webapp.app_and_db import app
 from docassemble.webapp.db_only import db
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
-from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, KVStore
-from docassemble.webapp.users.models import UserModel, UserAuthModel, Role, UserRoles, UserDict, UserDictKeys, TempUser, ChatLog # UserDictLock
+from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors
+from docassemble.webapp.users.models import UserModel, UserAuthModel, Role, UserRoles, UserDict, UserDictKeys, TempUser, ChatLog
 from docassemble.webapp.update import get_installed_distributions
 from sqlalchemy import create_engine, MetaData
-#import docassemble.webapp.database
 import random
 import string
 from flask_user import UserManager, SQLAlchemyAdapter
-
-# if __name__ == "__main__":
-#     with app.app_context():
-#         app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
-#         app.secret_key = daconfig.get('secretkey', '28ihfiFehfoU34mcq_4clirglw3g4o87')
 
 def get_role(db, name):
     the_role = Role.query.filter_by(name=word(name)).first()

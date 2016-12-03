@@ -184,16 +184,11 @@ def invite():
         the_role_id = None
         
         for role in Role.query.order_by('id'):
-            if role.id == invite_form.role_id and role.name != 'admin' and role.name != 'cron':
+            if role.id == int(invite_form.role_id.data) and role.name != 'admin' and role.name != 'cron':
                 the_role_id = role.id
 
         if the_role_id is None:
             the_role_id = user_role.id
-
-        # user_class_fields = User.__dict__
-        # user_fields = {
-        #     "email": email
-        # }
 
         user, user_email = user_manager.find_user_by_email(email)
         if user:
@@ -211,21 +206,14 @@ def invite():
         user_invite.token = token
         db.session.commit()
         try:
-            # Send 'invite' email
             logmessage("Trying to send e-mail to " + str(user_invite.email))
             emails.send_invite_email(user_invite, accept_invite_link)
         except Exception as e:
             logmessage("Failed to send e-mail")
-            # delete new User object if send fails
             user_invite.delete()
             db.session.commit()
             flash(word('Unable to send e-mail.  Error was: ') + str(e), 'error')
             return redirect(url_for('invite'))
-        # signals \
-        #     .user_sent_invitation \
-        #     .send(current_app._get_current_object(), user_invite=user_invite,
-        #           form=invite_form)
-
         flash(word('Invitation has been sent.'), 'success')
         return redirect(next)
 

@@ -174,28 +174,23 @@ def logout():
     return response
 
 def custom_login():
-    #logmessage("Got to login page")
     user_manager = current_app.user_manager
     db_adapter = user_manager.db_adapter
     secret = request.cookies.get('secret', None)
     if secret is not None:
         secret = str(secret)
-    #logmessage("custom_login: secret is " + str(secret))
     next = request.args.get('next', _endpoint_url(user_manager.after_login_endpoint))
     reg_next = request.args.get('reg_next', _endpoint_url(user_manager.after_register_endpoint))
 
-    # Immediately redirect already logged in users
     if _call_or_get(current_user.is_authenticated) and user_manager.auto_login_at_login:
         return redirect(next)
 
-    # Initialize form
-    login_form = user_manager.login_form(request.form)          # for login.html
-    register_form = user_manager.register_form()                # for login_or_register.html
+    login_form = user_manager.login_form(request.form)
+    register_form = user_manager.register_form()
     if request.method != 'POST':
         login_form.next.data     = register_form.next.data = next
         login_form.reg_next.data = register_form.reg_next.data = reg_next
 
-    # Process valid POST
     if request.method == 'POST':
         try:
             login_form.validate()
@@ -203,37 +198,29 @@ def custom_login():
             logmessage("Got an error when validating login")
             pass
     if request.method == 'POST' and login_form.validate():
-        # Retrieve User
         user = None
         user_email = None
         if user_manager.enable_username:
-            # Find user record by username
             user = user_manager.find_user_by_username(login_form.username.data)
             user_email = None
-            # Find primary user_email record
             if user and db_adapter.UserEmailClass:
                 user_email = db_adapter.find_first_object(db_adapter.UserEmailClass,
                         user_id=int(user.get_id()),
                         is_primary=True,
                         )
-            # Find user record by email (with form.username)
             if not user and user_manager.enable_email:
                 user, user_email = user_manager.find_user_by_email(login_form.username.data)
         else:
-            # Find user by email (with form.email)
             user, user_email = user_manager.find_user_by_email(login_form.email.data)
 
         if user:
-            # Log user in
             return _do_login_user(user, login_form.password.data, secret, login_form.next.data, login_form.remember_me.data)
 
-    # Process GET or invalid POST
     return render_template(user_manager.login_template, page_title=word('Sign In'), tab_title=word('Sign In'), form=login_form, login_form=login_form, register_form=register_form)
 
 def unauthenticated():
     flash(word("You need to log in before you can access") + " " + word(request.path), 'error')
     the_url = url_for('user.login', next=fix_http(request.url))
-    #sys.stderr.write("responding with " + the_url)
     return redirect(the_url)
 
 def unauthorized():
@@ -243,54 +230,20 @@ def unauthorized():
 def my_default_url(error, endpoint, values):
     return url_for('index')
 
-#def setup_app():
-#sys.stderr.write("Calling app\n")
 from docassemble.webapp.app_and_db import app
-#sys.stderr.write("Calling db\n")
 from docassemble.webapp.db_only import db
-#sys.stderr.write("Calling setup\n")
 import docassemble.webapp.setup
-#sys.stderr.write("Importing MyRegisterForm and MyInviteForm\n")
 from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm
-#sys.stderr.write("Importing UserModel, UserAuthModel, and MyUserInvitation\n")
 from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation
-#sys.stderr.write("Importing UserManager, SQLAlchemyAdapter\n")
 from flask_user import UserManager, SQLAlchemyAdapter
-#sys.stderr.write("Calling SQLAlchemyAdapter\n")
 db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
-#db_adapter.UserInvitationClass = MyUserInvitation
-#sys.stderr.write("Importing user_profile_page\n")
 from docassemble.webapp.users.views import user_profile_page
-#sys.stderr.write("Calling UserManager\n")
-#logout, custom_login, unauthorized, unauthenticated
 user_manager = UserManager()
-#sys.stderr.write("Calling user_manager.init_app\n")
 user_manager.init_app(app, db_adapter=db_adapter, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, login_view_function=custom_login, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated)
-#sys.stderr.write("Calling LoginManager\n")
 from flask_login import LoginManager
 lm = LoginManager()
 lm.init_app(app)
 lm.login_view = 'user.login'
-#    return(db, app, lm)
-
-#db, app, lm = setup_app()
-
-# def _force_https():
-#     from flask import _request_ctx_stack, _app_ctx_stack
-#     if _app_ctx_stack is not None:
-#         #sys.stderr.write("changing scheme\n")
-#         appctx = _app_ctx_stack.top
-#         appctx.url_adapter.url_scheme = 'https'
-#     if _request_ctx_stack is not None:
-#         #sys.stderr.write("changing scheme\n")
-#         reqctx = _request_ctx_stack.top
-#         reqctx.url_adapter.url_scheme = 'https'
-#     #else:
-#     #    sys.stderr.write("could not change scheme\n")
-
-# if HTTP_TO_HTTPS:
-    
-#     app.before_request(_force_https)
 
 from twilio.util import TwilioCapability
 from twilio.rest import TwilioRestClient
@@ -340,7 +293,7 @@ from flask import make_response, abort, render_template, request, session, send_
 from flask import url_for
 from flask_login import login_user, logout_user, current_user
 from flask_user import login_required, roles_required
-from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_registered, user_reset_password
+from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_reset_password
 from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm
 from flask_mail import Mail, Message
 import flask_user.signals
@@ -348,7 +301,6 @@ from werkzeug import secure_filename, FileStorage
 from rauth import OAuth1Service, OAuth2Service
 from flask_kvsession import KVSessionExtension
 from simplekv.memory.redisstore import RedisStore
-#from simplekv.db.sql import SQLAlchemyStore
 from sqlalchemy import or_, and_
 import docassemble.base.parse
 import docassemble.base.pdftk
@@ -392,16 +344,6 @@ def fix_http(url):
         return re.sub(r'^http:', 'https:', url)
     else:
         return url
-
-# def url_for(*pargs, **kwargs):
-#     if HTTP_TO_HTTPS:
-#         kwargs['_external'] = True
-#         kwargs['_scheme'] = 'https'
-#     return flask_url_for(*pargs, **kwargs)
-
-#engine = create_engine(alchemy_connect_string, convert_unicode=True)
-#metadata = MetaData(bind=engine)
-#store = SQLAlchemyStore(engine, metadata, 'kvstore')
 
 def get_url_from_file_reference(file_reference, **kwargs):
     file_reference = str(file_reference)
@@ -453,14 +395,6 @@ def get_url_from_file_reference(file_reference, **kwargs):
             if the_package is None:
                 the_package = 'docassemble.base'
             parts = [the_package, file_reference]
-            #the_file = None
-            #try:
-            #the_file = pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
-            #except:
-            #    if current_user.is_authenticated and not current_user.is_anonymous:
-            #        return(fileroot + "playgroundstatic/" + file_reference)
-            #if not os.path.isfile(the_file) and current_user.is_authenticated and not current_user.is_anonymous:
-            #    return(fileroot + "playgroundstatic/" + file_reference)
         parts[1] = re.sub(r'^data/static/', '', parts[1])
         url = fileroot + 'packagestatic/' + parts[0] + '/' + parts[1] + extn
     return(url)
@@ -505,9 +439,6 @@ def get_title_documentation():
             content = fix_tabs.sub('  ', content)
             return(yaml.load(content))
     return(None)
-
-#current_app.secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits)
-#                         for x in xrange(32))
 
 def _call_or_get(function_or_property):
     return function_or_property() if callable(function_or_property) else function_or_property
@@ -606,7 +537,6 @@ def substitute_secret(oldsecret, newsecret):
     filename = session.get('i', None)
     if user_code == None or filename == None:
         return newsecret
-    # currentsecret = None
     changed = False
     for record in SpeakList.query.filter_by(key=user_code, filename=filename).all():
         if record.encrypted:
@@ -621,29 +551,23 @@ def substitute_secret(oldsecret, newsecret):
     changed = False
     for record in Attachments.query.filter_by(key=user_code, filename=filename).all():
         if record.dictionary:
-            #logmessage("Found old dictionary in attachments")
             if record.encrypted:
                 the_dict = decrypt_dictionary(record.dictionary, oldsecret)
-                #logmessage("Decrypted it with old secret " + oldsecret)
             else:
                 the_dict = unpack_dictionary(record.dictionary)
                 record.encrypted = True
-            #logmessage("re-encrypted with secret " + newsecret)
             record.dictionary = encrypt_dictionary(the_dict, newsecret)
             changed = True
     if changed:
         db.session.commit()
     changed = False
     for record in UserDict.query.filter_by(key=user_code, filename=filename).order_by(UserDict.indexno).all():
-        #logmessage("Found old dictionary in userdict")
         if record.encrypted:
             the_dict = decrypt_dictionary(record.dictionary, oldsecret)
-            #logmessage("Decrypted it with old secret " + oldsecret)
         else:
             the_dict = unpack_dictionary(record.dictionary)
             record.encrypted = True
         record.dictionary = encrypt_dictionary(the_dict, newsecret)
-        #logmessage("re-encrypted with secret " + newsecret)
         changed = True
     if changed:
         db.session.commit()
@@ -666,16 +590,13 @@ def MD5Hash(data=''):
     return h
 
 def _do_login_user(user, password, secret, next, remember_me=False):
-    # User must have been authenticated
     if not user:
         return unauthenticated()
 
-    # Check if user account has been disabled
     if not _call_or_get(user.is_active):
         flash(word('Your account has not been enabled.'), 'error')
         return redirect(url_for('user.login'))
 
-    # Check if user has a confirmed email address
     user_manager = current_app.user_manager
     if user_manager.enable_email and user_manager.enable_confirm_email \
             and not current_app.user_manager.enable_login_without_confirm_email \
@@ -684,15 +605,12 @@ def _do_login_user(user, password, secret, next, remember_me=False):
         flash('Your email address has not yet been confirmed. Check your email Inbox and Spam folders for the confirmation email or <a href="' + str(url) + '">Re-send confirmation email</a>.', 'error')
         return redirect(url_for('user.login'))
 
-    # Use Flask-Login to sign in user
-    #print('login_user: remember_me=', remember_me)
     login_user(user, remember=remember_me)
 
     if 'i' in session and 'uid' in session:
         save_user_dict_key(session['uid'], session['i'])
         session['key_logged'] = True 
 
-    # Send user_logged_in signal
     signals.user_logged_in.send(current_app._get_current_object(), user=user)
 
     if 'tempuser' in session:
@@ -712,11 +630,9 @@ def _do_login_user(user, password, secret, next, remember_me=False):
             db.session.commit()
         del session['tempuser']
     session['user_id'] = user.id
-    # Prepare one-time system message
     flash(word('You have signed in successfully.'), 'success')
 
     newsecret = substitute_secret(secret, pad_to_16(MD5Hash(data=password).hexdigest()))
-    # Redirect to 'next' URL
     response = redirect(next)
     response.set_cookie('secret', newsecret)
     return response
@@ -849,7 +765,6 @@ def manual_checkout():
     else:
         the_user_id = current_user.id
     endpart = ':uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-    #logmessage("Checking out from " + endpart)
     pipe = r.pipeline()
     pipe.expire('da:session' + endpart, 12)
     pipe.expire('da:html' + endpart, 12)
@@ -956,27 +871,19 @@ def process_file(saved_file, orig_file, mimetype, extension):
     saved_file.finalize()
     
 def save_user_dict_key(user_code, filename):
-    #sys.stderr.write("20\n")
     the_record = UserDictKeys.query.filter_by(key=user_code, filename=filename, user_id=current_user.id).first()
-    #sys.stderr.write("21\n")
     if the_record:
         found = True
     else:
         found = False
     if not found:
-        #sys.stderr.write("22\n")
         new_record = UserDictKeys(key=user_code, filename=filename, user_id=current_user.id)
-        #sys.stderr.write("23\n")
         db.session.add(new_record)
-        #sys.stderr.write("24\n")
         db.session.commit()
-        #sys.stderr.write("25\n")
     return
 
 def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, encrypt=True, manual_user_id=None):
-    #sys.stderr.write("30\n")
     nowtime = datetime.datetime.utcnow()
-    #sys.stderr.write("31\n")
     user_dict['_internal']['modtime'] = nowtime
     if manual_user_id is not None or (current_user and current_user.is_authenticated and not current_user.is_anonymous):
         if manual_user_id is not None:
@@ -987,7 +894,6 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
     else:
         user_dict['_internal']['accesstime'][-1] = nowtime
         the_user_id = None
-    #sys.stderr.write("32\n")
     if changed is True:
         if encrypt:
             new_record = UserDict(modtime=nowtime, key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
@@ -995,11 +901,8 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
             new_record = UserDict(modtime=nowtime, key=user_code, dictionary=pack_dictionary(user_dict), filename=filename, user_id=the_user_id, encrypted=False)
         db.session.add(new_record)
         db.session.commit()
-        #sys.stderr.write("33\n")
     else:
-        #sys.stderr.write("34\n")
         max_indexno = db.session.query(db.func.max(UserDict.indexno)).filter(UserDict.key == user_code, UserDict.filename == filename).scalar()
-        #sys.stderr.write("35\n")
         if max_indexno is None:
             if encrypt:
                 new_record = UserDict(modtime=nowtime, key=user_code, dictionary=encrypt_dictionary(user_dict, secret), filename=filename, user_id=the_user_id, encrypted=True)
@@ -1007,29 +910,20 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
                 new_record = UserDict(modtime=nowtime, key=user_code, dictionary=pack_dictionary(user_dict), filename=filename, user_id=the_user_id, encrypted=False)
             db.session.add(new_record)
             db.session.commit()
-            #sys.stderr.write("36\n")
         else:
-            #sys.stderr.write("37\n")
             for record in UserDict.query.filter_by(key=user_code, filename=filename, indexno=max_indexno).all():
-                #sys.stderr.write("37.5\n")
                 if encrypt:
                     record.dictionary = encrypt_dictionary(user_dict, secret)
-                    #sys.stderr.write("37.6\n")
                     record.modtime = nowtime
-                    #sys.stderr.write("37.7\n")
                     record.encrypted = True
                 else:
                     record.dictionary = pack_dictionary(user_dict)
-                    #sys.stderr.write("37.7\n")
                     record.modtime = nowtime
                     record.encrypted = False                   
-            #sys.stderr.write("38\n")
             db.session.commit()
-    #sys.stderr.write("39\n")
     return
 
 def process_bracket_expression(match):
-    #return("[" + repr(urllib.unquote(match.group(1)).encode('unicode_escape')) + "]")
     try:
         inner = codecs.decode(match.group(1), 'base64').decode('utf-8')
     except:
@@ -1043,7 +937,6 @@ def safeid(text):
     return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
 
 def from_safeid(text):
-    #logmessage("from_safeid: " + str(text))
     return(codecs.decode(text, 'base64').decode('utf-8'))
 
 def progress_bar(progress):
@@ -1060,45 +953,22 @@ def get_unique_name(filename, secret):
         if existing_key:
             release_lock(newname, filename)
             continue
-        # cur = conn.cursor()
-        # cur.execute("SELECT key from userdict where key=%s", [newname])
-        # if cur.fetchone():
-        #     #logmessage("Key already exists in database")
-        #     continue
         new_user_dict = UserDict(modtime=nowtime, key=newname, filename=filename, dictionary=encrypt_dictionary(fresh_dictionary(), secret))
         db.session.add(new_user_dict)
         db.session.commit()
-        # cur.execute("INSERT INTO userdict (key, filename, dictionary) values (%s, %s, %s);", [newname, filename, codecs.encode(pickle.dumps(initial_dict.copy()), 'base64').decode()])
-        # conn.commit()
         return newname
 
-# def update_user_id(the_user_code):
-#     if current_user.id is not None and the_user_code is not None:
-#         cur = conn.cursor()
-#         cur.execute("UPDATE userdict set user_id=%s where key=%s", [current_user.id, the_user_code])
-#         conn.commit()
-#     return
-    
 def get_attachment_info(the_user_code, question_number, filename, secret):
     the_user_dict = None
     existing_entry = Attachments.query.filter_by(key=the_user_code, question=question_number, filename=filename).first()
     if existing_entry and existing_entry.dictionary:
-        #the_user_dict = pickle.loads(codecs.decode(existing_entry.dictionary, 'base64'))
         if existing_entry.encrypted:
             the_user_dict = decrypt_dictionary(existing_entry.dictionary, secret)
         else:
             the_user_dict = unpack_dictionary(existing_entry.dictionary)
-    # cur = conn.cursor()
-    # cur.execute("select dictionary from attachments where key=%s and question=%s and filename=%s", [the_user_code, question_number, filename])
-    # for d in cur:
-    #     if d[0]:
-    #         the_user_dict = pickle.loads(codecs.decode(d[0], 'base64'))
-    #     break
-    # conn.commit()
     return the_user_dict
 
 def update_attachment_info(the_user_code, the_user_dict, the_interview_status, secret, encrypt=True):
-    #logmessage("Got to update_attachment_info")
     Attachments.query.filter_by(key=the_user_code, question=the_interview_status.question.number, filename=the_interview_status.question.interview.source.path).delete()
     db.session.commit()
     if encrypt:
@@ -1110,12 +980,10 @@ def update_attachment_info(the_user_code, the_user_dict, the_interview_status, s
     return
 
 def obtain_lock(user_code, filename):
-    #logmessage("Obtain lock: " + str(user_code) + " " + str(filename))
     key = 'da:lock:' + user_code + ':' + filename
     found = False
     count = 4
     while count > 0:
-        #record = UserDictLock.query.filter_by(key=user_code, filename=filename).first()
         record = r.get(key)
         if record:
             time.sleep(1.0)
@@ -1126,17 +994,11 @@ def obtain_lock(user_code, filename):
         count -= 1
     if found:
         release_lock(user_code, filename)
-    #new_record = UserDictLock(key=user_code, filename=filename)
-    #db.session.add(new_record)
-    #db.session.commit()
     pipe = r.pipeline()
     pipe.set(key, 1)
     pipe.expire(key, 4)
     
 def release_lock(user_code, filename):
-    #logmessage("Release lock: " + str(user_code) + " " + str(filename))
-    #UserDictLock.query.filter_by(key=user_code, filename=filename).delete()
-    #db.session.commit()
     key = 'da:lock:' + user_code + ':' + filename
     r.delete(key)
 
@@ -1179,10 +1041,6 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
         <div class="collapse navbar-collapse" id="navbar-collapse">
           <ul class="nav navbar-nav navbar-left hidden-xs">
 """
-    # if status.question.helptext is None:
-    #     navbar += '<li><a href="#help" data-toggle="tab">' + word('Help') + "</a></li>\n"
-    # else:
-    #     navbar += '<li><a class="daactivetext" href="#help" data-toggle="tab">' + word('Help') + ' <i class="glyphicon glyphicon-star"></i>' + "</a></li>\n"
     if DEBUG:
         navbar += """\
             <li><a class="no-outline" title=""" + repr(str(source_message)) + """ id="sourcetoggle" href="#source" data-toggle="collapse" aria-expanded="false" aria-controls="source">""" + word('Source') + """</a></li>
@@ -1211,7 +1069,6 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
         sign_in_text = word('Sign in to save answers')
     if show_login:
         if current_user.is_anonymous:
-            #logmessage("is_anonymous is " + str(current_user.is_anonymous))
             if custom_menu:
                 navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('user.login', next=url_for('index')) + '">' + sign_in_text + '</a></li></ul></li>' + "\n"
             else:
@@ -1259,7 +1116,6 @@ def reset_session(yaml_filename, secret):
     if 'action' in session:
         del session['action']
     user_code = session['uid']
-    #logmessage("User code is now " + str(user_code))
     user_dict = fresh_dictionary()
     return(user_code, user_dict)
 
@@ -1329,10 +1185,7 @@ def install_zip_package(packagename, file_number):
         existing_package.type = 'zip'
         existing_package.version += 1
     db.session.commit()
-    #logmessage("Going into check for updates now")
     ok, logmessages = docassemble.webapp.update.check_for_updates()
-    #logmessage("Returned from check for updates")
-    #logmessage('pip log: ' + str(logmessages), 'info')
     if ok:
         trigger_update(except_for=hostname)
         restart_this()
@@ -1341,13 +1194,6 @@ def install_zip_package(packagename, file_number):
         flash(word("Install not successful"), 'error')
     logmessages = re.sub(r'\n', r'<br>', logmessages)
     flash('pip log: ' + Markup(logmessages), 'info')
-    # pip_log = tempfile.NamedTemporaryFile()
-    # commands = ['install', '--quiet', '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, zippath]
-    # returnval = pip.main(commands)
-    # if returnval > 0:
-    #     with open(pip_log.name) as x:
-    #         logfilecontents = x.read()
-    #         flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + '</pre>', 'error')
     return
 
 def install_git_package(packagename, giturl):
@@ -1378,12 +1224,6 @@ def install_git_package(packagename, giturl):
         flash(word("Install not successful"), 'error')
     logmessages = re.sub(r'\n', r'<br>', logmessages)
     flash('pip log: ' + Markup(logmessages), 'info')
-    # pip_log = tempfile.NamedTemporaryFile()
-    # commands = ['install', '--quiet', '--egg', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, 'git+' + giturl + '.git#egg=' + packagename]
-    # returnval = pip.main(commands)
-    # if returnval > 0:
-    #     with open(pip_log.name) as x: logfilecontents = x.read()
-    #     flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + "</pre>", 'error')
     return
 
 def install_pip_package(packagename, limitation):
@@ -1412,12 +1252,6 @@ def install_pip_package(packagename, limitation):
         flash(word("Install not successful"), 'error')
     logmessages = re.sub(r'\n', r'<br>', logmessages)
     flash('pip log: ' + Markup(logmessages), 'info')
-    # pip_log = tempfile.NamedTemporaryFile()
-    # commands = ['install', '--quiet', '--egg', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, 'git+' + giturl + '.git#egg=' + packagename]
-    # returnval = pip.main(commands)
-    # if returnval > 0:
-    #     with open(pip_log.name) as x: logfilecontents = x.read()
-    #     flash("pip " + " ".join(commands) + "<pre>" + str(logfilecontents) + "</pre>", 'error')
     return
 
 def get_package_info():
@@ -1479,7 +1313,6 @@ def make_example_html(examples, first_id, example_html, data_dict):
             make_example_html(example['list'], first_id, example_html, data_dict)
             example_html.append('          </li>')
             continue
-        #logmessage("Doing example with id " + str(example['id']))
         if len(first_id) == 0:
             first_id.append(example['id'])
         example_html.append('            <li><a class="example-link" data-example="' + example['id'] + '">' + example['title'] + '</a></li>')
@@ -1499,10 +1332,6 @@ def noquote(string):
     string = gt_match.sub('&gt;', string)
     string = amp_match.sub('&amp;', string)
     return string
-    # if string is None:
-    #     return None
-    # newstring = json.dumps(string.replace('\n', ' ').rstrip())
-    # return newstring[1:-1]
 
 def infobutton(title):
     docstring = ''
@@ -1552,16 +1381,12 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
     area = SavedFile(current_user.id, fix=True, section='playgroundmodules')
     avail_modules = sorted([re.sub(r'.py$', '', f) for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
     for val in user_dict:
-        #logmessage("Found val " + str(val) + " of type " + str(type(user_dict[val])))
         if type(user_dict[val]) is types.FunctionType:
             functions.add(val)
             name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val) + '()', 'tag': str(val) + str(inspect.formatargspec(*inspect.getargspec(user_dict[val])))}
         elif type(user_dict[val]) is types.ModuleType:
             modules.add(val)
             name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val)}
-        # elif type(user_dict[val]) is types.ClassType:
-        #     classes.add(val)
-        #     name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val)}
         elif type(user_dict[val]) is types.TypeType or type(user_dict[val]) is types.ClassType:
             classes.add(val)
             bases = list()
@@ -1572,13 +1397,11 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
             method_list = list()
             for name, value in methods:
                 method_list.append({'insert': '.' + str(name) + '()', 'name': str(name), 'doc': noquote(inspect.getdoc(value)), 'tag': '.' + str(name) + str(inspect.formatargspec(*inspect.getargspec(value)))})
-            #logmessage("Defining name_info for " + str(val))
             name_info[val] = {'doc': noquote(inspect.getdoc(user_dict[val])), 'name': str(val), 'insert': str(val), 'bases': bases, 'methods': method_list}
     for val in docassemble.base.functions.pickleable_objects(user_dict):
         names_used.add(val)
         if val not in name_info:
             name_info[val] = dict()
-        #name_info[val]['type'] = type(user_dict[val]).__name__
         name_info[val]['type'] = user_dict[val].__class__.__name__
     for var in base_name_info:
         if base_name_info[var]['show']:
@@ -1616,14 +1439,6 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
         else:
             message_to_use = title_documentation['generic error']['doc']
         content += '\n                  <tr><td class="playground-warning-box"><div class="alert alert-' + error_style + '">' + message_to_use + '</div></td></tr>'
-    # content += '\n                  <tr><td><h4>From</h4></td></tr>'
-    # content += '\n                  <tr><td><select>'
-    # for the_file in files:
-    #     content += '<option '
-    #     if the_file == current_file:
-    #         content += "selected "
-    #     content += 'value="' + the_file + '">' + str(the_file) + '</option>'
-    # content += '</select></td></tr>'
     names_used = names_used.difference( functions | classes | modules | set(avail_modules) )
     undefined_names = names_used.difference(fields_used | set(base_name_info.keys()) )
     for var in ['_internal']:
@@ -1702,7 +1517,6 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
     return content
 
 def make_image_files(path):
-    #logmessage("make_image_files on " + str(path))
     if PDFTOPPM_COMMAND is not None:
         args = [PDFTOPPM_COMMAND, '-r', str(PNG_RESOLUTION), '-png', path, path + 'page']
         result = call(args)
@@ -1743,13 +1557,6 @@ def restart_on(host):
             logmessage("restart_on: sent reset to " + str(host.hostname))
         else:
             logmessage("restart_on: call to supervisorctl with reset on " + str(host.hostname) + " was not successful")
-    # if re.search(r':(celery|all):', host.role):
-    #     args = [SUPERVISORCTL, '-s', the_url, 'restart celery']
-    # result = call(args)
-    # if result == 0:
-    #     logmessage("restart_on: sent restart celery to " + str(host.hostname))
-    # else:
-    #     logmessage("restart_on: call to supervisorctl with restart celery on " + str(host.hostname) + " was not successful")
     return
 
 def restart_all():
@@ -1820,9 +1627,6 @@ def indent_by(text, num):
     if not text:
         return ""
     return (" " * num) + re.sub(r'\n', "\n" + (" " * num), text).rstrip() + "\n"
-
-# def indent_by(text, num):
-#     return (" " * num) + re.sub(r'\n', "\n" + (" " * num), text).rstrip() + "\n"
     
 def call_sync():
     if not USING_SUPERVISOR:
@@ -1991,6 +1795,23 @@ class FacebookSignIn(OAuthSignIn):
 #         username = me.get('screen_name')
 #         return social_id, username, None   # Twitter does not provide email
 
+@user_registered.connect_via(app)
+def on_register_hook(sender, user, **extra):
+    from docassemble.webapp.users.models import Role
+    user_invite = extra.get('user_invite', None)
+    if user_invite is None:
+        return
+    this_user_role = Role.query.filter_by(id=user_invite.role_id).first()
+    if this_user_role is None:
+        this_user_role = Role.query.filter_by(name='user').first()
+    roles_to_remove = list()
+    for role in user.roles:
+        roles_to_remove.append(role)
+    for role in roles_to_remove:
+        user.roles.remove(role)
+    user.roles.append(this_user_role)
+    db.session.commit()
+    
 @lm.user_loader
 def load_user(id):
     return UserModel.query.get(int(id))
@@ -2027,22 +1848,10 @@ def oauth_callback(provider):
         secret = str(secret)
     newsecret = substitute_secret(secret, pad_to_16(MD5Hash(data=social_id+password_secret_key).hexdigest()))
     if not current_user.is_anonymous:
-        #update_user_id(session['uid'])
         flash(word('Welcome!  You are logged in as ') + email, 'success')
     response = redirect(url_for('interview_list'))
     response.set_cookie('secret', newsecret)
     return response
-
-# @app.route('/login')
-# def login():
-#     msg = Message("Test message",
-#                   sender="Docassemble <no-reply@docassemble.org>",
-#                   recipients=["jhpyle@gmail.com"])
-#     msg.body = "Testing, testing"
-#     msg.html = "<p>Testing, testing.  Someone used the login page.</p>"
-#     mail.send(msg)
-#     form = LoginForm()
-#     return render_template('flask_user/login.html', form=form, login_form=form, title="Sign in")
 
 @app.route('/user/google-sign-in')
 def google_page():
@@ -2088,16 +1897,11 @@ def checkout():
 @roles_required(['admin', 'developer'])
 def restart_ajax():
     logmessage("Action is " + str(request.form.get('action', None)))
-    # if 'restart' in session:
-    #     logmessage("Restart is in session")
-    # else:
-    #     logmessage("Restart is not in session")
     if current_user.has_role('admin', 'developer'):
         logmessage("User has perms")
     else:
         logmessage("User has no perms")
     if request.form.get('action', None) == 'restart' and current_user.has_role('admin', 'developer'):
-        #del session['restart']
         restart_all()
         return jsonify(success=True)
 
@@ -2132,7 +1936,6 @@ def checkin():
         messages = get_chat_log(user_dict['_internal']['livehelp']['mode'], yaml_filename, session_id, auth_user_id, temp_user_id, secret, auth_user_id, temp_user_id)
         return jsonify(success=True, messages=messages)
     if request.form.get('action', None) == 'checkin':
-        #logmessage("Doing redis statement")
         peer_ok = False
         help_ok = False
         num_peers = 0
@@ -2225,7 +2028,6 @@ def checkin():
                     else:
                         pipe.expire(lkey, 60)
                         pipe.execute()
-                        #logmessage("Wrote to " + str(lkey))
                         chatstatus = 'ready'
                         session['chatstatus'] = chatstatus
                         obj['chatstatus'] = chatstatus
@@ -2254,11 +2056,9 @@ def checkin():
                     session['chatstatus'] = chatstatus
                     obj['chatstatus'] = chatstatus
             else:
-                #logmessage("Peer ok is " + str(peer_ok) + " and chatstatus is " + str(chatstatus))
                 if peer_ok:
                     if chatstatus == 'ringing':
                         lkey = 'da:ready:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-                        #logmessage("Writing to " + str(lkey))
                         pipe = r.pipeline()
                         failure = True
                         for the_key in r.keys('da:interviewsession:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:*'):
@@ -2268,7 +2068,6 @@ def checkin():
                         if not failure:
                             pipe.expire(lkey, 6000)
                             pipe.execute()
-                            #logmessage("Wrote to " + str(lkey))
                         chatstatus = 'ready'
                         session['chatstatus'] = chatstatus
                         obj['chatstatus'] = chatstatus
@@ -2288,7 +2087,6 @@ def checkin():
         help_available = len(potential_partners)
         html_key = 'da:html:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         if old_chatstatus != chatstatus:
-            #logmessage("Doing a sessionupdate because " + str(chatstatus))
             html = r.get(html_key)
             if html is not None:
                 html_obj = json.loads(html)
@@ -2301,7 +2099,6 @@ def checkin():
                 r.publish('da:monitor', json.dumps(dict(messagetype='sessionupdate', key=key, session=obj)))
             else:
                 logmessage("The html was not found at " + str(html_key))
-        #logmessage("Setting " + key)
         pipe = r.pipeline()
         pipe.set(key, pickle.dumps(obj))
         pipe.expire(key, 60)
@@ -2313,7 +2110,6 @@ def checkin():
             observer_control = False
         else:
             observer_control = True
-        #logmessage("Done setting " + key)
         parameters = request.form.get('parameters', None)
         if parameters is not None:
             key = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
@@ -2331,11 +2127,7 @@ def checkin():
 
 @app.route("/", methods=['POST', 'GET'])
 def index():
-    #sys.stderr.write("-4\n")
-    #seq = Sequence(message_sequence)
-    #nextid = connection.execute(seq)
     if 'ajax' in request.form:
-        #sys.stderr.write("This is ajax!\n")
         is_ajax = True
     else:
         is_ajax = False
@@ -2369,22 +2161,12 @@ def index():
     yaml_filename = session.get('i', default_yaml_filename)
     steps = 0
     need_to_reset = False
-    # secret_parameter = request.args.get('sid', None)
     yaml_parameter = request.args.get('i', None)
     session_parameter = request.args.get('session', None)
-    # if secret_parameter is not None:
-    #     if currentsecret != secret_parameter:
-    #         currentsecret = secret_parameter
-    #         session['currentsecret'] = currentsecret
     if yaml_parameter is not None:
         show_flash = False
         yaml_filename = yaml_parameter
-        # if session.get('nocache', False):
-        #     docassemble.base.interview_cache.clear_cache(yaml_filename)
         old_yaml_filename = session.get('i', None)
-        # if yaml_filename.startswith("/playground") and not current_user.is_authenticated:
-        #     flash(word("You must be logged in as a developer to continue"), 'error')
-        #     return redirect(url_for('user.login', next=url_for('index', **request.args)))
         if old_yaml_filename is not None:
             if old_yaml_filename != yaml_filename:
                 session['i'] = yaml_filename
@@ -2396,7 +2178,6 @@ def index():
                     message = "Starting a new interview.  To go back to your previous interview, go to My Interviews on the menu."
                 else:
                     message = "Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews."
-            #logmessage("session parameter is none")
             user_code, user_dict = reset_session(yaml_filename, secret)
             release_lock(user_code, yaml_filename)
             session_id = session.get('uid', None)
@@ -2412,7 +2193,6 @@ def index():
                     message = "Entering a different interview.  To go back to your previous interview, log in to see a list of your interviews."
         if show_flash:
             flash(word(message), 'info')
-    #sys.stderr.write("-3\n")
     if session_parameter is not None:
         logmessage("session parameter is " + str(session_parameter))
         session_id = session_parameter
@@ -2422,17 +2202,11 @@ def index():
         if 'key_logged' in session:
             del session['key_logged']
         need_to_reset = True
-    #sys.stderr.write("-2.9\n")
     if session_id:
         user_code = session_id
-        #logmessage("session id is " + str(session_id))
-        #sys.stderr.write("-2.8\n")
         obtain_lock(user_code, yaml_filename)
-        #sys.stderr.write("-2.7\n")
         try:
-            #sys.stderr.write("-2.69\n")
             steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
-            #sys.stderr.write("-2.68\n")
         except:
             release_lock(user_code, yaml_filename)
             user_code, user_dict = reset_session(yaml_filename, secret)
@@ -2442,27 +2216,9 @@ def index():
             if 'key_logged' in session:
                 del session['key_logged']
             need_to_reset = True
-        #sys.stderr.write("-2.6\n")
         if encrypted != is_encrypted:
             encrypted = is_encrypted
             session['encrypted'] = encrypted
-        #sys.stderr.write("-2.5\n")
-        # if currentsecret is not None:
-        #     try:
-        #         steps, user_dict = fetch_user_dict(user_code, yaml_filename, secret=currentsecret)
-        #         secret_to_use = currentsecret
-        #     except:
-        #         del session['currentsecret']
-        #         currentsecret = None
-        #         try:
-        #             steps, user_dict = fetch_user_dict(user_code, yaml_filename, secret=secret)
-        #             secret_to_use = secret
-        #         except:
-        #             logmessage("Error: could not get user dict")
-        # else:
-        #     steps, user_dict = fetch_user_dict(user_code, yaml_filename, secret=secret)
-        #     secret_to_use = secret
-        #sys.stderr.write("-2.4\n")
         if user_dict is None:
             logmessage("user_dict was none")
             try:
@@ -2471,40 +2227,26 @@ def index():
                 pass
             del user_code
             del user_dict
-        #sys.stderr.write("-2.3\n")
     try:
         user_dict
         user_code
     except:
-        #sys.stderr.write("-2.2\n")
-        #logmessage("resetting session")
         user_code, user_dict = reset_session(yaml_filename, secret)
         encrypted = False
         session['encrypted'] = encrypted
         if 'key_logged' in session:
             del session['key_logged']
         steps = 0
-        #sys.stderr.write("-2.1\n")
-    #sys.stderr.write("-2\n")
     action = None
     if user_dict.get('multi_user', False) is True and encrypted is True:
         encrypted = False
         session['encrypted'] = encrypted
         decrypt_session(secret, user_code=session.get('uid', None), filename=session.get('i', None))
-        # Added this for locking
-        # steps, user_dict, new_is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
-        # user_dict['_internal']['secret'] = ''.join(random.choice(string.ascii_letters) for i in range(16))
-        # currentsecret, temptwo = substitute_secret(secret, user_dict['_internal']['secret'])
-        # session['currentsecret'] = currentsecret
-        # secret_in_use = currentsecret
     if user_dict.get('multi_user', False) is False and encrypted is False:
         encrypt_session(secret, user_code=session.get('uid', None), filename=session.get('i', None))
         encrypted = True
         session['encrypted'] = encrypted
-        # Added this for locking
-        # steps, user_dict, new_is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     if current_user.is_authenticated and 'key_logged' not in session:
-        #logmessage("save_user_dict_key called with " + user_code + " and " + yaml_filename)
         save_user_dict_key(user_code, yaml_filename)
         session['key_logged'] = True
     if 'action' in session:
@@ -2526,12 +2268,8 @@ def index():
             if re.match('[A-Za-z_]+', argname):
                 exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)
             need_to_reset = True
-    #sys.stderr.write("-1\n")
     if need_to_reset:
         save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
-        # if current_user.is_authenticated:
-        #     save_user_dict_key(user_code, yaml_filename)
-        #     session['key_logged'] = True
         response = do_redirect(url_for('index'), is_ajax)
         if set_cookie:
             response.set_cookie('secret', secret)
@@ -2539,7 +2277,6 @@ def index():
             response.set_cookie('visitor_secret', '', expires=0)
         release_lock(user_code, yaml_filename)
         return response
-    #logmessage("action is " + str(action))
     post_data = request.form.copy()
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data and '_question_number' in post_data:
         success = False
@@ -2559,12 +2296,10 @@ def index():
         logmessage("Got e-mail request for " + str(question_number) + " with e-mail " + str(attachment_email_address) + " and rtf inclusion of " + str(include_editable) + " and using yaml file " + yaml_filename)
         the_user_dict = get_attachment_info(user_code, question_number, yaml_filename, secret)
         if the_user_dict is not None:
-            #logmessage("the_user_dict is not none!")
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action))
             interview.assemble(the_user_dict, interview_status)
             if len(interview_status.attachments) > 0:
-                #logmessage("there are attachments!")
                 attached_file_count = 0
                 attachment_info = list()
                 for the_attachment in interview_status.attachments:
@@ -2604,7 +2339,6 @@ def index():
                         with open(attach_info['path'], 'rb') as fp:
                             msg.attach(attach_info['filename'], attach_info['mimetype'], fp.read())
                     try:
-                        # mail.send(msg)
                         logmessage("Starting to send")
                         async_mail(msg)
                         logmessage("Finished sending")
@@ -2621,22 +2355,16 @@ def index():
         if encrypted != is_encrypted:
             encrypted = is_encrypted
             session['encrypted'] = encrypted
-        #logmessage("Went back")
     elif 'filename' in request.args:
-        #logmessage("Got a GET statement with filename!")
         the_user_dict = get_attachment_info(user_code, request.args.get('question'), request.args.get('filename'), secret)
         if the_user_dict is not None:
-            #logmessage("the_user_dict is not none!")
             interview = docassemble.base.interview_cache.get_interview(request.args.get('filename'))
             interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action))
             interview.assemble(the_user_dict, interview_status)
             if len(interview_status.attachments) > 0:
-                #logmessage("there are attachments!")
                 the_attachment = interview_status.attachments[int(request.args.get('index'))]
                 the_filename = the_attachment['file'][request.args.get('format')]
                 the_format = request.args.get('format')
-                #block_size = 4096
-                #status = '200 OK'
                 if the_format == "pdf":
                     mime_type = 'application/pdf'
                 elif the_format == "tex":
@@ -2657,7 +2385,6 @@ def index():
     something_changed = False
     if '_tracker' in post_data and user_dict['_internal']['tracker'] != int(post_data['_tracker']):
         logmessage("Something changed.")
-        #logmessage("user dict has " + str(user_dict['_internal']['tracker']) + " and post data has " + post_data['_tracker'])
         something_changed = True
     if '_track_location' in post_data and post_data['_track_location']:
         logmessage("Found track location of " + post_data['_track_location'])
@@ -2665,7 +2392,6 @@ def index():
     else:
         the_location = None
     should_assemble = False
-    #sys.stderr.write("0\n")
     if something_changed:
         for key in post_data:
             try:
@@ -2674,22 +2400,13 @@ def index():
                     break
             except:
                 logmessage("Bad key: " + str(key))
-    #sys.stderr.write("1\n")
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-    #sys.stderr.write("2\n")
-    #logmessage("Getting interview status where action is " + str(action))
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location), tracker=user_dict['_internal']['tracker'])
-    #sys.stderr.write("3\n")
     if should_assemble:
-        #logmessage("Reassembling.")
         interview.assemble(user_dict, interview_status)
-    #else:
-        #logmessage("I am not assembling.")        
-    #sys.stderr.write("3\n")
     changed = False
     error_messages = list()
     if '_the_image' in post_data:
-        #interview.assemble(user_dict, interview_status)
         file_field = from_safeid(post_data['_save_as']);
         if match_invalid.search(file_field):
             error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
@@ -2703,28 +2420,22 @@ def index():
                 error_messages.append(("error", "Error: " + str(errMess)))
             if '_success' in post_data and post_data['_success']:
                 theImage = base64.b64decode(re.search(r'base64,(.*)', post_data['_the_image']).group(1) + '==')
-                #sys.stderr.write("Got theImage and it is " + str(len(theImage)) + " bytes long\n")
                 filename = secure_filename('canvas.png')
                 file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
                 extension, mimetype = get_ext_and_mimetype(filename)
                 new_file = SavedFile(file_number, extension=extension, fix=True)
                 new_file.write_content(theImage)
                 new_file.finalize()
-                #sys.stderr.write("Saved theImage\n")
                 the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ", filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
             else:
                 the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ")"
-            ##sys.stderr.write(the_string + "\n")
             try:
                 exec(the_string, user_dict)
                 changed = True
                 steps += 1
             except Exception as errMess:
-                #sys.stderr.write("Error: " + str(errMess) + "\n")
                 error_messages.append(("error", "Error: " + str(errMess)))
     if '_files' in post_data:
-        #logmessage("There are files")
-        #interview.assemble(user_dict, interview_status)
         file_fields = json.loads(myb64unquote(post_data['_files'])) #post_data['_files'].split(",")
         has_invalid_fields = False
         should_assemble_now = False
@@ -2749,14 +2460,11 @@ def index():
             if something_changed and should_assemble_now and not should_assemble:
                 interview.assemble(user_dict, interview_status)
             for orig_file_field in file_fields:
-                #logmessage("There is a file_field")
                 if orig_file_field in request.files:
-                    #logmessage("There is a file_field in request.files")
                     the_files = request.files.getlist(orig_file_field)
                     if the_files:
                         files_to_process = list()
                         for the_file in the_files:
-                            #logmessage("There is a file_field in request.files and it has a type of " + str(type(the_file)) + " and its str representation is " + str(the_file))
                             filename = secure_filename(the_file.filename)
                             file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
                             extension, mimetype = get_ext_and_mimetype(filename)
@@ -2790,10 +2498,8 @@ def index():
                         except Exception as errMess:
                             sys.stderr.write("Error: " + str(errMess) + "\n")
                             error_messages.append(("error", "Error: " + str(errMess)))
-                        #post_data.add(file_field, str(file_number))
     known_datatypes = dict()
     if '_datatypes' in post_data:
-        #logmessage(myb64unquote(post_data['_datatypes']))
         known_datatypes = json.loads(myb64unquote(post_data['_datatypes']))
     known_varnames = dict()
     if '_varnames' in post_data:
@@ -2821,7 +2527,6 @@ def index():
             key = myb64unquote(orig_key)
         except:
             raise DAError("invalid name " + str(orig_key))
-        #data = re.sub(r'"""', '', data)
         if key.startswith('_field_'):
             continue
         bracket_expression = None
@@ -2891,7 +2596,6 @@ def index():
             elif known_datatypes[real_key] in ['object', 'object_radio']:
                 if data == '':
                     continue
-                #logmessage("Got to here")
                 data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
             elif known_datatypes[real_key] in ['object_checkboxes'] and bracket_expression is not None:
                 if data not in ['True', 'False', 'None']:
@@ -2953,15 +2657,12 @@ def index():
     # if '_multiple_choice' in post_data and '_question_name' in post_data and post_data['_question_name'] in interview.questions_by_name and not interview.questions_by_name[post_data['_question_name']].is_generic:
     #     interview_status.populate(interview.questions_by_name[post_data['_question_name']].ask(user_dict, 'None', 'None'))
     # else:
-    #sys.stderr.write("4\n")
     interview.assemble(user_dict, interview_status)
-    #sys.stderr.write("5\n")
     if not interview_status.can_go_back:
         user_dict['_internal']['steps_offset'] = steps
     if len(interview_status.attachments) > 0:
         #logmessage("Updating attachment info")
         update_attachment_info(user_code, user_dict, interview_status, secret)
-    #sys.stderr.write("6\n")
     if interview_status.question.question_type == "restart":
         manual_checkout()
         url_args = user_dict['url_args']
@@ -3048,9 +2749,7 @@ def index():
         del user_dict['_internal']['answers'][interview_status.question.name]
     if changed and interview_status.question.interview.use_progress_bar:
         advance_progress(user_dict)
-    #sys.stderr.write("7\n")
     save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
-    #sys.stderr.write("8\n")
     if user_dict.get('multi_user', False) is True and encrypted is True:
         encrypted = False
         session['encrypted'] = encrypted
@@ -3080,7 +2779,6 @@ def index():
         # $(function () {
         #   $('.tabs a:last').tab('show')
         # })
-    #sys.stderr.write("9\n")
     if not is_ajax:
         scripts = standard_scripts()
         chat_available = user_dict['_internal']['livehelp']['availability']
