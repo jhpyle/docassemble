@@ -1,0 +1,116 @@
+modules:
+  - docassemble.base.core
+---
+mandatory: true
+code: |
+  multi_user = True
+---
+objects:
+  - aasdfasdf: DAObject
+  - basdfasdf: DAObject
+  - casdfasdf: DAObject
+  - dasdfasdf: DAObject
+  - easdfasdf: DAObject
+  - fasdfasdf: DAObject
+  - gasdfasdf: DAObject
+  - hasdfasdf: DAObject
+  - iasdfasdf: DAObject
+  - jasdfasdf: DAObject
+  - kasdfasdf: DAObject
+  - lasdfasdf: DAObject
+  - masdfasdf: DAObject
+  - nasdfasdf: DAObject
+  - oasdfasdf: DAObject
+  - pasdfasdf: DAObject
+  - qasdfasdf: DAObject
+  - rasdfasdf: DAObject
+  - sasdfasdf: DAObject
+  - tasdfasdf: DAObject
+  - uasdfasdf: DAObject
+  - vasdfasdf: DAObject
+  - wasdfasdf: DAObject
+  - xasdfasdf: DAObject
+  - yasdfasdf: DAObject
+  - zasdfasdf: DAObject
+  - aaasdfasdf: DAObject
+  - bbasdfasdf: DAObject
+  - ccasdfasdf: DAObject
+  - ddasdfasdf: DAObject
+  - eeasdfasdf: DAObject
+  - ffasdfasdf: DAObject
+  - ggasdfasdf: DAObject
+  - hhasdfasdf: DAObject
+  - iiasdfasdf: DAObject
+  - jjasdfasdf: DAObject
+  - kkasdfasdf: DAObject
+  - llasdfasdf: DAObject
+  - mmasdfasdf: DAObject
+  - aasdfasdfa: DAObject
+  - basdfasdfa: DAObject
+  - casdfasdfa: DAObject
+  - dasdfasdfa: DAObject
+  - easdfasdfa: DAObject
+  - fasdfasdfa: DAObject
+  - gasdfasdfa: DAObject
+  - hasdfasdfa: DAObject
+  - iasdfasdfa: DAObject
+  - jasdfasdfa: DAObject
+  - kasdfasdfa: DAObject
+  - lasdfasdfa: DAObject
+  - masdfasdfa: DAObject
+  - nasdfasdfa: DAObject
+  - oasdfasdfa: DAObject
+  - pasdfasdfa: DAObject
+  - qasdfasdfa: DAObject
+  - rasdfasdfa: DAObject
+  - sasdfasdfa: DAObject
+  - tasdfasdfa: DAObject
+  - uasdfasdfa: DAObject
+  - vasdfasdfa: DAObject
+  - wasdfasdfa: DAObject
+  - xasdfasdfa: DAObject
+  - yasdfasdfa: DAObject
+  - zasdfasdfa: DAObject
+  - aaasdfasdfa: DAObject
+  - bbasdfasdfa: DAObject
+  - ccasdfasdfa: DAObject
+  - ddasdfasdfa: DAObject
+  - eeasdfasdfa: DAObject
+  - ffasdfasdfa: DAObject
+  - ggasdfasdfa: DAObject
+  - hhasdfasdfa: DAObject
+  - iiasdfasdfa: DAObject
+  - jjasdfasdfa: DAObject
+  - kkasdfasdfa: DAObject
+  - llasdfasdfa: DAObject
+  - mmasdfasdfa: DAObject
+---
+question: |
+  What is the name of your cat?
+fields:
+  - Cat Name: cat_name
+---
+question: |
+  What is the name of your mouse?
+fields:
+  - Mouse Name: mouse_name
+---
+question: |
+  What is the name of your panda?
+fields:
+  - Mouse Name: panda_name
+---
+question: |
+  What is the name of your pumpkin?
+fields:
+  - Mouse Name: pumpkin_name
+---
+mandatory: true
+question: |
+  Your cat is named ${ cat_name }.
+
+  Your mouse is named ${ mouse_name }.
+
+  Your panda is named ${ panda_name }.
+
+  Your pumpkin is named ${ pumpkin_name }.

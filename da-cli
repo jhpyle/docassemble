@@ -66,9 +66,19 @@ def fix_web_sockets():
             elb.register_targets(TargetGroupArn=target_groups_arns[targetGroupWebSocket], Targets=[{'Id': server}])
 
 def start_up(the_count=1):
+    print "Creating EC2 instances"
     update_ec2_instances(the_count + 1)
+    print "Updating backend count"
     update_desired_count(serviceBackend, 1)
+    print "Updating app count"
     update_desired_count(serviceApp, the_count)
+    print "Waiting for targets to be registered"
+    while True:
+        web_servers = get_registered_targets(target_groups_arns[targetGroupWeb])
+        if len(web_servers) >= the_count:
+            break
+        time.sleep(2)
+    print "Registering targets for target group " + str(targetGroupWebSocket)
     fix_web_sockets()
 
 def shut_down():

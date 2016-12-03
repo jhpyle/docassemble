@@ -45,22 +45,31 @@ class DAObject(object):
             #logmessage("Found key " + str(key) + " with value " + str(value))
             setattr(self, key, value)
         return
-    # def __setstate__(self, state):
-    #     self.__dict__ = state
-    # def __getstate__(self):
-    #     return self.__dict__
+#     def __setstate__(self, state):
+# #        sys.stderr.write("__setstate__\n")
+#         self.__dict__ = state
+#     def __getstate__(self):
+# #        sys.stderr.write("__getstate__\n")
+#         return self.__dict__
+    # def __slots__(self):
+    #     attrs = ['has_nonrandom_instance_name', 'instanceName', 'attrList']
+    #     attrs.extend(self.attrList)
+    #     return attrs
     def __init__(self, *args, **kwargs):
         if len(args):
             thename = args[0]
+#            sys.stderr.write("__init__: " + thename + "\n")
             self.has_nonrandom_instance_name = True
         else:
             thename = get_unique_name()
+#            sys.stderr.write("__init__: " + thename + "\n")
             self.has_nonrandom_instance_name = False
-        self.instanceName = thename
+        self.instanceName = str(thename)
         self.attrList = list()
         self.init(**kwargs)
     def set_instance_name(self, thename):
         """Sets the instanceName attribute, if it is not already set."""
+#        sys.stderr.write("set_instance_name\n")
         if not self.has_nonrandom_instance_name:
             self.instanceName = thename
             self.has_nonrandom_instance_name = True
@@ -70,10 +79,16 @@ class DAObject(object):
     def _map_info(self):
         return None
     def __getattr__(self, thename):
-        if hasattr(self, thename) or thename == "__setstate__" or thename == "__getstate__" or thename == "__slots__":
-            return(object.__getattribute__(self, thename))
+        # sys.stderr.write("__getattr__: " + thename + "\n")
+        # if hasattr(self, thename):# or thename == "__setstate__" or thename == "__getstate__" or thename == "__slots__":
+        #     #sys.stderr.write("special __getattr__: " + thename + "\n")
+        #     return(object.__getattribute__(self, thename))
+        if thename.startswith('_'):
+            return object.__getattribute__(self, thename)
         else:
+            #var_name = object.__getattribute__(self, 'instanceName') + "." + thename
             var_name = object.__getattribute__(self, 'instanceName') + "." + thename
+#            sys.stderr.write("__getattr__: " + thename + "\n")
             raise NameError("name '" + var_name + "' is not defined")
             #return var_name
     def object_name(self):
@@ -100,17 +115,22 @@ class DAObject(object):
             self.attrList.append(name)
     def attribute_defined(self, name):
         """Returns True or False depending on whether the given attribute is defined."""
+#        sys.stderr.write("attribute_defined\n")
         return hasattr(self, name)
     def attr(self, name):
         """Returns the value of the given attribute, or None if the attribute is not defined"""
+#        sys.stderr.write("attr\n")
         return getattr(self, name, None)
     def __str__(self):
+#        sys.stderr.write("__str__\n")
         if hasattr(self, 'name'):
             return self.name
         return self.object_name()
     def __unicode__(self):
+#        sys.stderr.write("__unicode__\n")
         return unicode(self.__str__())
     def __dir__(self):
+#        sys.stderr.write("__dir__\n")
         return self.attrList
     def pronoun_possessive(self, target, **kwargs):
         """Returns "its <target>." """

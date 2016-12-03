@@ -335,6 +335,9 @@ def encrypt_dictionary(the_dict, secret):
     return iv + codecs.encode(encrypter.encrypt(pad(pickle.dumps(pickleable_objects(the_dict)))), 'base64').decode()
 
 def pack_dictionary(the_dict):
+    # sys.stderr.write("pack_dictionary keys:\n")
+    # for key in pickleable_objects(the_dict):
+    #     sys.stderr.write("  " + key + ": " + pprint.pformat(the_dict[key]) + "\n")
     return codecs.encode(pickle.dumps(pickleable_objects(the_dict)), 'base64').decode()
 
 def decrypt_dictionary(dict_string, secret):
