@@ -73,6 +73,7 @@ def start_up(the_count=1):
     print "Updating app count"
     update_desired_count(serviceApp, the_count)
     print "Waiting for targets to be registered"
+    target_groups_arns = get_target_groups()
     while True:
         web_servers = get_registered_targets(target_groups_arns[targetGroupWeb])
         if len(web_servers) >= the_count:

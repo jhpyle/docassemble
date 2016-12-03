@@ -110,7 +110,8 @@ function newCanvas(){
   }
   
   // setup canvas
-  ctx=document.getElementById("sigcanvas").getContext("2d");
+  // ctx=document.getElementById("sigcanvas").getContext("2d");
+  ctx = $("#sigcanvas")[0].getContext("2d");
   ctx.strokeStyle = color;
   ctx.lineWidth = theWidth;	
   

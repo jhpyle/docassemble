@@ -2761,7 +2761,7 @@ def index():
                             file_number = get_new_file_number(session.get('uid', None), filename, yaml_file_name=yaml_filename)
                             extension, mimetype = get_ext_and_mimetype(filename)
                             saved_file = SavedFile(file_number, extension=extension, fix=True)
-                            temp_file = tempfile.NamedTemporaryFile(suffix='.' + extension)
+                            temp_file = tempfile.NamedTemporaryFile(suffix='.' + extension, delete=False)
                             the_file.save(temp_file.name)
                             process_file(saved_file, temp_file.name, mimetype, extension)
                             files_to_process.append((filename, file_number, mimetype, extension))

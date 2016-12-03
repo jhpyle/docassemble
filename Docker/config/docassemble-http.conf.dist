@@ -1,3 +1,4 @@
+#ServerName {{DAHOSTNAME}}
 <VirtualHost *:80>
     ServerAdmin webmaster@localhost
     #ServerName {{DAHOSTNAME}}
