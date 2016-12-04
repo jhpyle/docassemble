@@ -96,6 +96,7 @@ user_invite|id|integer||nextval('user_invite_id_seq'::regclass)
 user_invite|role_id|integer||
 user_invite|invited_by_user_id|integer||
 user_invite|token|character varying|100|''::character varying
+user_invite|email|character varying|255|
 chatlog|id|integer||nextval('chatlog_id_seq'::regclass)
 chatlog|filename|text||
 chatlog|key|character varying|250|
