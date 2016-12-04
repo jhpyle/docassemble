@@ -240,8 +240,7 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
-    su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.create_tables $DA_CONFIG_FILE" www-data
-    python /usr/share/docassemble/webapp/fix-postgresql-tables.py
+    su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.fix_postgresql_tables $DA_CONFIG_FILE && python -m docassemble.webapp.create_tables $DA_CONFIG_FILE" www-data
 fi
 
 if [ -f /etc/syslog-ng/syslog-ng.conf ] && [ ! -f /usr/share/docassemble/webapp/syslog-ng-orig.conf ]; then
