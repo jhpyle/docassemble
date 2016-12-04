@@ -441,8 +441,8 @@ sudo a2dismod ssl
 # <a name="setup"></a>Setting up the SQL server
 
 `docassemble` uses a SQL database.  These instructions assume you are
-using [PostgreSQL].  Set up the database by running the following
-commands.
+using [PostgreSQL] locally.  Set up the database by running the
+following commands.
 
 {% highlight bash %}
 echo "create role docassemble with login password 'abc123'; create database docassemble owner docassemble;" | sudo -u postgres psql
@@ -455,7 +455,7 @@ called `docassemble` with the password `abc123`, and note that the
 contains these same values under the [`db`] directive.
 
 (If you decide to store your [configuration] file in a location other
-than `/usr/share/docassemble/config/config.yml`, note that the
+than `/usr/share/docassemble/config/config.yml`, the
 `docassemble.webapp.create_tables` module will take the configuration
 file path as a command line argument.)
 
@@ -708,10 +708,13 @@ pip install --upgrade \
 ./docassemble_base \
 ./docassemble_demo \
 ./docassemble_webapp
+python -m docassemble.webapp.fix_postgresql_tables
+python -m docassemble.webapp.create_tables
 exit
 {% endhighlight %}
 
-If you get any errors while upgrading, try doing the following first:
+If you get any errors while upgrading with `pip`, try doing the
+following first:
 
 {% highlight bash %}
 sudo su www-data
@@ -723,16 +726,18 @@ pip uninstall docassemble.webapp
 {% endhighlight %}
 
 Sometimes, new versions of docassemble require additional database
-tables or additional columns in tables.  Normally, the installation
-script will take care of these issues, but if there are problems, you
-can reset your database by following these steps.
-
-Run the following commands as root:
+tables or additional columns in tables.  The
+[`docassemble.webapp.fix_postgresql_tables`] module adds new columns
+to existing database tables, while the
+[`docassemble.webapp.create_tables`] module creates new tables.  (The
+latter works on non-[PostgreSQL] databases, but the former does not.)
+Hopefully, these modules will take care of all necessary changes to
+the database, but if there are problems, you can reset your database
+by running the following commands as root:
 
 {% highlight bash %}
-su -c "dropdb docassemble" postgres
-su -c "createdb -O docassemble docassemble" postgres
-su -c "/usr/share/docassemble/local/bin/python -m docassemble.webapp.create_tables" www-data
+echo "drop database docassemble; create database docassemble owner docassemble;" | sudo -u postgres psql
+sudo -H -u www-data bash -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.create_tables"
 rm -rf /usr/share/docassemble/files/0*
 {% endhighlight %}
 
@@ -794,6 +799,8 @@ files.  In this case, you will need to manually reinstall
 [`docassemble.base`]: {{ site.github.repository_url }}/tree/master/docassemble_base
 [`docassemble.demo`]: {{ site.github.repository_url }}/tree/master/docassemble_demo
 [`docassemble.webapp`]: {{ site.github.repository_url }}/tree/master/docassemble_webapp
+[`docassemble.webapp.fix_postgresql_tables`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/fix_postgresql_tables.py
+[`docassemble.webapp.create_tables`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/create_tables.py
 [VoiceRSS]: http://www.voicerss.org/
 [Twilio]: https://twilio.com
 [multi-server arrangement]: {{ site.baseurl }}/docs/scalability.html
