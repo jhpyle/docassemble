@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Demo: Are You Sure? - a dirty forms jQuery Plugin</title>
+
+    <!-- 
+
+    We'll use an old version of jQuery to show we're backwards compatible. In 
+    production we recommend using a later version. e.g.
+
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+
+    -->
+
+    <script src="http://code.jquery.com/jquery-1.4.2.min.js"></script>
+    <script src="../jquery.are-you-sure.js"></script>
+    <script src="../ays-beforeunload-shim.js"></script>
+    <script>
+
+      $(function() {
+
+        // Example 1 - ... in one line of code
+        $('#example-1-form').areYouSure();
+
+
+        // Example 2 - ignore a dynamic field
+        $('#example-2-form').areYouSure();
+
+        var defaultPickup15min = new Date((new Date()).getTime() + 15 * 60000);
+        $('#pickup').val(defaultPickup15min.getHours() 
+                          + ':' + defaultPickup15min.getMinutes());
+
+
+        // Example 3 - custom message and hooking the dirty change events
+        $('#example-3-form').areYouSure(
+          {
+            message: "Did you forget to save your standard coffee order?"
+          }
+        );
+        // Enable save button only if the form is dirty - using events.
+        $('#example-3-form').bind('dirty.areYouSure', function() {
+          $(this).find('input[type="submit"]').removeAttr('disabled');
+        });
+        $('#example-3-form').bind('clean.areYouSure', function() {
+          $(this).find('input[type="submit"]').attr('disabled', 'disabled');
+        });
+
+
+        // Example 4 - dynamically change and add form fields.
+        $('#example-4-form').areYouSure(
+          {
+            message: "Did you forget to submit your coffee order?"
+          }
+        );
+
+        $('#example-4-lastorder').click(function() {
+          // ... set our saved coffee type.
+          $('#example-4-coffee').val('espresso');
+          // Because we've made a change from our own JavaScript, we need to fire
+          // off manual 'form check'.
+          $('#example-4-form').trigger('checkform.areYouSure');
+        });
+
+        // If it's warm enough, offer an iced coffee special.
+        $.getJSON("http://api.openweathermap.org/data/2.5/weather?q=Melbourne,AU&mode=json&units=metric&callback=?", 
+          function(data) {
+            var temp = data.main.temp;
+            if (temp > 5) {
+              $('#example-4-special').append('<p>It\'s currently ' 
+                  + temp + 'C in Melbourne. Ice it up!</p>'); 
+              $('#example-4-special').append('<input type="checkbox" name="make-it-iced" value="true" />' 
+                  + ' Make it an iced coffee<br />');
+
+              // Trigger rescan event on the form so we start tracking the new field.
+              $('#example-4-form').trigger('rescan.areYouSure');
+            }
+          }
+        );
+        
+
+        /*
+         * Example 5
+         *  - extra shots button to enable/disable shots options
+         *  - like/unlike button (changing hidden form field value)
+         *  - hook dirty change event to enable/disable submit (using method), 
+         *    to more easily demonstrate when the form is dirty
+         */
+        $('#example-5-extra-shots').click(function() {
+          // we trigger a change event on the fields so that the AreYouSure event handler is called
+          $('#example-5-form input[name=shots]').removeAttr('disabled').change();
+          $('#example-5-extra-shots').hide();
+          $('#example-5-shots-options').show();
+          return false;
+        });
+        $('#example-5-like-button').click(function() {
+          var currentLike = $('#example-5-like').val() == 'true';
+          var newLike = !currentLike;
+          // we trigger a change event on the fields so that the areYouSure event handler is called
+          $('#example-5-like').val(newLike).change();
+          $('#example-5-like-button').text(newLike ? 'Unlike' : 'Like');
+          return false;
+        });
+        $('#example-5-form').areYouSure({
+          change: function() {
+            // Enable save button only if the form is dirty.
+            if ($(this).hasClass('dirty')) {
+              $(this).find('input[type="submit"]').removeAttr('disabled');
+            } else {
+              $(this).find('input[type="submit"]').attr('disabled', 'disabled');
+            }
+          }
+        });
+
+        // Example 6 - HTML5 input types
+        $('#example-6-form').areYouSure();
+
+        // Example 7 - ... in one line of code for the form and some more optional to toggle disabled state of the save button
+        $('#example-7-form').areYouSure();
+        $('#example-7-save-button').click(function () {
+            $('#example-7-form').trigger('reinitialize.areYouSure');
+        });
+        // code below is optional to handle disabled state of the save button
+        $('#example-7-form').bind('dirty.areYouSure', function () {
+            // Enable save button only as the form is dirty.
+            $('#example-7-save-button').attr({ 'disabled': false });
+        });
+        $('#example-7-form').bind('clean.areYouSure', function () {
+            // Form is clean so nothing to save - disable the save button.
+            $('#example-7-save-button').attr({ 'disabled': true });
+        });
+      });
+
+    </script>
+
+    <style type="text/css">
+      body {
+        font-family: myriad-pro-1, myriad-pro-2, 'Lucida Grande', 'Arial', sans-serif;
+        margin: 25px;
+      }
+
+      form {
+        width: 350px;
+        border: 1px solid #AA5303;
+        padding: 10px 20px;
+        background-image: -webkit-linear-gradient(top, rgba(170,83,3, 0.1), rgba(170,83,3, 0.5));
+        background-image: -moz-linear-gradient(top, rgba(170,83,3, 0.1), rgba(170,83,3, 0.5));
+        background-image: -ms-linear-gradient(top, rgba(170,83,3, 0.1), rgba(170,83,3, 0.5));
+        background-image: -o-linear-gradient(top, rgba(170,83,3, 0.1), rgba(170,83,3, 0.5));
+        background-image: linear-gradient(top, rgba(170,83,3, 0.1), rgba(170,83,3, 0.5));
+        border-radius: 5px;
+      }
+
+      /* A bit of custom styling on example 3 */
+      #example-3-form.dirty, #example-4-form.dirty {
+        box-shadow: 0 0 8px rgba(255, 0, 0, 1);
+        -webkit-box-shadow: 0 0 8px rgba(255, 0, 0, 1); 
+        -moz-box-shadow: 0 0 8px rgba(255, 0, 0, 1);
+        border:1px solid rgba(255,0,0, 0.8);
+      }
+
+      form h2 {
+        font-size: 22px;
+      }
+
+      form > div {
+        padding: 8px;
+        font-size: 12px;
+      }
+      form > div input[type="text"],
+      form > div input[type="color"],
+      form > div input[type="date"],
+      form > div input[type="datetime"],
+      form > div input[type="datetime-local"],
+      form > div input[type="email"],
+      form > div input[type="month"],
+      form > div input[type="number"],
+      form > div input[type="range"],
+      form > div input[type="search"],
+      form > div input[type="tel"],
+      form > div input[type="time"],
+      form > div input[type="url"],
+      form > div input[type="week"],
+      form > div input:not([type]),
+      form > div textarea,
+      form > div select,
+      form > div button {
+        float: right;
+        width: 200px;
+      }
+      
+      form > div  input[type="radio"],
+      form > div  input[type="checkbox"] {
+        display: inline-block;
+        margin-left: 130px;
+      }
+
+      form > div input[type="submit"] {
+        float: right;
+      }
+      form > div.buttons {
+        clear: both;
+        padding-bottom: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>jQuery Plugin Demo: Are You Sure?</h1>
+    <p>
+      This page hosts a demo of the <a href="https://github.com/codedance/jquery.AreYouSure">jQuery Are-You-Sure</a> plugin (<code>jquery.are-you-sure.js</code>).  
+    </p>
+    <p>
+      <i>Are-you-sure</i> is simple light-weight "dirty forms" JQuery Plugin for modern browsers. It helps prevent users from loosing unsaved form changes.
+    </p>
+    <p>
+      <strong>Features:</strong>
+      <ul>
+        <li>Light weight - only the features you need!</li>
+        <li>Dependency free.</li>
+        <li>Correct state management - if a user edits then restores a value, the form is not considered dirty.</li>
+        <li>Easy to understand - less than a "terminal screen" of code!</li>
+        <li>... and <a href="https://github.com/codedance/jquery.AreYouSure">more</a>.</li>
+      </ul>
+    </p>
+
+    <h2>Example 1: It's simple!</h2>
+    <p>
+      This example shows how easy it is to add a dirty check to your form(s) with one line 
+      of code. (View the page's source)
+    </p>
+
+    <form id="example-1-form" name="coffeeOrder1" method="post">
+      <h2>Enter Your Coffee Order</h2>
+      <div>
+        <label for="example-1-coffee">Coffee</label>
+        <select name="coffee" id="example-1-coffee">
+          <option value="espresso">Espresso</option>
+          <option value="dbl-espresso">Caffe Doppio</option>
+          <option value="latte">Caffe Latte</option>
+          <option value="macciato">Machhiato</option>
+          <option value="cappuccino">Cappuccino</option>
+        </select>
+      </div>
+      <div>
+        <label>Shots</label><br />
+        <input type="radio" name="shots" value="1" checked /> 1 Shot - Standard<br />
+        <input type="radio" name="shots" value="2" /> 2 Shots - Morning wakeup!<br />
+        <input type="radio" name="shots" value="3" /> 3 Shots - Overdrive!<br />
+      </div>
+      <div>
+        <label for="example-1-sugar">Sugar</label> <input type="text" name="sugar" value="0" id="example-1-sugar" />
+      </div>
+      <div>
+        <label for="example-1-instructions">Special Instructions</label>
+        <textarea name="instructions" rows="5" id="example-1-instructions"></textarea>
+      </div>
+
+      <div class="buttons">
+        <input type="checkbox" name="remember" value="true" /> Remember my order<br />
+        <input type="submit" value="Submit">
+        <input type="reset" value="Reset">
+      </div>
+      <div>
+        <p>... or visit <a href="http://www.google.com/">Google</a> or close the window without saving!</p>
+      </div>
+    </form>
+
+    <h2>Example 2: Ignore the unimportant!</h2>
+    <p>
+      This example highlights how to disregard a field from the dirty check. In this form
+      the first field is dynamically populated and hence a change on this field should <em>not</em> 
+      mark the form as dirty.
+    </p>
+    <form id="example-2-form" name="coffeeOrder2" method="post">
+      <h2>Enter Your Coffee Order</h2>
+      <div>
+        <!-- The ays-ignore class means a change on this field is not considered "dirty" -->
+        <label for="pickup">Pickup Time</label>
+        <input class="ays-ignore" type="text" name="pickup" id="pickup" />
+        <!-- or you can use a data attribute like this: 
+        <label for="pickup">Pickup Time</label> <input data-ays-ignore="true" type="text" name="pickup" id="pickup" />
+        -->
+      </div>
+      <div>
+        <label for="example-2-coffee">Coffee</label>
+        <select name="coffee" id="example-2-coffee">
+          <option value="espresso">Espresso</option>
+          <option value="dbl-espresso">Caffe Doppio</option>
+          <option value="latte">Caffe Latte</option>
+          <option value="macciato">Machhiato</option>
+          <option value="cappuccino">Cappuccino</option>
+        </select>
+      </div>
+      <div>
+        <label>Shots</label><br />
+        <input type="radio" name="shots" value="1" checked /> 1 Shot - Standard<br />
+        <input type="radio" name="shots" value="2" /> 2 Shots - Morning wakeup!<br />
+        <input type="radio" name="shots" value="3" /> 3 Shots - Overdrive!<br />
+      </div>
+      <div>
+        <label for="example-2-sugar">Sugar</label> <input type="text" name="sugar" value="0" id="example-2-sugar" />
+      </div>
+      <div>
+        <label for="example-2-instructions">Special Instructions</label>
+        <textarea name="instructions" rows="5" id="example-2-instructions"></textarea>
+      </div>
+
+      <div class="buttons">
+        <input type="checkbox" name="remember" value="true" /> Remember my order<br />
+        <input type="submit" value="Submit">
+      </div>
+      <div>
+        <p>... or visit <a href="http://www.google.com/">Google</a> or close the window without saving!</p>
+      </div>
+    </form>
+
+
+    <h2>Example 3: Lets be intelligent!</h2>
+    <p>
+      This is a more advanced example.  The <code>dirty</code> and <code>clean</code> change events are 
+      intercepted so the save button is only enabled if the form is dirty (i.e. something to save). 
+      It also demonstrates how to customize the warning message and change the style of a dirty 
+      form (CSS styling using the <code>.dirty</code> class).
+    </p>
+    <form id="example-3-form" name="coffeeOrder3" method="post">
+      <h2>Update My Standard Order</h2>
+      <div>
+        <label for="example-3-coffee">Coffee</label>
+        <select name="coffee" id="example-3-coffee">
+          <option value=""></option>
+          <option value="cappuccino">Cappuccino</option>
+          <option value="espresso">Espresso</option>
+          <option value="dbl-espresso">Caffe Doppio</option>
+          <option value="latte">Caffe Latte</option>
+          <option value="macciato">Machhiato</option>
+        </select>
+      </div>
+      <div>
+        <label>Shots</label><br />
+        <input type="radio" name="shots" value="1" /> 1 Shot - Standard<br />
+        <input type="radio" name="shots" value="2" checked /> 2 Shots - Morning wakeup!<br />
+        <input type="radio" name="shots" value="3" /> 3 Shots - Overdrive!<br />
+      </div>
+      <div>
+        <label for="example-3-sugar">Sugar</label>
+        <input type="text" name="sugar" value="1" id="example-3-sugar" />
+      </div>
+      <div>
+        <label for="example-3-instructions">Special Instructions</label>
+        <textarea name="instructions" rows="5" id="example-3-instructions">No chocolate please</textarea>
+      </div>
+
+      <div class="buttons">
+        <input type="submit" value="Save" disabled="disabled">
+      </div>
+      <div>
+        <p>... or visit <a href="http://www.google.com/">Google</a> or close the window without saving!</p>
+      </div>
+    </form>
+
+    <h2>Example 4: Lets be dynamic!</h2>
+    <p>
+      In this example we'll dymaically add a field and fire off the <code>rescan</code> event. After
+      the rescan, Are-You-Sure will start looking for changes on the new fields as well.
+    </p>
+    <form id="example-4-form" name="coffeeOrder4" method="post">
+      <h2>Order Coffee For Pickup Now</h2>
+      <div>
+        <a id="example-4-lastorder" href="javascript:void(0);">Set my preferences from my last order</a><br />
+      </div>
+      <div>
+        <label for="example-4-coffee">Coffee</label>
+        <select name="coffee" id="example-4-coffee">
+          <option value="cappuccino">Cappuccino</option>
+          <option value="espresso">Espresso</option>
+          <option value="dbl-espresso">Caffe Doppio</option>
+          <option value="latte">Caffe Latte</option>
+        </select>
+      </div>
+      <div id="example-4-special"></div>
+      <div class="buttons">
+        <input type="submit" value="Place Order">
+      </div>
+      <div>
+        <p>... or visit <a href="http://www.google.com/">Google</a> or close the window without saving!</p>
+      </div>
+    </form>
+
+    <h2>Example 5: Edge cases</h2>
+    <p>
+      This example demonstrates tracking of hidden and disabled form elements that are changed by non-input elements.
+      E.g.:
+    </p>
+    <ul>
+      <li>clicking a link or non-input button that changes the value of a hidden form field, or</li>
+      <li>
+        clicking a link or non-input button that enables or disables some form fields (which has an effect on whether
+        or not those fields will be submitted with the form, despite the values not changing).
+      </li>
+    </ul>
+    <form id="example-5-form" name="coffeeOrder5" method="post">
+      <h2>Update My Standard Order</h2>
+      <div>
+        <label for="example-5-coffee">Coffee</label>
+        <select name="coffee" id="example-3-coffee">
+          <option value="cappuccino">Cappuccino</option>
+          <option value="espresso">Espresso</option>
+          <option value="dbl-espresso">Caffe Doppio</option>
+          <option value="latte">Caffe Latte</option>
+          <option value="macciato">Machhiato</option>
+        </select>
+      </div>
+      <div>
+        <label>Shots</label>
+        <!--
+          The visually hidden "shots" radio buttons are disabled and would not normally be submitted with the form.
+          Clicking the following button will visually show and enable these buttons, resulting in a form state change
+          (and hence the form is considered dirty) without the values having changed.
+        -->
+        <button id="example-5-extra-shots">I want extra shots</button>
+        <div id="example-5-shots-options" style="display: none;">
+          <input type="radio" name="shots" value="1" disabled /> 1 Shot - Standard<br />
+          <input type="radio" name="shots" value="2" disabled /> 2 Shots - Morning wakeup!<br />
+          <input type="radio" name="shots" value="3" disabled /> 3 Shots - Overdrive!<br />
+        </div>
+      </div>
+      <div>
+        <label>Do you like us?</label>
+        <input type="hidden" name="like" value="false" id="example-5-like" />
+        <button id="example-5-like-button">Like</button>
+      </div>
+      <div class="buttons">
+        <input type="submit" value="Save" disabled="disabled">
+      </div>
+      <div>
+        <p>... or visit <a href="http://www.google.com/">Google</a> or close the window without saving!</p>
+      </div>
+    </form>
+
+    <h2>Example 6: HTML5 inputs!</h2>
+    <p>
+      This example shows support for HTML5 input types. It's not a coffee order form,
+      but you need coffee if you're working with HTML5 :-)
+    </p>
+
+    <form id="example-6-form" name="coffeeOrder6" method="post">
+      <h2>Doing HTML5? You'll need coffee!</h2>
+      <div>          
+          <label for="example-6-color">color</label>
+          <input type="color" name="example-6-color" />
+      </div>
+      <div>          
+          <label for="example-6-date">date</label>
+          <input type="date" name="example-6-date" />
+      </div>
+      <div>          
+          <label for="example-6-datetime">datetime</label>
+          <input type="datetime" name="example-6-datetime" />
+      </div>
+      <div>          
+          <label for="example-6-datetime-local">datetime-local</label>
+          <input type="datetime-local" name="example-6-datetime-local" />
+      </div>
+      <div>          
+          <label for="example-6-email">email</label>
+          <input type="email" name="example-6-email" />
+      </div>
+      <div>          
+          <label for="example-6-month">month</label>
+          <input type="month" name="example-6-month" />
+      </div>
+      <div>          
+          <label for="example-6-number">number</label>
+          <input type="number" name="example-6-number" />
+      </div>
+      <div>          
+          <label for="example-6-range">range</label>
+          <input type="range" name="example-6-range" />
+      </div>
+      <div>          
+          <label for="example-6-search">search</label>
+          <input type="search" name="example-6-search" />
+      </div>
+      <div>          
+          <label for="example-6-tel">tel</label>
+          <input type="tel" name="example-6-tel" />
+      </div>
+      <div>          
+          <label for="example-6-time">time</label>
+          <input type="time" name="example-6-time" />
+      </div>
+      <div>          
+          <label for="example-6-url">url</label>
+          <input type="url" name="example-6-url" />
+      </div>
+      <div>          
+          <label for="example-6-week">week</label>
+          <input type="week" name="example-6-week" />
+      </div>
+      <div>
+        <label for="example-6-select">select/optgroup</label>
+        <select>
+         <optgroup label="Beans">
+           <option value="india">India</option>
+           <option value="indonesia" selected="selected">Indonesia</option>
+           <option value="brazil">Brazil</option>
+         </optgroup>
+         <optgroup label="Roast">
+            <option value="l">Light</option>
+            <option value="m">Medium</option>
+            <option value="h">Heavy</option>
+         </optgroup>
+        </select>
+      </div>
+      <div>
+        <label for="example-6-mselect">multi select</label>
+        <select multiple>
+           <option value="arabica">Arabica</option>
+           <option value="arabica">Peaberry</option>
+           <option value="malabar " selected="selected">Malabar</option>
+           <option value="robusta ">Robusta</option>
+        </select>
+      </div>
+      <div style="clear:both;"></div>
+      <div>
+          <label for="example-6-plain">plain old field</label>
+          <input name="example-6-plain" />
+      </div>
+      
+      <div class="buttons">
+        <input type="submit" value="Submit">
+        <input type="reset" value="Reset">
+      </div>
+      <div>
+        <p>... or visit <a href="http://www.google.com/">Google</a> or close the window without saving!</p>
+      </div>
+    </form>
+    <h2>Example 7: Mark current state as not dirty!</h2>
+    <p>
+        This example shows how you can mark the current state as not dirty. Handy for AJAX forms 
+        we're you're managing your own submits.
+    </p>
+
+    <form id="example-7-form" name="coffeeOrder7" method="post">
+        <h2>Tell us your default coffee</h2>
+        <div>
+            <label for="example-7-coffee">Default coffee</label>
+            <select name="coffee" id="example-7-coffee">
+                <option value="espresso">Espresso</option>
+                <option value="dbl-espresso">Caffe Doppio</option>
+                <option value="latte">Caffe Latte</option>
+                <option value="macciato">Machhiato</option>
+                <option value="cappuccino">Cappuccino</option>
+            </select>
+        </div>
+        <div>
+            <button id="example-7-save-button" disabled="disabled">Save without submit</button>
+        </div>
+        <div class="buttons">
+            <input type="submit" value="Submit">
+        </div>
+        <div>
+            <p>... or visit <a href="http://www.google.com/">Google</a> or close the window without saving!</p>
+        </div>
+    </form>
+
+    <p>
+      This jQuery plugin is developed by <a href="https://github.com/codedance">Chris Dance</a> 
+      at <a href="http://www.papercut.com/">PaperCut Software</a> - Are-You-Sure is used in
+      PaperCut's printing management software and it has been open sourced with help of
+      Tom, Jack and Matt from PaperCut's dev team.
+    </p>
+
+  </body>
+</html>

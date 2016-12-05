@@ -1,0 +1,39 @@
+{
+    "name": "are-you-sure",
+    "title": "Are You Sure? - a dirty forms check plugin",
+    "description": "Are-you-sure is simple light-weight dirty forms JQuery Plugin for modern browsers. It helps prevent users from loosing unsaved form changes by prompting the user to save/submit. It's dependency free and designed for modern browsers... just the features you need and nothing more! See the project page and demo for usage and examples.",
+    "keywords": [
+        "form",
+        "dirty",
+        "field",
+        "change",
+        "save",
+        "save-check",
+        "save-warning"
+    ],
+    "version": "1.9.0",
+    "author": {
+        "name": "Chris Dance (codedance) at PaperCut Software",
+        "url": "https://github.com/codedance"
+    },
+    "maintainers": [
+        {
+            "name": "Chris Dance",
+            "email": "chris.dance@papercut.com",
+            "url": "http://www.papercut.com/"
+        }
+    ],
+    "licenses": [
+        {
+            "type": "MIT",
+            "url": "https://github.com/codedance/jquery.AreYouSure/blob/master/README.md"
+        }
+    ],
+    "bugs": "https://github.com/codedance/jquery.AreYouSure/issues",
+    "homepage": "https://github.com/codedance/jquery.AreYouSure",
+    "docs": "https://github.com/codedance/jquery.AreYouSure",
+    "demo": "http://www.papercut.com/products/free_software/are-you-sure/demo/are-you-sure-demo.html",
+    "dependencies": {
+        "jquery": ">=1.4.2"
+    }
+}

@@ -1,0 +1,45 @@
+{
+  "name": "jquery.AreYouSure",
+  "description": "A light-weight jQuery \"dirty forms\" Plugin - it monitors HTML forms and alerts users to unsaved changes if they attempt to close the browser or navigate away from the page. (Are you sure?)",
+  "homepage": "https://github.com/codedance/jquery.AreYouSure",
+  "author": "Chris Dance <chris.dance@papercut.com> (https://github.com/codedance)",
+  "contributors": [
+    "Tom Clift <tom.clift@papercut.com> (https://github.com/tclift)",
+    "Jon Egerton <jon@ja2.co.uk> (http://www.jonegerton.com/)",
+    "Scadoodles (https://github.com/Scadoodles)",
+    "Albin Sunnanbo (https://github.com/albinsunnanbo)",
+    "Marc Sutton <ashre@iname.com> (http://www.codev.co.uk)"
+  ],
+  "version": "1.9.0",
+  "license": "MIT/GPLv2",
+  "keywords": [ "dirty", "form", "onbeforeunload", "save", "check" ],
+  "main": "jquery.are-you-sure.js",
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codedance/jquery.AreYouSure"
+  },
+  "bugs": {
+    "url": "https://github.com/codedance/jquery.AreYouSure/issues"
+  },
+  "dependencies": {
+    "jquery": ">=1.4.2"
+  },
+  "devDependencies": {
+    "bower": "^1.3.1",
+    "grunt": "^0.4.5",
+    "grunt-cli": "^0.1.13",
+    "grunt-karma": "^0.8.3",
+    "karma-chrome-launcher": "^0.1.4",
+    "karma-jasmine": "^0.2.2",
+    "karma-ie-launcher": "^0.1.5",
+    "karma-firefox-launcher": "^0.1.3",
+    "karma-safari-launcher": "^0.1.1"
+  },
+  "scripts": {
+    "postinstall": "node_modules/.bin/bower install",
+    "test": "node_modules/.bin/grunt test"
+  }
+}

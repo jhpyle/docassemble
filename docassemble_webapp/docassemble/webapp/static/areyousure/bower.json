@@ -1,0 +1,30 @@
+{
+  "name": "jquery.are-you-sure",
+  "version": "1.9.0",
+  "homepage": "https://github.com/codedance/jquery.AreYouSure",
+  "authors": [
+    "CodeDance <chris.dance@papercut.com>"
+  ],
+  "description": "A light-weight jQuery 'dirty forms' Plugin - it monitors html forms and alerts users to unsaved changes if they attempt to close the browser or navigate away from the page. (Are you sure?)",
+  "main": "jquery.are-you-sure.js",
+  "keywords": [
+    "form",
+    "dirty",
+    "field",
+    "change",
+    "save-check",
+    "are-you-sure",
+    "save-warning"
+  ],
+  "license": "MIT/GPLv2",
+  "ignore": [
+    "**/.*",
+    "demo"
+  ],
+  "dependencies": {
+    "jquery": ">=1.4.2"
+  },
+  "devDependencies": {
+    "jasmine-jquery": "~2.0.3"
+  }
+}
