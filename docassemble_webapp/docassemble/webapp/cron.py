@@ -83,6 +83,7 @@ def run_cron(cron_type):
             if cron_type_to_use not in interview.questions:
                 continue
             if re.search(r'_background$', cron_type_to_use):
+                #sys.stderr.write("  Spawning bg task: " + str(cron_type_to_use) + "\n")
                 new_task = docassemble.webapp.worker.background_action.delay(item['filename'], user_info, item['key'], None, None, None, {'action': cron_type_to_use, 'arguments': dict()})
             else:
                 try:
@@ -102,6 +103,7 @@ def run_cron(cron_type):
                     elif interview_status.question.question_type in ["backgroundresponse"]:
                         pass
                     elif interview_status.question.question_type in ["backgroundresponseaction"]:
+                        #sys.stderr.write("  Got background response action\n")
                         new_action = interview_status.question.action
                         interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=item['key'], secret=None, yaml_filename=item['filename'], url=None, url_root=None, action=new_action['action'], arguments=new_action['arguments'], interface='cron'))
                         obtain_lock(session_code, yaml_filename)
@@ -126,10 +128,10 @@ def run_cron(cron_type):
                     continue
             
 if __name__ == "__main__":
-    if cron_type == 'cron_daily':
-        clear_old_interviews()
     with app.app_context():
+        if cron_type == 'cron_daily':
+            clear_old_interviews()
         run_cron(cron_type)
-    db.engine.dispose()
+        db.engine.dispose()
     sys.exit(0)
 

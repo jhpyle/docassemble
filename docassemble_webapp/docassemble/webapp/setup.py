@@ -1,4 +1,4 @@
-from docassemble.webapp.app_and_db import app
+from docassemble.webapp.app_object import app
 from docassemble.base.config import daconfig
 import docassemble.webapp.database
 app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')

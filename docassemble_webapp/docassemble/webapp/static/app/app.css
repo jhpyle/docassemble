@@ -775,3 +775,7 @@ img.da-spinner {
     margin-left: -16px;
     z-index: 2000;
 }
+
+.fullwidth + label {
+    width: 100%;
+}

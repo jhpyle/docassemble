@@ -1177,7 +1177,7 @@ def add_validation(extra_scripts, validation_rules):
               name: 'ajax',
               value: '1'
           }).appendTo($(form));
-          iframe.load(function(){
+          iframe.bind('load', function(){
             setTimeout(function(){
               daProcessAjax($.parseJSON($("#uploadiframe").contents().text()), form);
             }, 0);

@@ -20,9 +20,15 @@ event: cron_hourly
 code: |
   response("Cron hourly was called.  Counter is " + str(counter) + ".  Last access minutes is " + str(last_access_minutes()) + ".  Last access days is " + str(last_access_days()) + ".  Last access hours is " + str(last_access_hours()) + ".")
 ---
+event: cron_daily
+code: |
+  import sys
+  sys.stderr.write("Should delete this.\n")
+  command('exit')
+---
 event: set_status
 code: |
-  if 'status' in argion_arguments():
+  if 'status' in action_arguments():
     status = action_argument('status')
   response(status)
 ---
@@ -30,7 +36,8 @@ mandatory: true
 question: |
   The current status is ${ status } and the counter is ${ counter }.
 subquestion: |
-  ${ last_access_minutes() }
+  Minutes since last access: ${ last_access_minutes() }
+  
   Set the status to:
 
   * [normal](${ interview_url_action('set_status', status='normal') })

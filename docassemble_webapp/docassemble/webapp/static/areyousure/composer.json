@@ -1,0 +1,25 @@
+{
+    "name": "codedance/jquery-areyousure",
+    "type": "component",
+    "description": "A light-weight jQuery \"dirty forms\" Plugin",
+    "keywords": [
+        "jquery",
+        "form"
+    ],
+    "homepage": "https://github.com/codedance/jquery.AreYouSure",
+    "license": "MIT",
+    "require": {
+        "robloach/component-installer": "*",
+        "components/jquery": ">=1.9.1"
+    },
+    "extra": {
+        "component": {
+            "scripts": [
+                "jquery.are-you-sure.js"
+            ],
+            "files": [
+                "jquery.are-you-sure.js"
+            ]
+        }
+    }
+}

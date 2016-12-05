@@ -1,4 +1,4 @@
-from docassemble.webapp.db_only import db
+from docassemble.webapp.db_object import db
 from flask_user import UserMixin
 from docassemble.base.config import daconfig, dbtableprefix
 

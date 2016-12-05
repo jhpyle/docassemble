@@ -76,7 +76,7 @@ baz.
 
 var randomStr = myMod.randomElt(myMod.strList);
 var randomInt = myMod.randomElt(myMod.intList);
-</textarea></p>
+</textarea></form>
 
 <p>Demonstrates integration of <a href="http://ternjs.net/">Tern</a>
 and CodeMirror. The following keys are bound:</p>
@@ -109,8 +109,8 @@ overview.</p>
   }
 
   var server;
-  getURL("//ternjs.net/defs/ecma5.json", function(err, code) {
-    if (err) throw new Error("Request for ecma5.json: " + err);
+  getURL("//ternjs.net/defs/ecmascript.json", function(err, code) {
+    if (err) throw new Error("Request for ecmascript.json: " + err);
     server = new CodeMirror.TernServer({defs: [JSON.parse(code)]});
     editor.setOption("extraKeys", {
       "Ctrl-Space": function(cm) { server.complete(cm); },

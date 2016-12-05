@@ -1,7 +1,8 @@
 from docassemble.webapp.core.models import MachineLearning
-from docassemble.webapp.db_only import db
+from docassemble.webapp.db_object import db
 from sqlalchemy import or_, and_
 import re
+import codecs
 import cPickle as pickle
 import datetime
 import os
@@ -56,7 +57,7 @@ class MachineLearner(object):
         if type(aref) is list:
             nowtime = datetime.datetime.utcnow()
             for entry in aref:
-                new_entry = MachineLearning(group_id=self.group_id, independent=pickle.dumps(entry['independent']), dependent=pickle.dumps(entry['dependent']), modtime=nowtime, create_time=nowtime, active=True)
+                new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), dependent=codecs.encode(pickle.dumps(entry['dependent']), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=True)
                 db.session.add(new_entry)
             db.session.commit()
     def __init__(self, *pargs, **kwargs):
@@ -70,17 +71,17 @@ class MachineLearner(object):
     def add_to_training_set(self, independent, dependent):
         self.initialize()
         nowtime = datetime.datetime.utcnow()
-        new_entry = MachineLearning(group_id=self.group_id, independent=pickle.dumps(independent), dependent=pickle.dumps(dependent), create_time=nowtime, modtime=nowtime, active=True)
+        new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(independent), 'base64').decode(), dependent=codecs.encode(pickle.dumps(dependent), 'base64').decode(), create_time=nowtime, modtime=nowtime, active=True)
         db.session.add(new_entry)
         db.session.commit()
         return new_entry.id
     def save_for_classification(self, text, **kwargs):
         self.initialize()
-        existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, independent=pickle.dumps(text)).first()
+        existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, independent=codecs.encode(pickle.dumps(text), 'base64').decode()).first()
         if existing_entry is not None:
             logmessage(str(text) + " is already there")
             return existing_entry.id
-        new_entry = MachineLearning(group_id=self.group_id, independent=pickle.dumps(text), create_time=datetime.datetime.utcnow(), active=False)
+        new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(text), 'base64').decode(), create_time=datetime.datetime.utcnow(), active=False)
         db.session.add(new_entry)
         db.session.commit()
         return new_entry.id
@@ -89,31 +90,31 @@ class MachineLearner(object):
         existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, id=the_id).first()
         if existing_entry is None:
             raise Exception("There was no entry in the database for id " + str(the_id))
-        return MachineLearningEntry(ml=self, id=existing_entry.id, independent=pickle.loads(existing_entry.independent), create_time=existing_entry.create_time)
+        return MachineLearningEntry(ml=self, id=existing_entry.id, independent=pickle.loads(codecs.decode(existing_entry.independent, 'base64')), create_time=existing_entry.create_time)
     def one_unclassified_entry(self):
         self.initialize()
         entry = MachineLearning.query.filter_by(group_id=self.group_id, active=False).order_by(MachineLearning.id).first()
         if entry is None:
             return None
-        return MachineLearningEntry(ml=self, id=entry.id, independent=pickle.loads(entry.independent), create_time=entry.create_time)
+        return MachineLearningEntry(ml=self, id=entry.id, independent=pickle.loads(codecs.decode(entry.independent, 'base64')), create_time=entry.create_time)
     def unclassified_entries(self):
         self.initialize()
         results = list()
         for entry in MachineLearning.query.filter_by(group_id=self.group_id, active=False).order_by(MachineLearning.id).all():
-            results.append(MachineLearningEntry(ml=self, id=entry.id, independent=pickle.loads(entry.independent), create_time=entry.create_time))
+            results.append(MachineLearningEntry(ml=self, id=entry.id, independent=pickle.loads(codecs.decode(entry.independent, 'base64')), create_time=entry.create_time))
         return results
     def classified_entries(self):
         self.initialize()
         results = list()
         for entry in MachineLearning.query.filter_by(group_id=self.group_id, active=True).order_by(MachineLearning.id).all():
-            results.append(MachineLearningEntry(ml=self, id=entry.id, independent=pickle.loads(entry.independent), dependent=pickle.loads(entry.dependent), create_time=entry.create_time))
+            results.append(MachineLearningEntry(ml=self, id=entry.id, independent=pickle.loads(codecs.decode(entry.independent, 'base64')), dependent=pickle.loads(codecs.decode(entry.dependent, 'base64')), create_time=entry.create_time))
         return results
     def set_dependent_by_id(self, the_id, the_dependent):
         self.initialize()
         existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, id=the_id).first()
         if existing_entry is None:
             raise Exception("There was no entry in the database for id " + str(the_id))
-        existing_entry.dependent = pickle.dumps(the_dependent)
+        existing_entry.dependent = codecs.encode(pickle.dumps(the_dependent), 'base64').decode()
         existing_entry.modtime = datetime.datetime.utcnow()
         existing_entry.active = True
         db.session.commit()
@@ -129,7 +130,7 @@ class MachineLearner(object):
         nowtime = datetime.datetime.utcnow()
         for record in MachineLearning.query.filter(and_(MachineLearning.group_id == self.group_id, MachineLearning.active == True, MachineLearning.modtime > lastmodtime[self.group_id])).all():
             logmessage("Training...")
-            self.train(pickle.loads(record.independent), pickle.loads(record.dependent))
+            self.train(pickle.loads(codecs.decode(record.independent, 'base64')), pickle.loads(codecs.decode(record.dependent, 'base64')))
         lastmodtime[self.group_id] = nowtime
     def delete_training_set(self):
         self.initialize()

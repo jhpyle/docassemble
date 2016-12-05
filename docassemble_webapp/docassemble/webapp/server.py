@@ -230,8 +230,8 @@ def unauthorized():
 def my_default_url(error, endpoint, values):
     return url_for('index')
 
-from docassemble.webapp.app_and_db import app
-from docassemble.webapp.db_only import db
+from docassemble.webapp.app_object import app
+from docassemble.webapp.db_object import db
 import docassemble.webapp.setup
 from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm
 from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation
@@ -817,10 +817,10 @@ def do_redirect(url, is_ajax):
         return redirect(url)
 
 def standard_scripts():
-    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/signature.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>\n'
+    return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/signature.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>\n'
     
 def standard_html_start(interview_language=DEFAULT_LANGUAGE, reload_after='', debug=False):
-    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">' + reload_after + '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/css/bootstrap-slider.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet">'
+    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">' + reload_after + '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet">'
     if debug:
         output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
     return output
@@ -2170,7 +2170,7 @@ def index():
         if old_yaml_filename is not None:
             if old_yaml_filename != yaml_filename:
                 session['i'] = yaml_filename
-                if request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.pground") and not yaml_filename.startswith("docassemble.base"):
+                if request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base"):
                     show_flash = True
         if session_parameter is None:
             if show_flash:
@@ -2705,9 +2705,9 @@ def index():
         else:
             return do_redirect(exit_page, is_ajax)
     if interview_status.question.question_type == "response":
-        # Duplicative to save here?
-        #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
         if is_ajax:
+            # Duplicative to save here?
+            #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
             release_lock(user_code, yaml_filename)
             return jsonify(action='resubmit')
         else:
@@ -2722,6 +2722,7 @@ def index():
             response.set_cookie('visitor_secret', '', expires=0)
     elif interview_status.question.question_type == "sendfile":
         if is_ajax:
+            #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
             release_lock(user_code, yaml_filename)
             return jsonify(action='resubmit')
         else:
@@ -3513,7 +3514,7 @@ def index():
             $(this)[0].setSelectionRange(strLength, strLength);
           }
         });
-        $(".to-labelauty").labelauty({ width: "100%" });
+        $(".to-labelauty").labelauty({ class: "labelauty fullwidth" });
         $(".to-labelauty-icon").labelauty({ label: false });
         $(function(){ 
           var navMain = $("#navbar-collapse");
@@ -3650,7 +3651,7 @@ def index():
         daInitialize();
         setTimeout(daCheckin, 100);
         checkinInterval = setInterval(daCheckin, 6000);
-        $( window ).unload(function() {
+        $( window ).bind('unload', function() {
           daStopCheckingIn();
           if (socket != null && socket.connected){
             //console.log('Terminating interview socket because window unloaded');
@@ -4297,7 +4298,7 @@ def observer():
       }
       $( document ).ready(function(){
         daInitialize();
-        $( window ).unload(function() {
+        $( window ).bind('unload', function() {
           if (socket != null && socket.connected){
             socket.emit('terminate');
           }
@@ -5393,7 +5394,7 @@ def monitor():
             update_monitor();
             playSound('signinout');
         });
-        $( window ).unload(function() {
+        $( window ).bind('unload', function() {
           if (typeof socket !== 'undefined'){
             socket.emit('terminate');
           }
@@ -6397,7 +6398,7 @@ def playground_page():
         active_file = post_data['variablefile']
         if post_data['variablefile'] in files:
             session['variablefile'] = active_file
-            interview_source = docassemble.base.parse.interview_source_from_string('docassemble.pground' + str(current_user.id) + ':' + active_file)
+            interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + active_file)
             interview_source.set_testing(True)
         else:
             if active_file == '':
@@ -6405,9 +6406,9 @@ def playground_page():
             content = ''
             if form.playground_content.data:
                 content = form.playground_content.data
-            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.pground" + str(current_user.id) + ":" + active_file, testing=True)
+            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
         interview = interview_source.get_interview()
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.pground' + str(current_user.id) + ':' + active_file, req=request, action=None))
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
         variables_html = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
         return jsonify(variables_html=variables_html)
     if request.method == 'POST' and the_file != '' and form.validate():
@@ -6431,7 +6432,7 @@ def playground_page():
             with open(filename, 'w') as fp:
                 fp.write(form.playground_content.data.encode('utf8'))
             for a_file in files:
-                docassemble.base.interview_cache.clear_cache('docassemble.pground' + str(current_user.id) + ':' + a_file)
+                docassemble.base.interview_cache.clear_cache('docassemble.playground' + str(current_user.id) + ':' + a_file)
                 a_filename = os.path.join(playground.directory, a_file)
                 if a_filename != filename and os.path.isfile(a_filename):
                     with open(a_filename, 'a'):
@@ -6441,12 +6442,12 @@ def playground_page():
                 flash(word('Saved at') + ' ' + the_time + '.', 'success')
             else:
                 flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Running in other tab.'), message_type='success')
-                interview_source = docassemble.base.parse.interview_source_from_string('docassemble.pground' + str(current_user.id) + ':' + the_file)
+                interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + the_file)
                 interview_source.set_testing(True)
                 interview = interview_source.get_interview()
-                interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.pground' + str(current_user.id) + ':' + active_file, req=request, action=None))
+                interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
                 variables_html = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
-                return jsonify(url=url_for('index', i='docassemble.pground' + str(current_user.id) + ':' + the_file), variables_html=variables_html, flash_message=flash_message)
+                return jsonify(url=url_for('index', i='docassemble.playground' + str(current_user.id) + ':' + the_file), variables_html=variables_html, flash_message=flash_message)
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
     interview_path = None
@@ -6459,9 +6460,9 @@ def playground_page():
                 #form.playground_content.data = content
     if active_file != '':
         is_fictitious = False
-        interview_path = 'docassemble.pground' + str(current_user.id) + ':' + active_file
+        interview_path = 'docassemble.playground' + str(current_user.id) + ':' + active_file
         if is_default:
-            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.pground" + str(current_user.id) + ":" + active_file, testing=True)
+            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
         else:
             interview_source = docassemble.base.parse.interview_source_from_string(interview_path)
             interview_source.set_testing(True)
@@ -6470,11 +6471,11 @@ def playground_page():
         active_file = 'test.yml'
         if form.playground_content.data:
             content = re.sub(r'\r', '', form.playground_content.data)
-            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.pground" + str(current_user.id) + ":" + active_file, testing=True)
+            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
         else:
-            interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path="docassemble.pground" + str(current_user.id) + ":" + active_file, testing=True)
+            interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
     interview = interview_source.get_interview()
-    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.pground' + str(current_user.id) + ':' + active_file, req=request, action=None))
+    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
     variables_html = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
     pulldown_files = list(files)
     if is_fictitious or is_new or is_default:
@@ -6519,7 +6520,7 @@ function activateExample(id){
   $("#example-source-after").addClass("invisible");
 }
 
-interviewBaseUrl = '""" + url_for('index', i='docassemble.pground' + str(current_user.id) + ':.yml') + """';
+interviewBaseUrl = '""" + url_for('index', i='docassemble.playground' + str(current_user.id) + ':.yml') + """';
 
 function updateRunLink(){
   $("#daRunButton").attr("href", interviewBaseUrl.replace('.yml', $("#daVariables").val()));

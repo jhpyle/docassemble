@@ -6,7 +6,7 @@ modules:
 ---
 mandatory: true
 code: |
-  set_live_help_status(status='available', roles=['user'], partner_roles=['advocate'])
+  set_live_help_status(availability='available', mode='help', partner_roles=['advocate'])
 ---
 mandatory: true
 question: |

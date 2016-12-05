@@ -1131,7 +1131,7 @@ def package_template_filename(the_file, **kwargs):
         #    logmessage("package_template_filename: retval is " + str(retval))
         #    return(retval)
     if len(parts) == 2:
-        m = re.search(r'^docassemble.pground([0-9]+)$', parts[0])
+        m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
         if m:
             parts[1] = re.sub(r'^data/templates/', '', parts[1])
             return(absolute_filename("/playgroundtemplate/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\.]', '', parts[1])).path)
@@ -1159,7 +1159,7 @@ def package_data_filename(the_file):
     #if len(parts) == 1:
     #    parts = ['docassemble.base', the_file]
     if len(parts) == 2:
-        m = re.search(r'^docassemble.pground([0-9]+)$', parts[0])
+        m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
         if m:
             if re.search(r'^data/sources/', parts[1]):
                 parts[1] = re.sub(r'^data/sources/', '', parts[1])

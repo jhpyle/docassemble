@@ -1,5 +1,5 @@
-from docassemble.webapp.app_and_db import app
-from docassemble.webapp.db_only import db
+from docassemble.webapp.app_object import app
+from docassemble.webapp.db_object import db
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, dbtableprefix, hostname, in_celery
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.webapp.core.models import Uploads
@@ -111,7 +111,7 @@ docassemble.base.parse.set_initial_dict(initial_dict)
 from docassemble.base.functions import pickleable_objects
 
 def absolute_filename(the_file):
-    match = re.match(r'^docassemble.pground([0-9]+):(.*)', the_file)
+    match = re.match(r'^docassemble.playground([0-9]+):(.*)', the_file)
     #logmessage("absolute_filename call: " + the_file)
     if match:
         filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', match.group(2))
@@ -332,6 +332,7 @@ def encrypt_dictionary(the_dict, secret):
     #sys.stderr.write("45\n")
     #four = encrypter.encrypt(three)
     #sys.stderr.write("46\n")
+    #logmessage(pprint.pformat(pickleable_objects(the_dict)))
     return iv + codecs.encode(encrypter.encrypt(pad(pickle.dumps(pickleable_objects(the_dict)))), 'base64').decode()
 
 def pack_dictionary(the_dict):

@@ -10,7 +10,7 @@
     "Albin Sunnanbo (https://github.com/albinsunnanbo)",
     "Marc Sutton <ashre@iname.com> (http://www.codev.co.uk)"
   ],
-  "version": "1.8.0",
+  "version": "1.9.0",
   "license": "MIT/GPLv2",
   "keywords": [ "dirty", "form", "onbeforeunload", "save", "check" ],
   "main": "jquery.are-you-sure.js",

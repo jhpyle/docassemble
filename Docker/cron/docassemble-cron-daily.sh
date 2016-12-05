@@ -3,7 +3,7 @@
 export DA_CONFIG_FILE=/usr/share/docassemble/config/config.yml
 source /usr/share/docassemble/local/bin/activate
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
-source /dev/stdin < <(su -c "python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
+source /dev/stdin < <(su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
 
 if [ "${S3ENABLE:-null}" == "null" ] && [ "${S3BUCKET:-null}" != "null" ]; then
     export S3ENABLE=true

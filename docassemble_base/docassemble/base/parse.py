@@ -1309,6 +1309,12 @@ class Question:
                 if self.language not in self.interview.generic_questions[self.generic_object][field_name]:
                     self.interview.generic_questions[self.generic_object][field_name][self.language] = list()
                 self.interview.generic_questions[self.generic_object][field_name][self.language].append(register_target)
+        if len(self.attachments):
+            indexno = 0
+            for att in self.attachments:
+                att['question_name'] = self.name
+                att['indexno'] = indexno
+                indexno += 1
     def yes(self):
         return word("Yes")
     def no(self):
@@ -1324,7 +1330,8 @@ class Question:
             raise
     def process_attachment_list(self, target):
         if type(target) is list:
-            return(list(map((lambda x: self.process_attachment(x)), target)))
+            att_list = list(map((lambda x: self.process_attachment(x)), target))
+            return att_list
         else:
             return([self.process_attachment(target)])
     def process_attachment(self, target):
@@ -1652,7 +1659,8 @@ class Question:
             if type(computed_attachment_list) is list:
                 for x in computed_attachment_list:
                     if str(type(x)) == "<class 'docassemble.base.core.DAFileCollection'>" and 'attachment' in x.info:
-                        items.append([x.info['attachment'], self.prepare_attachment(x.info['attachment'], user_dict, **kwargs)])
+                        attachment = self.interview.questions_by_name[x.info['attachment']['name']].attachments[x.info['attachment']['number']]
+                        items.append([attachment, self.prepare_attachment(attachment, user_dict, **kwargs)])
         for item in items:
             result_list.append(self.finalize_attachment(item[0], item[1], user_dict))
         return result_list
@@ -1771,7 +1779,7 @@ class Question:
             string = attachment['variable_name'] + " = docassemble.base.core.DAFileCollection('" + attachment['variable_name'] + "')"
             #logmessage("Executing " + string + "\n")
             exec(string, user_dict)
-            user_dict['_attachment_info'] = dict(name=attachment['name'].text(user_dict), filename=attachment['filename'].text(user_dict), description=attachment['description'].text(user_dict), attachment=attachment)
+            user_dict['_attachment_info'] = dict(name=attachment['name'].text(user_dict), filename=attachment['filename'].text(user_dict), description=attachment['description'].text(user_dict), attachment=dict(name=attachment['question_name'], number=attachment['indexno']))
             exec(attachment['variable_name'] + '.info = _attachment_info', user_dict)
             del user_dict['_attachment_info']
             for doc_format in result['file']:
@@ -2222,7 +2230,7 @@ class Interview:
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
                 #the_question = new_question.follow_multiple_choice(user_dict)
-                interview_status.populate(the_question.ask(user_dict, 'None', 'None'))
+                interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
                 break
             except AttributeError as errMess:
                 #logmessage(str(errMess.args))
@@ -2593,6 +2601,38 @@ class Interview:
                     question_data = dict(extras=dict())
                     if hasattr(qError, 'action'):
                         question_data['action'] = qError.action
+                    new_interview_source = InterviewSourceString(content='')
+                    new_interview = new_interview_source.get_interview()
+                    new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
+                    new_question.name = "Question_Temp"
+                    return(new_question.ask(user_dict, 'None', 'None'))
+                except QuestionError as qError:
+                    #logmessage("Trapped QuestionError")
+                    question_data = dict()
+                    if qError.question:
+                        question_data['question'] = qError.question
+                    if qError.subquestion:
+                        question_data['subquestion'] = qError.subquestion
+                    if qError.dead_end:
+                        pass
+                    elif qError.buttons:
+                        question_data['buttons'] = qError.buttons
+                    else:
+                        buttons = list()
+                        if qError.show_exit is not False and not (qError.show_leave is True and qError.show_exit is None):
+                            exit_button = {word('Exit'): 'exit'}
+                            if qError.url:
+                                exit_button.update(dict(url=qError.url))
+                            buttons.append(exit_button)
+                        if qError.show_leave:
+                            leave_button = {word('Leave'): 'leave'}
+                            if qError.url:
+                                leave_button.update(dict(url=qError.url))
+                            buttons.append(leave_button)
+                        if qError.show_restart is not False:
+                            buttons.append({word('Restart'): 'restart'})
+                        if len(buttons):
+                            question_data['buttons'] = buttons
                     new_interview_source = InterviewSourceString(content='')
                     new_interview = new_interview_source.get_interview()
                     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)

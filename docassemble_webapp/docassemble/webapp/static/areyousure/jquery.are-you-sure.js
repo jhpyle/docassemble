@@ -7,8 +7,8 @@
  * http://jquery.org/license
  *
  * Author:  chris.dance@papercut.com
- * Version: 1.8.0
- * Date:    22nd June 2014
+ * Version: 1.9.0
+ * Date:    13th August 2014
  */
 (function($) {
   
@@ -49,9 +49,13 @@
           val = $field.is(':checked');
           break;
         case 'select':
-          if($field.val()) {
-            val = $field.val().toString();
-          }
+          val = '';
+          $field.find('option').each(function(o) {
+            var $option = $(this);
+            if ($option.is(':selected')) {
+              val += $option.val();
+            }
+          });
           break;
         default:
           val = $field.val();

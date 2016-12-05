@@ -2,8 +2,8 @@ import sys
 import docassemble.base.config
 docassemble.base.config.load(filename="/usr/share/docassemble/config/config.yml")
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, dbtableprefix, hostname, in_celery
-from docassemble.webapp.app_and_db import app
-from docassemble.webapp.db_only import db
+from docassemble.webapp.app_object import app
+from docassemble.webapp.db_object import db
 from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, nice_utc_date, nice_date_from_utc, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase
 from docassemble.webapp.users.models import UserModel, ChatLog
 import docassemble.webapp.database

@@ -1,15 +1,202 @@
 Change Log: `bootstrap-fileinput`
 =================================
 
+## version 4.3.6
+
+**Date:** 15-Nov-2016
+
+1. (enh #696): Better default preview zoom settings.
+2. (enh #764): Update Russian Translations.
+3. (enh #771): Update Chinese Translations.
+4. (enh #769, #785, #786, #787): Better image resized event handling.
+5. (enh #779, #789): More correct thumbnail identification post rearrange.
+6. (enh #782): New validation for invalid slug file name (caption):
+   - if slug callback returns an empty string, then an error will be thrown using `msgInvalidFileName`.
+   - if slug callback returns `false` then the next file will be read and current file skipped.
+7. (enh #788): New validation for minimum file size:
+   - new property `minFileSize` which validates the minimum file size in KB for upload, else throws
+     a validation error using `msgSizeTooSmall`. This defaults to `0`.
+   - if `minFileSize` is set to `null`, then above validation is skipped and no minimum file size 
+     check is performed.
+8. (enh #791): Auto orientation of images based on EXIF data.
+9. (enh #799): Fix IE memory issue on image load.
+10. (enh #800): Update Spanish Translations.
+11. (enh #802): Allow MOV files preview for supported devices and browsers.
+12. (enh #803): Update Hungarian Translations.
+13. (enh #804): Add Slovenian Translations.
+
+## version 4.3.5
+
+**Date:** 20-Sep-2016
+
+1. (bug #734): Correct right parsing of `fileuploaded` event params.
+2. (enh #736): Update Portugese Brazilian Translations.
+3. (enh #741): Update Vietnamese Translations.
+4. (enh #745): Update Russian Translations.
+5. (bug #753): Correct IE11 file clear bug when using without ajax.
+6. (bug #758): Correct file slug name parsing for an invalid file extension.
+
+## version 4.3.4
+
+**Date:** 07-Aug-2016
+
+1. (bug #710): Fix bug for `ifSet` validation.
+2. Add contribution templates.
+3. (enh #715): Reset caption correctly on clear.
+4. (enh #718): Update Japanese Translations.
+5. (enh #719): Pass right `previewId` to `fileuploaded` event.
+6. (enh #721): Update Turkish Translations.
+7. (bug #722): Correctly concat ajax output in initial preview.
+8. (enh #728): Change sortable plugin name to avoid conflict with JUI Sortable.
+9. (enh #729): Implement `progressUploadThreshold` to show processing when waiting for server response.
+10. (enh #730): Correct Romanian Translations.
+11. (enh #731): New method `getFilesCount` for returning upl + non-upl files count.
+
+## version 4.3.3
+
+**Date:** 09-Jul-2016
+
+1. (enh #680): Populate filestack for files greater than maxFilePreviewSize.
+2. (enh #695): Update Spanish Translations.
+3. (enh #698): Re-enable drag and drop support for IE Edge.
+4. (bug #700): Fix custom preview icons to be displayed and validated correctly.
+5. (enh #702): Add files to stack correctly for max & min preview size validation.
+6. (enh #704): Add grammatically correct "No files selected" message.
+7. (enh #706): Remove invalid files from filestack correctly for validation errors.
+
+## version 4.3.2
+
+**Date:** 11-Jun-2016
+
+1. (bug #595): Correct initialization of `allowedPreviewTypes`.
+2. (enh #600): Synchronize latest package on NuGet.
+3. (enh #604): Fixed unset method in deleting previewCache index.
+4. (enh #605): Fixed previewCache tags reset.
+5. (enh #615): Correct Finnish Localizations.
+6. (enh #618): Update German Translations.
+7. (enh #632): Find correct filename in IE9.
+8. (enh #633): New property `maxFilePreviewSize` to control preview of large size files.
+9. (enh #634): Enhance ability for PDF and HTML preview.
+    - Enhanced PDF support as PDF embedding is now possible for `initialPreview`. In addition a new template for PDF is available within `previewTemplates`.
+    - HTML Preview is enhanced with a better template. The plugin also now includes support for `DOMPurify` plugin (and available in plugins folder). This processes and cleans the HTML from XSS before previewing. This behavior can be controlled via `purifyHtml` property that defaults to `true`.
+10. (enh #635): Various preview enhancements. Previews will be revamped with various functionality:
+    - Add ability to zoom every thumbnail to a modal preview. So all types of files (images, videos, pdf, text etc) can be previewed in a larger zoom dialog window.
+    - Automatic slideshow like interface for zoom preview modal. One can navigate left or right to view previous or next content in the preview. In addition to button navigation, keyboard navigation (via left/right arrow keys) is also available.
+    - Borderless maximized mode and Full Screen mode available for preview.
+    - Auto disable the previous or next button when the first or last file/image is reached.
+    - Now `initialPreview` can be setup MORE easier without writing or returning entire markup. Thus the new functionality will enable to use built in `previewTemplates`.  
+    - A new boolean property `initialPreviewAsData` is available to control the above. If set to `true`, it will allow developers to now pass just the data within `initialPreview` (instead of complete markup) and the markup will be auto generated using `previewTemplates`.
+    - New property `initialPreviewFileType` to set the default file type for initial preview. Defaults to `image`. Must be on of the keys in `fileTypeSettings`.
+    - All the other settings can be controlled via `initialPreviewConfig`. The new properties available within `initialPreviewConfig` are:
+       - `type`: Override `initialPreviewFileType` at global level and set a separate type for each file in the initial preview.
+       - `previewAsData`: boolean property to override the `initialPreviewAsData` setting at global level
+    - New zoom preview control buttons:
+       - `prev`
+       - `next`
+       - `fullscreen`
+       - `borderless`
+       - `toggleheader`
+       - `close`
+    - The other new settings to control zoomed preview:
+        - `previewZoomSettings`: Will allow to set the CSS style (e.g. width, height and other CSS style settings) for each zoomed content type (i.e. `image`, `pdf`, `video` etc.).
+        - `previewZoomButtonIcons`: Ability to set the labels for previous, next, fullscreen, borderless, and close buttons.
+        - `previewZoomButtonTitles`: Ability to set the titles for previous, next,  fullscreen, borderless, and close buttons.
+        - `previewZoomButtonClasses`:  Ability to set the CSS classes for previous, next,  fullscreen, borderless, and close buttons.
+    - Modifications to all language locales JS for accomodating new translations
+11. (enh #636): File action enhancements.
+    - Zoom and Drag buttons will be shown as an additional file action buttons in addition to `upload` and `remove`
+    - New boolean properties `showZoom`, `showDrag`, `showRemove`, `showUpload` are now added to `fileActionSettings` to control display of these buttons
+    - New properties `zoomIcon`, `zoomClass`, `zoomTitle` are available within `fileActionSettings` for controlling the zoom button styles and display.
+    - New properties `dragIcon`, `dragClass`, `dragTitle` are available within `fileActionSettings` for controlling the drag indicator styles and display.
+    - New properties `actionZoom` and `actionDrag` are available within `layoutTemplates` to configure the markup of the zoom and drag buttons.
+12. (enh #639): Add ability to just require package in nodejs
+13. (enh #640): Ability to theme and provide font awesome theme. New property `theme` added.
+14. (enh #641): Wrap readFile(index + 1) in a function to prevent 'unsafe-eval' blocking with CSP.
+15. (enh #642): Reorganize JS code into proper folders. Following folders will be added/maintained
+    - `locales`: all translation JS files will be located here
+    - `themes`: all theme JS files will be located here
+    - `plugins`: third party JS plugins that will be used to work with bootstrap-fileinput
+16. (enh #643):Implement rearranging / sorting functionality for initial preview. 
+    - Add ability to rearrange and sort thumbnails by drag & drop. This feature will use the [Sortable plugin](https://github.com/RubaXa/Sortable) which will be included in the `js/plugins` folder.
+    - This feature will be available only for **initial preview thumbnails** for both ajax and form uploads.
+    - New property for drag indicator and drag behavior configurations will be included in `fileActionSettings`:
+        - `showDrag`
+        - `dragIcon`
+        - `dragClass`
+        - `dragTitle`
+        - `dragSettings`
+    - New template `actionDrag` will be available within `layoutTemplates` to configure your drag indicator markup.
+17. Simpler naming for files in locales and themes folders.
+18. (enh #647): Display file size in previews and templates.
+19. Enhancements to file preview icons (`other` template).
+20. (enh #654): Update Spanish Translations.
+21. (enh #655): Include sass styling configuration.
+22. (enh #666): Update sortable draggable selector.
+23. (enh #674): Organize all themes in a separate `themes` folder.
+24. (enh #650, #676): Ability to configure browse button display and file select via zone click.
+    - New boolean property `showBrowse` that allows you to control the display of the browse button
+    - New boolean property `browseOnZoneClick` that allows you to select a file:
+         - **for ajax uploads** - by clicking on the preview drag/drop zone 
+         - **for form based/non-ajax uploads** - by setting `defaultPreviewContent` and that will be clickable to browse files
+    - New string message property `dropZoneClickTitle` that will be appended to the `dragZoneTitle` for ajax uploads when `browseOnZoneClick` is `true`.
+
+## version 4.3.1
+
+**Date:** 28-Feb-2016
+
+1. (enh #514): Set default value for `removeFromPreviewOnError` to `false`.
+2. (enh #554): Update documentation and demos to include `webkitdirectory` for upload.
+3. (enh #555): Set default value for `removeFromPreviewOnError` to `false`.
+4. (enh #557): Enhance default file type parsing to intelligently not render unpreviewable content.
+5. (enh #559): Allow custom error display styles (e.g. via bootstrap dialog) through these changes:
+    - added `msg` param in `fileerror`, `fileuploaderror`, and `filefoldererror` events.
+6. (enh #560): Update French Translations.
+7. (enh #565): Enhance progress bar display when upload is aborted or cancelled.
+8. (enh #567): New properties and improved messages.
+9. (enh #572): Add Finnish Translations.
+10. (enh #573): Update package.json to include `peerDependencies`.
+11. (enh #574): Change naming convention for private / internal methods. Prepend internal plugin methods with underscore `_`.
+12. (enh #575): Implement public method chaining and update docs for methods.
+13. (bug #576): Correct previewCache initialization.
+14. (bug #577): Better label spacing for default browse icon.
+
+## version 4.3.0
+
+**Date:** 25-Jan-2016
+
+1. (enh #550): Correct Drag and drop issue with v4.2.9.
+
+## version 4.2.9
+
+**Date:** 22-Jan-2016
+
+1. (enh #489): Update documentation for `change` and `fileselect` events.
+2. (enh #521): Update Dutch Translations.
+3. (enh #523): Add new branch `sass` for `bootstrap-sass-official` support.
+4. (enh #530): Error alert box and preview thumbnail styling enhancements.
+5. (enh #531): Enhance/Fix typos of Arabic translation.
+6. (enh #534, enh #535): Ability to remove errored file thumbnails via `removeFromPreviewOnError`.
+7. (enh #541): Improve default slug callback to accept most characters.
+8. (enh #545): Refactor code to deep extend options correctly.
+
 ## version 4.2.8
 
-**Date:** 25-Sep-2015
+**Date:** 18-Nov-2015
 
 1. Update bootstrap bower version to support only 3.x variants.
 2. Implement package.json.
 3. (enh #449): Add Arabic Translations.
 4. (enh #454): Update Turkish Translations.
 5. (enh #460): Update CSS selectors prefix to start with `file`.
+6. (enh #462): Responsive buttons and new property `buttonLabelClass`.
+7. (enh #465): Add Català translations.
+8. (enh #474): Upload via button within each preview thumbnail skips last file for async uploads.
+9. (enh #477): Fix IE10 specific styling bug for file input block button.
+10. (enh #481): Universal Module Definition for use with CommonJS, AMD or browser globals.
+11. (bug #483): Clear and reset native input after uploading each single file thumbnail.
+12. (enh #488): Publish to npm.
+13. (enh #490): Fix `zh-TW` translation `browseLabel` wording.
+14. (enh #494): Add Indonesian translations.
 
 ## version 4.2.7
 
@@ -187,7 +374,7 @@ Change Log: `bootstrap-fileinput`
 17. (enh #202): Ability to add Translations / Locales.
     - Identify and group all messages that need to be translated configurable via `$.fn.fileinput.locales['<lang-code>']`
     - Set default english messages configuration `$.fn.fileinput.locales['en']` within the plugin core code
-    - Individual locale files need to be created as separate js files e.g. `fileinput_locale_<lang>.js`
+    - Individual locale files need to be created as separate js files e.g. `<lang>.js`
 18. (enh #203): Enhancements and revamp of all error events.
     - fileerror
     - fileuploaderror

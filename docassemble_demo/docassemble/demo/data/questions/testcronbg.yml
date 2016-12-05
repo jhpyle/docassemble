@@ -1,5 +1,5 @@
 metadata:
-  title: Cron test 1
+  title: Cron test background
 ---
 mandatory: true
 code: |
@@ -16,23 +16,24 @@ code: |
   counter += 1
   process_action()
 ---
-event: cron_daily
+event: cron_weekly
 code: |
   import sys
-  sys.stderr.write("I am in cron_daily and I am running a background action")
-  task = background_action('bg_task', myarg=2)
+  sys.stderr.write("Should delete this.\n")
+  command('exit')
 ---
-event: bg_task
+event: cron_daily_background
 code: |
   import sys
-  sys.stderr.write("I am a background cron job with argument " + str(action_argument('myarg')))
-  background_response_action('bg_response', ans=myarg + 4)
+  sys.stderr.write("I am a background cron job and counter is " + str(counter) + "\n")
+  background_response_action('bg_response', ans=555+counter)
 ---
 event: bg_response
 code: |
   answer = action_argument('ans')
   import sys
-  sys.stderr.write("The answer is " + str(answer))
+  sys.stderr.write("The new counter is " + str(answer) + "\n")
+  counter = answer
 ---
 event: cron_hourly
 code: |

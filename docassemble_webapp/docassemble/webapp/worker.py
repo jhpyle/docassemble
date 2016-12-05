@@ -2,12 +2,6 @@ def null_function(*pargs, **kwargs):
     return
 import docassemble.base.config
 if not docassemble.base.config.loaded:
-#     set_request_active = null_function
-#     fetch_user_dict = null_function
-#     save_user_dict = null_function
-#     app = None
-#     db = None
-# else:
     docassemble.base.config.load(in_celery=True)
 from docassemble.base.config import daconfig
 import docassemble.base.interview_cache
@@ -27,9 +21,6 @@ broker = daconfig.get('rabbitmq', None)
 if broker is None:
     broker = 'pyamqp://guest@' + socket.gethostname() + '//'
 
-#sys.stderr.write("backend is " + str(backend) + "\n")
-#sys.stderr.write("broker is " + str(broker) + "\n")
-
 workerapp = Celery('docassemble.webapp.worker', backend=backend, broker=broker)
 workerapp.conf.update(
     task_serializer='pickle',
@@ -38,81 +29,56 @@ workerapp.conf.update(
     timezone=daconfig.get('timezone', 'America/New_York'),
     enable_utc=True,
 )
-#workerapp.config_from_object('docassemble.webapp.celeryconfig')
 
-w = None
+worker_controller = None
 
 def initialize_db():
-    global w
-    w = WorkerController()
+    global worker_controller
+    worker_controller = WorkerController()
     from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, release_lock
     from docassemble.webapp.server import app as flaskapp
-    w.flaskapp = flaskapp
-    w.set_request_active = set_request_active
-    w.fetch_user_dict = fetch_user_dict
-    w.save_user_dict = save_user_dict
-    w.obtain_lock = obtain_lock
-    w.release_lock = release_lock
-    #sys.stderr.write("initialized db")
-
-# @workerapp.task
-# def add(x, y):
-#     return x + y
+    worker_controller.flaskapp = flaskapp
+    worker_controller.set_request_active = set_request_active
+    worker_controller.fetch_user_dict = fetch_user_dict
+    worker_controller.save_user_dict = save_user_dict
+    worker_controller.obtain_lock = obtain_lock
+    worker_controller.release_lock = release_lock
 
 def convert(obj):
     return result_from_tuple(obj.as_tuple(), app=workerapp)
 
 @workerapp.task
 def background_action(yaml_filename, user_info, session_code, secret, url, url_root, action):
-    if w is None:
+    if worker_controller is None:
         initialize_db()
-    with w.flaskapp.app_context():
-        #sys.stderr.write("Got to background action in worker where action is " + str(action) + " and yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + "\n")
-        w.set_request_active(False)
+    with worker_controller.flaskapp.app_context():
+        sys.stderr.write("background_action: action is " + str(action) + " and yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + "\n")
+        worker_controller.set_request_active(False)
         interview = docassemble.base.interview_cache.get_interview(yaml_filename)
         interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, action=action['action'], interface='worker', arguments=action['arguments']))
-        #sys.stderr.write("Calling fetch_user_dict with " + str(session_code) + " " + str(yaml_filename) + " " + str(secret) + "\n")
-        steps, user_dict, is_encrypted = w.fetch_user_dict(session_code, yaml_filename, secret=secret)
-        # if 'answer' in user_dict:
-        #     sys.stderr.write("Answer currently is " + str(user_dict['answer']) + "\n")
-        # else:
-        #     sys.stderr.write("Answer not in user_dict\n")
+        steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
         try:
             interview.assemble(user_dict, interview_status)
-            #sys.stderr.write("Assembled ok\n")
         except:
-            #sys.stderr.write("Assemble not ok\n")
             pass
-        #sys.stderr.write("Status " + str(interview_status.question.content.original_text) + "\n")
-        # if 'answer' in user_dict:
-        #     sys.stderr.write("Answer now is " + str(user_dict['answer']) + "\n")
-        # else:
-        #     sys.stderr.write("Answer still not in user_dict\n")
         if interview_status.question.question_type in ["restart", "exit"]:
-            #sys.stderr.write("  Deleting dictionary\n")
             reset_user_dict(session_code, yaml_filename)
             release_lock(session_code, yaml_filename)
-            #sys.stderr.write("  Deleted dictionary\n")
         if interview_status.question.question_type == "response":
-            #sys.stderr.write("  Got response\n")
             if not hasattr(interview_status.question, 'binaryresponse'):
                 sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
         if interview_status.question.question_type == "backgroundresponse":
-            #sys.stderr.write("Got backgroundresponse in worker\n")
             return(interview_status.question.backgroundresponse)
         if interview_status.question.question_type == "backgroundresponseaction":
-            #sys.stderr.write("Got backgroundresponseaction in worker\n")
             new_action = interview_status.question.action
             interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, interface='worker', action=new_action['action'], arguments=new_action['arguments']))
-            w.obtain_lock(session_code, yaml_filename)
-            steps, user_dict, is_encrypted = w.fetch_user_dict(session_code, yaml_filename, secret=secret)
+            worker_controller.obtain_lock(session_code, yaml_filename)
+            steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
             try:
                 interview.assemble(user_dict, interview_status)
-                #sys.stderr.write("Assembled 2 ok\n")
             except:
-                #sys.stderr.write("Assembled 2 not ok\n")
                 pass
-            w.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'])
-            w.release_lock(session_code, yaml_filename)
+            worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'])
+            worker_controller.release_lock(session_code, yaml_filename)
             return(new_action)
         return(None)

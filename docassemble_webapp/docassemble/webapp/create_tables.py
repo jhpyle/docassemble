@@ -6,8 +6,8 @@ from docassemble.base.config import daconfig
 if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)
 from docassemble.base.functions import word
-from docassemble.webapp.app_and_db import app
-from docassemble.webapp.db_only import db
+from docassemble.webapp.app_object import app
+from docassemble.webapp.db_object import db
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors
 from docassemble.webapp.users.models import UserModel, UserAuthModel, Role, UserRoles, UserDict, UserDictKeys, TempUser, ChatLog

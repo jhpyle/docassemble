@@ -1,5 +1,5 @@
-from docassemble.webapp.app_and_db import app
-from docassemble.webapp.db_only import db
+from docassemble.webapp.app_object import app
+from docassemble.webapp.db_object import db
 from flask import redirect, render_template, render_template_string, request, flash, current_app
 from flask import url_for as url_for
 from flask_user import current_user, login_required, roles_required, emails
