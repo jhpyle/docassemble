@@ -745,7 +745,7 @@ A `DAList` can be given a default object type, so that
 `appendObject()` can be called without an argument.  This default
 object type is controlled by the `.objectFunction` attribute.  For
 example, when a `PartyList` object is created, the `.objectFunction`
-attribute is set to `Person`.
+attribute is set to [`Person`].
 
 If you want greater control over the way the questions are asked, you
 could add a `generic object` question that is specific to the
