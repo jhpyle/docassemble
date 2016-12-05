@@ -83,8 +83,11 @@ def start_up(the_count=1):
     fix_web_sockets()
 
 def shut_down():
+    print "Updating app count"
     update_desired_count(serviceApp, 0)
+    print "Updating backend count"
     update_desired_count(serviceBackend, 0)
+    print "Terminating EC2 instances"
     update_ec2_instances(0)
 
 def connect_string(service):
