@@ -74,7 +74,10 @@ modules:
 
 Second, we set [`use_cron`] to `True`, which allows scheduled tasks to
 run, and we set [`multi_user`] to `True`, which disables
-[server-side encryption].
+[server-side encryption].  (We need to disable this feature so that
+the computer can access the interview when the user is not logged in.
+The user's data is still secure; it just does not have a layer of
+special additional security.)
 
 {% highlight yaml %}
 ---
@@ -280,6 +283,81 @@ the real user's e-mail address into a variable beforehand.  During the
 scheduled task, a call to [`user_info()`] will retrieve information
 about the "cron user," which is not what you want.
 
+If your interview is a [multi-user interview], make sure that the
+"cron user" is not inadvertently kicked out of your interview before
+[`process_action()`] is run.  For example, an interview with this code
+could prevent scheduled tasks from running:
+
+{% highlight yaml %}
+---
+default role: organizer
+code: |
+  multi_user = True
+  role = 'organizer'
+  if introduction_made and participants_invited:
+    if user_logged_in():
+      if user_info().email == first_person_email:
+        role = 'first_person'
+      elif user_info().email == second_person_email:
+        role = 'second_person'
+---
+initial: true
+code: |
+  if role != first_person' and not ready_for_other_people:
+    say_goodbye_to_user
+---
+initial: true:
+code: |
+  process_actions()
+---
+event: cron_daily
+code: |
+  do_something_important()
+---
+{% endhighlight %}
+
+When the "cron user" accesses this interview, it will not be able to
+run the `cron_daily` action, because it will immediately be presented
+with the `say_goodbye_to_user` screen.
+
+One way to get around this problem is to move the [`initial`]
+<span></span> [`code`] block that runs  `process_actions()` so that it
+appears before the block that runs `say_goodbye_to_user`:
+
+{% highlight yaml %}
+---
+initial: true:
+code: |
+  process_actions()
+---
+initial: true
+code: |
+  if role != first_person' and not ready_for_other_people:
+    say_goodbye_to_user
+---
+{% endhighlight %}
+
+This opens up the possibility that someone in the role of
+`second_person` could run [actions] without being screened.  If this
+is a problem, you could alternatively do:
+
+{% highlight yaml %}
+---
+initial: true
+code: |
+  if (role != first_person' and not user_has_privilege('cron')) and not ready_for_other_people:
+    say_goodbye_to_user
+---
+{% endhighlight %}
+
+The "cron user" is the only user on the system with the [privilege] of
+`cron`, so you can use the [`user_has_privilege()`] function to detect
+whether the user is the "cron user."
+
+[privilege]: {{ site.baseurl }}/docs/users.html
+[`user_has_privilege()`]: {{ site.baseurl }}/docs/functions.html#user_has_privilege
+[actions]: {{ site.baseurl }}/docs/functions.html#actions
+[multi-user interview]: {{ site.baseurl }}/docs/roles.html
 [cron user]: #cron user
 [interview deletion]: #deleting
 [Docker]: {{ site.baseurl }}/docs/docker.html
