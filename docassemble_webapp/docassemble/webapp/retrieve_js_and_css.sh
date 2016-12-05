@@ -31,10 +31,13 @@ mv bootstrap-*-dist bootstrap
 rm -rf areyousure
 git clone https://github.com/codedance/jquery.AreYouSure
 mv jquery.AreYouSure areyousure
+rm -rf areyousure/.git*
 rm -rf bootstrap-fileinput
 git clone https://github.com/kartik-v/bootstrap-fileinput
+rm -rf bootstrap-fileinput/.git*
 rm -r bootstrap-slider
 git clone https://github.com/seiyria/bootstrap-slider
+rm -rf bootstrap-slider/.git*
 rm -rf codemirror
 wget http://codemirror.net/codemirror.zip
 unzip codemirror.zip
