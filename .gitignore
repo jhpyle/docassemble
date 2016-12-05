@@ -3,9 +3,15 @@
 en
 */auto
 foobar.pickle
-*/build
+docassemble/build
+docassemble_base/build
+docassemble_demo/build
+docassemble_webapp/build
 *.egg-info
-*/dist
+docassemble/dist
+docassemble_base/dist
+docassemble_demo/dist
+docassemble_webapp/dist
 make_session_store.py
 da.wsgi
 oauth.wsgi
