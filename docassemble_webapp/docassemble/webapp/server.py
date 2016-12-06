@@ -1973,7 +1973,6 @@ def checkin():
             obj['chatstatus'] = chatstatus
             obj['secret'] = secret
             obj['encrypted'] = is_encrypted
-            obj['roles'] = user_dict['_internal']['livehelp']['roles']
             obj['mode'] = user_dict['_internal']['livehelp']['mode']
             if obj['mode'] in ['peer', 'peerhelp']:
                 peer_ok = True

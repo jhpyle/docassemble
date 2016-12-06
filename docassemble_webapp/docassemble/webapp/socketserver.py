@@ -25,13 +25,14 @@ from flask import render_template, session, request
 from flask_kvsession import KVSessionExtension
 eventlet.monkey_patch()
 
-store = RedisStore(redis.StrictRedis(host=docassemble.base.util.redis_server, db=1))
-kv_session = KVSessionExtension(store, app)
-
 redis_host = daconfig.get('redis', None)
 if redis_host is None:
     redis_host = 'redis://localhost'
 docassemble.base.util.set_redis_server(redis_host)
+
+store = RedisStore(redis.StrictRedis(host=docassemble.base.util.redis_server, db=1))
+kv_session = KVSessionExtension(store, app)
+
 rr = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
 
 threads = dict()
