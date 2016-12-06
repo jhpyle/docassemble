@@ -2912,7 +2912,7 @@ def index():
         var chatScroller = $("#daCorrespondence");
         if (chatScroller.length){
           var height = chatScroller[0].scrollHeight;
-          //console.log("Slow scrolling to " + height)
+          //console.log("Slow scrolling to " + height);
           if (height == 0){
             notYetScrolled = true;
             return;
@@ -2920,7 +2920,7 @@ def index():
           chatScroller.animate({scrollTop: height}, 800);
         }
         else{
-          console.log("scrollChat: error")
+          console.log("scrollChat: error");
         }
       }
       function scrollChatFast(){
@@ -2939,7 +2939,7 @@ def index():
         }
       }
       function daSender(){
-        //console.log("Clicked it")
+        //console.log("Clicked it");
         if ($("#daMessage").val().length){
           socket.emit('chatmessage', {data: $("#daMessage").val()});
           $("#daMessage").val("");
@@ -2984,7 +2984,7 @@ def index():
       function daInitializeSocket(){
         if (socket != null){
             if (socket.connected){
-                //console.log("Calling connectagain")
+                //console.log("Calling connectagain");
                 if (daChatStatus == 'ready'){
                   socket.emit('connectagain', {data: 1});
                 }
@@ -2994,6 +2994,7 @@ def index():
                 }
             }
             else{
+                //console.log('daInitializeSocket: socket.connect()');
                 socket.connect();
             }
             return;
@@ -3004,10 +3005,11 @@ def index():
         if (location.protocol === 'https:' || document.location.protocol === 'https:'){
             socket = io.connect("https://" + document.domain + "/interview" + location.port, {path: '/ws/socket.io'});
         }
+        //console.log("daInitializeSocket: socket is " + socket);
         if (socket != null){
             socket.on('connect', function() {
                 if (socket == null){
-                    console.log("Error: socket is null");
+                    //console.log("Error: socket is null");
                     return;
                 }
                 //console.log("Connected socket with sid " + socket.id);
@@ -3062,7 +3064,7 @@ def index():
                 //socket = null;
             });
             socket.on('reconnected', function() {
-                //console.log("Reconnected")
+                //console.log("Reconnected");
                 daChatStatus = 'on';
                 display_chat();
                 pushChanges();
@@ -4340,9 +4342,9 @@ def observer():
                 window.parent.abortControlling(data.key);
             });
             socket.on('noconnection', function(data) {
-                console.log("no connection 1");
+                console.log("warning: no connection");
                 if (daNoConnectionCount++ > 2){
-                    console.log("no connection!");
+                    console.log("error: no connection");
                     window.parent.stopControlling(data.key);
                 }
             });
@@ -4539,12 +4541,12 @@ def monitor():
             daAudioContext.decodeAudioData(request.response, function(buffer){
                 if (!buffer){
                     if (pos == 1){
-                        console.error('error decoding file data');
+                        console.error('loadSoundBuffer: error decoding file data');
                         return;
                     }
                     else {
                         pos = 1;
-                        console.info('error decoding file data, trying next source');
+                        console.info('loadSoundBuffer: error decoding file data, trying next source');
                         request.open("GET", url_b, true);
                         return request.send();
                     }
@@ -4553,12 +4555,12 @@ def monitor():
             },
             function(error){
                 if (pos == 1){
-                    console.error('decodeAudioData error');
+                    console.error('loadSoundBuffer: decodeAudioData error');
                     return;
                 }
                 else{
                     pos = 1;
-                    console.info('decodeAudioData error, trying next source');
+                    console.info('loadSoundBuffer: decodeAudioData error, trying next source');
                     request.open("GET", url_b, true);
                     return request.send();
                 }
@@ -5167,6 +5169,7 @@ def monitor():
         }
     }
     $(document).ready(function(){
+        //console.log("document ready!");
         try {
             window.AudioContext = window.AudioContext || window.webkitAudioContext;
             daAudioContext = new AudioContext();
@@ -5183,6 +5186,7 @@ def monitor():
         if (location.protocol === 'https:' || document.location.protocol === 'https:'){
             socket = io.connect("https://" + document.domain + "/monitor" + location.port, {path: '/ws/socket.io'});
         }
+        //console.log("socket is " + socket)
         if (typeof socket !== 'undefined') {
             socket.on('connect', function() {
                 //console.log("Connected!");
@@ -5217,6 +5221,7 @@ def monitor():
                 deActivateChatArea(key);
             });
             socket.on('chat_log', function(arg) {
+                //console.log('chat_log: ' + arg.userid);
                 publish_chat_log(arg.uid, arg.i, arg.userid, arg.mode, arg.data);
             });            
             socket.on('block', function(arg) {
@@ -5228,6 +5233,7 @@ def monitor():
                 update_monitor();
             });            
             socket.on('chatmessage', function(data) {
+                //console.log("chatmessage");
                 var keys; 
                 if (data.data.mode == 'peer' || data.data.mode == 'peerhelp'){
                   keys = allSessions(data.uid, data.i);
