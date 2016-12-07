@@ -2115,11 +2115,13 @@ def checkin():
             r.publish(key, parameters)
         worker_key = 'da:worker:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         worker_len = r.llen(worker_key)
+        logmessage("Inspecting " + str(worker_key) + " where len is " + str(worker_len))
         flash_messages = list()
         if worker_len > 0:
             workers_inspected = 0
             while workers_inspected <= worker_len:
                 worker_id = r.lpop(worker_key)
+                logmessage("Looking at " + str(worker_id))
                 if worker_id is not None:
                     try:
                         result = docassemble.worker.AsyncResult(id=worker_id)
@@ -2127,7 +2129,8 @@ def checkin():
                             flash_messages.append(result.result)
                         else:
                             r.rpush(worker_key, worker_id)
-                    except:
+                    except Exception as errstr:
+                        logmessage("Error: " + str(errstr))
                         r.rpush(worker_key, worker_id)
                 workers_inspected += 1
         if peer_ok or help_ok:
