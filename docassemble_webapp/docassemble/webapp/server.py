@@ -2124,7 +2124,7 @@ def checkin():
                 logmessage("Looking at " + str(worker_id))
                 if worker_id is not None:
                     try:
-                        result = docassemble.worker.AsyncResult(id=worker_id)
+                        result = docassemble.webapp.worker.AsyncResult(id=worker_id)
                         if result.ready():
                             flash_messages.append(result.result)
                         else:
