@@ -409,6 +409,7 @@ def worker_caller(func, action):
     #sys.stderr.write("Got to worker_caller in functions\n")
     result = MyAsyncResult()
     result.obj = func.delay(this_thread.current_info['yaml_filename'], this_thread.current_info['user'], this_thread.current_info['session'], this_thread.current_info['secret'], this_thread.current_info['url'], this_thread.current_info['url_root'], action)
+    sys.stderr.write("worker_caller: id is " + str(result.obj.id) + "\n")
     return result
 
 def null_chat_partners(*pargs, **kwargs):

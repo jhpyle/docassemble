@@ -58,8 +58,8 @@ def set_url_for(func):
 def set_file_finder(func):
     docassemble.base.filter.set_file_finder(func)
 
-def set_async_mail(func):
-    docassemble.base.filter.set_async_mail(func)
+def set_flask_send_mail(func):
+    docassemble.base.filter.set_flask_send_mail(func)
 
 def set_mail_variable(func):
     docassemble.base.filter.set_mail_variable(func)

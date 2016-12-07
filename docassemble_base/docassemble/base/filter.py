@@ -80,16 +80,16 @@ def set_mail_variable(func):
     mail_variable = func
     return
 
-def blank_async_mail(*args, **kwargs):
+def blank_flask_send_mail(*args, **kwargs):
     logmessage("blank async mail")
     return(None)
 
 #sys.stderr.write("setting blank async mail")
-async_mail = blank_async_mail
+flask_send_mail = blank_flask_send_mail
 
-def set_async_mail(func):
-    global async_mail
-    async_mail = func
+def set_flask_send_mail(func):
+    global flask_send_mail
+    flask_send_mail = func
     return
 
 def blank_file_finder(*args, **kwargs):

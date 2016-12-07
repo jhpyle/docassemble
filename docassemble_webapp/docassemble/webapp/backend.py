@@ -64,15 +64,13 @@ def get_mail_variable(*args, **kwargs):
 
 mail = Mail(app)
 
-def async_mail(the_message):
-    #logmessage("real async mail start")
+def flask_send_mail(the_message):
     mail.send(the_message)
-    #logmessage("real async mail finished")
 
 #sys.stderr.write("setting mail variable\n")
 docassemble.base.parse.set_mail_variable(get_mail_variable)
-#sys.stderr.write("setting async_mail variable\n")
-docassemble.base.parse.set_async_mail(async_mail)
+#sys.stderr.write("setting flask_send_mail variable\n")
+docassemble.base.parse.set_flask_send_mail(flask_send_mail)
 
 docassemble.base.parse.set_save_numbered_file(save_numbered_file)
 #sys.stderr.write("I am in backend again4\n")

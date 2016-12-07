@@ -312,7 +312,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, async_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file
+from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, flask_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, Messages
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -2113,10 +2113,27 @@ def checkin():
         if parameters is not None:
             key = 'da:input:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
             r.publish(key, parameters)
+        worker_key = 'da:worker:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+        worker_len = r.llen(worker_key)
+        flash_messages = list()
+        if worker_len > 0:
+            workers_inspected = 0
+            while workers_inspected <= worker_len:
+                worker_id = r.lpop(worker_key)
+                if worker_id is not None:
+                    try:
+                        result = docassemble.worker.AsyncResult(id=worker_id)
+                        if result.ready():
+                            flash_messages.append(result.result)
+                        else:
+                            r.rpush(worker_key, worker_id)
+                    except:
+                        r.rpush(worker_key, worker_id)
+                workers_inspected += 1
         if peer_ok or help_ok:
-            return jsonify(success=True, chat_status=chatstatus, num_peers=num_peers, help_available=help_available, phone=call_forwarding_message, observerControl=observer_control)
+            return jsonify(success=True, chat_status=chatstatus, num_peers=num_peers, help_available=help_available, phone=call_forwarding_message, observerControl=observer_control, flash_messages=flash_messages)
         else:
-            return jsonify(success=True, chat_status=chatstatus, phone=call_forwarding_message, observerControl=observer_control)
+            return jsonify(success=True, chat_status=chatstatus, phone=call_forwarding_message, observerControl=observer_control, flash_messages=flash_messages)
     return jsonify(success=False)
 
 # @app.before_request
@@ -2277,6 +2294,10 @@ def index():
         release_lock(user_code, yaml_filename)
         return response
     post_data = request.form.copy()
+    if current_user.is_anonymous:
+        the_user_id = 't' + str(session['tempuser'])
+    else:
+        the_user_id = current_user.id
     if '_email_attachments' in post_data and '_attachment_email_address' in post_data and '_question_number' in post_data:
         success = False
         question_number = post_data['_question_number']
@@ -2292,61 +2313,90 @@ def index():
         del post_data['_question_number']
         del post_data['_email_attachments']
         del post_data['_attachment_email_address']
-        logmessage("Got e-mail request for " + str(question_number) + " with e-mail " + str(attachment_email_address) + " and rtf inclusion of " + str(include_editable) + " and using yaml file " + yaml_filename)
-        the_user_dict = get_attachment_info(user_code, question_number, yaml_filename, secret)
-        if the_user_dict is not None:
-            interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action))
-            interview.assemble(the_user_dict, interview_status)
-            if len(interview_status.attachments) > 0:
-                attached_file_count = 0
-                attachment_info = list()
-                for the_attachment in interview_status.attachments:
-                    file_formats = list()
-                    if 'pdf' in the_attachment['valid_formats'] or '*' in the_attachment['valid_formats']:
-                        file_formats.append('pdf')
-                    if include_editable or 'pdf' not in file_formats:
-                        if 'rtf' in the_attachment['valid_formats'] or '*' in the_attachment['valid_formats']:
-                            file_formats.append('rtf')
-                        if 'docx' in the_attachment['valid_formats']:
-                            file_formats.append('docx')
-                    for the_format in file_formats:
-                        the_filename = the_attachment['file'][the_format]
-                        if the_format == "pdf":
-                            mime_type = 'application/pdf'
-                        elif the_format == "rtf":
-                            mime_type = 'application/rtf'
-                        elif the_format == "docx":
-                            mime_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                        attachment_info.append({'filename': str(the_attachment['filename']) + '.' + str(the_format), 'path': str(the_filename), 'mimetype': str(mime_type), 'attachment': the_attachment})
-                        logmessage("Need to attach to the e-mail a file called " + str(the_attachment['filename']) + '.' + str(the_format) + ", which is located on the server at " + str(the_filename) + ", with mime type " + str(mime_type))
-                        attached_file_count += 1
-                if attached_file_count > 0:
-                    doc_names = list()
-                    for attach_info in attachment_info:
-                        if attach_info['attachment']['name'] not in doc_names:
-                            doc_names.append(attach_info['attachment']['name'])
-                    subject = comma_and_list(doc_names)
-                    if len(doc_names) > 1:
-                        body = "Your " + subject + " are attached."
-                    else:
-                        body = "Your " + subject + " is attached."
-                    html = "<p>" + body + "</p>"
-                    logmessage("Need to send an e-mail with subject " + subject + " to " + str(attachment_email_address) + " with " + str(attached_file_count) + " attachment(s)")
-                    msg = Message(subject, recipients=[attachment_email_address], body=body, html=html)
-                    for attach_info in attachment_info:
-                        with open(attach_info['path'], 'rb') as fp:
-                            msg.attach(attach_info['filename'], attach_info['mimetype'], fp.read())
-                    try:
-                        logmessage("Starting to send")
-                        async_mail(msg)
-                        logmessage("Finished sending")
-                        success = True
-                    except Exception as errmess:
-                        logmessage(str(errmess))
-                        success = False
+        ci = current_info(yaml=yaml_filename, req=request)
+        worker_key = 'da:worker:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
+        for email_address in re.split(r' *[,;] *', attachment_email_address.strip()):
+            try:
+                result = docassemble.webapp.worker.email_attachments.delay(yaml_filename, ci['user'], user_code, secret, ci['url'], ci['url_root'], email_address, question_number, include_editable)
+                r.rpush(worker_key, result.id)
+                success = True
+            except Exception as errmess:
+                success = False
+                logmessage("Fail: " + str(errmess))
+                break
+        # success = False
+        # question_number = post_data['_question_number']
+        # attachment_email_address = post_data['_attachment_email_address']
+        # if '_attachment_include_editable' in post_data:
+        #     if post_data['_attachment_include_editable'] == 'True':
+        #         include_editable = True
+        #     else:
+        #         include_editable = False
+        #     del post_data['_attachment_include_editable']
+        # else:
+        #     include_editable = False
+        # del post_data['_question_number']
+        # del post_data['_email_attachments']
+        # del post_data['_attachment_email_address']
+        # logmessage("Got e-mail request for " + str(question_number) + " with e-mail " + str(attachment_email_address) + " and rtf inclusion of " + str(include_editable) + " and using yaml file " + yaml_filename)
+        # the_user_dict = get_attachment_info(user_code, question_number, yaml_filename, secret)
+        # if the_user_dict is not None:
+        #     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+        #     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action))
+        #     interview.assemble(the_user_dict, interview_status)
+        #     if len(interview_status.attachments) > 0:
+        #         attached_file_count = 0
+        #         attachment_info = list()
+        #         for the_attachment in interview_status.attachments:
+        #             file_formats = list()
+        #             if 'pdf' in the_attachment['valid_formats'] or '*' in the_attachment['valid_formats']:
+        #                 file_formats.append('pdf')
+        #             if include_editable or 'pdf' not in file_formats:
+        #                 if 'rtf' in the_attachment['valid_formats'] or '*' in the_attachment['valid_formats']:
+        #                     file_formats.append('rtf')
+        #                 if 'docx' in the_attachment['valid_formats']:
+        #                     file_formats.append('docx')
+        #             for the_format in file_formats:
+        #                 the_filename = the_attachment['file'][the_format]
+        #                 if the_format == "pdf":
+        #                     mime_type = 'application/pdf'
+        #                 elif the_format == "rtf":
+        #                     mime_type = 'application/rtf'
+        #                 elif the_format == "docx":
+        #                     mime_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        #                 attachment_info.append({'filename': str(the_attachment['filename']) + '.' + str(the_format), 'path': str(the_filename), 'mimetype': str(mime_type), 'attachment': the_attachment})
+        #                 logmessage("Need to attach to the e-mail a file called " + str(the_attachment['filename']) + '.' + str(the_format) + ", which is located on the server at " + str(the_filename) + ", with mime type " + str(mime_type))
+        #                 attached_file_count += 1
+        #         if attached_file_count > 0:
+        #             doc_names = list()
+        #             for attach_info in attachment_info:
+        #                 if attach_info['attachment']['name'] not in doc_names:
+        #                     doc_names.append(attach_info['attachment']['name'])
+        #             subject = comma_and_list(doc_names)
+        #             if len(doc_names) > 1:
+        #                 body = "Your " + subject + " are attached."
+        #             else:
+        #                 body = "Your " + subject + " is attached."
+        #             html = "<p>" + body + "</p>"
+        #             logmessage("Need to send an e-mail with subject " + subject + " to " + str(attachment_email_address) + " with " + str(attached_file_count) + " attachment(s)")
+        #             msg = Message(subject, recipients=[attachment_email_address], body=body, html=html)
+        #             for attach_info in attachment_info:
+        #                 with open(attach_info['path'], 'rb') as fp:
+        #                     msg.attach(attach_info['filename'], attach_info['mimetype'], fp.read())
+        #             try:
+        #                 logmessage("Starting to send")
+        #                 flask_send_mail(msg)
+        #                 logmessage("Finished sending")
+        #                 success = True
+        #             except Exception as errmess:
+        #                 logmessage(str(errmess))
+        #                 success = False
+        # if success:
+        #     flash(word("Your documents were e-mailed to") + " " + str(attachment_email_address) + ".", 'info')
+        # else:
+        #     flash(word("Unable to e-mail your documents to") + " " + str(attachment_email_address) + ".", 'error')
         if success:
-            flash(word("Your documents were e-mailed to") + " " + str(attachment_email_address) + ".", 'info')
+            flash(word("Your documents will be e-mailed to") + " " + str(attachment_email_address) + ".", 'success')
         else:
             flash(word("Unable to e-mail your documents to") + " " + str(attachment_email_address) + ".", 'error')
     if '_back_one' in post_data and steps > 1:
@@ -2504,10 +2554,6 @@ def index():
     if '_varnames' in post_data:
         known_varnames = json.loads(myb64unquote(post_data['_varnames']))
     known_variables = dict()
-    if current_user.is_anonymous:
-        the_user_id = 't' + str(session['tempuser'])
-    else:
-        the_user_id = current_user.id
     for orig_key in copy.deepcopy(post_data):
         if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed']:
             continue
@@ -3155,6 +3201,59 @@ def index():
       var dadisable = null;
       var daChatRoles = """ + json.dumps(user_dict['_internal']['livehelp']['roles']) + """;
       var daChatPartnerRoles = """ + json.dumps(user_dict['_internal']['livehelp']['partner_roles']) + """;
+      function daValidationHandler(form){
+        //form.submit();
+        dadisable = setTimeout(function(){
+          $(form).find('input[type="submit"]').prop("disabled", true);
+          $(form).find('button[type="submit"]').prop("disabled", true);
+        }, 1);
+        if ($('input[name="_files"]').length){
+          $("#uploadiframe").remove();
+          var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"></iframe>');
+          $("body").append(iframe);
+          $(form).attr("target", "uploadiframe");
+          $('<input>').attr({
+              type: 'hidden',
+              name: 'ajax',
+              value: '1'
+          }).appendTo($(form));
+          iframe.bind('load', function(){
+            setTimeout(function(){
+              daProcessAjax($.parseJSON($("#uploadiframe").contents().text()), form);
+            }, 0);
+          });
+          form.submit();
+        }
+        else{
+          if (daSubmitter != null){
+            var input = $("<input>")
+              .attr("type", "hidden")
+              .attr("name", daSubmitter.name).val(daSubmitter.value);
+            $(form).append($(input));
+          }
+          var informed = '';
+          if (daInformedChanged){
+            informed = '&informed=' + Object.keys(daInformed).join(',');
+          }
+          $.ajax({
+            type: "POST",
+            url: $(form).attr('action'),
+            data: $(form).serialize() + '&ajax=1' + informed, 
+            success: function(data){
+              setTimeout(function(){
+                daProcessAjax(data, form);
+              }, 0);
+            },
+            error: function(xhr, status, error){
+              setTimeout(function(){
+                daProcessAjaxError(xhr, status, error);
+              }, 0);
+            }
+          });
+        }
+        daSpinnerTimeout = setTimeout(showSpinner, 1000);
+        return(false);
+      }
       function pushChanges(){
         if (checkinInterval != null){
           clearInterval(checkinInterval);
@@ -3335,6 +3434,9 @@ def index():
         daCheckingIn = 0;
         //console.log("success is " + data.success);
         if (data.success){
+          for (var i = 0; i < data.flash_messages.length; ++i){
+            console.log(data.flash_messages[i]);
+          }
           oldDaChatStatus = daChatStatus;
           //console.log("daCheckinCallback: from " + daChatStatus + " to " + data.chat_status);
           if (data.phone == null){
@@ -3500,6 +3602,10 @@ def index():
           if(e.keyCode == 13) { daSender(); e.preventDefault(); }
         });
         $('#daform button[type="submit"]').click(function(){
+          daSubmitter = this;
+          return true;
+        });
+        $('#emailform button[type="submit"]').click(function(){
           daSubmitter = this;
           return true;
         });
@@ -4484,6 +4590,7 @@ def monitor():
     var updateMonitorInterval = null;
     var daNotificationsEnabled = false;
     var daControlling = Object();
+    var daBrowserTitle = """ + repr(str(word('Monitor'))) + """;
     window.gotConfirmation = function(key){
         // console.log("Got confirmation in parent for key " + key);
         // daControlling[key] = 2;
@@ -4607,10 +4714,10 @@ def monitor():
         }
         if ($("#listelement" + skey).offset().top > $(window).scrollTop() + $(window).height()){
           if (mode == "chat"){
-            $("#chat-message-below").html("New message below");
+            $("#chat-message-below").html(""" + repr(str(word("New message below"))) + """);
           }
           else{
-            $("#chat-message-below").html("New conversation below");
+            $("#chat-message-below").html(""" + repr(str(word("New conversation below"))) + """);
           }
           //$("#chat-message-below").data('key', key);
           $("#chat-message-below").slideDown();
@@ -4767,6 +4874,9 @@ def monitor():
         var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
         if (!$("#chatarea" + skey).find('input').first().is(':focus')){
           $("#listelement" + skey).addClass("new-message");
+          if (daBrowserTitle == document.title){
+            document.title = '* ' + daBrowserTitle;
+          }
         }
         markAsUpdated(key);
         $("#chatarea" + skey).removeClass('invisible');
@@ -4778,6 +4888,9 @@ def monitor():
         var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
         $("#chatarea" + skey).find('input, button').prop("disabled", true);
         $("#listelement" + skey).removeClass("new-message");
+        if (document.title != daBrowserTitle){
+            document.title = daBrowserTitle;
+        }
     }
     function undraw_session(key){
         //console.log("Undrawing...")
@@ -4926,7 +5039,10 @@ def monitor():
                 if(e.keyCode == 13) { submitter(); e.preventDefault(); }
             });
             $(theChatArea).find("input").focus(function(){
-              $(theListElement).removeClass("new-message");
+                $(theListElement).removeClass("new-message");
+                if (document.title != daBrowserTitle){
+                    document.title = daBrowserTitle;
+                }
             });
             $(theChatArea).appendTo($(theListElement));
             if (obj.chatstatus == 'on' && key in daChatPartners){
@@ -5209,7 +5325,7 @@ def monitor():
                 var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
                 //console.log('chatready: ' + key);
                 activateChatArea(key);
-                notifyOperator(key, "chatready", """ + repr(str(word("New chat connection from "))) + """ + data.name)
+                notifyOperator(key, "chatready", """ + repr(str(word("New chat connection from"))) + """ + ' ' + data.name)
             });
             socket.on('chatstop', function(data) {
                 var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
@@ -5258,10 +5374,16 @@ def monitor():
                   scrollChat("#chatarea" + skey);
                   if (data.data.is_self){
                     $("#listelement" + skey).removeClass("new-message");
+                    if (document.title != daBrowserTitle){
+                      document.title = daBrowserTitle;
+                    }
                   }
                   else{
                     if (!$("#chatarea" + skey).find('input').first().is(':focus')){
                       $("#listelement" + skey).addClass("new-message");
+                      if (daBrowserTitle == document.title){
+                        document.title = '* ' + daBrowserTitle;
+                      }
                     }
                     if (data.data.hasOwnProperty('temp_user_id')){
                       notifyOperator(key, "chat", """ + repr(str(word("anonymous visitor"))) + """ + ' ' + data.data.temp_user_id + ': ' + data.data.message);
@@ -5413,6 +5535,9 @@ def monitor():
           });
         }
         $(window).scroll(function(){
+            if (document.title != daBrowserTitle){
+                document.title = daBrowserTitle;
+            }
             if (!daShowingNotif){
                 return true;
             }
@@ -6857,7 +6982,7 @@ def request_developer():
             flash(word('No administrators could be found.'), 'error')
         else:
             try:
-                async_mail(msg)
+                flask_send_mail(msg)
                 flash(word('Your request was submitted.'), 'success')
             except:
                 flash(word('We were unable to submit your request.'), 'error')
@@ -7673,11 +7798,12 @@ else:
     import logging.handlers
     handler = logging.handlers.SysLogHandler(address=(LOGSERVER, 514), socktype=socket.SOCK_STREAM)
     sys_logger.addHandler(handler)
-    
-if LOGSERVER is None:
-    docassemble.base.logger.set_logmessage(syslog_message_with_timestamp)
-else:
-    docassemble.base.logger.set_logmessage(syslog_message)
+
+if not in_celery:
+    if LOGSERVER is None:
+        docassemble.base.logger.set_logmessage(syslog_message_with_timestamp)
+    else:
+        docassemble.base.logger.set_logmessage(syslog_message)
 
 r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
 

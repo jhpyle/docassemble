@@ -9,7 +9,7 @@ from docassemble.base.core import DAObject, DAList, DADict, DAFile, DAFileCollec
 from decimal import Decimal
 import sys
 #sys.stderr.write("importing async mail now from util\n")
-from docassemble.base.filter import file_finder, url_finder, markdown_to_html, async_mail, to_text
+from docassemble.base.filter import file_finder, url_finder, markdown_to_html, flask_send_mail, to_text
 import docassemble.base.filter
 import dateutil
 import dateutil.parser
@@ -1038,7 +1038,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
         try:
             # appmail.send(msg)
             logmessage("Starting to send")
-            async_mail(msg)
+            flask_send_mail(msg)
             logmessage("Finished sending")
         except Exception as errmess:
             logmessage("Sending mail failed: " + str(errmess))

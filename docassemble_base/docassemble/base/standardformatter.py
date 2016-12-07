@@ -992,7 +992,9 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
               </div>
             </div>
 """
-            extra_scripts.append("""<script>\n      $("#emailform").validate(""" + json.dumps({'rules': {'_attachment_email_address': {'minlength': 1, 'required': True, 'email': True}}, 'messages': {'_attachment_email_address': {'required': word("An e-mail address is required."), 'email': word("You need to enter a complete e-mail address.")}}, 'errorClass': 'help-inline'}) + """);\n    </script>""")
+            extra_scripts.append("""<script>
+      $("#emailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + repr(str(word("An e-mail address is required."))) + """, 'email': """ + repr(str(word("You need to enter a complete e-mail address."))) + """}}, 'errorClass': 'help-inline'});
+    </script>""")
     if len(status.attributions):
         output += '            <br/><br/><br/><br/><br/><br/><br/>\n'
     for attribution in sorted(status.attributions):
@@ -1161,59 +1163,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
 def add_validation(extra_scripts, validation_rules):
     extra_scripts.append("""<script>
       var validation_rules = """ + json.dumps(validation_rules) + """;
-      validation_rules.submitHandler = function(form){
-        //form.submit();
-        dadisable = setTimeout(function(){
-          $("#daform").find('input[type="submit"]').prop("disabled", true);
-          $("#daform").find('button[type="submit"]').prop("disabled", true);
-        }, 1);
-        if ($('#daform input[name="_files"]').length){
-          $("#uploadiframe").remove();
-          var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"></iframe>');
-          $("body").append(iframe);
-          $(form).attr("target", "uploadiframe");
-          $('<input>').attr({
-              type: 'hidden',
-              name: 'ajax',
-              value: '1'
-          }).appendTo($(form));
-          iframe.bind('load', function(){
-            setTimeout(function(){
-              daProcessAjax($.parseJSON($("#uploadiframe").contents().text()), form);
-            }, 0);
-          });
-          form.submit();
-        }
-        else{
-          if (daSubmitter != null){
-            var input = $("<input>")
-              .attr("type", "hidden")
-              .attr("name", daSubmitter.name).val(daSubmitter.value);
-            $("#daform").append($(input));
-          }
-          var informed = '';
-          if (daInformedChanged){
-            informed = '&informed=' + Object.keys(daInformed).join(',');
-          }
-          $.ajax({
-            type: "POST",
-            url: $("#daform").attr('action'),
-            data: $("#daform").serialize() + '&ajax=1' + informed, 
-            success: function(data){
-              setTimeout(function(){
-                daProcessAjax(data, form);
-              }, 0);
-            },
-            error: function(xhr, status, error){
-              setTimeout(function(){
-                daProcessAjaxError(xhr, status, error);
-              }, 0);
-            }
-          });
-        }
-        daSpinnerTimeout = setTimeout(showSpinner, 1000);
-        return(false);
-      };
+      validation_rules.submitHandler = daValidationHandler;
       $("#daform").validate(validation_rules);
       $("#backbutton").submit(function(event){
         var informed = '';
