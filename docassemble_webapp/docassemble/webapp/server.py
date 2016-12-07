@@ -2123,7 +2123,6 @@ def checkin():
                 if worker_id is not None:
                     try:
                         result = docassemble.webapp.worker.workerapp.AsyncResult(id=worker_id)
-                        logmessage("Result status is " + result.status)
                         if result.ready():
                             flash_messages.append(result.result)
                         else:
