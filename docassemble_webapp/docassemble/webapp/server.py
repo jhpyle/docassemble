@@ -3437,8 +3437,19 @@ def index():
         daCheckingIn = 0;
         //console.log("success is " + data.success);
         if (data.success){
-          for (var i = 0; i < data.flash_messages.length; ++i){
-            console.log(data.flash_messages[i]);
+          if (data.flash_messages.length > 0){
+            if (!$("#flash").length){
+              $("#main").prepend('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
+            }
+            for (var i = 0; i < data.flash_messages.length; ++i){
+              $("#flash").append('<div class="alert alert-info alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + data.flash_messages[i] + '</div>');
+              console.log(data.flash_messages[i]);
+            }
+            setTimeout(function(){
+              $("#flash .alert-interlocutory").hide(300, function(){
+                $(self).remove();
+              });
+            }, 3000);
           }
           oldDaChatStatus = daChatStatus;
           //console.log("daCheckinCallback: from " + daChatStatus + " to " + data.chat_status);
