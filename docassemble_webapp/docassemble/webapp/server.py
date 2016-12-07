@@ -2115,22 +2115,21 @@ def checkin():
             r.publish(key, parameters)
         worker_key = 'da:worker:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         worker_len = r.llen(worker_key)
-        logmessage("Inspecting " + str(worker_key) + " where len is " + str(worker_len))
         flash_messages = list()
         if worker_len > 0:
             workers_inspected = 0
             while workers_inspected <= worker_len:
                 worker_id = r.lpop(worker_key)
-                logmessage("Looking at " + str(worker_id))
                 if worker_id is not None:
                     try:
                         result = docassemble.webapp.worker.AsyncResult(id=worker_id)
+                        logmessage("Result status is " + result.status)
                         if result.ready():
                             flash_messages.append(result.result)
                         else:
                             r.rpush(worker_key, worker_id)
                     except Exception as errstr:
-                        logmessage("Error: " + str(errstr))
+                        logmessage("checkin: got error " + str(errstr))
                         r.rpush(worker_key, worker_id)
                 workers_inspected += 1
         if peer_ok or help_ok:
@@ -3443,13 +3442,13 @@ def index():
             }
             for (var i = 0; i < data.flash_messages.length; ++i){
               $("#flash").append('<div class="alert alert-info alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + data.flash_messages[i] + '</div>');
-              console.log(data.flash_messages[i]);
+              //console.log(data.flash_messages[i]);
             }
             setTimeout(function(){
               $("#flash .alert-interlocutory").hide(300, function(){
                 $(self).remove();
               });
-            }, 3000);
+            }, 4000);
           }
           oldDaChatStatus = daChatStatus;
           //console.log("daCheckinCallback: from " + daChatStatus + " to " + data.chat_status);
