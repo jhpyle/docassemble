@@ -1,0 +1,46 @@
+metadata:
+  title: Background action that flashes a message
+  example start: 4
+  example end: 5
+---
+modules:
+  - docassemble.base.util
+---
+initial: true
+code: |
+  process_action()
+---
+question: |
+  How much shall I add to 553?
+fields:
+  - Number: value_to_add
+    datatype: integer
+---
+code: |
+  the_task = background_action('bg_task', 'flash', additional=value_to_add)
+---
+event: bg_task
+code: |
+  the_answer = str(553 + action_argument('additional'))
+  background_response("The answer is " + the_answer + ".")
+---
+mandatory: true
+code: |
+  if the_task.ready():
+    final_screen
+  else:
+    waiting_screen
+---
+event: waiting_screen
+question: |
+  Your answer will appear shortly.
+buttons:
+  - Continue: refresh
+---
+event: final_screen
+question: |
+  All done afd asdf asdfasdfasdf asdf asdf asdf asdf asdf asdf asd fasd fasd f asdfasdfasd fasd fas df asdf asdf asd fasd fasd fasd fasd fasdf asd fasd fas dfas dfasdfasdf asdf asdf asdf asd fasdf asdf asdf asdf asdf wefwer
+subquestion: |
+  The response was:
+
+  > ${ the_task.get() }

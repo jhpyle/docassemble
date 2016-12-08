@@ -5,7 +5,7 @@ if not docassemble.base.config.loaded:
     docassemble.base.config.load(in_celery=True)
 from docassemble.base.config import daconfig
 import docassemble.base.interview_cache
-from docassemble.base.functions import word, comma_and_list
+from docassemble.base.functions import word, comma_and_list, ReturnValue
 from celery import Celery
 from celery.result import result_from_tuple, AsyncResult
 import sys
@@ -35,7 +35,7 @@ worker_controller = None
 def initialize_db():
     global worker_controller
     worker_controller = WorkerController()
-    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, release_lock, get_attachment_info, Message, reset_user_dict, flask_send_mail
+    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, release_lock, get_attachment_info, Message, reset_user_dict, da_send_mail
     from docassemble.webapp.server import app as flaskapp
     worker_controller.flaskapp = flaskapp
     worker_controller.set_request_active = set_request_active
@@ -46,7 +46,7 @@ def initialize_db():
     worker_controller.get_attachment_info = get_attachment_info
     worker_controller.Message = Message
     worker_controller.reset_user_dict = reset_user_dict
-    worker_controller.flask_send_mail = flask_send_mail
+    worker_controller.da_send_mail = da_send_mail
 
 def convert(obj):
     return result_from_tuple(obj.as_tuple(), app=workerapp)
@@ -103,23 +103,24 @@ def email_attachments(yaml_filename, user_info, user_code, secret, url, url_root
                             msg.attach(attach_info['filename'], attach_info['mimetype'], fp.read())
                     try:
                         sys.stderr.write("Starting to send\n")
-                        worker_controller.flask_send_mail(msg)
+                        worker_controller.da_send_mail(msg)
                         sys.stderr.write("Finished sending\n")
                         success = True
                     except Exception as errmess:
                         sys.stderr.write(str(errmess) + "\n")
                         success = False
+    
     if success:
-        return word("E-mail was sent to") + " " + email_address
+        return ReturnValue(value=word("E-mail was sent to") + " " + email_address, extra='flash')
     else:
-        return word("Unable to send e-mail to") + " " + email_address
+        return ReturnValue(value=word("Unable to send e-mail to") + " " + email_address, extra='flash')
 
 @workerapp.task
-def background_action(yaml_filename, user_info, session_code, secret, url, url_root, action):
+def background_action(yaml_filename, user_info, session_code, secret, url, url_root, action, extra=None):
     if worker_controller is None:
         initialize_db()
     with worker_controller.flaskapp.app_context():
-        sys.stderr.write("background_action: action is " + str(action) + " and yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + "\n")
+        sys.stderr.write("background_action: yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + "\n")
         worker_controller.set_request_active(False)
         interview = docassemble.base.interview_cache.get_interview(yaml_filename)
         interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, action=action['action'], interface='worker', arguments=action['arguments']))
@@ -135,7 +136,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
             if not hasattr(interview_status.question, 'binaryresponse'):
                 sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
         if interview_status.question.question_type == "backgroundresponse":
-            return(interview_status.question.backgroundresponse)
+            return ReturnValue(value=interview_status.question.backgroundresponse, extra=extra)
         if interview_status.question.question_type == "backgroundresponseaction":
             new_action = interview_status.question.action
             interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, interface='worker', action=new_action['action'], arguments=new_action['arguments']))
@@ -145,7 +146,13 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 interview.assemble(user_dict, interview_status)
             except:
                 pass
-            worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'])
+            # is this right?
+            if str(user_info.get('the_user_id', None)).startswith('t'):
+                worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted)
+            else:
+                worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'])
             worker_controller.release_lock(session_code, yaml_filename)
-            return(new_action)
-        return(None)
+            if hasattr(interview_status, 'question') and interview_status.question.question_type == "backgroundresponse":
+                return ReturnValue(value=interview_status.question.backgroundresponse, extra=extra)
+            return ReturnValue(value=new_action, extra=extra)
+        return(ReturnValue(extra=extra))

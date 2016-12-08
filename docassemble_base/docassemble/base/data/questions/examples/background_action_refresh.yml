@@ -1,6 +1,6 @@
 metadata:
-  title: Background action that sets a variable
-  example start: 2
+  title: Background action that refreshes the screen
+  example start: 4
   example end: 7
 ---
 modules:
@@ -17,7 +17,7 @@ fields:
     datatype: integer
 ---
 code: |
-  the_task = background_action('bg_task', None, additional=value_to_add)
+  the_task = background_action('bg_task', 'refresh', additional=value_to_add)
 ---
 event: bg_task
 code: |
@@ -28,23 +28,19 @@ event: bg_resp
 code: |
   answer = action_argument('ans')
 ---
+event: final_screen
+question: |
+  The answer is ${ answer }.
+---
+event: waiting_screen
+question: |
+  Hang tight.
+subquestion: |
+  Still waiting for an answer.
+---
 mandatory: true
 code: |
   if the_task.ready():
     final_screen
   else:
     waiting_screen
----
-event: waiting_screen
-reload: true
-question: |
-  Hang tight.
-  Still waiting for an answer.
-subquestion: |
-  This screen will reload every
-  ten seconds until the answer
-  is available.
----
-event: final_screen
-question: |
-  The answer is ${ answer }.

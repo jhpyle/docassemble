@@ -17,7 +17,7 @@ fields:
     datatype: integer
 ---
 code: |
-  the_task = background_action('bg_task', additional=value_to_add)
+  the_task = background_action('bg_task', None, additional=value_to_add)
 ---
 event: bg_task
 code: |

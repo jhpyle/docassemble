@@ -43,6 +43,11 @@ daconfig = dict()
 dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
 newlines = re.compile(r'[\r\n]+')
 
+class ReturnValue(object):
+    def __init__(self, value=None, extra=None):
+        self.extra = extra
+        self.value = value
+
 class ThreadVariables(threading.local):
     language = default_language
     dialect = default_dialect
@@ -376,7 +381,6 @@ def set_url_finder(func):
     the_url_func = func
     if the_url_func.__doc__ is None:
         the_url_func.__doc__ = """Returns a URL to a file within a docassemble package."""
-    return
 
 def null_worker(*pargs, **kwargs):
     #sys.stderr.write("Got to null worker\n")
@@ -394,22 +398,26 @@ def background_response_action(*pargs, **kwargs):
     """Finishes a background task by running an action to save values"""
     raise BackgroundResponseActionError(*pargs, **kwargs)
 
-def background_action(action, **kwargs):
+def background_action(action, ui_notification, **kwargs):
     """Runs an action in the background."""
     #sys.stderr.write("Got to background_action in functions\n")
-    return(bg_action(action, **kwargs))
+    return(bg_action(action, ui_notification, **kwargs))
 
 class MyAsyncResult(object):
     def ready(self):
         return worker_convert(self.obj).ready()
     def get(self):
-        return worker_convert(self.obj).get()
+        return worker_convert(self.obj).get().value
 
-def worker_caller(func, action):
+def worker_caller(func, ui_notification, action):
     #sys.stderr.write("Got to worker_caller in functions\n")
     result = MyAsyncResult()
-    result.obj = func.delay(this_thread.current_info['yaml_filename'], this_thread.current_info['user'], this_thread.current_info['session'], this_thread.current_info['secret'], this_thread.current_info['url'], this_thread.current_info['url_root'], action)
-    sys.stderr.write("worker_caller: id is " + str(result.obj.id) + "\n")
+    result.obj = func.delay(this_thread.current_info['yaml_filename'], this_thread.current_info['user'], this_thread.current_info['session'], this_thread.current_info['secret'], this_thread.current_info['url'], this_thread.current_info['url_root'], action, extra=ui_notification)
+    if ui_notification is not None:
+        worker_key = 'da:worker:uid:' + str(this_thread.current_info['session']) + ':i:' + str(this_thread.current_info['yaml_filename']) + ':userid:' + str(this_thread.current_info['user']['the_user_id'])
+        #sys.stderr.write("worker_caller: id is " + str(result.obj.id) + " and key is " + worker_key + "\n")
+        server_redis.rpush(worker_key, result.obj.id)
+    #sys.stderr.write("worker_caller: id is " + str(result.obj.id) + "\n")
     return result
 
 def null_chat_partners(*pargs, **kwargs):
@@ -420,18 +428,21 @@ chat_partners_available_func = null_chat_partners
 def set_chat_partners_available(func):
     global chat_partners_available_func
     chat_partners_available_func = func
-    return
 
 def set_worker(func, func_two):
-    #sys.stderr.write("Got to set_worker in functions\n")
-    def new_func(action, **kwargs):
-        return worker_caller(func, {'action': action, 'arguments': kwargs})
+    def new_func(action, ui_notification, **kwargs):
+        return worker_caller(func, ui_notification, {'action': action, 'arguments': kwargs})
     global bg_action
     bg_action = new_func
     global worker_convert
     worker_convert = func_two
-    #sys.stderr.write("Just set bg_action\n")
     return
+
+server_redis = None
+
+def set_server_redis(target):
+    global server_redis
+    server_redis = target
 
 def default_ordinal_function(i):
     return unicode(i)

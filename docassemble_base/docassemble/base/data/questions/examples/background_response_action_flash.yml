@@ -1,7 +1,7 @@
 metadata:
-  title: Background action that sets a variable
-  example start: 2
-  example end: 7
+  title: Background action that sets a variable and sends a message
+  example start: 4
+  example end: 6
 ---
 modules:
   - docassemble.base.util
@@ -17,7 +17,7 @@ fields:
     datatype: integer
 ---
 code: |
-  the_task = background_action('bg_task', None, additional=value_to_add)
+  the_task = background_action('bg_task', 'flash', additional=value_to_add)
 ---
 event: bg_task
 code: |
@@ -27,6 +27,17 @@ code: |
 event: bg_resp
 code: |
   answer = action_argument('ans')
+  background_response("The answer is " + str(answer) + ".")
+---
+event: final_screen
+question: |
+  The answer is ${ answer }.
+---
+event: waiting_screen
+question: |
+  Your answer will appear shortly.
+buttons:
+  - Continue: refresh
 ---
 mandatory: true
 code: |
@@ -34,17 +45,3 @@ code: |
     final_screen
   else:
     waiting_screen
----
-event: waiting_screen
-reload: true
-question: |
-  Hang tight.
-  Still waiting for an answer.
-subquestion: |
-  This screen will reload every
-  ten seconds until the answer
-  is available.
----
-event: final_screen
-question: |
-  The answer is ${ answer }.

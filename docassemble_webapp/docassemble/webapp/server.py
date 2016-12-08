@@ -79,6 +79,7 @@ DEFAULT_LANGUAGE = daconfig.get('language', 'en')
 DEFAULT_LOCALE = daconfig.get('locale', 'US.utf8')
 DEFAULT_DIALECT = daconfig.get('dialect', 'us')
 LOGSERVER = daconfig.get('log server', None)
+CHECKIN_INTERVAL = daconfig.get('checkin interval', 6000)
 #message_sequence = dbtableprefix + 'message_id_seq'
 
 if os.environ.get('SUPERVISOR_SERVER_URL', None):
@@ -310,9 +311,9 @@ from docassemble.base.standardformatter import as_html, as_sms, signature_html, 
 from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
 from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
-from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone
+from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, flask_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file
+from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, Messages
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -1594,9 +1595,9 @@ def restart_others():
 
 def current_info(yaml=None, req=None, action=None, location=None, interface='web'):
     if current_user.is_authenticated and not current_user.is_anonymous:
-        ext = dict(email=current_user.email, roles=[role.name for role in current_user.roles], theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization)
+        ext = dict(email=current_user.email, roles=[role.name for role in current_user.roles], the_user_id=current_user.id, theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization)
     else:
-        ext = dict(email=None, theid=session.get('tempuser', None), roles=list())
+        ext = dict(email=None, the_user_id='t' + str(session.get('tempuser', None)), theid=session.get('tempuser', None), roles=list())
     if req is None:
         url = 'http://localhost'
         url_root = 'http://localhost'
@@ -2115,7 +2116,7 @@ def checkin():
             r.publish(key, parameters)
         worker_key = 'da:worker:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         worker_len = r.llen(worker_key)
-        flash_messages = list()
+        commands = list()
         if worker_len > 0:
             workers_inspected = 0
             while workers_inspected <= worker_len:
@@ -2124,7 +2125,8 @@ def checkin():
                     try:
                         result = docassemble.webapp.worker.workerapp.AsyncResult(id=worker_id)
                         if result.ready():
-                            flash_messages.append(result.result)
+                            if type(result.result) == ReturnValue:
+                                commands.append(dict(value=result.result.value, extra=result.result.extra))
                         else:
                             r.rpush(worker_key, worker_id)
                     except Exception as errstr:
@@ -2132,9 +2134,9 @@ def checkin():
                         r.rpush(worker_key, worker_id)
                 workers_inspected += 1
         if peer_ok or help_ok:
-            return jsonify(success=True, chat_status=chatstatus, num_peers=num_peers, help_available=help_available, phone=call_forwarding_message, observerControl=observer_control, flash_messages=flash_messages)
+            return jsonify(success=True, chat_status=chatstatus, num_peers=num_peers, help_available=help_available, phone=call_forwarding_message, observerControl=observer_control, commands=commands)
         else:
-            return jsonify(success=True, chat_status=chatstatus, phone=call_forwarding_message, observerControl=observer_control, flash_messages=flash_messages)
+            return jsonify(success=True, chat_status=chatstatus, phone=call_forwarding_message, observerControl=observer_control, commands=commands)
     return jsonify(success=False)
 
 # @app.before_request
@@ -2386,7 +2388,7 @@ def index():
         #                     msg.attach(attach_info['filename'], attach_info['mimetype'], fp.read())
         #             try:
         #                 logmessage("Starting to send")
-        #                 flask_send_mail(msg)
+        #                 da_send_mail(msg)
         #                 logmessage("Finished sending")
         #                 success = True
         #             except Exception as errmess:
@@ -3260,7 +3262,7 @@ def index():
           clearInterval(checkinInterval);
         }
         daCheckin();
-        checkinInterval = setInterval(daCheckin, 6000);
+        checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
       }
       function daProcessAjaxError(xhr, status, error){
         //console.log("Got error: " + error);
@@ -3315,7 +3317,8 @@ def index():
             clearTimeout(daReloader);
           }
           if (data.reload_after != null){
-            daReloader = setTimeout(function(){location.reload();}, data.reload_after);
+            //daReloader = setTimeout(function(){location.reload();}, data.reload_after);
+            daReloader = setTimeout(function(){daRefreshSubmit();}, data.reload_after);
           }
           daUpdateHeight();
         }
@@ -3431,23 +3434,46 @@ def index():
           scrollChatFast();
         }
       }
+      function daRefreshSubmit(){
+        $.ajax({
+          type: "POST",
+          url: $('#daform').attr('action'),
+          data: 'ajax=1', 
+          success: function(data){
+            setTimeout(function(){
+              daProcessAjax(data, $("#daform"));
+            }, 0);
+          },
+          error: function(xhr, status, error){
+            setTimeout(function(){
+              daProcessAjaxError(xhr, status, error);
+            }, 0);
+          }
+        });
+      }
       function daCheckinCallback(data){
         daCheckingIn = 0;
         //console.log("success is " + data.success);
         if (data.success){
-          if (data.flash_messages.length > 0){
-            if (!$("#flash").length){
-              $("#main").prepend('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
+          if (data.commands.length > 0){
+            for (var i = 0; i < data.commands.length; ++i){
+              var command = data.commands[i];
+              if (command.extra == 'flash'){
+                if (!$("#flash").length){
+                  $("body").append('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash"></div>');
+                }
+                $("#flash").append('<div class="alert alert-info alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + command.value + '</div>');
+                //console.log("command is " + command.value);
+              }
+              else if (command.extra == 'refresh'){
+                daRefreshSubmit();
+              }
             }
-            for (var i = 0; i < data.flash_messages.length; ++i){
-              $("#flash").append('<div class="alert alert-info alert-interlocutory"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + data.flash_messages[i] + '</div>');
-              //console.log(data.flash_messages[i]);
-            }
-            setTimeout(function(){
-              $("#flash .alert-interlocutory").hide(300, function(){
-                $(self).remove();
-              });
-            }, 4000);
+            // setTimeout(function(){
+            //   $("#flash .alert-interlocutory").hide(300, function(){
+            //     $(self).remove();
+            //   });
+            // }, 5000);
           }
           oldDaChatStatus = daChatStatus;
           //console.log("daCheckinCallback: from " + daChatStatus + " to " + data.chat_status);
@@ -3566,7 +3592,7 @@ def index():
       }
       function daStartCheckingIn(){
         daStopCheckingIn();
-        checkinInterval = setInterval(daCheckin, 6000);
+        checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
       }
       function showSpinner(){
         var newImg = document.createElement('img');
@@ -3769,7 +3795,7 @@ def index():
       $( document ).ready(function(){
         daInitialize();
         setTimeout(daCheckin, 100);
-        checkinInterval = setInterval(daCheckin, 6000);
+        checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
         $( window ).bind('unload', function() {
           daStopCheckingIn();
           if (socket != null && socket.connected){
@@ -4283,7 +4309,7 @@ def observer():
         if (observerChangesInterval != null){
           clearInterval(observerChangesInterval);
         }
-        observerChangesInterval = setInterval(pushChanges, 6000);
+        observerChangesInterval = setInterval(pushChanges, """ + str(CHECKIN_INTERVAL) + """);
       }
       function pushChanges(){
         //console.log("Pushing changes");
@@ -4293,7 +4319,7 @@ def observer():
         if (!daSendChanges || !daConnected){
           return;
         }
-        observerChangesInterval = setInterval(pushChanges, 6000);
+        observerChangesInterval = setInterval(pushChanges, """ + str(CHECKIN_INTERVAL) + """);
         socket.emit('observerChanges', {uid: """ + repr(str(uid)) + """, i: """ + repr(str(i)) + """, userid: """ + repr(str(userid)) + """, parameters: JSON.stringify($("#daform").serializeArray())});
       }
       function daProcessAjaxError(xhr, status, error){
@@ -4532,7 +4558,7 @@ def observer():
                 });
             });
         }
-        observerChangesInterval = setInterval(pushChanges, 6000);
+        observerChangesInterval = setInterval(pushChanges, """ + str(CHECKIN_INTERVAL) + """);
     });
     </script>
 """
@@ -4857,7 +4883,7 @@ def monitor():
             clearInterval(updateMonitorInterval);
         }
         do_update_monitor();
-        updateMonitorInterval = setInterval(do_update_monitor, 6000);
+        updateMonitorInterval = setInterval(do_update_monitor, """ + str(CHECKIN_INTERVAL) + """);
         //console.log("update_monitor");
     }
     function isHidden(ref){
@@ -6994,7 +7020,7 @@ def request_developer():
             flash(word('No administrators could be found.'), 'error')
         else:
             try:
-                flask_send_mail(msg)
+                da_send_mail(msg)
                 flash(word('Your request was submitted.'), 'success')
             except:
                 flash(word('We were unable to submit your request.'), 'error')
@@ -7261,7 +7287,7 @@ def sms():
         #     action_manual = True
         # else:
         #     action_manual = False
-        ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=request.base_url, url_root=request.url_root, sms_variable=sms_variable, skip=user_dict['_internal']['skip'])
+        ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=request.base_url, url_root=request.url_root, sms_variable=sms_variable, skip=user_dict['_internal']['skip'])
         if action is not None:
             #logmessage("Setting action to " + str(action))
             ci.update(action)
@@ -7818,6 +7844,7 @@ if not in_celery:
         docassemble.base.logger.set_logmessage(syslog_message)
 
 r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
+docassemble.base.functions.set_server_redis(r)
 
 if not in_celery:
     import docassemble.webapp.worker

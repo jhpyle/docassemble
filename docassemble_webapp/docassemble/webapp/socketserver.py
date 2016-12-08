@@ -18,7 +18,7 @@ import cPickle as pickle
 import re
 import time
 import random
-from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_mail_variable, get_new_file_number, nice_utc_date, nice_date_from_utc, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase
+from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_new_file_number, nice_utc_date, nice_date_from_utc, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase
 from docassemble.webapp.users.models import UserModel, ChatLog
 from docassemble.base.functions import get_default_timezone, word
 from flask import render_template, session, request

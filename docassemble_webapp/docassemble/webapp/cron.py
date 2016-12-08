@@ -58,7 +58,7 @@ def run_cron(cron_type):
     if not re.search(r'_background$', cron_type):
         cron_types.append(str(cron_type) + "_background")
     cron_user = get_cron_user()
-    user_info = dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user.id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None)
+    user_info = dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user.id, the_user_id=cron_user.id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None)
     #sys.stderr.write("cron_user id is " + str(cron_user.id) + ".\n")
     to_do = list()
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).group_by(UserDict.filename, UserDict.key).filter(UserDict.encrypted == False).subquery()
@@ -88,7 +88,7 @@ def run_cron(cron_type):
             else:
                 try:
                     #sys.stderr.write("  " + str(cron_type_to_use) + " status\n")
-                    interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user.id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None), session=item['key'], yaml_filename=item['filename'], url=None, url_root=None, action=cron_type_to_use, interface='cron', arguments=dict()))
+                    interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=dict(is_anonymous=False, is_authenticated=True, email=cron_user.email, theid=cron_user.id, the_user_id=cron_user.id, roles=[role.name for role in cron_user.roles], firstname=cron_user.first_name, lastname=cron_user.last_name, nickname=cron_user.nickname, country=cron_user.country, subdivisionfirst=cron_user.subdivisionfirst, subdivisionsecond=cron_user.subdivisionsecond, subdivisionthird=cron_user.subdivisionthird, organization=cron_user.organization, location=None), session=item['key'], yaml_filename=item['filename'], url=None, url_root=None, action=cron_type_to_use, interface='cron', arguments=dict()))
                     #sys.stderr.write("  " + str(cron_type_to_use) + " fetch\n")
                     obtain_lock(item['key'], item['filename'])
                     steps, user_dict, is_encrypted = fetch_user_dict(item['key'], item['filename'])

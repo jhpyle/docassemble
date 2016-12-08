@@ -69,27 +69,15 @@ def set_max_width_points(points):
 def get_max_width_points():
     return(MAX_WIDTH_POINTS)
 
-def blank_mail_variable(*args, **kwargs):
+def blank_da_send_mail(*args, **kwargs):
+    logmessage("da_send_mail: no mail agent configured!")
     return(None)
 
-mail_variable = blank_mail_variable
+da_send_mail = blank_da_send_mail
 
-def set_mail_variable(func):
-    global mail_variable
-    #logmessage("set the mail variable to " + str(func) + "\n")
-    mail_variable = func
-    return
-
-def blank_flask_send_mail(*args, **kwargs):
-    logmessage("blank async mail")
-    return(None)
-
-#sys.stderr.write("setting blank async mail")
-flask_send_mail = blank_flask_send_mail
-
-def set_flask_send_mail(func):
-    global flask_send_mail
-    flask_send_mail = func
+def set_da_send_mail(func):
+    global da_send_mail
+    da_send_mail = func
     return
 
 def blank_file_finder(*args, **kwargs):
