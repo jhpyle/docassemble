@@ -669,6 +669,22 @@ initiate a conversation by sending the SMS message "help" to the
 [Twilio] phone number will be started into the
 `docassemble.base:data/questions/examples/sms.yml` interview.
 
+# Miscellaneous optional directives
+
+## <a name="checkin interval"></a>Polling frequency
+
+By default, the user interface polls the server every six seconds to
+"check in" to see if anything has happened that it needs to know
+about, and to let the server know that the user is still active.
+
+You can change this interval by setting the `checkin interval`
+directive.  The number refers to the milliseconds between each call to
+the server.
+
+{% highlight yaml %}
+checkin interval: 6000
+{% endhighlight %}
+
 ## <a name="docassemble_git_url"></a>Alternative GitHub location for docassemble
 
 The [Packages] feature updates the **docassemble** software directly

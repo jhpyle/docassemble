@@ -837,6 +837,66 @@ s3:
   bucket: yourbucketname
 {% endhighlight %}
 
+# Performance
+
+With one central server and two application servers, all three of
+which are [t2.micro] instances running on [Amazon Web Services],
+**docassemble** can handle 100 concurrent requests without errors or
+significant slowdown:
+
+{% highlight text %}
+Server Software:        Apache/2.4.10
+Server Hostname:        test.docassemble.org
+Server Port:            443
+SSL/TLS Protocol:       TLSv1.2,ECDHE-RSA-AES128-GCM-SHA256,2048,128
+
+Document Path:          /
+Document Length:        44602 bytes
+
+Concurrency Level:      100
+Time taken for tests:   14.606 seconds
+Complete requests:      1000
+Failed requests:        0
+Total transferred:      44932939 bytes
+HTML transferred:       44602000 bytes
+Requests per second:    68.47 [#/sec] (mean)
+Time per request:       1460.582 [ms] (mean)
+Time per request:       14.606 [ms] (mean, across all concurrent requests)
+Transfer rate:          3004.27 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:      231  257  29.4    245     402
+Processing:   408 1109 149.4   1109    1671
+Waiting:      255 1017 150.1   1018    1574
+Total:        650 1366 160.6   1361    2073
+
+Percentage of the requests served within a certain time (ms)
+  50%   1361
+  66%   1396
+  75%   1425
+  80%   1449
+  90%   1513
+  95%   1640
+  98%   1806
+  99%   1928
+ 100%   2073 (longest request)
+{% endhighlight %}
+
+# PostgreSQL concurrency
+
+You can expect each application server to maintain 11 concurrent
+connections to PostgreSQL:
+
+* 5 connections for the web server
+* 5 connections for the [WebSocket] server
+* 1 connnection for the [Celery] server
+
+This assumes that the server has one CPU.  The [Celery] server will
+start one process per CPU.  So if the server has two CPUs, the total
+number of PostgreSQL connections will be 12.
+
+[t2.micro]: https://aws.amazon.com/ec2/instance-types/t2/
 [IAM role]: http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html
 [SMTP Authentication]: https://en.wikipedia.org/wiki/SMTP_Authentication
 [Apache]: https://en.wikipedia.org/wiki/Apache_HTTP_Server

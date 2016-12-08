@@ -198,7 +198,7 @@
       datatype: integer
   ---
   code: |
-    the_task = background_action('bg_task', additional=value_to_add)
+    the_task = background_action('bg_task', None, additional=value_to_add)
   ---
   event: bg_task
   code: |
@@ -210,6 +210,34 @@
       final_screen
     else:
       waiting_screen
+  ---
+"background_action_flash": |-
+  ---
+  code: |
+    the_task = background_action('bg_task', 'flash', additional=value_to_add)
+  ---
+  event: bg_task
+  code: |
+    the_answer = str(553 + action_argument('additional'))
+    background_response("The answer is " + the_answer + ".")
+  ---
+"background_action_refresh": |-
+  ---
+  code: |
+    the_task = background_action('bg_task', 'refresh', additional=value_to_add)
+  ---
+  event: bg_task
+  code: |
+    value = 553 + action_argument('additional')
+    background_response_action('bg_resp', ans=value)
+  ---
+  event: bg_resp
+  code: |
+    answer = action_argument('ans')
+  ---
+  event: final_screen
+  question: |
+    The answer is ${ answer }.
   ---
 "background_action_with_response_action": |-
   ---
@@ -224,7 +252,7 @@
       datatype: integer
   ---
   code: |
-    the_task = background_action('bg_task', additional=value_to_add)
+    the_task = background_action('bg_task', None, additional=value_to_add)
   ---
   event: bg_task
   code: |
@@ -241,6 +269,21 @@
       final_screen
     else:
       waiting_screen
+  ---
+"background_response_action_flash": |-
+  ---
+  code: |
+    the_task = background_action('bg_task', 'flash', additional=value_to_add)
+  ---
+  event: bg_task
+  code: |
+    value = 553 + action_argument('additional')
+    background_response_action('bg_resp', ans=value)
+  ---
+  event: bg_resp
+  code: |
+    answer = action_argument('ans')
+    background_response("The answer is " + str(answer) + ".")
   ---
 "blank-label-field": |-
   ---

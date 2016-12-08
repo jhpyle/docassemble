@@ -776,16 +776,21 @@ Starting a task involves calling the `background_action()` function.
 {% highlight yaml %}
 ---
 code: |
-  the_task = background_action('bg_task', additional=value_to_add)
+  the_task = background_action('bg_task', None, additional=value_to_add)
 ---
 {% endhighlight %}
 
 In this example, the first argument, `bg_task`, is the name of an
-[action](#actions) available in the interview.  The keyword argument,
-`additional`, is an argument that is passed to that action (which can
-be retrieved with [`action_argument()`]).  The parameters to
-`background_action()` should be familiar if you have ever used
-[`url_action()`].
+[action](#actions) available in the interview.
+
+The second argument indicates how the result of the action should be
+communicated to the user.  In this case, `None` means no communication
+(more on this [below](#ui_notification)).
+
+The keyword argument, `additional`, is an argument that is passed to
+that action (which can be retrieved with [`action_argument()`]).  The
+parameters to `background_action()` should be familiar if you have
+ever used [`url_action()`].
 
 The `background_action()` function returns a [Celery] "task" object.
 If the object is named `the_task`, it can be used in the following
@@ -843,7 +848,7 @@ accessed by using the `.get()` method on the "task" that was created.
 For example, in the above example, the task is created like this:
 
 {% highlight python %}
-the_task = background_action('bg_task', additional=value_to_add)
+the_task = background_action('bg_task', None, additional=value_to_add)
 {% endhighlight %}
 
 There is now a variable `the_task` in the interview, which is used to
@@ -928,6 +933,55 @@ In computer science terminology, the `bg_resp` action is similar to a
 These [background processes] are designed to run in the background
 while the user is still using the application.  If the user closes the
 web browser, the actions will still continue to run.
+
+## <a name="ui_notification"></a>Communicating results to the user interface
+
+You can alert the user when the background job finishes.
+
+The first way to do this is to "flash" a message at the top of a user's
+screen.
+
+The second way is to cause the user's screen to reload the
+interview when the job finishes.  If you used
+[`background_response_action()`] to change the interview's dictionary
+on the basis of work done by the background process, then this can be
+an effective way to present the effect of the changes to the user.
+However, it is important to be mindful of the user experience when
+using this feature; you would not want to annoy users by refreshing
+their screens while they are in the middle of entering information.
+
+You can cause these responses by setting the second argument to
+[`background_action()`] to `'flash'` or `'refresh'`.  For no response,
+set the second argument to `None`.
+
+In the following example, the value provided to
+[`background_response()`] ("The answer is (some number)."), is
+"flashed" at the top of the screen.
+
+{% include side-by-side.html demo="background_action_flash" %}
+
+You can also "flash" messages when you use
+[`background_response_action()`] to save changes to the interview's
+dictionary: after setting the variable or variables you want to set,
+call [`background_response()`] with the message you want to flash.
+
+{% include side-by-side.html demo="background_response_action_flash" %}
+
+In the next example, when the background process finishes, the user's
+screen refreshes.  Since the [`background_response_action()`] function
+was used to save the result of the background process to a variable
+(`answer`), the result can be displayed by referring to `${ answer }`.
+
+The user interface does not respond immediately.  It polls the server
+every six seconds.  Therefore, users may experience up to a six-second
+delay after the background process finishes before they receive
+notification.
+
+### Refresh
+
+{% include side-by-side.html demo="background_action_refresh" %}
+
+
 
 ## Comparison with scheduled tasks
 
@@ -2431,6 +2485,7 @@ modules:
 [Python Imaging Library]: http://www.pythonware.com/products/pil/
 [URL arguments]: {{ site.baseurl }}/docs/special.html#url_args
 [Celery]: http://www.celeryproject.org/
+[`background_action()`]: #background_action
 [`background_response()`]: #background_response
 [`background_response_action()`]: #background_response_action
 [callback function]: https://en.wikipedia.org/wiki/Callback_(computer_programming)
@@ -2451,3 +2506,4 @@ modules:
 [`country` configuration directive]: {{ site.baseurl }}/docs/config.html#country
 [`pycountry` package]: https://pypi.python.org/pypi/pycountry
 [`send_sms()`]: #send_sms
+[flash]: http://flask.pocoo.org/docs/0.11/patterns/flashing/
