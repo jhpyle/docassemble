@@ -1,5 +1,5 @@
 metadata:
-  title: Background action that flashes a message
+  title: Background action that runs Javascript
   example start: 4
   example end: 5
 ---
@@ -17,12 +17,12 @@ fields:
     datatype: integer
 ---
 code: |
-  the_task = background_action('bg_task', 'flash', additional=value_to_add)
+  the_task = background_action('bg_task', 'javascript', additional=value_to_add)
 ---
 event: bg_task
 code: |
   the_answer = str(553 + action_argument('additional'))
-  background_response("The answer is " + the_answer + ".")
+  background_response("alert('The answer is " + the_answer + ".');")
 ---
 mandatory: true
 code: |

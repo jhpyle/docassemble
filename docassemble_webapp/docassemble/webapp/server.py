@@ -1836,6 +1836,9 @@ def oauth_callback(provider):
     user = UserModel.query.filter_by(social_id=social_id).first()
     if not user:
         user = UserModel.query.filter_by(email=email).first()
+    if user and user.social_id is not None and user.social_id.startswith('local'):
+        flash(word('There is already a username and password on this system with the e-mail address') + " " + str(email) + ".  " + word("Please log in."), 'error')
+        return redirect(url_for('user.login'))
     if not user:
         user = UserModel(social_id=social_id, nickname=username, email=email, active=True)
         db.session.add(user)
@@ -3467,6 +3470,9 @@ def index():
               }
               else if (command.extra == 'refresh'){
                 daRefreshSubmit();
+              }
+              else if (command.extra == 'javascript'){
+                eval(command.value);
               }
             }
             // setTimeout(function(){

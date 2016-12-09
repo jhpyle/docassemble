@@ -20,6 +20,10 @@ def read_in(line, target):
 
 def main():
     dbconfig = daconfig.get('db', dict())
+    db_prefix = dbconfig.get('prefix', 'postgresql+psycopg2://')
+    if db_prefix != 'postgresql+psycopg2://':
+        sys.stderr.write("fix_postgresql_tables: skipping because configured database is not PostgreSQL.  You may need to adjust table columns manually.\n")
+        return
     db_name = dbconfig.get('name', None)
     db_host = dbconfig.get('host', None)
     db_user = dbconfig.get('user', None)

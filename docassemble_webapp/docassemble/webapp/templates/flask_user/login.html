@@ -68,7 +68,6 @@
 {% endif %}
 {% if config['USE_GOOGLE_LOGIN'] %}
 <a class="nohover" href="{{ url_for('google_page') }}"><div class="daiconbox"><table style="height:100%"><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/google-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">Sign in with Google</td></tr></table></div></a>
-<!--<div class="g-signin2" data-width="250" data-longtitle="true" data-onsuccess="onSignIn"></div>-->
 {% endif %}
 {% if config['USE_FACEBOOK_LOGIN'] %}
 <a class="nohover" href="{{ url_for('oauth_authorize', provider='facebook') }}"><div class="daiconbox"><table style="height:100%"><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/facebook-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">Sign in with Facebook</td></tr></table></div></a>

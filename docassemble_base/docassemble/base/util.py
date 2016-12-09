@@ -927,6 +927,11 @@ def send_sms(to=None, body=None, template=None, task=None, attachments=None, con
         url_start = get_config('url root')
         if url_start is None:
             url_start = 'http://localhost'
+        url_start = re.sub(r'/$', r'', url_start)
+        root = get_config('root')
+        if root is None:
+            root = '/'
+        url_start += root
     success = True
     media = list()
     for attachment in attachments:
