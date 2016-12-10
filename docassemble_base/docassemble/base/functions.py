@@ -619,8 +619,11 @@ def get_locale():
 
 def update_locale():
     """Updates the system locale based on the value set by set_locale()."""
-    #logmessage("Using " + str(this_thread.language) + '_' + str(this_thread.locale) + "\n")
-    locale.setlocale(locale.LC_ALL, str(this_thread.language) + '_' + str(this_thread.locale))
+    try:
+        locale.setlocale(locale.LC_ALL, str(this_thread.locale))
+    except:
+        logmessage("update_locale error: unable to set the locale to " + str(this_thread.locale))
+        locale.setlocale(locale.LC_ALL, 'en_US.utf8')
     return
 
 def comma_list_en(*pargs, **kargs):

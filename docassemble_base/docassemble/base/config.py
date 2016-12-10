@@ -3,6 +3,8 @@ import os
 import sys
 import httplib2
 import socket
+import string
+import random
 
 dbtableprefix = None
 daconfig = dict()
@@ -108,19 +110,8 @@ def load(**kwargs):
 
 def default_config():
     config = """\
-debug: true
-exitpage: http://docassemble.org
-secretkey: 28asflwjeifwlfjsd2fejfiefw3g4o87
+secretkey: """ + ''.join(random.choice(string.ascii_letters) for i in range(32)) + """
 mail:
   default_sender: '"Administrator" <no-reply@example.com>'
-default_interview: docassemble.demo:data/questions/questions.yml
-language: en
-locale: US.utf8
-words:
-  - docassemble.base:data/sources/us-words.yml
-default_admin_account:
-  nickname: admin
-  email: admin@admin.com
-  password: password
 """
     return config

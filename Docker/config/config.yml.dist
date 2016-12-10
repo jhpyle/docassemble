@@ -1,5 +1,4 @@
 debug: false
-root: /
 url root: {{URLROOT}}
 exitpage: /
 db:
@@ -22,27 +21,18 @@ oauth:
 secretkey: {{DASECRETKEY}}
 default_title: docassemble
 default_short_title: doc
-packagecache: /tmp/docassemble-cache
-uploads: /usr/share/docassemble/files
-packages: /usr/share/docassemble/local
-webapp: /usr/share/docassemble/webapp/docassemble.wsgi
 mail:
   username: null
   password: null
   server: localhost
   default_sender: '"Administrator" <no-reply@example.com>'
 default_interview: docassemble.demo:data/questions/questions.yml
-flask_log: /tmp/flask.log
 language: en
-locale: US.utf8
+locale: en_US.utf8
 os locale: {{LOCALE}}
 timezone: {{TIMEZONE}}
 redis: {{REDIS}}
 rabbitmq: {{RABBITMQ}}
-default_admin_account:
-  nickname: admin
-  email: admin@admin.com
-  password: password
 voicerss:
   enable: false
   key: ae8734983948ebc98239e9898f998432

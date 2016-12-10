@@ -71,7 +71,7 @@ docassemble.base.parse.set_save_numbered_file(save_numbered_file)
 import docassemble.base.functions
 docassemble.base.functions.set_debug_status(DEBUG)
 DEFAULT_LANGUAGE = daconfig.get('language', 'en')
-DEFAULT_LOCALE = daconfig.get('locale', 'US.utf8')
+DEFAULT_LOCALE = daconfig.get('locale', 'en_US.utf8')
 country_part = re.sub(r'\..*', r'', DEFAULT_LOCALE)
 DEFAULT_COUNTRY = daconfig.get('country', country_part)
 DEFAULT_DIALECT = daconfig.get('dialect', 'us')
@@ -84,15 +84,16 @@ docassemble.base.functions.set_default_country(DEFAULT_COUNTRY)
 docassemble.base.functions.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
 docassemble.base.functions.set_locale(DEFAULT_LOCALE)
 docassemble.base.functions.set_da_config(daconfig)
-
 docassemble.base.functions.update_locale()
 if 'currency symbol' in daconfig:
     docassemble.base.functions.update_language_function('*', 'currency_symbol', lambda: daconfig['currency symbol'])
+
 if S3_ENABLED:
     import docassemble.webapp.amazon
     s3 = docassemble.webapp.amazon.s3object(s3_config)
 else:
     s3 = None
+
 initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict())
 #else:
 #    initial_dict = dict(_internal=dict(tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
