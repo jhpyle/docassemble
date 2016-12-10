@@ -112,6 +112,8 @@ if [ "${S3ENABLE:-false}" == "true" ]; then
     fi
 fi
 
+DEFAULT_SECRET=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
+
 if [ ! -f $DA_CONFIG_FILE ]; then
     sed -e 's@{{DBPREFIX}}@'"${DBPREFIX:-postgresql+psycopg2://}"'@' \
 	-e 's/{{DBNAME}}/'"${DBNAME:-docassemble}"'/' \
@@ -134,6 +136,7 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 	-e 's/{{LOGSERVER}}/'"${LOGSERVER:-null}"'/' \
 	-e 's/{{DAHOSTNAME}}/'"${DAHOSTNAME:-null}"'/' \
 	-e 's/{{LOCALE}}/'"${LOCALE:-null}"'/' \
+	-e 's/{{DASECRETKEY}}/'"${DEFAULT_SECRET}"'/' \
 	-e 's@{{URLROOT}}@'"${URLROOT:-null}"'@' \
 	-e 's/{{BEHINDHTTPSLOADBALANCER}}/'"${BEHINDHTTPSLOADBALANCER:-false}"'/' \
 	$DA_CONFIG_FILE_DIST > $DA_CONFIG_FILE || exit 1
