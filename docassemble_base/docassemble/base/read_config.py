@@ -79,6 +79,8 @@ if __name__ == "__main__":
         print('export EC2=true')
     if 'log server' in daconfig and daconfig['log server'] is not None:
         print('export LOGSERVER="' + str(daconfig['log server']) + '"')
+    if 'log' in daconfig and daconfig['log'] is not None:
+        print('export LOGDIRECTORY="' + str(daconfig['log']) + '"')
     if 'use https' in daconfig and daconfig['use https']:
         print('export USEHTTPS=true')
     if 'use lets encrypt' in daconfig and daconfig['use lets encrypt']:

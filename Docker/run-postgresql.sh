@@ -2,14 +2,14 @@
 
 PGVERSION=`pg_config --version | sed 's/PostgreSQL \([0-9][0-9]*\.[0-9][0-9]*\).*/\1/'`
 
-export DA_CONFIG_FILE=/usr/share/docassemble/config/config.yml
+export DA_ACTIVATE="${DA_PYTHON:-/usr/share/docassemble/local}/bin/activate"
 
 chown -R postgres.postgres /etc/postgresql
 chown -R postgres.postgres /var/lib/postgresql
 chown -R postgres.postgres /var/run/postgresql
 chown -R postgres.postgres /var/log/postgresql
 
-source /dev/stdin < <(su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
+source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.read_config" www-data)
 
 if [ "${S3ENABLE:-null}" == "null" ] && [ "${S3BUCKET:-null}" != "null" ]; then
     export S3ENABLE=true

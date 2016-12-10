@@ -1,8 +1,8 @@
 #!/bin/bash
 
-export DA_CONFIG_FILE=/usr/share/docassemble/config/config.yml
+export DA_ACTIVATE="${DA_PYTHON:-/usr/share/docassemble/local}/bin/activate"
 
-source /dev/stdin < <(su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
+source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.read_config" www-data)
 
 if [ "${S3ENABLE:-null}" == "null" ] && [ "${S3BUCKET:-null}" != "null" ]; then
     export S3ENABLE=true

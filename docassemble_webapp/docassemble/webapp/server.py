@@ -2,6 +2,9 @@ import re
 import os
 import sys
 import tempfile
+import docassemble.base.config
+if not docassemble.base.config.loaded:
+    docassemble.base.config.load()
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, hostname, in_celery
 
 DEBUG = daconfig.get('debug', False)
@@ -121,7 +124,7 @@ ROOT = daconfig.get('root', '/')
 exit_page = daconfig.get('exitpage', 'http://docassemble.org')
 
 SUPERVISORCTL = daconfig.get('supervisorctl', 'supervisorctl')
-PACKAGE_CACHE = daconfig.get('packagecache', '/var/www/.cache')
+#PACKAGE_CACHE = daconfig.get('packagecache', '/var/www/.cache')
 WEBAPP_PATH = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
 PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
 UPLOAD_DIRECTORY = daconfig.get('uploads', '/usr/share/docassemble/files')
@@ -295,6 +298,7 @@ from flask import url_for
 from flask_login import login_user, logout_user, current_user
 from flask_user import login_required, roles_required
 from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_reset_password
+from flask_wtf.csrf import generate_csrf
 from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm
 from flask_mail import Mail, Message
 import flask_user.signals
@@ -317,6 +321,7 @@ from docassemble.webapp.backend import s3, initial_dict, can_access_file_number,
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, Messages
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
+import docassemble.base.functions
 import docassemble.base.util
 
 redis_host = daconfig.get('redis', None)
@@ -1019,7 +1024,7 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
 """
     if status.question.can_go_back and steps > 1:
         navbar += """\
-          <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="_back_one" value="1"><button class="dabackicon" type="submit"><i class="glyphicon glyphicon-chevron-left dalarge"></i></button></form></span>
+          <span class="navbar-brand"><form style="inline-block" id="backbutton" method="POST"><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"><button class="dabackicon" type="submit"><i class="glyphicon glyphicon-chevron-left dalarge"></i></button></form></span>
 """
     navbar += """\
           <a href="#question" data-toggle="tab" class="navbar-brand"><span class="hidden-xs">""" + status.question.interview.get_title().get('full', page_title) + """</span><span class="visible-xs-block">""" + status.question.interview.get_title().get('short', page_short_title) + """</span></a>
@@ -2561,7 +2566,7 @@ def index():
         known_varnames = json.loads(myb64unquote(post_data['_varnames']))
     known_variables = dict()
     for orig_key in copy.deepcopy(post_data):
-        if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed']:
+        if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
             continue
         try:
             key = myb64unquote(orig_key)
@@ -2570,7 +2575,7 @@ def index():
         if key.startswith('_field_') and orig_key in known_varnames:
             post_data[known_varnames[orig_key]] = post_data[orig_key]
     for orig_key in post_data:
-        if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed']:
+        if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
             continue
         #logmessage("Got a key: " + key)
         data = post_data[orig_key]
@@ -2884,6 +2889,7 @@ def index():
       var daShowingSpinner = false;
       var daSpinnerTimeout = null;
       var daSubmitter = null;
+      var daCsrf = """ + repr(str(generate_csrf())) + """;
       function userNameString(data){
           if (data.hasOwnProperty('temp_user_id')){
               return """ + repr(str(word("anonymous visitor"))) + """ + ' ' + data.temp_user_id;
@@ -3441,7 +3447,7 @@ def index():
         $.ajax({
           type: "POST",
           url: $('#daform').attr('action'),
-          data: 'ajax=1', 
+          data: 'csrf_token=' + daCsrf + '&ajax=1',
           success: function(data){
             setTimeout(function(){
               daProcessAjax(data, $("#daform"));
@@ -3565,10 +3571,10 @@ def index():
         }
         var datastring;
         if ((daChatStatus != 'off') && $("#daform").length > 0 && !daBeingControlled){ // daChatStatus == 'waiting' || daChatStatus == 'standby' || daChatStatus == 'ringing' || daChatStatus == 'ready' || daChatStatus == 'on' || daChatStatus == 'observeonly'
-          datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, parameters: JSON.stringify($("#daform").serializeArray())});
+          datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, parameters: JSON.stringify($("#daform").serializeArray())});
         }
         else{
-          datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode});
+          datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf});
         }
         //console.log("Doing checkin with " + daChatStatus);
         $.ajax({
@@ -3584,7 +3590,7 @@ def index():
         $.ajax({
           type: 'POST',
           url: """ + "'" + url_for('checkout') + "'" + """,
-          data: 'action=checkout',
+          data: 'csrf_token=' + daCsrf + '&action=checkout',
           success: daCheckoutCallback,
           dataType: 'json'
         });
@@ -3761,7 +3767,7 @@ def index():
             $.ajax({
               type: 'POST',
               url: """ + "'" + url_for('checkin') + "'" + """,
-              data: $.param({action: 'chat_log'}),
+              data: $.param({action: 'chat_log', csrf_token: daCsrf}),
               success: daChatLogCallback,
               dataType: 'json'
             });
@@ -4287,6 +4293,7 @@ def observer():
       var daShowingHelp = false;
       var daInformedChanged = false;
       var dadisable = null;
+      var daCsrf = """ + repr(str(generate_csrf())) + """;
       window.turnOnControl = function(){
         //console.log("Turning on control");
         daSendChanges = true;
@@ -4316,6 +4323,59 @@ def observer():
           clearInterval(observerChangesInterval);
         }
         observerChangesInterval = setInterval(pushChanges, """ + str(CHECKIN_INTERVAL) + """);
+      }
+      function daValidationHandler(form){
+        //form.submit();
+        dadisable = setTimeout(function(){
+          $(form).find('input[type="submit"]').prop("disabled", true);
+          $(form).find('button[type="submit"]').prop("disabled", true);
+        }, 1);
+        if ($('input[name="_files"]').length){
+          $("#uploadiframe").remove();
+          var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"></iframe>');
+          $("body").append(iframe);
+          $(form).attr("target", "uploadiframe");
+          $('<input>').attr({
+              type: 'hidden',
+              name: 'ajax',
+              value: '1'
+          }).appendTo($(form));
+          iframe.bind('load', function(){
+            setTimeout(function(){
+              daProcessAjax($.parseJSON($("#uploadiframe").contents().text()), form);
+            }, 0);
+          });
+          form.submit();
+        }
+        else{
+          if (daSubmitter != null){
+            var input = $("<input>")
+              .attr("type", "hidden")
+              .attr("name", daSubmitter.name).val(daSubmitter.value);
+            $(form).append($(input));
+          }
+          var informed = '';
+          if (daInformedChanged){
+            informed = '&informed=' + Object.keys(daInformed).join(',');
+          }
+          $.ajax({
+            type: "POST",
+            url: $(form).attr('action'),
+            data: $(form).serialize() + '&ajax=1' + informed, 
+            success: function(data){
+              setTimeout(function(){
+                daProcessAjax(data, form);
+              }, 0);
+            },
+            error: function(xhr, status, error){
+              setTimeout(function(){
+                daProcessAjaxError(xhr, status, error);
+              }, 0);
+            }
+          });
+        }
+        daSpinnerTimeout = setTimeout(showSpinner, 1000);
+        return(false);
       }
       function pushChanges(){
         //console.log("Pushing changes");
@@ -6113,7 +6173,7 @@ def restart_page():
         $.ajax({
           type: 'POST',
           url: """ + repr(str(url_for('restart_ajax'))) + """,
-          data: 'action=restart',
+          data: 'csrf_token=""" + generate_csrf() + """&action=restart',
           success: daRestartCallback,
           dataType: 'json'
         });
@@ -7752,21 +7812,19 @@ def sms():
         del session['uid']
     return Response(str(resp), mimetype='text/xml')
 
-for path in [FULL_PACKAGE_DIRECTORY, PACKAGE_CACHE, UPLOAD_DIRECTORY, LOG_DIRECTORY]: #, os.path.join(PLAYGROUND_MODULES_DIRECTORY, 'docassemble')
+for path in [FULL_PACKAGE_DIRECTORY, UPLOAD_DIRECTORY, LOG_DIRECTORY]: #PACKAGE_CACHE
     if not os.path.isdir(path):
         try:
             os.makedirs(path)
         except:
-            print "Could not create path: " + path
-            sys.exit(1)
+            sys.exit("Could not create path: " + path)
     if not os.access(path, os.W_OK):
-        print "Unable to create files in directory: " + path
-        sys.exit(1)
+        sys.exit("Unable to create files in directory: " + path)
 if not os.access(WEBAPP_PATH, os.W_OK):
-    print "Unable to modify the timestamp of the WSGI file: " + WEBAPP_PATH
-    sys.exit(1)
+    sys.exit("Unable to modify the timestamp of the WSGI file: " + WEBAPP_PATH)
 
 docassemble.base.util.set_user_id_function(user_id_dict)
+docassemble.base.functions.set_generate_csrf(generate_csrf)
 docassemble.base.parse.set_url_finder(get_url_from_file_reference)
 docassemble.base.parse.set_url_for(url_for)
 #APPLICATION_NAME = 'docassemble'

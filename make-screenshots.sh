@@ -31,5 +31,6 @@ if [ -d ~/gh-pages-da ]
 then
     ./get_yaml_from_example.py docassemble_base/docassemble/base/data/questions/examples > ~/gh-pages-da/_data/example.yml
     rsync -auv docassemble_webapp/docassemble/webapp/static/examples ~/gh-pages-da/img/
+    psql -h localhost -T 'class="table table-striped"' -U docassemble -P footer=off -P border=0 -Hc "select table_name, column_name, data_type, character_maximum_length, column_default from information_schema.columns where table_schema='public'" docassemble > ~/gh-pages-da/_includes/db-schema.html
 fi
 rm $tempfile

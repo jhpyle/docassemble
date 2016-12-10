@@ -1,11 +1,11 @@
 #! /bin/bash
 
-# alter table "user" add column password varchar(255) default 'x';
+export DA_ACTIVATE="${DA_PYTHON:-/usr/share/docassemble/local}/bin/activate"
+source $DA_ACTIVATE
 
-export DA_CONFIG_FILE_DIST=/usr/share/docassemble/config/config.yml.dist
-export DA_CONFIG_FILE=/usr/share/docassemble/config/config.yml
+export DA_CONFIG_FILE_DIST="${DA_CONFIG_FILE_DIST:-/usr/share/docassemble/config/config.yml.dist}"
+export DA_CONFIG_FILE="${DA_CONFIG:-/usr/share/docassemble/config/config.yml}"
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
-source /usr/share/docassemble/local/bin/activate
 
 if pg_isready -q; then
     PGRUNNING=true
@@ -100,7 +100,7 @@ if [ "${S3ENABLE:-false}" == "true" ]; then
 	s3cmd -q sync s3://${S3BUCKET}/apache/ /etc/apache2/sites-available/
     fi
     if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/log) ]]; then
-	s3cmd -q sync s3://${S3BUCKET}/log/ /usr/share/docassemble/log/
+	s3cmd -q sync s3://${S3BUCKET}/log/ ${LOGDIRECTORY:-/usr/share/docassemble/log}/
     fi
     if [[ $(s3cmd ls s3://${S3BUCKET}/config.yml) ]]; then
 	rm -f $DA_CONFIG_FILE
@@ -140,7 +140,7 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 fi
 chown www-data.www-data $DA_CONFIG_FILE
 
-source /dev/stdin < <(su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
+source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
 
 if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(s3cmd ls s3://${S3BUCKET}/config.yml) ]]; then
     s3cmd -q put $DA_CONFIG_FILE s3://${S3BUCKET}/config.yml
@@ -212,7 +212,7 @@ if [ "${TIMEZONE:-undefined}" != "undefined" ]; then
 fi
 
 if [ "${S3ENABLE:-false}" == "true" ]; then
-    su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.s3register $DA_CONFIG_FILE" www-data
+    su -c "source $DA_ACTIVATE && python -m docassemble.webapp.s3register $DA_CONFIG_FILE" www-data
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
@@ -240,7 +240,7 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
-    su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.fix_postgresql_tables $DA_CONFIG_FILE && python -m docassemble.webapp.create_tables $DA_CONFIG_FILE" www-data
+    su -c "source $DA_ACTIVATE && python -m docassemble.webapp.fix_postgresql_tables $DA_CONFIG_FILE && python -m docassemble.webapp.create_tables $DA_CONFIG_FILE" www-data
 fi
 
 if [ -f /etc/syslog-ng/syslog-ng.conf ] && [ ! -f /usr/share/docassemble/webapp/syslog-ng-orig.conf ]; then
@@ -259,8 +259,8 @@ if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "${LOGSERVER:-undefined}" == "null" 
     OTHERLOGSERVER=false
 fi
 
-if [ "$OTHERLOGSERVER" = false ] && [ -f /usr/share/docassemble/log/docassemble.log ]; then
-    chown www-data.www-data /usr/share/docassemble/log/docassemble.log
+if [ "$OTHERLOGSERVER" = false ] && [ -f ${LOGDIRECTORY:-/usr/share/docassemble/log}/docassemble.log ]; then
+    chown www-data.www-data ${LOGDIRECTORY:-/usr/share/docassemble/log}/docassemble.log
 fi
 
 if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "$OTHERLOGSERVER" = true ]; then
@@ -284,9 +284,9 @@ if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]] && [ "$RABBITMQRUNNING" = false 
     supervisorctl --serverurl http://localhost:9001 start rabbitmq
 fi
 
-su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.update $DA_CONFIG_FILE" www-data || exit 1
+su -c "source $DA_ACTIVATE && python -m docassemble.webapp.update $DA_CONFIG_FILE" www-data || exit 1
 
-if su -c "source /usr/share/docassemble/local/bin/activate && celery -A docassemble.webapp.worker status" www-data 2>&1 | grep -q `hostname`; then
+if su -c "source $DA_ACTIVATE && celery -A docassemble.webapp.worker status" www-data 2>&1 | grep -q `hostname`; then
     CELERYRUNNING=true;
 else
     CELERYRUNNING=false;
@@ -370,16 +370,16 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
     fi
 fi
 
-su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.register $DA_CONFIG_FILE" www-data
+su -c "source $DA_ACTIVATE && python -m docassemble.webapp.register $DA_CONFIG_FILE" www-data
 
 if [ "$CRONRUNNING" = false ]; then
    supervisorctl --serverurl http://localhost:9001 start cron
 fi
 
 function deregister {
-    su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.deregister $DA_CONFIG_FILE" www-data
+    su -c "source $DA_ACTIVATE && python -m docassemble.webapp.deregister $DA_CONFIG_FILE" www-data
     if [ "${S3ENABLE:-false}" == "true" ]; then
-	su -c "source /usr/share/docassemble/local/bin/activate && python -m docassemble.webapp.s3deregister" www-data 
+	su -c "source $DA_ACTIVATE && python -m docassemble.webapp.s3deregister" www-data 
 	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
 	    s3cmd -q sync /usr/share/docassemble/log/ s3://${S3BUCKET}/log/
 	fi

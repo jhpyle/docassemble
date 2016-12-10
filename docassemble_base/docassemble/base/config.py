@@ -109,28 +109,11 @@ def load(**kwargs):
 def default_config():
     config = """\
 debug: true
-root: /
 exitpage: http://docassemble.org
-db:
-  prefix: postgresql+psycopg2://
-  name: docassemble
-  user: docassemble
-  password: abc123
-  host: localhost
-  port: null
 secretkey: 28asflwjeifwlfjsd2fejfiefw3g4o87
-password_secretkey: 2f928j3rwjf82498rje9t
-default_title: docassemble
-default_short_title: doc
-packagecache: /tmp/docassemble-cache
-uploads: /usr/share/docassemble/files
-packages: /usr/share/docassemble/local
-webapp: /usr/share/docassemble/webapp/docassemble.wsgi
 mail:
   default_sender: '"Administrator" <no-reply@example.com>'
-admin_address: '"Administrator" <admin@example.com>'
 default_interview: docassemble.demo:data/questions/questions.yml
-flask_log: /tmp/flask.log
 language: en
 locale: US.utf8
 words:

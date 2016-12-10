@@ -779,3 +779,9 @@ img.da-spinner {
 .fullwidth + label {
     width: 100%;
 }
+
+.CodeMirror {
+    border-width: 1px;
+    border-color: #dddddd;
+    border-style: solid;
+}

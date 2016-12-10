@@ -7,7 +7,8 @@
 #
 # This script will obtain new versions of the Javascript and CSS files
 
-source /usr/share/docassemble/local/bin/activate # for running pygmentize
+export DA_ACTIVATE="${DA_PYTHON:-/usr/share/docassemble/local}/bin/activate"
+source $DA_ACTIVATE # for running pygmentize
 
 cd static/app
 rm -f jasny-bootstrap.min.css
@@ -43,5 +44,6 @@ wget http://codemirror.net/codemirror.zip
 unzip codemirror.zip
 rm -f codemirror.zip
 mv codemirror-* codemirror
-rm -rf jquery-labelauty
-git clone https://github.com/fntneves/jquery-labelauty
+# need to use old version of jquery-labelauty
+#rm -rf jquery-labelauty
+#git clone https://github.com/fntneves/jquery-labelauty

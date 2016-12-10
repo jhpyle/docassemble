@@ -1,6 +1,7 @@
 #import sys
 from werkzeug.contrib.fixers import ProxyFix
 from flask import Flask
+from flask_wtf.csrf import CsrfProtect
 
 def create_app():
     app = Flask(__name__)
@@ -15,6 +16,8 @@ def create_app():
     from docassemble.webapp.db_object import db
     #sys.stderr.write("Setting up app\n")
     db.init_app(app)
+    csrf = CsrfProtect()
+    csrf.init_app(app)
     app.wsgi_app = ProxyFix(app.wsgi_app)
     return app
 

@@ -1,6 +1,6 @@
 import sys
 import docassemble.base.config
-docassemble.base.config.load(filename="/usr/share/docassemble/config/config.yml")
+docassemble.base.config.load(arguments=sys.argv)
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, dbtableprefix, hostname, in_celery
 
 from flask_socketio import join_room, disconnect

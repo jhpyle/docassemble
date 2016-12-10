@@ -382,6 +382,18 @@ def set_url_finder(func):
     if the_url_func.__doc__ is None:
         the_url_func.__doc__ = """Returns a URL to a file within a docassemble package."""
 
+def basic_generate_csrf(*pargs, **kwargs):
+    return None
+        
+the_generate_csrf = basic_generate_csrf
+
+def generate_csrf(*pargs, **kwargs):
+    return the_generate_csrf(*pargs, **kwargs)
+
+def set_generate_csrf(func):
+    global the_generate_csrf
+    the_generate_csrf = func
+        
 def null_worker(*pargs, **kwargs):
     #sys.stderr.write("Got to null worker\n")
     return None

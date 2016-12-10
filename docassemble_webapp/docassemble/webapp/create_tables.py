@@ -18,15 +18,15 @@ import string
 from flask_user import UserManager, SQLAlchemyAdapter
 
 def get_role(db, name):
-    the_role = Role.query.filter_by(name=word(name)).first()
+    the_role = Role.query.filter_by(name=name).first()
     if the_role:
         return the_role
-    the_role = Role(name=word(name))
+    the_role = Role(name=name)
     db.session.add(the_role)
     return the_role
 
 def get_user(db, role, defaults):
-    the_user = UserModel.query.filter_by(nickname=word(defaults['nickname'])).first()
+    the_user = UserModel.query.filter_by(nickname=defaults['nickname']).first()
     if the_user:
         return the_user
     user_auth = UserAuthModel(password=app.user_manager.hash_password(defaults.get('password', 'password')))
@@ -51,7 +51,15 @@ def get_user(db, role, defaults):
 
 def populate_tables():
     user_manager = UserManager(SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel), app)
-    admin_defaults = daconfig.get('default_admin_account', {'nickname': 'admin', 'email': 'admin@admin.com', 'first_name': 'System', 'last_name': 'Administrator'})
+    admin_defaults = daconfig.get('default_admin_account', dict())
+    if 'email' not in admin_defaults:
+        admin_defaults['email'] = 'admin@admin.com'
+    if 'nickname' not in admin_defaults:
+        admin_defaults['nickname'] = 'admin'
+    if 'first_name' not in admin_defaults:
+        admin_defaults['first_name'] = word('System')
+    if 'last_name' not in admin_defaults:
+        admin_defaults['first_name'] = word('Administrator')
     cron_defaults = daconfig.get('default_cron_account', {'nickname': 'cron', 'email': 'cron@admin.com', 'first_name': 'Cron', 'last_name': 'User'})
     cron_defaults['active'] = False
     user_role = get_role(db, 'user')

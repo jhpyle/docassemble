@@ -1,4 +1,4 @@
-from docassemble.base.functions import word, currency_symbol, url_action, comma_and_list
+from docassemble.base.functions import word, currency_symbol, url_action, comma_and_list, generate_csrf
 import docassemble.base.filter
 from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text
 from docassemble.base.parse import Question, debug
@@ -14,6 +14,7 @@ import codecs
 
 def tracker_tag(status):
     output = ''
+    output += '                <input type="hidden" name="csrf_token" value="' + generate_csrf() + '"/>\n'
     if status.question.name:
         output += '                <input type="hidden" name="_question_name" value="' + status.question.name + '"/>\n'
     output += '                <input type="hidden" name="_tracker" value="' + str(status.tracker) + '"/>\n'
@@ -986,6 +987,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
                         <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Send') + '</button></div><input type="hidden" name="_email_attachments" value="1"/><input type="hidden" name="_question_number" value="' + str(status.question.number) + '"/>'
             output += """
                       </fieldset>
+                      <input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/>
                     </form>
                   </div>
                 </div>
