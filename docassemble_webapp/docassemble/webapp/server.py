@@ -2694,7 +2694,7 @@ def index():
             # Duplicative to save here?
             #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
             release_lock(user_code, yaml_filename)
-            return jsonify(action='resubmit')
+            return jsonify(action='resubmit', csrf_token=generate_csrf())
         else:
             if hasattr(interview_status.question, 'binaryresponse'):
                 response_to_send = make_response(interview_status.question.binaryresponse, '200 OK')
@@ -2709,7 +2709,7 @@ def index():
         if is_ajax:
             #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
             release_lock(user_code, yaml_filename)
-            return jsonify(action='resubmit')
+            return jsonify(action='resubmit', csrf_token=generate_csrf())
         else:
             # Duplicative to save here?  Just for the 404?
             #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
@@ -3222,6 +3222,7 @@ def index():
         if (dadisable != null){
           clearTimeout(dadisable);
         }
+        daCsrf = data.csrf_token;
         if (data.action == 'body'){
           $("body").html(data.body);
           $("body").removeClass();
@@ -3996,7 +3997,7 @@ def index():
             reload_after = 1000 * int(interview_status.extras['reload_after'])
         else:
             reload_after = None
-        response = jsonify(action='body', body=output, extra_scripts=extra_scripts, extra_css=extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'])
+        response = jsonify(action='body', body=output, extra_scripts=extra_scripts, extra_css=extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf())
     else:
         output = start_output + output + end_output
         response = make_response(output.encode('utf8'), '200 OK')
