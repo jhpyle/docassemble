@@ -690,7 +690,7 @@ directives in the [configuration].
 For instructions on installing **docassemble** in a multi-server
 arrangement, see the [scalability] section.
 
-# Upgrading **docassemble**
+# <a name="upgrade"></a>Upgrading **docassemble**
 
 To upgrade a local installation of **docassemble** and its
 dependencies, do the following.  (This assumes that in the past you
@@ -708,6 +708,9 @@ pip install --upgrade \
 ./docassemble_base \
 ./docassemble_demo \
 ./docassemble_webapp
+cp ./docassemble/docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/
+cp ./docassemble/Docker/config/* /usr/share/docassemble/config/
+cp ./docassemble/Docker/*.sh /usr/share/docassemble/webapp/
 python -m docassemble.webapp.fix_postgresql_tables
 python -m docassemble.webapp.create_tables
 exit
@@ -729,11 +732,14 @@ Sometimes, new versions of docassemble require additional database
 tables or additional columns in tables.  The
 [`docassemble.webapp.fix_postgresql_tables`] module adds new columns
 to existing database tables, while the
-[`docassemble.webapp.create_tables`] module creates new tables.  (The
-latter works on non-[PostgreSQL] databases, but the former does not.)
-Hopefully, these modules will take care of all necessary changes to
-the database, but if there are problems, you can reset your database
-by running the following commands as root:
+[`docassemble.webapp.create_tables`] module creates new tables.
+
+The latter works on non-[PostgreSQL] databases, but the former does
+not.  If you are running a non-[PostgreSQL] database, and you get an
+error about a missing column, see the [schema] for information about
+what database columns need to exist.
+
+You can reset your database by running the following commands as root:
 
 {% highlight bash %}
 echo "drop database docassemble; create database docassemble owner docassemble;" | sudo -u postgres psql
@@ -753,6 +759,7 @@ Other times, a **docassemble** upgrade involves changes to the
 files.  In this case, you will need to manually reinstall
 **docassemble**.
 
+[schema]: {{ site.baseurl }}/docs/schema.html
 [dependencies]: {{ site.baseurl }}/docs/requirements.html
 [install it using Docker]: {{ site.baseurl }}/docs/docker.html
 [Docker]: {{ site.baseurl }}/docs/docker.html

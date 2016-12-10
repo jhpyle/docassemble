@@ -817,11 +817,30 @@ mail:
 Note that for this to work, you will need to go into your Google
 settings and set "Allow less secure apps" to "ON."
 
-Alternatively, you could set up an e-mail server on [Amazon SES].  It
-is easy to set up, but in order to get permission to send e-mails to
-the outside world, you will need to explain to Amazon what your
-purposes for sending e-mail are, and explain your policy of dealing
-with replies and bounce-backs.
+You can also use the [Amazon SES] service to send e-mail.  When you
+set it up, you will be given a username, password, and server.  In the
+**docassemble** configuration, you would write something like this:
+
+{% highlight yaml %}
+mail:
+  username: WJYAKIBAJVIFYAETTC3G
+  password: At6Cz2BH8Tx1zqPp0j3XhzlhbRnYsmBx7WwoItL9N5GU
+  server: email-smtp.us-east-1.amazonaws.com
+  default_sender: '"Example Inc." <no-reply@example.com>'
+{% endhighlight %}
+
+In order to send e-mail through [Amazon SES], you will need to verify
+your domain.  Among other things, this involves editing your [DNS]
+configuration to add a [TXT record] for the host `_amazonses`.
+
+To ensure that e-mails from your application are not blocked by spam
+filters, you should also add a [TXT record] with [SPF] information for
+your domain, indicating that [Amazon SES] is authorized to send e-mail
+for your domain:
+
+{% highlight text %}
+v=spf1 mx include:amazonses.com ~all
+{% endhighlight %}
 
 # Using S3 without passing access keys in the configuration
 
@@ -984,3 +1003,5 @@ number of PostgreSQL connections will be 12.
 [`Docker/cgi-bin/index.sh`]: {{ site.github.repository_url }}/blob/master/Docker/cgi-bin/index.sh
 [file sharing]: {{ site.baseurl }}/docs/docker.html#file sharing
 [data storage]: {{ site.baseurl }}/docs/docker.html#data storage
+[TXT record]: https://en.wikipedia.org/wiki/TXT_record
+[SPF]: https://en.wikipedia.org/wiki/Sender_Policy_Framework

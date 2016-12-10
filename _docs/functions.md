@@ -743,8 +743,6 @@ subquestion: |
 
 # <a name="background"></a>Background processes
 
-{% include side-by-side.html demo="background_action" %}
-
 If you include code in your interview that takes a long time to run,
 such as code that looks up information in an on-line database, the
 screen will take a long time to load and the user may think that the
@@ -752,26 +750,30 @@ application has "crashed" when it is actually just working normally.
 
 To get around this problem, **docassemble** allows interview authors
 to run code in "background processes."  While the user is answering
-other questions, the **docassemble** server can be hard at work
+other questions, or looking at a user-friendly screen that instructs
+the user to be patient, the **docassemble** server can be hard at work
 carrying out a variety of time-consuming tasks for the user.
 
-These tasks can even operate in parallel.  For example, if your
+These processes can even operate in parallel.  For example, if your
 interview searches the user's name in four different on-line
 databases, all of these searches can be carried out simultaneously,
 which will return a result to the user much faster than if the
 searches were carried out one after the other.
 
-**docassemble** uses [Celery], a "distributed task queue" system, to
-run these background tasks.  [Celery] is highly scalable.  If you are
-running **docassemble** on a single server and an interview starts 100
-tasks at the same time, [Celery] will will queue the tasks and handle
-them in order, working on several of them at a time.  And if
+**docassemble** runs these background tasks using [Celery], a
+"distributed task queue" system.  [Celery] is highly scalable.  If you
+are running **docassemble** on a single server and an interview starts
+100 tasks at the same time, [Celery] will will queue the tasks and
+handle them in order, working on several of them at a time.  And if
 background tasks are particularly important for your application, you
-can install multiple servers dedicated to handling these tasks.
+can install [multiple servers] dedicated to handling these tasks.
 
 ## <a name="background_action"></a>background_action()
 
-Starting a task involves calling the `background_action()` function.
+{% include side-by-side.html demo="background_action" %}
+
+Starting a background process involves calling the
+`background_action()` function.
 
 {% highlight yaml %}
 ---
@@ -780,21 +782,25 @@ code: |
 ---
 {% endhighlight %}
 
-In this example, the first argument, `bg_task`, is the name of an
-[action](#actions) available in the interview.
+In this example, the first argument to [`background_action()`],
+`bg_task`, is the name of an [action](#actions) available in the
+interview that contains the time-consuming code you want to run.
 
-The second argument indicates how the result of the action should be
-communicated to the user.  In this case, `None` means no communication
-(more on this [below](#ui_notification)).
+The second argument to [`background_action()`] indicates how the
+result of the action should be communicated to the user.  In this
+case, `None` means no communication (more on this
+[below](#ui_notification)).
 
 The keyword argument, `additional`, is an argument that is passed to
 that action (which can be retrieved with [`action_argument()`]).  The
 parameters to `background_action()` should be familiar if you have
-ever used [`url_action()`].
+ever used [`url_action()`].  You can have as many keyword arguments as
+you want, called anything you want, or you can have no keyword
+arguments at all.
 
-The `background_action()` function returns a [Celery] "task" object.
-If the object is named `the_task`, it can be used in the following
-ways:
+The `background_action()` function returns an object that represents a
+[Celery] "task."  In this example, the object is saved to a variable
+called `the_task`.  It can be used in the following ways:
 
 * `the_task.ready()` returns `True` if the task has been completed
   yet, and `False` if not.
@@ -812,7 +818,7 @@ run as soon as a [Celery] "worker" is available.
 
 The background action runs much like other [actions] do: via the
 [`process_action()`] function.  If you call `background_action()` in
-your interview, make sure that you have include [`initial`] code that
+your interview, make sure that you have included [`initial`] code that
 calls [`process_action()`], as in the example above.  This is
 important because it gives interview authors the ability to determine
 the context in which the [`process_action()`] function is called.  For
@@ -828,16 +834,25 @@ run as the special "[cron user]."  In addition, background tasks are
 different from [scheduled tasks] in that you can run background tasks
 regardless of whether [`multi_user`] is set to `True` or `False`.
 
+{% highlight yaml %}
+---
+event: bg_task
+code: |
+  # This is where time-consuming code would go
+  background_response(553 + action_argument('additional'))
+---
+{% endhighlight %}
+
 Any changes made to variables by a background action will not be
 remembered after the action finishes.  You need to use
 [`background_response()`] or [`background_response_action()`]
-(discussed below) in order to make a lasting change to variables in
-the interview.  This limitation exists because background actions are
-intended to run at the same time the user is answering questions in
-the interview.  If the background process starts at 3:05 p.m. and
-finishes at 3:10 p.m., but the user answers five questions between
-3:05 p.m. and 3:10 p.m., the user's changes would be overwritten if
-the background process saved its changes at 3:10 p.m.
+(discussed below) in order to communicate a result.  This limitation
+exists because background actions are intended to run at the same time
+the user is answering questions in the interview.  If the background
+process starts at 3:05 p.m. and finishes at 3:10 p.m., but the user
+answers five questions between 3:05 p.m. and 3:10 p.m., the user's
+changes would be overwritten if the background process saved its
+changes at 3:10 p.m.
 
 ## <a name="background_response"></a>background_response()
 
@@ -865,11 +880,12 @@ background_response(553 + action_argument('additional'))
 
 The response value is the sum of 553 and whatever number was provided
 in the `additional` parameter.  This value is not saved to any
-variable, since any changes that background actions make to variables
-are forgotten once the action completes.
+variable.  (Even if the background action tried to make a change to
+variables in the interview's dictionary, those changes would be
+forgotten once the action completes.)
 
-The interview retrieves the response value within a [Mako] template by
-calling the `.get()` method on the `the_task` variable:
+The interview can retrieve the response value by calling the `.get()`
+method on the `the_task` variable.  For example,
 
 {% highlight yaml %}
 question: |
@@ -924,7 +940,7 @@ When the code for the `bg_resp` action runs, it runs separately from
 the `bg_task` action.  If `bg_task` changes a variable in the
 interview's dictionary, the `bg_resp` action will not be able to see
 those changes.  The only way the `bg_task` action can send information
-to the `bg_resp` action is by passing arguments via the
+to the `bg_resp` action is by passing arguments to it via the
 `background_response_action()` function.
 
 In computer science terminology, the `bg_resp` action is similar to a
@@ -936,23 +952,27 @@ web browser, the actions will still continue to run.
 
 ## <a name="ui_notification"></a>Communicating results to the user interface
 
-You can alert the user when the background job finishes.
+**docassemble** can automatically alert the user when a background job
+finishes.  There are three ways this can be done.
 
-The first way to do this is to "flash" a message at the top of a user's
-screen.
+The first way is to "flash" a message at the top of a user's screen.
 
-The second way is to cause the user's screen to reload the
-interview when the job finishes.  If you used
-[`background_response_action()`] to change the interview's dictionary
-on the basis of work done by the background process, then this can be
-an effective way to present the effect of the changes to the user.
-However, it is important to be mindful of the user experience when
-using this feature; you would not want to annoy users by refreshing
-their screens while they are in the middle of entering information.
+The second way is to cause the user's screen to reload the interview
+when the job finishes.  If you used [`background_response_action()`]
+to change the interview's dictionary on the basis of work done by the
+background process, then the user may see a different screen after the
+interview reloads.  However, it is important to be mindful of the
+users' perspective when using this feature; you would not want to
+annoy users by refreshing their screens while they are in the middle
+of entering information.
+
+The third way is to cause the user's browser to run [Javascript] code
+produced by your background process.
 
 You can cause these responses by setting the second argument to
-[`background_action()`] to `'flash'` or `'refresh'`.  For no response,
-set the second argument to `None`.
+[`background_action()`] to `'flash'`, `'refresh'`, or `'javascript'`.
+Setting the second argument to `None` means that no notification of
+any kind will be sent to the user's browser.
 
 In the following example, the value provided to
 [`background_response()`] ("The answer is (some number)."), is
@@ -961,9 +981,10 @@ In the following example, the value provided to
 {% include side-by-side.html demo="background_action_flash" %}
 
 You can also "flash" messages when you use
-[`background_response_action()`] to save changes to the interview's
-dictionary: after setting the variable or variables you want to set,
-call [`background_response()`] with the message you want to flash.
+[`background_response_action()`] to run a separate [action](#actions)
+that saves changes to the interview's dictionary.  In your action that
+sets variables, conclude your code with a call to
+[`background_response()`] containing the message you want to flash.
 
 {% include side-by-side.html demo="background_response_action_flash" %}
 
@@ -972,16 +993,20 @@ screen refreshes.  Since the [`background_response_action()`] function
 was used to save the result of the background process to a variable
 (`answer`), the result can be displayed by referring to `${ answer }`.
 
-The user interface does not respond immediately.  It polls the server
-every six seconds.  Therefore, users may experience up to a six-second
-delay after the background process finishes before they receive
-notification.
-
-### Refresh
-
 {% include side-by-side.html demo="background_action_refresh" %}
 
+The next example is like the first, except the notification takes
+place through [Javascript] code created by the background process,
+which in this case uses the built-in [Javascript] function
+[`alert()`] to send a message to the user.
 
+{% include side-by-side.html demo="background_action_javascript" %}
+
+Note that the user interface does not respond immediately when the
+background task finishes.  The user's browser polls the server every
+six seconds (edit [`checkin interval`] to adjust this).  Therefore,
+users may experience up to a six-second delay after the background
+process finishes before they receive notification.
 
 ## Comparison with scheduled tasks
 
@@ -991,6 +1016,11 @@ background, without any direct interaction with the user.  The
 [scheduled tasks] are different in that they are triggered at monthly,
 weekly, daily, or hourly intervals, rather than being triggered by the
 user.
+
+Another difference is that [scheduled tasks] are always run by a
+[special user], and this requires that server-side encryption be
+disabled in the interview.  These restrictions do not apply to
+[background processes].
 
 # Geographic functions
 
@@ -2461,7 +2491,7 @@ modules:
 [`datetime`]: https://docs.python.org/2/library/datetime.html#datetime.datetime
 [`action_argument()`]: #action_argument
 [`action_arguments()`]: #action_arguments
-[HTTPS]: {{ site.baseurl }}/docs/scalability.html#ssl
+[HTTPS]: {{ site.baseurl }}/docs/docker.html#https
 [QR code]: https://en.wikipedia.org/wiki/QR_code
 [Profile page]: {{ site.baseurl }}/docs/users.html#profile
 [country code]: http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
@@ -2507,3 +2537,7 @@ modules:
 [`pycountry` package]: https://pypi.python.org/pypi/pycountry
 [`send_sms()`]: #send_sms
 [flash]: http://flask.pocoo.org/docs/0.11/patterns/flashing/
+[Javascript]: https://en.wikipedia.org/wiki/JavaScript
+[`alert()`]: http://www.w3schools.com/jsref/met_win_alert.asp
+[multiple servers]: {{ site.baseurl }}/docs/scalability.html
+[special user]: {{ site.baseurl }}/docs/scheduled.html#cron user

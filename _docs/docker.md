@@ -891,7 +891,7 @@ and [`docker rm`] on the **docassemble** container.  Note that [`docker rm`] wil
 [Docker Hub]: https://hub.docker.com/
 [scalability]: {{ site.baseurl }}/docs/scalability.html
 [Amazon S3]: https://aws.amazon.com/s3/
-[using HTTPS]: {{ site.baseurl }}/docs/scalability.html#ssl
+[using HTTPS]: #https
 [docassemble repository]: {{ site.github.repository_url }}
 [`docassemble/Dockerfile`]: {{ site.github.repository_url }}/blob/master/Dockerfile
 [`docassemble/Docker/config/config.yml.dist`]: {{ site.github.repository_url }}/blob/master/Docker/config/config.yml.dist

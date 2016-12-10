@@ -221,6 +221,16 @@
     the_answer = str(553 + action_argument('additional'))
     background_response("The answer is " + the_answer + ".")
   ---
+"background_action_javascript": |-
+  ---
+  code: |
+    the_task = background_action('bg_task', 'javascript', additional=value_to_add)
+  ---
+  event: bg_task
+  code: |
+    the_answer = str(553 + action_argument('additional'))
+    background_response("alert('The answer is " + the_answer + ".');")
+  ---
 "background_action_refresh": |-
   ---
   code: |

@@ -194,6 +194,10 @@ Packages can be installed in three different ways:
 Packages will be installed using the [pip] package manager.  A log
 of the output of [pip] will be shown.
 
+If you are running **docassemble** on Mac and Windows, make sure that
+the web server user has a home directory to which [pip] can write.
+(See [pip/utils/appdirs.py].)
+
 ## <a name="updating"></a>Updating Python packages
 
 To upgrade a package that you installed from a GitHub URL or from
@@ -249,3 +253,4 @@ interviews that might have a very different purpose.
 [initial blocks]: {{ site.baseurl }}/docs/logic.html#mandatory
 [machine learning]: {{ site.baseurl }}/docs/ml.html
 [translations]: {{ site.baseurl }}/docs/config.html#words
+[pip/utils/appdirs.py]: https://github.com/pypa/pip/blob/master/pip/utils/appdirs.py
