@@ -1165,15 +1165,18 @@ def uninstall_package(packagename):
             SavedFile(the_upload_number).delete()
         trigger_update(except_for=hostname)
         restart_this()
-        flash(word("Uninstall successful: " + str(results)), 'success')
+        flash(summarize_results(results), 'success')
     else:
-        flash(word("Uninstall not successful: " + str(results)), 'error')
+        flash(summarize_results(results), 'error')
     if len(logmessages):
         logmessages = re.sub(r'\n', r'<br>', logmessages)
         flash('pip log:  ' + Markup(logmessages), 'info')
         #logmessage(logmessages)
     logmessage("server uninstall_package: done")
     return
+
+def summarize_results(results):
+    return Markup('<br>'.join([x + ':&nbsp;' + results[x] for x in sorted(results.keys())]))
 
 def install_zip_package(packagename, file_number):
     logmessage("install_zip_package: " + packagename + " " + str(file_number))
@@ -1196,9 +1199,9 @@ def install_zip_package(packagename, file_number):
     if ok:
         trigger_update(except_for=hostname)
         restart_this()
-        flash(word("Install successful: " + str(results)), 'success')
+        flash(summarize_results(results), 'success')
     else:
-        flash(word("Install not successful: " + str(results)), 'error')
+        flash(summarize_results(results), 'error')
     logmessages = re.sub(r'\n', r'<br>', logmessages)
     flash('pip log: ' + Markup(logmessages), 'info')
     return
@@ -1226,9 +1229,9 @@ def install_git_package(packagename, giturl):
     if ok:
         trigger_update(except_for=hostname)
         restart_this()
-        flash(word("Install successful: " + str(results)), 'success')
+        flash(summarize_results(results), 'success')
     else:
-        flash(word("Install not successful: " + str(results)), 'error')
+        flash(summarize_results(results), 'error')
     logmessages = re.sub(r'\n', r'<br>', logmessages)
     flash('pip log: ' + Markup(logmessages), 'info')
     return
@@ -1254,9 +1257,9 @@ def install_pip_package(packagename, limitation):
     if ok:
         trigger_update(except_for=hostname)
         restart_this()
-        flash(word("Install successful: " + str(results)), 'success')
+        flash(summarize_results(results), 'success')
     else:
-        flash(word("Install not successful: " + str(results)), 'error')
+        flash(summarize_results(results), 'error')
     logmessages = re.sub(r'\n', r'<br>', logmessages)
     flash('pip log: ' + Markup(logmessages), 'info')
     return
