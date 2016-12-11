@@ -1,6 +1,7 @@
-import string
-import random
+#import string
+#import random
 from docassemble.base.logger import logmessage
+from docassemble.base.generate_key import random_string
 import re
 import codecs
 import redis
@@ -32,7 +33,7 @@ def object_name_convert(text):
 
 def get_unique_name():
     while True:
-        newname = ''.join(random.choice(string.ascii_letters) for i in range(12))
+        newname = random_string(12)
         if newname in unique_names:
             continue
         unique_names.add(newname)

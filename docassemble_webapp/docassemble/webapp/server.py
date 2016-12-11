@@ -161,7 +161,7 @@ else:
 def logout():
     secret = request.cookies.get('secret', None)
     if secret is None:
-        secret = ''.join(random.choice(string.ascii_letters) for i in range(16))
+        secret = random_string(16)
         set_cookie = True
     else:
         secret = str(secret)
@@ -278,8 +278,8 @@ from Crypto.Hash import MD5
 import mimetypes
 import logging
 import cPickle as pickle
-import string
-import random
+#import string
+#import random
 import cgi
 import Cookie
 import urlparse
@@ -321,6 +321,7 @@ from docassemble.webapp.backend import s3, initial_dict, can_access_file_number,
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, Messages
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
+from docassemble.base.generate_key import random_string, random_alphanumeric
 import docassemble.base.functions
 import docassemble.base.util
 
@@ -953,7 +954,7 @@ def progress_bar(progress):
 def get_unique_name(filename, secret):
     nowtime = datetime.datetime.utcnow()
     while True:
-        newname = ''.join(random.choice(string.ascii_letters) for i in range(32))
+        newname = random_string(32)
         obtain_lock(newname, filename)
         existing_key = UserDict.query.filter_by(key=newname).first()
         if existing_key:
@@ -2181,7 +2182,7 @@ def index():
         secret = request.cookies.get('secret', None)
     encrypted = session.get('encrypted', True)
     if secret is None:
-        secret = ''.join(random.choice(string.ascii_letters) for i in range(16))
+        secret = random_string(16)
         set_cookie = True
     else:
         secret = str(secret)
@@ -4017,7 +4018,7 @@ def utility_processor():
     def word(text):
         return docassemble.base.functions.word(text)
     def random_social():
-        return 'local$' + ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
+        return 'local$' + random_alphanumeric(32)
     return dict(random_social=random_social, word=word)
 
 @app.route('/speakfile', methods=['GET'])
@@ -7236,7 +7237,7 @@ def sms():
             if inp.lower() in tconfig['dispatch']:
                 yaml_filename = tconfig['dispatch'][inp.lower()]
                 #logmessage("sms: using interview from dispatch: " + str(yaml_filename))
-        secret = ''.join(random.choice(string.ascii_letters) for i in range(16))
+        secret = random_string(16)
         uid = get_unique_name(yaml_filename, secret)
         new_temp_user = TempUser()
         db.session.add(new_temp_user)

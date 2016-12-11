@@ -6,6 +6,7 @@ from docassemble.webapp.core.models import Uploads
 from docassemble.base.logger import logmessage
 from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList
+from docassemble.base.generate_key import random_string
 from sqlalchemy import or_, and_
 import docassemble.webapp.database
 import logging
@@ -13,8 +14,8 @@ import urllib
 import tempfile
 import cPickle as pickle
 import codecs
-import string
-import random
+#import string
+#import random
 import pprint
 import datetime
 import json
@@ -308,7 +309,7 @@ def unpack_phrase(phrase_string):
 
 def encrypt_dictionary(the_dict, secret):
     #sys.stderr.write("40\n")
-    iv = ''.join(random.choice(string.ascii_letters) for i in range(16))
+    iv = random_string(16)
     #iv = Random.new().read(AES.block_size)
     #sys.stderr.write("41\n")
     #sys.stderr.write("iv is " + str(iv) + "\n")

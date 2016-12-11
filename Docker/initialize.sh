@@ -112,7 +112,7 @@ if [ "${S3ENABLE:-false}" == "true" ]; then
     fi
 fi
 
-DEFAULT_SECRET=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 32)
+DEFAULT_SECRET=$(python -m docassemble.base.generate_key)
 
 if [ ! -f $DA_CONFIG_FILE ]; then
     sed -e 's@{{DBPREFIX}}@'"${DBPREFIX:-postgresql+psycopg2://}"'@' \
@@ -151,8 +151,14 @@ fi
 
 if [ "${EC2:-false}" == "true" ]; then
     export LOCAL_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/local-hostname`
+    export PUBLIC_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/public-hostname`
 else
     export LOCAL_HOSTNAME=`hostname --fqdn`
+    export PUBLIC_HOSTNAME=$LOCAL_HOSTNAME
+fi
+
+if [ "${DAHOSTNAME:-none}" == "none" ]; then
+    export DAHOSTNAME=$PUBLIC_HOSTNAME
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then

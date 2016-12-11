@@ -13,8 +13,9 @@ from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supe
 from docassemble.webapp.users.models import UserModel, UserAuthModel, Role, UserRoles, UserDict, UserDictKeys, TempUser, ChatLog
 from docassemble.webapp.update import get_installed_distributions, add_dependencies
 from sqlalchemy import create_engine, MetaData
-import random
-import string
+#import random
+#import string
+from docassemble.base.generate_key import random_alphanumeric
 from flask_user import UserManager, SQLAlchemyAdapter
 
 def get_role(db, name):
@@ -34,7 +35,7 @@ def get_user(db, role, defaults):
     the_user = UserModel(
         active=defaults.get('active', True),
         nickname=defaults['nickname'],
-        social_id='local$' + ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32)),
+        social_id='local$' + random_alphanumeric(32),
         email=defaults['email'],
         user_auth=user_auth,
         first_name = defaults.get('first_name', ''),

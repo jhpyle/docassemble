@@ -90,7 +90,7 @@ def check_for_updates():
     if changed:
         db.session.commit()
     for package in packages.itervalues():
-        logmessage("check_for_updates: processing package id " + str(package.id))
+        #logmessage("check_for_updates: processing package id " + str(package.id))
         #logmessage("1: " + str(installs[package.id].packageversion) + " 2: " + str(package.packageversion))
         if (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is None) or (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is not None and LooseVersion(package.packageversion) > LooseVersion(installs[package.id].packageversion)):
             new_version_needed = True

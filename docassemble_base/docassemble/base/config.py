@@ -3,8 +3,9 @@ import os
 import sys
 import httplib2
 import socket
-import string
-import random
+#import string
+#import random
+from docassemble.base.generate_key import random_string
 
 dbtableprefix = None
 daconfig = dict()
@@ -110,7 +111,7 @@ def load(**kwargs):
 
 def default_config():
     config = """\
-secretkey: """ + ''.join(random.choice(string.ascii_letters) for i in range(32)) + """
+secretkey: """ + random_string(32) + """
 mail:
   default_sender: '"Administrator" <no-reply@example.com>'
 """
