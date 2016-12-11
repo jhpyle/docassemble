@@ -199,7 +199,7 @@ def custom_login():
         try:
             login_form.validate()
         except:
-            logmessage("Got an error when validating login")
+            logmessage("custom_login: got an error when validating login")
             pass
     if request.method == 'POST' and login_form.validate():
         user = None
@@ -1149,7 +1149,7 @@ def user_can_edit_package(pkgname=None, giturl=None):
     return(False)
 
 def uninstall_package(packagename):
-    logmessage("server uninstall_package: " + packagename)
+    #logmessage("server uninstall_package: " + packagename)
     existing_package = Package.query.filter_by(name=packagename, active=True).order_by(Package.id.desc()).first()
     if existing_package is None:
         flash(word("Package did not exist"), 'error')
@@ -1165,21 +1165,24 @@ def uninstall_package(packagename):
             SavedFile(the_upload_number).delete()
         trigger_update(except_for=hostname)
         restart_this()
-        flash(summarize_results(results), 'success')
+        flash(summarize_results(results, logmessages), 'info')
     else:
-        flash(summarize_results(results), 'error')
-    if len(logmessages):
-        logmessages = re.sub(r'\n', r'<br>', logmessages)
-        flash('pip log:  ' + Markup(logmessages), 'info')
-        #logmessage(logmessages)
-    logmessage("server uninstall_package: done")
+        flash(summarize_results(results, logmessages), 'error')
+    #logmessage("server uninstall_package: done")
     return
 
-def summarize_results(results):
-    return Markup('<br>'.join([x + ':&nbsp;' + results[x] for x in sorted(results.keys())]))
+def summarize_results(results, logmessages):
+    output = '<br>'.join([x + ':&nbsp;' + results[x] for x in sorted(results.keys())])
+    if len(logmessages):
+        if len(output):
+            output += '<br><br><strong>'+ word("pip log") + ':</strong><br>'
+        else:
+            output = ''
+        output += re.sub(r'\n', r'<br>', logmessages)
+    return Markup(output)
 
 def install_zip_package(packagename, file_number):
-    logmessage("install_zip_package: " + packagename + " " + str(file_number))
+    #logmessage("install_zip_package: " + packagename + " " + str(file_number))
     existing_package = Package.query.filter_by(name=packagename, active=True).order_by(Package.id.desc()).first()
     if existing_package is None:
         package_auth = PackageAuth(user_id=current_user.id)
@@ -1199,15 +1202,13 @@ def install_zip_package(packagename, file_number):
     if ok:
         trigger_update(except_for=hostname)
         restart_this()
-        flash(summarize_results(results), 'success')
+        flash(summarize_results(results, logmessages), 'info')
     else:
-        flash(summarize_results(results), 'error')
-    logmessages = re.sub(r'\n', r'<br>', logmessages)
-    flash('pip log: ' + Markup(logmessages), 'info')
+        flash(summarize_results(results, logmessages), 'error')
     return
 
 def install_git_package(packagename, giturl):
-    logmessage("install_git_package: " + packagename + " " + str(giturl))
+    #logmessage("install_git_package: " + packagename + " " + str(giturl))
     if Package.query.filter_by(name=packagename, active=True).first() is None and Package.query.filter_by(giturl=giturl, active=True).first() is None:
         package_auth = PackageAuth(user_id=current_user.id)
         package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth, version=1, active=True, type='git')
@@ -1229,11 +1230,9 @@ def install_git_package(packagename, giturl):
     if ok:
         trigger_update(except_for=hostname)
         restart_this()
-        flash(summarize_results(results), 'success')
+        flash(summarize_results(results, logmessages), 'info')
     else:
-        flash(summarize_results(results), 'error')
-    logmessages = re.sub(r'\n', r'<br>', logmessages)
-    flash('pip log: ' + Markup(logmessages), 'info')
+        flash(summarize_results(results, logmessages), 'error')
     return
 
 def install_pip_package(packagename, limitation):
@@ -1257,11 +1256,9 @@ def install_pip_package(packagename, limitation):
     if ok:
         trigger_update(except_for=hostname)
         restart_this()
-        flash(summarize_results(results), 'success')
+        flash(summarize_results(results, logmessages), 'info')
     else:
-        flash(summarize_results(results), 'error')
-    logmessages = re.sub(r'\n', r'<br>', logmessages)
-    flash('pip log: ' + Markup(logmessages), 'info')
+        flash(summarize_results(results, logmessages), 'error')
     return
 
 def get_package_info():
@@ -1366,7 +1363,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
             has_error = True
             error_message = str(errmess)
             error_type = type(errmess)
-            logmessage("Failed assembly with error type " + str(error_type) + " and message: " + error_message)
+            logmessage("get_vars_in_use: failed assembly with error type " + str(error_type) + " and message: " + error_message)
     fields_used = set()
     names_used = set()
     names_used.update(interview.names_used)
@@ -1592,7 +1589,7 @@ def restart_this():
     return
 
 def restart_others():
-    logmessage("Got to restart_others")
+    logmessage("restart_others: starting")
     if USING_SUPERVISOR:
         for host in Supervisors.query.all():
             if host.url:
@@ -1644,9 +1641,9 @@ def call_sync():
     args = [SUPERVISORCTL, '-s', 'http://localhost:9001', 'start', 'sync']
     result = call(args)
     if result == 0:
-        logmessage("logs: sent message to " + hostname)
+        logmessage("call_sync: sent message to " + hostname)
     else:
-        logmessage("logs: call to supervisorctl on " + hostname + " was not successful")
+        logmessage("call_sync: call to supervisorctl on " + hostname + " was not successful")
         abort(404)
     in_process = 1
     counter = 10
@@ -1909,11 +1906,11 @@ def checkout():
 @login_required
 @roles_required(['admin', 'developer'])
 def restart_ajax():
-    logmessage("Action is " + str(request.form.get('action', None)))
+    logmessage("restart_ajax: action is " + str(request.form.get('action', None)))
     if current_user.has_role('admin', 'developer'):
-        logmessage("User has perms")
+        logmessage("restart_ajax: user has permission")
     else:
-        logmessage("User has no perms")
+        logmessage("restart_ajax: user has no permission")
     if request.form.get('action', None) == 'restart' and current_user.has_role('admin', 'developer'):
         restart_all()
         return jsonify(success=True)
@@ -2110,7 +2107,7 @@ def checkin():
                     obj['blocked'] = False
                 r.publish('da:monitor', json.dumps(dict(messagetype='sessionupdate', key=key, session=obj)))
             else:
-                logmessage("The html was not found at " + str(html_key))
+                logmessage("checkin: the html was not found at " + str(html_key))
         pipe = r.pipeline()
         pipe.set(key, pickle.dumps(obj))
         pipe.expire(key, 60)
@@ -2216,7 +2213,7 @@ def index():
                 del session['key_logged']
             need_to_reset = True
         else:
-            logmessage("Both i and session provided")
+            #logmessage("Both i and session provided")
             if show_flash:
                 if current_user.is_authenticated:
                     message = "Entering a different interview.  To go back to your previous interview, go to My Interviews on the menu."
@@ -2225,7 +2222,7 @@ def index():
         if show_flash:
             flash(word(message), 'info')
     if session_parameter is not None:
-        logmessage("session parameter is " + str(session_parameter))
+        #logmessage("session parameter is " + str(session_parameter))
         session_id = session_parameter
         session['uid'] = session_id
         if yaml_parameter is not None:
@@ -2251,7 +2248,7 @@ def index():
             encrypted = is_encrypted
             session['encrypted'] = encrypted
         if user_dict is None:
-            logmessage("user_dict was none")
+            logmessage("index: user_dict was None")
             try:
                 release_lock(user_code, yaml_filename)
             except:
@@ -2337,7 +2334,7 @@ def index():
                 success = True
             except Exception as errmess:
                 success = False
-                logmessage("Fail: " + str(errmess))
+                logmessage("index: failed with " + str(errmess))
                 break
         if success:
             flash(word("Your documents will be e-mailed to") + " " + str(attachment_email_address) + ".", 'success')
@@ -2377,10 +2374,10 @@ def index():
                 post_data.add(checkbox_field, 'False')
     something_changed = False
     if '_tracker' in post_data and user_dict['_internal']['tracker'] != int(post_data['_tracker']):
-        logmessage("Something changed.")
+        logmessage("index: something changed.")
         something_changed = True
     if '_track_location' in post_data and post_data['_track_location']:
-        logmessage("Found track location of " + post_data['_track_location'])
+        logmessage("index: found track location of " + post_data['_track_location'])
         the_location = json.loads(post_data['_track_location'])
     else:
         the_location = None
@@ -2392,7 +2389,7 @@ def index():
                     should_assemble = True
                     break
             except:
-                logmessage("Bad key: " + str(key))
+                logmessage("index: bad key was " + str(key))
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location), tracker=user_dict['_internal']['tracker'])
     if should_assemble:
@@ -2719,7 +2716,7 @@ def index():
             #save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
             the_path = interview_status.question.response_filename
             if not os.path.isfile(the_path):
-                logmessage("Could not send file because file (" + the_path + ") not found")
+                logmessage("index: could not send file because file (" + the_path + ") not found")
                 abort(404)
             response_to_send = send_file(the_path, mimetype=interview_status.extras['content_type'])
             response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -3865,7 +3862,7 @@ def index():
             elif the_language in valid_voicerss_languages:
                 the_dialect = valid_voicerss_languages[the_language][0]
             else:
-                logmessage("Unable to determine dialect; reverting to default")
+                logmessage("index: unable to determine dialect; reverting to default")
                 the_language = DEFAULT_LANGUAGE
                 the_dialect = DEFAULT_DIALECT
             for question_type in ['question', 'help']:
@@ -3895,7 +3892,7 @@ def index():
                     else:
                         existing_phrase = unpack_phrase(existing_entry.phrase)
                     if phrase != existing_phrase:
-                        logmessage("The phrase changed; updating it")
+                        logmessage("index: the phrase changed; updating it")
                         existing_entry.phrase = the_phrase
                         existing_entry.upload = None
                         existing_entry.encrypted = encrypted
@@ -4039,21 +4036,21 @@ def speak_file():
     if secret is not None:
         secret = str(secret)
     if file_format not in ['mp3', 'ogg'] or not (filename and key and question and question_type and file_format and the_language and the_dialect):
-        logmessage("Could not serve speak file because invalid or missing data was provided: filename " + str(filename) + " and key " + str(key) + " and question number " + str(question) + " and question type " + str(question_type) + " and language " + str(the_language) + " and dialect " + str(the_dialect))
+        logmessage("speak_file: could not serve speak file because invalid or missing data was provided: filename " + str(filename) + " and key " + str(key) + " and question number " + str(question) + " and question type " + str(question_type) + " and language " + str(the_language) + " and dialect " + str(the_dialect))
         abort(404)
     entry = SpeakList.query.filter_by(filename=filename, key=key, question=question, digest=the_hash, type=question_type, language=the_language, dialect=the_dialect).first()
     if not entry:
-        logmessage("Could not serve speak file because no entry could be found in speaklist for filename " + str(filename) + " and key " + str(key) + " and question number " + str(question) + " and question type " + str(question_type) + " and language " + str(the_language) + " and dialect " + str(the_dialect))
+        logmessage("speak_file: could not serve speak file because no entry could be found in speaklist for filename " + str(filename) + " and key " + str(key) + " and question number " + str(question) + " and question type " + str(question_type) + " and language " + str(the_language) + " and dialect " + str(the_dialect))
         abort(404)
     if not entry.upload:
         existing_entry = SpeakList.query.filter(SpeakList.phrase == entry.phrase, SpeakList.language == entry.language, SpeakList.dialect == entry.dialect, SpeakList.upload != None, SpeakList.encrypted == entry.encrypted).first()
         if existing_entry:
-            logmessage("Found existing entry: " + str(existing_entry.id) + ".  Setting to " + str(existing_entry.upload))
+            logmessage("speak_file: found existing entry: " + str(existing_entry.id) + ".  Setting to " + str(existing_entry.upload))
             entry.upload = existing_entry.upload
             db.session.commit()
         else:
             if not VOICERSS_ENABLED:
-                logmessage("Could not serve speak file because voicerss not enabled")
+                logmessage("speak_file: could not serve speak file because voicerss not enabled")
                 abort(404)
             new_file_number = get_new_file_number(key, 'speak.mp3', yaml_file_name=filename)
             #phrase = codecs.decode(entry.phrase, 'base64')
@@ -4067,25 +4064,25 @@ def speak_file():
             audio_file.fetch_url_post(url, dict(f=voicerss_config.get('format', '16khz_16bit_stereo'), key=voicerss_config['key'], src=phrase, hl=str(entry.language) + '-' + str(entry.dialect)))
             if audio_file.size_in_bytes() > 100:
                 call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', audio_file.path + '.mp3']
-                logmessage("Calling " + " ".join(call_array))
+                logmessage("speak_file: calling " + " ".join(call_array))
                 result = call(call_array)
                 if result != 0:
-                    logmessage("Failed to convert downloaded mp3 (" + audio_file.path + '.mp3' + ") to ogg")
+                    logmessage("speak_file: failed to convert downloaded mp3 (" + audio_file.path + '.mp3' + ") to ogg")
                     abort(404)
                 entry.upload = new_file_number
                 audio_file.finalize()
                 db.session.commit()
             else:
-                logmessage("Download from voicerss (" + url + ") failed")
+                logmessage("speak_file: download from voicerss (" + url + ") failed")
                 abort(404)
     if not entry.upload:
-        logmessage("Upload file number was not set")
+        logmessage("speak_file: upload file number was not set")
         abort(404)
     if not audio_file:
         audio_file = SavedFile(entry.upload, extension='mp3', fix=True)
     the_path = audio_file.path + '.' + file_format
     if not os.path.isfile(the_path):
-        logmessage("Could not serve speak file because file (" + the_path + ") not found")
+        logmessage("speak_file: could not serve speak file because file (" + the_path + ") not found")
         abort(404)
     response = send_file(the_path, mimetype=audio_mimetype_table[file_format])
     return(response)
@@ -4171,7 +4168,7 @@ def serve_uploaded_pagescreen(number, page):
         privileged = False
     file_info = get_info_from_file_number(number, privileged=privileged)
     if 'path' not in file_info:
-        logmessage('no access to file number ' + str(number))
+        logmessage('serve_uploaded_pagescreen: no access to file number ' + str(number))
         abort(404)
     else:
         filename = file_info['path'] + 'screen-' + str(page) + '.png'
@@ -4179,7 +4176,7 @@ def serve_uploaded_pagescreen(number, page):
             response = send_file(filename, mimetype='image/png')
             return(response)
         else:
-            logmessage('path ' + filename + ' is not a file')
+            logmessage('serve_uploaded_pagescreen: path ' + filename + ' is not a file')
             abort(404)
 
 @app.route('/visit_interview', methods=['GET', 'POST'])
@@ -4567,7 +4564,7 @@ def observer():
     if html is not None:
         obj = json.loads(html)
     else:
-        logmessage("Failed to load JSON from key " + the_key)
+        logmessage("observer: failed to load JSON from key " + the_key)
         obj = dict()
     output = standard_html_start(interview_language=obj.get('lang', 'en'), debug=DEBUG)
     output += "".join(obj.get('extra_css', list()))
@@ -6140,7 +6137,7 @@ def config_page():
                 content = form.config_content.data
                 errMess = word("Configuration not updated.  There was a syntax error in the configuration YAML.") + '<pre>' + str(errMess) + '</pre>'
                 flash(str(errMess), 'error')
-                logmessage(str(errMess))
+                logmessage('config_page: ' + str(errMess))
             if ok:
                 if S3_ENABLED:
                     key = s3.get_key('config.yml')
@@ -7084,7 +7081,7 @@ def interview_list():
         try:
             interview = docassemble.base.interview_cache.get_interview(interview_info.filename)
         except:
-            logmessage("Unable to load interview file " + interview_info.filename)
+            logmessage("interview_list: unable to load interview file " + interview_info.filename)
             continue
         if len(interview.metadata):
             metadata = interview.metadata[0]
@@ -7096,7 +7093,7 @@ def interview_list():
             try:
                 dictionary = decrypt_dictionary(interview_info.dictionary, secret)
             except:
-                logmessage("Unable to decrypt dictionary with secret " + str(secret))
+                logmessage("interview_list: unable to decrypt dictionary with secret " + str(secret))
                 continue
         else:
             dictionary = unpack_dictionary(interview_info.dictionary)
@@ -7128,13 +7125,13 @@ def interview_list():
 @app.route('/webrtc_token', methods=['GET'])
 def webrtc_token():
     if twilio_config is None:
-        logmessage("Could not get twilio configuration")
+        logmessage("webrtc_token: could not get twilio configuration")
         return
     account_sid = twilio_config['name']['default'].get('account sid', None)
     auth_token = twilio_config['name']['default'].get('auth token', None)
     application_sid = twilio_config['name']['default'].get('app sid', None)
 
-    logmessage("account sid is " + str(account_sid) + "; auth_token is " + str(auth_token) + "; application_sid is " + str(application_sid))
+    logmessage("webrtc_token: account sid is " + str(account_sid) + "; auth_token is " + str(auth_token) + "; application_sid is " + str(application_sid))
 
     identity = 'testuser2'
 
@@ -7149,16 +7146,16 @@ def webrtc_token():
 def voice():
     resp = twilio.twiml.Response()
     if twilio_config is None:
-        logmessage("Ignoring call to voice because Twilio not enabled")
+        logmessage("voice: ignoring call to voice because Twilio not enabled")
         return Response(str(resp), mimetype='text/xml')
     if 'voice' not in twilio_config['name']['default'] or twilio_config['name']['default']['voice'] in [False, None]:
-        logmessage("Ignoring call to voice because voice feature not enabled")
+        logmessage("voice: ignoring call to voice because voice feature not enabled")
         return Response(str(resp), mimetype='text/xml')
     if "AccountSid" not in request.form or request.form["AccountSid"] != twilio_config['name']['default'].get('account sid', None):
-        logmessage("Request to voice did not authenticate")
+        logmessage("voice: request to voice did not authenticate")
         return Response(str(resp), mimetype='text/xml')
     for item in request.form:
-        logmessage("Item " + str(item) + " is " + str(request.form[item]))
+        logmessage("voice: item " + str(item) + " is " + str(request.form[item]))
     with resp.gather(action=daconfig.get('root', '/') + "digits", finishOnKey='#', method="POST", timeout=10, numDigits=5) as g:
         g.say(word("Please enter the four digit code, followed by the pound sign."))
 
@@ -7182,10 +7179,10 @@ def voice():
 def digits():
     resp = twilio.twiml.Response()
     if twilio_config is None:
-        logmessage("Ignoring call to digits because Twilio not enabled")
+        logmessage("digits: ignoring call to digits because Twilio not enabled")
         return Response(str(resp), mimetype='text/xml')
     if "AccountSid" not in request.form or request.form["AccountSid"] != twilio_config['name']['default'].get('account sid', None):
-        logmessage("Request to digits did not authenticate")
+        logmessage("digits: request to digits did not authenticate")
         return Response(str(resp), mimetype='text/xml')
     if "Digits" in request.form:
         the_digits = re.sub(r'[^0-9]', '', request.form["Digits"])
@@ -7298,7 +7295,7 @@ def sms():
             sess_info['question'] = interview_status.question.name
             r.set(key, pickle.dumps(sess_info))
         elif 'question' in sess_info and sess_info['question'] != interview_status.question.name:
-            logmessage("blanking the input because question changed")
+            logmessage("sms: blanking the input because question changed")
             if inp not in [word('?'), word('back'), word('question'), word('exit')]:
                 inp = 'question'
 
@@ -7782,7 +7779,7 @@ if 'twilio' in daconfig:
             if 'name' in tconfig:
                 twilio_config['name'][tconfig['name']] = tconfig
         else:
-            logmessage("Improper setup in twilio configuration")    
+            logmessage("sms: improper setup in twilio configuration")    
     if 'default' not in twilio_config['name']:
         twilio_config = None
 else:

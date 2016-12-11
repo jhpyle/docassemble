@@ -82,7 +82,7 @@ def check_for_updates():
         package_owner[auth.package_id] = auth.user_id
     for package in packages.itervalues():
         if package.id not in installs and package.name in here_already:
-            logmessage("Package " + package.name + " here already")
+            logmessage("check_for_updates: package " + package.name + " here already")
             install = Install(hostname=hostname, packageversion=here_already[package.name], version=package.version, package_id=package.id)
             db.session.add(install)
             installs[package.id] = install
@@ -90,7 +90,7 @@ def check_for_updates():
     if changed:
         db.session.commit()
     for package in packages.itervalues():
-        #logmessage("Processing package id " + str(package.id))
+        logmessage("check_for_updates: processing package id " + str(package.id))
         #logmessage("1: " + str(installs[package.id].packageversion) + " 2: " + str(package.packageversion))
         if (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is None) or (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is not None and LooseVersion(package.packageversion) > LooseVersion(installs[package.id].packageversion)):
             new_version_needed = True
@@ -101,9 +101,10 @@ def check_for_updates():
             to_install.append(package)
     #logmessage("done with that")
     for package in to_uninstall:
-        logmessage("Going to uninstall a package: " + package.name)
+        #logmessage("Going to uninstall a package: " + package.name)
         if package.name in uninstall_done:
-            logmessage("Skipping uninstallation of " + str(package.name) + " because already uninstalled")
+            logmessage("check_for_updates: skipping uninstallation of " + str(package.name) + " because already uninstalled")
+            continue
         returnval, newlog = uninstall_package(package)
         uninstall_done[package.name] = 1
         logmessages += newlog
@@ -115,25 +116,25 @@ def check_for_updates():
             ok = False
     packages_to_delete = list()
     for package in to_install:
-        logmessage("Going to install a package: " + package.name)
+        logmessage("check_for_updates: going to install a package: " + package.name)
         returnval, newlog = install_package(package)
         logmessages += newlog
-        logmessage("Return value was " + str(returnval))
+        logmessage("check_for_updates: return value was " + str(returnval))
         if returnval != 0:
             logmessage("Return value was not good")
             ok = False
         pip._vendor.pkg_resources._initialize_master_working_set()
         real_name = get_real_name(package.name)
-        logmessage("Real name of package " + str(package.name) + " is " + str(real_name))
+        logmessage("check_for_updates: real name of package " + str(package.name) + " is " + str(real_name))
         if real_name is None:
             results[package.name] = word('install failed')
             if package.name not in here_already:
-                logmessage("Removing package entry for " + package.name)
+                logmessage("check_for_updates: removing package entry for " + package.name)
                 packages_to_delete.append(package)
         else:
             results[package.name] = word('successfully installed')
             if real_name != package.name:
-                logmessage("changing name")
+                logmessage("check_for_updates: changing name")
                 package.name = real_name
             if package.id in installs:
                 install = installs[package.id]
@@ -152,7 +153,7 @@ def check_for_updates():
     return ok, logmessages, results
 
 def update_versions():
-    logmessage("update_versions")
+    logmessage("update_versions: starting")
     install_by_id = dict()
     from docassemble.base.config import hostname
     for install in Install.query.filter_by(hostname=hostname).all():
@@ -174,7 +175,7 @@ def update_versions():
     return
 
 def add_dependencies(user_id):
-    logmessage('add_dependencies: ' + str(user_id))
+    logmessage('add_dependencies: user_id is ' + str(user_id))
     from docassemble.base.config import hostname, daconfig
     docassemble_git_url = daconfig.get('docassemble_git_url', 'https://github.com/jhpyle/docassemble')
     package_by_name = dict()
@@ -208,7 +209,7 @@ def fix_names():
                 package.name = actual_name
                 db.session.commit()
             else:
-                logmessage("Package " + package.name + " does not appear to be installed")
+                logmessage("fix_names: package " + package.name + " does not appear to be installed")
 
 def install_package(package):
     if package.type == 'zip' and package.upload is None:
@@ -233,8 +234,8 @@ def install_package(package):
         commands = ['install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, package.name + limit]
     else:
         return 1, 'Unable to recognize package type: ' + package.name
-    logmessage("Running pip " + " ".join(commands))
-    logfilecontents += "Running pip " + " ".join(commands) + "\n"
+    #logmessage("install_package: running pip " + " ".join(commands))
+    logfilecontents += "pip " + " ".join(commands) + "\n"
     returnval = pip.main(commands)
     with open(pip_log.name) as x:
         logfilecontents += x.read()
@@ -243,7 +244,7 @@ def install_package(package):
     return returnval, logfilecontents
 
 def uninstall_package(package):
-    logmessage('update uninstall_package: ' + package.name)
+    logmessage('uninstall_package: ' + package.name)
     logfilecontents = ''
     #sys.stderr.write("uninstall_package: uninstalling " + package.name + "\n")
     #return 0
@@ -251,14 +252,14 @@ def uninstall_package(package):
     pip.utils.logging._log_state.indentation = 0
     pip_log = tempfile.NamedTemporaryFile()
     commands = ['uninstall', '-y', '--log-file=' + pip_log.name, package.name]
-    logmessage("Running pip " + " ".join(commands))
-    logfilecontents += "Running pip " + " ".join(commands) + "\n"
+    #logmessage("Running pip " + " ".join(commands))
+    logfilecontents += "pip " + " ".join(commands) + "\n"
     returnval = pip.main(commands)
-    logmessage('Finished running pip')
+    #logmessage('Finished running pip')
     with open(pip_log.name) as x:
         logfilecontents += x.read()
     logmessage(logfilecontents)
-    logmessage('update uninstall_package: done')
+    logmessage('uninstall_package: done')
     return returnval, logfilecontents
 
 class Object(object):
