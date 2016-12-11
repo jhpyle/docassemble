@@ -11,7 +11,7 @@ from docassemble.webapp.db_object import db
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors
 from docassemble.webapp.users.models import UserModel, UserAuthModel, Role, UserRoles, UserDict, UserDictKeys, TempUser, ChatLog
-from docassemble.webapp.update import get_installed_distributions
+from docassemble.webapp.update import get_installed_distributions, add_dependencies
 from sqlalchemy import create_engine, MetaData
 import random
 import string
@@ -72,19 +72,20 @@ def populate_tables():
     advocate_role = get_role(db, 'advocate')
     admin = get_user(db, admin_role, admin_defaults)
     cron = get_user(db, cron_role, cron_defaults)
-    docassemble_git_url = daconfig.get('docassemble_git_url', 'https://github.com/jhpyle/docassemble')
-    installed_packages = sorted(get_installed_distributions())
-    existing_packages = [package.name for package in Package.query.all()]
-    for package in installed_packages:
-        if package in existing_packages:
-            continue
-        package_auth = PackageAuth(user_id=admin.id)
-        if package.key in ['docassemble', 'docassemble.base', 'docassemble.webapp', 'docassemble.demo']:
-            package_entry = Package(name=package.key, package_auth=package_auth, giturl=docassemble_git_url, packageversion=package.version, gitsubdir=re.sub(r'\.', '_', package.key), type='git', core=True)
-        else:
-            package_entry = Package(name=package.key, package_auth=package_auth, packageversion=package.version, type='pip', core=True)
-        db.session.add(package_auth)
-        db.session.add(package_entry)
+    add_dependencies(admin.id)
+    # docassemble_git_url = daconfig.get('docassemble_git_url', 'https://github.com/jhpyle/docassemble')
+    # installed_packages = get_installed_distributions()
+    # existing_packages = [package.name for package in Package.query.all()]
+    # for package in installed_packages:
+    #     if package.key in existing_packages:
+    #         continue
+    #     package_auth = PackageAuth(user_id=admin.id)
+    #     if package.key in ['docassemble', 'docassemble.base', 'docassemble.webapp', 'docassemble.demo']:
+    #         package_entry = Package(name=package.key, package_auth=package_auth, giturl=docassemble_git_url, packageversion=package.version, gitsubdir=re.sub(r'\.', '_', package.key), type='git', core=True)
+    #     else:
+    #         package_entry = Package(name=package.key, package_auth=package_auth, packageversion=package.version, type='pip', core=True)
+    #     db.session.add(package_auth)
+    #     db.session.add(package_entry)
     db.session.commit()
     return
 

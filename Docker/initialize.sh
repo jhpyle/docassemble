@@ -112,7 +112,7 @@ if [ "${S3ENABLE:-false}" == "true" ]; then
     fi
 fi
 
-DEFAULT_SECRET=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
+DEFAULT_SECRET=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 32)
 
 if [ ! -f $DA_CONFIG_FILE ]; then
     sed -e 's@{{DBPREFIX}}@'"${DBPREFIX:-postgresql+psycopg2://}"'@' \

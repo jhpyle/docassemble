@@ -8,6 +8,8 @@ import threading
 import subprocess
 import xmlrpclib
 import re
+from cStringIO import StringIO
+import sys
 
 from distutils.version import LooseVersion
 if __name__ == "__main__":
@@ -19,6 +21,7 @@ from docassemble.webapp.packages.models import Package, Install, PackageAuth
 from docassemble.webapp.core.models import Supervisors
 from docassemble.base.logger import logmessage
 from docassemble.webapp.files import SavedFile
+from docassemble.base.functions import word
 
 supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
 if supervisor_url:
@@ -43,10 +46,11 @@ def remove_inactive_hosts():
             Supervisors.query.filter_by(id=id_to_delete).delete()
 
 def check_for_updates():
-    logmessage("check_for_update: starting")
+    logmessage("check_for_updates: starting")
     from docassemble.base.config import hostname
     ok = True
     here_already = dict()
+    results = dict()
     installed_packages = get_installed_distributions()
     for package in installed_packages:
         here_already[package.key] = package.version
@@ -57,19 +61,8 @@ def check_for_updates():
     uninstalled_packages = dict()
     logmessages = ''
     package_by_name = dict()
-    for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
-        if package.name in package_by_name:
-            continue
+    for package in Package.query.filter_by(active=True).all():
         package_by_name[package.name] = package
-    if False:
-        to_cull = list()
-        for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
-            if package.id != package_by_name[package.name].id:
-                to_cull.append(package.id)
-        if len(to_cull):
-            for pid in to_cull:
-                Package.query.filter_by(id=pid).delete()
-            db.session.commit()
     # packages is what is supposed to be installed
     for package in Package.query.filter_by(active=True).all():
         if package.type is not None:
@@ -111,28 +104,45 @@ def check_for_updates():
         logmessages += newlog
         if returnval == 0:
             Install.query.filter_by(hostname=hostname, package_id=package.id).delete()
+            results[package.name] = word('successfully uninstalled')
         else:
+            results[package.name] = word('uninstall failed')
             ok = False
+    packages_to_delete = list()
     for package in to_install:
-        #logmessage("Going to install a package")
+        logmessage("Going to install a package: " + package.name)
         returnval, newlog = install_package(package)
         logmessages += newlog
-        if returnval == 0:
+        if returnval != 0:
+            logmessage("Return value was not good")
+            ok = False
+        real_name = get_real_name(package.name)
+        logmessage("Real name of package is " + str(real_name))
+        if real_name is None:
+            results[package.name] = word('install failed')
+            if package.name not in here_already:
+                logmessage("Removing package entry for " + package.name)
+                packages_to_delete.append(package)
+        else:
+            results[package.name] = word('successfully installed')
+            if real_name != package.name:
+                logmessage("changing name")
+                package.name = real_name
             if package.id in installs:
                 install = installs[package.id]
                 install.version = package.version
             else:
                 install = Install(hostname=hostname, packageversion=package.packageversion, version=package.version, package_id=package.id)
-                db.session.add(install)
+            db.session.add(install)
             db.session.commit()
             update_versions()
             add_dependencies(package_owner.get(package.id, 1))
             update_versions()
-        else:
-            ok = False
+    for package in packages_to_delete:
+        package.active = False
     db.session.commit()
-    #logmessage("check_for_update: finished uninstalling and installing")
-    return ok, logmessages
+    logmessage("check_for_updates: finished uninstalling and installing")
+    return ok, logmessages, results
 
 def update_versions():
     logmessage("update_versions")
@@ -181,6 +191,17 @@ def add_dependencies(user_id):
         db.session.add(install)
         db.session.commit()
     return
+
+def fix_names():
+    installed_packages = [package.key for package in get_installed_distributions()]
+    for package in Package.query.filter_by(active=True).all():
+        if package.name not in installed_packages:
+            actual_name = get_real_name(package.name)
+            if actual_name is not None:
+                package.name = actual_name
+                db.session.commit()
+            else:
+                logmessage("Package " + package.name + " does not appear to be installed")
 
 def install_package(package):
     if package.type == 'zip' and package.upload is None:
@@ -243,12 +264,28 @@ def get_installed_distributions():
     from docassemble.base.config import daconfig
     PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
     results = list()
-    output, err = subprocess.Popen([daconfig.get('pip', os.path.join(PACKAGE_DIRECTORY, 'bin', 'pip')), 'freeze'], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
+    old_stdout = sys.stdout
+    sys.stdout = saved_stdout = StringIO()
+    pip.main(['freeze'])
+    sys.stdout = old_stdout
+    output = saved_stdout.getvalue()
     for line in output.split('\n'):
         a = line.split("==")
         if len(a) == 2:
             results.append(Object(key=a[0], version=a[1]))
     return results
+
+def get_real_name(package_name):
+    old_stdout = sys.stdout
+    sys.stdout = saved_stdout = StringIO()
+    pip.main(['show', package_name])
+    sys.stdout = old_stdout
+    output = saved_stdout.getvalue()
+    for line in output.split('\n'):
+        a = line.split(": ")
+        if len(a) == 2 and a[0] == 'Name':
+            return a[1]
+    return None
 
 if __name__ == "__main__":
     #import docassemble.webapp.database

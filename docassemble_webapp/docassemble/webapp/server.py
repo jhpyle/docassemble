@@ -1159,15 +1159,15 @@ def uninstall_package(packagename):
     for package in Package.query.filter_by(name=packagename, active=True).all():
         package.active = False
     db.session.commit()
-    ok, logmessages = docassemble.webapp.update.check_for_updates()
+    ok, logmessages, results = docassemble.webapp.update.check_for_updates()
     if ok:
         if the_package_type == 'zip' and the_upload_number is not None:
             SavedFile(the_upload_number).delete()
         trigger_update(except_for=hostname)
         restart_this()
-        flash(word("Uninstall successful"), 'success')
+        flash(word("Uninstall successful: " + str(results)), 'success')
     else:
-        flash(word("Uninstall not successful"), 'error')
+        flash(word("Uninstall not successful: " + str(results)), 'error')
     if len(logmessages):
         logmessages = re.sub(r'\n', r'<br>', logmessages)
         flash('pip log:  ' + Markup(logmessages), 'info')
@@ -1192,13 +1192,13 @@ def install_zip_package(packagename, file_number):
         existing_package.type = 'zip'
         existing_package.version += 1
     db.session.commit()
-    ok, logmessages = docassemble.webapp.update.check_for_updates()
+    ok, logmessages, results = docassemble.webapp.update.check_for_updates()
     if ok:
         trigger_update(except_for=hostname)
         restart_this()
-        flash(word("Install successful"), 'success')
+        flash(word("Install successful: " + str(results)), 'success')
     else:
-        flash(word("Install not successful"), 'error')
+        flash(word("Install not successful: " + str(results)), 'error')
     logmessages = re.sub(r'\n', r'<br>', logmessages)
     flash('pip log: ' + Markup(logmessages), 'info')
     return
@@ -1222,13 +1222,13 @@ def install_git_package(packagename, giturl):
             package_entry.limitation = None
             package_entry.type = 'git'
             db.session.commit()
-    ok, logmessages = docassemble.webapp.update.check_for_updates()
+    ok, logmessages, results = docassemble.webapp.update.check_for_updates()
     if ok:
         trigger_update(except_for=hostname)
         restart_this()
-        flash(word("Install successful"), 'success')
+        flash(word("Install successful: " + str(results)), 'success')
     else:
-        flash(word("Install not successful"), 'error')
+        flash(word("Install not successful: " + str(results)), 'error')
     logmessages = re.sub(r'\n', r'<br>', logmessages)
     flash('pip log: ' + Markup(logmessages), 'info')
     return
@@ -1250,13 +1250,13 @@ def install_pip_package(packagename, limitation):
         existing_package.giturl = None
         existing_package.upload = None
         db.session.commit()
-    ok, logmessages = docassemble.webapp.update.check_for_updates()
+    ok, logmessages, results = docassemble.webapp.update.check_for_updates()
     if ok:
         trigger_update(except_for=hostname)
         restart_this()
-        flash(word("Install successful"), 'success')
+        flash(word("Install successful: " + str(results)), 'success')
     else:
-        flash(word("Install not successful"), 'error')
+        flash(word("Install not successful: " + str(results)), 'error')
     logmessages = re.sub(r'\n', r'<br>', logmessages)
     flash('pip log: ' + Markup(logmessages), 'info')
     return
