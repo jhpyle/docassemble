@@ -32,15 +32,25 @@ def main():
     db_table_prefix = dbconfig.get('table_prefix', None)
     schema_file = dbconfig.get('schema_file', None)
     if db_name is None:
-        db_name = os.getenv('DBNAME', 'docassemble')
+        db_name = os.getenv('DBNAME', '')
+    if db_name == '':
+        db_name = 'docassemble'
     if db_host is None:
-        db_host = os.getenv('DBHOST', 'localhost')
+        db_host = os.getenv('DBHOST', '')
+    if db_host == '':
+        db_host = 'localhost'
     if db_user is None:
-        db_user = os.getenv('DBUSER', 'docassemble')
+        db_user = os.getenv('DBUSER', '')
+    if db_user == '':
+        db_user = 'docassemble'
     if db_password is None:
-        db_password = os.getenv('DBPASSWORD', 'abc123')
+        db_password = os.getenv('DBPASSWORD', '')
+    if db_password == '':
+        db_password = 'abc123'
     if db_port is None:
-        db_port = os.getenv('DBPORT', '5432')
+        db_port = os.getenv('DBPORT', '')
+    if db_port == '':
+        db_port = '5432'
     if db_table_prefix is None:
         db_table_prefix = os.getenv('DBTABLEPREFIX', '')
     if schema_file is None:

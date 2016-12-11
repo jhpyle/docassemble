@@ -239,7 +239,6 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
     if [ -z "$dbexists" ]; then
 	echo "create database "${DBNAME:-docassemble}" owner "${DBUSER:-docassemble}";" | su -c psql postgres || exit 1
     fi
-    su -c "psql -c 'select password from \"user\" limit 0' docassemble" postgres &> /dev/null || echo "alter table \"user\" add column password varchar(255) default 'x';" | su -c "psql docassemble" postgres
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
