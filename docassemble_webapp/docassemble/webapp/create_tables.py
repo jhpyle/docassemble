@@ -23,6 +23,7 @@ def get_role(db, name):
         return the_role
     the_role = Role(name=name)
     db.session.add(the_role)
+    db.session.commit()
     return the_role
 
 def get_user(db, role, defaults):
@@ -47,6 +48,7 @@ def get_user(db, role, defaults):
     the_user.roles.append(role)
     db.session.add(user_auth)
     db.session.add(the_user)
+    db.session.commit()
     return the_user
 
 def populate_tables():
@@ -70,16 +72,13 @@ def populate_tables():
     advocate_role = get_role(db, 'advocate')
     admin = get_user(db, admin_role, admin_defaults)
     cron = get_user(db, cron_role, cron_defaults)
-    db.session.commit()
     docassemble_git_url = daconfig.get('docassemble_git_url', 'https://github.com/jhpyle/docassemble')
     installed_packages = sorted(get_installed_distributions())
-    package_auth = PackageAuth.query.filter_by(user_id=admin.id).first()
-    if not package_auth:
-        package_auth = PackageAuth(user_id=admin.id)
     existing_packages = [package.name for package in Package.query.all()]
     for package in installed_packages:
         if package in existing_packages:
             continue
+        package_auth = PackageAuth(user_id=admin.id)
         if package.key in ['docassemble', 'docassemble.base', 'docassemble.webapp', 'docassemble.demo']:
             package_entry = Package(name=package.key, package_auth=package_auth, giturl=docassemble_git_url, packageversion=package.version, gitsubdir=re.sub(r'\.', '_', package.key), type='git', core=True)
         else:

@@ -7,6 +7,7 @@ import tempfile
 import threading
 import subprocess
 import xmlrpclib
+import re
 
 from distutils.version import LooseVersion
 if __name__ == "__main__":
@@ -60,16 +61,17 @@ def check_for_updates():
         if package.name in package_by_name:
             continue
         package_by_name[package.name] = package
-    to_cull = list()
-    for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
-        if package.id != package_by_name[package.name].id:
-            to_cull.append(package.id)
-    if len(to_cull):
-        for pid in to_cull:
-            Package.query.filter_by(id=pid).delete()
-        db.session.commit()
+    if False:
+        to_cull = list()
+        for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
+            if package.id != package_by_name[package.name].id:
+                to_cull.append(package.id)
+        if len(to_cull):
+            for pid in to_cull:
+                Package.query.filter_by(id=pid).delete()
+            db.session.commit()
     # packages is what is supposed to be installed
-    for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
+    for package in Package.query.filter_by(active=True).all():
         if package.type is not None:
             packages[package.id] = package
             #print "Found a package " + package.name
@@ -156,7 +158,8 @@ def update_versions():
 
 def add_dependencies(user_id):
     logmessage('add_dependencies: ' + str(user_id))
-    from docassemble.base.config import hostname
+    from docassemble.base.config import hostname, daconfig
+    docassemble_git_url = daconfig.get('docassemble_git_url', 'https://github.com/jhpyle/docassemble')
     package_by_name = dict()
     for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
         if package.name in package_by_name:
@@ -183,21 +186,23 @@ def install_package(package):
     if package.type == 'zip' and package.upload is None:
         return 0, ''
     logmessage('install_package: ' + package.name)
+    from docassemble.base.config import daconfig
+    PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
     logfilecontents = ''
     pip.utils.logging._log_state = threading.local()
     pip.utils.logging._log_state.indentation = 0
     pip_log = tempfile.NamedTemporaryFile()
     if package.type == 'zip' and package.upload is not None:
         saved_file = SavedFile(package.upload, extension='zip', fix=True)
-        commands = ['install', '--no-index', '--quiet', '--src=' + tempfile.mkdtemp(), '--log-file=' + pip_log.name, '--upgrade', saved_file.path + '.zip']
+        commands = ['install', '--no-index', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + tempfile.mkdtemp(), '--log-file=' + pip_log.name, '--upgrade', saved_file.path + '.zip']
     elif package.type == 'git' and package.giturl is not None:
-        commands = ['install', '--quiet', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, 'git+' + package.giturl + '.git#egg=' + package.name]
+        commands = ['install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, 'git+' + package.giturl + '.git#egg=' + package.name]
     elif package.type == 'pip':
         if package.limitation is None:
             limit = ""
         else:
             limit = str(package.limitation)
-        commands = ['install', '--quiet', '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, package.name + limit]
+        commands = ['install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, package.name + limit]
     else:
         return 1, 'Unable to recognize package type: ' + package.name
     logmessage("Running pip " + " ".join(commands))
@@ -242,9 +247,7 @@ def get_installed_distributions():
     for line in output.split('\n'):
         a = line.split("==")
         if len(a) == 2:
-            results.append(Object(key=a[0].lower(), version=a[1]))
-        #else:
-            #logmessage("Did not understand line: " + str(line))
+            results.append(Object(key=a[0], version=a[1]))
     return results
 
 if __name__ == "__main__":

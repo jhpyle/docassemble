@@ -1168,9 +1168,10 @@ def uninstall_package(packagename):
         flash(word("Uninstall successful"), 'success')
     else:
         flash(word("Uninstall not successful"), 'error')
-    logmessages = re.sub(r'\n', r'<br>', logmessages)
-    flash('pip log:  ' + Markup(logmessages), 'info')
-    logmessage(logmessages)
+    if len(logmessages):
+        logmessages = re.sub(r'\n', r'<br>', logmessages)
+        flash('pip log:  ' + Markup(logmessages), 'info')
+        logmessage(logmessages)
     logmessage("uninstall_package: done")
     return
 
@@ -5682,6 +5683,7 @@ def update_package():
                         install_git_package(target, existing_package.giturl)
                     elif existing_package.type == 'pip':
                         install_pip_package(existing_package.name, existing_package.limitation)
+        return redirect(url_for('update_package'))
     if request.method == 'POST' and form.validate_on_submit():
         if 'zipfile' in request.files and request.files['zipfile'].filename:
             try:
