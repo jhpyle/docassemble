@@ -58,6 +58,7 @@ def check_for_updates():
     installs = dict()
     to_install = list()
     to_uninstall = list()
+    uninstall_done = dict()
     uninstalled_packages = dict()
     logmessages = ''
     package_by_name = dict()
@@ -100,8 +101,11 @@ def check_for_updates():
             to_install.append(package)
     #logmessage("done with that")
     for package in to_uninstall:
-        #logmessage("Going to uninstall a package")
+        logmessage("Going to uninstall a package: " + package.name)
+        if package.name in uninstall_done:
+            logmessage("Skipping uninstallation of " + str(package.name) + " because already uninstalled")
         returnval, newlog = uninstall_package(package)
+        uninstall_done[package.name] = 1
         logmessages += newlog
         if returnval == 0:
             Install.query.filter_by(hostname=hostname, package_id=package.id).delete()
@@ -118,6 +122,7 @@ def check_for_updates():
         if returnval != 0:
             logmessage("Return value was not good")
             ok = False
+        pip._vendor.pkg_resources._initialize_master_working_set()
         real_name = get_real_name(package.name)
         logmessage("Real name of package " + str(package.name) + " is " + str(real_name))
         if real_name is None:
@@ -253,7 +258,7 @@ def uninstall_package(package):
     with open(pip_log.name) as x:
         logfilecontents += x.read()
     logmessage(logfilecontents)
-    logmessage('uninstall_package: done')
+    logmessage('update uninstall_package: done')
     return returnval, logfilecontents
 
 class Object(object):
