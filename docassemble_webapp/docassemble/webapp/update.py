@@ -69,10 +69,11 @@ def check_for_updates():
             packages[package.id] = package
             #print "Found a package " + package.name
     for package in Package.query.filter_by(active=False).all():
-        uninstalled_packages[package.id] = package # this is what the database says should be uninstalled
+        if package.name not in package_by_name:
+            uninstalled_packages[package.id] = package # this is what the database says should be uninstalled
     for install in Install.query.filter_by(hostname=hostname).all():
         installs[install.package_id] = install # this is what the database says in installed on this server
-        if install.package_id in uninstalled_packages:
+        if install.package_id in uninstalled_packages and uninstalled_packages[install.package_id].name not in package_by_name:
             to_uninstall.append(uninstalled_packages[install.package_id]) # uninstall if it is installed
     changed = False
     package_owner = dict()
@@ -113,11 +114,12 @@ def check_for_updates():
         logmessage("Going to install a package: " + package.name)
         returnval, newlog = install_package(package)
         logmessages += newlog
+        logmessage("Return value was " + str(returnval))
         if returnval != 0:
             logmessage("Return value was not good")
             ok = False
         real_name = get_real_name(package.name)
-        logmessage("Real name of package is " + str(real_name))
+        logmessage("Real name of package " + str(package.name) + " is " + str(real_name))
         if real_name is None:
             results[package.name] = word('install failed')
             if package.name not in here_already:
