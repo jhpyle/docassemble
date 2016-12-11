@@ -1149,7 +1149,7 @@ def user_can_edit_package(pkgname=None, giturl=None):
     return(False)
 
 def uninstall_package(packagename):
-    logmessage("uninstall_package: " + packagename)
+    logmessage("server uninstall_package: " + packagename)
     existing_package = Package.query.filter_by(name=packagename, active=True).order_by(Package.id.desc()).first()
     if existing_package is None:
         flash(word("Package did not exist"), 'error')
@@ -1171,8 +1171,8 @@ def uninstall_package(packagename):
     if len(logmessages):
         logmessages = re.sub(r'\n', r'<br>', logmessages)
         flash('pip log:  ' + Markup(logmessages), 'info')
-        logmessage(logmessages)
-    logmessage("uninstall_package: done")
+        #logmessage(logmessages)
+    logmessage("server uninstall_package: done")
     return
 
 def install_zip_package(packagename, file_number):

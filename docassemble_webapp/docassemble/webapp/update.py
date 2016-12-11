@@ -238,7 +238,7 @@ def install_package(package):
     return returnval, logfilecontents
 
 def uninstall_package(package):
-    logmessage('uninstall_package: ' + package.name)
+    logmessage('update uninstall_package: ' + package.name)
     logfilecontents = ''
     #sys.stderr.write("uninstall_package: uninstalling " + package.name + "\n")
     #return 0
