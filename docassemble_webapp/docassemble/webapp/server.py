@@ -5959,6 +5959,8 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
             questionfiletext = """\
 ---
 metadata:
+  title: I am the title of the application
+  short title: Mobile title
   description: |
     Insert description of question file here.
   authors:
