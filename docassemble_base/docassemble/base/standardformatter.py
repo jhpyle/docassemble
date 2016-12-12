@@ -687,7 +687,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
             output += '                <input type="hidden" name="_files" value=' + myb64doublequote(json.dumps(files)) + '/>\n'
             init_string = '<script>'
             for saveasname in files:
-                init_string += '$("#' + saveasname + '").fileinput();' + "\n"
+                init_string += '$("#' + escape_for_jquery(saveasname) + '").fileinput();' + "\n"
             init_string += '</script>'
             #extra_scripts.append('<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + init_string)
             extra_scripts.append(init_string)

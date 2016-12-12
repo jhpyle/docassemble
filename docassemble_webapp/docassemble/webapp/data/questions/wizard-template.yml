@@ -356,7 +356,7 @@ question: |
   What type of answer is required to define
   `${ x.variable }`?
 subquestion: |
-  For example, if the type of answer is "Simple yes/no," then
+  For example, if the type of answer is "Yes or no," then
   `${ x.variable }` will be defined either as `True` or
   `False`.
 field: x.field_type

@@ -2838,7 +2838,7 @@ def index():
         if (subject in daInformed || (subject != 'chatmessage' && !daIsUser)){
           return;
         }
-        if (daShowingHelp){
+        if (daShowingHelp && subject != 'chatmessage'){
           daInformed[subject] = 1;
           daInformedChanged = true;
           return;
