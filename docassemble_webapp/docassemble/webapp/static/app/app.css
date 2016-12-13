@@ -776,6 +776,23 @@ img.da-spinner {
     z-index: 2000;
 }
 
+img.da-sig-spinner {
+    position: fixed;
+    width: 32px;
+    height: 32px;
+    top: 50px;
+    left: 50%;
+    margin-left: -16px;
+    z-index: 2000;
+}
+
+@media (min-width: 850px) {
+    img.da-sig-spinner {
+	left: 409px;
+	margin-left: 0px;
+    }
+}
+
 .fullwidth + label {
     width: 100%;
 }

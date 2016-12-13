@@ -8,7 +8,7 @@
   <h1>{{ header }}</h1>
 </div>
 {%- if description %}
-<div>{{ description }}</div>
+<p>{{ description }}</p>
 {%- endif %}
 {%- if upload_header %}
 {%- if files %}
@@ -39,7 +39,7 @@
 <form action="" method="POST" class="form" role="form" enctype="multipart/form-data">
   {{ form.hidden_tag() }}
   {{ myrender_hidden_field(form.section, value=section) }}
-  {{ render_file_field(form.uploadfile, tabindex=80) }}
+  {{ render_file_field(form.uploadfile, tabindex=80, multiple=True) }}
   <div class="form-actions">
     {{ render_submit_field(form.submit, tabindex=100) }}
   </div>

@@ -3542,8 +3542,14 @@ def index():
         var newImg = document.createElement('img');
         $(newImg).attr("src", """ + repr(str(url_for('static', filename='app/loader.gif')))+ """);
         $(newImg).attr("id", "daSpinner");
-        $(newImg).addClass("da-spinner");
-        $(newImg).appendTo("#question");
+        if ($("#question").length > 0){
+          $(newImg).addClass("da-spinner");
+          $(newImg).appendTo("#question");
+        }
+        else{
+          $(newImg).addClass("da-sig-spinner");
+          $(newImg).appendTo("#sigtoppart");
+        }
         daShowingSpinner = true;
       }
       function hideSpinner(){
@@ -6265,16 +6271,19 @@ def playground_files():
             else:
                 flash(word("File not found: ") + argument, "error")
     if request.method == 'POST':
-        if 'uploadfile' in request.files and request.files['uploadfile'].filename:
-            try:
-                up_file = request.files['uploadfile']
-                filename = secure_filename(up_file.filename)
-                filename = re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', filename)
-                filename = os.path.join(area.directory, filename)
-                up_file.save(filename)
-                area.finalize()
-            except Exception as errMess:
-                flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
+        if 'uploadfile' in request.files:
+            the_files = request.files.getlist('uploadfile')
+            if the_files:
+                for up_file in the_files:
+                    try:
+                        #up_file = request.files['uploadfile']
+                        filename = secure_filename(up_file.filename)
+                        filename = re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', filename)
+                        filename = os.path.join(area.directory, filename)
+                        up_file.save(filename)
+                        area.finalize()
+                    except Exception as errMess:
+                        flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
         if formtwo.delete.data:
             if the_file != '':
                 filename = os.path.join(area.directory, the_file)
@@ -6381,7 +6390,7 @@ def playground_files():
       scrollBottom();\n"""
     else:
         extra_command = ""
-    return render_template('pages/playgroundfiles.html', tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("file_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "' + mode + '", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#formtwo").trigger("checkform.areYouSure");});\n      $("#formtwo").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#formtwo").bind("submit", function(){daCodeMirror.save(); $("#formtwo").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new)), 200
+    return render_template('pages/playgroundfiles.html', tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("file_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "' + mode + '", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#formtwo").trigger("checkform.areYouSure");});\n      $("#formtwo").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#formtwo").bind("submit", function(){daCodeMirror.save(); $("#formtwo").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '      $( document ).ready(function() { $("#uploadfile").fileinput(); });\n' + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new)), 200
 
 @app.route('/playgroundpackages', methods=['GET', 'POST'])
 @login_required
@@ -6505,6 +6514,22 @@ def playground_packages():
         extra_command = ""
     return render_template('pages/playgroundpackages.html', tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this package?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("readme");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names), 200
 
+@app.route('/playground_redirect', methods=['GET', 'POST'])
+@login_required
+@roles_required(['developer', 'admin'])
+def playground_redirect():
+    key = 'da:runplayground:' + str(current_user.id)
+    counter = 0
+    while counter < 15:
+        the_url = r.get(key)
+        logmessage("playground_redirect: key " + str(key) + " is " + str(the_url))
+        if the_url is not None:
+            r.delete(key)
+            return redirect(the_url)
+        time.sleep(1)
+        counter += 1
+    abort(404)
+    
 @app.route('/playground', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])
@@ -6616,7 +6641,14 @@ def playground_page():
                 interview = interview_source.get_interview()
                 interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
                 variables_html = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
-                return jsonify(url=url_for('index', i='docassemble.playground' + str(current_user.id) + ':' + the_file), variables_html=variables_html, flash_message=flash_message)
+                the_url = url_for('index', i='docassemble.playground' + str(current_user.id) + ':' + the_file)
+                key = 'da:runplayground:' + str(current_user.id)
+                logmessage("Setting key " + str(key) + " to " + str(the_url))
+                pipe = r.pipeline()
+                pipe.set(key, the_url)
+                pipe.expire(key, 12)
+                pipe.execute()
+                return jsonify(url=the_url, variables_html=variables_html, flash_message=flash_message)
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
     interview_path = None
@@ -6720,7 +6752,7 @@ $( document ).ready(function() {
     $.ajax({
       type: "POST",
       url: """ + '"' + url_for('playground_page') + '"' + """,
-      data: $("#form").serialize() + '&run=Save+and+Run',
+      data: $("#form").serialize() + '&run=Save+and+Run&connector=' + Math.floor(Math.random()*10000000),
       success: function(data){
         if ($("#flash").length){
           $("#flash").html(data.flash_message)
@@ -6729,7 +6761,7 @@ $( document ).ready(function() {
           $("#main").prepend('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash">' + data.flash_message + '</div>')
         }
         $("#daplaygroundtable").html(data.variables_html)
-        window.open(data.url, '_blank');
+        //window.open(data.url, '_blank');
         $("#form").trigger("reinitialize.areYouSure")
         $(function () {
           $('[data-toggle="popover"]').popover({trigger: 'click', html: true})
@@ -6742,7 +6774,8 @@ $( document ).ready(function() {
       },
       dataType: 'json'
     });
-    event.preventDefault();
+    //event.preventDefault();
+    return true;
   });
   $(".playground-variable").on("click", function(){
     daCodeMirror.replaceSelection($(this).data("insert"), "around");

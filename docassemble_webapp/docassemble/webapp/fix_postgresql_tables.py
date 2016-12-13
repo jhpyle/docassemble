@@ -89,7 +89,7 @@ def main():
         if db_table_prefix + table_name in existing_columns:
             for column_name in desired_columns[table_name]:
                 if column_name not in existing_columns[db_table_prefix + table_name]:
-                    output = "alter table " + table_name + " add column " + column_name + " " + desired_columns[table_name][column_name]['type']
+                    output = "alter table \"" + table_name + "\" add column \"" + column_name + "\" " + desired_columns[table_name][column_name]['type']
                     if desired_columns[table_name][column_name]['size']:
                         output += "(" + desired_columns[table_name][column_name]['size'] + ")"
                     if desired_columns[table_name][column_name]['default']:

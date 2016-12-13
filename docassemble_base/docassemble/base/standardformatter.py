@@ -68,7 +68,6 @@ def signature_html(status, debug, root, extra_scripts, validation_rules):
     add_validation(extra_scripts, validation_rules)
     return output
 
-
 def get_choices_with_abb(status, field, terms=None, links=None):
     if terms is None:
         terms = dict()

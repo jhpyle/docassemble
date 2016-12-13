@@ -1,7 +1,7 @@
 {% extends 'flask_user/public_base.html' %}
 
 {% block content %}
-{% from "base_templates/form_macros.html" import render_field, render_file_field, render_submit_field with context %}
+{% from "base_templates/form_macros.html" import render_field, render_file_field_simple, render_submit_field with context %}
 
 <h1>{{ word('Install or update a package') }}</h1>
 
@@ -11,7 +11,7 @@
     <h4>{{ word('You can provide a:') }}</h4>
     {{ render_field(form.giturl, tabindex=70, placeholder='https://github.com/yourname/docassemble-yourpackage') }}
     <h4>{{ word('Or you can upload a:') }}</h4>
-    {{ render_file_field(form.zipfile, tabindex=80) }}
+    {{ render_file_field_simple(form.zipfile, tabindex=80) }}
     <h4>{{ word('Or you can specify a:') }}</h4>
     {{ render_field(form.pippackage, tabindex=90) }}
   </div>
