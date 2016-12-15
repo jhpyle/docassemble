@@ -1,6 +1,6 @@
 ---
 layout: docs
-title: Interview Logic
+title: Interview logic
 short_title: Interview Logic
 ---
 

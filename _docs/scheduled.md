@@ -1,7 +1,7 @@
 ---
 layout: docs
 title: Scheduled tasks
-short_title: Scheduled tasks
+short_title: Scheduled Tasks
 ---
 
 The "scheduled tasks" feature of **docassemble** allows your

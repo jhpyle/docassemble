@@ -1,6 +1,6 @@
 ---
 layout: docs
-title: Package Management
+title: Package management
 short_title: Packages
 ---
 

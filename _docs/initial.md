@@ -1,6 +1,6 @@
 ---
 layout: docs
-title: Initial Blocks
+title: Initial blocks
 short_title: Initial Blocks
 ---
 

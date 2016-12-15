@@ -1,12 +1,9 @@
-- title: Installation
-  docs:
-    - installation
-    - config
 - title: Tutorial
   docs:
     - helloworld
 - title: Authoring
   docs:
+    - authoring
     - interviews
     - initial
     - questions
@@ -27,14 +24,18 @@
     - ml
     - reserved
     - errors
-- title: Miscellaneous
+- title: Special features
   docs:
     - language
     - users
     - packages
     - playground
-    - livehelp
     - sms
+    - livehelp
+- title: Administration
+  docs:
+    - installation
+    - config
     - docker
     - scalability
     - security

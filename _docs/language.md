@@ -1,6 +1,6 @@
 ---
 layout: docs
-title: Language Support
+title: Language support
 short_title: Language Support
 ---
 

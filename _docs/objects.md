@@ -1353,6 +1353,10 @@ including the unit, if the unit is defined.
 The `.line_two()` method returns the second line of the address,
 consisting of the city, state, and zip code.
 
+<a name="Address.address_on_one_line"></a>
+The `.address_on_one_line()` method returns the address, consisting of
+the city, state, and zip code, as a single line of text.
+
 ## <a name="LatitudeLongitude"></a>LatitudeLongitude
 
 A `LatitudeLongitude` object represents the GPS coordinates of an

@@ -1,6 +1,6 @@
 ---
 layout: docs
-title: User Login System
+title: User login system
 short_title: User Login
 ---
 

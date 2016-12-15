@@ -1,7 +1,7 @@
 ---
 layout: docs
 title: The "legal" module and basic-questions.yml
-short_title: Legal applications
+short_title: Legal Applications
 ---
 
 # Using **docassemble** in legal applications

@@ -1,6 +1,6 @@
 ---
 layout: docs
-title: Question Modifiers
+title: Question modifiers
 short_title: Question Modifiers
 ---
 

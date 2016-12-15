@@ -276,9 +276,7 @@ screenshot.
 
 The "Save" button will save the interview and do nothing more.
 
-The "Save and Run" button will open an interview in another window.
-Your browser might block this as an unwanted pop-up window.  Make sure
-to tell your browser to allow pop-ups from **docassemble**.
+The "Save and Run" button will run the interview in another window.
 
 The "Delete" button will remove the interview from the Playground.
 

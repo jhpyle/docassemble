@@ -708,9 +708,9 @@ pip install --upgrade \
 ./docassemble_base \
 ./docassemble_demo \
 ./docassemble_webapp
-cp ./docassemble/docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/
-cp ./docassemble/Docker/config/* /usr/share/docassemble/config/
-cp ./docassemble/Docker/*.sh /usr/share/docassemble/webapp/
+cp ./docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/
+cp ./Docker/config/* /usr/share/docassemble/config/
+cp ./Docker/*.sh /usr/share/docassemble/webapp/
 python -m docassemble.webapp.fix_postgresql_tables
 python -m docassemble.webapp.create_tables
 exit

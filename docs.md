@@ -7,20 +7,29 @@ short_title: Documentation
 This documentation is intended more as a reference guide than as a
 manual that you have to read before getting started.
 
-The best way to learn about **docassemble** is to study working
-examples.  There is a full-featured sample interview linked from the
+The best way to learn about **docassemble** is to start creating your
+own interview.  There is a "Hello, world" [tutorial] that explains how
+to create a simple interview.  Once you get that working, you can
+experiment with adding more questions to it.
+
+Once you know the basics, the best way to learn about advanced
+features is to study working examples.  The sections of this
+documentation site contain a number of side-by-side examples comparing
+source code to screenshots.  You can click on the screenshots to run
+the interviews.  In addition, as you are developing interviews in the
+[Playground], you can see working examples of many of
+**docassemble**'s features.
+
+There is also a full-featured sample interview linked from the
 [demonstration page].  The full source code of that interview is
-available on the [demonstration page], and while you are using the
+available on the [demonstration page].  While you are using the
 interview you can click "Source" in the navigation bar to toggle
 display of the source code for the question and an explanation of the
 path **docassemble** took to decide to ask that question.
 
-Another good way to start learning about **docassemble** is to start
-creating your own interview.  There is a "Hello, world" [tutorial]
-that explains how to create a simple interview.  Once you get that
-working, you can experiment with adding more questions to it.
-
 ### Table of Contents
+
+For a narrative version of the sections of the documentation, see the [Overview].
 
 <ul>
 {% for section in site.data.docs %}
@@ -31,7 +40,9 @@ working, you can experiment with adding more questions to it.
 {% endfor %}
 </ul>
 
+[Overview]: {{ site.baseurl }}/docs/authoring.html
 [demonstration]: {{ site.baseurl }}/demo.html
 [YAML]: [YAML]: https://en.wikipedia.org/wiki/YAML
 [demonstration page]: {{ site.baseurl}}/demo.html
 [tutorial]: {{ site.baseurl}}/docs/helloworld.html
+[Playground]: {{ site.baseurl}}/docs/playground.html

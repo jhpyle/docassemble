@@ -1,7 +1,7 @@
 ---
 layout: docs
 title: SQL database schema
-short_title: SQL schema
+short_title: SQL Schema
 ---
 
 The **docassemble** web application requires a central SQL server.

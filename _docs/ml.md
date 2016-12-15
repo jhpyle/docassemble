@@ -1,6 +1,6 @@
 ---
 layout: docs
-title: Machine Learning
+title: Machine learning
 short_title: Machine Learning
 ---
 

@@ -1,6 +1,6 @@
 ---
 layout: docs
-title: Code Questions
+title: Code questions
 short_title: Code
 ---
 

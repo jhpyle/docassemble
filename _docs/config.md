@@ -1,6 +1,6 @@
 ---
 layout: docs
-title: System-wide Configuration
+title: System-wide configuration
 short_title: Configuration
 ---
 

@@ -1,6 +1,6 @@
 ---
 layout: docs
-title: Reserved Variable Names
+title: Reserved variable names
 short_title: Reserved Names
 ---
 

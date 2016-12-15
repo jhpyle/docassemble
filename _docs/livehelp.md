@@ -1,7 +1,7 @@
 ---
 layout: docs
 title: "Live help: chat, phone, monitoring"
-short_title: Live help
+short_title: Live Help
 ---
 
 # Introduction

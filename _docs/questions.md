@@ -1,6 +1,6 @@
 ---
 layout: docs
-short_title: Question Blocks
+short_title: Question blocks
 title: Question Blocks
 ---
 

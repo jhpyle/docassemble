@@ -1,6 +1,6 @@
 ---
 layout: docs
-title: Special Variables
+title: Special variables
 short_title: Special Variables
 ---
 
