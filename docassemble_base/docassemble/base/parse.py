@@ -2226,8 +2226,9 @@ class Interview:
                 new_interview = new_interview_source.get_interview()
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                #the_question = new_question.follow_multiple_choice(user_dict)
-                interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
+                # will this be a problem?
+                the_question = new_question.follow_multiple_choice(user_dict)
+                interview_status.populate(the_question.ask(user_dict, 'None', 'None'))
                 break
             except AttributeError as errMess:
                 #logmessage(str(errMess.args))
@@ -2634,7 +2635,9 @@ class Interview:
                     new_interview = new_interview_source.get_interview()
                     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                     new_question.name = "Question_Temp"
-                    return(new_question.ask(user_dict, 'None', 'None'))
+                    # will this be a problem?
+                    the_question = new_question.follow_multiple_choice(user_dict)
+                    return(the_question.ask(user_dict, 'None', 'None'))
                 # except SendFileError as qError:
                 #     #logmessage("Trapped SendFileError2")
                 #     question_data = dict(extras=dict())

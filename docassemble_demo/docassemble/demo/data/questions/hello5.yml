@@ -1,0 +1,46 @@
+---
+image sets:
+  freepik:
+    images:
+      earth: globe.svg
+    attribution: |
+      Icon made by [Freepik](http://www.flaticon.com/authors/freepik)
+---
+question: Hello, ${ planet }!
+subquestion: |
+  I surmise that you have no more than ${ inhabitant_count }
+  inhabitants.
+attachment:
+  - name: A letter for the inhabitants of ${ planet }
+    filename: hello
+    metadata:
+      SingleSpacing: true
+    content: |
+      Dear ${ planet } residents,
+
+      Hello to all ${ inhabitant_count } of you.
+
+      Goodbye,
+
+      Your friend
+buttons:
+  - Exit: exit
+mandatory: true
+---
+decoration: earth
+question: |
+  What is your planet's name?
+fields:
+  - Your Planet: planet
+---
+code: |
+  if favorite_number == 42:
+    inhabitant_count = 2
+  else:
+    inhabitant_count = 2000 + favorite_number * 45
+---
+question: What is your favorite number?
+fields:
+  - Number: favorite_number
+    datatype: number
+---

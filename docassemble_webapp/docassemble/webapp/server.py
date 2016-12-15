@@ -819,7 +819,7 @@ def chat_partners_available(session_id, yaml_filename, the_user_id, mode, partne
     
 def do_redirect(url, is_ajax):
     if is_ajax:
-        return jsonify(action='redirect', url=url)
+        return jsonify(action='redirect', url=url, csrf_token=generate_csrf())
     else:
         return redirect(url)
 
@@ -1308,6 +1308,8 @@ def name_of_user(user, include_email=False):
     return output
 
 def flash_as_html(message, message_type="info"):
+    if message_type == 'error':
+        message_type = 'danger'
     output = """
         <div class="alert alert-""" + str(message_type) + """"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>""" + str(message) + """</div>
 """
@@ -5729,7 +5731,7 @@ def update_package():
                 else:
                     packagename = form.pippackage.data
                     limitation = None
-                packagename = re.sub(r'[^A-Za-z0-9\_]', '', packagename)
+                packagename = re.sub(r'[^A-Za-z0-9\_\-]', '', packagename)
                 if user_can_edit_package(pkgname=packagename):
                     install_pip_package(packagename, limitation)
                 else:
@@ -5780,7 +5782,6 @@ def create_playground_package():
     form = CreatePlaygroundPackageForm(request.form, current_user)
     current_package = request.args.get('package', None)
     do_install = request.args.get('install', False)
-    from_playground = request.args.get('from_playground', False)
     area = dict()
     area['playgroundpackages'] = SavedFile(current_user.id, fix=True, section='playgroundpackages')
     file_list = dict()
@@ -5836,18 +5837,20 @@ def create_playground_package():
             zip_file = docassemble.webapp.files.make_package_zip(pkgname, info, author_info)
             saved_file.copy_from(zip_file.name)
             saved_file.finalize()
-            existing_package = Package.query.filter_by(name='docassemble.' + pkgname, active=True).first()
-            if existing_package is None:
-                package_auth = PackageAuth(user_id=current_user.id)
-                package_entry = Package(name='docassemble.' + pkgname, package_auth=package_auth, upload=file_number, type='zip')
-                db.session.add(package_auth)
-                db.session.add(package_entry)
-                #sys.stderr.write("Ok, did the commit\n")
-            else:
-                existing_package.upload = file_number
-                existing_package.active = True
-                existing_package.version += 1
-            db.session.commit()
+            # # Why do this here?  To reserve the name?  It is all done by install_zip_package
+            # # and otherwise why mess up the package listing?
+            # existing_package = Package.query.filter_by(name='docassemble.' + pkgname, active=True).first()
+            # if existing_package is None:
+            #     package_auth = PackageAuth(user_id=current_user.id)
+            #     package_entry = Package(name='docassemble.' + pkgname, package_auth=package_auth, upload=file_number, type='zip')
+            #     db.session.add(package_auth)
+            #     db.session.add(package_entry)
+            #     #sys.stderr.write("Ok, did the commit\n")
+            # else:
+            #     existing_package.upload = file_number
+            #     existing_package.active = True
+            #     existing_package.version += 1
+            # db.session.commit()
             if do_install:
                 install_zip_package('docassemble.' + pkgname, file_number)
                 return redirect(url_for('playground_packages', file=current_package))
@@ -6635,12 +6638,6 @@ def playground_page():
             if form.submit.data:
                 flash(word('Saved at') + ' ' + the_time + '.', 'success')
             else:
-                flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Running in other tab.'), message_type='success')
-                interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + the_file)
-                interview_source.set_testing(True)
-                interview = interview_source.get_interview()
-                interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
-                variables_html = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
                 the_url = url_for('index', i='docassemble.playground' + str(current_user.id) + ':' + the_file)
                 key = 'da:runplayground:' + str(current_user.id)
                 logmessage("Setting key " + str(key) + " to " + str(the_url))
@@ -6648,7 +6645,17 @@ def playground_page():
                 pipe.set(key, the_url)
                 pipe.expire(key, 12)
                 pipe.execute()
-                return jsonify(url=the_url, variables_html=variables_html, flash_message=flash_message)
+                try:
+                    interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + the_file)
+                    interview_source.set_testing(True)
+                    interview = interview_source.get_interview()
+                    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
+                    variables_html = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
+                    flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Running in other tab.'), message_type='success')
+                except:
+                    variables_html = None
+                    flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Problem detected.'), message_type='error')
+                return jsonify(variables_html=variables_html, flash_message=flash_message)
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
     interview_path = None
@@ -6737,10 +6744,12 @@ $( document ).ready(function() {
       data: $("#form").serialize() + '&variablefile=' + $(this).val(),
       success: function(data){
         //console.log("foobar1")
-        $("#daplaygroundtable").html(data.variables_html)
-        $(function () {
-          $('[data-toggle="popover"]').popover({trigger: 'click', html: true})
-        });
+        if (data.variables_html != null){
+          $("#daplaygroundtable").html(data.variables_html);
+          $(function () {
+            $('[data-toggle="popover"]').popover({trigger: 'click', html: true})
+          });
+        }
         //console.log("foobar2")
       },
       dataType: 'json'
@@ -6752,7 +6761,7 @@ $( document ).ready(function() {
     $.ajax({
       type: "POST",
       url: """ + '"' + url_for('playground_page') + '"' + """,
-      data: $("#form").serialize() + '&run=Save+and+Run&connector=' + Math.floor(Math.random()*10000000),
+      data: $("#form").serialize() + '&run=Save+and+Run',
       success: function(data){
         if ($("#flash").length){
           $("#flash").html(data.flash_message)
@@ -6760,12 +6769,13 @@ $( document ).ready(function() {
         else{
           $("#main").prepend('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash">' + data.flash_message + '</div>')
         }
-        $("#daplaygroundtable").html(data.variables_html)
-        //window.open(data.url, '_blank');
-        $("#form").trigger("reinitialize.areYouSure")
-        $(function () {
-          $('[data-toggle="popover"]').popover({trigger: 'click', html: true})
-        });
+        if (data.variables_html != null){
+          $("#daplaygroundtable").html(data.variables_html)
+          $("#form").trigger("reinitialize.areYouSure")
+          $(function () {
+            $('[data-toggle="popover"]').popover({trigger: 'click', html: true})
+          });
+        }
         // setTimeout(function(){
         //   $("#flash .alert-success").hide(300, function(){
         //     $(self).remove();

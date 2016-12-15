@@ -14,6 +14,7 @@ app.config['MAIL_USE_TLS'] = daconfig['mail'].get('use_tls', True)
 app.config['APP_SYSTEM_ERROR_SUBJECT_LINE'] = app.config['APP_NAME'] + " system error"
 app.config['APPLICATION_ROOT'] = daconfig.get('root', '/')
 app.config['CSRF_ENABLED'] = False
+app.config['WTF_CSRF_TIME_LIMIT'] = 604800
 app.config['USER_APP_NAME'] = app.config['APP_NAME']
 app.config['USER_SEND_PASSWORD_CHANGED_EMAIL'] = False
 app.config['USER_SEND_REGISTERED_EMAIL'] = False

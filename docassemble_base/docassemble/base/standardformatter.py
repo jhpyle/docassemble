@@ -612,10 +612,10 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
                     the_saveas = safeid('_field_' + str(field.number))
                 else:
                     the_saveas = field.saveas
+                validation_rules['messages'][the_saveas] = {'required': word("This field is required.")}
                 if status.extras['required'][field.number]:
                     #sys.stderr.write(field.datatype + "\n")
                     validation_rules['rules'][the_saveas] = {'required': True}
-                    validation_rules['messages'][the_saveas] = {'required': word("This field is required.")}
                 else:
                     validation_rules['rules'][the_saveas] = {'required': False}
                 for key in ['minlength', 'maxlength']:

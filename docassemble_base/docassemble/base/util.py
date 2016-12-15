@@ -432,7 +432,7 @@ class Address(DAObject):
         return super(Address, self).init(**kwargs)
     def __str__(self):
         return(self.block())
-    def address_for_geolocation(self):
+    def address_on_one_line(self):
         """Returns a one-line address.  Primarily used internally for geolocation."""
         output = str(self.address) + ", " + str(self.city) + ", " + str(self.state)
         if hasattr(self, 'zip'):
@@ -450,7 +450,7 @@ class Address(DAObject):
         """Determines the latitude and longitude of the location."""
         if self.geolocated:
             return self.geolocate_success    
-        the_address = self.address_for_geolocation()
+        the_address = self.address_on_one_line()
         logmessage("Trying to geolocate " + str(the_address))
         from geopy.geocoders import GoogleV3
         my_geocoder = GoogleV3()
