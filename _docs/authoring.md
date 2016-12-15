@@ -1,6 +1,6 @@
 ---
 layout: docs
-title: Authoring overview
+title: Documentation overview
 short_title: Overview
 ---
 
@@ -37,7 +37,7 @@ fields:
 
 Some blocks are [Initial Blocks], which set things up in the background.
 
-Other blocks are [Question blocks] that represent screens that the
+Other blocks are [Question Blocks] that represent screens that the
 user will actually see.  The basic structure of question blocks is
 simple, but there are a lot of possible [Question Modifiers] that can
 make your screens do different things.
@@ -154,7 +154,7 @@ free software available with a highly permissive open-source
 [Hello World]: {{ site.baseurl }}/docs/helloworld.html
 [Interviews]: {{ site.baseurl }}/docs/interviews.html
 [Initial Blocks]: {{ site.baseurl }}/docs/initial.html
-[Question blocks]: {{ site.baseurl }}/docs/questions.html
+[Question Blocks]: {{ site.baseurl }}/docs/questions.html
 [Setting Variables]: {{ site.baseurl }}/docs/fields.html
 [Question Modifiers]: {{ site.baseurl }}/docs/modifiers.html
 [Code]: {{ site.baseurl }}/docs/code.html

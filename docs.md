@@ -12,13 +12,12 @@ own interview.  There is a "Hello, world" [tutorial] that explains how
 to create a simple interview.  Once you get that working, you can
 experiment with adding more questions to it.
 
-Once you know the basics, the best way to learn about advanced
-features is to study working examples.  The sections of this
-documentation site contain a number of side-by-side examples comparing
-source code to screenshots.  You can click on the screenshots to run
-the interviews.  In addition, as you are developing interviews in the
-[Playground], you can see working examples of many of
-**docassemble**'s features.
+The best way to learn about more advanced **docassemble** features is
+to study working examples.  The sections of this documentation site
+contain a number of side-by-side examples comparing source code to
+screenshots.  You can click on the screenshots to run the interviews.
+In addition, while you are developing interviews in the [Playground],
+you can browse working examples of many of **docassemble**'s features.
 
 There is also a full-featured sample interview linked from the
 [demonstration page].  The full source code of that interview is

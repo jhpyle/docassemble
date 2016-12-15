@@ -1,7 +1,7 @@
 ---
 layout: docs
-short_title: Question blocks
-title: Question Blocks
+title: Question blocks
+short_title: Question Blocks
 ---
 
 In the **docassemble** web app, every screen that a user sees is
