@@ -47,7 +47,8 @@
     <textarea rows="34" cols="80" id="playground_content" name="playground_content" tabindex="70">{{ content }}</textarea>
   </div>
   <div class="form-actions">
-    {{ render_submit_field(form.submit, class="btn btn-primary btn-lg") }}
+    <a id="daSave" href="#" class="btn btn-primary btn-lg">Save</a>
+    {# {{ render_submit_field(form.submit, class="btn btn-primary btn-lg") }} #}
     {# {{ render_submit_field(form.run, id='daRun', class="btn btn-warning btn-lg") }} #}
     <a id="daRun" target="_blank" href="{{ url_for('playground_redirect') }}" class="btn btn-warning btn-lg">Save and Run</a>
     {% if is_new == 'False' %}{{ render_submit_field(form.delete, id='daDelete', class="btn btn-default btn-lg") }}

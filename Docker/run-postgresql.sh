@@ -21,8 +21,9 @@ if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "
 fi
 
 function stopfunc {
-    echo "backing up postgres" >&2
+    sleep 1
     if [ "${S3ENABLE:-false}" == "true" ]; then
+	echo "backing up postgres" >&2
 	PGBACKUPDIR=`mktemp -d`
 	chown postgres.postgres "$PGBACKUPDIR"
 	su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
@@ -30,7 +31,6 @@ function stopfunc {
     fi
     echo "stopping postgres" >&2
     pg_ctlcluster --force $PGVERSION main stop
-    #sleep 4
     exit 0
 }
 

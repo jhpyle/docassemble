@@ -1,0 +1,20 @@
+metadata:
+  title: Insert image with code
+  short title: Insert image with code
+  documentation: "http://docassemble.org/docs/functions.html#static_image"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+code: |
+  image_name = 'court'
+---
+mandatory: true
+question: |
+  An image created by code
+subquestion: |
+  This is the "${ image_name }" image.
+
+  ${ static_image(image_name + '.svg') }

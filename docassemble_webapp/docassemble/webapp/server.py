@@ -3970,7 +3970,8 @@ def index():
                         #     output += "<p>Variables in templates: " + ", ".join(['<code>' + obj + '</code>' for obj in sorted(stage['question'].mako_names)]) + "</p>"
                     elif 'variable' in stage:
                         output += "          <h5>" + word('Needed definition of') + " <code>" + str(stage['variable']) + "</code></h5>\n"
-                # output += '          <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.functions.pickleable_objects(user_dict))]) + '</p>' + "\n"
+#                output += '          <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.functions.pickleable_objects(user_dict))]) + '</p>' + "\n"
+                output += '          <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(user_dict)]) + '</p>' + "\n"
             output += '        </div>' + "\n"
             output += '      </div>' + "\n"
         output += '    </div>'
@@ -6635,9 +6636,7 @@ def playground_page():
                     with open(a_filename, 'a'):
                         os.utime(a_filename, None)
             playground.finalize()
-            if form.submit.data:
-                flash(word('Saved at') + ' ' + the_time + '.', 'success')
-            else:
+            if not form.submit.data:
                 the_url = url_for('index', i='docassemble.playground' + str(current_user.id) + ':' + the_file)
                 key = 'da:runplayground:' + str(current_user.id)
                 logmessage("Setting key " + str(key) + " to " + str(the_url))
@@ -6645,17 +6644,20 @@ def playground_page():
                 pipe.set(key, the_url)
                 pipe.expire(key, 12)
                 pipe.execute()
-                try:
-                    interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + the_file)
-                    interview_source.set_testing(True)
-                    interview = interview_source.get_interview()
-                    interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
-                    variables_html = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
+            try:
+                interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + the_file)
+                interview_source.set_testing(True)
+                interview = interview_source.get_interview()
+                interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
+                variables_html = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
+                if form.submit.data:
+                    flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.', 'success')
+                else:
                     flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Running in other tab.'), message_type='success')
-                except:
-                    variables_html = None
-                    flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Problem detected.'), message_type='error')
-                return jsonify(variables_html=variables_html, flash_message=flash_message)
+            except:
+                variables_html = None
+                flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Problem detected.'), message_type='error')
+            return jsonify(variables_html=variables_html, flash_message=flash_message)
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
     interview_path = None
@@ -6762,6 +6764,37 @@ $( document ).ready(function() {
       type: "POST",
       url: """ + '"' + url_for('playground_page') + '"' + """,
       data: $("#form").serialize() + '&run=Save+and+Run',
+      success: function(data){
+        if ($("#flash").length){
+          $("#flash").html(data.flash_message)
+        }
+        else{
+          $("#main").prepend('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash">' + data.flash_message + '</div>')
+        }
+        if (data.variables_html != null){
+          $("#daplaygroundtable").html(data.variables_html)
+          $("#form").trigger("reinitialize.areYouSure")
+          $(function () {
+            $('[data-toggle="popover"]').popover({trigger: 'click', html: true})
+          });
+        }
+        // setTimeout(function(){
+        //   $("#flash .alert-success").hide(300, function(){
+        //     $(self).remove();
+        //   });
+        // }, 3000);
+      },
+      dataType: 'json'
+    });
+    //event.preventDefault();
+    return true;
+  });
+  $("#daSave").click(function(event){
+    daCodeMirror.save();
+    $.ajax({
+      type: "POST",
+      url: """ + '"' + url_for('playground_page') + '"' + """,
+      data: $("#form").serialize() + '&submit=Save',
       success: function(data){
         if ($("#flash").length){
           $("#flash").html(data.flash_message)

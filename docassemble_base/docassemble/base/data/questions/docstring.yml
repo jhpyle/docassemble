@@ -79,3 +79,216 @@ str:
 len:
   doc: |
     This is a built-in Python function that returns the length of a list or other data structure.
+sorted:
+  doc: |
+    This is a built-in Python function that sorts a list in alphabetical order.
+map:
+  doc: |
+    This is a built-in Python function that applies a function to each member of a list and returns a list.
+abs:
+  doc: |
+    This is a built-in Python function that returns the absolute value of a number.
+all:
+  doc: |
+    This is a built-in Python function that returns True if all the values of a given list are True.
+any:
+  doc: |
+    This is a built-in Python function that returns True if any of the values of a given list are True.
+basestring:
+  doc: |
+    This is a built-in Python function.
+bin:
+  doc: |
+    This is a built-in Python function that converts an integer to a binary string.
+bool:
+  doc: |
+    This is a built-in Python function that returns True or False depending on whether the argument evaluates to true or false.
+bytearray:
+  doc: |
+    This is a built-in Python function.
+callable:
+  doc: |
+    This is a built-in Python function.
+chr:
+  doc: |
+    This is a built-in Python function.
+classmethod:
+  doc: |
+    This is a built-in Python function.
+cmp:
+  doc: |
+    This is a built-in Python function.
+compile:
+  doc: |
+    This is a built-in Python function.
+complex:
+  doc: |
+    This is a built-in Python function.
+delattr:
+  doc: |
+    This is a built-in Python function.
+dir:
+  doc: |
+    This is a built-in Python function.
+divmod:
+  doc: |
+    This is a built-in Python function.
+enumerate:
+  doc: |
+    This is a built-in Python function.
+eval:
+  doc: |
+    This is a built-in Python function.
+execfile:
+  doc: |
+    This is a built-in Python function.
+file:
+  doc: |
+    This is a built-in Python function.
+filter:
+  doc: |
+    This is a built-in Python function.
+float:
+  doc: |
+    This is a built-in Python function.
+format:
+  doc: |
+    This is a built-in Python function.
+frozenset:
+  doc: |
+    This is a built-in Python function.
+getattr:
+  doc: |
+    This is a built-in Python function.
+globals:
+  doc: |
+    This is a built-in Python function.
+hasattr:
+  doc: |
+    This is a built-in Python function.
+hash:
+  doc: |
+    This is a built-in Python function.
+help:
+  doc: |
+    This is a built-in Python function.
+hex:
+  doc: |
+    This is a built-in Python function.
+id:
+  doc: |
+    This is a built-in Python function.
+input:
+  doc: |
+    This is a built-in Python function.
+int:
+  doc: |
+    This is a built-in Python function.
+isinstance:
+  doc: |
+    This is a built-in Python function.
+issubclass:
+  doc: |
+    This is a built-in Python function.
+iter:
+  doc: |
+    This is a built-in Python function.
+locals:
+  doc: |
+    This is a built-in Python function.
+long:
+  doc: |
+    This is a built-in Python function.
+map:
+  doc: |
+    This is a built-in Python function.
+memoryview:
+  doc: |
+    This is a built-in Python function.
+min:
+  doc: |
+    This is a built-in Python function.
+next:
+  doc: |
+    This is a built-in Python function.
+object:
+  doc: |
+    This is a built-in Python function.
+oct:
+  doc: |
+    This is a built-in Python function.
+open:
+  doc: |
+    This is a built-in Python function.
+ord:
+  doc: |
+    This is a built-in Python function.
+pow:
+  doc: |
+    This is a built-in Python function.
+print:
+  doc: |
+    This is a built-in Python function.
+property:
+  doc: |
+    This is a built-in Python function.
+range:
+  doc: |
+    This is a built-in Python function.
+raw_input:
+  doc: |
+    This is a built-in Python function.
+reduce:
+  doc: |
+    This is a built-in Python function.
+reload:
+  doc: |
+    This is a built-in Python function.
+repr:
+  doc: |
+    This is a built-in Python function.
+reversed:
+  doc: |
+    This is a built-in Python function.
+round:
+  doc: |
+    This is a built-in Python function.
+set:
+  doc: |
+    This is a built-in Python function.
+setattr:
+  doc: |
+    This is a built-in Python function.
+slice:
+  doc: |
+    This is a built-in Python function.
+staticmethod:
+  doc: |
+    This is a built-in Python function.
+sum:
+  doc: |
+    This is a built-in Python function.
+super:
+  doc: |
+    This is a built-in Python function.
+tuple:
+  doc: |
+    This is a built-in Python function.
+type:
+  doc: |
+    This is a built-in Python function.
+unichr:
+  doc: |
+    This is a built-in Python function.
+unicode:
+  doc: |
+    This is a built-in Python function.
+vars:
+  doc: |
+    This is a built-in Python function.
+xrange:
+  doc: |
+    This is a built-in Python function.
+zip:
+  doc: |
+    This is a built-in Python function.
