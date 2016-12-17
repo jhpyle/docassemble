@@ -4,6 +4,8 @@ title: Error messages
 short_title: Errors
 ---
 
+# Common error messages
+
 Here are some error messages you might encounter in **docassemble**
 and how to avoid them.
 
@@ -69,6 +71,25 @@ packages.  Also make sure that you do not have multiple versions of
 [Flask] installed at the same time (e.g., one version in `/usr/lib`
 and another in `/usr/local/lib`).
 
+# Unexplained errors
+
+If you run into a problem where you think you did everything right,
+but you are getting a strange error, the problem might be that your
+interview uses a [variable name] that is being used for some other
+purpose.  See [reserved variable names] for a list of variable names
+that you cannot use.  If this is the problem, the solution is simply
+to change the name of your variable to something else.
+
+# Report an issue
+
+If you encounter an error that you think is a problem with
+**docassemble** rather than with your interview, please create an
+"issue" on the [issues page].  The developers will be happy to sort
+out the problem.
+
+[issues page]: {{ site.github.repository_url }}/issues
+[variable name]: {{ site.baseurl }}/docs/fields.html#variable names
+[reserved variable names]: {{ site.baseurl }}/docs/reserved.html
 [Flask]: http://flask.pocoo.org/
 [WSGI]: http://en.wikipedia.org/wiki/Web_Server_Gateway_Interface
 [Mako]: http://www.makotemplates.org/

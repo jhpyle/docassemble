@@ -38,7 +38,9 @@ The last line allows the non-root user to run [Docker].  You may need to
 log out and log back in again for the new user permission to take
 effect.
 
-Docker will probably start automatically after it is installed.  On Linux, you many need to do `sudo /etc/init.d/docker start`, `sudo systemctl start docker`, or `sudo service docker start`.
+[Docker] will probably start automatically after it is installed.  On
+Linux, you many need to do `sudo /etc/init.d/docker start`, `sudo
+systemctl start docker`, or `sudo service docker start`.
 
 # <a name="single server arrangement"></a>Quick start
 
@@ -83,7 +85,7 @@ branch of the [docassemble repository] on [GitHub].
 
 ## Shutting down
 
-Make sure to cleanly shut down the container by running:
+Shut down the container by running:
 
 {% highlight bash %}
 docker stop -t 60 <containerid>
@@ -93,12 +95,12 @@ The container runs a [PostgreSQL] server, and the data files of the
 server may become corrupted if [PostgreSQL] is not gracefully shut down.
 
 By default, [Docker] gives containers ten seconds to shut down before
-forcibly shutting them down, but sometimes [PostgreSQL] takes a little
-longer than ten seconds to shut down, so it is a good idea to give the
+forcibly shutting them down.  Usually, ten seconds is plenty of time,
+but if the server is slow, [PostgreSQL] might take a little longer
+than ten seconds to shut down.  To be on the safe side, give the
 container plenty of time to shut down gracefully.  The `-t 60` means
 that [Docker] will wait up to 60 seconds before forcibly shutting down
-the container.  Usually the container will shut down in about ten
-seconds.
+the container.
 
 To see a list of stopped containers, run `docker ps -a`.  To remove a
 container, run `docker rm <containerid>`.
@@ -106,8 +108,9 @@ container, run `docker rm <containerid>`.
 ## Troubleshooting
 
 You should not need to access the running container in order to get
-**docassemble** to work.  However, you might want to gain access to
-the running container for some reason.
+**docassemble** to work, and the log files you need ought to be
+available from "Logs" in the web browser.  However, you might want to
+gain access to the running container for some reason.
 
 To do so, find out the ID of the running container by doing
 [`docker ps`].  You will see output like the following:
@@ -846,7 +849,7 @@ docker push yourdockerhubusername/mydocassemble
 
 # Cleaning up after multiple builds
 
-If you build docker images, you may find your disk space being used
+If you build [Docker] images, you may find your disk space being used
 up.  These three lines will stop all containers, remove all
 containers, and then remove all of the images that [Docker] created
 during the build process.
@@ -870,8 +873,11 @@ Then, subsequent [`docker run`] and [`docker build`] commands will use
 the latest **docassemble** image.
 
 When you are using [Docker] to run **docassemble**, you can upgrade
-**docassemble** to the newest version simply by running [`docker stop`]
-and [`docker rm`] on the **docassemble** container.  Note that [`docker rm`] will delete all of the data on the server unless you are using a [data storage] system.
+**docassemble** to the newest version simply by running
+[`docker stop`] and [`docker rm`] on the **docassemble** container,
+followed by [`docker run`].  Note, however, that [`docker rm`] will
+delete all of the data on the server unless you are using a
+[data storage] system.
 
 [Redis]: http://redis.io/
 [Docker installation instructions for Windows]: https://docs.docker.com/engine/installation/windows/

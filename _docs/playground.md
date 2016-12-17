@@ -66,7 +66,9 @@ main interview files will consist only of "mandatory" code blocks.
 Improvements you make to the questions will be available automatically
 to all interviews.
 
-## <a name="templates"></a>The Templates folder
+## Folders
+
+### <a name="templates"></a>The Templates folder
 
 If you create [documents], you might want to use separate document
 templates.  In a typical **docassemble** package, these templates are
@@ -88,7 +90,7 @@ uploaded files from [Microsoft Word] format (`.docx`, `.doc`, or
 `.rtf`) or [OpenDocument] format (`odt`) to Markdown (`.md`) format,
 so that you can include the text in your documents.
 
-## <a name="static"></a>The Static folder
+### <a name="static"></a>The Static folder
 
 If your interviews include images or sound, you can bundle image and
 audio files with your interview's **docassemble** [package] by
@@ -101,7 +103,9 @@ In this area, you can upload files or write files of your own.  For
 example, you might want to write your own Javascript files here, or
 upload images that you want to include in interview questions.
 
-## <a name="sources"></a>The Sources folder
+### <a name="sources"></a>The Sources folder
+
+{% include scroll-image.html image="playground-sources-page-clipped.png" %}
 
 This is where you can store data files for use by your interviews,
 including:
@@ -110,7 +114,7 @@ including:
 using the [`words`] directive in the [configuration].
 * Training data for the [machine learning] function.
 
-## <a name="modules"></a>The Modules folder
+### <a name="modules"></a>The Modules folder
 
 If your interviews contain any complicated Python code, or you want to
 create your own classes, you should create a Python module and import
@@ -119,6 +123,8 @@ are located in the main directory (the directory that contains the
 `data` subdirectory).  In the Playground, these files are located
 within the "Modules" folder.  In this area, you can write your own
 Python classes and functions.
+
+{% include scroll-image.html image="playground-modules-page-clipped.png" %}
 
 The best way to incorporate your module into your interview is to use
 Python's notation for "relative imports."  For example, if your module
@@ -135,7 +141,7 @@ modules:
 This notation will work both in the Playground and when the interview
 is bundled as a Python module.
 
-## <a name="packages"></a>The Packages folder
+### <a name="packages"></a>The Packages folder
 
 The Packages area allows you to bundle the [interview files], [templates],
 [static files], and/or [modules] from your Playground into a
@@ -270,13 +276,14 @@ example block to run as part of a working interview.  This working
 interview is what you will run when you click the "Preview"
 screenshot.
 
-# The buttons
+## The buttons
 
 ![buttons]({{ site.baseurl }}/img/playground-buttons.png){: .full-width }
 
 The "Save" button will save the interview and do nothing more.
 
-The "Save and Run" button will run the interview in another window.
+The "Save and Run" button will save the interview and run the
+interview in another window.
 
 The "Delete" button will remove the interview from the Playground.
 

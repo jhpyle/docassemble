@@ -11,26 +11,30 @@
     - modifiers
     - code
     - logic
+    - markup
     - template
     - documents
-    - markup
     - objects
     - groups
     - functions
     - legal
-    - roles
     - special
-    - scheduled
-    - ml
     - reserved
-    - errors
 - title: Special features
   docs:
     - language
-    - users
-    - packages
-    - playground
+    - roles
+    - scheduled
+    - ml
     - sms
+- title: Development
+  docs:
+    - playground
+    - packages
+    - errors
+- title: Users
+  docs:
+    - users
     - livehelp
 - title: Administration
   docs:

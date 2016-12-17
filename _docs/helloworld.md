@@ -15,8 +15,7 @@ mandatory: true
 ---
 {% endhighlight %}
 
-To run this, first set up your server using [Docker] (recommended) or
-by following the [installation] instructions.
+To run this, first set up your server using [Docker].
 
 Once **docassemble** is up and running in your web browser, click "Log
 in" in the upper right hand corner.  The default username and password

@@ -2082,6 +2082,22 @@ docassemble.base.util.update_language_function('fr', 'her', docassemble.base.uti
 
 # <a name="functions"></a>Miscellaneous functions
 
+## <a name="static_image"></a>static_image()
+
+{% include side-by-side.html demo="static_image" %}
+
+Returns appropriate markup to include a static image.  If you know the
+image path, you can just use the `[FILE ...]` [markup] statement.  The
+`static_image()` function is primarily useful when you want to
+assemble the image path using code.
+
+The function takes an optional keyword argument "width" that will
+affect the width of the image on the screen or page:
+
+{% highlight python %}
+static_image('docassemble.demo:crawling.png', width='2in'))
+{% endhighlight %}
+
 ## <a name="get_config"></a>get_config()
 
 Returns a value from the **docassemble** configuration file.  If the
@@ -2286,24 +2302,96 @@ its elements are added to the list of selections.
 `objects_from_file()` is a utility function for initializing a group
 of objects from a [YAML] file written in a certain format.
 
-# Accessing redis server
+# <a name="storage"></a>Storing data
 
-If you do not know what a [redis] server is, skip this section!
+## <a name="redis"></a>With Redis
+
+If you do not know what a [Redis] server is, skip this section!
 
 The [background processes] feature of **docassemble** depends on a
-[redis] server being available.  The server is also used to facilitate
+[Redis] server being available.  The server is also used to facilitate
 [live chat].
 
-Interview authors may want to make use of the [redis] server for
+Interview authors may want to make use of the [Redis] server for
 purposes of storing information across users of a particular
 interview, keeping usage statistics, or other purposes.
 
 {% include side-by-side.html demo="redis" %}
 
-To use the [redis] server, use an [`objects`] section to create an
-object of type [`DARedis`].  This object can now be used to
+To use the [Redis] server, use an [`objects`] section to create an
+object of type `DARedis`.  This object can now be used to
 communicate with the redis server, much as though it had been created
 by calling `redis.StrictRedis()`.
+
+## <a name="sql"></a>With SQL
+
+Since [Redis] is an [in-memory database], it is not appropriate for
+long-term storage or for the storage of large amounts of data.
+
+An alternative is to store data in SQL.  **docassemble** provides two
+functions that allow you to store and retrieve data.
+
+{% include side-by-side.html demo="database_storage" %}
+
+<a name="write_record"></a>When you call `write_record(key, data)`,
+the variable `data` is stored in a SQL database.  The function returns
+the integer unique ID for the record.  The `data` variable can be any
+type of data, such as a number, some text, an [object], a
+[Python dictionary], or something else.  The only limitation is that
+the information in the variable needs to be able to be [pickled].
+
+<a name="read_records"></a>When you call `read_records(key)`, you will
+retrieve all of the records that had been stored using that `key`.
+The function returns a [Python dictionary] where the keys are integers
+representing the unique ID of the record.
+
+<a name="delete_records"></a>You can delete records by calling
+`delete_record(key, id)` where `key` is the key under which the record
+was saved and `id` is the unique ID integer of the record.
+
+Note that all interviews on the server will have access to the data
+stored with `write_record()`, and the data are not encrypted on the
+server.  It is important to choose your `key` names wisely because if
+you use a simple name like `mydata`, another interview developer might
+have chosen the same key, and then your data will become intermingled.
+It is a good idea to include your interview package name in the `key`
+names you choose.
+
+**docassemble** will attempt to sanitize data you pass to
+`write_record()` by converting any item that cannot be [pickled] to
+`None`.
+
+### Advanced SQL storage
+
+Though the data are stored on a SQL server, you cannot use SQL queries
+to retrieve data stored by `write_record()`; you can only use
+`read_records()` to retrieve data.
+
+If you want to use the full power of SQL in your interviews, you can
+write a module that does something like this:
+
+{% highlight python %}
+from docassemble.base.util import get_config
+import psycopg2
+
+def get_conn():
+    dbconfig = get_config('db')
+    return psycopg2.connect(database=dbconfig.get('name'),
+                            user=dbconfig.get('user'),
+                            password=dbconfig.get('password')
+                            host=dbconfig.get('host')
+                            port=dbconfig.get('port'))
+def some_function(id, thing):
+    conn = get_conn()
+    cur = conn.get_cursor()
+    cur.execute("update foo set bar=%s where id=%s", (thing, id))
+    conn.commit()
+    cur.close()
+{% endhighlight %}
+
+This assumes the [`db`] configuration refers to a [PostgreSQL]
+database.  If you connect to the database with the credentials from
+[`db`], you have the power to create and drop tables.
 
 # Writing your own functions
 
@@ -2541,3 +2629,10 @@ modules:
 [`alert()`]: http://www.w3schools.com/jsref/met_win_alert.asp
 [multiple servers]: {{ site.baseurl }}/docs/scalability.html
 [special user]: {{ site.baseurl }}/docs/scheduled.html#cron user
+[Redis]: https://redis.io/
+[in-memory database]: https://en.wikipedia.org/wiki/In-memory_database
+[object]: {{ site.baseurl }}/docs/objects.html
+[pickled]: https://docs.python.org/2/library/pickle.html
+[`db`]: {{ site.baseurl }}/docs/config.html#db
+[PostgreSQL]: http://www.postgresql.org/
+[`checkin interval`]: {{ site.baseurl }}/docs/config.html#checkin interval

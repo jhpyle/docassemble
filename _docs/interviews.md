@@ -147,6 +147,7 @@ special features, for example by adding help text or icons.
 * [Reserved Names] - Lists the variable names you aren't allowed to use
   because they would conflict with the functionality of
   **docassemble** and [Python].
+* [Special Variables] - Describes variables that have special properties
 * [Errors] - Explains some common error messages and how to avoid them.
 
 # How you run a **docassemble** interview

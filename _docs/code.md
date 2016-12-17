@@ -163,7 +163,7 @@ The following conditions apply when the variables are text.
 
 ## Going through the items in a group
 
-
+(not written yet)
 
 # <a name="code"></a> The `code` block
 

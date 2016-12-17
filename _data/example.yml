@@ -686,6 +686,11 @@
     - docassemble.base.core
     - docassemble.base.util
   ---
+"database_storage": "---\nmandatory: true\ncode: |\n  write_record('fruit', favorite_fruit)\n\
+  ---\nreconsider: true\ncode: |\n  fruit_summary = ''\n  records = read_records('fruit')\n\
+  \  for id in records:\n    fruit_summary += \"* \" + str(records[id]) + \"\\n\"\n\
+  ---\nmandatory: true\nquestion: |\n  Contents of database\nsubquestion: |\n  The\
+  \ following fruits have\n  been reported:\n  \n  ${ fruit_summary }\n---"
 "date-difference": |-
   ---
   code: |
@@ -834,6 +839,7 @@
   fields:
     - E-mail: target_variable
       datatype: email
+      required: false
   ---
 "event-example": |-
   ---
@@ -2455,6 +2461,19 @@
     ${ space_to_underscore(book) }.
   sets: all_done
   ---
+"static_image": |-
+  ---
+  code: |
+    image_name = 'court'
+  ---
+  mandatory: true
+  question: |
+    An image created by code
+  subquestion: |
+    This is the "${ image_name }" image.
+
+    ${ static_image(image_name + '.svg') }
+  ---
 "subquestion": |-
   ---
   question: |
@@ -2462,6 +2481,27 @@
   subquestion: Be careful how you answer.
   fields:
     - Velocity: swallow_velocity
+  ---
+"table": |-
+  ---
+  mandatory: true
+  question: |
+    A table
+  subquestion: |
+    This is a table.
+
+    <table class="table table-striped">
+      <thead>
+        <tr><th>Header 1</th><th>Header 2</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>$4.50</td></tr>
+        <tr><td>2</td><td>$5.50</td></tr>
+        <tr><td>3</td><td>$6.50</td></tr>
+        <tr><td>4</td><td>$7.50</td></tr>
+        <tr><td>5</td><td>$8.50</td></tr>
+      </tbody>
+    </table>
   ---
 "terminal-screen": |-
   ---

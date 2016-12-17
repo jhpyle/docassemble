@@ -851,9 +851,53 @@ For example:
 
 {% include side-by-side.html demo="dadict" %}
 
-The `DADict` uses the following attributes:
+Internally, the `DADict` uses the following attributes:
 
 * `elements`: a [Python dictionary] containing the items of the dictionary.
+
+However, your code can treat a `DADict` object just like a
+[Python dictionary].
+
+{% highlight yaml %}
+---
+objects:
+  things: DADict
+---
+code: |
+  if 'abc' in things:
+    gathered_abc = True
+  else:
+    gathered_abc = False
+---
+code: |
+  if len(things) > 0:
+    there_are_things = True
+  else:
+    there_are_things = False
+  things['abc'] = some_variable
+---
+code: |
+  description = ''
+  for key, value in things.iteritems():
+    description += "* " + key + ": " + value + "\n"
+---
+{% endhighlight %}
+
+## <a name="DASet"></a>DASet
+
+A `DASet` is like a [`DADict`] and a [`DAList`], except it acts like a
+[Python] "[set]."
+
+{% highlight yaml %}
+---
+objects:
+  issues: DASet
+---
+code: |
+  if user_needs_to_apply:
+    issues.add('application')
+---
+{% endhighlight %}
 
 ## <a name="DAFile"></a>DAFile
 

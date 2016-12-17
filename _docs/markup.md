@@ -60,6 +60,10 @@ All of these methods will format text in questions as well as PDF and
 RTF documents, with the exception of the `!` image insertion command,
 which does not work within PDF and RTF documents.
 
+# <a name="mako"></a>Using Mako for logic and generated text.
+
+
+
 # <a name="inserting images"></a>Inserting images
 
 To insert an image that is located in the `static` folder of a custom
