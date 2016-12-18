@@ -1,0 +1,34 @@
+metadata:
+  title: Database storage
+  short title: Database storage
+  documentation: "http://docassemble.org/docs/functions.html#write_record"
+  example start: 2
+  example end: 4
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+code: |
+  write_record('fruit', favorite_fruit)
+---
+reconsider: true
+code: |
+  fruit_summary = ''
+  records = read_records('fruit')
+  for id in records:
+    fruit_summary += "* " + str(records[id]) + "\n"
+---
+mandatory: true
+question: |
+  Contents of database
+subquestion: |
+  The following fruits have
+  been reported:
+  
+  ${ fruit_summary }
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Favorite Fruit: favorite_fruit

@@ -322,6 +322,7 @@ from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supe
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
 from docassemble.base.generate_key import random_string, random_alphanumeric
+import docassemble.webapp.backend
 import docassemble.base.functions
 import docassemble.base.util
 
@@ -7834,6 +7835,9 @@ for path in [FULL_PACKAGE_DIRECTORY, UPLOAD_DIRECTORY, LOG_DIRECTORY]: #PACKAGE_
 if not os.access(WEBAPP_PATH, os.W_OK):
     sys.exit("Unable to modify the timestamp of the WSGI file: " + WEBAPP_PATH)
 
+docassemble.base.functions.set_write_record(docassemble.webapp.backend.write_record)
+docassemble.base.functions.set_read_records(docassemble.webapp.backend.read_records)
+docassemble.base.functions.set_delete_record(docassemble.webapp.backend.delete_record)
 docassemble.base.util.set_user_id_function(user_id_dict)
 docassemble.base.functions.set_generate_csrf(generate_csrf)
 docassemble.base.parse.set_url_finder(get_url_from_file_reference)

@@ -36,10 +36,10 @@ else:
     alchemy_connect_string += ":"
 if dbhost is not None:
     alchemy_connect_string += '@' + dbhost
+    if dbport is not None:
+        alchemy_connect_string += ':' + dbport
 else:
     alchemy_connect_string += '@'
-if dbport is not None:
-    alchemy_connect_string += ':' + dbhost
 if dbname is not None:
     alchemy_connect_string += "/" + dbname
 else:

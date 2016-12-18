@@ -235,6 +235,10 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
     if [ "${S3ENABLE:-false}" == "true" ] && [[ $(s3cmd ls s3://${S3BUCKET}/postgres) ]]; then
 	PGBACKUPDIR=`mktemp -d`
 	s3cmd -q sync s3://${S3BUCKET}/postgres/ "$PGBACKUPDIR/"
+    else
+	PGBACKUPDIR=/usr/share/docassemble/backup/postgres
+    fi
+    if [ -d $PGBACKUPDIR ]; then
 	cd "$PGBACKUPDIR"
 	chown -R postgres.postgres "$PGBACKUPDIR"
 	for db in $( ls ); do

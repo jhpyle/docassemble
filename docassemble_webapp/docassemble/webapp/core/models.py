@@ -45,6 +45,12 @@ class Uploads(db.Model):
 #     create_time = db.Column(db.DateTime(), server_default=db.func.now())
 #     description = db.Column(db.Text())
 
+class ObjectStorage(db.Model):
+    __tablename__ = dbtableprefix + "objectstorage"
+    id = db.Column(db.Integer(), primary_key=True)
+    key = db.Column(db.Text())
+    value = db.Column(db.Text())
+
 class SpeakList(db.Model):
     __tablename__ = dbtableprefix + "speaklist"
     id = db.Column(db.Integer(), primary_key=True)

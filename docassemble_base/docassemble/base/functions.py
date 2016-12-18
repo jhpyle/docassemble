@@ -27,7 +27,7 @@ import pycountry
 import phonenumbers
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'objects_from_file', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'objects_from_file', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record']
 
 debug = False
 default_dialect = 'us'
@@ -375,6 +375,51 @@ the_url_func = basic_url_of
 def url_of(*pargs, **kwargs):
     """Returns a URL to a file within a docassemble package."""
     return the_url_func(*pargs, **kwargs)
+
+def basic_write_record(key, data):
+    return None
+
+the_write_record = basic_write_record
+
+def set_write_record(func):
+    global the_write_record
+    the_write_record = func
+
+def write_record(key, data):
+    """Stores the data in a SQL database for later retrieval with the
+    key.  Returns the unique ID integers of the saved record.
+    """
+    return the_write_record(key, data)
+
+def basic_read_records(key):
+    return dict()
+
+the_read_records = basic_read_records
+
+def set_read_records(func):
+    global the_read_records
+    the_read_records = func
+
+def read_records(key):
+    """Returns a dictionary of records that have been stored with
+    write_record() using the given key.  In the dictionary, the key is
+    the unique ID integer of the record and the value is the data that
+    had been stored.
+    """
+    return the_read_records(key)
+
+def basic_delete_record(key, id):
+    return
+
+the_delete_record = basic_delete_record
+
+def set_delete_record(func):
+    global the_delete_record
+    the_delete_record = func
+
+def delete_record(key, id):
+    """Deletes a record with the given key and id."""
+    return the_delete_record(key, id)
 
 def set_url_finder(func):
     global the_url_func

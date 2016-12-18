@@ -22,9 +22,3 @@ def create_app():
     return app
 
 app = create_app()
-
-# def reset_db():
-#     global db
-#     if hasattr(db, 'engine'):
-#         db.engine.dispose()
-#     db = SQLAlchemy(app)

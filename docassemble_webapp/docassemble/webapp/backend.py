@@ -5,7 +5,7 @@ from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.webapp.core.models import Uploads
 from docassemble.base.logger import logmessage
 from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys
-from docassemble.webapp.core.models import Attachments, Uploads, SpeakList
+from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, ObjectStorage
 from docassemble.base.generate_key import random_string
 from sqlalchemy import or_, and_
 import docassemble.webapp.database
@@ -19,6 +19,7 @@ import codecs
 import pprint
 import datetime
 import json
+import types
 from Crypto.Cipher import AES
 from Crypto import Random
 from dateutil import tz
@@ -39,6 +40,24 @@ import docassemble.webapp.setup
 
 DEBUG = daconfig.get('debug', False)
 docassemble.base.parse.debug = DEBUG
+
+def write_record(key, data):
+    new_record = ObjectStorage(key=key, value=pack_object(data))
+    db.session.add(new_record)
+    db.session.commit()
+    return new_record.id
+
+def read_records(key):
+    logmessage("got here!")
+    results = dict()
+    for record in ObjectStorage.query.filter_by(key=key).order_by(ObjectStorage.id):
+        logmessage("and here!")
+        results[record.id] = unpack_object(record.value)
+    return results
+
+def delete_record(key, id):
+    ObjectStorage.query.filter_by(key=key, id=id).delete()
+    db.session.commit()
 
 def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
     if uid is None:
@@ -327,6 +346,29 @@ def encrypt_dictionary(the_dict, secret):
     #sys.stderr.write("46\n")
     #logmessage(pprint.pformat(pickleable_objects(the_dict)))
     return iv + codecs.encode(encrypter.encrypt(pad(pickle.dumps(pickleable_objects(the_dict)))), 'base64').decode()
+
+def pack_object(the_object):
+    return codecs.encode(pickle.dumps(safe_pickle(the_object)), 'base64').decode()
+
+def unpack_object(the_string):
+    return pickle.loads(codecs.decode(the_string, 'base64'))
+
+def safe_pickle(the_object):
+    if type(the_object) is list:
+        return [safe_pickle(x) for x in the_object]
+    if type(the_object) is dict:
+        new_dict = dict()
+        for key, value in the_object.iteritems():
+            new_dict[key] = safe_pickle(value)
+        return new_dict
+    if type(the_object) is set:
+        new_set = set()
+        for sub_object in the_object:
+            new_set.add(safe_pickle(sub_object))
+        return new_set
+    if type(the_object) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType]:
+        return None
+    return the_object
 
 def pack_dictionary(the_dict):
     # sys.stderr.write("pack_dictionary keys:\n")

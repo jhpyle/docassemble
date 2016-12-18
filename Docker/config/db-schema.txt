@@ -108,3 +108,6 @@ chatlog|temp_owner_id|integer||
 chatlog|open_to_peer|boolean||false
 chatlog|encrypted|boolean||true
 chatlog|modtime|timestamp without time zone||
+objectstorage|id|integer||nextval('objectstorage_id_seq'::regclass)
+objectstorage|key|text||
+objectstorage|value|text||

@@ -132,6 +132,9 @@
 - Background processes:
     - background_action
     - background_action_with_response_action
+- Storage:
+    - redis
+    - database_storage
 - Dates:
     - timezone-list
     - as-datetime

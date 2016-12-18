@@ -22,11 +22,16 @@ fi
 
 function stopfunc {
     sleep 1
+    echo "backing up postgres" >&2
     if [ "${S3ENABLE:-false}" == "true" ]; then
-	echo "backing up postgres" >&2
 	PGBACKUPDIR=`mktemp -d`
-	chown postgres.postgres "$PGBACKUPDIR"
-	su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
+    else
+	PGBACKUPDIR=/usr/share/docassemble/backup/postgres
+	mkdir -p $PGBACKUPDIR
+    fi
+    chown postgres.postgres "$PGBACKUPDIR"
+    su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
+    if [ "${S3ENABLE:-false}" == "true" ]; then
 	s3cmd sync "$PGBACKUPDIR/" s3://${S3BUCKET}/postgres/
     fi
     echo "stopping postgres" >&2

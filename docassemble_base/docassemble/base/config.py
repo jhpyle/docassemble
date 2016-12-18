@@ -106,6 +106,16 @@ def load(**kwargs):
             if key.exists():
                 the_host = key.get_contents_as_string()
                 daconfig['rabbitmq'] = 'pyamqp://guest@' + str(the_host) + '//'
+    if daconfig['db'].get('host', None) is None or daconfig['db'].get('host', '') == '':
+        daconfig['db']['host'] = 'localhost'
+    if daconfig['db'].get('name', None) is None or daconfig['db'].get('name', '') == '':
+        daconfig['db']['name'] = 'docassemble'
+    if daconfig['db'].get('user', None) is None or daconfig['db'].get('user', '') == '':
+        daconfig['db']['user'] = 'docassemble'
+    if daconfig['db'].get('password', None) is None or daconfig['db'].get('password', '') == '':
+        daconfig['db']['password'] = 'abc123'
+    if daconfig['db'].get('port', None) is None or daconfig['db'].get('port', '') == '':
+        daconfig['db']['port'] = '5432'
     loaded = True
     return
 
