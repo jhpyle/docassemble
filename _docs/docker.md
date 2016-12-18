@@ -242,24 +242,14 @@ the image as follows:
 
 {% highlight bash %}
 docker run --env-file=env.list \
--v pgetc:/etc/postgresql \
--v pglog:/var/log/postgresql \
--v pglib:/var/lib/postgresql \
--v pgrun:/var/run/postgresql \
--v dalog:/usr/share/docassemble/log \
--v dafiles:/usr/share/docassemble/files \
 -v certs:/usr/share/docassemble/certs \
--v daconfig:/usr/share/docassemble/config \
--v dabackup:/usr/share/docassemble/backup \
--v redis:/var/lib/redis/ \
--v letsencrypt:/etc/letsencrypt \
--v apache:/etc/apache2/sites-available \
+-v backup:/usr/share/docassemble/backup \
 -d -p 80:80 -p 443:443 jhpyle/docassemble
 {% endhighlight %}
 
 where `--env-file=env.list` is an optional parameter that refers to a
 file `env.list` containing environment variables for the
-configuration.
+configuration.  A [template for the `env.list` file] is included in distribution
 
 To delete all of the volumes, do:
 
@@ -817,6 +807,8 @@ files:
   so that it is easier to view them in the web application.
 * <span></span>[`docassemble/Docker/run-apache.sh`]: This is a script
   that is run by [supervisor] to start the [Apache] server.
+* <span></span>[`docassemble/Docker/run-celery.sh`]: This is a script
+  that is run by [supervisor] to start the [Celery] server.
 * <span></span>[`docassemble/Docker/run-cron.sh`]: This is a script
   that is run by [supervisor] to start the [cron] daemon.
 * <span></span>[`docassemble/Docker/run-postgresql.sh`]: This is a script that is
@@ -825,6 +817,13 @@ files:
   run by [supervisor] to start the [RabbitMQ] server.
 * <span></span>[`docassemble/Docker/run-redis.sh`]: This is a script that is
   run by [supervisor] to start the [Redis] server.
+* <span></span>[`docassemble/Docker/run-syslogng.sh`]: This is a script that is
+  run by [supervisor] to start the [Syslog-ng] daemon.
+* <span></span>[`docassemble/Docker/run-websockets.sh`]: This is a script that is
+  run by [supervisor] to start the [WebSocket] server.
+* <span></span>[`docassemble/Docker/reset.sh`]: This is a script that is
+  run by [supervisor] to restart the web server, the [Celery] server,
+  and the [WebSocket] server on a signal from a peer server.
 * <span></span>[`docassemble/Docker/sync.sh`]: This is a script that is
   run by [supervisor] to synchronize log files.
 
@@ -918,10 +917,15 @@ delete all of the data on the server unless you are using a
 [`docassemble/Docker/apache.logrotate`]: {{ site.github.repository_url }}/blob/master/Docker/apache.logrotate
 [`docassemble/Docker/run-postgresql.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-postgresql.sh
 [`docassemble/Docker/run-apache.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-apache.sh
+[`docassemble/Docker/run-celery.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-celery.sh
 [`docassemble/Docker/run-cron.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-cron.sh
 [`docassemble/Docker/run-rabbitmq.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-rabbitmq.sh
 [`docassemble/Docker/run-redis.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-redis.sh
+[`docassemble/Docker/run-syslogng.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-syslogng.sh
+[`docassemble/Docker/run-websockets.sh`]: {{ site.github.repository_url }}/blob/master/Docker/run-websockets.sh
+[`docassemble/Docker/reset.sh`]: {{ site.github.repository_url }}/blob/master/Docker/reset.sh
 [`docassemble/Docker/sync.sh`]: {{ site.github.repository_url }}/blob/master/Docker/sync.sh
+[template for the `env.list` file]: {{ site.github.repository_url }}/blob/master/Docker/env.list
 [ECS]: https://aws.amazon.com/ecs/
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [PostgreSQL]: http://www.postgresql.org/
@@ -1003,3 +1007,4 @@ delete all of the data on the server unless you are using a
 [Amazon Web Services]: https://aws.amazon.com
 [S3 bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
 [scheduled tasks]: {{ site.baseurl }}/docs/scheduled.html
+[WebSocket]: https://en.wikipedia.org/wiki/WebSocket

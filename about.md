@@ -19,7 +19,8 @@ fields.
 Though the name emphasizes the document assembly feature,
 **docassemble** interviews do not need to assemble a document; they
 might submit an application, direct the user to other resources on the
-internet, or simply provide the user with information.
+internet, store user input, or simply provide the user with
+information.
 
 ## Features
 
@@ -169,6 +170,13 @@ screen-sharing, and/or telephonic connection.
 * **Text message interface** Your interviews can be available not only
 through a web browser, but also through a [text messaging interface],
 for those of your users without computers or smartphones.
+* **Machine learning** Your interviews can use [machine learning] to
+process user input.  Your interviews can become "smarter" over time as
+the machine learning models are trained to associate particular user
+input with particular concepts.
+* **Central storage** Your interviews can [store data] in a central
+location, for example if you want use your interview to conduct a
+survey, or collect analytics about user answers.
 * **Interview sessions spanning months** **docassemble** interviews do
 not have to end the day the interviewee starts the interview.  The
 interview and its answers can persist for months, and the interview
@@ -202,13 +210,6 @@ application can interact with an ongoing interview by
 answers.  It can also [extract] information from the interview, such
 as a [JSON] representation of particular user answers, or an assembled
 PDF file.
-
-### Fuzzy logic
-
-**docassemble** interviews can use [machine learning] to process user
-input.  Your interviews can become "smarter" over time as the machine
-learning models are trained to associate particular user input with
-particular concepts.
 
 ### Secure
 
@@ -499,3 +500,4 @@ the same interview on a single server.
 [check in]: {{ site.baseurl }}/docs/scheduled.html
 [live help]: {{ site.baseurl }}/docs/livehelp.html
 [text messaging interface]: {{ site.baseurl }}/docs/sms.html
+[store data]: {{ site.baseurl }}/docs/functions.html#storage

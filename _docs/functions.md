@@ -2328,8 +2328,8 @@ by calling `redis.StrictRedis()`.
 Since [Redis] is an [in-memory database], it is not appropriate for
 long-term storage or for the storage of large amounts of data.
 
-An alternative is to store data in SQL.  **docassemble** provides two
-functions that allow you to store and retrieve data.
+An alternative is to store data in SQL.  **docassemble** provides three
+functions that allow you to store, retrieve, and delete data.
 
 {% include side-by-side.html demo="database_storage" %}
 
