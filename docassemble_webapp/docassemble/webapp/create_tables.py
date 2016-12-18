@@ -62,7 +62,7 @@ def populate_tables():
     if 'first_name' not in admin_defaults:
         admin_defaults['first_name'] = word('System')
     if 'last_name' not in admin_defaults:
-        admin_defaults['first_name'] = word('Administrator')
+        admin_defaults['last_name'] = word('Administrator')
     cron_defaults = daconfig.get('default_cron_account', {'nickname': 'cron', 'email': 'cron@admin.com', 'first_name': 'Cron', 'last_name': 'User'})
     cron_defaults['active'] = False
     user_role = get_role(db, 'user')

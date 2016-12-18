@@ -96,7 +96,7 @@ def edit_user_profile_page(id):
     if len(the_role_id) == 0:
         the_role_id = [str(Role.query.filter_by(name='user').first().id)]
     form = EditUserProfileForm(request.form, user, role_id=the_role_id)
-    form.role_id.choices = [(r.id, r.name) for r in db.session.query(Role).filter(Role.name != 'cron', Role.name != 'admin').order_by('name')]
+    form.role_id.choices = [(r.id, r.name) for r in db.session.query(Role).filter(Role.name != 'cron').order_by('name')]
     form.timezone.choices = [(x, x) for x in sorted([tz for tz in pytz.all_timezones])]
     form.timezone.default = the_tz
     if str(form.timezone.data) == 'None':

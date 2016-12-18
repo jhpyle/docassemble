@@ -15,6 +15,6 @@ RUN sed -i -e 's/^\(daemonize\s*\)yes\s*$/\1no/g' -e 's/^bind 127.0.0.1/bind 0.0
 EXPOSE 80 443 9001 514 8080 5432 6379 4369 5671 5672 25672
 ENV CONTAINERROLE="all" LOCALE="en_US.UTF-8 UTF-8" TIMEZONE="America/New_York" EC2="" S3ENABLE="" S3BUCKET="" S3ACCESSKEY="" S3SECRETACCESSKEY="" DAHOSTNAME="" USEHTTPS="" USELETSENCRYPT="" LETSENCRYPTEMAIL="" DBHOST="" LOGSERVER="" REDIS="" RABBITMQ=""
 
-VOLUME  ["/var/run/postgresql", "/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql", "/usr/share/docassemble/log", "/usr/share/docassemble/files", "/usr/share/docassemble/config", "/usr/share/docassemble/backup", "/etc/letsencrypt", "/etc/apache2/sites-available"]
+VOLUME  ["/usr/share/docassemble/certs", "/usr/share/docassemble/backup"]
 
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]
