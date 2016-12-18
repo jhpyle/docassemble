@@ -18,6 +18,8 @@ function stopfunc {
     echo backing up redis
     if [ "${S3ENABLE:-false}" == "true" ]; then
 	s3cmd -q put "/var/lib/redis/dump.rdb" s3://${S3BUCKET}/redis.rdb
+    else
+	cp /var/lib/redis/dump.rdb /usr/share/docassemble/backup/redis.rdb
     fi
     exit 0
 }

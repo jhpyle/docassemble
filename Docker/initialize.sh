@@ -101,13 +101,39 @@ if [ "${S3ENABLE:-false}" == "true" ]; then
     fi
     if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/log) ]]; then
 	s3cmd -q sync s3://${S3BUCKET}/log/ ${LOGDIRECTORY:-/usr/share/docassemble/log}/
+	chown -R www-data.www-data /usr/share/docassemble/log
     fi
     if [[ $(s3cmd ls s3://${S3BUCKET}/config.yml) ]]; then
 	rm -f $DA_CONFIG_FILE
 	s3cmd -q get s3://${S3BUCKET}/config.yml $DA_CONFIG_FILE
+	chown www-data.www-data $DA_CONFIG_FILE
     fi
     if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/redis.rdb) ]] && [ "$REDISRUNNING" = false ]; then
 	s3cmd -q -f get s3://${S3BUCKET}/redis.rdb "/var/lib/redis/dump.rdb"
+	chown redis.redis "/var/lib/redis/dump.rdb"
+    fi
+else
+    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ -f /usr/share/docassemble/backup/letsencrypt.tar.gz ]; then
+	cd /
+	tar -xf /usr/share/docassemble/backup/letsencrypt.tar.gz
+    fi
+    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ -d /usr/share/docassemble/backup/apache ]; then
+	cp -r /usr/share/docassemble/backup/apache/*  /etc/apache2/sites-available/
+    fi
+    if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [ -d /usr/share/docassemble/backup/log ]; then
+	cp -r /usr/share/docassemble/backup/log/* ${LOGDIRECTORY:-/usr/share/docassemble/log}/
+	chown -R www-data.www-data /usr/share/docassemble/log
+    fi
+    if [ -f /usr/share/docassemble/backup/config.yml ]; then
+	cp /usr/share/docassemble/backup/config.yml $DA_CONFIG_FILE
+	chown www-data.www-data $DA_CONFIG_FILE
+    fi
+    if [ -f /usr/share/docassemble/backup/files ]; then
+	cp -r /usr/share/docassemble/backup/files /usr/share/docassemble/
+	chown -R www-data.www-data /usr/share/docassemble/files
+    fi
+    if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [ -f /usr/share/docassemble/backup/redis.rdb ] && [ "$REDISRUNNING" = false ]; then
+	cp /usr/share/docassemble/backup/redis.rdb /var/lib/redis/dump.rdb
 	chown redis.redis "/var/lib/redis/dump.rdb"
     fi
 fi
@@ -346,13 +372,21 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
 	a2dissite -q docassemble-ssl &> /dev/null
     fi
     if [ "${S3ENABLE:-false}" == "true" ]; then
-	cd /
 	if [ "${USELETSENCRYPT:-none}" != "none" ]; then
+	    cd /
 	    rm -f /tmp/letsencrypt.tar.gz
 	    tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
 	    s3cmd -q put /tmp/letsencrypt.tar.gz 's3://'${S3BUCKET}/letsencrypt.tar.gz
 	fi
 	s3cmd -q sync /etc/apache2/sites-available/ 's3://'${S3BUCKET}/apache/
+    else
+	if [ "${USELETSENCRYPT:-none}" != "none" ]; then
+	    cd /
+	    rm -f /usr/share/docassemble/backup/letsencrypt.tar.gz
+	    tar -zcf /usr/share/docassemble/backup/letsencrypt.tar.gz etc/letsencrypt
+	fi
+	rm -rf /usr/share/docassemble/backup/apache
+	cp -r /etc/apache2/sites-available /usr/share/docassemble/backup/apache
     fi
 fi
 
@@ -395,6 +429,15 @@ function deregister {
 	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
 	    s3cmd -q sync /usr/share/docassemble/log/ s3://${S3BUCKET}/log/
 	fi
+    else
+	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
+	    rm -rf /usr/share/docassemble/backup/log
+	    cp -r /usr/share/docassemble/log /usr/share/docassemble/backup/log
+	fi
+	rm -f /usr/share/docassemble/backup/config.yml
+	cp /usr/share/docassemble/config/config.yml /usr/share/docassemble/backup/config.yml
+	rm -rf /usr/share/docassemble/backup/files
+	cp -r /usr/share/docassemble/files /usr/share/docassemble/backup/
     fi
     echo "finished shutting down initialize" >&2
     kill %1
