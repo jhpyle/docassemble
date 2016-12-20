@@ -185,3 +185,5 @@ free software available with a highly permissive open-source
 [License]: {{ site.baseurl }}/docs/license.html
 [Demonstration]: {{ site.baseurl }}/demo.html
 [YAML]: https://en.wikipedia.org/wiki/YAML
+[Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
+[GitHub]: https://github.com/
