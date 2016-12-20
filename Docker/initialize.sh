@@ -118,7 +118,12 @@ else
 	tar -xf /usr/share/docassemble/backup/letsencrypt.tar.gz
     fi
     if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ -d /usr/share/docassemble/backup/apache ]; then
-	cp -r /usr/share/docassemble/backup/apache/*  /etc/apache2/sites-available/
+	cp -r /usr/share/docassemble/backup/apache/* /etc/apache2/sites-available/
+    fi
+    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ -d /usr/share/docassemble/backup/apachelogs ]; then
+	cp -r /usr/share/docassemble/backup/apachelogs/* /var/log/apache2/
+	chown root.adm /var/log/apache2/*
+	chmod 640 /var/log/apache2/*
     fi
     if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [ -d /usr/share/docassemble/backup/log ]; then
 	cp -r /usr/share/docassemble/backup/log/* ${LOGDIRECTORY:-/usr/share/docassemble/log}/
@@ -433,6 +438,8 @@ function deregister {
 	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
 	    rm -rf /usr/share/docassemble/backup/log
 	    cp -r /usr/share/docassemble/log /usr/share/docassemble/backup/log
+	    rm -rf /usr/share/docassemble/backup/apachelogs
+	    cp -r /var/log/apache2 /usr/share/docassemble/backup/apachelogs
 	fi
 	rm -f /usr/share/docassemble/backup/config.yml
 	cp /usr/share/docassemble/config/config.yml /usr/share/docassemble/backup/config.yml

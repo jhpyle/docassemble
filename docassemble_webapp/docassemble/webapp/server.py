@@ -6737,90 +6737,7 @@ function updateRunLink(){
   $("#daRunButton").attr("href", interviewBaseUrl.replace('.yml', $("#daVariables").val()));
 }
 
-$( document ).ready(function() {
-  $("#daVariables").change(function(event){
-    daCodeMirror.save();
-    updateRunLink();
-    $.ajax({
-      type: "POST",
-      url: """ + '"' + url_for('playground_page') + '"' + """,
-      data: $("#form").serialize() + '&variablefile=' + $(this).val(),
-      success: function(data){
-        //console.log("foobar1")
-        if (data.variables_html != null){
-          $("#daplaygroundtable").html(data.variables_html);
-          $(function () {
-            $('[data-toggle="popover"]').popover({trigger: 'click', html: true})
-          });
-        }
-        //console.log("foobar2")
-      },
-      dataType: 'json'
-    });
-    $(this).blur();
-  });
-  $("#daRun").click(function(event){
-    daCodeMirror.save();
-    $.ajax({
-      type: "POST",
-      url: """ + '"' + url_for('playground_page') + '"' + """,
-      data: $("#form").serialize() + '&run=Save+and+Run',
-      success: function(data){
-        if ($("#flash").length){
-          $("#flash").html(data.flash_message)
-        }
-        else{
-          $("#main").prepend('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash">' + data.flash_message + '</div>')
-        }
-        if (data.variables_html != null){
-          $("#daplaygroundtable").html(data.variables_html)
-          $("#form").trigger("reinitialize.areYouSure")
-          $(function () {
-            $('[data-toggle="popover"]').popover({trigger: 'click', html: true})
-          });
-        }
-        // setTimeout(function(){
-        //   $("#flash .alert-success").hide(300, function(){
-        //     $(self).remove();
-        //   });
-        // }, 3000);
-      },
-      dataType: 'json'
-    });
-    //event.preventDefault();
-    return true;
-  });
-  $("#daSave").click(function(event){
-    daCodeMirror.save();
-    $.ajax({
-      type: "POST",
-      url: """ + '"' + url_for('playground_page') + '"' + """,
-      data: $("#form").serialize() + '&submit=Save',
-      success: function(data){
-        if ($("#flash").length){
-          $("#flash").html(data.flash_message)
-        }
-        else{
-          $("#main").prepend('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash">' + data.flash_message + '</div>')
-        }
-        if (data.variables_html != null){
-          $("#daplaygroundtable").html(data.variables_html)
-          $("#form").trigger("reinitialize.areYouSure")
-          $(function () {
-            $('[data-toggle="popover"]').popover({trigger: 'click', html: true})
-          });
-        }
-        // setTimeout(function(){
-        //   $("#flash .alert-success").hide(300, function(){
-        //     $(self).remove();
-        //   });
-        // }, 3000);
-      },
-      dataType: 'json'
-    });
-    //event.preventDefault();
-    return true;
-  });
+function activateVariables(){
   $(".playground-variable").on("click", function(){
     daCodeMirror.replaceSelection($(this).data("insert"), "around");
     daCodeMirror.focus();
@@ -6828,7 +6745,7 @@ $( document ).ready(function() {
 
   $(".daparenthetical").on("click", function(event){
     var reference = $(this).data("ref");
-    //console.log("reference is " + reference)
+    //console.log("reference is " + reference);
     var target = $('[data-name="' + reference + '"]').first();
     if (target != null){
       //console.log("scrolltop is now " + $('#daplaygroundpanel').scrollTop());
@@ -6842,8 +6759,80 @@ $( document ).ready(function() {
 
   $(".dashowmethods").on("click", function(event){
     var target_id = $(this).data("showhide");
-    //$("#" + target_id).toggleClass("invisible");
     $("#" + target_id).slideToggle();
+  });
+}
+
+function saveCallback(data){
+  if ($("#flash").length){
+    $("#flash").html(data.flash_message);
+  }
+  else{
+    $("#main").prepend('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash">' + data.flash_message + '</div>');
+  }
+  if (data.variables_html != null){
+    $("#daplaygroundtable").html(data.variables_html);
+    activateVariables();
+    $("#form").trigger("reinitialize.areYouSure");
+    $(function () {
+      $('[data-toggle="popover"]').popover({trigger: 'click', html: true});
+    });
+  }
+}
+
+$( document ).ready(function() {
+  $("#daVariables").change(function(event){
+    daCodeMirror.save();
+    updateRunLink();
+    $.ajax({
+      type: "POST",
+      url: """ + '"' + url_for('playground_page') + '"' + """,
+      data: $("#form").serialize() + '&variablefile=' + $(this).val(),
+      success: function(data){
+        if (data.variables_html != null){
+          $("#daplaygroundtable").html(data.variables_html);
+          $(function () {
+            $('[data-toggle="popover"]').popover({trigger: 'click', html: true})
+          });
+          activateVariables();
+        }
+      },
+      dataType: 'json'
+    });
+    $(this).blur();
+  });
+  $("#daRun").click(function(event){
+    daCodeMirror.save();
+    $.ajax({
+      type: "POST",
+      url: """ + '"' + url_for('playground_page') + '"' + """,
+      data: $("#form").serialize() + '&run=Save+and+Run',
+      success: function(data){
+        saveCallback(data);
+      },
+      dataType: 'json'
+    });
+    //event.preventDefault();
+    return true;
+  });
+  $("#daSave").click(function(event){
+    daCodeMirror.save();
+    $.ajax({
+      type: "POST",
+      url: """ + '"' + url_for('playground_page') + '"' + """,
+      data: $("#form").serialize() + '&submit=Save',
+      success: function(data){
+        saveCallback(data);
+        setTimeout(function(){
+          $("#flash .alert-success").hide(300, function(){
+            $(self).remove();
+          });
+        }, 3000);
+      },
+      dataType: 'json'
+    });
+    event.preventDefault();
+    return false;
   });
 
   $(".example-link").on("click", function(){
