@@ -59,6 +59,7 @@ class ThreadVariables(threading.local):
     internal = dict()
     initialized = False
     redis = None
+    uid = None
     def __init__(self, **kw):
         if self.initialized:
             raise SystemError('__init__ called too many times')
@@ -66,6 +67,12 @@ class ThreadVariables(threading.local):
         self.__dict__.update(kw)
 
 this_thread = ThreadVariables()
+
+def set_uid(uid):
+    this_thread.uid = uid
+
+def get_uid():
+    return this_thread.uid
 
 def user_logged_in():
     """Returns True if the user is logged in, False otherwise."""

@@ -6,6 +6,7 @@ if not docassemble.base.config.loaded:
 from docassemble.base.config import daconfig
 import docassemble.base.interview_cache
 from docassemble.base.functions import word, comma_and_list, ReturnValue
+import docassemble.base.functions
 from celery import Celery
 from celery.result import result_from_tuple, AsyncResult
 import sys
@@ -56,7 +57,9 @@ def email_attachments(yaml_filename, user_info, user_code, secret, url, url_root
     success = False
     if worker_controller is None:
         initialize_db()
+    docassemble.base.functions.set_uid(user_code)
     with worker_controller.flaskapp.app_context():
+        worker_controller.set_request_active(False)
         the_user_dict = worker_controller.get_attachment_info(user_code, question_number, yaml_filename, secret)
         if the_user_dict is not None:
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
@@ -119,6 +122,7 @@ def email_attachments(yaml_filename, user_info, user_code, secret, url, url_root
 def background_action(yaml_filename, user_info, session_code, secret, url, url_root, action, extra=None):
     if worker_controller is None:
         initialize_db()
+    docassemble.base.functions.set_uid(user_code)
     with worker_controller.flaskapp.app_context():
         sys.stderr.write("background_action: yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + "\n")
         worker_controller.set_request_active(False)

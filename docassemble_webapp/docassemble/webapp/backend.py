@@ -29,7 +29,7 @@ import re
 import os
 import sys
 import pyPdf
-from flask import session, current_app
+from flask import session, current_app, has_request_context
 from flask_mail import Mail, Message
 from PIL import Image
 import xml.etree.ElementTree as ET
@@ -61,7 +61,10 @@ def delete_record(key, id):
 
 def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
     if uid is None:
-        uid = session['uid']
+        if has_request_context():
+            uid = session['uid']
+        else:
+            uid = docassemble.base.functions.get_uid()
     file_number = get_new_file_number(uid, filename, yaml_file_name=yaml_file_name)
     extension, mimetype = get_ext_and_mimetype(filename)
     new_file = SavedFile(file_number, extension=extension, fix=True)
@@ -71,7 +74,10 @@ def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
 
 def savedfile_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
     if uid is None:
-        uid = session['uid']
+        if has_request_context():
+            uid = session['uid']
+        else:
+            uid = docassemble.base.functions.get_uid()
     file_number = get_new_file_number(uid, filename, yaml_file_name=yaml_file_name)
     extension, mimetype = get_ext_and_mimetype(filename)
     new_file = SavedFile(file_number, extension=extension, fix=True)
@@ -158,7 +164,10 @@ docassemble.base.parse.set_absolute_filename(absolute_filename)
 
 def can_access_file_number(file_number, uid=None):
     if uid is None:
-        uid = session['uid']
+        if has_request_context():
+            uid = session['uid']
+        else:
+            uid = docassemble.base.functions.get_uid()
     upload = Uploads.query.filter_by(indexno=file_number, key=uid).first()
     if upload:
         return True
@@ -178,26 +187,21 @@ def get_new_file_number(user_code, file_name, yaml_file_name=None):
     # return (indexno)
 
 def get_info_from_file_number(file_number, privileged=False):
+    if has_request_context():
+        uid = session['uid']
+    else:
+        uid = docassemble.base.functions.get_uid()
     result = dict()
     if privileged:
         upload = Uploads.query.filter_by(indexno=file_number).first()
     else:
-        upload = Uploads.query.filter_by(indexno=file_number, key=session['uid']).first()
+        upload = Uploads.query.filter_by(indexno=file_number, key=uid).first()
     if upload:
         result['filename'] = upload.filename
         result['extension'], result['mimetype'] = get_ext_and_mimetype(result['filename'])
         result['savedfile'] = SavedFile(file_number, extension=result['extension'], fix=True)
         result['path'] = result['savedfile'].path
         result['fullpath'] = result['path'] + '.' + result['extension']
-    # cur = conn.cursor()
-    # cur.execute("SELECT filename FROM uploads where indexno=%s and key=%s", [file_number, session['uid']])
-    # for d in cur:
-    #     result['path'] = get_path_from_file_number(file_number)
-    #     result['filename'] = d[0]
-    #     result['extension'], result['mimetype'] = get_ext_and_mimetype(result['filename'])
-    #     result['fullpath'] = result['path'] + '.' + result['extension']
-    #     break
-    # conn.commit()
     if 'path' not in result:
         logmessage("path is not in result for " + str(file_number))
         return result
