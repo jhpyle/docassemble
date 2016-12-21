@@ -60,7 +60,10 @@ All of these methods will format text in questions as well as PDF and
 RTF documents, with the exception of the `!` image insertion command,
 which does not work within PDF and RTF documents.
 
-# <a name="mako"></a>Using Mako for logic and generated text.
+# <a name="mako"></a>Using Mako for logic and generated text
+
+{% include side-by-side.html demo="mako-01" %}
+
 
 
 

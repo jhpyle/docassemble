@@ -236,20 +236,51 @@ your [S3] bucket.
 ## <a name="persistent"></a>Using persistent volumes
 
 To run **docassemble** in a [single-server arrangement] in such a way
-that the [configuration], the [Playground] files, and the uploaded
-files persist after the [Docker] container is removed or updated, run
-the image as follows:
+that the [configuration], the [Playground] files, the uploaded files,
+and other data persist after the [Docker] container is removed or
+updated, run the image as follows:
 
 {% highlight bash %}
 docker run --env-file=env.list \
--v certs:/usr/share/docassemble/certs \
--v backup:/usr/share/docassemble/backup \
+-v dabackup:/usr/share/docassemble/backup \
 -d -p 80:80 -p 443:443 jhpyle/docassemble
 {% endhighlight %}
 
 where `--env-file=env.list` is an optional parameter that refers to a
 file `env.list` containing environment variables for the
-configuration.  A [template for the `env.list` file] is included in distribution
+configuration.  A [template for the `env.list` file] is included in
+distribution.
+
+An advantage of using persistent volumes is that you can completely
+replace the **docassemble** container and rebuild it from scratch, and
+when you `run` the `jhpyle/docassemble` image again, docassemble will
+keep running where it left off.
+
+If you are using [HTTPS] with your own certificates (as opposed to
+using [Let's Encrypt]), you can use a persistent volume to provide the
+certificates to the [Docker] container.  Just add `-v
+dacerts:/usr/share/docassemble/certs` to your [`docker run`] command.
+
+To see what volumes exist on your [Docker] system, you can run:
+
+{% highlight bash %}
+docker volume ls
+{% endhighlight %}
+
+[Docker] volumes are actual directories on the file system.  To find
+the path of a given volume, use [`docker volume inspect`]:
+
+{% highlight bash %}
+docker volume inspect dabackup
+{% endhighlight %}
+
+For example, if you are using [HTTPS] with your own certificates, and
+you need to update the certificates your server should use, you can
+find the path where the `dacerts` volume lives (`docker volume inspect
+dacerts`), copy your certificates to that path (`cp mycertificate.key
+/var/lib/docker/volumes/dacerts/data/docassemble.key`), and then stop
+the container (`docker stop -t 60 <containerid>`) and start it again
+(`docker start <containerid>`).
 
 To delete all of the volumes, do:
 
@@ -257,36 +288,17 @@ To delete all of the volumes, do:
 docker volume rm $(docker volume ls -qf dangling=true)
 {% endhighlight %}
 
-An advantage of using persistent volumes is that you can completely
-replace the **docassemble** container and rebuild it from scratch, and
-when you `run` the `jhpyle/docassemble` image again, docassemble will
-keep running where it left off.  This also facilitates backing up a
-**docassemble** server that runs on [Docker].  For example, here is a
-script that backs up all of the **docassemble** volumes running on a
-remote server, `docassemble.example.com`:
+Ultimately, the better [data storage] solution is to [use S3] because:
 
-{% highlight bash %}
-rsync -au --rsync-path="sudo rsync" docassemble.example.com:/var/lib/docker/volumes /root/my-backup-directory
-{% endhighlight %}
-
-Note: for this to run unattended, you need to edit `~/.ssh/config` to
-indicate where the identity file is located:
-
-{% highlight text %}
-Host docassemble.example.com
-    HostName docassemble.example.com
-    User ec2-user
-    IdentityFile /root/ec2-user.pem
-{% endhighlight %}
-
-Ultimately, however, the better [data storage] solution is to
-[use S3].  One of the downsides of storing the SQL server data on a
-persistent volume is that if the [PostgreSQL] version changes between
-one **docassemble** image and the next, the new container will not be
-able to use the [PostgreSQL] data stored in the persistent volume.
-The [S3] system, by contrast, uses "dump" and "restore" operations to
-save the SQL database.  Also, the [`docker run`] command is much
-shorter when [S3] is used.
+1. [S3] makes scaling easier.  [S3] and systems like it are the
+   "cloud" way of storing persistent data, at least until cloud-based
+   network file systems become more robust.
+2. It is easier to upgrade your virtual machines to the latest
+   software and operating system if you can just destroy them and
+   recreate them, rather than running update scripts.  If your
+   persistent data is stored on [S3], you can destroy and recreate
+   virtual machines at will, without ever having to worry about
+   copying your data on and off the machines.
 
 # <a name="configuration options"></a>Configuration options
 
@@ -1004,6 +1016,8 @@ delete all of the data on the server unless you are using a
 [`docker run`]: https://docs.docker.com/engine/reference/commandline/run/
 [`docker build`]: https://docs.docker.com/engine/reference/commandline/build/
 [`docker ps`]: https://docs.docker.com/engine/reference/commandline/ps/
+[`docker volume`]: https://docs.docker.com/engine/reference/commandline/volume/
+[`docker volume inspect`]: https://docs.docker.com/engine/reference/commandline/volume/
 [Amazon Web Services]: https://aws.amazon.com
 [S3 bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
 [scheduled tasks]: {{ site.baseurl }}/docs/scheduled.html
