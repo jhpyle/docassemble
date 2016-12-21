@@ -11,6 +11,7 @@ from docassemble.base.error import DAError
 from docassemble.base.logger import logmessage
 import docassemble.base.functions
 import docassemble.base.parse
+import docassemble.base.pdftk
 import shutil
 import datetime
 import types
@@ -45,7 +46,13 @@ class DAAttachmentList(DAList):
         self.object_type = DAAttachment
         return super(DAAttachmentList, self).init(**kwargs)
     def url_list(self):
-        return docassemble.base.functions.comma_and_list(map(lambda x: '[`' + x.markdown_filename + '`](' + docassemble.base.functions.url_of("playgroundfiles", section="template", file=x.markdown_filename) + ')', self.elements))
+        output_list = list()
+        for x in self.elements:
+            if x.type == 'md':
+                output_list.append('[`' + x.markdown_filename + '`](' + docassemble.base.functions.url_of("playgroundfiles", section="template", file=x.markdown_filename) + ')')
+            elif x.type == 'pdf':
+                output_list.append('[`' + x.pdf_filename + '`](' + docassemble.base.functions.url_of("playgroundfiles", section="template", file=x.pdf_filename) + ')')
+        return docassemble.base.functions.comma_and_list(output_list)
 
 class DAUploadMultiple(DAObject):
     def init(self, **kwargs):
@@ -176,7 +183,13 @@ class DAQuestion(DAObject):
                     for attachment in self.attachments:
                         content += "  - name: " + oneline(attachment.name) + "\n"
                         content += "    filename: " + varname(attachment.name) + "\n"
-                        content += "    content: " + oneline(attachment.content) + "\n"
+                        if attachment.type == 'md':
+                            content += "    content: " + oneline(attachment.content) + "\n"
+                        elif attachment.type == 'pdf':
+                            content += "    pdf template file: " + oneline(attachment.pdf_filename) + "\n"
+                            content += "    fields: " + "\n"
+                            for field, default, pageno, rect, field_type in attachment.fields:
+                                content += '      "' + field + '": ${ ' + varname(field).lower() + " }\n"
             else:
                 content += "fields:\n"
                 for field in self.field_list:
@@ -305,6 +318,13 @@ class PlaygroundSection(object):
         if extension == "md":
             return True
         return False
+    def is_pdf(self, filename):
+        extension, mimetype = get_ext_and_mimetype(filename)
+        if extension == "pdf":
+            return True
+        return False
+    def get_fields(self, filename):
+        return docassemble.base.pdftk.read_fields(self.get_file(filename))
     def convert_file_to_md(self, filename, convert_variables=True):
         extension, mimetype = get_ext_and_mimetype(filename)
         if (mimetype and mimetype in convertible_mimetypes):

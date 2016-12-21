@@ -1,0 +1,26 @@
+metadata:
+  title: Mako if/then/else
+  short title: If/then/else
+  documentation: "http://docassemble.org/docs/markup.html#mako"
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+question: |
+  Commentary on the day of the month
+subquestion: |
+  Let me tell you about today.
+
+  % if day_of_month < 3:
+  The month just started!
+  % elif day_of_month < 15:
+  It is the beginning part of the month.
+  % else:
+  It is the latter part of the month.
+  % endif
+---
+code: |
+  day_of_month = format_date(current_datetime(), format='d')

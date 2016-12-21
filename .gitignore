@@ -23,7 +23,6 @@ compile.sh
 www-compile.sh
 compile2.sh
 www-compile2.sh
-reset.sh
 requirements.txt
 full-requirements.txt
 taskdefinition.json

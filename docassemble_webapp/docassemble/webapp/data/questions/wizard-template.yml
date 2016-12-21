@@ -26,8 +26,10 @@ subquestion: |
   [Playground].
 
   If you have not already uploaded your templates, you can upload them
-  with this wizard.  Word files will be converted to Markdown format.
+  with this wizard.  If you upload a Word file, it will be converted
+  to [Markdown] format.
 
+  [Markdown]: https://daringfireball.net/projects/markdown/syntax
   [Playground]: ${ url_of('playground') }
   [Templates section]: ${ url_of('playgroundtemplate') }
 yesno: templates_already_uploaded
@@ -35,6 +37,16 @@ yesno: templates_already_uploaded
 question: |
   Please upload one or more templates that you want your interview to
   assemble.
+subquestion: |
+  The following types of files are accepted: 
+
+  * Word files with variable names in square brackets.  These will be
+    converted to [Markdown] format.  Only basic formatting will be
+    retained, such as bold, italics, and section headings.
+  * PDF files with fillable fields.
+  * Text files in [Markdown] format.
+  
+  [Markdown]: https://daringfireball.net/projects/markdown/syntax
 fields:
   - Files: template_uploads
     datatype: files
@@ -58,22 +70,29 @@ code: |
       new_template = templates.copy_from(the_file.path(), the_file.filename)
       chosen_templates.append(new_template)
   for template_filename in chosen_templates:
-    if templates.is_markdown(template_filename):
-      markdown_filename = template_filename
+    if templates.is_pdf(template_filename):
+      attachment = attachments.appendObject()
+      attachment.type = 'pdf'
+      attachment.pdf_filename = template_filename
+      attachment.fields = templates.get_fields(template_filename)
     else:
-      markdown_filename = templates.convert_file_to_md(template_filename)
-    attachment = attachments.appendObject()
-    base_file = varname(base_name(markdown_filename))
-    attachment.content = '${ ' + base_file + ' }'
-    attachment.markdown_filename = markdown_filename
-    new_template = interview.questions.initializeObject(base_file)
-    new_template.type = 'template'
-    new_template.interview = interview
-    new_template.field_list.appendObject()
-    new_template.field_list[0].variable = base_file
-    new_template.field_list[0].field_type = 'template'
-    new_template.field_list[0].question = new_template
-    new_template.template_file = markdown_filename
+      if templates.is_markdown(template_filename):
+        markdown_filename = template_filename
+      else:
+        markdown_filename = templates.convert_file_to_md(template_filename)
+      attachment = attachments.appendObject()
+      attachment.type = 'md'
+      base_file = varname(base_name(markdown_filename))
+      attachment.content = '${ ' + base_file + ' }'
+      attachment.markdown_filename = markdown_filename
+      new_template = interview.questions.initializeObject(base_file)
+      new_template.type = 'template'
+      new_template.interview = interview
+      new_template.field_list.appendObject()
+      new_template.field_list[0].variable = base_file
+      new_template.field_list[0].field_type = 'template'
+      new_template.field_list[0].question = new_template
+      new_template.template_file = markdown_filename
   attachments.gathered = True
 ---
 question: |
@@ -409,8 +428,13 @@ fields:
 ---
 generic object: DAAttachment
 question: |
+  % if x.type == 'md':
   What is the name of the document that will be assembled using
   the template `${ x.markdown_filename }`?
+  % else:
+  What is the name of the document that will be filled in using
+  the template `${ x.pdf_filename }`?
+  % endif
 subquestion: |
   E.g., if the name is "Complaint for Custody," then on the final
   screen, this will be the heading of the area where the user can
@@ -452,24 +476,36 @@ subquestion: |
   This wizard will create a **docassemble** interview that assembles
   one or more documents for the user.
 
-  It will ask you to upload one or more Word documents you have marked
-  up with variable names in square brackets.  For example, your Word
-  document may contain the text:
+  It will ask you to upload at least one document template.
+
+  You can upload a Word file template in which variable names are
+  enclosed in square brackets.  For example, your Word document may
+  contain the text:
 
   > Your phone number is \[phone number\] and you live in \[city\].
 
   The wizard will build a **docassemble** interview that gathers
-  definitions of necessary variables `phone_number` and `city` in
-  order to create the assembled document.  Here is a [sample Word
-  file].
+  definitions of the variables `phone_number` and `city` in order to
+  create the assembled document.
 
   The Word file(s) you upload will be converted to [Markdown].  As a
   result, some of the formatting in the documents may be lost.
-  See the [Documents] section of the documentation for more
-  information about how documents are formatted in **docassemble**.
+  (See the [Documents] section of the documentation for more
+  information about how documents are formatted in **docassemble**.)
 
-  You can also upload templates in [Markdown] format, or use
-  already-uploaded files instead of uploading new files.
+  Here is a [sample Word file] you can use as a starting point.
+  
+  You can also upload PDF files containing fillable fields.  The
+  names of the fields will be converted to variable names.
+  
+  You can also upload templates in [Markdown] format that contain
+  variables embedded using [Mako syntax]:
+
+      Your phone number is ${ '${ phone_number }' } and you live in ${ '${ city }' }.
+
+  The files will be uploaded into the [Templates section] of the
+  [Playground].  If the template file you want to use is already in
+  the [Templates section], you do not need to upload it again.
   
   Once your interview has been created, it will be available in the
   [Playground], where you can edit it.
@@ -477,9 +513,11 @@ subquestion: |
   This wizard is primarily a tool to help new interview authors learn
   how to write **docassemble** interviews.  There are many features in
   **docassemble** that are not available with this wizard.
-  
+
+  [Mako syntax]: http://docassemble.org/docs/markup.html#mako
   [Playground]: ${ url_of('playground') }
   [sample Word file]: ${ url_of('docassemble.webapp:data/static/test-document.docx') }
   [Markdown]: https://daringfireball.net/projects/markdown/syntax
   [Documents]: http://docassemble.org/docs/documents.html
+  [Templates section]: ${ url_of('playgroundtemplate') }
 field: splash_screen

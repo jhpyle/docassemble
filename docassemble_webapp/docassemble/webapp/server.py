@@ -1579,7 +1579,7 @@ def restart_this():
     if USING_SUPERVISOR:
         for host in Supervisors.query.all():
             if host.url:
-                logmessage("restart_this: considering " + str(host.hostname) + "against " + str(hostname))
+                logmessage("restart_this: considering " + str(host.hostname) + " against " + str(hostname))
                 if host.hostname == hostname:
                     restart_on(host)
             else:

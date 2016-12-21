@@ -1,0 +1,17 @@
+metadata:
+  title: Mako
+  short title: Mako
+  documentation: "http://docassemble.org/docs/markup.html#mako"
+  example start: 1
+  example end: 2
+---
+mandatory: true
+question: |
+  A summary
+subquestion: |
+  You like ${ favorite_fruit }
+  and ${ favorite_vegetable }.
+---
+code: |
+  favorite_fruit = 'apples'
+  favorite_vegetable = 'potatoes'
