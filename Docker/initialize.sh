@@ -133,7 +133,7 @@ else
 	cp /usr/share/docassemble/backup/config.yml $DA_CONFIG_FILE
 	chown www-data.www-data $DA_CONFIG_FILE
     fi
-    if [ -f /usr/share/docassemble/backup/files ]; then
+    if [ -d /usr/share/docassemble/backup/files ]; then
 	cp -r /usr/share/docassemble/backup/files /usr/share/docassemble/
 	chown -R www-data.www-data /usr/share/docassemble/files
     fi
