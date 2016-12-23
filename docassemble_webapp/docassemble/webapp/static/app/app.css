@@ -820,3 +820,7 @@ img.da-sig-spinner {
 .dasearchicon:hover {
     color: #444444;
 }
+
+.pointer {
+    cursor: pointer;
+}

@@ -62,6 +62,7 @@ class PlaygroundFilesEditForm(FlaskForm):
     section = StringField(word('Section'))
     original_file_name = StringField(word('Original Name'))
     file_name = StringField(word('Name'), [validators.Length(min=1, max=255)])
+    search_term = StringField(word('Search'))
     file_content = TextAreaField(word('File Text'))
     submit = SubmitField(word('Save'))
     delete = SubmitField(word('Delete'))

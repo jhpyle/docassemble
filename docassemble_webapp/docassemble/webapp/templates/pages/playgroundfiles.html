@@ -57,7 +57,15 @@
   {{ myrender_hidden_field(formtwo.section, value=section) }}
   {{ myrender_hidden_field(formtwo.original_file_name, value=current_file) }}
   <div class="daspacer"></div>
-  {{ render_addon_field(formtwo.file_name, tabindex=20) }}
+  {# {{ render_addon_field(formtwo.file_name, tabindex=20) }} #}
+  <div class="row">
+    <div class="col-lg-6">
+      {{ render_addon_field(formtwo.file_name, tabindex=20) }}
+    </div>
+    <div class="col-lg-6">
+      {{ render_addon_field(formtwo.search_term, tabindex=30, extra='<a class="input-group-addon no-outline pointer" id="daSearchPrevious"><i class="glyphicon glyphicon-chevron-left"></i></a><a class="input-group-addon no-outline pointer" id="daSearchNext"><i class="glyphicon glyphicon-chevron-right"></i></a>', extra_class='pull-right') }}
+    </div>
+  </div>
   <div class="daspacer"></div>
   <div class="form-group">
     <textarea rows="24" cols="80" id="file_content" name="file_content" tabindex="70">{{ content }}</textarea>
