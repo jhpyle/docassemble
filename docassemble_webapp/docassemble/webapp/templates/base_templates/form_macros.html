@@ -37,13 +37,17 @@
 </div>
 {%- endmacro %}
 
-{% macro render_addon_field(field, label=None, label_visible=True, right_url=None, right_label=None, right_message=None) %}
-<div class="input-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
+{% macro render_addon_field(field, label=None, label_visible=True, right_url=None, right_label=None, right_message=None, extra=None, extra_class=None) %}
+{%- if not extra_class %}{% set extra_class='' %}{% endif %}
+<div class="input-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}{{ extra_class }}">
   {%- if field.type != 'HiddenField' and label_visible %}
   {%- if not label %}{% set label=field.label.text %}{% endif %}
   <span class="input-group-addon">{{ label|safe }}</span>
   {%- endif %}
   {{ field(class_='form-control', **kwargs) }}
+  {%- if extra %}
+  {{ extra|safe }}
+  {%- endif %}
 </div>
 {%- if field.errors %}
 {%- for e in field.errors %}

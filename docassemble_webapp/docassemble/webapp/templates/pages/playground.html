@@ -22,9 +22,10 @@
   </li>
   <li role="presentation" class="dropdown">
     <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another interview')}}">
-      <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;&nbsp;{{ current_file }}<span class="caret"></span>
+      <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}<span class="caret"></span>
     </a>
     <ul class="dropdown-menu">
+      {% if any_files %}
       {% for file in files %}{% if file == current_file %}<li class="active">
         <a href="#"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {{ file }}
         </a>
@@ -34,25 +35,41 @@
         </a>
       </li>
       {% endif %}{% endfor %}
+      {% else %}<li class="active">
+        <a href="#"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}
+        </a>
+      </li>
+      {% endif %}
     </ul>
   </li>
 </ul>
 <form action="{{ url_for('playground_page') }}" method="POST" class="form" role="form" id="form">
   {{ form.hidden_tag() }}
   {{ myrender_hidden_field(form.original_playground_name, value=current_file) }}
+  {# <div class="daspacer"></div> #}
+  <div class="row">
+    <div class="col-lg-6">
+      {{ render_addon_field(form.playground_name, tabindex=20) }}
+    </div>
+    <div class="col-lg-6">
+      {{ render_addon_field(form.search_term, tabindex=30, extra='<a href="#" class="input-group-addon no-outline" id="daSearchPrevious"><i class="glyphicon glyphicon-chevron-left"></i></a><a href="#" class="input-group-addon no-outline" id="daSearchNext"><i class="glyphicon glyphicon-chevron-right"></i></a>', extra_class='pull-right') }}
+    </div>
+  </div>
   <div class="daspacer"></div>
-  {{ render_addon_field(form.playground_name, tabindex=20) }}
-  <div class="daspacer"></div>
-  <div class="form-group">
-    <textarea rows="34" cols="80" id="playground_content" name="playground_content" tabindex="70">{{ content }}</textarea>
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="form-group">
+        <textarea rows="34" cols="80" id="playground_content" name="playground_content" tabindex="70">{{ content }}</textarea>
+      </div>
+    </div>
   </div>
   <div class="form-actions">
-    <a id="daSave" href="#" class="btn btn-primary btn-lg">Save</a>
-    {# {{ render_submit_field(form.submit, class="btn btn-primary btn-lg") }} #}
+    {# <a id="daSave" href="#" class="btn btn-primary btn-lg">Save</a> #}
+    {{ render_submit_field(form.submit, class="btn btn-primary btn-lg") }}
     {# {{ render_submit_field(form.run, id='daRun', class="btn btn-warning btn-lg") }} #}
-    <a id="daRun" target="_blank" href="{{ url_for('playground_redirect') }}" class="btn btn-warning btn-lg">Save and Run</a>
-    {% if is_new == 'False' %}{{ render_submit_field(form.delete, id='daDelete', class="btn btn-default btn-lg") }}
-    {% if interview_path%}
+    {% if is_new == 'False' %}<a id="daRun" target="_blank" href="{{ url_for('playground_redirect') }}" class="btn btn-warning btn-lg">{{ word("Save and Run") }}</a>
+    {{ render_submit_field(form.delete, id='daDelete', class="btn btn-default btn-lg") }}
+    {% if interview_path %}
     <a title="Right-click to copy link" class="label label-default example-share" target="_blank" href="{{ url_for('index', i=interview_path) }}"><i class="glyphicon glyphicon-link"></i> {{ word('Share') }}</a>
     {% endif %}
     {% endif %}

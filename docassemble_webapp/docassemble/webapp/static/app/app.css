@@ -802,3 +802,21 @@ img.da-sig-spinner {
     border-color: #dddddd;
     border-style: solid;
 }
+
+.search-error {
+  background-color: #f2dede;
+}
+
+.dasearchicon {
+    color: #aaaaaa;
+    vertical-align: middle;
+    cursor: pointer;
+    text-decoration: none !important;
+    line-height: normal;
+    font-size: 16px;
+    margin-right: 4px;
+}
+
+.dasearchicon:hover {
+    color: #444444;
+}

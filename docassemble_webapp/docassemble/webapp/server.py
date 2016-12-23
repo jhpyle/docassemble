@@ -1308,12 +1308,14 @@ def name_of_user(user, include_email=False):
         output += user.email
     return output
 
-def flash_as_html(message, message_type="info"):
+def flash_as_html(message, message_type="info", is_ajax=True):
     if message_type == 'error':
         message_type = 'danger'
     output = """
         <div class="alert alert-""" + str(message_type) + """"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>""" + str(message) + """</div>
 """
+    if not is_ajax:
+        flash(message, message_type)
     return output
 
 def make_example_html(examples, first_id, example_html, data_dict):
@@ -1351,7 +1353,10 @@ def infobutton(title):
     if 'url' in title_documentation[title]:
         docstring += "<a target='_blank' href='" + title_documentation[title]['url'] + "'>" + word("View documentation") + "</a>"
     return '&nbsp;<a class="daquestionsign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + docstring + '" title="' + word("Help") + '" data-selector="true" data-title="' + noquote(title_documentation[title].get('title', title)) + '"><i class="glyphicon glyphicon-question-sign"></i></a>'
-    
+
+def search_button(var):
+    return '<a class="dasearchicon" data-name="' + noquote(var) + '"><i class="glyphicon glyphicon-search"></i></a>'
+
 def get_vars_in_use(interview, interview_status, debug_mode=False):
     user_dict = fresh_dictionary()
     has_no_endpoint = False
@@ -1458,11 +1463,11 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
     if len(undefined_names):
         content += '\n                  <tr><td><h4>Undefined names' + infobutton('undefined') + '</h4></td></tr>'
         for var in sorted(undefined_names):
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-danger playground-variable">' + var + '</a></td></tr>'
+            content += '\n                  <tr><td>' + search_button(var) + '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-danger playground-variable">' + var + '</a></td></tr>'
     if len(names_used):
         content += '\n                  <tr><td><h4>Variables' + infobutton('variables') + '</h4></td></tr>'
         for var in sorted(names_used):
-            content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + var + '</a>'
+            content += '\n                  <tr><td>' + search_button(var) + '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + var + '</a>'
             if var in name_info and 'type' in name_info[var] and name_info[var]['type']:
                 content +='&nbsp;<span data-ref="' + noquote(name_info[var]['type']) + '" class="daparenthetical">(' + name_info[var]['type'] + ')</span>'
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
@@ -6539,6 +6544,10 @@ def playground_redirect():
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_page():
+    if 'ajax' in request.form:
+        is_ajax = True
+    else:
+        is_ajax = False
     form = PlaygroundForm(request.form, current_user)
     interview = None
     the_file = request.args.get('file', '')
@@ -6558,17 +6567,19 @@ def playground_page():
         if (form.playground_name.data):
             the_file = form.playground_name.data
             the_file = re.sub(r'[^A-Za-z0-9\_\-\.]', '', the_file)
-            if not re.search(r'\.ya?ml$', the_file):
-                the_file = re.sub(r'\..*', '', the_file) + '.yml'
             if the_file != '':
+                if not re.search(r'\.ya?ml$', the_file):
+                    the_file = re.sub(r'\..*', '', the_file) + '.yml'
                 filename = os.path.join(playground.directory, the_file)
                 if not os.path.isfile(filename):
                     with open(filename, 'a'):
                         os.utime(filename, None)
             else:
                 flash(word('You need to type in a name for the interview'), 'error')
+                is_new = True
         else:
             flash(word('You need to type in a name for the interview'), 'error')
+            is_new = True
     the_file = re.sub(r'[^A-Za-z0-9\_\-\.]', '', the_file)
     files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f))])
     content = ''
@@ -6609,7 +6620,8 @@ def playground_page():
         interview = interview_source.get_interview()
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
         variables_html = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
-        return jsonify(variables_html=variables_html)
+        if is_ajax:
+            return jsonify(variables_html=variables_html)
     if request.method == 'POST' and the_file != '' and form.validate():
         if form.delete.data:
             if os.path.isfile(filename):
@@ -6624,6 +6636,8 @@ def playground_page():
         if (form.submit.data or form.run.data) and form.playground_content.data:
             if form.original_playground_name.data and form.original_playground_name.data != the_file:
                 old_filename = os.path.join(playground.directory, form.original_playground_name.data)
+                if not is_ajax:
+                    flash(word("Changed name of interview"), 'success')
                 if os.path.isfile(old_filename):
                     os.remove(old_filename)
                     files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f))])
@@ -6652,13 +6666,14 @@ def playground_page():
                 interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
                 variables_html = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
                 if form.submit.data:
-                    flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.', 'success')
+                    flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.', 'success', is_ajax=is_ajax)
                 else:
-                    flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Running in other tab.'), message_type='success')
+                    flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Running in other tab.'), message_type='success', is_ajax=is_ajax)
             except:
                 variables_html = None
-                flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Problem detected.'), message_type='error')
-            return jsonify(variables_html=variables_html, flash_message=flash_message)
+                flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Problem detected.'), message_type='error', is_ajax=is_ajax)
+            if is_ajax:
+                return jsonify(variables_html=variables_html, flash_message=flash_message)
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
     interview_path = None
@@ -6697,6 +6712,10 @@ def playground_page():
             active_file = new_active_file
     ajax = """
 var exampleData;
+var originalFileName = """ + repr(str(the_file)) + """;
+var isNew = """ + repr(str(is_new)) + """;
+var origPosition = null;
+var searchMatches = null;
 
 function activateExample(id){
   var info = exampleData[id];
@@ -6738,7 +6757,7 @@ function updateRunLink(){
 }
 
 function activateVariables(){
-  $(".playground-variable").on("click", function(){
+  $(".playground-variable").on("click", function(event){
     daCodeMirror.replaceSelection($(this).data("insert"), "around");
     daCodeMirror.focus();
   });
@@ -6761,6 +6780,37 @@ function activateVariables(){
     var target_id = $(this).data("showhide");
     $("#" + target_id).slideToggle();
   });
+
+  $(".dasearchicon").on("click", function(event){
+    var query = $(this).data('name');
+    if (query == null || query.length == 0){
+      return;
+    }
+    origPosition = daCodeMirror.getCursor('to');
+    $("#form input[name='search_term']").val(query);
+    var sc = daCodeMirror.getSearchCursor(query, origPosition);
+    show_matches(query);
+    var found = sc.findNext();
+    if (found){
+      daCodeMirror.setSelection(sc.from(), sc.to());
+      $("#form input[name='search_term']").removeClass('search-error');
+    }
+    else{
+      origPosition = { line: 0, ch: 0, xRel: 1 }
+      sc = daCodeMirror.getSearchCursor(query, origPosition);
+      show_matches(query);
+      var found = sc.findNext();
+      if (found){
+        daCodeMirror.setSelection(sc.from(), sc.to());
+        $("#form input[name='search_term']").removeClass('search-error');
+      }
+      else{
+        $("#form input[name='search_term']").addClass('search-error');
+      }
+    }
+    event.preventDefault();
+    return false;
+  });
 }
 
 function saveCallback(data){
@@ -6780,6 +6830,41 @@ function saveCallback(data){
   }
 }
 
+function show_matches(query){
+  if (searchMatches != null){
+    searchMatches.clear();
+  }
+  searchMatches = daCodeMirror.showMatchesOnScrollbar(query);
+}
+
+function update_search(event){
+  var query = $(this).val();
+  if (query.length == 0){
+    return;
+  }
+  var sc = daCodeMirror.getSearchCursor(query, origPosition);
+  show_matches(query);
+
+  var found = sc.findNext();
+  if (found){
+    daCodeMirror.setSelection(sc.from(), sc.to());
+    $(this).removeClass("search-error");
+  }
+  else{
+    origPosition = { line: 0, ch: 0, xRel: 1 }
+    sc = daCodeMirror.getSearchCursor(query, origPosition);
+    show_matches(query);
+    var found = sc.findNext();
+    if (found){
+      daCodeMirror.setSelection(sc.from(), sc.to());
+      $(this).removeClass("search-error");
+    }
+    else{
+      $(this).addClass("search-error");
+    }
+  }
+}
+
 $( document ).ready(function() {
   $("#daVariables").change(function(event){
     daCodeMirror.save();
@@ -6787,7 +6872,7 @@ $( document ).ready(function() {
     $.ajax({
       type: "POST",
       url: """ + '"' + url_for('playground_page') + '"' + """,
-      data: $("#form").serialize() + '&variablefile=' + $(this).val(),
+      data: $("#form").serialize() + '&variablefile=' + $(this).val() + '&ajax=1',
       success: function(data){
         if (data.variables_html != null){
           $("#daplaygroundtable").html(data.variables_html);
@@ -6801,12 +6886,73 @@ $( document ).ready(function() {
     });
     $(this).blur();
   });
+  $("#form input[name='search_term']").on("focus", function(event){
+    origPosition = daCodeMirror.getCursor('from');
+  });
+  $("#form input[name='search_term']").change(update_search);
+  $("#form input[name='search_term']").on("keyup", update_search);
+  $("#daSearchPrevious").click(function(event){
+    var query = $("#form input[name='search_term']").val();
+    if (query.length == 0){
+      return;
+    }
+    origPosition = daCodeMirror.getCursor('from');
+    var sc = daCodeMirror.getSearchCursor(query, origPosition);
+    show_matches(query);
+    var found = sc.findPrevious();
+    if (found){
+      daCodeMirror.setSelection(sc.from(), sc.to());
+    }
+    else{
+      var lastLine = daCodeMirror.lastLine()
+      var lastChar = daCodeMirror.lineInfo(lastLine).text.length
+      origPosition = { line: lastLine, ch: lastChar, xRel: 1 }
+      sc = daCodeMirror.getSearchCursor(query, origPosition);
+      show_matches(query);
+      var found = sc.findPrevious();
+      if (found){
+        daCodeMirror.setSelection(sc.from(), sc.to());
+      }
+    }
+    event.preventDefault();
+    return false;
+  });
+  $("#daSearchNext").click(function(event){
+    var query = $("#form input[name='search_term']").val();
+    if (query.length == 0){
+      return;
+    }
+    origPosition = daCodeMirror.getCursor('to');
+    var sc = daCodeMirror.getSearchCursor(query, origPosition);
+    show_matches(query);
+    var found = sc.findNext();
+    if (found){
+      daCodeMirror.setSelection(sc.from(), sc.to());
+    }
+    else{
+      origPosition = { line: 0, ch: 0, xRel: 1 }
+      sc = daCodeMirror.getSearchCursor(query, origPosition);
+      show_matches(query);
+      var found = sc.findNext();
+      if (found){
+        daCodeMirror.setSelection(sc.from(), sc.to());
+      }
+    }
+    event.preventDefault();
+    return false;
+  });
   $("#daRun").click(function(event){
+    if (originalFileName != $("#playground_name").val()){
+      console.log("Click daSave");
+      $("#form button[name='submit']").click();
+      event.preventDefault();
+      return false;
+    }
     daCodeMirror.save();
     $.ajax({
       type: "POST",
       url: """ + '"' + url_for('playground_page') + '"' + """,
-      data: $("#form").serialize() + '&run=Save+and+Run',
+      data: $("#form").serialize() + '&run=Save+and+Run&ajax=1',
       success: function(data){
         saveCallback(data);
       },
@@ -6815,12 +6961,15 @@ $( document ).ready(function() {
     //event.preventDefault();
     return true;
   });
-  $("#daSave").click(function(event){
+  $("#form button[name='submit']").click(function(event){
     daCodeMirror.save();
+    if (isNew == "True" || originalFileName != $("#playground_name").val() || $("#playground_name").val().trim() == ""){
+      return true;
+    }
     $.ajax({
       type: "POST",
       url: """ + '"' + url_for('playground_page') + '"' + """,
-      data: $("#form").serialize() + '&submit=Save',
+      data: $("#form").serialize() + '&submit=Save&ajax=1',
       success: function(data){
         saveCallback(data);
         setTimeout(function(){
@@ -6911,7 +7060,9 @@ $( document ).ready(function() {
   else{
     $("#playground_name").focus()
   }
+  activateVariables();
   updateRunLink();
+  origPosition = daCodeMirror.getCursor();
 });
 """
     example_html = list()
@@ -6922,7 +7073,11 @@ $( document ).ready(function() {
     example_html.append('        </div>')
     example_html.append('        <div class="col-md-6"><h4>' + word("Preview") + '<a target="_blank" class="label label-primary example-documentation example-hidden" id="example-documentation-link">' + word('View documentation') + '</a></h4><a href="#" target="_blank" id="example-image-link"><img title="' + word('Click to try this interview') + '" class="example_screenshot" id="example-image"></a></div>')
     example_html.append('        <div class="col-md-4 example-source-col"><h4>' + word('Source') + ' <a class="label label-success example-copy">' + word('Insert') + '</a></h4><div id="example-source-before" class="invisible"></div><div id="example-source"></div><div id="example-source-after" class="invisible"></div><div><a class="example-hider" id="show-full-example">' + word("Show context of example") + '</a><a class="example-hider invisible" id="hide-full-example">' + word("Hide context of example") + '</a></div></div>')
-    return render_template('pages/playground.html', page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, "400px");\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=Markup("\n".join(example_html)), interview_path=interview_path, is_new=str(is_new)), 200
+    if len(files):
+        any_files = True
+    else:
+        any_files = False
+    return render_template('pages/playground.html', page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, "400px");\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=Markup("\n".join(example_html)), interview_path=interview_path, is_new=str(is_new)), 200
 
 # nameInfo = ' + str(json.dumps(vars_in_use['name_info'])) + ';      
 
