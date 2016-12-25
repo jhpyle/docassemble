@@ -432,6 +432,18 @@ class Question:
                 raise DAError("A features section must be a dictionary." + self.idebug(data))
             if 'progress bar' in data['features'] and data['features']['progress bar']:
                 self.interview.use_progress_bar = True
+            for key in ['javascript', 'css']:
+                if key in data['features']:
+                    if type(data['features'][key]) is list:
+                        the_list = data['features'][key]
+                    elif type(data['features'][key]) is dict:
+                        raise DAError("A features section " + key + " entry must be a list or plain text." + self.idebug(data))
+                    else:
+                        the_list = [data['features'][key]]
+                    for the_file in the_list:
+                        if key not in self.interview.external_files:
+                            self.interview.external_files[key] = list()
+                        self.interview.external_files[key].append(the_file)
         if 'default language' in data:
             should_append = False
             self.from_source.set_language(data['default language'])
@@ -1928,6 +1940,7 @@ class Interview:
         self.use_progress_bar = False
         self.names_used = set()
         self.attachment_options = dict()
+        self.external_files = dict()
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
     def get_title(self):

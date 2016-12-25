@@ -49,8 +49,8 @@ code: |
     benefits = "Medicaid"
 """
 
-ok_mimetypes = {"application/javascript": "javascript", "text/x-python": "python", "application/json": "json"}
-ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown", 'py': "python", "json": "json"}
+ok_mimetypes = {"application/javascript": "javascript", "text/x-python": "python", "application/json": "json", "text/css": "css"}
+ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown", 'py': "python", "json": "json", "css": "css"}
 default_yaml_filename = daconfig.get('default_interview', 'docassemble.demo:data/questions/questions.yml')
 
 alphanumeric_only = re.compile('[\W_]+')
@@ -1455,10 +1455,13 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
         else:
             message_to_use = title_documentation['generic error']['doc']
         content += '\n                  <tr><td class="playground-warning-box"><div class="alert alert-' + error_style + '">' + message_to_use + '</div></td></tr>'
+    vocab_set = (names_used | functions | classes | modules | fields_used | set([key for key in base_name_info if not re.search(r'\.', key)]) | set([key for key in name_info if not re.search(r'\.', key)]) | set(templates) | set(static) | set(sources) | set(avail_modules) | set(interview.images.keys()))
+    vocab_set = set([i for i in vocab_set if not extraneous_var.search(i)])
     names_used = names_used.difference( functions | classes | modules | set(avail_modules) )
     undefined_names = names_used.difference(fields_used | set(base_name_info.keys()) )
     for var in ['_internal']:
         undefined_names.discard(var)
+        vocab_set.discard(var)
     names_used = names_used.difference( undefined_names )
     if len(undefined_names):
         content += '\n                  <tr><td><h4>Undefined names' + infobutton('undefined') + '</h4></td></tr>'
@@ -1530,7 +1533,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
         for var in sorted(interview.images):
             content += '\n                  <tr><td><img class="daimageicon" src="' + get_url_from_file_reference(interview.images[var].get_reference()) + '">&nbsp;<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
-    return content
+    return content, sorted(vocab_set)
 
 def make_image_files(path):
     if PDFTOPPM_COMMAND is not None:
@@ -2777,6 +2780,9 @@ def index():
         # })
     if not is_ajax:
         scripts = standard_scripts()
+        if 'javascript' in interview_status.question.interview.external_files:
+            for fileref in interview_status.question.interview.external_files['javascript']:
+                scripts += '    <script src="' + get_url_from_file_reference(fileref, question=interview_status.question) + '"></script>\n';
         chat_available = user_dict['_internal']['livehelp']['availability']
         chat_mode = user_dict['_internal']['livehelp']['mode']
         if chat_available == 'unavailable':
@@ -3749,8 +3755,9 @@ def index():
         if (daShowingSpinner){
           hideSpinner();
         }
+        $(document).trigger('daPageLoad');
       }
-      $( document ).ready(function(){
+      $(document).ready(function(){
         daInitialize();
         setTimeout(daCheckin, 100);
         checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
@@ -3919,6 +3926,9 @@ def index():
         # output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">\n    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" rel="stylesheet">\n    <link href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">'
         if not is_ajax:
             start_output = standard_header_start
+            if 'css' in interview_status.question.interview.external_files:
+                for fileref in interview_status.question.interview.external_files['css']:
+                    start_output += '\n    <link href="' + get_url_from_file_reference(fileref, question=interview_status.question) + '" rel="stylesheet">'
             start_output += "".join(extra_css)
             start_output += '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dabody">\n'
         output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp']) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">\n        <div class="tab-content">\n'
@@ -6177,7 +6187,7 @@ def config_page():
             content = fp.read().decode('utf8')
     if content is None:
         abort(404)
-    return render_template('pages/config.html', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = ' + json.dumps(content) + ';\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n    </script>'), form=form), 200
+    return render_template('pages/config.html', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = ' + json.dumps(content) + ';\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n    </script>'), form=form), 200
 
 @app.route('/playgroundstatic/<userid>/<filename>', methods=['GET'])
 def playground_static(userid, filename):
@@ -6423,6 +6433,11 @@ def playground_files():
           catch(err){}
         }
       }
+      function scroll_to_selection(){
+        daCodeMirror.scrollIntoView(daCodeMirror.getCursor('from'))
+        var t = daCodeMirror.charCoords(daCodeMirror.getCursor('from'), "local").top;
+        daCodeMirror.scrollTo(null, t);
+      }
       function update_search(event){
         var query = $(this).val();
         if (query.length == 0){
@@ -6436,6 +6451,7 @@ def playground_files():
         var found = sc.findNext();
         if (found){
           daCodeMirror.setSelection(sc.from(), sc.to());
+          scroll_to_selection();
           $(this).removeClass("search-error");
         }
         else{
@@ -6445,6 +6461,7 @@ def playground_files():
           var found = sc.findNext();
           if (found){
             daCodeMirror.setSelection(sc.from(), sc.to());
+            scroll_to_selection();
             $(this).removeClass("search-error");
           }
           else{
@@ -6457,7 +6474,7 @@ def playground_files():
       }
       $( document ).ready(function() {
         daTextArea = document.getElementById("file_content");
-        daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: """ + repr(str(mode)) + """, tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});
+        daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: """ + repr(str(mode)) + """, tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});
         $(window).bind("beforeunload", function(){
           daCodeMirror.save();
           $("#formtwo").trigger("checkform.areYouSure");
@@ -6494,6 +6511,8 @@ def playground_files():
           var found = sc.findPrevious();
           if (found){
             daCodeMirror.setSelection(sc.from(), sc.to());
+            scroll_to_selection();
+            $("#formtwo input[name='search_term']").removeClass("search-error");
           }
           else{
             var lastLine = daCodeMirror.lastLine()
@@ -6504,6 +6523,11 @@ def playground_files():
             var found = sc.findPrevious();
             if (found){
               daCodeMirror.setSelection(sc.from(), sc.to());
+              scroll_to_selection();
+              $("#formtwo input[name='search_term']").removeClass("search-error");
+            }
+            else{
+              $("#formtwo input[name='search_term']").addClass("search-error");
             }
           }
           event.preventDefault();
@@ -6523,6 +6547,8 @@ def playground_files():
           var found = sc.findNext();
           if (found){
             daCodeMirror.setSelection(sc.from(), sc.to());
+            scroll_to_selection();
+            $("#formtwo input[name='search_term']").removeClass("search-error");
           }
           else{
             origPosition = { line: 0, ch: 0, xRel: 1 }
@@ -6531,6 +6557,11 @@ def playground_files():
             var found = sc.findNext();
             if (found){
               daCodeMirror.setSelection(sc.from(), sc.to());
+              scroll_to_selection();
+              $("#formtwo input[name='search_term']").removeClass("search-error");
+            }
+            else{
+              $("#formtwo input[name='search_term']").addClass("search-error");
             }
           }
           event.preventDefault();
@@ -6538,7 +6569,7 @@ def playground_files():
         });""" + extra_command + """
       });
     </script>"""
-    return render_template('pages/playgroundfiles.html', tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>' + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new)), 200
+    return render_template('pages/playgroundfiles.html', tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>' + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new)), 200
 
 @app.route('/playgroundpackages', methods=['GET', 'POST'])
 @login_required
@@ -6660,7 +6691,7 @@ def playground_packages():
         extra_command = "      scrollBottom();\n"
     else:
         extra_command = ""
-    return render_template('pages/playgroundpackages.html', tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this package?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("readme");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names), 200
+    return render_template('pages/playgroundpackages.html', tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this package?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("readme");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names), 200
 
 @app.route('/playground_redirect', methods=['GET', 'POST'])
 @login_required
@@ -6757,9 +6788,9 @@ def playground_page():
             interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
         interview = interview_source.get_interview()
         interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
-        variables_html = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
+        variables_html, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
         if is_ajax:
-            return jsonify(variables_html=variables_html)
+            return jsonify(variables_html=variables_html, vocab_list=vocab_list)
     if request.method == 'POST' and the_file != '' and form.validate():
         if form.delete.data:
             if os.path.isfile(filename):
@@ -6802,7 +6833,7 @@ def playground_page():
                 interview_source.set_testing(True)
                 interview = interview_source.get_interview()
                 interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
-                variables_html = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
+                variables_html, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
                 if form.submit.data:
                     flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.', 'success', is_ajax=is_ajax)
                 else:
@@ -6811,7 +6842,7 @@ def playground_page():
                 variables_html = None
                 flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Problem detected.'), message_type='error', is_ajax=is_ajax)
             if is_ajax:
-                return jsonify(variables_html=variables_html, flash_message=flash_message)
+                return jsonify(variables_html=variables_html, vocab_list=vocab_list, flash_message=flash_message)
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
     interview_path = None
@@ -6840,7 +6871,7 @@ def playground_page():
             interview_source = docassemble.base.parse.InterviewSourceString(content='', directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
     interview = interview_source.get_interview()
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
-    variables_html = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
+    variables_html, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
     pulldown_files = list(files)
     if is_fictitious or is_new or is_default:
         new_active_file = word('(New file)')
@@ -6854,6 +6885,7 @@ var originalFileName = """ + repr(str(the_file)) + """;
 var isNew = """ + repr(str(is_new)) + """;
 var origPosition = null;
 var searchMatches = null;
+var vocab = """ + json.dumps(vocab_list) + """;
 
 function activateExample(id){
   var info = exampleData[id];
@@ -6933,6 +6965,7 @@ function activateVariables(){
     var found = sc.findNext();
     if (found){
       daCodeMirror.setSelection(sc.from(), sc.to());
+      scroll_to_selection();
       $("#form input[name='search_term']").removeClass('search-error');
     }
     else{
@@ -6942,6 +6975,7 @@ function activateVariables(){
       var found = sc.findNext();
       if (found){
         daCodeMirror.setSelection(sc.from(), sc.to());
+        scroll_to_selection();
         $("#form input[name='search_term']").removeClass('search-error');
       }
       else{
@@ -6959,6 +6993,9 @@ function saveCallback(data){
   }
   else{
     $("#main").prepend('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash">' + data.flash_message + '</div>');
+  }
+  if (data.vocab_list != null){
+    vocab = data.vocab_list;
   }
   if (data.variables_html != null){
     $("#daplaygroundtable").html(data.variables_html);
@@ -6989,6 +7026,11 @@ function clear_matches(){
   }
 }
 
+function scroll_to_selection(){
+  var t = daCodeMirror.charCoords(daCodeMirror.getCursor('from'), "local").top;
+  daCodeMirror.scrollTo(null, t);
+}
+
 function update_search(event){
   var query = $(this).val();
   if (query.length == 0){
@@ -7003,6 +7045,7 @@ function update_search(event){
   var found = sc.findNext();
   if (found){
     daCodeMirror.setSelection(sc.from(), sc.to());
+    scroll_to_selection();
     $(this).removeClass("search-error");
   }
   else{
@@ -7012,6 +7055,7 @@ function update_search(event){
     var found = sc.findNext();
     if (found){
       daCodeMirror.setSelection(sc.from(), sc.to());
+      scroll_to_selection();
       $(this).removeClass("search-error");
     }
     else{
@@ -7029,6 +7073,9 @@ $( document ).ready(function() {
       url: """ + '"' + url_for('playground_page') + '"' + """,
       data: $("#form").serialize() + '&variablefile=' + $(this).val() + '&ajax=1',
       success: function(data){
+        if (data.vocab_list != null){
+          vocab = data.vocab_list;
+        }
         if (data.variables_html != null){
           $("#daplaygroundtable").html(data.variables_html);
           $(function () {
@@ -7060,6 +7107,8 @@ $( document ).ready(function() {
     var found = sc.findPrevious();
     if (found){
       daCodeMirror.setSelection(sc.from(), sc.to());
+      scroll_to_selection();
+      $("#form input[name='search_term']").removeClass("search-error");
     }
     else{
       var lastLine = daCodeMirror.lastLine()
@@ -7070,6 +7119,11 @@ $( document ).ready(function() {
       var found = sc.findPrevious();
       if (found){
         daCodeMirror.setSelection(sc.from(), sc.to());
+        scroll_to_selection();
+        $("#form input[name='search_term']").removeClass("search-error");
+      }
+      else{
+        $("#form input[name='search_term']").addClass("search-error");
       }
     }
     event.preventDefault();
@@ -7089,6 +7143,8 @@ $( document ).ready(function() {
     var found = sc.findNext();
     if (found){
       daCodeMirror.setSelection(sc.from(), sc.to());
+      scroll_to_selection();
+      $("#form input[name='search_term']").removeClass("search-error");
     }
     else{
       origPosition = { line: 0, ch: 0, xRel: 1 }
@@ -7097,6 +7153,11 @@ $( document ).ready(function() {
       var found = sc.findNext();
       if (found){
         daCodeMirror.setSelection(sc.from(), sc.to());
+        scroll_to_selection();
+        $("#form input[name='search_term']").removeClass("search-error");
+      }
+      else{
+        $("#form input[name='search_term']").addClass("search-error");
       }
     }
     event.preventDefault();
@@ -7238,7 +7299,27 @@ $( document ).ready(function() {
         any_files = True
     else:
         any_files = False
-    return render_template('pages/playground.html', page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, "400px");\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=Markup("\n".join(example_html)), interview_path=interview_path, is_new=str(is_new)), 200
+    cm_setup = """
+    <script>
+      var word_re = /[\w$]+/
+      CodeMirror.registerHelper("hint", "yaml", function(editor, options){
+        var cur = editor.getCursor(), curLine = editor.getLine(cur.line);
+        var end = cur.ch, start = end;
+        while (start && word_re.test(curLine.charAt(start - 1))) --start;
+        var curWord = start != end && curLine.slice(start, end);
+        var list = [];
+        if (curWord){
+          var n = vocab.length;
+          for (var i = 0; i < n; ++i){
+            if (vocab[i].indexOf(curWord) == 0){
+              list.push(vocab[i]);
+            }
+          }
+        }
+        return {list: list, from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end)};
+      });
+    </script>"""
+    return render_template('pages/playground.html', page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, "400px");\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete" });\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=Markup("\n".join(example_html)), interview_path=interview_path, is_new=str(is_new)), 200
 
 # nameInfo = ' + str(json.dumps(vars_in_use['name_info'])) + ';      
 
@@ -8242,4 +8323,3 @@ with app.app_context():
 
 if __name__ == "__main__":
     app.run()
-

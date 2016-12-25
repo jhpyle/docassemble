@@ -1,0 +1,16 @@
+metadata:
+  title: Javascript and CSS files
+  short title: Javascript and CSS
+  documentation: "http://docassemble.org/docs/initial.html"
+  example start: 1
+  example end: 2
+---
+features:
+  javascript: my-functions.js
+  css: my-styles.css
+---
+mandatory: true
+question: |
+  A test of Javascript and CSS
+subquestion: |
+  <span class="groovy"></span>
