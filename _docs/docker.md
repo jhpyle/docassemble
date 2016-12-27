@@ -5,11 +5,11 @@ short_title: Docker
 ---
 
 [Docker] is a good platform for trying out **docassemble** for the
-first time.  It can also be used as a production environment; Amazon's
+first time.  It is also ideal in a production environment.  Amazon's
 [EC2 Container Service] can be used to maintain a cluster of
 **docassemble** web server instances, created from [Docker] images,
-that communicate with a central SQL server.  For information about how
-to install **docassemble** in a multi-server arrangement on
+that communicate with a central server.  For information about how to
+install **docassemble** in a multi-server arrangement on
 [EC2 Container Service] ("[ECS]"), see the [scalability] section.
 
 # Installing Docker
@@ -17,14 +17,6 @@ to install **docassemble** in a multi-server arrangement on
 If you have a Windows PC, follow the [Docker installation instructions for Windows]{:target="_blank"}.
 
 If you have a Mac, follow the [Docker installation instructions for OS X]{:target="_blank"}.
-
-On [Amazon Linux] (assuming the username `ec2-user`):
-
-{% highlight bash %}
-sudo yum -y update
-sudo yum -y install docker
-sudo usermod -a -G docker ec2-user
-{% endhighlight %}
 
 On Ubuntu (assuming username `ubuntu`):
 
@@ -34,9 +26,17 @@ sudo apt-get -y install docker.io
 sudo usermod -a -G docker ubuntu
 {% endhighlight %}
 
-The last line allows the non-root user to run [Docker].  You may need to
-log out and log back in again for the new user permission to take
-effect.
+On [Amazon Linux] (assuming the username `ec2-user`):
+
+{% highlight bash %}
+sudo yum -y update
+sudo yum -y install docker
+sudo usermod -a -G docker ec2-user
+{% endhighlight %}
+
+The `usermod` line allows the non-root user to run [Docker].  You may
+need to log out and log back in again for this new user permission to
+take effect.
 
 [Docker] will probably start automatically after it is installed.  On
 Linux, you many need to do `sudo /etc/init.d/docker start`, `sudo
@@ -52,7 +52,7 @@ To get a command line on a Mac, launch the [Terminal] application.
 
 ## Starting
 
-From the command line, simply enter:
+From the command line, simply type in:
 
 {% highlight bash %}
 docker run -d -p 80:80 jhpyle/docassemble
@@ -77,11 +77,19 @@ If you are already using port 80 on your machine, call [`docker run`]
 using `-p 8080:80` instead of `-p 80:80`.
 
 In the [`docker run`] command, the `-d` flag means that the container
-will run in the background.  The `-p` flag maps a port on the host
-machine to a port on the [Docker] container.  The `jhpyle/docassemble`
-tag refers to an image that is [hosted on Docker Hub].  The image is
-about 2.4GB in size.  It is an [automated build] based on the "master"
-branch of the [docassemble repository] on [GitHub].
+will run in the background.
+
+The `-p` flag maps a port on the host machine to a port on the
+[Docker] container.  In this example, port 80 on the host machine will
+map to port 80 within the [Docker] container.  If you are already
+using port 80 on the host machine, you could use `-p 8080:80`, and
+then port 8080 on the host machine would be passed through to port 80
+on the [Docker] container.
+
+The `jhpyle/docassemble` tag refers to a [Docker] image that is
+[hosted on Docker Hub].  The image is about 2.4GB in size.  It is an
+[automated build] based on the "master" branch of the
+[docassemble repository] on [GitHub].
 
 ## Shutting down
 
@@ -91,16 +99,24 @@ Shut down the container by running:
 docker stop -t 60 <containerid>
 {% endhighlight %}
 
-The container runs a [PostgreSQL] server, and the data files of the
-server may become corrupted if [PostgreSQL] is not gracefully shut down.
-
 By default, [Docker] gives containers ten seconds to shut down before
 forcibly shutting them down.  Usually, ten seconds is plenty of time,
-but if the server is slow, [PostgreSQL] might take a little longer
+but if the server is slow, **docassemble** might take a little longer
 than ten seconds to shut down.  To be on the safe side, give the
 container plenty of time to shut down gracefully.  The `-t 60` means
 that [Docker] will wait up to 60 seconds before forcibly shutting down
-the container.
+the container.  It will probably take no more than 15 seconds for the
+[`docker stop`] command to complete.
+
+It is very important to avoid a forced shutdown of **docassemble**.
+The container runs a [PostgreSQL] server, and the data files of the
+server may become corrupted if [PostgreSQL] is not gracefully shut
+down.  To facilitate [data storage] (more on this later),
+**docassemble** backs up your data during the shutdown process and
+restores from that backup during the initialization process.  If the
+shutdown process is interrupted, your data may be left in an
+inconsistent state and there may be errors during later
+initialization.
 
 To see a list of stopped containers, run `docker ps -a`.  To remove a
 container, run `docker rm <containerid>`.
@@ -108,9 +124,9 @@ container, run `docker rm <containerid>`.
 ## Troubleshooting
 
 You should not need to access the running container in order to get
-**docassemble** to work, and the log files you need ought to be
-available from "Logs" in the web browser.  However, you might want to
-gain access to the running container for some reason.
+**docassemble** to work, and all the log files you need will hopefully
+be available from "Logs" in the web browser.  However, you might want
+to gain access to the running container for some reason.
 
 To do so, find out the ID of the running container by doing
 [`docker ps`].  You will see output like the following:
@@ -129,15 +145,246 @@ docker exec -t -i e4fa52ba540e /bin/bash
 using your own ID in place of `e4fa52ba540e`.  This will give you a
 command prompt within the running container.
 
+The first thing to check when you connect to a container is:
+
+{% highlight bash %}
+supervisorctl status
+{% endhighlight %}
+
+The output should be something like:
+
+{% highlight text %}
+apache2                          RUNNING   pid 1088, uptime 0:14:15
+celery                           RUNNING   pid 1865, uptime 0:14:45
+cron                             STOPPED   Not started
+initialize                       RUNNING   pid 1014, uptime 0:14:53
+postgres                         RUNNING   pid 1020, uptime 0:14:42
+rabbitmq                         RUNNING   pid 1045, uptime 0:14:38
+redis                            RUNNING   pid 1067, uptime 0:14:35
+reset                            STOPPED   Not started
+sync                             EXITED    Dec 22 07:22 AM
+syslogng                         STOPPED   Not started
+update                           STOPPED   Not started
+watchdog                         RUNNING   pid 1013, uptime 0:14:53
+websockets                       RUNNING   pid 1904, uptime 0:14:40
+{% endhighlight %}
+
+If you are running **docassemble** in a single-server arrangement, the
+processes that should be "RUNNING" include apache2, celery,
+initialize, postgres, rabbitmq, redis, watchdog, and websockets.
+
 Log files on the container that you might wish to check include:
 
 * `/var/log/supervisor/initialize-stderr---supervisor-*.log`
 * `/var/log/supervisor/postgres-stderr---supervisor-*.log`
+* Other files in `/var/log/supervisor/`
 * `/var/log/apache2/error.log`
 * `/usr/share/docassemble/log/docassemble.log`
 
 Enter `exit` to leave the container and get back to your standard
 command prompt.
+
+# <a name="configuration options"></a>Configuration options
+
+In the example [above](#single server arrangement), we started
+**docassemble** with `docker run -d -p 80:80 jhpyle/docassemble`.
+This command will cause **docassemble** to use default values for all
+configuration options.  You can also communicate specific
+configuration options to the container.
+
+The recommended way to do this is to create a text file called `env.list`
+in the current working directory containing variable definitions in
+standard shell script format.  For example:
+
+{% highlight text %}
+DAHOSTNAME=docassemble.example.com
+USEHTTPS=true
+USELETSENCRYPT=true
+LETSENCRYPTEMAIL=admin@example.com
+{% endhighlight %}
+
+Then, you can pass these environment variables to the container using
+the [`docker run`] command:
+
+{% highlight bash %}
+docker run --env-file=env.list -d -p 80:80 -p 443:443 jhpyle/docassemble
+{% endhighlight %}
+
+These configuration options will cause the [Apache] configuration file
+to use docassemble.example.com as the `ServerName` and use [HTTPS]
+with certificates hosted on [Let's Encrypt].  (The directive `-p
+443:443` is included so that the [HTTPS] port is exposed.)
+
+A [template for the `env.list` file] is included in distribution.
+
+When running **docassemble** in [ECS], environment variables like
+these are specified in [JSON] text that is entered into the web
+interface.  (See the [scalability] section for more information about
+using [ECS].)
+
+You can set the following configuration options:
+
+* <a name="CONTAINERROLE"></a>`CONTAINERROLE`: either `all` or a
+  colon-separated list of services (e.g. `web:celery`,
+  `sql:log:redis`, etc.).  The options are:
+  * `all`: the [Docker] container will run all of the services of
+    **docassemble** on a single container.
+  * `web`: The [Docker] container will serve as a web server.
+  * `celery`: The [Docker] container will serve as a [Celery] node.
+  * `sql`: The [Docker] container will run the central [PostgreSQL] service.
+  * `redis`: The [Docker] container will run the central [Redis] service.
+  * `rabbitmq`: The [Docker] container will run the central [RabbitMQ] service.
+  * `log`: The [Docker] container will run the central log aggregation service.
+* <a name="SERVERHOSTNAME"></a>`SERVERHOSTNAME`: In a
+  [multi-server arrangement], all **docassemble** application servers
+  need to be able to communicate with each other using port 9001 (the
+  [supervisor] port).  All application servers "register" with the
+  central SQL server.  When they register, they each provide their
+  hostname; that is, the hostname at which the specific individual
+  application server can be found.  Then, when an application server
+  wants to send a message to the other application servers, the
+  application server can query the central SQL server to get a list of
+  hostnames of other application servers.  This is necessary so that
+  any one application server can send a signal to the other
+  application servers to install a new package or new version of a
+  package, so that all servers are running the same software.  If you
+  are running **docassemble** in a [multi-server arrangement], and you
+  are starting an application server, set `SERVERHOSTNAME` to the
+  hostname with which other application servers can find that server.
+  Note that you do not need to worry about setting `SERVERHOSTNAME` if
+  you are using [EC2].
+* <a name="DBHOST"></a>`DBHOST`: The hostname of the [PostgreSQL]
+  server.  Keep undefined or set to `null` in order to use the
+  [PostgreSQL] server on the same host.  This environment variable,
+  along with others that begin with `DB`, populates values in
+  [`db` section] of the [configuration] file.
+* <a name="DBNAME"></a>`DBNAME`: The name of the [PostgreSQL]
+  database.  The default is `docassemble`.
+* <a name="DBUSER"></a>`DBUSER`: The username for connecting to the
+  [PostgreSQL] server.  The default is `docassemble`.
+* <a name="DBPASSWORD"></a>`DBPASSWORD`: The password for connecting
+  to the SQL server.  The default is `abc123`.
+* <a name="DBPREFIX"></a>`DBPREFIX`: This sets the prefix for the
+  database specifier.  The default is `postgresql+psycopg2://`.
+* <a name="DBPORT"></a>`DBPORT`: This sets the port that
+  **docassemble** will use to access the SQL server.
+* <a name="DBTABLEPREFIX"></a>`DBTABLEPREFIX`: This allows multiple
+  separate **docassemble** implementations to share the same SQL
+  database.  The value is a prefix to be added to each table in the
+  database.
+* <a name="EC2"></a>`EC2`: Set this to `true` if you are running
+  [Docker] on [EC2].  This tells **docassemble** that it can use an
+  [EC2]-specific method of determining the hostname of the server on
+  which it is running.  See the [`ec2`] configuration directive.
+* <a name="USEHTTPS"></a>`USEHTTPS`: Set this to `true` if you would
+  like **docassemble** to communicate with the browser using
+  encryption.  Read the [HTTPS] section for more information.
+  Defaults to `false`.  See the [`use https`] configuration directive.
+* <a name="DAHOSTNAME"></a>`DAHOSTNAME`: Set this to the hostname by
+  which web browsers can find **docassemble**.  This is necessary for
+  [HTTPS] to function. See the [`external hostname`] configuration
+  directive.
+* <a name="USELETSENCRYPT"></a>`USELETSENCRYPT`: Set this to `true` if
+  you are [using Let's Encrypt].  The default is `false`.  See the
+  [`use lets encrypt`] configuration directive.
+* <a name="LETSENCRYPTEMAIL"></a>`LETSENCRYPTEMAIL`: Set this to the
+  e-mail address you use with [Let's Encrypt].  See the
+  [`lets encrypt email`] configuration directive.
+* <a name="LOGSERVER"></a>`LOGSERVER`: This is used in the
+  [multi-server arrangement] where there is a separate server for
+  collecting log messages.  The default is `none`, which causes the
+  server to run [Syslog-ng].  See the [`log server`] configuration
+  directive.
+* <a name="REDIS"></a>`REDIS`: If you are running **docassemble** in a
+  [multi-server arrangement], set this to the host name at which the
+  [Redis] server can be accessed.  See the [`redis`] configuration
+  directive.
+* <a name="RABBITMQ"></a>`RABBITMQ`: If you are running
+  **docassemble** in a [multi-server arrangement], set this to the host
+  name at which the [RabbitMQ] server can be accessed.  Note that
+  [RabbitMQ] is very particular about hostnames.  If the [RabbitMQ]
+  server is running on a machine on which the `hostname` command
+  evaluates to `abc`, then your application servers will need to set
+  `RABBITMQ` to `abc` and nothing else.  It is up to you to make sure
+  that `abc` resolves to an IP address.  Note that if you run
+  **docassemble** using the instructions in the [scalability] section,
+  you do not need to worry about this.  See the [`rabbitmq`]
+  configuration directive.
+* <a name="URLROOT"></a>`URLROOT`: If users access **docassemble** at
+  https://docassemble.example.com, set `URLROOT` to
+  `https://docassemble.example.com`.  See the [`url root`]
+  configuration directive.
+* <a name="BEHINDHTTPSLOADBALANCER"></a>`BEHINDHTTPSLOADBALANCER`: Set
+  this to `true` if a load balancer is in use and the load balancer
+  accepts connections in HTTPS but forwards them to web servers as
+  HTTP.  This lets **docassemble** know that when it forms URLs, it
+  should use the `https` scheme even though requests appear to be
+  coming in as HTTP requests.  See the [`behind https load balancer`]
+  configuration directive.
+* <a name="S3ENABLE"></a>`S3ENABLE`: Set this to `true` if you are
+  using [S3] as a repository for uploaded files, [Playground] files,
+  the [configuration] file, and other information.  This environment
+  variable, along with others that begin with `S3`, populates values
+  in [`s3` section] of the [configuration] file.  If this is unset,
+  but [`S3BUCKET`] is set, it will be assumed to be `true`.
+* <a name="S3BUCKET"></a>`S3BUCKET`: If you are using [S3], set this
+  to the bucket name.  Note that **docassemble** will not create the
+  bucket for you.  You will need to create it for yourself beforehand.
+* <a name="S3ACCESSKEY"></a>`S3ACCESSKEY`: If you are using [S3], set
+  this to the [S3] access key.  You can ignore this environment
+  variable if you are using [EC2] with an [IAM] role that allows
+  access to your [S3] bucket.
+* <a name="S3SECRETACCESSKEY"></a>`S3SECRETACCESSKEY`: If you are
+  using [S3], set this to the [S3] access secret.  You can ignore this
+  environment variable if you are using [EC2] with an [IAM] role that
+  allows access to your [S3] bucket.
+* <a name="TIMEZONE"></a>`TIMEZONE`: You can use this to set the time
+  zone of the server.  The value of the variable is stored in
+  `/etc/timezone` and `dpkg-reconfigure -f noninteractive tzdata` is
+  run in order to set the system time zone.  The default is
+  `America/New_York`.  See the [`timezone`] configuration directive.
+* <a name="LOCALE"></a>`LOCALE`: You can use this to enable a locale
+  on the server.  When the server starts, the value of `LOCALE` is
+  appended to `/etc/locale.gen` and `locale-gen` and `update-locale`
+  are run.  The default is `en_US.UTF-8 UTF-8`.  See the [`os locale`]
+  configuration directive.
+* <a name="OTHERLOCALES"></a>`OTHERLOCALES`: You can use this to set
+  up other locales on the system besides the default locale.  Set this
+  to a comma separated list of locales.  The values need to match
+  entries in [Debian]'s `/etc/locale.gen`.  See the
+  [`other os locales`] configuration directive.
+* <a name="PACKAGES"></a>`PACKAGES`: If your interviews use code that
+  depends on certain [Debian] packages being installed, you can
+  provide a comma-separated list of [Debian] packages in the
+  `PACKAGES` environment variable.  The packages will be installed
+  when the image is run.  See the [`debian packages`] configuration
+  directive.
+
+Note that if you use [persistent volumes] and/or [S3], launching a new
+**docassemble** container with different variables is not necessarily
+going to change the way **docassemble** works.
+
+For example, if [`USEHTTPS`] is `true` and [`USELETSENCRYPT`] is
+`true`, then the [Apache] configuration files, if stored on a
+persistent volume, will not be overwritten if they already exist when
+a new container starts up.  So if you had been using [Let's Encrypt],
+but then you decide to change the [`DAHOSTNAME`], you will need to
+delete the saved configuration before running a new container.  If
+using [S3], you can go to the [S3 Console] and delete the "Apache"
+folder and the "letsencrypt.tar.gz" file.
+  
+Also, if a configuration file exists on [S3] (`config.yml`) or in a
+persistent volume (`/usr/share/docassemble/config/config.yml`), then
+the values in that configuration will take precedence over the
+corresponding environment variables that are passed to [Docker].  Once
+a configuration file exists, you should make changes to the
+configuration file rather than passing environment variables to
+[Docker].  However, note that you always need to pass [`S3BUCKET`] if
+your configuration is on [S3]; otherwise your container will not know
+where to find the configuration.  Also, there are some environment
+variables that do not exist in the configuration file because they are
+server-specific.  These include [`CONTAINERROLE`] and
+[`SERVERHOSTNAME`].
 
 # <a name="data storage"></a>Data storage
 
@@ -299,192 +546,6 @@ Ultimately, the better [data storage] solution is to [use S3] because:
    persistent data is stored on [S3], you can destroy and recreate
    virtual machines at will, without ever having to worry about
    copying your data on and off the machines.
-
-# <a name="configuration options"></a>Configuration options
-
-The **docassemble** [Docker] installation is configurable with
-environment variables.  From the [Docker] command line, these
-variables can be included with the `--env-file=env.list` option, where
-`env.list` is a text file containing variable definitions in standard
-shell script format.  When running **docassemble** in [ECS], these
-variables are specified in [JSON] text that is entered into the web
-interface.  (See the [scalability] section for more information about
-using [ECS].)
-
-Here is a sample `env.list` file:
-
-{% highlight text %}
-DAHOSTNAME=docassemble.example.com
-LOCALE=en_US.UTF-8 UTF-8
-TIMEZONE=America/New_York
-USEHTTPS=true
-USELETSENCRYPT=true
-LETSENCRYPTEMAIL=admin@example.com
-{% endhighlight %}
-
-This will cause the [Apache] configuration file to use
-docassemble.example.com as the `ServerName` and use [HTTPS] with
-certificates hosted on [Let's Encrypt].  During startup, the `LOCALE`
-will be appended to `/etc/locale.gen` and `locale-gen` and
-`update-locale` will be run.  The `TIMEZONE` will be stored in
-`/etc/timezone` and `dpkg-reconfigure -f noninteractive tzdata` will set the system timezone.
-
-The available environment variables include:
-
-* <a name="CONTAINERROLE"></a>`CONTAINERROLE`: either `all` or a
-  colon-separated list of services (e.g. `web:celery`,
-  `sql:log:redis`, etc.).  The options are:
-  * `all`: the [Docker] container will run all of the services of
-    **docassemble** on a single container.
-  * `web`: The [Docker] container will serve as a web server.
-  * `celery`: The [Docker] container will serve as a [Celery] node.
-  * `sql`: The [Docker] container will run the central [PostgreSQL] service.
-  * `redis`: The [Docker] container will run the central [Redis] service.
-  * `rabbitmq`: The [Docker] container will run the central [RabbitMQ] service.
-  * `log`: The [Docker] container will run the central log aggregation service.
-* <a name="SERVERHOSTNAME"></a>`SERVERHOSTNAME`: If you are running
-  **docassemble** in a [multi-server arrangement], and you are
-  starting an application server, set this to the hostname of the
-  [Docker] host.  **docassemble** will forward this address to the
-  central server.  In a [multi-server arrangement], all
-  **docassemble** application servers need to be able to communicate
-  with each other on port 9001 (the [supervisor] port).  This is
-  necessary for sending signals that cause the application servers to
-  install new versions of packages, so that all servers are running
-  the same software.  Note that you do not need to worry about
-  `SERVERHOSTNAME` this if you are using [EC2].
-* <a name="DBHOST"></a>`DBHOST`: The hostname of the [PostgreSQL]
-  server.  Keep undefined or set to `null` in order to use the
-  [PostgreSQL] server on the same host.  This environment variable,
-  along with others that begin with `DB`, populates values in
-  [`db` section] of the [configuration] file.
-* <a name="DBNAME"></a>`DBNAME`: The name of the [PostgreSQL]
-  database.  Default is `docassemble`.
-* <a name="DBUSER"></a>`DBUSER`: The username for connecting to the
-  [PostgreSQL] server.  Default is `docassemble`.
-* <a name="DBPASSWORD"></a>`DBPASSWORD`: The password for connecting
-  to the SQL server.  Default is `abc123`.
-* <a name="DBPREFIX"></a>`DBPREFIX`: This sets the prefix for the
-  database specifier.  The default is `postgresql+psycopg2://`.
-* <a name="DBPORT"></a>`DBPORT`: This sets the port that
-  **docassemble** will use to access the SQL server.
-* <a name="DBTABLEPREFIX"></a>`DBTABLEPREFIX`: This allows multiple
-  separate **docassemble** implementations to share the same SQL
-  database.  The value is a prefix to be added to each table in the
-  database.
-* <a name="EC2"></a>`EC2`: Set this to `true` if you are running [Docker] on [EC2].
-  This allows **docassemble** to determine the hostname of the server
-  on which it is running.  See the [`ec2`] configuration directive.
-* <a name="USEHTTPS"></a>`USEHTTPS`: Set this to `true` if you would like **docassemble** to
-  communicate with the browser using encryption.  Read the [HTTPS]
-  section for more information.  Defaults to `false`.  See the
-  [`use https`] configuration directive.
-* <a name="DAHOSTNAME"></a>`DAHOSTNAME`: Set this to the hostname by which web browsers can
-  find **docassemble**.  This is necessary for [HTTPS] to
-  function. See the [`external hostname`] configuration directive.
-* <a name="USELETSENCRYPT"></a>`USELETSENCRYPT`: Set this to `true` if you are
-  [using Let's Encrypt].  The default is `false`.  See the
-  [`use lets encrypt`] configuration directive.
-* <a name="LETSENCRYPTEMAIL"></a>`LETSENCRYPTEMAIL`: Set this to the e-mail address you use with
-  [Let's Encrypt].  See the [`lets encrypt email`] configuration
-  directive.
-* <a name="LOGSERVER"></a>`LOGSERVER`: This is used in the
-  [multi-server arrangement] where there is a separate server for
-  collecting log messages.  The default is `none`, which causes the
-  server to run [Syslog-ng].  See the [`log server`] configuration
-  directive.
-* <a name="REDIS"></a>`REDIS`: If you are running **docassemble** in a
-  [multi-server arrangement], set this to the host name at which the
-  [Redis] server can be accessed.  See the [`redis`] configuration
-  directive.
-* <a name="RABBITMQ"></a>`RABBITMQ`: If you are running
-  **docassemble** in a [multi-server arrangement], set this to the host
-  name at which the [RabbitMQ] server can be accessed.  Note that
-  [RabbitMQ] is very particular about hostnames.  If the [RabbitMQ]
-  server is running on a machine on which the `hostname` command
-  evaluates to `abc`, then your application servers will need to set
-  `RABBITMQ` to `abc` and nothing else.  It is up to you to make sure
-  that `abc` resolves to an IP address.  Note that if you run
-  **docassemble** using the instructions in the [scalability] section,
-  you do not need to worry about this.  See the [`rabbitmq`]
-  configuration directive.
-* <a name="URLROOT"></a>`URLROOT`: If users access **docassemble** at
-  https://docassemble.example.com, set `URLROOT` to
-  `https://docassemble.example.com`.  See the [`url root`]
-  configuration directive.
-* <a name="BEHINDHTTPSLOADBALANCER"></a>`BEHINDHTTPSLOADBALANCER`: Set
-  this to `true` if a load balancer is in use and the load balancer
-  accepts connections in HTTPS but forwards them to web servers as
-  HTTP.  This lets **docassemble** know that when it forms URLs, it
-  should use the `https` scheme even though requests appear to be
-  coming in as HTTP requests.  See the [`behind https load balancer`]
-  configuration directive.
-* <a name="S3ENABLE"></a>`S3ENABLE`: Set this to `true` if you are
-  using [S3] as a repository for uploaded files, [Playground] files,
-  the [configuration] file, and other information.  This environment
-  variable, along with others that begin with `S3`, populates values
-  in [`s3` section] of the [configuration] file.  If this is unset,
-  but [`S3BUCKET`] is set, it will be assumed to be `true`.
-* <a name="S3BUCKET"></a>`S3BUCKET`: If you are using [S3], set this
-  to the bucket name.  Note that **docassemble** will not create the
-  bucket for you.  You will need to create it for yourself beforehand.
-* <a name="S3ACCESSKEY"></a>`S3ACCESSKEY`: If you are using [S3], set
-  this to the [S3] access key.  You can ignore this environment
-  variable if you are using [EC2] with an [IAM] role that allows
-  access to your [S3] bucket.
-* <a name="S3SECRETACCESSKEY"></a>`S3SECRETACCESSKEY`: If you are
-  using [S3], set this to the [S3] access secret.  You can ignore this
-  environment variable if you are using [EC2] with an [IAM] role that
-  allows access to your [S3] bucket.
-* <a name="TIMEZONE"></a>`TIMEZONE`: You can use this to set the time
-  zone of the server.  The value of the variable is stored in
-  `/etc/timezone` and `dpkg-reconfigure -f noninteractive tzdata` is
-  run in order to set the system time zone.  The default is
-  `America/New_York`.  See the [`timezone`] configuration directive.
-* <a name="LOCALE"></a>`LOCALE`: You can use this to enable a locale
-  on the server.  When the server starts, the value of `LOCALE` is
-  appended to `/etc/locale.gen` and `locale-gen` and `update-locale`
-  are run.  The default is `en_US.UTF-8 UTF-8`.  See the [`os locale`]
-  configuration directive.
-* <a name="OTHERLOCALES"></a>`OTHERLOCALES`: You can use this to set
-  up other locales on the system besides the default locale.  Set this
-  to a comma separated list of locales.  The values need to match
-  entries in [Debian]'s `/etc/locale.gen`.  See the
-  [`other os locales`] configuration directive.
-* <a name="PACKAGES"></a>`PACKAGES`: If your interviews use code that
-  depends on certain [Debian] packages being installed, you can
-  provide a comma-separated list of [Debian] packages in the
-  `PACKAGES` environment variable.  The packages will be installed
-  when the image is run.  See the [`debian packages`] configuration
-  directive.
-
-Note that if you use [persistent volumes] and/or [S3], launching a new
-**docassemble** container with different variables is not necessarily
-going to change the way **docassemble** works.
-
-For example, if [`USEHTTPS`] is `true` and [`USELETSENCRYPT`] is `true`,
-then the [Apache] configuration files, if stored on a persistent
-volume, will not be overwritten if they already exist when a new
-container starts up.  So if you had been using [Let's Encrypt], but
-then you decide to change the [`DAHOSTNAME`], you will need to delete
-the saved configuration before running a new container.  If using
-persistent volumes, you can run `docker volume rm letsencrypt` and
-`docker volume rm apache` to remove the [Let's Encrypt] and [Apache]
-configuration files.  If using [S3], you can go to the [S3 Console]
-and delete the "Apache" folder and the "letsencrypt.tar.gz" file.
-  
-Also, if a configuration file exists on [S3] (`config.yml`) or in a
-persistent volume (`/usr/share/docassemble/config/config.yml`), then
-the values in that configuration will take precedence over the
-corresponding environment variables that are passed to [Docker].  Once
-a configuration file exists, you should make changes to the
-configuration file rather than passing environment variables to
-[Docker].  However, note that you always need to pass [`S3BUCKET`] if
-your configuration is on [S3]; otherwise your container will not know
-where to find the configuration.  Also, there are some environment
-variables that do not exist in the configuration file because they are
-server-specific.  These include [`CONTAINERROLE`] and
-[`SERVERHOSTNAME`].
 
 # <a name="multi server arrangement"></a>Multi-server arrangement
 

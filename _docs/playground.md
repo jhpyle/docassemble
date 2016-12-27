@@ -19,20 +19,14 @@ with which you can edit [YAML]&nbsp;[interview] files.
 
 ![playground]({{ site.baseurl }}/img/playground-main.png)
 
-Each "tab" on the Playground page represents a separate [YAML] file,
-or a folder in which you can store files.
-
 To create a new [YAML] file, click the <i class="glyphicon
 glyphicon-plus-sign" aria-hidden="true"></i> icon.
 
-You can use each tab for a different interview.
+You can use multiple files to organize parts of a single interview.
+For example, if you have a file called "interview.yml" and a file called
+"questions.yml," you can incorporate one into the other by reference.
 
-You can also use multiple tabs to organize parts of a single
-interview.  For example, if you have a tab called "interview.yml" and a tab
-called "questions.yml," you can incorporate one into the other by
-reference.
-
-For example, suppose your "interview.yml" tab contains:
+For example, suppose your "interview.yml" file contains:
 
 {% highlight yaml %}
 ---
@@ -45,7 +39,7 @@ code:
 ---
 {% endhighlight %}
 
-and suppose your "questions.yml" tab contains:
+and suppose your "questions.yml" file contains:
 
 {% highlight yaml %}
 ---
@@ -55,9 +49,9 @@ question: |
 ---
 {% endhighlight %}
 
-If you run the "interview.yml" tab, you will go to an interview that says
+If you run the "interview.yml" file, you will go to an interview that says
 "Hello, world!"  The "interview.yml" interview knew how to ask `say_hello`
-because it incorporated the "questions.yml" tab by reference.
+because it incorporated the "questions.yml" file by reference.
 
 If you write more than one interview, you might want to put all of
 your questions into a separate [YAML] file (e.g. "questions.yml") so
@@ -216,6 +210,10 @@ interview.  Clicking on one of the names will insert the name into the
 text editor.  You may find this helpful if you are not sure of the
 exact spelling of a variable or a function.
 
+In addition, if you start typing a name and then press Ctrl-Space, the
+editor will attempt to auto-complete the name for you.  If there are
+multiple possibilities, you can choose the name from the list.
+
 The list is updated when the page loads, or when you press "Save" or "Save
 and Run."
 
@@ -223,20 +221,20 @@ The area lists the following types of names (which are color-coded):
 
 * Variables: variables that are mentioned in your questions and code
   blocks, or that have been included in the Python namespace through a
-  [`modules`] statement
+  [`modules`] statement.  Variables in light blue are **docassemble**'s [special variables].
 * Functions: functions that are available because they have been
-  included in the Python namespace through a [`modules`] statement
+  included in the Python namespace through a [`modules`] statement.
 * Classes: classes that are available because they have been
-  included in the Python namespace through a [`modules`] statement
+  included in the Python namespace through a [`modules`] statement.
 * Modules defined: modules that are available because they have been
-  included in the Python namespace through a [`import`] statement
+  included in the Python namespace through a [`import`] statement.
 * Modules available in Playground: modules that are available to be
   included with [`modules`] or [`import`] because they exist in the
   [modules] folder of the Playground.
-* Templates: template files available in the Templates folder of the
-  Playground
-* Static files: static files available in the Static folder of the
-  Playground
+* Templates: template files available in the [Templates folder] of the
+  Playground.
+* Static files: static files available in the [Static folder] of the
+  Playground.
 * Decorations: decorations defined with [`images`] or [`image sets`]
   that are available for inclusion with [`decoration`] or [emoji] markup.
 
@@ -248,6 +246,20 @@ etc." area, you can select a different file that should be used for
 purposes of populating the "Variables, etc." section.  Usually the
 file you want to select here is the "top level" file for your
 interview, which [`include`]s the file you are editing.
+
+### Meaning of icons
+
+* Clicking ![magnifying glass]({{ site.baseurl
+  }}/img/playground-icon-magnifying-glass.png) next to a variable name
+  will search the [text editor] for the variable name.
+* Clicking ![information]({{ site.baseurl
+  }}/img/playground-icon-info.png) shows a pop-up containing
+  information about the item and a link to the item's documentation.
+* Clicking ![cog]({{ site.baseurl }}/img/playground-icon-cog.png)
+  reveals the methods of an [object].
+* Clicking ![question mark]({{ site.baseurl
+  }}/img/playground-icon-question-mark.png) next to a category name
+  shows information about that category.
 
 ## <a name="examples"></a>The examples area
 
@@ -404,3 +416,7 @@ Then the editing screen will load.
 [`words`]: {{ site.baseurl }}/docs/config.html#words
 [configuration]: {{ site.baseurl }}/docs/config.html
 [machine learning]: {{ site.baseurl }}/docs/ml.html
+[object]: {{ site.baseurl }}/docs/objects.html
+[text editor]: #interview_files
+[Templates folder]: #templates
+[Static folder]: #static

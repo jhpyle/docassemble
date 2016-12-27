@@ -378,16 +378,102 @@ See [language support] for more information about how to create
 multi-lingual interviews.  See [modifiers] for information about the
 `language` setting of a question.
 
-# <a name="features"></a><a name="progress bar"></a>`features`
+# <a name="features"></a>`features`
 
 The `features` block sets some optional features of the interview.
-Currently the only feature that can be set using this block is
-`progress bar`, which controls whether a progress bar is shown during
-the interview.  The setting of the progress bar is controlled by the
-[progress] modifier.
+
+## <a name="progress bar"></a>Progress bar
+
+The `progress bar` feature controls whether a progress bar is shown
+during the interview.  You can use the [progress] modifier to indicate
+the setting of the progress bar.
 
 {% include side-by-side.html demo="progress-features" %}
 
+## <a name="javascript"></a><a name="css"></a>Javascript and CSS files
+
+If you are a web developer and you know how to write HTML, Javscript,
+and CSS, you can embed HTML and Javascript in your interviews using
+the [`html`], [`script`], and [`css`] directives within a [`fields`]
+block.
+
+You can also bring Javascript and CSS files into the user's browser.
+
+For example, the following interview brings in a Javascript file,
+[`my-functions.js`], and a CSS file, [`my-styles.css`], into the
+user's browser.  These files are located in the `data/static` folder
+of the same [package] in which the interview is located.
+
+{% include side-by-side.html demo="external_files" %}
+
+The contents of [`my-functions.js`] are:
+
+{% highlight javascript %}
+$(document).on('daPageLoad', function(){
+  $(".groovy").html("I am purple");
+});
+{% endhighlight %}
+
+The contents of [`my-styles.css`] are:
+
+{% highlight css %}
+.groovy {
+  color: purple;
+}
+{% endhighlight %}
+
+You can write whatever you want in these files; they will simply be
+loaded by the user's browser.  Note that your Javascript files will be
+loaded after [jQuery] is loaded, so your code can use [jQuery], as
+this example does.
+
+If you have Javascript code that you want to run after each screen of
+the interview is loaded, attach a [jQuery] event handler to `document`
+for the event `daPageLoad`, which is a **docassemble**-specific event
+that is triggered after each screen loads.  (Since **docassemble**
+uses [Ajax] to load each new screen, if you attach code using
+[jQuery]'s [`ready()`] method, the code will run when the browser
+first loads, but not every time the user sees a new screen.)  The
+example above demonstrates this; every time the page loads, the code
+will replace the contents of any element with the class `groovy`.
+
+This example demonstrates bringing in CSS and Javascript files that
+are located in the `data/static` directory of the same package as the
+interview.  You can also refer to files in other packages:
+
+{% highlight yaml %}
+features:
+  css: docassemble.demo:data/static/my.css
+{% endhighlight %}
+
+or on the internet at a URL:
+
+{% highlight yaml %}
+features:
+  javascript: https://example.com/js/my-functions.js
+{% endhighlight %}
+
+Also, if you want to bring in multiple files, specify them with a
+[YAML] list:
+
+{% highlight yaml %}
+features:
+  css:
+    - my-styles.css
+    - https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css
+  javascript:
+    - http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js
+    - https://cdnjs.cloudflare.com/ajax/libs/offline-js/0.7.18/offline.min.js
+{% endhighlight %}
+
+[`ready()`]: https://api.jquery.com/ready/
+[Ajax]: https://en.wikipedia.org/wiki/Ajax_(programming)
+[jQuery]: https://jquery.com/
+[package]: {{ site.baseurl }}/docs/packages.html
+[`html`]: {{ site.baseurl }}/docs/fields.html#html
+[`script`]: {{ site.baseurl }}/docs/fields.html#script
+[`css`]: {{ site.baseurl }}/docs/fields.html#script
+[`fields`]: {{ site.baseurl }}/docs/fields.html#fields
 [Mako]: http://www.makotemplates.org/
 [language support]: {{ site.baseurl }}/docs/language.html
 [modifiers]: {{ site.baseurl }}/docs/modifiers.html
@@ -402,6 +488,8 @@ the interview.  The setting of the progress bar is controlled by the
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
 [`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
+[`my-functions.js`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/static/my-functions.js
+[`my-styles.css`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/static/my-styles.css
 [`set_info()`]: {{ site.baseurl}}/docs/functions.html#set_info
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`code` block]: {{ site.baseurl}}/docs/code.html
