@@ -1470,7 +1470,14 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
     if len(names_used):
         content += '\n                  <tr><td><h4>Variables' + infobutton('variables') + '</h4></td></tr>'
         for var in sorted(names_used):
-            content += '\n                  <tr><td>' + search_button(var) + '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + var + '</a>'
+            if var in base_name_info:
+                if not base_name_info[var]['show']:
+                    continue
+            if var in documentation_dict or var in base_name_info:
+                class_type = 'info'
+            else:
+                class_type = 'primary'
+            content += '\n                  <tr><td>' + search_button(var) + '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-' + class_type + ' playground-variable">' + var + '</a>'
             if var in name_info and 'type' in name_info[var] and name_info[var]['type']:
                 content +='&nbsp;<span data-ref="' + noquote(name_info[var]['type']) + '" class="daparenthetical">(' + name_info[var]['type'] + ')</span>'
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
@@ -1533,6 +1540,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
         for var in sorted(interview.images):
             content += '\n                  <tr><td><img class="daimageicon" src="' + get_url_from_file_reference(interview.images[var].get_reference()) + '">&nbsp;<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
+    content += "\n                  <tr><td><br><em>Type Ctrl-space to autocomplete.</em></td><tr>"
     return content, sorted(vocab_set)
 
 def make_image_files(path):
