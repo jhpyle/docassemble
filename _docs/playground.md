@@ -62,6 +62,24 @@ to all interviews.
 
 ## Folders
 
+Within your Playground there are five "folders" where you can upload,
+download, and/or create various resources related to the development
+of your interviews.  These include:
+
+* [Templates](#templates) for storing [Markdown] and PDF
+  templates that are used in documents and interview questions.
+* [Static files](#static) for images, Javascript, CSS, and other
+  auxillary files that your interview uses.
+* [Sources](#sources) for [YAML] files containing translations of text
+  into other languages, as well as for training data for the
+  [machine learning] function of **docassemble**.
+* [Modules](#modules) for [Python] code that extends the features of
+  your interview.  You can also embed [Python] code directly into your
+  interviews, but your interviews will be more readable if you keep
+  its embedded [Python] code limited to if/then/else statements.
+* [Packages](#packages) for bundling your interviews into packages for
+  installation on a production server or other means of distribution.
+
 ### <a name="templates"></a>The Templates folder
 
 If you create [documents], you might want to use separate document
@@ -221,7 +239,8 @@ The area lists the following types of names (which are color-coded):
 
 * Variables: variables that are mentioned in your questions and code
   blocks, or that have been included in the Python namespace through a
-  [`modules`] statement.  Variables in light blue are **docassemble**'s [special variables].
+  [`modules`] statement.  Variables in light blue are
+  **docassemble**'s [special variables].
 * Functions: functions that are available because they have been
   included in the Python namespace through a [`modules`] statement.
 * Classes: classes that are available because they have been
@@ -261,6 +280,39 @@ interview, which [`include`]s the file you are editing.
   }}/img/playground-icon-question-mark.png) next to a category name
   shows information about that category.
 
+## The buttons
+
+![buttons]({{ site.baseurl }}/img/playground-buttons.png){: .full-width }
+
+The "Save" button will save the interview and do nothing more.
+
+The "Save and Run" button will save the interview and run the
+interview in another window.
+
+The "Delete" button will remove the interview from the Playground.
+
+To give a link to the interview to someone else, right-click on the
+"<i class="glyphicon glyphicon-link" aria-hidden="true"></i> Share"
+button and copy the URL to your clipboard.
+
+Note that users do not need to log in to be able to run interviews
+using these links.  If you want to protect your interviews during
+development, you can add an initial block like this, which will stop
+anyone other than a developer from using the interview:
+
+{% highlight yaml %}
+---
+initial: true
+code: |
+  if not user_has_privilege('developer'):
+    message("Only developers can access this interview.", show_restart=False)
+---
+{% endhighlight %}
+
+Note that the "Playground" is a development platform.  If you are
+going to put an interview into production, put it into a package.  You
+can create a package in the [packages area].
+
 ## <a name="examples"></a>The examples area
 
 ![example area]({{ site.baseurl }}/img/playground-example-area.png){: .full-width }
@@ -287,39 +339,6 @@ context of example" to see the other blocks that are necessary for the
 example block to run as part of a working interview.  This working
 interview is what you will run when you click the "Preview"
 screenshot.
-
-## The buttons
-
-![buttons]({{ site.baseurl }}/img/playground-buttons.png){: .full-width }
-
-The "Save" button will save the interview and do nothing more.
-
-The "Save and Run" button will save the interview and run the
-interview in another window.
-
-The "Delete" button will remove the interview from the Playground.
-
-To give a link to the interview to someone else, right-click on the
-"<i class="glyphicon glyphicon-link" aria-hidden="true"></i> Share"
-button and copy the URL to your clipboard.
-
-Note that users do not need to log in to be able to run interviews
-from your Playground.  If you want to protect your interviews during
-development, you can add an initial block like this, which will stop
-anyone other than a developer from using the interview:
-
-{% highlight yaml %}
----
-initial: true
-code: |
-  if not (user_logged_in() or user_has_privilege('developer')):
-    message("Only developers can access this interview.", show_restart=False)
----
-{% endhighlight %}
-
-Note that the "Playground" is a development platform.  If you are
-going to put an interview into production, put it into a package by
-going to the [packages area].
 
 # <a name="wizard"></a>The Wizard
 
@@ -370,13 +389,13 @@ interview.  If your interview is `myinterview.yml`, the URL that edits
 the interview will be something like
 
 {% highlight text %}
-https://dev.docassemble.org/playground?file=myinterview.yml
+https://dev.example.com/playground?file=myinterview.yml
 {% endhighlight %}
 
 You will need to add `&debug=1` to the end:
 
 {% highlight text %}
-https://dev.docassemble.org/playground?file=myinterview.yml&debug=1
+https://dev.example.com/playground?file=myinterview.yml&debug=1
 {% endhighlight %}
 
 Then the editing screen will load.
@@ -420,3 +439,4 @@ Then the editing screen will load.
 [text editor]: #interview_files
 [Templates folder]: #templates
 [Static folder]: #static
+[special variables]: {{ site.baseurl }}/docs/special.html
