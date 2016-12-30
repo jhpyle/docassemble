@@ -365,11 +365,11 @@ embedded in the URL.  The result is an immediate PDF document.
 
 ## <a name="variables_as_json"></a>variables_as_json()
 
-{% include side-by-side.html demo="variables_as_json" %}
-
 The `variables_as_json()` function acts like [`response()`] in the
 example above, except that is returns all of the variables in the
 interview dictionary in [JSON] format.
+
+{% include side-by-side.html demo="variables_as_json" %}
 
 ## <a name="command"></a>command()
 
