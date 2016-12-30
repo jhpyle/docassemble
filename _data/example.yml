@@ -2250,10 +2250,10 @@
   code: |
     response("Hello, world!")
   ---
-"response-json": "---\nmodules:\n  - docassemble.base.util\n---\nobjects:\n  - user:\
-  \ Individual\n---\nmandatory: true\ncode: |\n  multi_user = True\n---\ninitial:\
-  \ true\ncode: |\n  process_action()\n---\nevent: query_fruit\ncode: |\n  data =\
-  \ dict(fruit=favorite_fruit, slices=number_of_slices)\n  response(json.dumps(data),\
+"response-json": "---\nimports:\n  - json\n---\nmodules:\n  - docassemble.base.util\n\
+  ---\nobjects:\n  - user: Individual\n---\nmandatory: true\ncode: |\n  multi_user\
+  \ = True\n---\ninitial: true\ncode: |\n  process_action()\n---\nevent: query_fruit\n\
+  code: |\n  data = dict(fruit=favorite_fruit, slices=number_of_slices)\n  response(json.dumps(data),\
   \ content_type=\"application/json\")\n---\nmandatory: true\nquestion: |\n  You currently\
   \ have\n  ${ nice_number(number_of_slices) }\n  ${ noun_plural('slice', number_of_slices)\
   \ }\n  of\n  ${ noun_singular(favorite_fruit) }.\nsubquestion: |\n  Use\n  [this\
@@ -2764,6 +2764,14 @@
     ${ value('favorite_fruit') }.
   mandatory: true
   ---
+"variables_as_json": "---\nmandatory: true\ncode: |\n  multi_user = True\n---\ninitial:\
+  \ true\ncode: |\n  process_action()\n---\nevent: query_variables\ncode: |\n  variables_as_json()\n\
+  ---\nmandatory: true\nquestion: |\n  You currently have\n  ${ nice_number(number_of_slices)\
+  \ }\n  ${ noun_plural('slice', number_of_slices) }\n  of\n  ${ noun_singular(favorite_fruit)\
+  \ }.\nsubquestion: |\n  Use\n  [this link](${ interview_url_action('query_variables')\
+  \ })\n  to query the information from\n  another application.\n\n  You can also\
+  \ change the \n  [fruit](${ url_action('favorite_fruit') })\n  and the\n  [number\
+  \ of slices](${ url_action('number_of_slices') }).\n---"
 "video": |-
   ---
   field: ready_to_proceed
