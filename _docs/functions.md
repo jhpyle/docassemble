@@ -623,6 +623,13 @@ will always be encrypted if the site is configured to use [HTTPS].
 The server-side encryption merely protects against the scenario in
 which the server running **docassemble** is compromised.
 
+You can include keyword arguments to `interview_url()`.  These will be
+passed to the interview as [`url_args`].
+
+The keyword argument `i` is special: you can set this to the name of
+an interview (e.g., `docassemble.demo:data/questions/questions.yml`)
+and this interview will be used instead of the current interview.
+
 ## <a name="interview_url_as_qr"></a>interview_url_as_qr()
 
 Like `interview_url()`, except it inserts into the markup a [QR code]

@@ -325,7 +325,7 @@ sudo cp ./docassemble/Docker/cron/docassemble-cron-weekly.sh /etc/cron.weekly/do
 sudo cp ./docassemble/Docker/cron/docassemble-cron-daily.sh /etc/cron.daily/docassemble
 sudo cp ./docassemble/Docker/cron/docassemble-cron-hourly.sh /etc/cron.hourly/docassemble
 sudo cp ./docassemble/Docker/docassemble.conf /etc/apache2/conf-available/
-sudo cp ./docassemble/Docker/docassemble-site.conf /etc/apache2/sites-available/docassemble.conf
+sudo cp ./docassemble/Docker/config/docassemble-http.conf.dist /etc/apache2/sites-available/docassemble.conf
 sudo cp ./docassemble/Docker/docassemble-supervisor.conf /etc/supervisor/conf.d/docassemble.conf
 {% endhighlight %}
 
