@@ -1,5 +1,6 @@
 #import mimetypes
 #import re
+#import sys
 
 class DAError(Exception):
     def __init__(self, value):
@@ -96,7 +97,8 @@ class BackgroundResponseActionError(Exception):
     
 class ResponseError(Exception):
     def __init__(self, *pargs, **kwargs):
-        if len(pargs) == 0 and not ('response' in kwargs or 'binaryresponse' in kwargs or 'file' in kwargs or 'url' in kwargs):
+        #sys.stderr.write(str(kwargs) + "\n")
+        if len(pargs) == 0 and not ('response' in kwargs or 'binaryresponse' in kwargs or 'all_variables' in kwargs or 'file' in kwargs or 'url' in kwargs):
             self.response = "Response not specified"
         if len(pargs) > 0:
             self.response = pargs[0];
@@ -108,6 +110,9 @@ class ResponseError(Exception):
             self.filename = kwargs['file'];
         elif 'url' in kwargs:
             self.url = kwargs['url'];
+        if 'all_variables' in kwargs:
+            self.all_variables = kwargs['all_variables'];
+            #sys.stderr.write("foosnoo\n")
         if 'content_type' in kwargs:
             self.content_type = kwargs['content_type'];
     def __str__(self):

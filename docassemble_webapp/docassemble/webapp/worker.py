@@ -137,7 +137,9 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
             worker_controller.reset_user_dict(session_code, yaml_filename)
             worker_controller.release_lock(session_code, yaml_filename)
         if interview_status.question.question_type == "response":
-            if not hasattr(interview_status.question, 'binaryresponse'):
+            if hasattr(interview_status.question, 'all_variables'):
+                pass
+            elif not hasattr(interview_status.question, 'binaryresponse'):
                 sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
         if interview_status.question.question_type == "backgroundresponse":
             return ReturnValue(value=interview_status.question.backgroundresponse, extra=extra)

@@ -813,6 +813,10 @@ class Question:
             self.binaryresponse = data['binaryresponse']
             if 'response' not in data:
                 self.content = TextObject('')
+        elif 'all_variables' in data:
+            self.question_type = 'response'
+            self.all_variables = True
+            self.content = TextObject('all_variables')
         elif 'response filename' in data:
             self.question_type = 'sendfile'
             if str(type(data['response filename'])) == "<class 'docassemble.base.core.DAFile'>":
@@ -837,7 +841,7 @@ class Question:
         elif 'redirect url' in data:
             self.question_type = 'redirect'
             self.content = TextObject(definitions + data['redirect url'], names_used=self.mako_names)
-        if 'response' in data or 'binaryresponse' in data:
+        if 'response' in data or 'binaryresponse' in data or 'all_variables' in data:
             if 'content type' in data:
                 self.content_type = TextObject(definitions + data['content type'], names_used=self.mako_names)
             else:
@@ -2160,6 +2164,9 @@ class Interview:
                     question_data['response filename'] = qError.filename
                 elif hasattr(qError, 'url') and qError.url is not None:
                     question_data['redirect url'] = qError.url
+                elif hasattr(qError, 'all_variables') and qError.all_variables:
+                    question_data['content type'] = 'application/json'
+                    question_data['all_variables'] = True
                 if hasattr(qError, 'content_type') and qError.content_type:
                     question_data['content type'] = qError.content_type
                 # new_interview = copy.deepcopy(self)
@@ -2589,6 +2596,9 @@ class Interview:
                         question_data['response filename'] = qError.filename
                     elif hasattr(qError, 'url') and qError.url is not None:
                         question_data['redirect url'] = qError.url
+                    elif hasattr(qError, 'all_variables') and qError.all_variables:
+                        question_data['content type'] = 'application/json'
+                        question_data['all_variables'] = True
                     if hasattr(qError, 'content_type') and qError.content_type:
                         question_data['content type'] = qError.content_type
                     new_interview_source = InterviewSourceString(content='')

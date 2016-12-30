@@ -1,17 +1,12 @@
 metadata:
-  title: Custom response
-  example start: 1
-  example end: 7
-  documentation: "http://docassemble.org/docs/functions.html#response"
----
-imports:
-  - json
+  title: Variables as JSON
+  short title: JSON variables
+  documentation: "http://docassemble.org/docs/functions.html#variables_as_json"
+  example start: 2
+  example end: 5
 ---
 modules:
   - docassemble.base.util
----
-objects:
-  - user: Individual
 ---
 mandatory: true
 code: |
@@ -21,10 +16,9 @@ initial: true
 code: |
   process_action()
 ---
-event: query_fruit
+event: query_variables
 code: |
-  data = dict(fruit=favorite_fruit, slices=number_of_slices)
-  response(json.dumps(data), content_type="application/json")
+  variables_as_json()
 ---
 mandatory: true
 question: |
@@ -35,7 +29,7 @@ question: |
   ${ noun_singular(favorite_fruit) }.
 subquestion: |
   Use
-  [this link](${ interview_url_action('query_fruit') })
+  [this link](${ interview_url_action('query_variables') })
   to query the information from
   another application.
 

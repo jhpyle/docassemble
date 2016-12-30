@@ -15,6 +15,7 @@ if __name__ == "__main__":
     import docassemble.base.config
     docassemble.base.config.load(arguments=remaining_arguments)
 from docassemble.webapp.server import UserModel, UserDict, logmessage, unpack_dictionary, db, set_request_active, fetch_user_dict, save_user_dict, fresh_dictionary, reset_user_dict, obtain_lock, release_lock, app
+import docassemble.webapp.backend
 import docassemble.base.interview_cache
 import docassemble.base.parse
 import docassemble.base.util
@@ -121,7 +122,9 @@ def run_cron(cron_type):
                         save_user_dict(item['key'], user_dict, item['filename'], encrypt=False, manual_user_id=cron_user.id)
                         release_lock(item['key'], item['filename'])
                         if interview_status.question.question_type == "response":
-                            if not hasattr(interview_status.question, 'binaryresponse'):
+                            if hasattr(interview_status.question, 'all_variables'):
+                                sys.stdout.write(docassemble.webapp.backend.dict_as_json(user_dict).encode('utf8') + "\n")
+                            elif not hasattr(interview_status.question, 'binaryresponse'):
                                 sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
                 except:
                     release_lock(item['key'], item['filename'])
