@@ -27,7 +27,7 @@ import pycountry
 import phonenumbers
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'objects_from_file', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'objects_from_file', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables']
 
 debug = False
 default_dialect = 'us'
@@ -57,6 +57,7 @@ class ThreadVariables(threading.local):
     role = 'user'
     current_info = dict()
     internal = dict()
+    #user_dict = None
     initialized = False
     redis = None
     uid = None
@@ -1114,6 +1115,9 @@ def variables_as_json():
     """Sends an HTTP response with all variables in JSON format."""
     raise ResponseError(None, all_variables=True)
 
+def all_variables():
+    return serializable_dict(get_user_dict())
+
 def command(*pargs, **kwargs):
     """Executes a command, such as exit, restart, or leave."""
     raise CommandError(*pargs, **kwargs)
@@ -1371,6 +1375,23 @@ def components_of(full_variable):
     crawler.visit(node)
     return list(reversed(crawler.stack))
 
+def get_user_dict():
+    frame = inspect.stack()[1][0]
+    the_user_dict = frame.f_locals
+    while '_internal' not in the_user_dict:
+        frame = frame.f_back
+        if frame is None:
+            return dict()
+        if 'user_dict' in frame.f_locals:
+            the_user_dict = eval('user_dict', frame.f_locals)
+            if '_internal' in the_user_dict:
+                break
+            else:
+                return None
+        else:
+            the_user_dict = frame.f_locals
+    return the_user_dict
+
 def defined(var):
     """Returns true if the variable has already been defined.  Otherwise, returns false."""
     if type(var) not in [str, unicode]:
@@ -1599,3 +1620,58 @@ def phone_number_is_valid(number, country=None):
     if phonenumbers.is_possible_number(pn) and phonenumbers.is_valid_number(pn):
         return True
     return False
+
+def dict_as_json(user_dict):
+    return json.dumps(serializable_dict(user_dict))
+
+def serializable_dict(user_dict):
+    result_dict = dict()
+    for key, data in user_dict.iteritems():
+        if key in ['_internal', '__builtins__']:
+            continue
+        if type(data) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType]:
+            continue
+        result_dict[key] = safe_json(data)
+    return result_dict
+
+def safe_json(the_object):
+    if type(the_object) in [str, unicode, bool, int, float]:
+        return the_object
+    if type(the_object) is list:
+        return [safe_json(x) for x in the_object]
+    if type(the_object) is dict:
+        new_dict = dict()
+        for key, value in the_object.iteritems():
+            new_dict[key] = safe_json(value)
+        return new_dict
+    if type(the_object) is set:
+        new_list = list()
+        for sub_object in the_object:
+            new_list.append(safe_json(sub_object))
+        return new_list
+    if type(the_object) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType]:
+        return None
+    if isinstance(the_object, datetime.datetime):
+        serial = the_object.isoformat()
+        return serial
+    from docassemble.base.core import DAObject
+    if isinstance(the_object, DAObject):
+        new_dict = dict()
+        new_dict['_class'] = type_name(the_object)
+        for key, data in the_object.__dict__.iteritems():
+            if key in ['has_nonrandom_instance_name', 'attrList']:
+                continue
+            new_dict[key] = safe_json(data)
+        return new_dict
+    try:
+        json.dumps(the_object)
+    except:
+        return None
+    return the_object
+
+def type_name(the_object):
+    name = str(type(the_object))
+    m = re.search(r'\'(.*)\'', name)
+    if m:
+        return m.group(1)
+    return name

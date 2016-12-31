@@ -34,7 +34,6 @@ from flask_mail import Mail, Message
 from PIL import Image
 import xml.etree.ElementTree as ET
 import docassemble.webapp.worker
-from docassemble.base.core import DAObject
 #sys.stderr.write("I am in backend\n")
 
 import docassemble.webapp.setup
@@ -96,6 +95,7 @@ docassemble.base.parse.set_da_send_mail(da_send_mail)
 docassemble.base.parse.set_save_numbered_file(save_numbered_file)
 
 import docassemble.base.functions
+from docassemble.base.functions import dict_as_json
 docassemble.base.functions.set_debug_status(DEBUG)
 DEFAULT_LANGUAGE = daconfig.get('language', 'en')
 DEFAULT_LOCALE = daconfig.get('locale', 'en_US.utf8')
@@ -358,16 +358,6 @@ def pack_object(the_object):
 def unpack_object(the_string):
     return pickle.loads(codecs.decode(the_string, 'base64'))
 
-def dict_as_json(user_dict):
-    result_dict = dict()
-    for key, data in user_dict.iteritems():
-        if key in ['_internal', '__builtins__']:
-            continue
-        if type(data) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType]:
-            continue
-        result_dict[key] = safe_json(data)
-    return json.dumps(result_dict)
-
 def safe_pickle(the_object):
     if type(the_object) is list:
         return [safe_pickle(x) for x in the_object]
@@ -384,47 +374,6 @@ def safe_pickle(the_object):
     if type(the_object) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType]:
         return None
     return the_object
-
-def safe_json(the_object):
-    if type(the_object) in [str, unicode, bool, int, float]:
-        return the_object
-    if type(the_object) is list:
-        return [safe_json(x) for x in the_object]
-    if type(the_object) is dict:
-        new_dict = dict()
-        for key, value in the_object.iteritems():
-            new_dict[key] = safe_json(value)
-        return new_dict
-    if type(the_object) is set:
-        new_list = list()
-        for sub_object in the_object:
-            new_list.append(safe_json(sub_object))
-        return new_list
-    if type(the_object) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType]:
-        return None
-    if isinstance(the_object, DAObject):
-        new_dict = dict()
-        new_dict['_class'] = type_name(the_object)
-        for key, data in the_object.__dict__.iteritems():
-            if key in ['has_nonrandom_instance_name', 'attrList']:
-                continue
-            new_dict[key] = safe_json(data)
-        return new_dict
-    if isinstance(the_object, datetime.datetime):
-        serial = the_object.isoformat()
-        return serial
-    try:
-        json.dumps(the_object)
-    except:
-        return None
-    return the_object
-
-def type_name(the_object):
-    name = str(type(the_object))
-    m = re.search(r'\'(.*)\'', name)
-    if m:
-        return m.group(1)
-    return name
 
 def pack_dictionary(the_dict):
     # sys.stderr.write("pack_dictionary keys:\n")

@@ -1,6 +1,6 @@
 metadata:
-  title: Mako if/then/else
-  short title: If/then/else
+  title: Nested if/then/else
+  short title: Nested if/then/else
   documentation: "http://docassemble.org/docs/markup.html#mako"
   example start: 2
   example end: 2
@@ -17,10 +17,16 @@ subquestion: |
   % if day_of_month < 3:
   The month just started!
   % elif day_of_month < 15:
-  It is the beginning part of the month.
+  It is the beginning part of
+  the month.
+  % else:
+  % if month_of_year == 12:
+  It is almost New Year's!
   % else:
   It is the latter part of the month.
   % endif
+  % endif
 ---
 code: |
+  month_of_year = format_date(current_datetime(), format='M')
   day_of_month = format_date(current_datetime(), format='d')

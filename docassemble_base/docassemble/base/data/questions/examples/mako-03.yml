@@ -17,10 +17,11 @@ subquestion: |
   % if day_of_month < 3:
   The month just started!
   % elif day_of_month < 15:
-  It is the beginning part of the month.
+  It is the beginning part of
+  the month.
   % else:
   It is the latter part of the month.
   % endif
 ---
 code: |
-  time_of_day = format_time(current_datetime(), format='M')
+  day_of_month = format_time(current_datetime(), format='M')

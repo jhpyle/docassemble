@@ -1,0 +1,30 @@
+metadata:
+  title: Variables as dictionary
+  short title: Variables dict
+  documentation: "http://docassemble.org/docs/functions.html#all_variables"
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+question: |
+  Interview dictionary
+subquestion: |
+  The variables in the dictionary are:
+    
+  `${ all_variables() }`
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---
+question: |
+  How many slices of ${ noun_singular(favorite_fruit) }
+  do you have?
+fields:
+  - Slices: number_of_slices
+    datatype: integer
+    min: 0

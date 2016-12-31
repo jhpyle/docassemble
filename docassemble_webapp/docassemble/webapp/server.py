@@ -2718,7 +2718,7 @@ def index():
             return jsonify(action='resubmit', csrf_token=generate_csrf())
         else:
             if hasattr(interview_status.question, 'all_variables'):
-                response_to_send = make_response(docassemble.webapp.backend.dict_as_json(user_dict).encode('utf8'), '200 OK')
+                response_to_send = make_response(docassemble.base.functions.dict_as_json(user_dict).encode('utf8'), '200 OK')
             elif hasattr(interview_status.question, 'binaryresponse'):
                 response_to_send = make_response(interview_status.question.binaryresponse, '200 OK')
             else:
@@ -3998,7 +3998,7 @@ def index():
                         output += "          <h5>" + word('Needed definition of') + " <code>" + str(stage['variable']) + "</code></h5>\n"
 #                output += '          <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(docassemble.base.functions.pickleable_objects(user_dict))]) + '</p>' + "\n"
                 output += '          <h4>' + word('Variables defined') + '</h4>' + "\n        <p>" + ", ".join(['<code>' + obj + '</code>' for obj in sorted(user_dict)]) + '</p>' + "\n"
-                # output += '          <h4>' + word('Variables as JSON') + '</h4>' + "\n        <pre>" + docassemble.webapp.backend.dict_as_json(user_dict) + '</pre>' + "\n"
+                # output += '          <h4>' + word('Variables as JSON') + '</h4>' + "\n        <pre>" + docassemble.base.functions.dict_as_json(user_dict) + '</pre>' + "\n"
             output += '        </div>' + "\n"
             output += '      </div>' + "\n"
         output += '    </div>'

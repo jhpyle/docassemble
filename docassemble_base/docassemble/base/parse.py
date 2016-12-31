@@ -2034,6 +2034,7 @@ class Interview:
         #user_dict['_current_info'] = interview_status.current_info
         docassemble.base.functions.this_thread.current_info = interview_status.current_info
         docassemble.base.functions.this_thread.internal = user_dict['_internal']
+        #docassemble.base.functions.this_thread.user_dict = user_dict
         for question in self.questions_list:
             if question.question_type == 'imports':
                 #logmessage("Found imports")
