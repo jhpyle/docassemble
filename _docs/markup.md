@@ -62,10 +62,47 @@ which does not work within PDF and RTF documents.
 
 # <a name="mako"></a>Using Mako for logic and generated text
 
+**docassemble** uses a template system called [Mako] in order to allow
+authors to insert variables and code into questions and documents.
+
+You can insert the values of variables into question text using [Mako]'s
+`${ ... }` syntax.
+
 {% include side-by-side.html demo="mako-01" %}
 
+You can use [Mako]'s `if/endif` syntax to insert text conditionally:
 
+{% include side-by-side.html demo="mako-02" %}
 
+You can also express more complicated logic:
+
+{% include side-by-side.html demo="mako-03" %}
+
+The [Mako] syntax for if/then/else statements is based on [Python],
+but is a little bit different.
+
+The `%` at the beginning of the line signifies that you are doing
+something special with [Mako].
+
+[Python] itself does not use `endif` -- it only uses indentation to
+designate where the if/then/else statement ends.  [Mako] uses `endif`
+instead of indentation.
+
+In [Python], `elif` is short for "else if."  In the example above, the
+if/then/else statement means:
+
+> If the day of the month is less than three, write "The month just
+> started!", but otherwise if the day of the month is less than 15,
+> write "It is the beginning part of the month."; otherwise, write "It
+> is the latter part of the month."
+
+As with [Python], it is critical that you include `:` at the end of
+any line where you indicate a condition.
+
+You can put `if/endif` statements inside of other `if/endif`
+statements.
+
+{% include side-by-side.html demo="mako-04" %}
 
 # <a name="inserting images"></a>Inserting images
 

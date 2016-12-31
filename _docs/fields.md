@@ -497,6 +497,11 @@ box.
 
 {% include side-by-side.html demo="email-field" %}
 
+<a name="password"></a>`datatype: password` provides an input box
+suitable for passwords.
+
+{% include side-by-side.html demo="password-field" %}
+
 ### Numeric fields
 
 <a name="integer"></a>`datatype: integer` indicates that the input

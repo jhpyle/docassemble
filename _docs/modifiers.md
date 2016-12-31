@@ -8,7 +8,7 @@ There are a number of optional modifiers that can be included in
 [`question`] blocks to control the appearance or behavior of the
 question.
 
-# <a name="audio"></a>`audio`
+# <a name="audio"></a>Including `audio`
 
 {% include side-by-side.html demo="audio" %}
 
@@ -90,7 +90,7 @@ through https, but will play the same audio retrieved through http.
 See [special variables] for information about **docassemble**'s
 automatic text-to-speech features.
 
-# <a name="video"></a>`video`
+# <a name="video"></a>Including `video`
 
 The `video` declaration is just like the [`audio`](#audio) declaration
 except that it displays a video instead of an audio file.
@@ -149,7 +149,7 @@ This would generate an error because [YAML] thinks square brackets
 indicate a list of items, not plain text.  If you want to write the
 declaration on one line, write `video: "[VIMEO 96044910]"`.
 
-# <a name="help"></a>`help`
+# <a name="help"></a>Providing `help` text to users
 
 {% include side-by-side.html demo="help-damages" %}
 
@@ -165,7 +165,7 @@ You can add audio to your help text:
 
 You can also add video to help text using the `video` declaration.
 
-# <a name="decoration"></a>`decoration`
+# <a name="decoration"></a>Adding images to question: `decoration`
 
 {% include side-by-side.html demo="decoration" %}
 
@@ -173,7 +173,7 @@ The `decoration` modifier adds an icon to the right of the
 [`question`] text.  In the example above, `kids` has been defined in
 an [image sets] or [images] block.
 
-# <a name="progress"></a>`progress`
+# <a name="progress"></a>The `progress` bar
 
 A **docassemble** interview can be configured to show a
 [progress bar].  This will show the user a progress indicator to give
@@ -184,7 +184,7 @@ The progress along the bar at any question needs to be set with the
 
 {% include side-by-side.html demo="progress" %}
 
-# <a name="prevent_going_back"></a>`prevent_going_back`
+# <a name="prevent_going_back"></a>Disable the back button: `prevent_going_back`
 
 Normally, **docassemble** allows the user to click the back button to
 get back to earlier steps in the interview.  Sometimes, it is
@@ -200,7 +200,7 @@ the same thing from [Python] code.  This may be more useful than the
 `prevent_going_back` modifier if the need to prevent the user from
 clicking the back button depends on the outcome of a process.
 
-# <a name="language"></a>`language`
+# <a name="language"></a>The `language` of the question
 
 {% highlight yaml %}
 ---
@@ -233,7 +233,7 @@ Instead of explicitly setting a `language` for every question, you can
 use [default language] to apply a particular language to the remaining
 questions in the file (see [initial blocks]).
 
-# <a name="continue button label"></a>`continue button label`
+# <a name="continue button label"></a>Changing the `continue button label`
 
 Some types of questions feature a "Continue" button.  If you want the
 label on the button to be something other than the word "Continue,"
@@ -250,7 +250,7 @@ The types of questions that feature a "Continue" button include:
 This modifier also allows you to customize the "Done" button that
 appears in [`signature`] questions.
 
-# <a name="generic object"></a>`generic object`
+# <a name="generic object"></a>Reusable questions: `generic object`
 
 {% highlight yaml %}
 ---
@@ -277,7 +277,7 @@ ask, "So, are you a defendant in this case?"
 any object of type [`Individual`], it can get an answer by asking this
 question.
 
-# <a name="role"></a>`role`
+# <a name="role"></a>The `role` of the question
 
 {% highlight yaml %}
 ---
@@ -312,7 +312,7 @@ If the user does not have an appropriate role, **docassemble** will
 look for a question in the interview in which `event` has been set to
 `role_event`.
 
-# <a name="reload"></a>`reload`
+# <a name="reload"></a>Automatically `reload` the screen
 
 To cause the screen to reload in the web browser after a number of
 seconds, use the `reload` modifier.
@@ -335,7 +335,7 @@ You can use [Mako] to determine the number of seconds.  If the
 `reload` value evaluates to `False` or `None`, the screen will not
 reload.
 
-# <a name="comment"></a>`comment`
+# <a name="comment"></a>Hidden `comment`s
 
 To make a note to yourself about a question, which will not be seen by
 the end user, you can use a `comment` statement.  It will be ignored

@@ -220,6 +220,18 @@ sure that the variables get defined.  The [`force_ask()`] and
 [actions] to do things that are outside the normal course of the
 [interview logic].
 
+## <a name="all_variables"></a>all_variables()
+
+The `all_variables()` function returns all of the variables in the
+interview in the form of a simplified [Python dictionary].
+
+{% include side-by-side.html demo="all_variables" %}
+
+The resulting [Python dictionary] is suitable for conversion to [JSON]
+or other formats.  Each [object] is converted to a
+[Python dictionary].  Each [`datetime`] object is converted to its
+`isoformat()`.  Other objects are converted to `None`.
+
 # <a name="special responses"></a>Functions for special responses
 
 ## <a name="message"></a>message()
@@ -370,6 +382,9 @@ example above, except that is returns all of the variables in the
 interview dictionary in [JSON] format.
 
 {% include side-by-side.html demo="variables_as_json" %}
+
+The `variables_as_json()` function simplifies the interview variables
+in the same way that the [`all_variables()`] function does.
 
 ## <a name="command"></a>command()
 
@@ -2651,3 +2666,4 @@ modules:
 [`db`]: {{ site.baseurl }}/docs/config.html#db
 [PostgreSQL]: http://www.postgresql.org/
 [`checkin interval`]: {{ site.baseurl }}/docs/config.html#checkin interval
+[`all_variables()`]: #all_variables

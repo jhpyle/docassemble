@@ -97,6 +97,8 @@
         | Fort Franklin, AR 92302
   mandatory: true
   ---
+"all_variables": "---\nmandatory: true\nquestion: |\n  Interview dictionary\nsubquestion:\
+  \ |\n  The variables in the dictionary are:\n    \n  `${ all_variables() }`\n---"
 "allow-emailing-false": |-
   ---
   question: Your document is ready.
@@ -1576,7 +1578,11 @@
     % elif day_of_month < 15:
     It is the beginning part of the month.
     % else:
+    % if month_of_year == 12:
+    It is almost New Year's!
+    % else
     It is the latter part of the month.
+    % endif
     % endif
   ---
 "mandatory": |-
@@ -2033,6 +2039,15 @@
         ${ client } is entitled to
         benefits plan ${ benefits }.
   mandatory: true
+  ---
+"password-field": |-
+  ---
+  question: |
+    Enter your username and password.
+  fields:
+    - Username: user_name
+    - Password: target_variable
+      datatype: password
   ---
 "past-tense": |-
   ---
