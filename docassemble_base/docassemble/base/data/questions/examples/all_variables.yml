@@ -2,11 +2,16 @@ metadata:
   title: Variables as dictionary
   short title: Variables dict
   documentation: "http://docassemble.org/docs/functions.html#all_variables"
-  example start: 2
-  example end: 2
+  example start: 3
+  example end: 3
 ---
 modules:
   - docassemble.base.util
+---
+mandatory: true
+code: |
+  favorite_fruit
+  number_of_slices  
 ---
 mandatory: true
 question: |
