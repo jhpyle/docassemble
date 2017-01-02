@@ -701,8 +701,9 @@
     interval = date_difference(starting=birthday, ending=christmas)
   ---
   question: |
-    The length of time between my birthday
-    and Christmas can be described several ways.
+    The length of time between my
+    birthday and Christmas can be
+    described several ways.
   subquestion: |
     * ${ interval.weeks } weeks
     * ${ interval.days } days
@@ -1560,7 +1561,8 @@
     % if day_of_month < 3:
     The month just started!
     % elif day_of_month < 15:
-    It is the beginning part of the month.
+    It is the beginning part of
+    the month.
     % else:
     It is the latter part of the month.
     % endif
@@ -1576,11 +1578,12 @@
     % if day_of_month < 3:
     The month just started!
     % elif day_of_month < 15:
-    It is the beginning part of the month.
+    It is the beginning part of
+    the month.
     % else:
     % if month_of_year == 12:
     It is almost New Year's!
-    % else
+    % else:
     It is the latter part of the month.
     % endif
     % endif
