@@ -1,0 +1,17 @@
+metadata:
+  title: Mako for loops
+  short title: For loops
+  documentation: "http://docassemble.org/docs/markup.html#mako"
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+question: |
+  Foods I like
+subquestion: |
+  % for food in ['plums', 'pears', 'peas']:
+  I like ${ food }.
+  % endfor

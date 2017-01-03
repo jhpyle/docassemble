@@ -20,11 +20,11 @@ subquestion: |
   It is the beginning part of
   the month.
   % else:
-  % if month_of_year == 12:
+    % if month_of_year == 12:
   It is almost New Year's!
-  % else:
+    % else:
   It is the latter part of the month.
-  % endif
+    % endif
   % endif
 ---
 code: |

@@ -1,0 +1,35 @@
+metadata:
+  title: Mako for loops
+  short title: For loops
+  documentation: "http://docassemble.org/docs/markup.html#mako"
+  example start: 1
+  example end: 6
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  - witness: PartyList
+---
+mandatory: true
+code: |
+  witness.gathered = witness.gather()
+---
+mandatory: true
+question: |
+  The ${ witness.as_noun() }
+subquestion: |
+  % for person in witness:
+  ${ person } is a witness.
+  % endfor
+---
+question: |
+  What is the name of the
+  ${ ordinal(i) } witness?
+fields:
+  - First Name: witness[i].name.first
+  - Last Name: witness[i].name.last
+---
+question: |
+  Are there any other witnesses?
+yesno: witness.there_is_another

@@ -1,0 +1,48 @@
+metadata:
+  title: Groups
+  short title: Groups
+  documentation: "http://docassemble.org/docs/groups.html"
+  example start: 1
+  example end: 4
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  - fruit: DAList
+  - feet: DADict
+  - colors: DASet
+---
+mandatory: true
+code: |
+  fruit.append('apple', 'pear', 'orange')
+  feet['dog'] = 4
+  feet['human'] = 2
+  feet['bird'] = 2
+  colors.add('blue', 'red', 'green')
+  fruit.gathered = True
+  feet.gathered = True
+  colors.gathered = True
+---
+mandatory: true
+question: |
+  Summary of groups
+subquestion: |
+  The fruits include ${ fruit }.
+  In alphabetical order:
+
+  % for thing in sorted(fruit):
+  * ${ thing }
+  % endfor
+
+  % for species in feet:
+  A ${ species } has ${ feet[species] }
+  feet.
+  % endfor
+
+  % for animal, number in feet.iteritems():
+  There are ${ number } feet on
+  a ${ animal }.
+  % endfor
+
+  The colors are ${ colors }.

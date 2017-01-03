@@ -1,0 +1,39 @@
+metadata:
+  title: Gather
+  short title: Gather
+  documentation: "http://docassemble.org/docs/groups.html#gathering"
+  example start: 1
+  example end: 6
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  - fruit: DAList
+---
+mandatory: true
+code: |
+  fruit.ask_number = True
+---
+question: |
+  How many fruits are there?
+fields:
+  - Number: fruit.target_number
+    datatype: integer
+    min: 2
+---
+question: |
+  What is the name of the ${ ordinal(i) } fruit?
+subquestion: |
+  % if fruit.number_gathered() > 0:
+  So far, you have mentioned ${ fruit }.
+  % endif
+fields:
+  - Fruit: fruit[i]
+---
+mandatory: true
+question: |
+  There are ${ fruit.number() }
+  fruits in all.
+subquestion: |
+  The fruits are ${ fruit }.

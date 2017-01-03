@@ -1,0 +1,29 @@
+metadata:
+  title: Gather
+  short title: Gather
+  documentation: "http://docassemble.org/docs/groups.html#gathering"
+  example start: 1
+  example end: 5
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  - fruit: DAList
+---
+question: |
+  What fruit should be added to the list?
+fields:
+  - Fruit: fruit[i]
+---
+question: |
+  So far, the fruits include
+  ${ fruit }.  Are there any others?
+yesno: fruit.there_is_another
+---
+mandatory: true
+question: |
+  There are ${ fruit.number() }
+  fruits in all.
+subquestion: |
+  The fruits are ${ fruit }.

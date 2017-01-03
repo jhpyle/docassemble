@@ -159,6 +159,8 @@ class DAList(DAObject):
     def init(self, **kwargs):
         self.elements = list()
         self.gathering = False
+        self.auto_gather = True
+        self.ask_number = False
         if 'elements' in kwargs:
             for element in kwargs['elements']:
                 self.append(element)
@@ -170,6 +172,10 @@ class DAList(DAObject):
         if not hasattr(self, 'object_type'):
             self.object_type = None
         return super(DAList, self).init(**kwargs)
+    def is_gathered(self):
+        if self.auto_gather:
+            return self.gather()
+        return self.gathered
     def clear(self):
         self.elements = list()
     def appendObject(self, *pargs, **kwargs):
@@ -213,7 +219,7 @@ class DAList(DAObject):
         case.plaintiff.does_verb('sue') will return "sues" if there is one plaintiff
         and "sue" if there is more than one plaintiff."""
         if not self.gathering:
-            self.gathered
+            self.is_gathered()
         if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
             if len(self.elements) > 1:
                 tense = 'ppl'
@@ -229,7 +235,7 @@ class DAList(DAObject):
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except it returns the past tense of the verb."""        
         if not self.gathering:
-            self.gathered
+            self.is_gathered()
         if len(self.elements) > 1:
             tense = 'ppl'
         else:
@@ -252,7 +258,7 @@ class DAList(DAObject):
         instead of the instanceName."""
         the_noun = self.instanceName
         if not self.gathering:
-            self.gathered
+            self.is_gathered()
             if len(pargs) > 0:
                 the_noun = pargs[0]
         the_noun = re.sub(r'.*\.', '', the_noun)
@@ -269,7 +275,7 @@ class DAList(DAObject):
     def number(self):
         """Returns the number of elements in the list.  Forces the gathering of the
         elements if necessary."""
-        self.gathered
+        self.is_gathered()
         return len(self.elements)
     def number_gathered(self):
         """Returns the number of elements in the list without forcing the gathering
@@ -285,10 +291,15 @@ class DAList(DAObject):
         return nice_number(self.number_gathered())
     def gather(self, number=None, item_object_type=None, minimum=1):
         """Causes the elements of the list to be gathered and named.  Returns True."""
+        if hasattr(self, 'gathered') and self.gathered:
+            return True
         if item_object_type is None and self.object_type is not None:
             item_object_type = self.object_type
         self.gathering = True
+        if number is None and self.ask_number:
+            number = self.target_number
         while len(self.elements) < minimum:
+            logmessage("I am here and item_object_type is " + str(item_object_type))
             the_length = len(self.elements)
             if item_object_type is not None:
                 self.appendObject(item_object_type)
@@ -308,17 +319,23 @@ class DAList(DAObject):
                     self.appendObject(item_object_type)
                 str(self.__getitem__(the_length))
         self.gathering = False
+        if self.auto_gather:
+            self.gathered = True
         return True
     def comma_and_list(self, **kwargs):
         """Returns the elements of the list, separated by commas, with 
         "and" before the last element."""
         if not self.gathering:
-            self.gathered
+            self.is_gathered()
         return comma_and_list(self.elements, **kwargs)
+    def __contains__(self, item):
+        return self.elements.__contains__(item)
     def __iter__(self):
         return self.elements.__iter__()
     def __len__(self):
         return self.elements.__len__()
+    def __delitem__(self, index):
+        return self.elements.__delitem__(index)
     def __reversed__(self):
         return self.elements.__reversed__()
     def _fill_up_to(self, index):
@@ -553,17 +570,54 @@ class DADict(DAObject):
     def __setitem__(self, key, value):
         self.elements[key] = value
         return
-    def __contains__(self, index):
-        return self.elements.__contains__(index)
+    def __contains__(self, item):
+        return self.elements.__contains__(item)
     def keys(self):
         """Returns the keys of the dictionary as a Python list."""
         return self.elements.keys()
     def values(self):
         """Returns the values of the dictionary as a Python list."""
         return self.elements.values()
+    def update(*pargs, **kwargs):
+        """Updates the dictionary with the keys and values of another dictionary"""
+        if len(pargs) > 0:
+            other_dict = pargs[0]
+            if isinstance(other_dict, DADict):
+                return self.elements.update(other_dict.elements)
+        self.elements.update(*pargs, **kwargs)
+    def pop(self, *pargs):
+        """Remove a given key from the dictionary and return its value"""
+        return self.elements.pop(*pargs)
+    def popitem(self):
+        """Remove an arbitrary key from the dictionary and return its value"""
+        return self.elements.popitem()
+    def setdefault(self, *pargs):
+        """Set a key to a default value if it does not already exist in the dictionary"""
+        return self.elements.setdefault(*pargs)
+    def get(*pargs):
+        """Returns the value of a given key."""
+        return self.elements.get(*pargs)
+    def clear(self):
+        """Removes all the items from the dictionary."""
+        return self.elements.clear()
+    def copy(self):
+        """Returns a copy of the dictionary."""
+        return self.elements.copy()
+    def has_key(key):
+        """Returns True if key is in the dictionary."""
+        return self.elements.has_key(key)
+    def items(self):
+        """Returns a copy of the items of the dictionary."""
+        return self.elements.items()
     def iteritems(self):
         """Iterates through the keys and values of the dictionary."""
         return self.elements.iteritems()
+    def iterkeys(self):
+        """Iterates through the keys of the dictionary."""
+        return self.elements.iterkeys()
+    def itervalues(self):
+        """Iterates through the values of the dictionary."""
+        return self.elements.itervalues()
     def __iter__(self):
         return self.elements.__iter__()
     def __len__(self):
@@ -622,8 +676,21 @@ class DASet(DAObject):
             self.gathered = True
             del kwargs['elements']
         return super(DASet, self).init(**kwargs)
+    def copy(self):
+        """Returns a copy of the set."""
+        return self.elements.copy()
     def clear(self):
-        self.elements = list()
+        """Removes all the items from the set."""
+        self.elements = set()
+    def remove(self, elem):
+        """Removes an element from the set."""
+        self.elements.remove(elem)
+    def discard(self, elem):
+        """Removes an element from the set if it exists."""
+        self.elements.discard(elem)
+    def pop(self, *pargs):
+        """Remove and return an arbitrary element from the set"""
+        return self.elements.pop(*pargs)
     def add(self, *pargs):
         """Adds the arguments to the set, unpacking each argument if it is a
         group of some sort (i.e. it is iterable)."""
@@ -738,8 +805,8 @@ class DASet(DAObject):
         if not self.gathering:
             self.gathered
         return comma_and_list(sorted(map(str, self.elements)), **kwargs)
-    def __contains__(self, index):
-        return self.elements.__contains__(index)
+    def __contains__(self, item):
+        return self.elements.__contains__(item)
     def __iter__(self):
         return self.elements.__iter__()
     def __len__(self):

@@ -1,0 +1,27 @@
+metadata:
+  title: Stop rendering Mako
+  short title: Stop rendering
+  documentation: "http://docassemble.org/docs/markup.html#mako"
+  example start: 1
+  example end: 1
+---
+mandatory: true
+question: |
+  Apples
+subquestion: |
+  % if not likes_apples:
+    Oh well, never mind.
+    <% return STOP_RENDERING %>
+  % endif
+  Apples are red.
+
+  They can also be green.
+
+  They have stems and seeds.
+
+  They are juicy and sweet.
+---
+question: |
+  Do you like apples?
+yesno: likes_apples
+  

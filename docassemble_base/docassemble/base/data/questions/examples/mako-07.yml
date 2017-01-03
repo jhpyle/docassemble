@@ -1,0 +1,15 @@
+metadata:
+  title: Python statements in Mako
+  short title: Statements
+  documentation: "http://docassemble.org/docs/markup.html#mako"
+  example start: 1
+  example end: 1
+---
+mandatory: true
+question: |
+  <%
+    a = 2
+    b = 3
+    the_answer = a + b
+  %>
+  The answer is ${ the_answer }.

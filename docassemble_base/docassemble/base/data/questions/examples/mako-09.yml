@@ -1,0 +1,32 @@
+metadata:
+  title: Mako loop object
+  short title: Loop object
+  documentation: "http://docassemble.org/docs/markup.html#mako"
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+question: |
+  Foods I like
+subquestion: |
+  % for food in ['apples',
+                 'peaches',
+                 'pears',
+                 'plums',
+                 'turnips',
+                 'raspberries']:
+    % if loop.first:
+  First, I like ${ food }.
+    % elif loop.last:
+  Last but not least, I am a
+  big fan of ${ food }.
+    % elif loop.even:
+  I also like ${ food }.
+    % elif loop.odd:
+  The ${ ordinal(loop.index) } food
+  I like is ${ food }.
+    % endif
+  % endfor

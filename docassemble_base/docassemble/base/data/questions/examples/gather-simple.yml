@@ -1,0 +1,34 @@
+metadata:
+  title: Gather
+  short title: Gather
+  documentation: "http://docassemble.org/docs/groups.html#gathering"
+  example start: 1
+  example end: 5
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - fruit: DAList
+---
+question: |
+  How many fruits are there?
+fields:
+  - Number: number_of_fruits
+    datatype: integer
+    min: 2
+---
+question: |
+  What's the ${ ordinal(i) } fruit?
+fields:
+  - Fruit: fruit[i]
+---
+mandatory: true
+question: |
+  Fruits
+subquestion: |
+  The fruits are:
+
+  % for index in range(0, number_of_fruits):
+  * ${ fruit[index] }
+  % endfor
