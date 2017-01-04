@@ -808,13 +808,6 @@ Other methods available on a DAList are:
 * <a name="DAList.number_as_word"></a>`number_as_word()` - same as
   `number()`, except that the [`nice_number()`] function is applied to
   the result.
-* <a name="DAList.number_gathered"></a>`number_gathered()` - like
-  `number()` except that it does not have the side effect of checking
-  on the value of the `gathered` attribute.
-* <a
-  name="DAList.number_gathered_as_word"></a>`number_gathered_as_word()` -
-  same as `number_gathered()`, except that the [`nice_number()`]
-  function is applied to the result.
 * <a name="DAList.remove"></a>`remove()` - removes the given elements
   from the list, if they are in the list.
 * <a name="DAList.comma_and_list"></a>`comma_and_list()` - returns the
@@ -1671,12 +1664,6 @@ The `FinancialList` has three methods:
   is `True`.  It requires `.gathered` to be `True`, which means that a
   reference to `.total()` will cause **docassemble** to ask the
   questions necessary to gather the full list of items.
-* <a name="FinancialList.total_gathered"></a>`.total_gathered()`: does
-  what `.total()` does, except it does not require `.gathered` to be
-  `True`, which means that a reference to `.total_gathered()` can be
-  used in the midst of the process of gathering the list of items.
-  For example, you may want to use this to say something like "So far,
-  you have told me about assets totaling $45,000."
 
 In the context of a [Mako] template, a `FinancialList` returns the result of
 `.total()`.

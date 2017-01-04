@@ -1202,6 +1202,190 @@
     `capitalize()` function.
   mandatory: true
   ---
+"gather": |-
+  ---
+  modules:
+    - docassemble.base.legal
+  ---
+  objects:
+    - witness: PartyList
+  ---
+  mandatory: true
+  code: |
+    witness.gathered = witness.gather()
+  ---
+  question: |
+    What is the name of the
+    ${ ordinal(i) } witness?
+  fields:
+    - First Name: witness[i].name.first
+    - Last Name: witness[i].name.last
+  ---
+  question: |
+    Are there any other witnesses?
+  yesno: witness.there_is_another
+  ---
+  mandatory: true
+  question: |
+    Witnesses
+  subquestion: |
+    % for person in witness:
+    ${ person } is a witness.
+    % endfor
+  ---
+"gather-another": |-
+  ---
+  modules:
+    - docassemble.base.util
+  ---
+  objects:
+    - fruit: DAList
+  ---
+  question: |
+    Are there more fruits?
+  yesno: more_fruits
+  ---
+  question: |
+    What's the ${ ordinal(i) } fruit?
+  fields:
+    - Fruit: fruit[i]
+  ---
+  mandatory: true
+  code: |
+    fruit[0]
+    if more_fruits:
+      del more_fruits
+      fruit[len(fruit)]
+  ---
+"gather-fruit": |-
+  ---
+  modules:
+    - docassemble.base.core
+  ---
+  objects:
+    - fruit: DAList
+  ---
+  question: |
+    Are there any fruit that you would like
+    to add to the list?
+  yesno: fruit.there_are_any
+  ---
+  question: |
+    What fruit should be added to the list?
+  fields:
+    - Fruit: fruit[i]
+  ---
+  question: |
+    So far, the fruits include ${ fruit }.
+    Are there any others?
+  yesno: fruit.there_is_another
+  ---
+  mandatory: true
+  question: |
+    There are ${ fruit.number_as_word() }
+    fruits in all.
+  subquestion: |
+    The fruits are ${ fruit }.
+  ---
+"gather-fruit-at-least-two": |-
+  ---
+  mandatory: true
+  code: |
+    fruit.minimum_number = 2
+  ---
+"gather-fruit-gather": |-
+  ---
+  modules:
+    - docassemble.base.core
+  ---
+  objects:
+    - fruit: DAList
+  ---
+  mandatory: true
+  code: |
+    fruit.auto_gather = False
+    fruit.gathered = fruit.gather(minimum=1)
+  ---
+  question: |
+    What fruit should be added to the list?
+  fields:
+    - Fruit: fruit[i]
+  ---
+  question: |
+    So far, the fruits include
+    ${ fruit }.  Are there any others?
+  yesno: fruit.there_is_another
+  ---
+  mandatory: true
+  question: |
+    The fruits are ${ fruit }.
+  ---
+"gather-fruit-number": |-
+  ---
+  modules:
+    - docassemble.base.util
+  ---
+  objects:
+    - fruit: DAList
+  ---
+  mandatory: true
+  code: |
+    fruit.ask_number = True
+  ---
+  question: |
+    How many fruits are there?
+  fields:
+    - Number: fruit.target_number
+      datatype: integer
+      min: 2
+  ---
+  question: |
+    What is the name of the
+    ${ ordinal(i) } fruit?
+  subquestion: |
+    % if fruit.number() > 0:
+    So far, you have mentioned ${ fruit }.
+    % endif
+  fields:
+    - Fruit: fruit[i]
+  ---
+  mandatory: true
+  question: |
+    There are ${ fruit.number() }
+    fruits in all.
+  subquestion: |
+    The fruits are ${ fruit }.
+  ---
+"gather-simple": |-
+  ---
+  modules:
+    - docassemble.base.util
+  ---
+  objects:
+    - fruit: DAList
+  ---
+  question: |
+    How many fruits are there?
+  fields:
+    - Number: number_of_fruits
+      datatype: integer
+      min: 2
+  ---
+  question: |
+    What's the ${ ordinal(i) } fruit?
+  fields:
+    - Fruit: fruit[i]
+  ---
+  mandatory: true
+  question: |
+    Fruits
+  subquestion: |
+    The fruits are:
+
+    % for index in range(0, number_of_fruits):
+    * ${ fruit[index] }
+    % endfor
+  ---
 "generic-object": |-
   ---
   generic object: Individual
@@ -1581,12 +1765,107 @@
     It is the beginning part of
     the month.
     % else:
-    % if month_of_year == 12:
+      % if month_of_year == 12:
     It is almost New Year's!
-    % else:
+      % else:
     It is the latter part of the month.
+      % endif
     % endif
+  ---
+"mako-05": |-
+  ---
+  mandatory: true
+  question: |
+    Foods I like
+  subquestion: |
+    % for food in ['plums', 'pears', 'peas']:
+    I like ${ food }.
+    % endfor
+  ---
+"mako-06": |-
+  ---
+  modules:
+    - docassemble.base.legal
+  ---
+  objects:
+    - witness: PartyList
+  ---
+  mandatory: true
+  code: |
+    witness.gathered = witness.gather()
+  ---
+  mandatory: true
+  question: |
+    The ${ witness.as_noun() }
+  subquestion: |
+    % for person in witness:
+    ${ person } is a witness.
+    % endfor
+  ---
+  question: |
+    What is the name of the
+    ${ ordinal(i) } witness?
+  fields:
+    - First Name: witness[i].name.first
+    - Last Name: witness[i].name.last
+  ---
+  question: |
+    Are there any other witnesses?
+  yesno: witness.there_is_another
+  ---
+"mako-07": |-
+  ---
+  mandatory: true
+  question: |
+    <%
+      a = 2
+      b = 3
+      the_answer = a + b
+    %>
+    The answer is ${ the_answer }.
+  ---
+"mako-08": |-
+  ---
+  mandatory: true
+  question: |
+    Apples
+  subquestion: |
+    % if not likes_apples:
+      Oh well, never mind.
+      <% return STOP_RENDERING %>
     % endif
+    Apples are red.
+
+    They can also be green.
+
+    They have stems and seeds.
+
+    They are juicy and sweet.
+  ---
+"mako-09": |-
+  ---
+  mandatory: true
+  question: |
+    Foods I like
+  subquestion: |
+    % for food in ['apples',
+                   'peaches',
+                   'pears',
+                   'plums',
+                   'turnips',
+                   'raspberries']:
+      % if loop.first:
+    First, I like ${ food }.
+      % elif loop.last:
+    Last but not least, I am a
+    big fan of ${ food }.
+      % elif loop.even:
+    I also like ${ food }.
+      % elif loop.odd:
+    The ${ ordinal(loop.index) } food
+    I like is ${ food }.
+      % endif
+    % endfor
   ---
 "mandatory": |-
   ---
@@ -1794,6 +2073,35 @@
     need(person.gathered)
     need(all_done)
   ---
+"nested-gather": |-
+  ---
+  modules:
+    - docassemble.base.legal
+  ---
+  objects:
+    - witness: PartyList
+  ---
+  mandatory: true
+  code: |
+    witness.auto_gather = False
+  ---
+  mandatory: true
+  code: |
+    witness.gathered = witness.gather()
+    for person in witness:
+      person.initializeAttribute('favorite_food', DAList)
+  ---
+  generic object: Individual
+  code: |
+    x.favorite_food.gathered = x.favorite_food.gather()
+  ---
+  question: |
+    What is the name of the
+    ${ ordinal(i) } witness?
+  fields:
+    - First Name: witness[i].name.first
+    - Last Name: witness[i].name.last
+  ---
 "nice-number": |-
   ---
   question: |
@@ -1888,6 +2196,50 @@
     choices:
       - protagonist
       - antagonist
+  ---
+"object-demo": |-
+  ---
+  modules:
+    - docassemble.base.core
+  ---
+  objects:
+    - fruit: DAList
+    - feet: DADict
+    - colors: DASet
+  ---
+  mandatory: true
+  code: |
+    fruit.append('apple', 'pear', 'orange')
+    feet['dog'] = 4
+    feet['human'] = 2
+    feet['bird'] = 2
+    colors.add('blue', 'red', 'green')
+    fruit.gathered = True
+    feet.gathered = True
+    colors.gathered = True
+  ---
+  mandatory: true
+  question: |
+    Summary of groups
+  subquestion: |
+    The fruits include ${ fruit }.
+    In alphabetical order:
+
+    % for thing in sorted(fruit):
+    * ${ thing }
+    % endfor
+
+    % for species in feet:
+    A ${ species } has ${ feet[species] }
+    feet.
+    % endfor
+
+    % for animal, number in feet.iteritems():
+    There are ${ number } feet on
+    a ${ animal }.
+    % endfor
+
+    The colors are ${ colors }.
   ---
 "object-radio": |-
   ---

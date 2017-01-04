@@ -62,7 +62,7 @@ which does not work within PDF and RTF documents.
 
 # <a name="mako"></a>Using Mako for logic and generated text
 
-**docassemble** uses a template system called [Mako] in order to allow
+**docassemble** uses a templating system called [Mako] to allow
 authors to insert variables and code into questions and documents.
 
 You can insert the values of variables into question text using [Mako]'s
@@ -78,15 +78,15 @@ You can also express more complicated logic:
 
 {% include side-by-side.html demo="mako-03" %}
 
-The [Mako] syntax for if/then/else statements is based on [Python],
-but is a little bit different.
+The [Mako] syntax for if/then/else statements is based on
+[Python's `if` statement], but is a little bit different.
 
 The `%` at the beginning of the line signifies that you are doing
 something special with [Mako].
 
 [Python] itself does not use `endif` -- it only uses indentation to
-designate where the if/then/else statement ends.  [Mako] uses `endif`
-instead of indentation.
+designate where the if/then/else statement ends.  [Mako] requires the
+use of `endif` because it does not see indentation.
 
 In [Python], `elif` is short for "else if."  In the example above, the
 if/then/else statement means:
@@ -100,9 +100,76 @@ As with [Python], it is critical that you include `:` at the end of
 any line where you indicate a condition.
 
 You can put `if/endif` statements inside of other `if/endif`
-statements.
+statements:
 
 {% include side-by-side.html demo="mako-04" %}
+
+In this example, the `% if`, `% else`, and `% endif` lines are
+indented, but they do not have to be.  Since nested if/then/else
+statements can be hard to read, the indentation helps make the
+statement more readable.  Note that the the actual text itself is not
+indented, even though the `%` lines are indented; this is because
+indentation means something in [Markdown].  If you indent a line by
+four spaces, [Markdown] will treat the line as a [code block], which
+might not be what you want.
+
+<a name="for"></a>[Mako] also allows you to work with lists of things
+using `% for` and `% endfor`:
+
+{% include side-by-side.html demo="mako-05" %}
+
+This is based on [Python's `for` statement].
+
+The `for` loop is useful for working with groups of [objects]:
+
+{% include side-by-side.html demo="mako-06" %}
+
+Within `for` loops, [Mako] provides a useful object called [`loop`],
+which contains information about the current iteration of the loop.
+
+{% include side-by-side.html demo="mako-09" %}
+
+Note that `loop.index` is a number in a range that starts with zero.
+The [`ordinal()`] function converts these numbers to words.
+
+For more information about working with groups of things, see
+[groups].
+
+In addition to allowing you to insert [Python] expressions with the `${
+... }` syntax, [Mako] allows you to embed [Python] statements using
+the `<%`/`%>` syntax:
+
+{% include side-by-side.html demo="mako-07" %}
+
+[Mako] also allows you to insert special code that cuts short the text
+being rendered:
+
+{% include side-by-side.html demo="mako-08" %}
+
+The same thing could also be accomplished with an `else` statement,
+but using [`STOP_RENDERING`] may be more readable.
+
+For more information about [Mako], see the [Mako documentation].
+Note, however, that not all features of [Mako] are available in
+**docassemble**.  For example, in normal [Mako], you can write:
+
+{% highlight text %}
+% if some_variable is UNDEFINED:
+...
+% endif
+{% endhighlight %}
+
+In **docassemble**, this will not work as intended.  Instead, you
+would use the [`defined()` function]:
+
+{% highlight text %}
+% if defined('some_variable'):
+...
+% endif
+{% endhighlight %}
+
+If you want to use the [`<%def>`] construct of [Mako], see the
+[`def` initial block].
 
 # <a name="inserting images"></a>Inserting images
 
@@ -327,3 +394,15 @@ See also the [`qr_code()`] function, which allows you to insert the
 [`audio`]: {{ site.baseurl }}/docs/modifiers.html#audio
 [`video`]: {{ site.baseurl }}/docs/modifiers.html#video
 [`qr_code()`]: {{ site.baseurl }}/docs/functions.html#qr_code
+[code block]: https://daringfireball.net/projects/markdown/syntax#precode
+[Python's `if` statement]: https://docs.python.org/2.7/tutorial/controlflow.html#if-statements
+[Python's `for` statement]: https://docs.python.org/2.7/tutorial/controlflow.html#for-statements
+[objects]: {{ site.baseurl }}/docs/objects.html
+[groups]: {{ site.baseurl }}/docs/groups.html
+[`loop`]: http://docs.makotemplates.org/en/latest/runtime.html#loop-context
+[`STOP_RENDERING`]: http://docs.makotemplates.org/en/latest/syntax.html#exiting-early-from-a-template
+[`ordinal()`]: {{ site.baseurl }}/docs/functions.html#ordinal
+[Mako documentation]: http://docs.makotemplates.org/en/latest/index.html
+[`defined()` function]: {{ site.baseurl }}/docs/functions.html#defined
+[`<%def>`]: http://docs.makotemplates.org/en/latest/defs.html#using-defs
+[`def` initial block]: {{ site.baseurl }}/docs/initial.html#def
