@@ -2,30 +2,32 @@ metadata:
   title: Gather
   short title: Gather
   documentation: "http://docassemble.org/docs/groups.html#gathering"
-  example start: 1
-  example end: 6
+  example start: 3
+  example end: 3
 ---
 modules:
-  - docassemble.base.core
+  - docassemble.base.util
 ---
 objects:
   - fruit: DAList
 ---
 mandatory: true
 code: |
-  fruit.gather(minimum=1)
+  fruit.minimum_number = 2
 ---
 question: |
-  What fruit should be added to the list?
+  What is the ${ ordinal(i) } fruit?
 fields:
   - Fruit: fruit[i]
 ---
 question: |
-  So far, the fruits include
-  ${ fruit }.  Are there any others?
+  So far, the fruits include ${ fruit }.
+  Are there any others?
 yesno: fruit.there_is_another
 ---
 mandatory: true
 question: |
+  There are ${ fruit.number_as_word() }
+  fruits in all.
+subquestion: |
   The fruits are ${ fruit }.
-  

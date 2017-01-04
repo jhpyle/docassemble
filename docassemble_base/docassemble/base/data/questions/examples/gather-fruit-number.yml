@@ -6,7 +6,7 @@ metadata:
   example end: 6
 ---
 modules:
-  - docassemble.base.core
+  - docassemble.base.util
 ---
 objects:
   - fruit: DAList
@@ -23,9 +23,10 @@ fields:
     min: 2
 ---
 question: |
-  What is the name of the ${ ordinal(i) } fruit?
+  What is the name of the
+  ${ ordinal(i) } fruit?
 subquestion: |
-  % if fruit.number_gathered() > 0:
+  % if fruit.number() > 0:
   So far, you have mentioned ${ fruit }.
   % endif
 fields:

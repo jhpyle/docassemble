@@ -34,10 +34,10 @@ class Case(DAObject):
         for partyname in dir(self):
             if not isinstance(getattr(self, partyname), PartyList):
                 continue
-            if getattr(self, partyname).gathered:
-                for indiv in getattr(self, partyname):
-                    if indiv is party:
-                        return partyname
+            getattr(self, partyname).trigger_gather()
+            for indiv in getattr(self, partyname).elements:
+                if indiv is party:
+                    return partyname
         return 'third party'
     def all_known_people(self):
         """Returns a list of all parties and their children, 
@@ -57,10 +57,10 @@ class Case(DAObject):
         for partyname in dir(self):
             if not isinstance(getattr(self, partyname), PartyList):
                 continue
-            if getattr(self, partyname).gathered:
-                for indiv in getattr(self, partyname):
-                    if indiv not in output_list:
-                        output_list.append(indiv)
+            getattr(self, partyname).trigger_gather()
+            for indiv in getattr(self, partyname).elements:
+                if indiv not in output_list:
+                    output_list.append(indiv)
         return(output_list)
 
 class Jurisdiction(DAObject):
@@ -78,8 +78,8 @@ class LegalFiling(Document):
     """Represents a document filed in court."""
     def caption(self):
         """Returns a case caption for the case, for inclusion in documents."""
-        self.case.firstParty.gathered
-        self.case.secondParty.gathered
+        self.case.firstParty.gather()
+        self.case.secondParty.gather()
         output = ""
         output += "[BOLDCENTER] " + (word("In the") + " " + self.case.court.name).upper() + "\n\n"
         output += "[BEGIN_CAPTION]"

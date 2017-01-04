@@ -9,6 +9,7 @@ import sys
 from docassemble.base.filter import file_finder
 #from docassemble.base.error import DANameError
 from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize
+import docassemble.base.functions
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate']
 
@@ -150,17 +151,13 @@ class DAObject(object):
         return self.pronoun(**kwargs)
 
 class DAList(DAObject):
-    """The base class for lists of things.  A DAList object
-    has the attributes "gathered" and "gathering."  The "gathering"
-    attribute should be True while the interview is in the midst of 
-    determining the items in the list.  When there are no more items
-    to be gathered, "gathering" should be set to False and "gathered"
-    should be set to True."""
+    """The base class for lists of things."""
     def init(self, **kwargs):
         self.elements = list()
-        self.gathering = False
+        #self.gathering = False
         self.auto_gather = True
         self.ask_number = False
+        self.minimum_number = None
         if 'elements' in kwargs:
             for element in kwargs['elements']:
                 self.append(element)
@@ -172,10 +169,18 @@ class DAList(DAObject):
         if not hasattr(self, 'object_type'):
             self.object_type = None
         return super(DAList, self).init(**kwargs)
-    def is_gathered(self):
+    def is_gathering(self, mode):
+        if mode:
+            docassemble.base.functions.set_gathering_mode(True)
+        else:
+            docassemble.base.functions.set_gathering_mode(False)
+    def trigger_gather(self):
         if self.auto_gather:
-            return self.gather()
-        return self.gathered
+            if docassemble.base.functions.get_gathering_mode() is False:
+                self.gather()
+        else:
+            return self.gathered
+        return
     def clear(self):
         self.elements = list()
     def appendObject(self, *pargs, **kwargs):
@@ -207,9 +212,11 @@ class DAList(DAObject):
         self.elements.extend(the_list)
     def first(self):
         """Returns the first element of the list"""
+        self.trigger_gather()
         return self.__getitem__(0)
     def last(self):
         """Returns the last element of the list"""
+        self.trigger_gather()
         if len(self.elements) == 0:
             return self.__getitem__(0)
         return self.__getitem__(len(self.elements)-1)
@@ -218,8 +225,7 @@ class DAList(DAObject):
         there is only one element in the list or multiple elements.  E.g.,
         case.plaintiff.does_verb('sue') will return "sues" if there is one plaintiff
         and "sue" if there is more than one plaintiff."""
-        if not self.gathering:
-            self.is_gathered()
+        self.trigger_gather()
         if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
             if len(self.elements) > 1:
                 tense = 'ppl'
@@ -234,8 +240,7 @@ class DAList(DAObject):
             return verb_present(the_verb, tense)
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except it returns the past tense of the verb."""        
-        if not self.gathering:
-            self.is_gathered()
+        self.trigger_gather()
         if len(self.elements) > 1:
             tense = 'ppl'
         else:
@@ -245,6 +250,7 @@ class DAList(DAObject):
         """Returns a human-readable expression of the object based on its instanceName,
         without making it plural.  E.g., case.plaintiff.child.as_singular_noun() 
         returns "child" even if there are multiple children."""
+        self.trigger_gather()
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
         return the_noun
@@ -256,11 +262,10 @@ class DAList(DAObject):
         than one element.  E.g., case.plaintiff.child.as_noun() returns "child" or
         "children," as appropriate.  If an argument is supplied, the argument is used
         instead of the instanceName."""
+        self.trigger_gather()
         the_noun = self.instanceName
-        if not self.gathering:
-            self.is_gathered()
-            if len(pargs) > 0:
-                the_noun = pargs[0]
+        if len(pargs) > 0:
+            the_noun = pargs[0]
         the_noun = re.sub(r'.*\.', '', the_noun)
         if len(self.elements) > 1 or len(self.elements) == 0:
             if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -275,29 +280,38 @@ class DAList(DAObject):
     def number(self):
         """Returns the number of elements in the list.  Forces the gathering of the
         elements if necessary."""
-        self.is_gathered()
+        self.trigger_gather()
         return len(self.elements)
-    def number_gathered(self):
-        """Returns the number of elements in the list without forcing the gathering
-        of the elements."""
-        return len(self.elements)
+    # def number_gathered(self):
+    #     """Returns the number of elements in the list without forcing the gathering
+    #     of the elements."""
+    #     return len(self.elements)
     def number_as_word(self):
         """Returns the number of elements in the list, spelling out the number if ten 
         or below.  Forces the gathering of the elements if necessary."""
         return nice_number(self.number())
-    def number_gathered_as_word(self):
-        """Returns the number of elements in the list, spelling out the number if ten 
-        or below.  Does not force the gathering of the elements."""
-        return nice_number(self.number_gathered())
-    def gather(self, number=None, item_object_type=None, minimum=1):
+    # def number_gathered_as_word(self):
+    #     """Returns the number of elements in the list, spelling out the number if ten 
+    #     or below.  Does not force the gathering of the elements."""
+    #     return nice_number(self.number_gathered())
+    def gather(self, number=None, item_object_type=None, minimum=None):
         """Causes the elements of the list to be gathered and named.  Returns True."""
         if hasattr(self, 'gathered') and self.gathered:
             return True
         if item_object_type is None and self.object_type is not None:
             item_object_type = self.object_type
-        self.gathering = True
+        #self.gathering = True
+        docassemble.base.functions.set_gathering_mode(True)
         if number is None and self.ask_number:
             number = self.target_number
+        if minimum is None:
+            minimum = self.minimum_number
+        if number is None and minimum is None:
+            if len(self.elements) == 0:
+                if self.there_are_any:
+                    minimum = 1
+                else:
+                    minimum = 0
         while len(self.elements) < minimum:
             logmessage("I am here and item_object_type is " + str(item_object_type))
             the_length = len(self.elements)
@@ -312,31 +326,35 @@ class DAList(DAObject):
                 if item_object_type is not None:
                     self.appendObject(item_object_type)
                 str(self.__getitem__(the_length))
-        else:
+        elif minimum != 0:
             while self.there_is_another:
                 del self.there_is_another
                 if item_object_type is not None:
                     self.appendObject(item_object_type)
                 str(self.__getitem__(the_length))
-        self.gathering = False
+        #self.gathering = False
         if self.auto_gather:
             self.gathered = True
+        docassemble.base.functions.set_gathering_mode(False)
         return True
     def comma_and_list(self, **kwargs):
         """Returns the elements of the list, separated by commas, with 
         "and" before the last element."""
-        if not self.gathering:
-            self.is_gathered()
+        self.trigger_gather()
         return comma_and_list(self.elements, **kwargs)
     def __contains__(self, item):
+        self.trigger_gather()
         return self.elements.__contains__(item)
     def __iter__(self):
+        self.trigger_gather()
         return self.elements.__iter__()
     def __len__(self):
+        self.trigger_gather()
         return self.elements.__len__()
     def __delitem__(self, index):
         return self.elements.__delitem__(index)
     def __reversed__(self):
+        self.trigger_gather()
         return self.elements.__reversed__()
     def _fill_up_to(self, index):
         if index < 0 and len(self.elements) + index < 0:
@@ -367,23 +385,32 @@ class DAList(DAObject):
                 self._fill_up_to(index)
             return self.elements[index]
     def __str__(self):
+        self.trigger_gather()
         return self.comma_and_list()
     def __unicode__(self):
+        self.trigger_gather()
         return unicode(self.__str__())
     def union(other_set):
+        self.trigger_gather()
         return set(self.elements).union(setify(other_set))
     def intersection(other_set):
+        self.trigger_gather()
         return set(self.elements).intersection(setify(other_set))
     def difference(other_set):
+        self.trigger_gather()
         return set(self.elements).difference(setify(other_set))
     def isdisjoint(other_set):
+        self.trigger_gather()
         return set(self.elements).isdisjoint(setify(other_set))
     def issubset(other_set):
+        self.trigger_gather()
         return set(self.elements).issubset(setify(other_set))
     def issuperset(other_set):
+        self.trigger_gather()
         return set(self.elements).issuperset(setify(other_set))
     def pronoun_possessive(self, target, **kwargs):
         """Given a word like "fish," returns "her fish," "his fish," or "their fish," as appropriate."""
+        self.trigger_gather()
         if len(self.elements) == 1:
             return self.elements[0].pronoun_possessive(target, **kwargs)
         output = their(target, **kwargs)
@@ -393,6 +420,7 @@ class DAList(DAObject):
             return(output)            
     def pronoun(self, **kwargs):
         """Returns a pronoun like "you," "her," or "him," "it", or "them," as appropriate."""
+        self.trigger_gather()
         if len(self.elements) == 1:
             return self.elements[0].pronoun(**kwargs)
         output = word('them', **kwargs)
@@ -405,6 +433,7 @@ class DAList(DAObject):
         return self.pronoun(**kwargs)
     def pronoun_subjective(self, **kwargs):
         """Returns a pronoun like "you," "she," "he," or "they" as appropriate."""
+        self.trigger_gather()
         if len(self.elements) == 1:
             return self.elements[0].pronoun_subjective(**kwargs)
         output = word('they', **kwargs)
@@ -417,7 +446,10 @@ class DADict(DAObject):
     """A base class for objects that behave like Python dictionaries."""
     def init(self, **kwargs):
         self.elements = dict()
-        self.gathering = False
+        self.auto_gather = True
+        self.ask_number = False
+        self.minimum_number = None
+        #self.gathering = False
         if 'elements' in kwargs:
             self.elements.update(kwargs['elements'])
             self.gathered = True
@@ -428,6 +460,18 @@ class DADict(DAObject):
         if not hasattr(self, 'object_type'):
             self.object_type = None
         return super(DADict, self).init(**kwargs)
+    def is_gathering(self, mode):
+        if mode:
+            docassemble.base.functions.set_gathering_mode(True)
+        else:
+            docassemble.base.functions.set_gathering_mode(False)
+    def trigger_gather(self):
+        if self.auto_gather:
+            if docassemble.base.functions.get_gathering_mode() is False:
+                self.gather()
+        else:
+            return self.gathered
+        return
     def clear(self):
         self.elements = list()
     def initializeObject(self, *pargs, **kwargs):
@@ -467,8 +511,7 @@ class DADict(DAObject):
         keys.  E.g., player.does_verb('finish') will return "finishes" if there
         is one player and "finish" if there is more than one
         player."""
-        if not self.gathering:
-            self.gathered
+        self.trigger_gather()
         if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
             if len(self.elements) > 1:
                 tense = 'ppl'
@@ -483,8 +526,7 @@ class DADict(DAObject):
             return verb_present(the_verb, tense)
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except it returns the past tense of the verb."""        
-        if not self.gathering:
-            self.gathered
+        self.trigger_gather()
         if len(self.elements) > 1:
             tense = 'ppl'
         else:
@@ -495,6 +537,7 @@ class DADict(DAObject):
         instanceName, without making it plural.  E.g.,
         player.as_singular_noun() returns "player" even if there are
         multiple players."""
+        self.trigger_gather()
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
         return the_noun        
@@ -505,11 +548,10 @@ class DADict(DAObject):
         player.as_noun() returns "player" or "players," as
         appropriate.  If an argument is supplied, the argument is used
         as the noun instead of the instanceName."""
+        self.trigger_gather()
         the_noun = self.instanceName
-        if not self.gathering:
-            self.gathered
-            if len(pargs) > 0:
-                the_noun = pargs[0]
+        if len(pargs) > 0:
+            the_noun = pargs[0]
         the_noun = re.sub(r'.*\.', '', the_noun)
         if len(self.elements) > 1 or len(self.elements) == 0:
             return noun_plural(the_noun)
@@ -518,28 +560,41 @@ class DADict(DAObject):
     def number(self):
         """Returns the number of keys in the dictionary.  Forces the gathering of the
         dictionary items if necessary."""
-        self.gathered
+        self.trigger_gather()
         return len(self.elements)
-    def number_gathered(self):
-        """Returns the number of keys in the dictionary without forcing the gathering
-        of the dictionary items."""
-        return len(self.elements)
-    def number_gathered_as_word(self):
-        """Returns the number of keys in the dictionary, spelling out the number if ten 
-        or below.  Does not force the gathering of the dictionary items."""
-        return nice_number(self.number_gathered())
+    # def number_gathered(self):
+    #     """Returns the number of keys in the dictionary without forcing the gathering
+    #     of the dictionary items."""
+    #     return len(self.elements)
+    # def number_gathered_as_word(self):
+    #     """Returns the number of keys in the dictionary, spelling out the number if ten 
+    #     or below.  Does not force the gathering of the dictionary items."""
+    #     return nice_number(self.number_gathered())
     def number_as_word(self):
         """Returns the number of keys in the dictionary, spelling out the number if ten 
         or below.  Forces the gathering of the dictionary items if necessary."""
+        self.trigger_gather()
         return nice_number(self.number())
-    def gather(self, item_object_type=None):
+    def gather(self, item_object_type=None, number=None, minimum=None):
         """Causes the dictionary items to be gathered and named.  Returns True."""
+        if hasattr(self, 'gathered') and self.gathered:
+            return True
         if item_object_type is None and self.object_type is not None:
             item_object_type = self.object_type
-        self.gathering = True
+        #self.gathering = True
+        docassemble.base.functions.set_gathering_mode(True)
         for elem in self.elements.values():
             str(elem)
-        while self.there_is_another:
+        if number is None and self.ask_number:
+            number = self.target_number
+        if minimum is None:
+            minimum = self.minimum_number
+        if number is None and minimum is None:
+            if len(self.elements) == 0 and self.there_are_any:
+                minimum = 1
+            else:
+                minimum = 0
+        while (number is not None and len(self.elements) < int(number)) or len(self.elements) < int(minimum) or (self.ask_number is False and self.there_is_another):
             if item_object_type is not None:
                 self.initializeObject(self.new_item_name, item_object_type)
                 self._new_item_init_callback()
@@ -547,16 +602,19 @@ class DADict(DAObject):
                 self.elements[self.new_item_name] = self.new_item_value
                 del self.new_item_value
             del self.new_item_name
-            del self.there_is_another
-        self.gathering = False
+            if hasattr(self, 'there_is_another'):
+                del self.there_is_another
+        #self.gathering = False
+        if self.auto_gather:
+            self.gathered = True
+        docassemble.base.functions.set_gathering_mode(False)
         return True
     def _new_item_init_callback(self):
         return
     def comma_and_list(self, **kwargs):
         """Returns the keys of the list, separated by commas, with 
         "and" before the last key."""
-        if not self.gathering:
-            self.gathered
+        self.trigger_gather()
         return comma_and_list(sorted(self.elements.keys()), **kwargs)
     def __getitem__(self, index):
         if index not in self.elements:
@@ -571,12 +629,15 @@ class DADict(DAObject):
         self.elements[key] = value
         return
     def __contains__(self, item):
+        self.trigger_gather()
         return self.elements.__contains__(item)
     def keys(self):
         """Returns the keys of the dictionary as a Python list."""
+        self.trigger_gather()
         return self.elements.keys()
     def values(self):
         """Returns the values of the dictionary as a Python list."""
+        self.trigger_gather()
         return self.elements.values()
     def update(*pargs, **kwargs):
         """Updates the dictionary with the keys and values of another dictionary"""
@@ -608,43 +669,59 @@ class DADict(DAObject):
         return self.elements.has_key(key)
     def items(self):
         """Returns a copy of the items of the dictionary."""
+        self.trigger_gather()
         return self.elements.items()
     def iteritems(self):
         """Iterates through the keys and values of the dictionary."""
+        self.trigger_gather()
         return self.elements.iteritems()
     def iterkeys(self):
         """Iterates through the keys of the dictionary."""
+        self.trigger_gather()
         return self.elements.iterkeys()
     def itervalues(self):
         """Iterates through the values of the dictionary."""
+        self.trigger_gather()
         return self.elements.itervalues()
     def __iter__(self):
+        self.trigger_gather()
         return self.elements.__iter__()
     def __len__(self):
+        self.trigger_gather()
         return self.elements.__len__()
     def __reversed__(self):
+        self.trigger_gather()
         return self.elements.__reversed__()
     def __delitem__(self, key):
         return self.elements.__delitem__(key)
     def __missing__(self, key):
         return self.elements.__missing__(key)
     def __hash__(self, the_object):
+        self.trigger_gather()
         return self.elements.__hash__(the_object)
     def __str__(self):
+        self.trigger_gather()
         return self.comma_and_list()
     def __unicode__(self):
+        self.trigger_gather()
         return unicode(self.__str__())
     def union(other_set):
+        self.trigger_gather()
         return set(self.elements.values()).union(setify(other_set))
     def intersection(other_set):
+        self.trigger_gather()
         return set(self.elements.values()).intersection(setify(other_set))
     def difference(other_set):
+        self.trigger_gather()
         return set(self.elements.values()).difference(setify(other_set))
     def isdisjoint(other_set):
+        self.trigger_gather()
         return set(self.elements.values()).isdisjoint(setify(other_set))
     def issubset(other_set):
+        self.trigger_gather()
         return set(self.elements.values()).issubset(setify(other_set))
     def issuperset(other_set):
+        self.trigger_gather()
         return set(self.elements.values()).issuperset(setify(other_set))
     def pronoun_possessive(self, target, **kwargs):
         """Returns "their <target>." """
@@ -670,12 +747,42 @@ class DASet(DAObject):
     """A base class for objects that behave like Python sets."""
     def init(self, **kwargs):
         self.elements = set()
-        self.gathering = False
+        #self.gathering = False
+        self.auto_gather = True
+        self.ask_number = False
+        self.minimum_number = None
         if 'elements' in kwargs:
             self.add(kwargs['elements'])
             self.gathered = True
             del kwargs['elements']
         return super(DASet, self).init(**kwargs)
+    # def initializeObject(self, *pargs, **kwargs):
+    #     """Creates a new object and adds it to the set.
+    #     Takes an optional second argument, which is the type of object
+    #     the new object should be.  If no object type is provided,
+    #     the object type given by .objectFunction is used, and if 
+    #     that is not set, DAObject is used."""
+    #     if len(pargs) > 0:
+    #         objectFunction = pargs[0]
+    #     elif self.object_type is not None:
+    #         objectFunction = self.object_type
+    #     else:
+    #         objectFunction = DAObject
+    #     newobject = objectFunction(**kwargs)
+    #     self.elements.add(newobject)
+    #     return newobject
+    def is_gathering(self, mode):
+        if mode:
+            docassemble.base.functions.set_gathering_mode(True)
+        else:
+            docassemble.base.functions.set_gathering_mode(False)
+    def trigger_gather(self):
+        if self.auto_gather:
+            if docassemble.base.functions.get_gathering_mode() is False:
+                self.gather()
+        else:
+            return self.gathered
+        return
     def copy(self):
         """Returns a copy of the set."""
         return self.elements.copy()
@@ -708,8 +815,7 @@ class DASet(DAObject):
         more than one player.
 
         """
-        if not self.gathering:
-            self.gathered
+        self.trigger_gather()
         if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
             if len(self.elements) > 1:
                 tense = 'ppl'
@@ -724,8 +830,7 @@ class DASet(DAObject):
             return verb_present(the_verb, tense)
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except it returns the past tense of the verb."""        
-        if not self.gathering:
-            self.gathered
+        self.trigger_gather()
         if len(self.elements) > 1:
             tense = 'ppl'
         else:
@@ -738,6 +843,7 @@ class DASet(DAObject):
         multiple players.
 
         """
+        self.trigger_gather()
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
         return the_noun        
@@ -750,11 +856,10 @@ class DASet(DAObject):
         instead of the instanceName.
 
         """
+        self.trigger_gather()
         the_noun = self.instanceName
-        if not self.gathering:
-            self.gathered
-            if len(pargs) > 0:
-                the_noun = pargs[0]
+        if len(pargs) > 0:
+            the_noun = pargs[0]
         the_noun = re.sub(r'.*\.', '', the_noun)
         if len(self.elements) > 1 or len(self.elements) == 0:
             return noun_plural(the_noun)
@@ -765,101 +870,133 @@ class DASet(DAObject):
         the items if necessary.
 
         """
-        self.gathered
+        self.trigger_gather()
         return len(self.elements)
-    def number_gathered(self):
-        """Returns the number of items in the set without forcing the
-        gathering of the items.
+    # def number_gathered(self):
+    #     """Returns the number of items in the set without forcing the
+    #     gathering of the items.
 
-        """
-        return len(self.elements)
-    def number_gathered_as_word(self):
-        """Returns the number of items in the set, spelling out the number if
-        ten or below.  Does not force the gathering of the items.
+    #     """
+    #     return len(self.elements)
+    # def number_gathered_as_word(self):
+    #     """Returns the number of items in the set, spelling out the number if
+    #     ten or below.  Does not force the gathering of the items.
 
-        """
-        return nice_number(self.number_gathered())
+    #     """
+    #     return nice_number(self.number_gathered())
     def number_as_word(self):
         """Returns the number of items in the set, spelling out the number if
         ten or below.  Forces the gathering of the items if necessary.
 
         """
+        self.trigger_gather()
         return nice_number(self.number())
-    def gather(self, item_object_type=None):
-        """Causes the items in the set to be gathered and named.  Returns
-        True.
+    def gather(self, number=None, minimum=None):
+        """Causes the items in the set to be gathered.  Returns True.
 
         """
-        self.gathering = True
-        for elem in self.elements.values():
+        #self.gathering = True
+        if hasattr(self, 'gathered') and self.gathered:
+            return True
+        docassemble.base.functions.set_gathering_mode(True)
+        if number is None and self.ask_number:
+            number = self.target_number
+        if minimum is None:
+            minimum = self.minimum_number
+        if number is None and minimum is None:
+            if len(self.elements) == 0 and self.there_are_any:
+                minimum = 1
+            else:
+                minimum = 0
+        for elem in self.elements:
             str(elem)
-        while self.there_is_another:
+        while (number is not None and len(self.elements) < int(number)) or len(self.elements) < int(minimum) or (self.ask_number is False and self.there_is_another):
             self.add(self.new_item)
             del self.new_item
-            del self.there_is_another
-        self.gathering = False
+            if hasattr(self, 'there_is_another'):
+                del self.there_is_another
+        #self.gathering = False
+        if self.auto_gather:
+            self.gathered = True
+        docassemble.base.functions.set_gathering_mode(False)
         return True
     def comma_and_list(self, **kwargs):
         """Returns the items in the set, separated by commas, with 
         "and" before the last item."""
-        if not self.gathering:
-            self.gathered
+        self.trigger_gather()
         return comma_and_list(sorted(map(str, self.elements)), **kwargs)
     def __contains__(self, item):
+        self.trigger_gather()
         return self.elements.__contains__(item)
     def __iter__(self):
+        self.trigger_gather()
         return self.elements.__iter__()
     def __len__(self):
+        self.trigger_gather()
         return self.elements.__len__()
     def __reversed__(self):
+        self.trigger_gather()
         return self.elements.__reversed__()
     def __and__(self, operand):
+        self.trigger_gather()
         return self.elements.__and__(operand)
     def __or__(self, operand):
+        self.trigger_gather()
         return self.elements.__or__(operand)
     def __rand__(self, operand):
+        self.trigger_gather()
         return self.elements.__rand__(operand)
     def __ror__(self, operand):
+        self.trigger_gather()
         return self.elements.__ror__(operand)
     def __hash__(self, the_object):
+        self.trigger_gather()
         return self.elements.__hash__(the_object)
     def __str__(self):
+        self.trigger_gather()
         return self.comma_and_list()
     def __unicode__(self):
+        self.trigger_gather()
         return unicode(self.__str__())
     def union(other_set):
         """Returns a Python set consisting of the elements of current set
         combined with the elements of the other_set.
 
         """
+        self.trigger_gather()
         return self.elements.union(setify(other_set))
     def intersection(other_set):
         """Returns a Python set consisting of the elements of the current set
         that also exist in the other_set.
 
         """
+        self.trigger_gather()
         return self.elements.intersection(setify(other_set))
     def difference(other_set):
         """Returns a Python set consisting of the elements of the current set
         that do not exist in the other_set.
 
         """
+        self.trigger_gather()
         return self.elements.difference(setify(other_set))
     def isdisjoint(other_set):
         """Returns True if no elements overlap between the current set and the
         other_set.  Otherwise, returns False."""
+        self.trigger_gather()
         return self.elements.isdisjoint(setify(other_set))
     def issubset(other_set):
         """Returns True if the current set is a subset of the other_set.
         Otherwise, returns False.
 
         """
+        self.trigger_gather()
         return self.elements.issubset(setify(other_set))
     def issuperset(other_set):
         """Returns True if the other_set is a subset of the current set.
         Otherwise, returns False.
 
         """
+        self.trigger_gather()
         return self.elements.issuperset(setify(other_set))
     def pronoun_possessive(self, target, **kwargs):
         """Returns "their <target>." """
@@ -997,7 +1134,7 @@ def selections(*pargs, **kwargs):
     seen = set()
     for arg in pargs:
         if isinstance(arg, DAList):
-            arg.gathered
+            arg.gather()
             the_list = arg.elements
         elif type(arg) is list:
             the_list = arg

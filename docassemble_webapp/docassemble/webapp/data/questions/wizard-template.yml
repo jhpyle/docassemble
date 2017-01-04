@@ -163,6 +163,8 @@ code: |
 ---
 mandatory: true
 code: |
+  attachments.auto_gather = False
+  interview.decorations.auto_gather = False
   interview.demonstrate()
   need(attachments.gathered)
   varsinuse = Playground().variables_from(interview.source())

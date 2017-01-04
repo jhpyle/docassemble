@@ -750,20 +750,11 @@ class FinancialList(DADict):
         return super(FinancialList, self).init(**kwargs)
     def total(self):
         """Returns the total value in the list, gathering the list items if necessary."""
-        if self.gathered:
-            result = 0
-            for item in self.elements:
-                if self[item].exists:
-                    result += Decimal(self[item].value)
-            return(result)
-    def total_gathered(self):
-        """Returns the total value in the list, for items gathered so far."""
+        self.trigger_gather():
         result = 0
         for item in self.elements:
-            elem = self.elements[item]
-            if hasattr(elem, 'exists') and hasattr(elem, 'value'):
-                if elem.exists:
-                    result += Decimal(elem.value)
+            if self[item].exists:
+                result += Decimal(self[item].value)
         return(result)
     def _new_item_init_callback(self):
         self.elements[self.new_item_name].exists = True
@@ -781,24 +772,13 @@ class PeriodicFinancialList(FinancialList):
         return super(FinancialList, self).init(**kwargs)
     def total(self, period_to_use=1):
         """Returns the total periodic value in the list, gathering the list items if necessary."""
-        if self.gathered:
-            result = 0
-            if period_to_use == 0:
-                return(result)
-            for item in self.elements:
-                if self.elements[item].exists:
-                    result += Decimal(self.elements[item].value) * Decimal(self.elements[item].period)
-            return(result/Decimal(period_to_use))
-    def total_gathered(self, period_to_use=1):
-        """Returns the total periodic value in the list, for items gathered so far."""
+        self.trigger_gather():
         result = 0
         if period_to_use == 0:
             return(result)
         for item in self.elements:
-            elem = getattr(self, item)
-            if hasattr(elem, 'exists') and hasattr(elem, 'value') and hasattr(elem, 'period'):
-                if elem.exists:
-                    result += Decimal(elem.value * Decimal(elem.period))
+            if self.elements[item].exists:
+                result += Decimal(self.elements[item].value) * Decimal(self.elements[item].period)
         return(result/Decimal(period_to_use))
     def _new_item_init_callback(self):
         if hasattr(self, 'new_item_period'):

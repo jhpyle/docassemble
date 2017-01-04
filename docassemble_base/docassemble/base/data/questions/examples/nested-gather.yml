@@ -13,6 +13,10 @@ objects:
 ---
 mandatory: true
 code: |
+  witness.auto_gather = False
+---
+mandatory: true
+code: |
   witness.gathered = witness.gather()
   for person in witness:
     person.initializeAttribute('favorite_food', DAList)

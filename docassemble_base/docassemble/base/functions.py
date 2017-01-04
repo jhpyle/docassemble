@@ -62,6 +62,7 @@ class ThreadVariables(threading.local):
     initialized = False
     redis = None
     uid = None
+    gathering_mode = False
     def __init__(self, **kw):
         if self.initialized:
             raise SystemError('__init__ called too many times')
@@ -70,6 +71,12 @@ class ThreadVariables(threading.local):
 
 this_thread = ThreadVariables()
 
+def set_gathering_mode(mode):
+    this_thread.gathering_mode = mode
+
+def get_gathering_mode():
+    return this_thread.gathering_mode
+    
 def set_uid(uid):
     this_thread.uid = uid
 
@@ -623,6 +630,7 @@ def reset_local_variables():
     this_thread.language = default_language
     this_thread.locale = default_locale
     this_thread.prevent_going_back = False
+    this_thread.gathering_mode = False
     return
 
 def prevent_going_back():

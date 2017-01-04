@@ -16,7 +16,7 @@ objects:
 ---
 generic object: DAList
 question: |
-  % if x.number_gathered() == 0:
+  % if x.number() == 0:
   Give me ${ indefinite_article(x.object_name()) }.
   % else:
   Give me another ${ x.object_name() }.

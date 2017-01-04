@@ -71,7 +71,7 @@ class DAInterview(DAObject):
         self.target_variable = None
         return super(DAInterview, self).init(**kwargs)
     def has_decorations(self):
-        if self.decorations.gathered and len(self.decorations) > 0:
+        if self.decorations.gather() and len(self.decorations) > 0:
             return True
         return False
     def decoration_list(self):
@@ -178,7 +178,7 @@ class DAQuestion(DAObject):
                     content += "yesnomaybe: " + varname(self.field_list[0].variable) + "\n"
             if self.field_list[0].field_type == 'end_attachment':
                 content += "buttons:\n  - Exit: exit\n  - Restart: restart\n"
-                if self.attachments.gathered and len(self.attachments):
+                if self.attachments.gather() and len(self.attachments):
                     content += "attachments:\n"
                     for attachment in self.attachments:
                         content += "  - name: " + oneline(attachment.name) + "\n"

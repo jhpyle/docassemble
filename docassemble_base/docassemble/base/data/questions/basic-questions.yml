@@ -370,21 +370,9 @@ comment: |
   Example 2: What is John Doe's first child's name?
 ---
 generic object: Individual
-code: |
-  x.child.gathering = True
-  if x.has_children:
-    if x.child.number_gathered() == 0:
-      x.child.appendObject(Individual)
-    while x.has_other_children:
-      x.child.appendObject(Individual)
-      del x.has_other_children
-  x.child.gathering = False
-  x.child.gathered = True
----
-generic object: Individual
 question: |
   ${ x.do_question('have', capitalize=True) } any children?
-yesno: x.has_children
+yesno: x.child.there_are_any
 decoration: children
 comment: |
   This illustrates the use of the "do_question" method of the class
@@ -395,28 +383,10 @@ comment: |
 
   Example 2: Does Jane Doe have any children?
 ---
-generic object: Individual
-question: |
-  So far, you have told me about
-  ${ x.possessive(x.child.number_gathered_as_word()) }
-  ${ x.child.as_noun() }, ${ x.child }.
-  ${ x.do_question('have', capitalize=True) } any other children?
-yesno: x.has_other_children
-decoration: children
-comment: |
-  This illustrates the use of various methods of the class Individual.
-  Depending on who x is, this question will ask different things:
-
-  Example 1: So far, you have told me about John Doe's two children, 
-  Sally Doe and Harold Doe.  Does John Doe have any other children?
-
-  Example 2: So far, you have told me about your one child, Kathleen 
-  Smith.  Do you have any other children?
----
 generic object: PartyList
 question: |
   You have told me that there ${ x.does_verb("is") }
-  ${ x.number_gathered_as_word() } ${ x.as_noun() }, ${ x }.
+  ${ x.number_as_word() } ${ x.as_noun() }, ${ x }.
   Is there another ${ x.as_singular_noun() }?
 yesno: x.there_is_another
 comment: |
@@ -431,6 +401,24 @@ comment: |
   there is one plaintiff, John Smith.  Is there another plaintiff?"
   This would not be possible if your variable name was something that
   only made sense to you, like "bad_guys_list_two."
+---
+generic object: Individual
+question: |
+  So far, you have told me about
+  ${ x.possessive(x.child.number_as_word()) }
+  ${ x.child.as_noun() }, ${ x.child }.
+  ${ x.do_question('have', capitalize=True) } any other children?
+yesno: x.child.there_is_another
+decoration: children
+comment: |
+  This illustrates the use of various methods of the class Individual.
+  Depending on who x is, this question will ask different things:
+
+  Example 1: So far, you have told me about John Doe's two children, 
+  Sally Doe and Harold Doe.  Does John Doe have any other children?
+
+  Example 2: So far, you have told me about your one child, Kathleen 
+  Smith.  Do you have any other children?
 ---
 generic object: Individual
 question: |

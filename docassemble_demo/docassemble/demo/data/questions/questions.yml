@@ -174,6 +174,15 @@ code: |
   speak_text = False
   set_live_help_status(availability='observeonly', mode='help', partner_roles=['advocate'])
 ---
+mandatory: true
+code: |
+  client.asset.new('checking account', 'savings account', 'stocks and bonds', 'automobiles')
+  client.asset.gathered = True
+  client.income.new('employment', 'self employment', 'SSI', 'TANF', 'rent', period=12)
+  client.income.gathered = True
+comment: |
+  This code indicates which income and asset items to ask about.
+---
 initial: true
 code: |
   if role == 'advocate' and not defined('client.name.first'):
@@ -210,6 +219,14 @@ comment: |
   
   "Mandatory" sections like this one are evaluated in the order they
   appear in the question file.
+---
+code: |
+  if client.is_plaintiff and client not in case.plaintiff.elements:
+    case.plaintiff.append(client)
+  if client not in case.defendant.elements and not client.is_plaintiff and client.is_defendant:
+    case.defendant.append(client)
+  case.defendant.there_are_any = True
+  parties_determined = True
 ---
 progress: 100
 question: |
@@ -319,47 +336,6 @@ comment: |
   and labels: you just add an "image" value to the button item.
 ---
 code: |
-  case.plaintiff.gathering = True
-  if client.is_plaintiff and client not in case.plaintiff:
-    case.plaintiff.append(client)
-  if case.plaintiff.number_gathered() == 0:
-    case.plaintiff.appendObject(Individual)
-  while case.plaintiff.there_is_another:
-    case.plaintiff.appendObject(Individual)
-    del case.plaintiff.there_is_another
-  case.plaintiff.gathering = False
-  case.plaintiff.gathered = True
-comment: |
-  These seven lines of code ask all the necessary questions to
-  gather the names of the plaintiffs in the case, when the user may
-  not be a plaintiff.
----
-code: |
-  case.defendant.gathering = True
-  if client not in case.defendant and not client.is_plaintiff and \
-     client.is_defendant:
-    case.defendant.append(client)
-  if case.defendant.number_gathered() == 0:
-    case.defendant.appendObject(Individual)
-  while case.defendant.there_is_another:
-    case.defendant.appendObject(Individual)
-    del case.defendant.there_is_another
-  case.defendant.gathering = False
-  case.defendant.gathered = True
-comment: |
-  This code will ask the user if he or she is a defendant, so long as
-  the user is not already a plaintiff.  Then it will ask for the names
-  of the defendants.
----
-code: |
-  people = [client]
-  people.extend(case.parties())
-  for indiv in people:
-    indiv.child.gathered
-comment: |
-  This code gathers the names of the children of all of the parties.
----
-code: |
   if client_has_injury and injury_in_jurisdiction and \
      statute_of_limitations_ok:
     client_has_standing = True
@@ -408,15 +384,6 @@ comment: |
   The function url_of, which is available in docassemble.base.util and
   docassemble.base.legal, will give you a URL to a file in a given
   package.
----
-generic object: Individual
-code: |
-  x.asset.new('checking account', 'savings account', 'stocks and bonds', 'automobiles')
-  x.asset.gathered = True
-  x.income.new('employment', 'self employment', 'SSI', 'TANF', 'rent', period=12)
-  x.income.gathered = True
-comment: |
-  This code indicates which income and asset items to ask about.
 ---
 question: |
   Why do you think you deserve to win this case?
@@ -653,10 +620,10 @@ comment: |
   processing the question and its attachments.  This helps to direct
   the order of the questions in a more sensible fashion.
 sets: client_done
-progress: 100
 need:
-  - case.plaintiff.gathered
-  - case.defendant.gathered
+  - client.name.first
+  - parties_determined
+progress: 100
 question: |
   % if client_has_standing:
     Congratulations!  You have a valid claim.
@@ -935,11 +902,6 @@ generic object: Individual
 question: |
   What language ${ x.do_question('speak') }?
 field: x.language
-#video: ${ my_av_file }
-#audio: |
-#  [FILE docassemble.demo:data/static/schumann-clip-1.mp3]
-#subquestion: |
-#  ${ my_av_file }
 choices:
   - English: en
   - Español: es

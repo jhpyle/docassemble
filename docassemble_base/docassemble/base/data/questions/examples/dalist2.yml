@@ -9,9 +9,12 @@ modules:
 objects:
   - thing: DAList
 ---
+mandatory: true
 code: |
-  thing.gather(number=number_of_things)
-  thing.gathered = True
+  thing.auto_gather = False
+---
+code: |
+  thing.gathered = thing.gather(number=number_of_things)
 ---
 question: |
   How many things are there?
@@ -25,7 +28,6 @@ question: |
 fields:
   - no label: thing[i]
 ---
-need: thing.gathered
 question: |
   The things are: ${ thing }.
 buttons:

@@ -28,7 +28,7 @@ code: |
   x.allergy.gathered = x.allergy.gather(minimum=0)
 ---
 question: |
-  % if person.number_gathered():
+  % if person.number():
   Is there another person?
   % else:
   Is there a person?
@@ -37,7 +37,7 @@ yesno: person.there_is_another
 ---
 generic object: Individual
 question: |
-  % if x.child.number_gathered():
+  % if x.child.number():
   Does ${ x } have any children other than ${ x.child }?
   % else:
   Does ${ x } have any children?
@@ -46,7 +46,7 @@ yesno: x.child.there_is_another
 ---
 generic object: Individual
 question: |
-  % if x.allergy.number_gathered():
+  % if x.allergy.number():
   Does ${ x } have any allergies other than ${ x.allergy }?
   % else:
   Does ${ x } have any allergies?
