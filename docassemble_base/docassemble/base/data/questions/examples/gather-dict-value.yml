@@ -6,16 +6,14 @@ metadata:
   example end: 6
 ---
 modules:
-  - docassemble.base.util
+  - docassemble.base.core
 ---
 objects:
   - fruit: DADict
 ---
 mandatory: true
 question: |
-  There
-  ${ fruit.does_verb("is") }
-  ${ fruit.number_as_word() }
+  There are ${ fruit.number_as_word() }
   fruits in all.
 subquestion: |
   % for item in fruit:
@@ -31,13 +29,7 @@ question: |
   the database?
 fields:
   - Fruit: fruit.new_item_name
----
-question: |
-  How many seeds does
-  ${ indefinite_article(noun_singular(i)) }
-  have?
-fields:
-  - Number of seeds: fruit[i]
+  - Number of seeds: fruit.new_item_value
     datatype: integer
     min: 0
 ---

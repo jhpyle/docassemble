@@ -529,18 +529,31 @@ class DADict(DAObject):
         if minimum is None:
             minimum = self.minimum_number
         if number is None and minimum is None:
-            if len(self.elements) == 0 and self.there_are_any:
-                minimum = 1
+            if len(self.elements) == 0:
+                if self.there_are_any:
+                    minimum = 1
+                else:
+                    minimum = 0
             else:
-                minimum = 0
+                minimum = 1
         while (number is not None and len(self.elements) < int(number)) or (minimum is not None and len(self.elements) < int(minimum)) or (self.ask_number is False and minimum != 0 and self.there_is_another):
             if item_object_type is not None:
                 self.initializeObject(self.new_item_name, item_object_type)
                 self._new_item_init_callback()
             else:
-                self.elements[self.new_item_name] = self.new_item_value
-                del self.new_item_value
-            del self.new_item_name
+                self.new_item_name
+                if hasattr(self, 'new_item_value'):
+                    self.elements[self.new_item_name] = self.new_item_value
+                    del self.new_item_value
+                    del self.new_item_name
+                    if hasattr(self, 'there_is_another'):
+                        del self.there_is_another
+                else:
+                    the_name = self.new_item_name
+                    del self.new_item_name
+                    if hasattr(self, 'there_is_another'):
+                        del self.there_is_another
+                    self.__getitem__(the_name)
             if hasattr(self, 'there_is_another'):
                 del self.there_is_another
         if self.auto_gather:
@@ -548,6 +561,8 @@ class DADict(DAObject):
         docassemble.base.functions.set_gathering_mode(False, self.instanceName)
         return True
     def _new_item_init_callback(self):
+        for elem in self.elements.values():
+            str(elem)
         return
     def comma_and_list(self, **kwargs):
         """Returns the keys of the list, separated by commas, with 
@@ -803,6 +818,8 @@ class DASet(DAObject):
         if hasattr(self, 'gathered') and self.gathered:
             return True
         docassemble.base.functions.set_gathering_mode(True, self.instanceName)
+        for elem in self.elements:
+            str(elem)
         if number is None and self.ask_number:
             number = self.target_number
         if minimum is None:
@@ -813,11 +830,13 @@ class DASet(DAObject):
                     minimum = 1
                 else:
                     minimum = 0
-        for elem in self.elements:
-            str(elem)
+            else:
+                minimum = 1
         while (number is not None and len(self.elements) < int(number)) or (minimum is not None and len(self.elements) < int(minimum)) or (self.ask_number is False and minimum != 0 and self.there_is_another):
             self.add(self.new_item)
             del self.new_item
+            for elem in self.elements:
+                str(elem)
             if hasattr(self, 'there_is_another'):
                 del self.there_is_another
         if self.auto_gather:
