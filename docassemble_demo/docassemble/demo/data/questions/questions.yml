@@ -225,8 +225,8 @@ code: |
     case.plaintiff.append(client)
   if client not in case.defendant.elements and not client.is_plaintiff and client.is_defendant:
     case.defendant.append(client)
+  case.plaintiff.there_are_any = True
   case.defendant.there_are_any = True
-  parties_determined = True
 ---
 progress: 100
 question: |
@@ -620,9 +620,6 @@ comment: |
   processing the question and its attachments.  This helps to direct
   the order of the questions in a more sensible fashion.
 sets: client_done
-need:
-  - client.name.first
-  - parties_determined
 progress: 100
 question: |
   % if client_has_standing:

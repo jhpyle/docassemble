@@ -1,56 +1,42 @@
 metadata:
   title: Nested for loops
-  example start: 14
-  example end: 14
   documentation: "http://docassemble.org/docs/groups.html"
+  example start: 12
+  example end: 12
 ---
 modules:
-  - docassemble.base.core
   - docassemble.base.legal
 ---
 objects:
   - person: PartyList
 ---
-code: |
-  person.gathered = person.gather()
----
-generic object: Individual
-code: |
-  x.child.gathered = x.child.gather(minimum=0)
----
 generic object: Individual
 sets: x.allergy
 code: |
   x.initializeAttribute('allergy', DAList)
----
-generic object: Individual
-code: |
-  x.allergy.gathered = x.allergy.gather(minimum=0)
----
+---  
 question: |
-  % if person.number():
   Is there another person?
-  % else:
-  Is there a person?
-  % endif
 yesno: person.there_is_another
 ---
 generic object: Individual
 question: |
-  % if x.child.number():
-  Does ${ x } have any children other than ${ x.child }?
-  % else:
   Does ${ x } have any children?
-  % endif
+yesno: x.child.there_are_any
+---
+generic object: Individual
+question: |
+  Does ${ x } have any children other than ${ x.child }?
 yesno: x.child.there_is_another
 ---
 generic object: Individual
 question: |
-  % if x.allergy.number():
-  Does ${ x } have any allergies other than ${ x.allergy }?
-  % else:
   Does ${ x } have any allergies?
-  % endif
+yesno: x.allergy.there_are_any
+---
+generic object: Individual
+question: |
+  Does ${ x } have any allergies other than ${ x.allergy }?
 yesno: x.allergy.there_is_another
 ---
 question: |
@@ -72,20 +58,15 @@ question: |
 fields:
   - Allergy: x.allergy[i]
 ---
-sets: all_done
+mandatory: true
+code: |
+  for the_person in person.elements:
+      for the_child in the_person.child.elements:
+          the_child.allergy.gather()
+      the_person.child.gather()
+  person.gather(minimum=1)
+---
+mandatory: true
 question: Information retrieved
 buttons:
   - Restart: restart
----
-mandatory: true
-code: |
-  for the_person in person:
-      need(the_person.name.first)
-      for the_child in the_person.child:
-          need(the_child.name.first)
-          for allergy in the_child.allergy:
-              need(allergy)
-          need(the_child.allergy.gathered)
-      need(the_person.child.gathered)
-  need(person.gathered)
-  need(all_done)

@@ -12,6 +12,7 @@ objects:
   antagonist: Individual
   actors: PartyList
 ---
+mandatory: true
 code: |
   protagonist.name.first = "Harry"
   protagonist.name.last = "Potter"
@@ -19,13 +20,14 @@ code: |
   antagonist.name.last = "Riddle"
   actors.append(protagonist)
   actors.append(antagonist)
+  actors.auto_gather = False
   actors.gathered = True
 ---
 question: Who is the villain?
 fields:
-  The villain is: villain
-  datatype: object
-  choices: actors
+  - The villain is: villain
+    datatype: object
+    choices: actors
 ---
 question: |
   ${ villain } will surely be defeated!

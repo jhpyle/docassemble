@@ -3,51 +3,13 @@ metadata:
   short title: For loops
   documentation: "http://docassemble.org/docs/groups.html#gathering"
   example start: 1
-  example end: 6
+  example end: 10
 ---
 modules:
   - docassemble.base.legal
 ---
 objects:
   - witness: PartyList
----
-mandatory: true
-code: |
-  witness.auto_gather = False
----
-mandatory: true
-code: |
-  witness.gathered = witness.gather()
-  for person in witness:
-    person.initializeAttribute('favorite_food', DAList)
----
-generic object: Individual
-code: |
-  x.favorite_food.gathered = x.favorite_food.gather()
----
-question: |
-  What is the name of the
-  ${ ordinal(i) } witness?
-fields:
-  - First Name: witness[i].name.first
-  - Last Name: witness[i].name.last
----
-generic object: Individual
-question: |
-  What food does ${ x } like?
-fields:
-  - Food: x.favorite_food[i]
----
-question: |
-  Are there any other witnesses?
-yesno: witness.there_is_another
----
-generic object: Individual
-question: |
-  Is there any other food that
-  ${ x } likes, besides
-  ${ x.favorite_food }?
-yesno: x.favorite_food.there_is_another
 ---
 mandatory: true
 question: |
@@ -58,3 +20,39 @@ subquestion: |
   who likes
   ${ person.favorite_food }.
   % endfor
+---
+code: |
+  witness.there_are_any = True
+---
+question: |
+  What is the name of the
+  ${ ordinal(i) } witness?
+fields:
+  - First Name: witness[i].name.first
+  - Last Name: witness[i].name.last
+---
+question: |
+  Are there any other witnesses?
+yesno: witness.there_is_another
+---
+generic object: Individual
+sets: x.favorite_food
+code: |
+  x.initializeAttribute('favorite_food', DAList)
+---
+generic object: Individual
+code: |
+  x.favorite_food.there_are_any = True
+---
+generic object: Individual
+question: |
+  What food does ${ x } like?
+fields:
+  - Food: x.favorite_food[i]
+---
+generic object: Individual
+question: |
+  Is there any other food that
+  ${ x } likes, besides
+  ${ x.favorite_food }?
+yesno: x.favorite_food.there_is_another

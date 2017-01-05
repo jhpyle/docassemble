@@ -1,0 +1,50 @@
+metadata:
+  title: Gather dictionary with object values
+  short title: Gather dictionary object
+  documentation: "http://docassemble.org/docs/groups.html#gathering"
+  example start: 1
+  example end: 8
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  - pet: DADict
+---
+mandatory: true
+code: |
+  pet.object_type = DAObject
+---
+mandatory: true
+question: |
+  You have ${ pet.number_as_word() }
+  pets.
+subquestion: |
+  % for item in pet:
+  Your pet ${ item } named
+  ${ pet[item] } has 
+  ${ pet[item].feet } feet.
+  % endfor
+---
+question: |
+  Do you have any pets?
+yesno: pet.there_are_any
+---
+question: |
+  What kind of pet do you have?
+fields:
+  - Type of pet: pet.new_item_name
+---
+question: |
+  Describe your pet ${ i }.
+fields:
+  - Name: pet[i].name
+  - Number of feet: pet[i].feet
+    datatype: integer
+    min: 0
+---
+question: |
+  So far, you have told me about your
+  ${ pet }.  Do you have any other
+  pets?
+yesno: pet.there_is_another

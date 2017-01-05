@@ -1,0 +1,36 @@
+metadata:
+  title: Gather set
+  short title: Gather set
+  documentation: "http://docassemble.org/docs/groups.html#gathering"
+  example start: 1
+  example end: 6
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  - fruit: DASet
+---
+mandatory: true
+question: |
+  There are ${ fruit.number_as_word() }
+  fruits in all.
+subquestion: |
+  The fruit include ${ fruit }.
+---
+question: |
+  Should there be any fruits
+  in the set?
+yesno: fruit.there_are_any
+---
+question: |
+  What fruit should be added to
+  the set?
+fields:
+  - Fruit: fruit.new_item
+---
+question: |
+  So far, the fruits in the set
+  include ${ fruit }.  Are there
+  any others?
+yesno: fruit.there_is_another

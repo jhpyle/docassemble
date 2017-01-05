@@ -598,6 +598,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
                     continue
                 else:
                     datatypes[field.saveas] = field.datatype
+                    if field.datatype == 'object_checkboxes':
+                        datatypes[safeid(from_safeid(field.saveas) + ".gathered")] = 'boolean'
             if field.number in status.helptexts:
                 helptext_start = '<a class="daterm" data-container="body" data-toggle="popover" data-placement="bottom" data-content=' + noquote(unicode(status.helptexts[field.number])) + '>' 
                 helptext_end = '</a>'
@@ -1230,6 +1232,7 @@ def input_for(status, field, extra_scripts, wide=False):
                 id_index += 1
             output += u''.join(inner_fieldlist)
             if field.datatype in ['object_checkboxes']:
+                
                 output += '<input type="hidden" name="' + safeid(from_safeid(saveas_string) + ".gathered")+ '" value="True"/>'
         elif field.datatype in ['radio', 'object_radio']:
             inner_fieldlist = list()

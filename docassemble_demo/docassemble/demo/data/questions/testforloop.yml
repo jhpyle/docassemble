@@ -2,6 +2,9 @@
 include:
   - basic-questions.yml
 ---
+code: |
+  case.plaintiff.there_are_any = True
+---
 question: |
   The number of plaintiffs is ${ case.plaintiff.number() }.
 subquestion: |
@@ -9,9 +12,6 @@ subquestion: |
   ${ person } is a plaintiff.
   % endfor
 sets: all_done
----
-code: |
-  case.plaintiff.gathered = case.plaintiff.gather()
 ---
 mandatory: true
 code: |

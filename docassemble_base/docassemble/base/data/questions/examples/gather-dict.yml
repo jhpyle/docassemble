@@ -1,0 +1,40 @@
+metadata:
+  title: Gather dictionary
+  short title: Gather dictionary
+  documentation: "http://docassemble.org/docs/groups.html#gathering"
+  example start: 1
+  example end: 6
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  - fruit: DADict
+---
+mandatory: true
+question: |
+  There are ${ fruit.number_as_word() }
+  fruits in all.
+subquestion: |
+  % for item in fruit:
+  The fruit ${ item } has
+  ${ fruit[item] } seeds.
+  % endfor
+---
+code: |
+  fruit.there_are_any = True
+---
+question: |
+  What fruit should be added to
+  the database?
+fields:
+  - Fruit: fruit.new_item_name
+  - Number of seeds: fruit.new_item_value
+    datatype: integer
+    min: 0
+---
+question: |
+  So far, the fruits in the database
+  include ${ fruit }.  Are there
+  any others?
+yesno: fruit.there_is_another

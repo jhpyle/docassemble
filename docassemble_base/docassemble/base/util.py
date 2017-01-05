@@ -306,7 +306,7 @@ class LatitudeLongitude(DAObject):
             else:
                 return True
     def _set_to_current(self):
-        logmessage("set to current")
+        #logmessage("set to current")
         if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and type(this_thread.current_info['user']['location']) is dict:
             if 'latitude' in this_thread.current_info['user']['location'] and 'longitude' in this_thread.current_info['user']['location']:
                 self.latitude = this_thread.current_info['user']['location']['latitude']
@@ -750,7 +750,7 @@ class FinancialList(DADict):
         return super(FinancialList, self).init(**kwargs)
     def total(self):
         """Returns the total value in the list, gathering the list items if necessary."""
-        self.trigger_gather():
+        self.trigger_gather()
         result = 0
         for item in self.elements:
             if self[item].exists:
@@ -772,7 +772,7 @@ class PeriodicFinancialList(FinancialList):
         return super(FinancialList, self).init(**kwargs)
     def total(self, period_to_use=1):
         """Returns the total periodic value in the list, gathering the list items if necessary."""
-        self.trigger_gather():
+        self.trigger_gather()
         result = 0
         if period_to_use == 0:
             return(result)
@@ -815,7 +815,7 @@ class PeriodicValue(Value):
         or 0 if the value does not exist."""
         if not self.exists:
             return 0
-        logmessage("period is a " + str(type(self.period).__name__))
+        #logmessage("period is a " + str(type(self.period).__name__))
         return (Decimal(self.value) * Decimal(self.period)) / Decimal(period_to_use)
 
 class OfficeList(DAList):
@@ -839,7 +839,7 @@ class Organization(Person):
     def will_handle(self, problem=None, county=None):
         """Returns True or False depending on whether the organization 
         serves the given county and/or handles the given problem."""
-        logmessage("Testing " + str(problem) + " against " + str(self.handles))
+        #logmessage("Testing " + str(problem) + " against " + str(self.handles))
         if problem:
             if not (hasattr(self, 'handles') and problem in self.handles):
                 return False

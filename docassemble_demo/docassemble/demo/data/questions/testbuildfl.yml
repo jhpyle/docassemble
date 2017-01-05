@@ -5,12 +5,9 @@ modules:
 objects:
   - asset: FinancialList
 ---
-code: |
-  asset.gathered = asset.gather()
----
 question: |
-  % if asset.number_gathered():
-  You have told me about your ${ asset.comma_and_list() }.
+  % if asset.number():
+  You have told me about your ${ asset }.
   Do you have another type of asset?
   % else:
   Do you have any assets?
@@ -24,6 +21,7 @@ fields:
   - Value: asset.new_item_value
     datatype: currency
 ---
+mandatory: true
 question: Summary of assets
 subquestion: |
   % if asset.number():
@@ -37,7 +35,3 @@ subquestion: |
   % else:
   You are broke!
   % endif
-sets: all_done
----
-mandatory: true
-code: all_done

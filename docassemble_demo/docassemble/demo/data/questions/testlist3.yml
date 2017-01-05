@@ -14,10 +14,7 @@ question: |
   Is there another person?
 yesno: person.there_is_another
 ---
-code: |
-  person.gathered = person.gather()
----
-sets: all_done
+mandatory: true
 question: |
   We are done.
 subquestion: |
@@ -26,7 +23,3 @@ subquestion: |
   % for p in person:
   * ${ p }
   % endfor
-need: person.gathered
----
-mandatory: true
-code: all_done

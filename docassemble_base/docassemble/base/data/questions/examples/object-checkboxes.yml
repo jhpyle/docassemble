@@ -12,11 +12,13 @@ objects:
   antagonist: Individual
   villain: PartyList
 ---
+mandatory: true
 code: |
   protagonist.name.first = "Harry"
   protagonist.name.last = "Potter"
   antagonist.name.first = "Tom"
   antagonist.name.last = "Riddle"
+  villain.auto_gather = False
 ---
 question: Who are the villains, if any?
 fields:

@@ -685,7 +685,7 @@ class Question:
             else:
                 raise DAError("A modules section must be organized as a list." + self.idebug(data))
         if 'reset' in data:
-            logmessage("Found a reset")
+            #logmessage("Found a reset")
             if type(data['reset']) is str:
                 data['reset'] = [data['reset']]
             if type(data['reset']) is list:
@@ -1454,7 +1454,7 @@ class Question:
                 options['pdf_template_file'] = docassemble.base.functions.package_template_filename(target['pdf template file'], package=self.package)
                 options['fields'] = dict()
                 for key, val in target['fields'].iteritems():
-                    logmessage("Set " + str(key) + " to " + str(val))
+                    #logmessage("Set " + str(key) + " to " + str(val))
                     options['fields'][key] = TextObject(str(val), names_used=self.mako_names)
             if 'content' not in target:
                 raise DAError("No content provided in attachment")
@@ -2075,6 +2075,8 @@ class Interview:
         #     exec('import docassemble.base.util')
         #     exec('docassemble.base.util.process_action()')
         while True:
+            #logmessage("Trying to reset gathering mode")
+            docassemble.base.functions.reset_gathering_mode()
             try:
                 if 'sms_variable' in interview_status.current_info and interview_status.current_info['sms_variable'] is not None:
                     raise ForcedNameError("name '" + str(interview_status.current_info['sms_variable']) + "' is not defined")
@@ -2269,6 +2271,7 @@ class Interview:
         if debug:
             seeking.append({'variable': missingVariable})
         #logmessage("I don't have " + str(missingVariable) + " for language " + str(language))
+        docassemble.base.functions.set_current_variable(missingVariable)
         if missingVariable in variable_stack:
             raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
         variable_stack.add(missingVariable)
@@ -2441,6 +2444,8 @@ class Interview:
                     #logmessage("There is no question for " + missingVariable)
                     continue
             while True:
+                #logmessage("While loop in askfor " + str(missingVariable))
+                docassemble.base.functions.reset_gathering_mode(missingVariable)
                 try:
                     #for the_question, is_generic, the_x, the_i, missing_var, generic_object in questions_to_try:
                         #logmessage("Will try question where is_generic is " + str(is_generic) + " and the_x is " + str(the_x) + " and the_i is " + str(the_i) + " and missing_var is " + missing_var + " and generic object is " + str(generic_object))
@@ -2507,14 +2512,14 @@ class Interview:
                         if question.question_type == 'attachments':
                             attachment_text = question.processed_attachments(user_dict)
                             if missing_var in variable_stack:
-                                logmessage("1 Removing missing variable " + missing_var)
+                                #logmessage("1 Removing missing variable " + missing_var)
                                 variable_stack.remove(missing_var)
                             try:
                                 eval(missing_var, user_dict)
                                 question.mark_as_answered(user_dict)
                                 return({'type': 'continue'})
                             except:
-                                logmessage("1 Try another method of setting the variable")
+                                #logmessage("1 Try another method of setting the variable")
                                 continue
                         if question.question_type in ["code", "event_code"]:
                             #logmessage("Running some code:\n\n" + question.sourcecode)
@@ -2545,6 +2550,7 @@ class Interview:
                             try:
                                 eval(missing_var, user_dict)
                                 question.mark_as_answered(user_dict)
+                                #logmessage("returning from running code")
                                 return({'type': 'continue'})
                             except:
                                 if was_defined:
@@ -2554,7 +2560,7 @@ class Interview:
                                         exec("del __oldvariable__", user_dict)
                                     except:
                                         pass
-                                logmessage("2 Try another method of setting the variable")
+                                #logmessage("2 Try another method of setting the variable")
                                 continue
                         else:
                             #logmessage("Question type is " + question.question_type)
@@ -2577,6 +2583,7 @@ class Interview:
                     #newMissingVariable = str(errMess).split("'")[1]
                     question_result = self.askfor(newMissingVariable, user_dict, variable_stack=variable_stack, seeking=seeking, follow_mc=follow_mc)
                     if question_result['type'] == 'continue':
+                        #logmessage("Continuing after asking for newMissingVariable " + str(newMissingVariable))
                         continue
                     return(question_result)
                 except CommandError as qError:

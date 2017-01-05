@@ -1,0 +1,68 @@
+metadata:
+  title: Gather set
+  short title: Gather set
+  documentation: "http://docassemble.org/docs/groups.html#gathering"
+  example start: 1
+  example end: 6
+---
+modules:
+  - docassemble.base.core
+---
+objects:
+  - fruit: DASet
+  - my_favorites: DASet
+  - apple: DAObject
+  - orange: DAObject
+  - pear: DAObject
+  - plum: DAObject
+  - grape: DAObject
+---
+mandatory: true
+code: |
+  apple.name = "apples"
+  orange.name = "oranges"
+  pear.name = "pears"
+  plum.name = "plums"
+  grape.name = "grapes"
+  my_favorites.add(apple, pear)
+  my_favorites.gathered = True
+---
+mandatory: true
+question: |
+  There are ${ fruit.number_as_word() }
+  fruits in all.
+subquestion: |
+  % if fruit.number():
+  The fruits you like include ${ fruit }.
+  % endif
+
+  % if fruits_in_common.number():
+  The fruits we both like are
+  ${ fruits_in_common }.
+  % endif
+---
+code: |
+  fruits_in_common = fruit.intersection(my_favorites)
+---
+question: |
+  Do you like ${ apple }, ${ orange },
+  ${ pear }, ${ plum }, or ${ grape }?
+yesno: fruit.there_are_any
+---
+question: |
+  Pick a fruit that you like.
+fields:
+  - Fruit: fruit.new_item
+    datatype: object
+    choices:
+      - apple
+      - orange
+      - pear
+      - plum
+      - grape
+---
+question: |
+  So far, you have indicated you like
+  ${ fruit }.  Are there any other
+  fruits you like?
+yesno: fruit.there_is_another

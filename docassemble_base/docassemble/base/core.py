@@ -1,5 +1,3 @@
-#import string
-#import random
 from docassemble.base.logger import logmessage
 from docassemble.base.generate_key import random_string
 import re
@@ -7,7 +5,6 @@ import codecs
 import redis
 import sys
 from docassemble.base.filter import file_finder
-#from docassemble.base.error import DANameError
 from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize
 import docassemble.base.functions
 
@@ -44,34 +41,20 @@ class DAObject(object):
     """The base class for all docassemble objects."""
     def init(self, **kwargs):
         for key, value in kwargs.iteritems():
-            #logmessage("Found key " + str(key) + " with value " + str(value))
             setattr(self, key, value)
         return
-#     def __setstate__(self, state):
-# #        sys.stderr.write("__setstate__\n")
-#         self.__dict__ = state
-#     def __getstate__(self):
-# #        sys.stderr.write("__getstate__\n")
-#         return self.__dict__
-    # def __slots__(self):
-    #     attrs = ['has_nonrandom_instance_name', 'instanceName', 'attrList']
-    #     attrs.extend(self.attrList)
-    #     return attrs
     def __init__(self, *args, **kwargs):
         if len(args):
             thename = args[0]
-#            sys.stderr.write("__init__: " + thename + "\n")
             self.has_nonrandom_instance_name = True
         else:
             thename = get_unique_name()
-#            sys.stderr.write("__init__: " + thename + "\n")
             self.has_nonrandom_instance_name = False
         self.instanceName = str(thename)
         self.attrList = list()
         self.init(**kwargs)
     def set_instance_name(self, thename):
         """Sets the instanceName attribute, if it is not already set."""
-#        sys.stderr.write("set_instance_name\n")
         if not self.has_nonrandom_instance_name:
             self.instanceName = thename
             self.has_nonrandom_instance_name = True
@@ -81,18 +64,11 @@ class DAObject(object):
     def _map_info(self):
         return None
     def __getattr__(self, thename):
-        # sys.stderr.write("__getattr__: " + thename + "\n")
-        # if hasattr(self, thename):# or thename == "__setstate__" or thename == "__getstate__" or thename == "__slots__":
-        #     #sys.stderr.write("special __getattr__: " + thename + "\n")
-        #     return(object.__getattribute__(self, thename))
         if thename.startswith('_'):
             return object.__getattribute__(self, thename)
         else:
-            #var_name = object.__getattribute__(self, 'instanceName') + "." + thename
             var_name = object.__getattribute__(self, 'instanceName') + "." + thename
-#            sys.stderr.write("__getattr__: " + thename + "\n")
             raise NameError("name '" + var_name + "' is not defined")
-            #return var_name
     def object_name(self):
         """Returns the instanceName attribute, or, if the instanceName contains attributes, returns a
         phrase.  E.g., case.plaintiff becomes "plaintiff in the case." """
@@ -117,22 +93,17 @@ class DAObject(object):
             self.attrList.append(name)
     def attribute_defined(self, name):
         """Returns True or False depending on whether the given attribute is defined."""
-#        sys.stderr.write("attribute_defined\n")
         return hasattr(self, name)
     def attr(self, name):
         """Returns the value of the given attribute, or None if the attribute is not defined"""
-#        sys.stderr.write("attr\n")
         return getattr(self, name, None)
     def __str__(self):
-#        sys.stderr.write("__str__\n")
         if hasattr(self, 'name'):
             return self.name
         return self.object_name()
     def __unicode__(self):
-#        sys.stderr.write("__unicode__\n")
         return unicode(self.__str__())
     def __dir__(self):
-#        sys.stderr.write("__dir__\n")
         return self.attrList
     def pronoun_possessive(self, target, **kwargs):
         """Returns "its <target>." """
@@ -154,7 +125,6 @@ class DAList(DAObject):
     """The base class for lists of things."""
     def init(self, **kwargs):
         self.elements = list()
-        #self.gathering = False
         self.auto_gather = True
         self.ask_number = False
         self.minimum_number = None
@@ -169,17 +139,12 @@ class DAList(DAObject):
         if not hasattr(self, 'object_type'):
             self.object_type = None
         return super(DAList, self).init(**kwargs)
-    def is_gathering(self, mode):
-        if mode:
-            docassemble.base.functions.set_gathering_mode(True)
-        else:
-            docassemble.base.functions.set_gathering_mode(False)
     def trigger_gather(self):
-        if self.auto_gather:
-            if docassemble.base.functions.get_gathering_mode() is False:
+        if docassemble.base.functions.get_gathering_mode(self.instanceName) is False:
+            if self.auto_gather:
                 self.gather()
-        else:
-            return self.gathered
+            else:
+                self.gathered
         return
     def clear(self):
         self.elements = list()
@@ -282,26 +247,17 @@ class DAList(DAObject):
         elements if necessary."""
         self.trigger_gather()
         return len(self.elements)
-    # def number_gathered(self):
-    #     """Returns the number of elements in the list without forcing the gathering
-    #     of the elements."""
-    #     return len(self.elements)
     def number_as_word(self):
         """Returns the number of elements in the list, spelling out the number if ten 
         or below.  Forces the gathering of the elements if necessary."""
         return nice_number(self.number())
-    # def number_gathered_as_word(self):
-    #     """Returns the number of elements in the list, spelling out the number if ten 
-    #     or below.  Does not force the gathering of the elements."""
-    #     return nice_number(self.number_gathered())
     def gather(self, number=None, item_object_type=None, minimum=None):
         """Causes the elements of the list to be gathered and named.  Returns True."""
         if hasattr(self, 'gathered') and self.gathered:
             return True
         if item_object_type is None and self.object_type is not None:
             item_object_type = self.object_type
-        #self.gathering = True
-        docassemble.base.functions.set_gathering_mode(True)
+        docassemble.base.functions.set_gathering_mode(True, self.instanceName)
         if number is None and self.ask_number:
             number = self.target_number
         if minimum is None:
@@ -313,7 +269,6 @@ class DAList(DAObject):
                 else:
                     minimum = 0
         while len(self.elements) < minimum:
-            logmessage("I am here and item_object_type is " + str(item_object_type))
             the_length = len(self.elements)
             if item_object_type is not None:
                 self.appendObject(item_object_type)
@@ -332,10 +287,9 @@ class DAList(DAObject):
                 if item_object_type is not None:
                     self.appendObject(item_object_type)
                 str(self.__getitem__(the_length))
-        #self.gathering = False
         if self.auto_gather:
             self.gathered = True
-        docassemble.base.functions.set_gathering_mode(False)
+        docassemble.base.functions.set_gathering_mode(False, self.instanceName)
         return True
     def comma_and_list(self, **kwargs):
         """Returns the elements of the list, separated by commas, with 
@@ -390,22 +344,22 @@ class DAList(DAObject):
     def __unicode__(self):
         self.trigger_gather()
         return unicode(self.__str__())
-    def union(other_set):
+    def union(self, other_set):
         self.trigger_gather()
-        return set(self.elements).union(setify(other_set))
-    def intersection(other_set):
+        return DASet(elements=set(self.elements).union(setify(other_set)))
+    def intersection(self, other_set):
         self.trigger_gather()
-        return set(self.elements).intersection(setify(other_set))
-    def difference(other_set):
+        return DASet(elements=set(self.elements).intersection(setify(other_set)))
+    def difference(self, other_set):
         self.trigger_gather()
-        return set(self.elements).difference(setify(other_set))
-    def isdisjoint(other_set):
+        return DASet(elements=set(self.elements).difference(setify(other_set)))
+    def isdisjoint(self, other_set):
         self.trigger_gather()
         return set(self.elements).isdisjoint(setify(other_set))
-    def issubset(other_set):
+    def issubset(self, other_set):
         self.trigger_gather()
         return set(self.elements).issubset(setify(other_set))
-    def issuperset(other_set):
+    def issuperset(self, other_set):
         self.trigger_gather()
         return set(self.elements).issuperset(setify(other_set))
     def pronoun_possessive(self, target, **kwargs):
@@ -449,7 +403,6 @@ class DADict(DAObject):
         self.auto_gather = True
         self.ask_number = False
         self.minimum_number = None
-        #self.gathering = False
         if 'elements' in kwargs:
             self.elements.update(kwargs['elements'])
             self.gathered = True
@@ -460,17 +413,12 @@ class DADict(DAObject):
         if not hasattr(self, 'object_type'):
             self.object_type = None
         return super(DADict, self).init(**kwargs)
-    def is_gathering(self, mode):
-        if mode:
-            docassemble.base.functions.set_gathering_mode(True)
-        else:
-            docassemble.base.functions.set_gathering_mode(False)
     def trigger_gather(self):
-        if self.auto_gather:
-            if docassemble.base.functions.get_gathering_mode() is False:
+        if docassemble.base.functions.get_gathering_mode(self.instanceName) is False:
+            if self.auto_gather:
                 self.gather()
-        else:
-            return self.gathered
+            else:
+                self.gathered
         return
     def clear(self):
         self.elements = list()
@@ -562,14 +510,6 @@ class DADict(DAObject):
         dictionary items if necessary."""
         self.trigger_gather()
         return len(self.elements)
-    # def number_gathered(self):
-    #     """Returns the number of keys in the dictionary without forcing the gathering
-    #     of the dictionary items."""
-    #     return len(self.elements)
-    # def number_gathered_as_word(self):
-    #     """Returns the number of keys in the dictionary, spelling out the number if ten 
-    #     or below.  Does not force the gathering of the dictionary items."""
-    #     return nice_number(self.number_gathered())
     def number_as_word(self):
         """Returns the number of keys in the dictionary, spelling out the number if ten 
         or below.  Forces the gathering of the dictionary items if necessary."""
@@ -581,8 +521,7 @@ class DADict(DAObject):
             return True
         if item_object_type is None and self.object_type is not None:
             item_object_type = self.object_type
-        #self.gathering = True
-        docassemble.base.functions.set_gathering_mode(True)
+        docassemble.base.functions.set_gathering_mode(True, self.instanceName)
         for elem in self.elements.values():
             str(elem)
         if number is None and self.ask_number:
@@ -594,7 +533,7 @@ class DADict(DAObject):
                 minimum = 1
             else:
                 minimum = 0
-        while (number is not None and len(self.elements) < int(number)) or len(self.elements) < int(minimum) or (self.ask_number is False and self.there_is_another):
+        while (number is not None and len(self.elements) < int(number)) or (minimum is not None and len(self.elements) < int(minimum)) or (self.ask_number is False and minimum != 0 and self.there_is_another):
             if item_object_type is not None:
                 self.initializeObject(self.new_item_name, item_object_type)
                 self._new_item_init_callback()
@@ -604,10 +543,9 @@ class DADict(DAObject):
             del self.new_item_name
             if hasattr(self, 'there_is_another'):
                 del self.there_is_another
-        #self.gathering = False
         if self.auto_gather:
             self.gathered = True
-        docassemble.base.functions.set_gathering_mode(False)
+        docassemble.base.functions.set_gathering_mode(False, self.instanceName)
         return True
     def _new_item_init_callback(self):
         return
@@ -705,22 +643,22 @@ class DADict(DAObject):
     def __unicode__(self):
         self.trigger_gather()
         return unicode(self.__str__())
-    def union(other_set):
+    def union(self, other_set):
         self.trigger_gather()
-        return set(self.elements.values()).union(setify(other_set))
-    def intersection(other_set):
+        return DASet(elements=set(self.elements.values()).union(setify(other_set)))
+    def intersection(self, other_set):
         self.trigger_gather()
-        return set(self.elements.values()).intersection(setify(other_set))
-    def difference(other_set):
+        return DASet(elements=set(self.elements.values()).intersection(setify(other_set)))
+    def difference(self, other_set):
         self.trigger_gather()
-        return set(self.elements.values()).difference(setify(other_set))
-    def isdisjoint(other_set):
+        return DASet(elements=set(self.elements.values()).difference(setify(other_set)))
+    def isdisjoint(self, other_set):
         self.trigger_gather()
         return set(self.elements.values()).isdisjoint(setify(other_set))
-    def issubset(other_set):
+    def issubset(self, other_set):
         self.trigger_gather()
         return set(self.elements.values()).issubset(setify(other_set))
-    def issuperset(other_set):
+    def issuperset(self, other_set):
         self.trigger_gather()
         return set(self.elements.values()).issuperset(setify(other_set))
     def pronoun_possessive(self, target, **kwargs):
@@ -747,7 +685,6 @@ class DASet(DAObject):
     """A base class for objects that behave like Python sets."""
     def init(self, **kwargs):
         self.elements = set()
-        #self.gathering = False
         self.auto_gather = True
         self.ask_number = False
         self.minimum_number = None
@@ -756,32 +693,12 @@ class DASet(DAObject):
             self.gathered = True
             del kwargs['elements']
         return super(DASet, self).init(**kwargs)
-    # def initializeObject(self, *pargs, **kwargs):
-    #     """Creates a new object and adds it to the set.
-    #     Takes an optional second argument, which is the type of object
-    #     the new object should be.  If no object type is provided,
-    #     the object type given by .objectFunction is used, and if 
-    #     that is not set, DAObject is used."""
-    #     if len(pargs) > 0:
-    #         objectFunction = pargs[0]
-    #     elif self.object_type is not None:
-    #         objectFunction = self.object_type
-    #     else:
-    #         objectFunction = DAObject
-    #     newobject = objectFunction(**kwargs)
-    #     self.elements.add(newobject)
-    #     return newobject
-    def is_gathering(self, mode):
-        if mode:
-            docassemble.base.functions.set_gathering_mode(True)
-        else:
-            docassemble.base.functions.set_gathering_mode(False)
     def trigger_gather(self):
-        if self.auto_gather:
-            if docassemble.base.functions.get_gathering_mode() is False:
+        if docassemble.base.functions.get_gathering_mode(self.instanceName) is False:
+            if self.auto_gather:
                 self.gather()
-        else:
-            return self.gathered
+            else:
+                self.gathered
         return
     def copy(self):
         """Returns a copy of the set."""
@@ -872,18 +789,6 @@ class DASet(DAObject):
         """
         self.trigger_gather()
         return len(self.elements)
-    # def number_gathered(self):
-    #     """Returns the number of items in the set without forcing the
-    #     gathering of the items.
-
-    #     """
-    #     return len(self.elements)
-    # def number_gathered_as_word(self):
-    #     """Returns the number of items in the set, spelling out the number if
-    #     ten or below.  Does not force the gathering of the items.
-
-    #     """
-    #     return nice_number(self.number_gathered())
     def number_as_word(self):
         """Returns the number of items in the set, spelling out the number if
         ten or below.  Forces the gathering of the items if necessary.
@@ -895,30 +800,29 @@ class DASet(DAObject):
         """Causes the items in the set to be gathered.  Returns True.
 
         """
-        #self.gathering = True
         if hasattr(self, 'gathered') and self.gathered:
             return True
-        docassemble.base.functions.set_gathering_mode(True)
+        docassemble.base.functions.set_gathering_mode(True, self.instanceName)
         if number is None and self.ask_number:
             number = self.target_number
         if minimum is None:
             minimum = self.minimum_number
         if number is None and minimum is None:
-            if len(self.elements) == 0 and self.there_are_any:
-                minimum = 1
-            else:
-                minimum = 0
+            if len(self.elements) == 0:
+                if self.there_are_any:
+                    minimum = 1
+                else:
+                    minimum = 0
         for elem in self.elements:
             str(elem)
-        while (number is not None and len(self.elements) < int(number)) or len(self.elements) < int(minimum) or (self.ask_number is False and self.there_is_another):
+        while (number is not None and len(self.elements) < int(number)) or (minimum is not None and len(self.elements) < int(minimum)) or (self.ask_number is False and minimum != 0 and self.there_is_another):
             self.add(self.new_item)
             del self.new_item
             if hasattr(self, 'there_is_another'):
                 del self.there_is_another
-        #self.gathering = False
         if self.auto_gather:
             self.gathered = True
-        docassemble.base.functions.set_gathering_mode(False)
+        docassemble.base.functions.set_gathering_mode(False, self.instanceName)
         return True
     def comma_and_list(self, **kwargs):
         """Returns the items in the set, separated by commas, with 
@@ -943,6 +847,18 @@ class DASet(DAObject):
     def __or__(self, operand):
         self.trigger_gather()
         return self.elements.__or__(operand)
+    def __iand__(self, operand):
+        self.trigger_gather()
+        return self.elements.__iand__(operand)
+    def __ior__(self, operand):
+        self.trigger_gather()
+        return self.elements.__ior__(operand)
+    def __isub__(self, operand):
+        self.trigger_gather()
+        return self.elements.__isub__(operand)
+    def __ixor__(self, operand):
+        self.trigger_gather()
+        return self.elements.__ixor__(operand)
     def __rand__(self, operand):
         self.trigger_gather()
         return self.elements.__rand__(operand)
@@ -958,40 +874,40 @@ class DASet(DAObject):
     def __unicode__(self):
         self.trigger_gather()
         return unicode(self.__str__())
-    def union(other_set):
+    def union(self, other_set):
         """Returns a Python set consisting of the elements of current set
         combined with the elements of the other_set.
 
         """
         self.trigger_gather()
-        return self.elements.union(setify(other_set))
-    def intersection(other_set):
+        return DASet(elements=self.elements.union(setify(other_set)))
+    def intersection(self, other_set):
         """Returns a Python set consisting of the elements of the current set
         that also exist in the other_set.
 
         """
         self.trigger_gather()
-        return self.elements.intersection(setify(other_set))
-    def difference(other_set):
+        return DASet(elements=self.elements.intersection(setify(other_set)))
+    def difference(self, other_set):
         """Returns a Python set consisting of the elements of the current set
         that do not exist in the other_set.
 
         """
         self.trigger_gather()
-        return self.elements.difference(setify(other_set))
-    def isdisjoint(other_set):
+        return DASet(elements=self.elements.difference(setify(other_set)))
+    def isdisjoint(self, other_set):
         """Returns True if no elements overlap between the current set and the
         other_set.  Otherwise, returns False."""
         self.trigger_gather()
         return self.elements.isdisjoint(setify(other_set))
-    def issubset(other_set):
+    def issubset(self, other_set):
         """Returns True if the current set is a subset of the other_set.
         Otherwise, returns False.
 
         """
         self.trigger_gather()
         return self.elements.issubset(setify(other_set))
-    def issuperset(other_set):
+    def issuperset(self, other_set):
         """Returns True if the other_set is a subset of the current set.
         Otherwise, returns False.
 
@@ -1044,7 +960,6 @@ class DAFile(DAObject):
         if not hasattr(self, 'file_info'):
             self.retrieve()
         if 'fullpath' not in self.file_info:
-            #logmessage("file_info is " + str(self.file_info))
             raise Exception("fullpath not found")
         return self.file_info['fullpath']
     def commit(self):
@@ -1118,8 +1033,6 @@ class DATemplate(DAObject):
         return(self.content)
     def __unicode__(self):
         return unicode(self.__str__())
-#    def __repr__(self):
-#        return(self.content)
 
 def selections(*pargs, **kwargs):
     """Packs a list of objects in the appropriate format for including

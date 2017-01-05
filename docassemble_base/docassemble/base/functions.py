@@ -62,7 +62,8 @@ class ThreadVariables(threading.local):
     initialized = False
     redis = None
     uid = None
-    gathering_mode = False
+    gathering_mode = dict()
+    current_variable = None
     def __init__(self, **kw):
         if self.initialized:
             raise SystemError('__init__ called too many times')
@@ -71,12 +72,33 @@ class ThreadVariables(threading.local):
 
 this_thread = ThreadVariables()
 
-def set_gathering_mode(mode):
-    this_thread.gathering_mode = mode
+def set_current_variable(var):
+    this_thread.current_variable = var
 
-def get_gathering_mode():
-    return this_thread.gathering_mode
-    
+def set_gathering_mode(mode, instanceName):
+    if mode:
+        if instanceName not in this_thread.gathering_mode:
+            this_thread.gathering_mode[instanceName] = this_thread.current_variable
+    else:
+        del this_thread.gathering_mode[instanceName]
+
+def get_gathering_mode(instanceName):
+    if instanceName not in this_thread.gathering_mode:
+        return False
+    return True
+
+def reset_gathering_mode(*pargs):
+    if len(pargs) == 0:
+        this_thread.gathering_mode = dict()
+        return
+    var = pargs[0]
+    todel = list()
+    for instanceName, curVar in this_thread.gathering_mode.iteritems():
+        if curVar == var:
+            todel.append(instanceName)
+    for item in todel:
+        del this_thread.gathering_mode[item]
+
 def set_uid(uid):
     this_thread.uid = uid
 
@@ -630,7 +652,8 @@ def reset_local_variables():
     this_thread.language = default_language
     this_thread.locale = default_locale
     this_thread.prevent_going_back = False
-    this_thread.gathering_mode = False
+    this_thread.gathering_mode = dict()
+    this_thread.current_variable = None
     return
 
 def prevent_going_back():
@@ -865,9 +888,9 @@ def possessify_en(a, b, **kwargs):
         return unicode(a) + unicode(middle) + unicode(b)
 
 def a_preposition_b_default(a, b, **kwargs):
-    logmessage("Got here")
+    #logmessage("Got here")
     if hasattr(a, 'preposition'):
-        logmessage("Has preposition")
+        #logmessage("Has preposition")
         preposition = a.preposition
     else:
         preposition = word('in the')

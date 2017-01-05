@@ -2634,18 +2634,19 @@ def index():
         if do_append:
             key_to_use = from_safeid(real_key)
             if do_opposite:
-                the_string = 'if ' + data + ' in ' + key_to_use + ':\n    ' + key_to_use + '.remove(' + data + ')'
+                the_string = 'if ' + data + ' in ' + key_to_use + '.elements:\n    ' + key_to_use + '.remove(' + data + ')'
             else:
-                the_string = 'if ' + data + ' not in ' + key_to_use + ':\n    ' + key_to_use + '.append(' + data + ')'
+                the_string = 'if ' + data + ' not in ' + key_to_use + '.elements:\n    ' + key_to_use + '.append(' + data + ')'
         else:
             the_string = key + ' = ' + data
-        #logmessage("Doing " + str(the_string))
+        # logmessage("Doing " + str(the_string))
         try:
             exec(the_string, user_dict)
             changed = True
             steps += 1
         except Exception as errMess:
             error_messages.append(("error", "Error: " + str(errMess)))
+            # logmessage("Error: " + str(errMess))
     if 'informed' in request.form:
         user_dict['_internal']['informed'][the_user_id] = dict()
         for key in request.form['informed'].split(','):

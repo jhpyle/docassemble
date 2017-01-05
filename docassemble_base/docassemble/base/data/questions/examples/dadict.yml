@@ -15,6 +15,7 @@ code: |
   player.initializeObject('trustee', DAObject)
   player.initializeObject('beneficiary', DAObject)
   player.initializeObject('grantor', DAObject)
+  player.gathered = True
 ---
 mandatory: true
 question: The players

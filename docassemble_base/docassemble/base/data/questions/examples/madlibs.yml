@@ -5,7 +5,6 @@ metadata:
   documentation: "http://docassemble.org/docs/groups.html"
 ---
 modules:
-  - docassemble.base.core
   - docassemble.base.util
 ---
 objects:
@@ -16,7 +15,7 @@ objects:
 ---
 generic object: DAList
 question: |
-  % if x.number() == 0:
+  % if i == 0:
   Give me ${ indefinite_article(x.object_name()) }.
   % else:
   Give me another ${ x.object_name() }.

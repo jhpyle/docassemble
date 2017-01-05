@@ -1,3 +1,4 @@
+#obsolete
 metadata:
   title: Linguistics
   example start: 3
@@ -5,10 +6,6 @@ metadata:
 ---
 include:
   - basic-questions.yml
----
-mandatory: true
-code: |
-  case.defendant.gathered = case.defendant.gather()
 ---
 mandatory: true
 question: |
@@ -40,7 +37,3 @@ code: |
     del case.defendant.there_is_another
   case.defendant.gathering = False
   case.defendant.gathered = True
-# Defendant has an asset
-# Defendant has a liability
-# Defendants have an asset
-# Defendants have a liability
