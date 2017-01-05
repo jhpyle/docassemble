@@ -11,6 +11,13 @@ modules:
 objects:
   - fruit: DAList
 ---
+mandatory: true
+question: |
+  There are ${ fruit.number_as_word() }
+  fruits in all.
+subquestion: |
+  The fruits are ${ fruit }.
+---
 question: |
   Are there any fruit that you would like
   to add to the list?
@@ -25,10 +32,3 @@ question: |
   So far, the fruits include ${ fruit }.
   Are there any others?
 yesno: fruit.there_is_another
----
-mandatory: true
-question: |
-  There are ${ fruit.number_as_word() }
-  fruits in all.
-subquestion: |
-  The fruits are ${ fruit }.

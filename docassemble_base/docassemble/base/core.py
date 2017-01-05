@@ -1047,7 +1047,7 @@ def selections(*pargs, **kwargs):
     seen = set()
     for arg in pargs:
         if isinstance(arg, DAList):
-            arg.gather()
+            arg.trigger_gather()
             the_list = arg.elements
         elif type(arg) is list:
             the_list = arg

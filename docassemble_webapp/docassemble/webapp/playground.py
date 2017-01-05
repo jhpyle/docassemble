@@ -35,6 +35,8 @@ class DADecoration(DAObject):
 class DADecorationDict(DADict):
     def init(self, **kwargs):
         self.object_type = DADecoration
+        self.auto_gather = False
+        self.there_are_any = True
         return super(DADecorationDict, self).init(**kwargs)
 
 class DAAttachment(DAObject):
@@ -44,6 +46,7 @@ class DAAttachment(DAObject):
 class DAAttachmentList(DAList):
     def init(self, **kwargs):
         self.object_type = DAAttachment
+        self.auto_gather = False
         return super(DAAttachmentList, self).init(**kwargs)
     def url_list(self):
         output_list = list()
@@ -71,7 +74,7 @@ class DAInterview(DAObject):
         self.target_variable = None
         return super(DAInterview, self).init(**kwargs)
     def has_decorations(self):
-        if self.decorations.gather() and len(self.decorations) > 0:
+        if self.decorations.gathered and len(self.decorations) > 0:
             return True
         return False
     def decoration_list(self):
@@ -135,6 +138,7 @@ class DAField(DAObject):
 class DAFieldList(DAList):
     def init(self, **kwargs):
         self.object_type = DAField
+        self.auto_gather = False
         self.gathered = True
         return super(DAFieldList, self).init(**kwargs)
     def __str__(self):
@@ -178,7 +182,7 @@ class DAQuestion(DAObject):
                     content += "yesnomaybe: " + varname(self.field_list[0].variable) + "\n"
             if self.field_list[0].field_type == 'end_attachment':
                 content += "buttons:\n  - Exit: exit\n  - Restart: restart\n"
-                if self.attachments.gather() and len(self.attachments):
+                if self.attachments.gathered and len(self.attachments):
                     content += "attachments:\n"
                     for attachment in self.attachments:
                         content += "  - name: " + oneline(attachment.name) + "\n"
@@ -260,6 +264,8 @@ class DAQuestion(DAObject):
 class DAQuestionDict(DADict):
     def init(self, **kwargs):
         self.object_type = DAQuestion
+        self.auto_gather = False
+        self.gathered = True
         return super(DAQuestionDict, self).init(**kwargs)
 
 class PlaygroundSection(object):
