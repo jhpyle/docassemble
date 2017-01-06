@@ -2271,7 +2271,8 @@ class Interview:
         if debug:
             seeking.append({'variable': missingVariable})
         #logmessage("I don't have " + str(missingVariable) + " for language " + str(language))
-        docassemble.base.functions.set_current_variable(missingVariable)
+        origMissingVariable = missingVariable
+        docassemble.base.functions.set_current_variable(origMissingVariable)
         if missingVariable in variable_stack:
             raise DAError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
         variable_stack.add(missingVariable)
@@ -2445,7 +2446,7 @@ class Interview:
                     continue
             while True:
                 #logmessage("While loop in askfor " + str(missingVariable))
-                docassemble.base.functions.reset_gathering_mode(missingVariable)
+                docassemble.base.functions.reset_gathering_mode(origMissingVariable)
                 try:
                     #for the_question, is_generic, the_x, the_i, missing_var, generic_object in questions_to_try:
                         #logmessage("Will try question where is_generic is " + str(is_generic) + " and the_x is " + str(the_x) + " and the_i is " + str(the_i) + " and missing_var is " + missing_var + " and generic object is " + str(generic_object))
@@ -2495,6 +2496,7 @@ class Interview:
                             #     variable_stack.remove(missing_var)
                             question.mark_as_answered(user_dict)
                             #logmessage("Returning after defining objects")
+                            docassemble.base.functions.pop_current_variable()
                             return({'type': 'continue'})
                         if question.question_type == "template":
                             string = "import docassemble.base.core"
@@ -2508,6 +2510,7 @@ class Interview:
                             #logmessage("Doing " + string)
                             exec(string, user_dict)
                             #question.mark_as_answered(user_dict)
+                            docassemble.base.functions.pop_current_variable()
                             return({'type': 'continue'})
                         if question.question_type == 'attachments':
                             attachment_text = question.processed_attachments(user_dict)
@@ -2517,6 +2520,7 @@ class Interview:
                             try:
                                 eval(missing_var, user_dict)
                                 question.mark_as_answered(user_dict)
+                                docassemble.base.functions.pop_current_variable()
                                 return({'type': 'continue'})
                             except:
                                 #logmessage("1 Try another method of setting the variable")
@@ -2546,11 +2550,13 @@ class Interview:
                                 #logmessage("2 Removing missing variable " + missing_var)
                                 variable_stack.remove(missing_var)
                             if question.question_type == 'event_code':
+                                docassemble.base.functions.pop_current_variable()
                                 return({'type': 'continue'})
                             try:
                                 eval(missing_var, user_dict)
                                 question.mark_as_answered(user_dict)
                                 #logmessage("returning from running code")
+                                docassemble.base.functions.pop_current_variable()
                                 return({'type': 'continue'})
                             except:
                                 if was_defined:
@@ -2585,6 +2591,7 @@ class Interview:
                     if question_result['type'] == 'continue':
                         #logmessage("Continuing after asking for newMissingVariable " + str(newMissingVariable))
                         continue
+                    docassemble.base.functions.pop_current_variable()
                     return(question_result)
                 except CommandError as qError:
                     question_data = dict(command=qError.return_type, url=qError.url)

@@ -825,27 +825,6 @@ attachments:
 
       [FLUSHLEFT] ${ client }, ${ title_case(case.role_of(client)) }
 ---
-sets: all_done
-question: Hi there
-attachment:
-  - name: the attachment
-    filename: helloworld
-    content: |
-      Hi there.
-
-      [BEGIN_TWOCOL]
-
-      Hi there.
-
-      Hi *there* again.
-      [BREAK]
-      Hello [there](http://google.com).
-      [SKIPLINE]
-      Hello **there again** and again.
-
-      And again.
-      [END_TWOCOL]
----
 question: Your document is ready.
 sets: provide_user_with_document
 attachment:

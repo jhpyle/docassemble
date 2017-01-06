@@ -63,7 +63,7 @@ class ThreadVariables(threading.local):
     redis = None
     uid = None
     gathering_mode = dict()
-    current_variable = None
+    current_variable = list()
     def __init__(self, **kw):
         if self.initialized:
             raise SystemError('__init__ called too many times')
@@ -72,22 +72,43 @@ class ThreadVariables(threading.local):
 
 this_thread = ThreadVariables()
 
+def get_current_variable():
+    if len(this_thread.current_variable):
+        return this_thread.current_variable[-1]
+    return None
+
 def set_current_variable(var):
-    this_thread.current_variable = var
+    #logmessage("set_current_variable: " + str(var))
+    this_thread.current_variable.append(var)
+
+def pop_current_variable():
+    #logmessage("pop_current_variable")
+    if len(this_thread.current_variable):
+        var = this_thread.current_variable.pop()
+        #logmessage("pop_current_variable: " + str(var))
+        return var
+    #logmessage("pop_current_variable: None")
+    return None
 
 def set_gathering_mode(mode, instanceName):
+    #logmessage("set_gathering_mode: " + str(mode) + " " + str(instanceName))
     if mode:
         if instanceName not in this_thread.gathering_mode:
-            this_thread.gathering_mode[instanceName] = this_thread.current_variable
+            #logmessage("set_gathering_mode: setting to " + str(get_current_variable()))
+            this_thread.gathering_mode[instanceName] = get_current_variable()
     else:
         del this_thread.gathering_mode[instanceName]
 
 def get_gathering_mode(instanceName):
+    #logmessage("get_gathering_mode: " + str(instanceName))
     if instanceName not in this_thread.gathering_mode:
+        #logmessage("get_gathering_mode: returning False")
         return False
+    #logmessage("get_gathering_mode: returning True")
     return True
 
 def reset_gathering_mode(*pargs):
+    #logmessage("reset_gathering_mode: " + str(pargs))
     if len(pargs) == 0:
         this_thread.gathering_mode = dict()
         return
@@ -97,6 +118,7 @@ def reset_gathering_mode(*pargs):
         if curVar == var:
             todel.append(instanceName)
     for item in todel:
+        #logmessage("reset_gathering_mode: deleting " + str(item))
         del this_thread.gathering_mode[item]
 
 def set_uid(uid):
@@ -653,7 +675,7 @@ def reset_local_variables():
     this_thread.locale = default_locale
     this_thread.prevent_going_back = False
     this_thread.gathering_mode = dict()
-    this_thread.current_variable = None
+    this_thread.current_variable = list()
     return
 
 def prevent_going_back():

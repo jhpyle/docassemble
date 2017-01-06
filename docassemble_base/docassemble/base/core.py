@@ -522,7 +522,7 @@ class DADict(DAObject):
         if item_object_type is None and self.object_type is not None:
             item_object_type = self.object_type
         docassemble.base.functions.set_gathering_mode(True, self.instanceName)
-        for elem in self.elements.values():
+        for elem in sorted(self.elements.values()):
             str(elem)
         if number is None and self.ask_number:
             number = self.target_number
@@ -539,6 +539,7 @@ class DADict(DAObject):
         while (number is not None and len(self.elements) < int(number)) or (minimum is not None and len(self.elements) < int(minimum)) or (self.ask_number is False and minimum != 0 and self.there_is_another):
             if item_object_type is not None:
                 self.initializeObject(self.new_item_name, item_object_type)
+                del self.new_item_name
                 self._new_item_init_callback()
             else:
                 self.new_item_name
@@ -561,7 +562,7 @@ class DADict(DAObject):
         docassemble.base.functions.set_gathering_mode(False, self.instanceName)
         return True
     def _new_item_init_callback(self):
-        for elem in self.elements.values():
+        for elem in sorted(self.elements.values()):
             str(elem)
         return
     def comma_and_list(self, **kwargs):

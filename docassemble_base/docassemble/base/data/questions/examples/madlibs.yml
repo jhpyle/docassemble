@@ -13,16 +13,7 @@ objects:
   - person: DAList
   - place: DAList
 ---
-generic object: DAList
-question: |
-  % if i == 0:
-  Give me ${ indefinite_article(x.object_name()) }.
-  % else:
-  Give me another ${ x.object_name() }.
-  % endif
-fields:
-  - no label: x[i]
----
+mandatory: true
 question: A funny story
 subquestion: |
   ${ person[0] } went to ${ place[0] }
@@ -40,4 +31,13 @@ subquestion: |
   saving the day.
 buttons:
   - Do it again: restart
-mandatory: true
+---
+generic object: DAList
+question: |
+  % if i == 0:
+  Give me ${ indefinite_article(x.object_name()) }.
+  % else:
+  Give me another ${ x.object_name() }.
+  % endif
+fields:
+  - no label: x[i]
