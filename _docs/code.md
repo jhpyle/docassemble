@@ -163,9 +163,11 @@ The following conditions apply when the variables are text.
 
 ## Going through the items in a group
 
-(not written yet)
+There are special types of variables in [Python] that help you manage
+collections of things.  For more information about this, see the
+[groups] section.
 
-# <a name="code"></a> The `code` block
+# <a name="code"></a>The `code` block
 
 In a **docassemble** interview, a [`question`] block tells
 **docassemble** that if the interview logic wants to know the value of
@@ -313,3 +315,4 @@ the [Interview Logic] section.
 [Mako]: http://www.makotemplates.org/
 [questions]: {{ site.baseurl }}/docs/questions.html
 [documents]: {{ site.baseurl }}/docs/documents.html
+[groups]: {{ site.baseurl }}/docs/groups.html

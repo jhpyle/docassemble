@@ -802,8 +802,7 @@ Other methods available on a DAList are:
   `applicant`, returns `applicants` or `applicant` depending on the
   number of elements in the list.
 * <a name="DAList.number"></a>`number()` - returns the total number of
-  elements in the list, with the side effect of checking on the value
-  of the `gathered` attribute, which might trigger questions that ask
+  elements in the list.  If necessary it will trigger questions that ask
   for all of the elements of the list to be populated.
 * <a name="DAList.number_as_word"></a>`number_as_word()` - same as
   `number()`, except that the [`nice_number()`] function is applied to
@@ -820,36 +819,44 @@ will be the output of the `comma_and_list()` method.
 
 The `DAList` uses the following attributes:
 
-* `gathering`: a boolean value, initialized to `False`.  Set this to
-`True` when the interview is in the process of asking questions to
-define all the elements of the list.
-* `gathered`: a boolean value, initially undefined.  Set this to
+* `object_type`: a class of type [`DAObject`] or subclass thereof, or
+  `None`.  Initially, this is set to `None`.  If set to an object
+  type, such as `DAObject` or `Individual`, then new items will be
+  created as objects of this type.
+* `gathered`: a boolean value, initially undefined.  It is set to
 `True` when then all of the elements of the list are defined.
 * `elements`: a [Python list] containing the elements of the list.
+* `are_there_any`: a boolean value, initially undefined, indicating
+  whether any values should be gathered.  The expectation is that the
+  interview will define a [question] or [code block] that defines this
+  attribute.
+* `is_there_another`: a boolean value, initially undefined, indicating
+  whether there are any additional values that should be gathered.
 
-By checking the value of the `gathered` attribute, you can trigger
-asking the necessary questions to define all of the elements of the
-list.  The methods of `DAList` behave differently depending on whether
-or not the interview is in the process of gathering the elements of
-the list.
+For more information about using [`DAList`] objects, see the section
+on [groups].
 
 ## <a name="DADict"></a><a name="DADict.initializeObject"></a>DADict
 
-A `DADict` acts like a [Python dictionary] except that dictionary
-elements can be defined through **docassemble** questions.  To add an
-element that is a new **docassemble** object, you need to call the
+A `DADict` acts like a [Python dictionary] except that dictionary keys
+and values can be defined through **docassemble** questions.  To add a
+value that is a new **docassemble** object, you need to call the
 `initializeObject()` method.
 
 For example:
 
 {% include side-by-side.html demo="dadict" %}
 
-Internally, the `DADict` uses the following attributes:
+`DADict`s uses the same attributes that [`DAList`] uses, and also
+uses:
 
-* `elements`: a [Python dictionary] containing the items of the dictionary.
+* `new_item_name`: a text value, initially undefined, indicating the
+key of a new item being gathered into the dictionary.
+* `new_item_value`: a value, initially undefined, indicating the
+value of a new item being gathered into the dictionary.  This is only
+used when the `.object_type` of the [`DADict`] is not set.
 
-However, your code can treat a `DADict` object just like a
-[Python dictionary].
+Your code can treat a `DADict` object just like a [Python dictionary].
 
 {% highlight yaml %}
 ---
@@ -867,6 +874,9 @@ code: |
     there_are_things = True
   else:
     there_are_things = False
+---
+mandatory: true
+code: |
   things['abc'] = some_variable
 ---
 code: |
@@ -875,6 +885,9 @@ code: |
     description += "* " + key + ": " + value + "\n"
 ---
 {% endhighlight %}
+
+For more information about using [`DADict`] objects, see the section
+on [groups].
 
 ## <a name="DASet"></a>DASet
 
@@ -891,6 +904,9 @@ code: |
     issues.add('application')
 ---
 {% endhighlight %}
+
+For more information about using [`DASet`] objects, see the section
+on [groups].
 
 ## <a name="DAFile"></a>DAFile
 
@@ -2034,7 +2050,9 @@ and not an instance of the `Attorney` class.
 [`DAFileCollection`]: {{ site.baseurl }}/docs/objects.html#DAFileCollection
 [`DAFileList`]: {{ site.baseurl }}/docs/objects.html#DAFileList
 [`DAFile`]: #DAFile
+[`DADict`]: #DAFile
 [`DAList`]: #DAList
+[`DASet`]: #DAList
 [`DAObject`]: #DAObject
 [`DATemplate`]: #DATemplate
 [`Expense`]: #Expense
@@ -2112,3 +2130,8 @@ and not an instance of the `Attorney` class.
 [`.sms_number()`]: #Person.sms_number
 [`.email_address()`]: #Person.email_address
 [`OfficeList`]: #OfficeList
+[groups]: {{ site.baseurl }}/docs/groups.html
+[question]: {{ site.baseurl }}/docs/questions.html#question
+[code block]: {{ site.baseurl }}/docs/code.html#code
+[dict]: https://docs.python.org/2/library/stdtypes.html#dict
+[set]: https://docs.python.org/2/library/stdtypes.html#set

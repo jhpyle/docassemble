@@ -1261,6 +1261,54 @@
 "gather-dict": |-
   ---
   modules:
+    - docassemble.base.util
+  ---
+  objects:
+    - fruit: DADict
+  ---
+  mandatory: true
+  question: |
+    There
+    ${ fruit.does_verb("is") }
+    ${ fruit.number_as_word() }
+    fruits in all.
+  subquestion: |
+    % for item in fruit:
+    The fruit ${ item } has
+    ${ fruit[item] } seeds.
+    % endfor
+  ---
+  code: |
+    fruit.there_are_any = True
+  ---
+  question: |
+    What fruit should be added to
+    the database?
+  fields:
+    - Fruit: fruit.new_item_name
+  ---
+  question: |
+    How many seeds does
+    ${ indefinite_article(noun_singular(i)) }
+    have?
+  fields:
+    - Number of seeds: fruit[i]
+      datatype: integer
+      min: 0
+  ---
+"gather-dict-object": "---\nmodules:\n  - docassemble.base.core\n---\nobjects:\n \
+  \ - pet: DADict\n---\nmandatory: true\ncode: |\n  pet.object_type = DAObject\n---\n\
+  mandatory: true\nquestion: |\n  You have ${ pet.number_as_word() }\n  pets.\nsubquestion:\
+  \ |\n  % for item in pet:\n  Your pet ${ item } named\n  ${ pet[item] } has \n \
+  \ ${ pet[item].feet } feet.\n  % endfor\n---\nquestion: |\n  Do you have any pets?\n\
+  yesno: pet.there_are_any\n---\nquestion: |\n  What kind of pet do you have?\nfields:\n\
+  \  - Type of pet: pet.new_item_name\n---\nquestion: |\n  Describe your pet ${ i\
+  \ }.\nfields:\n  - Name: pet[i].name\n  - Number of feet: pet[i].feet\n    datatype:\
+  \ integer\n    min: 0\n---\nquestion: |\n  So far, you have told me about your\n\
+  \  ${ pet }.  Do you have any other\n  pets?\nyesno: pet.there_is_another\n---"
+"gather-dict-value": |-
+  ---
+  modules:
     - docassemble.base.core
   ---
   objects:
@@ -1294,16 +1342,6 @@
     any others?
   yesno: fruit.there_is_another
   ---
-"gather-dict-object": "---\nmodules:\n  - docassemble.base.core\n---\nobjects:\n \
-  \ - pet: DADict\n---\nmandatory: true\ncode: |\n  pet.object_type = DAObject\n---\n\
-  mandatory: true\nquestion: |\n  You have ${ pet.number_as_word() }\n  pets.\nsubquestion:\
-  \ |\n  % for item in pet:\n  Your pet ${ item } named\n  ${ pet[item] } has \n \
-  \ ${ pet[item].feet } feet.\n  % endfor\n---\nquestion: |\n  Do you have any pets?\n\
-  yesno: pet.there_are_any\n---\nquestion: |\n  What kind of pet do you have?\nfields:\n\
-  \  - Type of pet: pet.new_item_name\n---\nquestion: |\n  Describe your pet ${ i\
-  \ }.\nfields:\n  - Name: pet[i].name\n  - Number of feet: pet[i].feet\n    datatype:\
-  \ integer\n    min: 0\n---\nquestion: |\n  So far, you have told me about your\n\
-  \  ${ pet }.  Do you have any other\n  pets?\nyesno: pet.there_is_another\n---"
 "gather-fruit": |-
   ---
   modules:
@@ -1311,6 +1349,13 @@
   ---
   objects:
     - fruit: DAList
+  ---
+  mandatory: true
+  question: |
+    There are ${ fruit.number_as_word() }
+    fruits in all.
+  subquestion: |
+    The fruits are ${ fruit }.
   ---
   question: |
     Are there any fruit that you would like
@@ -1326,13 +1371,6 @@
     So far, the fruits include ${ fruit }.
     Are there any others?
   yesno: fruit.there_is_another
-  ---
-  mandatory: true
-  question: |
-    There are ${ fruit.number_as_word() }
-    fruits in all.
-  subquestion: |
-    The fruits are ${ fruit }.
   ---
 "gather-fruit-at-least-two": |-
   ---
@@ -1434,7 +1472,7 @@
     any others?
   yesno: fruit.there_is_another
   ---
-"gather-set-objects": |-
+"gather-set-object": |-
   ---
   modules:
     - docassemble.base.core
@@ -1791,11 +1829,10 @@
   ---
 "lists": |-
   ---
-  question: Your fears
-  subquestion: |
-    You are afraid of
-    ${ comma_and_list(fears) }.
-  sets: all_done
+  mandatory: true
+  code: |
+    fears.extend(['spiders', 'snakes', 'fish'])
+    fears.gathered = True
   ---
 "live_chat": |-
   ---
@@ -1814,24 +1851,15 @@
   ---
 "madlibs": |-
   ---
-  question: A funny story
-  subquestion: |
-    ${ person[0] } went to ${ place[0] }
-    to buy
-    ${ indefinite_article(noun[0]) }.
-
-    At the ${ place[0] }, there was
-    ${ indefinite_article(adjective[0])}
-    ${ noun[1] }, which tried to zap
-    ${ person[0] }.
-
-    But luckily, ${ person[1] } came out of
-    the back room just in time and
-    lunged at the ${ noun[1] }, thereby
-    saving the day.
-  buttons:
-    - Do it again: restart
-  mandatory: true
+  generic object: DAList
+  question: |
+    % if i == 0:
+    Give me ${ indefinite_article(x.object_name()) }.
+    % else:
+    Give me another ${ x.object_name() }.
+    % endif
+  fields:
+    - no label: x[i]
   ---
 "mako-01": |-
   ---

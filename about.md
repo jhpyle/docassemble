@@ -177,12 +177,12 @@ input with particular concepts.
 * **Central storage** Your interviews can [store data] in a central
 location, for example if you want use your interview to conduct a
 survey, or collect analytics about user answers.
-* **Interview sessions spanning months** **docassemble** interviews do
-not have to end the day the interviewee starts the interview.  The
-interview and its answers can persist for months, and the interview
-could guide the interviewee through a long legal process.  The
-interview can [check in] on an hourly, daily, weekly, or monthly basis
-for the purpose of checking on-line dockets or sending e-mails or text
+* **Interview sessions spanning months** Interviews do not have to end
+the day the interviewee starts the interview.  The interview and its
+answers can persist for months, and the interview could guide the
+interviewee through a long legal process.  The interview can
+[check in] on an hourly, daily, weekly, or monthly basis for the
+purpose of checking on-line dockets or sending e-mails or text
 messages.  For example, in a divorce application, the interview could
 produce a divorce petition and then check in with the user five days
 later to make sure service of process was carried out.  Then the

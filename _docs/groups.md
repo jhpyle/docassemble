@@ -5,8 +5,8 @@ short_title: Groups
 ---
 
 To help you organize groups of things, **docassemble** offers three
-data structures: lists, dictionaries, and sets.  These mirror the data
-types of the same name that exist in [Python].
+data structures: lists, dictionaries, and sets.  These mirror the
+[list], [dict], and [set] data types that exist in [Python].
 
 # Overview of types of data structures
 
@@ -81,27 +81,29 @@ and `feet['bird']` will return `2`.  The keys are `dog`, `human`, and
 {% endhighlight %}
 
 The keys of a dictionary are unique.  Doing `feet['rabbit'] = 2` will
-add a new entry to the dictionary, whereas doing `feet['dog'] = 3`
-will change the existing entry for `dog`.  The items in a dictionary
-are stored in no particular order; [Python] does not remember the
-order in which you add them.
+add a new entry to the above dictionary, whereas doing `feet['dog'] =
+3` will change the existing entry for `dog`.  The items in a
+dictionary are stored in no particular order; [Python] will not
+remember the order in which you add them.
 
 In **docassemble**, dictionaries are objects of type [`DADict`], which
 behave much like [Python dict]s.
 
 ## <a name="set"></a>Set
 
-A **set** is a **group of unique elements with no order**.  There is
-no index or key that allows you to refer to a particular entry; an
-element is either in the set or is not.  In Python, a set can be
-defined with a statement like `colors = set(['blue', 'red'])`. Adding
-a new element to the set is called "adding," not "appending."  E.g.,
-`colors.add('green')`.  If you add an element to a set when the
-element is already in the set, this will have no effect on the set.
+A **set** is a **group of unique items with no order**.  There is no
+index or key that allows you to refer to a particular item; an item is
+either in the set or is not.  In Python, a set can be defined with a
+statement like `colors = set(['blue', 'red'])`. Adding a new item to
+the set is called "adding," not "appending."  E.g.,
+`colors.add('green')`.  If you add an item to a set when the item is
+already in the set, this will have no effect on the set.
 
 {% highlight python %}
 >>> colors = set(['blue', 'red'])
->>> colors.add('green')
+>>> colors
+set(['blue', 'green', 'red'])
+>>> colors.add('blue')
 >>> colors
 set(['blue', 'green', 'red'])
 >>> colors.remove('red')
@@ -117,20 +119,21 @@ much like [Python set]s.
 In **docassemble**, you can track groups of things using objects of
 types [`DAList`], [`DADict`], or [`DASet`].  These are defined in the
 [`docassemble.base.core`] module.  They are also available if you use
-[`docassemble.base.util`] or [`docassemble.base.legal`].
+[`docassemble.base.util`] or [`docassemble.base.legal`] as
+[`modules`], or if you [`include`] the file [`basic-questions.yml`].
 
 {% include side-by-side.html demo="object-demo" %}
 
 In your **docassemble** interviews, you will typically not use these
-object types directly, but rather subtypes of these basic objects.
-For example, if you include the [`basic-questions.yml`] file (see
-[legal applications]), an object of type [`Case`] will be created
+object types directly, but rather you will use subtypes of these basic
+objects.  For example, if you include the [`basic-questions.yml`] file
+(see [legal applications]), an object of type [`Case`] will be created
 (called `case`), which allows you to refer to the plaintiffs and
 defendants in the case as `case.plaintiff` or `case.defendant`,
-respectively.  Both of these objects are objects of type [`PartyList`],
-which is a subtype of [`DAList`].  The first plaintiff is
-`case.plaintiff[0]` and the second plaintiff, if there is one, will be
-`case.plaintiff[1]`.
+respectively.  Both of these objects are objects of type
+[`PartyList`], which is a subtype of [`DAList`].  The first plaintiff
+is `case.plaintiff[0]` and the second plaintiff, if there is one, will
+be `case.plaintiff[1]`.
 
 ## <a name="gathering"></a>Gathering information from the user
 
@@ -141,37 +144,116 @@ data types.  These objects have special attributes that help
 interviews find the right questions to ask the user in order to
 populate the items of the group.
 
-The following interview populates a list of fruits.  The list of
-fruits is a variable called `fruit`, which is a [`DAList`] object.
-The interview contains a question that asks for the name of the fruit
-and stores the name in the variable `fruit[i]`.  The interview also
-contains a yes/no question that asks the user if there are any more
-fruits to add to the interview.  The true/false value is stored in the
-variable `fruit.there_is_another`.
+### <a name="gather list"></a>Lists
+
+The following interview populates a list of fruits.
 
 {% include side-by-side.html demo="gather-fruit" %}
 
-The asking of the questions is triggered by the reference to
-`fruit.number_as_word()`, which returns the number of items in the
-list.  In order to know how many items are in the list, it needs to
-ask the user what those items are.  (The reference in the template to
-`${ fruit }` will also trigger the questions.)
+First, the module [`docassemble.base.core`] is brought in, because it
+contains the definition of the [`DAList`] object.
 
-The interview will first want to know whether there are any elements
-in the list at all.  It will seek a definition for
-`fruit.there_are_any`.  If the answer to this is `True`, the interview
-will seek a definition for `fruit[0]` to gather the first element.
-Then it will seek a definition for `fruit.there_is_another`.  If the
-answer to this is `True`, it will seek a definition for `fruit[1]`.
-Then it will seek the definition of `fruit.there_is_another` again.
-If the answer to this is `False`, then `fruit.number_as_word()` has all the
-information it needs, and it returns the number of items in `fruit`.
+{% highlight yaml %}
+modules:
+  - docassemble.base.core
+{% endhighlight %}
 
-This interview succeeds because the variable `i` is special in
-**docassemble**.  When it seeks a definition for `fruit[0]`, the
-interview will first look for a question that offers to define
-`fruit[0]`, but if it does not find one, it will generalize and look
-for a question that offers to define `fruit[i]`.
+Second, the variable `fruit` is defined as a [`DAList`] <span></span>
+[object].
+
+{% highlight yaml %}
+objects:
+  - fruit: DAList
+{% endhighlight %}
+
+The next block contains the end point of the interview, a screen that
+says how many fruits are in the list and lists them.
+
+{% highlight yaml %}
+mandatory: true
+question: |
+  There are ${ fruit.number_as_word() }
+  fruits in all.
+subquestion: |
+  The fruits are ${ fruit }.
+{% endhighlight %}
+
+The interview encounters `fruit.number_as_word()`, which will return
+the number of items in the list.  But in order to know how many items
+are in the list, the interview first needs to ask the user what those
+items are.  So the reference to `fruit.number_as_word()` will trigger
+the process of asking these questions.  (The reference to ${ fruit }
+would trigger the same process, but the interview will encounter
+`fruit.number_as_word()` first.)
+
+The text of these questions is provided in [`question`] blocks that
+define the following variables:
+
+* `fruit.there_are_any`: should there be any items in the list at all?
+* `fruit[i]`: the name of the `i`th fruit in the list.
+* `fruit.there_is_another`: are there any more fruits that still need
+  to be added?
+
+First, the interview will want to know whether there are any items in
+the list at all.  It will seek a definition for `fruit.there_are_any`.
+It will ask the question, "Are there any fruit that you would like to
+add to the list?"
+
+{% highlight yaml %}
+question: |
+  Are there any fruit that you would like
+  to add to the list?
+yesno: fruit.there_are_any
+{% endhighlight %}
+
+If the answer to this is `True`, the interview will seek a definition
+for `fruit[0]` to gather the first element.  It will ask the question
+"What fruit should be added to the list?"
+
+{% highlight yaml %}
+question: |
+  What fruit should be added to the list?
+fields:
+  - Fruit: fruit[i]
+{% endhighlight %}
+
+Assume the user enters "apples."
+
+Now the interview knows the first item in the list, but it does not
+know if the list is complete yet.  Therefore, it will seek a
+definition for `fruit.there_is_another`.  It will ask the question "So
+far, the fruits include apples.  Are there any others?"
+
+{% highlight yaml %}
+question: |
+  So far, the fruits include ${ fruit }.
+  Are there any others?
+yesno: fruit.there_is_another
+{% endhighlight %}
+
+If the answer to this is `True`, the interview will seek a definition
+of `fruit[1]` to gather the second item in the list.  It will ask,
+again, "What fruit should be added to the list?"  Assume the user
+enters "oranges."
+
+Then the interview will again seek the definition of
+`fruit.there_is_another`.  This time, if the answer is `False`, then
+`fruit.number_as_word()` has all the information it needs, and it will
+return the number of items in `fruit` (in this case, 2).  When the interview later
+encounters `The fruits are ${ fruit }.`, it will attempt to reduce the
+variable `fruit` to text.  Since the interview knows that there are no
+more elements in the list, it does not need to ask any further
+questions.  `${ fruit }` will result in `apples and oranges`.
+
+Note that the variable `i` is special in **docassemble**.  When the
+interview seeks a definition for `fruit[0]`, the interview will first
+look for a question that offers to define `fruit[0]`.  If it does not
+find one, it will take a more general approach and look for a question
+that offers to define `fruit[i]`.  It finds just such a question.  As
+a result, the single question that offers to define `fruit[i]` can be
+reused as many times as necessary.
+
+#### Customizing the way information is gathered
 
 The way that **docassemble** asks questions to populate the list can
 be customized by setting attributes of `fruit`.  For example, perhaps
@@ -196,24 +278,52 @@ You can avoid the `.there_are_any` question by setting the
 
 {% include side-by-side.html demo="gather-fruit-at-least-two" %}
 
-### Manually triggering the gathering process
+### <a name="gather dictionary"></a>Dictionaries
 
-In the example above, the reference to `fruit.number()` implicitly
-triggers the process of asking the questions that populate the `fruit`
-list.  If you want to ask the questions at a particular time, you can
-do so by referring to `fruit.gather()`.  (Behind the scenes, this is
-how **docassemble** makes sure the list is fully populated.)
+The process of gathering the items in a [`DADict`] dictionary is
+slightly different.  Like the gathering process for [`DAList`]
+objects, the gathering process for [`DADict`] objects will call upon
+the attributes `.there_are_any` and `.there_is_another`.
+
+In addition, the process will look for the attribute `.new_item_name`
+to get the key to be added to the dictionary.
+
+If you use a plain [`DADict`] object, the process will look for the
+attribute `.new_item_value` to get the value of the 
+
+{% include side-by-side.html demo="gather-dict" %}
+
+{% include side-by-side.html demo="gather-dict-object" %}
+
+{% include side-by-side.html demo="gather-dict-value" %}
+
+
+### <a name="gather set"></a>Sets
+
+{% include side-by-side.html demo="gather-set" %}
+
+{% include side-by-side.html demo="gather-set-object" %}
+
+## Manually triggering the gathering process
+
+In the examples above, the process of asking questions that populate
+the list was triggered implicitly by code like `${ fruit.number() }` or
+`${ fruit }` or `% for item in fruit:`.
+
+If you want to ask the questions at a particular time, you can do so
+by referring to `fruit.gather()`.  (Behind the scenes, this is the
+same method used when the process is implicitly triggered.)
 
 {% include side-by-side.html demo="gather-fruit-gather" %}
 
-### Asking additional questions about each item
+## Asking additional questions about each item
 
 The `.gather()` method only asks enough questions about each item in
 order to display it.  For example, if you have a `PartyList` called
 `witness`, the items will be `Individual`s, and the bare minimum
 information needed to display an `Individual` is the `Individual`'s `.name.first`.
 
-### Manually gathering items
+## Manually gathering items
 
 At a very basic level, it is not complicated to gather a list of
 things from a user.  For example, you can do this:
@@ -300,11 +410,9 @@ and will return `True` when the list has been fully populated.  The
 `fruit.there_is_another`, and makes `fruit.there_is_another`
 undefined, as necessary.
 
-
 Here is a complete example:
 
 {% include side-by-side.html demo="gather-fruit" %}
-
 
 # For loop
 
@@ -324,8 +432,8 @@ print total
 This code "loops" through the elements of `numbers` and computes the
 total amount.  At the end, `14` is printed.
 
-For loops can be included in **docassemble** templates using the
-`for`/`endfor` [Mako] statement:
+For loops based on [`DAList`], [`DADict`], and [`DASet`] objects can be included in
+**docassemble** templates using the `for`/`endfor` [Mako] statement:
 
 {% include side-by-side.html demo="for_fruit" %}
 
@@ -437,6 +545,10 @@ yesno: case.plaintiff[i].agrees_to_accept_service
 [`for` loop]: {{ site.baseurl }}/docs/markup.html#for
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [`code` block]: {{ site.baseurl }}/docs/code.html#code
+[`modules`]: {{ site.baseurl }}/docs/initial.html#modules
+[`include`]: {{ site.baseurl }}/docs/initial.html#include
 [list]: https://docs.python.org/2.7/tutorial/datastructures.html
 [dict]: https://docs.python.org/2/library/stdtypes.html#dict
 [set]: https://docs.python.org/2/library/stdtypes.html#set
+[object]: {{ site.baseurl }}/docs/objects.html
+[`question`]: {{ site.baseurl }}/docs/questions.html#question
