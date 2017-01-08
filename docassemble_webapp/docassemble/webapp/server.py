@@ -5701,7 +5701,7 @@ def monitor():
 def update_package():
     pip.utils.logging._log_state = threading.local()
     pip.utils.logging._log_state.indentation = 0
-    form = UpdatePackageForm(request.form, current_user)
+    form = UpdatePackageForm(request.form)
     action = request.args.get('action', None)
     target = request.args.get('package', None)
     if action is not None and target is not None:
@@ -5808,7 +5808,7 @@ def update_package():
 @login_required
 @roles_required(['admin', 'developer'])
 def create_playground_package():
-    form = CreatePlaygroundPackageForm(request.form, current_user)
+    form = CreatePlaygroundPackageForm(request.form)
     current_package = request.args.get('package', None)
     do_install = request.args.get('install', False)
     area = dict()
@@ -5893,7 +5893,7 @@ def create_playground_package():
 @login_required
 @roles_required(['admin', 'developer'])
 def create_package():
-    form = CreatePackageForm(request.form, current_user)
+    form = CreatePackageForm(request.form)
     if request.method == 'POST' and form.validate():
         pkgname = re.sub(r'^docassemble-', r'', form.name.data)
         if not user_can_edit_package(pkgname='docassemble.' + pkgname):
@@ -6166,7 +6166,7 @@ def restart_page():
 @login_required
 @roles_required(['admin'])
 def config_page():
-    form = ConfigForm(request.form, current_user)
+    form = ConfigForm(request.form)
     content = None
     ok = True
     if request.method == 'POST':
@@ -6242,8 +6242,8 @@ def playground_template(userid, filename):
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_files():
-    form = PlaygroundFilesForm(request.form, current_user)
-    formtwo = PlaygroundFilesEditForm(request.form, current_user)
+    form = PlaygroundFilesForm(request.form)
+    formtwo = PlaygroundFilesEditForm(request.form)
     section = request.args.get('section', 'template')
     the_file = request.args.get('file', '')
     scroll = False
@@ -6587,7 +6587,7 @@ def playground_files():
 @login_required
 @roles_required(['developer', 'admin'])
 def playground_packages():
-    form = PlaygroundPackagesForm(request.form, current_user)
+    form = PlaygroundPackagesForm(request.form)
     the_file = request.args.get('file', '')
     scroll = False
     package_list, package_auth = get_package_info()
@@ -6729,7 +6729,7 @@ def playground_page():
         is_ajax = True
     else:
         is_ajax = False
-    form = PlaygroundForm(request.form, current_user)
+    form = PlaygroundForm(request.form)
     interview = None
     the_file = request.args.get('file', '')
     if request.method == 'GET':
@@ -7426,7 +7426,7 @@ def logfile(filename):
 @login_required
 @roles_required(['admin', 'developer'])
 def logs():
-    form = LogForm(request.form, current_user)
+    form = LogForm(request.form)
     the_file = request.args.get('file', None)
     default_filter_string = ''
     if request.method == 'POST' and form.file_name.data:
@@ -7477,7 +7477,7 @@ def logs():
 @login_required
 def request_developer():
     from docassemble.webapp.users.forms import RequestDeveloperForm
-    form = RequestDeveloperForm(request.form, current_user)
+    form = RequestDeveloperForm(request.form)
     recipients = list()
     if request.method == 'POST':
         for user in UserModel.query.filter_by(active=True).all():
