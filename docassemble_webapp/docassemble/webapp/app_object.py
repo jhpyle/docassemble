@@ -1,7 +1,7 @@
 #import sys
 from werkzeug.contrib.fixers import ProxyFix
 from flask import Flask
-from flask_wtf.csrf import CsrfProtect
+from flask_wtf.csrf import CSRFProtect
 
 def create_app():
     app = Flask(__name__)
