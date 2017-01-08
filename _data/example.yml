@@ -215,6 +215,16 @@
   ---
 "background_action_flash": |-
   ---
+  initial: true
+  code: |
+    process_action()
+  ---
+  question: |
+    How much shall I add to 553?
+  fields:
+    - Number: value_to_add
+      datatype: integer
+  ---
   code: |
     the_task = background_action('bg_task', 'flash', additional=value_to_add)
   ---
@@ -225,6 +235,16 @@
   ---
 "background_action_javascript": |-
   ---
+  initial: true
+  code: |
+    process_action()
+  ---
+  question: |
+    How much shall I add to 553?
+  fields:
+    - Number: value_to_add
+      datatype: integer
+  ---
   code: |
     the_task = background_action('bg_task', 'javascript', additional=value_to_add)
   ---
@@ -234,6 +254,16 @@
     background_response("alert('The answer is " + the_answer + ".');")
   ---
 "background_action_refresh": |-
+  ---
+  initial: true
+  code: |
+    process_action()
+  ---
+  question: |
+    How much shall I add to 553?
+  fields:
+    - Number: value_to_add
+      datatype: integer
   ---
   code: |
     the_task = background_action('bg_task', 'refresh', additional=value_to_add)
@@ -283,6 +313,16 @@
       waiting_screen
   ---
 "background_response_action_flash": |-
+  ---
+  initial: true
+  code: |
+    process_action()
+  ---
+  question: |
+    How much shall I add to 553?
+  fields:
+    - Number: value_to_add
+      datatype: integer
   ---
   code: |
     the_task = background_action('bg_task', 'flash', additional=value_to_add)
@@ -2545,6 +2585,62 @@
     - File: pdf_file
       datatype: file
   ---
+"ocr-background": |-
+  ---
+  initial: true
+  code: |
+    process_action()
+  ---
+  mandatory: true
+  code: |
+    pdf_file
+    the_task
+    user_testimonial
+    if not the_task.ready():
+      waiting_screen
+  ---
+  question: |
+    Please upload a file
+  fields:
+    - File: pdf_file
+      datatype: file
+  ---
+  code: |
+    the_task = background_action('ocr_start', None)
+  ---
+  event: ocr_start
+  code: |
+    the_text = ocr_file(pdf_file)
+    background_response_action('ocr_finish', text=the_text)
+  ---
+  event: ocr_finish
+  code: |
+    text_of_pdf_file = action_argument('text')
+    background_response()
+  ---
+  question: |
+    How do you describe what happened?
+  fields:
+    - no label: user_testimonial
+      datatype: area
+  ---
+  event: waiting_screen
+  reload: 5
+  question: |
+    Please wait.
+  ---
+  mandatory: true
+  question: |
+    All done
+  subquestion: |
+    You claim that:
+
+    ${ quote_paragraphs(user_testimonial) }
+
+    The document states:
+
+    ${ quote_paragraphs(text_of_pdf_file) }
+  ---
 "optional-field": |-
   ---
   question: |
@@ -2732,6 +2828,16 @@
     - "Are apples good?": question_one_a
       datatype: yesno
     - "Your favorite variety": question_one_b
+  ---
+"quote_paragraphs": |-
+  ---
+  mandatory: true
+  question: |
+    Your allegations
+  subquestion: |
+    You allege that:
+
+    ${ quote_paragraphs(allegations) }
   ---
 "radio-list": |-
   ---

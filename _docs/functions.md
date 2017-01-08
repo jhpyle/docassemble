@@ -460,6 +460,13 @@ attachment:
 ---
 {% endhighlight %}
 
+## <a name="quote_paragraphs"></a>quote_paragraphs()
+
+The `quote_paragraphs()` function adds [Markdown] to text so that it
+appears as a quotation.
+
+{% include side-by-side.html demo="quote_paragraphs" %}
+
 # <a name="actions"></a>Functions for interacting with the interview using URLs
 
 ## <a name="url_action"></a><a name="process_action"></a>url_action() and process_action()
@@ -801,6 +808,21 @@ can install [multiple servers] dedicated to handling these tasks.
 ## <a name="background_action"></a>background_action()
 
 {% include side-by-side.html demo="background_action" %}
+
+Note the first block:
+{% highlight yaml %}
+---
+initial: true
+code: |
+  process_action()
+---
+{% endhighlight %}
+
+Background actions will not work unless your interview contains a call
+to [`process_action()`] in [`initial`] code.  This code needs to run
+early on -- after you have screened out unwanted users, but before the
+substance of your interview begins.  It is easy to forget to add the
+[`process_action()`] block, so don't forget!
 
 Starting a background process involves calling the
 `background_action()` function.
@@ -2347,7 +2369,9 @@ separated by the [form feed character].
 
 {% include side-by-side.html demo="ocr" %}
 
-The first argument must be a [`DAFile`] or [`DAFileList`] object.
+The first argument must be a [`DAFile`] or [`DAFileList`] object.  If
+the argument is a [`DAFileList`] with more than one file, all files
+will be OCRed, and the text of all the pages will be returned.
 
 The following optional keyword arguments affect the way OCR is
 performed.
@@ -2360,9 +2384,36 @@ performed.
 * `last_page` indicates the last page to read.  By default, all pages
   are read.
 
-If you need to OCR uncommon languages, you may need to install
-extension packages on your system and edit the [`ocr languages`]
-configuration directive.
+### Running OCR tasks in the background
+
+Note that the OCR process usually takes a long time.  Unless the
+document is only one page long, the user will have to wait, looking at
+a spinner, for far too long.
+
+The best practice is to run OCR tasks in the background, using the
+[`background_action()`] function discussed above.
+
+The following example demonstrates how this can be done.  First, the
+user is asked to upload a PDF file.  Then, the OCR task is started in
+the background.  Then, the user is asked to answer another question,
+which will take significant time.  Hopefully, by the time the user
+finishes answering that question, the OCR will be finished.  But just
+in case it hasn't finished, the user will be shown a screen telling
+the user to wait.  This screen reloads every five seconds, so that
+when then OCR process does finish, the user will be able to proceed to
+the rest of the interview.
+
+{% include side-by-side.html demo="ocr-background" %}
+
+For more information about using [background processes], see the
+documentation for the [`background_action()`] function and its related
+functions, above.
+
+### Running OCR with languages other than English
+
+If you need to OCR languages other than English, you may need to
+install extension packages on your system and edit the
+[`ocr languages`] configuration directive.
 
 For example, if your server needs to OCR Arabic, you will need the
 `tesseract-ocr-ara` package, which is not installed by default.
@@ -2378,7 +2429,7 @@ You can associate the language code `ar` with the abbreviation used by
 ocr languages:
   ar: ara
 {% endhighlight %}
-  
+
 # <a name="storage"></a>Storing data
 
 ## <a name="redis"></a>With Redis
