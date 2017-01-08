@@ -1,0 +1,25 @@
+metadata:
+  title: Quote paragraphs
+  short title: Quote paragraphs
+  documentation: "http://docassemble.org/docs/functions.html#quote_paragraphs"
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: true
+question: |
+  Your allegations
+subquestion: |
+  You allege that:
+
+  ${ quote_paragraphs(allegations) }
+---
+question: |
+  What do you allege?
+subquestion: |
+  Be verbose.
+fields:
+  - Allegations: allegations
+    datatype: area

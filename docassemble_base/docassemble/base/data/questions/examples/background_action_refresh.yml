@@ -1,6 +1,6 @@
 metadata:
   title: Background action that refreshes the screen
-  example start: 4
+  example start: 2
   example end: 7
 ---
 modules:

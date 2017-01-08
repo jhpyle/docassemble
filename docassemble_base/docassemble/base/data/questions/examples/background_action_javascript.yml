@@ -1,6 +1,6 @@
 metadata:
   title: Background action that runs Javascript
-  example start: 4
+  example start: 2
   example end: 5
 ---
 modules:

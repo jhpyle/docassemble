@@ -122,7 +122,7 @@ def email_attachments(yaml_filename, user_info, user_code, secret, url, url_root
 def background_action(yaml_filename, user_info, session_code, secret, url, url_root, action, extra=None):
     if worker_controller is None:
         initialize_db()
-    docassemble.base.functions.set_uid(user_code)
+    docassemble.base.functions.set_uid(session_code)
     with worker_controller.flaskapp.app_context():
         sys.stderr.write("background_action: yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + "\n")
         worker_controller.set_request_active(False)
@@ -131,27 +131,34 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
         steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
         try:
             interview.assemble(user_dict, interview_status)
-        except:
-            pass
+        except Exception as e:
+            sys.stderr.write("Error in assembly: " + str(e))
+        #sys.stderr.write("Question type is " + str(interview_status.question.question_type) + "\n")
+        if not hasattr(interview_status, 'question'):
+            return(ReturnValue(extra=extra))
         if interview_status.question.question_type in ["restart", "exit"]:
+            #sys.stderr.write("Got restart or exit\n")
             worker_controller.reset_user_dict(session_code, yaml_filename)
             worker_controller.release_lock(session_code, yaml_filename)
         if interview_status.question.question_type == "response":
+            #sys.stderr.write("Got response\n")
             if hasattr(interview_status.question, 'all_variables'):
                 pass
             elif not hasattr(interview_status.question, 'binaryresponse'):
                 sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
         if interview_status.question.question_type == "backgroundresponse":
+            #sys.stderr.write("Got backgroudresponse\n")
             return ReturnValue(value=interview_status.question.backgroundresponse, extra=extra)
         if interview_status.question.question_type == "backgroundresponseaction":
+            #sys.stderr.write("Got backgroudresponseaction\n")
             new_action = interview_status.question.action
             interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, interface='worker', action=new_action['action'], arguments=new_action['arguments']))
             worker_controller.obtain_lock(session_code, yaml_filename)
             steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
             try:
                 interview.assemble(user_dict, interview_status)
-            except:
-                pass
+            except Exception as e:
+                sys.stderr.write("Error in assembly: " + str(e))
             # is this right?
             if str(user_info.get('the_user_id', None)).startswith('t'):
                 worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted)
@@ -161,4 +168,5 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
             if hasattr(interview_status, 'question') and interview_status.question.question_type == "backgroundresponse":
                 return ReturnValue(value=interview_status.question.backgroundresponse, extra=extra)
             return ReturnValue(value=new_action, extra=extra)
+        #sys.stderr.write("Got to end\n")
         return(ReturnValue(extra=extra))
