@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import datetime
 import pytz
+from PIL import Image
 from twilio.rest import TwilioRestClient
+import pyocr
+import pyocr.builders
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
 from docassemble.base.functions import comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, value, message, response, command, single_paragraph, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, objects_from_file, this_thread, static_image, action_arguments, action_argument, default_timezone, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables
@@ -19,9 +22,13 @@ import babel.dates
 import redis
 import re
 import phonenumbers
+import tempfile
+import os
+import shutil
+from subprocess import call
 from bs4 import BeautifulSoup
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'email_string', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'format_date', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'DARedis', 'SimpleTextMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'email_string', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'format_date', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'DARedis', 'SimpleTextMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file']
 
 class DummyObject(object):
     def __init__(self, *pargs, **kwargs):
@@ -1057,5 +1064,54 @@ def map_of(*pargs, **kwargs):
         the_map['center'] = the_map['markers'][0]
     if len(the_map['markers']) or 'center' in the_map:
         return '[MAP ' + codecs.encode(json.dumps(the_map).encode('utf-8'), 'base64').decode().replace('\n', '') + ']'
-    return '(Unable to display map)'
+    return word('(Unable to display map)')
     
+def ocr_file(pdf_file, language=None, first_page=None, last_page=None):
+    """Reads a PDF file with optical character recognition and returns the text."""
+    if not (isinstance(pdf_file, DAFile) or isinstance(pdf_file, DAFileList)):
+        return word("(Not a DAFile or DAFileList object)")
+    if isinstance(pdf_file, DAFile):
+        pdf_file = [pdf_file]
+    pdf_to_ppm = get_config("pdftoppm")
+    if pdf_to_ppm is None:
+        pdf_to_ppm = 'pdftoppm'
+    ocr_resolution = get_config("ocr dpi")
+    if ocr_resolution is None:
+        ocr_resolution = '300'
+    tools = pyocr.get_available_tools()
+    if len(tools) == 0:
+        return word('(OCR engine not available')
+    tool = tools[0]
+    langs = tool.get_available_languages()
+    if language is None:
+        language = get_language()
+    ocr_langs = get_config("ocr languages")
+    if ocr_langs is None:
+        ocr_langs = dict()
+    if language in ocr_langs and ocr_langs[language] in langs:
+        lang = ocr_langs[language]
+    else:
+        lang = langs[0]
+        logmessage("Could not get OCR language for language " + str(language) + "; using language " + str(lang))
+    page_text = list()
+    for doc in pdf_file:
+        if hasattr(doc, 'extension') and doc.extension != 'pdf':
+            return word("(Not a PDF file)")
+        path = doc.path()
+        directory = tempfile.mkdtemp()
+        prefix = os.path.join(directory, 'page')
+        args = [pdf_to_ppm, '-r', ocr_resolution]
+        if first_page is not None:
+            args.extend(['-f', first_page])
+        if last_page is not None:
+            args.extend(['-l', last_page])
+        args.extend(['-png', path, prefix])
+        result = call(args)
+        if result > 0:
+            return word("(Unable to extract images from PDF file)")
+        pages = sorted([os.path.join(directory, f) for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))])
+        for page in pages:
+            text = tool.image_to_string(Image.open(page), lang=lang, builder=pyocr.builders.TextBuilder())
+            page_text.append(text)
+        shutil.rmtree(directory)
+    return "\f".join(page_text)

@@ -232,7 +232,7 @@ class DAList(DAObject):
         if len(pargs) > 0:
             the_noun = pargs[0]
         the_noun = re.sub(r'.*\.', '', the_noun)
-        if len(self.elements) > 1 or len(self.elements) == 0:
+        if (len(self.elements) > 1 or len(self.elements) == 0 or ('plural' in kwargs and kwargs['plural'])) and not ('singular' in kwargs and kwargs['singular']):
             if 'capitalize' in kwargs and kwargs['capitalize']:
                 return capitalize(noun_plural(the_noun))
             else:

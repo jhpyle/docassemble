@@ -1355,10 +1355,10 @@ class Question:
         if type(target) is dict:
             if 'language' in target:
                 options['language'] = target['language']
-            if 'filename' not in target:
-                target['filename'] = word("Document")
             if 'name' not in target:
                 target['name'] = word("Document")
+            if 'filename' not in target:
+                target['filename'] = docassemble.base.functions.space_to_underscore(target['name'])
             if 'description' not in target:
                 target['description'] = ''
             if 'initial yaml' in target:
@@ -1461,7 +1461,7 @@ class Question:
             #logmessage("The content is " + str(target['content']))
             return({'name': TextObject(target['name'], names_used=self.mako_names), 'filename': TextObject(target['filename'], names_used=self.mako_names), 'description': TextObject(target['description'], names_used=self.mako_names), 'content': TextObject("\n".join(defs) + "\n" + target['content'], names_used=self.mako_names), 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
         elif type(target) is str:
-            return({'name': TextObject('Document'), 'filename': TextObject('document'), 'content': TextObject(target, names_used=self.mako_names), 'valid_formats': ['*'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
+            return({'name': TextObject('Document'), 'filename': TextObject('Document'), 'description': TextObject(''), 'content': TextObject(target, names_used=self.mako_names), 'valid_formats': ['*'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
         else:
             raise DAError("Unknown data type in process_attachment")
 

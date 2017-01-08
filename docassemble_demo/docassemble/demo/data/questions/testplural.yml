@@ -26,14 +26,6 @@ code: |
     balance_sheet_item = "asset"
 ---
 code: |
-  case.defendant.gathering = True
-  if client not in case.defendant and not client.is_plaintiff and \
-     client.is_defendant:
+  if not client.is_plaintiff and client.is_defendant:
     case.defendant.append(client)
-  if case.defendant.number_gathered() == 0:
-    case.defendant.appendObject(Individual)
-  while case.defendant.there_is_another:
-    case.defendant.appendObject(Individual)
-    del case.defendant.there_is_another
-  case.defendant.gathering = False
-  case.defendant.gathered = True
+  case.defendant.there_are_any = True

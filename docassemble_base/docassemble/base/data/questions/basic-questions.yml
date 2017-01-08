@@ -369,6 +369,11 @@ comment: |
 
   Example 2: What is John Doe's first child's name?
 ---
+generic object: DAList
+question: |
+  Are there any ${ x.as_noun(plural=True) }?
+yesno: x.there_are_any
+---
 generic object: Individual
 question: |
   ${ x.do_question('have', capitalize=True) } any children?
