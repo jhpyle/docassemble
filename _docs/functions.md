@@ -1344,6 +1344,10 @@ choices:
 ---
 {% endhighlight %}
 
+The value given to `set_language()` must be a two-character lowercase
+[ISO-639-1] code.  For example, Spanish is `es`, French is `fr`, and
+Arabic is `ar`.
+
 Using the optional `dialect` keyword argument, you can also set the
 dialect of the language.  The dialect is relevant only for the
 text-to-speech engine.  For example:
@@ -1361,10 +1365,13 @@ text-to-speech engine to use an Australian dialect.  (The dialect is
 relevant only for the text-to-speech engine, which is controlled by
 the [special variable `speak_text`].)
 
+For more information about languages in **docassemble**, see
+[language support].
+
 ## <a name="get_dialect"></a>get_dialect()
 
 Returns the current dialect, as set by the `dialect` keyword argument
-to the `set_language()` function.
+to the [`set_language()`] function.
 
 ## <a name="get_country"></a>get_country()
 
@@ -2332,6 +2339,46 @@ its elements are added to the list of selections.
 `objects_from_file()` is a utility function for initializing a group
 of objects from a [YAML] file written in a certain format.
 
+## <a name="ocr_file"></a>ocr_file()
+
+Given a PDF file, `ocr_file()` uses [optical character recognition] (OCR) to
+read the text of the file.  In the text returned, pages are
+separated by the [form feed character].
+
+{% include side-by-side.html demo="ocr" %}
+
+The first argument must be a [`DAFile`] or [`DAFileList`] object.
+
+The following optional keyword arguments affect the way OCR is
+performed.
+
+* `language` indicates the language of the document.  If not
+  specified, the language returned by `get_language()` is used.  The
+  language must be a two-character lowercase [ISO-639-1] code.
+* `first_page` indicates the first page to read.  By default, all
+  pages are read.
+* `last_page` indicates the last page to read.  By default, all pages
+  are read.
+
+If you need to OCR uncommon languages, you may need to install
+extension packages on your system and edit the [`ocr languages`]
+configuration directive.
+
+For example, if your server needs to OCR Arabic, you will need the
+`tesseract-ocr-ara` package, which is not installed by default.
+
+If using [Docker], you can ensure that the package is installed when
+the server starts by including `tesseract-ocr-ara` in the
+[`debian packages`] configuration directive.
+
+You can associate the language code `ar` with the abbreviation used by
+[Tesseract] by including the following in the [configuration]<span></span>:
+
+{% highlight yaml %}
+ocr languages:
+  ar: ara
+{% endhighlight %}
+  
 # <a name="storage"></a>Storing data
 
 ## <a name="redis"></a>With Redis
@@ -2496,6 +2543,7 @@ modules:
 [Mako]: http://www.makotemplates.org/
 [Content-Type header]: https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
 [Documents]: {{ site.baseurl }}/docs/documents.html
+[Docker]: {{ site.baseurl }}/docs/docker.html
 [Flask-Mail]: https://pythonhosted.org/Flask-Mail/
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [JSON]: https://en.wikipedia.org/wiki/JSON
@@ -2667,3 +2715,11 @@ modules:
 [PostgreSQL]: http://www.postgresql.org/
 [`checkin interval`]: {{ site.baseurl }}/docs/config.html#checkin interval
 [`all_variables()`]: #all_variables
+[form feed character]: https://en.wikipedia.org/wiki/Page_break#Form_feed
+[optical character recognition]: https://en.wikipedia.org/wiki/Optical_character_recognition
+[`get_language()`]: #get_language
+[`set_language()`]: #set_language
+[ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+[Tesseract]: https://en.wikipedia.org/wiki/Tesseract_(software)
+[`ocr languages`]: {{ site.baseurl }}/docs/config.html#ocr languages
+[`debian packages`]: {{ site.baseurl }}/docs/config.html#debian packages

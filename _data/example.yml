@@ -1404,6 +1404,21 @@
   question: |
     The fruits are ${ fruit }.
   ---
+"gather-fruit-incomplete": |-
+  ---
+  modules:
+    - docassemble.base.core
+  ---
+  objects:
+    - fruit: DAList
+  ---
+  mandatory: true
+  question: |
+    There are ${ fruit.number_as_word() }
+    fruits in all.
+  subquestion: |
+    The fruits are ${ fruit }.
+  ---
 "gather-fruit-number": |-
   ---
   modules:
@@ -2515,6 +2530,20 @@
   ---
   modules:
     - docassemble.base.util
+  ---
+"ocr": |-
+  ---
+  mandatory: true
+  question: |
+    Here is the text of the file
+  subquestion: |
+    ${ ocr_file(pdf_file) }
+  ---
+  question: |
+    Please upload a file
+  fields:
+    - File: pdf_file
+      datatype: file
   ---
 "optional-field": |-
   ---

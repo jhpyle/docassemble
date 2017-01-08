@@ -202,7 +202,8 @@ not need to make the user wait for the process to complete.
 **docassemble** allows tasks to be placed into a task queue and
 [run in the background].  While the user is busy answering other
 questions, the server can be hard at work conducting time-intensive
-operations.
+operations.  This is particularly useful for 
+[optical character recognition] tasks, which can take significant time.
 * **APIs for your interview** Interviews can be started with URLs that
 contain [embedded answers] to particular questions.  A third party
 application can interact with an ongoing interview by
@@ -501,3 +502,4 @@ the same interview on a single server.
 [live help]: {{ site.baseurl }}/docs/livehelp.html
 [text messaging interface]: {{ site.baseurl }}/docs/sms.html
 [store data]: {{ site.baseurl }}/docs/functions.html#storage
+[optical character recognition]: {{ site.baseurl }}/docs/functions.html#ocr_file

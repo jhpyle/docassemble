@@ -537,6 +537,17 @@ but at a lower resolution.  The `png_screen_resolution` directive
 defines the dots per inch to be used for conversion of PDF pages to
 PNG files for display in the web browser.
 
+<a name="ocr dpi"></a>OCR resolution
+
+If you use the [`ocr_file()`] function, the pages of the PDF file will
+be converted to images before being read by the OCR engine.  By
+default, the resolution used is 300 dpi.  To change this to something
+else, set the `ocr dpi` directive:
+
+{% highlight yaml %}
+ocr dpi: 500
+{% endhighlight %}
+
 ## <a name="show_login"></a>Hiding the login link
 
 If the `show_login` directive is set to `false`, users will not see a
@@ -804,6 +815,22 @@ The `enable` key must be set to `true` in order for the text-to-speech
 feature to work.  The `key` is the [VoiceRSS] API key.  The
 `languages` key refers to a dictionary that associates languages with
 default dialects to be used with that language.
+
+## <a name="ocr languages"></a>OCR language settings
+
+The [`ocr_file()`] function uses the [Tesseract] OCR application to
+extract text from PDF files.  One of the options for the OCR process
+is the language being recognized.  The abbreviations for language that
+[Tesseract] uses are different from those that **docassemble** uses
+([ISO-639-1] codes).  The `ocr languages` directive maps between
+[ISO-639-1] codes and the abbreviations that [Tesseract] uses.  The
+default values are:
+
+{% highlight yaml %}
+ocr languages:
+  en: eng
+  es: spa
+{% endhighlight %}
 
 ## <a name="aws"></a>Amazon Web Services directives
 
@@ -1206,3 +1233,5 @@ and Facebook API keys.
 [`default_sender`]: #default_sender
 [Python]: https://www.python.org/
 [Celery]: http://www.celeryproject.org/
+[`ocr_file()`]: {{ site.baseurl }}/docs/functions.html#ocr_file
+[Tesseract]: https://en.wikipedia.org/wiki/Tesseract_(software)
