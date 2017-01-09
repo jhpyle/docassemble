@@ -2868,6 +2868,9 @@ def index():
           daInformedChanged = true;
           return;
         }
+        if (daShowingHelp && subject == 'chatmessage'){
+          return;
+        }
         var target;
         var message;
         var waitPeriod = 3000;

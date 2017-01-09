@@ -14,7 +14,7 @@ code: |
 ---
 mandatory: true
 code: |
-  pdf_file
+  the_file
   the_task
   user_testimonial
   if not the_task.ready():
@@ -23,20 +23,20 @@ code: |
 question: |
   Please upload a file
 fields:
-  - File: pdf_file
-    datatype: file
+  - File: the_file
+    datatype: files
 ---
 code: |
   the_task = background_action('ocr_start', None)
 ---
 event: ocr_start
 code: |
-  the_text = ocr_file(pdf_file)
+  the_text = ocr_file(the_file)
   background_response_action('ocr_finish', text=the_text)
 ---
 event: ocr_finish
 code: |
-  text_of_pdf_file = action_argument('text')
+  text_of_the_file = action_argument('text')
   background_response()
 ---
 question: |
@@ -60,4 +60,4 @@ subquestion: |
 
   The document states:
 
-  ${ quote_paragraphs(text_of_pdf_file) }
+  ${ quote_paragraphs(text_of_the_file) }

@@ -1066,12 +1066,10 @@ def map_of(*pargs, **kwargs):
         return '[MAP ' + codecs.encode(json.dumps(the_map).encode('utf-8'), 'base64').decode().replace('\n', '') + ']'
     return word('(Unable to display map)')
     
-def ocr_file(pdf_file, language=None, first_page=None, last_page=None):
-    """Reads a PDF file with optical character recognition and returns the text."""
-    if not (isinstance(pdf_file, DAFile) or isinstance(pdf_file, DAFileList)):
+def ocr_file(image_file, language=None, first_page=None, last_page=None):
+    """Reads an image or PDF file with optical character recognition and returns the text."""
+    if not (isinstance(image_file, DAFile) or isinstance(image_file, DAFileList)):
         return word("(Not a DAFile or DAFileList object)")
-    if isinstance(pdf_file, DAFile):
-        pdf_file = [pdf_file]
     pdf_to_ppm = get_config("pdftoppm")
     if pdf_to_ppm is None:
         pdf_to_ppm = 'pdftoppm'
@@ -1093,25 +1091,35 @@ def ocr_file(pdf_file, language=None, first_page=None, last_page=None):
     else:
         lang = langs[0]
         logmessage("Could not get OCR language for language " + str(language) + "; using language " + str(lang))
+    if isinstance(image_file, DAFile):
+        image_file = [image_file]
+    temp_directory_list = list()
+    file_list = list()
+    for doc in image_file:
+        if hasattr(doc, 'extension'):
+            if doc.extension not in ['pdf', 'png', 'jpg']:
+                return word("(Not a readable image file)")
+            path = doc.path()
+            if doc.extension == 'pdf':
+                directory = tempfile.mkdtemp()
+                temp_directory_list.append(directory)
+                prefix = os.path.join(directory, 'page')
+                args = [pdf_to_ppm, '-r', ocr_resolution]
+                if first_page is not None:
+                    args.extend(['-f', first_page])
+                if last_page is not None:
+                    args.extend(['-l', last_page])
+                args.extend(['-png', path, prefix])
+                result = call(args)
+                if result > 0:
+                    return word("(Unable to extract images from PDF file)")
+                file_list.extend(sorted([os.path.join(directory, f) for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]))
+                continue
+            file_list.append(path)
     page_text = list()
-    for doc in pdf_file:
-        if hasattr(doc, 'extension') and doc.extension != 'pdf':
-            return word("(Not a PDF file)")
-        path = doc.path()
-        directory = tempfile.mkdtemp()
-        prefix = os.path.join(directory, 'page')
-        args = [pdf_to_ppm, '-r', ocr_resolution]
-        if first_page is not None:
-            args.extend(['-f', first_page])
-        if last_page is not None:
-            args.extend(['-l', last_page])
-        args.extend(['-png', path, prefix])
-        result = call(args)
-        if result > 0:
-            return word("(Unable to extract images from PDF file)")
-        pages = sorted([os.path.join(directory, f) for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))])
-        for page in pages:
-            text = tool.image_to_string(Image.open(page), lang=lang, builder=pyocr.builders.TextBuilder())
-            page_text.append(text)
+    for page in file_list:
+        text = tool.image_to_string(Image.open(page), lang=lang, builder=pyocr.builders.TextBuilder())
+        page_text.append(text)
+    for directory in temp_directory_list:
         shutil.rmtree(directory)
     return "\f".join(page_text)

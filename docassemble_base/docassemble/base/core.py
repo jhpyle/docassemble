@@ -190,23 +190,21 @@ class DAList(DAObject):
         there is only one element in the list or multiple elements.  E.g.,
         case.plaintiff.does_verb('sue') will return "sues" if there is one plaintiff
         and "sue" if there is more than one plaintiff."""
-        self.trigger_gather()
         if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
-            if len(self.elements) > 1:
+            if self.number() > 1:
                 tense = 'ppl'
             else:
                 tense = '3sgp'
             return verb_past(the_verb, tense)
         else:
-            if len(self.elements) > 1:
+            if self.number() > 1:
                 tense = 'pl'
             else:
                 tense = '3sg'
             return verb_present(the_verb, tense)
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except it returns the past tense of the verb."""        
-        self.trigger_gather()
-        if len(self.elements) > 1:
+        if self.number() > 1:
             tense = 'ppl'
         else:
             tense = '3sgp'
@@ -215,24 +213,22 @@ class DAList(DAObject):
         """Returns a human-readable expression of the object based on its instanceName,
         without making it plural.  E.g., case.plaintiff.child.as_singular_noun() 
         returns "child" even if there are multiple children."""
-        self.trigger_gather()
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
         return the_noun
     def possessive(self, target):
-        return possessify(self.as_noun(), target, plural=(len(self.elements) > 1))
+        return possessify(self.as_noun(), target, plural=(self.number() > 1))
     def as_noun(self, *pargs, **kwargs):
         """Returns a human-readable expression of the object based on its instanceName,
         using singular or plural depending on whether the list has one element or more
         than one element.  E.g., case.plaintiff.child.as_noun() returns "child" or
         "children," as appropriate.  If an argument is supplied, the argument is used
         instead of the instanceName."""
-        self.trigger_gather()
         the_noun = self.instanceName
         if len(pargs) > 0:
             the_noun = pargs[0]
         the_noun = re.sub(r'.*\.', '', the_noun)
-        if (len(self.elements) > 1 or len(self.elements) == 0 or ('plural' in kwargs and kwargs['plural'])) and not ('singular' in kwargs and kwargs['singular']):
+        if (self.number() > 1 or self.number() == 0 or ('plural' in kwargs and kwargs['plural'])) and not ('singular' in kwargs and kwargs['singular']):
             if 'capitalize' in kwargs and kwargs['capitalize']:
                 return capitalize(noun_plural(the_noun))
             else:
@@ -245,6 +241,8 @@ class DAList(DAObject):
     def number(self):
         """Returns the number of elements in the list.  Forces the gathering of the
         elements if necessary."""
+        if self.ask_number:
+            return self._target_or_actual()
         self.trigger_gather()
         return len(self.elements)
     def number_as_word(self):
@@ -302,7 +300,13 @@ class DAList(DAObject):
     def __iter__(self):
         self.trigger_gather()
         return self.elements.__iter__()
+    def _target_or_actual(self):
+        if hasattr(self, 'gathered') and self.gathered:
+            return len(self.elements)
+        return self.target_number
     def __len__(self):
+        if self.ask_number:
+            return self._target_or_actual()
         self.trigger_gather()
         return self.elements.__len__()
     def __delitem__(self, index):
@@ -364,8 +368,8 @@ class DAList(DAObject):
         return set(self.elements).issuperset(setify(other_set))
     def pronoun_possessive(self, target, **kwargs):
         """Given a word like "fish," returns "her fish," "his fish," or "their fish," as appropriate."""
-        self.trigger_gather()
-        if len(self.elements) == 1:
+        if self.number() == 1:
+            self.trigger_gather()
             return self.elements[0].pronoun_possessive(target, **kwargs)
         output = their(target, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -374,8 +378,8 @@ class DAList(DAObject):
             return(output)            
     def pronoun(self, **kwargs):
         """Returns a pronoun like "you," "her," or "him," "it", or "them," as appropriate."""
-        self.trigger_gather()
-        if len(self.elements) == 1:
+        if self.number() == 1:
+            self.trigger_gather()
             return self.elements[0].pronoun(**kwargs)
         output = word('them', **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -387,8 +391,8 @@ class DAList(DAObject):
         return self.pronoun(**kwargs)
     def pronoun_subjective(self, **kwargs):
         """Returns a pronoun like "you," "she," "he," or "they" as appropriate."""
-        self.trigger_gather()
-        if len(self.elements) == 1:
+        if self.number() == 1:
+            self.trigger_gather()
             return self.elements[0].pronoun_subjective(**kwargs)
         output = word('they', **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -459,23 +463,21 @@ class DADict(DAObject):
         keys.  E.g., player.does_verb('finish') will return "finishes" if there
         is one player and "finish" if there is more than one
         player."""
-        self.trigger_gather()
         if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
-            if len(self.elements) > 1:
+            if self.number() > 1:
                 tense = 'ppl'
             else:
                 tense = '3sgp'
             return verb_past(the_verb, tense)
         else:
-            if len(self.elements) > 1:
+            if self.number() > 1:
                 tense = 'pl'
             else:
                 tense = '3sg'
             return verb_present(the_verb, tense)
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except it returns the past tense of the verb."""        
-        self.trigger_gather()
-        if len(self.elements) > 1:
+        if self.number() > 1:
             tense = 'ppl'
         else:
             tense = '3sgp'
@@ -485,7 +487,6 @@ class DADict(DAObject):
         instanceName, without making it plural.  E.g.,
         player.as_singular_noun() returns "player" even if there are
         multiple players."""
-        self.trigger_gather()
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
         return the_noun        
@@ -496,24 +497,24 @@ class DADict(DAObject):
         player.as_noun() returns "player" or "players," as
         appropriate.  If an argument is supplied, the argument is used
         as the noun instead of the instanceName."""
-        self.trigger_gather()
         the_noun = self.instanceName
         if len(pargs) > 0:
             the_noun = pargs[0]
         the_noun = re.sub(r'.*\.', '', the_noun)
-        if len(self.elements) > 1 or len(self.elements) == 0:
+        if self.number() > 1 or self.number() == 0:
             return noun_plural(the_noun)
         else:
             return the_noun
     def number(self):
         """Returns the number of keys in the dictionary.  Forces the gathering of the
         dictionary items if necessary."""
+        if self.ask_number:
+            return self._target_or_actual()
         self.trigger_gather()
         return len(self.elements)
     def number_as_word(self):
         """Returns the number of keys in the dictionary, spelling out the number if ten 
         or below.  Forces the gathering of the dictionary items if necessary."""
-        self.trigger_gather()
         return nice_number(self.number())
     def gather(self, item_object_type=None, number=None, minimum=None):
         """Causes the dictionary items to be gathered and named.  Returns True."""
@@ -640,7 +641,13 @@ class DADict(DAObject):
     def __iter__(self):
         self.trigger_gather()
         return self.elements.__iter__()
+    def _target_or_actual(self):
+        if hasattr(self, 'gathered') and self.gathered:
+            return len(self.elements)
+        return self.target_number
     def __len__(self):
+        if self.ask_number:
+            return self._target_or_actual()
         self.trigger_gather()
         return self.elements.__len__()
     def __reversed__(self):
@@ -748,23 +755,21 @@ class DASet(DAObject):
         more than one player.
 
         """
-        self.trigger_gather()
         if ('past' in kwargs and kwargs['past'] == True) or ('present' in kwargs and kwargs['present'] == False):
-            if len(self.elements) > 1:
+            if self.number() > 1:
                 tense = 'ppl'
             else:
                 tense = '3sgp'
             return verb_past(the_verb, tense)
         else:
-            if len(self.elements) > 1:
+            if self.number() > 1:
                 tense = 'pl'
             else:
                 tense = '3sg'
             return verb_present(the_verb, tense)
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except it returns the past tense of the verb."""        
-        self.trigger_gather()
-        if len(self.elements) > 1:
+        if self.number() > 1:
             tense = 'ppl'
         else:
             tense = '3sgp'
@@ -776,7 +781,6 @@ class DASet(DAObject):
         multiple players.
 
         """
-        self.trigger_gather()
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
         return the_noun        
@@ -789,12 +793,11 @@ class DASet(DAObject):
         instead of the instanceName.
 
         """
-        self.trigger_gather()
         the_noun = self.instanceName
         if len(pargs) > 0:
             the_noun = pargs[0]
         the_noun = re.sub(r'.*\.', '', the_noun)
-        if len(self.elements) > 1 or len(self.elements) == 0:
+        if self.number() > 1 or self.number() == 0:
             return noun_plural(the_noun)
         else:
             return the_noun
@@ -803,6 +806,8 @@ class DASet(DAObject):
         the items if necessary.
 
         """
+        if self.ask_number:
+            return self._target_or_actual()
         self.trigger_gather()
         return len(self.elements)
     def number_as_word(self):
@@ -810,7 +815,6 @@ class DASet(DAObject):
         ten or below.  Forces the gathering of the items if necessary.
 
         """
-        self.trigger_gather()
         return nice_number(self.number())
     def gather(self, number=None, minimum=None):
         """Causes the items in the set to be gathered.  Returns True.
@@ -855,7 +859,13 @@ class DASet(DAObject):
     def __iter__(self):
         self.trigger_gather()
         return self.elements.__iter__()
+    def _target_or_actual(self):
+        if hasattr(self, 'gathered') and self.gathered:
+            return len(self.elements)
+        return self.target_number
     def __len__(self):
+        if self.ask_number:
+            return self._target_or_actual()
         self.trigger_gather()
         return self.elements.__len__()
     def __reversed__(self):

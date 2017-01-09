@@ -12,10 +12,10 @@ mandatory: true
 question: |
   Here is the text of the file
 subquestion: |
-  ${ ocr_file(pdf_file) }
+  ${ ocr_file(the_file) }
 ---
 question: |
   Please upload a file
 fields:
-  - File: pdf_file
-    datatype: file
+  - File: the_file
+    datatype: files

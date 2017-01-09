@@ -1,0 +1,32 @@
+metadata:
+  title: OCR machine learning
+  example start: 2
+  example end: 5
+---
+modules:
+  - docassemble.base.util
+---
+code: |
+  ml = SimpleTextMachineLearner('ocr_ai')
+---
+initial: true
+code: |
+  if defined('classification'):
+    entry_to_classify.classify(classification)
+    del classification
+  entry_to_classify = ml.one_unclassified_entry()
+  if entry_to_classify is not None:
+    need(classification)
+---
+question: |
+  How should this be classified?
+subquestion: |
+  ${ entry_to_classify.independent }
+fields:
+  - no label: classification
+---
+mandatory: true
+question: |
+  There is nothing left to classify.
+buttons:
+  - Check again: refresh

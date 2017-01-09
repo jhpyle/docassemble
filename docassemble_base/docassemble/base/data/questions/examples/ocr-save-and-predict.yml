@@ -1,0 +1,60 @@
+metadata:
+  title: OCR machine learning
+  short title: OCR machine learning
+  example start: 3
+  example end: 7
+---
+modules:
+  - docassemble.base.util
+---
+initial: true
+code: |
+  process_action()
+---
+mandatory: true
+code: |
+  the_file
+  the_task
+  if not the_task.ready():
+    waiting_screen
+  ml = SimpleTextMachineLearner('ocr_ai')
+  ml.save_for_classification(phrase)
+  predictions = ml.predict(phrase)
+---
+question: |
+  Please upload a file
+fields:
+  - File: the_file
+    datatype: file
+---
+code: |
+  the_task = background_action('ocr_start', None)
+---
+event: ocr_start
+code: |
+  background_response_action('ocr_finish', text=ocr_file(the_file))
+---
+event: ocr_finish
+code: |
+  phrase = action_argument('text')
+  background_response()
+---
+event: waiting_screen
+reload: 5
+question: |
+  Please wait.
+---
+mandatory: true
+question: |
+  The prediction
+subquestion: |
+  % if len(predictions):
+  The prediction was:
+
+  > ${ predictions[0] }
+  % else:
+  There is not enough training data
+  to make a prediction yet.
+  % endif
+buttons:
+  - Restart: restart
