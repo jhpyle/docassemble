@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 import pytz
-from PIL import Image
+from PIL import Image, ImageEnhance
 from twilio.rest import TwilioRestClient
 import pyocr
 import pyocr.builders
@@ -1118,7 +1118,14 @@ def ocr_file(image_file, language=None, first_page=None, last_page=None):
             file_list.append(path)
     page_text = list()
     for page in file_list:
-        text = tool.image_to_string(Image.open(page), lang=lang, builder=pyocr.builders.TextBuilder())
+        image = Image.open(page)
+        color = ImageEnhance.Color(image)
+        bw = color.enhance(0.0)
+        bright = ImageEnhance.Brightness(bw)
+        brightened = bright.enhance(1.5)
+        contrast = ImageEnhance.Contrast(brightened)
+        final_image = contrast.enhance(2.0)
+        text = tool.image_to_string(final_image, lang=lang, builder=pyocr.builders.TextBuilder())
         page_text.append(text)
     for directory in temp_directory_list:
         shutil.rmtree(directory)
