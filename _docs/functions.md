@@ -2379,10 +2379,37 @@ performed.
 * `language` indicates the language of the document.  If not
   specified, the language returned by `get_language()` is used.  The
   language must be a two-character lowercase [ISO-639-1] code.
-* `first_page` indicates the first page to read.  By default, all
-  pages are read.
-* `last_page` indicates the last page to read.  By default, all pages
-  are read.
+* `psm` indicates the [Tesseract] page segmentation mode.  The default
+is 6 ("assume a uniform block of text").  The choices are:
+    * 0: Orientation and script detection (OSD) only.
+    * 1: Automatic page segmentation with OSD.
+    * 2: Automatic page segmentation, but no OSD, or OCR.
+    * 3: Fully automatic page segmentation, but no OSD. (Default)
+    * 4: Assume a single column of text of variable sizes.
+    * 5: Assume a single uniform block of vertically aligned text.
+    * 6: Assume a single uniform block of text.
+    * 7: Treat the image as a single text line.
+    * 8: Treat the image as a single word.
+    * 9: Treat the image as a single word in a circle.
+    * 10: Treat the image as a single character.
+
+In addition, the following optional parameters, which are passed to
+[pdftoppm], customize the conversion of PDF files:
+
+* `f` indicates the first page of the PDF file to read.  By
+  default, all pages are read.
+* `l` indicates the last page of the PDF file to read.  By
+  default, all pages are read.
+* `x`: for cropping PDF pages.  Indicates the x-coordinate of the crop
+  area's top left corner, in pixels.  (By default, PDF files are
+  converted at 300 dpi unless another value is given by the
+  [`ocr dpi`] configuration directive.)
+* `y`: for cropping PDF pages.  Indicates the y-coordinate of the crop
+  area's top left corner, in pixels.
+* `W`: for cropping PDF pages.  Indicates the width of the crop area
+  in pixels (default is 0).
+* `H`: for cropping PDF pages.  Indicates the height of the crop area
+  in pixels (default is 0).
 
 ### Running OCR tasks in the background
 
@@ -2774,3 +2801,5 @@ modules:
 [Tesseract]: https://en.wikipedia.org/wiki/Tesseract_(software)
 [`ocr languages`]: {{ site.baseurl }}/docs/config.html#ocr languages
 [`debian packages`]: {{ site.baseurl }}/docs/config.html#debian packages
+[`ocr dpi`]: {{ site.baseurl }}/docs/config.html#ocr dpi
+[pdftoppm]: http://www.foolabs.com/xpdf/download.html
