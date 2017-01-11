@@ -1,3 +1,8 @@
+metadata:
+  title: Recipe
+  documentation: "http://docassemble.org/docs/objects.html"
+  example start: 1
+  example end: 6
 ---
 modules:
   - docassemble.demo.cooking
@@ -30,4 +35,4 @@ question: |
 fields:
   - no label: x.instructions
     datatype: area
----
+

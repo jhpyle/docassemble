@@ -1,0 +1,28 @@
+metadata:
+  title: Objects have independent existence
+  short title: Objects
+  documentation: "http://docassemble.org/docs/objects.html"
+  example start: 4
+  example end: 4
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - user: Individual
+---
+code: |
+  trustee = user
+---
+mandatory: true
+question: |
+  % if user is trustee:
+  As the trustee of the estate, you need to understand that it is
+  your fiduciary duty to safeguard the assets of the estate.
+  % elif user is grantee:
+  You are the grantee, which means that ${ trustee } is required to
+  safeguard the assets of the estate on your behalf.
+  % else:
+  ${ trustee } will safeguard the assets of the estate on behalf of
+  ${ grantee }.
+  % endif

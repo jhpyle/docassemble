@@ -13,8 +13,8 @@ objects:
 generic object: Individual
 sets: x.allergy
 code: |
-  x.initializeAttribute('allergy', DAList)
----  
+  x.allergy = DAList()
+---
 question: |
   Is there another person?
 yesno: person.there_is_another

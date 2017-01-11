@@ -7,7 +7,7 @@ objects:
 ---
 sets: tree.branch
 code: |
-  tree.initializeAttribute('branch', DAObject)
+  tree.branch = DAObject()
 ---
 mandatory: true
 question: |

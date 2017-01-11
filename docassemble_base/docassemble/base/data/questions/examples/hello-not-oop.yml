@@ -1,0 +1,14 @@
+metadata:
+  title: Not object oriented
+  documentation: "http://docassemble.org/docs/objects.html"
+  example start: 1
+  example end: 2
+---
+question: What is your name?
+fields:
+  - First: user_first_name
+  - Last: user_last_name
+---
+question: |
+  Hello, ${ user_first_name } ${ user_last_name }!
+mandatory: true

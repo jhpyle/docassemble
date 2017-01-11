@@ -11,7 +11,6 @@ import titlecase
 from docassemble.base.logger import logmessage
 from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError
 import locale
-import json
 import urllib
 import codecs
 import base64
@@ -20,7 +19,6 @@ import ast
 import datetime
 import threading
 import astunparse
-import yaml
 import sys
 import tzlocal
 import us
@@ -28,7 +26,7 @@ import pycountry
 import phonenumbers
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'objects_from_file', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables']
 
 debug = False
 default_dialect = 'us'
@@ -309,38 +307,6 @@ def set_info(**kwargs):
     """Used to set the values of global variables you wish to retrieve through get_info()."""
     for att, value in kwargs.iteritems():
         setattr(this_thread, att, value)
-
-def objects_from_file(file_ref):
-    """A utility function for initializing a group of objects from a YAML file written in a certain format."""
-    file_info = file_finder(file_ref)
-    if 'path' not in file_info:
-        raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' not found')
-    objects = list()
-    with open(file_info['fullpath'], 'r') as fp:
-        for document in yaml.load_all(fp):
-            if type(document) is not dict:
-                raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained a document that was not a YAML dictionary')
-            if len(document):
-                if not ('object' in document and 'items' in document):
-                    raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained a document that did not contain an object and items declaration')
-                if type(document['items']) is not list:
-                    raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained a document the items declaration for which was not a dictionary')
-                constructor = None
-                if document['object'] in globals():
-                    contructor = globals()[document['object']]
-                elif document['object'] in locals():
-                    contructor = locals()[document['object']]
-                if not constructor:
-                    if 'module' in document:
-                        new_module = __import__(document['module'], globals(), locals(), [document['object']], -1)
-                        constructor = getattr(new_module, document['object'], None)
-                if not constructor:
-                    raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained a document for which the object declaration, ' + str(document['object']) + ' could not be found')
-                for item in document['items']:
-                    if type(item) is not dict:
-                        raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained an item, ' + str(item) + ' that was not expressed as a dictionary')
-                    objects.append(constructor(**item))
-    return objects
 
 word_collection = {
     'es': {
@@ -1166,6 +1132,10 @@ def response(*pargs, **kwargs):
     """Sends a custom HTTP response."""
     raise ResponseError(*pargs, **kwargs)
 
+def json_response(data):
+    """Sends data in JSON format as an HTTP response."""
+    raise ResponseError(json.dumps(data), content_type="application/json")
+
 def variables_as_json():
     """Sends an HTTP response with all variables in JSON format."""
     raise ResponseError(None, all_variables=True)
@@ -1734,3 +1704,8 @@ def type_name(the_object):
     if m:
         return m.group(1)
     return name
+
+def inspector():
+    frame = inspect.stack()[1][0]
+    for key in frame.__dict__.keys():
+        sys.stderr.write(str(key) + "\n")

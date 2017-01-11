@@ -38,7 +38,7 @@ yesno: witness.there_is_another
 generic object: Individual
 sets: x.favorite_food
 code: |
-  x.initializeAttribute('favorite_food', DAList)
+  x.favorite_food = DAList()
 ---
 generic object: Individual
 code: |

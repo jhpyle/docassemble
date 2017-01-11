@@ -1,3 +1,9 @@
+metadata:
+  title: Periodic value attributes
+  short title: Periodic value
+  documentation: "http://docassemble.org/docs/objects.html"
+  example start: 1
+  example end: 5
 ---
 modules:
   - docassemble.base.legal
@@ -21,14 +27,10 @@ fields:
       - Monthly: 12
       - Per week: 54
 ---
+mandatory: true
 question: |
   % if user_salary.exists:
   You make ${ currency(user_salary) } per year.
   % else:
   Get a job!
   % endif
-sets: all_done
----
-mandatory: true
-code: all_done
----

@@ -228,6 +228,7 @@ last_access_hours: "http://docassemble.org/docs/functions.html#last_access_hours
 last_access_minutes: "http://docassemble.org/docs/functions.html#last_access_minutes"
 message: "http://docassemble.org/docs/functions.html#message"
 response: "http://docassemble.org/docs/functions.html#response"
+json_response: "http://docassemble.org/docs/functions.html#json_response"
 command: "http://docassemble.org/docs/functions.html#command"
 single_paragraph: "http://docassemble.org/docs/functions.html#single_paragraph"
 quote_paragraphs: "http://docassemble.org/docs/functions.html#quote_paragraphs"

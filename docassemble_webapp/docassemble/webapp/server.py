@@ -2846,6 +2846,32 @@ def index():
       var daSpinnerTimeout = null;
       var daSubmitter = null;
       var daCsrf = """ + repr(str(generate_csrf())) + """;
+      function url_action(action, args){
+          if (args == null){
+              args = {};
+          }
+          data = {action: action, arguments: args};
+          return '?action=' + encodeURIComponent(btoa(JSON.stringify(data)));
+      }
+      function url_action_call(action, args, callback){
+          if (args == null){
+              args = {};
+          }
+          if (callback == null){
+              callback = function(){};
+          }
+          var data = {action: action, arguments: args};
+          $.ajax({
+            type: "GET",
+            url: "?action=" + encodeURIComponent(btoa(JSON.stringify(data))),
+            success: callback,
+            error: function(xhr, status, error){
+              setTimeout(function(){
+                daProcessAjaxError(xhr, status, error);
+              }, 0);
+            }
+          });
+      }
       function userNameString(data){
           if (data.hasOwnProperty('temp_user_id')){
               return """ + repr(str(word("anonymous visitor"))) + """ + ' ' + data.temp_user_id;

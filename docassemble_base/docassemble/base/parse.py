@@ -2098,7 +2098,7 @@ class Interview:
                                     m = re.search(r"(.*)\.(.*)", variable)
                                     variable = m.group(1)
                                     attribute = m.group(2)
-                                    command = variable + ".initializeAttribute(name='" + attribute + "', objectType=" + object_type + ")"
+                                    command = variable + "." + attribute + " = " + object_type + "()"
                                     #logmessage("Running " + command)
                                     exec(command, user_dict)
                                 else:
@@ -2484,7 +2484,7 @@ class Interview:
                                         m = re.search(r"(.*)\.(.*)", variable)
                                         variable = m.group(1)
                                         attribute = m.group(2)
-                                        command = variable + ".initializeAttribute(name='" + attribute + "', objectType=" + object_type + ")"
+                                        command = variable + "." + attribute + " = " + object_type + "()"
                                         #logmessage("Running " + command)
                                         exec(command, user_dict)
                                     else:

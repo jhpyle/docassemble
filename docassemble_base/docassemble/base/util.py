@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 import datetime
 import pytz
+import yaml
 from PIL import Image, ImageEnhance
 from twilio.rest import TwilioRestClient
 import pyocr
 import pyocr.builders
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
-from docassemble.base.functions import comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, value, message, response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, objects_from_file, this_thread, static_image, action_arguments, action_argument, default_timezone, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables
+from docassemble.base.functions import comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, this_thread, static_image, action_arguments, action_argument, default_timezone, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables
 from docassemble.base.core import DAObject, DAList, DADict, DASet, DAFile, DAFileCollection, DAFileList, DATemplate, selections
 from decimal import Decimal
 import sys
@@ -28,7 +29,7 @@ import shutil
 from subprocess import call
 from bs4 import BeautifulSoup
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'email_string', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'format_date', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'DARedis', 'SimpleTextMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'email_string', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'format_date', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'DARedis', 'SimpleTextMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file']
 
 class DummyObject(object):
     def __init__(self, *pargs, **kwargs):
@@ -434,7 +435,7 @@ class IndividualName(Name):
 class Address(DAObject):
     """A geographic address."""
     def init(self, **kwargs):
-        self.initializeAttribute('location', LatitudeLongitude)
+        self.location = LatitudeLongitude()
         self.geolocated = False
         return super(Address, self).init(**kwargs)
     def __str__(self):
@@ -477,7 +478,7 @@ class Address(DAObject):
                     if 'types' in component and 'long_name' in component:
                         for geo_type, addr_type in geo_types.iteritems():
                             if geo_type in component['types'] and not hasattr(self, addr_type):
-                                logmessage("Setting " + str(addr_type) + " to " + str(getattr(results[0], geo_type)) + " from " + str(geo_type))
+                                #logmessage("Setting " + str(addr_type) + " to " + str(getattr(results[0], geo_type)) + " from " + str(geo_type))
                                 setattr(self, addr_type, component['long_name'])
         else:
             logmessage("valid not ok: result count was " + str(len(results)))
@@ -506,9 +507,10 @@ class Address(DAObject):
 class Person(DAObject):
     """Represents a legal or natural person."""
     def init(self, **kwargs):
-        self.initializeAttribute('name', Name)
-        self.initializeAttribute('address', Address)
-        self.initializeAttribute('location', LatitudeLongitude)
+        if not hasattr(self, 'name'):
+            self.name = Name()
+        self.address = Address()
+        self.location = LatitudeLongitude()
         if 'name' in kwargs:
             self.name.text = kwargs['name']
             del kwargs['name']
@@ -537,10 +539,10 @@ class Person(DAObject):
             return True
         return False
     def __setattr__(self, attrname, value):
-        if attrname == 'name' and type(value) == str:
+        if attrname == 'name' and type(value) in [str, unicode]:
             self.name.text = value
         else:
-            self.__dict__[attrname] = value
+            return super(Person, self).__setattr__(attrname, value)
     def __str__(self):
         return self.name.full()
     def pronoun_objective(self, **kwargs):
@@ -570,7 +572,7 @@ class Person(DAObject):
         if self is this_thread.user:
             output = word('are you', **kwargs)
         else:
-            output = is_word(self.full(), **kwargs)
+            output = is_word(self.name.full(), **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
         else:
@@ -646,11 +648,11 @@ class Person(DAObject):
 class Individual(Person):
     """Represents a natural person."""
     def init(self, **kwargs):
-        self.initializeAttribute('name', IndividualName)
-        self.initializeAttribute('child', ChildList)
-        self.initializeAttribute('income', Income)
-        self.initializeAttribute('asset', Asset)
-        self.initializeAttribute('expense', Expense)
+        self.name = IndividualName()
+        self.child = ChildList()
+        self.income = Income()
+        self.asset = Asset()
+        self.expense = Expense()
         return super(Individual, self).init(**kwargs)
     def identified(self):
         """Returns True if the individual's name has been set.  Otherwise, returns False."""
@@ -834,7 +836,7 @@ class OfficeList(DAList):
 class Organization(Person):
     """Represents a company or organization."""
     def init(self, **kwargs):
-        self.initializeAttribute('office', OfficeList)
+        self.office = OfficeList()
         if 'offices' in kwargs:
             if type(kwargs['offices']) is list:
                 for office in kwargs['offices']:
@@ -1066,8 +1068,9 @@ def map_of(*pargs, **kwargs):
         return '[MAP ' + codecs.encode(json.dumps(the_map).encode('utf-8'), 'base64').decode().replace('\n', '') + ']'
     return word('(Unable to display map)')
     
-def ocr_file(image_file, language=None, first_page=None, last_page=None):
-    """Reads an image or PDF file with optical character recognition and returns the text."""
+def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W=None, H=None):
+    """Runs optical character recognition on one or more image files or PDF
+    files and returns the recognized text."""
     if not (isinstance(image_file, DAFile) or isinstance(image_file, DAFileList)):
         return word("(Not a DAFile or DAFileList object)")
     pdf_to_ppm = get_config("pdftoppm")
@@ -1097,7 +1100,7 @@ def ocr_file(image_file, language=None, first_page=None, last_page=None):
     file_list = list()
     for doc in image_file:
         if hasattr(doc, 'extension'):
-            if doc.extension not in ['pdf', 'png', 'jpg']:
+            if doc.extension not in ['pdf', 'png', 'jpg', 'gif']:
                 return word("(Not a readable image file)")
             path = doc.path()
             if doc.extension == 'pdf':
@@ -1105,10 +1108,18 @@ def ocr_file(image_file, language=None, first_page=None, last_page=None):
                 temp_directory_list.append(directory)
                 prefix = os.path.join(directory, 'page')
                 args = [pdf_to_ppm, '-r', ocr_resolution]
-                if first_page is not None:
-                    args.extend(['-f', first_page])
-                if last_page is not None:
-                    args.extend(['-l', last_page])
+                if f is not None:
+                    args.extend(['-f', f])
+                if l is not None:
+                    args.extend(['-l', l])
+                if x is not None:
+                    args.extend(['-x', x])
+                if y is not None:
+                    args.extend(['-y', y])
+                if W is not None:
+                    args.extend(['-W', W])
+                if H is not None:
+                    args.extend(['-H', H])
                 args.extend(['-png', path, prefix])
                 result = call(args)
                 if result > 0:
@@ -1125,8 +1136,41 @@ def ocr_file(image_file, language=None, first_page=None, last_page=None):
         brightened = bright.enhance(1.5)
         contrast = ImageEnhance.Contrast(brightened)
         final_image = contrast.enhance(2.0)
-        text = tool.image_to_string(final_image, lang=lang, builder=pyocr.builders.TextBuilder())
+        text = tool.image_to_string(final_image, lang=lang, builder=pyocr.builders.TextBuilder(tesseract_layout=psm))
         page_text.append(text)
     for directory in temp_directory_list:
         shutil.rmtree(directory)
     return "\f".join(page_text)
+
+def objects_from_file(file_ref):
+    """A utility function for initializing a group of objects from a YAML file written in a certain format."""
+    file_info = file_finder(file_ref)
+    if 'path' not in file_info:
+        raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' not found')
+    objects = list()
+    with open(file_info['fullpath'], 'r') as fp:
+        for document in yaml.load_all(fp):
+            if type(document) is not dict:
+                raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained a document that was not a YAML dictionary')
+            if len(document):
+                if not ('object' in document and 'items' in document):
+                    raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained a document that did not contain an object and items declaration')
+                if type(document['items']) is not list:
+                    raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained a document the items declaration for which was not a dictionary')
+                constructor = None
+                if document['object'] in globals():
+                    contructor = globals()[document['object']]
+                elif document['object'] in locals():
+                    contructor = locals()[document['object']]
+                if not constructor:
+                    if 'module' in document:
+                        new_module = __import__(document['module'], globals(), locals(), [document['object']], -1)
+                        constructor = getattr(new_module, document['object'], None)
+                if not constructor:
+                    raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained a document for which the object declaration, ' + str(document['object']) + ' could not be found')
+                for item in document['items']:
+                    if type(item) is not dict:
+                        raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained an item, ' + str(item) + ' that was not expressed as a dictionary')
+                    objects.append(constructor(**item))
+    return objects
+

@@ -7,12 +7,12 @@ objects:
 ---
 mandatory: true
 code: |
-  neighborhood.initializeAttribute('garden', DAList)
-  neighborhood.garden.appendObject(DAObject)
-  neighborhood.garden.appendObject(DAObject)
-  neighborhood.garden[0].initializeAttribute('flower', DAList)
-  neighborhood.garden[1].initializeAttribute('flower', DAList)
-  neighborhood.garden[1].flower.appendObject(DAObject)
+  neighborhood.garden = DAList()
+  neighborhood.garden.append(DAObject())
+  neighborhood.garden.append(DAObject())
+  neighborhood.garden[0].flower = DAList()
+  neighborhood.garden[1].flower = DAList()
+  neighborhood.garden[1].flower.append(DAObject())
 ---
 mandatory: true
 question: |

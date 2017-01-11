@@ -1,0 +1,31 @@
+metadata:
+  title: Value attributes
+  documentation: "http://docassemble.org/docs/objects.html"
+  example start: 1
+  example end: 4
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - real_estate_holdings: Value
+---
+question: |
+  Do you have real estate holdings?
+yesno: real_estate_holdings.exists
+---
+question: |
+  How much real estate do you own?
+fields:
+  - Value: real_estate_holdings.value
+    datatype: currency
+---
+mandatory: true
+question: |
+  % if real_estate_holdings.exists:
+  The value of your real estate
+  holdings is
+  ${ currency(real_estate_holdings.value) }.
+  % else:
+  You do not have real estate.
+  % endif

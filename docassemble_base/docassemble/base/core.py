@@ -4,6 +4,7 @@ import re
 import codecs
 import redis
 import sys
+import inspect
 from docassemble.base.filter import file_finder
 from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize
 import docassemble.base.functions
@@ -48,11 +49,24 @@ class DAObject(object):
             thename = args[0]
             self.has_nonrandom_instance_name = True
         else:
-            thename = get_unique_name()
-            self.has_nonrandom_instance_name = False
+            frame = inspect.stack()[1][0]
+            the_names = frame.f_code.co_names
+            #sys.stderr.write("co_name is " + str(frame.f_code.co_names) + "\n")
+            if len(the_names) == 2:
+                thename = the_names[1]
+                self.has_nonrandom_instance_name = True
+            else:
+                thename = get_unique_name()
+                self.has_nonrandom_instance_name = False
         self.instanceName = str(thename)
         self.attrList = list()
         self.init(**kwargs)
+    def fix_instance_name(self, old_instance_name, new_instance_name):
+        self.instanceName = re.sub(r'^' + old_instance_name, new_instance_name, self.instanceName)
+        for aname in self.__dict__:
+            if isinstance(getattr(self, aname), DAObject):
+                getattr(self, aname).fix_instance_name(old_instance_name, new_instance_name)
+        self.has_has_nonrandom_instance_name = True
     def set_instance_name(self, thename):
         """Sets the instanceName attribute, if it is not already set."""
         if not self.has_nonrandom_instance_name:
@@ -120,6 +134,11 @@ class DAObject(object):
     def pronoun_subjective(self, **kwargs):        
         """Same as pronoun()."""
         return self.pronoun(**kwargs)
+    def __setattr__(self, key, value):
+        if isinstance(value, DAObject) and not value.has_nonrandom_instance_name:
+            value.has_nonrandom_instance_name = True
+            value.instanceName = self.instanceName + '.' + str(key)
+        return super(DAObject, self).__setattr__(key, value)
 
 class DAList(DAObject):
     """The base class for lists of things."""
@@ -166,6 +185,10 @@ class DAList(DAObject):
     def append(self, *pargs):
         """Adds the arguments to the end of the list."""
         for parg in pargs:
+            if isinstance(parg, DAObject) and not parg.has_nonrandom_instance_name:
+                parg.fix_instance_name(parg.instanceName, self.instanceName + '[' + str(len(self.elements)) + ']')
+                #parg.has_nonrandom_instance_name = True
+                #parg.instanceName = self.instanceName + '[' + str(len(self.elements)) + ']'
             self.elements.append(parg)
     def remove(self, *pargs):
         """Removes the given arguments from the list, if they are in the list"""
@@ -331,6 +354,9 @@ class DAList(DAObject):
                     self.appendObject(self.object_type)        
     def __setitem__(self, index, value):
         self._fill_up_to(index)
+        if isinstance(value, DAObject) and not value.has_nonrandom_instance_name:
+            value.has_nonrandom_instance_name = True
+            value.instanceName = self.instanceName + '[' + str(index) + ']'
         return self.elements.__setitem__(index, value)
     def __getitem__(self, index):
         try:

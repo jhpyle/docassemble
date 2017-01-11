@@ -1,3 +1,8 @@
+metadata:
+  title: DAObject
+  documentation: "http://docassemble.org/docs/objects.html"
+  example start: 1
+  example end: 5
 ---
 modules:
   - docassemble.base.core
@@ -8,7 +13,7 @@ objects:
 ---
 mandatory: true
 code: |
-  park.initializeAttribute('front_gate', DAObject)
+  park.front_gate = DAObject()
 ---
 mandatory: true
 question: |
@@ -20,4 +25,3 @@ question: |
   What is the color of the ${ x }?
 fields:
   - Color: x.color
----

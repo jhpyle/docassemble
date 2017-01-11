@@ -40,6 +40,12 @@ class MachineLearner(object):
             return yaml.safe_dump(output, default_flow_style=False)
         else:
             raise Exception("Unknown output format " + str(output_format))
+    def dependent_in_use(self):
+        in_use = set()
+        for record in db.session.query(MachineLearning.dependent).filter(MachineLearning.group_id == self.group_id).group_by(MachineLearning.dependent):
+            if record.dependent is not None:
+                in_use.add(pickle.loads(codecs.decode(record.dependent, 'base64')))
+        return sorted(in_use)
     def start_from_file(self, fileref):
         #logmessage("Starting from file " + str(fileref))
         existing_entry = MachineLearning.query.filter_by(group_id=self.group_id).first()

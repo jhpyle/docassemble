@@ -1,6 +1,6 @@
 ---
 modules:
-  - docassemble.base.legal
+  - docassemble.base.util
 ---
 objects:
   - recipient: DAList
@@ -13,8 +13,9 @@ code: |
   recipient.append(trustee)
   recipient.append(beneficiary)
   recipient.append(grantor)
-  recipient.appendObject(Individual)
-  recipient.appendObject(Individual)
+  recipient.append(Individual())
+  recipient.append(Individual())
+  recipient.gathered = True
 ---
 mandatory: true
 question: The recipients

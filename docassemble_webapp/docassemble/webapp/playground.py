@@ -68,9 +68,9 @@ class DAUpload(DAObject):
 class DAInterview(DAObject):
     def init(self, **kwargs):
         self.blocks = list()
-        self.initializeAttribute('questions', DAQuestionDict)
-        self.initializeAttribute('final_screen', DAQuestion)
-        self.initializeAttribute('decorations', DADecorationDict)
+        self.questions = DAQuestionDict()
+        self.final_screen = DAQuestion()
+        self.decorations = DADecorationDict()
         self.target_variable = None
         return super(DAInterview, self).init(**kwargs)
     def has_decorations(self):
@@ -146,7 +146,7 @@ class DAFieldList(DAList):
 
 class DAQuestion(DAObject):
     def init(self, **kwargs):
-        self.initializeAttribute('field_list', DAFieldList)
+        self.field_list = DAFieldList()
         self.templates_used = set()
         return super(DAQuestion, self).init(**kwargs)
     def names_reduced(self):
