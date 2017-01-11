@@ -11,46 +11,18 @@ short_title: Objects
 
 Here is a non-object-oriented way of saying hello to the user by name:
 
-{% highlight yaml %}
----
-question: What is your name?
-fields:
-  - First: user_first_name
-  - Last: user_last_name
----
-question: |
-  Hello, ${ user_first_name } ${ user_last_name }!
-mandatory: true
-{% endhighlight %}
+{% include side-by-side.html demo="hello-not-oop" %}
 
 A better way is to define `user` as a **docassemble** object,
 [`Individual`].
 
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.legal
----
-objects:
-  - user: Individual
----
-question: |
-  What's your name?
-fields:
-  - First: user.name.first
-  - Last: user.name.last
----
-question: |
-  Hello, ${ user }!
-mandatory: true
----
-{% endhighlight %}
+{% include side-by-side.html demo="hello-oop" %}
 
 As explained in the [fields] section, variable names cannot contain
 any punctuation other than the underscore.  So while `user_first_name`
-is a valid variable name, `user.name.first` must be something
-different.  Periods in [Python] are used to refer to the "attributes"
-of "objects."
+is a valid variable name, `user.name.first` must be referring to
+something different.  Periods in [Python] are used to refer to the
+"attributes" of "objects."
 
 An object is a special type of variable.  Rather than being a piece of
 text, like `user_first_name` is, the variable `user` is an "object"
@@ -80,7 +52,8 @@ on the date defined in the attribute `user.birthdate`:
 
 Methods are similar to attributes in that they are written with a `.`
 before them.  The difference is that they run code to produce a value,
-rather than simply accessing a stored value.
+rather than simply accessing a stored value.  You can tell by the
+presence of parentheses whether a method is being used.
 
 Using objects in your interviews has a number of advantages over
 using plain variables.
@@ -119,23 +92,10 @@ then you will define the variable `trustee` as being equivalent to the
 as `user.name.first`, and `trustee.phone_number` will always return
 the same thing as `user.phone_number`.  In addition,
 `trustee.possessive('phone number')` will return "your phone number."
-You can write code that checks for the equivalence of objects:
+You can write code that checks for the equivalence of objects, using
+the `is` operator:
 
-{% highlight yaml %}
----
-question: |
-  % if user is trustee:
-  As the trustee of the estate, you need to understand that it is
-  your fiduciary duty to safeguard the assets of the estate.
-  % elif user is grantee:
-  You are the grantee, which means that ${ trustee } is required to
-  safeguard the assets of the estate on your behalf.
-  % else:
-  ${ trustee } will safeguard the assets of the estate on behalf of
-  ${ grantee }.
-  % endif
----
-{% endhighlight %}
+{% include side-by-side.html demo="user-is-trustee" %}
 
 Object methods allow you to have a standard way of expressing
 information even though the methods used to gather the information may
@@ -144,38 +104,15 @@ vary depending on the circumstances.  For example, the
 attribute `age` is defined, and if so will return that instead of
 asking for the `birthdate` attribute:
 
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.legal
----
-objects:
-  - user: Individual
----
-question: |
-  How old are you?
-fields:
-  - Age in years: user.age
-    datatype: number
----
-mandatory: true
-code: |
-  need(user.age)
----
-mandatory: true
-question: |
-  You are ${ user.age_in_years() } years old.
----
-{% endhighlight %}
-
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testage2.yml){:target="_blank"}.)
+{% include side-by-side.html demo="testage2" %}
 
 Although objects are a fairly complicated concept, as you can see,
 they allow you to write code that looks much like plain English.
 
 In part, this is because objects allow you to do complicated things in
 an implicit way.  For example, writing `${ grantee }` in a [Mako]
-template implicitly calls the method `__str()__` on `grantee`.
+template will return the name of the grantee.  The interview
+implicitly calls the method `__str()__` on `grantee`.
 `grantee.__str()__` in turn calls `grantee.name.full()`, which strings
 together the `grantee`'s full name from its constituent parts
 (`name.first`, `name.middle`, `name.last`, and `name.suffix`), all but
@@ -238,43 +175,7 @@ start of a line indicates that the line is a section name.
 Once you install the package on your server, you can use your class in
 an interview:
 
-{% highlight yaml %}
----
-modules:
-  - docassemble.cooking.objects
----
-objects:
-  - submission: Recipe
----
-generic object: Recipe
-question: |
-  What do you want to cook?
-fields:
-  - Food: x.name
----
-generic object: Recipe
-question: |
-  What are the ingredients of ${ x.name }?
-fields:
-  - no label: x.ingredients
-    datatype: area
----
-generic object: Recipe
-question: |
-  What are the cooking instructions for making ${ x.name }?
-fields:
-  - no label: x.instructions
-    datatype: area
----
-mandatory: true
-question: |
-  Recipe for ${ submission.name }
-subquestion: |
-  ${ submission.summary() }
----
-{% endhighlight %}
-
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testcooking.yml){:target="_blank"}.)
+{% include side-by-side.html demo="madlibs" %}
 
 By the way, there is way to write the `summary()` method that is more
 friendly to other interview authors:
@@ -517,18 +418,17 @@ and let it warm up.
 
 All **docassemble** objects are instances of the `DAObject` class.
 `DAObject`s are different from normal [Python objects] because they
-have special attributes that allow their attributes to be set by
+have special features that allow their attributes to be set by
 **docassemble** questions.  If `fruit` is an ordinary [Python object]
 and you refer to `fruit.seeds` when `seeds` is not an existing
 attribute of `fruit`, [Python] will generate an [AttributeError].  But
-if `fruit` is a `DAObject`, **docassemble** will be able to intercept
-that error and ask a question that offers to define `fruit.seeds`, or
-ask a `generic object` question for object `DAObject` that offers to
+if `fruit` is a `DAObject`, **docassemble** will intercept that error
+and ask a question that offers to define `fruit.seeds`, or ask a
+[`generic object`] question for object `DAObject` that offers to
 define `x.seeds`.
 
-If you wish to add an attribute to a `DAObject`, where the attribute
-itself is a `DAObject`, you may need to use the
-`initializeAttribute()` method rather than using the `=` operator.
+From the interview author's perspective, `DAObject`s can be treated
+like ordinary [Python objects] in most ways, but there are exceptions.
 
 Suppose you try the following:
 
@@ -562,8 +462,8 @@ This will result in the following error:
 > incorporated by reference into the question file, despite reaching
 > the very end of the file.
 
-If you had a question that defined `long_branch.length` or a `generic
-object` question for the `x.length` where `x` is a `DAObject`, then
+If you had a question that defined `long_branch.length` or a [`generic
+object`] question for the `x.length` where `x` is a `DAObject`, then
 **docassemble** would use that question, but it is not able to ask for
 the length of the branch with `tree.branch.length` since the intrinsic
 name of the branch is `long_branch`, not `tree.branch`.
@@ -608,7 +508,7 @@ by functions, and **docassemble** does not realize that.  The
 to define `tree.branch`.  See [`sets`] for more information.
 
 One of the useful things about `DAObject`s is that you can write
-`generic object` questions that work in a wide variety of
+[`generic object`] questions that work in a wide variety of
 circumstances because the questions can use the variable name itself
 when forming the text of the question to ask the user.
 
@@ -619,33 +519,7 @@ human-friendly name for the object.
 
 For example:
 
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.core
----
-objects:
-  - park: DAObject
-  - turnip: DAObject
----
-mandatory: true
-code: |
-  park.initializeAttribute('front_gate', DAObject)
----
-mandatory: true
-question: |
-  The ${ turnip.color } turnip sat before the
-  ${ park.front_gate.color } gate.
----
-generic object: DAObject
-question: |
-  What is the color of the ${ x }?
-fields:
-  - Color: x.color
----
-{% endhighlight %}
-
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testdaobject.yml){:target="_blank"}.)
+{% include side-by-side.html demo="daobject" %}
 
 Although there is only one question for `x.color`, this question
 generates both "What is the color of the turnip?" and "What is the
@@ -684,46 +558,27 @@ will not return `friend.object_name()`; rather, it will return
 ## <a name="DAList"></a>DAList
 
 A `DAList` acts like an ordinary [Python list], except that
-**docassemble** can ask questions to define elements of the list.  For
-example, you could define `recipient` as a `DAList` containing five
-[`Individual`]s:
+**docassemble** can ask questions to define elements of the list.
 
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.legal
----
-objects:
-  - recipient: DAList
-  - trustee: Individual
-  - beneficiary: Individual
-  - grantor: Individual
----
-mandatory: true
-code: |
-  recipient.append(trustee)
-  recipient.append(beneficiary)
-  recipient.append(grantor)
-  recipient.appendObject(Individual)
-  recipient.appendObject(Individual)
----
-mandatory: true
-question: The recipients
-subquestion: |
-  % for person in recipient:
-  ${ person } is a recipient.
-  % endfor
----
-generic object: Individual
-question: |
-  What is the name of the ${ x.object_name() }?
-fields:
-  - First Name: x.name.first
-  - Last Name: x.name.last
----
-{% endhighlight %}
+Here is a simple "Mad Libs" interview that uses `DAList`s to keep
+track of words:
 
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testdalist.yml){:target="_blank"}.)
+{% include side-by-side.html demo="madlibs" %}
+
+The variable `i` is special.  When the interview encounters
+`person[0]` and sees that it is undefined, it will go searching for a
+question that offers to define `person[0]`.  If it does not find that,
+it will generalize and look for a question that offers to define
+`person[i]`.  If that is not found, it will generalize further and
+look for a question that offers to define `x[i]`.  Thus, the one
+[`generic object`] question, which defines `x[i]` where `x` is a
+`DAList`, will ask all of the questions in the interview.
+
+For another example, suppose you want to work with a list of
+prospective recipients of an e-mail.  You could define `recipient` as
+a `DAList` containing five [`Individual`]s
+
+{% include side-by-side.html demo="testdalist" %}
 
 This will result in the following five questions being asked:
 
@@ -748,7 +603,7 @@ example, when a `PartyList` object is created, the `.objectFunction`
 attribute is set to [`Person`].
 
 If you want greater control over the way the questions are asked, you
-could add a `generic object` question that is specific to the
+could add a [`generic object`] question that is specific to the
 recipients that were added with `appendObject()`.  For example:
 
 {% highlight yaml %}
@@ -765,12 +620,12 @@ fields:
 The names of the fourth and fifth recipients are capable of being
 asked by this question, since the pattern `x[i]` (where `x[i]` is an
 [`Individual`]) matches the intrinsic names `recipient[3]` and
-`recipient[4]`.  Since the other `generic object` question, which
+`recipient[4]`.  Since the other [`generic object`] question, which
 matches `x` (where `x` is an [`Individual`]) also matches `recipient[3]`
 and `recipient[4]`, the order in which you list the questions in the
 [YAML] file will determine which one is chosen.  Later-appearing questions
-take precedence, so you would need to place the second `generic
-object` question somewhere after the first `generic object` question
+take precedence, so you would need to place the second [`generic
+object`] question somewhere after the first [`generic object`] question
 in order for it to be chosen.
 
 Other methods available on a DAList are:
@@ -831,7 +686,9 @@ The `DAList` uses the following attributes:
   interview will define a [question] or [code block] that defines this
   attribute.
 * `is_there_another`: a boolean value, initially undefined, indicating
-  whether there are any additional values that should be gathered.
+whether there are any additional values that should be gathered.
+* `auto_gather`: a boolean value, initially `True`, indicating whether
+  the interview should attempt to 
 
 For more information about using [`DAList`] objects, see the section
 on [groups].
@@ -1530,33 +1387,7 @@ The `.exists` attribute facilitates asking questions about values
 using two screens: first, ask whether the value exists at all, then
 ask for the value.  For example:
 
-{% highlight yaml %}
----
-objects:
-  - real_estate_holdings: Value
----
-question: Do you have real estate holdings?
-yesno: real_estate_holdings.exists
----
-question: How much real estate do you own?
-fields:
-  - Value: real_estate_holdings.value
-    datatype: currency
----
-sets: all_done
-question: |
-  % if real_estate_holdings.exists:
-  The value of your real estate holdings is ${ currency(real_estate_holdings.value) }.
-  % else:
-  You do not have real estate.
-  % endif
----
-mandatory: true
-code: all_done
----
-{% endhighlight %}
-
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testvalue.yml){:target="_blank"}.)
+{% include side-by-side.html demo="exists" %}
 
 The [`FinancialList`] object, explained below, represents a list of
 `Value`s.  When computing a total of the values (with `.total()`), it
@@ -1589,44 +1420,7 @@ A `PeriodicValue` is a [`Value`] that has an additional attribute,
 `period`, which is a number representing the number of times per year
 the value applies.
 
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.legal
----
-objects:
-  - user_salary: PeriodicValue
----
-question: |
-  Do you make money from working?
-yesno: user_salary.exists
----
-question: |
-  What is your salary?
-fields:
-  - Amount: user_salary.value
-    datatype: currency
-  - Period: user_salary.period
-    default: 1
-    choices:
-      - Annually: 1
-      - Monthly: 12
-      - Per week: 54
----
-question: |
-  % if user_salary.exists:
-  You make ${ currency(user_salary) } per year.
-  % else:
-  Get a job!
-  % endif
-sets: all_done
----
-mandatory: true
-code: all_done
----
-{% endhighlight %}
-
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testperiodicvalue.yml){:target="_blank"}.)
+{% include side-by-side.html demo="periodic-value" %}
 
 <a name="PeriodicValue.amount"></a>To access the value of a
 `PeriodicValue` object, you can use the `.amount()` method.  If the
@@ -1931,6 +1725,109 @@ defined.
 body of the e-mail that will be sent.  See [objects] for an
 explanation of [`DATemplate`].
 
+# How docassemble objects are different
+
+For most purposes, **docassemble** objects behave just like [Python]
+objects.  However, they have special properties that facilitate the
+automatic asking of questions.  You may need to be mindful of these
+special properties if you do anything fancy in your code.
+
+In contrast to [Python objects] in general, **docassemble** objects
+are aware of their first-given names.  All **docassemble** objects
+have an `.instanceName` attribute.  So if you do:
+
+{% highlight yaml %}
+---
+objects:
+  - user: Individual
+---
+{% endhighlight %}
+
+then `user.instanceName` will be `'user'`, and
+`user.name.instanceName` will be `'user.name'`.
+
+You can also initialize `user` in standard [Python] fashion:
+
+{% highlight yaml %}
+---
+code: |
+  user = Individual()
+---
+{% endhighlight %}
+
+In this circumstance, **docassemble** uses some [magic] to set
+`.instanceName` to `user`.  However, the magic has its limits.  For
+example, the following does not work:
+
+{% highlight yaml %}
+---
+code: |
+  (user, advocate) = (Individual(), Individual())
+---
+{% endhighlight %}
+
+If you ever get an error message in **docassemble** referring to
+variables with a name like `qjAMyvGQYnyK`, and you are sure you did
+not create such a variable, then you have an object that was unable to
+determine its given name.
+
+If you want to initialize objects using expressions more complicated
+than `variable_name = ObjectName()`, you can -- you just need to
+include the variable name as an argument to the object name.  For
+example:
+
+{% highlight yaml %}
+---
+code: |
+  (user, advocate) = (Individual('user'), Individual('advocate'))
+---
+{% endhighlight %}
+
+Attribute initialization does not have this limitation.
+
+Always keep in mind that objects are given `.instanceName` attributes
+as early as possible, and once an `.instanceName` is assigned, it will
+not be overwritten unless you explicitly overwrite it.  For example,
+if you do:
+
+{% highlight yaml %}
+---
+code: |
+  user.name = IndividualName()
+---
+{% endhighlight %}
+
+then `user.name.instanceName` will return `'user.name'`, as you would
+expect.  But if you do:
+
+{% highlight yaml %}
+---
+code: |
+  cool_name = IndividualName()
+  cool_name.first = 'Groovy'
+  cool_name.last = 'Jones'
+---
+code: |
+  user.name = cool_name()
+---
+{% endhighlight %}
+
+then `user.name.instanceName` will be `'cool_name'`, not `'user.name'`.
+
+You can manually correct this:
+
+{% highlight yaml %}
+---
+code: |
+  user.name = cool_name()
+  user.name.instanceName = 'user.name'
+---
+{% endhighlight %}
+
+The `.instanceName` is not simply an internal attribute; it is used by
+the [`object_possessive()`] method to refer to the object in
+human-readable format.
+
 # Extending existing classes
 
 If you want to add a method to an existing **docassemble** class, such
@@ -1960,44 +1857,7 @@ methods that can be used on an [`Individual`] can be used on an
 
 This allows you to write an interview like the following:
 
-{% highlight yaml %}
----
-modules:
-  - docassemble.missouri_family_law.objects
----
-imports:
-  - us
----
-objects:
-  - lawyer: Attorney
----
-mandatory: true
-question: |
-  % if lawyer.can_practice_in('MA'):
-  ${ lawyer } can practice in Massachusetts.
-  % else:
-  Sorry, ${ lawyer } cannot practice in Massachusetts.
-  % endif
----
-generic object: Attorney
-question: |
-  In what state(s) ${ x.is_are_you() } admitted to practice?
-fields:
-  - no label: x.bar_admissions
-    datatype: checkboxes
-    code: |
-      us.states.mapping('abbr', 'name')
----
-generic object: Attorney
-question: |
-  What is the attorney's name?
-fields:
-  - First Name: x.name.first
-  - Last Name: x.name.last
----
-{% endhighlight %}
-
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testattorney.yml){:target="_blank"}.)
+{% include side-by-side.html demo="attorney" %}
 
 Note that the `lawyer` object works just like an [`Individual`] object.
 The `is_are_you()` method, which is defined in
@@ -2135,3 +1995,4 @@ and not an instance of the `Attorney` class.
 [code block]: {{ site.baseurl }}/docs/code.html#code
 [dict]: https://docs.python.org/2/library/stdtypes.html#dict
 [set]: https://docs.python.org/2/library/stdtypes.html#set
+[magic]: https://docs.python.org/2/library/inspect.html

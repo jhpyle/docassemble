@@ -375,6 +375,14 @@ embedded in the URL.  The result is an immediate PDF document.
 
 > [{{ site.demourl }}?i=docassemble.base:data/questions/examples/immediate_file.yml&name=Fred]({{ site.demourl }}?i=docassemble.base:data/questions/examples/immediate_file.yml&name=Fred){:target="_blank"}
 
+## <a name="json_response"></a>json_response()
+
+The function `json_response(data)` is a shorthand for
+`response(json.dumps(data), content_type="application/json")`.
+
+In other words, it takes a single argument and returns it as an HTTP
+response in [JSON] format.
+
 ## <a name="variables_as_json"></a>variables_as_json()
 
 The `variables_as_json()` function acts like [`response()`] in the

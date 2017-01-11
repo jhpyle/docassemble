@@ -178,6 +178,41 @@
     content: |
       Hello, world number three!
   ---
+"attorney": |-
+  ---
+  modules:
+    - docassemble.demo.attorney
+  ---
+  imports:
+    - us
+  ---
+  objects:
+    - lawyer: Attorney
+  ---
+  mandatory: true
+  question: |
+    % if lawyer.can_practice_in('MA'):
+    ${ lawyer } can practice in Massachusetts.
+    % else:
+    Sorry, ${ lawyer } cannot practice in Massachusetts.
+    % endif
+  ---
+  generic object: Attorney
+  question: |
+    In what state(s) ${ x.is_are_you() } admitted to practice?
+  fields:
+    - no label: x.bar_admissions
+      datatype: checkboxes
+      code: |
+        us.states.mapping('abbr', 'name')
+  ---
+  generic object: Attorney
+  question: |
+    What is the attorney's name?
+  fields:
+    - First Name: x.name.first
+    - Last Name: x.name.last
+  ---
 "audio": |-
   ---
   audio: schumann-clip-1.mp3
@@ -728,6 +763,30 @@
   modules:
     - docassemble.base.util
   ---
+"daobject": |-
+  ---
+  modules:
+    - docassemble.base.core
+  ---
+  objects:
+    - park: DAObject
+    - turnip: DAObject
+  ---
+  mandatory: true
+  code: |
+    park.front_gate = DAObject()
+  ---
+  mandatory: true
+  question: |
+    The ${ turnip.color } turnip sat before the
+    ${ park.front_gate.color } gate.
+  ---
+  generic object: DAObject
+  question: |
+    What is the color of the ${ x }?
+  fields:
+    - Color: x.color
+  ---
 "database_storage": "---\nmandatory: true\ncode: |\n  write_record('fruit', favorite_fruit)\n\
   ---\nreconsider: true\ncode: |\n  fruit_summary = ''\n  records = read_records('fruit')\n\
   \  for id in records:\n    fruit_summary += \"* \" + str(records[id]) + \"\\n\"\n\
@@ -900,6 +959,24 @@
     when you can resume the interview.
   buttons:
     - Exit: leave
+  ---
+"exists": |-
+  ---
+  modules:
+    - docassemble.base.util
+  ---
+  objects:
+    - real_estate_holdings: Value
+  ---
+  question: |
+    Do you have real estate holdings?
+  yesno: real_estate_holdings.exists
+  ---
+  question: |
+    How much real estate do you own?
+  fields:
+    - Value: real_estate_holdings.value
+      datatype: currency
   ---
 "exit": |-
   ---
@@ -1336,6 +1413,44 @@
       datatype: integer
       min: 0
   ---
+"gather-dict-number": |-
+  ---
+  modules:
+    - docassemble.base.util
+  ---
+  objects:
+    - fruit: DADict
+  ---
+  mandatory: true
+  code: |
+    fruit.ask_number = True
+  ---
+  mandatory: true
+  question: |
+    There
+    ${ fruit.does_verb("is") }
+    ${ fruit.number_as_word() }
+    fruits in all.
+  subquestion: |
+    % for item in fruit:
+    The fruit ${ item } has
+    ${ fruit[item] } seeds.
+    % endfor
+  ---
+  question: |
+    How many fruit should be added
+    to the database?
+  fields:
+    - Number: fruit.target_number
+      datatype: integer
+      min: 0
+  ---
+  question: |
+    What fruit should be added to
+    the database?
+  fields:
+    - Fruit: fruit.new_item_name
+  ---
 "gather-dict-object": "---\nmodules:\n  - docassemble.base.core\n---\nobjects:\n \
   \ - pet: DADict\n---\nmandatory: true\ncode: |\n  pet.object_type = DAObject\n---\n\
   mandatory: true\nquestion: |\n  You have ${ pet.number_as_word() }\n  pets.\nsubquestion:\
@@ -1527,6 +1642,39 @@
     any others?
   yesno: fruit.there_is_another
   ---
+"gather-set-number": |-
+  ---
+  modules:
+    - docassemble.base.core
+  ---
+  objects:
+    - fruit: DASet
+  ---
+  mandatory: true
+  code: |
+    fruit.ask_number = True
+  ---
+  mandatory: true
+  question: |
+    There are ${ fruit.number_as_word() }
+    fruits in all.
+  subquestion: |
+    The fruit include ${ fruit }.
+  ---
+  question: |
+    How many fruit should be added
+    to the set?
+  fields:
+    - Number: fruit.target_number
+      datatype: integer
+      min: 0
+  ---
+  question: |
+    What fruit should be added to
+    the set?
+  fields:
+    - Fruit: fruit.new_item
+  ---
 "gather-set-object": |-
   ---
   modules:
@@ -1638,6 +1786,35 @@
   question: |
     The default time zone is
     ${ get_default_timezone() }.
+  mandatory: true
+  ---
+"hello-not-oop": |-
+  ---
+  question: What is your name?
+  fields:
+    - First: user_first_name
+    - Last: user_last_name
+  ---
+  question: |
+    Hello, ${ user_first_name } ${ user_last_name }!
+  mandatory: true
+  ---
+"hello-oop": |-
+  ---
+  modules:
+    - docassemble.base.util
+  ---
+  objects:
+    - user: Individual
+  ---
+  question: |
+    What's your name?
+  fields:
+    - First: user.name.first
+    - Last: user.name.last
+  ---
+  question: |
+    Hello, ${ user }!
   mandatory: true
   ---
 "help": |-
@@ -2145,6 +2322,32 @@
       minlength: 5
       maxlength: 15
   ---
+"ml-ajax": |-
+  ---
+  modules:
+    - docassemble.base.util
+  ---
+"ml-ajax-classify": |-
+  ---
+  modules:
+    - docassemble.base.util
+  ---
+  code: |
+    ml = SimpleTextMachineLearner('sug')
+  ---
+  initial: true
+  code: |
+    if defined('classification'):
+      entry_to_classify.classify(classification)
+      del classification
+    entry_to_classify = ml.one_unclassified_entry()
+    if entry_to_classify is not None:
+      need(classification)
+  ---
+  reconsider: true
+  code: |
+    current_keys = " ".join(map(lambda x: '<a class="mysug label label-primary">' + str(x) + '</a>', ml.dependent_in_use()))
+  ---
 "ml-classify": |-
   ---
   code: |
@@ -2310,7 +2513,7 @@
   generic object: Individual
   sets: x.favorite_food
   code: |
-    x.initializeAttribute('favorite_food', DAList)
+    x.favorite_food = DAList()
   ---
   generic object: Individual
   code: |
@@ -2577,13 +2780,13 @@
   question: |
     Here is the text of the file
   subquestion: |
-    ${ ocr_file(pdf_file) }
+    ${ ocr_file(the_file) }
   ---
   question: |
     Please upload a file
   fields:
-    - File: pdf_file
-      datatype: file
+    - File: the_file
+      datatype: files
   ---
 "ocr-background": |-
   ---
@@ -2593,7 +2796,7 @@
   ---
   mandatory: true
   code: |
-    pdf_file
+    the_file
     the_task
     user_testimonial
     if not the_task.ready():
@@ -2602,20 +2805,20 @@
   question: |
     Please upload a file
   fields:
-    - File: pdf_file
-      datatype: file
+    - File: the_file
+      datatype: files
   ---
   code: |
     the_task = background_action('ocr_start', None)
   ---
   event: ocr_start
   code: |
-    the_text = ocr_file(pdf_file)
+    the_text = ocr_file(the_file)
     background_response_action('ocr_finish', text=the_text)
   ---
   event: ocr_finish
   code: |
-    text_of_pdf_file = action_argument('text')
+    text_of_the_file = action_argument('text')
     background_response()
   ---
   question: |
@@ -2639,7 +2842,64 @@
 
     The document states:
 
-    ${ quote_paragraphs(text_of_pdf_file) }
+    ${ quote_paragraphs(text_of_the_file) }
+  ---
+"ocr-classify": |-
+  ---
+  code: |
+    ml = SimpleTextMachineLearner('ocr_ai')
+  ---
+  initial: true
+  code: |
+    if defined('classification'):
+      entry_to_classify.classify(classification)
+      del classification
+    entry_to_classify = ml.one_unclassified_entry()
+    if entry_to_classify is not None:
+      need(classification)
+  ---
+  question: |
+    How should this be classified?
+  subquestion: |
+    ${ entry_to_classify.independent }
+  fields:
+    - no label: classification
+  ---
+  mandatory: true
+  question: |
+    There is nothing left to classify.
+  buttons:
+    - Check again: refresh
+  ---
+"ocr-save-and-predict": |-
+  ---
+  mandatory: true
+  code: |
+    the_file
+    the_task
+    if not the_task.ready():
+      waiting_screen
+    ml = SimpleTextMachineLearner('ocr_ai')
+    ml.save_for_classification(phrase)
+    predictions = ml.predict(phrase)
+  ---
+  question: |
+    Please upload a file
+  fields:
+    - File: the_file
+      datatype: file
+  ---
+  code: |
+    the_task = background_action('ocr_start', None)
+  ---
+  event: ocr_start
+  code: |
+    background_response_action('ocr_finish', text=ocr_file(the_file))
+  ---
+  event: ocr_finish
+  code: |
+    phrase = action_argument('text')
+    background_response()
   ---
 "optional-field": |-
   ---
@@ -2727,6 +2987,38 @@
     - Period: period
       code: |
         period_list()
+  ---
+"periodic-value": |-
+  ---
+  modules:
+    - docassemble.base.legal
+  ---
+  objects:
+    - user_salary: PeriodicValue
+  ---
+  question: |
+    Do you make money from working?
+  yesno: user_salary.exists
+  ---
+  question: |
+    What is your salary?
+  fields:
+    - Amount: user_salary.value
+      datatype: currency
+    - Period: user_salary.period
+      default: 1
+      choices:
+        - Annually: 1
+        - Monthly: 12
+        - Per week: 54
+  ---
+  mandatory: true
+  question: |
+    % if user_salary.exists:
+    You make ${ currency(user_salary) } per year.
+    % else:
+    Get a job!
+    % endif
   ---
 "prevent-back": |-
   ---
@@ -3271,6 +3563,53 @@
       A harmless creature who carries a gold
       sword.
   ---
+"testage2": |-
+  ---
+  objects:
+    - user: Individual
+  ---
+"testcooking": |-
+  ---
+  modules:
+    - docassemble.demo.cooking
+  ---
+  objects:
+    - submission: Recipe
+  ---
+  mandatory: true
+  question: |
+    Recipe for ${ submission.name }
+  subquestion: |
+    ${ submission.summary() }
+  ---
+  generic object: Recipe
+  question: |
+    What do you want to cook?
+  fields:
+    - Food: x.name
+  ---
+  generic object: Recipe
+  question: |
+    What are the ingredients in ${ x.name }?
+  fields:
+    - no label: x.ingredients
+      datatype: area
+  ---
+  generic object: Recipe
+  question: |
+    What are the instructions for cooking ${ x.name }?
+  fields:
+    - no label: x.instructions
+      datatype: area
+  ---
+"testdalist": |-
+  ---
+  objects:
+    - recipient: DAList
+    - trustee: Individual
+    - beneficiary: Individual
+    - grantor: Individual
+  ---
 "testmessage": |-
   ---
   code: |
@@ -3436,6 +3775,21 @@
     about this interview before
     proceeding.
   field: ready_to_proceed
+  ---
+"user-is-trustee": |-
+  ---
+  mandatory: true
+  question: |
+    % if user is trustee:
+    As the trustee of the estate, you need to understand that it is
+    your fiduciary duty to safeguard the assets of the estate.
+    % elif user is grantee:
+    You are the grantee, which means that ${ trustee } is required to
+    safeguard the assets of the estate on your behalf.
+    % else:
+    ${ trustee } will safeguard the assets of the estate on behalf of
+    ${ grantee }.
+    % endif
   ---
 "value": |-
   ---
