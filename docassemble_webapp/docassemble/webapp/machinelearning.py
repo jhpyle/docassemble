@@ -85,7 +85,7 @@ class MachineLearner(object):
         self.initialize()
         existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, independent=codecs.encode(pickle.dumps(text), 'base64').decode()).first()
         if existing_entry is not None:
-            logmessage(str(text) + " is already there")
+            logmessage("entry is already there")
             return existing_entry.id
         new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(text), 'base64').decode(), create_time=datetime.datetime.utcnow(), active=False)
         db.session.add(new_entry)
