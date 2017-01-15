@@ -334,3 +334,21 @@ img.maybe-full-width {
     float: none;
     max-width: 100%;
 }
+
+h1 > a.bookmark,
+h2 > a.bookmark,
+h3 > a.bookmark,
+h4 > a.bookmark,
+h5 > a.bookmark {
+    display: none;
+    color: #800000;
+    text-decoration: none;
+}
+
+h1:hover > a.bookmark,
+h2:hover > a.bookmark,
+h3:hover > a.bookmark,
+h4:hover > a.bookmark,
+h5:hover > a.bookmark {
+    display: inline;
+}

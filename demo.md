@@ -70,14 +70,21 @@ comment: |
   the name of the author.
 ---
 interview help:
-  heading: About this web site
+  heading: |
+    % if interface() == 'sms':
+    About this text messaging service
+    % else:
+    About this web site
+    % endif
   content: |
     Answer each question.  At the end, you may be given a document
     that you can save.
-
+    
+    % if interface() == 'web':
     If you see a word written in green text, you can click on it to
     see more information about the word.  You can try this out here 
     to find out more about rhododendron plants.
+    % endif
 comment: |
   An "interview help" block adds text to the "Help" page of every
   question in the interview.  If the question has help text of its
@@ -134,7 +141,6 @@ comment: |
 ---
 objects:
   - village_idiot: Individual
-  - role_change: RoleChangeTracker
 comment: |
   In a later question we will refer to the variable "village_idiot."
   This "objects" block creates the variable "village_idiot" and
@@ -164,65 +170,37 @@ comment: |
   turn them into hyperlinks wherever they appear.  When the user
   clicks on the hyperlink, a popup appears with the word's definition.
 ---
-event: role_event
-question: You are done for now.
-subquestion: |
-  % if 'advocate' in role_needed:
-  An advocate needs to review your answers before you can proceed.
-
-  Please remember the following link and come back to it when you
-  receive notice to do so:
-
-  [${ interview_url() }](${ interview_url() })  
-  % else:
-  Thanks, the client needs to resume the interview now.
-  % endif
-
-  % if role_change.send_email(role_needed, advocate={'to': advocate, 'email': role_event_email_to_advocate}, client={'to': client, 'email': role_event_email_to_client}):
-  An e-mail has been sent.
-  % endif
-decoration: exit
-buttons:
-  - Exit: leave
----
-template: role_event_email_to_advocate
-subject: |
-  Client interview waiting for your attention: ${ client }
-content: |
-  A client, ${ client }, has partly finished an interview.
-  ${ client.pronoun_subjective(capitalize=True, thirdperson=True) }
-  needs you to review
-  ${ client.pronoun_possessive('answers', thirdperson=True) }
-  so that ${ client.pronoun_subjective(thirdperson=True) } can obtain
-  ${ client.pronoun_possessive('advice letter', thirdperson=True) }
-  and ${ pleading.title }.
-
-  Please go to [the interview](${ interview_url() }) as soon as possible.
-
-  Thank you!
----
-template: role_event_email_to_client
-subject: |
-  Your interview answers have been reviewed
-content: |
-  ${ client.salutation() } ${ client.name.last }:
-  
-  An advocate has finished reviewing your answers.
-
-  Please go to [${ interview_url() }](${ interview_url() })
-  to continue the interview.
-
-  Thank you for your patience.
----
+role:
+  - client
+  - advocate
 mandatory: true
 code: |
   multi_user = False
   speak_text = False
+  set_live_help_status(availability='observeonly', mode='help', partner_roles=['advocate'])
+---
+mandatory: true
+code: |
+  client.asset.new('checking account', 'savings account', 'stocks and bonds', 'automobiles')
+  client.asset.gathered = True
+  client.income.new('employment', 'self employment', 'SSI', 'TANF', 'rent', period=12)
+  client.income.gathered = True
+comment: |
+  This code indicates which income and asset items to ask about.
 ---
 initial: true
 code: |
+  if role == 'advocate' and not defined('client.name.first'):
+    welcome_advocate
   # track_location = user.location.status()
   set_language(user.language)
+---
+role: advocate
+event: welcome_advocate
+question: |
+  No role for advocate yet.
+subquestion: |
+  You are an advocate and this interview is not yet ready for your participation.
 ---
 mandatory: true
 code: |
@@ -246,6 +224,14 @@ comment: |
   
   "Mandatory" sections like this one are evaluated in the order they
   appear in the question file.
+---
+code: |
+  if client.is_plaintiff and client not in case.plaintiff.elements:
+    case.plaintiff.append(client)
+  if client not in case.defendant.elements and not client.is_plaintiff and client.is_defendant:
+    case.defendant.append(client)
+  case.plaintiff.there_are_any = True
+  case.defendant.there_are_any = True
 ---
 progress: 100
 question: |
@@ -281,6 +267,7 @@ subquestion: |
   **docassemble**'s features.  At the end, you will be provided with a
   fake client letter and a fake pleading.
 
+  % if interface() == 'web':
   In the navigation bar above, you can click "Help" to see the help
   text associated with the interview and with the individual question
   (if any).  If "Help <i class="glyphicon glyphicon-star"></i>"
@@ -291,6 +278,7 @@ subquestion: |
   generate the question.  (Note: the "Source" tab is available because
   this server is configured as a development server; end users would
   not see a "Source" tab.)
+  % endif
 
   % if user.location.known:
   Your current location is ${ user.location }.
@@ -353,47 +341,6 @@ comment: |
   and labels: you just add an "image" value to the button item.
 ---
 code: |
-  case.plaintiff.gathering = True
-  if client.is_plaintiff and client not in case.plaintiff:
-    case.plaintiff.append(client)
-  if case.plaintiff.number_gathered() == 0:
-    case.plaintiff.appendObject(Individual)
-  while case.plaintiff.there_is_another:
-    case.plaintiff.appendObject(Individual)
-    del case.plaintiff.there_is_another
-  case.plaintiff.gathering = False
-  case.plaintiff.gathered = True
-comment: |
-  These seven lines of code ask all the necessary questions to
-  gather the names of the plaintiffs in the case, when the user may
-  not be a plaintiff.
----
-code: |
-  case.defendant.gathering = True
-  if client not in case.defendant and not client.is_plaintiff and \
-     client.is_defendant:
-    case.defendant.append(client)
-  if case.defendant.number_gathered() == 0:
-    case.defendant.appendObject(Individual)
-  while case.defendant.there_is_another:
-    case.defendant.appendObject(Individual)
-    del case.defendant.there_is_another
-  case.defendant.gathering = False
-  case.defendant.gathered = True
-comment: |
-  This code will ask the user if he or she is a defendant, so long as
-  the user is not already a plaintiff.  Then it will ask for the names
-  of the defendants.
----
-code: |
-  people = [client]
-  people.extend(case.parties())
-  for indiv in people:
-    indiv.child.gathered
-comment: |
-  This code gathers the names of the children of all of the parties.
----
-code: |
   if client_has_injury and injury_in_jurisdiction and \
      statute_of_limitations_ok:
     client_has_standing = True
@@ -442,15 +389,6 @@ comment: |
   The function url_of, which is available in docassemble.base.util and
   docassemble.base.legal, will give you a URL to a file in a given
   package.
----
-generic object: Individual
-code: |
-  x.asset.new('checking account', 'savings account', 'stocks and bonds', 'automobiles')
-  x.asset.gathered = True
-  x.income.new('employment', 'self employment', 'SSI', 'TANF', 'rent', period=12)
-  x.income.gathered = True
-comment: |
-  This code indicates which income and asset items to ask about.
 ---
 question: |
   Why do you think you deserve to win this case?
@@ -688,9 +626,6 @@ comment: |
   the order of the questions in a more sensible fashion.
 sets: client_done
 progress: 100
-need:
-  - case.plaintiff.gathered
-  - case.defendant.gathered
 question: |
   % if client_has_standing:
     Congratulations!  You have a valid claim.
@@ -895,27 +830,6 @@ attachments:
 
       [FLUSHLEFT] ${ client }, ${ title_case(case.role_of(client)) }
 ---
-sets: all_done
-question: Hi there
-attachment:
-  - name: the attachment
-    filename: helloworld
-    content: |
-      Hi there.
-
-      [BEGIN_TWOCOL]
-
-      Hi there.
-
-      Hi *there* again.
-      [BREAK]
-      Hello [there](http://google.com).
-      [SKIPLINE]
-      Hello **there again** and again.
-
-      And again.
-      [END_TWOCOL]
----
 question: Your document is ready.
 sets: provide_user_with_document
 attachment:
@@ -1024,6 +938,11 @@ fields:
   - Suffix: village_idiot.name.suffix
     required: False
     code: name_suffix()
+---
+question: Take something!
+fields:
+  - no label: my_av_file
+    datatype: camera
 ...
 {% endhighlight %}
 
@@ -1035,6 +954,7 @@ defined in the `basic-questions.yml` file.  Here is an annotated
 guide to this file.
 
 {% highlight yaml %}
+---
 metadata:
   description: |
     These are basic questions common to a variety of scenarios
@@ -1069,38 +989,12 @@ comment: |
   interview if the user is logged in and the user has "advocate" as a
   user role.
 
-  The functions in docassemble.base.utl need to know who the user
+  The functions in docassemble.base.util need to know who the user
   is.  The set_info function communicates that information to the
   docassemble.base.util module.  Since the code is paired with the
   "default role" declaration, this code is run as "initial" code,
   meaning that it is run every time docassemble processes the
   interview (i.e., every time the screen loads).
----
-event: role_event
-question: You are done for now.
-subquestion: |
-  % if 'advocate' in role_needed:
-    An advocate needs to review your answers before you can proceed.
-
-    Please remember the following link and come back to it when you
-    receive notice to do so:
-
-    [${ interview_url() }](${ interview_url() })
-    
-  % else:
-    Thanks, the client needs to resume the interview now.
-  % endif
-
-decoration: exit
-buttons:
-  - Exit: leave
-comment: |
-  The "event" declaration acts like "sets."  When docassemble
-  needs to ask a question that requires a role other than the user's
-  role, it displays a special message for the user.  You need to
-  configure this message by defining a question tagged with "event:
-  role_event."  docassemble will search for this question just as
-  it searches for a question to define a variable.
 ---
 objects:
   - case: Case
@@ -1405,22 +1299,15 @@ comment: |
 
   Example 2: What is John Doe's first child's name?
 ---
-generic object: Individual
-code: |
-  x.child.gathering = True
-  if x.has_children:
-    if x.child.number_gathered() == 0:
-      x.child.appendObject(Individual)
-    while x.has_other_children:
-      x.child.appendObject(Individual)
-      del x.has_other_children
-  x.child.gathering = False
-  x.child.gathered = True
+generic object: DAList
+question: |
+  Are there any ${ x.as_noun(plural=True) }?
+yesno: x.there_are_any
 ---
 generic object: Individual
 question: |
   ${ x.do_question('have', capitalize=True) } any children?
-yesno: x.has_children
+yesno: x.child.there_are_any
 decoration: children
 comment: |
   This illustrates the use of the "do_question" method of the class
@@ -1431,28 +1318,10 @@ comment: |
 
   Example 2: Does Jane Doe have any children?
 ---
-generic object: Individual
-question: |
-  So far, you have told me about
-  ${ x.possessive(x.child.number_gathered_as_word()) }
-  ${ x.child.as_noun() }, ${ x.child }.
-  ${ x.do_question('have', capitalize=True) } any other children?
-yesno: x.has_other_children
-decoration: children
-comment: |
-  This illustrates the use of various methods of the class Individual.
-  Depending on who x is, this question will ask different things:
-
-  Example 1: So far, you have told me about John Doe's two children, 
-  Sally Doe and Harold Doe.  Does John Doe have any other children?
-
-  Example 2: So far, you have told me about your one child, Kathleen 
-  Smith.  Do you have any other children?
----
 generic object: PartyList
 question: |
   You have told me that there ${ x.does_verb("is") }
-  ${ x.number_gathered_as_word() } ${ x.as_noun() }, ${ x }.
+  ${ x.number_as_word() } ${ x.as_noun() }, ${ x }.
   Is there another ${ x.as_singular_noun() }?
 yesno: x.there_is_another
 comment: |
@@ -1467,6 +1336,24 @@ comment: |
   there is one plaintiff, John Smith.  Is there another plaintiff?"
   This would not be possible if your variable name was something that
   only made sense to you, like "bad_guys_list_two."
+---
+generic object: Individual
+question: |
+  So far, you have told me about
+  ${ x.possessive(x.child.number_as_word()) }
+  ${ x.child.as_noun() }, ${ x.child }.
+  ${ x.do_question('have', capitalize=True) } any other children?
+yesno: x.child.there_is_another
+decoration: children
+comment: |
+  This illustrates the use of various methods of the class Individual.
+  Depending on who x is, this question will ask different things:
+
+  Example 1: So far, you have told me about John Doe's two children, 
+  Sally Doe and Harold Doe.  Does John Doe have any other children?
+
+  Example 2: So far, you have told me about your one child, Kathleen 
+  Smith.  Do you have any other children?
 ---
 generic object: Individual
 question: |

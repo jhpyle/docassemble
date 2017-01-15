@@ -98,7 +98,6 @@ used:
 * [`date_interval`]
 * [`day_of`]
 * [`defined`]
-* [`email_string`]
 * [`force_ask`]
 * [`force_gather`]
 * [`format_date`]
@@ -588,7 +587,6 @@ All others are available for you to use and to retrieve with
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
 [`DARedis`]: {{ site.baseurl }}/docs/functions.html#redis
 [`currency_symbol`]: {{ site.baseurl }}/docs/functions.html#currency_symbol
-[`email_string`]: {{ site.baseurl }}/docs/functions.html#email_string
 [`static_image`]: {{ site.baseurl }}/docs/functions.html#static_image
 [`loop`]: http://docs.makotemplates.org/en/latest/runtime.html#loop-context
 [`STOP_RENDERING`]: http://docs.makotemplates.org/en/latest/syntax.html#exiting-early-from-a-template

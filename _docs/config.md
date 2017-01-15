@@ -645,53 +645,6 @@ The default value is `'{{ site.github.repository_url }}'`.
 
 This directive only has an effect during [initial database setup].
 
-### Multiple Twilio configurations
-
-You can use multiple Twilio configurations on the same server.  You
-might wish to do this if you want to advertise more than one [Twilio]
-number to your users.  You can do this by specifying the `twilio`
-directive as a list of dictionaries, and giving each dictionary a
-`name`.  In this example, there are two configurations, one named
-`default`, and one named `bankruptcy`:
-
-{% highlight yaml %}
-twilio:
-  - name: default
-    sms: true
-    voice: true
-    account sid: ACfad8e668d876f5473fb232a311243b58
-    auth token: auth token: 87559c7a427c25e34e20c654e8b05234
-    caller id: "+12762410114"
-    default interview: docassemble.base:data/questions/examples/sms.yml
-    dispatch:
-      color: docassemble.base:data/questions/examples/buttons-code-color.yml
-      doors: docassemble.base:data/questions/examples/doors.yml
-    default interview: docassemble.demo:data/questions/questions.yml
-  - name: bankruptcy
-    sms: true
-    voice: false
-    account sid: ACfad8e668d876f5473fb232a311243b58
-    auth token: auth token: 87559c7a427c25e34e20c654e8b05234
-    caller id: "+12768571217"
-    default interview: docassemble.bankruptcy:data/questions/bankruptcy.yml
-    dispatch:
-      adversary: docassemble.base:data/questions/adversary-case.yml
-      chapter7: docassemble.base:data/questions/bankruptcy.yml
-{% endhighlight %}
-
-When you call [`send_sms()`], you can indicate which configuration
-should be used:
-
-{% highlight python %}
-send_sms(to='202-943-0949', body='Hi there!', config='bankruptcy')
-{% endhighlight %}
-
-This will cause the message to be sent from 276-857-1217.
-
-If no configuration is named `default`, the first configuration will
-be used as the default.  The [call forwarding] feature uses the
-default configuration.
-
 ## Pre-defined variables for all interviews
 
 If you would like to pass variable definitions from the configuration
@@ -1058,7 +1011,7 @@ twilio:
   voice: true
   account sid: ACfad8e668d876f5473fb232a311243b58
   auth token: auth token: 87559c7a427c25e34e20c654e8b05234
-  caller id: "+12762410114"
+  number: "+12762410114"
   dispatch:
     color: docassemble.base:data/questions/examples/buttons-code-color.yml
     doors: docassemble.base:data/questions/examples/doors.yml
@@ -1078,7 +1031,7 @@ The `auth token` is another value you copy and paste from your
 [Twilio] account dashboard.  This is only necessary if you intend to
 use the [`send_sms()`] function.
 
-The `caller id` is the phone number you purchased.  The phone number
+The `number` is the phone number you purchased.  The phone number
 must be written in [E.164] format.  This is the phone number with
 which your users will exchange [SMS] messages.
 
@@ -1088,6 +1041,59 @@ your prospective users to "text 'color' to 276-241-0114."  Users who
 initiate a conversation by sending the SMS message "help" to the
 [Twilio] phone number will be started into the
 `docassemble.base:data/questions/examples/sms.yml` interview.
+
+The `default interview` configuration allows you to set an interview
+that will be used in case the user's initial message does not match up
+with a `dispatch` entry.  If you do not set a `default interview`, the
+global [`default interview`] will be used.  If you want unknown
+messages to be ignored, set `default interview` to `null`.
+
+### <a name="multiple twilio"></a>Multiple Twilio configurations
+
+You can use multiple [Twilio] configurations on the same server.  You
+might wish to do this if you want to advertise more than one [Twilio]
+number to your users.  You can do this by specifying the `twilio`
+directive as a list of dictionaries, and giving each dictionary a
+`name`.  In this example, there are two configurations, one named
+`default`, and one named `bankruptcy`:
+
+{% highlight yaml %}
+twilio:
+  - name: default
+    sms: true
+    voice: true
+    account sid: ACfad8e668d876f5473fb232a311243b58
+    auth token: auth token: 87559c7a427c25e34e20c654e8b05234
+    number: "+12762410114"
+    default interview: docassemble.base:data/questions/examples/sms.yml
+    dispatch:
+      color: docassemble.base:data/questions/examples/buttons-code-color.yml
+      doors: docassemble.base:data/questions/examples/doors.yml
+    default interview: docassemble.demo:data/questions/questions.yml
+  - name: bankruptcy
+    sms: true
+    voice: false
+    account sid: ACfad8e668d876f5473fb232a311243b58
+    auth token: auth token: 87559c7a427c25e34e20c654e8b05234
+    number: "+12768571217"
+    default interview: docassemble.bankruptcy:data/questions/bankruptcy.yml
+    dispatch:
+      adversary: docassemble.base:data/questions/adversary-case.yml
+      chapter7: docassemble.base:data/questions/bankruptcy.yml
+{% endhighlight %}
+
+When you call [`send_sms()`], you can indicate which configuration
+should be used:
+
+{% highlight python %}
+send_sms(to='202-943-0949', body='Hi there!', config='bankruptcy')
+{% endhighlight %}
+
+This will cause the message to be sent from 276-857-1217.
+
+If no configuration is named `default`, the first configuration will
+be used as the default.  The [call forwarding] feature uses the
+default configuration.
 
 # <a name="get_config"></a>Adding your own configuration variables
 
@@ -1235,3 +1241,4 @@ and Facebook API keys.
 [Celery]: http://www.celeryproject.org/
 [`ocr_file()`]: {{ site.baseurl }}/docs/functions.html#ocr_file
 [Tesseract]: https://en.wikipedia.org/wiki/Tesseract_(software)
+[`default interview`]: #default_interview

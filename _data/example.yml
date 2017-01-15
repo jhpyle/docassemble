@@ -758,6 +758,31 @@
   modules:
     - docassemble.base.legal
   ---
+  objects:
+    - people: PartyList
+  ---
+  question: |
+    What is the person's name?
+  fields:
+    - First: people[i].name.first
+    - Last: people[i].name.last
+  ---
+  question: |
+    Do you have any people to add to the list?
+  yesno: people.there_are_any
+  ---
+  question: |
+    Do you have more people for me?
+  subquestion: |
+    So far you have told me about ${ people }.
+  yesno: people.there_is_another
+  ---
+  mandatory: true
+  question: |
+    Here is your list of people.
+  subquestion: |
+    ${ people }
+  ---
 "dalist2": |-
   ---
   modules:

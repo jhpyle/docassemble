@@ -24,3 +24,18 @@
     <script>
       $('#main').toc({showAlways:true});
     </script>
+    <script>
+      $("h1, h2, h3, h4, h5").each(function(){
+        if ($(this).children().length > 0){
+          var firstElement = $(this).children()[0];
+          //console.log($(firstElement).attr('name'));
+          if ($(firstElement).prop('tagName') == 'A' && $(firstElement).attr('name') != null){
+            var bookmark = $("<a>", {"class": "bookmark"});
+            bookmark.attr('href', '#' + $(firstElement).prop('name'));
+            bookmark.html('&para;');
+            $(this).append(bookmark);
+            //console.log('got: ' + $(firstElement).prop('name'));
+          }
+        }
+      });
+    </script>
