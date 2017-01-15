@@ -267,3 +267,5 @@ variables_as_json: "http://docassemble.org/docs/functions.html#variables_as_json
 role_event: "http://docassemble.org/docs/roles.html"
 server_capabilities: "http://docassemble.org/docs/functions.html#server_capabilities"
 send_sms_invite: "http://docassemble.org/docs/functions.html#send_sms_invite"
+language_from_browser: "http://docassemble.org/docs/functions.html#language_from_browser"
+device: "http://docassemble.org/docs/functions.html#device"

@@ -24,10 +24,11 @@ import sys
 import tzlocal
 import us
 import pycountry
+from user_agents import parse as ua_parse
 import phonenumbers
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device']
 
 # debug = False
 # default_dialect = 'us'
@@ -109,6 +110,61 @@ def user_logged_in():
     if this_thread.current_info['user']['is_authenticated']:
         return True
     return False
+
+def device():
+    """Returns an an object describing the device the user is using."""
+    if 'headers' not in this_thread.current_info:
+        return None
+    ua_string = this_thread.current_info['headers'].get('User-Agent', None)
+    if ua_string is None:
+        return None
+    return ua_parse(ua_string)
+
+def language_from_browser(*pargs):
+    """Attempts to determine the user's language based on information supplied by the user's web browser."""
+    if len(pargs) > 0:
+        restrict = True
+        valid_options = [lang for lang in pargs]
+    else:
+        restrict = False
+    if 'headers' in this_thread.current_info:
+        langs = [entry.split(";")[0].strip() for entry in this_thread.current_info['headers'].get('Accept-Language', '').split(",")]
+    else:
+        return None
+    for lang in langs:
+        if restrict and lang in valid_options:
+            return lang
+        if len(lang) == 2:
+            try:
+                pycountry.languages.get(alpha_2=lang)
+                return lang
+            except:
+                continue
+        if len(lang) == 3:
+            try:
+                pycountry.languages.get(alpha_3=lang)
+                return lang
+            except:
+                continue
+    for lang in langs:
+        if len(lang) <= 3:
+            continue
+        this_lang = re.sub(r'[\-\_].*', r'', lang)
+        if restrict and this_lang in valid_options:
+            return this_lang
+        if len(this_lang) == 2:
+            try:
+                pycountry.languages.get(alpha_2=this_lang)
+                return this_lang
+            except:
+                continue
+        if len(this_lang) == 3:
+            try:
+                pycountry.languages.get(alpha_3=this_lang)
+                return this_lang
+            except:
+                continue
+    return None
 
 def country_name(country_code):
     """Given a two-digit country code, returns the country name."""

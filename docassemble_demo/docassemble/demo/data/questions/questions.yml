@@ -877,10 +877,19 @@ buttons:
 generic object: Individual
 question: |
   What language ${ x.do_question('speak') }?
+subquestion: |
+  % if device().is_mobile
+  You are on a phone!
+  % elif device().is_tablet:
+  You are on a tablet!
+  % elif device().is_pc:
+  You are on a PC!
+  % endif
 field: x.language
 choices:
   - English: en
   - Español: es
+default: ${ language_from_browser() }
 ---
 language: es
 terms:

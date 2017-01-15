@@ -304,7 +304,7 @@ from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackag
 from flask_mail import Mail, Message
 import flask_user.signals
 from werkzeug import secure_filename, FileStorage
-from rauth import OAuth1Service, OAuth2Service
+from rauth import OAuth2Service
 from flask_kvsession import KVSessionExtension
 from simplekv.memory.redisstore import RedisStore
 from sqlalchemy import or_, and_
@@ -624,7 +624,7 @@ def encrypt_session(secret, user_code=None, filename=None):
     return
 
 def substitute_secret(oldsecret, newsecret):
-    logmessage("substitute_secret: " + repr(oldsecret) + " and " + repr(newsecret))
+    #logmessage("substitute_secret: " + repr(oldsecret) + " and " + repr(newsecret))
     if oldsecret == None or oldsecret == newsecret:
         return newsecret
     user_code = session.get('uid', None)
@@ -1198,14 +1198,14 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
     return(navbar)
 
 def delete_session():
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms']:
         if key in session:
             del session[key]
     return
 
 def backup_session():
     backup = dict()
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms']:
         if key in session:
             backup[key] = session[key]
     return backup
@@ -1723,6 +1723,7 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
         ext = dict(email=current_user.email, roles=[role.name for role in current_user.roles], the_user_id=current_user.id, theid=current_user.id, firstname=current_user.first_name, lastname=current_user.last_name, nickname=current_user.nickname, country=current_user.country, subdivisionfirst=current_user.subdivisionfirst, subdivisionsecond=current_user.subdivisionsecond, subdivisionthird=current_user.subdivisionthird, organization=current_user.organization)
     else:
         ext = dict(email=None, the_user_id='t' + str(session.get('tempuser', None)), theid=session.get('tempuser', None), roles=list())
+    headers = dict()
     if req is None:
         url = 'http://localhost'
         url_root = 'http://localhost'
@@ -1731,9 +1732,11 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
         url = req.base_url
         url_root = req.url_root
         secret = req.cookies.get('secret', None)
+        for key, value in req.headers.iteritems():
+            headers[key] = value
     if secret is not None:
         secret = str(secret)
-    return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'encrypted': session.get('encrypted', True), 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}}
+    return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'encrypted': session.get('encrypted', True), 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}, 'headers': headers}
     if action is not None:
         return_val.update(action)
     if location is not None:
@@ -1843,19 +1846,31 @@ class GoogleSignIn(OAuthSignIn):
         )
     def authorize(self):
         result = urlparse.parse_qs(request.data)
+        logmessage("GoogleSignIn, args: " + str([str(arg) + ": " + str(request.args[arg]) for arg in request.args]))
+        logmessage("GoogleSignIn, request: " + str(request.data))
         session['google_id'] = result.get('id', [None])[0]
         session['google_email'] = result.get('email', [None])[0]
-        response = make_response(json.dumps('Successfully connected user.', 200))
+        response = make_response(json.dumps('Successfully connected user.'), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
     
     def callback(self):
-        email = session.get('google_email')
-        return (
-            'google$' + str(session.get('google_id')),
-            email.split('@')[0],
-            email
-        )
+        logmessage("GoogleCallback, args: " + str([str(arg) + ": " + str(request.args[arg]) for arg in request.args]))
+        logmessage("GoogleCallback, request: " + str(request.data))
+        email = session.get('google_email', None)
+        google_id = session.get('google_id', None)
+        if 'google_id' in session:
+            del session['google_id']
+        if 'google_email' in session:
+            del session['google_email']
+        if email is not None and google_id is not None:
+            return (
+                'google$' + str(google_id),
+                email.split('@')[0],
+                email
+            )
+        else:
+            raise Exception("Could not get Google authorization information")
 
 class FacebookSignIn(OAuthSignIn):
     def __init__(self):
@@ -7699,17 +7714,17 @@ def interview_list():
         is_valid = True
         try:
             interview = docassemble.base.interview_cache.get_interview(interview_info.filename)
+            if len(interview.metadata):
+                metadata = interview.metadata[0]
+                interview_title = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
+            else:
+                interview_title = word('Untitled')
         except:
             logmessage("interview_list: unable to load interview file " + interview_info.filename)
             metadata = dict()
-            metadata['title'] = 'Error: interview is corrupted'
+            metadata['title'] = word('Error: interview not found')
             interview_title = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
             is_valid = False
-        if len(interview.metadata):
-            metadata = interview.metadata[0]
-            interview_title = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
-        else:
-            interview_title = word('Untitled')
         #logmessage("Found old interview with title " + interview_title)
         if interview_info.encrypted:
             try:
@@ -7718,7 +7733,7 @@ def interview_list():
                 logmessage("interview_list: unable to decrypt dictionary with secret " + str(secret))
                 dictionary = fresh_dictionary()
                 metadata = dict()
-                metadata['title'] = 'Error: interview is corrupted'
+                metadata['title'] = word('Error: interview cannot be decrypted')
                 interview_title = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
                 is_valid = False
         else:
@@ -7763,18 +7778,18 @@ def login_or_register(sender, user, **extra):
 
 @user_logged_in.connect_via(app)
 def _on_user_login(sender, user, **extra):
-    logmessage("on user login")
+    #logmessage("on user login")
     login_or_register(sender, user, **extra)
     #flash(word('You have signed in successfully.'), 'success')
 
 @user_changed_password.connect_via(app)
 def _on_password_change(sender, user, **extra):
-    logmessage("on password change")
+    #logmessage("on password change")
     fix_secret()
     
 @user_reset_password.connect_via(app)
 def _on_password_reset(sender, user, **extra):
-    logmessage("on password reset")
+    #logmessage("on password reset")
     fix_secret()
 
 @user_registered.connect_via(app)
@@ -8031,9 +8046,9 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         if sess_info['user_id'] is not None:
             user = load_user(sess_info['user_id'])
         if user is None:
-            ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, sms_variable=sms_variable, skip=user_dict['_internal']['skip'], sms_sender=form["From"])
+            ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), sms_variable=sms_variable, skip=user_dict['_internal']['skip'], sms_sender=form["From"])
         else:
-            ci = dict(user=dict(is_anonymous=False, is_authenticated=True, email=user.email, theid=user.id, the_user_id=user.id, roles=user.roles, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, sms_variable=sms_variable, skip=user_dict['_internal']['skip'])
+            ci = dict(user=dict(is_anonymous=False, is_authenticated=True, email=user.email, theid=user.id, the_user_id=user.id, roles=user.roles, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, headers=dict(), sms_variable=sms_variable, skip=user_dict['_internal']['skip'])
         if action is not None:
             #logmessage("Setting action to " + str(action))
             ci.update(action)
