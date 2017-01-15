@@ -1,0 +1,19 @@
+metadata:
+  title: User language from browser
+  short title: Browser language
+  documentation: "http://docassemble.org/docs/functions.html#language_from_browser"
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  % if language_from_browser('es', 'fr') is None:
+  I guess you do not speak
+  Spanish or French.
+  % else:
+  Great!  Your language code is
+  `${ language_from_browser('es', 'fr') }`.
+  % endif
+mandatory: true

@@ -128,12 +128,15 @@ def language_from_browser(*pargs):
     else:
         restrict = False
     if 'headers' in this_thread.current_info:
-        langs = [entry.split(";")[0].strip() for entry in this_thread.current_info['headers'].get('Accept-Language', '').split(",")]
+        langs = [entry.split(";")[0].strip() for entry in this_thread.current_info['headers'].get('Accept-Language', '').lower().split(",")]
     else:
         return None
     for lang in langs:
-        if restrict and lang in valid_options:
-            return lang
+        if restrict:
+            if lang in valid_options:
+                return lang
+            else:
+                continue
         if len(lang) == 2:
             try:
                 pycountry.languages.get(alpha_2=lang)
@@ -150,8 +153,11 @@ def language_from_browser(*pargs):
         if len(lang) <= 3:
             continue
         this_lang = re.sub(r'[\-\_].*', r'', lang)
-        if restrict and this_lang in valid_options:
-            return this_lang
+        if restrict:
+            if this_lang in valid_options:
+                return this_lang
+            else:
+                continue
         if len(this_lang) == 2:
             try:
                 pycountry.languages.get(alpha_2=this_lang)

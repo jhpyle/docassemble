@@ -1,0 +1,23 @@
+metadata:
+  title: User device
+  documentation: "http://docassemble.org/docs/functions.html#device"
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  % if device().is_mobile:
+  You are on a phone.
+  % elif device().is_tablet:
+  You are on a tablet.
+  % elif device().is_pc:
+  You are on a PC.
+  % elif device().is_bot:
+  You are a bot.
+  % else:
+  Your device is: ${ device() }.
+  % endif
+mandatory: true
+

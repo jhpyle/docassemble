@@ -8544,7 +8544,10 @@ if 'twilio' in daconfig:
         twilio_config = None
 else:
     twilio_config = None
-    
+
+r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
+#docassemble.base.functions.set_server_redis(r)
+
 #docassemble.base.util.set_twilio_config(twilio_config)
 docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          chat_partners_available=chat_partners_available,
@@ -8553,6 +8556,7 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          initiate_sms_session=initiate_sms_session,
                                          terminate_sms_session=terminate_sms_session,
                                          twilio_config=twilio_config,
+                                         server_redis=r,
                                          user_id_dict=user_id_dict)
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)
@@ -8612,9 +8616,6 @@ if not in_celery:
         docassemble.base.logger.set_logmessage(syslog_message_with_timestamp)
     else:
         docassemble.base.logger.set_logmessage(syslog_message)
-
-r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
-#docassemble.base.functions.set_server_redis(r)
 
 def null_func(*pargs, **kwargs):
     logmessage("Null function called")
