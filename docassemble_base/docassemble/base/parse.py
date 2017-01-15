@@ -17,7 +17,7 @@ import docassemble.base.filter
 import docassemble.base.pdftk
 from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError
 import docassemble.base.functions
-from docassemble.base.functions import pickleable_objects, word, get_language
+from docassemble.base.functions import pickleable_objects, word, get_language, server
 from docassemble.base.logger import logmessage
 from docassemble.base.pandoc import MyPandoc
 from docassemble.base.mako.template import Template as MakoTemplate
@@ -44,33 +44,33 @@ def process_audio_video_list(the_list, user_dict):
 def textify(data, user_dict):
     return list(map((lambda x: x.text(user_dict)), data))
 
-def set_absolute_filename(func):
-    #logmessage("Running set_absolute_filename in parse")
-    docassemble.base.functions.set_absolute_filename(func)
+# def set_absolute_filename(func):
+#     #logmessage("Running set_absolute_filename in parse")
+#     docassemble.base.functions.set_absolute_filename(func)
 
-def set_url_finder(func):
-    docassemble.base.filter.set_url_finder(func)
-    docassemble.base.functions.set_url_finder(func)
+# def set_url_finder(func):
+#     docassemble.base.filter.set_url_finder(func)
+#     docassemble.base.functions.set_url_finder(func)
 
-def set_url_for(func):
-    docassemble.base.filter.set_url_for(func)
+# def set_url_for(func):
+#     docassemble.base.filter.set_url_for(func)
 
-def set_file_finder(func):
-    docassemble.base.filter.set_file_finder(func)
+# def set_file_finder(func):
+#     docassemble.base.filter.set_file_finder(func)
 
-def set_da_send_mail(func):
-    docassemble.base.filter.set_da_send_mail(func)
+# def set_da_send_mail(func):
+#     docassemble.base.filter.set_da_send_mail(func)
 
-def blank_save_numbered_file(*args, **kwargs):
-    return(None, None, None)
+# def blank_save_numbered_file(*args, **kwargs):
+#     return(None, None, None)
 
-save_numbered_file = blank_save_numbered_file
+# save_numbered_file = blank_save_numbered_file
 
-def set_save_numbered_file(func):
-    global save_numbered_file
-    #logmessage("set the save_numbered_file function to " + str(func))
-    save_numbered_file = func
-    return
+# def set_save_numbered_file(func):
+#     global save_numbered_file
+#     #logmessage("set the save_numbered_file function to " + str(func))
+#     save_numbered_file = func
+#     return
 
 initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict())
 
@@ -824,7 +824,7 @@ class Question:
                 if hasattr(data['response filename'], 'mimetype') and data['response filename'].mimetype:
                     self.content_type = TextObject(data['response filename'].mimetype)
             else:
-                info = docassemble.base.filter.file_finder(data['response filename'], question=self)
+                info = docassemble.base.functions.server.file_finder(data['response filename'], question=self)
                 if 'fullpath' in info and info['fullpath']:
                     self.response_filename = info['fullpath']
                 else:
@@ -1798,7 +1798,7 @@ class Question:
             for doc_format in result['file']:
                 variable_string = attachment['variable_name'] + '.' + doc_format
                 filename = result['filename'] + '.' + doc_format
-                file_number, extension, mimetype = save_numbered_file(filename, result['file'][doc_format], yaml_file_name=self.interview.source.path)
+                file_number, extension, mimetype = docassemble.base.functions.server.save_numbered_file(filename, result['file'][doc_format], yaml_file_name=self.interview.source.path)
                 if file_number is None:
                     raise Exception("Could not save numbered file")
                 string = variable_string + " = docassemble.base.core.DAFile('" + variable_string + "', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
@@ -1846,7 +1846,7 @@ class Question:
                         m = re.search(r'\[FILE ([^\]]+)\]', answer)
                         if m:
                             file_reference = re.sub(r'[ ,].*', '', m.group(1))
-                            file_info = docassemble.base.filter.file_finder(file_reference, convert={'svg': 'png'})
+                            file_info = docassemble.base.functions.server.file_finder(file_reference, convert={'svg': 'png'})
                             result['images'].append((key, file_info))
                         else:
                             result['data_strings'].append((key, answer))
@@ -1894,7 +1894,7 @@ def interview_source_from_string(path, **kwargs):
         if new_source is not None:
             return new_source
     #sys.stderr.write("Trying to find it\n")
-    for the_filename in [docassemble.base.functions.package_question_filename(path), docassemble.base.functions.standard_question_filename(path), docassemble.base.functions.absolute_filename(path)]:
+    for the_filename in [docassemble.base.functions.package_question_filename(path), docassemble.base.functions.standard_question_filename(path), docassemble.base.functions.server.absolute_filename(path)]:
         #sys.stderr.write("Trying " + str(the_filename) + " with path " + str(path) + "\n")
         if the_filename is not None:
             new_source = InterviewSourceFile(filepath=the_filename, path=path)

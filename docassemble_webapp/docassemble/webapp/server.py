@@ -234,7 +234,7 @@ def unauthorized():
 def my_default_url(error, endpoint, values):
     return url_for('index')
 
-from docassemble.webapp.app_object import app
+from docassemble.webapp.app_object import app, csrf
 from docassemble.webapp.db_object import db
 import docassemble.webapp.setup
 from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm
@@ -298,7 +298,7 @@ from flask import url_for
 from flask_login import login_user, logout_user, current_user
 from flask_user import login_required, roles_required
 from flask_user import signals, user_logged_in, user_changed_password, user_registered, user_reset_password
-from flask_wtf.csrf import generate_csrf
+#from flask_wtf.csrf import generate_csrf
 from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm
 from flask_mail import Mail, Message
 import flask_user.signals
@@ -317,7 +317,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file
+from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file, generate_csrf
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, Messages
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -346,6 +346,85 @@ if 'oauth' in daconfig:
         app.config['USE_GOOGLE_LOGIN'] = True
     if 'facebook' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enable'] is False):
         app.config['USE_FACEBOOK_LOGIN'] = True
+
+def get_sms_session(phone_number, config='default'):
+    sess_info = None
+    if twilio_config is None:
+        raise DAError("get_sms_session: Twilio not enabled")
+        return Response(str(resp), mimetype='text/xml')
+    if config not in twilio_config['name']:
+        raise DAError("get_sms_session: Invalid twilio configuration")
+    tconfig = twilio_config['name'][config]
+    phone_number = docassemble.base.functions.phone_number_in_e164(phone_number)
+    if phone_number is None:
+        raise DAError("terminate_sms_session: phone_number " + str(phone_number) + " is invalid")
+    sess_contents = r.get('da:sms:client:' + phone_number + ':server:' + tconfig['number'])
+    if sess_contents is not None:
+        try:        
+            sess_info = pickle.loads(sess_contents)
+        except:
+            logmessage("get_sms_session: unable to decode session information")
+    return sess_info
+
+def initiate_sms_session(phone_number, yaml_filename=None, uid=None, secret=None, encrypted=None, user_id=None, email=None, new=False, config='default'):
+    phone_number = docassemble.base.functions.phone_number_in_e164(phone_number)
+    if phone_number is None:
+        raise DAError("initiate_sms_session: phone_number " + str(phone_number) + " is invalid")
+    if config not in twilio_config['name']:
+        raise DAError("get_sms_session: Invalid twilio configuration")
+    tconfig = twilio_config['name'][config]
+    current_info = docassemble.base.functions.get_info('current_info')
+    if yaml_filename is None:
+        yaml_filename = current_info.get('yaml_filename', None)
+        if yaml_filename is None:
+            yaml_filename = default_yaml_filename
+    temp_user_id = None
+    if user_id is None and email is not None:
+        user = UserModel.query.filter_by(email=email, active=True).first()
+        if user is not None:
+            user_id = user.id
+    if user_id is None:
+        if not new:
+            if 'user' in current_info:
+                if 'theid' in current_info['user']:
+                    if current_info['user'].get('is_authenticated', False):
+                        user_id = current_info['user']['theid']
+                    else:
+                        temp_user_id = current_info['user']['theid']
+        if user_id is None and temp_user_id is None:
+            new_temp_user = TempUser()
+            db.session.add(new_temp_user)
+            db.session.commit()
+            temp_user_id = new_temp_user.id
+    if secret is None:
+        if not new:
+            secret = current_info['secret']
+        if secret is None:
+            secret = random_string(16)
+    if uid is None:
+        if new:
+            uid = get_unique_name(yaml_filename, secret)
+        else:
+            uid = current_info.get('session', None)
+            if uid is None:
+                uid = get_unique_name(yaml_filename, secret)
+    if encrypted is None:
+        if new:
+            encrypted = True
+        else:
+            encrypted = current_info['encrypted']
+    sess_info = dict(yaml_filename=yaml_filename, uid=uid, secret=secret, number=phone_number, encrypted=encrypted, tempuser=temp_user_id, user_id=user_id)
+    #logmessage("initiate_sms_session: setting da:sms:client:" + phone_number + ':server:' + tconfig['number'] + " to " + str(sess_info))
+    r.set('da:sms:client:' + phone_number + ':server:' + tconfig['number'], pickle.dumps(sess_info))
+    return True
+        
+def terminate_sms_session(phone_number, config='default'):
+    sess_info = None
+    if config not in twilio_config['name']:
+        raise DAError("get_sms_session: Invalid twilio configuration")
+    tconfig = twilio_config['name'][config]
+    phone_number = docassemble.base.functions.phone_number_in_e164(phone_number)
+    r.delete('da:sms:client:' + phone_number + ':server:' + tconfig['number'])
 
 def fix_http(url):
     if HTTP_TO_HTTPS:
@@ -974,7 +1053,7 @@ def get_attachment_info(the_user_code, question_number, filename, secret):
             the_user_dict = decrypt_dictionary(existing_entry.dictionary, secret)
         else:
             the_user_dict = unpack_dictionary(existing_entry.dictionary)
-    return the_user_dict
+    return the_user_dict, existing_entry.encrypted
 
 def update_attachment_info(the_user_code, the_user_dict, the_interview_status, secret, encrypt=True):
     Attachments.query.filter_by(key=the_user_code, question=the_interview_status.question.number, filename=the_interview_status.question.interview.source.path).delete()
@@ -1111,10 +1190,22 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
     return(navbar)
 
 def delete_session():
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile']:
         if key in session:
             del session[key]
     return
+
+def backup_session():
+    backup = dict()
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile']:
+        if key in session:
+            backup[key] = session[key]
+    return backup
+
+def restore_session(backup):
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile']:
+        if key in backup:
+            session[key] = backup[key]
 
 def reset_session(yaml_filename, secret):
     session['i'] = yaml_filename
@@ -1634,7 +1725,7 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
         secret = req.cookies.get('secret', None)
     if secret is not None:
         secret = str(secret)
-    return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}}
+    return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'encrypted': session.get('encrypted', True), 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}}
     if action is not None:
         return_val.update(action)
     if location is not None:
@@ -2366,7 +2457,7 @@ def index():
             encrypted = is_encrypted
             session['encrypted'] = encrypted
     elif 'filename' in request.args:
-        the_user_dict = get_attachment_info(user_code, request.args.get('question'), request.args.get('filename'), secret)
+        the_user_dict, attachment_encrypted = get_attachment_info(user_code, request.args.get('question'), request.args.get('filename'), secret)
         if the_user_dict is not None:
             interview = docassemble.base.interview_cache.get_interview(request.args.get('filename'))
             interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action))
@@ -2820,8 +2911,11 @@ def index():
         else:
             user_id_string = 't' + str(session['tempuser'])
             is_user = 'true'
-        if r.get('da:control:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)) is not None:
-            being_controlled = 'true'
+        if 'uid' in session and 'i' in session:
+            if r.get('da:control:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)) is not None:
+                being_controlled = 'true'
+            else:
+                being_controlled = 'false'
         else:
             being_controlled = 'false'
         scripts += """    <script type="text/javascript" charset="utf-8">
@@ -4048,18 +4142,19 @@ def index():
             end_output = scripts + "\n    " + "".join(extra_scripts) + """\n  </body>\n</html>"""
     #logmessage(output.encode('utf8'))
     #logmessage("Request time interim: " + str(g.request_time()))
-    key = 'da:html:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
-    #logmessage("Setting html key " + key)
-    pipe = r.pipeline()
-    pipe.set(key, json.dumps(dict(body=output, extra_scripts=extra_scripts, extra_css=extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after)))
-    pipe.expire(key, 60)
-    pipe.execute()
-    #sys.stderr.write("10\n")
-    #logmessage("Done setting html key " + key)
-    #if session.get('chatstatus', 'off') in ['waiting', 'standby', 'ringing', 'ready', 'on']:
-    if user_dict['_internal']['livehelp']['availability'] != 'unavailable':
-        inputkey = 'da:input:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
-        r.publish(inputkey, json.dumps(dict(message='newpage', key=key)))
+    if 'uid' in session and 'i' in session:
+        key = 'da:html:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
+        #logmessage("Setting html key " + key)
+        pipe = r.pipeline()
+        pipe.set(key, json.dumps(dict(body=output, extra_scripts=extra_scripts, extra_css=extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after)))
+        pipe.expire(key, 60)
+        pipe.execute()
+        #sys.stderr.write("10\n")
+        #logmessage("Done setting html key " + key)
+        #if session.get('chatstatus', 'off') in ['waiting', 'standby', 'ringing', 'ready', 'on']:
+        if user_dict['_internal']['livehelp']['availability'] != 'unavailable':
+            inputkey = 'da:input:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
+            r.publish(inputkey, json.dumps(dict(message='newpage', key=key)))
     if is_ajax:
         if 'reload_after' in interview_status.extras:
             reload_after = 1000 * int(interview_status.extras['reload_after'])
@@ -6742,7 +6837,7 @@ def playground_redirect():
     counter = 0
     while counter < 15:
         the_url = r.get(key)
-        logmessage("playground_redirect: key " + str(key) + " is " + str(the_url))
+        #logmessage("playground_redirect: key " + str(key) + " is " + str(the_url))
         if the_url is not None:
             r.delete(key)
             return redirect(the_url)
@@ -6864,7 +6959,7 @@ def playground_page():
             if not form.submit.data:
                 the_url = url_for('index', i='docassemble.playground' + str(current_user.id) + ':' + the_file)
                 key = 'da:runplayground:' + str(current_user.id)
-                logmessage("Setting key " + str(key) + " to " + str(the_url))
+                #logmessage("Setting key " + str(key) + " to " + str(the_url))
                 pipe = r.pipeline()
                 pipe.set(key, the_url)
                 pipe.expire(key, 12)
@@ -7378,7 +7473,7 @@ def package_page():
 
 @app.errorhandler(Exception)
 def server_error(the_error):
-    errmess = unicode(the_error)
+    errmess = unicode(type(the_error).__name__) + ": " + unicode(the_error)
     if type(the_error) is DAError:
         the_trace = None
         logmessage(errmess)
@@ -7386,11 +7481,12 @@ def server_error(the_error):
         the_trace = traceback.format_exc()
         logmessage(the_trace)
     flask_logtext = []
-    with open(LOGFILE) as the_file:
-        for line in the_file:
-            if re.match('Exception', line):
-                flask_logtext = []
-            flask_logtext.append(line)
+    if os.path.exists(LOGFILE):
+        with open(LOGFILE) as the_file:
+            for line in the_file:
+                if re.match('Exception', line):
+                    flask_logtext = []
+                flask_logtext.append(line)
     # apache_logtext = []
     # with open(APACHE_LOGFILE) as the_file:
     #     for line in the_file:
@@ -7630,6 +7726,7 @@ def interview_list():
 #     return render_template('pages/webrtc.html', tab_title=word("WebRTC"), page_title=word("WebRTC"))
 
 @app.route('/webrtc_token', methods=['GET'])
+@csrf.exempt
 def webrtc_token():
     if twilio_config is None:
         logmessage("webrtc_token: could not get twilio configuration")
@@ -7650,6 +7747,7 @@ def webrtc_token():
     return jsonify(identity=identity, token=token)
 
 @app.route("/voice", methods=['POST', 'GET'])
+@csrf.exempt
 def voice():
     resp = twilio.twiml.Response()
     if twilio_config is None:
@@ -7683,6 +7781,7 @@ def voice():
     return Response(str(resp), mimetype='text/xml')
 
 @app.route("/digits", methods=['POST', 'GET'])
+@csrf.exempt
 def digits():
     resp = twilio.twiml.Response()
     if twilio_config is None:
@@ -7707,60 +7806,104 @@ def digits():
         resp.hangup()
     return Response(str(resp), mimetype='text/xml')
 
+def sms_body(phone_number, body='question', config='default'):
+    if twilio_config is None:
+        raise DAError("sms_body: Twilio not enabled")
+    if config not in twilio_config['name']:
+        raise DAError("sms_body: specified config value, " + str(config) + ", not in Twilio configuration")
+    tconfig = twilio_config['name'][config]
+    if 'sms' not in tconfig or tconfig['sms'] in [False, None, 0]:
+        raise DAError("sms_body: sms feature is not enabled in Twilio configuration")
+    if 'account sid' not in tconfig:
+        raise DAError("sms_body: account sid not in Twilio configuration")
+    if 'number' not in tconfig:
+        raise DAError("sms_body: phone number not in Twilio configuration")
+    form = dict(To=tconfig['number'], From=phone_number, Body=body, AccountSid=tconfig['account sid'])
+    base_url = request.base_url
+    url_root = request.url_root
+    tbackup = docassemble.base.functions.backup_thread_variables()
+    sbackup = backup_session()
+    try:
+        resp = do_sms(form, base_url, url_root, save=False)
+    except Exception as errmess:
+        resp = None
+        logmessage(str(errmess))
+    restore_session(sbackup)
+    docassemble.base.functions.restore_thread_variables(tbackup)
+    if resp is None or len(resp.verbs) == 0 or len(resp.verbs[0].verbs) == 0:
+        return None
+    #return 'snooobar'
+    return resp.verbs[0].verbs[0].body
+
 @app.route("/sms", methods=['POST'])
+@csrf.exempt
 def sms():
     #logmessage("Received: " + str(request.form))
-    special_messages = list()
+    form = request.form
+    base_url = request.base_url
+    url_root = request.url_root
+    resp = do_sms(form, base_url, url_root)
+    return Response(str(resp), mimetype='text/xml')
+
+def do_sms(form, base_url, url_root, config='default', save=True):
     resp = twilio.twiml.Response()
+    special_messages = list()
     if twilio_config is None:
-        logmessage("sms: ignoring message to sms because Twilio not enabled")
-        return Response(str(resp), mimetype='text/xml')
-    if 'sms' not in twilio_config['name']['default'] or twilio_config['name']['default']['sms'] in [False, None]:
-        logmessage("sms: ignoring message to sms because SMS not enabled")
-        return Response(str(resp), mimetype='text/xml')
-    if "AccountSid" not in request.form or request.form["AccountSid"] not in twilio_config['account sid']:
-        logmessage("sms: request to sms did not authenticate")
-        return Response(str(resp), mimetype='text/xml')
-    if "To" not in request.form or request.form["To"] not in twilio_config['number']:
-        logmessage("sms: request to sms ignored because recipient number " + str(request.form.get('To', None)) + " not in configuration, " + str(twilio_config))
-        return Response(str(resp), mimetype='text/xml')
-    tconfig = twilio_config['number'][request.form["To"]]
-    if "From" not in request.form or not re.search(r'[0-9]', request.form["From"]):
-        logmessage("sms: request to sms ignored because unable to determine caller ID")
-        return Response(str(resp), mimetype='text/xml')
-    if "Body" not in request.form:
-        logmessage("sms: request to sms ignored because message had no content")
-        return Response(str(resp), mimetype='text/xml')
-    inp = request.form['Body'].strip()
+        logmessage("do_sms: ignoring message to sms because Twilio not enabled")
+        return resp
+    if "AccountSid" not in form or form["AccountSid"] not in twilio_config['account sid']:
+        logmessage("do_sms: request to sms did not authenticate")
+        return resp
+    if "To" not in form or form["To"] not in twilio_config['number']:
+        logmessage("do_sms: request to sms ignored because recipient number " + str(form.get('To', None)) + " not in configuration, " + str(twilio_config))
+        return resp
+    tconfig = twilio_config['number'][form["To"]]
+    if 'sms' not in tconfig or tconfig['sms'] in [False, None, 0]:
+        logmessage("do_sms: ignoring message to sms because SMS not enabled")
+        return resp
+    if "From" not in form or not re.search(r'[0-9]', form["From"]):
+        logmessage("do_sms: request to sms ignored because unable to determine caller ID")
+        return resp
+    if "Body" not in form:
+        logmessage("do_sms: request to sms ignored because message had no content")
+        return resp
+    inp = form['Body'].strip()
     #logmessage("Received >" + inp + "<")
-    key = 'da:sms:' + request.form["From"]
+    key = 'da:sms:client:' + form["From"] + ':server:' + tconfig['number']
+    #logmessage("Searching for " + key)
     sess_contents = r.get(key)
     if sess_contents is None:
+        logmessage("Nothing found")
         yaml_filename = tconfig.get('default interview', default_yaml_filename)
         if 'dispatch' in tconfig and type(tconfig['dispatch']) is dict:
             if inp.lower() in tconfig['dispatch']:
                 yaml_filename = tconfig['dispatch'][inp.lower()]
-                #logmessage("sms: using interview from dispatch: " + str(yaml_filename))
+                #logmessage("do_sms: using interview from dispatch: " + str(yaml_filename))
+        if yaml_filename is None:
+            logmessage("do_sms: request to sms ignored because no interview could be determined")
+            return resp
         secret = random_string(16)
         uid = get_unique_name(yaml_filename, secret)
         new_temp_user = TempUser()
         db.session.add(new_temp_user)
         db.session.commit()
-        sess_info = dict(yaml_filename=yaml_filename, uid=uid, secret=secret, number=request.form["From"], encrypted=True, tempuser=new_temp_user.id)
+        sess_info = dict(yaml_filename=yaml_filename, uid=uid, secret=secret, number=form["From"], encrypted=True, tempuser=new_temp_user.id, user_id=None)
         r.set(key, pickle.dumps(sess_info))
         accepting_input = False
     else:
         try:        
             sess_info = pickle.loads(sess_contents)
+            #logmessage("Unpickled contents: " + str(sess_info))
         except:
-            logmessage("sms: unable to decode session information")
-            return Response(str(resp), mimetype='text/xml')
+            #logmessage("do_sms: unable to decode session information")
+            return resp
         accepting_input = True
     if inp.lower() in [word('exit'), word('quit')]:
-        logmessage("sms: exiting")
-        reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
+        logmessage("do_sms: exiting")
+        if save:
+            reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
         r.delete(key)
-        return Response(str(resp), mimetype='text/xml')
+        return resp
     session['uid'] = sess_info['uid']
     obtain_lock(sess_info['uid'], sess_info['yaml_filename'])
     steps, user_dict, is_encrypted = fetch_user_dict(sess_info['uid'], sess_info['yaml_filename'], secret=sess_info['secret'])
@@ -7773,18 +7916,20 @@ def sms():
             sess_info['encrypted'] = encrypted
             is_encrypted = encrypted
             r.set(key, pickle.dumps(sess_info))
-            decrypt_session(sess_info['secret'], user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
+            if save:
+                decrypt_session(sess_info['secret'], user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
         if user_dict.get('multi_user', False) is False and encrypted is False:
             encrypted = True
             sess_info['encrypted'] = encrypted
             is_encrypted = encrypted
             r.set(key, pickle.dumps(sess_info))
-            encrypt_session(sess_info['secret'], user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
+            if save:
+                encrypt_session(sess_info['secret'], user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
         interview = docassemble.base.interview_cache.get_interview(sess_info['yaml_filename'])
         if 'skip' not in user_dict['_internal']:
             user_dict['_internal']['skip'] = dict()
         if 'smsgather' in user_dict['_internal']:
-            #logmessage("sms: need to gather " + user_dict['_internal']['smsgather'])
+            #logmessage("do_sms: need to gather " + user_dict['_internal']['smsgather'])
             sms_variable = user_dict['_internal']['smsgather']
         else:
             sms_variable = None
@@ -7792,7 +7937,13 @@ def sms():
         #     action_manual = True
         # else:
         #     action_manual = False
-        ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=request.base_url, url_root=request.url_root, sms_variable=sms_variable, skip=user_dict['_internal']['skip'])
+        user = None
+        if sess_info['user_id'] is not None:
+            user = load_user(sess_info['user_id'])
+        if user is None:
+            ci = dict(user=dict(is_anonymous=True, is_authenticated=False, email=None, theid=sess_info['tempuser'], the_user_id='t' + sess_info['tempuser'], roles=['user'], firstname='SMS', lastname='User', nickname=None, country=None, subdivisionfirst=None, subdivisionsecond=None, subdivisionthird=None, organization=None, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, sms_variable=sms_variable, skip=user_dict['_internal']['skip'], sms_sender=form["From"])
+        else:
+            ci = dict(user=dict(is_anonymous=False, is_authenticated=True, email=user.email, theid=user.id, the_user_id=user.id, roles=user.roles, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization, location=None), session=sess_info['uid'], secret=sess_info['secret'], yaml_filename=sess_info['yaml_filename'], interface='sms', url=base_url, url_root=url_root, encrypted=encrypted, sms_variable=sms_variable, skip=user_dict['_internal']['skip'])
         if action is not None:
             #logmessage("Setting action to " + str(action))
             ci.update(action)
@@ -7802,11 +7953,11 @@ def sms():
             sess_info['question'] = interview_status.question.name
             r.set(key, pickle.dumps(sess_info))
         elif 'question' in sess_info and sess_info['question'] != interview_status.question.name:
-            logmessage("sms: blanking the input because question changed")
+            logmessage("do_sms: blanking the input because question changed")
             if inp not in [word('?'), word('back'), word('question'), word('exit')]:
                 inp = 'question'
 
-        #logmessage("sms: inp is " + inp.lower() + " and steps is " + str(steps) + " and can go back is " + str(interview_status.can_go_back))
+        #logmessage("do_sms: inp is " + inp.lower() + " and steps is " + str(steps) + " and can go back is " + str(interview_status.can_go_back))
         m = re.search(r'^(' + word('menu') + '|' + word('link') + ')([0-9]+)', inp.lower())
         if m:
             #logmessage("Got " + inp)
@@ -7863,7 +8014,7 @@ def sms():
             release_lock(sess_info['uid'], sess_info['yaml_filename'])
             if 'uid' in session:
                 del session['uid']
-            return Response(str(resp), mimetype='text/xml')
+            return resp
         if inp_lower in [word('question')]:
             accepting_input = False
     if accepting_input:
@@ -7885,7 +8036,7 @@ def sms():
                     else:
                         break
                 if field is None:
-                    logmessage("sms: unclear what field is necessary!")
+                    logmessage("do_sms: unclear what field is necessary!")
                     if 'smsgather' in user_dict['_internal']:
                         del user_dict['_internal']['smsgather']
                     field = interview_status.question.fields[0]
@@ -7894,7 +8045,7 @@ def sms():
             else:
                 if hasattr(interview_status.question.fields[0], 'saveas'):
                     saveas = myb64unquote(interview_status.question.fields[0].saveas)
-                    #logmessage("sms: variable to set is " + str(saveas))
+                    #logmessage("do_sms: variable to set is " + str(saveas))
                 else:
                     saveas = None
                 field = interview_status.question.fields[0]
@@ -7914,14 +8065,14 @@ def sms():
                 saved_file = savedfile_numbered_file(filename, temp_image_file.name, yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
                 if inp_lower in [word('x')]:
                     the_string = saveas + " = docassemble.base.core.DAFile('" + saveas + "', filename='" + str(filename) + "', number=" + str(saved_file.file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
-                    #logmessage("sms: doing " + the_string)
+                    #logmessage("do_sms: doing " + the_string)
                     try:
                         exec('import docassemble.base.core', user_dict)
                         exec(the_string, user_dict)
                         changed = True
                         steps += 1
                     except Exception as errMess:
-                        logmessage("sms: error: " + str(errMess))
+                        logmessage("do_sms: error: " + str(errMess))
                         special_messages.append(word("Error") + ": " + str(errMess))
                     skip_it = True
                     data = repr('')
@@ -7933,22 +8084,22 @@ def sms():
                     data = repr('')
                 else:
                     files_to_process = list()
-                    num_media = int(request.form.get('NumMedia', '0'))
+                    num_media = int(form.get('NumMedia', '0'))
                     fileindex = 0
                     while True:
                         if field.datatype == "file" and fileindex > 0:
                             break
-                        if fileindex >= num_media or 'MediaUrl' + str(fileindex) not in request.form:
+                        if fileindex >= num_media or 'MediaUrl' + str(fileindex) not in form:
                             break
-                        #logmessage("mime type is" + request.form.get('MediaContentType' + str(fileindex), 'Unknown'))
-                        mimetype = request.form.get('MediaContentType' + str(fileindex), 'image/jpeg')
+                        #logmessage("mime type is" + form.get('MediaContentType' + str(fileindex), 'Unknown'))
+                        mimetype = form.get('MediaContentType' + str(fileindex), 'image/jpeg')
                         extension = re.sub(r'\.', r'', mimetypes.guess_extension(mimetype))
                         if extension == 'jpe':
                             extension = 'jpg'
                         filename = 'file' + '.' + extension
                         file_number = get_new_file_number(sess_info['uid'], filename, yaml_file_name=sess_info['yaml_filename'])
                         saved_file = SavedFile(file_number, extension=extension, fix=True)
-                        the_url = request.form['MediaUrl' + str(fileindex)]
+                        the_url = form['MediaUrl' + str(fileindex)]
                         #logmessage("Fetching from >" + the_url + "<")
                         saved_file.fetch_url(the_url)
                         process_file(saved_file, saved_file.path, mimetype, extension)
@@ -7961,14 +8112,14 @@ def sms():
                             elements.append("docassemble.base.core.DAFile('" + saveas + "[" + str(indexno) + "]', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')")
                             indexno += 1
                         the_string = saveas + " = docassemble.base.core.DAFileList('" + saveas + "', elements=[" + ", ".join(elements) + "])"
-                        logmessage("sms: doing " + the_string)
+                        logmessage("do_sms: doing " + the_string)
                         try:
                             exec('import docassemble.base.core', user_dict)
                             exec(the_string, user_dict)
                             changed = True
                             steps += 1
                         except Exception as errMess:
-                            logmessage("sms: error: " + str(errMess))
+                            logmessage("do_sms: error: " + str(errMess))
                             special_messages.append(word("Error") + ": " + str(errMess))
                         skip_it = True
                         data = repr('')
@@ -8012,12 +8163,12 @@ def sms():
                         eval(saveas, user_dict)
                     except:
                         the_string = saveas + ' = dict()'
-                        #logmessage("sms: doing " + the_string)
+                        #logmessage("do_sms: doing " + the_string)
                         try:
                             exec(the_string, user_dict)
                             changed = True
                         except:
-                            logmessage("sms: failed to create checkbox dict")
+                            logmessage("do_sms: failed to create checkbox dict")
                 if (inp_lower == word('skip') or (inp_lower == word('none') and hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes'])) and ((hasattr(field, 'disableothers') and field.disableothers) or (hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']) or not (interview_status.extras['required'][field.number] or (question.question_type == 'multiple_choice' and hasattr(field, 'saveas')))):
                     if hasattr(field, 'datatype'):
                         if field.datatype in ['object', 'object_radio']:
@@ -8028,12 +8179,12 @@ def sms():
                             data = repr('')
                             for choice in choice_list:
                                 the_string = choice[1] + ' = False'
-                                #logmessage("sms: doing " + str(the_string) + " for skipping checkboxes")
+                                #logmessage("do_sms: doing " + str(the_string) + " for skipping checkboxes")
                                 try:
                                     exec(the_string, user_dict)
                                     changed = True
                                 except:
-                                    logmessage("sms: failure to set checkbox with " + the_string)
+                                    logmessage("do_sms: failure to set checkbox with " + the_string)
                         elif field.datatype in ['integer']:
                             data = '0'
                         elif field.datatype in ['number', 'float', 'currency', 'range']:
@@ -8058,12 +8209,12 @@ def sms():
                                 the_string = 'if ' + choice[2] + ' not in ' + saveas + ':\n    ' + saveas + '.append(' + choice[2] + ')'
                             else:
                                 the_string = 'if ' + choice[2] + ' in ' + saveas + ':\n    ' + saveas + '.remove(' + choice[2] + ')'
-                            #logmessage("sms: doing " + str(the_string) + " for object_checkboxes")
+                            #logmessage("do_sms: doing " + str(the_string) + " for object_checkboxes")
                             try:
                                 exec(the_string, user_dict)
                                 changed = True
                             except:
-                                logmessage("sms: failure to set checkbox with " + the_string)
+                                logmessage("do_sms: failure to set checkbox with " + the_string)
                     elif hasattr(field, 'datatype') and field.datatype in ['checkboxes']:
                         skip_it = True
                         data = repr('')
@@ -8079,21 +8230,21 @@ def sms():
                                 the_string = choice[1] + ' = True'
                             else:
                                 the_string = choice[1] + ' = False'
-                            #logmessage("sms: doing " + str(the_string) + " for checkboxes")
+                            #logmessage("do_sms: doing " + str(the_string) + " for checkboxes")
                             try:
                                 exec(the_string, user_dict)
                                 changed = True
                             except:
-                                logmessage("sms: failure to set checkbox with " + the_string)
+                                logmessage("do_sms: failure to set checkbox with " + the_string)
                     else:
-                        #logmessage("sms: user selected " + inp_lower + " and data is " + str(cdata))
+                        #logmessage("do_sms: user selected " + inp_lower + " and data is " + str(cdata))
                         for potential_abb, value in cdata['abblower'].iteritems():
                             if inp_lower.startswith(potential_abb):
-                                #logmessage("sms: user selected " + value)
+                                #logmessage("do_sms: user selected " + value)
                                 for choice in choice_list:
-                                    #logmessage("sms: considering " + choice[0])
+                                    #logmessage("do_sms: considering " + choice[0])
                                     if value == choice[0]:
-                                        #logmessage("sms: found a match")
+                                        #logmessage("do_sms: found a match")
                                         saveas = choice[1]
                                         if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio']:
                                             data = choice[2]
@@ -8151,23 +8302,23 @@ def sms():
         else:
             data = None
         if data is None:
-            logmessage("sms: could not process input: " + inp)
+            logmessage("do_sms: could not process input: " + inp)
             special_messages.append(word("I do not understand what you mean by") + ' "' + inp + '"')
         else:
             the_string = saveas + ' = ' + data
-            #logmessage("sms: doing " + str(the_string))
+            #logmessage("do_sms: doing " + str(the_string))
             #release_lock(sess_info['uid'], sess_info['yaml_filename'])
-            #return Response(str(resp), mimetype='text/xml')
+            #return resp
             try:
                 if not skip_it:
                     exec(the_string, user_dict)
                     changed = True
                     if hasattr(field, 'disableothers') and field.disableothers and hasattr(field, 'saveas'):
-                        #logmessage("sms: disabling others")
+                        #logmessage("do_sms: disabling others")
                         if 'sms_variable' in interview_status.current_info:
                             del interview_status.current_info['sms_variable']
                         if 'smsgather' in user_dict['_internal'] and user_dict['_internal']['smsgather'] == saveas:
-                            #logmessage("sms: deleting " + user_dict['_internal']['smsgather'] + "because disable others")
+                            #logmessage("do_sms: deleting " + user_dict['_internal']['smsgather'] + "because disable others")
                             del user_dict['_internal']['smsgather']
                 if next_field is None:
                     if 'skip' in user_dict['_internal']:
@@ -8177,22 +8328,23 @@ def sms():
                 else:
                     user_dict['_internal']['skip'][field.number] = True
                 if 'smsgather' in user_dict['_internal'] and user_dict['_internal']['smsgather'] == saveas:
-                    #logmessage("sms: deleting " + user_dict['_internal']['smsgather'])
+                    #logmessage("do_sms: deleting " + user_dict['_internal']['smsgather'])
                     del user_dict['_internal']['smsgather']
             except:
-                logmessage("sms: failure to set variable with " + the_string)
+                logmessage("do_sms: failure to set variable with " + the_string)
                 release_lock(sess_info['uid'], sess_info['yaml_filename'])
                 if 'uid' in session:
                     del session['uid']
-                return Response(str(resp), mimetype='text/xml')
+                return resp
         if changed and next_field is None and question.name not in user_dict['_internal']['answers']:
             user_dict['_internal']['answered'].add(question.name)
         interview.assemble(user_dict, interview_status)
         sess_info['question'] = interview_status.question.name
         r.set(key, pickle.dumps(sess_info))
     if interview_status.question.question_type in ["restart", "exit"]:
-        logmessage("sms: exiting because of restart or exit")
-        reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
+        logmessage("do_sms: exiting because of restart or exit")
+        if save:
+            reset_user_dict(sess_info['uid'], sess_info['yaml_filename'])
         r.delete(key)
     else:
         if not interview_status.can_go_back:
@@ -8200,16 +8352,16 @@ def sms():
         #user_dict['_internal']['answers'] = dict()
         if interview_status.question.name and interview_status.question.name in user_dict['_internal']['answers']:
             del user_dict['_internal']['answers'][interview_status.question.name]
-        #logmessage("sms: " + as_sms(interview_status))
+        #logmessage("do_sms: " + as_sms(interview_status))
         #twilio_client = TwilioRestClient(tconfig['account sid'], tconfig['auth token'])
-        #message = twilio_client.messages.create(to=request.form["From"], from_=request.form["To"], body=as_sms(interview_status))
+        #message = twilio_client.messages.create(to=form["From"], from_=form["To"], body=as_sms(interview_status))
         #logmessage("calling as_sms")
         sms_info = as_sms(interview_status)
         qoutput = sms_info['question']
         if sms_info['next'] is not None:
-            #logmessage("sms: next variable is " + sms_info['next'])
+            #logmessage("do_sms: next variable is " + sms_info['next'])
             user_dict['_internal']['smsgather'] = sms_info['next']
-        if accepting_input or changed or action_performed or sms_info['next'] is not None:
+        if (accepting_input or changed or action_performed or sms_info['next'] is not None) and save:
             save_user_dict(sess_info['uid'], user_dict, sess_info['yaml_filename'], secret=sess_info['secret'], encrypt=encrypted, changed=changed)
         for special_message in special_messages:
             qoutput = re.sub(r'XXXXMESSAGE_AREAXXXX', "\n" + special_message + 'XXXXMESSAGE_AREAXXXX', qoutput)
@@ -8219,13 +8371,15 @@ def sms():
             sess_info['encrypted'] = encrypted
             is_encrypted = encrypted
             r.set(key, pickle.dumps(sess_info))
-            decrypt_session(secret, user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
+            if save:
+                decrypt_session(secret, user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
         if user_dict.get('multi_user', False) is False and encrypted is False:
             encrypted = True
             sess_info['encrypted'] = encrypted
             is_encrypted = encrypted
             r.set(key, pickle.dumps(sess_info))
-            encrypt_session(secret, user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
+            if save:
+                encrypt_session(secret, user_code=sess_info['uid'], filename=sess_info['yaml_filename'])
         if len(interview_status.attachments) > 0:
             with resp.message(qoutput) as m:
                 media_count = 0
@@ -8239,17 +8393,17 @@ def sms():
                             continue
                         filename = attachment['filename'] + '.' + doc_format
                         saved_file = savedfile_numbered_file(filename, attachment['file'][doc_format], yaml_file_name=sess_info['yaml_filename'], uid=sess_info['uid'])
-                        url = re.sub(r'/$', r'', request.url_root) + url_for('serve_stored_file', uid=sess_info['uid'], number=saved_file.file_number, filename=attachment['filename'], extension=doc_format)
+                        url = re.sub(r'/$', r'', url_root) + url_for('serve_stored_file', uid=sess_info['uid'], number=saved_file.file_number, filename=attachment['filename'], extension=doc_format)
                         #logmessage('sms: url is ' + str(url))
                         m.media(url)
                         media_count += 1
         else:
             resp.message(qoutput)
     release_lock(sess_info['uid'], sess_info['yaml_filename'])
-    #logmessage(str(request.form))
+    #logmessage(str(form))
     if 'uid' in session:
         del session['uid']
-    return Response(str(resp), mimetype='text/xml')
+    return resp
 
 for path in [FULL_PACKAGE_DIRECTORY, UPLOAD_DIRECTORY, LOG_DIRECTORY]: #PACKAGE_CACHE
     if not os.path.isdir(path):
@@ -8261,15 +8415,6 @@ for path in [FULL_PACKAGE_DIRECTORY, UPLOAD_DIRECTORY, LOG_DIRECTORY]: #PACKAGE_
         sys.exit("Unable to create files in directory: " + path)
 if not os.access(WEBAPP_PATH, os.W_OK):
     sys.exit("Unable to modify the timestamp of the WSGI file: " + WEBAPP_PATH)
-
-docassemble.base.functions.set_write_record(docassemble.webapp.backend.write_record)
-docassemble.base.functions.set_read_records(docassemble.webapp.backend.read_records)
-docassemble.base.functions.set_delete_record(docassemble.webapp.backend.delete_record)
-docassemble.base.util.set_user_id_function(user_id_dict)
-docassemble.base.functions.set_generate_csrf(generate_csrf)
-docassemble.base.parse.set_url_finder(get_url_from_file_reference)
-docassemble.base.parse.set_url_for(url_for)
-#APPLICATION_NAME = 'docassemble'
 
 if 'twilio' in daconfig:
     twilio_config = dict()
@@ -8289,13 +8434,27 @@ if 'twilio' in daconfig:
             if 'name' in tconfig:
                 twilio_config['name'][tconfig['name']] = tconfig
         else:
-            logmessage("sms: improper setup in twilio configuration")    
+            logmessage("do_sms: improper setup in twilio configuration")    
     if 'default' not in twilio_config['name']:
         twilio_config = None
 else:
     twilio_config = None
     
-docassemble.base.util.set_twilio_config(twilio_config)
+#docassemble.base.util.set_twilio_config(twilio_config)
+docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
+                                         chat_partners_available=chat_partners_available,
+                                         sms_body=sms_body,
+                                         get_sms_session=get_sms_session,
+                                         initiate_sms_session=initiate_sms_session,
+                                         terminate_sms_session=terminate_sms_session,
+                                         twilio_config=twilio_config,
+                                         user_id_dict=user_id_dict)
+#docassemble.base.util.set_user_id_function(user_id_dict)
+#docassemble.base.functions.set_generate_csrf(generate_csrf)
+#docassemble.base.parse.set_url_finder(get_url_from_file_reference)
+#docassemble.base.parse.set_url_for(url_for)
+#APPLICATION_NAME = 'docassemble'
+
 
 title_documentation = get_title_documentation()
 documentation_dict = get_documentation_dict()
@@ -8326,7 +8485,7 @@ for word_file in word_file_list:
     else:
         sys.stderr.write("Error reading " + str(word_file) + ": yaml file not found.\n")
 
-docassemble.base.functions.set_chat_partners_available(chat_partners_available)
+#docassemble.base.functions.set_chat_partners_available(chat_partners_available)
 
 password_secret_key = daconfig.get('password_secretkey', app.secret_key)
 
@@ -8350,14 +8509,24 @@ if not in_celery:
         docassemble.base.logger.set_logmessage(syslog_message)
 
 r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
-docassemble.base.functions.set_server_redis(r)
+#docassemble.base.functions.set_server_redis(r)
 
-if not in_celery:
+def null_func(*pargs, **kwargs):
+    logmessage("Null function called")
+    return None
+
+if in_celery:
+    docassemble.base.functions.update_server(bg_action=null_func,
+                                             worker_convert=null_func)
+else:
     import docassemble.webapp.worker
     #sys.stderr.write("calling set worker now\n")
-    docassemble.base.functions.set_worker(docassemble.webapp.worker.background_action, docassemble.webapp.worker.convert)
+    docassemble.base.functions.update_server(bg_action=docassemble.webapp.worker.background_action,
+                                             worker_convert=docassemble.webapp.worker.convert)
+
 import docassemble.webapp.machinelearning
 docassemble.base.util.set_knn_machine_learner(docassemble.webapp.machinelearning.SimpleTextMachineLearner)
+
 from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, UserDictKeys, TempUser, ChatLog
 with app.app_context():
     copy_playground_modules()

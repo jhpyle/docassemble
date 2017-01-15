@@ -23,14 +23,16 @@ import types
 from Crypto.Cipher import AES
 from Crypto import Random
 from dateutil import tz
+import tzlocal
 
 import docassemble.base.parse
 import re
 import os
 import sys
 import pyPdf
-from flask import session, current_app, has_request_context
+from flask import session, current_app, has_request_context, url_for
 from flask_mail import Mail, Message
+from flask_wtf.csrf import generate_csrf
 from PIL import Image
 import xml.etree.ElementTree as ET
 import docassemble.webapp.worker
@@ -85,50 +87,6 @@ def savedfile_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
     new_file.save(finalize=True)
     return new_file
 
-mail = Mail(app)
-
-def da_send_mail(the_message):
-    mail.send(the_message)
-
-docassemble.base.parse.set_da_send_mail(da_send_mail)
-
-docassemble.base.parse.set_save_numbered_file(save_numbered_file)
-
-import docassemble.base.functions
-from docassemble.base.functions import dict_as_json
-docassemble.base.functions.set_debug_status(DEBUG)
-DEFAULT_LANGUAGE = daconfig.get('language', 'en')
-DEFAULT_LOCALE = daconfig.get('locale', 'en_US.utf8')
-country_part = re.sub(r'\..*', r'', DEFAULT_LOCALE)
-DEFAULT_COUNTRY = daconfig.get('country', country_part)
-DEFAULT_DIALECT = daconfig.get('dialect', 'us')
-if 'timezone' in daconfig and daconfig['timezone'] is not None:
-    docassemble.base.functions.set_default_timezone(daconfig['timezone'])
-docassemble.base.functions.set_default_language(DEFAULT_LANGUAGE)
-docassemble.base.functions.set_default_locale(DEFAULT_LOCALE)
-docassemble.base.functions.set_default_dialect(DEFAULT_DIALECT)
-docassemble.base.functions.set_default_country(DEFAULT_COUNTRY)
-docassemble.base.functions.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
-docassemble.base.functions.set_locale(DEFAULT_LOCALE)
-docassemble.base.functions.set_da_config(daconfig)
-docassemble.base.functions.update_locale()
-if 'currency symbol' in daconfig:
-    docassemble.base.functions.update_language_function('*', 'currency_symbol', lambda: daconfig['currency symbol'])
-
-if S3_ENABLED:
-    import docassemble.webapp.amazon
-    s3 = docassemble.webapp.amazon.s3object(s3_config)
-else:
-    s3 = None
-
-initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict())
-#else:
-#    initial_dict = dict(_internal=dict(tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
-if 'initial_dict' in daconfig:
-    initial_dict.update(daconfig['initial_dict'])
-docassemble.base.parse.set_initial_dict(initial_dict)
-from docassemble.base.functions import pickleable_objects
-
 def absolute_filename(the_file):
     match = re.match(r'^docassemble.playground([0-9]+):(.*)', the_file)
     #logmessage("absolute_filename call: " + the_file)
@@ -154,13 +112,135 @@ def absolute_filename(the_file):
         return playground
     return(None)
 
+def get_info_from_file_reference(file_reference, **kwargs):
+    #sys.stderr.write('file reference is ' + str(file_reference) + "\n")
+    #logmessage('file reference is ' + str(file_reference))
+    if 'convert' in kwargs:
+        convert = kwargs['convert']
+    else:
+        convert = None
+    if re.match('[0-9]+', str(file_reference)):
+        result = get_info_from_file_number(int(file_reference))
+    elif re.search(r'^https*://', str(file_reference)):
+        #logmessage(str(file_reference) + " is a URL")
+        m = re.search('(\.[A-Za-z0-9]+)$', file_reference)
+        if m:
+            suffix = m.group(1)
+        else:
+            suffix = '.html'
+        result = dict(tempfile=tempfile.NamedTemporaryFile(suffix=suffix))
+        urllib.urlretrieve(file_reference, result['tempfile'].name)
+        result['fullpath'] = result['tempfile'].name
+        #logmessage("Downloaded to " + result['tempfile'].name)
+    else:
+        #logmessage(str(file_reference) + " is not a URL")
+        result = dict()
+        question = kwargs.get('question', None)
+        the_package = None
+        parts = file_reference.split(':')
+        if len(parts) == 1:
+            the_package = None
+            if question is not None:
+                the_package = question.from_source.package
+            if the_package is not None:
+                file_reference = the_package + ':' + file_reference
+            else:
+                file_reference = 'docassemble.base:' + file_reference
+        result['fullpath'] = docassemble.base.functions.static_filename_path(file_reference)
+    #logmessage("path is " + str(result['fullpath']))
+    if result['fullpath'] is not None and os.path.isfile(result['fullpath']):
+        result['filename'] = os.path.basename(result['fullpath'])
+        ext_type, result['mimetype'] = get_ext_and_mimetype(result['fullpath'])
+        path_parts = os.path.splitext(result['fullpath'])
+        result['path'] = path_parts[0]
+        result['extension'] = path_parts[1].lower()
+        result['extension'] = re.sub(r'\.', '', result['extension'])
+        #logmessage("Extension is " + result['extension'])
+        if convert is not None and result['extension'] in convert:
+            #logmessage("Converting...")
+            if os.path.isfile(result['path'] + '.' + convert[result['extension']]):
+                #logmessage("Found conversion file ")
+                result['extension'] = convert[result['extension']]
+                result['fullpath'] = result['path'] + '.' + result['extension']
+                ext_type, result['mimetype'] = get_ext_and_mimetype(result['fullpath'])
+            else:
+                logmessage("Did not find file " + result['path'] + '.' + convert[result['extension']])
+                return dict()
+        #logmessage("Full path is " + result['fullpath'])
+        if os.path.isfile(result['fullpath']):
+            add_info_about_file(result['fullpath'], result)
+    else:
+        logmessage("File reference " + str(file_reference) + " DID NOT EXIST.")
+    return(result)
+
+#docassemble.base.parse.set_file_finder(get_info_from_file_reference)
+
+mail = Mail(app)
+
+def da_send_mail(the_message):
+    mail.send(the_message)
+
+#docassemble.base.parse.set_da_send_mail(da_send_mail)
+
+#docassemble.base.parse.set_save_numbered_file(save_numbered_file)
+
+import docassemble.webapp.machinelearning
+import docassemble.base.functions
+from docassemble.base.functions import dict_as_json
+DEFAULT_LANGUAGE = daconfig.get('language', 'en')
+DEFAULT_LOCALE = daconfig.get('locale', 'en_US.utf8')
+DEFAULT_DIALECT = daconfig.get('dialect', 'us')
+if 'timezone' in daconfig and daconfig['timezone'] is not None:
+    DEFAULT_TIMEZONE = daconfig['timezone']
+else:
+    try:
+        DEFAULT_TIMEZONE = tzlocal.get_localzone().zone
+    except:
+        DEFAULT_TIMEZONE = 'America/New_York'
+
+docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
+                                         default_locale=DEFAULT_LOCALE,
+                                         default_dialect=DEFAULT_DIALECT,
+                                         default_timezone=DEFAULT_TIMEZONE,
+                                         default_country=daconfig.get('country', re.sub(r'\..*', r'', DEFAULT_LOCALE)),
+                                         daconfig=daconfig,
+                                         debug_status=DEBUG,
+                                         save_numbered_file=save_numbered_file,
+                                         send_mail=da_send_mail,
+                                         absolute_filename=absolute_filename,
+                                         write_record=write_record,
+                                         read_records=read_records,
+                                         delete_record=delete_record,
+                                         generate_csrf=generate_csrf,
+                                         url_for=url_for,
+                                         file_finder=get_info_from_file_reference)
+docassemble.base.functions.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
+docassemble.base.functions.set_locale(DEFAULT_LOCALE)
+docassemble.base.functions.update_locale()
+if 'currency symbol' in daconfig:
+    docassemble.base.functions.update_language_function('*', 'currency_symbol', lambda: daconfig['currency symbol'])
+
+if S3_ENABLED:
+    import docassemble.webapp.amazon
+    s3 = docassemble.webapp.amazon.s3object(s3_config)
+else:
+    s3 = None
+
+initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict())
+#else:
+#    initial_dict = dict(_internal=dict(tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
+if 'initial_dict' in daconfig:
+    initial_dict.update(daconfig['initial_dict'])
+docassemble.base.parse.set_initial_dict(initial_dict)
+from docassemble.base.functions import pickleable_objects
+
 # def absolute_validator(the_file):
 #     #logmessage("Running my validator")
 #     if the_file.startswith(os.path.join(UPLOAD_DIRECTORY, 'playground')) and current_user.is_authenticated and not current_user.is_anonymous and current_user.has_role('admin', 'developer') and os.path.dirname(the_file) == os.path.join(UPLOAD_DIRECTORY, 'playground', str(current_user.id)):
 #         return True
 #     return False
 
-docassemble.base.parse.set_absolute_filename(absolute_filename)
+#docassemble.base.parse.set_absolute_filename(absolute_filename)
 #logmessage("Server started")
 
 def can_access_file_number(file_number, uid=None):
@@ -231,73 +311,14 @@ def add_info_about_file(filename, result):
                 result['height'] = float(dimen[3]) - float(dimen[1])
     return
 
-def get_info_from_file_reference(file_reference, **kwargs):
-    #sys.stderr.write('file reference is ' + str(file_reference) + "\n")
-    #logmessage('file reference is ' + str(file_reference))
-    if 'convert' in kwargs:
-        convert = kwargs['convert']
-    else:
-        convert = None
-    if re.match('[0-9]+', str(file_reference)):
-        result = get_info_from_file_number(int(file_reference))
-    elif re.search(r'^https*://', str(file_reference)):
-        #logmessage(str(file_reference) + " is a URL")
-        m = re.search('(\.[A-Za-z0-9]+)$', file_reference)
-        if m:
-            suffix = m.group(1)
-        else:
-            suffix = '.html'
-        result = dict(tempfile=tempfile.NamedTemporaryFile(suffix=suffix))
-        urllib.urlretrieve(file_reference, result['tempfile'].name)
-        result['fullpath'] = result['tempfile'].name
-        #logmessage("Downloaded to " + result['tempfile'].name)
-    else:
-        #logmessage(str(file_reference) + " is not a URL")
-        result = dict()
-        question = kwargs.get('question', None)
-        the_package = None
-        parts = file_reference.split(':')
-        if len(parts) == 1:
-            the_package = None
-            if question is not None:
-                the_package = question.from_source.package
-            if the_package is not None:
-                file_reference = the_package + ':' + file_reference
-            else:
-                file_reference = 'docassemble.base:' + file_reference
-        result['fullpath'] = docassemble.base.functions.static_filename_path(file_reference)
-    #logmessage("path is " + str(result['fullpath']))
-    if result['fullpath'] is not None and os.path.isfile(result['fullpath']):
-        result['filename'] = os.path.basename(result['fullpath'])
-        ext_type, result['mimetype'] = get_ext_and_mimetype(result['fullpath'])
-        path_parts = os.path.splitext(result['fullpath'])
-        result['path'] = path_parts[0]
-        result['extension'] = path_parts[1].lower()
-        result['extension'] = re.sub(r'\.', '', result['extension'])
-        #logmessage("Extension is " + result['extension'])
-        if convert is not None and result['extension'] in convert:
-            #logmessage("Converting...")
-            if os.path.isfile(result['path'] + '.' + convert[result['extension']]):
-                #logmessage("Found conversion file ")
-                result['extension'] = convert[result['extension']]
-                result['fullpath'] = result['path'] + '.' + result['extension']
-                ext_type, result['mimetype'] = get_ext_and_mimetype(result['fullpath'])
-            else:
-                logmessage("Did not find file " + result['path'] + '.' + convert[result['extension']])
-                return dict()
-        #logmessage("Full path is " + result['fullpath'])
-        if os.path.isfile(result['fullpath']):
-            add_info_about_file(result['fullpath'], result)
-    else:
-        logmessage("File reference " + str(file_reference) + " DID NOT EXIST.")
-    return(result)
-
-docassemble.base.parse.set_file_finder(get_info_from_file_reference)
-
 if in_celery:
     LOGFILE = daconfig.get('celery_flask_log', '/tmp/celery-flask.log')
 else:
     LOGFILE = daconfig.get('flask_log', '/tmp/flask.log')
+
+if not os.path.exists(LOGFILE):
+    with open(LOGFILE, 'a'):
+        os.utime(LOGFILE, None)
 
 error_file_handler = logging.FileHandler(filename=LOGFILE)
 error_file_handler.setLevel(logging.DEBUG)

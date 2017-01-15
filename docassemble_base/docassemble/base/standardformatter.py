@@ -1,6 +1,5 @@
-from docassemble.base.functions import word, currency_symbol, url_action, comma_and_list, generate_csrf
-import docassemble.base.filter
-from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text
+from docassemble.base.functions import word, currency_symbol, url_action, comma_and_list, server
+from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape
 from docassemble.base.parse import Question, debug
 from docassemble.base.logger import logmessage
 import urllib
@@ -14,7 +13,7 @@ import codecs
 
 def tracker_tag(status):
     output = ''
-    output += '                <input type="hidden" name="csrf_token" value="' + generate_csrf() + '"/>\n'
+    output += '                <input type="hidden" name="csrf_token" value="' + server.generate_csrf() + '"/>\n'
     if status.question.name:
         output += '                <input type="hidden" name="_question_name" value="' + status.question.name + '"/>\n'
     output += '                <input type="hidden" name="_tracker" value="' + str(status.tracker) + '"/>\n'
@@ -38,9 +37,9 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
         status.attributions.add(the_image.attribution)
     if the_image is None:
         return('')
-    url = docassemble.base.filter.url_finder(str(the_image.package) + ':' + str(the_image.filename))
+    url = server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
     sizing = 'width:' + str(width_value) + str(width_units) + ';'
-    filename = docassemble.base.filter.file_finder(str(the_image.package) + ':' + str(the_image.filename))
+    filename = server.file_finder(str(the_image.package) + ':' + str(the_image.filename))
     if 'extension' in filename and filename['extension'] == 'svg':
         if filename['width'] and filename['height']:
             sizing += 'height:' + str(width_value * (filename['height']/filename['width'])) + str(width_units) + ';'
@@ -465,11 +464,11 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
                 the_image = status.question.interview.images.get(decoration['image'], None)
                 if the_image is not None:
                     #sys.stderr.write("yoo4\n")
-                    url = docassemble.base.filter.url_finder(str(the_image.package) + ':' + str(the_image.filename))
+                    url = server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
                     width_value = 2.0
                     width_units = 'em'
                     sizing = 'width:' + str(width_value) + str(width_units) + ';'
-                    filename = docassemble.base.filter.file_finder(str(the_image.package) + ':' + str(the_image.filename))
+                    filename = server.file_finder(str(the_image.package) + ':' + str(the_image.filename))
                     if 'extension' in filename and filename['extension'] == 'svg' and 'width' in filename:
                         if filename['width'] and filename['height']:
                             sizing += 'height:' + str(width_value * (filename['height']/filename['width'])) + str(width_units) + ';'
@@ -770,7 +769,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
                                 ischecked = ' checked="checked"'
                             else:
                                 ischecked = ''
-                            output += '                <div class="row"><div class="col-md-12"><input alt="' + formatted_key + '" data-labelauty="' + docassemble.base.filter.my_escape(the_icon) + formatted_key + '|' + docassemble.base.filter.my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(choice[key]) + '"' + ischecked + '/></div></div>\n'
+                            output += '                <div class="row"><div class="col-md-12"><input alt="' + formatted_key + '" data-labelauty="' + my_escape(the_icon) + formatted_key + '|' + my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value="' + unicode(choice[key]) + '"' + ischecked + '/></div></div>\n'
                         id_index += 1
                 validation_rules['ignore'] = None
                 validation_rules['rules'][status.question.fields[0].saveas] = {'required': True}
@@ -787,7 +786,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
                         if key == 'image':
                             continue
                         formatted_key = markdown_to_html(key, status=status, trim=True, escape=True)
-                        output += '                <div class="row"><div class="col-md-12"><input alt="' + formatted_key + '" data-labelauty="' + docassemble.base.filter.my_escape(the_icon) + formatted_key + '|' + docassemble.base.filter.my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="X211bHRpcGxlX2Nob2ljZQ==" type="radio" value="' + str(indexno) + '"/></div></div>\n'
+                        output += '                <div class="row"><div class="col-md-12"><input alt="' + formatted_key + '" data-labelauty="' + my_escape(the_icon) + formatted_key + '|' + my_escape(the_icon) + formatted_key + '" class="to-labelauty radio-icon" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="X211bHRpcGxlX2Nob2ljZQ==" type="radio" value="' + str(indexno) + '"/></div></div>\n'
                         id_index += 1
                     indexno += 1
                     validation_rules['rules']['X211bHRpcGxlX2Nob2ljZQ=='] = {'required': True}
@@ -988,7 +987,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
                         <div class="form-actions"><button class="btn btn-primary" type="submit">""" + word('Send') + '</button></div><input type="hidden" name="_email_attachments" value="1"/><input type="hidden" name="_question_number" value="' + str(status.question.number) + '"/>'
             output += """
                       </fieldset>
-                      <input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/>
+                      <input type="hidden" name="csrf_token" value=""" + '"' + server.generate_csrf() + '"' + """/>
                     </form>
                   </div>
                 </div>

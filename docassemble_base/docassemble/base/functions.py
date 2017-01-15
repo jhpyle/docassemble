@@ -13,6 +13,7 @@ from docassemble.base.error import ForcedNameError, QuestionError, ResponseError
 import locale
 import urllib
 import codecs
+import copy
 import base64
 import json
 import ast
@@ -28,17 +29,17 @@ locale.setlocale(locale.LC_ALL, '')
 
 __all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables']
 
-debug = False
-default_dialect = 'us'
-default_language = 'en'
-default_locale = 'US.utf8'
-default_country = 'US'
+# debug = False
+# default_dialect = 'us'
+# default_language = 'en'
+# default_locale = 'US.utf8'
+# default_country = 'US'
 
-try:
-    default_timezone = tzlocal.get_localzone().zone
-except:
-    default_timezone = 'America/New_York'
-daconfig = dict()
+# try:
+#     default_timezone = tzlocal.get_localzone().zone
+# except:
+#     default_timezone = 'America/New_York'
+# daconfig = dict()
 dot_split = re.compile(r'([^\.\[\]]+(?:\[.*?\])?)')
 newlines = re.compile(r'[\r\n]+')
 single_newline = re.compile(r'[\r\n]')
@@ -47,29 +48,6 @@ class ReturnValue(object):
     def __init__(self, value=None, extra=None):
         self.extra = extra
         self.value = value
-
-class ThreadVariables(threading.local):
-    language = default_language
-    dialect = default_dialect
-    country = default_country
-    locale = default_locale
-    user = None
-    role = 'user'
-    current_info = dict()
-    internal = dict()
-    #user_dict = None
-    initialized = False
-    redis = None
-    uid = None
-    gathering_mode = dict()
-    current_variable = list()
-    def __init__(self, **kw):
-        if self.initialized:
-            raise SystemError('__init__ called too many times')
-        self.initialized = True
-        self.__dict__.update(kw)
-
-this_thread = ThreadVariables()
 
 def get_current_variable():
     if len(this_thread.current_variable):
@@ -141,7 +119,7 @@ def countries_list():
     return [{country.alpha_2: country.name} for country in sorted(pycountry.countries, key=lambda x: x.name)]
 
 def interface():
-    """Returns web, sms, cron, or worker, depending on how the interview is being accessed"""
+    """Returns web, sms, cron, or worker, depending on how the interview is being accessed."""
     return this_thread.current_info.get('interface', None)
 
 def user_privileges():
@@ -197,7 +175,7 @@ def user_info():
 
 def action_arguments():
     """Used when processing an "action."  Returns a dictionary with the 
-    arguments passed to url_action() or interview_url_action()"""
+    arguments passed to url_action() or interview_url_action()."""
     if 'arguments' in this_thread.current_info:
         return this_thread.current_info['arguments']
     else:
@@ -243,7 +221,7 @@ def user_lat_lon():
 
 def chat_partners_available(*pargs, **kwargs):
     """Given a list of partner roles, returns the number of operators and 
-    peers available to chat with the user"""
+    peers available to chat with the user."""
     partner_roles = kwargs.get('partner_roles', list())
     mode = kwargs.get('mode', 'peerhelp')
     if type(partner_roles) is not list:
@@ -265,7 +243,7 @@ def chat_partners_available(*pargs, **kwargs):
     if the_user_id == 'tNone':
         logmessage("chat_partners_available: unable to get temporary user id")
         return dict(peer=0, help=0)
-    return chat_partners_available_func(session_id, yaml_filename, the_user_id, mode, partner_roles)
+    return server.chat_partners_available(session_id, yaml_filename, the_user_id, mode, partner_roles)
 
 def interview_url(**kwargs):
     """Returns a URL that is direct link to the interview and the current
@@ -302,6 +280,7 @@ def get_info(att):
     """Used to retrieve the values of global variables set through set_info()."""
     if hasattr(this_thread, att):
         return getattr(this_thread, att)
+    return None
 
 def set_info(**kwargs):
     """Used to set the values of global variables you wish to retrieve through get_info()."""
@@ -395,105 +374,294 @@ nice_numbers = {
     }
 }
 
-def basic_url_of(*pargs, **kwargs):
-    """Returns a URL to a file within a docassemble package."""
-    return pargs[0]
+# def basic_url_of(*pargs, **kwargs):
+#     """Returns a URL to a file within a docassemble package."""
+#     return pargs[0]
 
-the_url_func = basic_url_of
+# the_url_func = basic_url_of
 
-def url_of(*pargs, **kwargs):
-    """Returns a URL to a file within a docassemble package."""
-    return the_url_func(*pargs, **kwargs)
+# def url_of(*pargs, **kwargs):
+#     """Returns a URL to a file within a docassemble package."""
+#     return the_url_func(*pargs, **kwargs)
 
-def basic_write_record(key, data):
+# def basic_write_record(key, data):
+#     return None
+
+class WebFunc(object):
+    pass
+server = WebFunc()
+
+def null_func(*pargs, **kwargs):
     return None
 
-the_write_record = basic_write_record
+server.write_record = null_func
+server.read_records = null_func
+server.delete_record = null_func
+server.url_for = null_func
+server.generate_csrf = null_func
+server.bg_action = null_func
+server.worker_convert = null_func
+server.chat_partners_available = null_func
+server.absolute_filename = null_func
+server.save_numbered_file = null_func
+server.send_mail = null_func
+server.absolute_filename = null_func
+server.file_finder = null_func
+server.url_finder = null_func
+server.user_id_dict = null_func
+server.sms_body = null_func
+server.get_sms_session = null_func
+server.initiate_sms_session = null_func
+server.terminate_sms_session = null_func
+server.debug = False
+server.default_dialect = 'us'
+server.default_language = 'en'
+server.default_locale = 'US.utf8'
+server.default_country = 'US'
+server.server_redis = None
+server.twilio_config = dict()
+server.daconfig = dict()
+try:
+    server.default_timezone = tzlocal.get_localzone().zone
+except:
+    server.default_timezone = 'America/New_York'
 
-def set_write_record(func):
-    global the_write_record
-    the_write_record = func
+# class NullWebFunc(object):
+#     def write_record(*pargs, **kwargs):
+#         return None
+#     def read_records(*pargs, **kwargs):
+#         return None
+#     def delete_record(*pargs, **kwargs):
+#         return None
+#     def url_for(*pargs, **kwargs):
+#         return None
+#     def generate_csrf(*pargs, **kwargs):
+#         sys.stderr.write("Generating csrf\n")
+#         return None
+#     def bg_action(*pargs, **kwargs):
+#         return None
+#     def worker_convert(*pargs, **kwargs):
+#         return None
+#     def chat_partners(*pargs, **kwargs):
+#         return dict(peer=0, help=0)
+#     def absolute_filename(*pargs, **kwargs):
+#         return None
+#     def save_numbered_file(*pargs, **kwargs):
+#         return None
+#     def send_mail(*pargs, **kwargs):
+#         return None
+#     def absolute_filename(*pargs, **kwargs):
+#         return None
+#     def file_finder(*pargs, **kwargs):
+#         return None
+#     def url_finder(*pargs, **kwargs):
+#         return None
+#     def user_id_dict(*pargs, **kwargs):
+#         return None
+#     def __init__(self):
+#         self.debug = False
+#         self.default_dialect = 'us'
+#         self.default_language = 'en'
+#         self.default_locale = 'US.utf8'
+#         self.default_country = 'US'
+#         self.server_redis = None
+#         try:
+#             self.default_timezone = tzlocal.get_localzone().zone
+#         except:
+#             self.default_timezone = 'America/New_York'
+#         self.daconfig = dict()
+
+# write_record = server.write_record
+# read_records = server.read_records
+# delete_record = server.delete_record
+# url_of = server.url_finder
+# get_sms_session = server.get_sms_session
+# initiate_sms_session = server.initiate_sms_session
+# terminate_sms_session = server.terminate_sms_session
 
 def write_record(key, data):
     """Stores the data in a SQL database for later retrieval with the
     key.  Returns the unique ID integers of the saved record.
     """
-    return the_write_record(key, data)
-
-def basic_read_records(key):
-    return dict()
-
-the_read_records = basic_read_records
-
-def set_read_records(func):
-    global the_read_records
-    the_read_records = func
-
-def read_records(key):
+    return server.write_record(key, data)
+def read_records(key, data):
     """Returns a dictionary of records that have been stored with
     write_record() using the given key.  In the dictionary, the key is
     the unique ID integer of the record and the value is the data that
     had been stored.
     """
-    return the_read_records(key)
-
-def basic_delete_record(key, id):
-    return
-
-the_delete_record = basic_delete_record
-
-def set_delete_record(func):
-    global the_delete_record
-    the_delete_record = func
-
+    return server.read_records(key, data)
 def delete_record(key, id):
     """Deletes a record with the given key and id."""
-    return the_delete_record(key, id)
+    return server.delete_record(key, id)
+def url_of(file_reference, **kwargs):
+    """Returns a URL to a file within a docassemble package."""
+    return server.url_finder(file_reference, **kwargs)
 
-def set_url_finder(func):
-    global the_url_func
-    the_url_func = func
-    if the_url_func.__doc__ is None:
-        the_url_func.__doc__ = """Returns a URL to a file within a docassemble package."""
+def server_capabilities():
+    """Returns a dictionary with true or false values indicating various capabilities of the server."""
+    result = dict(sms=False, google_login=False, facebook_login=False, voicerss=False, s3=False)
+    if 'twilio' in server.daconfig and type(server.daconfig['twilio']) in [list, dict]:
+        if type(server.daconfig['twilio']) is list:
+            tconfigs = server.daconfig['twilio']
+        else:
+            tconfigs = [server.daconfig['twilio']]
+        for tconfig in tconfigs:
+            if 'enabled' in tconfig and not tconfig['enabled']:
+                continue
+            result['sms'] = True
+            break
+    if 'oauth' in server.daconfig and type(server.daconfig['oauth']) is dict:
+        if 'google' in server.daconfig['oauth'] and type(server.daconfig['oauth']['google']) is dict:
+            if not ('enabled' in server.daconfig['oauth']['google'] and not server.daconfig['oauth']['google']['enabled']):
+                result['google_login'] = True
+        if 'facebook' in server.daconfig['oauth'] and type(server.daconfig['oauth']['facebook']) is dict:
+            if not ('enabled' in server.daconfig['oauth']['facebook'] and not server.daconfig['oauth']['facebook']['enabled']):
+                result['facebook_login'] = True
+    for key in ['voicerss', 's3']:
+        if key in server.daconfig and type(server.daconfig[key]) is dict:
+            if not ('enabled' in server.daconfig[key] and not server.daconfig[key]['enabled']):
+                result[key] = True
+    
+    return result
 
-def basic_generate_csrf(*pargs, **kwargs):
-    return None
+# def generate_csrf(*pargs, **kwargs):
+#     return server.generate_csrf(*pargs, **kwargs)
+# def chat_partners(*pargs, **kwargs):
+#     return dict(peer=0, help=0)
+# def absolute_filename(*pargs, **kwargs):
+#     return server.absolute_filename(*pargs, **kwargs)
+
+def update_server(*pargs, **kwargs):
+    for arg, func in kwargs.iteritems():
+        sys.stderr.write("Setting " + str(arg) + "\n")
+        if arg == 'bg_action':
+            the_func = func
+            def worker_wrapper(action, ui_notification, **kwargs):
+                return worker_caller(the_func, ui_notification, {'action': action, 'arguments': kwargs})
+            setattr(server, arg, worker_wrapper)
+        else:
+            setattr(server, arg, func)
+
+# the_write_record = basic_write_record
+
+# def set_write_record(func):
+#     global the_write_record
+#     the_write_record = func
+
+# def write_record(key, data):
+#     """Stores the data in a SQL database for later retrieval with the
+#     key.  Returns the unique ID integers of the saved record.
+#     """
+#     return the_write_record(key, data)
+
+# def basic_read_records(key):
+#     return dict()
+
+# the_read_records = basic_read_records
+
+# def set_read_records(func):
+#     global the_read_records
+#     the_read_records = func
+
+# def read_records(key):
+#     """Returns a dictionary of records that have been stored with
+#     write_record() using the given key.  In the dictionary, the key is
+#     the unique ID integer of the record and the value is the data that
+#     had been stored.
+#     """
+#     return the_read_records(key)
+
+# def basic_delete_record(key, id):
+#     return
+
+# the_delete_record = basic_delete_record
+
+# def set_delete_record(func):
+#     global the_delete_record
+#     the_delete_record = func
+
+# def delete_record(key, id):
+#     """Deletes a record with the given key and id."""
+#     return the_delete_record(key, id)
+
+# def set_url_finder(func):
+#     global the_url_func
+#     the_url_func = func
+#     if the_url_func.__doc__ is None:
+#         the_url_func.__doc__ = """Returns a URL to a file within a docassemble package."""
+
+# def basic_generate_csrf(*pargs, **kwargs):
+#     return None
         
-the_generate_csrf = basic_generate_csrf
+# the_generate_csrf = basic_generate_csrf
 
-def generate_csrf(*pargs, **kwargs):
-    return the_generate_csrf(*pargs, **kwargs)
+# def generate_csrf(*pargs, **kwargs):
+#     return the_generate_csrf(*pargs, **kwargs)
 
-def set_generate_csrf(func):
-    global the_generate_csrf
-    the_generate_csrf = func
+# def set_generate_csrf(func):
+#     global the_generate_csrf
+#     the_generate_csrf = func
         
-def null_worker(*pargs, **kwargs):
-    #sys.stderr.write("Got to null worker\n")
-    return None
+# def null_worker(*pargs, **kwargs):
+#     #sys.stderr.write("Got to null worker\n")
+#     return None
 
-bg_action = null_worker
+# bg_action = null_worker
 
-worker_convert = null_worker
+# worker_convert = null_worker
+
+class ThreadVariables(threading.local):
+    language = server.default_language
+    dialect = server.default_dialect
+    country = server.default_country
+    locale = server.default_locale
+    user = None
+    role = 'user'
+    current_info = dict()
+    internal = dict()
+    #user_dict = None
+    initialized = False
+    redis = None
+    uid = None
+    gathering_mode = dict()
+    current_variable = list()
+    def __init__(self, **kw):
+        if self.initialized:
+            raise SystemError('__init__ called too many times')
+        self.initialized = True
+        self.__dict__.update(kw)
+
+this_thread = ThreadVariables()
+
+def backup_thread_variables():
+    backup = dict()
+    for key in ['language', 'dialect', 'country', 'locale', 'user', 'role', 'current_info', 'internal', 'initialized', 'uid', 'gathering_mode', 'current_variable']:
+        backup[key] = copy.deepcopy(getattr(this_thread, key))
+    return backup
+
+def restore_thread_variables(backup):
+    for key in ['language', 'dialect', 'country', 'locale', 'user', 'role', 'current_info', 'internal', 'initialized', 'uid', 'gathering_mode', 'current_variable']:
+        setattr(this_thread, key, backup[key])
 
 def background_response(*pargs, **kwargs):
-    """Finishes a background task"""
+    """Finishes a background task."""
     raise BackgroundResponseError(*pargs, **kwargs)
 
 def background_response_action(*pargs, **kwargs):
-    """Finishes a background task by running an action to save values"""
+    """Finishes a background task by running an action to save values."""
     raise BackgroundResponseActionError(*pargs, **kwargs)
 
 def background_action(action, ui_notification, **kwargs):
     """Runs an action in the background."""
     #sys.stderr.write("Got to background_action in functions\n")
-    return(bg_action(action, ui_notification, **kwargs))
+    return(server.bg_action(action, ui_notification, **kwargs))
 
 class MyAsyncResult(object):
     def ready(self):
-        return worker_convert(self.obj).ready()
+        return server.worker_convert(self.obj).ready()
     def get(self):
-        return worker_convert(self.obj).get().value
+        return server.worker_convert(self.obj).get().value
 
 def worker_caller(func, ui_notification, action):
     #sys.stderr.write("Got to worker_caller in functions\n")
@@ -502,33 +670,33 @@ def worker_caller(func, ui_notification, action):
     if ui_notification is not None:
         worker_key = 'da:worker:uid:' + str(this_thread.current_info['session']) + ':i:' + str(this_thread.current_info['yaml_filename']) + ':userid:' + str(this_thread.current_info['user']['the_user_id'])
         #sys.stderr.write("worker_caller: id is " + str(result.obj.id) + " and key is " + worker_key + "\n")
-        server_redis.rpush(worker_key, result.obj.id)
+        server.server_redis.rpush(worker_key, result.obj.id)
     #sys.stderr.write("worker_caller: id is " + str(result.obj.id) + "\n")
     return result
 
-def null_chat_partners(*pargs, **kwargs):
-    return (dict(peer=0, help=0))
+# def null_chat_partners(*pargs, **kwargs):
+#     return (dict(peer=0, help=0))
 
-chat_partners_available_func = null_chat_partners
+# chat_partners_available_func = null_chat_partners
 
-def set_chat_partners_available(func):
-    global chat_partners_available_func
-    chat_partners_available_func = func
+# def set_chat_partners_available(func):
+#     global chat_partners_available_func
+#     chat_partners_available_func = func
 
-def set_worker(func, func_two):
-    def new_func(action, ui_notification, **kwargs):
-        return worker_caller(func, ui_notification, {'action': action, 'arguments': kwargs})
-    global bg_action
-    bg_action = new_func
-    global worker_convert
-    worker_convert = func_two
-    return
+# def set_worker(func, func_two):
+#     def new_func(action, ui_notification, **kwargs):
+#         return worker_caller(func, ui_notification, {'action': action, 'arguments': kwargs})
+#     global bg_action
+#     bg_action = new_func
+#     global worker_convert
+#     worker_convert = func_two
+#     return
 
-server_redis = None
+# server_redis = None
 
-def set_server_redis(target):
-    global server_redis
-    server_redis = target
+# def set_server_redis(target):
+#     global server_redis
+#     server_redis = target
 
 def default_ordinal_function(i):
     return unicode(i)
@@ -601,33 +769,33 @@ def update_word_collection(lang, defs):
         word_collection[lang][word] = translation
     return
 
-def set_da_config(config):
-    global daconfig
-    daconfig = config
+# def set_da_config(config):
+#     global daconfig
+#     daconfig = config
 
 def get_config(key):
     """Returns a value from the docassemble configuration.  If not defined, returns None."""
-    return daconfig.get(key, None)
+    return server.daconfig.get(key, None)
 
-def set_default_language(lang):
-    global default_language
-    default_language = lang
-    return
+# def set_default_language(lang):
+#     global default_language
+#     default_language = lang
+#     return
 
-def set_default_dialect(dialect):
-    global default_dialect
-    default_dialect = dialect
-    return
+# def set_default_dialect(dialect):
+#     global default_dialect
+#     default_dialect = dialect
+#     return
 
-def set_default_country(country):
-    global default_country
-    default_country = country
-    return
+# def set_default_country(country):
+#     global default_country
+#     default_country = country
+#     return
 
-def set_default_timezone(timezone):
-    global default_timezone
-    default_timezone = timezone
-    return
+# def set_default_timezone(timezone):
+#     global default_timezone
+#     default_timezone = timezone
+#     return
 
 def get_default_timezone():
     """Returns the default timezone (e.g., 'America/New_York').  This is
@@ -635,11 +803,11 @@ def get_default_timezone():
     the docassemble configuration.
 
     """
-    return default_timezone
+    return server.default_timezone
 
 def reset_local_variables():
-    this_thread.language = default_language
-    this_thread.locale = default_locale
+    this_thread.language = server.default_language
+    this_thread.locale = server.default_locale
     this_thread.prevent_going_back = False
     this_thread.gathering_mode = dict()
     this_thread.current_variable = list()
@@ -1141,6 +1309,7 @@ def variables_as_json():
     raise ResponseError(None, all_variables=True)
 
 def all_variables():
+    """Returns the interview variables as a dictionary suitable for export to JSON or other formats."""
     return serializable_dict(get_user_dict())
 
 def command(*pargs, **kwargs):
@@ -1178,7 +1347,7 @@ def force_gather(*pargs):
 def static_filename_path(filereference):
     result = package_data_filename(static_filename(filereference))
     #if result is None or not os.path.isfile(result):
-    #    result = absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\.]', '', filereference)).path
+    #    result = server.absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\.]', '', filereference)).path
     return(result)
 
 def static_filename(filereference):
@@ -1241,14 +1410,14 @@ def package_template_filename(the_file, **kwargs):
             #parts = ['docassemble.base', the_file]
             #logmessage("my package is docassemble.base and the_file is " + str(the_file))
         #else:
-        #    retval = absolute_filename('/playgroundtemplate/' + the_file).path
+        #    retval = server.absolute_filename('/playgroundtemplate/' + the_file).path
         #    logmessage("package_template_filename: retval is " + str(retval))
         #    return(retval)
     if len(parts) == 2:
         m = re.search(r'^docassemble.playground([0-9]+)$', parts[0])
         if m:
             parts[1] = re.sub(r'^data/templates/', '', parts[1])
-            return(absolute_filename("/playgroundtemplate/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\.]', '', parts[1])).path)
+            return(server.absolute_filename("/playgroundtemplate/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\.]', '', parts[1])).path)
         if not re.match(r'data/.*', parts[1]):
             parts[1] = 'data/templates/' + parts[1]
         try:
@@ -1277,15 +1446,15 @@ def package_data_filename(the_file):
         if m:
             if re.search(r'^data/sources/', parts[1]):
                 parts[1] = re.sub(r'^data/sources/', '', parts[1])
-                return(absolute_filename("/playgroundsources/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\.]', '', parts[1])).path)
+                return(server.absolute_filename("/playgroundsources/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\.]', '', parts[1])).path)
             parts[1] = re.sub(r'^data/static/', '', parts[1])
-            return(absolute_filename("/playgroundstatic/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\.]', '', parts[1])).path)
+            return(server.absolute_filename("/playgroundstatic/" + m.group(1) + '/' + re.sub(r'[^A-Za-z0-9\-\_\.]', '', parts[1])).path)
         try:
             result = pkg_resources.resource_filename(pkg_resources.Requirement.parse(parts[0]), re.sub(r'\.', r'/', parts[0]) + '/' + parts[1])
         except:
             result = None
     #if result is None or not os.path.isfile(result):
-    #    result = absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\.]', '', the_file)).path
+    #    result = server.absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\.]', '', the_file)).path
     return(result)
 
 def package_question_filename(the_file):
@@ -1301,16 +1470,16 @@ def package_question_filename(the_file):
             return(None)
     return(None)
 
-def default_absolute_filename(the_file):
-    return the_file
+# def default_absolute_filename(the_file):
+#     return the_file
 
-absolute_filename = default_absolute_filename
+# absolute_filename = default_absolute_filename
 
-def set_absolute_filename(func):
-    #logmessage("Running set_absolute_filename in util")
-    global absolute_filename
-    absolute_filename = func
-    return
+# def set_absolute_filename(func):
+#     #logmessage("Running set_absolute_filename in util")
+#     global absolute_filename
+#     absolute_filename = func
+#     return
 
 def nodoublequote(text):
     return re.sub(r'"', '', unicode(text))
@@ -1353,12 +1522,12 @@ def url_action(action, **kwargs):
 def myb64quote(text):
     return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
 
-def set_debug_status(new_value):
-    global debug
-    debug = new_value
+# def set_debug_status(new_value):
+#     global debug
+#     debug = new_value
 
 def debug_status():
-    return debug
+    return server.debug
 # grep -E -R -o -h "word\(['\"][^\)]+\)" * | sed "s/^[^'\"]+['\"]//g"
 
 def action_menu_item(label, action, **kwargs):

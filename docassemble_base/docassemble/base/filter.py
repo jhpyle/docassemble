@@ -9,7 +9,7 @@ import qrcode
 import qrcode.image.svg
 import StringIO
 import tempfile
-import docassemble.base.functions
+from docassemble.base.functions import server, word
 from docassemble.base.pandoc import MyPandoc
 from mdx_smartypants import SmartypantsExt
 from bs4 import BeautifulSoup
@@ -69,47 +69,47 @@ def set_max_width_points(points):
 def get_max_width_points():
     return(MAX_WIDTH_POINTS)
 
-def blank_da_send_mail(*args, **kwargs):
-    logmessage("da_send_mail: no mail agent configured!")
-    return(None)
+# def blank_da_send_mail(*args, **kwargs):
+#     logmessage("da_send_mail: no mail agent configured!")
+#     return(None)
 
-da_send_mail = blank_da_send_mail
+# da_send_mail = blank_da_send_mail
 
-def set_da_send_mail(func):
-    global da_send_mail
-    da_send_mail = func
-    return
+# def set_da_send_mail(func):
+#     global da_send_mail
+#     da_send_mail = func
+#     return
 
-def blank_file_finder(*args, **kwargs):
-    return(dict(filename="invalid"))
+# def blank_file_finder(*args, **kwargs):
+#     return(dict(filename="invalid"))
 
-file_finder = blank_file_finder
+# file_finder = blank_file_finder
 
-def set_file_finder(func):
-    global file_finder
-    #sys.stderr.write("set the file finder to " + str(func) + "\n")
-    file_finder = func
-    return
+# def set_file_finder(func):
+#     global file_finder
+#     #sys.stderr.write("set the file finder to " + str(func) + "\n")
+#     file_finder = func
+#     return
 
-def blank_url_finder(*args, **kwargs):
-    return('about:blank')
+# def blank_url_finder(*args, **kwargs):
+#     return('about:blank')
 
-url_finder = blank_url_finder
+# url_finder = blank_url_finder
 
-def set_url_finder(func):
-    global url_finder
-    url_finder = func
-    return
+# def set_url_finder(func):
+#     global url_finder
+#     url_finder = func
+#     return
 
-def blank_url_for(*args, **kwargs):
-    return('about:blank')
+# def blank_url_for(*args, **kwargs):
+#     return('about:blank')
 
-url_for = blank_url_for
+# url_for = blank_url_for
 
-def set_url_for(func):
-    global url_for
-    url_for = func
-    return
+# def set_url_for(func):
+#     global url_for
+#     url_for = func
+#     return
 
 rtf_spacing = {'single': '\\sl0 ', 'oneandahalf': '\\sl360\\slmult1 ', 'double': '\\sl480\\slmult1 ', 'triple': '\\sl720\\slmult1 '}
 
@@ -566,7 +566,7 @@ def image_as_rtf(match, question=None):
     if width == 'full':
         width_supplied = False
     file_reference = match.group(1)
-    file_info = file_finder(file_reference, convert={'svg': 'png'}, question=question)
+    file_info = server.file_finder(file_reference, convert={'svg': 'png'}, question=question)
     if 'path' not in file_info:
         return ''
     #logmessage('image_as_rtf: path is ' + file_info['path'])
@@ -692,7 +692,7 @@ def image_url_string(match, emoji=False, question=None, playground=False):
         width = "300px"
     if width == "full":
         width = "300px"    
-    file_info = file_finder(file_reference, question=question)
+    file_info = server.file_finder(file_reference, question=question)
     if 'mimetype' in file_info:
         if re.search(r'^audio', file_info['mimetype']):
             urls = get_audio_urls([{'text': "[FILE " + file_reference + "]", 'package': None, 'type': 'audio'}], question=question)
@@ -712,14 +712,14 @@ def image_url_string(match, emoji=False, question=None, playground=False):
         if emoji:
             width_string += ';vertical-align: middle'
         if file_info['extension'] in ['png', 'jpg', 'gif', 'svg']:
-            return('<img class="daicon" style="' + width_string + '" src="' + url_finder(file_reference, question=question) + '"/>')
+            return('<img class="daicon" style="' + width_string + '" src="' + server.url_finder(file_reference, question=question) + '"/>')
         elif file_info['extension'] == 'pdf':
-            output = '<img class="daicon" style="' + width_string + '" src="' + url_finder(file_reference, size="screen", page=1, question=question) + '"/>'
+            output = '<img class="daicon" style="' + width_string + '" src="' + server.url_finder(file_reference, size="screen", page=1, question=question) + '"/>'
             if 'pages' in file_info and file_info['pages'] > 1:
-                output += " (" + str(file_info['pages']) + " " + docassemble.base.functions.word('pages') + ")"
+                output += " (" + str(file_info['pages']) + " " + word('pages') + ")"
             return(output)
         else:
-            return('<a href="' + url_finder(file_reference, question=question) + '">' + file_info['filename'] + '</a>')
+            return('<a href="' + server.url_finder(file_reference, question=question) + '">' + file_info['filename'] + '</a>')
     else:
         return('[Invalid image reference; reference=' + str(file_reference) + ', width=' + str(width) + ', filename=' + file_info.get('filename', 'unknown') + ']')
 
@@ -759,7 +759,7 @@ def image_include_string(match, emoji=False, question=None):
             width = '\\textwidth'
     except:
         width = DEFAULT_IMAGE_WIDTH
-    file_info = file_finder(file_reference, convert={'svg': 'eps'}, question=question)
+    file_info = server.file_finder(file_reference, convert={'svg': 'eps'}, question=question)
     if 'mimetype' in file_info:
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
@@ -787,7 +787,7 @@ def image_include_docx(match, question=None):
             width = '100%'
     except:
         width = DEFAULT_IMAGE_WIDTH
-    file_info = file_finder(file_reference, convert={'svg': 'eps'}, question=question)
+    file_info = server.file_finder(file_reference, convert={'svg': 'eps'}, question=question)
     if 'mimetype' in file_info:
         if re.search(r'^(audio|video)', file_info['mimetype']):
             return '[reference to file type that cannot be displayed]'
@@ -944,7 +944,7 @@ def audio_control(files, preload="metadata"):
             if d[1] is not None:
                 output += ' type="' + d[1] + '"/>'
             output += "\n"
-    output += '  <a target="_blank" href="' + files[-1][0] +  '">' + docassemble.base.functions.word('Listen') + '</a>\n'
+    output += '  <a target="_blank" href="' + files[-1][0] +  '">' + word('Listen') + '</a>\n'
     output += "</audio>\n"
     return output
 
@@ -959,7 +959,7 @@ def video_control(files):
             if d[1] is not None:
                 output += ' type="' + d[1] + '"/>'
             output += "\n"
-    output += '  <a target="_blank" href="' + files[-1][0] +  '">' + docassemble.base.functions.word('Listen') + '</a>\n'
+    output += '  <a target="_blank" href="' + files[-1][0] +  '">' + word('Listen') + '</a>\n'
     output += "</video>\n"
     return output
 
@@ -976,18 +976,18 @@ def get_audio_urls(the_audio, question=None):
             found_upload = True
             m = re.match(r'[0-9]+', file_ref)
             if m:
-                file_info = file_finder(file_ref, question=question)
+                file_info = server.file_finder(file_ref, question=question)
                 if 'path' in file_info:
                     if file_info['mimetype'] == 'audio/ogg':
-                        output.append([url_finder(file_ref, question=question), file_info['mimetype']])
+                        output.append([server.url_finder(file_ref, question=question), file_info['mimetype']])
                     elif os.path.isfile(file_info['path'] + '.ogg'):
-                        output.append([url_finder(file_ref, ext='ogg', question=question), 'audio/ogg'])
+                        output.append([server.url_finder(file_ref, ext='ogg', question=question), 'audio/ogg'])
                     if file_info['mimetype'] == 'audio/mpeg':
-                        output.append([url_finder(file_ref, question=question), file_info['mimetype']])
+                        output.append([server.url_finder(file_ref, question=question), file_info['mimetype']])
                     elif os.path.isfile(file_info['path'] + '.mp3'):
-                        output.append([url_finder(file_ref, ext='mp3', question=question), 'audio/mpeg'])
+                        output.append([server.url_finder(file_ref, ext='mp3', question=question), 'audio/mpeg'])
                     if file_info['mimetype'] not in ['audio/mpeg', 'audio/ogg']:
-                        output.append([url_finder(file_ref, question=question), file_info['mimetype']])
+                        output.append([server.url_finder(file_ref, question=question), file_info['mimetype']])
             else:
                 the_list.append({'text': file_ref, 'package': audio_item['package']})
         if not found_upload:
@@ -1025,9 +1025,9 @@ def get_audio_urls(the_audio, question=None):
                 parts[0] = 'None'
             parts[1] = re.sub(r'^data/static/', '', parts[1])
             full_file = parts[0] + ':data/static/' + parts[1]
-            file_info = file_finder(full_file, question=question)
+            file_info = server.file_finder(full_file, question=question)
             if 'fullpath' in file_info:
-                url = url_finder(full_file, question=question)
+                url = server.url_finder(full_file, question=question)
                 output.append([url, mimetype])
     return output
 
@@ -1047,18 +1047,18 @@ def get_video_urls(the_video, question=None):
             found_upload = True
             m = re.match(r'[0-9]+', file_ref)
             if m:
-                file_info = file_finder(file_ref, question=question)
+                file_info = server.file_finder(file_ref, question=question)
                 if 'path' in file_info:
                     if file_info['mimetype'] == 'video/ogg':
-                        output.append([url_finder(file_ref, question=question), file_info['mimetype']])
+                        output.append([server.url_finder(file_ref, question=question), file_info['mimetype']])
                     elif os.path.isfile(file_info['path'] + '.ogv'):
-                        output.append([url_finder(file_ref, ext='ogv', question=question), 'video/ogg'])
+                        output.append([server.url_finder(file_ref, ext='ogv', question=question), 'video/ogg'])
                     if file_info['mimetype'] == 'video/mp4':
-                        output.append([url_finder(file_ref, question=question), file_info['mimetype']])
+                        output.append([server.url_finder(file_ref, question=question), file_info['mimetype']])
                     elif os.path.isfile(file_info['path'] + '.mp4'):
-                        output.append([url_finder(file_ref, ext='mp4', question=question), 'video/mp4'])
+                        output.append([server.url_finder(file_ref, ext='mp4', question=question), 'video/mp4'])
                     if file_info['mimetype'] not in ['video/mp4', 'video/ogg']:
-                        output.append([url_finder(file_ref, question=question), file_info['mimetype']])
+                        output.append([server.url_finder(file_ref, question=question), file_info['mimetype']])
             else:
                 the_list.append({'text': file_ref, 'package': video_item['package']})
         if not found_upload:
@@ -1096,9 +1096,9 @@ def get_video_urls(the_video, question=None):
                 parts[0] = 'None'
             parts[1] = re.sub(r'^data/static/', '', parts[1])
             full_file = parts[0] + ':data/static/' + parts[1]
-            file_info = file_finder(full_file, question=question)
+            file_info = server.file_finder(full_file, question=question)
             if 'fullpath' in file_info:
-                url = url_finder(full_file, question=question)
+                url = server.url_finder(full_file, question=question)
                 output.append([url, mimetype])
     return output
 

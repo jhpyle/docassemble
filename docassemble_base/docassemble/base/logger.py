@@ -1,7 +1,10 @@
 import sys
 
 def default_logmessage(message):
-    sys.stderr.write(message + "\n")
+    try:
+        sys.stderr.write(message + "\n")
+    except:
+        sys.stderr.write("default_logmessage: unable to print message\n")
 
 the_logmessage = default_logmessage
 

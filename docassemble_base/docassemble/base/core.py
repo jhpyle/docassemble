@@ -5,8 +5,7 @@ import codecs
 import redis
 import sys
 import inspect
-from docassemble.base.filter import file_finder
-from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize
+from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server
 import docassemble.base.functions
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate']
@@ -1010,7 +1009,7 @@ class DAFile(DAObject):
     def __unicode__(self):
         return unicode(self.__str__())
     def retrieve(self):
-        self.file_info = file_finder(self.number)
+        self.file_info = server.file_finder(self.number)
     def path(self):
         """Returns a filename at which the file can be accessed"""
         if not hasattr(self, 'file_info'):

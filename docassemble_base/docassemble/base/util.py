@@ -8,12 +8,15 @@ import pyocr
 import pyocr.builders
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
-from docassemble.base.functions import comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, this_thread, static_image, action_arguments, action_argument, default_timezone, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables
+from docassemble.base.functions import comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server
 from docassemble.base.core import DAObject, DAList, DADict, DASet, DAFile, DAFileCollection, DAFileList, DATemplate, selections
 from decimal import Decimal
 import sys
 #sys.stderr.write("importing async mail now from util\n")
-from docassemble.base.filter import file_finder, url_finder, markdown_to_html, da_send_mail, to_text
+from docassemble.base.filter import markdown_to_html, to_text
+
+#file_finder, url_finder, da_send_mail
+
 import docassemble.base.filter
 import dateutil
 import dateutil.parser
@@ -29,28 +32,17 @@ import shutil
 from subprocess import call
 from bs4 import BeautifulSoup
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'email_string', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'format_date', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'DARedis', 'SimpleTextMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file']
-
-class DummyObject(object):
-    def __init__(self, *pargs, **kwargs):
-        pass
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'format_date', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'DARedis', 'SimpleTextMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session']
 
 #knn_machine_learner = DummyObject
 
 # def TheSimpleTextMachineLearner(*pargs, **kwargs):
 #     return knn_machine_learner(*pargs, **kwargs)
 
-SimpleTextMachineLearner = DummyObject
-
-def set_knn_machine_learner(target):
-    #global knn_machine_learner
-    #knn_machine_learner = target
-    global SimpleTextMachineLearner
-    SimpleTextMachineLearner = target
-    #if SimpleTextMachineLearner.__doc__ is None:
-    #    SimpleTextMachineLearner.__doc__ = """A class used to interact with the machine learning system"""
-
 redis_server = None
+
+def redis_server():
+    return re.sub(r'^redis://', r'', server.redis_host)
 
 class DARedis(DAObject):
     """A class used to interact with the redis server."""
@@ -66,17 +58,19 @@ def set_redis_server(redis_host):
     global redis_server
     redis_server = re.sub(r'^redis://', r'', redis_host)
 
-def default_user_id_function():
-    return dict()
+# def default_user_id_function():
+#     return dict()
 
-user_id_dict = default_user_id_function
+# user_id_dict = default_user_id_function
 
-def set_user_id_function(func):
-    global user_id_dict
-    user_id_dict = func
-    return
+# def set_user_id_function(func):
+#     global user_id_dict
+#     user_id_dict = func
+#     return
 
-def today_default(format='long', timezone=default_timezone):
+def today_default(format='long', timezone=None):
+    if timezone is None:
+        timezone = get_default_timezone()
     return babel.dates.format_date(pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone)).date(), format=format, locale=this_thread.language)
 
 language_functions['today'] = {'*': today_default}
@@ -148,14 +142,18 @@ class DateTimeDelta(object):
         return quantity_noun(output.days, word('day'))
     pass
 
-def current_datetime(timezone=default_timezone):
+def current_datetime(timezone=None):
     """Returns the current time as a datetime.datetime object with a timezone.
     Uses the default timezone unless another timezone is explicitly provided."""
+    if timezone is None:
+        timezone = get_default_timezone()
     return pytz.utc.localize(datetime.datetime.utcnow()).astimezone(pytz.timezone(timezone))
 
-def as_datetime(the_date, timezone=default_timezone):
+def as_datetime(the_date, timezone=None):
     """Converts the_date to a datetime.datetime object with a timezone.  Uses the
     default timezone unless another timezone is explicitly provided."""
+    if timezone is None:
+        timezone = get_default_timezone()
     if isinstance(the_date, datetime.date):
         the_date = datetime.datetime.combine(the_date, datetime.datetime.min.time())
     if isinstance(the_date, datetime.datetime):
@@ -173,10 +171,12 @@ def date_interval(**kwargs):
     to dateutil.relativedelta.relativedelta."""
     return dateutil.relativedelta.relativedelta(**kwargs)
 
-def date_difference(starting=current_datetime(), ending=current_datetime(), timezone=default_timezone):
+def date_difference(starting=current_datetime(), ending=current_datetime(), timezone=None):
     """Calculates the difference between the date indicated by "starting" 
     and the date indicated by "ending."  Returns an object with attributes weeks, 
     days, hours, minutes, seconds, and delta."""
+    if timezone is None:
+        timezone = get_default_timezone()
     if isinstance(starting, datetime.date):
         starting = datetime.datetime.combine(starting, datetime.datetime.min.time())
     if isinstance(ending, datetime.date):
@@ -280,7 +280,7 @@ def last_access_time(*pargs, **kwargs):
             roles = [roles]
         if 'cron' in roles:
             include_cron = True    
-    lookup_dict = user_id_dict()
+    lookup_dict = server.user_id_dict()
     for user_id, access_time in this_thread.internal['accesstime'].iteritems():
         if user_id in lookup_dict and hasattr(lookup_dict[user_id], 'roles'):
             for role in lookup_dict[user_id].roles:
@@ -595,7 +595,7 @@ class Person(DAObject):
             the_country = get_country()
         return phone_number_in_e164(the_number, country=the_country)
     def email_address(self, include_name=None):
-        """Returns an e-mail address for the person"""
+        """Returns an e-mail address for the person."""
         if include_name is True or (include_name is not False and self.name.defined()):
             return('"' + nodoublequote(self.name) + '" <' + str(self.email) + '>')
         return(str(self.email))
@@ -800,11 +800,11 @@ class Income(PeriodicFinancialList):
     pass
 
 class Asset(FinancialList):
-    """A FinancialList representing a person's assets"""
+    """A FinancialList representing a person's assets."""
     pass
 
 class Expense(PeriodicFinancialList):
-    """A PeriodicFinancialList representing a person's expenses"""
+    """A PeriodicFinancialList representing a person's expenses."""
     pass
 
 class Value(DAObject):
@@ -875,21 +875,50 @@ class Organization(Person):
             return the_response
         return None
 
-twilio_config = None
+# twilio_config = None
     
-def set_twilio_config(the_config):
-    global twilio_config
-    twilio_config = the_config
+# def set_twilio_config(the_config):
+#     global twilio_config
+#     twilio_config = the_config
+
+def get_sms_session(phone_number, config='default'):
+    """Returns the SMS session information for a phone number, or None if no session exists."""
+    return server.get_sms_session(phone_number, config=config)
+
+def initiate_sms_session(phone_number, yaml_filename=None, email=None, new=False, send=True, config='default'):
+    """Initiates a new SMS session for a phone number, overwriting any that is currently active."""
+    server.initiate_sms_session(phone_number, yaml_filename=yaml_filename, email=email, new=new, config=config)
+    if send:
+        send_sms_invite(to=phone_number, config=config)
+    return True
+
+def terminate_sms_session(phone_number, config='default'):
+    """Terminates an SMS session for a phone number, whether the session exists or not."""
+    return server.terminate_sms_session(phone_number, config=config)
+
+def send_sms_invite(to=None, body='question', config='default'):
+    """Sends an SMS message to a phone number, where the message is the
+    current interview question the recipient would see if he or she
+    texted 'question' to the system.
+    """
+    if to is None:
+        raise DAError("send_sms_invite: no phone number provided")
+    phone_number = docassemble.base.functions.phone_number_in_e164(to)
+    if phone_number is None:
+        raise DAError("send_sms_invite: phone number is invalid")
+    message = server.sms_body(phone_number, body=body, config=config)
+    logmessage("Sending message " + str(message) + " to " + str(phone_number))
+    #send_sms(to=phone_number, body=message, config=config)
 
 def send_sms(to=None, body=None, template=None, task=None, attachments=None, config='default'):
     """Sends a text message and returns whether sending the text was successful."""
-    if twilio_config is None:
+    if server.twilio_config is None:
         logmessage("send_sms: ignoring because Twilio not enabled")
         return False
-    if config not in twilio_config['name']:
+    if config not in server.twilio_config['name']:
         logmessage("send_sms: ignoring because requested configuration does not exist")
         return False
-    tconfig = twilio_config['name'][config]
+    tconfig = server.twilio_config['name'][config]
     if 'sms' not in tconfig or tconfig['sms'] in [False, None]:
         logmessage("send_sms: ignoring because SMS not enabled")
         return False
@@ -1015,7 +1044,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
         if success:
             for the_attachment in attachment_list:
                 if the_attachment.ok:
-                    file_info = file_finder(str(the_attachment.number))
+                    file_info = server.file_finder(str(the_attachment.number))
                     if ('path' in file_info):
                         failed = True
                         with open(file_info['path'], 'rb') as fp:
@@ -1028,7 +1057,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
     if success:
         try:
             logmessage("Starting to send")
-            da_send_mail(msg)
+            server.send_mail(msg)
             logmessage("Finished sending")
         except Exception as errmess:
             logmessage("Sending mail failed: " + str(errmess))
@@ -1052,7 +1081,7 @@ def map_of(*pargs, **kwargs):
             if markers:
                 for marker in markers:
                     if 'icon' in marker and type(marker['icon']) is not dict:
-                        marker['icon'] = {'url': url_finder(marker['icon'])}
+                        marker['icon'] = {'url': server.url_finder(marker['icon'])}
                     if 'info' in marker and marker['info']:
                         marker['info'] = markdown_to_html(marker['info'], trim=True)
                     the_map['markers'].append(marker)
@@ -1144,7 +1173,7 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
 
 def objects_from_file(file_ref):
     """A utility function for initializing a group of objects from a YAML file written in a certain format."""
-    file_info = file_finder(file_ref)
+    file_info = server.file_finder(file_ref)
     if 'path' not in file_info:
         raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' not found')
     objects = list()
@@ -1174,3 +1203,16 @@ def objects_from_file(file_ref):
                     objects.append(constructor(**item))
     return objects
 
+class DummyObject(object):
+    def __init__(self, *pargs, **kwargs):
+        pass
+    
+SimpleTextMachineLearner = DummyObject
+
+def set_knn_machine_learner(target):
+    #global knn_machine_learner
+    #knn_machine_learner = target
+    global SimpleTextMachineLearner
+    SimpleTextMachineLearner = target
+    #if SimpleTextMachineLearner.__doc__ is None:
+    #    SimpleTextMachineLearner.__doc__ = """A class used to interact with the machine learning system"""

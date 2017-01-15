@@ -1,15 +1,14 @@
 metadata:
   title: List of objects
   documentation: "http://docassemble.org/docs/groups.html"
+  example start: 1
+  example end: 6
 ---
 modules:
   - docassemble.base.legal
 ---
 objects:
   - people: PartyList
----
-code: |
-  people.gathered = people.gather()
 ---
 question: |
   What is the person's name?
@@ -18,17 +17,17 @@ fields:
   - Last: people[i].name.last
 ---
 question: |
+  Do you have any people to add to the list?
+yesno: people.there_are_any
+---
+question: |
   Do you have more people for me?
 subquestion: |
   So far you have told me about ${ people }.
 yesno: people.there_is_another
 ---
+mandatory: true
 question: |
   Here is your list of people.
 subquestion: |
   ${ people }
-sets: all_done
----
-mandatory: true
-code: |
-  need(people.gathered, all_done)

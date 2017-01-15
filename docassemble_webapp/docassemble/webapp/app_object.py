@@ -19,6 +19,6 @@ def create_app():
     csrf = CSRFProtect()
     csrf.init_app(app)
     app.wsgi_app = ProxyFix(app.wsgi_app)
-    return app
+    return app, csrf
 
-app = create_app()
+app, csrf = create_app()

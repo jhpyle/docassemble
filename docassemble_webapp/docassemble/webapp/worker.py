@@ -60,10 +60,10 @@ def email_attachments(yaml_filename, user_info, user_code, secret, url, url_root
     docassemble.base.functions.set_uid(user_code)
     with worker_controller.flaskapp.app_context():
         worker_controller.set_request_active(False)
-        the_user_dict = worker_controller.get_attachment_info(user_code, question_number, yaml_filename, secret)
+        the_user_dict, encrypted = worker_controller.get_attachment_info(user_code, question_number, yaml_filename, secret)
         if the_user_dict is not None:
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-            interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=user_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, interface='worker', arguments=dict()))
+            interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=user_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=encrypted, interface='worker', arguments=dict()))
             interview.assemble(the_user_dict, interview_status)
             if len(interview_status.attachments) > 0:
                 attached_file_count = 0
@@ -127,8 +127,8 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
         sys.stderr.write("background_action: yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + "\n")
         worker_controller.set_request_active(False)
         interview = docassemble.base.interview_cache.get_interview(yaml_filename)
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, action=action['action'], interface='worker', arguments=action['arguments']))
         steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=is_encrypted, action=action['action'], interface='worker', arguments=action['arguments']))
         try:
             interview.assemble(user_dict, interview_status)
         except Exception as e:
@@ -152,9 +152,9 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
         if interview_status.question.question_type == "backgroundresponseaction":
             #sys.stderr.write("Got backgroudresponseaction\n")
             new_action = interview_status.question.action
-            interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, interface='worker', action=new_action['action'], arguments=new_action['arguments']))
             worker_controller.obtain_lock(session_code, yaml_filename)
             steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
+            interview_status = docassemble.base.parse.InterviewStatus(current_info=dict(user=user_info, session=session_code, secret=secret, yaml_filename=yaml_filename, url=url, url_root=url_root, encrypted=is_encrypted, interface='worker', action=new_action['action'], arguments=new_action['arguments']))
             try:
                 interview.assemble(user_dict, interview_status)
             except Exception as e:
