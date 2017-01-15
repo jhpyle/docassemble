@@ -177,50 +177,51 @@ def logout():
         response.set_cookie('secret', secret)
     return response
 
-def custom_login():
-    user_manager = current_app.user_manager
-    db_adapter = user_manager.db_adapter
-    secret = request.cookies.get('secret', None)
-    if secret is not None:
-        secret = str(secret)
-    next = request.args.get('next', _endpoint_url(user_manager.after_login_endpoint))
-    reg_next = request.args.get('reg_next', _endpoint_url(user_manager.after_register_endpoint))
+# def custom_login():
+#     logmessage("custom_login")
+#     user_manager = current_app.user_manager
+#     db_adapter = user_manager.db_adapter
+#     secret = request.cookies.get('secret', None)
+#     if secret is not None:
+#         secret = str(secret)
+#     next = request.args.get('next', _endpoint_url(user_manager.after_login_endpoint))
+#     reg_next = request.args.get('reg_next', _endpoint_url(user_manager.after_register_endpoint))
 
-    if _call_or_get(current_user.is_authenticated) and user_manager.auto_login_at_login:
-        return redirect(next)
+#     if _call_or_get(current_user.is_authenticated) and user_manager.auto_login_at_login:
+#         return redirect(next)
 
-    login_form = user_manager.login_form(request.form)
-    register_form = user_manager.register_form()
-    if request.method != 'POST':
-        login_form.next.data     = register_form.next.data = next
-        login_form.reg_next.data = register_form.reg_next.data = reg_next
+#     login_form = user_manager.login_form(request.form)
+#     register_form = user_manager.register_form()
+#     if request.method != 'POST':
+#         login_form.next.data     = register_form.next.data = next
+#         login_form.reg_next.data = register_form.reg_next.data = reg_next
 
-    if request.method == 'POST':
-        try:
-            login_form.validate()
-        except:
-            logmessage("custom_login: got an error when validating login")
-            pass
-    if request.method == 'POST' and login_form.validate():
-        user = None
-        user_email = None
-        if user_manager.enable_username:
-            user = user_manager.find_user_by_username(login_form.username.data)
-            user_email = None
-            if user and db_adapter.UserEmailClass:
-                user_email = db_adapter.find_first_object(db_adapter.UserEmailClass,
-                        user_id=int(user.get_id()),
-                        is_primary=True,
-                        )
-            if not user and user_manager.enable_email:
-                user, user_email = user_manager.find_user_by_email(login_form.username.data)
-        else:
-            user, user_email = user_manager.find_user_by_email(login_form.email.data)
+#     if request.method == 'POST':
+#         try:
+#             login_form.validate()
+#         except:
+#             logmessage("custom_login: got an error when validating login")
+#             pass
+#     if request.method == 'POST' and login_form.validate():
+#         user = None
+#         user_email = None
+#         if user_manager.enable_username:
+#             user = user_manager.find_user_by_username(login_form.username.data)
+#             user_email = None
+#             if user and db_adapter.UserEmailClass:
+#                 user_email = db_adapter.find_first_object(db_adapter.UserEmailClass,
+#                         user_id=int(user.get_id()),
+#                         is_primary=True,
+#                         )
+#             if not user and user_manager.enable_email:
+#                 user, user_email = user_manager.find_user_by_email(login_form.username.data)
+#         else:
+#             user, user_email = user_manager.find_user_by_email(login_form.email.data)
 
-        if user:
-            return _do_login_user(user, login_form.password.data, secret, login_form.next.data, login_form.remember_me.data)
+#         if user:
+#             return _do_login_user(user, login_form.password.data, secret, login_form.next.data, login_form.remember_me.data)
 
-    return render_template(user_manager.login_template, page_title=word('Sign In'), tab_title=word('Sign In'), form=login_form, login_form=login_form, register_form=register_form)
+#     return render_template(user_manager.login_template, page_title=word('Sign In'), tab_title=word('Sign In'), form=login_form, login_form=login_form, register_form=register_form)
 
 def unauthenticated():
     flash(word("You need to log in before you can access") + " " + word(request.path), 'error')
@@ -234,16 +235,16 @@ def unauthorized():
 def my_default_url(error, endpoint, values):
     return url_for('index')
 
-from docassemble.webapp.app_object import app, csrf
-from docassemble.webapp.db_object import db
 import docassemble.webapp.setup
+from docassemble.webapp.app_object import app, csrf, flaskbabel
+from docassemble.webapp.db_object import db
 from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm
 from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation
 from flask_user import UserManager, SQLAlchemyAdapter
 db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
 from docassemble.webapp.users.views import user_profile_page
 user_manager = UserManager()
-user_manager.init_app(app, db_adapter=db_adapter, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, login_view_function=custom_login, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated)
+user_manager.init_app(app, db_adapter=db_adapter, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated) #login_view_function=custom_login
 from flask_login import LoginManager
 lm = LoginManager()
 lm.init_app(app)
@@ -623,6 +624,7 @@ def encrypt_session(secret, user_code=None, filename=None):
     return
 
 def substitute_secret(oldsecret, newsecret):
+    logmessage("substitute_secret: " + repr(oldsecret) + " and " + repr(newsecret))
     if oldsecret == None or oldsecret == newsecret:
         return newsecret
     user_code = session.get('uid', None)
@@ -681,53 +683,54 @@ def MD5Hash(data=''):
     h.update(data)
     return h
 
-def _do_login_user(user, password, secret, next, remember_me=False):
-    if not user:
-        return unauthenticated()
+# def _do_login_user(user, password, secret, next, remember_me=False):
+#     logmessage("_do_login_user")
+#     if not user:
+#         return unauthenticated()
 
-    if not _call_or_get(user.is_active):
-        flash(word('Your account has not been enabled.'), 'error')
-        return redirect(url_for('user.login'))
+#     if not _call_or_get(user.is_active):
+#         flash(word('Your account has not been enabled.'), 'error')
+#         return redirect(url_for('user.login'))
 
-    user_manager = current_app.user_manager
-    if user_manager.enable_email and user_manager.enable_confirm_email \
-            and not current_app.user_manager.enable_login_without_confirm_email \
-            and not user.has_confirmed_email():
-        url = url_for('user.resend_confirm_email')
-        flash('Your email address has not yet been confirmed. Check your email Inbox and Spam folders for the confirmation email or <a href="' + str(url) + '">Re-send confirmation email</a>.', 'error')
-        return redirect(url_for('user.login'))
+#     user_manager = current_app.user_manager
+#     if user_manager.enable_email and user_manager.enable_confirm_email \
+#             and not current_app.user_manager.enable_login_without_confirm_email \
+#             and not user.has_confirmed_email():
+#         url = url_for('user.resend_confirm_email')
+#         flash('Your email address has not yet been confirmed. Check your email Inbox and Spam folders for the confirmation email or <a href="' + str(url) + '">Re-send confirmation email</a>.', 'error')
+#         return redirect(url_for('user.login'))
 
-    login_user(user, remember=remember_me)
+#     login_user(user, remember=remember_me)
 
-    if 'i' in session and 'uid' in session:
-        save_user_dict_key(session['uid'], session['i'])
-        session['key_logged'] = True 
+#     if 'i' in session and 'uid' in session:
+#         save_user_dict_key(session['uid'], session['i'])
+#         session['key_logged'] = True 
 
-    signals.user_logged_in.send(current_app._get_current_object(), user=user)
+#     signals.user_logged_in.send(current_app._get_current_object(), user=user)
 
-    if 'tempuser' in session:
-        changed = False
-        for chat_entry in ChatLog.query.filter_by(temp_user_id=int(session['tempuser'])).all():
-            chat_entry.user_id = user.id
-            chat_entry.temp_user_id = None
-            changed = True
-        if changed:
-            db.session.commit()
-        changed = False
-        for chat_entry in ChatLog.query.filter_by(temp_owner_id=int(session['tempuser'])).all():
-            chat_entry.owner_id = user.id
-            chat_entry.temp_owner_id = None
-            changed = True
-        if changed:
-            db.session.commit()
-        del session['tempuser']
-    session['user_id'] = user.id
-    flash(word('You have signed in successfully.'), 'success')
+#     if 'tempuser' in session:
+#         changed = False
+#         for chat_entry in ChatLog.query.filter_by(temp_user_id=int(session['tempuser'])).all():
+#             chat_entry.user_id = user.id
+#             chat_entry.temp_user_id = None
+#             changed = True
+#         if changed:
+#             db.session.commit()
+#         changed = False
+#         for chat_entry in ChatLog.query.filter_by(temp_owner_id=int(session['tempuser'])).all():
+#             chat_entry.owner_id = user.id
+#             chat_entry.temp_owner_id = None
+#             changed = True
+#         if changed:
+#             db.session.commit()
+#         del session['tempuser']
+#     session['user_id'] = user.id
+#     flash(word('You have signed in successfully.'), 'success')
 
-    newsecret = substitute_secret(secret, pad_to_16(MD5Hash(data=password).hexdigest()))
-    response = redirect(next)
-    response.set_cookie('secret', newsecret)
-    return response
+#     newsecret = substitute_secret(secret, pad_to_16(MD5Hash(data=password).hexdigest()))
+#     response = redirect(next)
+#     response.set_cookie('secret', newsecret)
+#     return response
 
 def set_request_active(value):
     global request_active
@@ -1162,9 +1165,9 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
     if show_login:
         if current_user.is_anonymous:
             if custom_menu:
-                navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('user.login', next=url_for('index')) + '">' + sign_in_text + '</a></li></ul></li>' + "\n"
+                navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + word("Menu") + '<span class="caret"></span></a><ul class="dropdown-menu">' + custom_menu + '<li><a href="' + url_for('user.login') + '">' + sign_in_text + '</a></li></ul></li>' + "\n"
             else:
-                navbar += '            <li><a href="' + url_for('user.login', next=url_for('index')) + '">' + sign_in_text + '</a></li>' + "\n"
+                navbar += '            <li><a href="' + url_for('user.login') + '">' + sign_in_text + '</a></li>' + "\n"
         else:
             navbar += '            <li class="dropdown"><a href="#" class="dropdown-toggle hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">' + current_user.email + '<span class="caret"></span></a><ul class="dropdown-menu">'
             if custom_menu:
@@ -1918,28 +1921,17 @@ class FacebookSignIn(OAuthSignIn):
 #         username = me.get('screen_name')
 #         return social_id, username, None   # Twitter does not provide email
 
-@user_registered.connect_via(app)
-def on_register_hook(sender, user, **extra):
-    from docassemble.webapp.users.models import Role
-    user_invite = extra.get('user_invite', None)
-    if user_invite is None:
-        return
-    this_user_role = Role.query.filter_by(id=user_invite.role_id).first()
-    if this_user_role is None:
-        this_user_role = Role.query.filter_by(name='user').first()
-    roles_to_remove = list()
-    for role in user.roles:
-        roles_to_remove.append(role)
-    for role in roles_to_remove:
-        user.roles.remove(role)
-    user.roles.append(this_user_role)
-    db.session.commit()
-    
+@flaskbabel.localeselector
+def get_locale():
+    translations = [str(translation) for translation in flaskbabel.list_translations()]
+    return request.accept_languages.best_match(translations)
+
 @lm.user_loader
 def load_user(id):
     return UserModel.query.get(int(id))
 
 @app.route('/authorize/<provider>', methods=['POST', 'GET'])
+@csrf.exempt
 def oauth_authorize(provider):
     if not current_user.is_anonymous:
         return redirect(url_for('interview_list'))
@@ -1947,6 +1939,7 @@ def oauth_authorize(provider):
     return oauth.authorize()
 
 @app.route('/callback/<provider>')
+@csrf.exempt
 def oauth_callback(provider):
     if not current_user.is_anonymous:
         return redirect(url_for('interview_list'))
@@ -1968,15 +1961,10 @@ def oauth_callback(provider):
     login_user(user, remember=False)
     if 'i' in session and 'uid' in session:
         save_user_dict_key(session['uid'], session['i'])
-        session['key_logged'] = True 
-    secret = request.cookies.get('secret', None)
-    if secret is not None:
-        secret = str(secret)
-    newsecret = substitute_secret(secret, pad_to_16(MD5Hash(data=social_id+password_secret_key).hexdigest()))
-    if not current_user.is_anonymous:
-        flash(word('Welcome!  You are logged in as ') + email, 'success')
+        session['key_logged'] = True
+    secret = substitute_secret(str(request.cookies.get('secret', None)), pad_to_16(MD5Hash(data=social_id).hexdigest()))
     response = redirect(url_for('interview_list'))
-    response.set_cookie('secret', newsecret)
+    response.set_cookie('secret', secret)
     return response
 
 @app.route('/user/google-sign-in')
@@ -2275,6 +2263,12 @@ def index():
         is_ajax = True
     else:
         is_ajax = False
+        # if 'newsecret' in session:
+        #     logmessage("interview_list: fixing cookie")
+        #     response = redirect(url_for('index'))
+        #     response.set_cookie('secret', session['newsecret'])
+        #     del session['newsecret']
+        #     return response
     chatstatus = session.get('chatstatus', 'off')
     session_id = session.get('uid', None)
     if current_user.is_anonymous:
@@ -7660,6 +7654,16 @@ def utilities():
 #         return render_template('pages/save_for_later.html', interview=sdf)
 #     secret = request.cookies.get('secret', None)
 
+@app.route('/after_reset', methods=['GET', 'POST'])
+def after_reset():
+    logmessage("after_reset")
+    response = redirect(url_for('user.login'))
+    if 'newsecret' in session:
+        logmessage("after_reset: fixing cookie")
+        response.set_cookie('secret', session['newsecret'])
+        del session['newsecret']
+    return response
+
 @app.route('/interviews', methods=['GET', 'POST'])
 @login_required
 def interview_list():
@@ -7667,6 +7671,12 @@ def interview_list():
         the_timezone = pytz.timezone(current_user.timezone)
     else:
         the_timezone = pytz.timezone(get_default_timezone())
+    if 'newsecret' in session:
+        logmessage("interview_list: fixing cookie")
+        response = redirect(url_for('interview_list'))
+        response.set_cookie('secret', session['newsecret'])
+        del session['newsecret']
+        return response
     secret = request.cookies.get('secret', None)
     if secret is not None:
         secret = str(secret)
@@ -7686,11 +7696,15 @@ def interview_list():
     #logmessage(str(interview_query))
     interviews = list()
     for interview_info in interview_query:
+        is_valid = True
         try:
             interview = docassemble.base.interview_cache.get_interview(interview_info.filename)
         except:
             logmessage("interview_list: unable to load interview file " + interview_info.filename)
-            continue
+            metadata = dict()
+            metadata['title'] = 'Error: interview is corrupted'
+            interview_title = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
+            is_valid = False
         if len(interview.metadata):
             metadata = interview.metadata[0]
             interview_title = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
@@ -7702,13 +7716,85 @@ def interview_list():
                 dictionary = decrypt_dictionary(interview_info.dictionary, secret)
             except:
                 logmessage("interview_list: unable to decrypt dictionary with secret " + str(secret))
-                continue
+                dictionary = fresh_dictionary()
+                metadata = dict()
+                metadata['title'] = 'Error: interview is corrupted'
+                interview_title = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
+                is_valid = False
         else:
             dictionary = unpack_dictionary(interview_info.dictionary)
         starttime = nice_date_from_utc(dictionary['_internal']['starttime'], timezone=the_timezone)
         modtime = nice_date_from_utc(dictionary['_internal']['modtime'], timezone=the_timezone)
-        interviews.append({'interview_info': interview_info, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'title': interview_title})
+        interviews.append({'interview_info': interview_info, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'title': interview_title, 'valid': is_valid})
     return render_template('pages/interviews.html', tab_title=word("Interviews"), page_title=word("Interviews"), interviews=sorted(interviews, key=lambda x: x['dict']['_internal']['starttime']))
+
+def fix_secret():
+    password = request.form.get('password', request.form.get('new_password', None))
+    if password is not None:
+        secret = str(request.cookies.get('secret', None))
+        newsecret = pad_to_16(MD5Hash(data=password).hexdigest())
+        if secret is None or secret != newsecret:
+            session['newsecret'] = substitute_secret(secret, newsecret)
+    else:
+        logmessage("fix_secret: password not in request")
+
+def login_or_register(sender, user, **extra):
+    fix_secret()
+    if 'i' in session and 'uid' in session:
+        save_user_dict_key(session['uid'], session['i'])
+        session['key_logged'] = True
+    if 'tempuser' in session:
+        changed = False
+        for chat_entry in ChatLog.query.filter_by(temp_user_id=int(session['tempuser'])).all():
+            chat_entry.user_id = user.id
+            chat_entry.temp_user_id = None
+            changed = True
+        if changed:
+            db.session.commit()
+        changed = False
+        for chat_entry in ChatLog.query.filter_by(temp_owner_id=int(session['tempuser'])).all():
+            chat_entry.owner_id = user.id
+            chat_entry.temp_owner_id = None
+            changed = True
+        if changed:
+            db.session.commit()
+        del session['tempuser']
+    session['user_id'] = user.id
+
+@user_logged_in.connect_via(app)
+def _on_user_login(sender, user, **extra):
+    logmessage("on user login")
+    login_or_register(sender, user, **extra)
+    #flash(word('You have signed in successfully.'), 'success')
+
+@user_changed_password.connect_via(app)
+def _on_password_change(sender, user, **extra):
+    logmessage("on password change")
+    fix_secret()
+    
+@user_reset_password.connect_via(app)
+def _on_password_reset(sender, user, **extra):
+    logmessage("on password reset")
+    fix_secret()
+
+@user_registered.connect_via(app)
+def on_register_hook(sender, user, **extra):
+    from docassemble.webapp.users.models import Role
+    user_invite = extra.get('user_invite', None)
+    if user_invite is None:
+        return
+    this_user_role = Role.query.filter_by(id=user_invite.role_id).first()
+    if this_user_role is None:
+        this_user_role = Role.query.filter_by(name='user').first()
+    roles_to_remove = list()
+    for role in user.roles:
+        roles_to_remove.append(role)
+    for role in roles_to_remove:
+        user.roles.remove(role)
+    user.roles.append(this_user_role)
+    db.session.commit()
+    login_or_register(sender, user, **extra)
+    #flash(word('You have registered successfully.'), 'success')
 
 # @user_logged_in.connect_via(app)
 # def _after_login_hook(sender, user, **extra):
