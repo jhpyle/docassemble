@@ -907,8 +907,8 @@ def send_sms_invite(to=None, body='question', config='default'):
     if phone_number is None:
         raise DAError("send_sms_invite: phone number is invalid")
     message = server.sms_body(phone_number, body=body, config=config)
-    logmessage("Sending message " + str(message) + " to " + str(phone_number))
-    #send_sms(to=phone_number, body=message, config=config)
+    #logmessage("Sending message " + str(message) + " to " + str(phone_number))
+    send_sms(to=phone_number, body=message, config=config)
 
 def send_sms(to=None, body=None, template=None, task=None, attachments=None, config='default'):
     """Sends a text message and returns whether sending the text was successful."""
