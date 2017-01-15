@@ -1335,6 +1335,35 @@ yesno: email_is_best
 ---
 {% endhighlight %}
 
+# Functions for determining information about the browser
+
+## <a name="language_from_browser"></a>language_from_browser()
+
+The `language_from_browser()` function returns a language code based
+on the [Accept-Language header].  The code will be in [ISO-639-1],
+[ISO-639-2], or [ISO-639-3] format and will be in lower case.  If
+multiple languages are listed in the [Accept-Language header], the
+first recogized language will be returned.
+
+{% include side-by-side.html demo="language_from_browser" %}
+
+Optionally, you can call `language_from_browser()` with arguments,
+where the arguments are valid languages.  The first valid language
+will be returned.  If none of the languages in the
+[Accept-Language header] is in the list, `None` will be returned.
+
+{% include side-by-side.html demo="language_from_browser_restricted" %}
+
+## <a name="device"></a>device()
+
+The `device()` function returns an object containing
+information about the user's browser, derived from the [User-Agent header].
+
+{% include side-by-side.html demo="device" %}
+
+For more information about the properties of this object, see the
+documentation for the [user-agents] library.
+
 # Language and locale functions()
 
 These functions access and change the active language and locale.  See
@@ -2972,6 +3001,8 @@ modules:
 [`get_language()`]: #get_language
 [`set_language()`]: #set_language
 [ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+[ISO-639-2]: https://en.wikipedia.org/wiki/List_of_ISO_639-2_codes
+[ISO-639-3]: https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes
 [Tesseract]: https://en.wikipedia.org/wiki/Tesseract_(software)
 [`ocr languages`]: {{ site.baseurl }}/docs/config.html#ocr languages
 [`debian packages`]: {{ site.baseurl }}/docs/config.html#debian packages
@@ -2983,3 +3014,6 @@ modules:
 [SMS interface]: {{ site.baseurl }}/docs/sms.html
 [more than one `twilio` configuration directive]: {{ site.baseurl }}/docs/config.html#multiple twilio
 [`initiate_sms_session()`]: #initiate_sms_session
+[user-agents]: https://pypi.python.org/pypi/user-agents
+[User-Agent header]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
+[Accept-Language header]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language

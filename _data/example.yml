@@ -908,6 +908,22 @@
       user_reconsidering_communism = False
       del user_is_communist
   ---
+"device": |-
+  ---
+  question: |
+    % if device().is_mobile:
+    You are on a phone.
+    % elif device().is_tablet:
+    You are on a tablet.
+    % elif device().is_pc:
+    You are on a PC.
+    % elif device().is_bot:
+    You are a bot.
+    % else:
+    Your device is: ${ device() }.
+    % endif
+  mandatory: true
+  ---
 "dialog-box": |-
   ---
   mandatory: true
@@ -2046,6 +2062,25 @@
   ---
 "language": "---\nlanguage: es\nquestion: |\n  \xBFCu\xE1l es el significado de la\
   \ vida?\nfields:\n  - Significado de la Vida: meaning_life\n---"
+"language_from_browser": |-
+  ---
+  question: |
+    I think your language code is
+    `${ language_from_browser() }`.
+  mandatory: true
+  ---
+"language_from_browser_restricted": |-
+  ---
+  question: |
+    % if language_from_browser('es', 'fr') is None:
+    I guess you do not speak
+    Spanish or French.
+    % else:
+    Great!  Your language code is
+    `${ language_from_browser('es', 'fr') }`.
+    % endif
+  mandatory: true
+  ---
 "lastfirst": |-
   ---
   template: client_letter
