@@ -878,7 +878,7 @@ generic object: Individual
 question: |
   What language ${ x.do_question('speak') }?
 subquestion: |
-  % if device().is_mobile
+  % if device().is_mobile:
   You are on a phone!
   % elif device().is_tablet:
   You are on a tablet!
