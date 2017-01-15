@@ -883,7 +883,11 @@ class Organization(Person):
 
 def get_sms_session(phone_number, config='default'):
     """Returns the SMS session information for a phone number, or None if no session exists."""
-    return server.get_sms_session(phone_number, config=config)
+    result = server.get_sms_session(phone_number, config=config)
+    for key in ['number', 'tempuser', 'user_id']:
+        if key in result:
+            del result[key]
+    return result
 
 def initiate_sms_session(phone_number, yaml_filename=None, email=None, new=False, send=True, config='default'):
     """Initiates a new SMS session for a phone number, overwriting any that is currently active."""

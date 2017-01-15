@@ -534,7 +534,7 @@ def server_capabilities():
 
 def update_server(*pargs, **kwargs):
     for arg, func in kwargs.iteritems():
-        sys.stderr.write("Setting " + str(arg) + "\n")
+        #sys.stderr.write("Setting " + str(arg) + "\n")
         if arg == 'bg_action':
             the_func = func
             def worker_wrapper(action, ui_notification, **kwargs):

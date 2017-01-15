@@ -364,6 +364,11 @@ def get_sms_session(phone_number, config='default'):
             sess_info = pickle.loads(sess_contents)
         except:
             logmessage("get_sms_session: unable to decode session information")
+    sess_info['email'] = None
+    if 'user_id' in sess_info and sess_info['user_id'] is not None:
+        user = load_user(sess_info['user_id'])
+        if user is not None:
+            sess_info['email'] = user.email
     return sess_info
 
 def initiate_sms_session(phone_number, yaml_filename=None, uid=None, secret=None, encrypted=None, user_id=None, email=None, new=False, config='default'):
@@ -1190,20 +1195,20 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
     return(navbar)
 
 def delete_session():
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms']:
         if key in session:
             del session[key]
     return
 
 def backup_session():
     backup = dict()
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms']:
         if key in session:
             backup[key] = session[key]
     return backup
 
 def restore_session(backup):
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms']:
         if key in backup:
             session[key] = backup[key]
 
@@ -7818,16 +7823,15 @@ def sms_body(phone_number, body='question', config='default'):
         raise DAError("sms_body: account sid not in Twilio configuration")
     if 'number' not in tconfig:
         raise DAError("sms_body: phone number not in Twilio configuration")
+    if 'doing_sms' in session:
+        raise DAError("Cannot call sms_body from within sms_body")
     form = dict(To=tconfig['number'], From=phone_number, Body=body, AccountSid=tconfig['account sid'])
     base_url = request.base_url
     url_root = request.url_root
     tbackup = docassemble.base.functions.backup_thread_variables()
     sbackup = backup_session()
-    try:
-        resp = do_sms(form, base_url, url_root, save=False)
-    except Exception as errmess:
-        resp = None
-        logmessage(str(errmess))
+    session['doing_sms'] = True
+    resp = do_sms(form, base_url, url_root, save=False)
     restore_session(sbackup)
     docassemble.base.functions.restore_thread_variables(tbackup)
     if resp is None or len(resp.verbs) == 0 or len(resp.verbs[0].verbs) == 0:
