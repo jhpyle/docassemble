@@ -359,14 +359,14 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
 	mv /usr/share/docassemble/certs/docassemble.ca.pem.orig /usr/share/docassemble/certs/docassemble.ca.pem
     fi
     python -m docassemble.webapp.install_certs $DA_CONFIG_FILE || exit 1
+    if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
+	echo "Listen 8081" >> /etc/apache2/ports.conf
+	a2ensite docassemble-redirect
+    fi
     if [ "${USEHTTPS:-false}" == "true" ]; then
 	echo "Listen 443" >> /etc/apache2/ports.conf
 	a2enmod ssl
 	a2ensite docassemble-ssl
-	if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
-	    echo "Listen 8081" >> /etc/apache2/ports.conf
-	    a2ensite docassemble-redirect
-	fi
 	if [ "${USELETSENCRYPT:-false}" == "true" ]; then
 	    cd /usr/share/docassemble/letsencrypt 
 	    if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then
