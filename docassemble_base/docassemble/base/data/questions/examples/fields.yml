@@ -44,13 +44,6 @@ fields:
       The date and time is
       <span class="mytime"
       id="today_time"></span>.
-  - script: |
-      <script>
-        document.getElementById("today_time").innerHTML = Date();
-      </script>
-  - css: |
-      <link rel="stylesheet" 
-      href="${ url_of('docassemble.demo:data/static/my.css') }">
   - Number of friends: num_friends
     datatype: radio
     choices:
@@ -81,3 +74,13 @@ fields:
       - Republican
       - Democrat
       - Independent
+css: |
+  <style>
+    .mytime {
+       color: green;
+    }
+  </style>
+script: |
+  <script>
+    $("#today_time").html(Date());
+  </script>

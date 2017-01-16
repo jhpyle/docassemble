@@ -866,7 +866,7 @@ def emoji_insert(text, status=None, images=None):
     else:
         return(":" + str(text) + ":")
 
-def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use_pandoc=False, escape=False, do_terms=True, indent=None, strip_newlines=None):
+def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use_pandoc=False, escape=False, do_terms=True, indent=None, strip_newlines=None, divclass=None):
     if question is None and status is not None:
         question = status.question
     if question is not None:
@@ -909,6 +909,8 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
     if result:
         if strip_newlines:
             result = result.replace('\n', ' ')
+        if divclass is not None:
+            result = '<div class="' + str(divclass) + '">' + result + '</div>'
         if indent and not code_match.search(result):
             return (" " * indent) + re.sub(r'\n', "\n" + (" " * indent), result).rstrip() + "\n"
     return(result)

@@ -824,3 +824,7 @@ img.da-sig-spinner {
 .pointer {
     cursor: pointer;
 }
+
+div.undertext {
+    margin-top: 10px;
+}

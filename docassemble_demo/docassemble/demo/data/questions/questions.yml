@@ -366,12 +366,18 @@ decoration: calendar
 fields:
   - html: |
       The current date and time is <span class="mytime" id="today_time"></span>.
-    script: |
-      <script>document.getElementById("today_time").innerHTML = Date();</script>
-    css: |
-      <link rel="stylesheet" href="${ url_of('docassemble.demo:data/static/my.css') }">
   - Date of Injury: injury_date
     datatype: date
+css: |
+  <style>
+    .mytime {
+       color: green;
+    }
+  </style>
+script: |
+  <script>
+    $("#today_time").html(Date());
+  </script>
 comment: |
   You can embed raw HTML into a list of fields using the 'html' key.
   You can also expand the capabilities of what you do with this HTML by
@@ -381,9 +387,6 @@ comment: |
   text of 'css' is added to the <head>.
 
   Note that you can use Mako templates in each of these declarations.
-  The function url_of, which is available in docassemble.base.util and
-  docassemble.base.legal, will give you a URL to a file in a given
-  package.
 ---
 question: |
   Why do you think you deserve to win this case?

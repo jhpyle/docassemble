@@ -202,8 +202,8 @@ def as_sms(status, links=None, menu_items=None):
         next_field = None
         for the_field in status.question.fields:
             if hasattr(the_field, 'datatype'):
-                if the_field.datatype in ['script', 'css']:
-                    continue
+                # if the_field.datatype in ['script', 'css']:
+                #     continue
                 if the_field.datatype in ['html', 'note'] and field is not None:
                     continue
                 if the_field.datatype in ['note']:
@@ -341,6 +341,8 @@ def as_sms(status, links=None, menu_items=None):
                     qoutput += "\n" + word("Type the") + " " + label + "." + next_label
                 else:
                     qoutput += "\n" + word("Type the") + " " + label + " " + word("or type skip to leave blank.") + next_label
+    if status.underText and question.question_type != 'signature':
+        qoutput += "\n" + to_text(markdown_to_html(status.underText, status=status), terms, links, status)
     if 'menu_items' in status.extras and type(status.extras['menu_items']) is list:
         for menu_item in status.extras['menu_items']:
             if type(menu_item) is dict and 'url' in menu_item and 'label' in menu_item:
@@ -439,12 +441,16 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
     datatypes = dict()
     varnames = dict()
     onchange = list()
+    if 'script' in status.extras and status.extras['script'] is not None:
+        extra_scripts.append(status.extras['script'])
+    if 'css' in status.extras and status.extras['css'] is not None:
+        extra_css.append(status.extras['css'])
     if status.continueLabel:
         continue_label = markdown_to_html(status.continueLabel, trim=True)
     else:
         continue_label = word('Continue')        
-    if status.question.script is not None:
-        extra_scripts.append(status.question.script)
+    # if status.question.script is not None:
+    #     extra_scripts.append(status.question.script)
     if status.audiovideo is not None:
         uses_audio_video = True
         audio_urls = get_audio_urls(status.audiovideo)
@@ -502,6 +508,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
             output += '\n                  <button class="btn btn-lg btn-warning" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None">' + status.question.maybe() + '</button>'
         output += '\n                </div>\n'
         #output += question_name_tag(status.question)
+        if (status.underText):
+            output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
         output += varname_tag(varnames)
@@ -520,6 +528,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
         if status.question.question_type == 'noyesmaybe':
             output += '\n                  <button class="btn btn-lg btn-warning" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None">' + status.question.maybe() + '</button>'
         output += '\n                </div>\n'
+        if (status.underText):
+            output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
         output += varname_tag(varnames)
@@ -532,8 +542,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
             if hasattr(field, 'extras'):
                 if 'script' in field.extras and 'script' in status.extras and field.number in status.extras['script']:
                     extra_scripts.append(status.extras['script'][field.number])
-                if 'css' in field.extras and 'css' in status.extras and field.number in status.extras['css']:
-                    extra_css.append(status.extras['css'][field.number])
+                # if 'css' in field.extras and 'css' in status.extras and field.number in status.extras['css']:
+                #     extra_css.append(status.extras['css'][field.number])
             if hasattr(field, 'datatype'):
                 if field.datatype == 'html' and 'html' in status.extras and field.number in status.extras['html']:
                     fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-md-12"><note>' + status.extras['html'][field.number].rstrip() + '</note></div></div>\n')
@@ -541,8 +551,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
                 elif field.datatype == 'note' and 'note' in status.extras and field.number in status.extras['note']:
                     fieldlist.append('                <div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status, strip_newlines=True) + '</div></div>\n')
                     continue
-                elif field.datatype in ['script', 'css']:
-                    continue
+                # elif field.datatype in ['script', 'css']:
+                #     continue
                 elif field.datatype == 'button' and hasattr(field, 'label') and field.number in status.helptexts:
                     fieldlist.append('                <div class="row"><div class="col-md-12"><a class="label label-success review-action" href="' + url_action(field.action) + '">' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a>' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
                     continue
@@ -563,6 +573,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
         else:
             resume_button_label = word('Resume')
         output += '                <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + resume_button_label + '</button></div>\n'
+        if (status.underText):
+            output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += '              </fieldset>\n            </form>\n'
     elif status.question.question_type == "fields":
@@ -579,10 +591,10 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
             else:
                 req_tag = ''
             if hasattr(field, 'extras'):
-                if 'script' in field.extras and 'script' in status.extras:
-                    extra_scripts.append(status.extras['script'][field.number])
-                if 'css' in field.extras and 'css' in status.extras:
-                    extra_css.append(status.extras['css'][field.number])
+                # if 'script' in field.extras and 'script' in status.extras:
+                #     extra_scripts.append(status.extras['script'][field.number])
+                # if 'css' in field.extras and 'css' in status.extras:
+                #     extra_css.append(status.extras['css'][field.number])
                 #fieldlist.append("<div>datatype is " + str(field.datatype) + "</div>")
                 if 'show_if_var' in field.extras and 'show_if_val' in status.extras and hasattr(field, 'saveas'):
                     fieldlist.append('                <div class="showif" data-saveas="' + escape_id(field.saveas) + '" data-showif-sign="' + escape_id(field.extras['show_if_sign']) + '" data-showif-var="' + escape_id(field.extras['show_if_var']) + '" data-showif-val=' + noquote(unicode(status.extras['show_if_val'][field.number])) + '>\n')
@@ -593,8 +605,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
                 elif field.datatype == 'note':
                     fieldlist.append('                <div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status, strip_newlines=True) + '</div></div>\n')
                     continue
-                elif field.datatype in ['script', 'css']:
-                    continue
+                # elif field.datatype in ['script', 'css']:
+                #     continue
                 else:
                     datatypes[field.saveas] = field.datatype
                     if field.datatype == 'object_checkboxes':
@@ -695,6 +707,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
         output += '                <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + continue_label + '</button></div>\n'
         #output += question_name_tag(status.question)
+        if (status.underText):
+            output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
         output += varname_tag(varnames)
@@ -711,6 +725,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
         output += '                <div class="form-actions"><button type="submit" class="btn btn-lg btn-primary" name="' + escape_id(status.question.fields[0].saveas) + '" value="True"> ' + continue_label + '</button></div>\n'
         #output += question_name_tag(status.question)
+        if (status.underText):
+            output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
         output += varname_tag(varnames)
@@ -849,6 +865,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
                     indexno += 1
             output += '                </div>\n'
         #output += question_name_tag(status.question)
+        if (status.underText):
+            output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
         output += varname_tag(varnames)
@@ -869,6 +887,8 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
         output += '                <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + continue_label + '</button></div>\n'
         #output += question_name_tag(status.question)
+        if (status.underText):
+            output += markdown_to_html(status.underText, status=status, indent=18, divclass="undertext")
         output += tracker_tag(status)
         output += '              </fieldset>\n            </form>\n'
     if len(status.attachments) > 0:
@@ -1001,7 +1021,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
         output += '            <br/><br/><br/><br/><br/><br/><br/>\n'
     for attribution in sorted(status.attributions):
         output += '            <div><attribution><small>' + markdown_to_html(attribution, strip_newlines=True) + '</small></attribution></div>\n'
-    if status.using_screen_reader:
+    if debug or status.using_screen_reader:
         status.screen_reader_text['question'] = unicode(output)
     master_output += output
     master_output += '          </section>\n'
@@ -1073,7 +1093,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
             output += '            <br/><br/><br/><br/><br/><br/><br/>\n'
         for attribution in sorted(status.attributions):
             output += '            <div><attribution><small>' + markdown_to_html(attribution, strip_newlines=True) + '</small></attribution></div>\n'
-        if status.using_screen_reader:
+        if debug or status.using_screen_reader:
             status.screen_reader_text['help'] = unicode(output)
     master_output += output
     master_output += '          </section>\n'
@@ -1163,7 +1183,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
     return master_output
 
 def add_validation(extra_scripts, validation_rules):
-    extra_scripts.append("""<script>
+    extra_scripts.append("""    <script>
       var validation_rules = """ + json.dumps(validation_rules) + """;
       validation_rules.submitHandler = daValidationHandler;
       $("#daform").validate(validation_rules);

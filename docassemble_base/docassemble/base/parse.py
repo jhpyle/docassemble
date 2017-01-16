@@ -412,6 +412,7 @@ class Question:
         self.continuelabel = None
         self.progress = None
         self.script = None
+        self.css = None
         self.decorations = None
         self.audiovideo = None
         self.allow_emailing = True
@@ -524,13 +525,13 @@ class Question:
                             raise DAError('The docx reference file must be a string.' + self.idebug(data))
                         self.interview.attachment_options['docx_reference_file'] = docassemble.base.functions.package_template_filename(value, package=self.package)
         if 'script' in data:
-            if type(data) is not str:
+            if type(data['script']) not in (str, unicode):
                 raise DAError("A script section must be plain text." + self.idebug(data))
-            self.script = data
+            self.script = TextObject(definitions + data['script'], names_used=self.mako_names)
         if 'css' in data:
-            if type(data) is not str:
+            if type(data['css']) not in (str, unicode):
                 raise DAError("A css section must be plain text." + self.idebug(data))
-            self.css = data
+            self.css = TextObject(definitions + data['css'], names_used=self.mako_names)
         if ('initial' in data and data['initial'] is True) or ('default role' in data):
             #logmessage("Setting a code block to initial\n")
             self.is_initial = True
@@ -935,8 +936,8 @@ class Question:
             self.question_type = 'signature'
             self.fields.append(Field({'saveas': data['signature']}))
             self.fields_used.add(data['signature'])
-            if 'under' in data:
-                self.undertext = TextObject(definitions + data['under'], names_used=self.mako_names)
+        if 'under' in data:
+            self.undertext = TextObject(definitions + data['under'], names_used=self.mako_names)
         if 'yesno' in data:
             self.fields.append(Field({'saveas': data['yesno'], 'boolean': 1}))
             self.fields_used.add(data['yesno'])
@@ -1162,12 +1163,12 @@ class Question:
                                     field_info['extras'] = dict()
                                 field_info['type'] = 'html'
                                 field_info['extras'][key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
-                            elif key in ['css', 'script']:
-                                if 'extras' not in field_info:
-                                    field_info['extras'] = dict()
-                                if field_info['type'] == 'text':
-                                    field_info['type'] = key
-                                field_info['extras'][key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
+                            # elif key in ['css', 'script']:
+                            #     if 'extras' not in field_info:
+                            #         field_info['extras'] = dict()
+                            #     if field_info['type'] == 'text':
+                            #         field_info['type'] = key
+                            #     field_info['extras'][key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
                             elif key == 'shuffle':
                                 field_info['shuffle'] = field[key]
                             elif key == 'field':
@@ -1218,7 +1219,7 @@ class Question:
                                 self.fields_used.add(field_info['saveas'] + '.gathered')
                             else:
                                 self.fields_used.add(field_info['saveas'])
-                        elif 'type' in field_info and field_info['type'] in ['note', 'html', 'script', 'css']:
+                        elif 'type' in field_info and field_info['type'] in ['note', 'html']: #, 'script', 'css'
                             self.fields.append(Field(field_info))
                         else:
                             raise DAError("A field was listed without indicating a label or a variable name, and the field was not a note or raw HTML." + self.idebug(field_info))
@@ -1242,8 +1243,8 @@ class Question:
                     elif key == 'help':
                         if type(field[key]) is not dict and type(field[key]) is not list:
                             field_info[key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
-                        if 'button' in field or 'note' in field or 'html' in field or 'css' in field or 'script' in field:
-                            raise DAError("In a review block, you cannot mix help text with note, html, css, or script items." + self.idebug(data))
+                        if 'button' in field or 'note' in field or 'html' in field: #or 'css' in field or 'script' in field:
+                            raise DAError("In a review block, you cannot mix help text with note, or html items." + self.idebug(data)) #, css, or script
                     elif key == 'button':
                         if type(field[key]) is not dict and type(field[key]) is not list:
                             field_info['help'] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
@@ -1258,12 +1259,12 @@ class Question:
                             field_info['extras'] = dict()
                         field_info['type'] = 'html'
                         field_info['extras'][key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
-                    elif key in ['css', 'script']:
-                        if 'extras' not in field_info:
-                            field_info['extras'] = dict()
-                        if field_info['type'] == 'text':
-                            field_info['type'] = key
-                        field_info['extras'][key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
+                    # elif key in ['css', 'script']:
+                    #     if 'extras' not in field_info:
+                    #         field_info['extras'] = dict()
+                    #     if field_info['type'] == 'text':
+                    #         field_info['type'] = key
+                    #     field_info['extras'][key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
                     elif key == 'show if':
                         field_info['saveas_code'] = compile(field[key], '', 'eval')
                         field_info['saveas'] = field[key]
@@ -1283,7 +1284,7 @@ class Question:
                         else:
                             field_info['action'] = field[key]
                         field_info['saveas_code'] = compile(field[key], '', 'eval')
-                if 'saveas' in field_info or ('type' in field_info and field_info['type'] in ['note', 'html', 'script', 'css']):
+                if 'saveas' in field_info or ('type' in field_info and field_info['type'] in ['note', 'html']): #, 'script', 'css'
                     self.fields.append(Field(field_info))
                 else:
                     raise DAError("A field in a review list was listed without indicating a label or a variable name, and the field was not a note or raw HTML." + self.idebug(field_info))
@@ -1484,6 +1485,11 @@ class Question:
             undertext = self.undertext.text(user_dict)
         else:
             undertext = None
+        extras = dict()
+        if self.css is not None:
+            extras['css'] = self.css.text(user_dict)
+        if self.script is not None:
+            extras['script'] = self.script.text(user_dict)
         if self.continuelabel is not None:
             continuelabel = self.continuelabel.text(user_dict)
         else:
@@ -1517,7 +1523,6 @@ class Question:
         defined = dict()
         hints = dict()
         helptexts = dict()
-        extras = dict()
         labels = dict()
         extras['required'] = dict()
         if self.reload_after is not None:
@@ -1549,7 +1554,7 @@ class Question:
                     except:
                         continue
                 if hasattr(field, 'extras'):
-                    for key in ['note', 'html', 'script', 'css', 'min', 'max', 'minlength', 'maxlength', 'step']:
+                    for key in ['note', 'html', 'min', 'max', 'minlength', 'maxlength', 'step']: # 'script', 'css', 
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()
@@ -1622,7 +1627,7 @@ class Question:
                 if hasattr(field, 'label'):
                     labels[field.number] = field.label.text(user_dict)
                 if hasattr(field, 'extras'):
-                    for key in ['note', 'html', 'script', 'css', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step']: # , 'textresponse', 'content_type'
+                    for key in ['note', 'html', 'min', 'max', 'minlength', 'maxlength', 'show_if_val', 'step']: # , 'textresponse', 'content_type' #'script', 'css', 
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = dict()

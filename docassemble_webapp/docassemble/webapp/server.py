@@ -2,6 +2,7 @@ import re
 import os
 import sys
 import tempfile
+from textstat.textstat import textstat
 import docassemble.base.config
 if not docassemble.base.config.loaded:
     docassemble.base.config.load()
@@ -2272,6 +2273,25 @@ def checkin():
 #     g.request_start_time = time.time()
 #     g.request_time = lambda: "%.5fs" % (time.time() - g.request_start_time)
 
+@app.route("/vars", methods=['POST', 'GET'])
+def get_variables():
+    session_id = session.get('uid', None)
+    yaml_filename = session.get('i', None)
+    if 'visitor_secret' in request.cookies:
+        secret = request.cookies['visitor_secret']
+    else:
+        secret = request.cookies.get('secret', None)
+    if secret is not None:
+        secret = str(secret)
+    #session_cookie_id = request.cookies.get('session', None)
+    if session_id is None or yaml_filename is None:
+        return jsonify(success=False)
+    try:
+        steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+    except:
+        return jsonify(success=False)
+    return jsonify(success=True, variables=docassemble.base.functions.serializable_dict(user_dict), steps=steps, encrypted=is_encrypted, uid=session_id, i=yaml_filename)
+
 @app.route("/", methods=['POST', 'GET'])
 def index():
     if 'ajax' in request.form:
@@ -2932,6 +2952,18 @@ def index():
                 being_controlled = 'false'
         else:
             being_controlled = 'false'
+        if DEBUG:
+            debug_readability_help = """
+            $("#readability-help").show();
+            $("#readability-question").hide();
+"""
+            debug_readability_question = """
+            $("#readability-help").hide();
+            $("#readability-question").show();
+"""
+        else:
+            debug_readability_help = ''
+            debug_readability_question = ''
         scripts += """    <script type="text/javascript" charset="utf-8">
       var map_info = null;
       var socket = null;
@@ -2972,6 +3004,21 @@ def index():
           $.ajax({
             type: "GET",
             url: "?action=" + encodeURIComponent(btoa(JSON.stringify(data))),
+            success: callback,
+            error: function(xhr, status, error){
+              setTimeout(function(){
+                daProcessAjaxError(xhr, status, error);
+              }, 0);
+            }
+          });
+      }
+      function get_interview_variables(callback){
+          if (callback == null){
+              callback = function(){};
+          }
+          $.ajax({
+            type: "GET",
+            url: """ + '"' + url_for('get_variables') + '"' + """,
             success: callback,
             error: function(xhr, status, error){
               setTimeout(function(){
@@ -3728,16 +3775,30 @@ def index():
           hideSpinner();
         }
         notYetScrolled = true;
+        $('#source').on('hide.bs.collapse', function (e) {
+          $("#readability").slideUp();
+        });
+        $('#source').on('show.bs.collapse', function (e) {
+          if (daShowingHelp){
+            $("#readability-question").hide();
+            $("#readability-help").show();
+          }
+          else{
+            $("#readability-help").hide();
+            $("#readability-question").show();
+          }
+          $("#readability").slideDown();
+        });
         $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
           if ($(e.target).attr("href") == '#help'){
             daShowingHelp = 1;
             if (notYetScrolled){
               scrollChatFast();
               notYetScrolled = false;
-            }
+            }""" + debug_readability_help + """
           }
-          else{
-            daShowingHelp = 0;
+          else if ($(e.target).attr("href") == '#question'){
+            daShowingHelp = 0;""" + debug_readability_question + """
           }
         });
         $(function () {
@@ -4016,6 +4077,8 @@ def index():
             end_output = scripts + "\n    " + "\n    ".join(extra_scripts) + """\n  </body>\n</html>"""
     else:
         bodyclass="dabody"
+        if DEBUG:
+            interview_status.screen_reader_text = dict()
         if 'speak_text' in interview_status.extras and interview_status.extras['speak_text']:
             interview_status.initialize_screen_reader()
             util_language = docassemble.base.functions.get_language()
@@ -4042,6 +4105,29 @@ def index():
         #     logmessage("speak_text was not here")
         content = as_html(interview_status, extra_scripts, extra_css, url_for, DEBUG, ROOT, validation_rules)
         #sms_content = as_sms(interview_status)
+        if DEBUG:
+            readability = dict()
+            for question_type in ['question', 'help']:
+                if question_type not in interview_status.screen_reader_text:
+                    continue
+                phrase = to_text(interview_status.screen_reader_text[question_type]).encode('utf8')
+                readability[question_type] = [('Flesch Reading Ease', textstat.flesch_reading_ease(phrase)),
+                                              ('Flesch-Kincaid Grade Level', textstat.flesch_kincaid_grade(phrase)),
+                                              ('Gunning FOG Scale', textstat.gunning_fog(phrase)),
+                                              ('SMOG Index', textstat.smog_index(phrase)),
+                                              ('Automated Readability Index', textstat.automated_readability_index(phrase)),
+                                              ('Coleman-Liau Index', textstat.coleman_liau_index(phrase)),
+                                              ('Linsear Write Formula', textstat.linsear_write_formula(phrase)),
+                                              ('Dale-Chall Readability Score', textstat.dale_chall_readability_score(phrase)),
+                                              ('Readability Consensus', textstat.text_standard(phrase))]
+            readability_report = ''
+            for question_type in ['question', 'help']:
+                if question_type in readability:
+                    readability_report += '          <table style="display: none;" class="table" id="readability-' + question_type +'">' + "\n"
+                    readability_report += '            <tr><th>Formula</th><th>Score</th></tr>' + "\n"
+                    for read_type, value in readability[question_type]:
+                        readability_report += '            <tr><td>' + read_type +'</td><td>' + str(value) + "</td></tr>\n"
+                    readability_report += '          </table>' + "\n"
         if interview_status.using_screen_reader:
             for question_type in ['question', 'help']:
                 #phrase = codecs.encode(to_text(interview_status.screen_reader_text[question_type]).encode('utf-8'), 'base64').decode().replace('\n', '')
@@ -4077,12 +4163,15 @@ def index():
             if 'css' in interview_status.question.interview.external_files:
                 for fileref in interview_status.question.interview.external_files['css']:
                     start_output += '\n    <link href="' + get_url_from_file_reference(fileref, question=interview_status.question) + '" rel="stylesheet">'
-            start_output += "".join(extra_css)
+            start_output += '\n' + indent_by("".join(extra_css).strip(), 4).rstrip()
             start_output += '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dabody">\n'
         output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp']) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">\n        <div class="tab-content">\n'
         if interview_status.question.interview.use_progress_bar:
             output += progress_bar(user_dict['_internal']['progress'])
-        output += content + "        </div>\n      </div>\n"
+        output += content + "        </div>"
+        if DEBUG:
+            output += '\n        <div class="col-md-4" style="display: none" id="readability">' + readability_report + '</div>'
+        output += "\n      </div>\n"
         if DEBUG:
             output += '      <div class="row">' + "\n"
             output += '        <div id="source" class="col-md-12 collapse">' + "\n"
@@ -4153,7 +4242,7 @@ def index():
 #                        </div>
 # """
         if not is_ajax:
-            end_output = scripts + "\n    " + "".join(extra_scripts) + """\n  </body>\n</html>"""
+            end_output = scripts + "\n" + "".join(extra_scripts) + """\n  </body>\n</html>"""
     #logmessage(output.encode('utf8'))
     #logmessage("Request time interim: " + str(g.request_time()))
     if 'uid' in session and 'i' in session:
@@ -4743,7 +4832,7 @@ def observer():
         logmessage("observer: failed to load JSON from key " + the_key)
         obj = dict()
     output = standard_html_start(interview_language=obj.get('lang', 'en'), debug=DEBUG)
-    output += "".join(obj.get('extra_css', list()))
+    output += indent_by("".join(obj.get('extra_css', list())), 4)
     output += '\n    <title>' + word('Observation') + '</title>\n  </head>\n  <body class="' + obj.get('bodyclass', 'dabody') + '">\n'
     output += obj.get('body', '')
     output += standard_scripts() + observation_script + "\n    " + "".join(obj.get('extra_scripts', list())) + "\n  </body>\n</html>"

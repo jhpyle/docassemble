@@ -1,0 +1,27 @@
+metadata:
+  title: CSS
+  example start: 2
+  example end: 2
+  documentation: "http://docassemble.org/docs/modifiers.html#css"
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  Do you want to build a snowman?
+yesno: wants_to_build_snowman
+css: |
+  <style>
+    body {
+      background-image: url('${ url_of('docassemble.base:data/static/snowman.png') }');
+      background-repeat: repeat;
+    }
+  </style>
+---
+mandatory: true
+question: |
+  % if wants_to_build_snowman:
+  Great!  Too bad there is no snow.
+  % else:
+  Now I feel sad.
+  % endif

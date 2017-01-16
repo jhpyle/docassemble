@@ -1,0 +1,25 @@
+metadata:
+  title: Javascript
+  example start: 1
+  example end: 1
+  documentation: "http://docassemble.org/docs/modifiers.html#script"
+---
+question: |
+  Do you want to build a snowman?
+subquestion: |
+  <span id="beg"></span>
+yesno: wants_to_build_snowman
+script: |
+  <script>
+    setTimeout(function(){
+      $("#beg").html("Pretty please?");
+    }, 1000);
+  </script>
+---
+mandatory: true
+question: |
+  % if wants_to_build_snowman:
+  Great!  Too bad there is no snow.
+  % else:
+  Now I feel sad.
+  % endif
