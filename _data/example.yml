@@ -701,6 +701,19 @@
     which is abbreviated
     ${ user_country }.
   ---
+"css": |-
+  ---
+  question: |
+    Do you want to build a snowman?
+  yesno: wants_to_build_snowman
+  css: |
+    <style>
+      body {
+        background-image: url('${ url_of('docassemble.base:data/static/snowman.png') }');
+        background-repeat: repeat;
+      }
+    </style>
+  ---
 "currency": |-
   ---
   question: |
@@ -1094,18 +1107,17 @@
   \ of turnips: turnip_rating\n    datatype: range\n    min: 1\n    max: 10\n  - Belly\
   \ button type: belly_button\n    datatype: radio\n    choices:\n      - Innie\n\
   \      - Outie\n  - html: |\n      The date and time is\n      <span class=\"mytime\"\
-  \n      id=\"today_time\"></span>.\n  - script: |\n      <script>\n        document.getElementById(\"\
-  today_time\").innerHTML = Date();\n      </script>\n  - css: |\n      <link rel=\"\
-  stylesheet\" \n      href=\"${ url_of('docassemble.demo:data/static/my.css') }\"\
-  >\n  - Number of friends: num_friends\n    datatype: radio\n    choices:\n     \
-  \ - One: 1\n      - Two: 2\n      - Three: 3\n  - Degrees obtained: degrees\n  \
-  \  datatype: checkboxes\n    choices:\n      - High school\n      - College\n  \
-  \    - Graduate school\n  - State you grew up in: home_state\n    code: |\n    \
-  \  us.states.mapping('abbr', 'name')\n  - note: |\n      #### Politics\n\n     \
-  \ Tell me about your political\n      views.\n  - no label: political_views\n  \
-  \  default: I have no political views\n    maxlength: 30\n  - Party: political_party\n\
+  \n      id=\"today_time\"></span>.\n  - Number of friends: num_friends\n    datatype:\
+  \ radio\n    choices:\n      - One: 1\n      - Two: 2\n      - Three: 3\n  - Degrees\
+  \ obtained: degrees\n    datatype: checkboxes\n    choices:\n      - High school\n\
+  \      - College\n      - Graduate school\n  - State you grew up in: home_state\n\
+  \    code: |\n      us.states.mapping('abbr', 'name')\n  - note: |\n      #### Politics\n\
+  \n      Tell me about your political\n      views.\n  - no label: political_views\n\
+  \    default: I have no political views\n    maxlength: 30\n  - Party: political_party\n\
   \    datatype: radio\n    shuffle: true \n    choices:\n      - Republican\n   \
-  \   - Democrat\n      - Independent\n---"
+  \   - Democrat\n      - Independent\ncss: |\n  <style>\n    .mytime {\n       color:\
+  \ green;\n    }\n  </style>\nscript: |\n  <script>\n    $(\"#today_time\").html(Date());\n\
+  \  </script>\n---"
 "fields-checkboxes": |-
   ---
   question: |
@@ -1920,13 +1932,20 @@
     I was thinking about your birthday.
   fields:
     - html: |
-        The date and time is <span class="mytime" id="today_time"></span>.
-    - script: |
-        <script>document.getElementById("today_time").innerHTML = Date();</script>
-    - css: |
-        <link rel="stylesheet" href="${ url_of('docassemble.demo:data/static/my.css') }">
+        The date and time today is
+        <span class="mytime" id="today_time"></span>.
     - "When is your next birthday?": birth_date
       datatype: date
+  css: |
+    <style>
+      .mytime {
+         color: green;
+      }
+    </style>
+  script: |
+    <script>
+      $("#today_time").html(Date());
+    </script>
   ---
 "image-sets": |-
   ---
@@ -3429,6 +3448,20 @@
   question: |
     The number after 3 is
     ${ plus_one(3) }.
+  ---
+"script": |-
+  ---
+  question: |
+    Do you want to build a snowman?
+  subquestion: |
+    <span id="beg"></span>
+  yesno: wants_to_build_snowman
+  script: |
+    <script>
+      setTimeout(function(){
+        $("#beg").html("Pretty please?");
+      }, 1000);
+    </script>
   ---
 "send-sms": |-
   ---

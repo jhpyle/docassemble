@@ -396,15 +396,13 @@ the setting of the progress bar.
 
 ## <a name="javascript"></a><a name="css"></a>Javascript and CSS files
 
-If you are a web developer and you know how to write HTML, Javscript,
-and CSS, you can embed HTML and Javascript in your interviews using
-the [`html`], [`script`], and [`css`] directives within a [`fields`]
-block.
+If you are a web developer and you know how to write [HTML],
+[Javascript], and [CSS], you can embed [HTML] in your interview text.
+You can also bring [Javascript] and [CSS] files into the user's
+browser.
 
-You can also bring Javascript and CSS files into the user's browser.
-
-For example, the following interview brings in a Javascript file,
-[`my-functions.js`], and a CSS file, [`my-styles.css`], into the
+For example, the following interview brings in a [Javascript] file,
+[`my-functions.js`], and a [CSS] file, [`my-styles.css`], into the
 user's browser.  These files are located in the `data/static` folder
 of the same [package] in which the interview is located.
 
@@ -441,7 +439,7 @@ first loads, but not every time the user sees a new screen.)  The
 example above demonstrates this; every time the page loads, the code
 will replace the contents of any element with the class `groovy`.
 
-This example demonstrates bringing in CSS and Javascript files that
+This example demonstrates bringing in [CSS] and [Javascript] files that
 are located in the `data/static` directory of the same package as the
 interview.  You can also refer to files in other packages:
 
@@ -470,13 +468,15 @@ features:
     - https://cdnjs.cloudflare.com/ajax/libs/offline-js/0.7.18/offline.min.js
 {% endhighlight %}
 
+If you want to include [CSS] or [Javascript] code in a specific
+question, rather than in all questions of your interview you can use
+the [`script`] and [`css`] modifiers.
+
 [`ready()`]: https://api.jquery.com/ready/
 [Ajax]: https://en.wikipedia.org/wiki/Ajax_(programming)
 [jQuery]: https://jquery.com/
 [package]: {{ site.baseurl }}/docs/packages.html
 [`html`]: {{ site.baseurl }}/docs/fields.html#html
-[`script`]: {{ site.baseurl }}/docs/fields.html#script
-[`css`]: {{ site.baseurl }}/docs/fields.html#script
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
 [Mako]: http://www.makotemplates.org/
 [language support]: {{ site.baseurl }}/docs/language.html
@@ -499,3 +499,8 @@ features:
 [`code` block]: {{ site.baseurl}}/docs/code.html
 [`code` blocks]: {{ site.baseurl}}/docs/code.html
 [`reconsider` modifier]: {{ site.baseurl}}/docs/logic.html#reconsider
+[Javascript]: https://en.wikipedia.org/wiki/JavaScript
+[CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
+[HTML]: https://en.wikipedia.org/wiki/HTML
+[`css`]: {{ site.baseurl }}/docs/modifiers.html#css
+[`script`]: {{ site.baseurl }}/docs/modifiers.html#script

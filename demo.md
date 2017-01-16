@@ -141,6 +141,7 @@ comment: |
 ---
 objects:
   - village_idiot: Individual
+  - role_change: RoleChangeTracker
 comment: |
   In a later question we will refer to the variable "village_idiot."
   This "objects" block creates the variable "village_idiot" and
@@ -169,6 +170,56 @@ comment: |
   term, you can define certain vocabulary words, and docassemble will
   turn them into hyperlinks wherever they appear.  When the user
   clicks on the hyperlink, a popup appears with the word's definition.
+---
+event: role_event
+question: You are done for now.
+subquestion: |
+  % if 'advocate' in role_needed:
+  An advocate needs to review your answers before you can proceed.
+
+  Please remember the following link and come back to it when you
+  receive notice to do so:
+
+  [${ interview_url() }](${ interview_url() })  
+  % else:
+  Thanks, the client needs to resume the interview now.
+  % endif
+
+  % if role_change.send_email(role_needed, advocate={'to': advocate, 'email': role_event_email_to_advocate}, client={'to': client, 'email': role_event_email_to_client}):
+  An e-mail has been sent.
+  % endif
+decoration: exit
+buttons:
+  - Exit: leave
+---
+template: role_event_email_to_advocate
+subject: |
+  Client interview waiting for your attention: ${ client }
+content: |
+  A client, ${ client }, has partly finished an interview.
+  ${ client.pronoun_subjective(capitalize=True, thirdperson=True) }
+  needs you to review
+  ${ client.pronoun_possessive('answers', thirdperson=True) }
+  so that ${ client.pronoun_subjective(thirdperson=True) } can obtain
+  ${ client.pronoun_possessive('advice letter', thirdperson=True) }
+  and ${ pleading.title }.
+
+  Please go to [the interview](${ interview_url() }) as soon as possible.
+
+  Thank you!
+---
+template: role_event_email_to_client
+subject: |
+  Your interview answers have been reviewed
+content: |
+  ${ client.salutation() } ${ client.name.last }:
+  
+  An advocate has finished reviewing your answers.
+
+  Please go to [${ interview_url() }](${ interview_url() })
+  to continue the interview.
+
+  Thank you for your patience.
 ---
 role:
   - client
@@ -371,12 +422,18 @@ decoration: calendar
 fields:
   - html: |
       The current date and time is <span class="mytime" id="today_time"></span>.
-    script: |
-      <script>document.getElementById("today_time").innerHTML = Date();</script>
-    css: |
-      <link rel="stylesheet" href="${ url_of('docassemble.demo:data/static/my.css') }">
   - Date of Injury: injury_date
     datatype: date
+css: |
+  <style>
+    .mytime {
+       color: green;
+    }
+  </style>
+script: |
+  <script>
+    $("#today_time").html(Date());
+  </script>
 comment: |
   You can embed raw HTML into a list of fields using the 'html' key.
   You can also expand the capabilities of what you do with this HTML by
@@ -386,9 +443,6 @@ comment: |
   text of 'css' is added to the <head>.
 
   Note that you can use Mako templates in each of these declarations.
-  The function url_of, which is available in docassemble.base.util and
-  docassemble.base.legal, will give you a URL to a file in a given
-  package.
 ---
 question: |
   Why do you think you deserve to win this case?
@@ -886,6 +940,7 @@ field: x.language
 choices:
   - English: en
   - Español: es
+default: ${ language_from_browser() }
 ---
 language: es
 terms:
@@ -995,6 +1050,32 @@ comment: |
   "default role" declaration, this code is run as "initial" code,
   meaning that it is run every time docassemble processes the
   interview (i.e., every time the screen loads).
+---
+event: role_event
+question: You are done for now.
+subquestion: |
+  % if 'advocate' in role_needed:
+    An advocate needs to review your answers before you can proceed.
+
+    Please remember the following link and come back to it when you
+    receive notice to do so:
+
+    [${ interview_url() }](${ interview_url() })
+    
+  % else:
+    Thanks, the client needs to resume the interview now.
+  % endif
+
+decoration: exit
+buttons:
+  - Exit: leave
+comment: |
+  The "event" declaration acts like "sets."  When docassemble
+  needs to ask a question that requires a role other than the user's
+  role, it displays a special message for the user.  You need to
+  configure this message by defining a question tagged with "event:
+  role_event."  docassemble will search for this question just as
+  it searches for a question to define a variable.
 ---
 objects:
   - case: Case

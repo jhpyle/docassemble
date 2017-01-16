@@ -1339,13 +1339,24 @@ yesno: email_is_best
 
 ## <a name="language_from_browser"></a>language_from_browser()
 
-The `language_from_browser()` function returns a language code based
-on the [Accept-Language header].  The code will be in [ISO-639-1],
-[ISO-639-2], or [ISO-639-3] format and will be in lower case.  If
-multiple languages are listed in the [Accept-Language header], the
-first recogized language will be returned.
+The `language_from_browser()` function returns a language code
+representing the preferred language of the user.  Most browsers allow
+users to select one or more preferred languages.  These languages are
+transmitted to web sites using the [Accept-Language header].  The
+`language_from_browser()` function reads this header and extracts the
+language from it.
+
+The code will be in [ISO-639-1], [ISO-639-2], or [ISO-639-3] format
+and will be in lower case.  If multiple languages are listed in the
+[Accept-Language header], the first recogized language will be
+returned.
 
 {% include side-by-side.html demo="language_from_browser" %}
+
+That this function will return `None` if the [`interface()`] is `sms`,
+if the [Accept-Language header] is missing, or if no valid
+[ISO-639-1], [ISO-639-2], or [ISO-639-3] code can be found in the
+[Accept-Language header].
 
 Optionally, you can call `language_from_browser()` with arguments,
 where the arguments are valid languages.  The first valid language
@@ -2816,7 +2827,90 @@ modules:
 ---
 {% endhighlight %}
 
+# <a name="javascript"></a> Javascript functions
+
+If you know how to program in [Javascript], you can include
+browser-side code in your interviews using [`script`], [`html`], and
+[`css`] elements within a [`fields`] block, or you can put
+[Javascript] and [CSS]<span></span> [static files] in your [packages]
+and bring them into your interview using the [`javascript`] and
+[`css`]({{ site.baseurl }}/docs/initial.html) directives within a
+[`features`] block.
+
+The following [Javascript] functions are available for your use in
+your [Javascript] code.
+
+## <a name="js_url_action"></a>url_action()
+
+The `url_action()` function, like its [Python namesake](#url_action),
+returns a URL that will run a particular action in the interview.  The
+first parameter is the action ([`event`]) to run, and the second
+parameter is an object containing the arguments to provide to the
+action (to be read with [`action_argument()`]).
+
+{% highlight javascript %}
+var url = url_action('myaction', {fruit: 'apple'});
+$("#mylink").attr('href', url);
+{% endhighlight %}
+
+## <a name="js_url_action_call"></a>url_action_call()
+
+The `url_action_call()` function is like
+[`url_action()`](#js_url_action), except it makes an [Ajax] call to
+the URL and runs a callback function when the server responds to the
+request.  In combination with [`json_response()`], this can allow you
+to write [Javascript] code that interacts with the server.
+
+{% highlight javascript %}
+url_action_call('myaction', {fruit: 'apple'}, function(data){
+  $("#resultsArea").html("The pie is called " + data.pie + ".")
+});
+{% endhighlight %}
+
+On the server end, the action could be specified as follows:
+
+{% highlight yaml %}
+event: myaction
+code: |
+  fruit = action_argument('fruit')
+  dessert = fruit + " pie"
+  json_response(dict(pie=dessert))
+{% endhighlight %}
+
+## <a name="js_get_interview_variables"></a>get_interview_variables()
+
+If you would like to work with all of the variables in the interview
+in your [Javascript] code, you can do so with the
+`get_interview_variables()` function, which sends an [Ajax] call to
+the server to retrieve the contents of the interview dictionary.
+
+The function takes a single argument, which is the callback function.
+The callback function is given one parameter, which is an object
+having the following attributes:
+
+* `success`: this will be `true` if the call succeeds, `false`
+otherwise.
+* `variables`: this will be an object containing the interview
+  variables in the format produced by [`all_variables()`].
+* `i`: the current interview [YAML] file.
+* `uid`: the current session ID.
+* `encrypted`: whether the interview dictionary is encrypted.
+* `steps`: the number of steps taken so far in the interview.
+
+{% highlight javascript %}
+var the_vars;
+get_interview_variables(function(data){
+  if (data.success){
+    the_vars = data.variables;
+    console.log("The current role is " + the_vars['role']);
+  }
+});
+{% endhighlight %}
+
+[`json_response()`]: #json_response
+[Ajax]: https://en.wikipedia.org/wiki/Ajax_(programming)
 [package]: {{ site.baseurl }}/docs/playground.html#packages
+[packages]: {{ site.baseurl }}/docs/packages.html
 [modules folder]: {{ site.baseurl }}/docs/playground.html#modules
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [Mako web site]: http://docs.makotemplates.org/en/latest/defs.html
@@ -2826,7 +2920,6 @@ modules:
 [Docker]: {{ site.baseurl }}/docs/docker.html
 [Flask-Mail]: https://pythonhosted.org/Flask-Mail/
 [HTML]: https://en.wikipedia.org/wiki/HTML
-[JSON]: https://en.wikipedia.org/wiki/JSON
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [Markdown]: https://daringfireball.net/projects/markdown/
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
@@ -2862,11 +2955,13 @@ modules:
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
 [`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
+[static files]: {{ site.baseurl }}/docs/playground.html#static
 [`event`]: {{ site.baseurl }}/docs/fields.html#event
 [`force_ask()`]: #force_ask
 [`force_gather()`]: #force_gather
 [`get_info()`]: #get_info
 [`initial`]: {{ site.baseurl }}/docs/logic.html#initial
+[`interface()`]: #interface
 [`interview_url()`]: #interview_url
 [`interview_url_action()`]: #interview_url_action
 [`legal.py`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
@@ -2985,6 +3080,13 @@ modules:
 [`send_sms()`]: #send_sms
 [flash]: http://flask.pocoo.org/docs/0.11/patterns/flashing/
 [Javascript]: https://en.wikipedia.org/wiki/JavaScript
+[CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
+[`features`]: {{ site.baseurl }}/docs/initial.html#features
+[`javascript`]: {{ site.baseurl }}/docs/initial.html#javascript
+[`script`]: {{ site.baseurl }}/docs/fields.html#script
+[`html`]: {{ site.baseurl }}/docs/fields.html#html
+[`css`]: {{ site.baseurl }}/docs/fields.html#css
+[`fields`]: {{ site.baseurl }}/docs/fields.html#fields
 [`alert()`]: http://www.w3schools.com/jsref/met_win_alert.asp
 [multiple servers]: {{ site.baseurl }}/docs/scalability.html
 [special user]: {{ site.baseurl }}/docs/scheduled.html#cron user

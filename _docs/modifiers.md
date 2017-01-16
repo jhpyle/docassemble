@@ -173,6 +173,32 @@ The `decoration` modifier adds an icon to the right of the
 [`question`] text.  In the example above, `kids` has been defined in
 an [image sets] or [images] block.
 
+# <a name="script"></a>Adding [Javascript]: `script`
+
+If you know how to write [Javascript] and [CSS], you can add
+[Javascript] code and [CSS] formatting to a question.
+
+To add [Javascript] or [CSS] to all questions, you can use a
+[`features`] block to include [Javascript] and [CSS] files on the web
+page.
+
+The `script` modifier contains raw HTML to be appended to the bottom
+of the web page for the question.
+
+{% include side-by-side.html demo="script" %}
+
+# <a name="css"></a>Adding [CSS]: `css`
+
+The `css` modifier contains raw HTML that will be appended to the HTML `<head>`.
+
+{% include side-by-side.html demo="css" %}
+
+It is best only to include [CSS] that is tied to specified HTML
+elements you include in your questions, rather than include [CSS] that
+has global effects (like the example above).  Because of the way
+**docassemble** interviews work, [CSS] applied in one question will
+affect later questions until the screen is reloaded.
+
 # <a name="progress"></a>The `progress` bar
 
 A **docassemble** interview can be configured to show a
@@ -366,3 +392,6 @@ by **docassemble**, so it can contain any valid [YAML].
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
 [`field` without `buttons` or `choices`]: {{ site.baseurl }}/docs/fields.html#field
 [`signature`]: {{ site.baseurl }}/docs/fields.html#signature
+[Javascript]: https://en.wikipedia.org/wiki/JavaScript
+[CSS]: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
+[`features`]: {{ site.baseurl }}/docs/initial.html#features

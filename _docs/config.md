@@ -92,7 +92,9 @@ debug: true
 Setting `debug` to `true` enables the following features:
 
 * The "Source" button in the web app, which shows the [YAML] source code used
-  to generate the current question.
+  to generate the current question, an explanation of the path the
+  interview took to get to the current question, and [readability
+  statistics] for the question and the help text.
 * Viewing [LaTeX] and [Markdown] source in document attachments.
 
 ## <a name="root"></a>Path to web application
@@ -1242,3 +1244,4 @@ and Facebook API keys.
 [`ocr_file()`]: {{ site.baseurl }}/docs/functions.html#ocr_file
 [Tesseract]: https://en.wikipedia.org/wiki/Tesseract_(software)
 [`default interview`]: #default_interview
+[readability statistics]: https://pypi.python.org/pypi/textstat/

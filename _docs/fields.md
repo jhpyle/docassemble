@@ -419,36 +419,18 @@ will be disabled.
 
 ### <a name="note"></a>`note`
 
-The value is [Markdown] text that will appear on the screen; useful
-for providing guidance to the user on how to enter information.
+The value of `note` is [Markdown] text that will appear on the screen;
+useful for providing guidance to the user on how to enter information.
 
 {% include side-by-side.html demo="note" %}
 
 ### <a name="html"></a>`html`
 
-Like [`note`](#note), except raw HTML.  See the [`css`](#css) section, below, for an example.
-
-### <a name="script"></a>`script`
-
-Raw HTML to be appended to the bottom of the page; usually used for
-Javascript code that interacts with HTML specified in `html` entries.
-See the [`css`](#css) section, below, for an example.
-  
-### <a name="css"></a>`css`
-
-`css` indicates raw HTML that will be appended to the HTML `<head>`;
-usually used to provide CSS classes for HTML specified in [`html`](#html)
-entries.
+The `html` directive is like [`note`](#note), except the format is
+expected to be raw HTML.  It can be used in combination with the
+[`css`] and [`script`] modifiers.
 
 {% include side-by-side.html demo="html" %}
-
-The referenced [CSS file] contains the following:
-
-{% highlight css %}
-.mytime {
-    color: green;
-}
-{% endhighlight %}
 
 ### <a name="no label"></a>`no label`
 
@@ -665,14 +647,6 @@ Here is a lengthy example that illustrates many of these features.
 
 {% include side-by-side.html demo="fields" %}
 
-The referenced [CSS file] contains the following:
-
-{% highlight css %}
-.mytime {
-    color: green;
-}
-{% endhighlight %}
-
 ## <a name="objects"></a>Assigning existing objects to variables
 
 Using [Mako] template expressions ([Python] code enclosed in `${ }`), you can
@@ -817,7 +791,7 @@ user can press to revisit an answer:
 {% include side-by-side.html demo="review-2" image="review-block-buttons.png" %}
 
 In addition, the `review` block, like the `fields` block, allows you
-to use `note`, `html`, `script`, and `css` entries.
+to use `note` and `html` entries.
 
 If these are modified with the optional `show if` modifier, they will
 only be displayed if the variable referenced by the `show if` modifier
@@ -877,7 +851,6 @@ why this needs to be done manually as opposed to automatically:
 [reserved variable names]: {{ site.baseurl }}/docs/reserved.html
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [question]: {{ site.baseurl }}/docs/questions.html
-[CSS file]: {{ site.demourl }}/packagestatic/docassemble.demo/my.css
 [function]: {{ site.baseurl }}/docs/functions.html
 [functions]: {{ site.baseurl }}/docs/functions.html
 [special variables]: {{ site.baseurl }}/docs/special.html
@@ -914,3 +887,5 @@ why this needs to be done manually as opposed to automatically:
 [`datatype`]: #datatype
 [roles]: {{ site.baseurl }}/docs/roles.html
 [`task_not_yet_performed()`]: {{ site.baseurl }}/docs/functions.html#task_not_yet_performed
+[`css`]: {{ site.baseurl }}/docs/modifiers.html#css
+[`script`]: {{ site.baseurl }}/docs/modifiers.html#script
