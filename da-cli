@@ -10,6 +10,7 @@ serviceApp = 'app'
 serviceBackend = 'backend'
 targetGroupWeb = 'web'
 targetGroupWebSocket = 'websocket'
+targetGroupRedirect = 'http-redirect'
 autoScalingGroup = 'docassembleAsg'
 
 import boto3
@@ -57,13 +58,17 @@ def update_desired_count(service, desired_count):
         else:
             break
 
-def fix_web_sockets():
+def fix_registered_instances():
     target_groups_arns = get_target_groups()
     web_servers = get_registered_targets(target_groups_arns[targetGroupWeb])
     web_sockets_servers = get_registered_targets(target_groups_arns[targetGroupWebSocket])
     for server in web_servers:
         if server not in web_sockets_servers:
             elb.register_targets(TargetGroupArn=target_groups_arns[targetGroupWebSocket], Targets=[{'Id': server}])
+    http_servers = get_registered_targets(target_groups_arns[targetGroupRedirect])
+    for server in web_servers:
+        if server not in http_servers:
+            elb.register_targets(TargetGroupArn=target_groups_arns[targetGroupRedirect], Targets=[{'Id': server}])
 
 def start_up(the_count=1):
     print "Creating EC2 instances"
@@ -80,7 +85,7 @@ def start_up(the_count=1):
             break
         time.sleep(2)
     print "Registering targets for target group " + str(targetGroupWebSocket)
-    fix_web_sockets()
+    fix_registered_instances()
 
 def shut_down():
     print "Updating app count"
@@ -124,7 +129,7 @@ def shutdown_unused_ec2_instances():
         else:
             break
 
-dispatch = dict(shutdown_unused_ec2_instances=shutdown_unused_ec2_instances, update_ec2_instances=update_ec2_instances, connect_string=connect_string, shut_down=shut_down, start_up=start_up, fix_web_sockets=fix_web_sockets, update_desired_count=update_desired_count)
+dispatch = dict(shutdown_unused_ec2_instances=shutdown_unused_ec2_instances, update_ec2_instances=update_ec2_instances, connect_string=connect_string, shut_down=shut_down, start_up=start_up, fix_registered_instances=fix_registered_instances, update_desired_count=update_desired_count)
 
 arguments = copy.deepcopy(sys.argv)
 
