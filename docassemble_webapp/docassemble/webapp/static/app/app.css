@@ -766,6 +766,13 @@ div.top-alert {
     }
 }
 
+div.spinner-container {
+    position: fixed;
+    top: 60px;
+    left: 0px;
+    width: 100%;
+}
+
 img.da-spinner {
     position: absolute;
     width: 32px;

@@ -95,9 +95,9 @@ def email_attachments(yaml_filename, user_info, user_code, secret, url, url_root
                             doc_names.append(attach_info['attachment']['name'])
                     subject = comma_and_list(doc_names)
                     if len(doc_names) > 1:
-                        body = word("Your documents, ") + " " + subject + " " + word(", are attached") + "."
+                        body = word("Your documents, ") + " " + subject + word(", are attached") + "."
                     else:
-                        body = word("Your document, ") + " " + subject + " " + word(", is attached") + "."
+                        body = word("Your document, ") + " " + subject + word(", is attached") + "."
                     html = "<p>" + body + "</p>"
                     sys.stderr.write("Need to send an e-mail with subject " + subject + " to " + str(email_address) + " with " + str(attached_file_count) + " attachment(s)\n")
                     msg = worker_controller.Message(subject, recipients=[email_address], body=body, html=html)

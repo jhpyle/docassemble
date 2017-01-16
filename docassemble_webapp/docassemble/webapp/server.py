@@ -3748,21 +3748,20 @@ def index():
         checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
       }
       function showSpinner(){
-        var newImg = document.createElement('img');
-        $(newImg).attr("src", """ + repr(str(url_for('static', filename='app/loader.gif')))+ """);
-        $(newImg).attr("id", "daSpinner");
         if ($("#question").length > 0){
-          $(newImg).addClass("da-spinner");
-          $(newImg).appendTo("#question");
+          $('<div id="daSpinner" class="spinner-container"><div class="container"><div class="row"><div class="col-lg-6 col-md-8 col-sm-10"><img class="da-spinner" src=""" + '"' + str(url_for('static', filename='app/loader.gif')) + '"' + """></div></div></div></div>').appendTo("body");
         }
         else{
+          var newImg = document.createElement('img');
+          $(newImg).attr("src", """ + repr(str(url_for('static', filename='app/loader.gif'))) + """);
+          $(newImg).attr("id", "daSpinner");
           $(newImg).addClass("da-sig-spinner");
           $(newImg).appendTo("#sigtoppart");
         }
         daShowingSpinner = true;
       }
       function hideSpinner(){
-        $("daSpinner").remove();
+        $("#daSpinner").remove();
         daShowingSpinner = false;
         daSpinnerTimeout = null;
       }

@@ -12,7 +12,7 @@ RUN bash -c "cd /tmp && virtualenv /usr/share/docassemble/local && source /usr/s
 
 USER root
 RUN sed -i -e 's/^\(daemonize\s*\)yes\s*$/\1no/g' -e 's/^bind 127.0.0.1/bind 0.0.0.0/g' /etc/redis/redis.conf && sed -i -e 's/#APACHE_ULIMIT_MAX_FILES/APACHE_ULIMIT_MAX_FILES/' -e 's/ulimit -n 65536/ulimit -n 8192/' /etc/apache2/envvars && echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && locale-gen && update-locale LANG=en_US.UTF-8 && a2dismod ssl; a2enmod wsgi; a2enmod rewrite; a2enmod xsendfile; a2enmod proxy; a2enmod proxy_http; a2enmod proxy_wstunnel; a2enconf docassemble; echo 'export TERM=xterm' >> /etc/bash.bashrc
-EXPOSE 80 443 9001 514 8080 5432 6379 4369 5671 5672 25672
+EXPOSE 80 443 9001 514 8080 8081 5432 6379 4369 5671 5672 25672
 ENV CONTAINERROLE="all" LOCALE="en_US.UTF-8 UTF-8" TIMEZONE="America/New_York" EC2="" S3ENABLE="" S3BUCKET="" S3ACCESSKEY="" S3SECRETACCESSKEY="" DAHOSTNAME="" USEHTTPS="" USELETSENCRYPT="" LETSENCRYPTEMAIL="" DBHOST="" LOGSERVER="" REDIS="" RABBITMQ=""
 
 VOLUME  ["/usr/share/docassemble/certs", "/usr/share/docassemble/backup"]

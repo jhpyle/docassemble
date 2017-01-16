@@ -212,6 +212,10 @@ if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
 	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/' \
 		/usr/share/docassemble/config/docassemble-log.conf.dist > /etc/apache2/sites-available/docassemble-log.conf || exit 1
 	fi
+	if [ ! -f /etc/apache2/sites-available/docassemble-redirect.conf ]; then
+	    sed -e 's/#ServerName {{DAHOSTNAME}}/ServerName '"${DAHOSTNAME}"'/' \
+		/usr/share/docassemble/config/docassemble-redirect.conf.dist > /etc/apache2/sites-available/docassemble-redirect.conf || exit 1
+	fi
     else
 	cp /usr/share/docassemble/config/docassemble-http.conf.dist /etc/apache2/sites-available/docassemble-http.conf || exit 1
     fi
@@ -359,6 +363,10 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
 	echo "Listen 443" >> /etc/apache2/ports.conf
 	a2enmod ssl
 	a2ensite docassemble-ssl
+	if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
+	    echo "Listen 8081" >> /etc/apache2/ports.conf
+	    a2ensite docassemble-redirect
+	fi
 	if [ "${USELETSENCRYPT:-false}" == "true" ]; then
 	    cd /usr/share/docassemble/letsencrypt 
 	    if [ -f /etc/letsencrypt/da_using_lets_encrypt ]; then

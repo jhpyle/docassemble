@@ -1,0 +1,9 @@
+<VirtualHost *:8081>
+    ServerAdmin webmaster@localhost
+    #ServerName {{DAHOSTNAME}}
+    DocumentRoot /var/www/html
+    RewriteEngine On
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
+    ErrorLog /var/log/apache2/error.log
+    CustomLog /var/log/apache2/access.log combined
+</VirtualHost>

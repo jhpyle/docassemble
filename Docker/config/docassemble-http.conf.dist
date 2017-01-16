@@ -3,11 +3,10 @@
     ServerAdmin webmaster@localhost
     #ServerName {{DAHOSTNAME}}
     DocumentRoot /var/www/html
+    RewriteEngine On
     <IfModule mod_ssl.c>
-        RewriteEngine On
         RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
     </IfModule>
-    RewriteEngine On
     RewriteCond %{REQUEST_URI}     ^/ws/socket.io         [NC]
     RewriteCond %{QUERY_STRING}    transport=websocket    [NC]
     RewriteRule /ws/(.*)           ws://localhost:5000/$1 [P,L]
