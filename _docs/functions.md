@@ -2713,7 +2713,7 @@ retrieve all of the records that had been stored using that `key`.
 The function returns a [Python dictionary] where the keys are integers
 representing the unique ID of the record.
 
-<a name="delete_records"></a>You can delete records by calling
+<a name="delete_record"></a>You can delete records by calling
 `delete_record(key, id)` where `key` is the key under which the record
 was saved and `id` is the unique ID integer of the record.
 
@@ -2761,7 +2761,7 @@ This assumes the [`db`] configuration refers to a [PostgreSQL]
 database.  If you connect to the database with the credentials from
 [`db`], you have the power to create and drop tables.
 
-# Writing your own functions
+# <a name="yourown"></a>Writing your own functions
 
 There are two ways that you can write your own functions in
 **docassemble**.
@@ -2877,6 +2877,8 @@ code: |
   json_response(dict(pie=dessert))
 {% endhighlight %}
 
+{% include side-by-side.html demo="js_url_action" %}
+
 ## <a name="js_get_interview_variables"></a>get_interview_variables()
 
 If you would like to work with all of the variables in the interview
@@ -2904,6 +2906,19 @@ get_interview_variables(function(data){
     the_vars = data.variables;
     console.log("The current role is " + the_vars['role']);
   }
+});
+{% endhighlight %}
+
+## <a name="js_daPageLoad"></a>Running Javascript at page load time
+
+When your [Javascript] code is imported through the [`javascript`]
+feature, it is necessary to wrap the code in a `daPageLoad` trigger.
+Otherwise, the code will only be executed on the first page load, not
+when the user navigates from screen to screen.
+
+{% highlight javascript %}
+$(document).on('daPageLoad', function(){
+  console.log("The screen is loaded");
 });
 {% endhighlight %}
 

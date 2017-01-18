@@ -254,8 +254,10 @@ through HTTPS.  Go to the "Security Groups" section of the
 [EC2 Console] and create a new [Security Group].  Set the "Security
 group name" to `docassembleLbSg` and set the "Description" to
 "docassemble load balancer security group."  Attach it to your default
-[VPC].  Add one "Inbound" rule, setting "Type" to HTTPS and "Source"
-to "Anywhere."
+[VPC].  Add two "Inbound" rules to allow HTTP and HTTPS traffic from
+anywhere.  For the first rule, set "Type" to HTTPS and "Source" to
+"Anywhere."  For the second rule, set "Type" to HTTP and "Source" to
+"Anywhere."
 
 Then go to the "Load Balancing" -> "Target Groups" section of the
 [EC2 Console] and create a new "Target Group."  Set the "Target group
@@ -269,25 +271,39 @@ balancer cares about is whether the page returns an
 [HTTP success code] or not.)  Under "Advanced health check settings,"
 set the "Healthy threshold" to 10, "Unhealthy threshold" to 2,
 "Timeout" to 10 seconds, "Interval" to 120 seconds, and keep other
-settings at their defaults.
+settings at their defaults.  Then click "Create."
 
 Once that "Target Group" is created, create a second "Target Group"
 called `websocket` with the same settings.  Then, once the `websocket`
 "Target Group" is created, do Actions -> Edit Attributes on it, and
 under "Stickiness," select "Enable load balancer generated cookie
-stickiness."  Keep other settings at their defaults.
+stickiness."  Keep other settings at their defaults.  Then click
+"Create."
+
+Finally, create a third "Target Group" called `http-redirect`.  The
+purpose of this target group is very limited: it will forward any HTTP
+requests to your HTTPS site.  Set the "Protocol" to HTTP, set the
+"Port" to 8081, and set the "VPC" to your default [VPC].  Under
+"Health check settings," set the "Protocol" to HTTP and the "Path" to
+`/health_check`.  Under "Advanced health check settings," change
+"Success codes" from 200 to 301.  This is because all requests to this
+target group should respond with an [HTTP redirect] response, the code
+for which is 301.  Then click "Create."
 
 Then go to the "Load Balancers" section of the [EC2 Console] and
 create a "Load Balancer."  Select "Application Load Balancer" as the
 type of load balancer.
 
 On the "Configure Load Balancer" page, set the name to
-`docassembleLb`.  Under "Listeners," set the "Load Balancer Protocol"
-to HTTPS, using port 443.  Under "Availability Zones," make sure your
-default [VPC] is selected.  Then select all of the "available subnets"
-by clicking the plus buttons next to each one.  (If it gives you any
-trouble about adding subnets, just add as many subnets as it will let
-you add.)
+`docassembleLb`.  Under "Listeners," keep the HTTP listener listening
+to port 80 and click "Add listener" to add a second listener.  Set the
+"Load Balancer Protocol" to HTTPS and set the "Load Balancer Port" to
+port 443.
+
+Under "Availability Zones," make sure your default [VPC] is selected.
+Then select all of the "available subnets" by clicking the plus buttons
+next to each one.  (If it gives you any trouble about adding subnets,
+just add as many subnets as it will let you add.)
 
 On the "Configure Security Settings" page, it will ask about SSL
 certificates and security policies.  Accept all of the defaults.  This
@@ -303,11 +319,16 @@ Skip past the "Register Targets" page.  On the "Review" page, click
 "Create" to create the Load Balancer.
 
 Once the `docassembleLb` load balancer is created, you need to make a
-manual change to it so that it will use the `websocket` "Target Group"
-you created earlier.  To do this, go to the "Listeners" tab, and open
-up the HTTPS rule by clicking the right arrow icon.  Click "Add rule."
-For the "Path pattern," enter `/ws/*`.  Under "Target group name,"
-select `websocket`.  Keep "Priority" as 1.  Then click "Save."
+few manual changes to it.
+
+In the "Load Balancers" section, select the `docassembleLb` load
+balancer, and open the "Listeners" tab.  Click "Edit" next to the HTTP
+listener.  Set the "Default target group" to "http-redirect."
+
+Once those changes are saved, open up the HTTPS rule by clicking the
+right arrow icon.  Click "Add rule."  For the "Path pattern," enter
+`/ws/*`.  Under "Target group name," select `websocket`.  Keep
+"Priority" as 1.  Then click "Save."
 
 Now the `docassembleLb` load balancer will listen to 443 and act on
 requests according to two "Rules."  The first rule says that if the
@@ -451,6 +472,10 @@ configuration below.  Edit the [`S3BUCKET`] environment variable.
         {
           "containerPort": 80,
           "hostPort": 80
+        },
+        {
+          "containerPort": 8081,
+          "hostPort": 8081
         },
         {
           "containerPort": 9001,
@@ -1005,3 +1030,4 @@ number of PostgreSQL connections will be 12.
 [data storage]: {{ site.baseurl }}/docs/docker.html#data storage
 [TXT record]: https://en.wikipedia.org/wiki/TXT_record
 [SPF]: https://en.wikipedia.org/wiki/Sender_Policy_Framework
+[HTTP redirect]: https://en.wikipedia.org/wiki/HTTP_301

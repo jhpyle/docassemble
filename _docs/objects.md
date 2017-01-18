@@ -1566,12 +1566,6 @@ The `PeriodicFinancialList` has three methods:
   the name `item_name` and the object type `PeriodicValue`.
 * <a name="PeriodicFinancialList.total"></a>`.total()`: tallies up the total annual value of all `PeriodicValue`s in the list
   for which the `exists` attribute is `True`.
-* <a name="PeriodicFinancialList.total_gathered"></a>`.total_gathered()`: does what `.total()` does, except it does not
-  require `.gathered` to be `True`, which means that a reference to
-  `.total_gathered()` can be used in the midst of the process of
-  gathering the list of items.  For example, you may want to use this
-  to say something like "So far, you have told me about income
-  totaling $56,000 per year."
 
 In the context of a [Mako] template, a `PeriodicFinancialList` returns `.total()`.
 

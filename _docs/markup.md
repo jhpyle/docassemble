@@ -124,7 +124,7 @@ The `for` loop is useful for working with groups of [objects]:
 
 {% include side-by-side.html demo="mako-06" %}
 
-Within `for` loops, [Mako] provides a useful object called [`loop`],
+<a name="loop"></a>Within `for` loops, [Mako] provides a useful object called [`loop`],
 which contains information about the current iteration of the loop.
 
 {% include side-by-side.html demo="mako-09" %}

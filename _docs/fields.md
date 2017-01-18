@@ -106,7 +106,7 @@ is equivalent to this:
 
 A powerful feature of `buttons` is the ability to use [Python] code to
 generate button choices.  If an item under `buttons` is a key-value
-pair in which the key is the word `code`, then **docassemble**
+pair in which the key is the word [`code`](#code), then **docassemble**
 executes the value as [Python] code, which is expected to return a list.
 This code is executed at the time the question is asked, and the code
 can include variables from the interview.  **docassemble** will
@@ -328,16 +328,9 @@ the variable value are the same).
 {% include side-by-side.html demo="fields-choices" %}
 
 When the [`datatype`] is [`object`], [`object_radio`], or
-[`object_checkboxes`], `choices` indicates a list of objects from which
-the user will choose.  See the
-[section on selecting objects](#objects), below.
-
-### <a name="exclude"></a>`exclude`
-
-`exclude` is used in combination with [`choices`](#choices) when the
-[`datatype`] is [`object`], [`object_radio`], or
-[`object_checkboxes`].  Any object in `exclude` will be omitted from the
-list of choices if it is present in [`choices`](#choices).  See the
+[`object_checkboxes`], `choices` indicates a list of objects from
+which the user will choose.  For more information about using objects
+in multiple choice questions, see the
 [section on selecting objects](#objects), below.
 
 ### <a name="code"></a>`code`
@@ -356,6 +349,17 @@ possible options for a multiple choice field.
 The [Python] code runs at the time the question is asked.  Therefore,
 you can use the `code` feature to create multiple-choice questions
 that have dynamically-created lists of choices.
+
+### <a name="exclude"></a>`exclude`
+
+If you build the list of choices with `code`, you can exclude items
+from the list using `exclude`, where the value of `exclude` is
+[Python] code.
+
+{% include side-by-side.html demo="fields-mc-exclude" %}
+
+In this example, the value of `exclude` is a single variable.  If
+given a list of things, it will exclude any items that are in the list.
 
 ### <a name="shuffle"></a>`shuffle`
 
@@ -507,11 +511,10 @@ provided, the default of which is 1.
 
 {% include side-by-side.html demo="range" %}
 
-### File uploads
+### <a name="file"></a><a name="files"></a>File uploads
 
-<a name="file"></a><a name="files"></a>Using the `file` or `files`
-datatypes within a `fields` list, you can allow users to upload one or
-more files.
+Using the `file` or `files` datatypes within a `fields` list, you can
+allow users to upload one or more files.
 
 `datatype: file` indicates that the user can upload a single file.
 The variable is set to a [`DAFileList`] object containing the
@@ -535,12 +538,11 @@ except for recording a video.
 <a name="microphone"></a>`datatype: microphone` is just like `camera`,
 except for recording an audio clip.
 
-### Yes/no fields
+### <a name="fields yesno"></a><a name="fields noyes"></a>Yes/no fields
 
-<a name="fields yesno"></a><a name="fields noyes"></a>`datatype:
-yesno` will show a checkbox with a label, aligned with labeled fields.
-`datatype: noyes` is like `datatype: yesno`, except with True and
-False inverted.
+`datatype: yesno` will show a checkbox with a label, aligned with
+labeled fields.  `datatype: noyes` is like `datatype: yesno`, except
+with True and False inverted.
 
 {% include side-by-side.html demo="fields-yesno" %}
 
@@ -569,13 +571,13 @@ buttons offering choices "Yes," "No," and "I don't know."
 
 {% include side-by-side.html demo="fields-noyesmaybe" %}
 
-### Multiple-choice fields
+### <a name="fields checkboxes"></a>Multiple-choice fields
 
-<a name="fields checkboxes"></a>`datatype: checkboxes` will show the
-[`choices`](#choices) list as checkboxes.  The variable will be a
-dictionary with items set to true or false depending on whether the
-option was checked.  No validation is done to see if the user selected
-at least one, regardless of the value of `required`.
+`datatype: checkboxes` will show the [`choices`](#choices) list as
+checkboxes.  The variable will be a dictionary with items set to true
+or false depending on whether the option was checked.  No validation
+is done to see if the user selected at least one, regardless of the
+value of `required`.
 
 {% include side-by-side.html demo="fields-checkboxes" %}
 
@@ -616,13 +618,13 @@ variable will be set to `True` after the elements are set.  See
 
 {% include side-by-side.html demo="object-checkboxes" %}
 
-## Input validation
+## <a name="min"></a>Input validation
 
 For some field types, you can require input validation by adding the
 following to the definition of a field:
 
-* <a name="min"></a>`min`: for `currency` and `number` data types,
-  require a minimum value.  This is passed directly to the
+* `min`: for `currency` and `number` data types, require a minimum
+  value.  This is passed directly to the
   [jQuery Validation Plugin](http://jqueryvalidation.org/min-method).
 * <a name="max"></a>`max`: for `currency` and `number` data types,
   require a maximum value.  This is passed directly to the

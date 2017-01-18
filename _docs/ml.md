@@ -134,7 +134,7 @@ modules:
 
 This makes the `SimpleTextMachineLearner` available in your interview.
 
-## Predicting
+## <a name="predicting"></a>Predicting
 
 Here is an example of the use of `SimpleTextMachineLearner` to predict
 the classification of user-supplied text using an already-trained
@@ -206,7 +206,7 @@ nobody else would use, like
 
 There are several ways to add data to a training set.
 
-### Adding user input to the training set
+### <a name="save"></a>Adding user input to the training set
 
 You may want to use the phrases that users type in as training data,
 so that your machine learning system becomes smarter over time.
@@ -325,7 +325,7 @@ ml.add_to_training_set("I am feeling blue", "unhappy")
 The first argument is the independent variable, and the second
 argument is the dependent variable.
 
-# Extracting training data
+# <a name="extracting"></a>Extracting training data
 
 If you have accumulated a training set within **docassemble** and you
 want to extract it, you can use the `export_training_set()` method of

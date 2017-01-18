@@ -101,8 +101,8 @@
   \ |\n  The variables in the dictionary are:\n    \n  `${ all_variables() }`\n---"
 "allow-emailing-false": |-
   ---
+  mandatory: true
   question: Your document is ready.
-  sets: provide_user_with_document
   attachment:
     - name: A hello world document
       filename: Hello_World
@@ -877,11 +877,17 @@
   ---
 "dead-end": |-
   ---
+  mandatory: true
+  code: |
+    # insert interview logic here
+    all_done
+  ---
   question: |
-    You have reached the end of the interview.
+    You have reached the end of the
+    interview.
   subquestion: |
     I hope you had a good time!
-  mandatory: true
+  sets: all_done
   ---
 "decoration": |-
   ---
@@ -962,6 +968,25 @@
 
         ${ client } is entitled to
         benefits plan ${ benefits }.
+  mandatory: true
+  ---
+"document-docx": "---\nquestion: Here is your document.\nattachments:\n  - name: Summary\
+  \ of Benefits\n    filename: benefits_summary\n    valid formats:\n      - docx\n\
+  \      - pdf    \n    content: |\n      [BOLDCENTER] Summary of Benefits\n\n   \
+  \   ${ client } is entitled to\n      benefits plan ${ benefits }.\nmandatory: true\n\
+  ---"
+"document-file": |-
+  ---
+  question: Here is your document.
+  attachments:
+    - name: Summary of Benefits
+      description: |
+        The `benefits_summary.md`
+        file is in the `templates`
+        directory of the current
+        package.
+      filename: benefits_summary
+      content file: summary_benefits.md
   mandatory: true
   ---
 "doors": |-
@@ -1051,7 +1076,7 @@
   buttons:
     - Exit: exit
     - Restart: restart
-  sets: all_done
+  mandatory: true
   ---
 "exit-choices": |-
   ---
@@ -1059,7 +1084,7 @@
   choices:
     - Exit: exit
     - Restart: restart
-  sets: all_done
+  mandatory: true
   ---
 "exit-url": |-
   ---
@@ -1158,6 +1183,33 @@
     - Fruit: favorite_fruit_of_brother
       code: |
         myoptions
+  ---
+  code: |
+    myoptions = [
+                  {'apple': "Apples"},
+                  {'orange': "Oranges"},
+                  {'pear': "Pears"}
+                ]
+  ---
+"fields-mc-exclude": |-
+  ---
+  question: |
+    What is your favorite fruit?
+  fields:
+    - Fruit: favorite_fruit
+      code: |
+        myoptions
+  ---
+  question: |
+    What is your brother's favorite
+    fruit, assuming he does not like
+    ${ favorite_fruit }?
+  fields:
+    - Fruit: favorite_fruit_of_brother
+      code: |
+        myoptions
+      exclude: |
+        favorite_fruit
   ---
   code: |
     myoptions = [
@@ -1465,6 +1517,12 @@
     - Number of seeds: fruit[i]
       datatype: integer
       min: 0
+  ---
+  question: |
+    So far, the fruits in the database
+    include ${ fruit }.  Are there
+    any others?
+  yesno: fruit.there_is_another
   ---
 "gather-dict-number": |-
   ---
@@ -1774,6 +1832,24 @@
     ${ pear }, ${ plum }, or ${ grape }?
   yesno: fruit.there_are_any
   ---
+  question: |
+    Pick a fruit that you like.
+  fields:
+    - Fruit: fruit.new_item
+      datatype: object
+      choices:
+        - apple
+        - orange
+        - pear
+        - plum
+        - grape
+  ---
+  question: |
+    So far, you have indicated you like
+    ${ fruit }.  Are there any other
+    fruits you like?
+  yesno: fruit.there_is_another
+  ---
 "gather-simple": |-
   ---
   modules:
@@ -1921,7 +1997,7 @@
   question: |
     Please fill in the following information.
   fields:
-    - "Do you you have fruit?": has_fruit
+    - "Do you have fruit?": has_fruit
       datatype: yesnoradio
     - "What fruit do you need?": fruit
       hide if: has_fruit
@@ -1992,6 +2068,13 @@
   initial: true
   code: |
     counter = counter + 1
+  ---
+"interface": |-
+  ---
+  question: |
+    You are using the ${ interface() }
+    interface.
+  mandatory: true
   ---
 "interview-help": |-
   ---
@@ -2069,6 +2152,72 @@
     if user_has_privilege('admin', 'developer'):
       advocate_screen
   ---
+"js_url_action": |-
+  ---
+  mandatory: true
+  code: |
+    dessert = "cod liver oil"
+  ---
+  mandatory: true
+  question: |
+    Your dessert is ${ dessert }.
+  subquestion: |
+    If you want, you can
+    <a id="choose">choose something tastier</a>.
+  script: |
+    <script>
+      $("#choose").attr('href', url_action('myaction', {fruit: 'apple'}));
+    </script>
+  ---
+  event: myaction
+  code: |
+    fruit = action_argument('fruit')
+    dessert = fruit + " pie"
+  ---
+"js_url_action_call": |-
+  ---
+  mandatory: true
+  question: |
+    The pie
+  subquestion: |
+    <button id="run">Run</button>
+
+    <span id="resultsArea"></span>
+  script: |
+    <script>
+      $("#run").click(function(){
+        url_action_call('myaction', {fruit: 'apple'}, function(data){
+          $("#resultsArea").html("The pie is called " + data.pie + ".")
+        });
+      });
+    </script>
+  ---
+  event: myaction
+  code: |
+    fruit = action_argument('fruit')
+    dessert = fruit + " pie"
+    json_response(dict(pie=dessert))
+  ---
+"js_variables": |-
+  ---
+  mandatory: true
+  code: |
+    fruit = 'apple'
+  ---
+  mandatory: true
+  question: |
+    The fruit.
+  subquestion: |
+    Fruit is <span id="food"></span>.
+  script: |
+    <script>
+      get_interview_variables(function(data){
+        if (data.success){
+          $("#food").html(data.variables['fruit']);
+        }
+      });
+    </script>
+  ---
 "label": |-
   ---
   question: |
@@ -2079,8 +2228,9 @@
     - label: Fruit
       field: favorite_fruit
   ---
-"language": "---\nlanguage: es\nquestion: |\n  \xBFCu\xE1l es el significado de la\
-  \ vida?\nfields:\n  - Significado de la Vida: meaning_life\n---"
+"language": "---\nquestion: |\n  What is the meaning of life?\nfields:\n  - Meaning\
+  \ of life: meaning_life\n---\nlanguage: es\nquestion: |\n  \xBFCu\xE1l es el significado\
+  \ de la vida?\nfields:\n  - Significado de la Vida: meaning_life\n---"
 "language_from_browser": |-
   ---
   question: |
@@ -2161,6 +2311,25 @@
     - docassemble.base.util
   ---
 "madlibs": |-
+  ---
+  mandatory: true
+  question: A funny story
+  subquestion: |
+    ${ person[0] } went to ${ place[0] }
+    to buy
+    ${ indefinite_article(noun[0]) }.
+
+    At the ${ place[0] }, there was
+    ${ indefinite_article(adjective[0])}
+    ${ noun[1] }, which tried to zap
+    ${ person[0] }.
+
+    But luckily, ${ person[1] } came out of
+    the back room just in time and
+    lunged at the ${ noun[1] }, thereby
+    saving the day.
+  buttons:
+    - Do it again: restart
   ---
   generic object: DAList
   question: |
@@ -2254,10 +2423,6 @@
     - witness: PartyList
   ---
   mandatory: true
-  code: |
-    witness.gathered = witness.gather()
-  ---
-  mandatory: true
   question: |
     The ${ witness.as_noun() }
   subquestion: |
@@ -2311,12 +2476,7 @@
   question: |
     Foods I like
   subquestion: |
-    % for food in ['apples',
-                   'peaches',
-                   'pears',
-                   'plums',
-                   'turnips',
-                   'raspberries']:
+    % for food in ['apples', 'peaches', 'pears', 'plums', 'turnips', 'raspberries']:
       % if loop.first:
     First, I like ${ food }.
       % elif loop.last:
@@ -2752,6 +2912,34 @@
 
     The colors are ${ colors }.
   ---
+"object-disable-others": |-
+  ---
+  objects:
+    protagonist: Individual
+    antagonist: Individual
+    actors: PartyList
+    villain: Individual
+  ---
+  mandatory: true
+  code: |
+    protagonist.name.first = "Harry"
+    protagonist.name.last = "Potter"
+    antagonist.name.first = "Tom"
+    antagonist.name.last = "Riddle"
+    actors.append(protagonist)
+    actors.append(antagonist)
+    actors.auto_gather = False
+    actors.gathered = True
+  ---
+  question: Who is the villain?
+  fields:
+    - One of these: villain
+      datatype: object
+      choices: actors
+      disable others: true
+    - First Name: villain.name.first
+    - Last Name: villain.name.last
+  ---
 "object-radio": |-
   ---
   objects:
@@ -2849,9 +3037,6 @@
   objects:
     - hero: Individual
     - villain: Individual
-  ---
-  modules:
-    - docassemble.base.util
   ---
 "ocr": |-
   ---
@@ -3053,6 +3238,53 @@
     - Present tense verb: the_verb
   sets: all_done
   ---
+"pdf-fill": |-
+  ---
+  question: |
+    Here is your PDF form
+  attachments:
+    - name: A filled-in form
+      filename: filled-form
+      pdf template file: sample-form.pdf
+      fields:
+        Your Name: |
+          ${ user }
+        Your Organization: |
+          ${ user.organization }
+        Apple Checkbox: |
+          ${ likes_apples }
+        Orange Checkbox: |
+          ${ likes_oranges }
+        Pear Checkbox: |
+          ${ likes_pears }
+        Toast Checkbox: |
+          ${ likes_toast }
+  mandatory: true
+  ---
+"pdf-fill-signature": |-
+  ---
+  question: |
+    Please sign your name below.
+  signature: user.signature
+  under: |
+    ${ user }
+  ---
+  sets: final_screen
+  question: Congratulations!
+  subquestion: |
+    You have now transferred everything
+    you own to ${ friend }.
+  attachment:
+    - name: Transfer of Ownership
+      filename: Transfer-of-Ownership
+      pdf template file: |
+        Transfer-of-Ownership.pdf
+      fields:
+        "grantor": ${ user }
+        "grantee": ${ friend }
+        "collection": ${ prized_collection }
+        "signature": ${ user.signature }
+  ---
 "periodic-amount": |-
   ---
   modules:
@@ -3068,9 +3300,6 @@
         period_list()
   ---
 "periodic-value": |-
-  ---
-  modules:
-    - docassemble.base.legal
   ---
   objects:
     - user_salary: PeriodicValue
@@ -3314,10 +3543,31 @@
   \ })\n  and the\n  [number of slices](${ url_action('number_of_slices') }).\n---"
 "response-svg": |-
   ---
-  mandatory: true
+  sets: all_done
   code: |
-    if press_to_continue:
-      all_done
+    svg_image = """\
+    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+    <svg
+       xmlns:dc="http://purl.org/dc/elements/1.1/"
+       xmlns:cc="http://creativecommons.org/ns#"
+       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+       xmlns:svg="http://www.w3.org/2000/svg"
+       xmlns="http://www.w3.org/2000/svg"
+       version="1.1"
+       id="svg2"
+       width="100"
+       height="100">
+      <circle
+         id="circle4"
+         fill="red"
+         stroke-width="3"
+         stroke="black"
+         r="40"
+         cy="50"
+         cx="50" />
+    </svg>
+    """
+    response(binaryresponse=svg_image, content_type="image/svg+xml")
   ---
 "resume-button-label": |-
   ---
@@ -3658,8 +3908,8 @@
   ---
 "testage2": |-
   ---
-  objects:
-    - user: Individual
+  modules:
+    - docassemble.base.util
   ---
 "testcooking": |-
   ---
@@ -3697,11 +3947,8 @@
   ---
 "testdalist": |-
   ---
-  objects:
-    - recipient: DAList
-    - trustee: Individual
-    - beneficiary: Individual
-    - grantor: Individual
+  modules:
+    - docassemble.base.util
   ---
 "testmessage": |-
   ---

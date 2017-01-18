@@ -86,34 +86,9 @@ assemble a PDF file by filling in fields in that template.  To do
 this, provide a `pdf template file` and a dictionary of `fields`.
 
 For example, here is an interview that populates fields in a file
-called [sample-form.pdf]({{ site.demourl }}/packagestatic/docassemble.demo/sample-form.pdf):
+called [sample-form.pdf]({{ site.demourl }}/packagestatic/docassemble.base/sample-form.pdf):
 
-{% highlight yaml %}
----
-mandatory: true
-question: |
-  Here is your PDF form
-attachments:
-  - name: A filled-in form
-    filename: filled-form
-    pdf template file: sample-form.pdf
-    fields:
-      Your Name: |
-        ${ user }
-      Your Organization: |
-        ${ user.organization }
-      Apple Checkbox: |
-        ${ likes_apples }
-      Orange Checkbox: |
-        ${ likes_oranges }
-      Pear Checkbox: |
-        ${ likes_pears }
-      Toast Checkbox: |
-        ${ likes_toast }
----
-{% endhighlight %}
-
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testfill.yml){:target="_blank"}.)
+{% include side-by-side.html demo="pdf-fill" %}
 
 The `pdf template file` is assumed to reside in the `data/templates`
 directory of your package, unless a specific package name is
@@ -148,61 +123,8 @@ will trim whitespace from the edges of the image and fit the image
 into the "Digital Signature" box.
 
 For example, here is an interview that populates text fields and a
-signature into the template [Transfer-of-Ownership.pdf]({{ site.demourl }}/packagestatic/docassemble.demo/Transfer-of-Ownership.pdf):
+signature into the template [Transfer-of-Ownership.pdf]({{ site.demourl }}/packagestatic/docassemble.base/Transfer-of-Ownership.pdf):
 
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.legal
----
-objects:
-  - user: Individual
-  - friend: Individual
----
-mandatory: true
-code: |
-  need(user.name.first, friend.name.first, prized_collection, final_screen)
----
-question: |
-  What is your name?
-fields:
-  - First Name: user.name.first
-  - Last Name: user.name.last
----
-question: |
-  What is your best friend's name?
-fields:
-  - First Name: friend.name.first
-  - Last Name: friend.name.last
----
-question: What objects do you collect?
-fields:
-  - Collection: prized_collection
-    hint: baseball cards, fine china
----
-question: |
-  Please sign your name below.
-signature: user.signature
-under: |
-  ${ user }
----
-sets: final_screen
-question: Congratulations!
-subquestion: |
-  You have now transferred everything you own to ${ friend }.
-attachment:
-  - name: Transfer of Ownership
-    filename: Transfer-of-Ownership
-    pdf template file: Transfer-of-Ownership.pdf
-    fields:
-      "grantor": ${ user }
-      "grantee": ${ friend }
-      "collection": ${ prized_collection }
-      "signature": ${ user.signature }
----
-{% endhighlight %}
-
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testfillsignature.yml){:target="_blank"}.)
 
 It is important that each "Digital Signature" field have a unique
 name.  If there is more than one field in the PDF template with the
