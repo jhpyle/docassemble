@@ -3,6 +3,7 @@ metadata:
   short title: Setting objects
   example start: 1
   example end: 4
+  documentation: "http://docassemble.org/docs/fields.html#objects"
 ---
 include: basic-questions.yml
 ---

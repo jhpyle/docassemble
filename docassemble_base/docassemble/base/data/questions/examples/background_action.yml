@@ -1,7 +1,8 @@
 metadata:
-  title: Background action that returns a value
+  title: Return a value
   example start: 2
   example end: 6
+  documentation: "http://docassemble.org/docs/functions.html#background_action"
 ---
 modules:
   - docassemble.base.util

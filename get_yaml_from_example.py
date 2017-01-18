@@ -20,6 +20,8 @@ def main():
     for filename in os.listdir(dirname):
         if not re.search(r'.ya*ml$', filename, flags=re.IGNORECASE):
             continue
+        if re.search(r'\#', filename):
+            continue    
         example_name = os.path.splitext(filename)[0]
         result = read_file(os.path.join(dirname, filename))
         if result is None:

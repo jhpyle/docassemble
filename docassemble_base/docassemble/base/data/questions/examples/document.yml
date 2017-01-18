@@ -1,6 +1,6 @@
 metadata:
   title: Assembling a document
-  documentation: "http://docassemble.org/docs/documents.html"
+  documentation: "http://docassemble.org/docs/documents.html#attachments"
 ---
 question: Here is your document.
 attachments:

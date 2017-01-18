@@ -1,9 +1,9 @@
 metadata:
-  title: Gather dictionary
-  short title: Gather dictionary
+  title: "Dictionary: gather keys, values"
+  short title: "Dictionary: gather keys, values"
   documentation: "http://docassemble.org/docs/groups.html#gathering"
   example start: 1
-  example end: 6
+  example end: 7
 ---
 modules:
   - docassemble.base.util

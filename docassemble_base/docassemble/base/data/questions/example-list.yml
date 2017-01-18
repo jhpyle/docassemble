@@ -1,12 +1,24 @@
 - Formatting:
     - markdown
+    - terms
+- Templates:
+    - mako-01
+    - mako-02
+    - mako-03
+    - mako-04
+    - mako-05
+    - mako-09
 - Documents:
     - document
+    - formatting
     - page-numbers
     - alignment
     - single-spacing
-    - formatting
+    - document-file
     - attachment-code
+    - document-docx
+    - pdf-fill
+    - pdf-fill-signature
     - allow-emailing-false
 - Fields:
     - text-field
@@ -15,14 +27,16 @@
     - money-field
     - number-field
     - email-field
+    - password-field
     - periodic-amount
     - radio-list
     - pull-down
     - pull-down-with-code
     - range
     - continue
-- Field modifiers:
+- Field settings:
     - no-label-field
+    - label
     - text-hint
     - text-default
     - text-help
@@ -39,6 +53,7 @@
     - yesno
     - noyes
     - yesno-custom
+    - yesnomaybe
     - buttons
     - buttons-labels
     - buttons-icons
@@ -48,79 +63,49 @@
     - choices-icons
     - fields-choices
     - fields-mc
+    - fields-mc-exclude
     - fields-yesno
     - fields-yesnowide
     - fields-yesnoradio
     - fields-yesnomaybe
     - fields-noyesmaybe
     - fields-checkboxes
+    - shuffle
 - Files:
     - upload
     - upload-multiple
     - signature
-- Objects as fields:
+- Objects:
+    - objects
     - object
     - object-radio
     - object-selections
+    - object-disable-others
     - object-checkboxes
-- Question modifiers:
+    - generic-object
+    - exists
+    - periodic-value
+- Question settings:
     - help
-    - decoration
     - prevent-going-back
     - language
     - continue-button-label
-    - generic-object
     - comment
     - audio
     - video
 #    - video-static
     - help-damages-audio
     - reload
+    - refresh
+    - signin
     - progress
-- Initial blocks:
-    - metadata
-    - objects
-    - include
-    - image-sets
-    - images
-    - imports
-    - modules
-    - terms
-    - interview-help
-    - def
-    - progress-features
-    - reset
-- Exit questions:
-    - exit-buttons
-    - exit-choices
-    - exit-url
-    - dead-end
-- Groups:
-    - for_fruit
-    - dalist
-    - madlibs
-    - nested-for-loop
-#    - dadict
-- Utility functions:
-    - loading-util
-    - space-underscore
-    - qr-code
-    - url-of
-    - set-language
-    - country
-    - defined
-    - value
-    - exit
-- Code:
-    - code
-    - initial
-    - mandatory
-    - reconsider
 - Interview flow:
     - need
-    - message
+    - del
+    - reset
     - actions
     - actions-parameters
+    - interview-url
     - interview_url_action
     - menu-item
     - review
@@ -128,19 +113,85 @@
     - prevent-back
     - force-ask
     - force-gather
-    - interview-url
-- Background processes:
-    - background_action
-    - background_action_with_response_action
-- Storage:
-    - redis
-    - database_storage
+    - dialog-box
+    - doors
+    - message
+- Interview settings:
+    - metadata
+    - include
+    - interview-help
+    - def
+    - progress-features
+- Images:
+    - image-sets
+    - images
+    - decoration
+    - static_image
+- Exit questions:
+    - dead-end
+    - exit-buttons
+    - exit-choices
+    - exit-url
+- Groups:
+    - for_fruit
+    - gather-fruit
+    - gather-fruit-at-least-two
+    - gather-fruit-number
+    - gather-fruit-gather
+    - gather-dict
+    - gather-dict-value
+    - gather-dict-object
+    - dadict
+    - gather-set
+    - gather-set-object
+    - mako-06
+    - nested-for-loop
+    - madlibs
+- Utility functions:
+    - defined
+    - value
+    - loading-util
+    - space-underscore
+    - quote_paragraphs
+    - qr-code
+    - url-of
+    - set-language
+    - country
+    - chat-partners-available
+    - device
+    - interface
+    - exit
+    - language_from_browser
+    - language_from_browser_restricted
+    - ocr
+    - ocr-background
+- Code:
+    - imports
+    - modules
+    - loading-legal
+    - code
+    - initial
+    - mandatory
+    - reconsider
+    - mako-07
+- HTML:
+    - script
+    - css
+    - html
+    - external_files
+    - js_url_action
+    - js_url_action_call
+    - js_variables
 - Dates:
     - timezone-list
     - as-datetime
+    - today
     - current-datetime
     - date-difference
     - date-interval
+    - age_in_years
+    - date-parts
+    - get-default-timezone
 - Linguistic:
     - capitalize
     - lists
@@ -152,5 +203,25 @@
     - ordinal-number
     - title-case
     - past-tense
-- Legal applications:
-    - loading-legal
+    - salutation
+- Background processes:
+    - background_action
+    - background_action_flash
+    - background_action_javascript
+    - background_action_with_response_action
+    - background_response_action_flash
+    - background_action_refresh
+- Machine Learning:
+    - ml-predict
+    - ml-save-and-predict
+    - ml-classify
+    - ml-export
+    - ml-export-yaml
+- Storage:
+    - redis
+    - database_storage
+- API responses: 
+    - response
+    - response-json
+    - response-svg
+    - variables_as_json

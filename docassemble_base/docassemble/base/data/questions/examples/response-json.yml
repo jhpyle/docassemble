@@ -1,5 +1,5 @@
 metadata:
-  title: Custom response
+  title: JSON response
   example start: 1
   example end: 7
   documentation: "http://docassemble.org/docs/functions.html#response"

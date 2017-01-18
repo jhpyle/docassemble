@@ -1,0 +1,39 @@
+metadata:
+  title: Existing or new
+  short title: Existing or new
+  documentation: "http://docassemble.org/docs/fields.html#disable others"
+  example start: 2
+  example end: 4
+---
+modules:
+  - docassemble.base.legal
+---
+objects:
+  protagonist: Individual
+  antagonist: Individual
+  actors: PartyList
+  villain: Individual
+---
+mandatory: true
+code: |
+  protagonist.name.first = "Harry"
+  protagonist.name.last = "Potter"
+  antagonist.name.first = "Tom"
+  antagonist.name.last = "Riddle"
+  actors.append(protagonist)
+  actors.append(antagonist)
+  actors.auto_gather = False
+  actors.gathered = True
+---
+question: Who is the villain?
+fields:
+  - One of these: villain
+    datatype: object
+    choices: actors
+    disable others: true
+  - First Name: villain.name.first
+  - Last Name: villain.name.last
+---
+question: |
+  ${ villain } will surely be defeated!
+mandatory: true

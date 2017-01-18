@@ -1,19 +1,15 @@
 metadata:
-  title: Mako for loops
-  short title: For loops
+  title: For loop over list
+  short title: For loop over list
   documentation: "http://docassemble.org/docs/markup.html#mako"
   example start: 1
-  example end: 6
+  example end: 5
 ---
 modules:
   - docassemble.base.legal
 ---
 objects:
   - witness: PartyList
----
-mandatory: true
-code: |
-  witness.gathered = witness.gather()
 ---
 mandatory: true
 question: |
@@ -33,3 +29,7 @@ fields:
 question: |
   Are there any other witnesses?
 yesno: witness.there_is_another
+---
+question: |
+  Were there any witnesses?
+yesno: witness.there_are_any

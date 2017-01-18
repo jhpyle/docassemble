@@ -2,6 +2,7 @@ metadata:
   title: Save training set to playground
   example start: 1
   example end: 2
+  documentation: "http://docassemble.org/docs/ml.html#extracting"
 ---
 modules:
   - docassemble.webapp.playground

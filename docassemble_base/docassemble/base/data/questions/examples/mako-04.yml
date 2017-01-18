@@ -1,6 +1,6 @@
 metadata:
-  title: Nested if/then/else
-  short title: Nested if/then/else
+  title: Nested if/else
+  short title: Nested if/else
   documentation: "http://docassemble.org/docs/markup.html#mako"
   example start: 2
   example end: 2

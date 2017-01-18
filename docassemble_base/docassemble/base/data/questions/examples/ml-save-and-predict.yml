@@ -1,8 +1,9 @@
 metadata:
-  title: Save answer for later classification
-  short title: Machine learning
+  title: Save for classification
+  short title: Predict and save
   example start: 3
   example end: 3
+  documentation: "http://docassemble.org/docs/ml.html#save"
 ---
 modules:
   - docassemble.base.util

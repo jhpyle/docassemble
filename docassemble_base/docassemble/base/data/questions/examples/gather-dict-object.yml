@@ -1,6 +1,6 @@
 metadata:
-  title: Gather dictionary with object values
-  short title: Gather dictionary object
+  title: "Dictionary: gather keys, objects"
+  short title: "Dictionary: gather keys, objects"
   documentation: "http://docassemble.org/docs/groups.html#gathering"
   example start: 1
   example end: 8

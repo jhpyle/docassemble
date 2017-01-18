@@ -2,6 +2,7 @@ metadata:
   title: Using redis
   example start: 2
   example end: 4
+  documentation: "http://docassemble.org/docs/functions.html#redis"
 ---
 modules:
   - docassemble.base.util

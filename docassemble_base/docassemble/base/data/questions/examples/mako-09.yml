@@ -1,7 +1,7 @@
 metadata:
-  title: Mako loop object
+  title: Loop object
   short title: Loop object
-  documentation: "http://docassemble.org/docs/markup.html#mako"
+  documentation: "http://docassemble.org/docs/markup.html#loop"
   example start: 2
   example end: 2
 ---
@@ -12,12 +12,7 @@ mandatory: true
 question: |
   Foods I like
 subquestion: |
-  % for food in ['apples',
-                 'peaches',
-                 'pears',
-                 'plums',
-                 'turnips',
-                 'raspberries']:
+  % for food in ['apples', 'peaches', 'pears', 'plums', 'turnips', 'raspberries']:
     % if loop.first:
   First, I like ${ food }.
     % elif loop.last:

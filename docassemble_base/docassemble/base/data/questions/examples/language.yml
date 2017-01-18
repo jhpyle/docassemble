@@ -1,6 +1,20 @@
 metadata:
   title: Language
   documentation: "http://docassemble.org/docs/modifiers.html#language"
+  example start: 3
+  example end: 4
+---
+modules:
+  - docassemble.base.util
+---
+initial: true
+code: |
+  set_language(language)
+---
+question: |
+  What is the meaning of life?
+fields:
+  - Meaning of life: meaning_life
 ---
 language: es
 question: |
@@ -9,23 +23,11 @@ fields:
   - Significado de la Vida: meaning_life
 ---
 question: |
-  What is the meaning of life?
-fields:
-  - Meaning of life: meaning_life
----
-question: |
   What language do you speak?
 field: language
 choices:
   - English: en
   - Español: es
----
-modules:
-  - docassemble.base.util
----
-initial: true
-code: |
-  set_language(language)
 ---
 question: |
   The meaning of life

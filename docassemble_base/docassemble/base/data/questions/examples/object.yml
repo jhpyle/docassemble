@@ -1,6 +1,7 @@
 metadata:
   title: Set variable to object
   short title: Set variable to object
+  documentation: "http://docassemble.org/docs/fields.html#object"
   example start: 2
   example end: 4
 ---

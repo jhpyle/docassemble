@@ -1,6 +1,6 @@
 metadata:
-  title: Mako
-  short title: Mako
+  title: Insert variable
+  short title: Insert variable
   documentation: "http://docassemble.org/docs/markup.html#mako"
   example start: 1
   example end: 2

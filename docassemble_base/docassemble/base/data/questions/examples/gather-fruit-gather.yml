@@ -1,6 +1,6 @@
 metadata:
-  title: Gather
-  short title: Gather
+  title: "List: the .gather method"
+  short title: "List: the .gather method"
   documentation: "http://docassemble.org/docs/groups.html#gathering"
   example start: 1
   example end: 6

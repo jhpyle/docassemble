@@ -1,6 +1,7 @@
 metadata:
-  title: Selectios from variable
+  title: Selections from variable
   short title: Selections from variable
+  documentation: "http://docassemble.org/docs/fields.html#object"
   example start: 2
   example end: 4
 ---

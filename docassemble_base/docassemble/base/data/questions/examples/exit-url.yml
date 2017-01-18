@@ -1,6 +1,6 @@
 metadata:
   title: Exit or restart with url
-  documentation: "http://docassemble.org/docs/fields.html#special buttons"
+  documentation: "http://docassemble.org/docs/questions.html#special buttons"
 ---
 question: |
   Congratulations, you found Nemo!

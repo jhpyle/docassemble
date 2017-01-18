@@ -298,6 +298,7 @@ img.example_screenshot {
 div > ul.example-list {
     max-height: 35em;
     overflow-y: auto;
+    position: relative;
 }
 
 ul.example-list ul {

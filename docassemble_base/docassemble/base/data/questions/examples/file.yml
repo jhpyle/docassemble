@@ -1,5 +1,6 @@
 metadata:
   title: File upload
+  documentation: "http://docassemble.org/docs/fields.html#file"
 ---
 question: |
   Please upload a file

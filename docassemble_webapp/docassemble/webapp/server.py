@@ -679,7 +679,9 @@ def substitute_secret(oldsecret, newsecret):
         db.session.commit()
     return newsecret
 
-def MD5Hash(data=''):
+def MD5Hash(data=None):
+    if data is None:
+        data = ''
     h = MD5.new()
     h.update(data)
     return h
@@ -804,20 +806,24 @@ def proc_example_list(example_list, examples):
             content = fix_initial.sub('', content)
             blocks = map(lambda x: x.strip(), document_match.split(content))
             if len(blocks):
+                has_context = False
                 if re.search(r'metadata:', blocks[0]) and start_block > 0:
                     initial_block = 1
                 else:
                     initial_block = 0
                 if start_block > initial_block:
                     result['before_html'] = highlight("\n---\n".join(blocks[initial_block:start_block]) + "\n---", YamlLexer(), HtmlFormatter())
+                    has_context = True
                 else:
                     result['before_html'] = ''
                 if len(blocks) > end_block:
                     result['after_html'] = highlight("---\n" + "\n---\n".join(blocks[end_block:len(blocks)]), YamlLexer(), HtmlFormatter())
+                    has_context = True
                 else:
                     result['after_html'] = ''
                 result['source'] = "\n---\n".join(blocks[start_block:end_block])
                 result['html'] = highlight(result['source'], YamlLexer(), HtmlFormatter())
+                result['has_context'] = has_context
         examples.append(result)
     
 def get_examples():
@@ -915,8 +921,8 @@ def do_redirect(url, is_ajax):
 def standard_scripts():
     return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/signature.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>\n'
     
-def standard_html_start(interview_language=DEFAULT_LANGUAGE, reload_after='', debug=False):
-    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">' + reload_after + '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet">'
+def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False):
+    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet">'
     if debug:
         output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
     return output
@@ -2914,6 +2920,10 @@ def index():
         # $(function () {
         #   $('.tabs a:last').tab('show')
         # })
+    if 'reload_after' in interview_status.extras:
+        reload_after = 1000 * int(interview_status.extras['reload_after'])
+    else:
+        reload_after = 0
     if not is_ajax:
         scripts = standard_scripts()
         if 'javascript' in interview_status.question.interview.external_files:
@@ -3466,7 +3476,7 @@ def index():
           if (daReloader != null){
             clearTimeout(daReloader);
           }
-          if (data.reload_after != null){
+          if (data.reload_after != null && data.reload_after > 0){
             //daReloader = setTimeout(function(){location.reload();}, data.reload_after);
             daReloader = setTimeout(function(){daRefreshSubmit();}, data.reload_after);
           }
@@ -3967,6 +3977,10 @@ def index():
       }
       $(document).ready(function(){
         daInitialize();
+        var daReloadAfter = """ + str(int(reload_after)) + """;
+        if (daReloadAfter > 0){
+          daReloader = setTimeout(function(){daRefreshSubmit();}, daReloadAfter);
+        }
         setTimeout(daCheckin, 100);
         checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
         $( window ).bind('unload', function() {
@@ -4058,13 +4072,13 @@ def index():
         interview_language = interview_status.question.language
     else:
         interview_language = DEFAULT_LANGUAGE
-    if 'reload_after' in interview_status.extras:
-        reload_after = '\n    <meta http-equiv="refresh" content="' + str(interview_status.extras['reload_after']) + '">'
-    else:
-        reload_after = ''
+    # if 'reload_after' in interview_status.extras:
+    #     reload_after = '\n    <meta http-equiv="refresh" content="' + str(interview_status.extras['reload_after']) + '">'
+    # else:
+    #     reload_after = ''
     browser_title = interview_status.question.interview.get_title().get('full', default_title)
     if not is_ajax:
-        standard_header_start = standard_html_start(interview_language=interview_language, reload_after=reload_after, debug=DEBUG)
+        standard_header_start = standard_html_start(interview_language=interview_language, debug=DEBUG)
     if interview_status.question.question_type == "signature":
         extra_scripts.append('<script>$( document ).ready(function() {daInitializeSignature();});</script>')
         bodyclass="dasignature"
@@ -4248,7 +4262,7 @@ def index():
         key = 'da:html:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
         #logmessage("Setting html key " + key)
         pipe = r.pipeline()
-        pipe.set(key, json.dumps(dict(body=output, extra_scripts=extra_scripts, extra_css=extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after)))
+        pipe.set(key, json.dumps(dict(body=output, extra_scripts=extra_scripts, extra_css=extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass)))
         pipe.expire(key, 60)
         pipe.execute()
         #sys.stderr.write("10\n")
@@ -4258,10 +4272,6 @@ def index():
             inputkey = 'da:input:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
             r.publish(inputkey, json.dumps(dict(message='newpage', key=key)))
     if is_ajax:
-        if 'reload_after' in interview_status.extras:
-            reload_after = 1000 * int(interview_status.extras['reload_after'])
-        else:
-            reload_after = None
         response = jsonify(action='body', body=output, extra_scripts=extra_scripts, extra_css=extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf())
     else:
         output = start_output + output + end_output
@@ -7111,6 +7121,7 @@ def playground_page():
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
     variables_html, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
     pulldown_files = list(files)
+    define_examples()
     if is_fictitious or is_new or is_default:
         new_active_file = word('(New file)')
         if new_active_file not in pulldown_files:
@@ -7125,7 +7136,7 @@ var origPosition = null;
 var searchMatches = null;
 var vocab = """ + json.dumps(vocab_list) + """;
 
-function activateExample(id){
+function activateExample(id, scroll){
   var info = exampleData[id];
   $("#example-source").html(info['html']);
   $("#example-source-before").html(info['before_html']);
@@ -7149,11 +7160,23 @@ function activateExample(id){
       $(this).addClass("example-active");
       $(this).parent().addClass("active");
       $(this).parents(".example-list").removeClass("example-hidden");
+      if (scroll){
+        setTimeout(function(){
+          //console.log($(this).parents("li").last()[0].offsetTop);
+          //console.log($(this).parents("li").last().parent()[0].offsetTop);
+          $(".example-active").parents("ul").last().scrollTop($(".example-active").parents("li").last()[0].offsetTop);
+        }, 0);
+      }
       //$(this).parents(".example-list").slideDown();
     }
   });
   $("#hide-full-example").addClass("invisible");
-  $("#show-full-example").removeClass("invisible");
+  if (info['has_context']){
+    $("#show-full-example").removeClass("invisible");
+  }
+  else{
+    $("#show-full-example").addClass("invisible");
+  }
   $("#example-source-before").addClass("invisible");
   $("#example-source-after").addClass("invisible");
 }
@@ -7446,7 +7469,7 @@ $( document ).ready(function() {
 
   $(".example-link").on("click", function(){
     var id = $(this).data("example");
-    activateExample(id);
+    activateExample(id, false);
   });
 
   $(".example-copy").on("click", function(){
@@ -7488,7 +7511,7 @@ $( document ).ready(function() {
       var new_link = $(this).parent().find("a.example-link").first();
       if (new_link.length){
         var id = new_link.data("example");
-        activateExample(id);  
+        activateExample(id, true);
       }
     }
   });
@@ -7525,14 +7548,6 @@ $( document ).ready(function() {
   origPosition = daCodeMirror.getCursor();
 });
 """
-    example_html = list()
-    example_html.append('        <div class="col-md-2">\n          <h4>' + word("Example blocks") +'</h4>')
-    first_id = list()
-    data_dict = dict()
-    make_example_html(get_examples(), first_id, example_html, data_dict)
-    example_html.append('        </div>')
-    example_html.append('        <div class="col-md-6"><h4>' + word("Preview") + '<a target="_blank" class="label label-primary example-documentation example-hidden" id="example-documentation-link">' + word('View documentation') + '</a></h4><a href="#" target="_blank" id="example-image-link"><img title="' + word('Click to try this interview') + '" class="example_screenshot" id="example-image"></a></div>')
-    example_html.append('        <div class="col-md-4 example-source-col"><h4>' + word('Source') + ' <a class="label label-success example-copy">' + word('Insert') + '</a></h4><div id="example-source-before" class="invisible"></div><div id="example-source"></div><div id="example-source-after" class="invisible"></div><div><a class="example-hider" id="show-full-example">' + word("Show context of example") + '</a><a class="example-hider invisible" id="hide-full-example">' + word("Hide context of example") + '</a></div></div>')
     if len(files):
         any_files = True
     else:
@@ -7557,7 +7572,7 @@ $( document ).ready(function() {
         return {list: list, from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end)};
       });
     </script>"""
-    return render_template('pages/playground.html', page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, "400px");\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete" });\n' + indent_by(ajax, 6) + '\n      exampleData = ' + str(json.dumps(data_dict)) + ';\n      activateExample("' + str(first_id[0]) + '");\n    </script>'), form=form, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=Markup("\n".join(example_html)), interview_path=interview_path, is_new=str(is_new)), 200
+    return render_template('pages/playground.html', page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, "400px");\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete" });\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
 
 # nameInfo = ' + str(json.dumps(vars_in_use['name_info'])) + ';      
 
@@ -8717,6 +8732,22 @@ else:
     #sys.stderr.write("calling set worker now\n")
     docassemble.base.functions.update_server(bg_action=docassemble.webapp.worker.background_action,
                                              worker_convert=docassemble.webapp.worker.convert)
+
+pg_ex = dict()
+
+def define_examples():
+    if 'encoded_example_html' in pg_ex:
+        return
+    example_html = list()
+    example_html.append('        <div class="col-md-2">\n          <h4>Example blocks</h4>')
+    pg_ex['pg_first_id'] = list()
+    data_dict = dict()
+    make_example_html(get_examples(), pg_ex['pg_first_id'], example_html, data_dict)
+    example_html.append('        </div>')
+    example_html.append('        <div class="col-md-6"><h4>Preview<a target="_blank" class="label label-primary example-documentation example-hidden" id="example-documentation-link">View documentation</a></h4><a href="#" target="_blank" id="example-image-link"><img title="Click to try this interview" class="example_screenshot" id="example-image"></a></div>')
+    example_html.append('        <div class="col-md-4 example-source-col"><h4>Source<a class="label label-success example-copy">Insert</a></h4><div id="example-source-before" class="invisible"></div><div id="example-source"></div><div id="example-source-after" class="invisible"></div><div><a class="example-hider" id="show-full-example">Show context of example</a><a class="example-hider invisible" id="hide-full-example">Hide context of example</a></div></div>')
+    pg_ex['encoded_data_dict'] = safeid(json.dumps(data_dict))
+    pg_ex['encoded_example_html'] = Markup("\n".join(example_html))
 
 import docassemble.webapp.machinelearning
 docassemble.base.util.set_knn_machine_learner(docassemble.webapp.machinelearning.SimpleTextMachineLearner)

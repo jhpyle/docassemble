@@ -1,5 +1,6 @@
 metadata:
   title: Two plus three
+  documentation: "http://docassemble.org/docs/code.html#python"
 ---
 code: |
   a = 2

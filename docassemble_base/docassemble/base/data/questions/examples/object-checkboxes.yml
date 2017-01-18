@@ -1,6 +1,7 @@
 metadata:
   title: Set variable to list of objects
   short title: Set variable to list of objects
+  documentation: "http://docassemble.org/docs/fields.html#object_checkboxes"
   example start: 2
   example end: 4
 ---

@@ -6,7 +6,7 @@ metadata:
 question: |
   Please fill in the following information.
 fields:
-  - "Do you you have fruit?": has_fruit
+  - "Do you have fruit?": has_fruit
     datatype: yesnoradio
   - "What fruit do you need?": fruit
     hide if: has_fruit

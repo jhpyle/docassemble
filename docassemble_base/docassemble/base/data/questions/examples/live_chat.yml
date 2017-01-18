@@ -1,5 +1,6 @@
 metadata:
   title: Live chat
+  documentation: "http://docassemble.org/docs/livehelp.html#chat"
 ---
 modules:
   - docassemble.base.util

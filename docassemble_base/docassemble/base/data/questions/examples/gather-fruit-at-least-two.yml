@@ -1,6 +1,6 @@
 metadata:
-  title: Gather
-  short title: Gather
+  title: "List: gather with minimum number"
+  short title: "List: minimum number"
   documentation: "http://docassemble.org/docs/groups.html#gathering"
   example start: 3
   example end: 3

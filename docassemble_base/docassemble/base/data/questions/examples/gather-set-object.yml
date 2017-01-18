@@ -1,9 +1,9 @@
 metadata:
-  title: Gather set with object values
-  short title: Gather set object
+  title: "Set: gather objects"
+  short title: "Set: gather objects"
   documentation: "http://docassemble.org/docs/groups.html#gathering"
   example start: 1
-  example end: 6
+  example end: 8
 ---
 modules:
   - docassemble.base.core

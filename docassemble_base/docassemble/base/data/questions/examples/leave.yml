@@ -2,6 +2,7 @@ metadata:
   title: "Command: leave"
   example start: 2
   example end: 3
+  documentation: "http://docassemble.org/docs/functions.html#command"
 ---
 modules:
   - docassemble.base.util

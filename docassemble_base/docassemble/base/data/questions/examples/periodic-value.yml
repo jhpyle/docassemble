@@ -2,11 +2,11 @@ metadata:
   title: Periodic value attributes
   short title: Periodic value
   documentation: "http://docassemble.org/docs/objects.html"
-  example start: 1
+  example start: 2
   example end: 5
 ---
 modules:
-  - docassemble.base.legal
+  - docassemble.base.util
 ---
 objects:
   - user_salary: PeriodicValue

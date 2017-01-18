@@ -1137,6 +1137,10 @@ class Question:
                             elif key == 'code':
                                 field_info['choicetype'] = 'compute'
                                 field_info['selections'] = {'compute': compile(field[key], '', 'eval'), 'sourcecode': field[key]}
+                                if 'exclude' in field:
+                                    if type(field['exclude']) in (list, dict):
+                                        raise DAError("An exclude entry cannot be a list or dictionary." + self.idebug(data))
+                                    field_info['selections']['exclude'] = compile(field['exclude'], '', 'eval')
                             elif key == 'exclude':
                                 pass
                             elif key == 'choices':
@@ -1190,12 +1194,12 @@ class Question:
                             else:
                                 select_list = field['choices']
                             if 'exclude' in field:
-                                if type(field['exclude']) not in [list, str]:
+                                if type(field['exclude']) in [dict]:
                                     raise DAError("choices exclude list is not in appropriate format" + self.idebug(data))
                                 if type(field['exclude']) is not list:
-                                    exclude_list = [str(field['exclude'])]
+                                    exclude_list = [str(field['exclude']).strip()]
                                 else:
-                                    exclude_list = field['exclude']
+                                    exclude_list = [x.strip() for x in field['exclude']]
                                 if len(exclude_list):
                                     select_list.append('exclude=[' + ", ".join(exclude_list) + ']')
                             if 'default' in field:
@@ -1607,7 +1611,10 @@ class Question:
                         #logmessage("Doing " + string)
                         exec(string, user_dict)                        
                     #logmessage("Doing " + field.selections['sourcecode'])
-                    selectcompute[field.number] = process_selections(eval(field.selections['compute'], user_dict))
+                    if 'exclude' in field.selections:
+                        selectcompute[field.number] = process_selections(eval(field.selections['compute'], user_dict), exclude=eval(field.selections['exclude'], user_dict))
+                    else:
+                        selectcompute[field.number] = process_selections(eval(field.selections['compute'], user_dict))
                 if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio', 'object_checkboxes']:
                     if field.number not in selectcompute:
                         raise DAError("datatype was set to object but no code or selections was provided")
@@ -2747,7 +2754,21 @@ def find_fields_in(code, fields_used, names_used):
         if item not in definables:
             names_used.add(item)
 
-def process_selections(data, manual=False):
+def unpack_list(item, target_list=None):
+    if target_list is None:
+        target_list = list()
+    if type(item) is not list:
+        target_list.append(item)
+    else:
+        for subitem in item:
+            unpack_list(subitem, target_list)
+    return target_list
+            
+def process_selections(data, manual=False, exclude=None):
+    if exclude is None:
+        to_exclude = list()
+    else:
+        to_exclude = unpack_list(exclude)
     result = []
     if type(data) is list:
         for entry in data:
@@ -2756,16 +2777,21 @@ def process_selections(data, manual=False):
                     if key == 'default':
                         continue
                     if 'default' in entry:
-                        result.append([key, entry[key], entry['default']])
+                        if key not in to_exclude:
+                            result.append([key, entry[key], entry['default']])
                     else:
-                        result.append([key, entry[key]])
+                        if key not in to_exclude:
+                            result.append([key, entry[key]])
             if type(entry) is list:
-                result.append([entry[0], entry[1]])
+                if entry[0] not in to_exclude:
+                    result.append([entry[0], entry[1]])
             elif type(entry) is str or type(entry) is unicode:
-                result.append([entry, entry])
+                if entry not in to_exclude:
+                    result.append([entry, entry])
     elif type(data) is dict:
         for key, value in sorted(data.items(), key=operator.itemgetter(1)):
-            result.append([key, value])
+            if key not in to_exclude:
+                result.append([key, value])
     else:
         raise DAError("Unknown data type in choices selection")
     return(result)

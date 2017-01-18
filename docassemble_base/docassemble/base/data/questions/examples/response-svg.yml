@@ -1,6 +1,6 @@
 metadata:
-  title: Custom response
-  example start: 2
+  title: Binary response
+  example start: 4
   documentation: "http://docassemble.org/docs/functions.html#response"
 ---
 modules:

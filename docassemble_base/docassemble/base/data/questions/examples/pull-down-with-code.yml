@@ -1,6 +1,6 @@
 metadata:
   title: Pulldown with code
-  documentation: "http://docassemble.org/docs/fields.html#mc-code"
+  documentation: "http://docassemble.org/docs/fields.html#code"
 ---
 question: |
   Describe yourself.

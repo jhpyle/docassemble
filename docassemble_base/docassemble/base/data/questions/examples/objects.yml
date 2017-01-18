@@ -1,15 +1,15 @@
 metadata:
   title: Define objects
-  example start: 1
+  example start: 2
   example end: 2
   documentation: "http://docassemble.org/docs/initial.html#objects"
+---
+modules:
+  - docassemble.base.util
 ---
 objects:
   - hero: Individual
   - villain: Individual
----
-modules:
-  - docassemble.base.util
 ---
 generic object: Individual
 question: |

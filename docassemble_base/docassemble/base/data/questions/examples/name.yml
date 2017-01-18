@@ -1,6 +1,6 @@
 metadata:
   title: Names
-  documentation: "http://docassemble.org/docs/object.html#Name"
+  documentation: "http://docassemble.org/docs/objects.html#Name"
   example start: 3
   example end: 4
 ---

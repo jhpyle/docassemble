@@ -1,6 +1,6 @@
 metadata:
-  title: Gather set
-  short title: Gather set
+  title: "Set: gathering"
+  short title: "Set: gathering"
   documentation: "http://docassemble.org/docs/groups.html#gathering"
   example start: 1
   example end: 6

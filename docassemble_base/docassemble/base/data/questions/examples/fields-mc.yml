@@ -3,7 +3,7 @@ metadata:
   short title: Multiple choice with code
   example start: 3
   example end: 5
-  documentation: "http://docassemble.org/docs/fields.html#mc-code"
+  documentation: "http://docassemble.org/docs/fields.html#field with buttons"
 ---
 mandatory: true
 code: final_screen

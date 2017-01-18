@@ -1,0 +1,14 @@
+metadata:
+  title: Interface in use
+  documentation: "http://docassemble.org/docs/functions.html#interface"
+  example start: 2
+  example end: 2
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  You are using the ${ interface() }
+  interface.
+mandatory: true
+

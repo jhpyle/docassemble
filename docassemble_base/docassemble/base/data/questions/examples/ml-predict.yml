@@ -1,7 +1,8 @@
 metadata:
-  title: Machine learning
+  title: Predict
   example start: 2
   example end: 4
+  documentation: "http://docassemble.org/docs/ml.html#predicting"
 ---
 modules:
   - docassemble.base.util

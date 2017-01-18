@@ -1,6 +1,6 @@
 metadata:
-  title: Gather
-  short title: Gather
+  title: "List: gather by total number"
+  short title: "List: gather by number"
   documentation: "http://docassemble.org/docs/groups.html#gathering"
   example start: 1
   example end: 6

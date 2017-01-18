@@ -1,7 +1,8 @@
 metadata:
-  title: Background action that sets a variable and sends a message
+  title: Set a variable and show a message
   example start: 2
   example end: 6
+  documentation: "http://docassemble.org/docs/functions.html#ui_notification"
 ---
 modules:
   - docassemble.base.util

@@ -1,0 +1,23 @@
+metadata:
+  title: Interview variables
+  documentation: "http://docassemble.org/docs/functions.html#js_get_interview_variables"
+  example start: 1
+  example end: 2
+---
+mandatory: true
+code: |
+  fruit = 'apple'
+---
+mandatory: true
+question: |
+  The fruit.
+subquestion: |
+  Fruit is <span id="food"></span>.
+script: |
+  <script>
+    get_interview_variables(function(data){
+      if (data.success){
+        $("#food").html(data.variables['fruit']);
+      }
+    });
+  </script>

@@ -1,13 +1,13 @@
+metadata:
+  title: PDF fill-in
+  documentation: "http://docassemble.org/docs/documents.html#pdf template file"
+  example start: 8
 ---
 modules:
-  - docassemble.base.legal
+  - docassemble.base.util
 ---
 objects:
   - user: Individual
----
-mandatory: true
-code: |
-  need(final_screen)
 ---
 question: |
   Please fill in the following information.
@@ -32,7 +32,6 @@ question: |
   Do you like oranges?
 yesno: likes_oranges
 ---
-sets: final_screen
 question: |
   Here is your PDF form
 attachments:
@@ -52,4 +51,5 @@ attachments:
         ${ likes_pears }
       Toast Checkbox: |
         ${ likes_toast }
----
+mandatory: true
+

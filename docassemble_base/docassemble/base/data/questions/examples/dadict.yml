@@ -1,6 +1,6 @@
 metadata:
-  title: DADict
-  documentation: "http://docassemble.org/docs/object.html#DADict"
+  title: "Dictionary: prepopuated objects"
+  documentation: "http://docassemble.org/docs/objects.html#DADict"
   example start: 1
   example end: 5
 ---

@@ -1,0 +1,21 @@
+metadata:
+  title: DOCX format
+  documentation: "http://docassemble.org/docs/documents.html#docx"
+---
+question: Here is your document.
+attachments:
+  - name: Summary of Benefits
+    filename: benefits_summary
+    valid formats:
+      - docx
+      - pdf    
+    content: |
+      [BOLDCENTER] Summary of Benefits
+
+      ${ client } is entitled to
+      benefits plan ${ benefits }.
+mandatory: true
+---
+code: |
+  client = "Jane Doe"
+  benefits = "G-432"

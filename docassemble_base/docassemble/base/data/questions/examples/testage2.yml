@@ -1,6 +1,9 @@
+metadata:
+  title: Age
+  documentation: "http://docassemble.org/docs/objects.html"
 ---
 modules:
-  - docassemble.base.legal
+  - docassemble.base.util
 ---
 objects:
   - user: Individual
@@ -18,4 +21,3 @@ code: |
 mandatory: true
 question: |
   You are ${ user.age_in_years() } years old.
----

@@ -1,5 +1,6 @@
 metadata:
   title: If/then/else in code
+  documentation: "http://docassemble.org/docs/code.html#python"
 ---
 code: |
   a = 4

@@ -1,3 +1,6 @@
+metadata:
+  title: DAList
+  documentation: "http://docassemble.org/docs/objects.html"
 ---
 modules:
   - docassemble.base.util
@@ -37,4 +40,3 @@ question: |
 fields:
   - First Name: x[i].name.first
   - Last Name: x[i].name.last
----

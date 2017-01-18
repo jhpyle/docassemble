@@ -31,3 +31,4 @@ testpubsub.py
 docassemble_webapp/docassemble/webapp/templates/pages/twiliotest.html
 send
 save-db-schema-html.sh
+audit.py

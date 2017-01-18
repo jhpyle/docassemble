@@ -1,0 +1,32 @@
+metadata:
+  title: Action links
+  documentation: "http://docassemble.org/docs/functions.html#js_url_action"
+  example start: 3
+  example end: 5
+---
+modules:
+  - docassemble.base.util
+---
+initial: true
+code: |
+  process_action()
+---
+mandatory: true
+code: |
+  dessert = "cod liver oil"
+---
+mandatory: true
+question: |
+  Your dessert is ${ dessert }.
+subquestion: |
+  If you want, you can
+  <a id="choose">choose something tastier</a>.
+script: |
+  <script>
+    $("#choose").attr('href', url_action('myaction', {fruit: 'apple'}));
+  </script>
+---
+event: myaction
+code: |
+  fruit = action_argument('fruit')
+  dessert = fruit + " pie"

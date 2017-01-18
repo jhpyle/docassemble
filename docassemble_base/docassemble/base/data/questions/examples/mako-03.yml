@@ -1,6 +1,6 @@
 metadata:
-  title: Mako if/then/else
-  short title: If/then/else
+  title: If/else statement
+  short title: If/else statement
   documentation: "http://docassemble.org/docs/markup.html#mako"
   example start: 2
   example end: 2

@@ -2,6 +2,7 @@ metadata:
   title: Complaint for Child Support
   example start: 2
   example end: 3
+  documentation: "http://docassemble.org/docs/livehelp.html#chat"
 ---
 modules:
   - docassemble.base.util

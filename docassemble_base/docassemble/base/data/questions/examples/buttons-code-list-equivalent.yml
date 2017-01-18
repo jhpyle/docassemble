@@ -1,5 +1,5 @@
 metadata:
-  title: Buttons defined with code
+  title: Buttons defined with list
   documentation: "http://docassemble.org/docs/fields.html#field with buttons"
 ---
 field: target_variable

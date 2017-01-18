@@ -1,7 +1,7 @@
 metadata:
   title: Yes/no checkboxes (wide)
   short title: Yes/no checkboxes (wide)
-  documentation: "http://docassemble.org/docs/fields.html#yesnowide"
+  documentation: "http://docassemble.org/docs/fields.html#fields yesnowide"
 ---
 question: |
   Please provide the following information.

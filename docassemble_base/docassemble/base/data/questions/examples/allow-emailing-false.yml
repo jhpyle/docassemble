@@ -1,9 +1,9 @@
 metadata:
-  title: Allowing documents to be e-mailed
+  title: Disallowing e-mailing
   documentation: "http://docassemble.org/docs/documents.html#allow emailing"
 ---
+mandatory: true
 question: Your document is ready.
-sets: provide_user_with_document
 attachment:
   - name: A hello world document
     filename: Hello_World
@@ -12,6 +12,3 @@ attachment:
     content: |
       Hello, world!
 allow emailing: false
----
-mandatory: true
-code: provide_user_with_document
