@@ -15,7 +15,9 @@
     - alignment
     - single-spacing
     - document-file
+    - document-variable-name
     - attachment-code
+    - valid-formats
     - document-docx
     - pdf-fill
     - pdf-fill-signature
@@ -85,6 +87,7 @@
     - generic-object
     - exists
     - periodic-value
+    - dafile
 - Question settings:
     - help
     - prevent-going-back
@@ -101,7 +104,6 @@
     - progress
 - Interview flow:
     - need
-    - del
     - reset
     - actions
     - actions-parameters
@@ -113,6 +115,7 @@
     - prevent-back
     - force-ask
     - force-gather
+    - del
     - dialog-box
     - doors
     - message

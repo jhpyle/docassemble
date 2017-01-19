@@ -8,7 +8,8 @@ modules:
   - docassemble.base.util
 ---
 question: |
-  The current date is ${ format_date(current_datetime()) }.
+  The current date is
+  ${ format_date(current_datetime()) }.
 buttons:
   - Tell me again: refresh
 mandatory: true

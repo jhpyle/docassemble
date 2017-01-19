@@ -26,7 +26,7 @@ def main():
         result = read_file(os.path.join(dirname, filename))
         if result is None:
             continue
-        output[example_name] = "---\n" + result + "\n---"
+        output[example_name] = result
     print(yaml.safe_dump(output, default_flow_style=False, default_style = '|'))
 
 def read_file(filename):

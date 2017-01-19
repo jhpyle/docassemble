@@ -1,6 +1,7 @@
 from docassemble.base.logger import logmessage
 from docassemble.base.generate_key import random_string
 import re
+import os
 import codecs
 import redis
 import sys
@@ -992,6 +993,7 @@ class DASet(DAObject):
 class DAFile(DAObject):
     """Used internally by docassemble to represent a file."""
     def init(self, **kwargs):
+        #logmessage("init")
         if 'filename' in kwargs:
             self.filename = kwargs['filename']
         if 'mimetype' in kwargs:
@@ -1008,26 +1010,83 @@ class DAFile(DAObject):
         return self.show()
     def __unicode__(self):
         return unicode(self.__str__())
+    def initialize(self, **kwargs):
+        """Creates the file on the system if it does not already exist, and ensures that the file is ready to be used."""
+        #logmessage("initialize")
+        if not hasattr(self, 'filename'):
+            self.filename = kwargs.get('filename', 'file.txt')
+        if not hasattr(self, 'number'):
+            yaml_filename = None
+            uid = None
+            if hasattr(docassemble.base.functions.this_thread, 'current_info'):
+                yaml_filename = docassemble.base.functions.this_thread.current_info.get('yaml_filename', None)
+                uid = docassemble.base.functions.this_thread.current_info.get('session', None)
+                #logmessage("yaml_filename is " + str(yaml_filename) + " and uid is " + str(uid))
+            self.number = server.get_new_file_number(uid, self.filename, yaml_file_name=yaml_filename)
+            self.ok = True
+            self.extension, self.mimetype = server.get_ext_and_mimetype(self.filename)
+        self.retrieve()
+        the_path = self.path()
+        if not (os.path.isfile(the_path) or os.path.islink(the_path)):
+            self.file_info['savedfile'].save()
     def retrieve(self):
+        """Ensures that the file is ready to be used."""
+        if not hasattr(self, 'number'):
+            raise Exception("Cannot retrieve a file without a file number.")
+        docassemble.base.functions.this_thread.open_files.add(self)
+        #logmessage("Retrieve: calling file finder")
         self.file_info = server.file_finder(self.number)
+    def slurp(self):
+        """Returns the contents of the file."""
+        self.retrieve()
+        the_path = self.path()
+        if not os.path.isfile(the_path):
+            raise Exception("File does not exist yet.")
+        with open(path, 'rU') as f:
+            return(f.read())    
+    def readlines(self):
+        """Returns the contents of the file."""
+        self.retrieve()
+        the_path = self.path()
+        if not os.path.isfile(the_path):
+            raise Exception("File does not exist yet.")
+        with open(path, 'rU') as f:
+            return(f.readlines())
+    def write(self, content):
+        """Writes the given content to the file, replacing existing contents."""
+        self.retrieve()
+        the_path = self.path()
+        with open(path, 'w') as f:
+            f.write(content)
+    def copy_into(self, filename):
+        """Makes the contents of the file the same as those of the given filename."""
+        self.retrieve()
+        shutil.copyfile(filename, self.path())
     def path(self):
-        """Returns a filename at which the file can be accessed"""
+        """Returns a path and filename at which the file can be accessed."""
+        #logmessage("path")
+        if not hasattr(self, 'number'):
+            raise Exception("Cannot get path of file without a file number.")
         if not hasattr(self, 'file_info'):
             self.retrieve()
         if 'fullpath' not in self.file_info:
-            raise Exception("fullpath not found")
+            raise Exception("fullpath not found.")
         return self.file_info['fullpath']
     def commit(self):
-        """Ensures that changes to the file are saved and available in the 
-        future
+        """Ensures that changes to the file are saved and will be available in
+        the future.
+
         """
+        #logmessage("commit")
         if hasattr(self, 'file_info') and 'savedfile' in self.file_info:
+            #logmessage("Committed " + str(self.number))
             self.file_info['savedfile'].finalize()
     def show(self, width=None):
         """Inserts markup that displays the file as an image.  Takes an
         optional keyword argument width.
 
         """
+        #logmessage("show")
         if not self.ok:
             return('')
         if width is not None:

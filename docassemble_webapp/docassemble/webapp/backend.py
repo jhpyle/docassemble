@@ -50,10 +50,8 @@ def write_record(key, data):
     return new_record.id
 
 def read_records(key):
-    logmessage("got here!")
     results = dict()
     for record in ObjectStorage.query.filter_by(key=key).order_by(ObjectStorage.id):
-        logmessage("and here!")
         results[record.id] = unpack_object(record.value)
     return results
 
@@ -148,7 +146,7 @@ def get_info_from_file_reference(file_reference, **kwargs):
                 file_reference = 'docassemble.base:' + file_reference
         result['fullpath'] = docassemble.base.functions.static_filename_path(file_reference)
     #logmessage("path is " + str(result['fullpath']))
-    if result['fullpath'] is not None and os.path.isfile(result['fullpath']):
+    if result['fullpath'] is not None: #os.path.isfile(result['fullpath'])
         result['filename'] = os.path.basename(result['fullpath'])
         ext_type, result['mimetype'] = get_ext_and_mimetype(result['fullpath'])
         path_parts = os.path.splitext(result['fullpath'])
@@ -172,6 +170,12 @@ def get_info_from_file_reference(file_reference, **kwargs):
     else:
         logmessage("File reference " + str(file_reference) + " DID NOT EXIST.")
     return(result)
+
+def get_new_file_number(user_code, file_name, yaml_file_name=None):
+    new_upload = Uploads(key=user_code, filename=file_name, yamlfile=yaml_file_name)
+    db.session.add(new_upload)
+    db.session.commit()
+    return new_upload.indexno
 
 #docassemble.base.parse.set_file_finder(get_info_from_file_reference)
 
@@ -213,6 +217,8 @@ docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          delete_record=delete_record,
                                          generate_csrf=generate_csrf,
                                          url_for=url_for,
+                                         get_new_file_number=get_new_file_number,
+                                         get_ext_and_mimetype=get_ext_and_mimetype,
                                          file_finder=get_info_from_file_reference)
 docassemble.base.functions.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
 docassemble.base.functions.set_locale(DEFAULT_LOCALE)
@@ -254,20 +260,8 @@ def can_access_file_number(file_number, uid=None):
         return True
     return False
 
-def get_new_file_number(user_code, file_name, yaml_file_name=None):
-    new_upload = Uploads(key=user_code, filename=file_name, yamlfile=yaml_file_name)
-    db.session.add(new_upload)
-    db.session.commit()
-    return new_upload.indexno
-    # indexno = None
-    # cur = conn.cursor()
-    # cur.execute("INSERT INTO uploads (key, filename) values (%s, %s) RETURNING indexno", [user_code, file_name])
-    # for d in cur:
-    #     indexno = d[0]
-    # conn.commit()
-    # return (indexno)
-
 def get_info_from_file_number(file_number, privileged=False):
+    #logmessage("get_info_from_file_number")
     if has_request_context():
         uid = session['uid']
     else:
@@ -283,14 +277,15 @@ def get_info_from_file_number(file_number, privileged=False):
         result['savedfile'] = SavedFile(file_number, extension=result['extension'], fix=True)
         result['path'] = result['savedfile'].path
         result['fullpath'] = result['path'] + '.' + result['extension']
+        #logmessage("fullpath is " + str(result['fullpath']))
     if 'path' not in result:
-        logmessage("path is not in result for " + str(file_number))
+        logmessage("get_info_from_file_number: path is not in result for " + str(file_number))
         return result
     filename = result['path'] + '.' + result['extension']
     if os.path.isfile(filename):
         add_info_about_file(filename, result)
-    else:
-        logmessage("Filename DID NOT EXIST.")
+    #else:
+    #    logmessage("Filename DID NOT EXIST.")
     return(result)
 
 def add_info_about_file(filename, result):
@@ -392,7 +387,7 @@ def safe_pickle(the_object):
         for sub_object in the_object:
             new_set.add(safe_pickle(sub_object))
         return new_set
-    if type(the_object) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType]:
+    if type(the_object) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, file]:
         return None
     return the_object
 

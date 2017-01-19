@@ -2164,6 +2164,7 @@ class Interview:
                 question_data = dict(command=qError.return_type, url=qError.url)
                 new_interview_source = InterviewSourceString(content='')
                 new_interview = new_interview_source.get_interview()
+                reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
                 interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
@@ -2191,6 +2192,7 @@ class Interview:
                 #     new_interview_source = self.source
                 new_interview_source = InterviewSourceString(content='')
                 new_interview = new_interview_source.get_interview()
+                reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
                 #the_question = new_question.follow_multiple_choice(user_dict)
@@ -2203,6 +2205,7 @@ class Interview:
                     question_data['backgroundresponse'] = qError.backgroundresponse
                 new_interview_source = InterviewSourceString(content='')
                 new_interview = new_interview_source.get_interview()
+                reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
                 interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
@@ -2214,6 +2217,7 @@ class Interview:
                     question_data['action'] = qError.action
                 new_interview_source = InterviewSourceString(content='')
                 new_interview = new_interview_source.get_interview()
+                reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
                 interview_status.populate(new_question.ask(user_dict, 'None', 'None'))
@@ -2259,6 +2263,7 @@ class Interview:
                         question_data['buttons'] = buttons
                 new_interview_source = InterviewSourceString(content='')
                 new_interview = new_interview_source.get_interview()
+                reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
                 # will this be a problem?
@@ -2274,6 +2279,7 @@ class Interview:
                 raise DAErrorNoEndpoint('Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any).  It is a best practice to end your interview with a question that says goodbye and offers an Exit button.')
         if docassemble.base.functions.get_info('prevent_going_back'):
             interview_status.can_go_back = False
+        docassemble.base.functions.close_files()
         return(pickleable_objects(user_dict))
     def askfor(self, missingVariable, user_dict, **kwargs):
         variable_stack = kwargs.get('variable_stack', set())
@@ -2609,6 +2615,7 @@ class Interview:
                     question_data = dict(command=qError.return_type, url=qError.url)
                     new_interview_source = InterviewSourceString(content='')
                     new_interview = new_interview_source.get_interview()
+                    reproduce_basics(self, new_interview)
                     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                     new_question.name = "Question_Temp"
                     return(new_question.ask(user_dict, 'None', 'None'))
@@ -2630,6 +2637,7 @@ class Interview:
                         question_data['content type'] = qError.content_type
                     new_interview_source = InterviewSourceString(content='')
                     new_interview = new_interview_source.get_interview()
+                    reproduce_basics(self, new_interview)
                     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                     new_question.name = "Question_Temp"
                     #the_question = new_question.follow_multiple_choice(user_dict)
@@ -2641,6 +2649,7 @@ class Interview:
                         question_data['backgroundresponse'] = qError.backgroundresponse
                     new_interview_source = InterviewSourceString(content='')
                     new_interview = new_interview_source.get_interview()
+                    reproduce_basics(self, new_interview)
                     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                     new_question.name = "Question_Temp"
                     return(new_question.ask(user_dict, 'None', 'None'))
@@ -2651,6 +2660,7 @@ class Interview:
                         question_data['action'] = qError.action
                     new_interview_source = InterviewSourceString(content='')
                     new_interview = new_interview_source.get_interview()
+                    reproduce_basics(self, new_interview)
                     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                     new_question.name = "Question_Temp"
                     return(new_question.ask(user_dict, 'None', 'None'))
@@ -2683,6 +2693,7 @@ class Interview:
                             question_data['buttons'] = buttons
                     new_interview_source = InterviewSourceString(content='')
                     new_interview = new_interview_source.get_interview()
+                    reproduce_basics(self, new_interview)
                     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                     new_question.name = "Question_Temp"
                     # will this be a problem?
@@ -2701,6 +2712,10 @@ class Interview:
                 #     new_question.name = "Question_Temp"
                 #     return(new_question.ask(user_dict, 'None', 'None'))
         raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + missingVariable + "' that could not be found in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.")
+
+def reproduce_basics(interview, new_interview):
+    new_interview.metadata = interview.metadata
+    new_interview.external_files = interview.external_files
 
 class myextract(ast.NodeVisitor):
     def __init__(self):

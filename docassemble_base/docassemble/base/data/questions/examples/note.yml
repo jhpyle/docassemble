@@ -10,7 +10,8 @@ fields:
   - Favorite vegetable: vegetable
   - note: |
       In case you did not know, a 
-      mushroom is a fungus, not a vegetable.
+      mushroom is a fungus, not a
+      vegetable.
   - Favorite fungus: mushroom
 ---
 question: |

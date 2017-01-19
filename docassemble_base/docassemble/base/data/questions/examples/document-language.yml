@@ -1,0 +1,23 @@
+metadata:
+  title: Language
+  documentation: "http://docassemble.org/docs/documents.html#language"
+---
+modules:
+  - docassemble.base.util
+---
+initial: true
+code: |
+  set_language('es')
+---
+mandatory: true
+language: es
+question: El documento está listo.
+sets: provide_user_with_document
+attachment:
+  - name: Alimentos
+    language: en
+    filename: food_order
+    content: |
+      This customer would like to order
+      ${ comma_and_list('fries', 'a Coke') }.
+

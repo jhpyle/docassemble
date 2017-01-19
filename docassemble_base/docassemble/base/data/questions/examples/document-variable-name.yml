@@ -1,0 +1,54 @@
+metadata:
+  title: Document as variable
+  documentation: "http://docassemble.org/docs/documents.html#variable name"
+  example start: 4
+  example end: 5
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - authority: Individual
+---
+mandatory: true
+question: Ok, all done.
+subquestion: |
+  % if submit_to_authority:
+    % if sent_ok:
+  Your document was sent.
+    % else:
+  For some reason, I was not able to send your document.
+    % endif
+  % else:
+  Ok, I will not send your document to The Man.
+  % endif
+---
+question: Your document is ready.
+subquestion: |
+  Would you like to submit the document
+  below to the authorities?
+yesno: submit_to_authority
+attachment:
+  - name: A *hello world* document
+    filename: Hello_World_Document
+    variable name: hello_file
+    content: |
+      Hello, world!
+---
+code: |
+  sent_ok = send_email(to=[authority],
+                       template=my_email,
+                       attachments=[hello_file])
+---
+code: |
+  authority.name.first = 'The'
+  authority.name.last = 'Man'
+  authority.email = 'man@hegemony.gov'
+---
+template: my_email
+subject: |
+  A PDF file that says hello world!
+content: |
+  Dear Authority,
+
+  Please see attached.

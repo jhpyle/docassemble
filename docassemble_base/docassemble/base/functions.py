@@ -68,6 +68,11 @@ def pop_current_variable():
     #logmessage("pop_current_variable: None")
     return None
 
+def close_files():
+    while len(this_thread.open_files):
+        file_object = this_thread.open_files.pop()
+        file_object.commit()
+
 def set_gathering_mode(mode, instanceName):
     #logmessage("set_gathering_mode: " + str(mode) + " " + str(instanceName))
     if mode:
@@ -103,7 +108,12 @@ def set_uid(uid):
     this_thread.uid = uid
 
 def get_uid():
-    return this_thread.uid
+    if this_thread.uid is not None:
+        return this_thread.uid
+    try:
+        return this_thread.current_info['session']
+    except:
+        return None
 
 def user_logged_in():
     """Returns True if the user is logged in, False otherwise."""
@@ -873,6 +883,7 @@ def reset_local_variables():
     this_thread.prevent_going_back = False
     this_thread.gathering_mode = dict()
     this_thread.current_variable = list()
+    this_thread.open_files = set()
     return
 
 def prevent_going_back():
@@ -932,12 +943,12 @@ def update_locale():
         locale.setlocale(locale.LC_ALL, 'en_US.utf8')
     return
 
-def comma_list_en(*pargs, **kargs):
+def comma_list_en(*pargs, **kwargs):
     """Returns the arguments separated by commas.  If the first argument is a list, 
     that list is used.  Otherwise, the arguments are treated as individual items.
     See also comma_and_list()."""
-    if 'comma_string' in kargs:
-        comma_string = kargs['comma_string']
+    if 'comma_string' in kwargs:
+        comma_string = kwargs['comma_string']
     else:
         comma_string = ", "
     if (len(pargs) == 0):
@@ -952,29 +963,34 @@ def comma_list_en(*pargs, **kargs):
     else:
         return(comma_string.join(pargs))
 
-def comma_and_list_en(*pargs, **kargs):
+def comma_and_list_es(*pargs, **kwargs):
+    if 'and_string' not in kwargs:
+        kwargs['and_string'] = 'y'
+    return comma_and_list_en(*pargs, **kwargs)
+
+def comma_and_list_en(*pargs, **kwargs):
     """Returns an English-language listing of the arguments.  If the first argument is a list, 
     that list is used.  Otherwise, the arguments are treated as individual items in the list.
     Use the optional argument oxford=False if you do not want a comma before the "and."
     See also comma_list()."""
-    if 'oxford' in kargs and kargs['oxford'] == False:
+    if 'oxford' in kwargs and kwargs['oxford'] == False:
         extracomma = ""
     else:
         extracomma = ","
-    if 'and_string' in kargs:
-        and_string = kargs['and_string']
+    if 'and_string' in kwargs:
+        and_string = kwargs['and_string']
     else:
         and_string = word('and')
-    if 'comma_string' in kargs:
-        comma_string = kargs['comma_string']
+    if 'comma_string' in kwargs:
+        comma_string = kwargs['comma_string']
     else:
         comma_string = ", "
-    if 'before_and' in kargs:
-        before_and = kargs['before_and']
+    if 'before_and' in kwargs:
+        before_and = kwargs['before_and']
     else:
         before_and = " "
-    if 'after_and' in kargs:
-        after_and = kargs['after_and']
+    if 'after_and' in kwargs:
+        after_and = kwargs['after_and']
     else:
         after_and = " "
     if (len(pargs) == 0):
@@ -1001,7 +1017,7 @@ def need(*pargs):
 def pickleable_objects(input_dict):
     output_dict = dict()
     for key in input_dict:
-        if type(input_dict[key]) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType]:
+        if type(input_dict[key]) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, file]:
             continue
         if key == "__builtins__":
             continue
@@ -1224,7 +1240,8 @@ language_functions = {
         'en': double_prefix_constructor_reverse('the ', ' of the ')
     },
     'comma_and_list': {
-        'en': comma_and_list_en
+        'en': comma_and_list_en,
+        'es': comma_and_list_es
     },
     'comma_list': {
         'en': comma_list_en
@@ -1889,7 +1906,7 @@ def serializable_dict(user_dict):
     for key, data in user_dict.iteritems():
         if key in ['_internal', '__builtins__']:
             continue
-        if type(data) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType]:
+        if type(data) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, file]:
             continue
         result_dict[key] = safe_json(data)
     return result_dict
@@ -1909,7 +1926,7 @@ def safe_json(the_object):
         for sub_object in the_object:
             new_list.append(safe_json(sub_object))
         return new_list
-    if type(the_object) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType]:
+    if type(the_object) in [types.ModuleType, types.FunctionType, types.TypeType, types.BuiltinFunctionType, types.BuiltinMethodType, types.MethodType, types.ClassType, file]:
         return None
     if isinstance(the_object, datetime.datetime):
         serial = the_object.isoformat()
@@ -1936,7 +1953,7 @@ def type_name(the_object):
         return m.group(1)
     return name
 
-def inspector():
-    frame = inspect.stack()[1][0]
-    for key in frame.__dict__.keys():
-        sys.stderr.write(str(key) + "\n")
+# def inspector():
+#     frame = inspect.stack()[1][0]
+#     for key in frame.__dict__.keys():
+#         sys.stderr.write(str(key) + "\n")

@@ -30,7 +30,8 @@ fields:
 mandatory: true
 question: |
   % if user_salary.exists:
-  You make ${ currency(user_salary) } per year.
+  You make ${ currency(user_salary) }
+  per year.
   % else:
   Get a job!
   % endif

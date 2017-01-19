@@ -1,0 +1,15 @@
+metadata:
+  title: Output formats
+  documentation: "http://docassemble.org/docs/documents.html#valid formats"
+---
+question: Your document is ready.
+attachment:
+  - name: A hello world document
+    filename: Hello_World_Document
+    valid formats:
+      - pdf
+    description: |
+      A document with a classic message
+    content: |
+      Hello, world!
+mandatory: true

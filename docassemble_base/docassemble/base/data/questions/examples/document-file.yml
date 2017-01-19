@@ -2,18 +2,9 @@ metadata:
   title: "From .md file"
   documentation: "http://docassemble.org/docs/documents.html#content file"
 ---
-question: Here is your document.
-attachments:
-  - name: Summary of Benefits
-    description: |
-      The `benefits_summary.md`
-      file is in the `templates`
-      directory of the current
-      package.
-    filename: benefits_summary
-    content file: summary_benefits.md
+question: Your document is ready.
+attachment:
+  - name: A *hello world* document
+    filename: Hello_World_Document
+    content file: hello.md
 mandatory: true
----
-code: |
-  client = "Jane Doe"
-  benefits = "G-432"

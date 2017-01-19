@@ -1,5 +1,5 @@
 metadata:
-  title: Message to user
+  title: Question generated with code
   documentation: "http://docassemble.org/docs/functions.html#message"
   example start: 2
 ---

@@ -14,7 +14,8 @@ subquestion: |
 
   The month is ${ month_of(some_date) }.
 
-  The day of month is ${ day_of(some_date) }.
+  The day of month is
+  ${ day_of(some_date) }.
 ---
 question: |
   Give me a date.
