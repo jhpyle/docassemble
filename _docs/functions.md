@@ -1866,7 +1866,7 @@ more [YAML] files.  This causes **docassemble** to call
 `docassemble.base.util.update_word_collection()` at the time the
 server is initialized.
 
-# Language-specific functions
+# <a name="linguistic"></a>Language-specific functions
 
 These functions behave differently according to the language and
 locale.  You can write functions for different languages, or reprogram

@@ -44,18 +44,9 @@ If the content of your document is lengthy and you would rather not
 type it into the interview [YAML] file as `content`, you can import
 the content from a separate file using `content file`:
 
-{% highlight yaml %}
----
-question: Your document is ready.
-sets: provide_user_with_document
-attachment:
-  - name: A *hello world* document
-    filename: Hello_World_Document
-    content file: hello.md
----
-{% endhighlight %}
+{% include side-by-side.html demo="document-file" %}
 
-The content of the [Markdown] file, `hello.md`, is:
+The content of the [Markdown] file, [hello.md], is:
 
 {% highlight text %}
 Hello, world!
@@ -86,7 +77,7 @@ assemble a PDF file by filling in fields in that template.  To do
 this, provide a `pdf template file` and a dictionary of `fields`.
 
 For example, here is an interview that populates fields in a file
-called [sample-form.pdf]({{ site.demourl }}/packagestatic/docassemble.base/sample-form.pdf):
+called [sample-form.pdf]:
 
 {% include side-by-side.html demo="pdf-fill" %}
 
@@ -123,8 +114,9 @@ will trim whitespace from the edges of the image and fit the image
 into the "Digital Signature" box.
 
 For example, here is an interview that populates text fields and a
-signature into the template [Transfer-of-Ownership.pdf]({{ site.demourl }}/packagestatic/docassemble.base/Transfer-of-Ownership.pdf):
+signature into the template [Transfer-of-Ownership.pdf]:
 
+{% include side-by-side.html demo="pdf-fill-signature" %}
 
 It is important that each "Digital Signature" field have a unique
 name.  If there is more than one field in the PDF template with the
@@ -152,59 +144,11 @@ e-mail it, or post it to a web site.
 You can save an assembled document to a variable by adding
 a `variable name` key to an attachment.  For example:
 
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.legal
----
-objects:
-  - authority: Individual
----
-question: Your document is ready.
-subquestion: |
-  Would you like to submit the document below to the authorities?
-yesno: submit_to_authority
-attachment:
-  - name: A *hello world* document
-    filename: Hello_World_Document
-    variable name: hello_file
-    content: |
-      Hello, world!
----
-mandatory: true
-question: Ok, all done.
-subquestion: |
-  % if submit_to_authority:
-    % if sent_ok:
-  Your document was sent.
-    % else:
-  For some reason, I was not able to send your document.
-    % endif
-  % else:
-  Ok, I will not send your document to The Man.
-  % endif
----
-code: |
-  sent_ok = send_email(to=[authority], template=my_email, attachments[hello_file])
----
-code: |
-  authority.name.first = 'The'
-  authority.name.last = 'Man'
-  authority.email = 'man@hegemony.gov'
----
-template: my_email
-subject: |
-  A PDF file that says hello world!
-content: |
-  Dear Authority,
-
-  Please see attached.
----
-{% endhighlight %}
+{% include side-by-side.html demo="document-variable-name" %}
 
 You can also assemble a document and save it to a variable without
 presenting it to the user.  The following example creates a PDF file
-containing the message "Hello, world!" and posts it to a slack.com
+containing the message "Hello, world!" and posts it to a [Slack]
 site.
 
 {% highlight yaml %}
@@ -260,26 +204,12 @@ separate [`attachment`] block.
 
 ## <a name="valid formats"></a>Limiting availability of formats
 
-You can also limit the file formats available:
-{% highlight yaml %}
----
-question: Your document is ready.
-sets: provide_user_with_document
-attachment:
-  - name: A *hello world* document
-    filename: Hello_World_Document
-    valid formats:
-      - pdf
-    description: A document with a **classic** message
-    content: |
-      Hello, world!
----
-{% endhighlight %}
+You can also limit the file formats available.
+
+{% include side-by-side.html demo="allow-emailing-true" %}
 
 In this example, the user will not have the option of seeing an HTML
-preview and will only be able to download the PDF file:
-
-![document screenshot]({{ site.baseurl }}/img/document-example-pdf-only.png)
+preview and will only be able to download the PDF file.
 
 ## <a name="docx"></a>Assembling documents in DOCX format
 
@@ -290,25 +220,7 @@ supported by RTF and PDF formats, such as tables (which are necessary
 for case captions).  To generate .docx files, specify `docx` as one of
 the `valid formats`:
 
-{% highlight yaml %}
----
-question: Your document is ready.
-sets: provide_user_with_document
-attachment:
-  - name: A *hello world* document
-    filename: Hello_World_Document
-    valid formats:
-      - docx
-      - pdf
-    description: A document with a **classic** message
-    content: |
-      # Hey there
-      
-      Hello, world!
----
-{% endhighlight %}
-
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testdocx.yml){:target="_blank"}.)
+{% include side-by-side.html demo="docx" %}
 
 To customize document styles, headers, and footers, see the `docx
 reference file` setting, discussed below.
@@ -316,32 +228,25 @@ reference file` setting, discussed below.
 ## <a name="language"></a>Assembling documents in a different language than the current language
 
 If you need to produce a document in a different language than the
-user's language, then the [`word()`] function may operate in a way you
-do not want it to operate.
+user's language, then the [linguistic functions] may operate in a way
+you do not want them to operate.
 
 For example, if your user is Spanish-speaking, but you need to produce
 an English language document, you may find that a word or two in the
 English language document has been translated into Spanish.  (E.g.,
-this can happen if your document template uses linguistic [functions]
+this can happen if your document template uses [linguistic functions]
 from [`docassemble.base.util`]).  You can remedy this by defining a
 `language` for the document.
 
-For example:
+{% include side-by-side.html demo="document-language" %}
 
-{% highlight yaml %}
----
-language: es
-question: El documento está listo.
-sets: provide_user_with_document
-attachment:
-  - name: Alimentos
-    language: en
-    filename: food_order
-    content: |
-      This customer would like to order
-      ${ comma_and_list('fries', 'a Coke') }.
----
-{% endhighlight %}
+Without `language: en`, the output would be:
+
+> This customer would like to order fries y a Coke.
+
+With `language: en`, the output is:
+
+> This customer would like to order fries and a Coke.
 
 ## <a name="allow emailing"></a>Preventing the user from e-mailing documents
 
@@ -485,7 +390,7 @@ Metadata values can contain [Mako] template commands.
   * `HeaderCenter`
   * `HeaderRight`
   
-## <a name="metadata pdf"></a>Metadata applicable to PDF only
+## <a name="metadata pdf"></a>Metadata applicable to generated PDFs only
 
 The following metadata tags only apply to PDF file generation.  To
 change analogous formatting in RTF files, you will need to create your
@@ -668,3 +573,8 @@ substantive content.
 [`DAFileCollection`]: {{ site.baseurl }}/docs/objects.html#DAFileCollection
 [`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
+[hello.md]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/hello.md
+[sample-form.pdf]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/sample-form.pdf
+[Transfer-of-Ownership.pdf]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/Transfer-of-Ownership.pdf
+[Slack]: https://slack.com
+[linguistic functions]: {{ site.baseurl }}/docs/functions.html#linguistic

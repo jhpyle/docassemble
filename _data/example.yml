@@ -1,5 +1,4 @@
 "actions": |-
-  ---
   initial: true
   code: |
     process_action()
@@ -11,9 +10,7 @@
     ${ color }.
     [Change this]( ${ url_action('color') } )
   field: info_is_verified
-  ---
 "actions-parameters": |-
-  ---
   initial: true
   code: |
     process_action()
@@ -35,9 +32,7 @@
   event: add
   code: |
     fishes[action_argument('color')] += 1
-  ---
 "age_in_years": |-
-  ---
   question: |
     What is your date of birth?
   fields:
@@ -48,14 +43,10 @@
     You are ${ user.age_in_years() }
     years old.
   mandatory: true
-  ---
 "alarm-clock": |-
-  ---
   modules:
     - docassemble.base.util
-  ---
 "alignment": |-
-  ---
   question: Here is your document.
   subquestion: It has aligned text.
   attachments:
@@ -96,11 +87,9 @@
         | 123 Riverside Drive
         | Fort Franklin, AR 92302
   mandatory: true
-  ---
-"all_variables": "---\nmandatory: true\nquestion: |\n  Interview dictionary\nsubquestion:\
-  \ |\n  The variables in the dictionary are:\n    \n  `${ all_variables() }`\n---"
+"all_variables": "mandatory: true\nquestion: |\n  Interview dictionary\nsubquestion:\
+  \ |\n  The variables in the dictionary are:\n    \n  `${ all_variables() }`"
 "allow-emailing-false": |-
-  ---
   mandatory: true
   question: Your document is ready.
   attachment:
@@ -111,9 +100,7 @@
       content: |
         Hello, world!
   allow emailing: false
-  ---
 "allow-emailing-true": |-
-  ---
   question: Your document is ready.
   sets: provide_user_with_document
   attachment:
@@ -123,11 +110,9 @@
         A document with a classic message
       content: |
         Hello, world!
-  ---
-"as-datetime": "---\nquestion: |\n  The Delorean will go back in time to \n  ${ as_datetime('11/5/1955').year\
-  \ }.\nmandatory: true\n---"
+"as-datetime": "question: |\n  The Delorean will go back in time to \n  ${ as_datetime('11/5/1955').year\
+  \ }.\nmandatory: true"
 "attachment": |-
-  ---
   question: Your document is ready.
   sets: provide_user_with_document
   attachment:
@@ -139,9 +124,7 @@
         A document with a classic message
       content: |
         Hello, world!
-  ---
 "attachment-code": |-
-  ---
   mandatory: true
   question: |
     Here are your documents!
@@ -177,9 +160,7 @@
     variable name: doc_three
     content: |
       Hello, world number three!
-  ---
 "attorney": |-
-  ---
   modules:
     - docassemble.demo.attorney
   ---
@@ -212,18 +193,14 @@
   fields:
     - First Name: x.name.first
     - Last Name: x.name.last
-  ---
 "audio": |-
-  ---
   audio: schumann-clip-1.mp3
   question: You need to relax.
   subquestion: |
     Listen to some Schumann, and then
     proceed.
   field: user_is_relaxed
-  ---
 "background_action": |-
-  ---
   initial: true
   code: |
     process_action()
@@ -247,9 +224,7 @@
       final_screen
     else:
       waiting_screen
-  ---
 "background_action_flash": |-
-  ---
   initial: true
   code: |
     process_action()
@@ -267,9 +242,7 @@
   code: |
     the_answer = str(553 + action_argument('additional'))
     background_response("The answer is " + the_answer + ".")
-  ---
 "background_action_javascript": |-
-  ---
   initial: true
   code: |
     process_action()
@@ -287,9 +260,7 @@
   code: |
     the_answer = str(553 + action_argument('additional'))
     background_response("alert('The answer is " + the_answer + ".');")
-  ---
 "background_action_refresh": |-
-  ---
   initial: true
   code: |
     process_action()
@@ -315,9 +286,7 @@
   event: final_screen
   question: |
     The answer is ${ answer }.
-  ---
 "background_action_with_response_action": |-
-  ---
   initial: true
   code: |
     process_action()
@@ -346,9 +315,7 @@
       final_screen
     else:
       waiting_screen
-  ---
 "background_response_action_flash": |-
-  ---
   initial: true
   code: |
     process_action()
@@ -371,16 +338,12 @@
   code: |
     answer = action_argument('ans')
     background_response("The answer is " + str(answer) + ".")
-  ---
 "blank-label-field": |-
-  ---
   question: |
     What is your Zodiac sign?
   fields:
     - "": target_variable
-  ---
 "buttons": |-
-  ---
   question: |
     What type of belly button do you
     have?
@@ -389,9 +352,7 @@
     - Innie
     - Outie
     - No belly button
-  ---
 "buttons-code": |-
-  ---
   question: What kind of car do you want?
   buttons:
     - Ford Focus:
@@ -402,9 +363,7 @@
         code: |
           car_model = "Camry"
           car_make = "Toyota"
-  ---
 "buttons-code-color": |-
-  ---
   question: What is your favorite color?
   buttons:
     - Red:
@@ -419,9 +378,7 @@
         buttons:
           - Dark Green
           - Light Green
-  ---
 "buttons-code-list": |-
-  ---
   field: target_variable
   question: |
     Your use of this system does not
@@ -431,9 +388,7 @@
     - "I understand": understands
     - code: |
         [{'does not understand':"I do not understand"}, {'unsure':"I'm not sure"}]
-  ---
 "buttons-code-list-equivalent": |-
-  ---
   field: target_variable
   question: |
     Your use of this system does not
@@ -443,9 +398,7 @@
     - "I understand": understands
     - "I do not understand": does not understand
     - "I'm not sure": unsure
-  ---
 "buttons-icons": |-
-  ---
   question: |
     What is the most important question
     to ask?
@@ -455,9 +408,7 @@
       image: calendar
     - "Where?": where
       image: map
-  ---
 "buttons-labels": |-
-  ---
   question: |
     How would you like to pay for your
     car?
@@ -465,40 +416,30 @@
   buttons:
     - Buy it: purchaser
     - Lease it: borrower
-  ---
 "buttons-variation-1": |-
-  ---
   field: user_gender
   question: What is your gender?
   buttons:
     - Male
     - Female
-  ---
 "buttons-variation-2": |-
-  ---
   field: user_gender
   question: What is your gender?
   buttons:
     - Male: Male
     - Female: Female
-  ---
 "capitalize": |-
-  ---
   question: |
     ${ capitalize(color) } is your
     favorite color, but ${ color } is
     not your favorite color of eggs.
   sets: all_done
-  ---
 "chat": |-
-  ---
   mandatory: true
   code: |
     multi_user = True
     set_live_help_status(availability='available', mode='help', partner_roles=['advocate'])
-  ---
 "chat-example-1": |-
-  ---
   mandatory: true
   code: |
     set_live_help_status(availability='available', mode='help', partner_roles=['advocate', 'family law'])
@@ -512,16 +453,12 @@
       choices:
         - Child Support
         - Spousal Support
-  ---
 "chat-example-2": |-
-  ---
   mandatory: true
   code: |
     multi_user = True
     set_live_help_status(availability='available', mode='peerhelp', partner_roles=['advocate'])
-  ---
 "chat-partners-available": |-
-  ---
   mandatory: true
   question: |
     Live chat status
@@ -529,11 +466,10 @@
     % if chat_partners_available('advocate').help > 0:
     An advocate is available to assist you.
     % else:
-    No advocates are available to assist you at this time.
+    No advocates are available to assist
+    you at this time.
     % endif
-  ---
 "choices": |-
-  ---
   question: |
     What type of shoes do you wear?
   field: target_variable
@@ -542,9 +478,7 @@
     - Sandals
     - Clogs
     - Other
-  ---
 "choices-icons": |-
-  ---
   question: |
     What is the most important question
     to ask?
@@ -554,9 +488,7 @@
       image: calendar
     - "Where?": where
       image: map
-  ---
 "choices-with-default": |-
-  ---
   question: |
     What type of shoes do you wear?
   field: target_variable
@@ -566,56 +498,40 @@
     - Sandals
     - Clogs
     - Other
-  ---
 "code": |-
-  ---
   code: |
     fruits = peaches + pears
-  ---
 "code-example-01": |-
-  ---
   code: |
     answer = 2 + 2
   ---
   question: |
     The answer is ${ answer }.
   mandatory: true
-  ---
 "code-example-02": |-
-  ---
   code: |
     a = 2
     b = 3
     answer = a + b
-  ---
 "code-example-03": |-
-  ---
   code: |
     a = 2
     b = 3
     answer = a + b
     b = 1
-  ---
 "code-example-04": |-
-  ---
   question: |
     The answer is ${ 2 + 2 }.
   mandatory: true
-  ---
 "code-example-05": |-
-  ---
   question: |
     The answer is ${ ( 42 + 4 ) * 50 / ( 5 - 2 ) }.
   mandatory: true
-  ---
 "code-example-06": |-
-  ---
   question: |
     The answer is ${(42+4)*50/(5-2)}.
   mandatory: true
-  ---
 "code-example-07": |-
-  ---
   code: |
     a = 4
     b = 5
@@ -625,9 +541,7 @@
     else:
       answer = 40 + b
     b = 0
-  ---
 "code-example-08": |-
-  ---
   code: |
     a = 4
     b = 5
@@ -643,50 +557,38 @@
     else:
       answer = 40 + b
     b = 0
-  ---
 "comment": |-
-  ---
   question: Do you like turnips?
   yesno: likes_turnips
   comment: |
     This question may be the most important
     question of the interview!
-  ---
-"comment-weather": "---\nquestion: |\n  Do you agree the weather\n  is nice today?\
-  \ \nyesno: day_is_nice\ncomment: |\n  We might wish to consider\n  taking out this\
-  \ question.\n  It does not seem necessary.\n---"
+"comment-weather": "question: |\n  Do you agree the weather\n  is nice today? \nyesno:\
+  \ day_is_nice\ncomment: |\n  We might wish to consider\n  taking out this question.\n\
+  \  It does not seem necessary."
 "continue": |-
-  ---
   field: target_variable
   question: |
     Welcome to the interview.
   subquestion: |
     When you are ready to begin, press
     Continue.
-  ---
 "continue-button-label": |-
-  ---
   question: |
     What is your favorite fruit?
   fields:
     - Fruit: favorite_fruit
   continue button label: Keep going
-  ---
 "continue-participation": |-
-  ---
   question: |
     Welcome to the interview!
   subquestion: |
     Your participation means a lot to us.
   field: user_saw_intro
-  ---
 "continue-special": |-
-  ---
   modules:
     - docassemble.base.util
-  ---
 "country": |-
-  ---
   question: |
     Where do you live?
   fields:
@@ -700,9 +602,7 @@
     ${ country_name(user_country) },
     which is abbreviated
     ${ user_country }.
-  ---
 "css": |-
-  ---
   question: |
     Do you want to build a snowman?
   yesno: wants_to_build_snowman
@@ -713,17 +613,13 @@
         background-repeat: repeat;
       }
     </style>
-  ---
 "currency": |-
-  ---
   question: |
     If you sold ${ number } fish for
     a dollar each, you would get
     ${ currency(number) }.
   mandatory: true
-  ---
 "current-datetime": |-
-  ---
   question: |
     % if current_datetime() < as_datetime('October 14, 1066'):
     The Normans have not yet invaded
@@ -733,9 +629,7 @@
     already invaded England.
     % endif
   mandatory: true
-  ---
 "dadict": |-
-  ---
   modules:
     - docassemble.base.core
   ---
@@ -765,9 +659,30 @@
   fields:
     - First Name: x[i].firstname
     - Last Name: x[i].lastname
+"dafile": |-
+  modules:
+    - docassemble.base.core
   ---
+  imports:
+    - PIL
+  ---
+  objects:
+    - myfile: DAFile
+  ---
+  mandatory: true
+  code: |
+    myfile.initialize(filename="foo.jpg")
+    im = PIL.Image.new("RGB",
+                       (512, 512),
+                       "green")
+    im.save(myfile.path())
+  ---
+  mandatory: true
+  question: |
+    Here is the picture.
+  subquestion: |
+    ${ myfile }
 "dalist": |-
-  ---
   modules:
     - docassemble.base.legal
   ---
@@ -795,14 +710,10 @@
     Here is your list of people.
   subquestion: |
     ${ people }
-  ---
 "dalist2": |-
-  ---
   modules:
     - docassemble.base.util
-  ---
 "daobject": |-
-  ---
   modules:
     - docassemble.base.core
   ---
@@ -824,14 +735,12 @@
     What is the color of the ${ x }?
   fields:
     - Color: x.color
-  ---
-"database_storage": "---\nmandatory: true\ncode: |\n  write_record('fruit', favorite_fruit)\n\
+"database_storage": "mandatory: true\ncode: |\n  write_record('fruit', favorite_fruit)\n\
   ---\nreconsider: true\ncode: |\n  fruit_summary = ''\n  records = read_records('fruit')\n\
   \  for id in records:\n    fruit_summary += \"* \" + str(records[id]) + \"\\n\"\n\
   ---\nmandatory: true\nquestion: |\n  Contents of database\nsubquestion: |\n  The\
-  \ following fruits have\n  been reported:\n  \n  ${ fruit_summary }\n---"
+  \ following fruits have\n  been reported:\n  \n  ${ fruit_summary }"
 "date-difference": |-
-  ---
   code: |
     birthday = as_datetime('5/17/2016')
     christmas = as_datetime('12/25/2016')
@@ -848,24 +757,18 @@
     * ${ interval.minutes } minutes
     * ${ interval.seconds } seconds
   mandatory: true
-  ---
 "date-field": |-
-  ---
   question: |
     What is your date of birth?
   fields:
     - Birthdate: target_variable
       datatype: date
-  ---
 "date-interval": |-
-  ---
   question: |
     In three days, it will be
     ${ format_date( current_datetime() + date_interval(days=3) ) }.
   mandatory: true
-  ---
 "date-parts": |-
-  ---
   mandatory: true
   question: The date, explained.
   subquestion: |
@@ -873,10 +776,9 @@
 
     The month is ${ month_of(some_date) }.
 
-    The day of month is ${ day_of(some_date) }.
-  ---
+    The day of month is
+    ${ day_of(some_date) }.
 "dead-end": |-
-  ---
   mandatory: true
   code: |
     # insert interview logic here
@@ -888,23 +790,19 @@
   subquestion: |
     I hope you had a good time!
   sets: all_done
-  ---
 "decoration": |-
-  ---
   decoration: kids
   question:
     Do you have children?
   yesno: has_children
-  ---
-"def": "---\ndef: my_explanation\nmako: |\n  <%def name=\"explain(fruit)\">\n  ${\
-  \ fruit } are a type of fruit, and\n  they are delicious.\n  </%def>\n  <%def name=\"\
+"def": "def: my_explanation\nmako: |\n  <%def name=\"explain(fruit)\">\n  ${ fruit\
+  \ } are a type of fruit, and\n  they are delicious.\n  </%def>\n  <%def name=\"\
   deride(fruit)\">\n  ${ fruit } are disgusting, and they\n  are basically inedible.\n\
   \  </%def>\n---\nquestion: The world of fruit\nsubquestion: |\n  There are many\
   \ types of fruit in the\n  world.\n  \n  ${ explain(\"Peaches\") }\n  ${ explain(\"\
   Oranges\") }\n  ${ deride(\"Strawberries\") }\nusedefs:\n - my_explanation\nmandatory:\
-  \ true\n---"
+  \ true"
 "defined": |-
-  ---
   question: Summary
   subquestion: |
     Your favorite fruit is
@@ -918,17 +816,13 @@
     vegetable.
     % endif
   mandatory: true
-  ---
 "del": |-
-  ---
   mandatory: true
   code: |
     if user_is_communist and user_reconsidering_communism:
       user_reconsidering_communism = False
       del user_is_communist
-  ---
 "device": |-
-  ---
   question: |
     % if device().is_mobile:
     You are on a phone.
@@ -942,9 +836,7 @@
     Your device is: ${ device() }.
     % endif
   mandatory: true
-  ---
 "dialog-box": |-
-  ---
   mandatory: true
   code: |
     if task_not_yet_performed('show current date'):
@@ -956,9 +848,7 @@
     The current date is ${ format_date(current_datetime()) }.
   buttons:
     - Ok: continue
-  ---
 "document": |-
-  ---
   question: Here is your document.
   attachments:
     - name: Summary of Benefits
@@ -969,28 +859,38 @@
         ${ client } is entitled to
         benefits plan ${ benefits }.
   mandatory: true
-  ---
-"document-docx": "---\nquestion: Here is your document.\nattachments:\n  - name: Summary\
+"document-docx": "question: Here is your document.\nattachments:\n  - name: Summary\
   \ of Benefits\n    filename: benefits_summary\n    valid formats:\n      - docx\n\
   \      - pdf    \n    content: |\n      [BOLDCENTER] Summary of Benefits\n\n   \
-  \   ${ client } is entitled to\n      benefits plan ${ benefits }.\nmandatory: true\n\
-  ---"
+  \   ${ client } is entitled to\n      benefits plan ${ benefits }.\nmandatory: true"
 "document-file": |-
-  ---
-  question: Here is your document.
-  attachments:
-    - name: Summary of Benefits
-      description: |
-        The `benefits_summary.md`
-        file is in the `templates`
-        directory of the current
-        package.
-      filename: benefits_summary
-      content file: summary_benefits.md
+  question: Your document is ready.
+  attachment:
+    - name: A *hello world* document
+      filename: Hello_World_Document
+      content file: hello.md
   mandatory: true
+"document-language": |-
+  modules:
+    - docassemble.base.util
+"document-variable-name": |-
+  question: Your document is ready.
+  subquestion: |
+    Would you like to submit the document
+    below to the authorities?
+  yesno: submit_to_authority
+  attachment:
+    - name: A *hello world* document
+      filename: Hello_World_Document
+      variable name: hello_file
+      content: |
+        Hello, world!
   ---
+  code: |
+    sent_ok = send_email(to=[authority],
+                         template=my_email,
+                         attachments=[hello_file])
 "doors": |-
-  ---
   question: |
     Which door do you choose?
   field: door_choice
@@ -1012,24 +912,18 @@
   question: |
     You walk into a stinky swamp.
   event: bad_luck
-  ---
 "email-field": |-
-  ---
   question: |
     What is your e-mail address?
   fields:
     - E-mail: target_variable
       datatype: email
       required: false
-  ---
 "event-example": |-
-  ---
   question: |
     This is a special screen.
   event: show_special_screen
-  ---
 "event-role-event": |-
-  ---
   event: role_event
   question: All done for now.
   subquestion: |
@@ -1038,9 +932,7 @@
     when you can resume the interview.
   buttons:
     - Exit: leave
-  ---
 "exists": |-
-  ---
   modules:
     - docassemble.base.util
   ---
@@ -1056,9 +948,7 @@
   fields:
     - Value: real_estate_holdings.value
       datatype: currency
-  ---
 "exit": |-
-  ---
   mandatory: true
   code: |
     command('exit', url=target_url)
@@ -1069,25 +959,19 @@
   buttons:
     - Stanford: "http://stanford.edu/"
     - Harvard: "http://www.harvard.edu/"
-  ---
 "exit-buttons": |-
-  ---
   question: We are all done.
   buttons:
     - Exit: exit
     - Restart: restart
   mandatory: true
-  ---
 "exit-choices": |-
-  ---
   question: We are all done.
   choices:
     - Exit: exit
     - Restart: restart
   mandatory: true
-  ---
 "exit-url": |-
-  ---
   question: |
     Congratulations, you found Nemo!
   buttons:
@@ -1095,9 +979,7 @@
     - Learn More: exit
       url: https://en.wikipedia.org/wiki/Amphiprioninae
   mandatory: true
-  ---
 "external_files": |-
-  ---
   features:
     javascript: my-functions.js
     css: my-styles.css
@@ -1107,9 +989,7 @@
     A test of Javascript and CSS
   subquestion: |
     <span class="groovy"></span>
-  ---
 "field-note": |-
-  ---
   question: |
     Tell me more about you.
   fields:
@@ -1122,8 +1002,7 @@
         bear with me.  We are almost
         done.
     - Favorite tree: tree
-  ---
-"fields": "---\nquestion: Tell me more about yourself\nfields:\n  - Description: user_description\n\
+"fields": "question: Tell me more about yourself\nfields:\n  - Description: user_description\n\
   \    datatype: area\n    hint: |\n      E.g., you can describe your\n      hair\
   \ color, eye color, \n      favorite movies, etc.\n  - Annual income: user_annual_income\n\
   \    datatype: currency\n    min: 100\n  - E-mail address: user_email_address\n\
@@ -1142,9 +1021,8 @@
   \    datatype: radio\n    shuffle: true \n    choices:\n      - Republican\n   \
   \   - Democrat\n      - Independent\ncss: |\n  <style>\n    .mytime {\n       color:\
   \ green;\n    }\n  </style>\nscript: |\n  <script>\n    $(\"#today_time\").html(Date());\n\
-  \  </script>\n---"
+  \  </script>"
 "fields-checkboxes": |-
-  ---
   question: |
     Please tell me what you think.
   fields:
@@ -1155,9 +1033,7 @@
         - Peaches
         - Pears
     - "What is your favorite fruit overall?": favorite_fruit
-  ---
 "fields-choices": |-
-  ---
   question: |
     What is your favorite fruit?
   fields:
@@ -1166,9 +1042,7 @@
         - Apples: apple
         - Oranges: orange
         - Pears: pear
-  ---
 "fields-mc": |-
-  ---
   question: |
     What is your favorite fruit?
   fields:
@@ -1190,9 +1064,7 @@
                   {'orange': "Oranges"},
                   {'pear': "Pears"}
                 ]
-  ---
 "fields-mc-exclude": |-
-  ---
   question: |
     What is your favorite fruit?
   fields:
@@ -1217,17 +1089,13 @@
                   {'orange': "Oranges"},
                   {'pear': "Pears"}
                 ]
-  ---
 "fields-noyesmaybe": |-
-  ---
   question: |
     Please answer the following question.
   fields:
     - "Was Washington the first U.S. president?": washington_not_the_first_president
       datatype: noyesmaybe
-  ---
 "fields-yesno": |-
-  ---
   question: |
     Please provide the following information.
   fields:
@@ -1237,17 +1105,13 @@
       datatype: yesno
     - Turnips: dislikes_turnips
       datatype: noyes
-  ---
 "fields-yesnomaybe": |-
-  ---
   question: |
     Please answer the following question.
   fields:
     - "Is Topeka the capital of Kansas?": topeka_is_capital_of_kansas
       datatype: yesnomaybe
-  ---
 "fields-yesnoradio": |-
-  ---
   question: |
     Please provide the following information.
   fields:
@@ -1255,9 +1119,7 @@
       datatype: yesnoradio
     - "Do you like pineapple?": dislikes_pineapple
       datatype: noyesradio
-  ---
 "fields-yesnowide": |-
-  ---
   question: |
     Please provide the following information.
   fields:
@@ -1266,21 +1128,18 @@
       datatype: yesnowide
     - Pears: dislikes_pears
       datatype: noyeswide
-  ---
 "file": |-
-  ---
   question: |
     Please upload a file
   fields:
     - File: the_file
       datatype: file
-  ---
-"flushleft": "---\nmandatory: true\nquestion: |\n  Here is your document.\nsubquestion:\
+"flushleft": "mandatory: true\nquestion: |\n  Here is your document.\nsubquestion:\
   \ |\n  It demonstrates the flush left environment.\nattachments:\n  - name: A test\
   \ document\n    filename: test_document\n    content: |\n      This line is indented.\n\
   \      \n      This line is also indented.\n      \n      [FLUSHLEFT] This line\
-  \ is not indented. [NEWLINE] Nor is this line.\n---"
-"flushright": "---\nmandatory: true\nquestion: |\n  Here is your document.\nsubquestion:\
+  \ is not indented. [NEWLINE] Nor is this line."
+"flushright": "mandatory: true\nquestion: |\n  Here is your document.\nsubquestion:\
   \ |\n  It demonstrates the flush right environment.\nattachments:\n  - name: A test\
   \ document\n    filename: test_document\n    metadata:\n      FirstHeaderLeft: Test\
   \ me test me\n      FirstHeaderCenter: Test me test me\n      FirstHeaderRight:\
@@ -1340,9 +1199,8 @@
   \ rutrum risus vehicula vel. Praesent\n      fermentum tortor posuere feugiat interdum.\
   \ Ut turpis arcu,\n      sagittis vitae odio vel, gravida cursus urna. Suspendisse\n\
   \      dignissim tortor id iaculis tincidunt. Nulla\n      facilisi. Suspendisse\
-  \ lacinia nisl interdum, egestas turpis non,\n      fringilla felis.\n---"
+  \ lacinia nisl interdum, egestas turpis non,\n      fringilla felis."
 "for_fruit": |-
-  ---
   code: |
     fruit_list = ['peaches', 'pears', 'apricots']
   ---
@@ -1353,17 +1211,13 @@
     I assume you like ${ fruit }.
     % endfor
   mandatory: true
-  ---
 "force-ask": |-
-  ---
   mandatory: true
   code: |
     if user_is_communist and user_reconsidering_communism:
       user_reconsidering_communism = False
       force_ask('user_is_communist')
-  ---
 "force-gather": |-
-  ---
   initial: true
   code: |
     process_action()
@@ -1371,8 +1225,7 @@
   event: gather_it
   code: |
     force_gather('favorite_food')
-  ---
-"formatting": "---\nquestion: |\n  Here is your document.\nsubquestion: |\n  It illustrates\
+"formatting": "question: |\n  Here is your document.\nsubquestion: |\n  It illustrates\
   \ some document-related\n  features.\nallow emailing: false\nattachments:\n  - name:\
   \ A test document\n    filename: test_document\n    valid formats:\n      - pdf\n\
   \    metadata:\n      FooterCenter: |\n        [HYPHEN] [PAGENUM] [HYPHEN]\n   \
@@ -1414,18 +1267,15 @@
   \  Capitol in what was then\n      little more than a tract of\n      wooded wilderness\
   \ here beside\n      the Potomac. We now find it\n      necessary to provide by\
   \ great\n      additional buildings for the\n      business of the government.\n\
-  mandatory: true\n---"
+  mandatory: true"
 "function": |-
-  ---
   question: |
     The word ${ color } becomes
     ${ capitalize(color) } when
     passed through the
     `capitalize()` function.
   mandatory: true
-  ---
 "gather": |-
-  ---
   modules:
     - docassemble.base.legal
   ---
@@ -1454,9 +1304,7 @@
     % for person in witness:
     ${ person } is a witness.
     % endfor
-  ---
 "gather-another": |-
-  ---
   modules:
     - docassemble.base.util
   ---
@@ -1479,9 +1327,7 @@
   comment: |
     This code block disables the automatic
     gathering system.
-  ---
 "gather-dict": |-
-  ---
   modules:
     - docassemble.base.util
   ---
@@ -1523,9 +1369,7 @@
     include ${ fruit }.  Are there
     any others?
   yesno: fruit.there_is_another
-  ---
 "gather-dict-number": |-
-  ---
   modules:
     - docassemble.base.util
   ---
@@ -1561,19 +1405,17 @@
     the database?
   fields:
     - Fruit: fruit.new_item_name
-  ---
-"gather-dict-object": "---\nmodules:\n  - docassemble.base.core\n---\nobjects:\n \
-  \ - pet: DADict\n---\nmandatory: true\ncode: |\n  pet.object_type = DAObject\n---\n\
-  mandatory: true\nquestion: |\n  You have ${ pet.number_as_word() }\n  pets.\nsubquestion:\
+"gather-dict-object": "modules:\n  - docassemble.base.core\n---\nobjects:\n  - pet:\
+  \ DADict\n---\nmandatory: true\ncode: |\n  pet.object_type = DAObject\n---\nmandatory:\
+  \ true\nquestion: |\n  You have ${ pet.number_as_word() }\n  pets.\nsubquestion:\
   \ |\n  % for item in pet:\n  Your pet ${ item } named\n  ${ pet[item] } has \n \
   \ ${ pet[item].feet } feet.\n  % endfor\n---\nquestion: |\n  Do you have any pets?\n\
   yesno: pet.there_are_any\n---\nquestion: |\n  What kind of pet do you have?\nfields:\n\
   \  - Type of pet: pet.new_item_name\n---\nquestion: |\n  Describe your pet ${ i\
   \ }.\nfields:\n  - Name: pet[i].name\n  - Number of feet: pet[i].feet\n    datatype:\
   \ integer\n    min: 0\n---\nquestion: |\n  So far, you have told me about your\n\
-  \  ${ pet }.  Do you have any other\n  pets?\nyesno: pet.there_is_another\n---"
+  \  ${ pet }.  Do you have any other\n  pets?\nyesno: pet.there_is_another"
 "gather-dict-value": |-
-  ---
   modules:
     - docassemble.base.core
   ---
@@ -1607,9 +1449,7 @@
     include ${ fruit }.  Are there
     any others?
   yesno: fruit.there_is_another
-  ---
 "gather-fruit": |-
-  ---
   modules:
     - docassemble.base.core
   ---
@@ -1637,15 +1477,11 @@
     So far, the fruits include ${ fruit }.
     Are there any others?
   yesno: fruit.there_is_another
-  ---
 "gather-fruit-at-least-two": |-
-  ---
   mandatory: true
   code: |
     fruit.minimum_number = 2
-  ---
 "gather-fruit-gather": |-
-  ---
   modules:
     - docassemble.base.core
   ---
@@ -1669,9 +1505,7 @@
   mandatory: true
   question: |
     The fruits are ${ fruit }.
-  ---
 "gather-fruit-incomplete": |-
-  ---
   modules:
     - docassemble.base.core
   ---
@@ -1684,9 +1518,7 @@
     fruits in all.
   subquestion: |
     The fruits are ${ fruit }.
-  ---
 "gather-fruit-number": |-
-  ---
   modules:
     - docassemble.base.util
   ---
@@ -1720,9 +1552,7 @@
     fruits in all.
   subquestion: |
     The fruits are ${ fruit }.
-  ---
 "gather-set": |-
-  ---
   modules:
     - docassemble.base.core
   ---
@@ -1752,9 +1582,7 @@
     include ${ fruit }.  Are there
     any others?
   yesno: fruit.there_is_another
-  ---
 "gather-set-number": |-
-  ---
   modules:
     - docassemble.base.core
   ---
@@ -1785,9 +1613,7 @@
     the set?
   fields:
     - Fruit: fruit.new_item
-  ---
 "gather-set-object": |-
-  ---
   modules:
     - docassemble.base.core
   ---
@@ -1849,9 +1675,7 @@
     ${ fruit }.  Are there any other
     fruits you like?
   yesno: fruit.there_is_another
-  ---
 "gather-simple": |-
-  ---
   modules:
     - docassemble.base.util
   ---
@@ -1879,16 +1703,12 @@
     % for index in range(0, number_of_fruits):
     * ${ fruit[index] }
     % endfor
-  ---
 "generic-object": |-
-  ---
   generic object: Individual
   question: |
     Does ${ x } like cats?
   yesno: x.likes_cats
-  ---
 "generic-object-phone-number": |-
-  ---
   objects:
     - grantor: Individual
     - grantee: Individual
@@ -1909,16 +1729,12 @@
       required: False
       code: |
         name_suffix()
-  ---
 "get-default-timezone": |-
-  ---
   question: |
     The default time zone is
     ${ get_default_timezone() }.
   mandatory: true
-  ---
 "hello-not-oop": |-
-  ---
   question: What is your name?
   fields:
     - First: user_first_name
@@ -1927,9 +1743,7 @@
   question: |
     Hello, ${ user_first_name } ${ user_last_name }!
   mandatory: true
-  ---
 "hello-oop": |-
-  ---
   modules:
     - docassemble.base.util
   ---
@@ -1945,9 +1759,7 @@
   question: |
     Hello, ${ user }!
   mandatory: true
-  ---
 "help": |-
-  ---
   question: |
     What is 2+2?
   subquestion:
@@ -1960,9 +1772,7 @@
     - 5
   help: |
     Hint: 2 + 2 = 4.
-  ---
 "help-damages": |-
-  ---
   question: |
     How much money do you wish
     to seek in damages?
@@ -1974,9 +1784,7 @@
     money to seek in damages, just ask
     for a million dollars, since you
     want ${ defendant } to suffer.
-  ---
 "help-damages-audio": |-
-  ---
   question: |
     How much money do you wish
     to seek in damages?
@@ -1991,9 +1799,7 @@
       want ${ defendant } to suffer.
     audio: |
       message_re_damages.mp3
-  ---
 "hideif-boolean": |-
-  ---
   question: |
     Please fill in the following information.
   fields:
@@ -2001,9 +1807,7 @@
       datatype: yesnoradio
     - "What fruit do you need?": fruit
       hide if: has_fruit
-  ---
 "html": |-
-  ---
   question: |
     I was thinking about your birthday.
   fields:
@@ -2022,71 +1826,52 @@
     <script>
       $("#today_time").html(Date());
     </script>
-  ---
 "image-sets": |-
-  ---
   image sets:
     freepik:
       attribution: |
-        Icon made by [Freepik](http://www.flaticon.com/authors/freepik)
+        Icon made by
+        [Freepik](http://www.flaticon.com/authors/freepik)
       images:
         baby: crawling.svg
         money: commerce.svg
-  ---
 "images": |-
-  ---
   images:
     star: star.svg
     diamond: bluediamond.svg
-  ---
 "immediate_file": |-
-  ---
   modules:
     - docassemble.base.util
-  ---
 "imports": |-
-  ---
   imports:
     - pygeocoder
-  ---
 "include": |-
-  ---
   include:
     - docassemble.demo:data/questions/some-questions.yml
-  ---
 "indefinite-article": |-
-  ---
   question: |
     Would you prefer to have
     ${ indefinite_article(fruit) }
     as opposed to
     ${ indefinite_article(vegetable) }?
   yesno: prefer_fruit
-  ---
 "initial": |-
-  ---
   initial: true
   code: |
     counter = counter + 1
-  ---
 "interface": |-
-  ---
   question: |
     You are using the ${ interface() }
     interface.
   mandatory: true
-  ---
 "interview-help": |-
-  ---
   interview help:
     heading: About this interview
     content: |
       Answer each question to the best of your
       ability.  If you do not know the answer
       to any question, panic.
-  ---
 "interview-url": |-
-  ---
   modules:
     - docassemble.base.util
   ---
@@ -2110,9 +1895,7 @@
   subquestion: |
     Now we are done with the interview.
   sets: final_screen
-  ---
 "interview_url_action": |-
-  ---
   modules:
     - docassemble.base.util
   ---
@@ -2143,17 +1926,13 @@
     * Change to [normal](${ interview_url_action('check_update_status', status='normal') })
     * Change to [danger](${ interview_url_action('check_update_status', status='danger') })
     * Change to [critical](${ interview_url_action('check_update_status', status='critical') })
-  ---
 "join": |-
-  ---
   initial: true
   code: |
     process_action()
     if user_has_privilege('admin', 'developer'):
       advocate_screen
-  ---
 "js_url_action": |-
-  ---
   mandatory: true
   code: |
     dessert = "cod liver oil"
@@ -2173,9 +1952,7 @@
   code: |
     fruit = action_argument('fruit')
     dessert = fruit + " pie"
-  ---
 "js_url_action_call": |-
-  ---
   mandatory: true
   question: |
     The pie
@@ -2197,9 +1974,7 @@
     fruit = action_argument('fruit')
     dessert = fruit + " pie"
     json_response(dict(pie=dessert))
-  ---
 "js_variables": |-
-  ---
   mandatory: true
   code: |
     fruit = 'apple'
@@ -2217,9 +1992,7 @@
         }
       });
     </script>
-  ---
 "label": |-
-  ---
   question: |
     What are your favorite things to eat?
   fields:
@@ -2227,19 +2000,15 @@
       field: favorite_vegetable
     - label: Fruit
       field: favorite_fruit
-  ---
-"language": "---\nquestion: |\n  What is the meaning of life?\nfields:\n  - Meaning\
-  \ of life: meaning_life\n---\nlanguage: es\nquestion: |\n  \xBFCu\xE1l es el significado\
-  \ de la vida?\nfields:\n  - Significado de la Vida: meaning_life\n---"
+"language": "question: |\n  What is the meaning of life?\nfields:\n  - Meaning of\
+  \ life: meaning_life\n---\nlanguage: es\nquestion: |\n  \xBFCu\xE1l es el significado\
+  \ de la vida?\nfields:\n  - Significado de la Vida: meaning_life"
 "language_from_browser": |-
-  ---
   question: |
     I think your language code is
     `${ language_from_browser() }`.
   mandatory: true
-  ---
 "language_from_browser_restricted": |-
-  ---
   question: |
     % if language_from_browser('es', 'fr') is None:
     I guess you do not speak
@@ -2249,9 +2018,7 @@
     `${ language_from_browser('es', 'fr') }`.
     % endif
   mandatory: true
-  ---
 "lastfirst": |-
-  ---
   template: client_letter
   content: |
     We need to be prepared to bring a lawsuit against the following:
@@ -2274,9 +2041,7 @@
     enemy[2].name.first = "Kylo"
     enemy[2].name.last = "Ren"
     enemy.gathered = True
-  ---
 "leave": |-
-  ---
   mandatory: true
   code: |
     command('leave', url=target_url)
@@ -2287,31 +2052,21 @@
   buttons:
     - Stanford: "http://stanford.edu/"
     - Harvard: "http://www.harvard.edu/"
-  ---
 "lists": |-
-  ---
   mandatory: true
   code: |
     fears.extend(['spiders', 'snakes', 'fish'])
     fears.gathered = True
-  ---
 "live_chat": |-
-  ---
   modules:
     - docassemble.base.util
-  ---
 "loading-legal": |-
-  ---
   modules:
     - docassemble.base.legal
-  ---
 "loading-util": |-
-  ---
   modules:
     - docassemble.base.util
-  ---
 "madlibs": |-
-  ---
   mandatory: true
   question: A funny story
   subquestion: |
@@ -2340,9 +2095,7 @@
     % endif
   fields:
     - no label: x[i]
-  ---
 "mako-01": |-
-  ---
   mandatory: true
   question: |
     A summary
@@ -2353,9 +2106,7 @@
   code: |
     favorite_fruit = 'apples'
     favorite_vegetable = 'potatoes'
-  ---
 "mako-02": |-
-  ---
   mandatory: true
   question: |
     Hello!
@@ -2365,9 +2116,7 @@
     % if day_of_month == 1:
     Don't forget to change your wall calendar!
     % endif
-  ---
 "mako-03": |-
-  ---
   mandatory: true
   question: |
     Commentary on the day of the month
@@ -2382,9 +2131,7 @@
     % else:
     It is the latter part of the month.
     % endif
-  ---
 "mako-04": |-
-  ---
   mandatory: true
   question: |
     Commentary on the day of the month
@@ -2403,9 +2150,7 @@
     It is the latter part of the month.
       % endif
     % endif
-  ---
 "mako-05": |-
-  ---
   mandatory: true
   question: |
     Foods I like
@@ -2413,9 +2158,7 @@
     % for food in ['plums', 'pears', 'peas']:
     I like ${ food }.
     % endfor
-  ---
 "mako-06": |-
-  ---
   modules:
     - docassemble.base.legal
   ---
@@ -2440,9 +2183,7 @@
   question: |
     Are there any other witnesses?
   yesno: witness.there_is_another
-  ---
 "mako-07": |-
-  ---
   mandatory: true
   question: |
     <%
@@ -2451,9 +2192,7 @@
       the_answer = a + b
     %>
     The answer is ${ the_answer }.
-  ---
 "mako-08": |-
-  ---
   mandatory: true
   question: |
     Apples
@@ -2469,9 +2208,7 @@
     They have stems and seeds.
 
     They are juicy and sweet.
-  ---
 "mako-09": |-
-  ---
   mandatory: true
   question: |
     Foods I like
@@ -2489,25 +2226,21 @@
     I like is ${ food }.
       % endif
     % endfor
-  ---
 "mandatory": |-
-  ---
   mandatory: true
   code: |
     fruits = peaches + pears
     all_done
-  ---
-"markdown": "---\nquestion: |\n  Introduction to Markdown\nsubquestion: |\n  Markdown\
-  \ allows you to express\n  formatting in plain text.\n  \n  # I am a heading\n\n\
-  \  Write in *italic text* or even\n  **bold text**.\n\n  ## I am a subheading\n\n\
-  \  ### I am a smaller subheading\n\n  To block quote,\n\n  > you can do this.\n\n\
-  \  Insert an image:\n\n  ![Markdown logo](https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Markdown-mark.svg/208px-Markdown-mark.svg.png)\n\
+"markdown": "question: |\n  Introduction to Markdown\nsubquestion: |\n  Markdown allows\
+  \ you to express\n  formatting in plain text.\n  \n  # I am a heading\n\n  Write\
+  \ in *italic text* or even\n  **bold text**.\n\n  ## I am a subheading\n\n  ###\
+  \ I am a smaller subheading\n\n  To block quote,\n\n  > you can do this.\n\n  Insert\
+  \ an image:\n\n  ![Markdown logo](https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Markdown-mark.svg/208px-Markdown-mark.svg.png)\n\
   \n  Here is a bullet list:\n\n  * Larry;\n  * Curly; and\n  * Moe\n\n  Here is a\
   \ numbered list:\n\n  1. Buy groceries.\n  2. Get the car inspected.\n  3. Take\
   \ over the world!\n  \n  You can [Google](http://google.com)\n  \"markdown\" to\
-  \ learn more.\nmandatory: true\n---"
+  \ learn more.\nmandatory: true"
 "menu-item": |-
-  ---
   modules:
     - docassemble.base.util
   ---
@@ -2518,15 +2251,11 @@
   mandatory: true
   code: |
     menu_items = [ action_menu_item('Visit Cow', 'see_cow') ]
-  ---
 "message": |-
-  ---
   code: |
     message("The interview is over.", "Better luck next time!")
   mandatory: true
-  ---
 "metadata": |-
-  ---
   metadata:
     title: |
       Interview title
@@ -2540,9 +2269,7 @@
         organization: Example, Inc.
     revision_date: 2016-03-22
     documentation: "http://docassemble.org/docs/initial.html#metadata"
-  ---
 "min": |-
-  ---
   question: |
     What percentage of your friends
     are turnips?
@@ -2551,23 +2278,17 @@
       datatype: number
       min: 0
       max: 100
-  ---
 "minlength": |-
-  ---
   question: |
     What is the nuclear launch code?
   fields:
     - Code: launch_code
       minlength: 5
       maxlength: 15
-  ---
 "ml-ajax": |-
-  ---
   modules:
     - docassemble.base.util
-  ---
 "ml-ajax-classify": |-
-  ---
   modules:
     - docassemble.base.util
   ---
@@ -2586,9 +2307,7 @@
   reconsider: true
   code: |
     current_keys = " ".join(map(lambda x: '<a class="mysug label label-primary">' + str(x) + '</a>', ml.dependent_in_use()))
-  ---
 "ml-classify": |-
-  ---
   code: |
     ml = SimpleTextMachineLearner('demo')
   ---
@@ -2613,17 +2332,13 @@
     There is nothing left to classify.
   buttons:
     - Check again: refresh
-  ---
 "ml-export": |-
-  ---
   initial: true
   code: |
     ml = SimpleTextMachineLearner('demo')
     the_data = ml.export_training_set(output_format='json')
     response(response=the_data, content_type='application/json')
-  ---
 "ml-export-playground": |-
-  ---
   modules:
     - docassemble.webapp.playground
     - docassemble.base.util
@@ -2634,45 +2349,35 @@
     the_data = ml.export_training_set(output_format='json')
     sources = PlaygroundSection('sources')
     sources.write_file('my_training_data.json', the_data)
-  ---
 "ml-export-yaml": |-
-  ---
   initial: true
   code: |
     ml = SimpleTextMachineLearner('demo')
     the_data = ml.export_training_set(output_format='yaml')
     response(response=the_data, content_type='text/plain')
-  ---
-"ml-predict": "---\nquestion: |\n  Enter some text.\nfields:\n  - no label: phrase\n\
-  ---\nmandatory: true\ncode: |\n  ml = SimpleTextMachineLearner('demo')\n  predictions\
+"ml-predict": "question: |\n  Enter some text.\nfields:\n  - no label: phrase\n---\n\
+  mandatory: true\ncode: |\n  ml = SimpleTextMachineLearner('demo')\n  predictions\
   \ = ml.predict(phrase)\n---\nmandatory: true\nquestion: |\n  The prediction\nsubquestion:\
   \ |\n  The text provided was:\n  > ${ phrase }\n  \n  % if len(predictions):\n \
   \ The prediction was:\n\n  > ${ predictions[0] }\n  % else:\n  There is not enough\
   \ training data\n  to make a prediction yet.\n  % endif\nbuttons:\n  - Restart:\
-  \ restart\n---"
+  \ restart"
 "ml-save-and-predict": |-
-  ---
   mandatory: true
   code: |
     ml = SimpleTextMachineLearner('demo')
     ml.save_for_classification(phrase)
     predictions = ml.predict(phrase)
-  ---
 "modules": |-
-  ---
   modules:
     - json
-  ---
 "money-field": |-
-  ---
   question: |
     How much is your house worth?
   fields:
     - Value: target_variable
       datatype: currency
-  ---
 "name": |-
-  ---
   question: |
     What are you fighting?
   field: opponent.name.text
@@ -2688,27 +2393,19 @@
     Your enemy is ${ opponent.name }.
 
     Your opponent is ${ opponent }.
-  ---
 "name-company": |-
-  ---
   question: |
     Do you wish to sue ${ company }?
   yesno: user_wants_to_sue
-  ---
 "name-company-question": |-
-  ---
   question: |
     Do you wish to sue ${ company }?
   yesno: user_wants_to_sue
-  ---
 "need": |-
-  ---
   mandatory: true
   code: |
     need(fruit, all_done)
-  ---
 "nested-for-loop": |-
-  ---
   mandatory: true
   code: |
     for the_person in person.elements:
@@ -2716,9 +2413,7 @@
             the_child.allergy.gather()
         the_person.child.gather()
     person.gather(minimum=1)
-  ---
 "nested-gather": |-
-  ---
   modules:
     - docassemble.base.legal
   ---
@@ -2770,9 +2465,7 @@
     ${ x } likes, besides
     ${ x.favorite_food }?
   yesno: x.favorite_food.there_is_another
-  ---
 "nice-number": |-
-  ---
   question: |
     There are ${ nice_number(toads) }
     toads and ${ nice_number(frogs) }
@@ -2780,20 +2473,16 @@
   buttons:
     - Restart: restart
   sets: all_done
-  ---
 "no-label-field": |-
-  ---
   question: |
     What is your Zodiac sign?
   fields:
     - no label: target_variable
-  ---
-"note": "---\nquestion: |\n  Please fill in the following information.\nfields:\n\
-  \  - Favorite fruit: fruit\n  - Favorite vegetable: vegetable\n  - note: |\n   \
-  \   In case you did not know, a \n      mushroom is a fungus, not a vegetable.\n\
-  \  - Favorite fungus: mushroom\n---"
+"note": "question: |\n  Please fill in the following information.\nfields:\n  - Favorite\
+  \ fruit: fruit\n  - Favorite vegetable: vegetable\n  - note: |\n      In case you\
+  \ did not know, a \n      mushroom is a fungus, not a\n      vegetable.\n  - Favorite\
+  \ fungus: mushroom"
 "noun-plural": |-
-  ---
   question: |
     There
     % if the_number > 1:
@@ -2807,15 +2496,11 @@
   fields:
     - Singular noun: the_noun
   sets: all_done
-  ---
 "noyes": |-
-  ---
   question: |
     Are you at least 18 years of age?
   noyes: user_is_minor
-  ---
 "number-field": |-
-  ---
   question: |
     Describe your possessions.
   fields:
@@ -2823,9 +2508,7 @@
       datatype: integer
     - Ounces of gold: gold_ounces
       datatype: number
-  ---
 "object": |-
-  ---
   objects:
     protagonist: Individual
     antagonist: Individual
@@ -2844,9 +2527,7 @@
     choices:
       - protagonist
       - antagonist
-  ---
 "object-checkboxes": |-
-  ---
   objects:
     protagonist: Individual
     antagonist: Individual
@@ -2867,9 +2548,7 @@
     choices:
       - protagonist
       - antagonist
-  ---
 "object-demo": |-
-  ---
   modules:
     - docassemble.base.core
   ---
@@ -2911,9 +2590,7 @@
     % endfor
 
     The colors are ${ colors }.
-  ---
 "object-disable-others": |-
-  ---
   objects:
     protagonist: Individual
     antagonist: Individual
@@ -2939,9 +2616,7 @@
       disable others: true
     - First Name: villain.name.first
     - Last Name: villain.name.last
-  ---
 "object-radio": |-
-  ---
   objects:
     protagonist: Individual
     antagonist: Individual
@@ -2960,9 +2635,7 @@
     choices:
       - protagonist
       - antagonist
-  ---
 "object-selections": |-
-  ---
   objects:
     protagonist: Individual
     antagonist: Individual
@@ -2984,9 +2657,7 @@
     - The villain is: villain
       datatype: object
       choices: actors
-  ---
 "object-try-1": |-
-  ---
   include: basic-questions.yml
   ---
   question: |
@@ -3002,9 +2673,7 @@
     The best day in the history of
     the world was ${ favorite_date }.
   mandatory: true
-  ---
 "object-try-2": |-
-  ---
   question: |
     Who is the tallest?
   fields:
@@ -3012,9 +2681,7 @@
       choices:
         - ${ client }
         - ${ advocate }
-  ---
 "object-try-3": |-
-  ---
   include: basic-questions.yml
   ---
   question: Who is the villain?
@@ -3031,15 +2698,11 @@
     born on
     ${ format_date(villain.birthdate) }.
   mandatory: true
-  ---
 "objects": |-
-  ---
   objects:
     - hero: Individual
     - villain: Individual
-  ---
 "ocr": |-
-  ---
   mandatory: true
   question: |
     Here is the text of the file
@@ -3051,9 +2714,7 @@
   fields:
     - File: the_file
       datatype: files
-  ---
 "ocr-background": |-
-  ---
   initial: true
   code: |
     process_action()
@@ -3107,9 +2768,7 @@
     The document states:
 
     ${ quote_paragraphs(text_of_the_file) }
-  ---
 "ocr-classify": |-
-  ---
   code: |
     ml = SimpleTextMachineLearner('ocr_ai')
   ---
@@ -3134,9 +2793,7 @@
     There is nothing left to classify.
   buttons:
     - Check again: refresh
-  ---
 "ocr-save-and-predict": |-
-  ---
   mandatory: true
   code: |
     the_file
@@ -3164,9 +2821,7 @@
   code: |
     phrase = action_argument('text')
     background_response()
-  ---
 "optional-field": |-
-  ---
   question: |
     What are your favorite things to eat?
   subquestion: |
@@ -3177,18 +2832,14 @@
     - Vegetable: target_variable
       required: false
     - Fruit: other_target_variable
-  ---
 "ordinal-number": |-
-  ---
   question: |
     The ${ ordinal_number(toads) }
     toad is here to see you.
   buttons:
     - Restart: restart
   sets: all_done
-  ---
 "other": |-
-  ---
   question: |
     What kind of car do you drive?
   fields:
@@ -3202,9 +2853,7 @@
       show if:
         variable: car_make
         is: Other
-  ---
 "page-numbers": |-
-  ---
   question: Here is your document.
   subquestion: It has page numbers.
   attachments:
@@ -3219,27 +2868,21 @@
         ${ client } is entitled to
         benefits plan ${ benefits }.
   mandatory: true
-  ---
 "password-field": |-
-  ---
   question: |
     Enter your username and password.
   fields:
     - Username: user_name
     - Password: target_variable
       datatype: password
-  ---
 "past-tense": |-
-  ---
   question: |
     I ${ verb_past(the_verb) }
     the apple.
   fields:
     - Present tense verb: the_verb
   sets: all_done
-  ---
 "pdf-fill": |-
-  ---
   question: |
     Here is your PDF form
   attachments:
@@ -3260,9 +2903,7 @@
         Toast Checkbox: |
           ${ likes_toast }
   mandatory: true
-  ---
 "pdf-fill-signature": |-
-  ---
   question: |
     Please sign your name below.
   signature: user.signature
@@ -3284,9 +2925,7 @@
         "grantee": ${ friend }
         "collection": ${ prized_collection }
         "signature": ${ user.signature }
-  ---
 "periodic-amount": |-
-  ---
   modules:
     - docassemble.base.util
   ---
@@ -3298,9 +2937,7 @@
     - Period: period
       code: |
         period_list()
-  ---
 "periodic-value": |-
-  ---
   objects:
     - user_salary: PeriodicValue
   ---
@@ -3323,38 +2960,42 @@
   mandatory: true
   question: |
     % if user_salary.exists:
-    You make ${ currency(user_salary) } per year.
+    You make ${ currency(user_salary) }
+    per year.
     % else:
     Get a job!
     % endif
-  ---
 "prevent-back": |-
-  ---
   code: |
     app_submitted = True
     prevent_going_back()
-  ---
 "prevent-going-back": |-
-  ---
   prevent_going_back: true
   question: |
     Your application for ${ service }
     has been submitted.
   mandatory: true
-  ---
 "progress": |-
+  features:
+    progress bar: true
   ---
   question: Are you doing well?
   yesno: user_is_well
   progress: 20
   ---
+  question: Done with the interview.
+  subquestion: |
+    % if user_is_well:
+    I am glad you are doing well.
+    % else:
+    I am sorry to hear that!
+    % endif
+  progress: 100
+  mandatory: true
 "progress-features": |-
-  ---
   features:
     progress bar: true
-  ---
 "pull-down": |-
-  ---
   question: |
     Describe yourself.
   fields:
@@ -3368,9 +3009,7 @@
         - Apple: apples
         - Pear: pears
         - Strawberry: strawberries
-  ---
 "pull-down-with-code": |-
-  ---
   question: |
     Describe yourself.
   fields:
@@ -3385,9 +3024,7 @@
     - Gender: gender
       code: |
         {'m': 'Male', 'f': 'Female', 'o': 'Other'}
-  ---
 "qr-code": |-
-  ---
   question: |
     Read the news on your mobile
     phone
@@ -3397,30 +3034,22 @@
 
     ${ qr_code('http://wsj.com') }
   sets: all_done
-  ---
 "quantity-noun": |-
-  ---
   mandatory: true
   question: |
     You have ${ quantity_noun(4, "apple") }.
-  ---
 "question": |-
-  ---
   question: |
     What is the airspeed velocity of an unladen swallow?
   fields:
     - Velocity: swallow_velocity
-  ---
 "question-markup": |-
-  ---
   question: |
     What is the *airspeed* velocity of an unladen ${ african_or_european }
     swallow?
   fields:
     - Velocity: swallow_velocity
-  ---
 "question-sequence": |-
-  ---
   mandatory: true
   question: |
     Lets think about apples
@@ -3428,9 +3057,7 @@
     - "Are apples good?": question_one_a
       datatype: yesno
     - "Your favorite variety": question_one_b
-  ---
 "quote_paragraphs": |-
-  ---
   mandatory: true
   question: |
     Your allegations
@@ -3438,9 +3065,7 @@
     You allege that:
 
     ${ quote_paragraphs(allegations) }
-  ---
 "radio-list": |-
-  ---
   question: |
     Describe your car.
   fields:
@@ -3459,9 +3084,7 @@
         - Buick: United States
         - Honda: Japan
         - Toyota: Japan
-  ---
 "range": |-
-  ---
   question: |
     On a scale from 1 to 10, how
     much do you like these animals?
@@ -3475,36 +3098,29 @@
       datatype: range
       min: 1
       max: 10
-  ---
 "reconsider": |-
-  ---
   code: |
     cat_food_cans_needed = number_of_cats * 4
   reconsider: true
-  ---
-"redis": "---\nobjects:\n  r: DARedis\n---\nmandatory: true\ncode: |\n  key = r.key('my_variable')\n\
+"redis": "objects:\n  r: DARedis\n---\nmandatory: true\ncode: |\n  key = r.key('my_variable')\n\
   \  r.set(key, 'hello world')\n---\nmandatory: true\nquestion: |\n  Value has been\
   \ retrieved from\n  the redis server.\nsubquestion: |\n  The key is `${ key }`.\n\
-  \  \n  The value is \"${ r.get(key) }\".\n---"
+  \  \n  The value is \"${ r.get(key) }\"."
 "refresh": |-
-  ---
   question: |
-    The current date is ${ format_date(current_datetime()) }.
+    The current date is
+    ${ format_date(current_datetime()) }.
   buttons:
     - Tell me again: refresh
   mandatory: true
-  ---
 "reload": |-
-  ---
   reload: true
   question: |
     You have viewed this screen
     ${ counter }
     ${ noun_plural('time', counter) }.
   field: acknowledged
-  ---
 "required-code": |-
-  ---
   question: |
     What are your favorite
     things to drink?
@@ -3512,37 +3128,29 @@
     - Favorite Beverage Overall: favorite_beverage
     - Favorite Soda: favorite_soda
       required: user_likes_soda
-  ---
 "reset": |-
-  ---
   reset:
     - cat_food_cans_needed
-  ---
 "response": |-
-  ---
   mandatory: true
   code: |
     data = dict(fruit='apple', slices=2)
     response(json.dumps(data), content_type="application/json")
-  ---
 "response-hello": |-
-  ---
   mandatory: true
   code: |
     response("Hello, world!")
-  ---
-"response-json": "---\nimports:\n  - json\n---\nmodules:\n  - docassemble.base.util\n\
-  ---\nobjects:\n  - user: Individual\n---\nmandatory: true\ncode: |\n  multi_user\
-  \ = True\n---\ninitial: true\ncode: |\n  process_action()\n---\nevent: query_fruit\n\
-  code: |\n  data = dict(fruit=favorite_fruit, slices=number_of_slices)\n  response(json.dumps(data),\
+"response-json": "imports:\n  - json\n---\nmodules:\n  - docassemble.base.util\n---\n\
+  objects:\n  - user: Individual\n---\nmandatory: true\ncode: |\n  multi_user = True\n\
+  ---\ninitial: true\ncode: |\n  process_action()\n---\nevent: query_fruit\ncode:\
+  \ |\n  data = dict(fruit=favorite_fruit, slices=number_of_slices)\n  response(json.dumps(data),\
   \ content_type=\"application/json\")\n---\nmandatory: true\nquestion: |\n  You currently\
   \ have\n  ${ nice_number(number_of_slices) }\n  ${ noun_plural('slice', number_of_slices)\
   \ }\n  of\n  ${ noun_singular(favorite_fruit) }.\nsubquestion: |\n  Use\n  [this\
   \ link](${ interview_url_action('query_fruit') })\n  to query the information from\n\
   \  another application.\n\n  You can also change the \n  [fruit](${ url_action('favorite_fruit')\
-  \ })\n  and the\n  [number of slices](${ url_action('number_of_slices') }).\n---"
+  \ })\n  and the\n  [number of slices](${ url_action('number_of_slices') })."
 "response-svg": |-
-  ---
   sets: all_done
   code: |
     svg_image = """\
@@ -3568,9 +3176,7 @@
     </svg>
     """
     response(binaryresponse=svg_image, content_type="image/svg+xml")
-  ---
 "resume-button-label": |-
-  ---
   event: review_answers
   question: |
     Revisit your answers
@@ -3588,9 +3194,7 @@
         You indicated you liked
         ${ fungi }.
   resume button label: Keep going
-  ---
 "review": |-
-  ---
   event: review_answers
   question: |
     Review your answers
@@ -3619,9 +3223,7 @@
     - note: |
         We suspect you prefer
         ${ fruit } to ${ vegetable }.
-  ---
 "review-1": |-
-  ---
   event: review_answers
   question: |
     Revisit questions
@@ -3636,14 +3238,12 @@
   mandatory: true
   code: |
     menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
-  ---
-"review-2": "---\nevent: review_answers\nquestion: |\n  Revisit your answers\nreview:\n\
+"review-2": "event: review_answers\nquestion: |\n  Revisit your answers\nreview:\n\
   \  - Revisit fruit: fruit\n    button: |\n      You said your favorite fruit was\n\
   \      ${ fruit }.\n  - Revisit vegetable: vegetable\n    button: |\n      You said\
   \ your favorite vegetable\n      was ${ vegetable }.\n  - Revisit fungus: fungi\n\
-  \    button: |\n      You said your favorite fungus \n      was ${ fungi }.\n---"
+  \    button: |\n      You said your favorite fungus \n      was ${ fungi }."
 "review-3": |-
-  ---
   event: review_answers
   question: |
     Revisit your answers
@@ -3654,9 +3254,7 @@
     - Favorite fruit: fruit
     - Favorite vegetable: vegetable
     - Favorite fungus: fungi
-  ---
 "review-4": |-
-  ---
   event: review_answers
   question: |
     Revisit your answers
@@ -3673,12 +3271,11 @@
       help: |
         You indicated you liked
         ${ fungi }.
-  ---
 "salutation": |-
-  ---
   template: letter_to_client
   content: |
-    Dear ${ client.salutation() } ${ client.name.last }:
+    Dear ${ client.salutation() }
+    ${ client.name.last }:
 
     I hope this letter finds you well.
 
@@ -3688,9 +3285,7 @@
     client.name.first = "John"
     client.name.last = "Smith"
     client.gender = "male"
-  ---
 "sample-function": |-
-  ---
   modules:
     - .test
   ---
@@ -3698,9 +3293,7 @@
   question: |
     The number after 3 is
     ${ plus_one(3) }.
-  ---
 "script": |-
-  ---
   question: |
     Do you want to build a snowman?
   subquestion: |
@@ -3712,17 +3305,13 @@
         $("#beg").html("Pretty please?");
       }, 1000);
     </script>
-  ---
 "send-sms": |-
-  ---
   modules:
     - docassemble.base.util
-  ---
-"set-language": "---\ninitial: true\ncode: |\n  set_language(language)\n---\nquestion:\
+"set-language": "initial: true\ncode: |\n  set_language(language)\n---\nquestion:\
   \ |\n  What language do you speak?\nfield: language\nchoices:\n  - English: en\n\
-  \  - Espa\xF1ol: es\n---"
+  \  - Espa\xF1ol: es"
 "showif": |-
-  ---
   question: |
     Please fill in the following information.
   fields:
@@ -3732,9 +3321,7 @@
       show if:
         code:
           2 + 2 == 3
-  ---
 "showif-boolean": |-
-  ---
   question: |
     Please fill in the following information.
   fields:
@@ -3742,9 +3329,7 @@
       datatype: yesnoradio
     - "What's your favorite fruit?": favorite_fruit
       show if: likes_fruit
-  ---
 "shuffle": |-
-  ---
   question: |
     For which of the following obscure
     candidates do you wish to vote?
@@ -3758,9 +3343,7 @@
         - Felicia Fellowes
         - Miranda Moore
         - Zachariah Zephyr
-  ---
 "signature": |-
-  ---
   question: |
     Please sign your name below.
   subquestion: |
@@ -3769,9 +3352,7 @@
   signature: target_variable
   under: |
     ${ user }
-  ---
 "signin": |-
-  ---
   mandatory: true
   code: |
     if user_logged_in():
@@ -3779,8 +3360,12 @@
     else:
       sign_in_page
   ---
+  question: |
+    Please sign in
+  buttons:
+    - Sign in: signin
+  sets: sign_in_page
 "single-spacing": |-
-  ---
   question: |
     Here is your document.
   subquestion: |
@@ -3827,17 +3412,13 @@
         conceived and so dedicated,
         can long endure.
   mandatory: true
-  ---
 "sms": |-
-  ---
   question: |
     Hello, world!
   subquestion: |
     Are you doing well?
   yesno: doing_well
-  ---
 "space-underscore": |-
-  ---
   question: |
     Removing spaces
   subquestion: |
@@ -3845,9 +3426,7 @@
     without underscores, it is
     ${ space_to_underscore(book) }.
   sets: all_done
-  ---
 "static_image": |-
-  ---
   code: |
     image_name = 'court'
   ---
@@ -3858,17 +3437,13 @@
     This is the "${ image_name }" image.
 
     ${ static_image(image_name + '.svg') }
-  ---
 "subquestion": |-
-  ---
   question: |
     What is the airspeed velocity of an unladen swallow?
   subquestion: Be careful how you answer.
   fields:
     - Velocity: swallow_velocity
-  ---
 "table": |-
-  ---
   mandatory: true
   question: |
     A table
@@ -3887,17 +3462,13 @@
         <tr><td>5</td><td>$8.50</td></tr>
       </tbody>
     </table>
-  ---
 "terminal-screen": |-
-  ---
   question: |
     Congratulations!
   subquestion: |
     You are all done with the interview.
   mandatory: true
-  ---
 "terms": |-
-  ---
   terms:
     creeper: |
       A tall green creature that explodes if
@@ -3905,14 +3476,10 @@
     zombie pigman: |
       A harmless creature who carries a gold
       sword.
-  ---
 "testage2": |-
-  ---
   modules:
     - docassemble.base.util
-  ---
 "testcooking": |-
-  ---
   modules:
     - docassemble.demo.cooking
   ---
@@ -3944,28 +3511,20 @@
   fields:
     - no label: x.instructions
       datatype: area
-  ---
 "testdalist": |-
-  ---
   modules:
     - docassemble.base.util
-  ---
 "testmessage": |-
-  ---
   code: |
     message("You suck", "Immensely!!!", show_leave=True, url="https://google.com")
   mandatory: true
-  ---
 "text-box-field": |-
-  ---
   question: |
     Tell me the story of your life.
   fields:
     - Life Story: target_variable
       datatype: area
-  ---
 "text-default": |-
-  ---
   question: |
     What are your favorite things to eat?
   subquestion: |
@@ -3979,9 +3538,7 @@
   ---
   code: |
     greatest_fruit = "apples"
-  ---
 "text-field": |-
-  ---
   question: |
     What are your favorite things to eat?
   subquestion: |
@@ -3989,18 +3546,14 @@
   fields:
     - Vegetable: target_variable
     - Fruit: other_target_variable
-  ---
 "text-field-example": |-
-  ---
   question: Tell me about yourself
   fields:
     - Favorite color: user_favorite_color
     - Description of your ideal vacation: user_ideal_vacation
       datatype: area
       required: false
-  ---
 "text-help": |-
-  ---
   question: |
     What are your favorite things to eat?
   subquestion: |
@@ -4014,9 +3567,7 @@
       help: |
         The pulpy, edible seed vessels
         of certain plants.
-  ---
 "text-hint": |-
-  ---
   question: |
     What are your favorite things to eat?
   subquestion: |
@@ -4026,9 +3577,7 @@
       hint: e.g., eggplant, turnips
     - Fruit: other_target_variable
       hint: e.g., apples, oranges
-  ---
 "timezone-list": |-
-  ---
   question: |
     What is your time zone?
   fields:
@@ -4036,9 +3585,7 @@
       default: "America/New_York"
       code: |
         timezone_list()
-  ---
 "title-case": |-
-  ---
   question: |
     Title of your book
   subquestion: |
@@ -4047,15 +3594,11 @@
     its title should be
     "${ title_case(subject) }."
   sets: all_done
-  ---
 "today": |-
-  ---
   question: |
     Today's date is ${ today() }.
   mandatory: true
-  ---
 "upload": |-
-  ---
   question: |
     Please upload a picture of yourself.
   fields:
@@ -4067,9 +3610,7 @@
   subquestion: |
     ${ user_picture }
   mandatory: true
-  ---
 "upload-multiple": |-
-  ---
   question: |
     Please upload pictures of yourself.
   fields:
@@ -4080,9 +3621,7 @@
     Look at all those adorable photos!
   audio: ${ user_pictures }
   mandatory: true
-  ---
 "upload_audio": |-
-  ---
   question: Please upload an MP3
   fields:
     - MP3 file: user_mp3_file
@@ -4092,9 +3631,7 @@
     Let's listen to what you uploaded.
   audio: ${ user_mp3_file }
   mandatory: true
-  ---
 "upload_audio_microphone": |-
-  ---
   question: Please record some audio.
   fields:
     - MP3 file: user_audio_file
@@ -4104,9 +3641,7 @@
     Let's listen to what you recorded.
   audio: ${ user_audio_file }
   mandatory: true
-  ---
 "url-of": |-
-  ---
   question: |
     Read more about this interview.
   subquestion: |
@@ -4115,9 +3650,7 @@
     about this interview before
     proceeding.
   field: ready_to_proceed
-  ---
 "user-is-trustee": |-
-  ---
   mandatory: true
   question: |
     % if user is trustee:
@@ -4130,25 +3663,33 @@
     ${ trustee } will safeguard the assets of the estate on behalf of
     ${ grantee }.
     % endif
-  ---
+"valid-formats": |-
+  question: Your document is ready.
+  attachment:
+    - name: A hello world document
+      filename: Hello_World_Document
+      valid formats:
+        - pdf
+      description: |
+        A document with a classic message
+      content: |
+        Hello, world!
+  mandatory: true
 "value": |-
-  ---
   question: Summary
   subquestion: |
     Your favorite fruit is
     ${ value('favorite_fruit') }.
   mandatory: true
-  ---
-"variables_as_json": "---\nmandatory: true\ncode: |\n  multi_user = True\n---\ninitial:\
+"variables_as_json": "mandatory: true\ncode: |\n  multi_user = True\n---\ninitial:\
   \ true\ncode: |\n  process_action()\n---\nevent: query_variables\ncode: |\n  variables_as_json()\n\
   ---\nmandatory: true\nquestion: |\n  You currently have\n  ${ nice_number(number_of_slices)\
   \ }\n  ${ noun_plural('slice', number_of_slices) }\n  of\n  ${ noun_singular(favorite_fruit)\
   \ }.\nsubquestion: |\n  Use\n  [this link](${ interview_url_action('query_variables')\
   \ })\n  to query the information from\n  another application.\n\n  You can also\
   \ change the \n  [fruit](${ url_action('favorite_fruit') })\n  and the\n  [number\
-  \ of slices](${ url_action('number_of_slices') }).\n---"
+  \ of slices](${ url_action('number_of_slices') })."
 "video": |-
-  ---
   field: ready_to_proceed
   question: |
     Welcome to the interview.
@@ -4157,16 +3698,12 @@
     before proceeding with the interview.
   video: |
     [YOUTUBE 9bZkp7q19f0]
-  ---
 "video-static": |-
-  ---
   question: |
     Are you traveling to New York City?
   yesno: going_to_nyc
   video: nyc_tourism.mp4
-  ---
 "vimeo": |-
-  ---
   field: ready_to_proceed
   question: |
     Welcome to the interview.
@@ -4175,26 +3712,19 @@
     before proceeding with the interview.
   video: |
     [VIMEO 96044910]
-  ---
 "yesno": |-
-  ---
   question: |
     Are you at least 18 years of age?
   yesno: over_eighteen
-  ---
 "yesno-custom": |-
-  ---
   question: |
     Are you satisfied?
   field: user_is_satisfied
   buttons:
     - "You bet": True
     - "No way": False
-  ---
 "yesnomaybe": |-
-  ---
   question: |
     Is Topeka the capital of Kansas?
   yesnomaybe: topeka_is_capital_of_kansas
-  ---
 
