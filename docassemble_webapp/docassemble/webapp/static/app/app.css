@@ -805,6 +805,10 @@ img.da-sig-spinner {
     width: 100%;
 }
 
+.fullheight {
+    max-height: none !important;
+}
+
 .CodeMirror {
     border-width: 1px;
     border-color: #dddddd;
@@ -816,7 +820,6 @@ img.da-sig-spinner {
 }
 
 .dasearchicon {
-    color: #aaaaaa;
     vertical-align: middle;
     cursor: pointer;
     text-decoration: none !important;
@@ -825,8 +828,20 @@ img.da-sig-spinner {
     margin-right: 4px;
 }
 
-.dasearchicon:hover {
-    color: #444444;
+.dasearchthis {
+    color: #999999;
+}
+
+.dasearchthis:hover {
+    color: #333333;
+}
+
+.dasearchother {
+    color: #cccccc;
+}
+
+.dasearchother:hover {
+    color: #666666;
 }
 
 .pointer {

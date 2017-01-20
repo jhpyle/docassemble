@@ -1460,8 +1460,58 @@ def infobutton(title):
         docstring += "<a target='_blank' href='" + title_documentation[title]['url'] + "'>" + word("View documentation") + "</a>"
     return '&nbsp;<a class="daquestionsign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + docstring + '" title="' + word("Help") + '" data-selector="true" data-title="' + noquote(title_documentation[title].get('title', title)) + '"><i class="glyphicon glyphicon-question-sign"></i></a>'
 
-def search_button(var):
-    return '<a class="dasearchicon" data-name="' + noquote(var) + '"><i class="glyphicon glyphicon-search"></i></a>'
+def search_button(var, field_origins, name_origins, interview_source, all_sources):
+    in_this_file = False
+    usage = dict()
+    if var in field_origins:
+        for x in sorted(field_origins[var]):
+            if x is interview_source:
+                in_this_file = True
+            else:
+                if x.path not in usage:
+                    usage[x.path] = set()
+                usage[x.path].add('defined')
+                all_sources.add(x)
+    if var in name_origins:
+        for x in sorted(name_origins[var]):
+            if x is interview_source:
+                in_this_file = True
+            else:
+                if x.path not in usage:
+                    usage[x.path] = set()
+                usage[x.path].add('used')
+                all_sources.add(x)
+    usage_type = [set(), set(), set()]
+    for path, the_set in usage.iteritems():
+        if 'defined' in the_set and 'used' in the_set:
+            usage_type[2].add(path)
+        elif 'used' in the_set:
+            usage_type[1].add(path)
+        elif 'defined' in the_set:
+            usage_type[0].add(path)
+        else:
+            continue
+    messages = list()
+    if len(usage_type[2]):
+        messages.append(word("Defined and used in " + docassemble.base.functions.comma_and_list(sorted(usage_type[2]))))
+    elif len(usage_type[0]):
+        messages.append(word("Defined in") + ' ' + docassemble.base.functions.comma_and_list(sorted(usage_type[0])))
+    elif len(usage_type[2]):
+        messages.append(word("Used in") + ' ' + docassemble.base.functions.comma_and_list(sorted(usage_type[0])))
+    if len(messages):
+        title = 'title="' + '; '.join(messages) + '" '
+    else:
+        title = ''
+    if in_this_file:
+        classname = 'dasearchthis'
+    else:
+        classname = 'dasearchother'
+    return '<a class="dasearchicon ' + classname + '" ' + title + 'data-name="' + noquote(var) + '"><i class="glyphicon glyphicon-search"></i></a>'
+
+search_key = """
+                  <tr><td><h4>""" + word("Note") + """</h4></td></tr>
+                  <tr><td><a class="dasearchicon dasearchthis"><i class="glyphicon glyphicon-search"></i></a> """ + word(" means the name is located in this file") + """</td></tr>
+                  <tr><td><a class="dasearchicon dasearchother"><i class="glyphicon glyphicon-search"></i></a> """ + word(" means the name may be located in a file included by reference, such as:") + """</td></tr>"""
 
 def get_vars_in_use(interview, interview_status, debug_mode=False):
     user_dict = fresh_dictionary()
@@ -1481,15 +1531,38 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
             logmessage("get_vars_in_use: failed assembly with error type " + str(error_type) + " and message: " + error_message)
     fields_used = set()
     names_used = set()
+    field_origins = dict()
+    name_origins = dict()
+    all_sources = set()
     names_used.update(interview.names_used)
     for question in interview.questions_list:
-        names_used.update(question.mako_names)
-        names_used.update(question.names_used)
-        names_used.update(question.fields_used)
+        for the_set in (question.mako_names, question.names_used, question.fields_used):
+            names_used.update(the_set)
+            for key in the_set:
+                if key not in name_origins:
+                    name_origins[key] = set()
+                name_origins[key].add(question.from_source)
         fields_used.update(question.fields_used)
+        for key in question.fields_used:
+            if key not in field_origins:
+                field_origins[key] = set()
+            field_origins[key].add(question.from_source)
+            # if key == 'advocate':
+            #     try:
+            #         logmessage("Found advocate in " + question.content.original_text)
+            #     except:
+            #         logmessage("Found advocate")
     for val in interview.questions:
         names_used.add(val)
+        if val not in name_origins:
+            name_origins[val] = set()
+            for lang in interview.questions[val]:
+                name_origins[val].add(interview.questions[val][lang].from_source)
         fields_used.add(val)
+        if val not in field_origins:
+            field_origins[val] = set()
+            for lang in interview.questions[val]:
+                field_origins[val].add(interview.questions[val][lang].from_source)
     functions = set()
     modules = set()
     classes = set()
@@ -1572,7 +1645,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
     if len(undefined_names):
         content += '\n                  <tr><td><h4>Undefined names' + infobutton('undefined') + '</h4></td></tr>'
         for var in sorted(undefined_names):
-            content += '\n                  <tr><td>' + search_button(var) + '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-danger playground-variable">' + var + '</a></td></tr>'
+            content += '\n                  <tr><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-danger playground-variable">' + var + '</a></td></tr>'
     if len(names_used):
         content += '\n                  <tr><td><h4>Variables' + infobutton('variables') + '</h4></td></tr>'
         for var in sorted(names_used):
@@ -1581,14 +1654,24 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
                     continue
             if var in documentation_dict or var in base_name_info:
                 class_type = 'info'
+                title = 'title="' + word("Special variable") + '" '
             else:
                 class_type = 'primary'
-            content += '\n                  <tr><td>' + search_button(var) + '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-' + class_type + ' playground-variable">' + var + '</a>'
+                title = ''
+            content += '\n                  <tr><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" ' + title + 'class="label label-' + class_type + ' playground-variable">' + var + '</a>'
             if var in name_info and 'type' in name_info[var] and name_info[var]['type']:
                 content +='&nbsp;<span data-ref="' + noquote(name_info[var]['type']) + '" class="daparenthetical">(' + name_info[var]['type'] + ')</span>'
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
                 content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
             content += '</td></tr>'
+        if len(all_sources):
+            content += search_key
+            content += '\n                <tr><td>'
+            content += '\n                  <ul>'
+            for path in sorted([x.path for x in all_sources]):
+                content += '\n                    <li><a target="_blank" href="' + url_for('view_source', i=path)+ '">' + path + '<a></li>'
+            content += '\n                  </ul>'
+            content += '\n                </td></tr>'
     if len(functions):
         content += '\n                  <tr><td><h4>Functions' + infobutton('functions') + '</h4></td></tr>'
         for var in sorted(functions):
@@ -6437,6 +6520,28 @@ def config_page():
         abort(404)
     return render_template('pages/config.html', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    <script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = ' + json.dumps(content) + ';\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n    </script>'), form=form), 200
 
+@app.route('/view_source', methods=['GET'])
+@login_required
+@roles_required(['developer', 'admin'])
+def view_source():
+    source_path = request.args.get('i', None)
+    if source_path is None:
+        logmessage("No source path")
+        abort(404)
+    try:
+        if re.search(r':', source_path):
+            source = docassemble.base.parse.interview_source_from_string(source_path)
+        else:
+            try:
+                source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + source_path)
+            except:
+                source = docassemble.base.parse.interview_source_from_string(source_path)
+    except Exception as errmess:
+        logmessage("No source: " + str(errmess))
+        abort(404)
+    header = source_path
+    return render_template('pages/view_source.html', tab_title="Source", page_title="Source", extra_css=Markup('\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), header=header, contents=Markup(highlight(source.content, YamlLexer(), HtmlFormatter(cssclass="highlight fullheight")))), 200
+
 @app.route('/playgroundstatic/<userid>/<filename>', methods=['GET'])
 def playground_static(userid, filename):
     filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', filename)
@@ -6448,9 +6553,9 @@ def playground_static(userid, filename):
         return(response)
     abort(404)
 
+@app.route('/playgroundsources/<userid>/<filename>', methods=['GET'])
 @login_required
 @roles_required(['developer', 'admin'])
-@app.route('/playgroundsources/<userid>/<filename>', methods=['GET'])
 def playground_sources(userid, filename):
     filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', filename)
     area = SavedFile(userid, fix=True, section='playgroundsources')
@@ -7077,7 +7182,7 @@ def playground_page():
                 pipe.expire(key, 12)
                 pipe.execute()
             try:
-                interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + the_file)
+                interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + active_file)
                 interview_source.set_testing(True)
                 interview = interview_source.get_interview()
                 interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
