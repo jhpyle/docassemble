@@ -556,13 +556,13 @@ def write_record(key, data):
     key.  Returns the unique ID integers of the saved record.
     """
     return server.write_record(key, data)
-def read_records(key, data):
+def read_records(key):
     """Returns a dictionary of records that have been stored with
     write_record() using the given key.  In the dictionary, the key is
     the unique ID integer of the record and the value is the data that
     had been stored.
     """
-    return server.read_records(key, data)
+    return server.read_records(key)
 def delete_record(key, id):
     """Deletes a record with the given key and id."""
     return server.delete_record(key, id)
