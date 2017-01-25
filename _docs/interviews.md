@@ -40,19 +40,20 @@ screen until 20 questions have been asked and answered.
 In addition to questions, the [YAML] file can contain bits of logic,
 written as lines of [Python] code.  For example:
 
-{% highlight python %}
-if user.age >= 65:
-  recommended_insurance = "Medicare"
-elif user.age < 18:
-  if household.is_low_income:
-    recommended_insurance = "CHIP"
+{% highlight yaml %}
+code: |
+  if user.age >= 65:
+    recommended_insurance = "Medicare"
+  elif user.age < 18:
+    if household.is_low_income:
+      recommended_insurance = "CHIP"
+    else:
+      recommended_insurance = "parent coverage"
   else:
-    recommended_insurance = "parent coverage"
-else:
-  if household.is_low_income:
-    recommended_insurance = "Medicaid"
-  else:
-    recommended_insurance = "Private Insurance"
+    if household.is_low_income:
+      recommended_insurance = "Medicaid"
+    else:
+      recommended_insurance = "Private Insurance"
 {% endhighlight %}
 
 If the interview ever needs to know the recommended insurance, it will
@@ -226,6 +227,183 @@ There are three ways to author your own interviews:
    [package] on **docassemble** (which will retrieve your code from
    [GitHub]).
 
+# Brief introduction to YAML
+
+**docassemble** interviews are written in [YAML] format, rather than
+assembled using a [graphical user interface], because once authors
+have climbed the **docassemble** learning curve, the text format is
+ideal for managing the complexity of advanced interviews, since it
+allows authors to copy-and-paste, search-and-replace, and organize
+text into multiple files.  [YAML] was chosen as the format because it
+is the cleanest-looking of data formats that are both machine-readable
+and human-readable.
+
+The hardest part about learning **docassemble** is not writing
+[Python] code, since sophisticated interviews can be built using
+nothing more complicated than a few [if/else statements].  The more
+difficult aspect may be learning [YAML].  While the [YAML] format
+looks simple, it can be frustrating.
+
+To understand [YAML], you first need to understand the difference
+between a "list" and a "dictionary."
+
+A "list" is an ordered collection of things.  If my to-do list for a
+Saturday afternoon was first to take out the garbage, and then to
+sweep the porch, this could be represented in [YAML] as:
+
+{% highlight yaml %}
+- Sweep the porch
+- Take out the garbage
+{% endhighlight %}
+
+A "dictionary," by contrast, associates things with other things.  For
+example, if I have some legal terms that I want to associate with an
+explanation, I could put this in a [YAML] dictionary:
+
+{% highlight yaml %}
+lawyer: A person who represents you.
+judge: A person who decides who wins or loses a court case.
+{% endhighlight %}
+
+While a list has an order to it (e.g., I need to first sweep the porch and
+then take out the garbage), the dictionary is just a jumble of words
+and definitions.  More generally, it associates "keys" with "values."
+
+[YAML] interprets lines of text and figures out whether you are
+talking about a list or a dictionary depending on what punctuation you
+use.  If it sees a hyphen, it thinks you are talking about a list.  If
+it sees a color, it things you are talking about a dictionary.
+
+Lists and dictionaries can be combined.  You can have a dictionary of
+lists and a list of dictionaries.  If I wanted to express the to-do
+lists of multiple people, I could write:
+
+{% highlight yaml %}
+Frank:
+  - Sweep the porch
+  - Take out the garbage
+  - Clean the toilets
+Sally:
+  - Rake the leaves
+  - Mow the lawn
+{% endhighlight %}
+
+Here, you have a dictionary with two keys: "Frank" and "Sally."  The
+value of the "Frank" key is a list with three items, and the value of
+the "Sally" key is a list with two items.
+
+If you are familiar with [Python]'s data notation, this translates
+into:
+
+{% highlight python %}
+{"Frank": ["Sweep the porch", "Take out the garbage", "Clean the toilets"], "Sally": ["Rake the leaves", "Mow the lawn"]}
+{% endhighlight %}
+
+(The [JSON] representation is the same.)
+
+You can also have a list of dictionaries:
+
+{% highlight yaml %}
+- title: Tale of Two Cities
+  author: Charles Dickens
+- title: Moby Dick
+  author: Herman Melville
+- title: Green Eggs and Ham
+  author: Dr. Seuss
+{% endhighlight %}
+
+In [Python]'s data notation, this translates into:
+
+{% highlight python %}
+[{'title': 'Tale of Two Cities', 'author': 'Charles Dickens'}, {'title': 'Moby Dick', 'author': 'Herman Melville'}, {'title': 'Green Eggs and Ham', 'author': 'Dr. Seuss'}]
+{% endhighlight %}
+
+[YAML] also allows you to divide up data into separate "documents"
+using the `---` separator.  Here is an example of using three
+documents to describe three different books:
+
+{% highlight yaml %}
+title: Tale of Two Cities
+author: Charles Dickens
+---
+title: Moby Dick
+author: Herman Melville
+---
+title: Green Eggs and Ham
+author: Dr. Seuss
+{% endhighlight %}
+
+This is all very simple and readable, but be careful about data that
+might confuse the computer.  For example, how should the computer read
+this shopping list?
+
+{% highlight yaml %}
+- apples
+- bread
+- olive oil
+- shortening: for cookies
+- flour
+{% endhighlight %}
+
+In [Python], this will be interpreted as:
+
+{% highlight python %}
+['apples', 'bread', 'olive oil', {'shortening': 'for cookies'}, 'flour']
+{% endhighlight %}
+
+But that's not what you wanted!  You wanted `shortening: for cookies`
+to be a piece of text.  This ambiguity is the downside of [YAML]'s
+clean appearance.
+
+You can get around this problem by putting quote marks around text:
+
+{% highlight yaml %}
+- apples
+- bread
+- olive oil
+- "shortening: for cookies"
+- flour
+{% endhighlight %}
+
+This will result in all of the list elements being interpreted as
+plain text:
+
+{% highlight python %}
+['apples', 'bread', 'olive oil', 'shortening: for cookies', 'flour']
+{% endhighlight %}
+
+[YAML] also allows text to be block quoted:
+
+{% highlight yaml %}
+title: |
+  Raspberry Jam: a "Fancy" Way to Eat Fruit
+author: |
+  Jeanne Trevaskis
+{% endhighlight %}
+
+Note that the indentation is important here; it allows the computer to
+discern where the block quote ends.  As long as you are indenting each
+line of text, you can write anything you want in the text (e.g.,
+colons, quotation marks) without worrying that the computer will
+misinterpret what you are writing.
+
+The following values in [YAML] are special:
+
+* `null`
+* `true`
+* `false`
+* numbers such as `54`, `3.14`
+
+These values will not be interpreted as literal pieces of text.  The
+`null` value becomes `None` in [Python], while 
+
+
+
+
+
+
+[if/else statements]: {{ site.baseurl }}/docs/code.html#if
+[graphical user interface]: PPP
 [GitHub]: https://github.com/
 [package]: {{ site.baseurl }}/docs/packages.html
 [playground]: {{ site.baseurl }}/docs/playground.html
@@ -255,3 +433,4 @@ There are three ways to author your own interviews:
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [`initial`]: {{ site.baseurl }}/docs/logic.html#initial
+[JSON]: https://en.wikipedia.org/wiki/JSON

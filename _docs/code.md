@@ -84,7 +84,7 @@ will still function without them:
 However, using spaces in your code is highly recommended, because they
 make the code much more readable!
 
-## Conditional actions: if/then/else statements
+## <a name="if"></a>Conditional actions: if/then/else statements
 
 Sometimes you want different code to run differently depending on
 certain conditions.  In computer programming, the simplest form of a

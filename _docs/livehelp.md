@@ -268,7 +268,7 @@ allow an operator to join an interview from the [monitor].
 
 The operator will join the interview with his or her own user
 identity, rather than with the identity of the user.  This means that
-the view the operator sees is not necessarily see the same as the view
+the view the operator sees is not necessarily the same as the view
 the user sees.  Interview authors can (and probably should) create a
 special "back door" into the interview specifically for operators.
 For example, the interview author could write the following into the
