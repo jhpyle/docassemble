@@ -2,7 +2,7 @@
 import mimetypes
 import re
 import ast
-import yaml
+import ruamel.yaml
 import os
 import os.path
 import sys
@@ -385,7 +385,7 @@ class Field:
 
 class Question:
     def idebug(self, data):
-        return "\nIn file " + str(self.from_source.path) + " from package " + str(self.package) + ":\n" + yaml.dump(data)
+        return "\nIn file " + str(self.from_source.path) + " from package " + str(self.package) + ":\n" + ruamel.yaml.dump(data)
     def __init__(self, data, caller, **kwargs):
         should_append = True
         if 'register_target' in kwargs:
@@ -461,7 +461,7 @@ class Question:
             else:
                 usedefs = [data['usedefs']]
             for usedef in usedefs:
-                if type(usedef) in [dict, list, bool]:
+                if type(usedef) in [dict, list, set, bool]:
                     raise DAError("A usedefs section must consist of a list of strings or a single string." + self.idebug(data))
                 if usedef not in self.interview.defs:
                     raise DAError('Referred to a non-existent def "' + usedef + '."  All defs must be defined before they are used.' + self.idebug(data))
@@ -472,11 +472,11 @@ class Question:
         if 'continue button label' in data:
             if 'yesno' in data or 'noyes' in data or 'yesnomaybe' in data or 'noyesmaybe' in data or 'buttons' in data:
                 raise DAError("You cannot set a continue button label if the type of question is yesno, noyes, yesnomaybe, noyesmaybe, or buttons." + self.idebug(data))
-            self.continuelabel = TextObject(definitions + data['continue button label'], names_used=self.mako_names)
+            self.continuelabel = TextObject(definitions + unicode(data['continue button label']), names_used=self.mako_names)
         if 'resume button label' in data:
             if 'review' not in data:
                 raise DAError("You cannot set a resume button label if the type of question is not review." + self.idebug(data))
-            self.continuelabel = TextObject(definitions + data['resume button label'], names_used=self.mako_names)
+            self.continuelabel = TextObject(definitions + unicode(data['resume button label']), names_used=self.mako_names)
         if 'mandatory' in data and data['mandatory'] is True:
             self.is_mandatory = True
         else:
@@ -527,11 +527,11 @@ class Question:
         if 'script' in data:
             if type(data['script']) not in (str, unicode):
                 raise DAError("A script section must be plain text." + self.idebug(data))
-            self.script = TextObject(definitions + data['script'], names_used=self.mako_names)
+            self.script = TextObject(definitions + unicode(data['script']), names_used=self.mako_names)
         if 'css' in data:
             if type(data['css']) not in (str, unicode):
                 raise DAError("A css section must be plain text." + self.idebug(data))
-            self.css = TextObject(definitions + data['css'], names_used=self.mako_names)
+            self.css = TextObject(definitions + unicode(data['css']), names_used=self.mako_names)
         if ('initial' in data and data['initial'] is True) or ('default role' in data):
             #logmessage("Setting a code block to initial\n")
             self.is_initial = True
@@ -576,7 +576,7 @@ class Question:
                     else:
                         raise DAError("Each item in the 'images' section needs to be a dictionary, not a list." + self.idebug(data))
                 if 'attribution' in image_set:
-                    if type(image_set['attribution']) in [dict, list]:
+                    if type(image_set['attribution']) in [dict, list, set]:
                         raise DAError("An attribution in an 'image set' section cannot be a dictionary or a list." + self.idebug(data))
                     attribution = image_set['attribution']
                 else:
@@ -631,7 +631,7 @@ class Question:
                 for the_item in the_list:
                     if type(the_item) in [list, dict]:
                         raise DAError("An interview help audio section must be in the form of a text item or a list of text items." + self.idebug(data))
-                    audiovideo.append({'text': TextObject(definitions + data['interview help']['audio'], names_used=self.mako_names), 'package': self.package, 'type': 'audio'})
+                    audiovideo.append({'text': TextObject(definitions + unicode(data['interview help']['audio']), names_used=self.mako_names), 'package': self.package, 'type': 'audio'})
             if 'video' in data['interview help']:
                 if type(data['interview help']['video']) is not list:
                     the_list = [data['interview help']['video']]
@@ -640,19 +640,19 @@ class Question:
                 for the_item in the_list:
                     if type(the_item) in [list, dict]:
                         raise DAError("An interview help video section must be in the form of a text item or a list of text items." + self.idebug(data))
-                    audiovideo.append({'text': TextObject(definitions + data['interview help']['video'], names_used=self.mako_names), 'package': self.package, 'type': 'video'})
+                    audiovideo.append({'text': TextObject(definitions + unicode(data['interview help']['video']), names_used=self.mako_names), 'package': self.package, 'type': 'video'})
             if 'video' not in data['interview help'] and 'audio' not in data['interview help']:
                 audiovideo = None
             if 'heading' in data['interview help']:
                 if type(data['interview help']['heading']) not in [dict, list]:
-                    help_heading = TextObject(definitions + data['interview help']['heading'], names_used=self.mako_names)
+                    help_heading = TextObject(definitions + unicode(data['interview help']['heading']), names_used=self.mako_names)
                 else:
                     raise DAError("A heading within an interview help section must be text, not a list or a dictionary." + self.idebug(data))
             else:
                 help_heading = None
             if 'content' in data['interview help']:
                 if type(data['interview help']['content']) not in [dict, list]:
-                    help_content = TextObject(definitions + data['interview help']['content'], names_used=self.mako_names)
+                    help_content = TextObject(definitions + unicode(data['interview help']['content']), names_used=self.mako_names)
                 else:
                     raise DAError("Help content must be text, not a list or a dictionary." + self.idebug(data))
             else:
@@ -806,7 +806,7 @@ class Question:
             self.content = TextObject('backgroundresponse')
             self.backgroundresponse = data['backgroundresponse']
         if 'response' in data:
-            self.content = TextObject(definitions + data['response'], names_used=self.mako_names)
+            self.content = TextObject(definitions + unicode(data['response']), names_used=self.mako_names)
             self.question_type = 'response'
         elif 'binaryresponse' in data:
             self.question_type = 'response'
@@ -836,23 +836,23 @@ class Question:
                     self.content_type = TextObject('text/plain; charset=utf-8')
             self.content = TextObject('')
             if 'content type' in data:
-                self.content_type = TextObject(definitions + data['content type'], names_used=self.mako_names)
+                self.content_type = TextObject(definitions + unicode(data['content type']), names_used=self.mako_names)
             elif not (hasattr(self, 'content_type') and self.content_type):
                 self.content_type = TextObject(get_mimetype(self.response_filename))
         elif 'redirect url' in data:
             self.question_type = 'redirect'
-            self.content = TextObject(definitions + data['redirect url'], names_used=self.mako_names)
+            self.content = TextObject(definitions + unicode(data['redirect url']), names_used=self.mako_names)
         if 'response' in data or 'binaryresponse' in data or 'all_variables' in data:
             if 'content type' in data:
-                self.content_type = TextObject(definitions + data['content type'], names_used=self.mako_names)
+                self.content_type = TextObject(definitions + unicode(data['content type']), names_used=self.mako_names)
             else:
                 self.content_type = TextObject('text/plain; charset=utf-8')
         if 'question' in data:
-            self.content = TextObject(definitions + data['question'], names_used=self.mako_names)
+            self.content = TextObject(definitions + unicode(data['question']), names_used=self.mako_names)
         if 'subquestion' in data:
-            self.subcontent = TextObject(definitions + data['subquestion'], names_used=self.mako_names)
+            self.subcontent = TextObject(definitions + unicode(data['subquestion']), names_used=self.mako_names)
         if 'reload' in data and data['reload']:
-            self.reload_after = TextObject(definitions + str(data['reload']), names_used=self.mako_names)
+            self.reload_after = TextObject(definitions + unicode(data['reload']), names_used=self.mako_names)
         if 'help' in data:
             if type(data['help']) is dict:
                 for key, value in data['help'].iteritems():
@@ -862,58 +862,58 @@ class Question:
                         else:
                             the_list = value
                         for list_item in the_list:
-                            if type(list_item) in [dict, list]:
+                            if type(list_item) in [dict, list, set]:
                                 raise DAError("An audio declaration in a help block can only contain a text item or a list of text items." + self.idebug(data))
                             if self.audiovideo is None:
                                 self.audiovideo = dict()
                             if 'help' not in self.audiovideo:
                                 self.audiovideo['help'] = list()
-                            self.audiovideo['help'].append({'text': TextObject(definitions + list_item, names_used=self.mako_names), 'package': self.package, 'type': 'audio'})
+                            self.audiovideo['help'].append({'text': TextObject(definitions + unicode(list_item), names_used=self.mako_names), 'package': self.package, 'type': 'audio'})
                     if key == 'video':
                         if type(value) is not list:
                             the_list = [value]
                         else:
                             the_list = value
                         for list_item in the_list:
-                            if type(list_item) in [dict, list]:
+                            if type(list_item) in [dict, list, set]:
                                 raise DAError("A video declaration in a help block can only contain a text item or a list of text items." + self.idebug(data))
                             if self.audiovideo is None:
                                 self.audiovideo = dict()
                             if 'help' not in self.audiovideo:
                                 self.audiovideo['help'] = list()
-                            self.audiovideo['help'].append({'text': TextObject(definitions + list_item, names_used=self.mako_names), 'package': self.package, 'type': 'video'})
+                            self.audiovideo['help'].append({'text': TextObject(definitions + unicode(list_item), names_used=self.mako_names), 'package': self.package, 'type': 'video'})
                     if key == 'content':
-                        if type(value) in [dict, list]:
+                        if type(value) in [dict, list, set]:
                             raise DAError("A content declaration in a help block can only contain text." + self.idebug(data))
-                        self.helptext = TextObject(definitions + value, names_used=self.mako_names)
+                        self.helptext = TextObject(definitions + unicode(value), names_used=self.mako_names)
             else:
-                self.helptext = TextObject(definitions + data['help'], names_used=self.mako_names)
+                self.helptext = TextObject(definitions + unicode(data['help']), names_used=self.mako_names)
         if 'audio' in data:
             if type(data['audio']) is not list:
                 the_list = [data['audio']]
             else:
                 the_list = data['audio']
             for list_item in the_list:
-                if type(list_item) in [dict, list]:
+                if type(list_item) in [dict, list, set]:
                     raise DAError("An audio declaration can only contain a text item or a list of text items." + self.idebug(data))
                 if self.audiovideo is None:
                     self.audiovideo = dict()    
                 if 'question' not in self.audiovideo:
                     self.audiovideo['question'] = list()
-                self.audiovideo['question'].append({'text': TextObject(definitions + list_item, names_used=self.mako_names), 'package': self.package, 'type': 'audio'})
+                self.audiovideo['question'].append({'text': TextObject(definitions + unicode(list_item), names_used=self.mako_names), 'package': self.package, 'type': 'audio'})
         if 'video' in data:
             if type(data['video']) is not list:
                 the_list = [data['video']]
             else:
                 the_list = data['video']
             for list_item in the_list:
-                if type(list_item) in [dict, list]:
+                if type(list_item) in [dict, list, set]:
                     raise DAError("A video declaration can only contain a text item or a list of text items." + self.idebug(data))
                 if self.audiovideo is None:
                     self.audiovideo = dict()    
                 if 'question' not in self.audiovideo:
                     self.audiovideo['question'] = list()
-                self.audiovideo['question'].append({'text': TextObject(definitions + list_item, names_used=self.mako_names), 'package': self.package, 'type': 'video'})
+                self.audiovideo['question'].append({'text': TextObject(definitions + unicode(list_item), names_used=self.mako_names), 'package': self.package, 'type': 'video'})
         if 'decoration' in data:
             if type(data['decoration']) is dict:
                 decoration_list = [data['decoration']]
@@ -937,7 +937,7 @@ class Question:
             self.fields.append(Field({'saveas': data['signature']}))
             self.fields_used.add(data['signature'])
         if 'under' in data:
-            self.undertext = TextObject(definitions + data['under'], names_used=self.mako_names)
+            self.undertext = TextObject(definitions + unicode(data['under']), names_used=self.mako_names)
         if 'yesno' in data:
             self.fields.append(Field({'saveas': data['yesno'], 'boolean': 1}))
             self.fields_used.add(data['yesno'])
@@ -985,7 +985,7 @@ class Question:
                 if has_code:
                     field_data['has_code'] = True
                 if 'default' in data:
-                    field_data['default'] = TextObject(definitions + data['default'], names_used=self.mako_names)
+                    field_data['default'] = TextObject(definitions + unicode(data['default']), names_used=self.mako_names)
                 self.question_variety = 'radio'
             elif 'buttons' in data:
                 has_code, choices = self.parse_fields(data['buttons'], register_target, uses_field)
@@ -1042,10 +1042,10 @@ class Question:
             self.fields_used.add(data['template'])
             field_data = {'saveas': data['template']}
             self.fields.append(Field(field_data))
-            self.content = TextObject(definitions + data['content'], names_used=self.mako_names)
+            self.content = TextObject(definitions + unicode(data['content']), names_used=self.mako_names)
             #logmessage("keys are: " + str(self.mako_names))
             if 'subject' in data:
-                self.subcontent = TextObject(definitions + data['subject'], names_used=self.mako_names)
+                self.subcontent = TextObject(definitions + unicode(data['subject']), names_used=self.mako_names)
             else:
                 self.subcontent = TextObject("")
             self.question_type = 'template'
@@ -1182,9 +1182,9 @@ class Question:
                             elif key == 'label':
                                 if 'field' not in field:
                                     raise DAError("If you use 'label' to label a field in a 'fields' section, you must also include a 'field.'" + self.idebug(data))                                    
-                                field_info['label'] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
+                                field_info['label'] = TextObject(definitions + interpret_label(field[key]), names_used=self.mako_names)
                             else:
-                                field_info['label'] = TextObject(definitions + unicode(key), names_used=self.mako_names)
+                                field_info['label'] = TextObject(definitions + interpret_label(key), names_used=self.mako_names)
                                 field_info['saveas'] = field[key]
                         if 'choicetype' in field_info and field_info['choicetype'] == 'compute' and 'type' in field_info and field_info['type'] in ['object', 'object_radio', 'object_checkboxes']:
                             if 'choices' not in field:
@@ -1279,9 +1279,9 @@ class Question:
                     elif key == 'label':
                         if 'field' not in field:
                             raise DAError("If you use 'label' to label a field in a 'fields' section, you must also include a 'field.'" + self.idebug(data))                                    
-                        field_info['label'] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
+                        field_info['label'] = TextObject(definitions + interpret_label(field[key]), names_used=self.mako_names)
                     else:
-                        field_info['label'] = TextObject(definitions + unicode(key), names_used=self.mako_names)
+                        field_info['label'] = TextObject(definitions + interpret_label(key), names_used=self.mako_names)
                         field_info['saveas'] = field[key]
                         if 'action' in field:
                             field_info['action'] = field['action']
@@ -1872,7 +1872,7 @@ class Question:
                                 modified_metadata[key] = data + unicode('[END]')
                             else:
                                 modified_metadata[key] = data
-                        the_markdown += "---\n" + yaml.safe_dump(modified_metadata, default_flow_style=False, default_style = '|') + "...\n"
+                        the_markdown += "---\n" + ruamel.yaml.safe_dump(modified_metadata, default_flow_style=False, default_style = '|') + "...\n"
                     the_markdown += attachment['content'].text(user_dict)
                     #logmessage("Markdown is:\n" + repr(the_markdown) + "END")
                     if emoji_match.search(the_markdown) and len(self.interview.images) > 0:
@@ -1994,14 +1994,14 @@ class Interview:
                 logmessage("Source " + str(source.path) + " has already been included.  Skipping.")
                 return
             self.includes.add(source.path)
-        #for document in yaml.load_all(source.content):
+        #for document in ruamel.yaml.safe_load_all(source.content):
         for source_code in document_match.split(source.content):
             source_code = remove_trailing_dots.sub('', source_code)
             source_code = fix_tabs.sub('  ', source_code)
             if source.testing:
                 try:
                     #logmessage("Package is " + str(source_package))
-                    document = yaml.load(source_code)
+                    document = ruamel.yaml.safe_load(source_code)
                     if document is not None:
                         question = Question(document, self, source=source, package=source_package, source_code=source_code)
                         self.names_used.update(question.fields_used)
@@ -2010,7 +2010,7 @@ class Interview:
                     pass
             else:
                 try:
-                    document = yaml.load(source_code)
+                    document = ruamel.yaml.safe_load(source_code)
                 except Exception as errMess:
                     raise DAError('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
                 if document is not None:
@@ -2880,3 +2880,8 @@ def get_mimetype(filename):
     if mimetype is None:
         mimetype = 'text/plain'    
     return mimetype
+
+def interpret_label(text):
+    if text is None:
+        return u'no label'
+    return unicode(text)

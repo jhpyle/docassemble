@@ -290,6 +290,7 @@ import base64
 import requests
 import redis
 import yaml
+import ruamel.yaml
 import inspect
 from subprocess import call, Popen, PIPE
 from pygments import highlight
@@ -513,7 +514,7 @@ def get_documentation_dict():
         with open(documentation['fullpath'], 'rU') as fp:
             content = fp.read().decode('utf8')
             content = fix_tabs.sub('  ', content)
-            return(yaml.load(content))
+            return(ruamel.yaml.safe_load(content))
     return(None)
 
 def get_name_info():
@@ -522,7 +523,7 @@ def get_name_info():
         with open(docstring['fullpath'], 'rU') as fp:
             content = fp.read().decode('utf8')
             content = fix_tabs.sub('  ', content)
-            return(yaml.load(content))
+            return(ruamel.yaml.safe_load(content))
     return(None)
 
 def get_title_documentation():
@@ -531,7 +532,7 @@ def get_title_documentation():
         with open(documentation['fullpath'], 'rU') as fp:
             content = fp.read().decode('utf8')
             content = fix_tabs.sub('  ', content)
-            return(yaml.load(content))
+            return(ruamel.yaml.safe_load(content))
     return(None)
 
 def _call_or_get(function_or_property):
@@ -834,7 +835,7 @@ def get_examples():
         with open(example_list_file['fullpath'], 'rU') as fp:
             content = fp.read().decode('utf8')
             content = fix_tabs.sub('  ', content)
-            proc_example_list(yaml.load(content), examples)
+            proc_example_list(ruamel.yaml.safe_load(content), examples)
     #logmessage("Examples: " + str(examples))
     return(examples)
 
@@ -8790,7 +8791,7 @@ for word_file in word_file_list:
     file_info = get_info_from_file_reference(word_file)
     if 'fullpath' in file_info and file_info['fullpath'] is not None:
         with open(file_info['fullpath'], 'rU') as stream:
-            for document in yaml.load_all(stream):
+            for document in ruamel.yaml.safe_load_all(stream):
                 if document and type(document) is dict:
                     for lang, words in document.iteritems():
                         if type(words) is dict:
