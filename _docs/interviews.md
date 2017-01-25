@@ -299,7 +299,7 @@ into:
 {"Frank": ["Sweep the porch", "Take out the garbage", "Clean the toilets"], "Sally": ["Rake the leaves", "Mow the lawn"]}
 {% endhighlight %}
 
-(The [JSON] representation is the same.)
+The [JSON] representation is the same.
 
 You can also have a list of dictionaries:
 
@@ -333,9 +333,9 @@ title: Green Eggs and Ham
 author: Dr. Seuss
 {% endhighlight %}
 
-This is all very simple and readable, but be careful about data that
-might confuse the computer.  For example, how should the computer read
-this shopping list?
+[YAML]'s simplicity results from its use of simple punctuation marks.
+However, be careful about data that might confuse the computer.  For
+example, how should the computer read this shopping list?
 
 {% highlight yaml %}
 - apples
@@ -351,9 +351,13 @@ In [Python], this will be interpreted as:
 ['apples', 'bread', 'olive oil', {'shortening': 'for cookies'}, 'flour']
 {% endhighlight %}
 
-But that's not what you wanted!  You wanted `shortening: for cookies`
-to be a piece of text.  This ambiguity is the downside of [YAML]'s
-clean appearance.
+This is a list of apples, bread, olive oil, a dictionary, and flour.
+That's not what you wanted!
+
+You wanted `shortening: for cookies` to be a piece of text.  But the
+computer assumed you wanted to indicate a dictionary.  [YAML]'s clean
+appearance makes it readable, but this kind of problem is the downside
+to [YAML].
 
 You can get around this problem by putting quote marks around text:
 
@@ -366,7 +370,7 @@ You can get around this problem by putting quote marks around text:
 {% endhighlight %}
 
 This will result in all of the list elements being interpreted as
-plain text:
+plain text.  In [Python]:
 
 {% highlight python %}
 ['apples', 'bread', 'olive oil', 'shortening: for cookies', 'flour']
@@ -381,29 +385,50 @@ author: |
   Jeanne Trevaskis
 {% endhighlight %}
 
-Note that the indentation is important here; it allows the computer to
-discern where the block quote ends.  As long as you are indenting each
-line of text, you can write anything you want in the text (e.g.,
-colons, quotation marks) without worrying that the computer will
-misinterpret what you are writing.
+The pipe character `|` followed by a line break indicates the start of
+the quote.  The indentation is important because it indicates where
+the block quote ends.  As long as you are indenting each line of text,
+you can write anything you want in the text (e.g., colons, quotation
+marks) without worrying that the computer will misinterpret what you
+are writing.
 
 The following values in [YAML] are special:
 
-* `null`
-* `true`
-* `false`
-* numbers such as `54`, `3.14`
+* `null`, `Null`, `NULL` -- these become `None` in [Python]
+* `true`, `True`, `TRUE` -- these become `True` in [Python]
+* `false`, `False`, `FALSE` -- these become `False` in [Python]
+* numbers such as `54`, `3.14` -- these become numbers in [Python]
 
-These values will not be interpreted as literal pieces of text.  The
-`null` value becomes `None` in [Python], while 
+These values will not be interpreted as literal pieces of text, but as
+values with special meaning in [Python].  This can cause confusion in
+your interviews, so if you ever use "True" and "False" as a label or
+value, make sure to enclose it in quotation marks.
+
+This [YAML] text:
+
+{% highlight yaml %}
+loopy: 'TRUE'
+smart: false
+pretty: TRUE
+energetic: "false"
+{% endhighlight %}
+
+becomes the following in [Python]:
+
+{% highlight python %}
+{'loopy': 'TRUE', 'smart': False, 'pretty': True, 'energetic': 'false'}
+{% endhighlight %}
 
 
+Many punctuation marks, including `"`, `'`, `%`, `?`, `~`, `|`, `#`, `>`, `:`, `!`, `:`, `{`, `}`,
+`[`, and `]`, have special meaning in [YAML], so if you use them in
+your text, make sure to use quotation marks or block quotes.
 
+For more information about [YAML], see the [YAML specification].
 
-
-
+[YAML specification]: http://yaml.org/spec/1.2/spec.html
 [if/else statements]: {{ site.baseurl }}/docs/code.html#if
-[graphical user interface]: PPP
+[graphical user interface]: https://en.wikipedia.org/wiki/Graphical_user_interface
 [GitHub]: https://github.com/
 [package]: {{ site.baseurl }}/docs/packages.html
 [playground]: {{ site.baseurl }}/docs/playground.html
