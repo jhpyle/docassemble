@@ -24,6 +24,7 @@
   docs:
     - language
     - roles
+    - background
     - scheduled
     - ml
     - sms

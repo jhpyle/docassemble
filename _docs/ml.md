@@ -397,7 +397,7 @@ take a long time to process, you may wish to call `.predict()` from a
 during the first call to `.predict()`, not during the creation of the
 object.)
 
-[background action]: {{ site.baseurl }}/docs/functions.html#background
+[background action]: {{ site.baseurl }}/docs/background.html#background
 [functions]: {{ site.baseurl }}/docs/functions.html
 [question]: {{ site.baseurl }}/docs/questions.html
 [machine learning]: http://en.wikipedia.org/wiki/Machine_learning

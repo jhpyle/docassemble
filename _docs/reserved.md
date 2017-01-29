@@ -517,15 +517,15 @@ All others are available for you to use and to retrieve with
 [`us`]: https://pypi.python.org/pypi/us
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
 [`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
-[scheduled tasks]: {{ site.baseurl }}/docs/scheduled.html
+[scheduled tasks]: {{ site.baseurl }}/docs/background.html#scheduled
 [`SimpleTextMachineLearner`]: {{ site.baseurl }}/docs/ml.html
 [`action_argument`]: {{ site.baseurl }}/docs/functions.html#action_argument
 [`action_arguments`]: {{ site.baseurl }}/docs/functions.html#action_arguments
 [`action_menu_item`]: {{ site.baseurl }}/docs/functions.html#action_menu_item
 [`as_datetime`]: {{ site.baseurl }}/docs/functions.html#as_datetime
-[`background_action`]: {{ site.baseurl }}/docs/functions.html#background_action
-[`background_response`]: {{ site.baseurl }}/docs/functions.html#background_response
-[`background_response_action`]: {{ site.baseurl }}/docs/functions.html#background_response_action
+[`background_action`]: {{ site.baseurl }}/docs/background.html#background_action
+[`background_response`]: {{ site.baseurl }}/docs/background.html#background_response
+[`background_response_action`]: {{ site.baseurl }}/docs/background.html#background_response_action
 [`chat_partners_available`]: {{ site.baseurl }}/docs/functions.html#chat_partners_available
 [`command`]: {{ site.baseurl }}/docs/functions.html#command
 [`countries_list`]: {{ site.baseurl }}/docs/functions.html#countries_list

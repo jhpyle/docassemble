@@ -124,7 +124,7 @@ with the [`appname`] directive.  If the [`appname`] is
 [User List]: #user_list
 [Profile]: #profile
 [Privileges List]: #profile
-[scheduled tasks]: {{ site.baseurl }}/docs/scheduled.html
+[scheduled tasks]: {{ site.baseurl }}/docs/background.html#scheduled
 [`user_info()`]: {{ site.baseurl }}/docs/functions.html#user_info
 [`allow_registration`]: {{ site.baseurl }}/docs/config.html#allow_registration
 [`appname`]: {{ site.baseurl }}/docs/config.html#appname

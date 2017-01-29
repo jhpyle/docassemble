@@ -827,11 +827,11 @@ files.  In this case, you will need to manually reinstall
 [Pandoc]: http://pandoc.org/
 [EC2]: https://aws.amazon.com/ec2/
 [S3]: https://aws.amazon.com/s3/
-[scheduled tasks]: {{ site.baseurl }}/docs/scheduled.html
+[scheduled tasks]: {{ site.baseurl }}/docs/background.html#scheduled
 [SysV]: https://en.wikipedia.org/wiki/UNIX_System_V
 [systemd]: https://en.wikipedia.org/wiki/Systemd
 [PyRTF-ng]: https://github.com/nekstrom/pyrtf-ng
 [PyPI]: https://pypi.python.org/pypi
 [ndg-httpsclient]: https://pypi.python.org/pypi/ndg-httpsclient
-[background processes]: {{ site.baseurl }}/docs/functions.html#background
+[background processes]: {{ site.baseurl }}/docs/background.html#background
 [live help]: {{ site.baseurl }}/docs/livehelp.html

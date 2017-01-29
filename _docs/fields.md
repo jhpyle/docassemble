@@ -717,6 +717,24 @@ The [`datatype`] of `object` presents the list of choices as a
 pull-down.  If you prefer to present the user with radio buttons, set
 the [`datatype`] to `object_radio`.
 
+## <a name="embed"></a>Embedding fields within a paragraph
+
+Within a [`fields`] question, you can include fill-in fields within
+the text of the [`subquestion`] using markup of the form
+`[FIELD variable_name]`.
+
+{% include side-by-side.html demo="embed" %}
+
+Any variable name referenced in `[FIELD ...]` must be one of the
+variable names listed in the `fields:` list.  If a field is referenced
+this way in the [`subquestion`], it will not be displayed the way that
+fields are ordinarily displayed, but will be moved into the
+[`subquestion`], where it will be formatted differently.  Any fields
+in the `fields:` list that are not referenced in the [`subquestion`]
+will appear on the screen in the normal fashion.
+
+The label of an embedded field is used as the [tooltip] of the field.
+
 # Special screens
 
 ## <a name="event"></a>Performing special actions requested by the user
@@ -891,3 +909,4 @@ why this needs to be done manually as opposed to automatically:
 [`task_not_yet_performed()`]: {{ site.baseurl }}/docs/functions.html#task_not_yet_performed
 [`css`]: {{ site.baseurl }}/docs/modifiers.html#css
 [`script`]: {{ site.baseurl }}/docs/modifiers.html#script
+[tooltip]: http://www.w3schools.com/tags/att_title.asp

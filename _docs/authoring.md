@@ -97,9 +97,13 @@ Interviews do not have to be ephemeral.  There is a [User Login]
 system that allows users to create accounts, save their answers, and
 resume their interviews at a later date.
 
-Using the [Scheduled Tasks] feature, you can have your interviews do
-things when the user is not logged in.  For example, you might want to
-send a reminder e-mail to a user about a deadline.
+Using the [Background Tasks] features, you can have your interviews do
+things on the server at times other than times when the user presses a
+button to advance to a new page.  Time-intensive tasks can run in the
+background; the interview can evaluate user input before the user
+submits it; and interviews can do things when the user is not logged
+in, like send a reminder e-mail to a user about a deadline as the date
+approaches.
 
 If you need to make an interview available in more than one language,
 **docassemble**'s [Language Support] features can help you manage
@@ -169,7 +173,7 @@ free software available with a highly permissive open-source
 [Legal Applications]: {{ site.baseurl }}/docs/legal.html
 [Roles]: {{ site.baseurl }}/docs/roles.html
 [Special Variables]: {{ site.baseurl }}/docs/special.html
-[Scheduled Tasks]: {{ site.baseurl }}/docs/scheduled.html
+[Background Tasks]: {{ site.baseurl }}/docs/background.html
 [Machine Learning]: {{ site.baseurl }}/docs/ml.html
 [Reserved Names]: {{ site.baseurl }}/docs/reserved.html
 [Errors]: {{ site.baseurl }}/docs/errors.html

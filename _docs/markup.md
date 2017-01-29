@@ -374,6 +374,23 @@ attachment:
 See also the [`qr_code()`] function, which allows you to insert the
 `[QR ...]` markup using [Python].
 
+# <a name="field"></a>Embedding fields
+
+In a [`fields`] block, you can use the markup syntax `[FIELD ...]` to
+embed fields within the within the [`subquestion`] text.  For more
+information about this feature, see the section on
+[Embedding fields within a paragraph].
+
+# <a name="target"></a>Embedding areas for interim information
+
+If you include the markup `[TARGET ...]` within text, you will create
+an invisible area where text can be placed by [`code`].  For more
+information about this feature, see the section on
+[Processing interim user input].
+
+[`code`]: {{ site.baseurl }}/docs/code.html
+[Processing interim user input]: {{ site.baseurl }}/docs/background.html#target
+[Embedding fields within a paragraph]: {{ site.baseurl }}/docs/fields.html#embed
 [documents]: {{ site.baseurl }}/docs/documents.html
 [modifiers]: {{ site.baseurl }}/docs/modifiers.html
 [Mako]: http://www.makotemplates.org/
@@ -406,3 +423,4 @@ See also the [`qr_code()`] function, which allows you to insert the
 [`defined()` function]: {{ site.baseurl }}/docs/functions.html#defined
 [`<%def>`]: http://docs.makotemplates.org/en/latest/defs.html#using-defs
 [`def` initial block]: {{ site.baseurl }}/docs/initial.html#def
+[`fields`]: {{ site.baseurl }}/docs/fields.html#fields

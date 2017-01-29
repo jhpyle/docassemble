@@ -1052,7 +1052,7 @@ delete all of the data on the server unless you are using a
 [`USEHTTPS`]: #USEHTTPS
 [`USELETSENCRYPT`]: #USELETSENCRYPT
 [Celery]: http://www.celeryproject.org/
-[background processes]: {{ site.baseurl }}/docs/functions.html#background
+[background processes]: {{ site.baseurl }}/docs/background.html#background
 [Windows PowerShell]: https://en.wikipedia.org/wiki/PowerShell
 [Terminal]: https://en.wikipedia.org/wiki/Terminal_(macOS)
 [`timezone`]: {{ site.baseurl }}/docs/config.html#timezone
@@ -1084,5 +1084,5 @@ delete all of the data on the server unless you are using a
 [`docker volume inspect`]: https://docs.docker.com/engine/reference/commandline/volume/
 [Amazon Web Services]: https://aws.amazon.com
 [S3 bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
-[scheduled tasks]: {{ site.baseurl }}/docs/scheduled.html
+[scheduled tasks]: {{ site.baseurl }}/docs/background.html#scheduled
 [WebSocket]: https://en.wikipedia.org/wiki/WebSocket

@@ -1193,9 +1193,9 @@ and Facebook API keys.
 [Pandoc]: http://johnmacfarlane.net/pandoc/
 [LibreOffice]: https://www.libreoffice.org/
 [`metadata`]: {{ site.baseurl }}/docs/initial.html#metadata
-[scheduled tasks]: {{ site.baseurl }}/docs/scheduled.html
-[scheduled task]: {{ site.baseurl }}/docs/scheduled.html
-[enabled]: {{ site.baseurl }}/docs/scheduled.html#enabling
+[scheduled tasks]: {{ site.baseurl }}/docs/background.html#scheduled
+[scheduled task]: {{ site.baseurl }}/docs/background.html#scheduled
+[enabled]: {{ site.baseurl }}/docs/background.html#enabling
 [`as_datetime()`]: {{ site.baseurl }}/docs/functions.html#as_datetime
 [`pytz`]: http://pytz.sourceforge.net/
 [`speak_text`]: {{ site.baseurl }}/docs/special.html#speak_text

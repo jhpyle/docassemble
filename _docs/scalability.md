@@ -973,7 +973,7 @@ number of PostgreSQL connections will be 12.
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [Redis]: http://redis.io/
 [RabbitMQ]: https://www.rabbitmq.com/
-[background processes]: {{ site.baseurl }}/docs/functions.html#background
+[background processes]: {{ site.baseurl }}/docs/background.html#background
 [live help]: {{ site.baseurl }}/docs/livehelp.html
 [Celery]: http://www.celeryproject.org/
 [DNS]: https://en.wikipedia.org/wiki/Domain_Name_System

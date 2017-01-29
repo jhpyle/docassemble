@@ -40,6 +40,12 @@ explanation is necessary.
 
 {% include side-by-side.html demo="subquestion" %}
 
+# <a name="under"></a>The `under` statement
+
+The optional `under` adds text underneath the buttons.
+
+{% include side-by-side.html demo="under" %}
+
 # Using questions to set variables
 
 Here is a brief summary of the types of questions that can be asked.

@@ -469,6 +469,34 @@
     No advocates are available to assist
     you at this time.
     % endif
+"check-in": |-
+  mandatory: true
+  code: |
+    counter = 0
+    drafts = set()
+  ---
+  question: |
+    What is your favorite food?
+  fields:
+    - Favorite food: favorite_food
+  check in: track_drafts
+  ---
+  event: track_drafts
+  code: |
+    counter += 1
+    if action_argument('favorite_food'):
+      drafts.add(action_argument('favorite_food'))
+  ---
+  mandatory: true
+  question: |
+    Your favorite food
+  subquestion: |
+    Your favorite food is ${ favorite_food }.
+
+    You checked in ${ counter } times.
+
+    Your draft choices were
+    ${ comma_and_list(drafts) }.
 "choices": |-
   question: |
     What type of shoes do you wear?
@@ -919,6 +947,22 @@
     - E-mail: target_variable
       datatype: email
       required: false
+"embed": |-
+  question: |
+    Fill in the blanks.
+  subquestion: |
+    I went downtown to get some
+    [FIELD grocery_item].
+    I slipped on the ice and
+    fell in the
+    [FIELD unfortunate_place].
+  fields:
+    - Grocery item: grocery_item
+    - no label: unfortunate_place
+      choices:
+        - storm drain
+        - gutter
+        - mineshaft
 "event-example": |-
   question: |
     This is a special screen.
@@ -1932,6 +1976,21 @@
     process_action()
     if user_has_privilege('admin', 'developer'):
       advocate_screen
+  ---
+  event: advocate_screen
+  question: |
+    Summary of user's answers so far.
+  review:
+    - Change Fruit: fruit
+      button: |
+        The favorite fruit was ${ fruit }.
+    - Change Vegetable: vegetable
+      button: |
+        The favorite vegetable was ${ vegetable }.
+    - Change Fungus: fungi
+      button: |
+        The favorite fungus was ${ fungi }.
+  resume button label: Refresh
 "js_url_action": |-
   mandatory: true
   code: |
@@ -1957,7 +2016,9 @@
   question: |
     The pie
   subquestion: |
-    <button id="run">Run</button>
+    <button id="run" class="btn btn-primary">
+      Run
+    </button>
 
     <span id="resultsArea"></span>
   script: |
@@ -3462,6 +3523,87 @@
         <tr><td>5</td><td>$8.50</td></tr>
       </tbody>
     </table>
+"target-code": |-
+  question: |
+    What is your favorite food?
+  fields:
+    - Favorite food: favorite_food
+  under: |
+    [TARGET feedback]
+  check in: question_food
+  ---
+  event: question_food
+  code: |
+    food = action_argument('favorite_food')
+    if food:
+      content = "What? You like " + food.upper() + "?"
+    else:
+      content = ''
+    background_response(target='feedback',
+                        content=content)
+  ---
+  mandatory: true
+  question: |
+    Your favorite food is ${ favorite_food }.
+"target-code-multiple": |-
+  check in: question_food
+  question: |
+    What is your favorite food?  [TARGET feedback_one]
+  fields:
+    - Favorite food: favorite_food
+  under: |
+    [TARGET feedback_two]
+  ---
+  event: question_food
+  code: |
+    food = action_argument('favorite_food')
+    if food:
+      content_one = "  (Please don't be gross.)"
+      content_two = "What? You like " + food.upper() + "?"
+    else:
+      content_one = ''
+      content_two = ''
+    background_response([{'target': 'feedback_one',
+                        'content': content_one},
+                        {'target': 'feedback_two',
+                        'content': content_two}])
+"target-code-template": |-
+  question: |
+    What is your favorite food?
+  fields:
+    - Favorite food: favorite_food
+  under: |
+    [TARGET feedback]
+  check in: question_food
+  ---
+  event: question_food
+  code: |
+    if action_argument('favorite_food'):
+      the_food = action_argument('favorite_food').upper()
+    else:
+      the_food = 'nothing'
+    food_message
+  ---
+  template: food_message
+  content: |
+    _What?_  You like ${ the_food }?
+  target: feedback
+"target-template": |-
+  question: |
+    What is your favorite food?
+  fields:
+    - Favorite food: favorite_food
+  under: |
+    [TARGET feedback]
+  check in: question_food
+  ---
+  template: question_food
+  content: |
+    % if action_argument('favorite_food'):
+    _What?_  You like
+    ${ action_argument('favorite_food').upper() }?
+    % endif
+  target: feedback
 "terminal-screen": |-
   question: |
     Congratulations!
@@ -3598,6 +3740,16 @@
   question: |
     Today's date is ${ today() }.
   mandatory: true
+"under": |-
+  question: |
+    What is the airspeed velocity of an
+    unladen swallow?
+  fields:
+    - Velocity: swallow_velocity
+  under: |
+    Note: if you did not catch this
+    movie reference, you need to
+    improve your cultural literacy.
 "upload": |-
   question: |
     Please upload a picture of yourself.

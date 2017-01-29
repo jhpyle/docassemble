@@ -220,7 +220,7 @@ supported by RTF and PDF formats, such as tables (which are necessary
 for case captions).  To generate .docx files, specify `docx` as one of
 the `valid formats`:
 
-{% include side-by-side.html demo="docx" %}
+{% include side-by-side.html demo="document-docx" %}
 
 To customize document styles, headers, and footers, see the `docx
 reference file` setting, discussed below.

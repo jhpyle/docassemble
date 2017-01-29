@@ -224,7 +224,7 @@ There are some built-in variable names with special meaning:
 * <a name="cron_monthly"></a>[`cron_monthly`] is similar, except runs on a monthly basis.
 
 [`allow_cron`]: #allow_cron
-[scheduled tasks]: {{ site.baseurl }}/docs/scheduled.html
+[scheduled tasks]: {{ site.baseurl }}/docs/background.html#scheduled
 [roles]: {{ site.baseurl }}/docs/roles.html
 [interview logic]: {{ site.baseurl }}/docs/logic.html
 [actions]: {{ site.baseurl }}/docs/functions.html#actions
