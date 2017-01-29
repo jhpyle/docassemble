@@ -47,7 +47,7 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
         sizing += 'height:auto;'    
     return('<img class="daicon" src="' + url + '" style="' + sizing + '"/>')
 
-def signature_html(status, debug, root, extra_scripts, validation_rules):
+def signature_html(status, debug, root, validation_rules):
     if (status.continueLabel):
         continue_label = markdown_to_html(status.continueLabel, trim=True)
     else:
@@ -64,7 +64,7 @@ def signature_html(status, debug, root, extra_scripts, validation_rules):
     output += '\n      </div>\n    </div>\n    <form action="' + root + '" id="daform" method="POST"><input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/><input type="hidden" id="_the_image" name="_the_image" value=""/><input type="hidden" id="_success" name="_success" value="0"/>'
     output += tracker_tag(status)
     output += '</form>\n'
-    add_validation(extra_scripts, validation_rules)
+    add_validation(status.extra_scripts, validation_rules)
     return output
 
 def get_choices_with_abb(status, field, terms=None, links=None):
@@ -433,7 +433,14 @@ def as_sms(status, links=None, menu_items=None):
             qoutput += "\n" + word("Your document is attached.")
     return dict(question=qoutput, help=houtput, next=next_variable)
 
-def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_rules):
+def embed_input(status, variable):
+    for field in status.question.fields:
+        if variable == from_safeid(field.saveas):
+            status.embedded.add(field.saveas)
+            return input_for(status, field, embedded=True)
+    return 'ERROR: field not found'
+
+def as_html(status, url_for, debug, root, validation_rules):
     decorations = list()
     uses_audio_video = False
     audio_text = ''
@@ -442,15 +449,15 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
     varnames = dict()
     onchange = list()
     if 'script' in status.extras and status.extras['script'] is not None:
-        extra_scripts.append(status.extras['script'])
+        status.extra_scripts.append(status.extras['script'])
     if 'css' in status.extras and status.extras['css'] is not None:
-        extra_css.append(status.extras['css'])
+        status.extra_css.append(status.extras['css'])
     if status.continueLabel:
         continue_label = markdown_to_html(status.continueLabel, trim=True)
     else:
         continue_label = word('Continue')        
     # if status.question.script is not None:
-    #     extra_scripts.append(status.question.script)
+    #     status.extra_scripts.append(status.question.script)
     if status.audiovideo is not None:
         uses_audio_video = True
         audio_urls = get_audio_urls(status.audiovideo)
@@ -541,9 +548,9 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
                 continue
             if hasattr(field, 'extras'):
                 if 'script' in field.extras and 'script' in status.extras and field.number in status.extras['script']:
-                    extra_scripts.append(status.extras['script'][field.number])
+                    status.extra_scripts.append(status.extras['script'][field.number])
                 # if 'css' in field.extras and 'css' in status.extras and field.number in status.extras['css']:
-                #     extra_css.append(status.extras['css'][field.number])
+                #     status.extra_css.append(status.extras['css'][field.number])
             if hasattr(field, 'datatype'):
                 if field.datatype == 'html' and 'html' in status.extras and field.number in status.extras['html']:
                     fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-md-12"><note>' + status.extras['html'][field.number].rstrip() + '</note></div></div>\n')
@@ -583,6 +590,9 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
         checkboxes = list()
         files = list()
         checkbox_validation = False
+        if status.subquestionText:
+            sub_question_text = markdown_to_html(status.subquestionText, status=status, indent=18, embedder=embed_input)
+        
         for field in status.question.fields:
             if not status.extras['ok'][field.number]:
                 continue
@@ -592,9 +602,9 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
                 req_tag = ''
             if hasattr(field, 'extras'):
                 # if 'script' in field.extras and 'script' in status.extras:
-                #     extra_scripts.append(status.extras['script'][field.number])
+                #     status.extra_scripts.append(status.extras['script'][field.number])
                 # if 'css' in field.extras and 'css' in status.extras:
-                #     extra_css.append(status.extras['css'][field.number])
+                #     status.extra_css.append(status.extras['css'][field.number])
                 #fieldlist.append("<div>datatype is " + str(field.datatype) + "</div>")
                 if 'show_if_var' in field.extras and 'show_if_val' in status.extras and hasattr(field, 'saveas'):
                     fieldlist.append('                <div class="showif" data-saveas="' + escape_id(field.saveas) + '" data-showif-sign="' + escape_id(field.extras['show_if_sign']) + '" data-showif-var="' + escape_id(field.extras['show_if_var']) + '" data-showif-val=' + noquote(unicode(status.extras['show_if_val'][field.number])) + '>\n')
@@ -670,28 +680,32 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
                     for pair in pairlist:
                         if pair[0] is not None:
                             checkboxes.append(safeid(from_safeid(field.saveas) + "[" + myb64quote(pair[0]) + "]"))
+            if hasattr(field, 'saveas') and field.saveas in status.embedded:
+                continue
             if hasattr(field, 'label'):
                 if status.labels[field.number] == 'no label':
-                    fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-md-12">' + input_for(status, field, extra_scripts, wide=True) + '</div></div>\n')
+                    fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-md-12">' + input_for(status, field, wide=True) + '</div></div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesnowide', 'noyeswide']:
-                    fieldlist.append('                <div class="row"><div class="col-md-12">' + input_for(status, field, extra_scripts) + '</div></div>\n')
+                    fieldlist.append('                <div class="row"><div class="col-md-12">' + input_for(status, field) + '</div></div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
-                    fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field, extra_scripts) + '</div></div>\n')
+                    fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>\n')
                 else:
-                    fieldlist.append('                <div class="form-group' + req_tag + '"><label for="' + escape_id(field.saveas) + '" class="control-label col-sm-4">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-sm-8 fieldpart">' + input_for(status, field, extra_scripts) + '</div></div>\n')
+                    fieldlist.append('                <div class="form-group' + req_tag + '"><label for="' + escape_id(field.saveas) + '" class="control-label col-sm-4">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-sm-8 fieldpart">' + input_for(status, field) + '</div></div>\n')
             if hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras and hasattr(field, 'saveas'):
                 fieldlist.append('                </div>\n')
         output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '>\n              <fieldset>\n'
         output += '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
         if status.subquestionText:
-            output += '                <div>\n' + markdown_to_html(status.subquestionText, status=status, indent=18) + '                </div>\n'
-        #output += '<div class="row">'
+            output += '                <div>\n' + sub_question_text 
+            for saveas_string in status.embedded:
+                output += '<label style="display: none;" for="' + escape_id(saveas_string) + '" class="help-inline" id="' + escape_id(saveas_string) + '-error"></label> '
+            output += '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         if (len(fieldlist)):
             output += "".join(fieldlist)
-        else:
-            output += "                <p>Error: no fields</p>\n"
+        #else:
+        #    output += "                <p>Error: no fields</p>\n"
         #output += '</div>\n'
         if len(checkboxes):
             output += '                <input type="hidden" name="_checkboxes" value=' + myb64doublequote(json.dumps(checkboxes)) + '/>\n'
@@ -701,9 +715,9 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
             for saveasname in files:
                 init_string += '$("#' + escape_for_jquery(saveasname) + '").fileinput();' + "\n"
             init_string += '</script>'
-            #extra_scripts.append('<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + init_string)
-            extra_scripts.append(init_string)
-            #extra_css.append('<link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />')
+            #status.extra_scripts.append('<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + init_string)
+            status.extra_scripts.append(init_string)
+            #status.extra_css.append('<link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />')
         output += '                <p class="sr-only">' + word('You can press the following button:') + '</p>\n'
         output += '                <div class="form-actions"><button class="btn btn-lg btn-primary" type="submit">' + continue_label + '</button></div>\n'
         #output += question_name_tag(status.question)
@@ -1014,7 +1028,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
               </div>
             </div>
 """
-            extra_scripts.append("""<script>
+            status.extra_scripts.append("""<script>
       $("#emailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + repr(str(word("An e-mail address is required."))) + """, 'email': """ + repr(str(word("You need to enter a complete e-mail address."))) + """}}, 'errorClass': 'help-inline'});
     </script>""")
     if len(status.attributions):
@@ -1098,7 +1112,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
     master_output += output
     master_output += '          </section>\n'
     # if status.question.question_type == "fields":
-    #     extra_scripts.append("""\
+    #     status.extra_scripts.append("""\
     # <script>
     #   $("#daform").find('button[type="submit"]').prop("disabled", true);
     #   daform = $("#daform");
@@ -1111,7 +1125,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
     #     }
     #   });
     # </script>""")
-    add_validation(extra_scripts, validation_rules)
+    add_validation(status.extra_scripts, validation_rules)
     for element_id_unescaped in onchange:
         element_id = re.sub(r'(:|\.|\[|\]|,|=)', r'\\\\\1', element_id_unescaped)
         the_script = """\
@@ -1132,7 +1146,7 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
       });
     </script>
 """
-        extra_scripts.append(the_script)
+        status.extra_scripts.append(the_script)
     if 'track_location' in status.extras and status.extras['track_location']:
         track_js = """\
     <script>
@@ -1171,15 +1185,15 @@ def as_html(status, extra_scripts, extra_css, url_for, debug, root, validation_r
         });
       });
     </script>"""
-        extra_scripts.append(track_js)
+        status.extra_scripts.append(track_js)
     if len(status.maps):
         map_js = """\
     <script>
       map_info = [""" + ", ".join(status.maps) + """];
     </script>
 """
-        extra_scripts.append(map_js)
-        extra_scripts.append('<script async defer src="https://maps.googleapis.com/maps/api/js?signed_in=true&callback=daInitMap"></script>')
+        status.extra_scripts.append(map_js)
+        status.extra_scripts.append('<script async defer src="https://maps.googleapis.com/maps/api/js?signed_in=true&callback=daInitMap"></script>')
     return master_output
 
 def add_validation(extra_scripts, validation_rules):
@@ -1211,7 +1225,7 @@ def add_validation(extra_scripts, validation_rules):
       });
     </script>""")
 
-def input_for(status, field, extra_scripts, wide=False):
+def input_for(status, field, wide=False, embedded=False):
     output = ""
     if field.number in status.defaults and type(status.defaults[field.number]) in [str, unicode, int, float]:
         defaultvalue = unicode(status.defaults[field.number])
@@ -1225,6 +1239,20 @@ def input_for(status, field, extra_scripts, wide=False):
         saveas_string = safeid('_field_' + str(field.number))
     else:
         saveas_string = field.saveas
+    if embedded:
+        extra_class = ' input-embedded'
+        extra_checkbox = ' checkbox-embedded'
+        extra_radio = ' radio-embedded'
+        label_text = strip_quote(to_text(markdown_to_html(status.labels[field.number], trim=False, status=status, strip_newlines=True), dict(), list(), status).strip())
+        if label_text != 'no label':
+            title_text = ' title="' + label_text + '"'
+        else:
+            title_text = ''
+    else:
+        extra_class = ''
+        extra_checkbox = ''
+        extra_radio = ''
+        title_text = ''
     if hasattr(field, 'choicetype'):
         if field.choicetype == 'compute':
             pairlist = list(status.selectcompute[field.number])
@@ -1245,7 +1273,7 @@ def input_for(status, field, extra_scripts, wide=False):
                         ischecked = ' checked'
                     else:
                         ischecked = ''
-                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty checkbox-icon" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + '/>')
+                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + '/>')
                 else:
                     inner_fieldlist.append('<div>' + markdown_to_html(pair[1], status=status) + '</div>')
                 id_index += 1
@@ -1265,14 +1293,21 @@ def input_for(status, field, extra_scripts, wide=False):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
-                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
+                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
                 else:
                     inner_fieldlist.append('<div>' + markdown_to_html(unicode(pair[1]), status=status) + '</div>')
                 id_index += 1
             output += "".join(inner_fieldlist)
         else:
-            output += '<p class="sr-only">' + word('Select box') + '</p>'
-            output += '<select name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '" >'
+            if embedded:
+                emb_text = 'class="input-embedded" '
+                label_text = strip_quote(to_text(markdown_to_html(status.labels[field.number], trim=False, status=status, strip_newlines=True), dict(), list(), status).strip())
+                if label_text != 'no label':
+                    emb_text += 'title="' + label_text + '" '
+            else:
+                output += '<p class="sr-only">' + word('Select box') + '</p>'
+                emb_text = ''
+            output += '<select ' + emb_text + 'name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '" >'
             output += '<option value="">' + word('Select...') + '</option>'
             for pair in pairlist:
                 if pair[0] is not None:
@@ -1296,7 +1331,7 @@ def input_for(status, field, extra_scripts, wide=False):
                             ischecked = ' checked="checked"'
                         else:
                             ischecked = ''
-                        inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
+                        inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
                         id_index += 1
                 else:
                     for pair in [['False', status.question.yes()], ['True', status.question.no()]]:
@@ -1305,14 +1340,14 @@ def input_for(status, field, extra_scripts, wide=False):
                             ischecked = ' checked="checked"'
                         else:
                             ischecked = ''
-                        inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
+                        inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
                         id_index += 1
                 output += "".join(inner_fieldlist)
             else:
                 if field.sign > 0:
-                    output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon" type="checkbox" value="True" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
+                    output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' type="checkbox" value="True" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
                 else:
-                    output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon" type="checkbox" value="False" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
+                    output += '<input alt="' + label_text + '" class="to-labelauty checkbox-icon' + extra_checkbox + '"' + title_text + ' type="checkbox" value="False" data-labelauty="' + label_text + '|' + label_text + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
                 if defaultvalue:
                     output += ' checked'
                 output += '/> '
@@ -1327,7 +1362,7 @@ def input_for(status, field, extra_scripts, wide=False):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
-                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
+                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
                     id_index += 1
             else:
                 for pair in [['False', status.question.yes()], ['True', status.question.no()], ['None', status.question.maybe()]]:
@@ -1336,7 +1371,7 @@ def input_for(status, field, extra_scripts, wide=False):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
-                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
+                    inner_fieldlist.append('<input alt="' + formatted_item + '" data-labelauty="' + formatted_item + '|' + formatted_item + '" class="to-labelauty radio-icon' + extra_radio + '"' + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" type="radio" value="' + unicode(pair[0]) + '"' + ischecked + '/>')
                     id_index += 1
             output += "".join(inner_fieldlist)
         elif field.datatype in ['file', 'files', 'camera', 'camcorder', 'microphone']:
@@ -1352,7 +1387,10 @@ def input_for(status, field, extra_scripts, wide=False):
                 accept = ' accept="audio/*;capture=microphone"'
             else:
                 accept = ''
-            output += '<input alt="' + word("You can upload a file here") + '" type="file" class="file" data-show-upload="false" data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + '/>'
+            if embedded:
+                output += '<input alt="' + word("You can upload a file here") + '" type="file" class="file file-embedded" name="' + escape_id(saveas_string) + '"' + title_text + ' id="' + escape_id(saveas_string) + '"' + multipleflag + accept + '/>'
+            else:
+                output += '<input alt="' + word("You can upload a file here") + '" type="file" class="file" data-show-upload="false" data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + '/>'
             #output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>\n'
         elif field.datatype == 'range':
             ok = True
@@ -1370,10 +1408,13 @@ def input_for(status, field, extra_scripts, wide=False):
                     the_step = ''
                 max_string = str(int(status.extras['max'][field.number]))
                 min_string = str(int(status.extras['min'][field.number]))
-                output += '<input alt="' + word('Select a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + the_default + ' data-slider-max="' + max_string + '" data-slider-min="' + min_string + '"' + the_step + '></input>'
-                extra_scripts.append('<script>$("#' + escape_for_jquery(saveas_string) + '").slider({tooltip: "always"});</script>\n')
+                if embedded:
+                    output += '<div class="form-group slider-embedded"' + title_text + '><input alt="' + word('Select a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + the_default + ' data-slider-max="' + max_string + '" data-slider-min="' + min_string + '"' + the_step + '></div>'
+                else:
+                    output += '<input alt="' + word('Select a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + the_default + ' data-slider-max="' + max_string + '" data-slider-min="' + min_string + '"' + the_step + '>'
+                status.extra_scripts.append('<script>$("#' + escape_for_jquery(saveas_string) + '").slider({tooltip: "always"});</script>\n')
         elif field.datatype == 'area':
-            output += '<textarea alt="' + word("Input box") + '" class="form-control" rows="4" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + placeholdertext + '>'
+            output += '<textarea alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + title_text + ' rows="4" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + placeholdertext + '>'
             if defaultvalue is not None:
                 output += defaultvalue
             output += '</textarea>'
@@ -1393,7 +1434,7 @@ def input_for(status, field, extra_scripts, wide=False):
                 if field.datatype == 'currency':
                     step_string = ' step="0.01"'
                     output += '<div class="input-group"><span class="input-group-addon" id="addon-' + do_escape_id(saveas_string) + '">' + currency_symbol() + '</span>'
-            output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control" type="' + input_type + '"' + step_string + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
+            output += '<input' + defaultstring + placeholdertext + ' alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + title_text + ' type="' + input_type + '"' + step_string + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"'
             if field.datatype == 'currency':
                 output += ' aria-describedby="addon-' + do_escape_id(saveas_string) + '"/></div><label style="display: none;" for="' + escape_id(saveas_string) + '" class="help-inline" id="' + escape_id(saveas_string) + '-error"></label>'
             else:
@@ -1429,3 +1470,6 @@ def escape_for_jquery(text):
 
 def myb64unquote(the_string):
     return(codecs.decode(the_string, 'base64').decode('utf-8'))
+
+def strip_quote(the_string):
+    return re.sub(r'"', r'', the_string)

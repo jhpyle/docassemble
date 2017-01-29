@@ -1,0 +1,33 @@
+metadata:
+  title: Checking in
+  documentation: "http://docassemble.org/docs/background.html#check in"
+  example start: 1
+  example end: 4
+---
+mandatory: true
+code: |
+  counter = 0
+  drafts = set()
+---
+question: |
+  What is your favorite food?
+fields:
+  - Favorite food: favorite_food
+check in: track_drafts
+---
+event: track_drafts
+code: |
+  counter += 1
+  if action_argument('favorite_food'):
+    drafts.add(action_argument('favorite_food'))
+---
+mandatory: true
+question: |
+  Your favorite food
+subquestion: |
+  Your favorite food is ${ favorite_food }.
+
+  You checked in ${ counter } times.
+
+  Your draft choices were
+  ${ comma_and_list(drafts) }.

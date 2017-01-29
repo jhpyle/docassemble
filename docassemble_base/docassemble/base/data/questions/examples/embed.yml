@@ -1,0 +1,32 @@
+metadata:
+  title: Embedded fields
+  documentation: "http://docassemble.org/docs/fields.html#embed"
+  example start: 1
+  example end: 1
+---
+question: |
+  Fill in the blanks.
+subquestion: |
+  I went downtown to get some
+  [FIELD grocery_item].
+  I slipped on the ice and
+  fell in the
+  [FIELD unfortunate_place].
+fields:
+  - Grocery item: grocery_item
+  - no label: unfortunate_place
+    choices:
+      - storm drain
+      - gutter
+      - mineshaft
+---
+mandatory: true
+question: |
+  While shopping for
+  ${ grocery_item },
+  you took a spill
+  and ended up in the
+  ${ unfortunate_place }.
+subquestion: |
+  You have my
+  condolences.

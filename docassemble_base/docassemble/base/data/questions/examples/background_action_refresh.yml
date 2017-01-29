@@ -2,7 +2,7 @@ metadata:
   title: Set a variable and refresh the screen
   example start: 2
   example end: 7
-  documentation: "http://docassemble.org/docs/functions.html#ui_notification"
+  documentation: "http://docassemble.org/docs/background.html#ui_notification"
 ---
 modules:
   - docassemble.base.util

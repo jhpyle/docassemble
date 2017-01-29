@@ -1,0 +1,31 @@
+metadata:
+  title: Check in feedback
+  documentation: "http://docassemble.org/docs/background.html#check in"
+  example start: 2
+  example end: 3
+---
+mandatory: true
+question: |
+  Your favorite food is ${ favorite_food }.
+---
+check in: question_food
+question: |
+  What is your favorite food?  [TARGET feedback_one]
+fields:
+  - Favorite food: favorite_food
+under: |
+  [TARGET feedback_two]
+---
+event: question_food
+code: |
+  food = action_argument('favorite_food')
+  if food:
+    content_one = "  (Please don't be gross.)"
+    content_two = "What? You like " + food.upper() + "?"
+  else:
+    content_one = ''
+    content_two = ''
+  background_response([{'target': 'feedback_one',
+                      'content': content_one},
+                      {'target': 'feedback_two',
+                      'content': content_two}])

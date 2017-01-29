@@ -24,6 +24,9 @@ from docassemble.base.mako.template import Template as MakoTemplate
 from types import CodeType, NoneType
 
 debug = False
+import_and_run_process_action = compile('from docassemble.base.util import *\nprocess_action()', '', 'exec')
+run_process_action = compile('process_action()', '', 'exec')
+match_process_action = re.compile(r'process_action\(')
 match_mako = re.compile(r'<%|\${|% if|% for|% while')
 emoji_match = re.compile(r':([^ ]+):')
 nameerror_match = re.compile(r'\'(.*)\' (is not defined|referenced before assignment)')
@@ -269,6 +272,7 @@ class InterviewStatus(object):
         self.using_screen_reader = False
         self.can_go_back = True
         self.attachments = None
+        self.embedded = set()
         self.extras = dict()
     def initialize_screen_reader(self):
         self.using_screen_reader = True
@@ -413,6 +417,8 @@ class Question:
         self.progress = None
         self.script = None
         self.css = None
+        self.checkin = None
+        self.target = None
         self.decorations = None
         self.audiovideo = None
         self.allow_emailing = True
@@ -682,6 +688,8 @@ class Question:
                 data['modules'] = [data['modules']]
             if type(data['modules']) is list:
                 self.question_type = 'modules'
+                if 'docassemble.base.util' in data['modules'] or 'docassemble.base.legal' in data['modules']:
+                    self.interview.imports_util = True
                 self.module_list = data['modules']
             else:
                 raise DAError("A modules section must be organized as a list." + self.idebug(data))
@@ -938,6 +946,11 @@ class Question:
             self.fields_used.add(data['signature'])
         if 'under' in data:
             self.undertext = TextObject(definitions + unicode(data['under']), names_used=self.mako_names)
+        if 'check in' in data:
+            self.interview.uses_util = True
+            if type(data['check in']) in (dict, list, set):
+                raise DAError("A check in event must be text or a list." + self.idebug(data))
+            self.checkin = str(data['check in'])
         if 'yesno' in data:
             self.fields.append(Field({'saveas': data['yesno'], 'boolean': 1}))
             self.fields_used.add(data['yesno'])
@@ -963,6 +976,7 @@ class Question:
             else:
                 raise DAError("A sets phrase must be text or a list." + self.idebug(data))
         if 'event' in data:
+            self.interview.uses_util = True
             if type(data['event']) is str:
                 self.fields_used.add(data['event'])
             elif type(data['event']) is list:
@@ -1021,6 +1035,13 @@ class Question:
             except:
                 logmessage("Compile error in need code:\n" + str(data['need']) + "\n" + str(sys.exc_info()[0]))
                 raise
+        if 'target' in data:
+            self.interview.uses_util = True
+            if type(data['target']) in [list, dict, set, bool, int, float]:
+                raise DAError("The target of a template must be plain text." + self.idebug(data))
+            if 'template' not in data:
+                raise DAError("A target directive can only be used with a template." + self.idebug(data))
+            self.target = data['target']
         if 'template' in data and 'content file' in data:
             if type(data['content file']) is not list:
                 data['content file'] = [data['content file']]
@@ -1056,6 +1077,8 @@ class Question:
             else:
                 self.question_type = 'code'
             if type(data['code']) == str:
+                if not self.interview.calls_process_action and match_process_action.search(data['code']):
+                    self.interview.calls_process_action = True
                 try:
                     self.compute = compile(data['code'], '', 'exec')
                     self.sourcecode = data['code']
@@ -1957,6 +1980,8 @@ class Interview:
         self.names_used = set()
         self.attachment_options = dict()
         self.external_files = dict()
+        self.calls_process_action = False
+        self.imports_util = False
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
     def get_title(self):
@@ -2092,6 +2117,11 @@ class Interview:
             try:
                 if 'sms_variable' in interview_status.current_info and interview_status.current_info['sms_variable'] is not None:
                     raise ForcedNameError("name '" + str(interview_status.current_info['sms_variable']) + "' is not defined")
+                if not self.calls_process_action:
+                    if self.imports_util:
+                        exec(run_process_action, user_dict)
+                    else:
+                        exec(import_and_run_process_action, user_dict)
                 for question in self.questions_list:
                     if question.question_type == 'code' and question.is_initial:
                         #logmessage("Running some code:\n\n" + question.sourcecode)
@@ -2517,6 +2547,8 @@ class Interview:
                             docassemble.base.functions.pop_current_variable()
                             return({'type': 'continue'})
                         if question.question_type == "template":
+                            if question.target is not None:
+                                return({'type': 'template', 'question_text': question.content.text(user_dict).rstrip(), 'subquestion_text': None, 'under_text': None, 'continue_label': None, 'audiovideo': None, 'decorations': None, 'help_text': None, 'attachments': None, 'question': question, 'variable_x': None, 'variable_i': None, 'selectcompute': dict(), 'defaults': dict(), 'hints': dict(), 'helptexts': dict(), 'extras': dict(), 'labels': dict()})
                             string = "import docassemble.base.core"
                             #logmessage("Doing " + string)
                             exec(string, user_dict)

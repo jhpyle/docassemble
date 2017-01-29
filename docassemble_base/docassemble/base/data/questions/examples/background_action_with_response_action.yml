@@ -2,7 +2,7 @@ metadata:
   title: Set a variable
   example start: 2
   example end: 7
-  documentation: "http://docassemble.org/docs/functions.html#background_response_action"
+  documentation: "http://docassemble.org/docs/background.html#background_response_action"
 ---
 modules:
   - docassemble.base.util

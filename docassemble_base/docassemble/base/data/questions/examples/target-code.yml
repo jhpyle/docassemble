@@ -1,0 +1,27 @@
+metadata:
+  title: Check in and run code
+  documentation: "http://docassemble.org/docs/background.html#check in"
+  example start: 1
+  example end: 3
+---
+question: |
+  What is your favorite food?
+fields:
+  - Favorite food: favorite_food
+under: |
+  [TARGET feedback]
+check in: question_food
+---
+event: question_food
+code: |
+  food = action_argument('favorite_food')
+  if food:
+    content = "What? You like " + food.upper() + "?"
+  else:
+    content = ''
+  background_response(target='feedback',
+                      content=content)
+---
+mandatory: true
+question: |
+  Your favorite food is ${ favorite_food }.

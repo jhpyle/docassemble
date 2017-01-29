@@ -1,6 +1,6 @@
 metadata:
   title: Scheduled task
-  documentation: "http://docassemble.org/docs/scheduled.html"
+  documentation: "http://docassemble.org/docs/background.html#scheduled"
 ---
 modules:
   - docassemble.base.util

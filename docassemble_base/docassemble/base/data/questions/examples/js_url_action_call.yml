@@ -1,21 +1,16 @@
 metadata:
   title: Calling actions
   documentation: "http://docassemble.org/docs/functions.html#js_url_action_call"
-  example start: 3
-  example end: 4
----
-modules:
-  - docassemble.base.util
----
-initial: true
-code: |
-  process_action()
+  example start: 1
+  example end: 2
 ---
 mandatory: true
 question: |
   The pie
 subquestion: |
-  <button id="run">Run</button>
+  <button id="run" class="btn btn-primary">
+    Run
+  </button>
 
   <span id="resultsArea"></span>
 script: |

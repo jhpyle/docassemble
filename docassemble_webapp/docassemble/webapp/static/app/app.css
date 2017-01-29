@@ -851,3 +851,116 @@ img.da-sig-spinner {
 div.undertext {
     margin-top: 10px;
 }
+
+input.input-embedded {
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    display: inline;
+    padding: 0px 8px;
+    border-style: solid;
+    line-height: inherit;
+    border-color: #888888;
+    min-width: 8em;
+    border-radius: 2px;
+    width: auto;
+    background-color: #f0f0ff;
+    border-width: 0px 0px 1px 0px;
+    margin: 4px 0px 3px 0px;
+    height: 31px;
+}
+
+input.input-embedded:focus {
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    border-width: 0px 0px 0px 0px;
+    background-color: #e0e0ff;
+    height: 30px;
+    color: #222222;
+    margin: 4px 0px 4px 0px;
+}
+
+textarea.input-embedded {
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    padding: 0px 8px;
+    border-style: solid;
+    border-width: 0px 0px 0px 0px;
+    background-color: #f0f0ff;
+    line-height: inherit;
+    border-radius: 2px;
+    margin: 10px 0px 0px 0px;
+}
+
+textarea.input-embedded:focus {
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    background-color: #e0e0ff;
+    color: #222222;
+}
+
+textarea.input-embedded:hover {
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    border-color: #888888;
+}
+
+span.input-embedded {
+    display: inline;
+    padding: 0px 8px;
+    border-style: solid;
+    border-width: 0px 0px 0px 0px;
+    border-radius: 0;
+    line-height: inherit;
+    background-color: #e0e0ff;
+    height: 30px;
+    min-width: 8em;
+    margin: 4px 0px 4px 0px;
+    border-radius: 2px;
+}
+
+select.input-embedded {
+    display: inline;
+    padding: 0px 4px;
+    line-height: inherit;
+    border-style: solid;
+    min-width: 8em;
+    background-color: #f0f0ff;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    outline: 0;
+    border-color: #888888;
+    border-radius: 2px;
+    border-width: 0px 0px 1px 0px;
+    margin: 4px 0px 3px 0px;
+    height: 31px;
+}
+
+select.input-embedded:focus {
+    color: #222222;
+    background-color: #e0e0ff;
+    border-width: 0px 0px 0px 0px;
+    height: 30px;
+    margin: 4px 0px 4px 0px;
+}
+
+select.input-embedded option {
+    outline: 0;
+    border-style: none;
+    margin: 0px;
+}
+
+input.checkbox-embedded {
+
+}
+
+input.radio-embedded {
+
+}
+
+input.file-embedded {
+
+}
+
+div.slider-embedded {
+
+}

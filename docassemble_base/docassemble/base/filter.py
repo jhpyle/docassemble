@@ -170,6 +170,8 @@ def rtf_filter(text, metadata=dict(), styles=dict(), question=None):
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_as_rtf, text)
     text = re.sub(r'\[QR ([^\]]+)\]', qr_as_rtf, text)
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
+    text = re.sub(r'\[FIELD ([^\]]+)\]', '', text)
+    text = re.sub(r'\[TARGET ([^\]]+)\]', '', text)
     text = re.sub(r'\[YOUTUBE ([^\]]+)\]', '', text)
     text = re.sub(r'\[VIMEO ([^\]]+)\]', '', text)
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', rtf_caption_table, text)
@@ -295,6 +297,8 @@ def docx_filter(text, metadata=dict(), question=None):
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_include_docx, text)
     text = re.sub(r'\[QR ([^\]]+)\]', qr_include_docx, text)
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
+    text = re.sub(r'\[FIELD ([^\]]+)\]', '', text)
+    text = re.sub(r'\[TARGET ([^\]]+)\]', '', text)
     text = re.sub(r'\[YOUTUBE ([^\]]+)\]', '', text)
     text = re.sub(r'\[VIMEO ([^\]]+)\]', '', text)
     text = re.sub(r'\\clearpage *\\clearpage', '', text)
@@ -353,6 +357,8 @@ def pdf_filter(text, metadata=dict(), question=None):
     text = re.sub(r'\[QR ([^,\]]+), *([0-9A-Za-z.%]+)\]', qr_include_string, text)
     text = re.sub(r'\[QR ([^\]]+)\]', qr_include_string, text)
     text = re.sub(r'\[MAP ([^\]]+)\]', '', text)
+    text = re.sub(r'\[FIELD ([^\]]+)\]', '', text)
+    text = re.sub(r'\[TARGET ([^\]]+)\]', '', text)
     text = re.sub(r'\[YOUTUBE ([^\]]+)\]', '', text)
     text = re.sub(r'\[VIMEO ([^\]]+)\]', '', text)
     text = re.sub(r'\\clearpage *\\clearpage', r'\\clearpage', text)
@@ -395,11 +401,16 @@ def pdf_filter(text, metadata=dict(), question=None):
     text = re.sub(r'\[BORDER\] *(.+?)\n *\n', border_pdf, text, flags=re.MULTILINE | re.DOTALL)
     return(text)
 
-def html_filter(text, status=None, question=None):
+def html_filter(text, status=None, question=None, embedder=None):
     if question is None and status is not None:
         question = status.question
     text = text + "\n\n"
     text = re.sub(r'^[|] (.*)$', r'\1<br>', text, flags=re.MULTILINE)
+    if embedder is not None:
+        text = re.sub(r'\[FIELD ([^\]]+)\]', lambda x: embedder(status, x.group(1)), text)
+    else:
+        text = re.sub(r'\[FIELD ([^\]]+)\]', 'ERROR: FIELD cannot be used here', text)
+    text = re.sub(r'\[TARGET ([^\]]+)\]', target_html, text)
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, emoji=True, question=question), text)
     text = re.sub(r'\[FILE ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_url_string(x, question=question), text)
     text = re.sub(r'\[FILE ([^,\]]+)\]', lambda x: image_url_string(x, question=question), text)
@@ -491,6 +502,11 @@ def map_string(encoded_text, status):
     map_number = len(status.maps)
     status.maps.append(codecs.decode(encoded_text, 'base64').decode('utf-8'))
     return '<div id="map' + str(map_number) + '" class="googleMap"></div>'
+
+def target_html(match):
+    target = match.group(1)
+    target = re.sub(r'[^A-Za-z0-9\_]', r'', str(target))
+    return '<span id="datarget' + target + '"></span>'
 
 def pdf_two_col(match, add_line=False):
     firstcol = clean_markdown_to_latex(match.group(1))
@@ -866,7 +882,7 @@ def emoji_insert(text, status=None, images=None):
     else:
         return(":" + str(text) + ":")
 
-def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use_pandoc=False, escape=False, do_terms=True, indent=None, strip_newlines=None, divclass=None):
+def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use_pandoc=False, escape=False, do_terms=True, indent=None, strip_newlines=None, divclass=None, embedder=None):
     if question is None and status is not None:
         question = status.question
     if question is not None:
@@ -878,7 +894,7 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
                     #logmessage("string is now " + str(a) + "\n")
     if status is not None and len(question.interview.images) > 0:
         a = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status)), a)
-    a = html_filter(unicode(a), status=status, question=question)
+    a = html_filter(unicode(a), status=status, question=question, embedder=embedder)
     #logmessage("before: " + a)
     if use_pandoc:
         converter = MyPandoc()

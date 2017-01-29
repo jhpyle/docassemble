@@ -2156,6 +2156,32 @@ def checkin():
         messages = get_chat_log(user_dict['_internal']['livehelp']['mode'], yaml_filename, session_id, auth_user_id, temp_user_id, secret, auth_user_id, temp_user_id)
         return jsonify(success=True, messages=messages)
     if request.form.get('action', None) == 'checkin':
+        commands = list()
+        checkin_code = request.form.get('checkinCode', None)
+        do_action = request.form.get('do_action', None)
+        if do_action is not None:
+            parameters = dict()
+            form_parameters = request.form.get('parameters', None)
+            if form_parameters is not None:
+                form_parameters = json.loads(form_parameters)
+                for param in form_parameters:
+                    if param['name'] in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
+                        continue
+                    try:
+                        parameters[from_safeid(param['name'])] = param['value']
+                    except:
+                        logmessage("checkin: failed to unpack " + str(param['name']))
+            #logmessage("Action was " + str(do_action) + " and parameters were " + str(parameters))
+            steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
+            interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=dict(action=do_action, arguments=parameters)))
+            interview.assemble(user_dict, interview_status)
+            if interview_status.question.question_type == "backgroundresponse":
+                the_response = interview_status.question.backgroundresponse
+                commands.append(dict(action=do_action, value=docassemble.base.functions.safe_json(the_response), extra='backgroundresponse'))
+            elif interview_status.question.question_type == "template" and interview_status.question.target is not None:
+                commands.append(dict(action=do_action, value=dict(target=interview_status.question.target, content=docassemble.base.util.markdown_to_html(interview_status.questionText, trim=True)), extra='backgroundresponse'))
+            save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted)
         peer_ok = False
         help_ok = False
         num_peers = 0
@@ -2335,7 +2361,6 @@ def checkin():
             r.publish(key, parameters)
         worker_key = 'da:worker:uid:' + str(session_id) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
         worker_len = r.llen(worker_key)
-        commands = list()
         if worker_len > 0:
             workers_inspected = 0
             while workers_inspected <= worker_len:
@@ -2353,9 +2378,9 @@ def checkin():
                         r.rpush(worker_key, worker_id)
                 workers_inspected += 1
         if peer_ok or help_ok:
-            return jsonify(success=True, chat_status=chatstatus, num_peers=num_peers, help_available=help_available, phone=call_forwarding_message, observerControl=observer_control, commands=commands)
+            return jsonify(success=True, chat_status=chatstatus, num_peers=num_peers, help_available=help_available, phone=call_forwarding_message, observerControl=observer_control, commands=commands, checkin_code=checkin_code)
         else:
-            return jsonify(success=True, chat_status=chatstatus, phone=call_forwarding_message, observerControl=observer_control, commands=commands)
+            return jsonify(success=True, chat_status=chatstatus, phone=call_forwarding_message, observerControl=observer_control, commands=commands, checkin_code=checkin_code)
     return jsonify(success=False)
 
 # @app.before_request
@@ -3010,6 +3035,10 @@ def index():
         reload_after = 0
     if not is_ajax:
         scripts = standard_scripts()
+        if interview_status.question.checkin is not None:
+            do_action = repr(str(interview_status.question.checkin))
+        else:
+            do_action = 'null'
         if 'javascript' in interview_status.question.interview.external_files:
             for fileref in interview_status.question.interview.external_files['javascript']:
                 scripts += '    <script src="' + get_url_from_file_reference(fileref, question=interview_status.question) + '"></script>\n';
@@ -3029,7 +3058,10 @@ def index():
         if chat_status != 'off':
             send_changes = 'true'
         else:
-            send_changes = 'false'
+            if do_action != 'null':
+                send_changes = 'true'
+            else:
+                send_changes = 'false'
         if current_user.is_authenticated:
             user_id_string = str(current_user.id)
             if current_user.has_role('admin', 'developer', 'advocate'):
@@ -3063,6 +3095,7 @@ def index():
       var socket = null;
       var foobar = null;
       var chatHistory = [];
+      var daCheckinCode = null;
       var daCheckingIn = 0;
       var daShowingHelp = 0;
       var daIsUser = """ + is_user + """;
@@ -3079,6 +3112,7 @@ def index():
       var daShowingSpinner = false;
       var daSpinnerTimeout = null;
       var daSubmitter = null;
+      var daDoAction = """ + do_action + """;
       var daCsrf = """ + repr(str(generate_csrf())) + """;
       function url_action(action, args){
           if (args == null){
@@ -3449,10 +3483,17 @@ def index():
       var daChatPartnerRoles = """ + json.dumps(user_dict['_internal']['livehelp']['partner_roles']) + """;
       function daValidationHandler(form){
         //form.submit();
+        $("#daform").each(function(){
+          $(this).find(':input').off('change', pushChanges);
+        });
+        if (checkinInterval != null){
+          clearInterval(checkinInterval);
+        }
         dadisable = setTimeout(function(){
           $(form).find('input[type="submit"]').prop("disabled", true);
           $(form).find('button[type="submit"]').prop("disabled", true);
         }, 1);
+
         if ($('input[name="_files"]').length){
           $("#uploadiframe").remove();
           var iframe = $('<iframe name="uploadiframe" id="uploadiframe" style="display: none"></iframe>');
@@ -3532,6 +3573,7 @@ def index():
           $("body").html(data.body);
           $("body").removeClass();
           $("body").addClass(data.bodyclass);
+          daDoAction = data.do_action;
           daChatAvailable = data.livehelp.available;
           daChatMode = data.livehelp.mode;
           daChatRoles = data.livehelp.roles;
@@ -3695,8 +3737,15 @@ def index():
           }
         });
       }
+      function daResetCheckinCode(){
+        daCheckinCode = Math.random();
+      }
       function daCheckinCallback(data){
         daCheckingIn = 0;
+        if (data.checkin_code != daCheckinCode){
+          console.log("Ignoring checkincallback because code is wrong");
+          return;
+        }
         //console.log("success is " + data.success);
         if (data.success){
           if (data.commands.length > 0){
@@ -3714,6 +3763,25 @@ def index():
               }
               else if (command.extra == 'javascript'){
                 eval(command.value);
+              }
+              else if (command.extra == 'backgroundresponse'){
+                var assignments = Array();
+                if (command.value.hasOwnProperty('target') && command.value.hasOwnProperty('content')){
+                  assignments.push({target: command.value.target, content: command.value.content});
+                }
+                if (Array.isArray(command.value)){
+                  for (i = 0; i < command.value.length; ++i){
+                    var possible_assignment = command.value[i];
+                    if (possible_assignment.hasOwnProperty('target') && possible_assignment.hasOwnProperty('content')){
+                      assignments.push({target: possible_assignment.target, content: possible_assignment.content});
+                    }
+                  }
+                }
+                for (i = 0; i < assignments.length; ++i){
+                  var assignment = assignments[i];
+                  $('#datarget' + assignment.target.replace(/[^A-Za-z0-9\_]/g)).html(assignment.content);
+                }
+                $(document).trigger('daCheckIn', [command.action, command.value]);
               }
             }
             // setTimeout(function(){
@@ -3806,10 +3874,20 @@ def index():
         }
         var datastring;
         if ((daChatStatus != 'off') && $("#daform").length > 0 && !daBeingControlled){ // daChatStatus == 'waiting' || daChatStatus == 'standby' || daChatStatus == 'ringing' || daChatStatus == 'ready' || daChatStatus == 'on' || daChatStatus == 'observeonly'
-          datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, parameters: JSON.stringify($("#daform").serializeArray())});
+          if (daDoAction != null){
+            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: JSON.stringify($("#daform").serializeArray()), do_action: daDoAction});
+          }
+          else{
+            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: JSON.stringify($("#daform").serializeArray())});
+          }
         }
         else{
-          datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf});
+          if (daDoAction != null){
+            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, do_action: daDoAction, parameters: JSON.stringify($("#daform").serializeArray())});
+          }
+          else{
+            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode});
+          }
         }
         //console.log("Doing checkin with " + daChatStatus);
         $.ajax({
@@ -3837,10 +3915,10 @@ def index():
           clearInterval(checkinInterval);
         }
       }
-      function daStartCheckingIn(){
-        daStopCheckingIn();
-        checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
-      }
+      //function daStartCheckingIn(){
+      //  daStopCheckingIn();
+      //  checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
+      //}
       function showSpinner(){
         if ($("#question").length > 0){
           $('<div id="daSpinner" class="spinner-container"><div class="container"><div class="row"><div class="col-lg-6 col-md-8 col-sm-10"><img class="da-spinner" src=""" + '"' + str(url_for('static', filename='app/loader.gif')) + '"' + """></div></div></div></div>').appendTo("body");
@@ -3859,7 +3937,15 @@ def index():
         daShowingSpinner = false;
         daSpinnerTimeout = null;
       }
+      function adjustInputWidth(e){
+        var contents = $(this).val();
+        contents = contents.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/ /g, '&nbsp;');
+        $('<span class="input-embedded" id="dawidth">').html( contents ).appendTo('body');
+        $(this).width($('#dawidth').width() + 16);
+        $('#dawidth').remove();
+      }
       function daInitialize(){
+        daResetCheckinCode();
         if (daSpinnerTimeout != null){
           clearTimeout(daSpinnerTimeout);
           daSpinnerTimeout = null;
@@ -3894,6 +3980,8 @@ def index():
             daShowingHelp = 0;""" + debug_readability_question + """
           }
         });
+        $("input.input-embedded").on('keyup', adjustInputWidth);
+        $("input.input-embedded").each(adjustInputWidth);
         $(function () {
           $('[data-toggle="popover"]').popover({trigger: 'click focus', html: true})
         });
@@ -4038,7 +4126,12 @@ def index():
           daSendChanges = true;
         }
         else{
-          daSendChanges = false;
+          if (daDoAction == null){
+            daSendChanges = false;
+          }
+          else{
+            daSendChanges = true;
+          }
         }
         if (daSendChanges){
           $("#daform").each(function(){
@@ -4057,6 +4150,11 @@ def index():
         if (daShowingSpinner){
           hideSpinner();
         }
+        if (checkinInterval != null){
+          clearInterval(checkinInterval);
+        }
+        setTimeout(daCheckin, 100);
+        checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
         $(document).trigger('daPageLoad');
       }
       $(document).ready(function(){
@@ -4065,8 +4163,8 @@ def index():
         if (daReloadAfter > 0){
           daReloader = setTimeout(function(){daRefreshSubmit();}, daReloadAfter);
         }
-        setTimeout(daCheckin, 100);
-        checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
+        // setTimeout(daCheckin, 100);
+        // checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
         $( window ).bind('unload', function() {
           daStopCheckingIn();
           if (socket != null && socket.connected){
@@ -4149,8 +4247,8 @@ def index():
         interview_language = interview_status.question.language
     else:
         interview_language = DEFAULT_LANGUAGE
-    extra_scripts = list()
-    extra_css = list()
+    interview_status.extra_scripts = list()
+    interview_status.extra_css = list()
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'help-inline'}
     if interview_status.question.language != '*':
         interview_language = interview_status.question.language
@@ -4164,14 +4262,14 @@ def index():
     if not is_ajax:
         standard_header_start = standard_html_start(interview_language=interview_language, debug=DEBUG)
     if interview_status.question.question_type == "signature":
-        extra_scripts.append('<script>$( document ).ready(function() {daInitializeSignature();});</script>')
+        interview_status.extra_scripts.append('<script>$( document ).ready(function() {daInitializeSignature();});</script>')
         bodyclass="dasignature"
         if not is_ajax:
             #output = '<!doctype html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" />\n    <title>' + interview_status.question.interview.get_title().get('full', default_title) + '</title>\n    <link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet">\n  </head>\n  <body class="dasignature">\n'
             start_output = standard_header_start + '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dasignature">\n'
-        output = signature_html(interview_status, DEBUG, ROOT, extra_scripts, validation_rules)
+        output = signature_html(interview_status, DEBUG, ROOT, validation_rules)
         if not is_ajax:
-            end_output = scripts + "\n    " + "\n    ".join(extra_scripts) + """\n  </body>\n</html>"""
+            end_output = scripts + "\n    " + "\n    ".join(interview_status.extra_scripts) + """\n  </body>\n</html>"""
     else:
         bodyclass="dabody"
         if DEBUG:
@@ -4200,7 +4298,7 @@ def index():
                     interview_status.screen_reader_links[question_type].append([url_for('speak_file', question=interview_status.question.number, digest='XXXTHEXXX' + question_type + 'XXXHASHXXX', type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
         # else:
         #     logmessage("speak_text was not here")
-        content = as_html(interview_status, extra_scripts, extra_css, url_for, DEBUG, ROOT, validation_rules)
+        content = as_html(interview_status, url_for, DEBUG, ROOT, validation_rules)
         #sms_content = as_sms(interview_status)
         if DEBUG:
             readability = dict()
@@ -4260,7 +4358,7 @@ def index():
             if 'css' in interview_status.question.interview.external_files:
                 for fileref in interview_status.question.interview.external_files['css']:
                     start_output += '\n    <link href="' + get_url_from_file_reference(fileref, question=interview_status.question) + '" rel="stylesheet">'
-            start_output += '\n' + indent_by("".join(extra_css).strip(), 4).rstrip()
+            start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
             start_output += '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dabody">\n'
         output = make_navbar(interview_status, default_title, default_short_title, (steps - user_dict['_internal']['steps_offset']), SHOW_LOGIN, user_dict['_internal']['livehelp']) + flash_content + '    <div class="container">' + "\n      " + '<div class="row">\n        <div class="tab-content">\n'
         if interview_status.question.interview.use_progress_bar:
@@ -4339,14 +4437,14 @@ def index():
 #                        </div>
 # """
         if not is_ajax:
-            end_output = scripts + "\n" + "".join(extra_scripts) + """\n  </body>\n</html>"""
+            end_output = scripts + "\n" + "".join(interview_status.extra_scripts) + """\n  </body>\n</html>"""
     #logmessage(output.encode('utf8'))
     #logmessage("Request time interim: " + str(g.request_time()))
     if 'uid' in session and 'i' in session:
         key = 'da:html:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
         #logmessage("Setting html key " + key)
         pipe = r.pipeline()
-        pipe.set(key, json.dumps(dict(body=output, extra_scripts=extra_scripts, extra_css=extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass)))
+        pipe.set(key, json.dumps(dict(body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass)))
         pipe.expire(key, 60)
         pipe.execute()
         #sys.stderr.write("10\n")
@@ -4356,7 +4454,11 @@ def index():
             inputkey = 'da:input:uid:' + str(session['uid']) + ':i:' + str(session['i']) + ':userid:' + str(the_user_id)
             r.publish(inputkey, json.dumps(dict(message='newpage', key=key)))
     if is_ajax:
-        response = jsonify(action='body', body=output, extra_scripts=extra_scripts, extra_css=extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf())
+        if interview_status.question.checkin is not None:
+            do_action = interview_status.question.checkin
+        else:
+            do_action = None
+        response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action)
     else:
         output = start_output + output + end_output
         response = make_response(output.encode('utf8'), '200 OK')
@@ -4791,7 +4893,7 @@ def observer():
         //   //$("#daform").find(':input').prop("disabled", true);
         // }, 1);
         $("#daform").each(function(){
-          $(this).find(':input').change(pushChanges);
+          $(this).find(':input').on('change', pushChanges);
         });
         daInitialized = true;
         daShowingHelp = 0;

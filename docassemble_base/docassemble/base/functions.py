@@ -257,7 +257,10 @@ def action_argument(item):
     """Used when processing an "action."  Returns the value of the given 
     argument, which is assumed to have been passed to url_action() or 
     interview_url_action()."""
-    return this_thread.current_info['arguments'][item]
+    if 'arguments' in this_thread.current_info:
+        return this_thread.current_info['arguments'].get(item, None)
+    else:
+        return None
 
 def location_returned():
     """Returns True or False depending on whether an attempt has yet 
@@ -998,6 +1001,8 @@ def comma_and_list_en(*pargs, **kwargs):
     elif (len(pargs) == 1):
         if type(pargs[0]) == list:
             pargs = pargs[0]
+        elif type(pargs[0]) == set:
+            pargs = list(pargs[0])
     if (len(pargs) == 0):
         return unicode('')
     elif (len(pargs) == 1):

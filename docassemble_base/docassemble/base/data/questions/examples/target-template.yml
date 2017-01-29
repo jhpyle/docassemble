@@ -1,0 +1,25 @@
+metadata:
+  title: Check in and return template
+  documentation: "http://docassemble.org/docs/background.html#check in"
+  example start: 1
+  example end: 2
+---
+question: |
+  What is your favorite food?
+fields:
+  - Favorite food: favorite_food
+under: |
+  [TARGET feedback]
+check in: question_food
+---
+template: question_food
+content: |
+  % if action_argument('favorite_food'):
+  _What?_  You like
+  ${ action_argument('favorite_food').upper() }?
+  % endif
+target: feedback
+---
+mandatory: true
+question: |
+  Your favorite food is ${ favorite_food }.
