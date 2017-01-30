@@ -30,7 +30,7 @@ that is an "instance" of the "class" known as [`Individual`].
 
 Using objects in **docassemble** requires a little bit of setup using
 [initial blocks].  [`Individual`] is defined in the
-[`docassemble.base.legal`] [Python module], so it was necessary to
+[`docassemble.base.legal`]<span></span> [Python module], so it was necessary to
 bring that module into the interview with a [`modules`] block.  It was
 also necessary to use an [`objects`] block to declare that `user` is
 an instance of the class [`Individual`].
@@ -892,7 +892,7 @@ Objects of this type have two attributes:
 
 When **docassemble** defines a [template], it assembles any [Mako] in
 the `content` and option `subject` sets defines these attributes as
-the resulting text.  Note that the text may have [Markdown] [markup]
+the resulting text.  Note that the text may have [Markdown]<span></span> [markup]
 in it.
 
 # <a name="person classes"></a>Classes for information about persons

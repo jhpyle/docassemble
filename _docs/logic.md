@@ -318,19 +318,19 @@ a value for `user_wants_to_got_to_dance`.  Not giving up,
 dance with me?" question, which was defined earlier in
 `question_library.yml`.
 
-
-
 # <a name="howitworks"></a>How **docassemble** runs your code
 
 **docassemble** goes through your interview [YAML] file from start to
-finish, incorporating [`include`]d files as it goes.  It always executes
-[`initial`] code when it sees it, executes [`mandatory`] [`code`] blocks
-that have not been successfully executed yet, and if it encounters a
-[`mandatory`] [`question`] that it has not been successfully
-asked yet, it will stop and ask the question.  If at any time it
-encounters a variable that is undefined, for example while trying to
-formulate a question, it will interrupt itself in order to go find the
-a definition for that variable.
+finish, incorporating [`include`]d files as it goes.  It always
+executes [`initial`] code when it sees it.  It executes any
+[`mandatory`]<span></span> [`code`] blocks that have not been
+successfully executed yet.  If it encounters a
+[`mandatory`]<span></span> [`question`] that it has not been
+successfully asked yet, it will stop and ask the question.
+
+If at any time it encounters a variable that is undefined, for example
+while trying to formulate a question, it will interrupt itself in
+order to go find the a definition for that variable.
 
 Whenever **docassemble** comes back from one of these excursions to
 find the definition of a variable, it does not pick up where it left
@@ -407,8 +407,9 @@ came back from asking whether the user has a car.
 
 # Best practices for interview logic and organization
 
-* Use only a single [`mandatory`] [`code`] block for each interview, and
-  put it at the top of the file after the [initial blocks].
+* Use only a single [`mandatory`]<span></span> [`code`] block for each
+  interview, and put it at the top of the file after the
+  [initial blocks].
 
 # Best practices for sharing with others
 

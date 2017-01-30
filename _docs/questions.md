@@ -224,7 +224,7 @@ user to the appropriate screen.
 In this example, `good_luck` and `bad_luck` are actually names of
 [Python] variables.  However, they are [Python] variables that will
 never be defined.  If a reference to these variables is made, as it is
-in the [`mandatory`] [`code`] block, **docassemble** will locate the
+in the [`mandatory`]<span></span> [`code`] block, **docassemble** will locate the
 `good_luck` and `bad_luck` questions, just as it looks for questions
 that offer to define any variable.
 

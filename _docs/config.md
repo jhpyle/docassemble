@@ -289,7 +289,7 @@ server.  This is a convenience feature.  Otherwise, you would have to
 manually install the SSL certificates on every new **docassemble** web
 server you create.
 
-The value of `certs` can be a file path or an [Amazon S3] [URI] (e.g.,
+The value of `certs` can be a file path or an [Amazon S3]<span></span> [URI] (e.g.,
 `s3://exampledotcom/certs`).  The contents of the directory are copied
 to `/etc/ssl/docassemble`.
 

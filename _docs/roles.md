@@ -201,7 +201,7 @@ the [`role`] variable, which is the role of whichever user is currently
 in the interview.  This code runs every single time the page loads for
 any user.
 
-This code block also sets the [special variable] [`multi_user`] to
+This code block also sets the [special variable]<span></span> [`multi_user`] to
 `True`, which tells **docassemble** that multiple users will be using
 this interview.  When `multi_user` is `True`, **docassemble** will not
 encrypt the answers on the server.  This reduces [security] somewhat,
@@ -216,7 +216,7 @@ Second, note that the flow of the interview is being controlled here.
 The references to `introduction_made` and `participants invited` mean
 that questions will be asked to define those variables if they are
 undefined.  This is the code that causes those questions to appear for
-the organizer.  After the role is set, the [`mandatory`] [`code`] block
+the organizer.  After the role is set, the [`mandatory`]<span></span> [`code`] block
 controls the flow of the interview.
 
 Third, note that by requiring `participants invited` to be set before

@@ -8,7 +8,7 @@ short_title: Legal Applications
 
 One "use case" for **docassemble** is the creation of web applications
 that help people with legal problems.  The [`docassemble.base`] package
-contains a [Python module] [`docassemble.base.legal`] that defines some
+contains a [Python module]<span></span> [`docassemble.base.legal`] that defines some
 helpful Python [classes] and [function]s.  It also contains a helpful
 set of [`question`]s and [`code`] blocks,
 `docassemble.base:data/questions/basic-questions.yml`.

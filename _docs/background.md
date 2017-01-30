@@ -12,38 +12,40 @@ screens."  The process goes like this:
 2. Information is sent from the user's browser to the **docassemble**
 server.
 3. The server updates the interview variables based on the user input.
-4. The server evaluates the interview based on the new interview
+4. The server [evaluates the interview] based on the new interview
    variables, running [code] as necessary.
 4. The server sends a new screen back to the user's browser.
 5. The user sees the new screen.
 
-Sometimes, this process is too limiting.
+Sometimes, this process is too limiting because you want your
+interview [`code`] to run at other times.
 
 For example:
 
 1. If your code takes a very long time to run, the user will have to
-   wait a long time, looking at a spinner.  For example, your code may
-   trigger a factual investigation process that retrieves information
-   from a variety of sources on the internet, which take a long time
-   to retrieve and process.  The user may think the interview crashed
+   wait, looking at a spinner.  For example, your code may trigger a
+   factual investigation process that retrieves information from a
+   variety of sources on the internet, which take a long time to
+   retrieve and process.  The user may think the interview crashed
    when in fact it is just working hard.  It would be better if the
    code could run in the background while the user continues to
-   interact with the interview and move from screen to screen.
+   interact with the interview.
 2. You may want to process the user's input before the user presses
-   the "Continue" button.  When you conduct an interview in real life,
-   you can interrupt the interviewee if he or she talks too long and
-   goes off on a tangent.  You may want to do the same in an
-   electronic interview.  If your interview processes information that
-   users type into a [large text box], your users might spend a great
-   deal of time typing their life story into the text box, when all
-   your interview needed was the first sentence of the user's
-   narrative.  If your interview could process the user's input as
-   they are typing it, similar to the way Google gives you search
-   suggestions as you are typing, you could return feedback to the
-   user as they are typing, which could save them a lot of time.
-3. If your interview is guiding a user through a process that lasts
+   the "Continue" button.  For example, when you conduct an interview
+   in real life, you can interrupt the interviewee if he or she goes
+   off on a tangent.  You may want to do the same in an electronic
+   interview.  If your interview processes information that users type
+   into a [large text box], your users might spend a great deal of
+   time typing their life story into the text box, when the first
+   sentence of the user's narrative would suffice.  If your interview
+   could process the user's input as they are typing it, similar to
+   the way Google gives you search suggestions as you are typing, you
+   could return feedback to the user as they are typing, letting them
+   know that they can stop typing.
+3. If your interview guides a user through a process that lasts
    several months, you might want your interview to send an e-mail to
-   the user on a particular date in the future.
+   the user on a particular date in the future to remind them about
+   something.
 
 There are features in **docassemble** that address each of these
 limitations.  If you have [`code`] that takes a long time to run, you
@@ -81,11 +83,27 @@ handle them in order, working on several of them at a time.  And if
 background tasks are particularly important for your application, you
 can install [multiple servers] dedicated to handling these tasks.
 
+To run your code in the background, use the [`background_action()`]
+function in combination with [`background_response()`] or
+[`background_response_action()`].  As explained in the section on
+[functions]({{ site.baseurl }}/docs/functions.html#howtouse), a
+prerequisite to using functions is including a [`modules`] block that
+activates this advanced functionality:
+
+{% highlight yaml %}
+---
+modules:
+  - docassemble.base.util
+---
+{% endhighlight %}
+
+The next subsections explain how to use these functions.
+
 ## <a name="background_action"></a>background_action()
 
 {% include side-by-side.html demo="background_action" %}
 
-Note the first block:
+Note the second block:
 {% highlight yaml %}
 ---
 initial: true
@@ -587,7 +605,7 @@ content: |
 {% endhighlight %}
 
 Finally, we get to the "scheduled task."  The [`event`] uses the
-[special variable] [`cron_daily`].  This code will run once per day.
+[special variable]<span></span> [`cron_daily`].  This code will run once per day.
 
 {% highlight yaml %}
 ---
@@ -867,3 +885,5 @@ whether the user is the "cron user."
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [list]: https://docs.python.org/2.7/tutorial/datastructures.html
 [dict]: https://docs.python.org/2/library/stdtypes.html#dict
+[evaluates the interview]: {{ site.baseurl }}/docs/logic.html
+[user input]: {{ site.baseurl }}/docs/fields.html

@@ -279,7 +279,7 @@ This works within PDF and RTF documents as well as within questions.
   
 # <a name="audio and video"></a>Inserting audio and video
 
-In addition to using the [`audio`] and [`video`] [modifiers], you can
+In addition to using the [`audio`] and [`video`]<span></span> [modifiers], you can
 insert audio and video into your [Mako] text in questions.
 
 {% highlight yaml %}

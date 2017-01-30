@@ -337,7 +337,7 @@ site configuration directives for the **docassemble** web application.
 
 # Setting up the web application
 
-Enable the [Apache] [wsgi], [xsendfile], [rewrite], [proxy], [proxy_http],
+Enable the [Apache]<span></span> [wsgi], [xsendfile], [rewrite], [proxy], [proxy_http],
 and [proxy_wstunnel] modules, if they are not already enabled, by
 running the following:
 

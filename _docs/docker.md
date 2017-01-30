@@ -594,13 +594,13 @@ they do not have to be run from **docassemble** [Docker] containers.
 
 To change the SQL server that **docassemble** uses, edit the
 [`DBHOST`], [`DBNAME`], [`DBUSER`], [`DBPASSWORD`], [`DBPREFIX`],
-[`DBPORT`], and [`DBTABLEPREFIX`] [configuration options].
+[`DBPORT`], and [`DBTABLEPREFIX`]<span></span> [configuration options].
 
 To change the [Redis] server that **docassemble** uses, edit the
-[`REDIS`] [configuration option].
+[`REDIS`]<span></span> [configuration option].
 
 To change the [RabbitMQ] server that **docassemble** uses, edit the
-[`RABBITMQ`] [configuration option].
+[`RABBITMQ`]<span></span> [configuration option].
 
 ## Port opening
 

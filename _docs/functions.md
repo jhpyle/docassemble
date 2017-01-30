@@ -17,7 +17,7 @@ functions.  If you know how to write [Python] code, you can write your
 own functions and include them in your interview using a [`modules`]
 block.
 
-# How to use functions
+# <a name="howtouse"></a>How to use functions
 
 To use the functions described in this section in your interviews, you
 need to include them from the [`docassemble.base.util`] module by
@@ -1565,7 +1565,7 @@ the module that happened to load last will win, and the results could
 be unpredictable.
 
 The best practice is to load translations at the server level by using
-the [`words`] [configuration] directive to load translations from one or
+the [`words`]<span></span> [configuration] directive to load translations from one or
 more [YAML] files.  This causes **docassemble** to call
 `docassemble.base.util.update_word_collection()` at the time the
 server is initialized.
