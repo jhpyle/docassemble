@@ -20,7 +20,7 @@ fields:
   - Value: real_estate_holdings.value
     datatype: currency
 ---
-mandatory: true
+mandatory: True
 question: |
   % if real_estate_holdings.exists:
   The value of your real estate

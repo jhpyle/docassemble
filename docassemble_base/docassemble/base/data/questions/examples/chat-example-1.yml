@@ -7,11 +7,11 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 code: |
   set_live_help_status(availability='available', mode='help', partner_roles=['advocate', 'family law'])
 ---
-mandatory: true
+mandatory: True
 question: |
   What types of support are you seeking?
 fields:
@@ -21,7 +21,7 @@ fields:
       - Child Support
       - Spousal Support
 ---
-mandatory: true
+mandatory: True
 question: |
   All done
 subquestion: |

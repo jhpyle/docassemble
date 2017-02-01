@@ -5,7 +5,7 @@ modules:
 objects:
   - neighborhood: DAObject
 ---
-mandatory: true
+mandatory: True
 code: |
   neighborhood.garden = DAList()
   neighborhood.garden.append(DAObject())
@@ -14,7 +14,7 @@ code: |
   neighborhood.garden[1].flower = DAList()
   neighborhood.garden[1].flower.append(DAObject())
 ---
-mandatory: true
+mandatory: True
 question: |
   The flower I was thinking of is ${ neighborhood.garden[1].flower[0].color }.
 ---

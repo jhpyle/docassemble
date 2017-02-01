@@ -15,6 +15,6 @@ question: |
   ${ format_date(villain.birthdate) }.
 sets: all_done
 ---
-mandatory: true
+mandatory: True
 code: all_done
 ---

@@ -20,4 +20,4 @@ subquestion: |
   functions in
   `docassemble.base.util`
   as well.
-mandatory: true
+mandatory: True

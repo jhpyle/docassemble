@@ -6,4 +6,4 @@ question: We are all done.
 buttons:
   - Exit: exit
   - Restart: restart
-mandatory: true
+mandatory: True

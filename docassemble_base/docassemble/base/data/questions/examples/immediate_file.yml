@@ -14,6 +14,6 @@ attachment:
   content: |
     Hello, ${ url_args.get('name', 'you')}!
 ---
-mandatory: true
+mandatory: True
 code: |
   response(file=the_file.pdf)

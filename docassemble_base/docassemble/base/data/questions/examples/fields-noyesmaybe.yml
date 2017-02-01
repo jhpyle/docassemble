@@ -19,4 +19,4 @@ subquestion: |
   % else:
   You were correct that Washington was the first President.
   % endif
-mandatory: true
+mandatory: True

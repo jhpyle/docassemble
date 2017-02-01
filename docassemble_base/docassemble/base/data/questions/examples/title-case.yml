@@ -16,7 +16,7 @@ subquestion: |
   "${ title_case(subject) }."
 sets: all_done
 ---
-mandatory: true
+mandatory: True
 code: |
   subject = "the politics of turtles"
   all_done

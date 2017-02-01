@@ -5,11 +5,11 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-initial: true
+initial: True
 code: |
   process_action()
 ---
-mandatory: true
+mandatory: True
 code: |
   email_sent = False
   multi_user = True
@@ -45,7 +45,7 @@ question: |
 subquestion: |
   I'll e-mail you when it's time to get up.
 ---
-reconsider: true
+reconsider: True
 code: |
   now = current_datetime(timezone=timezone)
 ---

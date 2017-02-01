@@ -6,6 +6,6 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 question: |
   You have ${ quantity_noun(4, "apple") }.

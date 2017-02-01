@@ -236,7 +236,7 @@ class DAQuestion(DAObject):
                 content += "under: |\n" + indent_by(self.under_text, 2)
         elif self.type == 'code':
             if hasattr(self, 'is_mandatory') and self.is_mandatory:
-                content += "mandatory: true\n"
+                content += "mandatory: True\n"
             content += "code: |\n" + indent_by(self.code, 2)
         elif self.type == 'text_template':
             content += "template: " + varname(self.field_list[0].variable) + "\n"

@@ -7,7 +7,7 @@ question: |
 subquestion: |
   You earn ${ currency(user_income_amount * user_income_period, decimals=False) }
   per year.
-mandatory: true
+mandatory: True
 ---
 question: |
   What is your income?

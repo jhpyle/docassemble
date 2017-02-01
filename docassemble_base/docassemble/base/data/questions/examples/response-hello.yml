@@ -6,6 +6,6 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 code: |
   response("Hello, world!")

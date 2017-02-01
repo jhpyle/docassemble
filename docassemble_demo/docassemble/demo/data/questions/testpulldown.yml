@@ -1,5 +1,5 @@
 ---
-mandatory: true
+mandatory: True
 code: |
   final_screen
 ---

@@ -13,6 +13,6 @@ subquestion: |
   % endfor
 sets: all_done
 ---
-mandatory: true
+mandatory: True
 code: |
   all_done

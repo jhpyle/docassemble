@@ -13,12 +13,12 @@ objects:
 modules:
   - docassemble.base.util  
 ---
-mandatory: true
+mandatory: True
 code: |
   fears.extend(['spiders', 'snakes', 'fish'])
   fears.gathered = True
 ---
-mandatory: true
+mandatory: True
 question: |
   Your fears
 subquestion: |

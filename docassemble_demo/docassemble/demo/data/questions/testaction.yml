@@ -2,11 +2,11 @@
 modules:
   - docassemble.base.util
 ---
-initial: true
+initial: True
 code: |
   process_action()
 ---
-mandatory: true
+mandatory: True
 code: |
   if lucky_information_confirmed:
     need(final_screen)

@@ -20,7 +20,7 @@ fields:
       - gutter
       - mineshaft
 ---
-mandatory: true
+mandatory: True
 question: |
   While shopping for
   ${ grocery_item },

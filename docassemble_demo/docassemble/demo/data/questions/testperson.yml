@@ -12,7 +12,7 @@ choices:
   - the Empire
   - the Rebel Alliance
 ---
-mandatory: true
+mandatory: True
 question: |
   You are fighting ${ opponent.name.full() }.
 subquestion: |

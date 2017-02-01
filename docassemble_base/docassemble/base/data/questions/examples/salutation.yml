@@ -24,7 +24,7 @@ code: |
   client.name.last = "Smith"
   client.gender = "male"
 ---
-mandatory: true
+mandatory: True
 question: |
   Client letter
 subquestion: |

@@ -13,4 +13,4 @@ fields:
 question: |
   Look at all those adorable photos!
 audio: ${ user_pictures }
-mandatory: true
+mandatory: True

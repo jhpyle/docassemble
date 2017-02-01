@@ -19,4 +19,4 @@ fields:
 ---
 question: |
   You drive a ${ car_make }.
-mandatory: true
+mandatory: True

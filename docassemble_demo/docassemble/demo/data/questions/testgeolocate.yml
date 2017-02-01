@@ -6,12 +6,12 @@ objects:
   - user: Individual
   - enemy: Individual
 ---
-initial: true
+initial: True
 code: |
   set_info(user=user, role='user')
   track_location = user.location.status()
 ---
-mandatory: true
+mandatory: True
 code: |
   need(welcome_screen, map_shown)
 ---
@@ -46,12 +46,12 @@ question: |
 fields:
   - Address: x.address.address
   - Unit: x.address.unit
-    required: false
+    required: False
     help: The apartment, suite, or unit number of the residence.
   - City: x.address.city
   - State: x.address.state
     code: |
       us.states.mapping('abbr', 'name')
   - Zip: x.address.zip
-    required: false
+    required: False
 ---

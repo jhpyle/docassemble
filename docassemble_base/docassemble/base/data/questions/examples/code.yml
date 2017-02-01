@@ -19,4 +19,4 @@ fields:
 ---
 question: |
   You have ${ fruits } pieces of fruit.
-mandatory: true
+mandatory: True

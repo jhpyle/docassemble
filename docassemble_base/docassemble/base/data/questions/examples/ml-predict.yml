@@ -12,12 +12,12 @@ question: |
 fields:
   - no label: phrase
 ---
-mandatory: true
+mandatory: True
 code: |
   ml = SimpleTextMachineLearner('demo')
   predictions = ml.predict(phrase)
 ---
-mandatory: true
+mandatory: True
 question: |
   The prediction
 subquestion: |

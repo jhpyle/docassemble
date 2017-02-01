@@ -5,7 +5,7 @@ modules:
 objects:
   - user: Individual
 ---
-mandatory: true
+mandatory: True
 question: |
   So long, ${ user }!
 subquestion: |

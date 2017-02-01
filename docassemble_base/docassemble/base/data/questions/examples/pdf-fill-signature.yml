@@ -11,7 +11,7 @@ objects:
   - user: Individual
   - friend: Individual
 ---
-mandatory: true
+mandatory: True
 code: |
   need(user.name.first,
        friend.name.first,

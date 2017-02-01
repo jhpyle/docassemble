@@ -12,7 +12,7 @@ yesno: user_agrees_it_is_a_nice_evening
 question: Do you want to go to the dance with me?
 yesno: user_wants_to_go_to_dance
 ---
-mandatory: true
+mandatory: True
 code: |
   belly_button_type
   if user_agrees_it_is_a_nice_evening and user_wants_to_go_to_dance:
@@ -96,7 +96,7 @@ fields:
     default: I have no political views
   - Political preference: political_party
     datatype: radio
-    shuffle: true 
+    shuffle: True 
     choices:
       - Republican
       - Democrat

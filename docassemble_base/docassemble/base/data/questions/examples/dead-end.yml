@@ -4,7 +4,7 @@ metadata:
   example start: 1
   example end: 2
 ---
-mandatory: true
+mandatory: True
 code: |
   # insert interview logic here
   all_done

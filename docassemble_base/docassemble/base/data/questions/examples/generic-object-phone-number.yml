@@ -35,7 +35,7 @@ question: |
 fields:
   Phone Number: x.phone_number
 ---
-mandatory: true
+mandatory: True
 question: |
   How to reach people
 subquestion: |

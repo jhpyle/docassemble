@@ -14,10 +14,10 @@ fields:
   - Age in years: user.age
     datatype: number
 ---
-mandatory: true
+mandatory: True
 code: |
   need(user.age)
 ---
-mandatory: true
+mandatory: True
 question: |
   You are ${ user.age_in_years() } years old.

@@ -16,6 +16,6 @@ question: |
   Done with the interview
 sets: all_done
 ---
-mandatory: true
+mandatory: True
 code: |
   need(fruit, all_done)

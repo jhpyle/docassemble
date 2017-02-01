@@ -1,12 +1,12 @@
 #event: say_hello
-mandatory: true
+mandatory: True
 response: |
   Hello, ${ world }!
 ---
 modules:
   - docassemble.base.util
 ---
-initial: true
+initial: True
 code: |
   process_action()
 ---

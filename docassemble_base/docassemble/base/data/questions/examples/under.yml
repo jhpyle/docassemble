@@ -14,4 +14,4 @@ under: |
 ---
 question: |
   The velocity is ${ swallow_velocity }
-mandatory: true
+mandatory: True

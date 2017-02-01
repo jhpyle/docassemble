@@ -9,7 +9,7 @@ objects:
   - metadata: DAQuestion
   - attachments: DAAttachmentList
 ---
-initial: true
+initial: True
 code: |
   if not user_logged_in():
       message("You are not authorized to view this page")
@@ -33,7 +33,7 @@ code: |
     attachment.content = templates.read_file(markdown_filename)
   attachments.gathered = True  
 ---
-mandatory: true
+mandatory: True
 code: |
   metadata.type = 'metadata'
   metadata.file_name = interview.file_name
@@ -41,7 +41,7 @@ code: |
   metadata.short_title = interview.short_title
   interview.blocks.append(metadata)
 ---
-mandatory: true
+mandatory: True
 code: |
   interview.demonstrate()
   main_code.type = 'code'
@@ -56,7 +56,7 @@ code: |
   end_question.attachments = attachments
   interview.blocks.append(main_code)
 ---
-mandatory: true
+mandatory: True
 code: |
   interview.demonstrate()
   ok = False
@@ -121,7 +121,7 @@ fields:
     datatype: area
   - Body: x.subquestion_text
     datatype: area
-    required: false
+    required: False
 ---
 generic object: DAQuestion
 question: |
@@ -164,11 +164,11 @@ question: |
 fields:
   - "Use a label?": x.has_label
     datatype: yesnoradio
-    default: true
+    default: True
   - Text of label: x.label
     show if:
       variable: x.has_label
-      is: true
+      is: True
 ---
 generic object: DAAttachment
 question: |

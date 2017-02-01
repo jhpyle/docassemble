@@ -8,4 +8,4 @@ modules:
 ---
 question: |
   Today's date is ${ today() }.
-mandatory: true
+mandatory: True

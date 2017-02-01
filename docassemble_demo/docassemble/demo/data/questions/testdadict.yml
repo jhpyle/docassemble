@@ -5,13 +5,13 @@ modules:
 objects:
   - player: DADict
 ---
-mandatory: true
+mandatory: True
 code: |
   player.initializeObject('trustee', DAObject)
   player.initializeObject('beneficiary', DAObject)
   player.initializeObject('grantor', DAObject)
 ---
-mandatory: true
+mandatory: True
 question: The players
 subquestion: |
   % for type in player:

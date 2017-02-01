@@ -6,16 +6,16 @@ default language: en
 modules:
   - docassemble.base.util
 ---
-initial: true
+initial: True
 code: |
   set_language('en')
 ---
-mandatory: true
+mandatory: True
 code: |
   speak_text = True
   multi_user = True
 ---
-mandatory: true
+mandatory: True
 code: |
   if wants_privacy:
     multi_user = False
@@ -36,4 +36,4 @@ question: |
   % else:
   You do not speak Spanish
   % endif
-mandatory: true
+mandatory: True

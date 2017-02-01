@@ -8,7 +8,7 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 question: |
   Commentary on the day of the month
 subquestion: |

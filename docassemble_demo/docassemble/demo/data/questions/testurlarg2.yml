@@ -1,5 +1,5 @@
 ---
-mandatory: true
+mandatory: True
 question: You came from the ${ url_args.get('from', 'unknown') }.
 subquestion: |
   % if url_args.get('fruit', 'apple') == 'apple':

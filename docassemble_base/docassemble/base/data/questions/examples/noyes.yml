@@ -9,4 +9,4 @@ noyes: user_is_minor
 question: Result of question
 subquestion: |
   user_is_minor is: "${ user_is_minor }"
-mandatory: true
+mandatory: True

@@ -15,4 +15,4 @@ question: |
   code (${ launch_code }).
 
   Countdown commencing.
-mandatory: true
+mandatory: True

@@ -22,4 +22,4 @@ subquestion: |
   ${ user_salary }
   and period is
   ${ period }.
-mandatory: true
+mandatory: True

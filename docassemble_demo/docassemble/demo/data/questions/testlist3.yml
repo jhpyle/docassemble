@@ -14,7 +14,7 @@ question: |
   Is there another person?
 yesno: person.there_is_another
 ---
-mandatory: true
+mandatory: True
 question: |
   We are done.
 subquestion: |

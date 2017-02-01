@@ -29,7 +29,7 @@ attachment:
 
       Is it not a thing of beauty?
 ---
-mandatory: true
+mandatory: True
 code: |
   need(final_screen)
 ---

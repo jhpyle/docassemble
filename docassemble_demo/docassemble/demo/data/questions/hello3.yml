@@ -5,7 +5,7 @@ subquestion: |
   inhabitants.
 buttons:
   - Exit: exit
-mandatory: true
+mandatory: True
 ---
 question: |
   What is your planet's name?

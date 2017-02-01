@@ -16,4 +16,4 @@ subquestion: |
   You must love ${ favorite_vegetable }
   and ${ favorite_fruit } pancakes.
   I know I do!
-mandatory: true
+mandatory: True

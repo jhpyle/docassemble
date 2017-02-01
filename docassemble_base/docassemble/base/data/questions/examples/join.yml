@@ -7,11 +7,11 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 code: |
   set_live_help_status(availability='available', mode='help', partner_roles=['advocate'])
 ---
-initial: true
+initial: True
 code: |
   process_action()
   if user_has_privilege('admin', 'developer'):
@@ -47,7 +47,7 @@ question: |
 fields:
   - Fungi: fungi
 ---
-mandatory: true
+mandatory: True
 question: |
   My conclusion
 subquestion: |

@@ -18,7 +18,7 @@ content: |
 objects:
   enemy: PartyList
 ---
-mandatory: true
+mandatory: True
 code: |
   enemy.appendObject(Individual)
   enemy[0].name.first = "Darth"
@@ -30,7 +30,7 @@ code: |
   enemy[2].name.last = "Ren"
   enemy.gathered = True
 ---
-mandatory: true
+mandatory: True
 question: |
   Client Letter
 subquestion: |

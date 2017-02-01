@@ -35,7 +35,7 @@ fields:
   - Value: asset.new_item_value
     datatype: currency
 ---
-mandatory: true
+mandatory: True
 question: Summary of assets
 subquestion: |
   % if asset.total() > 0:

@@ -14,5 +14,5 @@ question: |
   Unfortunately, the Normans have
   already invaded England.
   % endif
-mandatory: true
+mandatory: True
   

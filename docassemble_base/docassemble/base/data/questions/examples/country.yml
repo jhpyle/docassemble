@@ -14,7 +14,7 @@ fields:
     code: countries_list()
     default: US
 ---
-mandatory: true
+mandatory: True
 question: |
   You live in
   ${ country_name(user_country) },

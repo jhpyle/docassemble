@@ -7,15 +7,15 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-initial: true
+initial: True
 code: |
   process_action()
 ---
-mandatory: true
+mandatory: True
 code: |
   dessert = "cod liver oil"
 ---
-mandatory: true
+mandatory: True
 question: |
   Your dessert is ${ dessert }.
 subquestion: |

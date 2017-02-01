@@ -10,12 +10,12 @@ modules:
 objects:
   - user: Individual
 ---
-mandatory: true
+mandatory: True
 code: |
   multi_user = True
   status = 'normal'
 ---
-initial: true
+initial: True
 code: |
   process_action()
 ---
@@ -24,7 +24,7 @@ code: |
   if 'status' in action_arguments():
     status = action_argument('status')
 ---
-mandatory: true
+mandatory: True
 question: |
   The current status is ${ status }.
 subquestion: |

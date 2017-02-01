@@ -19,4 +19,4 @@ field: ready_to_proceed
 question: |
   All done with the interview
 need: ready_to_proceed
-mandatory: true
+mandatory: True

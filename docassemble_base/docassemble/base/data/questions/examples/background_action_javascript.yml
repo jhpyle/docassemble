@@ -1,15 +1,18 @@
 metadata:
   title: Return a value and run Javascript
   example start: 2
-  example end: 5
+  example end: 4
   documentation: "http://docassemble.org/docs/background.html#ui_notification"
 ---
-modules:
-  - docassemble.base.util
----
-initial: true
+mandatory: True
 code: |
-  process_action()
+  if the_task.ready():
+    final_screen
+  else:
+    waiting_screen
+---
+code: |
+  the_task = background_action('bg_task', 'javascript', additional=value_to_add)
 ---
 question: |
   How much shall I add to 553?
@@ -17,20 +20,10 @@ fields:
   - Number: value_to_add
     datatype: integer
 ---
-code: |
-  the_task = background_action('bg_task', 'javascript', additional=value_to_add)
----
 event: bg_task
 code: |
   the_answer = str(553 + action_argument('additional'))
   background_response("alert('The answer is " + the_answer + ".');")
----
-mandatory: true
-code: |
-  if the_task.ready():
-    final_screen
-  else:
-    waiting_screen
 ---
 event: waiting_screen
 question: |

@@ -15,7 +15,7 @@ buttons:
   - Restart: restart
 sets: all_done
 ---
-initial: true
+initial: True
 code: |
   toads = int(1 + random()*16)
   need(all_done)

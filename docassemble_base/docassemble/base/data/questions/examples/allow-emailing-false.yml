@@ -2,7 +2,7 @@ metadata:
   title: Disallowing e-mailing
   documentation: "http://docassemble.org/docs/documents.html#allow emailing"
 ---
-mandatory: true
+mandatory: True
 question: Your document is ready.
 attachment:
   - name: A hello world document
@@ -11,4 +11,4 @@ attachment:
       A document with a classic message
     content: |
       Hello, world!
-allow emailing: false
+allow emailing: False

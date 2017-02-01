@@ -7,7 +7,7 @@ question: What is your favorite vegetable?
 fields:
   - Animal: favorite_vegetable
 ---
-mandatory: true
+mandatory: True
 question: What a coincidence!
 subquestion: |
   My favorite animal is the ${ favorite_animal }, too!

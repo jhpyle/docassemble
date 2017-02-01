@@ -6,7 +6,7 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 code: |
   if press_to_continue:
     all_done

@@ -17,4 +17,4 @@ subquestion: |
   % if likes_apricots:
   You like apricots.
   % endif
-mandatory: true
+mandatory: True

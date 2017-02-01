@@ -4,7 +4,7 @@ metadata:
   example end: 4
   documentation: "http://docassemble.org/docs/documents.html#attachment code"
 ---
-mandatory: true
+mandatory: True
 question: |
   Here are your documents!
 attachment code: |

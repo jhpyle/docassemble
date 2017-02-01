@@ -7,7 +7,7 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-initial: true
+initial: True
 code: |
   set_language(language)
 ---
@@ -36,4 +36,4 @@ subquestion: |
   is:
 
   ${ meaning_life }
-mandatory: true
+mandatory: True

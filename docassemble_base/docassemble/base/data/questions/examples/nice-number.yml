@@ -16,7 +16,7 @@ buttons:
   - Restart: restart
 sets: all_done
 ---
-initial: true
+initial: True
 code: |
   toads, frogs = 15, 15
   while toads > 10 and frogs > 10:

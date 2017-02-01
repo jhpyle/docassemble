@@ -2,7 +2,7 @@ metadata:
   title: Flushright
   documentation: "http://docassemble.org/docs/documents.html#metadata rtf pdf"
 ---
-mandatory: true
+mandatory: True
 question: |
   Here is your document.
 subquestion: |
@@ -35,7 +35,7 @@ attachments:
         Example, LLP [BR]
         123 Main Street, Suite 1500 [BR]
         Philadelphia, PA 19102
-      SingleSpacing: true
+      SingleSpacing: True
     content: |
       This "line" is to the left.
       

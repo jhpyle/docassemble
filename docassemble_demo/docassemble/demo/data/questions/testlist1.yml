@@ -20,5 +20,5 @@ subquestion: |
   * ${ person[1] }
   * ${ person[2] }
 ---
-mandatory: true
+mandatory: True
 code: all_done

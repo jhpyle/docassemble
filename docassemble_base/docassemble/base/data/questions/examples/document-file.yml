@@ -7,4 +7,4 @@ attachment:
   - name: A *hello world* document
     filename: Hello_World_Document
     content file: hello.md
-mandatory: true
+mandatory: True

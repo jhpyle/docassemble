@@ -3,11 +3,11 @@ metadata:
   documentation: "http://docassemble.org/docs/logic.html#initial"
   example start: 2
 ---
-mandatory: true
+mandatory: True
 code: |
   counter = 0
 ---
-initial: true
+initial: True
 code: |
   counter = counter + 1
 ---
@@ -37,4 +37,4 @@ question: |
 subquestion: |
   The value of the counter
   is ${ counter }.
-mandatory: true
+mandatory: True

@@ -10,11 +10,11 @@ subquestion: |
   fruit.
 fields:
   - Vegetable: target_variable
-    required: false
+    required: False
   - Fruit: other_target_variable
 ---
 question: Result of question
 subquestion: |
   other_target_variable is:
   "${ other_target_variable }"
-mandatory: true
+mandatory: True

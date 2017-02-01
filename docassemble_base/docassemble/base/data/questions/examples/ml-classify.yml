@@ -10,7 +10,7 @@ modules:
 code: |
   ml = SimpleTextMachineLearner('demo')
 ---
-initial: true
+initial: True
 code: |
   if defined('classification'):
     entry_to_classify.classify(classification)
@@ -26,7 +26,7 @@ subquestion: |
 fields:
   - no label: classification
 ---
-mandatory: true
+mandatory: True
 question: |
   There is nothing left to classify.
 buttons:

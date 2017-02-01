@@ -23,4 +23,4 @@ subquestion: |
   % else:
   You clearly need to play more Minecraft.
   % endif
-mandatory: true
+mandatory: True

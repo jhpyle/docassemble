@@ -7,7 +7,7 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 code: |
   multi_user = True
 ---
@@ -33,7 +33,7 @@ question: |
   So long!
 sets: kick_out_screen
 ---
-mandatory: true
+mandatory: True
 code: |
   if ready_to_proceed:
     final_screen

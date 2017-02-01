@@ -2,7 +2,7 @@
 modules:
   - docassemble.base.util
 ---
-initial: true
+initial: True
 code: |
   set_language(user_language)
   need(final_screen)

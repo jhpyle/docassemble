@@ -1,7 +1,7 @@
 metadata:
   title: Sample
 ---
-mandatory: true
+mandatory: True
 signature: the_signature
 question: This is the main message
 subquestion: This is above the signature

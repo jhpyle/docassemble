@@ -12,4 +12,4 @@ attachment:
       A document with a classic message
     content: |
       Hello, world!
-mandatory: true
+mandatory: True

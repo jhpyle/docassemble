@@ -7,7 +7,7 @@ metadata:
 include:
   - basic-questions.yml
 ---
-initial: true
+initial: True
 code: |
   process_action()
 ---
@@ -55,12 +55,12 @@ question: |
 fields:
   - no label: fungi
 ---
-mandatory: true
+mandatory: True
 code: |
   menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
   do_initial_review = True
 ---
-mandatory: true
+mandatory: True
 code: |
   if do_initial_review:
     fruit = "apples"
@@ -87,4 +87,4 @@ subquestion: |
   You can revisit your answers by
   selecting "Review Answers" from the
   menu.
-mandatory: true
+mandatory: True

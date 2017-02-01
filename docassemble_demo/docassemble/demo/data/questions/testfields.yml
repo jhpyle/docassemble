@@ -5,7 +5,7 @@ imports:
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 code: |
   need(final_screen)
 ---
@@ -61,7 +61,7 @@ fields:
     maxlength: 30
   - Political preference: political_party
     datatype: radio
-    shuffle: true 
+    shuffle: True 
     choices:
       - Republican
       - Democrat

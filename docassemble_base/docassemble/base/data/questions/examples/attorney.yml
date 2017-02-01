@@ -13,7 +13,7 @@ imports:
 objects:
   - lawyer: Attorney
 ---
-mandatory: true
+mandatory: True
 question: |
   % if lawyer.can_practice_in('MA'):
   ${ lawyer } can practice in Massachusetts.

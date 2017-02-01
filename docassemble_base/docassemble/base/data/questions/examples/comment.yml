@@ -14,4 +14,4 @@ question: |
   do not
   % endif
   like turnips.
-mandatory: true
+mandatory: True

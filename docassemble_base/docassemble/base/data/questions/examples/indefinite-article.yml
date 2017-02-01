@@ -22,7 +22,7 @@ question: |
   % endif
 sets: all_done
 ---
-mandatory: true
+mandatory: True
 code: |
   fruit = "apple"
   vegetable = "squash"

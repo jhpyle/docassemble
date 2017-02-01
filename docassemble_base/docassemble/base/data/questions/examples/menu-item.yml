@@ -7,11 +7,11 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-initial: true
+initial: True
 code: |
   process_action()
 ---
-mandatory: true
+mandatory: True
 code: |
   menu_items = [ action_menu_item('Visit Cow', 'see_cow') ]
 ---
@@ -30,5 +30,5 @@ question: Welcome to the interview
 subquestion: |
   Check out the menu in the
   upper-right corner.
-mandatory: true
+mandatory: True
 

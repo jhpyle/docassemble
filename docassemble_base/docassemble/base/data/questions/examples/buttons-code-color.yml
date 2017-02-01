@@ -18,4 +18,4 @@ buttons:
         - Light Green
 ---
 question: Your favorite color is ${ favorite_color }.
-mandatory: true
+mandatory: True

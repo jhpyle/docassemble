@@ -8,11 +8,11 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 code: |
   multi_user = True
 ---
-initial: true
+initial: True
 code: |
   process_action()
 ---
@@ -20,7 +20,7 @@ event: query_variables
 code: |
   variables_as_json()
 ---
-mandatory: true
+mandatory: True
 question: |
   You currently have
   ${ nice_number(number_of_slices) }

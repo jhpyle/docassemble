@@ -1,7 +1,7 @@
 metadata:
   title: Cron test 2
 ---
-mandatory: true
+mandatory: True
 code: |
   multi_user = True
   allow_cron = True
@@ -11,7 +11,7 @@ code: |
 modules:
   - docassemble.base.util
 ---
-initial: true
+initial: True
 code: |
   counter += 1
   process_action()
@@ -32,7 +32,7 @@ code: |
     status = action_argument('status')
   response(status)
 ---
-mandatory: true
+mandatory: True
 question: |
   The current status is ${ status } and the counter is ${ counter }.
 subquestion: |

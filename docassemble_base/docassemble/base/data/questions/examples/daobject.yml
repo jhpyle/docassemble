@@ -11,11 +11,11 @@ objects:
   - park: DAObject
   - turnip: DAObject
 ---
-mandatory: true
+mandatory: True
 code: |
   park.front_gate = DAObject()
 ---
-mandatory: true
+mandatory: True
 question: |
   The ${ turnip.color } turnip sat before the
   ${ park.front_gate.color } gate.

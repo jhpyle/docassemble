@@ -7,9 +7,9 @@ question: |
 fields:
   - E-mail: target_variable
     datatype: email
-    required: false
+    required: False
 ---
 question: Result of question
 subquestion: |
   target_variable is: "${ target_variable }"
-mandatory: true
+mandatory: True

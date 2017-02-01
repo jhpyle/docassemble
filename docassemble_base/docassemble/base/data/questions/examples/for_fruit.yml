@@ -13,4 +13,4 @@ subquestion: |
   % for fruit in fruit_list:
   I assume you like ${ fruit }.
   % endfor
-mandatory: true
+mandatory: True

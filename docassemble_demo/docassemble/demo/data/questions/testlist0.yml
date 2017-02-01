@@ -39,6 +39,6 @@ question: Give me a verb.
 fields:
   - Verb: verb_one
 ---
-mandatory: true
+mandatory: True
 code: all_done
 ---

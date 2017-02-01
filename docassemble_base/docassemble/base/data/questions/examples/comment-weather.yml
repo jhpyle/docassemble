@@ -14,4 +14,4 @@ comment: |
 question: |
   All done with the interview.
 need: day_is_nice
-mandatory: true
+mandatory: True

@@ -9,4 +9,4 @@ yesno: over_eighteen
 question: Result of question
 subquestion: |
   over_eighteen is: "${ over_eighteen }"
-mandatory: true
+mandatory: True

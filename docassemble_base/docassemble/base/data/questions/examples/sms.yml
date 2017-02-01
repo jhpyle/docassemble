@@ -11,7 +11,7 @@ terms:
   world: |
     A planet.
 ---
-mandatory: true
+mandatory: True
 question: |
   % if doing_well:
   Glad to hear that!

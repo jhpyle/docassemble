@@ -10,4 +10,4 @@ continue button label: Keep going
 ---
 question: |
   Your favorite fruit is ${ favorite_fruit }.
-mandatory: true
+mandatory: True

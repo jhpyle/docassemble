@@ -17,5 +17,5 @@ subquestion: |
   ${ qr_code('http://wsj.com') }
 sets: all_done
 ---
-mandatory: true
+mandatory: True
 code: all_done

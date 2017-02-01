@@ -8,7 +8,7 @@ question: |
   This is a special screen.
 event: show_special_screen
 ---
-mandatory: true
+mandatory: True
 code: |
   show_special_screen
   

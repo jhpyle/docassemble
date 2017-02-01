@@ -2,15 +2,37 @@ import re
 import os
 import sys
 import tempfile
+import ruamel.yaml
 from textstat.textstat import textstat
 import docassemble.base.config
 if not docassemble.base.config.loaded:
     docassemble.base.config.load()
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, hostname, in_celery
+from docassemble.webapp.file_access import get_info_from_file_reference
 
 DEBUG = daconfig.get('debug', False)
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 request_active = True
+
+word_file_list = daconfig.get('words', list())
+if type(word_file_list) is not list:
+    word_file_list = [word_file_list]
+for word_file in word_file_list:
+    #sys.stderr.write("Reading from " + str(word_file) + "\n")
+    file_info = get_info_from_file_reference(word_file)
+    if 'fullpath' in file_info and file_info['fullpath'] is not None:
+        with open(file_info['fullpath'], 'rU') as stream:
+            for document in ruamel.yaml.safe_load_all(stream):
+                if document and type(document) is dict:
+                    for lang, words in document.iteritems():
+                        if type(words) is dict:
+                            docassemble.base.functions.update_word_collection(lang, words)
+                        else:
+                            sys.stderr.write("Error reading " + str(word_file) + ": words not in dictionary form.\n")
+                else:
+                    sys.stderr.write("Error reading " + str(word_file) + ": yaml file not in dictionary form.\n")
+    else:
+        sys.stderr.write("Error reading " + str(word_file) + ": yaml file not found.\n")
 
 default_playground_yaml = """metadata:
   title: Default playground interview
@@ -20,7 +42,7 @@ default_playground_yaml = """metadata:
 include:
   - basic-questions.yml
 ---
-mandatory: true
+mandatory: True
 question: |
   Here is your document, ${ client }.
 subquestion: |
@@ -290,7 +312,6 @@ import base64
 import requests
 import redis
 import yaml
-import ruamel.yaml
 import inspect
 from subprocess import call, Popen, PIPE
 from pygments import highlight
@@ -320,7 +341,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file, generate_csrf
+from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file, generate_csrf
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, Messages
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -2159,6 +2180,7 @@ def checkin():
         commands = list()
         checkin_code = request.form.get('checkinCode', None)
         do_action = request.form.get('do_action', None)
+        #logmessage("in checkin")
         if do_action is not None:
             parameters = dict()
             form_parameters = request.form.get('parameters', None)
@@ -2171,7 +2193,7 @@ def checkin():
                         parameters[from_safeid(param['name'])] = param['value']
                     except:
                         logmessage("checkin: failed to unpack " + str(param['name']))
-            #logmessage("Action was " + str(do_action) + " and parameters were " + str(parameters))
+            logmessage("Action was " + str(do_action) + " and parameters were " + str(parameters))
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
             interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=dict(action=do_action, arguments=parameters)))
@@ -3264,7 +3286,7 @@ def index():
         }
       }
       function daSender(){
-        //console.log("Clicked it");
+        //console.log("daSender");
         if ($("#daMessage").val().length){
           socket.emit('chatmessage', {data: $("#daMessage").val()});
           $("#daMessage").val("");
@@ -3334,7 +3356,7 @@ def index():
         if (socket != null){
             socket.on('connect', function() {
                 if (socket == null){
-                    //console.log("Error: socket is null");
+                    console.log("Error: socket is null");
                     return;
                 }
                 //console.log("Connected socket with sid " + socket.id);
@@ -3542,6 +3564,7 @@ def index():
         return(false);
       }
       function pushChanges(){
+        //console.log("pushChanges");
         if (checkinInterval != null){
           clearInterval(checkinInterval);
         }
@@ -3742,11 +3765,11 @@ def index():
       }
       function daCheckinCallback(data){
         daCheckingIn = 0;
+        //console.log("daCheckinCallback: success is " + data.success);
         if (data.checkin_code != daCheckinCode){
-          console.log("Ignoring checkincallback because code is wrong");
+          //console.log("Ignoring checkincallback because code is wrong");
           return;
         }
-        //console.log("success is " + data.success);
         if (data.success){
           if (data.commands.length > 0){
             for (var i = 0; i < data.commands.length; ++i){
@@ -3867,9 +3890,10 @@ def index():
       function daCheckoutCallback(data){
       }
       function daCheckin(){
+        //console.log("daCheckin");
         daCheckingIn += 1;
         if (daCheckingIn > 1 && !(daCheckingIn % 3)){
-          console.log("daCheckin: request already pending, not re-sending");
+          //console.log("daCheckin: request already pending, not re-sending");
           return;
         }
         var datastring;
@@ -4942,9 +4966,9 @@ def observer():
                 window.parent.abortControlling(data.key);
             });
             socket.on('noconnection', function(data) {
-                console.log("warning: no connection");
+                //console.log("warning: no connection");
                 if (daNoConnectionCount++ > 2){
-                    console.log("error: no connection");
+                    //console.log("error: no connection");
                     window.parent.stopControlling(data.key);
                 }
             });
@@ -5087,7 +5111,7 @@ def monitor():
     var daControlling = Object();
     var daBrowserTitle = """ + repr(str(word('Monitor'))) + """;
     window.gotConfirmation = function(key){
-        // console.log("Got confirmation in parent for key " + key);
+        //console.log("Got confirmation in parent for key " + key);
         // daControlling[key] = 2;
         // var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
         // $("#listelement" + skey).find("a").each(function(){
@@ -5131,6 +5155,7 @@ def monitor():
         console.log('daOnError');
     }
     function loadSoundBuffer(key, url_a, url_b){
+        //console.log("loadSoundBuffer");
         var pos = 0;
         if (daAudioContext == null){
             return;
@@ -5170,6 +5195,7 @@ def monitor():
         request.send();
     }
     function playSound(key) {
+        //console.log("playSound");
         var buffer = soundBuffer[key];
         if (!daAudioContext || !buffer){
             return;
@@ -5180,6 +5206,7 @@ def monitor():
         source.start(0);
     }
     function checkNotifications(){
+        //console.log("checkNotifications");
         if (daNotificationsEnabled){
             return;
         }
@@ -5200,6 +5227,7 @@ def monitor():
         }
     }
     function notifyOperator(key, mode, message) {
+        //console.log("notifyOperator");
         var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
         if (mode == "chat"){
           playSound('newmessage');
@@ -5254,6 +5282,7 @@ def monitor():
         }
     }
     function phoneNumberOk(){
+        //console.log("phoneNumberOk");
         var phoneNumber = $("#daPhoneNumber").val();
         if (phoneNumber == '' || phoneNumber.match(/^\+?[1-9]\d{1,14}$/)){
             return true;
@@ -5263,7 +5292,7 @@ def monitor():
         }
     }
     function checkPhone(){
-        //console.log("Doing checkPhone");
+        //console.log("checkPhone");
         $("#daPhoneNumber").val($("#daPhoneNumber").val().replace(/[^0-9\+]/g, ''));
         var the_number = $("#daPhoneNumber").val();
         if (the_number[0] != '+'){
@@ -5292,6 +5321,7 @@ def monitor():
         }, 2000);
     }
     function allSessions(uid, yaml_filename){
+        //console.log("allSessions");
         var prefix = 'da:session:uid:' + uid + ':i:' + yaml_filename + ':userid:';
         var output = Array();
         for (var key in daSessions){
@@ -5323,7 +5353,7 @@ def monitor():
         }
     }
     function do_update_monitor(){
-        //console.log("do update monitor with " + daAvailableForChat);
+        //console.log("do_update_monitor with " + daAvailableForChat);
         if (phoneNumberOk()){
           daPhoneNumber = $("#daPhoneNumber").val();
           if (daPhoneNumber == ''){
@@ -5336,6 +5366,7 @@ def monitor():
         socket.emit('updatemonitor', {available_for_chat: daAvailableForChat, phone_number: daPhoneNumber, subscribed_roles: daSubscribedRoles, phone_partners_to_add: daNewPhonePartners, phone_partners_to_terminate: daTermPhonePartners});
     }
     function update_monitor(){
+        //console.log("update_monitor with " + daAvailableForChat);
         if (updateMonitorInterval != null){
             clearInterval(updateMonitorInterval);
         }
@@ -5360,12 +5391,14 @@ def monitor():
         }
     }
     function markAsUpdated(key){
+        //console.log("markAsUpdated with " + key);
         var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
         if (isHidden("#listelement" + skey)){
             daUpdatedSessions["#listelement" + skey] = 1;
         }
     }
     function activateChatArea(key){
+        //console.log("activateChatArea with " + key);
         var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
         if (!$("#chatarea" + skey).find('input').first().is(':focus')){
           $("#listelement" + skey).addClass("new-message");
@@ -5380,6 +5413,7 @@ def monitor():
         socket.emit('chat_log', {key: key});
     }
     function deActivateChatArea(key){
+        //console.log("daActivateChatArea with " + key);
         var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
         $("#chatarea" + skey).find('input, button').prop("disabled", true);
         $("#listelement" + skey).removeClass("new-message");
@@ -5388,7 +5422,7 @@ def monitor():
         }
     }
     function undraw_session(key){
-        //console.log("Undrawing...")
+        //console.log("Undrawing...");
         var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
         var xButton = document.createElement('a');
         var xButtonIcon = document.createElement('i');
@@ -5421,6 +5455,7 @@ def monitor():
         delete daSessions[key];
     }
     function publish_chat_log(uid, yaml_filename, userid, mode, messages){
+        //console.log("publish_chat_log with " + uid + " " + yaml_filename + " " + userid + " " + mode + " " + messages);
         var keys; 
         //if (mode == 'peer' || mode == 'peerhelp'){
         //    keys = allSessions(uid, yaml_filename);
@@ -5457,6 +5492,7 @@ def monitor():
         }
     }
     function draw_session(key, obj){
+        //console.log("draw_session with " + key);
         var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
         var the_html;
         var wants_to_chat;
@@ -5778,8 +5814,56 @@ def monitor():
             deActivateChatArea(key);
         }
     }
+    function onScrollResize(){
+        if (document.title != daBrowserTitle){
+            document.title = daBrowserTitle;
+        }
+        if (!daShowingNotif){
+            return true;
+        }
+        var obj = Array();
+        for (var key in daUpdatedSessions){
+            if (daUpdatedSessions.hasOwnProperty(key)){
+                obj.push(key);
+            }
+        }
+        var somethingAbove = false;
+        var somethingBelow = false;
+        var firstElement = -1;
+        var lastElement = -1;
+        for (var i = 0; i < obj.length; ++i){
+            var result = isHidden(obj[i]);
+            if (result == 0){
+                delete daUpdatedSessions[obj[i]];
+            }
+            else if (result < 0){
+                var top = $(obj[i]).offset().top;
+                somethingAbove = true;
+                if (firstElement == -1 || top < firstElement){
+                    firstElement = top;
+                }
+            }
+            else if (result > 0){
+                var top = $(obj[i]).offset().top;
+                somethingBelow = true;
+                if (lastElement == -1 || top > lastElement){
+                    lastElement = top;
+                }
+            }
+        }
+        if (($("#chat-message-above").is(":visible")) && !somethingAbove){
+            $("#chat-message-above").hide();
+        }
+        if (($("#chat-message-below").is(":visible")) && !somethingBelow){
+            $("#chat-message-below").hide();
+        }
+        if (!(somethingAbove || somethingBelow)){
+            daShowingNotif = false;
+        }
+        return true;
+    }
     $(document).ready(function(){
-        //console.log("document ready!");
+        //console.log("document ready");
         try {
             window.AudioContext = window.AudioContext || window.webkitAudioContext;
             daAudioContext = new AudioContext();
@@ -6029,54 +6113,8 @@ def monitor():
             if(e.keyCode == 13) { $(this).blur(); e.preventDefault(); }
           });
         }
-        $(window).scroll(function(){
-            if (document.title != daBrowserTitle){
-                document.title = daBrowserTitle;
-            }
-            if (!daShowingNotif){
-                return true;
-            }
-            var obj = Array();
-            for (var key in daUpdatedSessions){
-                if (daUpdatedSessions.hasOwnProperty(key)){
-                    obj.push(key);
-                }
-            }
-            var somethingAbove = false;
-            var somethingBelow = false;
-            var firstElement = -1;
-            var lastElement = -1;
-            for (var i = 0; i < obj.length; ++i){
-                var result = isHidden(obj[i]);
-                if (result == 0){
-                    delete daUpdatedSessions[obj[i]];
-                }
-                else if (result < 0){
-                    var top = $(obj[i]).offset().top;
-                    somethingAbove = true;
-                    if (firstElement == -1 || top < firstElement){
-                        firstElement = top;
-                    }
-                }
-                else if (result > 0){
-                    var top = $(obj[i]).offset().top;
-                    somethingBelow = true;
-                    if (lastElement == -1 || top > lastElement){
-                        lastElement = top;
-                    }
-                }
-            }
-            if (($("#chat-message-above").is(":visible")) && !somethingAbove){
-                $("#chat-message-above").hide();
-            }
-            if (($("#chat-message-below").is(":visible")) && !somethingBelow){
-                $("#chat-message-below").hide();
-            }
-            if (!(somethingAbove || somethingBelow)){
-                daShowingNotif = false;
-            }
-            return true;
-        });
+        $(window).on('scroll', onScrollResize);
+        $(window).on('resize', onScrollResize);
         $(".chat-notifier").click(function(e){
             //var key = $(this).data('key');
             var direction = 0;
@@ -6429,7 +6467,7 @@ metadata:
       organization: """ + unicode(current_user.organization) + """
   revision_date: """ + formatted_current_date() + """
 ---
-mandatory: true
+mandatory: True
 code: |
   user_done
 ---
@@ -6481,7 +6519,7 @@ machine learning training files, and other source files.
 # objects:
 #   - favorite_fruit: Fruit
 # ---
-# mandatory: true
+# mandatory: True
 # question: |
 #   When I eat some ${ favorite_fruit.name }, 
 #   I think, "${ favorite_fruit.eat() }"
@@ -7634,7 +7672,7 @@ $( document ).ready(function() {
   });
   $("#daRun").click(function(event){
     if (originalFileName != $("#playground_name").val()){
-      console.log("Click daSave");
+      //console.log("Click daSave");
       $("#form button[name='submit']").click();
       event.preventDefault();
       return false;
@@ -8884,26 +8922,6 @@ for val in base_name_info:
     base_name_info[val]['insert'] = val
     if 'show' not in base_name_info[val]:
         base_name_info[val]['show'] = False
-
-word_file_list = daconfig.get('words', list())
-if type(word_file_list) is not list:
-    word_file_list = [word_file_list]
-for word_file in word_file_list:
-    #sys.stderr.write("Reading from " + str(word_file) + "\n")
-    file_info = get_info_from_file_reference(word_file)
-    if 'fullpath' in file_info and file_info['fullpath'] is not None:
-        with open(file_info['fullpath'], 'rU') as stream:
-            for document in ruamel.yaml.safe_load_all(stream):
-                if document and type(document) is dict:
-                    for lang, words in document.iteritems():
-                        if type(words) is dict:
-                            docassemble.base.functions.update_word_collection(lang, words)
-                        else:
-                            sys.stderr.write("Error reading " + str(word_file) + ": words not in dictionary form.\n")
-                else:
-                    sys.stderr.write("Error reading " + str(word_file) + ": yaml file not in dictionary form.\n")
-    else:
-        sys.stderr.write("Error reading " + str(word_file) + ": yaml file not found.\n")
 
 #docassemble.base.functions.set_chat_partners_available(chat_partners_available)
 

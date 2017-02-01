@@ -27,7 +27,7 @@ fields:
       - Monthly: 12
       - Per week: 54
 ---
-mandatory: true
+mandatory: True
 question: |
   % if user_salary.exists:
   You make ${ currency(user_salary) }

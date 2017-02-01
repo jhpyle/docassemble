@@ -17,4 +17,4 @@ question: |
   % else:
   You do not like fruit.
   % endif
-mandatory: true
+mandatory: True

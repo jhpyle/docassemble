@@ -20,7 +20,7 @@ question: |
 fields:
   - Fruit: fruit[i]
 ---
-mandatory: true
+mandatory: True
 code: |
   fruit.auto_gather = False
   fruit.gathered = True
@@ -28,14 +28,14 @@ comment: |
   This code block disables the automatic
   gathering system.
 ---
-mandatory: true
+mandatory: True
 code: |
   fruit[0]
   if more_fruits:
     del more_fruits
     fruit[len(fruit)]
 ---
-mandatory: true
+mandatory: True
 question: |
   Fruits
 subquestion: |

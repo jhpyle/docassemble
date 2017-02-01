@@ -29,4 +29,4 @@ fields:
 ---
 question: |
   ${ villain } will surely be defeated!
-mandatory: true
+mandatory: True

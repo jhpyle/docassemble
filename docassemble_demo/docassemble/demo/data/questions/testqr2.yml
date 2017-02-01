@@ -2,7 +2,7 @@
 include:
   - basic-questions.yml
 ---
-mandatory: true
+mandatory: True
 code: |
   multi_user = True
   if 'resume_interview_screen' in url_args:

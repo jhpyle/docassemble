@@ -17,4 +17,4 @@ question: |
   % else:
   You need some ${ fruit }.
   % endif
-mandatory: true
+mandatory: True

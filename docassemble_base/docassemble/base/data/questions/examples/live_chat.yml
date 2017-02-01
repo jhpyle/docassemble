@@ -5,11 +5,11 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 code: |
   set_live_help_status(availability='available', mode='help', partner_roles=['advocate'])
 ---
-mandatory: true
+mandatory: True
 question: |
   Welcome to the live chat test.
 subquestion: |

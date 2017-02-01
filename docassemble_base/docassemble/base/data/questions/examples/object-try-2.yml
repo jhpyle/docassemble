@@ -17,4 +17,4 @@ fields:
 ---
 question: |
   The tallest person is ${ tallest_person }.
-mandatory: true
+mandatory: True

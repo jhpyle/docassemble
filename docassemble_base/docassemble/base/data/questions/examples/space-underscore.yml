@@ -18,5 +18,5 @@ sets: all_done
 code: |
   book = "Cat in the Hat"
 ---
-mandatory: true
+mandatory: True
 code: all_done

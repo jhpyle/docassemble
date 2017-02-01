@@ -7,7 +7,7 @@ attachment:
   - name: A letter for the inhabitants of ${ planet }
     filename: hello
     metadata:
-      SingleSpacing: true
+      SingleSpacing: True
     content: |
       Dear ${ planet } residents,
 
@@ -18,7 +18,7 @@ attachment:
       Your friend
 buttons:
   - Exit: exit
-mandatory: true
+mandatory: True
 ---
 question: |
   What is your planet's name?

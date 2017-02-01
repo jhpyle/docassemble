@@ -19,4 +19,4 @@ subquestion: |
   % endif
   You also have ${ gold_ounces }
   ounces of gold.
-mandatory: true
+mandatory: True

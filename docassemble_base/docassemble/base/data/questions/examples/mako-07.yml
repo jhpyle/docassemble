@@ -5,7 +5,7 @@ metadata:
   example start: 1
   example end: 1
 ---
-mandatory: true
+mandatory: True
 question: |
   <%
     a = 2

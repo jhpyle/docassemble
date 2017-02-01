@@ -4,7 +4,7 @@ metadata:
   example start: 2
   example end: 3
 ---
-mandatory: true
+mandatory: True
 question: |
   Your favorite food is ${ favorite_food }.
 ---

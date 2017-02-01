@@ -5,11 +5,11 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-initial: true
+initial: True
 code: |
   set_language('es')
 ---
-mandatory: true
+mandatory: True
 language: es
 question: El documento está listo.
 sets: provide_user_with_document

@@ -11,7 +11,7 @@ modules:
 objects:
   - fruit: DADict
 ---
-mandatory: true
+mandatory: True
 question: |
   There
   ${ fruit.does_verb("is") }

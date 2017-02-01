@@ -14,4 +14,4 @@ question: |
   You're so adorable!
 subquestion: |
   ${ user_picture }
-mandatory: true
+mandatory: True

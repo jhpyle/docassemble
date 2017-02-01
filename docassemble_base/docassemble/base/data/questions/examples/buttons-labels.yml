@@ -11,4 +11,4 @@ buttons:
   - Lease it: borrower
 ---
 question: You are a ${ target_variable }.
-mandatory: true
+mandatory: True

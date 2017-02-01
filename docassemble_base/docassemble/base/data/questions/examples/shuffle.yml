@@ -8,7 +8,7 @@ question: |
 fields:
   - Type: candidate
     datatype: radio
-    shuffle: true
+    shuffle: True
     choices:
       - Aaron Aardvark
       - Albert Arnold
@@ -20,4 +20,4 @@ question: Result of question
 subquestion: |
   You voted for ${ candidate }.
   Thanks!
-mandatory: true
+mandatory: True

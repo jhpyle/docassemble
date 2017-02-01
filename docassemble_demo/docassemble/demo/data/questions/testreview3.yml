@@ -1,7 +1,7 @@
 modules:
   - docassemble.base.util
 ---
-initial: true
+initial: True
 code: |
   process_action()
 ---
@@ -40,11 +40,11 @@ question: All done
 subquestion: |
   You like ${ fruit }, ${ vegetable }, and ${ fungi }.
 ---
-mandatory: true
+mandatory: True
 code: |
   menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
 ---
-mandatory: true
+mandatory: True
 code: |
   need(final_screen)
 ---

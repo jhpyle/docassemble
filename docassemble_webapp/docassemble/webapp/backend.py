@@ -2,7 +2,6 @@ from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, dbtableprefix, hostname, in_celery
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
-from docassemble.webapp.core.models import Uploads
 from docassemble.base.logger import logmessage
 from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, ObjectStorage
@@ -10,8 +9,6 @@ from docassemble.base.generate_key import random_string
 from sqlalchemy import or_, and_
 import docassemble.webapp.database
 import logging
-import urllib
-import tempfile
 import cPickle as pickle
 import codecs
 #import string
@@ -29,12 +26,9 @@ import docassemble.base.parse
 import re
 import os
 import sys
-import pyPdf
 from flask import session, current_app, has_request_context, url_for
 from flask_mail import Mail, Message
 from flask_wtf.csrf import generate_csrf
-from PIL import Image
-import xml.etree.ElementTree as ET
 import docassemble.webapp.worker
 #sys.stderr.write("I am in backend\n")
 
@@ -42,6 +36,8 @@ import docassemble.webapp.setup
 
 DEBUG = daconfig.get('debug', False)
 docassemble.base.parse.debug = DEBUG
+
+from docassemble.webapp.file_access import get_info_from_file_number, get_info_from_file_reference
 
 def write_record(key, data):
     new_record = ObjectStorage(key=key, value=pack_object(data))
@@ -110,66 +106,6 @@ def absolute_filename(the_file):
         return playground
     return(None)
 
-def get_info_from_file_reference(file_reference, **kwargs):
-    #sys.stderr.write('file reference is ' + str(file_reference) + "\n")
-    #logmessage('file reference is ' + str(file_reference))
-    if 'convert' in kwargs:
-        convert = kwargs['convert']
-    else:
-        convert = None
-    if re.match('[0-9]+', str(file_reference)):
-        result = get_info_from_file_number(int(file_reference))
-    elif re.search(r'^https*://', str(file_reference)):
-        #logmessage(str(file_reference) + " is a URL")
-        m = re.search('(\.[A-Za-z0-9]+)$', file_reference)
-        if m:
-            suffix = m.group(1)
-        else:
-            suffix = '.html'
-        result = dict(tempfile=tempfile.NamedTemporaryFile(suffix=suffix))
-        urllib.urlretrieve(file_reference, result['tempfile'].name)
-        result['fullpath'] = result['tempfile'].name
-        #logmessage("Downloaded to " + result['tempfile'].name)
-    else:
-        #logmessage(str(file_reference) + " is not a URL")
-        result = dict()
-        question = kwargs.get('question', None)
-        the_package = None
-        parts = file_reference.split(':')
-        if len(parts) == 1:
-            the_package = None
-            if question is not None:
-                the_package = question.from_source.package
-            if the_package is not None:
-                file_reference = the_package + ':' + file_reference
-            else:
-                file_reference = 'docassemble.base:' + file_reference
-        result['fullpath'] = docassemble.base.functions.static_filename_path(file_reference)
-    #logmessage("path is " + str(result['fullpath']))
-    if result['fullpath'] is not None: #os.path.isfile(result['fullpath'])
-        result['filename'] = os.path.basename(result['fullpath'])
-        ext_type, result['mimetype'] = get_ext_and_mimetype(result['fullpath'])
-        path_parts = os.path.splitext(result['fullpath'])
-        result['path'] = path_parts[0]
-        result['extension'] = path_parts[1].lower()
-        result['extension'] = re.sub(r'\.', '', result['extension'])
-        #logmessage("Extension is " + result['extension'])
-        if convert is not None and result['extension'] in convert:
-            #logmessage("Converting...")
-            if os.path.isfile(result['path'] + '.' + convert[result['extension']]):
-                #logmessage("Found conversion file ")
-                result['extension'] = convert[result['extension']]
-                result['fullpath'] = result['path'] + '.' + result['extension']
-                ext_type, result['mimetype'] = get_ext_and_mimetype(result['fullpath'])
-            else:
-                logmessage("Did not find file " + result['path'] + '.' + convert[result['extension']])
-                return dict()
-        #logmessage("Full path is " + result['fullpath'])
-        if os.path.isfile(result['fullpath']):
-            add_info_about_file(result['fullpath'], result)
-    else:
-        logmessage("File reference " + str(file_reference) + " DID NOT EXIST.")
-    return(result)
 
 def get_new_file_number(user_code, file_name, yaml_file_name=None):
     new_upload = Uploads(key=user_code, filename=file_name, yamlfile=yaml_file_name)
@@ -259,52 +195,6 @@ def can_access_file_number(file_number, uid=None):
     if upload:
         return True
     return False
-
-def get_info_from_file_number(file_number, privileged=False):
-    #logmessage("get_info_from_file_number")
-    if has_request_context():
-        uid = session['uid']
-    else:
-        uid = docassemble.base.functions.get_uid()
-    result = dict()
-    if privileged:
-        upload = Uploads.query.filter_by(indexno=file_number).first()
-    else:
-        upload = Uploads.query.filter_by(indexno=file_number, key=uid).first()
-    if upload:
-        result['filename'] = upload.filename
-        result['extension'], result['mimetype'] = get_ext_and_mimetype(result['filename'])
-        result['savedfile'] = SavedFile(file_number, extension=result['extension'], fix=True)
-        result['path'] = result['savedfile'].path
-        result['fullpath'] = result['path'] + '.' + result['extension']
-        #logmessage("fullpath is " + str(result['fullpath']))
-    if 'path' not in result:
-        logmessage("get_info_from_file_number: path is not in result for " + str(file_number))
-        return result
-    filename = result['path'] + '.' + result['extension']
-    if os.path.isfile(filename):
-        add_info_about_file(filename, result)
-    #else:
-    #    logmessage("Filename DID NOT EXIST.")
-    return(result)
-
-def add_info_about_file(filename, result):
-    if result['extension'] == 'pdf':
-        reader = pyPdf.PdfFileReader(open(filename))
-        result['pages'] = reader.getNumPages()
-    elif result['extension'] in ['png', 'jpg', 'gif']:
-        im = Image.open(filename)
-        result['width'], result['height'] = im.size
-    elif result['extension'] == 'svg':
-        tree = ET.parse(filename)
-        root = tree.getroot()
-        viewBox = root.attrib.get('viewBox', None)
-        if viewBox is not None:
-            dimen = viewBox.split(' ')
-            if len(dimen) == 4:
-                result['width'] = float(dimen[2]) - float(dimen[0])
-                result['height'] = float(dimen[3]) - float(dimen[1])
-    return
 
 if in_celery:
     LOGFILE = daconfig.get('celery_flask_log', '/tmp/celery-flask.log')

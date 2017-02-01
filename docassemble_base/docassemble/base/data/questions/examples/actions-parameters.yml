@@ -7,13 +7,13 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 code: |
   fishes = dict()
   fishes['blue'] = 2
   fishes['red'] = 3
 ---
-initial: true
+initial: True
 code: |
   process_action()
 ---
@@ -43,4 +43,4 @@ subquestion: |
   fishes and ${ fishes['red'] } red
   fishes.
   % endif
-mandatory: true
+mandatory: True

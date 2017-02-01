@@ -1,5 +1,5 @@
 ---
-mandatory: true
+mandatory: True
 code: |
   provide_user_with_document
 ---

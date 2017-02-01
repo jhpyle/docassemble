@@ -7,7 +7,7 @@ question: |
 subquestion: |
   It illustrates some document-related
   features.
-allow emailing: false
+allow emailing: False
 attachments:
   - name: A test document
     filename: test_document
@@ -122,7 +122,7 @@ attachments:
       necessary to provide by great
       additional buildings for the
       business of the government.
-mandatory: true
+mandatory: True
 ---
 code: |
   client = "Jane Doe"

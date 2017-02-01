@@ -23,6 +23,6 @@ question: |
   Your spouse is going to take you to the cleaners.
   % endif
 ---
-mandatory: true
+mandatory: True
 code: all_done
   

@@ -3,7 +3,7 @@ metadata:
   documentation: "http://docassemble.org/docs/modifiers.html#progress"
 ---
 features:
-  progress bar: true
+  progress bar: True
 ---
 question: Are you doing well?
 yesno: user_is_well
@@ -17,4 +17,4 @@ subquestion: |
   I am sorry to hear that!
   % endif
 progress: 100
-mandatory: true
+mandatory: True

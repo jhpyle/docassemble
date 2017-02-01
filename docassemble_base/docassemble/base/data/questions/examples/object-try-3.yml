@@ -20,4 +20,4 @@ question: |
   The villain, ${ villain }, was
   born on
   ${ format_date(villain.birthdate) }.
-mandatory: true
+mandatory: True

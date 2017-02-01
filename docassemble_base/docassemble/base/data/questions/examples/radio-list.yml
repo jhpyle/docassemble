@@ -26,4 +26,4 @@ subquestion: |
   Your ${ car_type }, which is from
   ${ car_country }, has
   ${ wheels_on_car } wheels.
-mandatory: true
+mandatory: True

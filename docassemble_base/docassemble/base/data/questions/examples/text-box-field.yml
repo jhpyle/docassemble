@@ -13,5 +13,5 @@ subquestion: |
   target_variable is:
 
   ${ target_variable }
-mandatory: true
+mandatory: True
 

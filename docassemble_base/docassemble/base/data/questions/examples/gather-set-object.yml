@@ -17,7 +17,7 @@ objects:
   - plum: DAObject
   - grape: DAObject
 ---
-mandatory: true
+mandatory: True
 code: |
   apple.name = "apples"
   orange.name = "oranges"
@@ -27,7 +27,7 @@ code: |
   my_favorites.add(apple, pear)
   my_favorites.gathered = True
 ---
-mandatory: true
+mandatory: True
 question: |
   There are ${ fruit.number_as_word() }
   fruits in all.

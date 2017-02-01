@@ -29,7 +29,7 @@ code: |
   client.name.last = "Doe"
   message_sent = send_sms(to=client, template=my_message)
 ---
-mandatory: true
+mandatory: True
 question: |
   Result
 subquestion: |

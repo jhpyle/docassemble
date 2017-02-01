@@ -9,5 +9,5 @@ subquestion: |
 buttons:
   - Exit: leave
 ---
-mandatory: true
+mandatory: True
 code: role_event

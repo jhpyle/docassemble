@@ -1,4 +1,4 @@
-debug: false
+debug: False
 url root: {{URLROOT}}
 exitpage: /
 db:
@@ -11,11 +11,11 @@ db:
   table_prefix: {{DBTABLEPREFIX}}
 oauth:
   facebook:
-    enable: false
+    enable: False
     id: 423759825983740
     secret: 34993a09909c0909b9000a090d09f099
   google:
-    enable: false
+    enable: False
     id: 23123018240-32239fj28fj4fuhf394h3984eurhfurh.apps.googleusercontent.com
     secret: DGE34gdgerg3GDG545tgdfRf
 secretkey: {{DASECRETKEY}}
@@ -34,7 +34,7 @@ timezone: {{TIMEZONE}}
 redis: {{REDIS}}
 rabbitmq: {{RABBITMQ}}
 voicerss:
-  enable: false
+  enable: False
   key: ae8734983948ebc98239e9898f998432
   languages:
     en: us

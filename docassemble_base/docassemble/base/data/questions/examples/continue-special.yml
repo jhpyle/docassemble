@@ -5,7 +5,7 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-initial: true
+initial: True
 code: |
   process_action()
 ---
@@ -42,4 +42,4 @@ choices:
 question: Your favorite food is ${ favorite_food }.
 subquestion: |
   [Ask it again](${ url_action('favorite_food')})
-mandatory: true
+mandatory: True

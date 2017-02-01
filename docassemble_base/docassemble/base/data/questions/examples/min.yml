@@ -14,4 +14,4 @@ fields:
 ---
 question: |
   ${ percent }% of your friends are turnips.
-mandatory: true
+mandatory: True

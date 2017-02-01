@@ -5,7 +5,7 @@ include:
 objects:
   - villain: PartyList
 ---
-mandatory: true
+mandatory: True
 code: |
   villain.append(client)
 ---
@@ -27,5 +27,5 @@ question: |
   % endif
 sets: all_done
 ---
-mandatory: true
+mandatory: True
 code: all_done

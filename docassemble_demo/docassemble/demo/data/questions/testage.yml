@@ -11,7 +11,7 @@ fields:
   - no label: user.birthdate
     datatype: date
 ---
-mandatory: true
+mandatory: True
 question: |
   You are ${ user.age_in_years() } years old.
 ---

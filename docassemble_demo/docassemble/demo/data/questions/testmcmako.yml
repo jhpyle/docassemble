@@ -14,5 +14,5 @@ question: |
   ${ formal_date(favorite_date) } was the best day in the history of the world.
 sets: all_done
 ---
-mandatory: true
+mandatory: True
 code: all_done

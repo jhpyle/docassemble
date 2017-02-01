@@ -9,5 +9,5 @@ modules:
 question: |
   The Delorean will go back in time to 
   ${ as_datetime('11/5/1955').year }.
-mandatory: true
+mandatory: True
   

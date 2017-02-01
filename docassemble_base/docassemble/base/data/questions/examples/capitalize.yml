@@ -13,7 +13,7 @@ question: |
   not your favorite color of eggs.
 sets: all_done
 ---
-mandatory: true
+mandatory: True
 code: |
   color = 'green'
   all_done

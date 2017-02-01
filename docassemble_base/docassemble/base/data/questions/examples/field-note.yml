@@ -20,4 +20,4 @@ subquestion: |
   If a ${ tree } falls in the forest,
   and there is no ${ fruit } to hear
   it, would you eat ${ veggie }?
-mandatory: true
+mandatory: True

@@ -14,7 +14,7 @@ attachments:
 
       ${ client } is entitled to
       benefits plan ${ benefits }.
-mandatory: true
+mandatory: True
 ---
 code: |
   client = "Jane Doe"

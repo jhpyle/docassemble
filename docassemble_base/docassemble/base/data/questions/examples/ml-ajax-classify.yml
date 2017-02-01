@@ -13,7 +13,7 @@ modules:
 code: |
   ml = SimpleTextMachineLearner('sug')
 ---
-initial: true
+initial: True
 code: |
   if defined('classification'):
     entry_to_classify.classify(classification)
@@ -22,7 +22,7 @@ code: |
   if entry_to_classify is not None:
     need(classification)
 ---
-reconsider: true
+reconsider: True
 code: |
   current_keys = " ".join(map(lambda x: '<a class="mysug label label-primary">' + str(x) + '</a>', ml.dependent_in_use()))
 ---
@@ -35,7 +35,7 @@ subquestion: |
 fields:
   - no label: classification
 ---
-mandatory: true
+mandatory: True
 question: |
   There is nothing left to classify.
 buttons:

@@ -2,11 +2,11 @@
 modules:
   - docassemble.base.util
 ---
-initial: true
+initial: True
 code: |
   process_action()
 ---
-mandatory: true
+mandatory: True
 code: |
   need(test_screen)
   need(final_screen)

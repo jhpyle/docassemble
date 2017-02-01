@@ -22,12 +22,12 @@ fields:
   - Singular noun: the_noun
 sets: all_done
 ---
-mandatory: true
+mandatory: True
 code: |
   seed(30)
   the_noun = "toad"
 ---
-initial: true
+initial: True
 code: |
   the_number = int(1 + random()*4)
   need(all_done)

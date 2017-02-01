@@ -12,4 +12,4 @@ question: Result of question
 subquestion: |
   user_saw_intro is:
   "${ user_saw_intro }"
-mandatory: true
+mandatory: True

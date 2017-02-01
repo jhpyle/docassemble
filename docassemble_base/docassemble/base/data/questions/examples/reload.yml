@@ -7,22 +7,22 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 code: |
   counter = 0
 ---
-initial: true
+initial: True
 code: |
   counter += 1
 ---
-reload: true
+reload: True
 question: |
   You have viewed this screen
   ${ counter }
   ${ noun_plural('time', counter) }.
 field: acknowledged
 ---
-mandatory: true
+mandatory: True
 need: acknowledged
 question: |
   All done with the interview.

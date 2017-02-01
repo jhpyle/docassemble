@@ -30,7 +30,7 @@ subquestion: |
 buttons:
   - Check: refresh
 ---
-mandatory: true
+mandatory: True
 code: |
   if role == 'first_person':
     first_person_bid

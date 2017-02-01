@@ -4,14 +4,14 @@ metadata:
   example end: 4
   documentation: "http://docassemble.org/docs/functions.html#process_action"
 ---
-mandatory: true
+mandatory: True
 code: |
   color = 'blue'
 ---
 modules:
   - docassemble.base.util
 ---
-initial: true
+initial: True
 code: |
   process_action()
 ---
@@ -35,4 +35,4 @@ subquestion: |
   You have submitted the fact that
   your favorite color is ${ color }.
   % endif
-mandatory: true
+mandatory: True

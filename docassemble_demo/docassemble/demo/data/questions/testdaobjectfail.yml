@@ -6,7 +6,7 @@ objects:
   - tree: DAObject
   - long_branch: DAObject
 ---
-mandatory: true
+mandatory: True
 question: |
   The length of the branch is ${ tree.branch.length }.
 ---

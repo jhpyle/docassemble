@@ -5,7 +5,7 @@ metadata:
 ---
 code: |
   cat_food_cans_needed = number_of_cats * 4
-reconsider: true
+reconsider: True
 ---
 question: |
   Does your neighbor's cat
@@ -37,4 +37,4 @@ question: |
   you will need to buy
   ${ cat_food_cans_needed } cans
   of cat food.
-mandatory: true
+mandatory: True

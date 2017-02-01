@@ -1,7 +1,7 @@
 metadata:
   title: Sample
 ---
-mandatory: true
+mandatory: True
 question: This is the title
 subquestion: This is the body
 field: to_be_continued

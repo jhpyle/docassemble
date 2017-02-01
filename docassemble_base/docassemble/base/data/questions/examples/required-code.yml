@@ -22,4 +22,4 @@ subquestion: |
   favorite_soda is:
   "${ favorite_soda }"
   % endif  
-mandatory: true
+mandatory: True

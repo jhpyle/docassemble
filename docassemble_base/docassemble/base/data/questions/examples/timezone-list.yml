@@ -17,5 +17,5 @@ fields:
 question: |
   The time in your timezone is
   ${ today(timezone=user_timezone) }.
-mandatory: true
+mandatory: True
   

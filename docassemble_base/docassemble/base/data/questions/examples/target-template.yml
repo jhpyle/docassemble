@@ -20,6 +20,6 @@ content: |
   % endif
 target: feedback
 ---
-mandatory: true
+mandatory: True
 question: |
   Your favorite food is ${ favorite_food }.

@@ -10,7 +10,7 @@ modules:
 objects:
   - authority: Individual
 ---
-mandatory: true
+mandatory: True
 question: Ok, all done.
 subquestion: |
   % if submit_to_authority:

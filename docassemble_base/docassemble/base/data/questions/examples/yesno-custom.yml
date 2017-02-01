@@ -18,4 +18,4 @@ subquestion: |
   We will strive to do better
   next time.
   % endif
-mandatory: true
+mandatory: True

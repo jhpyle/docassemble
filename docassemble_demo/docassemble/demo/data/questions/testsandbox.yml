@@ -3,7 +3,7 @@ question: |
   Are you a foozball?
 yesno: user_is_foozball
 ---
-mandatory: true
+mandatory: True
 question: |
   % if user_is_foozball:
   You are a total foozball.

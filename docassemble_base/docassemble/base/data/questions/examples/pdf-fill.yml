@@ -51,5 +51,5 @@ attachments:
         ${ likes_pears }
       Toast Checkbox: |
         ${ likes_toast }
-mandatory: true
+mandatory: True
 

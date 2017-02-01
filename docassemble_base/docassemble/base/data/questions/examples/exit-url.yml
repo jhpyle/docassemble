@@ -8,4 +8,4 @@ buttons:
   - Try again: restart
   - Learn More: exit
     url: https://en.wikipedia.org/wiki/Amphiprioninae
-mandatory: true
+mandatory: True

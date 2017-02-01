@@ -18,7 +18,7 @@ css: |
     }
   </style>
 ---
-mandatory: true
+mandatory: True
 question: |
   % if wants_to_build_snowman:
   Great!  Too bad there is no snow.

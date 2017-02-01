@@ -10,4 +10,4 @@ modules:
 question: |
   In three days, it will be
   ${ format_date( current_datetime() + date_interval(days=3) ) }.
-mandatory: true
+mandatory: True

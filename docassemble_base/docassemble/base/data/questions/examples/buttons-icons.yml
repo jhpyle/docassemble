@@ -28,4 +28,4 @@ fields:
 ---
 question: |
   You were born in ${ target_variable }.
-mandatory: true
+mandatory: True

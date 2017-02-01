@@ -7,7 +7,7 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 code: |
   command('exit', url=target_url)
 ---

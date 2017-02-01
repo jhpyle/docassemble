@@ -7,12 +7,12 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 code: |
   multi_user = True
   set_live_help_status(availability='available', mode='help', partner_roles=['advocate'])
 ---
-mandatory: true
+mandatory: True
 question: |
   Chat system
 subquestion: |
@@ -30,7 +30,7 @@ fields:
     min: 1
     max: 10
 ---
-mandatory: true
+mandatory: True
 question: |
   All done
 subquestion: |

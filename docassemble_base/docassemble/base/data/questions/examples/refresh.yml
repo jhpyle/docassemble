@@ -12,4 +12,4 @@ question: |
   ${ format_date(current_datetime()) }.
 buttons:
   - Tell me again: refresh
-mandatory: true
+mandatory: True

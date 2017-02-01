@@ -7,7 +7,7 @@ metadata:
 include:
   - basic-questions.yml
 ---
-mandatory: true
+mandatory: True
 question: |
   ${ case.defendant.as_noun(capitalize=True) }
   ${ case.defendant.does_verb("have") }

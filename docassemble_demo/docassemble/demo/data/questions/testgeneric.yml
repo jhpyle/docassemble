@@ -17,7 +17,7 @@ objects:
   - case: Case
   - defendant: PartyList
 ---
-initial: true
+initial: True
 code: |
   set_info(user=user, role='client')
 ---
@@ -25,12 +25,12 @@ question: |
   Thanks for the information
 sets: all_done
 ---
-mandatory: true
+mandatory: True
 code: |
   case.judge = Individual()
   case.bailiff = Individual()
 ---
-mandatory: true
+mandatory: True
 code: |
   case.bailiff.name.first
   case.judge.name.first

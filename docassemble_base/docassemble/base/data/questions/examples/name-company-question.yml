@@ -19,7 +19,7 @@ question: |
 fields:
   - Company name: company.name.text
 ---
-mandatory: true
+mandatory: True
 question: |
   % if user_wants_to_sue:
   You will need a lawyer.

@@ -2,11 +2,11 @@ metadata:
   title: Disable back button
   documentation: "http://docassemble.org/docs/modifiers.html#prevent_going_back"
 ---
-prevent_going_back: true
+prevent_going_back: True
 question: |
   Your application for ${ service }
   has been submitted.
-mandatory: true
+mandatory: True
 ---
 question: |
   For what service would you like

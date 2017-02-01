@@ -11,11 +11,11 @@ modules:
 objects:
   - fruit: DASet
 ---
-mandatory: true
+mandatory: True
 code: |
   fruit.ask_number = True
 ---
-mandatory: true
+mandatory: True
 question: |
   There are ${ fruit.number_as_word() }
   fruits in all.

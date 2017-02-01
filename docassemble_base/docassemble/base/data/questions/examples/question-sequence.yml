@@ -1,7 +1,7 @@
 metadata:
   title: Question sequence
 ---
-mandatory: true
+mandatory: True
 question: |
   Lets think about apples
 fields:
@@ -9,36 +9,36 @@ fields:
     datatype: yesno
   - "Your favorite variety": question_one_b
 ---
-mandatory: true
+mandatory: True
 question: |
   Are peaches good?
 yesno: question_two
 ---
-mandatory: true
+mandatory: True
 question: |
   Are turnips good?
 yesno: question_three
 ---
-mandatory: true
+mandatory: True
 question: |
   Is linoleum good?
 yesno: question_four
 ---
-mandatory: true
+mandatory: True
 question: |
   Are automobiles good?
 yesno: question_five
 ---
-mandatory: true
+mandatory: True
 question: |
   Is furniture good?
 yesno: question_six
 ---
-mandatory: true
+mandatory: True
 question: |
   Was this interview good?
 yesno: question_seven
 ---
-mandatory: true
+mandatory: True
 question: |
   Thanks for answering my questions!

@@ -2,7 +2,7 @@
 modules:
   - docassemble.base.legal
 ---
-mandatory: true
+mandatory: True
 code: all_done
 ---
 sets: all_done

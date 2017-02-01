@@ -346,7 +346,7 @@ question: |
 fields:
   - Somebody already mentioned: x.child[i]
     datatype: object
-    disable others: true
+    disable others: True
     choices: case.all_known_people()
     exclude:
       - x

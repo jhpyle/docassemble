@@ -13,7 +13,7 @@ objects:
   antagonist: Individual
   actors: PartyList
 ---
-mandatory: true
+mandatory: True
 code: |
   protagonist.name.first = "Harry"
   protagonist.name.last = "Potter"
@@ -32,4 +32,4 @@ fields:
 ---
 question: |
   ${ villain } will surely be defeated!
-mandatory: true
+mandatory: True

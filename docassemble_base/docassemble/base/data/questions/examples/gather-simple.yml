@@ -23,7 +23,7 @@ question: |
 fields:
   - Fruit: fruit[i]
 ---
-mandatory: true
+mandatory: True
 question: |
   Fruits
 subquestion: |

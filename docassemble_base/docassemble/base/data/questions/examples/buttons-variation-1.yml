@@ -11,4 +11,4 @@ buttons:
 question: Result of question
 subquestion: |
   You are ${ user_gender }.
-mandatory: true
+mandatory: True

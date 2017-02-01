@@ -1,15 +1,18 @@
 metadata:
   title: Set a variable
-  example start: 2
-  example end: 7
+  example start: 4
+  example end: 6
   documentation: "http://docassemble.org/docs/background.html#background_response_action"
 ---
-modules:
-  - docassemble.base.util
----
-initial: true
+mandatory: True
 code: |
-  process_action()
+  if the_task.ready():
+    final_screen
+  else:
+    waiting_screen
+---
+code: |
+  the_task = background_action('bg_task', None, additional=value_to_add)
 ---
 question: |
   How much shall I add to 553?
@@ -17,11 +20,10 @@ fields:
   - Number: value_to_add
     datatype: integer
 ---
-code: |
-  the_task = background_action('bg_task', None, additional=value_to_add)
----
 event: bg_task
 code: |
+  # This is where time-consuming code
+  # would go
   value = 553 + action_argument('additional')
   background_response_action('bg_resp', ans=value)
 ---
@@ -29,15 +31,11 @@ event: bg_resp
 code: |
   answer = action_argument('ans')
 ---
-mandatory: true
-code: |
-  if the_task.ready():
-    final_screen
-  else:
-    waiting_screen
+event: final_screen
+question: |
+  The answer is ${ answer }.
 ---
 event: waiting_screen
-reload: true
 question: |
   Hang tight.
   Still waiting for an answer.
@@ -45,7 +43,4 @@ subquestion: |
   This screen will reload every
   ten seconds until the answer
   is available.
----
-event: final_screen
-question: |
-  The answer is ${ answer }.
+reload: True

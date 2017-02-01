@@ -22,5 +22,5 @@ subquestion: |
   * ${ interval.hours } hours
   * ${ interval.minutes } minutes
   * ${ interval.seconds } seconds
-mandatory: true
+mandatory: True
   

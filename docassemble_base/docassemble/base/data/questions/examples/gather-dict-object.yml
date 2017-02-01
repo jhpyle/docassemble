@@ -11,11 +11,11 @@ modules:
 objects:
   - pet: DADict
 ---
-mandatory: true
+mandatory: True
 code: |
   pet.object_type = DAObject
 ---
-mandatory: true
+mandatory: True
 question: |
   You have ${ pet.number_as_word() }
   pets.

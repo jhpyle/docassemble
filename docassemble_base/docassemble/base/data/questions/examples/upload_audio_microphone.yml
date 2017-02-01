@@ -12,4 +12,4 @@ fields:
 question: |
   Let's listen to what you recorded.
 audio: ${ user_audio_file }
-mandatory: true
+mandatory: True

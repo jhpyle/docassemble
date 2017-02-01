@@ -16,4 +16,4 @@ question: |
   Great!  Your language code is
   `${ language_from_browser('es', 'fr') }`.
   % endif
-mandatory: true
+mandatory: True

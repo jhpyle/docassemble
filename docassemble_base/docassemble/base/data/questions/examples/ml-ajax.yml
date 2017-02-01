@@ -9,7 +9,7 @@ modules:
 features:
   javascript: suggestions.js
 ---
-initial: true
+initial: True
 code: |
   process_action()
 ---
@@ -20,7 +20,7 @@ fields:
     datatype: area
   - html: '<div id="fromserver"></div>'
 ---
-mandatory: true
+mandatory: True
 code: |
   ml = SimpleTextMachineLearner('sug')
 ---
@@ -28,13 +28,13 @@ code: |
   ml.save_for_classification(phrase)
   saved = True
 ---
-mandatory: true
+mandatory: True
 code: |
   while saved:
     del phrase
     del saved
 ---
-mandatory: true
+mandatory: True
 question: |
   Thank you.
 buttons:

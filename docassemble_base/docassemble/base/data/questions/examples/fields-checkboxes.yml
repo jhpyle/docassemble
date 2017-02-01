@@ -27,4 +27,4 @@ subquestion: |
   You like pears.
   % endif
   Your favorite, though, is ${ favorite_fruit }.
-mandatory: true
+mandatory: True

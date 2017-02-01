@@ -15,4 +15,4 @@ question: |
   % else:
   Actually, Topeka is the capital of Kansas.
   % endif
-mandatory: true
+mandatory: True

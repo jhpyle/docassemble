@@ -4,7 +4,7 @@ metadata:
   example start: 1
   example end: 4
 ---
-mandatory: true
+mandatory: True
 code: |
   counter = 0
   drafts = set()
@@ -21,7 +21,7 @@ code: |
   if action_argument('favorite_food'):
     drafts.add(action_argument('favorite_food'))
 ---
-mandatory: true
+mandatory: True
 question: |
   Your favorite food
 subquestion: |

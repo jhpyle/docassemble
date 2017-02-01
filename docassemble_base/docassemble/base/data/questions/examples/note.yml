@@ -17,4 +17,4 @@ fields:
 question: |
   You like ${ fruit }, ${ vegetable },
   and ${ mushroom }.
-mandatory: true
+mandatory: True

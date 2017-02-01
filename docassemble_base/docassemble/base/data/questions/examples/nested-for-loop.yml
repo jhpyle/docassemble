@@ -58,7 +58,7 @@ question: |
 fields:
   - Allergy: x.allergy[i]
 ---
-mandatory: true
+mandatory: True
 code: |
   for the_person in person.elements:
       for the_child in the_person.child.elements:
@@ -66,7 +66,7 @@ code: |
       the_person.child.gather()
   person.gather(minimum=1)
 ---
-mandatory: true
+mandatory: True
 question: Information retrieved
 buttons:
   - Restart: restart

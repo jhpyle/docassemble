@@ -18,4 +18,4 @@ yesno: ready_to_start
 ---
 need: ready_to_start
 question: This is the end of the interview.
-mandatory: true
+mandatory: True

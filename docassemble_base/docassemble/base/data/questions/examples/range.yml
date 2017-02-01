@@ -32,4 +32,4 @@ question: |
   % else:
   I guess you don't really like rabbits.
   % endif
-mandatory: true
+mandatory: True

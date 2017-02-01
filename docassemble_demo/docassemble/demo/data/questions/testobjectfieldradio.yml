@@ -14,5 +14,5 @@ question: |
   The villain is ${ villain }.
 sets: all_done
 ---
-mandatory: true
+mandatory: True
 code: all_done

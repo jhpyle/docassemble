@@ -25,4 +25,4 @@ subquestion: |
   ${ deride("Strawberries") }
 usedefs:
  - my_explanation
-mandatory: true
+mandatory: True

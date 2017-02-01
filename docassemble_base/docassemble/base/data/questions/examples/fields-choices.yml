@@ -5,7 +5,7 @@ metadata:
   example end: 2
   documentation: "http://docassemble.org/docs/fields.html#choices"
 ---
-mandatory: true
+mandatory: True
 question: |
   Your favorite fruit is the
   ${ favorite_fruit }, which is

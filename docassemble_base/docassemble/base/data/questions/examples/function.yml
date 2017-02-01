@@ -12,7 +12,7 @@ question: |
   ${ capitalize(color) } when
   passed through the
   `capitalize()` function.
-mandatory: true
+mandatory: True
 ---
 code: |
   color = 'green'

@@ -8,7 +8,7 @@ objects:
 ---
 comment: |
         respondents.addObject(DAObject, user_info().email)
-initial: true
+initial: True
 code: |
   multi_user = True
   if user_logged_in():

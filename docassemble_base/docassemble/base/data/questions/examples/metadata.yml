@@ -21,4 +21,4 @@ question: End of interview
 subquestion: |
   Your docket number is
   "${ docket_number }."
-mandatory: true
+mandatory: True

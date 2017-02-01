@@ -10,12 +10,12 @@ modules:
 objects:
   r: DARedis
 ---
-mandatory: true
+mandatory: True
 code: |
   key = r.key('my_variable')
   r.set(key, 'hello world')
 ---
-mandatory: true
+mandatory: True
 question: |
   Value has been retrieved from
   the redis server.

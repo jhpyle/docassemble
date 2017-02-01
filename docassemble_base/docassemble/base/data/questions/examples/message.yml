@@ -8,4 +8,4 @@ modules:
 ---
 code: |
   message("The interview is over.", "Better luck next time!")
-mandatory: true
+mandatory: True

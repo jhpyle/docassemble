@@ -20,4 +20,4 @@ question: Located address
 subquestion: |
   The address "${ user_address }" is
   located in ${ user_county }.
-mandatory: true
+mandatory: True

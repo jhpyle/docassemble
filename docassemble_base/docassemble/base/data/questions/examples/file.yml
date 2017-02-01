@@ -8,7 +8,7 @@ fields:
   - File: the_file
     datatype: file
 ---
-mandatory: true
+mandatory: True
 question: |
   Here is the file you uploaded
 subquestion: |

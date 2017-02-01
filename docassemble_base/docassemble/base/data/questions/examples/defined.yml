@@ -18,7 +18,7 @@ subquestion: |
   I do not know your favorite
   vegetable.
   % endif
-mandatory: true
+mandatory: True
 ---
 question: |
   Tell me about your favorite fruit.

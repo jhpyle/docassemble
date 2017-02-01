@@ -13,7 +13,7 @@ objects:
   - feet: DADict
   - colors: DASet
 ---
-mandatory: true
+mandatory: True
 code: |
   fruit.append('apple', 'pear', 'orange')
   feet['dog'] = 4
@@ -24,7 +24,7 @@ code: |
   feet.gathered = True
   colors.gathered = True
 ---
-mandatory: true
+mandatory: True
 question: |
   Summary of groups
 subquestion: |

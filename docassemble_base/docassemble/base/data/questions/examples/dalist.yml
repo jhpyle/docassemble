@@ -26,7 +26,7 @@ subquestion: |
   So far you have told me about ${ people }.
 yesno: people.there_is_another
 ---
-mandatory: true
+mandatory: True
 question: |
   Here is your list of people.
 subquestion: |

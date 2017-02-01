@@ -10,7 +10,7 @@ question: Summary
 subquestion: |
   Your favorite fruit is
   ${ value('favorite_fruit') }.
-mandatory: true
+mandatory: True
 ---
 question: |
   Tell me about your favorite fruit.

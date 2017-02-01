@@ -18,4 +18,4 @@ question: All done
 subquestion: |
   Your list in JSON format looks like
   `${ dumps(my_list) }`
-mandatory: true
+mandatory: True

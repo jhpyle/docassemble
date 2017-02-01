@@ -14,7 +14,7 @@ objects:
   actors: PartyList
   villain: Individual
 ---
-mandatory: true
+mandatory: True
 code: |
   protagonist.name.first = "Harry"
   protagonist.name.last = "Potter"
@@ -30,10 +30,10 @@ fields:
   - One of these: villain
     datatype: object
     choices: actors
-    disable others: true
+    disable others: True
   - First Name: villain.name.first
   - Last Name: villain.name.last
 ---
 question: |
   ${ villain } will surely be defeated!
-mandatory: true
+mandatory: True

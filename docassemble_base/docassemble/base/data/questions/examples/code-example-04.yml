@@ -4,4 +4,4 @@ metadata:
 ---
 question: |
   The answer is ${ 2 + 2 }.
-mandatory: true
+mandatory: True

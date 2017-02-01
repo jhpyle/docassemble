@@ -14,7 +14,7 @@ objects:
 code: |
   trustee = user
 ---
-mandatory: true
+mandatory: True
 question: |
   % if user is trustee:
   As the trustee of the estate, you need to understand that it is

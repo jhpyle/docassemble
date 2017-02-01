@@ -14,5 +14,5 @@ attachment:
     content: |
       Hello, world!
 ---
-mandatory: true
+mandatory: True
 code: provide_user_with_document

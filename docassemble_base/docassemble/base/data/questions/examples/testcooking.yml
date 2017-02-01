@@ -10,7 +10,7 @@ modules:
 objects:
   - submission: Recipe
 ---
-mandatory: true
+mandatory: True
 question: |
   Recipe for ${ submission.name }
 subquestion: |

@@ -22,4 +22,4 @@ subquestion: |
   ${ favorite_fruit }, which is not
   surprising given that you have only
   a ${ education} education.
-mandatory: true
+mandatory: True

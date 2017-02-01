@@ -9,4 +9,4 @@ question: |
   Your favorite fruit is ${ favorite_fruit }
   and your favorite vegetable is
   ${ favorite_vegetable }.
-mandatory: true
+mandatory: True

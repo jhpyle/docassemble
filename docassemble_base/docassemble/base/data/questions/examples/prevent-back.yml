@@ -15,7 +15,7 @@ question: |
   Your application for ${ service }
   has been submitted.
 need: app_submitted
-mandatory: true
+mandatory: True
 ---
 question: |
   For what service would you like

@@ -17,7 +17,7 @@ yesno: user_wants_to_sue
 code: |
   company.name.text = "ABC Corporation"
 ---
-mandatory: true
+mandatory: True
 question: |
   % if user_wants_to_sue:
   You will need a lawyer.

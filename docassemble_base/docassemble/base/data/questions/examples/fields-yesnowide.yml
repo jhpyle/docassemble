@@ -21,4 +21,4 @@ subquestion: |
   % if dislikes_pears:
   You dislike pears.
   % endif
-mandatory: true
+mandatory: True

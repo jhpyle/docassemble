@@ -2,7 +2,7 @@ metadata:
   title: Mandatory code
   documentation: "http://docassemble.org/docs/logic.html#mandatory"
 ---
-mandatory: true
+mandatory: True
 code: |
   fruits = peaches + pears
   all_done

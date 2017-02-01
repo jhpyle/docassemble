@@ -2,7 +2,7 @@ metadata:
   title: Flushleft
   documentation: "http://docassemble.org/docs/documents.html#metadata rtf pdf"
 ---
-mandatory: true
+mandatory: True
 question: |
   Here is your document.
 subquestion: |

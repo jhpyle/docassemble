@@ -6,11 +6,11 @@ modules:
 objects:
   - user: Individual
 ---
-initial: true
+initial: True
 code: |
   set_info(user=user, role='user')
 ---
-mandatory: true
+mandatory: True
 code: |
   need(map_of_organizations)
 ---
@@ -58,11 +58,11 @@ question: |
 fields:
   - Address: x.address.address
   - Unit: x.address.unit
-    required: false
+    required: False
   - City: x.address.city
   - State: x.address.state
     code: |
       us.states.mapping('abbr', 'name')
   - Zip: x.address.zip
-    required: false
+    required: False
 ---

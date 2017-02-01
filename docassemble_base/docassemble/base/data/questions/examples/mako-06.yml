@@ -11,7 +11,7 @@ modules:
 objects:
   - witness: PartyList
 ---
-mandatory: true
+mandatory: True
 question: |
   The ${ witness.as_noun() }
 subquestion: |

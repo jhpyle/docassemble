@@ -19,4 +19,4 @@ fields:
 question: |
   You are ${ user.age_in_years() }
   years old.
-mandatory: true
+mandatory: True

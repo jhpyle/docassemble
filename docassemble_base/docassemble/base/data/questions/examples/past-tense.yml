@@ -7,7 +7,7 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 code: |
   the_verb = "eat"
 ---
@@ -18,5 +18,5 @@ fields:
   - Present tense verb: the_verb
 sets: all_done
 ---
-mandatory: true
+mandatory: True
 code: all_done

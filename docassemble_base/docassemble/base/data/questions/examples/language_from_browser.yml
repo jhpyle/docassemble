@@ -11,4 +11,4 @@ modules:
 question: |
   I think your language code is
   `${ language_from_browser() }`.
-mandatory: true
+mandatory: True

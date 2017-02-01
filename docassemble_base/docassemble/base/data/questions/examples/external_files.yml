@@ -9,7 +9,7 @@ features:
   javascript: my-functions.js
   css: my-styles.css
 ---
-mandatory: true
+mandatory: True
 question: |
   A test of Javascript and CSS
 subquestion: |

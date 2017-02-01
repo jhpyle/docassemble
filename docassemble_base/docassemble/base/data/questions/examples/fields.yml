@@ -9,7 +9,7 @@ imports:
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 question: All done
 subquestion: |
   Your income is ${ user_annual_income }.
@@ -69,7 +69,7 @@ fields:
     maxlength: 30
   - Party: political_party
     datatype: radio
-    shuffle: true 
+    shuffle: True 
     choices:
       - Republican
       - Democrat

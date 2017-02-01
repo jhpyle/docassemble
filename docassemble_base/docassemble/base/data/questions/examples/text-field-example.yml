@@ -7,10 +7,10 @@ fields:
   - Favorite color: user_favorite_color
   - Description of your ideal vacation: user_ideal_vacation
     datatype: area
-    required: false
+    required: False
 ---
 question: Result of question
 subquestion: |
   user_favorite_color is: "${ user_favorite_color }"
-mandatory: true
+mandatory: True
 

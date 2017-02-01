@@ -13,7 +13,7 @@ imports:
 objects:
   - myfile: DAFile
 ---
-mandatory: true
+mandatory: True
 code: |
   myfile.initialize(filename="foo.jpg")
   im = PIL.Image.new("RGB",
@@ -21,7 +21,7 @@ code: |
                      "green")
   im.save(myfile.path())
 ---
-mandatory: true
+mandatory: True
 question: |
   Here is the picture.
 subquestion: |

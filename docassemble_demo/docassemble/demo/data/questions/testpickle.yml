@@ -1,7 +1,7 @@
 modules:
   - docassemble.base.core
 ---
-mandatory: true
+mandatory: True
 code: |
   multi_user = True
 ---
@@ -105,7 +105,7 @@ question: |
 fields:
   - Mouse Name: pumpkin_name
 ---
-mandatory: true
+mandatory: True
 question: |
   Your cat is named ${ cat_name }.
 

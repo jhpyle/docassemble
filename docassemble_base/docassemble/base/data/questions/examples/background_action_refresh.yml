@@ -1,24 +1,24 @@
 metadata:
   title: Set a variable and refresh the screen
   example start: 2
-  example end: 7
+  example end: 5
   documentation: "http://docassemble.org/docs/background.html#ui_notification"
 ---
-modules:
-  - docassemble.base.util
----
-initial: true
+mandatory: True
 code: |
-  process_action()
+  if the_task.ready():
+    final_screen
+  else:
+    waiting_screen
+---
+code: |
+  the_task = background_action('bg_task', 'refresh', additional=value_to_add)
 ---
 question: |
   How much shall I add to 553?
 fields:
   - Number: value_to_add
     datatype: integer
----
-code: |
-  the_task = background_action('bg_task', 'refresh', additional=value_to_add)
 ---
 event: bg_task
 code: |
@@ -29,19 +29,12 @@ event: bg_resp
 code: |
   answer = action_argument('ans')
 ---
-event: final_screen
-question: |
-  The answer is ${ answer }.
----
 event: waiting_screen
 question: |
   Hang tight.
 subquestion: |
   Still waiting for an answer.
 ---
-mandatory: true
-code: |
-  if the_task.ready():
-    final_screen
-  else:
-    waiting_screen
+event: final_screen
+question: |
+  The answer is ${ answer }.

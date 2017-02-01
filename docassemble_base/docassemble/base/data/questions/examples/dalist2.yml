@@ -8,14 +8,14 @@ modules:
 objects:
   - thing: DAList
 ---
-mandatory: true
+mandatory: True
 code: |
   thing.auto_gather = False
 ---
 code: |
   thing.gathered = thing.gather(number=number_of_things)
 ---
-mandatory: true
+mandatory: True
 question: |
   The things are: ${ thing }.
 buttons:

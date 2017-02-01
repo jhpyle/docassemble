@@ -19,4 +19,4 @@ fields:
 question: |
   The best day in the history of
   the world was ${ favorite_date }.
-mandatory: true
+mandatory: True

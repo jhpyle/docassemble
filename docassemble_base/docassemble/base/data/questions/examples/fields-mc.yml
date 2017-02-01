@@ -5,7 +5,7 @@ metadata:
   example end: 5
   documentation: "http://docassemble.org/docs/fields.html#field with buttons"
 ---
-mandatory: true
+mandatory: True
 code: final_screen
 ---
 sets: final_screen

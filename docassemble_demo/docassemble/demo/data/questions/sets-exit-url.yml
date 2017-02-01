@@ -9,5 +9,5 @@ choices:
     url: https://en.wikipedia.org/wiki/Amphiprioninae
 sets: all_done
 ---
-mandatory: true
+mandatory: True
 code: all_done

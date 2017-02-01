@@ -9,7 +9,7 @@ sets: tree.branch
 code: |
   tree.branch = DAObject()
 ---
-mandatory: true
+mandatory: True
 question: |
   The length of the branch is ${ tree.branch.length }.
 ---

@@ -9,5 +9,5 @@ modules:
 question: |
   The default time zone is
   ${ get_default_timezone() }.
-mandatory: true
+mandatory: True
   

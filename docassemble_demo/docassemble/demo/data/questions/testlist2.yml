@@ -20,5 +20,5 @@ subquestion: |
   * ${ person[j] }
   % endfor
 ---
-mandatory: true
+mandatory: True
 code: all_done

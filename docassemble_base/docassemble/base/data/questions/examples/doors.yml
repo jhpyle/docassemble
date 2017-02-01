@@ -11,7 +11,7 @@ choices:
   - Door Number 1
   - Door Number 2
 ---
-mandatory: true
+mandatory: True
 code: |
   if door_choice == 'Door Number 1':
     good_luck

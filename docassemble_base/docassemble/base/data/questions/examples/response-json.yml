@@ -13,11 +13,11 @@ modules:
 objects:
   - user: Individual
 ---
-mandatory: true
+mandatory: True
 code: |
   multi_user = True
 ---
-initial: true
+initial: True
 code: |
   process_action()
 ---
@@ -26,7 +26,7 @@ code: |
   data = dict(fruit=favorite_fruit, slices=number_of_slices)
   response(json.dumps(data), content_type="application/json")
 ---
-mandatory: true
+mandatory: True
 question: |
   You currently have
   ${ nice_number(number_of_slices) }

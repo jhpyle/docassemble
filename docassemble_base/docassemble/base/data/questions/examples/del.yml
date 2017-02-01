@@ -11,7 +11,7 @@ question: |
   Are you a communist?
 yesno: user_is_communist
 ---
-mandatory: true
+mandatory: True
 code: |
   if user_is_communist and user_reconsidering_communism:
     user_reconsidering_communism = False
@@ -30,4 +30,4 @@ question: |
   I am glad you are a true
   American.
   % endif
-mandatory: true
+mandatory: True

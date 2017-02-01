@@ -29,4 +29,4 @@ fields:
 question: |
   You like ${ fruit }, ${ vegetable },
   ${ cuisine }, and ${ tv_show }.
-mandatory: true
+mandatory: True

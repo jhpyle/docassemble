@@ -19,5 +19,5 @@ question: |
   % else:
   Your device is: ${ device() }.
   % endif
-mandatory: true
+mandatory: True
 

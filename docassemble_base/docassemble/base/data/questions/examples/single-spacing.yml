@@ -10,7 +10,7 @@ attachments:
   - name: A test document
     filename: test_document
     metadata:
-      SingleSpacing: true
+      SingleSpacing: True
     content: |
       ${ client } is entitled to
       benefits plan ${ benefits }.
@@ -47,7 +47,7 @@ attachments:
       nation, or any nation so
       conceived and so dedicated,
       can long endure.
-mandatory: true
+mandatory: True
 ---
 code: |
   client = "Jane Doe"

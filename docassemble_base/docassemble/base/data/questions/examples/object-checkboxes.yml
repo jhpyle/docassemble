@@ -13,7 +13,7 @@ objects:
   antagonist: Individual
   villain: PartyList
 ---
-mandatory: true
+mandatory: True
 code: |
   protagonist.name.first = "Harry"
   protagonist.name.last = "Potter"
@@ -37,4 +37,4 @@ question: |
   ${ villain.does_verb("include") }
   ${ villain }.
   % endif
-mandatory: true
+mandatory: True

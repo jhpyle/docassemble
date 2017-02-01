@@ -8,12 +8,12 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 code: |
   favorite_fruit
   number_of_slices  
 ---
-mandatory: true
+mandatory: True
 question: |
   Interview dictionary
 subquestion: |

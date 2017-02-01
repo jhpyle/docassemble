@@ -7,7 +7,7 @@ metadata:
 modules:
   - docassemble.base.util
 ---
-initial: true
+initial: True
 code: |
   ml = SimpleTextMachineLearner('demo')
   the_data = ml.export_training_set(output_format='yaml')

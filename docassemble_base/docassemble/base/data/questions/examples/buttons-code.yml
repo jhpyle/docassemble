@@ -18,4 +18,4 @@ subquestion: |
   You need to go to a ${ car_make }
   dealership and ask if they have a
   ${ car_model } for sale.
-mandatory: true
+mandatory: True

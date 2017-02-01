@@ -13,4 +13,4 @@ video: |
 ---
 question: This concludes the interview.
 need: ready_to_proceed
-mandatory: true
+mandatory: True

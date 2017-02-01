@@ -5,7 +5,7 @@ modules:
 objects:
   - user: Individual
 ---
-initial: true
+initial: True
 code: |
   process_action()
 ---
@@ -28,7 +28,7 @@ subquestion: |
   [Add to the lucky number](${ url_action('set_number_event', increment=2) })
 buttons:
   - Check: refresh
-mandatory: true
+mandatory: True
 ---
 event: set_number_event
 code: |

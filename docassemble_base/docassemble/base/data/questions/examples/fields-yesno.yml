@@ -19,4 +19,4 @@ subquestion: |
   % if likes_apples:
   You like apples.
   % endif
-mandatory: true
+mandatory: True
