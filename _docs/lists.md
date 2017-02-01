@@ -12,7 +12,7 @@ like:
 modules:
   - docassemble.base.legal
 ---
-mandatory: true
+mandatory: True
 question: |
   Summary of the parties in this case
 subquestion: |

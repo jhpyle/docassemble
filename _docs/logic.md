@@ -10,7 +10,7 @@ they contain variables that **docassemble** needs.  All [`question`] and
 
 For your interview to start asking questions, you need to mark at
 least one [`question`] block or [`code`] block with the modifier
-`mandatory: true`.
+`mandatory: True`.
 
 # Directives that control interview logic
 
@@ -26,10 +26,10 @@ fields:
 ---
 question: Are you sitting down?
 yesno: user_sitting_down
-mandatory: true
+mandatory: True
 ---
 question: Your socks do not match.
-mandatory: true
+mandatory: True
 ---
 {% endhighlight %}
 
@@ -44,7 +44,7 @@ For example:
 
 {% highlight yaml %}
 ---
-mandatory: true
+mandatory: True
 code: |
   if user_sitting_down:
     user_informed_that_socks_do_not_match
@@ -79,7 +79,7 @@ they are successfully "asked" once.
 
 {% highlight yaml %}
 ---
-initial: true
+initial: True
 code: |
   my_counter = 0
 ---
@@ -89,7 +89,7 @@ code: |
 
 The `reconsider` modifier can only be used on [`code`] blocks.
 
-If `reconsider` is set to `true`, then **docassemble** will always
+If `reconsider` is set to `True`, then **docassemble** will always
 "reconsider" the values of any of the variables set by the `code`
 block.
 
@@ -97,7 +97,7 @@ That is, every time the interview is assembled (every time the screen
 loads) **docassemble** will forget about the value of any of the
 variables set by the `code` block.
 
-You will want to set `reconsider` to `true` if your interview flow is
+You will want to set `reconsider` to `True` if your interview flow is
 such that you want **docassemble** to reconsider its definition of a
 variable based on information that might be gathered in the future.
 
@@ -135,7 +135,7 @@ question: |
   you will need to buy ${ cat_food_cans_needed } cans of cat food.
 sets: all_done
 ---
-mandatory: true
+mandatory: True
 code: all_done
 {% endhighlight %}
 
@@ -148,14 +148,14 @@ has been defined once, **docassemble** will continue to use that
 definition whenever the interview calls for the definition of
 `cat_food_cans_needed`.
 
-This problem can be fixed by adding `reconsider: true` to the [`code`]
+This problem can be fixed by adding `reconsider: True` to the [`code`]
 block:
 
 {% highlight yaml %}
 ---
 code: |
   cat_food_cans_needed = number_of_cats * 4
-reconsider: true
+reconsider: True
 ---
 {% endhighlight %}
 
@@ -223,7 +223,7 @@ You could write your own interview file that looks like this:
 include:
   - question_library.yml
 ---
-mandatory: true
+mandatory: True
 code: |
   if user_agrees_it_is_a_nice_evening and user_wants_to_go_to_dance:
     life_is_good
@@ -260,7 +260,7 @@ For example:
 include:
   - question_library.yml
 ---
-mandatory: true
+mandatory: True
 code: |
   if user_agrees_it_is_a_nice_evening and user_wants_to_go_to_dance:
     life_is_good
@@ -290,7 +290,7 @@ Such fall-backs can also happen with Python code.  For example:
 include:
   - question_library.yml
 ---
-mandatory: true
+mandatory: True
 code: |
   if user_agrees_it_is_a_nice_evening and user_wants_to_go_to_dance:
     life_is_good
@@ -344,7 +344,7 @@ For example, consider the following code:
 
 {% highlight yaml %}
 ---
-mandatory: true
+mandatory: True
 code: |
   if user_has_car:
     user_net_worth = user_net_worth + resale_value_of_user_car
@@ -390,7 +390,7 @@ block to compute `user_net_worth`:
 
 {% highlight yaml %}
 ---
-mandatory: true
+mandatory: True
 code: |
   user_net_worth = 0
   if user_has_car:

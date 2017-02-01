@@ -28,7 +28,7 @@ review of the conditions that led to the question being asked.  You
 can learn a lot about how to do things in **docassemble** by clicking
 "Source" and comparing the [YAML] source to the end result.  The
 "Source" tab is only available because the demo server is configured
-as a development server (by setting `debug: true` in the
+as a development server (by setting `debug: True` in the
 [configuration file]).  End users will not see a "Source" tab.
 
 # The YAML file that generates the demonstration interview
@@ -224,13 +224,13 @@ content: |
 role:
   - client
   - advocate
-mandatory: true
+mandatory: True
 code: |
   multi_user = False
   speak_text = False
   set_live_help_status(availability='observeonly', mode='help', partner_roles=['advocate'])
 ---
-mandatory: true
+mandatory: True
 code: |
   client.asset.new('checking account', 'savings account', 'stocks and bonds', 'automobiles')
   client.asset.gathered = True
@@ -239,7 +239,7 @@ code: |
 comment: |
   This code indicates which income and asset items to ask about.
 ---
-initial: true
+initial: True
 code: |
   if role == 'advocate' and not defined('client.name.first'):
     welcome_advocate
@@ -253,7 +253,7 @@ question: |
 subquestion: |
   You are an advocate and this interview is not yet ready for your participation.
 ---
-mandatory: true
+mandatory: True
 code: |
   need(user_saw_initial_screen)
   if user_understands_no_attorney_client_relationship == "understands":
@@ -550,7 +550,7 @@ question: |
 fields:
   - Type of home: x.address.type
     datatype: radio
-    shuffle: true
+    shuffle: True
     choices:
       - Apartment
       - Leased house
@@ -563,7 +563,7 @@ fields:
   - note: |
       How would you describe the general *milieu* of ${ x.possessive('abode') }?
   - no label: x.address.milieu
-    required: false
+    required: False
 comment: |
   In this question, the type of home uses a "radio" selector.  The
   address type will be set to one of "Apartment," "Leased house,"
@@ -598,14 +598,14 @@ question: |
 fields:
   - Address: x.address.address
   - Unit: x.address.unit
-    required: false
+    required: False
     help: The apartment, suite, or unit number of the residence.
   - City: x.address.city
   - State: x.address.state
     code: |
       us.states.mapping('abbr', 'name')
   - Zip: x.address.zip
-    required: false
+    required: False
 comment: |
   This question demonstrates fields that have the style of dropdown
   lists.  The values of a dropdown list can be generated with code
@@ -712,7 +712,7 @@ attachments:
       HeaderLeft: |
         ${ client } [BR] ${ today() } [BR] Page [PAGENUM]
       HeaderLines: "3"
-      SingleSpacing: true
+      SingleSpacing: True
     content: |
       ${ today() }
 
@@ -982,7 +982,7 @@ question: |
 fields:
   - Somebody already mentioned: village_idiot
     datatype: object
-    disable others: true
+    disable others: True
     choices:
       - case.plaintiff
       - case.defendant
@@ -1357,7 +1357,7 @@ question: |
 fields:
   - Somebody already mentioned: x.child[i]
     datatype: object
-    disable others: true
+    disable others: True
     choices: case.all_known_people()
     exclude:
       - x

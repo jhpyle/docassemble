@@ -74,7 +74,7 @@ question: What is your favorite vegetable?
 fields:
   - Animal: favorite_vegetable
 ---
-mandatory: true
+mandatory: True
 question: What a coincidence!
 subquestion: |
   My favorite animal is the ${ favorite_animal }, too!
@@ -395,8 +395,8 @@ are writing.
 The following values in [YAML] are special:
 
 * `null`, `Null`, `NULL` -- these become `None` in [Python]
-* `true`, `True`, `TRUE` -- these become `True` in [Python]
-* `false`, `False`, `FALSE` -- these become `False` in [Python]
+* `True`, `True`, `TRUE` -- these become `True` in [Python]
+* `False`, `False`, `FALSE` -- these become `False` in [Python]
 * numbers such as `54`, `3.14` -- these become numbers in [Python]
 
 These values will not be interpreted as literal pieces of text, but as

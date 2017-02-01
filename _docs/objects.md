@@ -229,7 +229,7 @@ write:
 modules:
   - docassemble.cooking.objects
 ---
-initial: true
+initial: True
 code: |
   if user_is_scientist:
     temperature_type = 'Kelvin'
@@ -284,7 +284,7 @@ modules:
   - docassemble.base.util
   - docassemble.cooking.objects
 ---
-initial: true
+initial: True
 code: |
   if user_is_scientist:
     set_info(temperature_type='Kelvin')
@@ -347,7 +347,7 @@ Now in your interview you can do:
 modules:
   - docassemble.cooking.objects
 ---
-initial: true
+initial: True
 code: |
   if user_is_scientist:
     set_temperature_type('Kelvin')
@@ -441,7 +441,7 @@ objects:
   - tree: DAObject
   - long_branch: DAObject
 ---
-mandatory: true
+mandatory: True
 question: |
   The length of the branch is ${ tree.branch.length }.
 ---
@@ -482,7 +482,7 @@ sets: tree.branch
 code: |
   tree.initializeAttribute('branch', DAObject)
 ---
-mandatory: true
+mandatory: True
 question: |
   The length of the branch is ${ tree.branch.length }.
 ---
@@ -732,7 +732,7 @@ code: |
   else:
     there_are_things = False
 ---
-mandatory: true
+mandatory: True
 code: |
   things['abc'] = some_variable
 ---
@@ -1076,7 +1076,7 @@ inserting the following [initial block]:
 
 {% highlight yaml %}
 ---
-initial: true
+initial: True
 code: |
   set_info(user=user, role='user_role')
 ---
@@ -1367,7 +1367,7 @@ longitude from the web browser.
 include:
   - basic-questions.yml
 ---
-initial: true
+initial: True
 code: |
   track_location = user.location.status()
 ---
@@ -1385,7 +1385,7 @@ modules:
 objects:
   - user: Individual
 ---
-initial: true
+initial: True
 code: |
   set_info(user=user, role='user_role')
   track_location = user.location.status()
@@ -1400,7 +1400,7 @@ user for this:
 
 {% highlight yaml %}
 ---
-initial: true
+initial: True
 code: |
   set_info(user=user, role='user_role')
   if user_ok_with_sharing_location:
@@ -1560,7 +1560,7 @@ called `asset` that is an object of type `Asset`.
 
 {% highlight yaml %}
 ---
-mandatory: true
+mandatory: True
 question: |
   Your total assets are ${ user.asset }.
 ---
@@ -1646,7 +1646,7 @@ that is an object of type `Income`.
 
 {% highlight yaml %}
 ---
-mandatory: true
+mandatory: True
 question: |
   Your total annual income is ${ user.income }.
 ---
@@ -1937,7 +1937,7 @@ interview:
 objects:
   - user: Individual
 ---
-mandatory: true
+mandatory: True
 question: |
   % if user.can_practice_in('MA'):
   You can take this case yourself.

@@ -28,7 +28,7 @@ application inoperative.)
 Here is an example of what a configuration file may look like:
 
 {% highlight yaml %}
-debug: true
+debug: True
 exitpage: http://docassemble.org
 db:
   prefix: postgresql+psycopg2://
@@ -36,14 +36,14 @@ db:
   user: docassemble
   password: abc123
   host: localhost
-  port: null
-  table_prefix: null
+  port: Null
+  table_prefix: Null
 secretkey: 28asflwjeifwlfjsd2fejfiefw3g4o87
 default_title: docassemble
 default_short_title: doc
 mail:
-  username: null
-  password: null
+  username: Null
+  password: Null
   server: localhost
   default_sender: '"Administrator" <no-reply@example.com>'
 default_interview: docassemble.demo:data/questions/questions.yml
@@ -54,18 +54,18 @@ default_admin_account:
   email: admin@admin.com
   password: password
 voicerss:
-  enable: false
+  enable: False
   key: ae8734983948ebc98239e9898f998432
   languages:
     en: us
     es: mx
     fr: fr
 s3:
-  enable: false
+  enable: False
   access_key_id: FWIEJFIJIDGISEJFWOEF
   secret_access_key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
   bucket: yourbucketname
-ec2: false
+ec2: False
 words:
   - docassemble.base:data/sources/us-words.yml
 {% endhighlight %}
@@ -83,13 +83,13 @@ mail:
 
 ## <a name="debug"></a>Development vs. production
 
-Set the `debug` directive to `true` on development servers.  The default is `false`.
+Set the `debug` directive to `True` on development servers.  The default is `False`.
 
 {% highlight yaml %}
-debug: true
+debug: True
 {% endhighlight %}
 
-Setting `debug` to `true` enables the following features:
+Setting `debug` to `True` enables the following features:
 
 * The "Source" button in the web app, which shows the [YAML] source code used
   to generate the current question, an explanation of the path the
@@ -353,8 +353,8 @@ mail:
   password: abc123
   server: smtp.example.com
   port: 25
-  use_ssl: false
-  use_tls: true
+  use_ssl: False
+  use_tls: True
 {% endhighlight %}
 
 Note that any machine that connects to an SMTP server will need to
@@ -552,12 +552,12 @@ ocr dpi: 500
 
 ## <a name="show_login"></a>Hiding the login link
 
-If the `show_login` directive is set to `false`, users will not see a
+If the `show_login` directive is set to `False`, users will not see a
 "Sign in or sign up to save answers" link in the upper-right-hand
 corner of the web app.
 
 {% highlight yaml %}
-show_login: false
+show_login: False
 {% endhighlight %}
 
 The default behavior is to show the "Sign in or sign up to save
@@ -565,12 +565,12 @@ answers" link.
 
 ## <a name="allow_registration"></a>Invitation-only registration
 
-If the `allow_registration` directive is set to `false`, users will
+If the `allow_registration` directive is set to `False`, users will
 not be allowed to register to become users of the site unless they are
 [invited by an administrator].
 
 {% highlight yaml %}
-allow_registration: false
+allow_registration: False
 {% endhighlight %}
 
 The default behavior is to allow any user to register.
@@ -578,10 +578,10 @@ The default behavior is to allow any user to register.
 ## <a name="xsendfile"></a>Support for xsendfile
 
 If your web server is not configured to support X-SENDFILE headers,
-set the `xsendfile` directive to `false`.
+set the `xsendfile` directive to `False`.
 
 {% highlight yaml %}
-xsendfile: false
+xsendfile: False
 {% endhighlight %}
 
 Use of X-SENDFILE is recommended because it allows the web server,
@@ -758,7 +758,7 @@ service allows 350 free requests per day.)
 
 {% highlight yaml %}
 voicerss:
-  enable: true
+  enable: True
   key: 347593849874e7454b9872948a87987d
   languages:
     en: us
@@ -766,7 +766,7 @@ voicerss:
     fr: fr
 {% endhighlight %}
 
-The `enable` key must be set to `true` in order for the text-to-speech
+The `enable` key must be set to `True` in order for the text-to-speech
 feature to work.  The `key` is the [VoiceRSS] API key.  The
 `languages` key refers to a dictionary that associates languages with
 default dialects to be used with that language.
@@ -796,7 +796,7 @@ keys and bucket name as follows:
 
 {% highlight yaml %}
 s3:
-  enable: true
+  enable: True
   access_key_id: FWIEJFIJIDGISEJFWOEF
   secret_access_key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
   bucket: yourbucketname
@@ -812,7 +812,7 @@ instance, or a [Docker] container within such an instance, set this to
 true:
 
 {% highlight yaml %}
-ec2: true
+ec2: True
 {% endhighlight %}
 
 This is necessary because when **docassemble** runs in a
@@ -822,13 +822,13 @@ it through [supervisor].  Each web server instance advertises the
 hostname or IP address through which its [supervisor] can be accessed.
 Normally, this can be obtained using the computer's hostname, but
 within an [EC2] instance or [Docker] container, this hostname is not
-one that other web servers can resolve.  If `ec2` is set to `true`,
+one that other web servers can resolve.  If `ec2` is set to `True`,
 then **docassemble** will determine the hostname by calling
 `http://169.254.169.254/latest/meta-data/local-ipv4`.
 
 ### <a name="ec2_ip_url"></a>ec2_ip_url
 
-If `ec2` is set to `true`, docassemble will determine the hostname by
+If `ec2` is set to `True`, docassemble will determine the hostname by
 calling `http://169.254.169.254/latest/meta-data/local-ipv4`.  If this
 URL does not work for some reason, but a different URL would work, you
 can change the URL that **docassemble** uses by setting the
@@ -904,8 +904,8 @@ do not have these applications on your system, you need to set the
 configuration variables to null:
 
 {% highlight yaml %}
-imagemagick: null
-pdftoppm: null
+imagemagick: Null
+pdftoppm: Null
 {% endhighlight %}
 
 If you have the applications, but you want to specify a particular
@@ -925,8 +925,8 @@ that they are accessible through the commands `pacpl` and
 your system, you need to set the configuration variables to null:
 
 {% highlight yaml %}
-pacpl: null
-avconv: null
+pacpl: Null
+avconv: Null
 {% endhighlight %}
 
 You can also set these variables to tell **docassemble** to use a
@@ -954,7 +954,7 @@ command `libreoffice`.  If you do not have LibreOffice on your system,
 you need to set the configuration variable to null:
 
 {% highlight yaml %}
-libreoffice: null
+libreoffice: Null
 {% endhighlight %}
 
 You can also use this configuration variable to set a different path
@@ -985,11 +985,11 @@ will need to tell **docassemble** your oauth keys:
 {% highlight yaml %}
 oauth:
   facebook:
-    enable: true
+    enable: True
     id: 423759825983740
     secret: 34993a09909c0909b9000a090d09f099
   google:
-    enable: true
+    enable: True
     id: 23123018240-32239fj28fj4fuhf394h3984eurhfurh.apps.googleusercontent.com
     secret: DGE34gdgerg3GDG545tgdfRf
 {% endhighlight %}
@@ -1009,8 +1009,8 @@ Here is an example:
 
 {% highlight yaml %}
 twilio:
-  sms: true
-  voice: true
+  sms: True
+  voice: True
   account sid: ACfad8e668d876f5473fb232a311243b58
   auth token: auth token: 87559c7a427c25e34e20c654e8b05234
   number: "+12762410114"
@@ -1020,10 +1020,10 @@ twilio:
   default interview: docassemble.demo:data/questions/questions.yml
 {% endhighlight %}
 
-The `sms: true` line tells **docassemble** that you intend to use the
+The `sms: True` line tells **docassemble** that you intend to use the
 text messaging features.
 
-The `voice: true` line tells **docassemble** that you intend to use the
+The `voice: True` line tells **docassemble** that you intend to use the
 [call forwarding] feature.
 
 The `account sid` is a value you copy and paste from your [Twilio]
@@ -1062,8 +1062,8 @@ directive as a list of dictionaries, and giving each dictionary a
 {% highlight yaml %}
 twilio:
   - name: default
-    sms: true
-    voice: true
+    sms: True
+    voice: True
     account sid: ACfad8e668d876f5473fb232a311243b58
     auth token: auth token: 87559c7a427c25e34e20c654e8b05234
     number: "+12762410114"
@@ -1073,8 +1073,8 @@ twilio:
       doors: docassemble.base:data/questions/examples/doors.yml
     default interview: docassemble.demo:data/questions/questions.yml
   - name: bankruptcy
-    sms: true
-    voice: false
+    sms: True
+    voice: False
     account sid: ACfad8e668d876f5473fb232a311243b58
     auth token: auth token: 87559c7a427c25e34e20c654e8b05234
     number: "+12768571217"

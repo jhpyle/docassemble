@@ -1,33 +1,32 @@
 ---
 layout: docs
-title: Running code in the background
-short_title: Background processes
+title: Running code behind the scenes
+short_title: Background code
 ---
 
 Usually, your interview [code] runs whenever the user is "between
 screens."  The process goes like this:
 
-1. The user presses a button on a **docassemble** screen (usually the
-   "Continue" button).
-2. Information is sent from the user's browser to the **docassemble**
-server.
-3. The server updates the interview variables based on the user input.
-4. The server [evaluates the interview] based on the new interview
-   variables, running [code] as necessary.
-4. The server sends a new screen back to the user's browser.
+1. The user submits information from a **docassemble** screen (e.g.,
+   by pressing the "Continue" button).
+2. The user's device sends information to the **docassemble** server.
+3. The server updates the interview variables based on that information.
+4. The server then [evaluates the interview], using the updated
+   interview variables, which may cause [code] to be run.
+4. The server sends a new screen back to the user's device.
 5. The user sees the new screen.
 
-Sometimes, this process is too limiting because you want your
-interview [`code`] to run at other times.
+You may find this process too limiting for you as an interview author
+if you want your [code] to run at other times.
 
 For example:
 
 1. If your code takes a very long time to run, the user will have to
    wait, looking at a spinner.  For example, your code may trigger a
    factual investigation process that retrieves information from a
-   variety of sources on the internet, which take a long time to
+   variety of sources on the internet, which takes a long time to
    retrieve and process.  The user may think the interview crashed
-   when in fact it is just working hard.  It would be better if the
+   when in fact it is hard at work.  It would be better if the
    code could run in the background while the user continues to
    interact with the interview.
 2. You may want to process the user's input before the user presses
@@ -48,13 +47,17 @@ For example:
    something.
 
 There are features in **docassemble** that address each of these
-limitations.  If you have [`code`] that takes a long time to run, you
-can run it in a [background process].  If you want to process user
-input before the user submits it, you can cause the user's web browser
-to [check in] with the server every few seconds and update the user's
-screen with the results.  If you want to schedule [`code`] to run at
-times when the user is not using **docassemble**, you can create a
-[scheduled task].
+limitations.
+
+1. If you have [`code`] that takes a long time to run, you can run it
+   in a [background process].
+2. If you want to process user input before the user submits it, you
+   can cause the user's web browser to [check in] with the server
+   every few seconds and update the user's screen with the results.
+3. If you want to schedule [`code`] to run at times when the user is
+   not using **docassemble**, you can create a [scheduled task].
+
+The following sections explain these features.
 
 # <a name="background"></a>Background processes for time-consuming code
 
@@ -66,8 +69,8 @@ application has "crashed" when it is actually just working normally.
 To get around this problem, **docassemble** allows interview authors
 to run code in "background processes."  While the user is answering
 other questions, or looking at a user-friendly screen that instructs
-the user to be patient, the **docassemble** server can be hard at work
-carrying out a variety of time-consuming tasks for the user.
+the user to wait, the **docassemble** server can be hard at work
+carrying out time-consuming tasks for the user.
 
 These processes can even operate in parallel.  For example, if your
 interview searches the user's name in four different on-line
@@ -83,39 +86,41 @@ handle them in order, working on several of them at a time.  And if
 background tasks are particularly important for your application, you
 can install [multiple servers] dedicated to handling these tasks.
 
-To run your code in the background, use the [`background_action()`]
+To run code in the background, use the [`background_action()`]
 function in combination with [`background_response()`] or
-[`background_response_action()`].  As explained in the section on
-[functions]({{ site.baseurl }}/docs/functions.html#howtouse), a
-prerequisite to using functions is including a [`modules`] block that
-activates this advanced functionality:
+[`background_response_action()`].
 
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.util
----
-{% endhighlight %}
-
-The next subsections explain how to use these functions.
+The next subsections explain how these functions work.
 
 ## <a name="background_action"></a>background_action()
 
+Here is an example that uses a background task to add a user-supplied
+number to 553 and return the result.
+
 {% include side-by-side.html demo="background_action" %}
 
-Note the second block:
-{% highlight yaml %}
----
-initial: true
-code: |
-  process_action()
----
-{% endhighlight %}
+Briefly, here is what happens in this interview.
 
-Background actions will not work unless your interview contains a call
-to [`process_action()`] in [`initial`] code.  This code needs to run
-early on -- after you have screened out unwanted users, but before the
-substance of your interview begins.
+1. The interview tries to [evaluate] the [`mandatory`] block.  The
+   variable `the_task` is undefined, so the interview tries to define
+   it by running [`background_action()`].  However, the interview
+   finds that `value_to_add` is undefined, so it asks the user "How
+   much shall I add to 553?"
+2. The next time the interview is evaluated, [`background_action()`]
+   runs successfully because `value_to_add` is now defined.  The
+   [`background_action()`] function starts an [action] running in the
+   background that adds `value_to_add` to the number 553.  The
+   variable `the_task`, representing the status of the background task,
+   is defined.
+3. The call to `the_task.ready()` returns `False` because the task is
+   still running, so the `waiting_screen` is shown.
+4. Since the `waiting_screen` has the [`reload` modifier] set, the
+   screen reloads after ten seconds.
+5. In the meantime, the `bg_task` [action] is running in the
+   background and finishes the calculation.
+6. The next time the screen loads, `the_task.ready()` will return
+   `True`, and the `final_screen` will be shown.  The `final_screen`
+   question calls `the_task.get()` to retrieve the calculated value.
 
 Starting a background process involves calling the
 `background_action()` function.
@@ -127,77 +132,87 @@ code: |
 ---
 {% endhighlight %}
 
-In this example, the first argument to [`background_action()`],
-`bg_task`, is the name of an [action] available in the
-interview that contains the time-consuming code you want to run.
+The first argument to [`background_action()`], `bg_task`, is the name
+of an [action] available in the interview.  Notice that the next block
+is identified with `event: bg_task`; this is the block that contains
+the code you want to run in the background.
 
 The second argument to [`background_action()`] indicates how the
-result of the action should be communicated to the user.  In this
+result of the [action] should be communicated to the user.  In this
 case, `None` means no communication (more on this
-[below](#ui_notification)).
+setting [below](#ui_notification)).
 
 The keyword argument, `additional`, is an argument that is passed to
-that action (which can be retrieved with [`action_argument()`]).  The
-parameters to `background_action()` should be familiar if you have
-ever used [`url_action()`].  You can have as many keyword arguments as
-you want, called anything you want, or you can have no keyword
-arguments at all.
+the [action] (which can be retrieved with [`action_argument()`]).  You
+can have as many keyword arguments as you want, called anything you
+want.  You can also have no keyword arguments at all.
 
 The `background_action()` function returns an object that represents a
 [Celery] "task."  In this example, the object is saved to a variable
-called `the_task`.  It can be used in the following ways:
+called `the_task`.  This variable can be used in the following ways:
 
 * `the_task.ready()` returns `True` if the task has been completed
   yet, and `False` if not.
 * `the_task.get()` returns the result of the task, if available.
 
-Even if the `bg_task` action takes a long time to finish, the
-`background_action()` function will always return a response right
-away.  The `bg_task` action will run in the background, independently
-of whatever goes on between the user and the web application.
-
-[Celery] will start trying to run the the `bg_task` action as soon as
+[Celery] will start trying to run the `bg_task` [action] as soon as
 possible after `background_action()` is called.  If a lot of other
 tasks are already running, the task will go into a queue and will be
 run as soon as a [Celery] "worker" is available.
 
-The background action runs much like other [actions] do: via the
-[`process_action()`] function.  If you call `background_action()` in
-your interview, make sure that you have included [`initial`] code that
-calls [`process_action()`], as in the example above.  This is
-important because it gives interview authors the ability to determine
-the context in which the [`process_action()`] function is called.  For
-example, you might want to call [`set_info()`] first to declare the
-role of the user.
+Regardless of how long the `bg_task` [action] takes to finish, the
+`background_action()` function will always return a response right
+away.  This means that when your interview starts a time-consuming
+background task, the server will immediately present the user with a
+new screen instead of making the user wait for the screen to load.
+The `bg_task` [action] will run in the background, independently of
+whatever goes on between the user and the interview.  It will continue
+running even if the user exits the browser.
 
-The code in a background action can use the [`user_logged_in()`],
-[`user_has_privilege()`], and [`user_info()`] functions to determine
-information about the current user (i.e. the user who caused the
-`background_action()` function to be called).  In this respect,
-background actions are different from [scheduled tasks], which always
-run as the special "[cron user]."  In addition, background tasks are
-different from [scheduled tasks] in that you can run background tasks
-regardless of whether [`multi_user`] is set to `True` or `False`.
+The `bg_task` [action] runs in much the same way as an [action]
+invoked by the user clicking on a hyperlink generated by
+[`url_action()`].  (The parameters to `background_action()` will be
+familiar if you have ever used [`url_action()`].)
 
 {% highlight yaml %}
 ---
 event: bg_task
 code: |
-  # This is where time-consuming code would go
+  # This is where time-consuming code
+  # would go
   background_response(553 + action_argument('additional'))
 ---
 {% endhighlight %}
 
-Any changes made to variables by a background action will not be
-remembered after the action finishes.  You need to use
+The code in a background action can use the [`action_argument()`] and
+[`action_arguments()`] functions to access the [action] parameters.
+It can use the [`user_logged_in()`], [`user_has_privilege()`], and
+[`user_info()`] functions to determine information about the current
+user (i.e. the user who caused the `background_action()` function to
+be called).  In this respect, background actions are different from
+[scheduled tasks], which always run as the special "[cron user]."  In
+addition, background tasks are different from [scheduled tasks] in
+that you can run background tasks regardless of whether [`multi_user`]
+is set to `True` or `False`.
+
+There is one important factor about [actions] invoked through
+`background_action()`, which is that any changes made to variables by
+a background action will not be remembered after the action finishes.
+In order to communicate back to the interview, you need to use
 [`background_response()`] or [`background_response_action()`]
-(discussed below) in order to communicate a result.  This limitation
-exists because background actions are intended to run at the same time
-the user is answering questions in the interview.  If the background
-process starts at 3:05 p.m. and finishes at 3:10 p.m., but the user
-answers five questions between 3:05 p.m. and 3:10 p.m., the user's
-changes would be overwritten if the background process saved its
-changes at 3:10 p.m.
+(discussed below).
+
+This limitation exists because background actions are intended to run
+at the same time the user is answering questions in the interview.  If
+the background process starts at 3:05 p.m. and finishes at 3:10 p.m.,
+but the user answers five questions between 3:05 p.m. and 3:10 p.m.,
+the user's changes would be overwritten if the background process
+saved its changes at 3:10 p.m.
+
+The [`background_response()`] function is the simplest way to return a
+value to the interview, but you may want to use
+[`background_response_action()`] if you want to make permanent changes
+to the interview variables based on the code that is run in the background.
 
 ## <a name="background_response"></a>background_response()
 
@@ -215,8 +230,8 @@ There is now a variable `the_task` in the interview, which is used to
 keep track of the status of the `bg_task` action, which is running in
 the background.
 
-The `bg_task` action does not change any of the variables in the
-interview, but it passes its result back to the interview using
+The `bg_task` action does not permanently change any of the variables
+in the interview, but it passes its result back to the interview using
 `background_response()`.
 
 {% highlight python %}
@@ -224,13 +239,14 @@ background_response(553 + action_argument('additional'))
 {% endhighlight %}
 
 The response value is the sum of 553 and whatever number was provided
-in the `additional` parameter.  This value is not saved to any
-variable.  (Even if the background action tried to make a change to
-variables in the interview's dictionary, those changes would be
+in the `additional` parameter.  Note that this value is not saved to
+any variable.  (Even if a background action _tried_ to make a change
+to variables in the interview's dictionary, those changes would be
 forgotten once the action completes.)
 
-The interview can retrieve the response value by calling the `.get()`
-method on the `the_task` variable.  For example,
+The interview can retrieve the value passed to `background_response()`
+by calling the `.get()` method on the `the_task` variable.  For
+example,
 
 {% highlight yaml %}
 question: |
@@ -291,10 +307,6 @@ to the `bg_resp` action is by passing arguments to it via the
 In computer science terminology, the `bg_resp` action is similar to a
 [callback function].
 
-These [background processes] are designed to run in the background
-while the user is still using the application.  If the user closes the
-web browser, the actions will still continue to run.
-
 ## <a name="ui_notification"></a>Communicating results to the user interface
 
 **docassemble** can automatically alert the user when a background job
@@ -320,7 +332,7 @@ Setting the second argument to `None` means that no notification of
 any kind will be sent to the user's browser.
 
 In the following example, the value provided to
-[`background_response()`] ("The answer is (some number)."), is
+[`background_response()`] (e.g., "The answer is 555."), is
 "flashed" at the top of the screen.
 
 {% include side-by-side.html demo="background_action_flash" %}
@@ -440,14 +452,17 @@ at the end of your [`code`]:
 
 {% include side-by-side.html demo="target-code-template" %}
 
-You can use [`code`] to plug raw [HTML] into `[TARGET ...]` areas.
+Another way to send messages to the user's screen is to use [`code`]
+to plug raw [HTML] into `[TARGET ...]` areas:
 
 {% include side-by-side.html demo="target-code" %}
 
 Calling [`background_response()`] with the keyword arguments `target`
 and `content` will result in the `content` being plugged into the
 user's screen in the `[TARGET ...]` area designated by the `target`
-argument.
+argument.  Unlike the method that uses [`template`]s, this method does
+not convert [Markdown] to [HTML]; rather, the `content` is inserted as
+raw [HTML].
 
 If you want to plug text into more than one `[TARGET ...]` area, you
 can do so by calling [`background_response()`] with a [list] of
@@ -476,12 +491,12 @@ appropriate legal document.
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 code: |
   use_cron = True
   multi_user = True
 ---
-initial: true
+initial: True
 code: |
   process_actions()
 ---
@@ -497,7 +512,7 @@ fields:
   - E-mail: email_address
     datatype: email
 ---
-mandatory: true
+mandatory: True
 question: |
   Ok, I'll e-mail you at ${ email_address} 20 days
   from ${ format_date(filing_date) }.
@@ -538,7 +553,7 @@ special additional security.)
 
 {% highlight yaml %}
 ---
-mandatory: true
+mandatory: True
 code: |
   use_cron = True
   multi_user = True
@@ -553,7 +568,7 @@ interview.
 
 {% highlight yaml %}
 ---
-initial: true
+initial: True
 code: |
   process_actions()
 ---
@@ -583,7 +598,7 @@ fields:
   - E-mail: email_address
     datatype: email
 ---
-mandatory: true
+mandatory: True
 question: |
   Ok, I'll e-mail you at ${ email_address} 20 days
   from ${ format_date(filing_date) }.
@@ -758,12 +773,12 @@ code: |
       elif user_info().email == second_person_email:
         role = 'second_person'
 ---
-initial: true
+initial: True
 code: |
   if role != first_person' and not ready_for_other_people:
     say_goodbye_to_user
 ---
-initial: true:
+initial: True:
 code: |
   process_actions()
 ---
@@ -783,11 +798,11 @@ appears before the block that runs `say_goodbye_to_user`:
 
 {% highlight yaml %}
 ---
-initial: true:
+initial: True:
 code: |
   process_actions()
 ---
-initial: true
+initial: True
 code: |
   if role != first_person' and not ready_for_other_people:
     say_goodbye_to_user
@@ -800,7 +815,7 @@ is a problem, you could alternatively do:
 
 {% highlight yaml %}
 ---
-initial: true
+initial: True
 code: |
   if (role != first_person' and not user_has_privilege('cron')) and not ready_for_other_people:
     say_goodbye_to_user
@@ -816,6 +831,7 @@ whether the user is the "cron user."
 [Javascript]: https://en.wikipedia.org/wiki/JavaScript
 [Python]: https://www.python.org/
 [`action_argument()`]: {{ site.baseurl }}/docs/functions.html#action_argument
+[`action_arguments()`]: {{ site.baseurl }}/docs/functions.html#action_arguments
 [`alert()`]: http://www.w3schools.com/jsref/met_win_alert.asp
 [`background_action()`]: #background_action
 [`background_response()`]: #background_response
@@ -886,4 +902,6 @@ whether the user is the "cron user."
 [list]: https://docs.python.org/2.7/tutorial/datastructures.html
 [dict]: https://docs.python.org/2/library/stdtypes.html#dict
 [evaluates the interview]: {{ site.baseurl }}/docs/logic.html
-[user input]: {{ site.baseurl }}/docs/fields.html
+[`reload` modifier]: {{ site.baseurl }}/docs/modifiers.html#reload
+[evaluate]: {{ site.baseurl }}/docs/logic.html
+[`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory

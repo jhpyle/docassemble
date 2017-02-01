@@ -170,7 +170,7 @@ The next block contains the end point of the interview, a screen that
 says how many fruits are in the list and lists them.
 
 {% highlight yaml %}
-mandatory: true
+mandatory: True
 question: |
   There are ${ fruit.number_as_word() }
   fruits in all.
@@ -455,7 +455,7 @@ subquestion: |
   % else:
   There are no fruits to discuss.
   % endif
-mandatory: true
+mandatory: True
 ---
 {% endhighlight %}
 

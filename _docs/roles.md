@@ -91,7 +91,7 @@ subquestion: |
 buttons:
   - Check: refresh
 ---
-mandatory: true
+mandatory: True
 code: |
   if role == 'first_person':
     first_person_bid
@@ -239,7 +239,7 @@ block:
 
 {% highlight yaml %}
 ---
-mandatory: true
+mandatory: True
 code: |
   if role == 'first_person':
     first_person_bid
@@ -290,7 +290,7 @@ modules:
 objects:
   - respondents: DADict
 ---
-initial: true
+initial: True
 code: |
   multi_user = True
   if user_logged_in():

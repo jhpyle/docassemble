@@ -95,7 +95,7 @@ asked questions necessary to get to the end of the intererview.
 
 {% highlight yaml %}
 ---
-mandatory: true
+mandatory: True
 code: |
   need(user_shown_splash_screen, user_shown_final_screen)
 ---
@@ -105,7 +105,7 @@ This happens to be 100% equivalent to writing:
 
 {% highlight yaml %}
 ---
-mandatory: true
+mandatory: True
 code: |
   user_shown_splash_screen
   user_shown_final_screen
@@ -136,7 +136,7 @@ question: |
   Are you a communist?
 yesno: user_is_communist
 ---
-mandatory: true
+mandatory: True
 code: |
   if user_is_communist and user_reconsidering_communism:
     user_reconsidering_communism = False
@@ -146,7 +146,7 @@ question: |
   I suggest you reconsider your answer.
 field: user_reconsidering_communism
 ---
-mandatory: true
+mandatory: True
 question: |
   % if user_is_communist:
   I am referring your case to Mr. McCarthy.
@@ -364,7 +364,7 @@ attachment:
   content: |
     Hello, world!
 ---
-mandatory: true
+mandatory: True
 code: |
   response(file=the_file.pdf)
 ---
@@ -498,11 +498,11 @@ Here is an example:
 modules:
   - docassemble.base.util
 ---
-initial: true
+initial: True
 code: |
   process_action()
 ---
-mandatory: true
+mandatory: True
 code: |
   if lucky_information_confirmed:
     need(final_screen)
@@ -602,7 +602,7 @@ can only be carried out if the user is logged in:
 
 {% highlight yaml %}
 ---
-initial: true
+initial: True
 code: |
   if user_logged_in():
     process_action()
@@ -624,7 +624,7 @@ setting menu items.
 
 {% highlight yaml %}
 ---
-mandatory: true
+mandatory: True
 code: |
   menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
 ---
@@ -778,7 +778,7 @@ and you would refer to them by writing something like:
 
 {% highlight yaml %}
 ---
-mandatory: true
+mandatory: True
 question: You are done.
 subquestion: |
   To learn more about this topic, read
@@ -874,7 +874,7 @@ This function is used to store information for later retrieval by
 
 {% highlight yaml %}
 ---
-initial: true
+initial: True
 code: |
   set_info(interview_type='standard')
 ---
@@ -959,7 +959,7 @@ accessing the interview through [SMS].
 
 {% highlight yaml %}
 ---
-mandatory: true
+mandatory: True
 code: |
   if interface() == 'sms':
     sms_instructions
@@ -980,7 +980,7 @@ requests and requests that originate from [background processes].
 code: |
   request_counter = 0
 ---
-initial: true
+initial: True
 code: |
   if interface() in ['sms', 'web']:
     request_counter += 1
@@ -1105,7 +1105,7 @@ set in the [configuration], you need to call `set_language()` within
 modules:
   - docassemble.base.util
 ---
-initial: true
+initial: True
 code: |
   set_language(user_language)
 ---
@@ -1128,7 +1128,7 @@ text-to-speech engine.  For example:
 
 {% highlight yaml %}
 ---
-initial: true
+initial: True
 code: |
   set_language('en', dialect='au')
 ---
@@ -1203,7 +1203,7 @@ how to do that.)  Then you would need to begin each interview with
 
 {% highlight yaml %}
 ---
-initial: true
+initial: True
 code: |
   import docassemble.base.util
   docassemble.base.util.set_language('fr')
@@ -1745,7 +1745,7 @@ question: |
 subquestion: |
   You earn ${ currency(user_income_amount * user_income_period) }
   per year.
-mandatory: true
+mandatory: True
 ---
 question: |
   What is your income?
@@ -1999,7 +1999,7 @@ modules:
 objects:
   - user: Individual
 ---
-mandatory: true
+mandatory: True
 question: |
   So long, ${ user }!
 subquestion: |
@@ -2315,7 +2315,7 @@ through [SMS].
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 code: |
   if interface() == 'sms':
     how_many_apples
@@ -2595,7 +2595,7 @@ The function takes a single argument, which is the callback function.
 The callback function is given one parameter, which is an object
 having the following attributes:
 
-* `success`: this will be `true` if the call succeeds, `false`
+* `success`: this will be `True` if the call succeeds, `False`
 otherwise.
 * `variables`: this will be an object containing the interview
   variables in the format produced by [`all_variables()`].

@@ -93,7 +93,7 @@ created.
 Administrators can invite people to register by clicking "Invite a
 user" on the [User List] page.  **docassemble** will send an e-mail
 with a link that the person can click on to register.  If
-[`allow_registration`] is set to `false`, this is the only way that
+[`allow_registration`] is set to `False`, this is the only way that
 users can register on the site.
 
 The administrator can select the role that the user will be assigned

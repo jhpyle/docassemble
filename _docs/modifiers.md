@@ -345,7 +345,7 @@ seconds, use the `reload` modifier.
 
 {% include side-by-side.html demo="reload" %}
 
-If you set `reload` to `true`, the screen on which the question is
+If you set `reload` to `True`, the screen on which the question is
 asked will reload every 10 seconds.  To use a different number of
 seconds, set `reload` to the number of seconds you wish to use.  E.g.,
 

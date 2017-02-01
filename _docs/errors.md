@@ -50,7 +50,7 @@ the following:
 {% highlight yaml %}
 ---
 question: Goodbye, world!
-mandatory: true
+mandatory: True
 buttons
   - Exit: exit
 ---

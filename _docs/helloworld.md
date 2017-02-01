@@ -11,7 +11,7 @@ Here is a simple interview file that says "Hello, world!" to the user.
 question: Hello, world!
 buttons:
   - Exit: exit
-mandatory: true
+mandatory: True
 ---
 {% endhighlight %}
 
@@ -55,7 +55,7 @@ Edit the interview and change the contents to:
 question: Hello, ${ planet }!
 buttons:
   - Exit: exit
-mandatory: true
+mandatory: True
 ---
 question: |
   What is your planet's name?
@@ -84,7 +84,7 @@ subquestion: |
   inhabitants.
 buttons:
   - Exit: exit
-mandatory: true
+mandatory: True
 ---
 question: |
   What is your planet's name?
@@ -120,7 +120,7 @@ attachment:
   - name: A letter for the inhabitants of ${ planet }
     filename: hello
     metadata:
-      SingleSpacing: true
+      SingleSpacing: True
     content: |
       Dear ${ planet } residents,
 
@@ -131,7 +131,7 @@ attachment:
       Your friend
 buttons:
   - Exit: exit
-mandatory: true
+mandatory: True
 ---
 question: |
   What is your planet's name?

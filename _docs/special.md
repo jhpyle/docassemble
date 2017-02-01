@@ -49,7 +49,7 @@ code: |
   else:
     origin_of_interviewee = 'unknown'
 ---
-mandatory: true
+mandatory: True
 question: You came from the ${ origin_of_interviewee }.
 ---
 {% endhighlight %}
@@ -59,7 +59,7 @@ thing in less space:
 
 {% highlight yaml %}
 ---
-mandatory: true
+mandatory: True
 question: You came from the ${ url_args.get('from', 'unknown') }.
 ---
 {% endhighlight %}
@@ -78,7 +78,7 @@ the interview.  For example:
 
 {% highlight yaml %}
 ---
-mandatory: true
+mandatory: True
 question: You came from the ${ url_args.get('from', 'unknown') }.
 subquestion: |
   % if url_args.get('fruit', 'apple') == 'apple':
@@ -138,7 +138,7 @@ The most common way to use this feature is as follows:
 include:
   - basic-questions.yml
 ---
-initial: true
+initial: True
 code: |
   track_location = user.location.status()
 ---
@@ -181,7 +181,7 @@ sections of the [functions] page for more information about what
 
 {% highlight yaml %}
 ---
-mandatory: true
+mandatory: True
 code: |
   menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
 ---
@@ -191,7 +191,7 @@ Alternatively, you can set items manually:
 
 {% highlight yaml %}
 ---
-mandatory: true
+mandatory: True
 code: |
   menu_items = [ {'url': 'http://google.com', 'label': 'Go to Google!'} ]
 ---

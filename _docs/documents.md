@@ -156,12 +156,12 @@ site.
 modules:
   - docassemble.base.util
 ---
-mandatory: true
+mandatory: True
 code: |
   import slacker
   slacker.Slacker(daconfig['slack_api_key']).files.upload(my_file.pdf.path())
 ---
-mandatory: true
+mandatory: True
 question: |
   I have posted a Hello World file to Slack!
 ---
@@ -252,13 +252,13 @@ With `language: en`, the output is:
 
 When [`attachments`] are included in a [`question`], the user will be
 given an option to e-mail the documents to an e-mail address.  If you
-would like to disable this feature, set `allow emailing` to `false`.
+would like to disable this feature, set `allow emailing` to `False`.
 
 By default, the user can e-mail documents:
 
 {% include side-by-side.html demo="allow-emailing-true" %}
 
-Including `allow emailing: false` will disable this:
+Including `allow emailing: False` will disable this:
 
 {% include side-by-side.html demo="allow-emailing-false" %}
 
@@ -339,7 +339,7 @@ attachment:
   - name: A *hello world* document
     filename: Hello_World_Document
     metadata:
-      SingleSpacing: true
+      SingleSpacing: True
       fontsize: 10pt
     description: A document with a **classic** message
     content: |
@@ -363,11 +363,11 @@ Metadata values can contain [Mako] template commands.
   * `date`
 * `toc` - default is not defined.  If defined, a table of contents is
   included.
-* `SingleSpacing` - set this to `true` for single spacing.
-* `OneAndAHalfSpacing` - set to `true` for 1.5 spacing.
-* `DoubleSpacing` - set this to `true` for double spacing.  Double spacing
+* `SingleSpacing` - set this to `True` for single spacing.
+* `OneAndAHalfSpacing` - set to `True` for 1.5 spacing.
+* `DoubleSpacing` - set this to `True` for double spacing.  Double spacing
   is the default.
-* `TripleSpacing` - set this to `true` for triple spacing.
+* `TripleSpacing` - set this to `True` for triple spacing.
 * `fontsize` - default is `12pt`.  Must be one of `10pt`, `11pt`, and `12pt`.
 * `Indentation` - not defined by default.  By default, the first line
   of each paragraph is indented, unless `SingleSpacing` is set, in
@@ -404,7 +404,7 @@ the next section).
   is loaded.
 * `papersize` - default is `letterpaper`.
 * `documentclass` - default is `article`.
-* `numbersections` - default is `true`.  If true, sections are
+* `numbersections` - default is `True`.  If true, sections are
   numbered; if false, they are not.  (In [LaTeX], `secnumdepth` is
   set to 5, otherwise 0.)
 * `geometry` - default is

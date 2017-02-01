@@ -275,20 +275,20 @@ You can set the following configuration options:
   separate **docassemble** implementations to share the same SQL
   database.  The value is a prefix to be added to each table in the
   database.
-* <a name="EC2"></a>`EC2`: Set this to `true` if you are running
+* <a name="EC2"></a>`EC2`: Set this to `True` if you are running
   [Docker] on [EC2].  This tells **docassemble** that it can use an
   [EC2]-specific method of determining the hostname of the server on
   which it is running.  See the [`ec2`] configuration directive.
-* <a name="USEHTTPS"></a>`USEHTTPS`: Set this to `true` if you would
+* <a name="USEHTTPS"></a>`USEHTTPS`: Set this to `True` if you would
   like **docassemble** to communicate with the browser using
   encryption.  Read the [HTTPS] section for more information.
-  Defaults to `false`.  See the [`use https`] configuration directive.
+  Defaults to `False`.  See the [`use https`] configuration directive.
 * <a name="DAHOSTNAME"></a>`DAHOSTNAME`: Set this to the hostname by
   which web browsers can find **docassemble**.  This is necessary for
   [HTTPS] to function. See the [`external hostname`] configuration
   directive.
-* <a name="USELETSENCRYPT"></a>`USELETSENCRYPT`: Set this to `true` if
-  you are [using Let's Encrypt].  The default is `false`.  See the
+* <a name="USELETSENCRYPT"></a>`USELETSENCRYPT`: Set this to `True` if
+  you are [using Let's Encrypt].  The default is `False`.  See the
   [`use lets encrypt`] configuration directive.
 * <a name="LETSENCRYPTEMAIL"></a>`LETSENCRYPTEMAIL`: Set this to the
   e-mail address you use with [Let's Encrypt].  See the
@@ -318,18 +318,18 @@ You can set the following configuration options:
   `https://docassemble.example.com`.  See the [`url root`]
   configuration directive.
 * <a name="BEHINDHTTPSLOADBALANCER"></a>`BEHINDHTTPSLOADBALANCER`: Set
-  this to `true` if a load balancer is in use and the load balancer
+  this to `True` if a load balancer is in use and the load balancer
   accepts connections in HTTPS but forwards them to web servers as
   HTTP.  This lets **docassemble** know that when it forms URLs, it
   should use the `https` scheme even though requests appear to be
   coming in as HTTP requests.  See the [`behind https load balancer`]
   configuration directive.
-* <a name="S3ENABLE"></a>`S3ENABLE`: Set this to `true` if you are
+* <a name="S3ENABLE"></a>`S3ENABLE`: Set this to `True` if you are
   using [S3] as a repository for uploaded files, [Playground] files,
   the [configuration] file, and other information.  This environment
   variable, along with others that begin with `S3`, populates values
   in [`s3` section] of the [configuration] file.  If this is unset,
-  but [`S3BUCKET`] is set, it will be assumed to be `true`.
+  but [`S3BUCKET`] is set, it will be assumed to be `True`.
 * <a name="S3BUCKET"></a>`S3BUCKET`: If you are using [S3], set this
   to the bucket name.  Note that **docassemble** will not create the
   bucket for you.  You will need to create it for yourself beforehand.
@@ -367,8 +367,8 @@ Note that if you use [persistent volumes] and/or [S3], launching a new
 **docassemble** container with different variables is not necessarily
 going to change the way **docassemble** works.
 
-For example, if [`USEHTTPS`] is `true` and [`USELETSENCRYPT`] is
-`true`, then the [Apache] configuration files, if stored on a
+For example, if [`USEHTTPS`] is `True` and [`USELETSENCRYPT`] is
+`True`, then the [Apache] configuration files, if stored on a
 persistent volume, will not be overwritten if they already exist when
 a new container starts up.  So if you had been using [Let's Encrypt],
 but then you decide to change the [`DAHOSTNAME`], you will need to
@@ -707,13 +707,13 @@ Note: using [Let's Encrypt] to enable [HTTPS] only works in a
 In your task definition or `env.list` file, set the following
 environment variables:
 
-* `USELETSENCRYPT`: set this to `true`.
+* `USELETSENCRYPT`: set this to `True`.
 * `LETSENCRYPTEMAIL`: [Let's Encrypt] requires an e-mail address, which
   it will use to get in touch with you about renewing the SSL certificates.
 * `DAHOSTNAME`: set this to the hostname that users will use to get to
   the web application.  [Let's Encrypt] needs this in order to verify
   that you have access to the host.
-* `USEHTTPS`: set this to `true`.
+* `USEHTTPS`: set this to `True`.
 
 For example, your `env.list` may look like:
 
@@ -847,9 +847,9 @@ files:
   server and initializes the database if it does not exist; creates
   the tables in the database if they do not already exist; copies SSL
   certificates from [S3] or `/usr/share/docassemble/certs` if [S3] is
-  not enabled; enables the [Apache] `mod_ssl` if `USEHTTPS` is `true`
+  not enabled; enables the [Apache] `mod_ssl` if `USEHTTPS` is `True`
   and otherwise disables it; runs the [Let's Encrypt] utility if
-  `USELETSENCRYPT` is `true` and the utility has not been run yet; and
+  `USELETSENCRYPT` is `True` and the utility has not been run yet; and
   starts [Apache].
 * <span></span>[`docassemble/Docker/config/docassemble-http.conf.dist`]:
   [Apache] configuration file for handling HTTP requests.

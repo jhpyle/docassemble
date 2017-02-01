@@ -275,15 +275,15 @@ stored.  For a full explanation of how this is used, see the
 
 `required` affects whether the field will be optional or required.  If
 a field is required, it will be marked with a red asterisk.  The value
-of `required` can be `true` or `false`.  By default, all fields are
-required, so you never need to write `required: true` unless you want
+of `required` can be `True` or `False`.  By default, all fields are
+required, so you never need to write `required: True` unless you want
 to.
 
 {% include side-by-side.html demo="optional-field" %}
 
-Instead of writing `true` or `false`, you can write [Python] code.
+Instead of writing `True` or `False`, you can write [Python] code.
 This code will be evaluated for whether it turns out to be true or
-false.  For example, instead of `true` or `false`, you could use the
+false.  For example, instead of `True` or `False`, you could use the
 name of a variable that is defined by a [`yesno`] question (as long as
 that variable was defined before the screen loads; the red asterisk
 cannot be toggled in real time within the browser).
@@ -364,7 +364,7 @@ given a list of things, it will exclude any items that are in the list.
 ### <a name="shuffle"></a>`shuffle`
 
 `shuffle` can be used on multiple-choice fields (defined with
-[`code`](#code) or [`choices`](#choices)).  When `true`, it randomizes
+[`code`](#code) or [`choices`](#choices)).  When `True`, it randomizes
 the order of the list of choices; the default is not to "shuffle" the
 list.
 
@@ -417,7 +417,7 @@ field instead of showing it.
 
 ### <a name="disable others"></a>`disable others`
 
-If `disable others` is set to `true`, then when the user changes the
+If `disable others` is set to `True`, then when the user changes the
 value of the field to something, all the other fields in the question
 will be disabled.
 

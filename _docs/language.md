@@ -92,7 +92,7 @@ make sure that it is always set to the correct value.
 include:
   - basic-questions.yml
 ---
-initial: true
+initial: True
 code: |
   set_language(user.language)
 ---
@@ -131,7 +131,7 @@ The contents of `code.yml` are:
 modules:
   - docassemble.base.util
 ---
-initial: true
+initial: True
 code: |
   set_language(user_language)
   need(final_screen)

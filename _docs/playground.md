@@ -33,7 +33,7 @@ For example, suppose your "interview.yml" file contains:
 include:
   - questions.yml
 ---
-mandatory: true
+mandatory: True
 code:
   say_hello
 ---
@@ -302,7 +302,7 @@ anyone other than a developer from using the interview:
 
 {% highlight yaml %}
 ---
-initial: true
+initial: True
 code: |
   if not user_has_privilege('developer'):
     message("Only developers can access this interview.", show_restart=False)

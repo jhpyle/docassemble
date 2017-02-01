@@ -39,7 +39,7 @@ Then, in your **docassemble** [configuration], add lines like:
 
 {% highlight yaml %}
 twilio:
-  sms: true
+  sms: True
   account sid: ACfad8e668d876f5473fb232a311243b58
   caller id: "+12762410114"
   dispatch:
@@ -48,7 +48,7 @@ twilio:
   default interview: docassemble.demo:data/questions/questions.yml
 {% endhighlight %}
 
-The `sms: true` line tells **docassemble** that you intend to use the
+The `sms: True` line tells **docassemble** that you intend to use the
 text messaging feature.  (Note that the `twilio` [configuration]
 section is also used to enable the [call forwarding] feature.)
 

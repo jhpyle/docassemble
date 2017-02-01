@@ -279,16 +279,16 @@ block.
 
 You can change the way `code` blocks work by adding modifiers:
 
-* <span></span>[`reconsider`]: If `reconsider` is set to `true`, then
+* <span></span>[`reconsider`]: If `reconsider` is set to `True`, then
   **docassemble** will always "reconsider" the values of any of the
   variables set by the `code` block.  That is, every time the
   interview is assembled (every time the screen loads) **docassemble**
   will forget about the value of any of the variables set by the
   `code` block.
-* <span></span>[`initial`]: If `initial` is set to `true`, then **docassemble**
+* <span></span>[`initial`]: If `initial` is set to `True`, then **docassemble**
   will run the code every time the interview is assembled (every time
   the screen loads).
-* <span></span>[`mandatory`]: If `mandatory` is set to `true`, then
+* <span></span>[`mandatory`]: If `mandatory` is set to `True`, then
   **docassemble** will run the code when the interview is assembled,
   except that once the code runs through all the way, **docassemble**
   will remember that the `code` block was successfully run, and it will

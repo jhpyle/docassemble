@@ -402,7 +402,7 @@ configuration below.  Edit the [`TIMEZONE`], [`DAHOSTNAME`], and
           "hostPort": 9001
         }
       ],
-      "essential": true,
+      "essential": True,
       "environment": [
         {
           "name": "CONTAINERROLE",
@@ -482,7 +482,7 @@ configuration below.  Edit the [`S3BUCKET`] environment variable.
           "hostPort": 9001
         }
       ],
-      "essential": true,
+      "essential": True,
       "environment": [
         {
           "name": "CONTAINERROLE",
@@ -587,7 +587,7 @@ then go to the [ECS Console] and set up a "service" that runs a single
           "hostPort": 443
         }
       ],
-      "essential": true,
+      "essential": True,
       "environment": [
         {
           "name": "DAHOSTNAME",
@@ -754,7 +754,7 @@ if [S3] is enabled as follows:
 
 {% highlight yaml %}
 s3:
-  enable: true
+  enable: True
   access_key_id: FWIEJFIJIDGISEJFWOEF
   secret_access_key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
   bucket: yourbucketname
@@ -779,7 +779,7 @@ webapp: /usr/share/docassemble/docassemble.wsgi
 If you are using Amazon EC2, set the following in the [configuration]:
 
 {% highlight yaml %}
-ec2: true
+ec2: True
 {% endhighlight yaml %}
 
 This can also be set with the `EC2` environment variable if
@@ -810,8 +810,8 @@ db:
   user: docassemble
   password: abc123
   host: 192.168.0.56
-  port: null
-  table_prefix: null
+  port: Null
+  table_prefix: Null
 {% endhighlight %}
 
 If you installed the web servers before installing the SQL server,
@@ -834,7 +834,7 @@ mail:
   server: smtp.gmail.com
   username: yourgoogleusername
   password: yourgooglepassword
-  use_ssl: true
+  use_ssl: True
   port: 465
   default_sender: '"Administrator" <no-reply@example.com>'
 {% endhighlight %}
@@ -877,7 +877,7 @@ not include an `access_key_id` or a `secret_access_key`.
 
 {% highlight yaml %}
 s3:
-  enable: true
+  enable: True
   bucket: yourbucketname
 {% endhighlight %}
 

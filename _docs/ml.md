@@ -232,7 +232,7 @@ Here is the core code block of this interview:
 
 {% highlight yaml %}
 ---
-initial: true
+initial: True
 code: |
   if defined('classification'):
     entry_to_classify.classify(classification)
@@ -348,14 +348,14 @@ modules:
   - docassemble.webapp.playground
   - docassemble.base.util
 ---
-initial: true
+initial: True
 code: |
   ml = SimpleTextMachineLearner('demo')
   the_data = ml.export_training_set(output_format='json')
   sources = PlaygroundSection('sources')
   sources.write_file('my_training_data.json', the_data)
 ---
-mandatory: true
+mandatory: True
 question: |
   The training data have been saved.
 buttons:

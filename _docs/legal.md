@@ -80,7 +80,7 @@ modules:
 objects: 
   - case: Case
 ---
-mandatory: true
+mandatory: True
 code: |
   del case.plaintiff
   del case.defendant
