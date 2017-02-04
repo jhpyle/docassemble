@@ -428,6 +428,58 @@ the string as [JSON], and returns the object represented by the
 This is an advanced function that is used by software developers to
 integrate other systems with docassemble.
 
+## <a name="plain"></a><a name="bold"></a><a name="italic"></a>plain(), bold(), and italic()
+
+The functions `plain()`, `bold()`, and `italic()` are useful when
+including variables in a template.
+
+For example, if you write:
+
+{% highlight yaml %}
+subquestion: |
+  * Your phone number: **${ phone_number }**
+  * Your fax number: **${ fax_number }**
+{% endhighlight %}
+
+Then the values of the two variables will have bold face [markup],
+but if one of them is empty, you will get asterisks instead of what
+you presumably wanted, which was no text at all.
+
+> * Your phone number: **202-555-2030**
+> * Your fax number: &#42;&#42;&#42;&#42;
+
+Instead, you can write:
+
+{% highlight yaml %}
+subquestion: |
+  * Your phone number: ${ bold(phone_number) }
+  * Your fax number: ${ bold(fax_number) }
+{% endhighlight %}
+
+This leads to:
+
+> * Your phone number: **202-555-2030**
+> * Your fax number: 
+
+Alternatively, you can pass an optional keyword argument, `default`,
+if it should plug in something different when empty.
+
+{% highlight yaml %}
+subquestion: |
+  * Your phone number: ${ bold(phone_number, default='Not available') }
+  * Your fax number: ${ bold(fax_number, default='Not available') }
+{% endhighlight %}
+
+This leads to:
+
+> * Your phone number: **202-555-2030**
+> * Your fax number: **Not available**
+
+Calling `italic('apple')` function returns `_apple`.
+
+The `plain()` function does not supply any formatting, but it
+will substitute the `default` keyword argument.
+
 ## <a name="space_to_underscore"></a>space_to_underscore()
 
 If `user_name` is `John Wilkes Booth`,
@@ -1407,6 +1459,7 @@ before date `b`, the resulting values will be positive.  But if date
 For example, if you set `z = date_difference(starting='1/1/2015',
 ending='1/3/2015')`, then:
 
+* `z.years` returns `0.005475814013977016`.
 * `z.weeks` returns `0.2857142857142857`.
 * `z.days` returns `2.0`.
 * `z.hours` returns `48.0`.
