@@ -987,6 +987,53 @@
     - Exit: exit
     - Restart: restart
   mandatory: True
+"exit-buttons-mixed": |-
+  question: |
+    Warning!
+  subquestion: |
+    Proceeding with this interview may
+    result in despair-inducing levels
+    of liability.
+  buttons:
+    - I understand:
+        code: |
+          attitude = 'careful'
+    - I do not care:
+        code: |
+          attitude = 'reckless'
+    - Get me out of here:
+        code: |
+          command('exit')
+  ---
+  mandatory: true
+  question: |
+    % if attitude == 'reckless':
+    You are foolish!
+    % else:
+    Ok, we are proceeding with caution.
+    % endif
+"exit-buttons-mixed-code": |-
+  mandatory: True
+  code: |
+    if user_choice == 'exit':
+      command('exit')
+    elif user_choice == 'proceed':
+      final_screen
+  ---
+  question: |
+    Warning!
+  subquestion: |
+    Proceeding with this interview may
+    result in despair-inducing levels
+    of liability.
+  field: user_choice
+  buttons:
+    - Exit: exit
+    - Keep going: proceed
+  ---
+  event: final_screen
+  question: |
+    Hey, I warned you.
 "exit-choices": |-
   question: We are all done.
   choices:
@@ -2279,17 +2326,11 @@
   \ numbered list:\n\n  1. Buy groceries.\n  2. Get the car inspected.\n  3. Take\
   \ over the world!\n  \n  You can [Google](http://google.com)\n  \"markdown\" to\
   \ learn more.\nmandatory: True"
-"menu-item": |-
-  modules:
-    - docassemble.base.util
-  ---
-  initial: True
-  code: |
-    process_action()
-  ---
-  mandatory: True
-  code: |
-    menu_items = [ action_menu_item('Visit Cow', 'see_cow') ]
+"menu-item": "mandatory: True\ncode: |\n  menu_items = [ action_menu_item('Visit Cow',\
+  \ 'see_cow') ]\n---\nevent: see_cow\nquestion: |\n  Moo!\nsubquestion: |\n  [FILE\
+  \ cow.jpg]\n  \n  Cow illustration designed by\n  [Freepik](http://www.freepik.com/free-photos-vectors/animal)\n\
+  buttons:\n  - Continue: continue\n---\nquestion: Welcome to the interview\nsubquestion:\
+  \ |\n  Check out the menu in the\n  upper-right corner.\nmandatory: True"
 "message": |-
   code: |
     message("The interview is over.", "Better luck next time!")

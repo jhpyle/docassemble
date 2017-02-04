@@ -126,7 +126,7 @@ buttons are special because they do not set a variable.
 
 These buttons are particularly useful on "terminal" screens.
 
-{% include side-by-side.html demo="exit" %}
+{% include side-by-side.html demo="exit-buttons" %}
 
 The above example allows the user to "exit" the interview (i.e., to be
 redirected to a different web site) or "restart" the interview (i.e.,
@@ -206,9 +206,10 @@ If you wish to mix "special" buttons with buttons that set a variable,
 you can use the [`command()`] function in [`code`] to trigger the same
 effects as clicking on a "special" button.
 
-The following example uses a [`code`] block to determine the course of
-the interview, and it either exits or proceeds based on the result of
-an ordinary [multiple choice question].
+The following example uses a [`mandatory`]<span></span> [`code`] block
+to determine the course of the interview.  Depending on the answer to
+an ordinary [multiple choice question], it either exits from the
+interview or proceeds to another screen.
 
 {% include side-by-side.html demo="exit-buttons-mixed-code" %}
 
