@@ -87,6 +87,7 @@ function saveCanvas(){
 }
 
 function newCanvas(){
+  console.log("running newCanvas");
   var cwidth = $(window).width() - theBorders;
   if (cwidth > 800 ){
     cwidth = 800;
@@ -111,9 +112,11 @@ function newCanvas(){
   
   // setup canvas
   // ctx=document.getElementById("sigcanvas").getContext("2d");
-  ctx = $("#sigcanvas")[0].getContext("2d");
-  ctx.strokeStyle = color;
-  ctx.lineWidth = theWidth;	
+  $("#sigcanvas").each(function(){
+    ctx = $(this)[0].getContext("2d");
+    ctx.strokeStyle = color;
+    ctx.lineWidth = theWidth;
+  });
   
   // setup to trigger drawing on mouse or touch
   $("#sigcanvas").drawTouch();
@@ -295,7 +298,7 @@ function da_post(params) {
       }
     }
   }
-  $('#daform').submit();
+  $('#dasigform').submit();
   return;
 }
 

@@ -61,7 +61,7 @@ def signature_html(status, debug, root, validation_rules):
     output += '\n      <div id="sigcontent"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div>\n      <div class="sigbottompart" id="sigbottompart">\n        '
     if (status.underText):
         output += markdown_to_html(status.underText, trim=True)
-    output += '\n      </div>\n    </div>\n    <form action="' + root + '" id="daform" method="POST"><input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/><input type="hidden" id="_the_image" name="_the_image" value=""/><input type="hidden" id="_success" name="_success" value="0"/>'
+    output += '\n      </div>\n    </div>\n    <form action="' + root + '" id="dasigform" method="POST"><input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/><input type="hidden" id="_the_image" name="_the_image" value=""/><input type="hidden" id="_success" name="_success" value="0"/>'
     output += tracker_tag(status)
     output += '</form>\n'
     add_validation(status.extra_scripts, validation_rules)

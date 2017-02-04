@@ -879,9 +879,15 @@ def fresh_dictionary():
     add_timestamps(the_dict)
     return the_dict    
 
-def manual_checkout():
-    session_id = session.get('uid', None)
-    yaml_filename = session.get('i', None)
+def manual_checkout(manual_session_id=None, manual_filename=None):
+    if manual_session_id is not None:
+        session_id = manual_session_id
+    else:
+        session_id = session.get('uid', None)
+    if manual_filename is not None:
+        yaml_filename = manual_filename
+    else:
+        yaml_filename = session.get('i', None)
     if session_id is None or yaml_filename is None:
         return
     if current_user.is_anonymous:
@@ -8108,11 +8114,25 @@ def interview_list():
     if secret is not None:
         secret = str(secret)
     #logmessage("interview_list: secret is " + str(secret))
-    if 'action' in request.args and request.args.get('action') == 'delete':
+    if 'action' in request.args and request.args.get('action') == 'deleteall':
+        subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), UserDict.filename, UserDict.key).group_by(UserDict.filename, UserDict.key).subquery()
+        interview_query = db.session.query(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted).filter(UserDictKeys.user_id == current_user.id).join(subq, and_(subq.c.filename == UserDictKeys.filename, subq.c.key == UserDictKeys.key)).join(UserDict, and_(UserDict.indexno == subq.c.indexno, UserDict.key == UserDictKeys.key, UserDict.filename == UserDictKeys.filename)).group_by(UserDictKeys.filename, UserDictKeys.key, UserDict.dictionary, UserDict.encrypted)
+        sessions_to_delete = list()
+        for interview_info in interview_query:
+            sessions_to_delete.append((interview_info.key, interview_info.filename))
+        if len(sessions_to_delete):
+            for session_id, yaml_filename in sessions_to_delete:
+                manual_checkout(manual_session_id=session_id, manual_filename=yaml_filename)
+                obtain_lock(session_id, yaml_filename)
+                reset_user_dict(session_id, yaml_filename)
+                release_lock(session_id, yaml_filename)
+            flash(word("Deleted interviews"), 'success')
+        return redirect(url_for('interview_list'))
+    elif 'action' in request.args and request.args.get('action') == 'delete':
         yaml_file = request.args.get('filename', None)
         session_id = request.args.get('session', None)
         if yaml_file is not None and session_id is not None:
-            manual_checkout()
+            manual_checkout(manual_session_id=session_id, manual_filename=yaml_file)
             obtain_lock(session_id, yaml_file)
             reset_user_dict(session_id, yaml_file)
             release_lock(session_id, yaml_file)
@@ -8153,7 +8173,17 @@ def interview_list():
         starttime = nice_date_from_utc(dictionary['_internal']['starttime'], timezone=the_timezone)
         modtime = nice_date_from_utc(dictionary['_internal']['modtime'], timezone=the_timezone)
         interviews.append({'interview_info': interview_info, 'dict': dictionary, 'modtime': modtime, 'starttime': starttime, 'title': interview_title, 'valid': is_valid})
-    return render_template('pages/interviews.html', tab_title=word("Interviews"), page_title=word("Interviews"), interviews=sorted(interviews, key=lambda x: x['dict']['_internal']['starttime']))
+    script = """<script>
+      $("#deleteall").on('click', function(event){
+        if (confirm('""" + word("Are you sure you want to delete all saved interviews?") + """')){
+          return true;
+        }
+        event.preventDefault();
+        return false;
+      });
+    </script>
+"""
+    return render_template('pages/interviews.html', extra_js=Markup(script), tab_title=word("Interviews"), page_title=word("Interviews"), numinterviews=len(interviews), interviews=sorted(interviews, key=lambda x: x['dict']['_internal']['starttime']))
 
 def fix_secret():
     password = request.form.get('password', request.form.get('new_password', None))
