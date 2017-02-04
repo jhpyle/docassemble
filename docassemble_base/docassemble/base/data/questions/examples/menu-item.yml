@@ -4,13 +4,6 @@ metadata:
   example end: 3
   documentation: "http://docassemble.org/docs/special.html#menu_items"
 ---
-modules:
-  - docassemble.base.util
----
-initial: True
-code: |
-  process_action()
----
 mandatory: True
 code: |
   menu_items = [ action_menu_item('Visit Cow', 'see_cow') ]

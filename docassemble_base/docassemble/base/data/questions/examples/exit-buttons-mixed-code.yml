@@ -1,0 +1,27 @@
+metadata:
+  title: Mixing special buttons
+  documentation: "http://docassemble.org/docs/questions.html#special buttons"
+  example start: 1
+  example end: 3
+---
+mandatory: True
+code: |
+  if user_choice == 'exit':
+    command('exit')
+  elif user_choice == 'proceed':
+    final_screen
+---
+question: |
+  Warning!
+subquestion: |
+  Proceeding with this interview may
+  result in despair-inducing levels
+  of liability.
+field: user_choice
+buttons:
+  - Exit: exit
+  - Keep going: proceed
+---
+event: final_screen
+question: |
+  Hey, I warned you.

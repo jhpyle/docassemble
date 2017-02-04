@@ -1,0 +1,30 @@
+metadata:
+  title: Mixing special buttons
+  documentation: "http://docassemble.org/docs/questions.html#special buttons"
+  example start: 1
+  example end: 2
+---
+question: |
+  Warning!
+subquestion: |
+  Proceeding with this interview may
+  result in despair-inducing levels
+  of liability.
+buttons:
+  - I understand:
+      code: |
+        attitude = 'careful'
+  - I do not care:
+      code: |
+        attitude = 'reckless'
+  - Get me out of here:
+      code: |
+        command('exit')
+---
+mandatory: true
+question: |
+  % if attitude == 'reckless':
+  You are foolish!
+  % else:
+  Ok, we are proceeding with caution.
+  % endif
