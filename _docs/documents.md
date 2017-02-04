@@ -206,7 +206,7 @@ separate [`attachment`] block.
 
 You can also limit the file formats available.
 
-{% include side-by-side.html demo="allow-emailing-true" %}
+{% include side-by-side.html demo="valid-formats" %}
 
 In this example, the user will not have the option of seeing an HTML
 preview and will only be able to download the PDF file.
