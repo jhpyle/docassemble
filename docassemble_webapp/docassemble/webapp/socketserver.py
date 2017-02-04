@@ -83,6 +83,7 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
                     elif data['messagetype'] == 'chatready':
                         pubsub.subscribe(data['sid'])
                         partners.add(data['sid'])
+                        sys.stderr.write("chatready 2")
                         socketio.emit('chatready', {}, namespace='/interview', room=sid)
                     elif data['messagetype'] == 'departure':
                         if data['sid'] in partners:
@@ -401,6 +402,7 @@ def monitor_thread(sid=None, user_id=None):
                                 name = str(person.first_name) + ' ' + str(person.last_name)
                             else:
                                 name = str(person.email)
+                        sys.stderr.write("chatready 1")
                         socketio.emit('chatready', {'uid': data['uid'], 'i': data['i'], 'userid': data['userid'], 'name': name}, namespace='/monitor', room=sid)
                     if data['messagetype'] == 'block':
                         pubsub.unsubscribe(item['channel'])

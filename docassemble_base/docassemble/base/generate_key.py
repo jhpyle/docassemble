@@ -2,6 +2,8 @@ import string
 import random
 import sys
 
+__all__ = ['random_string', 'random_alphanumeric']
+
 r = random.SystemRandom()
 
 def random_string(length):

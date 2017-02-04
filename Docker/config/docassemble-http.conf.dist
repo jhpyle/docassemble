@@ -9,9 +9,9 @@
     </IfModule>
     RewriteCond %{REQUEST_URI}     ^/ws/socket.io         [NC]
     RewriteCond %{QUERY_STRING}    transport=websocket    [NC]
-    RewriteRule /ws/(.*)           ws://localhost:5000/$1 [P,L]
-    ProxyPass /ws/ http://localhost:5000/
-    ProxyPassReverse /ws/ http://localhost:5000/
+    RewriteRule /ws/(.*)           ws://127.0.0.1:5000/$1 [P,L]
+    ProxyPass /ws/ http://127.0.0.1:5000/
+    ProxyPassReverse /ws/ http://127.0.0.1:5000/
     <IfModule !mod_ssl.c>
         XSendFile on
         XSendFilePath /usr

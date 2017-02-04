@@ -55,6 +55,20 @@ package_auth|id|integer||nextval('package_auth_id_seq'::regclass)
 package_auth|package_id|integer||
 package_auth|user_id|integer||
 package_auth|authtype|character varying|255|'owner'::character varying
+user_roles|id|integer||nextval('user_roles_id_seq'::regclass)
+user_roles|user_id|integer||
+user_roles|role_id|integer||
+userdict|indexno|integer||nextval('userdict_indexno_seq'::regclass)
+userdict|filename|text||
+userdict|key|character varying|250|
+userdict|dictionary|text||
+userdict|user_id|integer||
+userdict|encrypted|boolean||true
+userdict|modtime|timestamp without time zone||
+userdictkeys|indexno|integer||nextval('userdictkeys_indexno_seq'::regclass)
+userdictkeys|filename|text||
+userdictkeys|key|character varying|250|
+userdictkeys|user_id|integer||
 user|id|integer||nextval('user_id_seq'::regclass)
 user|social_id|character varying|64|
 user|nickname|character varying|64|
@@ -70,20 +84,6 @@ user|subdivisionthird|character varying|50|
 user|organization|character varying|64|
 user|timezone|character varying|64|
 user|password|character varying|255|'x'::character varying
-user_roles|id|integer||nextval('user_roles_id_seq'::regclass)
-user_roles|user_id|integer||
-user_roles|role_id|integer||
-userdict|indexno|integer||nextval('userdict_indexno_seq'::regclass)
-userdict|filename|text||
-userdict|key|character varying|250|
-userdict|dictionary|text||
-userdict|user_id|integer||
-userdict|encrypted|boolean||true
-userdict|modtime|timestamp without time zone||
-userdictkeys|indexno|integer||nextval('userdictkeys_indexno_seq'::regclass)
-userdictkeys|filename|text||
-userdictkeys|key|character varying|250|
-userdictkeys|user_id|integer||
 machinelearning|id|integer||nextval('machinelearning_id_seq'::regclass)
 machinelearning|group_id|text||
 machinelearning|independent|text||
@@ -111,3 +111,12 @@ chatlog|modtime|timestamp without time zone||
 objectstorage|id|integer||nextval('objectstorage_id_seq'::regclass)
 objectstorage|key|text||
 objectstorage|value|text||
+shortener|id|integer||nextval('shortener_id_seq'::regclass)
+shortener|short|character varying|250|
+shortener|filename|text||
+shortener|uid|character varying|250|
+shortener|user_id|integer||
+shortener|temp_user_id|integer||
+shortener|key|text||
+shortener|index|integer||
+shortener|modtime|timestamp without time zone||

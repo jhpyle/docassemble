@@ -1,6 +1,6 @@
 {% extends 'base_templates/flask_two_col_base.html' %}
 {% block content %}
-{%- from "base_templates/form_macros.html" import render_addon_field, render_submit_field, myrender_hidden_field with context %}
+{%- from "base_templates/form_macros.html" import render_addon_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
 <ul class="nav nav-pills">
   <li>
     <a title="{{ word('Create new interview') }}" href="?new=1"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Add') }}</a>
@@ -41,6 +41,21 @@
       </li>
       {% endif %}
     </ul>
+  </li>
+  <li role="presentation">
+    <a id="uploadlink" style="cursor: pointer">
+      <form action="" method="POST" class="form" role="form" id="fileform" enctype="multipart/form-data">
+        {{ fileform.hidden_tag() }}
+        <label id="uploadlabel" for="uploadfile" style="position: inline; font-weight: normal; cursor: pointer; margin: 0">
+          <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
+          {{ word("Upload") }}
+        </label>
+        <div style="width: 0px; height: 0px; overflow: hidden">
+          <input type="file" name="uploadfile" id="uploadfile"/>
+        </div>
+        {# {{ render_file_field(fileform.uploadfile, label_visible=False, tabindex=80, multiple=False) }} #}
+      </form>
+    </a>
   </li>
 </ul>
 <form action="{{ url_for('playground_page') }}" method="POST" class="form" role="form" id="form">

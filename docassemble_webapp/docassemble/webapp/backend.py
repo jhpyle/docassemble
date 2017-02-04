@@ -4,7 +4,7 @@ from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, 
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.base.logger import logmessage
 from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys
-from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, ObjectStorage
+from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, ObjectStorage, Shortener
 from docassemble.base.generate_key import random_string
 from sqlalchemy import or_, and_
 import docassemble.webapp.database
@@ -39,6 +39,51 @@ docassemble.base.parse.debug = DEBUG
 
 from docassemble.webapp.file_access import get_info_from_file_number, get_info_from_file_reference
 
+def get_short_code(**pargs):
+    key = pargs.get('key', None)
+    index = pargs.get('index', None)
+    if 'i' in pargs:
+        yaml_filename = pargs['i']
+    else:
+        yaml_filename = session['i']
+    if 'uid' in pargs:
+        uid = pargs['uid']
+    else:
+        uid = session['uid']
+    if 'user_id' in pargs:
+        user_id = pargs['user_id']
+        temp_user_id = None
+    elif 'temp_user_id' in pargs:
+        user_id = None
+        temp_user_id = pargs['temp_user_id']
+    elif current_user.is_anonymous:
+        user_id = None
+        temp_user_id = session.get('tempuser', None)
+    else:
+        user_id = current_user.id
+        temp_user_id = None
+    short_code = None
+    for record in Shortener.query.filter_by(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id, key=key, index=index):
+        short_code = record.short
+    if short_code is not None:
+        return short_code
+    counter = 0
+    new_record = None
+    while counter < 20:
+        existing_id = None
+        new_short = random_string(6)
+        for record in Shortener(short=new_short):
+            existing_id = record.id
+        if existing_id is None:
+            new_record = Shortener(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id, short=new_short, key=key, index=index)
+            db.session.add(new_record)
+            db.session.commit()
+            break
+        counter += 1
+    if new_record is None:
+        raise SystemError("Failed to generate unique short code")
+    return new_short
+        
 def write_record(key, data):
     new_record = ObjectStorage(key=key, value=pack_object(data))
     db.session.add(new_record)
@@ -155,7 +200,8 @@ docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          url_for=url_for,
                                          get_new_file_number=get_new_file_number,
                                          get_ext_and_mimetype=get_ext_and_mimetype,
-                                         file_finder=get_info_from_file_reference)
+                                         file_finder=get_info_from_file_reference,
+                                         get_short_code=get_short_code)
 docassemble.base.functions.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
 docassemble.base.functions.set_locale(DEFAULT_LOCALE)
 docassemble.base.functions.update_locale()

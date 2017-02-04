@@ -42,6 +42,9 @@ class PlaygroundForm(FlaskForm):
     run = SubmitField(word('Save and Run'))
     delete = SubmitField(word('Delete'))
 
+class PlaygroundUploadForm(FlaskForm):
+    uploadfile = FileField(word('File to upload'))
+
 class LogForm(FlaskForm):
     filter_string = StringField(word('Filter For'))
     file_name = StringField(word('File Name'))

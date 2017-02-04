@@ -88,3 +88,15 @@ class MachineLearning(db.Model):
     create_time = db.Column(db.DateTime())
     modtime = db.Column(db.DateTime())
     active = db.Column(db.Boolean(), nullable=False, server_default='0')
+
+class Shortener(db.Model):
+    __tablename__ = dbtableprefix + "shortener"
+    id = db.Column(db.Integer(), primary_key=True)
+    short = db.Column(db.String(250))
+    filename = db.Column(db.Text())
+    uid = db.Column(db.String(250))
+    user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
+    temp_user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'tempuser.id', ondelete='CASCADE'))
+    key = db.Column(db.Text())
+    index = db.Column(db.Integer())
+    modtime = db.Column(db.DateTime())
