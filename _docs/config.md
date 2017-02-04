@@ -838,6 +838,12 @@ can change the URL that **docassemble** uses by setting the
 ec2_ip_url: http://169.254.169.254/latest/meta-data/local-ipv4
 {% endhighlight %}
 
+## <a name="vim"></a>Vim-like editor in Playground
+
+If the `vim` directive is set to `True`, then the in-browser text
+editors in the [Playground] will emulate [Vim].  This uses the
+[Vim bindings option] of [CodeMirror].
+
 ## <a name="external hostname"></a>URL to the site
 
 The `external hostname` is the hostname by which users will access
@@ -1245,3 +1251,7 @@ and Facebook API keys.
 [Tesseract]: https://en.wikipedia.org/wiki/Tesseract_(software)
 [`default interview`]: #default_interview
 [readability statistics]: https://pypi.python.org/pypi/textstat/
+[Playground]: {{ site.baseurl }}/docs/playground.html
+[Vim]: http://www.vim.org/
+[Vim bindings option]: https://codemirror.net/demo/vim.html
+[CodeMirror]: http://codemirror.net/

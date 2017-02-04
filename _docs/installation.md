@@ -41,14 +41,19 @@ use the HTTP and HTTPS ports if it has exclusive use of them.)
 
 The installation instructions in this section assume you are
 installing **docassemble** into a 64 bit [Debian]/[Ubuntu] environment
-(not using [Docker]).  However, **docassemble** has been developed to
-be operating-system-independent.  If you can install the dependencies,
+(not using [Docker]).
+
+However, **docassemble** has been developed to be
+operating-system-independent.  If you can install the dependencies,
 and you know what you're doing, you should be able to get
 **docassemble** to run on any operating system, with appropriate
 adjustments to the [configuration].  **docassemble** has not been
 tested on Mac or Windows, but all the dependencies are likely to be
-available for installation on those platforms.  (E.g., see [MacTex]
-for LaTeX on Mac, and [MiKTeX] for LaTeX on Windows.)
+available for native installation on those platforms.  (E.g., see
+[MacTex] for LaTeX on Mac, and [MiKTeX] for LaTeX on Windows.)
+However, it would probably take a lot of time to figure this out, any
+why bother, when you can install **docassemble** on a Mac or PC using
+[Docker]?.
 
 For instructions on installing **docassemble** in a multi-server
 arrangement, see the [scalability] section.
@@ -64,7 +69,7 @@ there is a separate [Python] module, [`docassemble.webapp`], that
 contains the code for the web application and the
 [text messaging interface].  These modules have a number of
 dependencies, including other [Python] packages as well as libraries
-needed by those [Python] packages
+needed by those [Python] packages.
 
 For all of the features of **docassemble** to be available, several
 other applications need to run concurrently on the same server.  These
@@ -72,7 +77,6 @@ applications include:
 
 * A web server (using ports 80 and/or 443);
 * A [web sockets] background process (using port 5000);
-* A [Celery] background process;
 * A [cron] background process that invokes **docassemble** scripts at
 hourly, daily, weekly, and monthly intervals;
 * A watchdog background process that terminates any web application
@@ -84,13 +88,15 @@ In addition, the following services need to be available, either on
 the same server or on a central server on the same local area network:
 
 * A SQL server;
-* A [Redis] server (port 6379) (multiple databases of which are used); and
-* A [RabbitMQ] server (port 5672).
+* A [Redis] server (port 6379) (multiple databases of which are used);
+* A [RabbitMQ] server (port 5672); and
+* A [Celery] background process.
 
-If you want to be able to view consolidated log files when you use a
-[multi-server arrangement], a central log server needs to run, and
-**docassemble** application servers need to run [syslog-ng] background
-processes that push log file entries to that central server.
+In addition, if you want to be able to view consolidated log files
+when you use a [multi-server arrangement], a central log server needs
+to run, and the **docassemble** application servers need to run
+[syslog-ng] background processes that push log file entries to that
+central server.
 
 (Installing on [Docker] ensures that all of these additional
 applications are running.)
@@ -104,13 +110,17 @@ to automatically renew the SSL certificates.)
 Finally, some of **docassemble**'s features depend on the following
 services:
 
-* An SMTP server for sending e-mails;
+* An [SMTP] server for sending e-mails;
 * [Twilio] for receiving text messages, sending text messages, and
   forwarding phone calls; and
 * [VoiceRSS] for converting text to an audio file.
 
 The authentication keys for these services can be set up in the
-[configuration].
+[configuration].  Note that while it is easy to run an [SMTP] server,
+most cloud providers block outgoing [SMTP] connections, so you may
+have to use a special service to send e-mail.  For example, on
+[Amazon Web Services], you can use [Amazon SES], and on
+[Microsoft Azure], you can use [SendGrid].
 
 # Installing underlying packages
 
@@ -137,7 +147,8 @@ sudo apt-get install apt-utils tzdata python python-dev wget unzip \
   fail2ban libxml2 libxslt1.1 libxml2-dev libxslt1-dev \
   libcurl4-openssl-dev libssl-dev redis-server rabbitmq-server \
   libreoffice libtool libtool-bin pacpl syslog-ng rsync s3cmd \
-  curl mktemp dnsutils
+  curl mktemp dnsutils tesseract-ocr-eng tesseract-ocr-spa \
+  tesseract-ocr build-essentials nodejs npm
 {% endhighlight %}
 
 **docassemble** depends on version 5.0.1 or later of the
@@ -155,8 +166,9 @@ sudo make install
 cd ..
 {% endhighlight %}
 
-(Note that the standard [pacpl] was installed and then uninstalled; this
-ensures that [pacpl]'s dependencies exist on the system.)
+(Note that these instructions call for the standard [pacpl] to be
+installed and then uninstalled; this is a quick way of ensuring that
+[pacpl]'s dependencies exist on the system.)
 
 **docassemble** also depends on [Pandoc] version 1.17 or later.  If
 your Linux distribution provides an earlier version, you can install
@@ -165,6 +177,14 @@ from the source:
 {% highlight bash %}
 wget https://github.com/jgm/pandoc/releases/download/1.17.1/pandoc-1.17.1-2-amd64.deb
 sudo dpkg -i pandoc-1.17.1-2-amd64.deb
+{% endhighlight %}
+
+To enable the use of [Microsoft Azure blob storage] as a means of
+[data storage], you will need to run the following:
+
+{% highlight bash %}
+update-alternatives --install /usr/bin/node node /usr/bin/nodejs 10
+npm install -g azure-storage-cmd
 {% endhighlight %}
 
 **docassemble** uses locale settings to format numbers, get currency
@@ -197,15 +217,15 @@ environment using [pip].
 
 There are two reasons for this.  First, if the ownership of the
 directories and files is set to `www-data`, developers will be able to
-install and upgrade [Python] packages [through the web interface],
-rather than on the command line.  Second, installing with `pip` into a
-virtual environment will ensure that all of the [Python] packages are
-the latest version; the versions that are packaged with Linux
-distributions are not always current.
+install and upgrade [Python] packages [through the web interface], and
+they will not need to use the command line.  Second, installing with
+[pip] into a virtual environment will ensure that all of the [Python]
+packages are the latest version; the versions that are packaged with
+Linux distributions are not always current.
 
 The installation process will require you to be able to run commands
 as `www-data`.  By default, your system may prevent the `www-data`
-user from using a shell.  You can get around this by running the
+user from using a shell.  Get around this limitation by running the
 following:
 
 {% highlight bash %}
@@ -214,7 +234,7 @@ sudo chown -R www-data.www-data /var/www
 {% endhighlight %}
 
 Before setting up the [Python virtual environment], you need to create
-directories needed by [pip] for temporary files, and the directories in
+directories needed by [pip] for temporary files and the directories in
 which **docassemble** and the [Python virtual environment] will live:
 
 {% highlight bash %}
@@ -253,12 +273,13 @@ package.  (This facilitates the use of user-created add-on packages.)
 The core functionality of parsing interviews is in the
 `docassemble.base` package.  With these two packages only, you can use
 **docassemble** through its [Python] API.  The `docassemble.webapp`
-package contains the standard **docassemble** web application, and the
+package contains the standard **docassemble** web application (which
+includes the [SMS] interface), and the
 `docassemble.demo` package contains a [demonstration] interview.
 
 <a name="virtualenv"></a>To install **docassemble** and its [Python]
 dependencies into the [Python virtual environment], first install the
-latest version of `pip`, then install the `virtualenv` module:
+latest version of [pip], then install the `virtualenv` module:
 
 {% highlight bash %}
 wget https://bootstrap.pypa.io/get-pip.py
@@ -288,13 +309,13 @@ pip install 'git+https://github.com/nekstrom/pyrtf-ng#egg=pyrtf-ng' \
 {% endhighlight %}
 
 The [ndg-httpsclient] module, which is a dependency, is installed by
-itself because errors have occurred during installation when this
-package does not already exist on the system.  Also note that there is
-one [Python] dependency, [PyRTF-ng], which is not available on [PyPI],
-but must be installed from [GitHub].
+itself because errors might occur during installation if this package
+does not already exist on the system.  Also note that there is one
+[Python] dependency, [PyRTF-ng], which is not available on [PyPI], but
+must be installed from [GitHub].
 
 Then, you need to move certain files into place for the web
-application (still acting as `www-data`):
+application.  Still acting as `www-data`, do:
 
 {% highlight bash %}
 cp ./docassemble/docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/
@@ -305,8 +326,8 @@ cp ./docassemble/Docker/*.sh /usr/share/docassemble/webapp/
 The `docassemble.wsgi` file is the primary "executable" for the web
 application.  Your web server configuration will point to this file.
 
-The files copied to `/usr/share/docassemble/config/` are necessary for
-[supervisor] to operate.
+The files copied to `/usr/share/docassemble/config/` include configuration
+file templates for **docassemble** and [Apache].
 
 The `.sh` files are scripts for running background processes.
 
@@ -324,7 +345,7 @@ sudo cp ./docassemble/Docker/cron/docassemble-cron-monthly.sh /etc/cron.monthly/
 sudo cp ./docassemble/Docker/cron/docassemble-cron-weekly.sh /etc/cron.weekly/docassemble
 sudo cp ./docassemble/Docker/cron/docassemble-cron-daily.sh /etc/cron.daily/docassemble
 sudo cp ./docassemble/Docker/cron/docassemble-cron-hourly.sh /etc/cron.hourly/docassemble
-sudo cp ./docassemble/Docker/docassemble.conf /etc/apache2/conf-available/
+sudo cp ./docassemble/Docker/docassemble.conf /etc/apache2/conf-available/docassemble.conf
 sudo cp ./docassemble/Docker/config/docassemble-http.conf.dist /etc/apache2/sites-available/docassemble.conf
 sudo cp ./docassemble/Docker/docassemble-supervisor.conf /etc/supervisor/conf.d/docassemble.conf
 {% endhighlight %}
@@ -350,7 +371,12 @@ sudo a2enmod proxy_http
 sudo a2enmod proxy_wstunnel
 {% endhighlight %}
 
-Set up and edit the [configuration] file, the standard location of
+Make any necessary changes to the [Apache] configuration file,
+`/etc/apache2/sites-available/docassemble.conf`.  It is a good idea to
+set the ServerName directive, and may be required if your site hosts
+multiple named virtual hosts.
+
+Set up and edit the **docassemble** [configuration] file, the standard location of
 which is `/usr/share/docassemble/config.yml`:
 
 {% highlight bash %}
@@ -362,11 +388,12 @@ At the very least, you should edit the `secretkey` and
 `password_secretkey` values and set them to something random and
 unique to your site.  By default, **docassemble** is available at the
 root of your site.  That is, if your domain is `example.com`,
-**docassemble** will be available at `http://example.com` or
-`https://example.com`.  If you would like it to be available at
-`http://example.com/docassemble`, you will need to change the [`root`]
-directive to `/docassemble/` and the [`url root`] directive to
-`http://example.com/docassemble`.
+**docassemble** will be available at `http://example.com`.  If you
+would like it to be available at `http://example.com/docassemble`, you
+will need to change the [`root`] directive to `/docassemble/` and the
+[`url root`] directive to `http://example.com/docassemble`.  Note that
+it is important to include `/` marks at both the beginning and end of
+[`root`].
 
 Make sure that everything in the **docassemble** directory can be read
 and written by the web server:
@@ -440,9 +467,10 @@ sudo a2dismod ssl
 
 # <a name="setup"></a>Setting up the SQL server
 
-`docassemble` uses a SQL database.  These instructions assume you are
-using [PostgreSQL] locally.  Set up the database by running the
-following commands.
+`docassemble` uses a SQL database.  This database can be located on
+the same server or a different server, but these instructions assume
+you are using [PostgreSQL] locally.  Set up the database by running
+the following commands.
 
 {% highlight bash %}
 echo "create role docassemble with login password 'abc123'; create database docassemble owner docassemble;" | sudo -u postgres psql
@@ -450,14 +478,14 @@ sudo -H -u www-data bash -c "source /usr/share/docassemble/local/bin/activate &&
 {% endhighlight %}
 
 Note that these commands create a "role" in the [PostgreSQL] server
-called `docassemble` with the password `abc123`, and note that the
+called `docassemble` with the password `abc123`.  Note also that the
 [configuration] file, `/usr/share/docassemble/config/config.yml`,
 contains these same values under the [`db`] directive.
 
 (If you decide to store your [configuration] file in a location other
-than `/usr/share/docassemble/config/config.yml`, the
-`docassemble.webapp.create_tables` module will take the configuration
-file path as a command line argument.)
+than `/usr/share/docassemble/config/config.yml`, you can run
+`docassemble.webapp.create_tables` by passing the the configuration
+file path as the first parameter on the command line.)
 
 # Setting up the log server
 
@@ -465,25 +493,28 @@ If you are only running **docassemble** on a single machine, you do
 not need to worry about operating a central log server, and you can
 skip this section.
 
-If the machine will function as a central log server, however, you
-would do the following as `root`:
+If the machine will function as a central log server, then other
+machines besides the machine running the log server will push log file
+entries to the central log server over port 514 and access the log
+files through a web server at port 8080.  Configure all of this by
+doing the following as `root`:
 
 {% highlight bash %}
 cp ./docassemble/Docker/cgi-bin/index.sh /usr/lib/cgi-bin/
 cp ./docassemble/Docker/syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
-{% endhighlight %}
-
-Other machines besides the machine running the log server would push
-log file entries to the central log server.  Configure this by doing:
-
-{% highlight bash %}
-cp ./docassemble/Docker/apache.logrotate /etc/logrotate.d/apache2
+cp ./docassemble/Docker/docassemble-log.conf.dist /etc/sites-available/docassemble-log.conf
+cp ./docassemble/Docker/syslog-ng-docker.conf /etc/syslog-ng/syslog-ng.conf
 cp ./docassemble/Docker/docassemble-syslog-ng.conf /etc/syslog-ng/conf.d/docassemble
+cp ./docassemble/Docker/apache.logrotate /etc/logrotate.d/apache2
+cp ./docassemble/Docker/config/docassemble-log.conf.dist /etc/apache2/sites-available/docassemble-log.conf
+echo "Listen 8080" >> /etc/apache2/ports.conf
+a2enmod cgid
+a2ensite docassemble-log
 {% endhighlight %}
 
-Then, you will need to edit /etc/syslog-ng/conf.d/docassemble to
-replace `` `LOGSERVER` `` in the second to last line with the address of
-the log server:
+Then, edit /etc/syslog-ng/conf.d/docassemble to replace `` `LOGSERVER`
+`` in the second to last line with the address of the log server.  For
+example:
 
 {% highlight yaml %}
 destination d_net { tcp("log.example.local" port(514) log_fifo_size(1000)); };
@@ -657,7 +688,7 @@ come into play when the [live help] features are used.  If you want a
 fully-functional **docassemble**, you will need to make sure that all
 of these services are running.
 
-If you need to run [Python] commands like `pip` in order to fix
+If you need to run [Python] commands like [pip] in order to fix
 problems, you need to let the shell know about the virtual
 environment.  You can do this by first running:
 
@@ -716,7 +747,7 @@ python -m docassemble.webapp.create_tables
 exit
 {% endhighlight %}
 
-If you get any errors while upgrading with `pip`, try doing the
+If you get any errors while upgrading with [pip], try doing the
 following first:
 
 {% highlight bash %}
@@ -835,3 +866,8 @@ files.  In this case, you will need to manually reinstall
 [ndg-httpsclient]: https://pypi.python.org/pypi/ndg-httpsclient
 [background processes]: {{ site.baseurl }}/docs/background.html#background
 [live help]: {{ site.baseurl }}/docs/livehelp.html
+[SMTP]: https://en.wikipedia.org/wiki/SMTP
+[Amazon SES]: https://aws.amazon.com/ses/
+[Amazon Web Services]: https://aws.amazon.com
+[SMS]: {{ site.baseurl }}/docs/sms.html
+[data storage]: {{ site.baseurl }}/docs/docker.html#data storage

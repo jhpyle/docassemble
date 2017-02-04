@@ -22,6 +22,11 @@ with which you can edit [YAML]&nbsp;[interview] files.
 To create a new [YAML] file, click the <i class="glyphicon
 glyphicon-plus-sign" aria-hidden="true"></i> icon.
 
+To upload a [YAML] file, click <i class="glyphicon glyphicon-upload"
+aria-hidden="true"></i> Upload.  The filename of the file you upload
+will be used as the name of the file in the Playground.  If a file
+exists with the same name, it will be overwritten.
+
 You can use multiple files to organize parts of a single interview.
 For example, if you have a file called "interview.yml" and a file called
 "questions.yml," you can incorporate one into the other by reference.
