@@ -17,9 +17,7 @@ buttons:
   - I do not care:
       code: |
         attitude = 'reckless'
-  - Get me out of here:
-      code: |
-        command('exit')
+  - Get me out of here: exit
 ---
 mandatory: true
 question: |

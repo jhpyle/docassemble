@@ -195,12 +195,12 @@ def date_difference(starting=current_datetime(), ending=current_datetime(), time
         ending = pytz.timezone(timezone).localize(ending)
     delta = ending - starting
     output = DateTimeDelta()
-    output.delta = delta
     output.weeks = (delta.days / 7.0) + (delta.seconds / 604800.0)
     output.days = delta.days + (delta.seconds / 86400.0)
     output.hours = (delta.days * 24.0) + (delta.seconds / 3600.0)
     output.minutes = (delta.days * 1440.0) + (delta.seconds / 60.0)
     output.seconds = (delta.days * 86400) + delta.seconds
+    output.years = float(dateutil.relativedelta.relativedelta(ending, starting).years)
     return output
 
 def phone_string(person):

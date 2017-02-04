@@ -4068,7 +4068,7 @@ def index():
         $(".showif").each(function(){
           var showIfSign = $(this).data('showif-sign');
           var showIfVar = $(this).data('showif-var');
-          var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/, "\\\\$1");
+          var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
           var showIfVal = $(this).data('showif-val');
           var saveAs = $(this).data('saveas');
           var isSame = (saveAs == showIfVar);
@@ -4870,7 +4870,7 @@ def observer():
         $(".showif").each(function(){
           var showIfSign = $(this).data('showif-sign');
           var showIfVar = $(this).data('showif-var');
-          var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/, "\\\\$1");
+          var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
           var showIfVal = $(this).data('showif-val');
           var saveAs = $(this).data('saveas');
           var isSame = (saveAs == showIfVar);
