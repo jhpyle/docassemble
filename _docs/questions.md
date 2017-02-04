@@ -122,9 +122,7 @@ use the [`event`](#event) feature described below.
 
 Using the [`buttons`](#buttons) or [`choices`](#choices) syntax
 described above, you can add special buttons to a screen.  These
-buttons are special because they do not set a variable.  (You do not
-need to specify a [`field`] to go along with these
-[`buttons`](#buttons).)
+buttons are special because they do not set a variable.
 
 These buttons are particularly useful on "terminal" screens.
 
@@ -196,6 +194,27 @@ buttons.
 {% include side-by-side.html demo="exit-choices" %}
 
 The functionality is the same.
+
+### <a name="special mixed"></a>Mixing special buttons with buttons that set a variable
+
+Note that since "special" buttons do not set a variable, you should
+not include a [`field`] in the [`question`].  If you include a
+[`field`] in the [`question`], **docassemble** will assume you are
+creating an ordinary [multiple choice question].
+
+If you wish to mix "special" buttons with buttons that set a variable,
+you can use the [`command()`] function in [`code`] to trigger the same
+effects as clicking on a "special" button.
+
+The following example uses a [`code`] block to determine the course of
+the interview, and it either exits or proceeds based on the result of
+an ordinary [multiple choice question].
+
+{% include side-by-side.html demo="exit-buttons-mixed-code" %}
+
+Another alternative is to use [multiple-choice buttons that run code]:
+
+{% include side-by-side.html demo="exit-buttons-mixed" %}
 
 ## <a name="event"></a>Special screens: `event`
 
@@ -269,3 +288,6 @@ more information, see [`event`], [`url_action()`],
 [`code`]: {{ site.baseurl }}/docs/code.html#code
 [configuration]: {{ site.baseurl }}/docs/config.html
 [actions]: {{ site.baseurl }}/docs/functions.html#actions
+[`command()`]: {{ site.baseurl }}/docs/functions.html#command
+[multiple choice question]: #buttons
+[multiple-choice buttons that run code]: {{ site.baseurl }}/docs/fields.html#code button
