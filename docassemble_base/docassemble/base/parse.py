@@ -390,7 +390,12 @@ class Field:
 class Question:
     def idebug(self, data):
         return "\nIn file " + str(self.from_source.path) + " from package " + str(self.package) + ":\n" + ruamel.yaml.dump(data)
-    def __init__(self, data, caller, **kwargs):
+    def __init__(self, orig_data, caller, **kwargs):
+        if type(orig_data) is not dict:
+            raise DAError("A block must be in the form of a dictionary." + self.idebug(orig_data))
+        data = dict()
+        for key, value in orig_data.iteritems():
+            data[key.lower()] = value
         should_append = True
         if 'register_target' in kwargs:
             register_target = kwargs['register_target']
@@ -1375,12 +1380,15 @@ class Question:
             return att_list
         else:
             return([self.process_attachment(target)])
-    def process_attachment(self, target):
+    def process_attachment(self, orig_target):
         metadata = dict()
         variable_name = str()
         defs = list()
         options = dict()
-        if type(target) is dict:
+        if type(orig_target) is dict:
+            target = dict()
+            for key, value in orig_target.iteritems():
+                target[key.lower()] = value
             if 'language' in target:
                 options['language'] = target['language']
             if 'name' not in target:
@@ -1488,10 +1496,10 @@ class Question:
                 raise DAError("No content provided in attachment")
             #logmessage("The content is " + str(target['content']))
             return({'name': TextObject(target['name'], names_used=self.mako_names), 'filename': TextObject(target['filename'], names_used=self.mako_names), 'description': TextObject(target['description'], names_used=self.mako_names), 'content': TextObject("\n".join(defs) + "\n" + target['content'], names_used=self.mako_names), 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
-        elif type(target) is str:
-            return({'name': TextObject('Document'), 'filename': TextObject('Document'), 'description': TextObject(''), 'content': TextObject(target, names_used=self.mako_names), 'valid_formats': ['*'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
+        elif type(orig_target) in (str, unicode):
+            return({'name': TextObject('Document'), 'filename': TextObject('Document'), 'description': TextObject(''), 'content': TextObject(orig_target, names_used=self.mako_names), 'valid_formats': ['*'], 'metadata': metadata, 'variable_name': variable_name, 'options': options})
         else:
-            raise DAError("Unknown data type in process_attachment")
+            raise DAError("Unknown data type in attachment")
 
     def ask(self, user_dict, the_x, the_i):
         #logmessage("ask: " + str(the_x) + " " + str(the_i))

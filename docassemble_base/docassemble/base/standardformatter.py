@@ -986,7 +986,7 @@ def as_html(status, url_for, debug, root, validation_rules):
                         md_format = format_type
                         break
                 output += '                <div class="tab-pane" id="markdown' + str(attachment_index) + '">\n'
-                output += '                  <pre>' + unicode(attachment['markdown'][md_format]) + '</pre>\n'
+                output += '                  <pre>' + safe_html(attachment['markdown'][md_format]) + '</pre>\n'
                 output += '                </div>\n'
             output += '              </div>\n            </div>\n'
             attachment_index += 1
@@ -1473,3 +1473,9 @@ def myb64unquote(the_string):
 
 def strip_quote(the_string):
     return re.sub(r'"', r'', the_string)
+
+def safe_html(the_string):
+    the_string = re.sub(r'\&', '&amp;', the_string)
+    the_string = re.sub(r'\<', '&lt;', the_string)
+    the_string = re.sub(r'\>', '&gt;', the_string)
+    return the_string

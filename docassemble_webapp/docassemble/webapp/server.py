@@ -6910,6 +6910,12 @@ def playground_files():
         scrollBottom();"""
     else:
         extra_command = ""
+    if daconfig.get('vim', False):
+        vimOpt = 'keyMap: "vim", cursorBlinkRate: 0, '
+        vimLoad = '<script src="' + url_for('static', filename="codemirror/keymap/vim.js") + '"></script>\n    '
+    else:
+        vimOpt = ''
+        vimLoad = ''
     extra_js = """
     <script>
       var origPosition = null;

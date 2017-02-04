@@ -1,0 +1,3 @@
+#Exim filter
+pipe /usr/share/docassemble/webapp/process-email.sh
+seen finish
