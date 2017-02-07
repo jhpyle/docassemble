@@ -9,7 +9,7 @@ import pyocr.builders
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
 from docassemble.base.functions import comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, interview_email, plain, bold, italic
-from docassemble.base.core import DAObject, DAList, DADict, DASet, DAFile, DAFileCollection, DAFileList, DATemplate, selections
+from docassemble.base.core import DAObject, DAList, DADict, DASet, DAFile, DAFileCollection, DAFileList, DAEmail, DAEmailRecipient, DAEmailRecipientList, DATemplate, selections
 from decimal import Decimal
 import sys
 #sys.stderr.write("importing async mail now from util\n")
@@ -32,7 +32,7 @@ import shutil
 from subprocess import call
 from bs4 import BeautifulSoup
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'format_date', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'DARedis', 'SimpleTextMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'plain', 'bold', 'italic']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'format_date', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'DARedis', 'SimpleTextMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'plain', 'bold', 'italic']
 
 #knn_machine_learner = DummyObject
 
@@ -200,7 +200,7 @@ def date_difference(starting=current_datetime(), ending=current_datetime(), time
     output.hours = (delta.days * 24.0) + (delta.seconds / 3600.0)
     output.minutes = (delta.days * 1440.0) + (delta.seconds / 60.0)
     output.seconds = (delta.days * 86400) + delta.seconds
-    output.years = float(dateutil.relativedelta.relativedelta(ending, starting).years)
+    output.years = (delta.days + delta.seconds / 86400.0) / 365.2425
     return output
 
 def phone_string(person):
@@ -294,11 +294,11 @@ def last_access_time(*pargs, **kwargs):
 
 class LatitudeLongitude(DAObject):
     """Represents a GPS location."""
-    def init(self, **kwargs):
+    def init(self, *pargs, **kwargs):
         self.gathered = False
         self.known = False
         self.description = ""
-        return super(LatitudeLongitude, self).init(**kwargs)
+        return super(LatitudeLongitude, self).init(*pargs, **kwargs)
     def status(self):
         """Returns True or False depending on whether an attempt has yet been made
         to gather the latitude and longitude."""
@@ -434,10 +434,10 @@ class IndividualName(Name):
 
 class Address(DAObject):
     """A geographic address."""
-    def init(self, **kwargs):
+    def init(self, *pargs, **kwargs):
         self.location = LatitudeLongitude()
         self.geolocated = False
-        return super(Address, self).init(**kwargs)
+        return super(Address, self).init(*pargs, **kwargs)
     def __str__(self):
         return(self.block())
     def address_on_one_line(self):
@@ -459,7 +459,7 @@ class Address(DAObject):
         if self.geolocated:
             return self.geolocate_success    
         the_address = self.address_on_one_line()
-        logmessage("Trying to geolocate " + str(the_address))
+        logmessage("geolocate: trying to geolocate " + str(the_address))
         from geopy.geocoders import GoogleV3
         my_geocoder = GoogleV3()
         results = my_geocoder.geocode(the_address)
@@ -481,7 +481,7 @@ class Address(DAObject):
                                 #logmessage("Setting " + str(addr_type) + " to " + str(getattr(results[0], geo_type)) + " from " + str(geo_type))
                                 setattr(self, addr_type, component['long_name'])
         else:
-            logmessage("valid not ok: result count was " + str(len(results)))
+            logmessage("geolocate: Valid not ok.  Result count was " + str(len(results)))
             self.geolocate_success = False
         return self.geolocate_success
     def block(self):
@@ -506,7 +506,7 @@ class Address(DAObject):
 
 class Person(DAObject):
     """Represents a legal or natural person."""
-    def init(self, **kwargs):
+    def init(self, *pargs, **kwargs):
         if not hasattr(self, 'name'):
             self.name = Name()
         self.address = Address()
@@ -515,7 +515,7 @@ class Person(DAObject):
             self.name.text = kwargs['name']
             del kwargs['name']
         self.roles = set()
-        return super(Person, self).init(**kwargs)
+        return super(Person, self).init(*pargs, **kwargs)
     def _map_info(self):
         if not self.location.known:
             if (self.address.location.gathered and self.address.location.known) or self.address.geolocate():
@@ -647,13 +647,13 @@ class Person(DAObject):
 
 class Individual(Person):
     """Represents a natural person."""
-    def init(self, **kwargs):
+    def init(self, *pargs, **kwargs):
         self.name = IndividualName()
         self.child = ChildList()
         self.income = Income()
         self.asset = Asset()
         self.expense = Expense()
-        return super(Individual, self).init(**kwargs)
+        return super(Individual, self).init(*pargs, **kwargs)
     def identified(self):
         """Returns True if the individual's name has been set.  Otherwise, returns False."""
         if hasattr(self.name, 'first'):
@@ -748,15 +748,15 @@ class Individual(Person):
 
 class ChildList(DAList):
     """Represents a list of children."""
-    def init(self, **kwargs):
+    def init(self, *pargs, **kwargs):
         self.object_type = Individual
-        return super(ChildList, self).init(**kwargs)
+        return super(ChildList, self).init(*pargs, **kwargs)
 
 class FinancialList(DADict):
     """Represents a set of currency amounts."""
-    def init(self, **kwargs):
+    def init(self, *pargs, **kwargs):
         self.object_type = Value
-        return super(FinancialList, self).init(**kwargs)
+        return super(FinancialList, self).init(*pargs, **kwargs)
     def total(self):
         """Returns the total value in the list, gathering the list items if necessary."""
         self.trigger_gather()
@@ -776,9 +776,9 @@ class FinancialList(DADict):
     
 class PeriodicFinancialList(FinancialList):
     """Represents a set of currency items, each of which has an associated period."""
-    def init(self, **kwargs):
+    def init(self, *pargs, **kwargs):
         self.object_type = PeriodicValue
-        return super(FinancialList, self).init(**kwargs)
+        return super(FinancialList, self).init(*pargs, **kwargs)
     def total(self, period_to_use=1):
         """Returns the total periodic value in the list, gathering the list items if necessary."""
         self.trigger_gather()
@@ -829,13 +829,13 @@ class PeriodicValue(Value):
 
 class OfficeList(DAList):
     """Represents a list of offices of a company or organization."""
-    def init(self, **kwargs):
+    def init(self, *pargs, **kwargs):
         self.object_type = Address
-        return super(OfficeList, self).init(**kwargs)
+        return super(OfficeList, self).init(*pargs, **kwargs)
 
 class Organization(Person):
     """Represents a company or organization."""
-    def init(self, **kwargs):
+    def init(self, *pargs, **kwargs):
         self.office = OfficeList()
         if 'offices' in kwargs:
             if type(kwargs['offices']) is list:
@@ -844,7 +844,7 @@ class Organization(Person):
                         new_office = self.office.appendObject(Address, **office)
                         new_office.geolocate()
             del kwargs['offices']
-        return super(Organization, self).init(**kwargs)
+        return super(Organization, self).init(*pargs, **kwargs)
     def will_handle(self, problem=None, county=None):
         """Returns True or False depending on whether the organization 
         serves the given county and/or handles the given problem."""
@@ -1060,11 +1060,11 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
                         success = False
     if success:
         try:
-            logmessage("Starting to send")
+            logmessage("send_email: starting to send")
             server.send_mail(msg)
-            logmessage("Finished sending")
+            logmessage("send_email: finished sending")
         except Exception as errmess:
-            logmessage("Sending mail failed: " + str(errmess))
+            logmessage("send_email: sending mail failed: " + str(errmess))
             success = False
     if success and task is not None:
         mark_task_as_performed(task)
@@ -1126,7 +1126,7 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
         lang = ocr_langs[language]
     else:
         lang = langs[0]
-        logmessage("Could not get OCR language for language " + str(language) + "; using language " + str(lang))
+        logmessage("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang))
     if isinstance(image_file, DAFile):
         image_file = [image_file]
     temp_directory_list = list()

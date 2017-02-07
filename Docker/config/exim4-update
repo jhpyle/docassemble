@@ -16,16 +16,16 @@
 #
 # This is a Debian specific file
 
-dc_eximconfig_configtype='local'
-dc_other_hostnames='stampy'
-dc_local_interfaces='127.0.0.1 ; ::1'
+dc_eximconfig_configtype='internet'
+dc_other_hostnames='*'
+dc_local_interfaces=''
 dc_readhost=''
 dc_relay_domains=''
 dc_minimaldns='false'
 dc_relay_nets=''
 dc_smarthost=''
 CFILEMODE='644'
-dc_use_split_config='false'
+dc_use_split_config='true'
 dc_hide_mailname=''
 dc_mailname_in_oh='true'
 dc_localdelivery='mail_spool'

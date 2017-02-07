@@ -43,7 +43,7 @@
     </ul>
   </li>
   <li role="presentation">
-    <a id="uploadlink" style="cursor: pointer">
+    <a id="uploadlink" style="cursor: pointer" title="{{ word('Upload a YAML file to the Playground') }}">
       <form action="" method="POST" class="form" role="form" id="fileform" enctype="multipart/form-data">
         {{ fileform.hidden_tag() }}
         <label id="uploadlabel" for="uploadfile" style="position: inline; font-weight: normal; cursor: pointer; margin: 0">
@@ -57,6 +57,14 @@
       </form>
     </a>
   </li>
+  {% if current_file != '' %}
+  <li role="presentation">
+    <a href="{{ url_for('playground_download', userid=userid, filename=current_file) }}" title="{{ word('Download the current file') }}">
+      <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+      {{ word("Download") }}
+    </a>
+  </li>
+  {% endif %}
 </ul>
 <form action="{{ url_for('playground_page') }}" method="POST" class="form" role="form" id="form">
   {{ form.hidden_tag() }}

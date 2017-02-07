@@ -573,11 +573,10 @@ def url_of(file_reference, **kwargs):
     """Returns a URL to a file within a docassemble package."""
     return server.url_finder(file_reference, **kwargs)
 
-def interview_email():
-    domain = server.daconfig.get('incoming_mail_domain', None)
-    if domain is None:
-        raise SystemError("term " + str(term) + " not in language_functions")
-    return server.get_short_code() + '@' + domain
+def interview_email(key=None, index=None):
+    """Returns an e-mail address that can be used to send e-mail messages to the case"""
+    domain = server.daconfig.get('incoming mail domain', server.daconfig.get('external hostname', server.hostname))
+    return server.get_short_code(key=key, index=index) + '@' + domain
 
 def server_capabilities():
     """Returns a dictionary with true or false values indicating various capabilities of the server."""

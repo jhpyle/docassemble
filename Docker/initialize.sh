@@ -435,6 +435,10 @@ if [ "$CRONRUNNING" = false ]; then
    supervisorctl --serverurl http://localhost:9001 start cron
 fi
 
+if [[ $CONTAINERROLE =~ .*:(all|mail):.* ]]; then
+    supervisorctl --serverurl http://localhost:9001 start exim4
+fi
+
 function deregister {
     su -c "source $DA_ACTIVATE && python -m docassemble.webapp.deregister $DA_CONFIG_FILE" www-data
     if [ "${S3ENABLE:-false}" == "true" ]; then

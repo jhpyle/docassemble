@@ -17,34 +17,6 @@ class Uploads(db.Model):
     filename = db.Column(db.Text())
     yamlfile = db.Column(db.Text())
 
-# class KVStore(db.Model):
-#     __tablename__ = dbtableprefix + "kvstore"
-#     key = db.Column(db.String(250), primary_key=True)
-#     value = db.Column(db.LargeBinary(), nullable=False)
-
-# class Ticket(db.Model):
-#     __tablename__ = dbtableprefix + 'ticket'
-#     id = db.Column(db.Integer(), primary_key=True)
-#     filename = db.Column(db.String(255))
-#     request_type = db.Column(db.String(50), nullable=False)
-#     description = db.Column(db.Text())
-#     opened_by = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
-#     open_time = db.Column(db.DateTime(), server_default=db.func.now())
-#     close_time = db.Column(db.DateTime())
-#     closed_by = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
-#     close_type = db.Column(db.String(50))
-#     close_description = db.Column(db.Text())
-#     status = db.Column(db.String(50))
-
-# class TicketNote(db.Model):
-#     __tablename__ = dbtableprefix + "ticketnote"
-#     id = db.Column(db.Integer(), primary_key=True)
-#     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
-#     note_type = db.Column(db.String(50), nullable=False)
-#     ticket_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'ticket.id', ondelete='CASCADE'))
-#     create_time = db.Column(db.DateTime(), server_default=db.func.now())
-#     description = db.Column(db.Text())
-
 class ObjectStorage(db.Model):
     __tablename__ = dbtableprefix + "objectstorage"
     id = db.Column(db.Integer(), primary_key=True)
@@ -64,12 +36,6 @@ class SpeakList(db.Model):
     upload = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'uploads.indexno', ondelete='CASCADE'))
     encrypted = db.Column(db.Boolean(), nullable=False, server_default='1')
     digest = db.Column(db.Text())
-
-# class Messages(db.Model):
-#     __tablename__ = dbtableprefix + "messages"
-#     id = db.Column(db.Integer(), db.Sequence(dbtableprefix + 'messages_id_seq'), primary_key=True)
-#     message = db.Column(db.Text())
-#     create_time = db.Column(db.DateTime(), server_default=db.func.now())
 
 class Supervisors(db.Model):
     __tablename__ = dbtableprefix + "supervisors"
@@ -92,7 +58,7 @@ class MachineLearning(db.Model):
 class Shortener(db.Model):
     __tablename__ = dbtableprefix + "shortener"
     id = db.Column(db.Integer(), primary_key=True)
-    short = db.Column(db.String(250))
+    short = db.Column(db.String(250), nullable=False, unique=True)
     filename = db.Column(db.Text())
     uid = db.Column(db.String(250))
     user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
@@ -100,3 +66,25 @@ class Shortener(db.Model):
     key = db.Column(db.Text())
     index = db.Column(db.Integer())
     modtime = db.Column(db.DateTime())
+
+class Email(db.Model):
+    __tablename__ = dbtableprefix + "email"
+    id = db.Column(db.Integer(), primary_key=True)
+    short = db.Column(db.String(250), db.ForeignKey(dbtableprefix + 'shortener.short', ondelete='CASCADE'))
+    to_addr = db.Column(db.Text())
+    from_addr = db.Column(db.Text())
+    reply_to_addr = db.Column(db.Text())
+    return_path_addr = db.Column(db.Text())
+    subject = db.Column(db.Text())
+    datetime_message = db.Column(db.DateTime())
+    datetime_received = db.Column(db.DateTime())
+
+class EmailAttachment(db.Model):
+    __tablename__ = dbtableprefix + "emailattachment"
+    id = db.Column(db.Integer(), primary_key=True)
+    email_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'email.id', ondelete='CASCADE'))
+    index = db.Column(db.Integer())
+    content_type = db.Column(db.Text())
+    extension = db.Column(db.Text())
+    upload = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'uploads.indexno', ondelete='CASCADE'))
+    

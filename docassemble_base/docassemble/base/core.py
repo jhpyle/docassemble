@@ -9,7 +9,7 @@ import inspect
 from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server
 import docassemble.base.functions
 
-__all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DATemplate']
+__all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate']
 
 unique_names = set()
 
@@ -40,13 +40,16 @@ def get_unique_name():
 
 class DAObject(object):
     """The base class for all docassemble objects."""
-    def init(self, **kwargs):
+    def init(self, *pargs, **kwargs):
         for key, value in kwargs.iteritems():
             setattr(self, key, value)
         return
-    def __init__(self, *args, **kwargs):
-        if len(args):
-            thename = args[0]
+    def __init__(self, *pargs, **kwargs):
+        thename = None
+        if len(pargs):
+            pargs = [x for x in pargs]
+            thename = pargs.pop(0)
+        if thename is not None:
             self.has_nonrandom_instance_name = True
         else:
             frame = inspect.stack()[1][0]
@@ -60,7 +63,7 @@ class DAObject(object):
                 self.has_nonrandom_instance_name = False
         self.instanceName = str(thename)
         self.attrList = list()
-        self.init(**kwargs)
+        self.init(*pargs, **kwargs)
     def fix_instance_name(self, old_instance_name, new_instance_name):
         self.instanceName = re.sub(r'^' + old_instance_name, new_instance_name, self.instanceName)
         for aname in self.__dict__:
@@ -94,16 +97,19 @@ class DAObject(object):
             return(possessify_long(self.object_name(), target))
         else:
             return(possessify(the(self.object_name()), target))
-    def initializeAttribute(self, name, objectType, **kwargs):
+    def initializeAttribute(self, *pargs, **kwargs):
         """Defines an attribute for the object, setting it to a newly initialized object.
         The first argument is the name of the attribute and the second argument is type
         of the new object that will be initialized.  E.g., 
         client.initializeAttribute('mother', Individual) initializes client.mother as an
         Individual with instanceName "client.mother"."""
+        pargs = [x for x in pargs]
+        name = pargs.pop(0)
+        objectType = pargs.pop(0)
         if name in self.__dict__:
             return
         else:
-            object.__setattr__(self, name, objectType(self.instanceName + "." + name, **kwargs))
+            object.__setattr__(self, name, objectType(self.instanceName + "." + name, *pargs, **kwargs))
             self.attrList.append(name)
     def attribute_defined(self, name):
         """Returns True or False depending on whether the given attribute is defined."""
@@ -142,7 +148,7 @@ class DAObject(object):
 
 class DAList(DAObject):
     """The base class for lists of things."""
-    def init(self, **kwargs):
+    def init(self, *pargs, **kwargs):
         self.elements = list()
         self.auto_gather = True
         self.ask_number = False
@@ -157,7 +163,7 @@ class DAList(DAObject):
             del kwargs['object_type']
         if not hasattr(self, 'object_type'):
             self.object_type = None
-        return super(DAList, self).init(**kwargs)
+        return super(DAList, self).init(*pargs, **kwargs)
     def trigger_gather(self):
         if docassemble.base.functions.get_gathering_mode(self.instanceName) is False:
             if self.auto_gather:
@@ -173,13 +179,16 @@ class DAList(DAObject):
         the new object should be.  If no object type is provided,
         the object type given by .objectFunction is used, and if 
         that is not set, DAObject is used."""
+        objectFunction = None
         if len(pargs) > 0:
-            objectFunction = pargs[0]
-        elif self.object_type is not None:
-            objectFunction = self.object_type
-        else:
-            objectFunction = DAObject
-        newobject = objectFunction(self.instanceName + '[' + str(len(self.elements)) + ']', **kwargs)
+            pargs = [x for x in pargs]
+            objectFunction = pargs.pop(0)
+        if objectFunction is None:
+            if self.object_type is not None:
+                objectFunction = self.object_type
+            else:
+                objectFunction = DAObject
+        newobject = objectFunction(self.instanceName + '[' + str(len(self.elements)) + ']', *pargs, **kwargs)
         self.elements.append(newobject)
         return newobject
     def append(self, *pargs):
@@ -428,7 +437,7 @@ class DAList(DAObject):
 
 class DADict(DAObject):
     """A base class for objects that behave like Python dictionaries."""
-    def init(self, **kwargs):
+    def init(self, *pargs, **kwargs):
         self.elements = dict()
         self.auto_gather = True
         self.ask_number = False
@@ -442,7 +451,7 @@ class DADict(DAObject):
             del kwargs['object_type']
         if not hasattr(self, 'object_type'):
             self.object_type = None
-        return super(DADict, self).init(**kwargs)
+        return super(DADict, self).init(*pargs, **kwargs)
     def trigger_gather(self):
         if docassemble.base.functions.get_gathering_mode(self.instanceName) is False:
             if self.auto_gather:
@@ -459,14 +468,17 @@ class DADict(DAObject):
         the new object should be.  If no object type is provided,
         the object type given by .objectFunction is used, and if 
         that is not set, DAObject is used."""
-        entry = pargs[0]
-        if len(pargs) > 1:
-            objectFunction = pargs[1]
-        elif self.object_type is not None:
-            objectFunction = self.object_type
-        else:
-            objectFunction = DAObject
-        newobject = objectFunction(self.instanceName + '[' + repr(entry) + ']', **kwargs)
+        objectFunction = None
+        pargs = [x for x in pargs]
+        entry = pargs.pop(0)
+        if len(pargs) > 0:
+            objectFunction = pargs.pop(0)
+        if objectFunction is None:
+            if self.object_type is not None:
+                objectFunction = self.object_type
+            else:
+                objectFunction = DAObject
+        newobject = objectFunction(self.instanceName + '[' + repr(entry) + ']', *pargs, **kwargs)
         self.elements[entry] = newobject
         return newobject
     def new(self, *pargs, **kwargs):
@@ -732,7 +744,7 @@ class DADict(DAObject):
 
 class DASet(DAObject):
     """A base class for objects that behave like Python sets."""
-    def init(self, **kwargs):
+    def init(self, *pargs, **kwargs):
         self.elements = set()
         self.auto_gather = True
         self.ask_number = False
@@ -741,7 +753,7 @@ class DASet(DAObject):
             self.add(kwargs['elements'])
             self.gathered = True
             del kwargs['elements']
-        return super(DASet, self).init(**kwargs)
+        return super(DASet, self).init(*pargs, **kwargs)
     def trigger_gather(self):
         if docassemble.base.functions.get_gathering_mode(self.instanceName) is False:
             if self.auto_gather:
@@ -992,10 +1004,13 @@ class DASet(DAObject):
 
 class DAFile(DAObject):
     """Used internally by docassemble to represent a file."""
-    def init(self, **kwargs):
+    def init(self, *pargs, **kwargs):
         #logmessage("init")
         if 'filename' in kwargs:
             self.filename = kwargs['filename']
+            self.has_specific_filename = True
+        else:
+            self.has_specific_filename = False
         if 'mimetype' in kwargs:
             self.mimetype = kwargs['mimetype']
         if 'extension' in kwargs:
@@ -1035,14 +1050,17 @@ class DAFile(DAObject):
             raise Exception("Cannot retrieve a file without a file number.")
         docassemble.base.functions.this_thread.open_files.add(self)
         #logmessage("Retrieve: calling file finder")
-        self.file_info = server.file_finder(self.number)
+        if self.has_specific_filename:
+            self.file_info = server.file_number_finder(self.number, filename=self.filename)
+        else:
+            self.file_info = server.file_number_finder(self.number)
     def slurp(self):
         """Returns the contents of the file."""
         self.retrieve()
         the_path = self.path()
         if not os.path.isfile(the_path):
-            raise Exception("File does not exist yet.")
-        with open(path, 'rU') as f:
+            raise Exception("File " + str(the_path) + " does not exist yet.")
+        with open(the_path, 'rU') as f:
             return(f.read())    
     def readlines(self):
         """Returns the contents of the file."""
@@ -1101,7 +1119,7 @@ class DAFileCollection(DAObject):
     feature generates objects of this type.
 
     """
-    def init(self, **kwargs):
+    def init(self, *pargs, **kwargs):
         self.info = dict()
     pass
 
@@ -1125,11 +1143,52 @@ class DAFileList(DAList):
                 output += element.show(width=width)
         return output
 
+class DAEmailRecipientList(DAList):
+    def init(self, *pargs, **kwargs):
+        #logmessage("DAEmailRecipientList: pargs is " + str(pargs) + " and kwargs is " + str(kwargs))
+        self.object_type = DAEmailRecipient
+        super(DAEmailRecipientList, self).init(**kwargs)
+        for parg in pargs:
+            if type(parg) is list:
+                #logmessage("DAEmailRecipientList: parg type is list")
+                for item in parg:
+                    self.appendObject(DAEmailRecipient, **item)
+            elif type(parg) is dict:
+                #logmessage("DAEmailRecipientList: parg type is dict")
+                self.appendObject(DAEmailRecipient, **parg)
+    
+class DAEmailRecipient(DAObject):
+    def init(self, *pargs, **kwargs):
+        #logmessage("DAEmailRecipient: pargs is " + str(pargs) + " and kwargs is " + str(kwargs))
+        if 'address' in kwargs:
+            self.address = kwargs['address']
+            del kwargs['address']
+        else:
+            self.address = ''
+        if 'name' in kwargs:
+            self.name = kwargs['name']
+            del kwargs['name']
+        else:
+            self.name = ''
+        return super(DAEmailRecipient, self).init(*pargs, **kwargs)
+    def __str__(self):
+        if self.address == '' and self.name == '':
+            return 'EMAIL NOT DEFINED'
+        if self.address == '' and self.name != '':
+            return self.name
+        if self.name == '' and self.address != '':
+            return '[' + unicode(self.address) + '](mailto:' + unicode(self.address) + ')' 
+        return '[' + unicode(self.name) + '](mailto:' + unicode(self.address) + ')'
+
+class DAEmail(DAObject):
+    def __str__(self):
+        return("This is an e-mail")
+
 class DATemplate(DAObject):
     """The class used for Markdown templates.  A template block saves to
     an object of this type.  The two attributes are "subject" and 
     "content." """
-    def init(self, **kwargs):
+    def init(self, *pargs, **kwargs):
         if 'content' in kwargs:
             self.content = kwargs['content']
         else:

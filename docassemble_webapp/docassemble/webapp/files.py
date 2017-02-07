@@ -3,12 +3,10 @@ import re
 import shutil
 import urllib
 import pycurl
-#import urllib2
 import tempfile
 import mimetypes
 import zipfile
 import datetime
-#import cookielib
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED
@@ -142,9 +140,10 @@ class SavedFile(object):
         filename = kwargs.get('filename', self.filename)
         if not self.fixed:
             self.fix()
-        with open(os.path.join(self.directory, filename), 'w') as ifile:
+        with open(os.path.join(self.directory, filename), 'wb') as ifile:
             ifile.write(content)
-        self.save()
+        if kwargs.get('save', True):
+            self.save()
         return
     def url_for(self, **kwargs):
         if 'ext' in kwargs:

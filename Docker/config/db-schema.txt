@@ -111,6 +111,16 @@ chatlog|modtime|timestamp without time zone||
 objectstorage|id|integer||nextval('objectstorage_id_seq'::regclass)
 objectstorage|key|text||
 objectstorage|value|text||
+emails|id|integer||nextval('emails_id_seq'::regclass)
+emails|short|character varying|250|
+emails|to_addr|text||
+emails|from_addr|text||
+emails|reply_to_addr|text||
+emails|return_path_addr|text||
+emails|subject|text||
+emails|datetime_message|timestamp without time zone||
+emails|datetime_received|timestamp without time zone||
+emails|upload|integer||
 shortener|id|integer||nextval('shortener_id_seq'::regclass)
 shortener|short|character varying|250|
 shortener|filename|text||
@@ -120,3 +130,18 @@ shortener|temp_user_id|integer||
 shortener|key|text||
 shortener|index|integer||
 shortener|modtime|timestamp without time zone||
+email|id|integer||nextval('email_id_seq'::regclass)
+email|short|character varying|250|
+email|to_addr|text||
+email|from_addr|text||
+email|reply_to_addr|text||
+email|return_path_addr|text||
+email|subject|text||
+email|datetime_message|timestamp without time zone||
+email|datetime_received|timestamp without time zone||
+emailattachment|id|integer||nextval('emailattachment_id_seq'::regclass)
+emailattachment|email_id|integer||
+emailattachment|index|integer||
+emailattachment|content_type|text||
+emailattachment|extension|text||
+emailattachment|upload|integer||

@@ -7,8 +7,8 @@ from textstat.textstat import textstat
 import docassemble.base.config
 if not docassemble.base.config.loaded:
     docassemble.base.config.load()
+import docassemble.base.functions
 from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, hostname, in_celery
-from docassemble.webapp.file_access import get_info_from_file_reference
 
 DEBUG = daconfig.get('debug', False)
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
@@ -19,9 +19,9 @@ if type(word_file_list) is not list:
     word_file_list = [word_file_list]
 for word_file in word_file_list:
     #sys.stderr.write("Reading from " + str(word_file) + "\n")
-    file_info = get_info_from_file_reference(word_file)
-    if 'fullpath' in file_info and file_info['fullpath'] is not None:
-        with open(file_info['fullpath'], 'rU') as stream:
+    filename = docassemble.base.functions.static_filename_path(word_file)
+    if os.path.isfile(filename):
+        with open(filename, 'rU') as stream:
             for document in ruamel.yaml.safe_load_all(stream):
                 if document and type(document) is dict:
                     for lang, words in document.iteritems():
@@ -31,8 +31,6 @@ for word_file in word_file_list:
                             sys.stderr.write("Error reading " + str(word_file) + ": words not in dictionary form.\n")
                 else:
                     sys.stderr.write("Error reading " + str(word_file) + ": yaml file not in dictionary form.\n")
-    else:
-        sys.stderr.write("Error reading " + str(word_file) + ": yaml file not found.\n")
 
 default_playground_yaml = """metadata:
   title: Default playground interview
@@ -341,14 +339,15 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file, generate_csrf
-from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors#, Messages
+from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file, generate_csrf, get_info_from_file_reference
+from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
-from docassemble.base.generate_key import random_string, random_alphanumeric
+from docassemble.base.generate_key import random_string, random_lower_string, random_alphanumeric
 import docassemble.webapp.backend
 import docassemble.base.functions
 import docassemble.base.util
+from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipient, DAFileList, DAFile
 
 redis_host = daconfig.get('redis', None)
 if redis_host is None:
@@ -955,7 +954,7 @@ def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False):
         output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
     return output
 
-def process_file(saved_file, orig_file, mimetype, extension):
+def process_file(saved_file, orig_file, mimetype, extension, initial=True):
     if extension == "jpg" and daconfig.get('imagemagick', 'convert') is not None:
         unrotated = tempfile.NamedTemporaryFile(suffix=".jpg")
         rotated = tempfile.NamedTemporaryFile(suffix=".jpg")
@@ -966,7 +965,7 @@ def process_file(saved_file, orig_file, mimetype, extension):
             saved_file.copy_from(rotated.name)
         else:
             saved_file.copy_from(unrotated.name)
-    else:
+    elif initial:
         shutil.move(orig_file, saved_file.path)
         saved_file.save()
     if mimetype == 'video/quicktime' and daconfig.get('avconv', 'avconv') is not None:
@@ -6732,6 +6731,20 @@ def playground_template(userid, filename):
         return(response)
     abort(404)
 
+@app.route('/playgrounddownload/<userid>/<filename>', methods=['GET'])
+@login_required
+@roles_required(['developer', 'admin'])
+def playground_download(userid, filename):
+    filename = re.sub(r'[^A-Za-z0-9\-\_\.]', '', filename)
+    area = SavedFile(userid, fix=True, section='playground')
+    filename = os.path.join(area.directory, filename)
+    if os.path.isfile(filename):
+        extension, mimetype = get_ext_and_mimetype(filename)
+        response = send_file(filename, mimetype=str(mimetype))
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        return(response)
+    abort(404)
+
 @app.route('/playgroundfiles', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])
@@ -7257,7 +7270,6 @@ def playground_page():
     #path = os.path.join(UPLOAD_DIRECTORY, 'playground', str(current_user.id))
     #if not os.path.exists(path):
     #    os.makedirs(path)
-    #PPP
     if request.method == 'POST' and 'uploadfile' in request.files:
         the_files = request.files.getlist('uploadfile')
         if the_files:
@@ -7887,7 +7899,7 @@ $( document ).ready(function() {
     else:
         vimOpt = ''
         vimLoad = ''
-    return render_template('pages/playground.html', page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + vimLoad + '<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + vimOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, "400px");\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete" });\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
+    return render_template('pages/playground.html', userid=current_user.id, page_title=word("Playground"), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/hint/show-hint.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/hint/show-hint.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js") + '"></script>\n    ' + vimLoad + '<script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>' + cm_setup + '\n    <script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + vimOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, "400px");\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete" });\n' + indent_by(ajax, 6) + '\n      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n    </script>'), form=form, fileform=fileform, files=files, any_files=any_files, pulldown_files=pulldown_files, current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new)), 200
 
 # nameInfo = ' + str(json.dumps(vars_in_use['name_info'])) + ';
 
@@ -8952,6 +8964,103 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         del session['uid']
     return resp
 
+def retrieve_email(email_id):
+    email = Email.query.filter_by(id=email_id).first()
+    if email is None:
+        raise DAError("E-mail did not exist")
+    short_record = Shortener.query.filter_by(short=email.short).first()
+    if short_record.user_id is not None:
+        user = UserModel.query.filter_by(id=short_record.user_id, active=True).first()
+    else:
+        user = None
+    if short_record is None:
+        raise DAError("Short code did not exist")
+    email_obj = DAEmail(short=email.short)
+    email_obj.initializeAttribute('to_address', DAEmailRecipientList, json.loads(email.to_addr), gathered=True)
+    email_obj.initializeAttribute('from_address', DAEmailRecipient, **json.loads(email.from_addr))
+    email_obj.initializeAttribute('reply_to', DAEmailRecipient, **json.loads(email.reply_to_addr))
+    email_obj.initializeAttribute('return_path', DAEmailRecipient, **json.loads(email.return_path_addr))
+    email_obj.subject = email.subject
+    email_obj.datetime_message = email.datetime_message
+    email_obj.datetime_received = email.datetime_received
+    email_obj.key = short_record.key
+    email_obj.index = short_record.index
+    email_obj.initializeAttribute('attachment', DAFileList, gathered=True)
+    if user is None:
+        email_obj.address_owner = None
+    else:
+        email_obj.address_owner = user.email
+    for attachment_record in EmailAttachment.query.filter_by(email_id=email.id).order_by(EmailAttachment.index):
+        #sys.stderr.write("Attachment record is " + str(attachment_record.id) + "\n")
+        upload = Uploads.query.filter_by(indexno=attachment_record.upload).first()
+        if upload is None:
+            continue
+        #sys.stderr.write("Filename is " + upload.filename + "\n")
+        saved_file_att = SavedFile(attachment_record.upload, extension=attachment_record.extension, fix=True)
+        process_file(saved_file_att, saved_file_att.path, attachment_record.content_type, attachment_record.extension, initial=False)
+        if upload.filename == 'headers.json':
+            #sys.stderr.write("Processing headers\n")
+            email_obj.initializeAttribute('headers', DAFile, mimetype=attachment_record.content_type, extension=attachment_record.extension, number=attachment_record.upload)
+        elif upload.filename == 'attachment.txt' and attachment_record.index < 3:
+            #sys.stderr.write("Processing body text\n")
+            email_obj.initializeAttribute('body_text', DAFile, mimetype=attachment_record.content_type, extension=attachment_record.extension, number=attachment_record.upload)
+        elif upload.filename == 'attachment.html' and attachment_record.index < 3:
+            email_obj.initializeAttribute('body_html', DAFile, mimetype=attachment_record.content_type, extension=attachment_record.extension, number=attachment_record.upload)
+        else:
+            email_obj.attachment.appendObject(DAFile, mimetype=attachment_record.content_type, extension=attachment_record.extension, number=attachment_record.upload)
+    if not hasattr(email_obj, 'headers'):
+        email_obj.headers = None
+    if not hasattr(email_obj, 'body_text'):
+        email_obj.body_text = None
+    if not hasattr(email_obj, 'body_html'):
+        email_obj.body_html = None
+    return email_obj
+
+def get_short_code(**pargs):
+    key = pargs.get('key', None)
+    index = pargs.get('index', None)
+    if 'i' in pargs:
+        yaml_filename = pargs['i']
+    else:
+        yaml_filename = session['i']
+    if 'uid' in pargs:
+        uid = pargs['uid']
+    else:
+        uid = session['uid']
+    if 'user_id' in pargs:
+        user_id = pargs['user_id']
+        temp_user_id = None
+    elif 'temp_user_id' in pargs:
+        user_id = None
+        temp_user_id = pargs['temp_user_id']
+    elif current_user.is_anonymous:
+        user_id = None
+        temp_user_id = session.get('tempuser', None)
+    else:
+        user_id = current_user.id
+        temp_user_id = None
+    short_code = None
+    for record in Shortener.query.filter_by(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id, key=key, index=index):
+        short_code = record.short
+    if short_code is not None:
+        return short_code
+    counter = 0
+    new_record = None
+    while counter < 20:
+        existing_id = None
+        new_short = random_lower_string(6)
+        for record in Shortener.query.filter_by(short=new_short):
+            existing_id = record.id
+        if existing_id is None:
+            new_record = Shortener(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id, short=new_short, key=key, index=index)
+            db.session.add(new_record)
+            db.session.commit()
+            break
+        counter += 1
+    if new_record is None:
+        raise SystemError("Failed to generate unique short code")
+    return new_short
+        
 for path in [FULL_PACKAGE_DIRECTORY, UPLOAD_DIRECTORY, LOG_DIRECTORY]: #PACKAGE_CACHE
     if not os.path.isdir(path):
         try:
@@ -8999,7 +9108,8 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          terminate_sms_session=terminate_sms_session,
                                          twilio_config=twilio_config,
                                          server_redis=r,
-                                         user_id_dict=user_id_dict)
+                                         user_id_dict=user_id_dict,
+                                         get_short_code=get_short_code)
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)
 #docassemble.base.parse.set_url_finder(get_url_from_file_reference)

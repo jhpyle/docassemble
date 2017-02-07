@@ -1,7 +1,3 @@
-#import mimetypes
-#import re
-#import sys
-
 class DAError(Exception):
     def __init__(self, value):
         self.value = value
@@ -97,9 +93,8 @@ class BackgroundResponseActionError(Exception):
     
 class ResponseError(Exception):
     def __init__(self, *pargs, **kwargs):
-        #sys.stderr.write(str(kwargs) + "\n")
         if len(pargs) == 0 and not ('response' in kwargs or 'binaryresponse' in kwargs or 'all_variables' in kwargs or 'file' in kwargs or 'url' in kwargs):
-            self.response = "Response not specified"
+            self.response = "Empty Response"
         if len(pargs) > 0:
             self.response = pargs[0];
         elif 'response' in kwargs:
@@ -112,32 +107,12 @@ class ResponseError(Exception):
             self.url = kwargs['url'];
         if 'all_variables' in kwargs:
             self.all_variables = kwargs['all_variables'];
-            #sys.stderr.write("foosnoo\n")
         if 'content_type' in kwargs:
             self.content_type = kwargs['content_type'];
     def __str__(self):
         if hasattr(self, 'response'):
             return str(self.response)
         return "A ResponseError exception was thrown"
-
-# class SendFileError(Exception):
-#     def __init__(self, *pargs, **kwargs):
-#         if len(pargs) == 0 and not ('file' in kwargs):
-#             self.filename = None
-#         if len(pargs) > 0:
-#             self.filename = pargs[0];
-#         elif 'file' in kwargs:
-#             self.filename = kwargs['file'];
-#         if 'content_type' in kwargs:
-#             self.content_type = kwargs['content_type'];
-#         # elif self.filename is not None:
-#         #     self.content_type = get_mimetype(self.filename)
-#         # else:
-#         #     self.content_type = 'text/plain; charset=utf-8'
-#     def __str__(self):
-#         if hasattr(self, 'filename'):
-#             return str(self.filename)
-#         return "A ResponseError exception was thrown"
 
 class CommandError(Exception):
     def __init__(self, *pargs, **kwargs):
@@ -151,12 +126,3 @@ class CommandError(Exception):
     def __str__(self):
         return str(self.return_type)
 
-# def get_mimetype(filename):
-#     mimetype, encoding = mimetypes.guess_type(filename)
-#     extension = filename.lower()
-#     extension = re.sub('.*\.', '', extension)
-#     if extension == '3gpp':
-#         mimetype = 'audio/3gpp'
-#     if mimetype is None:
-#         mimetype = 'text/plain'    
-#     return mimetype

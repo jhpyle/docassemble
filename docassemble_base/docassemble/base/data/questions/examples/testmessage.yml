@@ -1,6 +1,7 @@
 metadata:
   title: Message to output
   documentation: "http://docassemble.org/docs/functions.html#message"
+---
 modules:
   - docassemble.base.util
 ---

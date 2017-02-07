@@ -6,6 +6,9 @@ __all__ = ['random_string', 'random_alphanumeric']
 
 r = random.SystemRandom()
 
+def random_lower_string(length):
+    return ''.join(r.choice(string.ascii_lowercase) for i in range(length))
+
 def random_string(length):
     return ''.join(r.choice(string.ascii_letters) for i in range(length))
 

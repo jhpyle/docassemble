@@ -709,7 +709,7 @@ def image_url_string(match, emoji=False, question=None, playground=False):
     if width == "full":
         width = "300px"    
     file_info = server.file_finder(file_reference, question=question)
-    if 'mimetype' in file_info:
+    if 'mimetype' in file_info and file_info['mimetype'] is not None:
         if re.search(r'^audio', file_info['mimetype']):
             urls = get_audio_urls([{'text': "[FILE " + file_reference + "]", 'package': None, 'type': 'audio'}], question=question)
             if len(urls):
@@ -720,17 +720,17 @@ def image_url_string(match, emoji=False, question=None, playground=False):
             if len(urls):
                 return video_control(urls)
             return ''
-    if 'extension' in file_info:
+    if 'extension' in file_info and file_info['extension'] is not None:
         if re.match(r'.*%$', width):
             width_string = "width:" + width
         else:
             width_string = "max-width:" + width
         if emoji:
             width_string += ';vertical-align: middle'
-        if file_info['extension'] in ['png', 'jpg', 'gif', 'svg']:
+        if file_info.get('extension', '') in ['png', 'jpg', 'gif', 'svg']:
             return('<img class="daicon" style="' + width_string + '" src="' + server.url_finder(file_reference, question=question) + '"/>')
         elif file_info['extension'] == 'pdf':
-            output = '<img class="daicon" style="' + width_string + '" src="' + server.url_finder(file_reference, size="screen", page=1, question=question) + '"/>'
+            output = '<a href="' + server.url_finder(file_reference, question=question) + '"><img class="daicon" style="' + width_string + '" src="' + server.url_finder(file_reference, size="screen", page=1, question=question) + '"/></a>'
             if 'pages' in file_info and file_info['pages'] > 1:
                 output += " (" + str(file_info['pages']) + " " + word('pages') + ")"
             return(output)

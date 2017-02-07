@@ -4,7 +4,7 @@ from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, 
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.base.logger import logmessage
 from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys
-from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, ObjectStorage, Shortener
+from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, ObjectStorage, Shortener 
 from docassemble.base.generate_key import random_string
 from sqlalchemy import or_, and_
 import docassemble.webapp.database
@@ -38,52 +38,8 @@ DEBUG = daconfig.get('debug', False)
 docassemble.base.parse.debug = DEBUG
 
 from docassemble.webapp.file_access import get_info_from_file_number, get_info_from_file_reference
+from docassemble.webapp.file_number import get_new_file_number
 
-def get_short_code(**pargs):
-    key = pargs.get('key', None)
-    index = pargs.get('index', None)
-    if 'i' in pargs:
-        yaml_filename = pargs['i']
-    else:
-        yaml_filename = session['i']
-    if 'uid' in pargs:
-        uid = pargs['uid']
-    else:
-        uid = session['uid']
-    if 'user_id' in pargs:
-        user_id = pargs['user_id']
-        temp_user_id = None
-    elif 'temp_user_id' in pargs:
-        user_id = None
-        temp_user_id = pargs['temp_user_id']
-    elif current_user.is_anonymous:
-        user_id = None
-        temp_user_id = session.get('tempuser', None)
-    else:
-        user_id = current_user.id
-        temp_user_id = None
-    short_code = None
-    for record in Shortener.query.filter_by(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id, key=key, index=index):
-        short_code = record.short
-    if short_code is not None:
-        return short_code
-    counter = 0
-    new_record = None
-    while counter < 20:
-        existing_id = None
-        new_short = random_string(6)
-        for record in Shortener(short=new_short):
-            existing_id = record.id
-        if existing_id is None:
-            new_record = Shortener(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id, short=new_short, key=key, index=index)
-            db.session.add(new_record)
-            db.session.commit()
-            break
-        counter += 1
-    if new_record is None:
-        raise SystemError("Failed to generate unique short code")
-    return new_short
-        
 def write_record(key, data):
     new_record = ObjectStorage(key=key, value=pack_object(data))
     db.session.add(new_record)
@@ -152,12 +108,6 @@ def absolute_filename(the_file):
     return(None)
 
 
-def get_new_file_number(user_code, file_name, yaml_file_name=None):
-    new_upload = Uploads(key=user_code, filename=file_name, yamlfile=yaml_file_name)
-    db.session.add(new_upload)
-    db.session.commit()
-    return new_upload.indexno
-
 #docassemble.base.parse.set_file_finder(get_info_from_file_reference)
 
 mail = Mail(app)
@@ -189,6 +139,7 @@ docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          default_timezone=DEFAULT_TIMEZONE,
                                          default_country=daconfig.get('country', re.sub(r'\..*', r'', DEFAULT_LOCALE)),
                                          daconfig=daconfig,
+                                         hostname=hostname,
                                          debug_status=DEBUG,
                                          save_numbered_file=save_numbered_file,
                                          send_mail=da_send_mail,
@@ -201,7 +152,7 @@ docassemble.base.functions.update_server(default_language=DEFAULT_LANGUAGE,
                                          get_new_file_number=get_new_file_number,
                                          get_ext_and_mimetype=get_ext_and_mimetype,
                                          file_finder=get_info_from_file_reference,
-                                         get_short_code=get_short_code)
+                                         file_number_finder=get_info_from_file_number)
 docassemble.base.functions.set_language(DEFAULT_LANGUAGE, dialect=DEFAULT_DIALECT)
 docassemble.base.functions.set_locale(DEFAULT_LOCALE)
 docassemble.base.functions.update_locale()
@@ -364,26 +315,18 @@ def fetch_user_dict(user_code, filename, secret=None):
     user_dict = None
     steps = 0
     encrypted = True
-    #sys.stderr.write("50\n")
     subq = db.session.query(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('count')).filter(UserDict.key == user_code and UserDict.filename == filename).subquery()
-    #sys.stderr.write("51\n")
     results = db.session.query(UserDict.dictionary, UserDict.encrypted, subq.c.count).join(subq, subq.c.indexno == UserDict.indexno)
     for d in results:
-        #sys.stderr.write("51.1\n")
         if d.dictionary:
             if d.encrypted:
-                #sys.stderr.write("52\n")
                 user_dict = decrypt_dictionary(d.dictionary, secret)
-                #sys.stderr.write("53\n")
             else:
-                #sys.stderr.write("54\n")
                 user_dict = unpack_dictionary(d.dictionary)
                 encrypted = False
         if d.count:
             steps = d.count
-        #sys.stderr.write("55\n")
         break
-    #sys.stderr.write("56\n")
     return steps, user_dict, encrypted
 
 def fetch_previous_user_dict(user_code, filename, secret):
@@ -413,6 +356,8 @@ def reset_user_dict(user_code, filename):
     SpeakList.query.filter_by(key=user_code, filename=filename).delete()
     db.session.commit()
     ChatLog.query.filter_by(key=user_code, filename=filename).delete()
+    db.session.commit()
+    Shortener.query.filter_by(uid=user_code, filename=filename).delete()
     db.session.commit()
     return
 
