@@ -59,19 +59,19 @@ def main():
         #fp.write("parsed from: " + str(parseaddr(addr_from)[1]) + "\n")
         addr_from = dict(name=parseaddr(addr_from)[0], address=parseaddr(addr_from)[1])
     else:
-        addr_from = dict()
+        addr_from = dict(empty=True)
     if addr_return_path is not None:
         #fp.write("parsed return_path: " + str(parseaddr(addr_return_path)[1]) + "\n")
         addr_return_path = dict(name=parseaddr(addr_return_path)[0], address=parseaddr(addr_return_path)[1])
     else:
-        addr_return_path = dict()
+        addr_return_path = dict(empty=True)
     #fp.write("return_path is " + str(addr_return_path) + "\n")
     if addr_reply_to is not None:
         #fp.write("parsed reply-to: " + str(parseaddr(addr_reply_to)[1]) + "\n")
         addr_reply_to = dict(name=parseaddr(addr_reply_to)[0], address=parseaddr(addr_reply_to)[1])
         #fp.write("reply-to is " + str(addr_reply_to) + "\n")
     else:
-        addr_reply_to = dict()
+        addr_reply_to = dict(empty=True)
     #fp.write("reply-to is " + str(addr_reply_to) + "\n")
     msg_current_time = datetime.datetime.now()
     if raw_date is not None:

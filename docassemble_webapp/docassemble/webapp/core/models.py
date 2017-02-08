@@ -65,7 +65,7 @@ class Shortener(db.Model):
     temp_user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'tempuser.id', ondelete='CASCADE'))
     key = db.Column(db.Text())
     index = db.Column(db.Integer())
-    modtime = db.Column(db.DateTime())
+    modtime = db.Column(db.DateTime(), server_default=db.func.now())
 
 class Email(db.Model):
     __tablename__ = dbtableprefix + "email"

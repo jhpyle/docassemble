@@ -28,7 +28,7 @@ from user_agents import parse as ua_parse
 import phonenumbers
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'interview_email', 'plain', 'bold', 'italic']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic']
 
 # debug = False
 # default_dialect = 'us'
@@ -320,6 +320,13 @@ def chat_partners_available(*pargs, **kwargs):
         return dict(peer=0, help=0)
     return server.chat_partners_available(session_id, yaml_filename, the_user_id, mode, partner_roles)
 
+def interview_email(key=None, index=None):
+    """Returns an e-mail address that can be used to send e-mail messages to the case"""
+    if key is None and index is not None:
+        raise DAError("interview_email: if you provide an index you must provide a key")
+    domain = server.daconfig.get('incoming mail domain', server.daconfig.get('external hostname', server.hostname))
+    return server.get_short_code(key=key, index=index) + '@' + domain
+
 def interview_url(**kwargs):
     """Returns a URL that is direct link to the interview and the current
     variable store.  This is used in multi-user interviews to invite
@@ -572,11 +579,6 @@ def delete_record(key, id):
 def url_of(file_reference, **kwargs):
     """Returns a URL to a file within a docassemble package."""
     return server.url_finder(file_reference, **kwargs)
-
-def interview_email(key=None, index=None):
-    """Returns an e-mail address that can be used to send e-mail messages to the case"""
-    domain = server.daconfig.get('incoming mail domain', server.daconfig.get('external hostname', server.hostname))
-    return server.get_short_code(key=key, index=index) + '@' + domain
 
 def server_capabilities():
     """Returns a dictionary with true or false values indicating various capabilities of the server."""

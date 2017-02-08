@@ -1584,12 +1584,14 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
         if val not in name_origins:
             name_origins[val] = set()
             for lang in interview.questions[val]:
-                name_origins[val].add(interview.questions[val][lang].from_source)
+                for q in interview.questions[val][lang]:
+                    name_origins[val].add(q.from_source)
         fields_used.add(val)
         if val not in field_origins:
             field_origins[val] = set()
             for lang in interview.questions[val]:
-                field_origins[val].add(interview.questions[val][lang].from_source)
+                for q in interview.questions[val][lang]:
+                    field_origins[val].add(q.from_source)
     functions = set()
     modules = set()
     classes = set()
@@ -8975,6 +8977,54 @@ def retrieve_email(email_id):
         user = None
     if short_record is None:
         raise DAError("Short code did not exist")
+    return get_email_obj(email, short_record, user)
+
+def retrieve_emails():
+    key = pargs.get('key', None)
+    index = pargs.get('index', None)
+    if key is None and index is not None:
+        raise DAError("retrieve_emails: if you provide an index you must provide a key")
+    if 'i' in pargs:
+        yaml_filename = pargs['i']
+    else:
+        yaml_filename = session['i']
+    if 'uid' in pargs:
+        uid = pargs['uid']
+    else:
+        uid = session['uid']
+    if 'user_id' in pargs:
+        user_id = pargs['user_id']
+        temp_user_id = None
+    elif 'temp_user_id' in pargs:
+        user_id = None
+        temp_user_id = pargs['temp_user_id']
+    elif current_user.is_anonymous:
+        user_id = None
+        temp_user_id = session.get('tempuser', None)
+    else:
+        user_id = current_user.id
+        temp_user_id = None
+    user_cache = user_id_dict()
+    results = list()
+    if key is None:
+        the_query = Shortener.query.filter_by(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id).order_by(Shortener.modtime)
+    else:
+        if index is None:
+            the_query = Shortener.query.filter_by(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id, key=key).order_by(Shortener.modtime)
+        else:
+            the_query = Shortener.query.filter_by(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id, key=key, index=index).order_by(Shortener.modtime)
+    for record in the_query:
+        result_for_short = dict(short=record.short, key=record.key, index=record.index, email=list())
+        if record.user_id is not None:
+            user = user_cache[record.user_id]
+            result_for_short['owner'] = user.email
+        else:
+            user = None
+            result_for_short['owner'] = None
+        for email in Email.query.filter_by(short=record.short).order_by(Email.datetime_received):
+            result_for_short['email'].append(get_email_obj(email, record, user))
+
+def get_email_obj(email, short_record, user):
     email_obj = DAEmail(short=email.short)
     email_obj.initializeAttribute('to_address', DAEmailRecipientList, json.loads(email.to_addr), gathered=True)
     email_obj.initializeAttribute('from_address', DAEmailRecipient, **json.loads(email.from_addr))
@@ -9019,6 +9069,8 @@ def retrieve_email(email_id):
 def get_short_code(**pargs):
     key = pargs.get('key', None)
     index = pargs.get('index', None)
+    if key is None and index is not None:
+        raise DAError("get_short_code: if you provide an index you must provide a key")
     if 'i' in pargs:
         yaml_filename = pargs['i']
     else:

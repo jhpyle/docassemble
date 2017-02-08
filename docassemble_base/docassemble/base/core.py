@@ -6,7 +6,7 @@ import codecs
 import redis
 import sys
 import inspect
-from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server
+from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote
 import docassemble.base.functions
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate']
@@ -116,7 +116,9 @@ class DAObject(object):
         return hasattr(self, name)
     def attr(self, name):
         """Returns the value of the given attribute, or None if the attribute is not defined"""
-        return getattr(self, name, None)
+        if hasattr(self, name):
+            return getattr(self, name)
+        return None
     def __str__(self):
         if hasattr(self, 'name'):
             return self.name
@@ -1163,22 +1165,33 @@ class DAEmailRecipient(DAObject):
         if 'address' in kwargs:
             self.address = kwargs['address']
             del kwargs['address']
-        else:
-            self.address = ''
         if 'name' in kwargs:
             self.name = kwargs['name']
             del kwargs['name']
-        else:
-            self.name = ''
         return super(DAEmailRecipient, self).init(*pargs, **kwargs)
+    def email_address(self, include_name=None):
+        """Returns a properly formatted e-mail address for the recipient."""
+        if hasattr(self, 'empty') and self.empty:
+            return ''
+        if include_name is True or (include_name is not False and self.name is not None and self.name != ''):
+            return('"' + nodoublequote(self.name) + '" <' + str(self.address) + '>')
+        return(str(self.address))
+    def exists(self):
+        return hasattr(self, 'address')
     def __str__(self):
-        if self.address == '' and self.name == '':
+        if hasattr(self, 'name'):
+            name = self.name
+        else:
+            name = ''
+        if hasattr(self, 'empty') and self.empty:
+            return ''
+        if self.address == '' and name == '':
             return 'EMAIL NOT DEFINED'
-        if self.address == '' and self.name != '':
-            return self.name
-        if self.name == '' and self.address != '':
+        if self.address == '' and name != '':
+            return name
+        if name == '' and self.address != '':
             return '[' + unicode(self.address) + '](mailto:' + unicode(self.address) + ')' 
-        return '[' + unicode(self.name) + '](mailto:' + unicode(self.address) + ')'
+        return '[' + unicode(name) + '](mailto:' + unicode(self.address) + ')'
 
 class DAEmail(DAObject):
     def __str__(self):
