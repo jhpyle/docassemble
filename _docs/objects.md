@@ -541,7 +541,7 @@ parque."  (The Spanish version of `a_in_the_b()` will be more
 complicated than the English version because it will need to determine
 the gender of the second argument.)
 
-<a name="DAObject.object_possessive()"></a>A related method of
+<a name="DAObject.object_possessive"></a>A related method of
 `DAObject` is `object_possessive()`.  Calling
 `turnip.object_possessive('leaves')` will return `the turnip's
 leaves`.  Calling `park.front_gate.object_possessive('latch')` will
@@ -1137,7 +1137,7 @@ fields:
 ---
 {% endhighlight %}
 
-For an explanation of how `.object_possessive()` works, see the
+For an explanation of how [`.object_possessive()`] works, see the
 [`Person`] class.
 
 ### <a name="Individual.possessive"></a>`.possessive()`
@@ -1504,16 +1504,14 @@ a `PeriodicValue` to the [`currency()`] function.
 
 ## <a name="PartyList"></a>PartyList
 
-This is a subclass of [`DAList`].  (See [objects] for an explanation of the
-[`DAList`] class.)
+This is a subclass of [`DAList`].
 
 It is indended to contain a list of [`Person`]s (or [`Individual`]s,
 which are a type of [`Person`]) who are parties to a case.
 
 ## <a name="ChildList"></a>ChildList
 
-This is a subclass of [`DAList`].  (See [objects] for an explanation of the
-[`DAList`] class.)
+This is a subclass of [`DAList`].
 
 It is indended to contain a list of [`Individual`]s who are children.
 
@@ -1783,8 +1781,7 @@ following keys:
 [`Individual`]).  The person's `email` attribute is expected to be
 defined.
 * `email`: this needs to a [`DATemplate`] containing the subject and
-body of the e-mail that will be sent.  See [objects] for an
-explanation of [`DATemplate`].
+body of the e-mail that will be sent.
 
 # How docassemble objects are different
 
@@ -1886,7 +1883,7 @@ code: |
 {% endhighlight %}
 
 The `.instanceName` is not simply an internal attribute; it is used by
-the [`object_possessive()`] method to refer to the object in
+the [`.object_possessive()`] method to refer to the object in
 human-readable format.
 
 # Extending existing classes
@@ -1968,8 +1965,8 @@ and not an instance of the `Attorney` class.
 [`Address`]: #Address
 [`Asset`]: #Asset
 [`ChildList`]: #ChildList
-[`DAFileCollection`]: {{ site.baseurl }}/docs/objects.html#DAFileCollection
-[`DAFileList`]: {{ site.baseurl }}/docs/objects.html#DAFileList
+[`DAFileCollection`]: DAFileCollection
+[`DAFileList`]: #DAFileList
 [`DAFile`]: #DAFile
 [`DADict`]: #DAFile
 [`DAList`]: #DAList
@@ -2004,7 +2001,7 @@ and not an instance of the `Attorney` class.
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [`modules`]: {{ site.baseurl }}/docs/initial.html#modules
 [`multi_user`]: {{ site.baseurl }}/docs/special.html#multi_user
-[`object_possessive`]: {{ site.baseurl }}/docs/objects.html#DAObject.object_possessive
+[`.object_possessive()`]: #DAObject.object_possessive
 [`objects`]: {{ site.baseurl }}/docs/initial.html#objects
 [`possessive()`]: #Individual.possessive
 [`process_action()`]: {{ site.baseurl }}/docs/functions.html#process_action
@@ -2029,7 +2026,6 @@ and not an instance of the `Attorney` class.
 [modifiers]: {{ site.baseurl }}/docs/modifiers.html
 [multi-user interviews]: {{ site.baseurl }}/docs/roles.html
 [object-oriented programming]: https://en.wikipedia.org/wiki/Object-oriented_programming
-[objects]: {{ site.baseurl }}/docs/objects.html
 [package system]: {{ site.baseurl }}/docs/packages.html
 [package]: {{ site.baseurl }}/docs/packages.html
 [roles]: {{ site.baseurl }}/docs/roles.html

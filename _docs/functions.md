@@ -838,6 +838,21 @@ subquestion: |
 ---
 {% endhighlight %}
 
+# Functions for interacting with the interview using e-mail
+
+For more information about how users can send e-mails to interviews,
+see the documentation for the [e-mail to interview] feature.
+
+## <a name="interview_email"></a>interview_email()
+
+The `interview_email()` function returns an e-mail address that the
+user can use to send a message to the interview.
+
+## <a name="get_emails"></a>get_emails()
+
+The `get_emails()` function returns a list of objects representing
+e-mail addresses generated with [`interview_email()`].
+
 # Geographic functions
 
 ## <a name="map_of"></a>map_of()
@@ -2895,3 +2910,6 @@ $(document).on('daPageLoad', function(){
 [Bootstrap]: https://en.wikipedia.org/wiki/Bootstrap_%28front-end_framework%29
 [Bootstrap documentation]: http://getbootstrap.com/css/
 [`check in` feature]: {{ site.baseurl }}/docs/background.html#check in
+[Amazon S3]: https://aws.amazon.com/s3/
+[e-mail to interview]: {{ site.baseurl }}/docs/background.html#email
+[`interview_email()`]: #interview_email

@@ -248,6 +248,7 @@ templates in order to enable fonts that support your language.
 [`set_language()`]: {{ site.baseurl }}/docs/functions.html#set_language
 [`set_locale()`]: {{ site.baseurl }}/docs/functions.html#set_locale
 [`get_language()`]: {{ site.baseurl }}/docs/functions.html#get_language
+[`get_dialect()`]: {{ site.baseurl }}/docs/functions.html#get_dialect
 [`get_locale()`]: {{ site.baseurl }}/docs/functions.html#get_locale
 [`word()`]: {{ site.baseurl }}/docs/functions.html#word
 [`default language`]: {{ site.baseurl }}/docs/initial.html#default language

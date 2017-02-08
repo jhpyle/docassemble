@@ -585,6 +585,7 @@ every time)
 * `/var/log/apache2/error.log`
 * `/usr/share/docassemble/log/docassemble.log`
 * `/tmp/flask.log`
+* `/tmp/mail.log`
 
 If you get an error in the browser that looks like a standard [Apache]
 error message, look in `/var/log/apache2/error.log`.  If you get an
@@ -871,3 +872,6 @@ files.  In this case, you will need to manually reinstall
 [Amazon Web Services]: https://aws.amazon.com
 [SMS]: {{ site.baseurl }}/docs/sms.html
 [data storage]: {{ site.baseurl }}/docs/docker.html#data storage
+[Microsoft Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
+[Microsoft Azure]: https://azure.microsoft.com/en-us/
+[SendGrid]: https://sendgrid.com/

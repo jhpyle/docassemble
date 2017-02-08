@@ -798,6 +798,76 @@
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
+    <td align="left">emails</td>
+    <td align="left">id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">nextval('emails_id_seq'::regclass)</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">emails</td>
+    <td align="left">short</td>
+    <td align="left">character varying</td>
+    <td align="right">250</td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">emails</td>
+    <td align="left">to_addr</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">emails</td>
+    <td align="left">from_addr</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">emails</td>
+    <td align="left">reply_to_addr</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">emails</td>
+    <td align="left">return_path_addr</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">emails</td>
+    <td align="left">subject</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">emails</td>
+    <td align="left">datetime_message</td>
+    <td align="left">timestamp without time zone</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">emails</td>
+    <td align="left">datetime_received</td>
+    <td align="left">timestamp without time zone</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">emails</td>
+    <td align="left">upload</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
     <td align="left">shortener</td>
     <td align="left">id</td>
     <td align="left">integer</td>
@@ -857,6 +927,111 @@
     <td align="left">shortener</td>
     <td align="left">modtime</td>
     <td align="left">timestamp without time zone</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">nextval('email_id_seq'::regclass)</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">short</td>
+    <td align="left">character varying</td>
+    <td align="right">250</td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">to_addr</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">from_addr</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">reply_to_addr</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">return_path_addr</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">subject</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">datetime_message</td>
+    <td align="left">timestamp without time zone</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">email</td>
+    <td align="left">datetime_received</td>
+    <td align="left">timestamp without time zone</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">emailattachment</td>
+    <td align="left">id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">nextval('emailattachment_id_seq'::regclass)</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">emailattachment</td>
+    <td align="left">email_id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">emailattachment</td>
+    <td align="left">index</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">emailattachment</td>
+    <td align="left">content_type</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">emailattachment</td>
+    <td align="left">extension</td>
+    <td align="left">text</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">emailattachment</td>
+    <td align="left">upload</td>
+    <td align="left">integer</td>
     <td align="right">&nbsp; </td>
     <td align="left">&nbsp; </td>
   </tr>

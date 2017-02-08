@@ -3687,9 +3687,8 @@
   modules:
     - docassemble.base.util
 "testmessage": |-
-  code: |
-    message("You suck", "Immensely!!!", show_leave=True, url="https://google.com")
-  mandatory: True
+  modules:
+    - docassemble.base.util
 "text-box-field": |-
   question: |
     Tell me the story of your life.

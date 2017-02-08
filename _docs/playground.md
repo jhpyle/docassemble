@@ -451,3 +451,4 @@ Then the editing screen will load.
 [Templates folder]: #templates
 [Static folder]: #static
 [special variables]: {{ site.baseurl }}/docs/special.html
+[Markdown]: https://daringfireball.net/projects/markdown/

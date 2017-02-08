@@ -590,3 +590,4 @@ All others are available for you to use and to retrieve with
 [`static_image`]: {{ site.baseurl }}/docs/functions.html#static_image
 [`loop`]: http://docs.makotemplates.org/en/latest/runtime.html#loop-context
 [`STOP_RENDERING`]: http://docs.makotemplates.org/en/latest/syntax.html#exiting-early-from-a-template
+[Mako]: http://www.makotemplates.org/

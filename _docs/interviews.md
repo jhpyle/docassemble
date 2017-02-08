@@ -459,3 +459,4 @@ For more information about [YAML], see the [YAML specification].
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [`initial`]: {{ site.baseurl }}/docs/logic.html#initial
 [JSON]: https://en.wikipedia.org/wiki/JSON
+[Special Variables]: {{ site.baseurl }}/docs/special.html

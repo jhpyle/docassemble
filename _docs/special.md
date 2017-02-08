@@ -252,3 +252,7 @@ There are some built-in variable names with special meaning:
 [`location_known()`]: {{ site.baseurl }}/docs/functions.html#location_known
 [`location_returned()`]: {{ site.baseurl }}/docs/functions.html#location_returned
 [`user_lat_lon()`]: {{ site.baseurl }}/docs/functions.html#user_lat_lon
+[`cron_hourly`]: {{ site.baseurl }}/docs/background.html#cron_hourly
+[`cron_daily`]: {{ site.baseurl }}/docs/background.html#cron_daily
+[`cron_weekly`]: {{ site.baseurl }}/docs/background.html#cron_weekly
+[`cron_monthly`]: {{ site.baseurl }}/docs/background.html#cron_monthly

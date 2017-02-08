@@ -238,6 +238,7 @@ You can set the following configuration options:
   * `redis`: The [Docker] container will run the central [Redis] service.
   * `rabbitmq`: The [Docker] container will run the central [RabbitMQ] service.
   * `log`: The [Docker] container will run the central log aggregation service.
+  * `mail`: The [Docker] container will accept [e-mails].
 * <a name="SERVERHOSTNAME"></a>`SERVERHOSTNAME`: In a
   [multi-server arrangement], all **docassemble** application servers
   need to be able to communicate with each other using port 9001 (the
@@ -617,6 +618,7 @@ to the container.
 * If [`CONTAINERROLE`] includes `redis`: forward port 6379 ([Redis])
 * If [`CONTAINERROLE`] includes `rabbitmq`: forward ports 4369, 5671,
   5672, and 25672 ([RabbitMQ]).
+* If [`CONTAINERROLE`] includes `mail`: forward port 25 ([e-mails]).
 
 For example:
 
@@ -666,11 +668,11 @@ there.  For example, to run a central server, you can do:
 
 {% highlight bash %}
 docker run \
--e CONTAINERROLE=sql:redis:rabbitmq:log:cron \
+-e CONTAINERROLE=sql:redis:rabbitmq:log:cron:mail \
 -e S3BUCKET=docassemble-example-com \
 -e S3ACCESSKEY=FWIEJFIJIDGISEJFWOEF \
 -e S3SECRETACCESSKEY=RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG \
--d -p 80:8080 -p 5432:5432 -p 514:514 \
+-d -p 80:8080 -p 25:25 -p 5432:5432 -p 514:514 \
 -p 6379:6379 -p 4369:4369 -p 5671:5671 \
 -p 5672:5672 -p 25672:25672 -p 9001:9001 \
 jhpyle/docassemble
@@ -1086,3 +1088,4 @@ delete all of the data on the server unless you are using a
 [S3 bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
 [scheduled tasks]: {{ site.baseurl }}/docs/background.html#scheduled
 [WebSocket]: https://en.wikipedia.org/wiki/WebSocket
+[e-mails]: {{ site.baseurl }}/docs/background.html#email

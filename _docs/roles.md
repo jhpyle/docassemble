@@ -460,3 +460,4 @@ cases.
 [`user_logged_in()`]: {{ site.baseurl }}/docs/functions.html#user_logged_in
 [`user_privileges()`]: {{ site.baseurl }}/docs/functions.html#user_privileges
 [`user_has_privilege()`]: {{ site.baseurl }}/docs/functions.html#user_has_privilege
+[function]: {{ site.baseurl }}/docs/functions.html

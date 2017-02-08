@@ -59,7 +59,7 @@ cluster) running two services: "backend" and "app."
 The "backend" service consists of a single "task," where the task is
 defined as a single [Docker] "container" running the "image"
 `jhpyle/docassemble` with the environment variable [`CONTAINERROLE`] set
-to `sql:redis:rabbitmq:log:cron`.  You will ask for one of these services
+to `sql:redis:rabbitmq:log:cron:mail`.  You will ask for one of these services
 to run (i.e. the "desired count" of this service is set to 1).
 
 The "app" service consists of a single "task," where the task is
@@ -368,6 +368,10 @@ configuration below.  Edit the [`TIMEZONE`], [`DAHOSTNAME`], and
         {
           "containerPort": 8080,
           "hostPort": 8080
+        },
+        {
+          "containerPort": 25,
+          "hostPort": 25
         },
         {
           "containerPort": 5432,
@@ -821,12 +825,12 @@ create the database tables that **docassemble** expects.
 # Mail server
 
 If you are launching **docassemble** within [EC2], note that Amazon does
-not allow e-mail to be sent from SMTP servers operating within an [EC2]
+not allow e-mail to be sent from [SMTP] servers operating within an [EC2]
 instance, unless you obtain special permission.  Therefore, you may
-wish to use an SMTP server on the internet with which you can connect
+wish to use an [SMTP] server on the internet with which you can connect
 through [SMTP Authentication]. 
 
-If you have a Google account, you can use Google's SMTP server by
+If you have a Google account, you can use Google's [SMTP] server by
 setting the following in your [configuration]:
 
 {% highlight yaml %}
@@ -1031,3 +1035,17 @@ number of PostgreSQL connections will be 12.
 [TXT record]: https://en.wikipedia.org/wiki/TXT_record
 [SPF]: https://en.wikipedia.org/wiki/Sender_Policy_Framework
 [HTTP redirect]: https://en.wikipedia.org/wiki/HTTP_301
+[CIDR]: https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing
+[HTTP]: https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol
+[`TIMEZONE`]: {{ site.baseurl }}/docs/docker.html#TIMEZONE
+[`DAHOSTNAME`]: {{ site.baseurl }}/docs/docker.html#DAHOSTNAME
+[`LETSENCRYPTEMAIL`]: {{ site.baseurl }}/docs/docker.html#LETSENCRYPTEMAIL
+[Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
+[PostgreSQL]: http://www.postgresql.org/
+[`docassemble.webapp.s3register`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/s3register.py
+[S3 bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
+[`log server`]: {{ site.baseurl }}/docs/config.html#log server
+[`db`]: {{ site.baseurl }}/docs/config.html#db
+[`host`]: {{ site.baseurl }}/docs/config.html#db_host
+[SMTP]: https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol
+

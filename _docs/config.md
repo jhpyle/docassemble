@@ -167,13 +167,13 @@ db:
 The `prefix` is a [SQLAlchemy] prefix.  If you use a database other
 than [PostgreSQL], change this.
 
-**docassemble** will connect to the SQL database at the hostname
-`host` on the port `port`, and will authenticate with the `user` and
-`password`.  It will connect to the database called `name`.  If you
-want separate **docassemble** systems to share the same database, you
-can set a `table_prefix`.
+<a name="db_host"></a>**docassemble** will connect to the SQL database
+at the hostname `host` on the port `port`, and will authenticate with
+the `user` and `password`.  It will connect to the database called
+`name`.  If you want separate **docassemble** systems to share the
+same database, you can set a `table_prefix`.
 
-<a name="schema_file"></a>The `schema_file` directive helps
+<a name="db_schema_file"></a>The `schema_file` directive helps
 **docassemble** create missing columns during the startup process.  It
 is used by the [`docassemble.webapp.fix_postgresql_tables`] module
 during [Docker] startup and during [installation] and [upgrades].
@@ -854,6 +854,23 @@ running on [Docker].
 external hostname: https://docassemble.example.com
 {% endhighlight %}
 
+## <a name="incoming mail domain"></a>E-mail domain of the site
+
+If you use the [e-mail receiving] feature, set the `incoming mail
+domain` to whatever e-mail domain will direct e-mail to the
+**docassemble** server configured to perform the `all` or `mail`
+services.
+
+{% highlight yaml %}
+incoming mail domain: mail.example.com
+{% endhighlight %}
+
+The [`interview_email()`] function will then return an e-mail address
+with `@mail.example.com` at the end.
+
+If `incoming mail domain` is not specified, the value of
+[`external hostname`] will be used.
+
 ## <a name="cert_install_directory"></a>Location of SSL certificates
 
 The `cert_install_directory` directive indicates the directory where
@@ -1255,3 +1272,5 @@ and Facebook API keys.
 [Vim]: http://www.vim.org/
 [Vim bindings option]: https://codemirror.net/demo/vim.html
 [CodeMirror]: http://codemirror.net/
+[e-mail receiving]: {{ site.baseurl }}/docs/background.html#email
+[`external hostname`]: #external hostname

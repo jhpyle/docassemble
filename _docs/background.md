@@ -45,6 +45,8 @@ For example:
    several months, you might want your interview to send an e-mail to
    the user on a particular date in the future to remind them about
    something.
+4. You may want your interview to take an action triggered not by the
+   user logging in, but by the receipt of an e-mail.
 
 There are features in **docassemble** that address each of these
 limitations.
@@ -56,6 +58,9 @@ limitations.
    every few seconds and update the user's screen with the results.
 3. If you want to schedule [`code`] to run at times when the user is
    not using **docassemble**, you can create a [scheduled task].
+4. If you want to allow people to send e-mails to your interview, you
+   can provide users with a special e-mail address that processes
+   [e-mail messages] and saves the results as an interview variable.
 
 The following sections explain these features.
 
@@ -666,9 +671,11 @@ should run under the same user as the web server, and if you have
 installed Python using a [virtualenv], you need to invoke [Python]
 appropriately.
 
-If you run **docassemble** on [Docker], you do not have to worry about
-any of these implementation details; the cron tasks operate
-automatically.  The tasks enabled in the [Docker] setup are:
+<a name="cron_hourly"></a><a name="cron_daily"></a><a
+name="cron_weekly"></a><a name="cron_monthly"></a>If you run
+**docassemble** on [Docker], you do not have to worry about any of
+these implementation details; the cron tasks operate automatically.
+The tasks enabled in the [Docker] setup are:
 
 * `cron_hourly`
 * `cron_daily`
@@ -826,6 +833,16 @@ The "cron user" is the only user on the system with the [privilege] of
 `cron`, so you can use the [`user_has_privilege()`] function to detect
 whether the user is the "cron user."
 
+# <a name="email"></a>E-mailing the interview
+
+Interviews can allows users to send e-mails to a case.  The interview
+code can process its contents when it arrives and update interview
+variables as a result.
+
+{% include side-by-side.html demo="email-to-case" %}
+
+[`interview_email()`]: {{ site.baseurl }}/docs/functions.html#interview_email
+[`get_emails()`]: {{ site.baseurl }}/docs/functions.html#get_emails
 [Celery]: http://www.celeryproject.org/
 [Docker]: {{ site.baseurl }}/docs/docker.html
 [Javascript]: https://en.wikipedia.org/wiki/JavaScript
@@ -905,3 +922,5 @@ whether the user is the "cron user."
 [`reload` modifier]: {{ site.baseurl }}/docs/modifiers.html#reload
 [evaluate]: {{ site.baseurl }}/docs/logic.html
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
+[Markdown]: https://daringfireball.net/projects/markdown/
+[e-mail messages]: #email
