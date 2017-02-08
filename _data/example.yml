@@ -938,6 +938,27 @@
     - E-mail: target_variable
       datatype: email
       required: False
+"email-to-case": "mandatory: true\ncode: |\n  multi_user = True\n  email = None\n\
+  ---\nmandatory: true\ncode: |\n  intro_seen\n  if email is None:\n    waiting_screen\n\
+  \  else:\n    all_done\n---\nquestion: |\n  E-mailing to the interview\nsubquestion:\
+  \ |\n  When you press continue, you will be\n  provided with an e-mail address to\n\
+  \  which you can send an email.\nfield: intro_seen\n---\nevent: waiting_screen\n\
+  question: |\n  E-mailing to the interview\nsubquestion: |\n  Send an e-mail to:\n\
+  \  \n  > ${ interview_email() }\n  \n  Once the e-mail is received and processed,\n\
+  \  you can click refresh to see the e-mail.\nbuttons:\n  - Refresh: refresh\n---\n\
+  event: all_done\nquestion: |\n  E-mails received\nsubquestion: |\n  The latest e-mail\
+  \ was:\n  \n  * Subject: ${ email.subject }\n  * To: ${ email.to_address }\n  *\
+  \ From: ${ email.from_address }\n  * Reply to: ${ email.reply_to }\n  * Return path:\
+  \ ${ email.return_path }\n  % if email.body_text:\n  * Body text: ${ email.body_text\
+  \ }\n  % endif\n  % if email.body_html:\n  * Body HTML: ${ email.body_html.slurp()\
+  \ }\n  % endif\n  % if len(email.attachment):\n  * Attachment: ${ email.attachment[0]\
+  \ }\n  % endif\n  \n  If you send another e-mail and refresh the \n  screen, you\
+  \ will see a list of all e-mails\n  below.\n  \n  % for item in get_emails():\n\
+  \  Subjects of all e-mails to ${ item.address }:\n  \n  % for mail_item in item.emails:\n\
+  \  * ${ mail_item.subject }\n  % endfor\n  % endfor\nbuttons:\n  - Refresh: refresh\n\
+  ---\nevent: incoming_email\ncode: |\n  # Time-consuming code that processes the\n\
+  \  # e-mail can go here.\n  background_response_action('save_email', email=action_argument('email'))\n\
+  ---\nevent: save_email\ncode: |\n  email = action_argument('email')\n  response()"
 "embed": |-
   question: |
     Fill in the blanks.
