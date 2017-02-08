@@ -1,0 +1,85 @@
+metadata:
+  title: E-mailing the interview
+  example start: 1
+  example end: 7
+  documentation: "http://docassemble.org/docs/background.html#email"
+---
+mandatory: true
+code: |
+  multi_user = True
+  email = None
+---
+mandatory: true
+code: |
+  intro_seen
+  if email is None:
+    waiting_screen
+  else:
+    all_done
+---
+question: |
+  E-mailing to the interview
+subquestion: |
+  When you press continue, you will be
+  provided with an e-mail address to
+  which you can send an email.
+field: intro_seen
+---
+event: waiting_screen
+question: |
+  E-mailing to the interview
+subquestion: |
+  Send an e-mail to:
+  
+  > ${ interview_email() }
+  
+  Once the e-mail is received and processed,
+  you can click refresh to see the e-mail.
+buttons:
+  - Refresh: refresh
+---
+event: all_done
+question: |
+  E-mails received
+subquestion: |
+  The latest e-mail was:
+  
+  * Subject: ${ email.subject }
+  * To: ${ email.to_address }
+  * From: ${ email.from_address }
+  * Reply to: ${ email.reply_to }
+  * Return path: ${ email.return_path }
+  % if email.body_text:
+  * Body text: ${ email.body_text }
+  % endif
+  % if email.body_html:
+  * Body HTML: ${ email.body_html.slurp() }
+  % endif
+  % if len(email.attachment):
+  * Attachment: ${ email.attachment[0] }
+  % endif
+  
+  If you send another e-mail and refresh the 
+  screen, you will see a list of all e-mails
+  below.
+  
+  % for item in get_emails():
+  Subjects of all e-mails to ${ item.address }:
+  
+  % for mail_item in item.emails:
+  * ${ mail_item.subject }
+  % endfor
+  % endfor
+buttons:
+  - Refresh: refresh
+---
+event: incoming_email
+code: |
+  # Time-consuming code that processes the
+  # e-mail can go here.
+  background_response_action('save_email', email=action_argument('email'))
+---
+event: save_email
+code: |
+  email = action_argument('email')
+  response()
