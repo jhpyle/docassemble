@@ -2953,6 +2953,7 @@ def index():
         steps = 0
         changed = False
         interview.assemble(user_dict, interview_status)
+    will_save = True
     if interview_status.question.question_type == "refresh":
         release_lock(user_code, yaml_filename)
         return do_redirect(url_for('index'), is_ajax)
@@ -8979,7 +8980,13 @@ def retrieve_email(email_id):
         raise DAError("Short code did not exist")
     return get_email_obj(email, short_record, user)
 
-def retrieve_emails():
+class AddressEmail(object):
+    def __str__(self):
+        return str(self.address)
+    def __unicode__(self):
+        return unicode(self.address)
+
+def retrieve_emails(**pargs):
     key = pargs.get('key', None)
     index = pargs.get('index', None)
     if key is None and index is not None:
@@ -9014,15 +9021,21 @@ def retrieve_emails():
         else:
             the_query = Shortener.query.filter_by(filename=yaml_filename, uid=uid, user_id=user_id, temp_user_id=temp_user_id, key=key, index=index).order_by(Shortener.modtime)
     for record in the_query:
-        result_for_short = dict(short=record.short, key=record.key, index=record.index, email=list())
+        result_for_short = AddressEmail()
+        result_for_short.address = record.short
+        result_for_short.key = record.key
+        result_for_short.index = record.index
+        result_for_short.emails = list()
         if record.user_id is not None:
             user = user_cache[record.user_id]
-            result_for_short['owner'] = user.email
+            result_for_short.owner = user.email
         else:
             user = None
-            result_for_short['owner'] = None
+            result_for_short.owner = None
         for email in Email.query.filter_by(short=record.short).order_by(Email.datetime_received):
-            result_for_short['email'].append(get_email_obj(email, record, user))
+            result_for_short.emails.append(get_email_obj(email, record, user))
+        results.append(result_for_short)
+    return results
 
 def get_email_obj(email, short_record, user):
     email_obj = DAEmail(short=email.short)
@@ -9161,6 +9174,7 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          twilio_config=twilio_config,
                                          server_redis=r,
                                          user_id_dict=user_id_dict,
+                                         retrieve_emails=retrieve_emails,
                                          get_short_code=get_short_code)
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)
