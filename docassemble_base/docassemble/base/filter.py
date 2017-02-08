@@ -939,7 +939,8 @@ def my_escape(result):
     return(result)
 
 def noquote(string):
-    return json.dumps(string.replace('\n', ' ').rstrip())
+    #return json.dumps(string.replace('\n', ' ').rstrip())
+    return '"' + string.replace('\n', ' ').replace('"', '&quot;').rstrip() + '"'
 
 def add_terms(termname, terms):
     #logmessage("add terms with " + termname + "\n")
