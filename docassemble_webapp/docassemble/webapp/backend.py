@@ -59,9 +59,11 @@ def delete_record(key, id):
 def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
     if uid is None:
         if has_request_context():
-            uid = session['uid']
+            uid = session.get('uid', None)
         else:
             uid = docassemble.base.functions.get_uid()
+    if uid is None:
+        raise Exception("save_numbered_file: uid not defined")
     file_number = get_new_file_number(uid, filename, yaml_file_name=yaml_file_name)
     extension, mimetype = get_ext_and_mimetype(filename)
     new_file = SavedFile(file_number, extension=extension, fix=True)
@@ -72,9 +74,11 @@ def save_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
 def savedfile_numbered_file(filename, orig_path, yaml_file_name=None, uid=None):
     if uid is None:
         if has_request_context():
-            uid = session['uid']
+            uid = session.get('uid', None)
         else:
             uid = docassemble.base.functions.get_uid()
+    if uid is None:
+        raise Exception("save_numbered_file: uid not defined")
     file_number = get_new_file_number(uid, filename, yaml_file_name=yaml_file_name)
     extension, mimetype = get_ext_and_mimetype(filename)
     new_file = SavedFile(file_number, extension=extension, fix=True)
@@ -185,9 +189,11 @@ from docassemble.base.functions import pickleable_objects
 def can_access_file_number(file_number, uid=None):
     if uid is None:
         if has_request_context():
-            uid = session['uid']
+            uid = session.get('uid', None)
         else:
             uid = docassemble.base.functions.get_uid()
+    if uid is None:
+        raise Exception("can_access_file_number: uid not defined")
     upload = Uploads.query.filter_by(indexno=file_number, key=uid).first()
     if upload:
         return True

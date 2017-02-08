@@ -1,0 +1,50 @@
+metadata:
+  title: Send e-mail
+  documentation: "http://docassemble.org/docs/functions.html#send_email"
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - recipient: Individual
+---
+mandatory: true
+question: |
+  E-mail test
+subquestion: |
+  % if intro_provided and email_sent_ok:
+  The e-mail was sent successfully.
+  % else:
+  There was a problem sending the e-mail.
+  % endif
+---
+question: |
+  E-mail test
+subquestion: |
+  This interview will send you an e-mail.
+field: intro_provided
+---
+question: |
+  What is your name?
+fields:
+  - First Name: recipient.name.first
+  - Last Name: recipient.name.last
+---
+question: |
+  What is your e-mail address?
+fields:
+  - E-mail: recipient.email
+    datatype: email
+---
+code: |
+  email_sent_ok = send_email(to=recipient, template=notification)
+---
+template: notification
+subject: |
+  Greetings, ${ recipient }!
+content: |
+  This is an e-mail sent from a
+  **docassemble** interview.
+
+  Have a nice day!
+    

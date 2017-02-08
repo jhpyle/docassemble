@@ -1543,6 +1543,8 @@ search_key = """
 def get_vars_in_use(interview, interview_status, debug_mode=False):
     user_dict = fresh_dictionary()
     has_no_endpoint = False
+    if 'uid' not in session:
+        session['uid'] = random_string(32)
     if debug_mode:
         has_error = True
         error_message = "Not checking variables because in debug mode."
@@ -1583,15 +1585,15 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
         names_used.add(val)
         if val not in name_origins:
             name_origins[val] = set()
-            for lang in interview.questions[val]:
-                for q in interview.questions[val][lang]:
-                    name_origins[val].add(q.from_source)
+        for lang in interview.questions[val]:
+            for q in interview.questions[val][lang]:
+                name_origins[val].add(q.from_source)
         fields_used.add(val)
         if val not in field_origins:
             field_origins[val] = set()
-            for lang in interview.questions[val]:
-                for q in interview.questions[val][lang]:
-                    field_origins[val].add(q.from_source)
+        for lang in interview.questions[val]:
+            for q in interview.questions[val][lang]:
+                field_origins[val].add(q.from_source)
     functions = set()
     modules = set()
     classes = set()
@@ -4515,8 +4517,8 @@ def utility_processor():
 @app.route('/speakfile', methods=['GET'])
 def speak_file():
     audio_file = None
-    filename = session['i']
-    key = session['uid']
+    filename = session.get('i', None)
+    key = session.get('uid', None)
     encrypted = session.get('encrypted', False)
     question = request.args.get('question', None)
     question_type = request.args.get('type', None)
@@ -8994,11 +8996,11 @@ def retrieve_emails(**pargs):
     if 'i' in pargs:
         yaml_filename = pargs['i']
     else:
-        yaml_filename = session['i']
+        yaml_filename = session.get('i', None)
     if 'uid' in pargs:
         uid = pargs['uid']
     else:
-        uid = session['uid']
+        uid = session.get('uid', None)
     if 'user_id' in pargs:
         user_id = pargs['user_id']
         temp_user_id = None
@@ -9087,11 +9089,11 @@ def get_short_code(**pargs):
     if 'i' in pargs:
         yaml_filename = pargs['i']
     else:
-        yaml_filename = session['i']
+        yaml_filename = session.get('i', None)
     if 'uid' in pargs:
         uid = pargs['uid']
     else:
-        uid = session['uid']
+        uid = session.get('uid', None)
     if 'user_id' in pargs:
         user_id = pargs['user_id']
         temp_user_id = None
