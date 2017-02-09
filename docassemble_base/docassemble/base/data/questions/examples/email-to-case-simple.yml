@@ -1,0 +1,41 @@
+metadata:
+  title: E-mailing the interview
+  short title: E-mail
+  example start: 1
+  example end: 3
+  documentation: "http://docassemble.org/docs/background.html#email"
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  E-mailing to the interview
+subquestion: |
+  When you press continue, you will be
+  provided with an e-mail address to
+  which you can send an email.
+field: intro_seen
+---
+need: intro_seen
+mandatory: true
+question: |
+  E-mails sent to case
+subquestion: |
+  Send an e-mail to
+  ${ interview_email() }
+  and click Refresh.
+  
+  Be patient, though.  It takes a
+  few seconds for e-mails to travel
+  and be processed.
+  
+  % for item in get_emails():
+  Subject lines of all e-mails sent
+  to ${ item.address }:
+  
+    % for mail_item in item.emails:
+  * ${ mail_item.subject }
+    % endfor
+  % endfor
+buttons:
+  - Refresh: refresh

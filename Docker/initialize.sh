@@ -436,6 +436,9 @@ if [ "$CRONRUNNING" = false ]; then
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|mail):.* ]]; then
+    echo 'hide pgsql_servers = '${DBHOST}'::'${DBPORT}'/'${DBNAME}'/'${DBUSER}'/'${DBPASSWORD} > /etc/exim4/pginfo
+    echo 'DAQUERY = select short from '${DBTABLEPREFIX}"shortener where short='\${quote_pgsql:\$local_part}'" >> /etc/exim4/pginfo
+    chmod og-rwx /etc/exim4/pginfo
     supervisorctl --serverurl http://localhost:9001 start exim4
 fi
 

@@ -1,5 +1,6 @@
 metadata:
   title: E-mailing the interview
+  short title: E-mail
   example start: 1
   example end: 7
   documentation: "http://docassemble.org/docs/background.html#email"
@@ -64,11 +65,12 @@ subquestion: |
   below.
   
   % for item in get_emails():
-  Subjects of all e-mails to ${ item.address }:
+  Subject lines of all e-mails sent to
+  ${ item.address }:
   
-  % for mail_item in item.emails:
+    % for mail_item in item.emails:
   * ${ mail_item.subject }
-  % endfor
+    % endfor
   % endfor
 buttons:
   - Refresh: refresh

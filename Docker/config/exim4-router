@@ -8,4 +8,5 @@ central_filter:
   allow_filter
   allow_freeze
   pipe_transport = address_pipe
+  condition = ${lookup pgsql {DAQUERY}{yes}{no}}
 

@@ -1,1 +1,5 @@
+keep_environment = ^DA
+MAIN_TLS_ENABLE = false
+MAIN_TLS_ADVERTISE_HOSTS =
 MAIN_ACL_CHECK_RCPT = docassemble_check_rcpt
+.include_if_exists "/etc/exim4/pginfo"

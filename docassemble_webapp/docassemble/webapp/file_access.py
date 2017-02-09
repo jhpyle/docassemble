@@ -111,14 +111,9 @@ def get_info_from_file_number(file_number, privileged=False, filename=None):
         else:
             result['filename'] = filename
         result['extension'], result['mimetype'] = get_ext_and_mimetype(result['filename'])
-        if filename is None:
-            result['savedfile'] = SavedFile(file_number, extension=result['extension'], fix=True)
-            result['path'] = result['savedfile'].path
-            result['fullpath'] = result['path'] + '.' + result['extension']
-        else:
-            result['savedfile'] = SavedFile(file_number, extension=result['extension'], fix=True, filename=filename)
-            result['path'] = result['savedfile'].path
-            result['fullpath'] = result['path']
+        result['savedfile'] = SavedFile(file_number, extension=result['extension'], fix=True)
+        result['path'] = result['savedfile'].path
+        result['fullpath'] = result['path'] + '.' + result['extension']
         #logmessage("fullpath is " + str(result['fullpath']))
     if 'path' not in result:
         logmessage("get_info_from_file_number: path is not in result for " + str(file_number))
