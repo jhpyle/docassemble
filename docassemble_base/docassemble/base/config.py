@@ -56,6 +56,13 @@ def load(**kwargs):
         else:
             daconfig[key] = val
     daconfig['config file'] = filename
+    if 'keymap' in daconfig and daconfig['keymap'] not in ['vim', 'emacs', 'sublime']:
+        sys.stderr.write("WARNING!  You used a keymap that is not supported.  Available values are vim, emacs, and sublime.\n")
+        del daconfig['keymap']
+    if 'vim' in daconfig:
+        sys.stderr.write("WARNING!  The configuration directive vim is deprecated.  Please use keymap instead.\n")
+        if daconfig['vim'] and 'keymap' not in daconfig:
+            daconfig['keymap'] = 'vim'
     s3_config = daconfig.get('s3', None)
     if not s3_config or ('enable' in s3_config and not s3_config['enable']): # or not ('access key id' in s3_config and s3_config['access key id']) or not ('secret access key' in s3_config and s3_config['secret access key']):
         S3_ENABLED = False
