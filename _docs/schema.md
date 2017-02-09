@@ -33,7 +33,7 @@ This module depends on a file called [`db-schema.txt`], which is
 stored in `/usr/share/docassemble/config/`.  This file will exist if
 you are using [Docker] or if you followed the [installation]
 instructions and copied necessary files into this folder.  (The
-location of this file is configurable with the [`schema_file`]
+location of this file is configurable with the [`schema file`]
 directive under [`db`] in the [configuration].)
 
 If you are running **docassemble** with [Docker], these two database
@@ -57,7 +57,7 @@ concepts exist in most SQL database systems.)
 [configuration]: {{ site.baseurl }}/docs/config.html
 [installation]: {{ site.baseurl }}/docs/installation.html
 [`db`]: {{ site.baseurl }}/docs/config.html#db
-[`schema_file`]: {{ site.baseurl }}/docs/config.html#db_schema_file
+[`schema file`]: {{ site.baseurl }}/docs/config.html#db schema file
 [`docassemble.webapp.create_tables`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/create_tables.py
 [`docassemble.webapp.fix_postgresql_tables`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/fix_postgresql_tables.py
 [`db-schema.txt`]: {{ site.github.repository_url }}/blob/master/Docker/db-schema.txt

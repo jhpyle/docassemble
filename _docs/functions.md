@@ -1702,7 +1702,7 @@ If the locale is `US.utf8`, `currency_symbol()` returns `$`.
 The locale can be set in the [configuration] or through the
 [`set_locale()`] function.
 
-If you set [`currency_symbol`] in the [configuration], then
+If you set [`currency symbol`] in the [configuration], then
 `currency_symbol()` returns the symbol specified there, and does not
 use the locale to determine the symbol.
 
@@ -2737,7 +2737,7 @@ $(document).on('daPageLoad', function(){
 [`code`]: {{ site.baseurl }}/docs/code.html
 [`currency()`]: #currency
 [`currency_symbol()`]: #currency_symbol
-[`currency_symbol`]: {{ site.baseurl }}/docs/config.html#currency_symbol
+[`currency symbol`]: {{ site.baseurl }}/docs/config.html#currency symbol
 [`default role`]: {{ site.baseurl }}/docs/initial.html#default role
 [`docassemble.base.core`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/core.py
 [`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py

@@ -807,7 +807,7 @@ standard web server configuration expects.
 If you want to use different filesystem or S3 locations, the
 `docassemble.webapp.install_certs` can be configured to use different
 locations.  See the [configuration] variables [`certs`] and
-[`cert_install_directory`].
+[`cert install directory`].
 
 # <a name="build"></a>Creating your own Docker image
 
@@ -1030,7 +1030,7 @@ delete all of the data on the server unless you are using a
 [IAM Console]: https://console.aws.amazon.com/iam
 [create your own Docker image]: #build
 [`certs`]: {{ site.baseurl }}/docs/config.html#certs
-[`cert_install_directory`]: {{ site.baseurl }}/docs/config.html#cert_install_directory
+[`cert install directory`]: {{ site.baseurl }}/docs/config.html#cert install directory
 [cron]: https://en.wikipedia.org/wiki/Cron
 [Python virtual environment]: http://docs.python-guide.org/en/latest/dev/virtualenvs/
 [configuration options]: #configuration options

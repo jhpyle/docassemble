@@ -890,7 +890,7 @@ variables as a result.
 [background processes]: #background
 [callback function]: https://en.wikipedia.org/wiki/Callback_(computer_programming)
 [code]: {{ site.baseurl }}/docs/code.html
-[configured]: {{ site.baseurl }}/docs/config.html#interview_delete_days
+[configured]: {{ site.baseurl }}/docs/config.html#interview delete days
 [cron user]: #cron user
 [cron]: https://en.wikipedia.org/wiki/Cron
 [events]: {{ site.baseurl }}/docs/fields.html#event

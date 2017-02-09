@@ -159,7 +159,7 @@ modules:
 mandatory: True
 code: |
   import slacker
-  slacker.Slacker(daconfig['slack_api_key']).files.upload(my_file.pdf.path())
+  slacker.Slacker(daconfig['slack api key']).files.upload(my_file.pdf.path())
 ---
 mandatory: True
 question: |

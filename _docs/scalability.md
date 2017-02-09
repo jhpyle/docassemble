@@ -1046,6 +1046,6 @@ number of PostgreSQL connections will be 12.
 [S3 bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
 [`log server`]: {{ site.baseurl }}/docs/config.html#log server
 [`db`]: {{ site.baseurl }}/docs/config.html#db
-[`host`]: {{ site.baseurl }}/docs/config.html#db_host
+[`host`]: {{ site.baseurl }}/docs/config.html#db host
 [SMTP]: https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol
 

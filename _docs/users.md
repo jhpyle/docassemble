@@ -118,7 +118,7 @@ with the [`appname`] directive.  If the [`appname`] is
 [roles]: {{ site.baseurl }}/docs/roles.html
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [`oauth`]: {{ site.baseurl }}/docs/config.html#oauth
-[`show_login`]: {{ site.baseurl }}/docs/config.html#show_login
+[`show login`]: {{ site.baseurl }}/docs/config.html#show login
 [`docassemble.webapp`]: {{ site.baseurl }}/docs/installation.html#docassemble.webapp
 [`create_tables.py`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/create_tables.py
 [User List]: #user_list
@@ -126,5 +126,5 @@ with the [`appname`] directive.  If the [`appname`] is
 [Privileges List]: #profile
 [scheduled tasks]: {{ site.baseurl }}/docs/background.html#scheduled
 [`user_info()`]: {{ site.baseurl }}/docs/functions.html#user_info
-[`allow_registration`]: {{ site.baseurl }}/docs/config.html#allow_registration
+[`allow registration`]: {{ site.baseurl }}/docs/config.html#allow registration
 [`appname`]: {{ site.baseurl }}/docs/config.html#appname
