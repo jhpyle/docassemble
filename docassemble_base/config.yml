@@ -18,17 +18,17 @@ oauth:
     id: 23123018240-32239fj28fj4fuhf394h3984eurhfurh.apps.googleusercontent.com
     secret: DGE34gdgerg3GDG545tgdfRf
 secretkey: 28asflwjeifwlfjsd2fejfiefw3g4o87
-default_title: docassemble
-default_short_title: doc
+default title: docassemble
+default short title: doc
 mail:
   username: Null
   password: Null
   server: localhost
-  default_sender: '"Administrator" <no-reply@example.com>'
-default_interview: docassemble.demo:data/questions/questions.yml
+  default sender: '"Administrator" <no-reply@example.com>'
+default interview: docassemble.demo:data/questions/questions.yml
 language: en
 locale: en_US.utf8
-default_admin_account:
+default admin account:
   email: admin@admin.com
   password: password
 voicerss:
@@ -40,8 +40,8 @@ voicerss:
     fr: fr
 s3:
   enable: False
-  access_key_id: FWIEJFIJIDGISEJFWOEF
-  secret_access_key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
+  access key id: FWIEJFIJIDGISEJFWOEF
+  secret access key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
   bucket: yourbucketname
 ec2: False
 words:

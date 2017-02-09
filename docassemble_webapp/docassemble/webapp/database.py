@@ -11,7 +11,7 @@ if dbhost is None and dbuser is not None:
 dbport = daconfig['db'].get('port', None)
 dbprefix = daconfig['db'].get('prefix', 'postgresql+psycopg2://')
 dbname = daconfig['db'].get('name', 'docassemble')
-dbtableprefix = daconfig['db'].get('table_prefix', None)
+dbtableprefix = daconfig['db'].get('table prefix', None)
 if not dbtableprefix:
     dbtableprefix = ''
 

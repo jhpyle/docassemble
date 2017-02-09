@@ -207,6 +207,9 @@
     - title-case
     - past-tense
     - salutation
+- E-mail:
+    - send-email
+    - email-to-case
 - Background processes:
     - background_action
     - background_action_flash
@@ -214,6 +217,8 @@
     - background_action_with_response_action
     - background_response_action_flash
     - background_action_refresh
+- Scheduled tasks:
+    - cron
 - Machine Learning:
     - ml-predict
     - ml-save-and-predict

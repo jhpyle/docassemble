@@ -33,7 +33,7 @@ def get_cron_user():
     sys.exit("Cron user not found")
 
 def clear_old_interviews():
-    interview_delete_days = docassemble.base.config.daconfig.get('interview_delete_days', 90)
+    interview_delete_days = docassemble.base.config.daconfig.get('interview delete days', 90)
     if interview_delete_days == 0:
         return
     stale = list()

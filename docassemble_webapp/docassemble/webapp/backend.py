@@ -173,7 +173,7 @@ initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret
 #else:
 #    initial_dict = dict(_internal=dict(tracker=0, steps_offset=0, answered=set(), answers=dict(), objselections=dict()), url_args=dict())
 if 'initial_dict' in daconfig:
-    initial_dict.update(daconfig['initial_dict'])
+    initial_dict.update(daconfig['initial dict'])
 docassemble.base.parse.set_initial_dict(initial_dict)
 from docassemble.base.functions import pickleable_objects
 
@@ -200,9 +200,9 @@ def can_access_file_number(file_number, uid=None):
     return False
 
 if in_celery:
-    LOGFILE = daconfig.get('celery_flask_log', '/tmp/celery-flask.log')
+    LOGFILE = daconfig.get('celery flask log', '/tmp/celery-flask.log')
 else:
-    LOGFILE = daconfig.get('flask_log', '/tmp/flask.log')
+    LOGFILE = daconfig.get('flask log', '/tmp/flask.log')
 
 if not os.path.exists(LOGFILE):
     with open(LOGFILE, 'a'):

@@ -1,10 +1,9 @@
 import yaml
 import os
+import re
 import sys
 import httplib2
 import socket
-#import string
-#import random
 from docassemble.base.generate_key import random_string
 
 dbtableprefix = None
@@ -43,31 +42,38 @@ def load(**kwargs):
     if not os.path.isfile(filename):
         sys.stderr.write("Configuration file " + str(filename) + " does not exist\n")
     with open(filename, 'rU') as stream:
-        daconfig = yaml.load(stream)
-    if daconfig is None:
+        raw_daconfig = yaml.load(stream)
+    if raw_daconfig is None:
         sys.stderr.write("Could not open configuration file from " + str(filename) + "\n")
         with open(filename, 'r') as fp:
             sys.stderr.write(fp.read() + "\n")
         sys.exit(1)
-    daconfig['config_file'] = filename
+    daconfig = dict()
+    for key, val in raw_daconfig.iteritems():
+        if re.search(r'_', key):
+            sys.stderr.write("WARNING!  Configuration keys should not contain underscores.  Your configuration key " + str(key) + " has been converted.\n")
+            daconfig[re.sub(r'_', r' ', key)] = val
+        else:
+            daconfig[key] = val
+    daconfig['config file'] = filename
     s3_config = daconfig.get('s3', None)
-    if not s3_config or ('enable' in s3_config and not s3_config['enable']): # or not ('access_key_id' in s3_config and s3_config['access_key_id']) or not ('secret_access_key' in s3_config and s3_config['secret_access_key']):
+    if not s3_config or ('enable' in s3_config and not s3_config['enable']): # or not ('access key id' in s3_config and s3_config['access key id']) or not ('secret access key' in s3_config and s3_config['secret access key']):
         S3_ENABLED = False
     else:
         S3_ENABLED = True
-    gc_config = daconfig.get('google_cloud', None)
-    if not gc_config or ('enable' in gc_config and not gc_config['enable']) or not ('access_key_id' in gc_config and gc_config['access_key_id']) or not ('secret_access_key' in gc_config and gc_config['secret_access_key']):
+    gc_config = daconfig.get('google cloud', None)
+    if not gc_config or ('enable' in gc_config and not gc_config['enable']) or not ('access key id' in gc_config and gc_config['access key id']) or not ('secret access key' in gc_config and gc_config['secret access key']):
         GC_ENABLED = False
     else:
         GC_ENABLED = True
     if 'db' not in daconfig:
         daconfig['db'] = dict(name="docassemble", user="docassemble", password="abc123")
-    dbtableprefix = daconfig['db'].get('table_prefix', None)
+    dbtableprefix = daconfig['db'].get('table prefix', None)
     if not dbtableprefix:
         dbtableprefix = ''
     if daconfig.get('ec2', False):
         h = httplib2.Http()
-        resp, content = h.request(daconfig.get('ec2_ip_url', "http://169.254.169.254/latest/meta-data/local-hostname"), "GET")
+        resp, content = h.request(daconfig.get('ec2 ip url', "http://169.254.169.254/latest/meta-data/local-hostname"), "GET")
         if resp['status'] and int(resp['status']) == 200:
             hostname = content
         else:
@@ -129,6 +135,6 @@ def default_config():
     config = """\
 secretkey: """ + random_string(32) + """
 mail:
-  default_sender: '"Administrator" <no-reply@example.com>'
+  default sender: '"Administrator" <no-reply@example.com>'
 """
     return config

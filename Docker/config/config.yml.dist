@@ -8,7 +8,7 @@ db:
   password: {{DBPASSWORD}}
   host: {{DBHOST}}
   port: {{DBPORT}}
-  table_prefix: {{DBTABLEPREFIX}}
+  table prefix: {{DBTABLEPREFIX}}
 oauth:
   facebook:
     enable: False
@@ -19,14 +19,14 @@ oauth:
     id: 23123018240-32239fj28fj4fuhf394h3984eurhfurh.apps.googleusercontent.com
     secret: DGE34gdgerg3GDG545tgdfRf
 secretkey: {{DASECRETKEY}}
-default_title: docassemble
-default_short_title: doc
+default title: docassemble
+default short title: doc
 mail:
   username: null
   password: null
   server: localhost
-  default_sender: '"Administrator" <no-reply@example.com>'
-default_interview: docassemble.demo:data/questions/questions.yml
+  default sender: '"Administrator" <no-reply@example.com>'
+default interview: docassemble.demo:data/questions/questions.yml
 language: en
 locale: en_US.utf8
 os locale: {{LOCALE}}
@@ -42,8 +42,8 @@ voicerss:
     fr: fr
 s3:
   enable: {{S3ENABLE}}
-  access_key_id: {{S3ACCESSKEY}}
-  secret_access_key: {{S3SECRETACCESSKEY}}
+  access key id: {{S3ACCESSKEY}}
+  secret access key: {{S3SECRETACCESSKEY}}
   bucket: {{S3BUCKET}}
 ec2: {{EC2}}
 log server: {{LOGSERVER}}

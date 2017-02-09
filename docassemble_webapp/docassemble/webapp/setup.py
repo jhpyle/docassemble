@@ -5,12 +5,12 @@ app.config['APP_NAME'] = daconfig.get('appname', 'docassemble')
 app.config['BRAND_NAME'] = daconfig.get('brandname', daconfig.get('appname', 'docassemble'))
 app.config['MAIL_USERNAME'] = daconfig['mail'].get('username', None)
 app.config['MAIL_PASSWORD'] = daconfig['mail'].get('password', None)
-app.config['MAIL_DEFAULT_SENDER'] = daconfig['mail'].get('default_sender', None)
+app.config['MAIL_DEFAULT_SENDER'] = daconfig['mail'].get('default sender', None)
 app.config['MAIL_SERVER'] = daconfig['mail'].get('server', 'localhost')
 app.config['MAIL_PORT'] = daconfig['mail'].get('port', 25)
-app.config['MAIL_USE_SSL'] = daconfig['mail'].get('use_ssl', False)
-app.config['MAIL_USE_TLS'] = daconfig['mail'].get('use_tls', True)
-#app.config['ADMINS'] = [daconfig.get('admin_address', None)]
+app.config['MAIL_USE_SSL'] = daconfig['mail'].get('use ssl', False)
+app.config['MAIL_USE_TLS'] = daconfig['mail'].get('use tls', True)
+#app.config['ADMINS'] = [daconfig.get('admin address', None)]
 app.config['APP_SYSTEM_ERROR_SUBJECT_LINE'] = app.config['APP_NAME'] + " system error"
 app.config['APPLICATION_ROOT'] = daconfig.get('root', '/')
 app.config['CSRF_ENABLED'] = False
@@ -39,7 +39,7 @@ app.config['USER_AFTER_RESET_PASSWORD_ENDPOINT'] = 'user.login'
 app.config['USER_INVITE_URL'] = '/user/invite'
 app.config['USER_ENABLE_INVITATION'] = True
 app.config['USER_INVITE_EMAIL_TEMPLATE'] = 'flask_user/emails/invite'
-if not daconfig.get('allow_registration', True):
+if not daconfig.get('allow registration', True):
     app.config['USER_REQUIRE_INVITATION'] = True
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['USE_X_SENDFILE'] = daconfig.get('xsendfile', True)

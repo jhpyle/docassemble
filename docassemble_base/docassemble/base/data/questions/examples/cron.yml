@@ -1,0 +1,29 @@
+metadata:
+  title: Scheduled task
+  documentation: "http://docassemble.org/docs/background.html#scheduled"
+  example start: 1
+  example end: 3
+---
+mandatory: True
+code: |
+  use_cron = True
+  multi_user = True
+  counter = 0
+---
+event: cron_hourly
+code: |
+  counter += 0
+---
+mandatory: True
+question: |
+  The value of the counter is
+  ${ counter }.
+subqueston: |
+  Every hour, the counter will
+  increase by one.
+
+  No, I do not expect you to wait
+  long enough to see the counter
+  increase!
+buttons:
+  - Refresh: refresh

@@ -54,7 +54,7 @@ def get_user(db, role, defaults):
 
 def populate_tables():
     user_manager = UserManager(SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel), app)
-    admin_defaults = daconfig.get('default_admin_account', dict())
+    admin_defaults = daconfig.get('default admin account', dict())
     if 'email' not in admin_defaults:
         admin_defaults['email'] = 'admin@admin.com'
     if 'nickname' not in admin_defaults:
@@ -63,7 +63,7 @@ def populate_tables():
         admin_defaults['first_name'] = word('System')
     if 'last_name' not in admin_defaults:
         admin_defaults['last_name'] = word('Administrator')
-    cron_defaults = daconfig.get('default_cron_account', {'nickname': 'cron', 'email': 'cron@admin.com', 'first_name': 'Cron', 'last_name': 'User'})
+    cron_defaults = daconfig.get('default cron account', {'nickname': 'cron', 'email': 'cron@admin.com', 'first_name': 'Cron', 'last_name': 'User'})
     cron_defaults['active'] = False
     user_role = get_role(db, 'user')
     admin_role = get_role(db, 'admin')
@@ -74,7 +74,7 @@ def populate_tables():
     admin = get_user(db, admin_role, admin_defaults)
     cron = get_user(db, cron_role, cron_defaults)
     add_dependencies(admin.id)
-    # docassemble_git_url = daconfig.get('docassemble_git_url', 'https://github.com/jhpyle/docassemble')
+    # docassemble_git_url = daconfig.get('docassemble git url', 'https://github.com/jhpyle/docassemble')
     # installed_packages = get_installed_distributions()
     # existing_packages = [package.name for package in Package.query.all()]
     # for package in installed_packages:

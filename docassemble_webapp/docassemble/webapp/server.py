@@ -72,7 +72,9 @@ code: |
 
 ok_mimetypes = {"application/javascript": "javascript", "text/x-python": "python", "application/json": "json", "text/css": "css"}
 ok_extensions = {"yml": "yaml", "yaml": "yaml", "md": "markdown", "markdown": "markdown", 'py': "python", "json": "json", "css": "css"}
-default_yaml_filename = daconfig.get('default_interview', 'docassemble.demo:data/questions/questions.yml')
+
+default_yaml_filename = daconfig.get('default interview', None)
+final_default_yaml_filename = daconfig.get('default interview', 'docassemble.demo:data/questions/questions.yml')
 
 alphanumeric_only = re.compile('[\W_]+')
 phone_pattern = re.compile(r"^[\d\+\-\(\) ]+$")
@@ -93,11 +95,13 @@ match_inside_brackets = re.compile('\[\'([^\]]+)\'\]')
 
 if 'mail' not in daconfig:
     daconfig['mail'] = dict()
-default_title = daconfig.get('default_title', daconfig.get('brandname', 'docassemble'))
-default_short_title = daconfig.get('default_short_title', default_title)
+if 'dispatch' not in daconfig:
+    daconfig['dispatch'] = dict()
+default_title = daconfig.get('default title', daconfig.get('brandname', 'docassemble'))
+default_short_title = daconfig.get('default short title', default_title)
 os.environ['PYTHON_EGG_CACHE'] = tempfile.mkdtemp()
-PNG_RESOLUTION = daconfig.get('png_resolution', 300)
-PNG_SCREEN_RESOLUTION = daconfig.get('png_screen_resolution', 72)
+PNG_RESOLUTION = daconfig.get('png resolution', 300)
+PNG_SCREEN_RESOLUTION = daconfig.get('png screen resolution', 72)
 PDFTOPPM_COMMAND = daconfig.get('pdftoppm', 'pdftoppm')
 DEFAULT_LANGUAGE = daconfig.get('language', 'en')
 DEFAULT_LOCALE = daconfig.get('locale', 'en_US.utf8')
@@ -164,16 +168,16 @@ except ImportError:
 #        the_file.write(init_py_file)
 
 #USE_PROGRESS_BAR = daconfig.get('use_progress_bar', True)
-SHOW_LOGIN = daconfig.get('show_login', True)
-ALLOW_REGISTRATION = daconfig.get('allow_registration', True)
+SHOW_LOGIN = daconfig.get('show login', True)
+ALLOW_REGISTRATION = daconfig.get('allow registration', True)
 #USER_PACKAGES = daconfig.get('user_packages', '/var/lib/docassemble/dist-packages')
 #sys.path.append(USER_PACKAGES)
 #if USE_PROGRESS_BAR:
 
 if in_celery:
-    LOGFILE = daconfig.get('celery_flask_log', '/tmp/celery-flask.log')
+    LOGFILE = daconfig.get('celery flask log', '/tmp/celery-flask.log')
 else:
-    LOGFILE = daconfig.get('flask_log', '/tmp/flask.log')
+    LOGFILE = daconfig.get('flask log', '/tmp/flask.log')
 #APACHE_LOGFILE = daconfig.get('apache_log', '/var/log/apache2/error.log')
 
 #connect_string = docassemble.webapp.database.connection_string()
@@ -2481,6 +2485,11 @@ def index():
     steps = 0
     need_to_reset = False
     yaml_parameter = request.args.get('i', None)
+    if yaml_filename is None and yaml_parameter is None:
+        if len(daconfig['dispatch']):
+            return redirect(url_for('interview_start'))
+        else:
+            yaml_filename = final_default_yaml_filename
     session_parameter = request.args.get('session', None)
     if yaml_parameter is not None:
         show_flash = False
@@ -4581,6 +4590,37 @@ def speak_file():
     response = send_file(the_path, mimetype=audio_mimetype_table[file_format])
     return(response)
 
+@app.route('/list', methods=['GET'])
+def interview_start():
+    interview_info = list()
+    if len(daconfig['dispatch']) == 0:
+        return redirect(url_for('index', i=final_default_yaml_filename))
+    for key, yaml_filename in sorted(daconfig['dispatch'].iteritems()):
+        try:
+            interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+            if len(interview.metadata):
+                metadata = interview.metadata[0]
+                interview_title = metadata.get('title', metadata.get('short title', word('Untitled'))).rstrip()
+            else:
+                interview_title = word('Untitled')
+        except:
+            logmessage("interview_dispatch: unable to load interview file " + yaml_filename)
+            continue
+        interview_info.append(dict(link=url_for('index', i=yaml_filename), display=interview_title))
+    return render_template('pages/start.html', interview_info=interview_info, title=daconfig.get('start page title', word('Available interviews')))
+
+@app.route('/start/<dispatch>', methods=['GET'])
+def redirect_to_interview(dispatch):
+    logmessage("The dispatch is " + str(dispatch))
+    yaml_filename = daconfig['dispatch'].get(dispatch, None)
+    if yaml_filename is None:
+        abort(404)
+    arguments = dict()
+    for arg in request.args:
+        arguments[arg] = request.args[arg]
+    arguments['i'] = yaml_filename
+    return redirect(url_for('index', **arguments))
+
 @app.route('/storedfile/<uid>/<number>/<filename>.<extension>', methods=['GET'])
 def serve_stored_file(uid, number, filename, extension):
     number = re.sub(r'[^0-9]', '', str(number))
@@ -6653,7 +6693,7 @@ def config_page():
                 if S3_ENABLED:
                     key = s3.get_key('config.yml')
                     key.set_contents_from_string(form.config_content.data)
-                with open(daconfig['config_file'], 'w') as fp:
+                with open(daconfig['config file'], 'w') as fp:
                     fp.write(form.config_content.data.encode('utf8'))
                     flash(word('The configuration file was saved.'), 'success')
                 #session['restart'] = 1
@@ -6665,7 +6705,7 @@ def config_page():
             flash(word('Configuration not updated.  There was an error.'), 'error')
             return redirect(url_for('interview_list'))
     if ok:
-        with open(daconfig['config_file'], 'rU') as fp:
+        with open(daconfig['config file'], 'rU') as fp:
             content = fp.read().decode('utf8')
     if content is None:
         abort(404)
@@ -9196,7 +9236,7 @@ for val in base_name_info:
 
 #docassemble.base.functions.set_chat_partners_available(chat_partners_available)
 
-password_secret_key = daconfig.get('password_secretkey', app.secret_key)
+password_secret_key = daconfig.get('password secretkey', app.secret_key)
 
 sys_logger = logging.getLogger('docassemble')
 sys_logger.setLevel(logging.DEBUG)

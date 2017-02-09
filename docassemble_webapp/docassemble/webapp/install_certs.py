@@ -22,7 +22,7 @@ def main():
         if bucket is not None and prefix is not None:
             if not re.search(r'/$', prefix):
                 prefix = prefix + '/'
-            dest = daconfig.get('cert_install_directory', '/etc/ssl/docassemble')
+            dest = daconfig.get('cert install directory', '/etc/ssl/docassemble')
             if dest:
                 if not os.path.isdir(dest):
                     os.makedirs(dest)
@@ -45,7 +45,7 @@ def main():
         sys.stderr.write("certs directory " + str(certs_location) + " does not exist")
         sys.exit(1)
     import shutil
-    dest = daconfig.get('cert_install_directory', '/etc/ssl/docassemble')
+    dest = daconfig.get('cert install directory', '/etc/ssl/docassemble')
     if dest:
         if os.path.isdir(dest):
             shutil.rmtree(dest)

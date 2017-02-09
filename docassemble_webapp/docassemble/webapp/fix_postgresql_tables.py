@@ -29,8 +29,8 @@ def main():
     db_user = dbconfig.get('user', None)
     db_password = dbconfig.get('password', None)
     db_port = dbconfig.get('port', None)
-    db_table_prefix = dbconfig.get('table_prefix', None)
-    schema_file = dbconfig.get('schema_file', None)
+    db_table_prefix = dbconfig.get('table prefix', None)
+    schema_file = dbconfig.get('schema file', None)
     if db_name is None:
         db_name = os.getenv('DBNAME', '')
     if db_name == '':

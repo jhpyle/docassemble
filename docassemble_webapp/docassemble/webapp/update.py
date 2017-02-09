@@ -177,7 +177,7 @@ def update_versions():
 def add_dependencies(user_id):
     #logmessage('add_dependencies: user_id is ' + str(user_id))
     from docassemble.base.config import hostname, daconfig
-    docassemble_git_url = daconfig.get('docassemble_git_url', 'https://github.com/jhpyle/docassemble')
+    docassemble_git_url = daconfig.get('docassemble git url', 'https://github.com/jhpyle/docassemble')
     package_by_name = dict()
     for package in Package.query.filter_by(active=True).order_by(Package.name, Package.id.desc()).all():
         if package.name in package_by_name:

@@ -6,8 +6,8 @@ import boto.s3.key
 class s3object(object):
     def __init__(self, s3_config):
         #logmessage("Trying to connect with " + s3_config['access_key_id'] + " and " + s3_config['secret_access_key'] + " and " + s3_config['bucket'])
-        if 'access_key_id' in s3_config and s3_config['access_key_id'] is not None:
-            self.conn = boto.s3.connection.S3Connection(s3_config['access_key_id'], s3_config['secret_access_key'])
+        if 'access key id' in s3_config and s3_config['access key id'] is not None:
+            self.conn = boto.s3.connection.S3Connection(s3_config['access key id'], s3_config['secret access key'])
         else:
             self.conn = boto.connect_s3()
         self.bucket = self.conn.get_bucket(s3_config['bucket'])
