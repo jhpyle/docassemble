@@ -30,6 +30,7 @@ such variable names you will may get an error or unexpected results:
 
 * `8th_plaintiff` (you can't begin a variable name with a number;
   [Python] will say "invalid syntax")
+* `Nyan-Cat` (this is arithmetic: `Nyan` minus `Cat`)
 * `fried.fish1` (this is valid code, but [Python] will think you are
 referring to the attribute `fish1` of the object `fried`)
 * `user's_phone_number` (apostrophes are not allowed; [Python]

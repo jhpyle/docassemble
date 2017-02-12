@@ -835,12 +835,92 @@ whether the user is the "cron user."
 
 # <a name="email"></a>E-mailing the interview
 
-Interviews can allows users to send e-mails to a case.  The interview
-code can process its contents when it arrives and update interview
-variables as a result.
+Interviews can allow users to send e-mails to a case.
+
+Here is how it works:
+
+* The interview calls [`interview_email()`] to obtain a unique e-mail
+  address for the interview session, such as
+  `kgjeir@help.example.com`, and shares that e-mail address with the
+  user.
+* When an e-mail is sent to `kgjeir@help.example.com`, the server
+  stores the e-mail.
+* The interview uses [`get_emails()`] to retrieve a list of e-mails
+  that have been sent to `kgjeir@help.example.com`.
+
+{% include side-by-side.html demo="email-to-case-simple" %}
+
+In order for this feature to work, your server must be configured to
+receive e-mails.  The [Docker] image includes an e-mail server that
+is configured to work with **docassemble**.  Configuring the e-mail
+receiving feature also involves:
+
+* Setting the MX record for your domain (e.g., `help.example.com`) so
+  that e-mails sent to addresses ending with `@help.example.com` will
+  be directed to the **docassemble** server.
+* Setting the [`incoming mail domain`] directive in the
+  [configuration] to this domain (e.g. `help.example.com`).
+* Editing the firewall rules protecting the **docassemble** server so
+  that incoming port 25 ([SMTP]) is open.
+
+## Running code in the background when an e-mail arrives
+
+If you want, you can set up your interview to run [`code`] in the
+background whenever an e-mail is sent to one of your interview's
+sessions.  This can be helpful if an e-mail arrives at a time when the
+user is not using the interview, but the user may need to take action
+based on the e-mail.
+
+When an e-mail arrives, **docassemble** will attempt to run a
+[background action] within the interview session.  The name of the
+"action" will be [`incoming_email`] and it will have one keyword
+argument, `email`, which will be a [`DAEmail`] object representing the
+e-mail that was received.
+
+Below is an example that uses a [background action] to process an
+incoming e-mail.  The [background action] simply sets the interview
+variable `email` to the e-mail itself (which is a [`DAEmail`] object).
 
 {% include side-by-side.html demo="email-to-case" %}
 
+Note that:
+
+* Your interview must set [`multi_user`] to `True`.  Disabling
+  server-side encryption for the interview session is necessary
+  because if the user is not currently using the interview when the
+  e-mail arrives, **docassemble** has no access to the user's
+  password, which is the key that decrypts the interview variables.
+  (The same limitation applies to [scheduled tasks].)
+* Your interview needs a [`code`] block that will respond to an
+  [action] by the name of [`incoming_email`] that has a keyword
+  argument `email`.
+* If it is necessary to make permanent changes to the interview
+  variables as a result of processing the e-mail, the [`code`] that
+  runs the [action] needs to use [`background_response_action()`] to
+  call a separate [action], the sole purpose of which is to save
+  values to variables.  When **docassemble** runs the
+  [`incoming_email`] action, it is as though [`background_action()`]
+  was called, which means that the only way to make permanent changes
+  to the interview variables is through
+  [`background_response_action()`].  This is helpful because the
+  [`code`] that processes the incoming e-mail might take a long time
+  to run.  For example, the code might call [`ocr_file()`] on each of
+  the attachments.
+
+If your interview uses [roles], note that the [`incoming_email`]
+action will be run using the privileges and user identity of the user
+who originally obtained the e-mail address from [`interview_email()`].
+This is different from [scheduled tasks], which are run using the
+privileges and user identity of the [cron user].
+
+[roles]: {{ site.baseurl }}/docs/roles.html
+[`ocr_file()`]: {{ site.baseurl }}/docs/functions.html#ocr_file
+[`DAEmail`]: {{ site.baseurl }}/docs/objects.html#DAEmail
+[`incoming_email`]: {{ site.baseurl }}/docs/special.html#incoming_email
+[background task]: #background
+[background action]: #background
+[SMTP]: https://en.wikipedia.org/wiki/SMTP
+[`incoming mail domain`]: {{ site.baseurl }}/docs/config.html#incoming mail domain
 [`interview_email()`]: {{ site.baseurl }}/docs/functions.html#interview_email
 [`get_emails()`]: {{ site.baseurl }}/docs/functions.html#get_emails
 [Celery]: http://www.celeryproject.org/
@@ -884,13 +964,14 @@ variables as a result.
 [`user_has_privilege()`]: {{ site.baseurl }}/docs/functions.html#user_has_privilege
 [`user_info()`]: {{ site.baseurl }}/docs/functions.html#user_info
 [`user_logged_in()`]: {{ site.baseurl }}/docs/functions.html#user_logged_in
-[action]: {{ site.baseurl }}/docs/functions.html#actions
-[actions]: {{ site.baseurl }}/docs/functions.html#actions
+[action]: #background
+[actions]: #background
 [background process]: #background
 [background processes]: #background
 [callback function]: https://en.wikipedia.org/wiki/Callback_(computer_programming)
 [code]: {{ site.baseurl }}/docs/code.html
 [configured]: {{ site.baseurl }}/docs/config.html#interview delete days
+[configuration]: {{ site.baseurl }}/docs/config.html
 [cron user]: #cron user
 [cron]: https://en.wikipedia.org/wiki/Cron
 [events]: {{ site.baseurl }}/docs/fields.html#event

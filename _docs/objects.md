@@ -879,6 +879,88 @@ an optional keyword argument, `width`.
 When included in a [Mako] template, a `DAFileList` object will effectively
 call `show()` on itself.
 
+## <a name="DAEmail"></a>DAEmail
+
+The [e-mail receiving] feature converts actual e-mails into objects of
+type `DAEmail`.  These objects have the following attributes:
+
+* `short`: the code that was assigned by [`interview_email()`]
+  (e.g. `ugjrye`) in order to create the e-mail address to which this
+  e-mail was sent (e.g. `ugjrye@help.example.com`).
+* `key`: the `key` that was passed to [`interview_email()`], or `None` if no
+  `key` was passed.
+* `index`: the `index` that was passed to [`interview_email()`], or
+  `None` if no index was passed.
+* `address_owner`: the e-mail address of the user whose identity and
+  privileges were being used when [`interview_email()`] was called.
+  If the user was not logged in when [`interview_email()`] was called,
+  this will be `None`.
+* `to_address`: a [`DAEmailRecipientList`] object representing the
+  recipients of the e-mail.
+* `cc_address`: a [`DAEmailRecipientList`] object representing the
+  "carbon copy" recipients of the e-mail.
+* `from_address`: a [`DAEmailRecipient`] object representing the
+  sender of the e-mail.
+* `reply_to`: a [`DAEmailRecipient`] object representing the
+  the [Reply-to] header of the e-mail.
+* `return_path`: a [`DAEmailRecipient`] object representing the
+  the [Return-path] header of the e-mail.
+* `subject`: the subject line of the e-mail.
+* `datetime_message`: a [`datetime`] object representing the stated date
+  and time of the e-mail message.
+* `datetime_received`: a [`datetime`] object representing the actual
+  date and time of the message.
+* `body_text`: a [`DAFile`] object referring to a file containing the
+  plain text version of the e-mail.  If the e-mail did not contain a
+  plain text version, `body_text` will be `None`.
+* `body_html`: a [`DAFile`] object referring to a file containing the
+  [HTML] version of the e-mail.  If the e-mail did not contain a
+  [HTML] version, `body_html` will be `None`.
+* `attachment`: an object of type [`DAFileList`] containing any
+  files that were attached to the e-mail.  Each attachment is a
+  [`DAFile`] object.
+* `headers`: a [`DAFile`] object referring to a file containing a
+  [JSON] representation of the headers of the e-mail.  The format of
+  the [JSON] file is a [list], where each item in the [list] is a
+  [list] with two elements, the first of which is the name of the
+  header (e.g., `To`, `From`), and the second element is the value.
+
+## <a name="DAEmailRecipient"></a>DAEmailRecipient
+
+A `DAEmailRecipient` object is used within [`DAEmail`] objects to
+represent a single e-mail address and the name associated with the
+e-mail address.
+
+It has two attributes:
+
+* `address`: the e-mail address (e.g., `fred1985@yahoo.com`).
+* `name`: the name of the owner of the address (e.g., `Fred Smith`).
+
+### <a name="DAEmailRecipient.email_address"></a>`.email_address()`
+
+If `recipient` is a `DAEmailRecipient`, then calling
+`recipient.email_address()` will return the person's name followed by
+the person's e-mail address, in the standard e-mail format.  E.g.,
+`'Fred Smith <fred1985@yahoo.com>'`.  If the name is not defined,
+it will simply return the e-mail address (`fred1985@yahoo.com`).
+
+You can suppress the inclusion of the person's name by setting the
+optional keyword parameter `include_name` to `False`.
+
+This method is intended to allow you to use `DAEmailRecipient` objects
+in much the same way as [`Person`] objects are used when sending
+e-mails with [`send_email()`].  (See the
+[`.email_address()`] method for [`Person`] objects).
+
+### <a name="DAEmailRecipient.exists"></a>`.exists()`
+
+The `.exists()` method returns `True` if the `.address` attribute has
+been defined, and `False` otherwise.
+
+## <a name="DAEmailRecipientList"></a>DAEmailRecipientList
+
+A `DAEmailRecipientList` is a [`DAList`] of [`DAEmailRecipient`] objects.
+
 ## <a name="DATemplate"></a>DATemplate
 
 The [`template`] block allows you to store some text to a variable.  See
@@ -1002,7 +1084,15 @@ the verb into the past tense.
 
 Calling `defendant.email_address()` will return the person's name
 followed by the person's e-mail address, in the standard e-mail
-format.  E.g., `'ABC Corporation <info@abc.com>'`.
+format.  E.g., `'ABC Corporation <info@abc.com>'`.  If the name is not
+yet defined, the e-mail address by itself (`info@abc.com`) will be
+returned.
+
+If you want to force **docassemble** to ask for the recipient's name,
+set the optional keyword parameter `include_name` to `True`.
+
+You can suppress the inclusion of the person's name by setting
+`include_name` to `False`.
 
 ### <a name="Person.sms_number"></a>`.sms_number()`
 
@@ -1968,6 +2058,9 @@ and not an instance of the `Attorney` class.
 [`DAFileCollection`]: DAFileCollection
 [`DAFileList`]: #DAFileList
 [`DAFile`]: #DAFile
+[`DAEmail`]: #DAEmail
+[`DAEmailRecipient`]: #DAEmailRecipient
+[`DAEmailRecipientList`]: #DAEmailRecipientList
 [`DADict`]: #DAFile
 [`DAList`]: #DAList
 [`DASet`]: #DAList
@@ -2056,3 +2149,9 @@ and not an instance of the `Attorney` class.
 [Amazon S3]: https://aws.amazon.com/s3/
 [S3]: https://aws.amazon.com/s3/
 [Python Imaging Library]: https://en.wikipedia.org/wiki/Python_Imaging_Library
+[e-mail receiving]: {{ site.baseurl }}/docs/background.html#email
+[`interview_email()`]: {{ site.baseurl }}/docs/functions.html#interview_email
+[`datetime`]: https://docs.python.org/2/library/datetime.html#datetime.datetime
+[Return-path]: https://en.wikipedia.org/wiki/Bounce_address
+[Reply-to]: https://www.ietf.org/rfc/rfc2822.txt
+[JSON]: https://en.wikipedia.org/wiki/JSON

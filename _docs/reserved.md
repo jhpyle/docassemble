@@ -23,6 +23,8 @@ experience errors or unexpected results.
 * <span></span>[`loop`]: within a [Mako] "for" loop, this variable has
   special meaning.
 * <span></span>[`i`]: used as an iterator when [generic objects] are defined.
+* <span></span>[`incoming_email`]: a [special variable] that is used
+  as part of the [background processes] system.
 * <span></span>[`menu_items`]: used to add items to the menu.
 * <span></span>[`multi_user`]: a [special variable] that is used as
   part of the [roles] system.
@@ -591,3 +593,4 @@ All others are available for you to use and to retrieve with
 [`loop`]: http://docs.makotemplates.org/en/latest/runtime.html#loop-context
 [`STOP_RENDERING`]: http://docs.makotemplates.org/en/latest/syntax.html#exiting-early-from-a-template
 [Mako]: http://www.makotemplates.org/
+[background processes]: {{ site.baseurl }}/docs/background.html#background

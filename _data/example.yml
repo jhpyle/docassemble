@@ -621,6 +621,30 @@
     ${ country_name(user_country) },
     which is abbreviated
     ${ user_country }.
+"cron": |-
+  mandatory: True
+  code: |
+    use_cron = True
+    multi_user = True
+    counter = 0
+  ---
+  event: cron_hourly
+  code: |
+    counter += 0
+  ---
+  mandatory: True
+  question: |
+    The value of the counter is
+    ${ counter }.
+  subqueston: |
+    Every hour, the counter will
+    increase by one.
+
+    No, I do not expect you to wait
+    long enough to see the counter
+    increase!
+  buttons:
+    - Refresh: refresh
 "css": |-
   question: |
     Do you want to build a snowman?
@@ -952,13 +976,19 @@
   \ ${ email.return_path }\n  % if email.body_text:\n  * Body text: ${ email.body_text\
   \ }\n  % endif\n  % if email.body_html:\n  * Body HTML: ${ email.body_html.slurp()\
   \ }\n  % endif\n  % if len(email.attachment):\n  * Attachment: ${ email.attachment[0]\
-  \ }\n  % endif\n  \n  If you send another e-mail and refresh the \n  screen, you\
-  \ will see a list of all e-mails\n  below.\n  \n  % for item in get_emails():\n\
-  \  Subjects of all e-mails to ${ item.address }:\n  \n  % for mail_item in item.emails:\n\
-  \  * ${ mail_item.subject }\n  % endfor\n  % endfor\nbuttons:\n  - Refresh: refresh\n\
-  ---\nevent: incoming_email\ncode: |\n  # Time-consuming code that processes the\n\
-  \  # e-mail can go here.\n  background_response_action('save_email', email=action_argument('email'))\n\
-  ---\nevent: save_email\ncode: |\n  email = action_argument('email')\n  response()"
+  \ }\n  % endif\n---\nevent: incoming_email\ncode: |\n  # Time-consuming code that\
+  \ processes the\n  # e-mail can go here.\n  background_response_action('save_email',\
+  \ email=action_argument('email'))\n---\nevent: save_email\ncode: |\n  email = action_argument('email')\n\
+  \  response()"
+"email-to-case-simple": "modules:\n  - docassemble.base.util\n---\nquestion: |\n \
+  \ E-mailing to the interview\nsubquestion: |\n  When you press continue, you will\
+  \ be\n  provided with an e-mail address to\n  which you can send an email.\nfield:\
+  \ intro_seen\n---\nneed: intro_seen\nmandatory: true\nquestion: |\n  E-mails sent\
+  \ to case\nsubquestion: |\n  Send an e-mail to\n  ${ interview_email() }\n  and\
+  \ click Refresh.\n  \n  Be patient, though.  It takes a\n  few seconds for e-mails\
+  \ to travel\n  and be processed.\n  \n  % for item in get_emails():\n  Subject lines\
+  \ of all e-mails sent\n  to ${ item.address }:\n  \n    % for mail_item in item.emails:\n\
+  \  * ${ mail_item.subject }\n    % endfor\n  % endfor\nbuttons:\n  - Refresh: refresh"
 "embed": |-
   question: |
     Fill in the blanks.
@@ -3417,6 +3447,62 @@
         $("#beg").html("Pretty please?");
       }, 1000);
     </script>
+"send-email": |-
+  objects:
+    - recipient: Individual
+  ---
+  mandatory: true
+  question: |
+    E-mail test
+  subquestion: |
+    % if intro_provided and email_sent_ok:
+    The e-mail was sent successfully.
+    % else:
+    There was a problem sending the e-mail.
+    % endif
+  ---
+  question: |
+    E-mail test
+  subquestion: |
+    This interview will send you an e-mail.
+  field: intro_provided
+  ---
+  question: |
+    What is your name?
+  fields:
+    - First Name: recipient.name.first
+    - Last Name: recipient.name.last
+  ---
+  question: |
+    What is your e-mail address?
+  fields:
+    - E-mail: recipient.email
+      datatype: email
+  ---
+  code: |
+    email_sent_ok = send_email(to=recipient, template=notification)
+  ---
+  template: notification
+  subject: |
+    Greetings, ${ recipient }!
+  content: |
+    This is an e-mail sent from a
+    **docassemble** interview.
+
+    Have a nice day!
+"send-email-with-attachment": |-
+  question: |
+    Please fill in the following information.
+  fields:
+    - Your First Name: user.name.first
+    - Your Last Name: user.name.last
+    - Your E-mail: user.email
+      datatype: email
+    - A Picture: the_file
+      datatype: file
+  ---
+  code: |
+    success_sending_email = send_email(to=[user], template=hello_email, attachments=[the_file])
 "send-sms": |-
   modules:
     - docassemble.base.util

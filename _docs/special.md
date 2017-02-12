@@ -214,6 +214,8 @@ variables, which may not ever be defined by an interview.
 
 There are some built-in variable names with special meaning:
 
+* <a name="incoming_email"></a>[`incoming_email`] is used to indicate
+  a [`code`] block that should be run when an [e-mail] is received.
 * <a name="role_event"></a>[`role_event`] is used to present a special screen when the [roles]
   system requires a change in the interview role.
 * <a name="cron_hourly"></a>[`cron_hourly`] is used by the [scheduled tasks] system.  This
@@ -256,3 +258,4 @@ There are some built-in variable names with special meaning:
 [`cron_daily`]: {{ site.baseurl }}/docs/background.html#cron_daily
 [`cron_weekly`]: {{ site.baseurl }}/docs/background.html#cron_weekly
 [`cron_monthly`]: {{ site.baseurl }}/docs/background.html#cron_monthly
+[e-mail]: {{ site.baseurl }}/docs/background.html#email
