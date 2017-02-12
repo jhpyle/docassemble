@@ -448,6 +448,8 @@ if [[ $CONTAINERROLE =~ .*:(all|mail):.* ]]; then
 	ln -s /etc/letsencrypt/live/${DAHOSTNAME}/cert.pem /etc/exim4/exim.crt
 	ln -s /etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem /etc/exim4/exim.key
 	echo 'MAIN_TLS_ENABLE = yes' >> /etc/exim4/pginfo
+    else
+	echo 'MAIN_TLS_ENABLE = no' >> /etc/exim4/pginfo
     fi
     chmod og-rwx /etc/exim4/pginfo
     supervisorctl --serverurl http://localhost:9001 start exim4
