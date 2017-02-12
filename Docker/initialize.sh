@@ -438,6 +438,17 @@ fi
 if [[ $CONTAINERROLE =~ .*:(all|mail):.* ]]; then
     echo 'hide pgsql_servers = '${DBHOST}'::'${DBPORT}'/'${DBNAME}'/'${DBUSER}'/'${DBPASSWORD} > /etc/exim4/pginfo
     echo 'DAQUERY = select short from '${DBTABLEPREFIX}"shortener where short='\${quote_pgsql:\$local_part}'" >> /etc/exim4/pginfo
+    if [ -f /etc/ssl/docassemble/exim4.crt ] && [ -f /etc/ssl/docassemble/exim4.key ]; then
+	cp /etc/ssl/docassemble/exim4.crt /etc/exim4/exim4.crt
+	cp /etc/ssl/docassemble/exim4.key /etc/exim4/exim4.key
+	echo 'MAIN_TLS_ENABLE = yes' >> /etc/exim4/pginfo
+    elif [[ $CONTAINERROLE =~ .*:all:.* ]] && [ "${USELETSENCRYPT:-false}" == "true" ] && [ -f /etc/letsencrypt/live/${DAHOSTNAME}/cert.pem ] && [ -f /etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem ]; then
+  	rm -f /etc/exim4/exim.crt
+	rm -f /etc/exim4/exim.key
+	ln -s /etc/letsencrypt/live/${DAHOSTNAME}/cert.pem /etc/exim4/exim.crt
+	ln -s /etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem /etc/exim4/exim.key
+	echo 'MAIN_TLS_ENABLE = yes' >> /etc/exim4/pginfo
+    fi
     chmod og-rwx /etc/exim4/pginfo
     supervisorctl --serverurl http://localhost:9001 start exim4
 fi

@@ -1,6 +1,6 @@
 metadata:
-  title: E-mailing the interview
-  short title: E-mail
+  title: Running code upon receipt of e-mail
+  short title: E-mail code
   example start: 1
   example end: 7
   documentation: "http://docassemble.org/docs/background.html#email"
@@ -59,21 +59,6 @@ subquestion: |
   % if len(email.attachment):
   * Attachment: ${ email.attachment[0] }
   % endif
-  
-  If you send another e-mail and refresh the 
-  screen, you will see a list of all e-mails
-  below.
-  
-  % for item in get_emails():
-  Subject lines of all e-mails sent to
-  ${ item.address }:
-  
-    % for mail_item in item.emails:
-  * ${ mail_item.subject }
-    % endfor
-  % endfor
-buttons:
-  - Refresh: refresh
 ---
 event: incoming_email
 code: |

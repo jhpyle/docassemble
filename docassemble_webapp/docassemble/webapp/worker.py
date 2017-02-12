@@ -130,7 +130,8 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
         sys.stderr.write("background_action: yaml_filename is " + str(yaml_filename) + " and session code is " + str(session_code) + "\n")
         worker_controller.set_request_active(False)
         if action['action'] == 'incoming_email':
-            action['arguments'] = dict(email=worker_controller.retrieve_email(action['arguments']['id']))
+            if 'id' in action['arguments']:
+                action['arguments'] = dict(email=worker_controller.retrieve_email(action['arguments']['id']))
         interview = worker_controller.interview_cache.get_interview(yaml_filename)
         try:
             steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)

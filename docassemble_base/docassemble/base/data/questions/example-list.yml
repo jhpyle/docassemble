@@ -209,6 +209,7 @@
     - salutation
 - E-mail:
     - send-email
+    - email-to-case-simple
     - email-to-case
 - Background processes:
     - background_action

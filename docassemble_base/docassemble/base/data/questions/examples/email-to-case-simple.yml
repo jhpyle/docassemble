@@ -30,12 +30,14 @@ subquestion: |
   and be processed.
   
   % for item in get_emails():
+    % if len(item.emails):
   Subject lines of all e-mails sent
   to ${ item.address }:
   
-    % for mail_item in item.emails:
+      % for mail_item in item.emails:
   * ${ mail_item.subject }
-    % endfor
+      % endfor
+    % endif
   % endfor
 buttons:
   - Refresh: refresh

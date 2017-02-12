@@ -85,11 +85,13 @@ def main():
             read_in(line.rstrip(), desired_columns)
 
     commands = list()
+    if db_table_prefix + 'shortener' in existing_columns and db_table_prefix + 'email' not in existing_columns:
+        commands.append("drop table if exists " + db_table_prefix + "shortener;")
     for table_name in desired_columns:
         if db_table_prefix + table_name in existing_columns:
             for column_name in desired_columns[table_name]:
                 if column_name not in existing_columns[db_table_prefix + table_name]:
-                    output = "alter table \"" + table_name + "\" add column \"" + column_name + "\" " + desired_columns[table_name][column_name]['type']
+                    output = "alter table \"" + db_table_prefix + table_name + "\" add column \"" + column_name + "\" " + desired_columns[table_name][column_name]['type']
                     if desired_columns[table_name][column_name]['size']:
                         output += "(" + desired_columns[table_name][column_name]['size'] + ")"
                     if desired_columns[table_name][column_name]['default']:

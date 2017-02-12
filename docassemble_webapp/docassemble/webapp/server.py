@@ -9082,15 +9082,16 @@ def retrieve_emails(**pargs):
 
 def get_email_obj(email, short_record, user):
     email_obj = DAEmail(short=email.short)
+    email_obj.key = short_record.key
+    email_obj.index = short_record.index
     email_obj.initializeAttribute('to_address', DAEmailRecipientList, json.loads(email.to_addr), gathered=True)
+    email_obj.initializeAttribute('cc_address', DAEmailRecipientList, json.loads(email.cc_addr), gathered=True)
     email_obj.initializeAttribute('from_address', DAEmailRecipient, **json.loads(email.from_addr))
     email_obj.initializeAttribute('reply_to', DAEmailRecipient, **json.loads(email.reply_to_addr))
     email_obj.initializeAttribute('return_path', DAEmailRecipient, **json.loads(email.return_path_addr))
     email_obj.subject = email.subject
     email_obj.datetime_message = email.datetime_message
     email_obj.datetime_received = email.datetime_received
-    email_obj.key = short_record.key
-    email_obj.index = short_record.index
     email_obj.initializeAttribute('attachment', DAFileList, gathered=True)
     if user is None:
         email_obj.address_owner = None

@@ -25,18 +25,23 @@ def main():
     except Exception as errMess:
         fp.write("Failed to read e-mail message: " + str(errMess) + "\n")
         sys.exit("Failed to read e-mail message")
-    raw_date = msg.get('Date', None)
+    raw_date = msg.get('Date', msg.get('Resent-Date', None))
     addr_return_path = msg.get('Return-path', None)
     addr_reply_to = msg.get('Reply-to', None)
     addr_to = msg.get('Envelope-to', None)
-    addr_from = msg.get('From', None)
+    addr_from = msg.get('From', msg.get('Sender', None))
     subject = msg.get('Subject', None)
     fp.write("Message to " + str(addr_to) + "\n")
     #fp.write("From was " + str(addr_from) + "\n")
     #fp.write("Subject was " + str(subject) + "\n")
-    all_recipients = getaddresses(msg.get_all('to', []) + msg.get_all('cc', []) + msg.get_all('resent-to', []) + msg.get_all('resent-cc', []))
+    to_recipients = list()
+    for recipient in getaddresses(msg.get_all('to', []) + msg.get_all('resent-to', [])):
+        to_recipients.append(dict(name=recipient[0], address=recipient[1]))
+    cc_recipients = list()
+    for recipient in getaddresses(msg.get_all('cc', []) + msg.get_all('resent-cc', [])):
+        cc_recipients.append(dict(name=recipient[0], address=recipient[1]))
     recipients = list()
-    for recipient in all_recipients:
+    for recipient in getaddresses(msg.get_all('to', []) + msg.get_all('cc', []) + msg.get_all('resent-to', []) + msg.get_all('resent-cc', [])):
         recipients.append(dict(name=recipient[0], address=recipient[1]))
     if addr_to is None and len(recipients):
         addr_to = recipients[0]['address']
@@ -85,7 +90,7 @@ def main():
         headers.append([item[0], item[1]])
     #fp.write("headers:\n" + json.dumps(headers) + "\n")
     
-    email_record = Email(short=short_code, to_addr=json.dumps(recipients), from_addr=json.dumps(addr_from), reply_to_addr=json.dumps(addr_reply_to), return_path_addr=json.dumps(addr_return_path), subject=subject, datetime_message=msg_date, datetime_received=msg_current_time)
+    email_record = Email(short=short_code, all_addr=json.dumps(recipients), to_addr=json.dumps(to_recipients), cc_addr=json.dumps(cc_recipients), from_addr=json.dumps(addr_from), reply_to_addr=json.dumps(addr_reply_to), return_path_addr=json.dumps(addr_return_path), subject=subject, datetime_message=msg_date, datetime_received=msg_current_time)
     db.session.add(email_record)
     db.session.commit()
 
@@ -123,7 +128,6 @@ def main():
     else:
         user_info = dict(email=user.email, roles=[role.name for role in user.roles], the_user_id=user.id, theid=user.id, firstname=user.first_name, lastname=user.last_name, nickname=user.nickname, country=user.country, subdivisionfirst=user.subdivisionfirst, subdivisionsecond=user.subdivisionsecond, subdivisionthird=user.subdivisionthird, organization=user.organization)
     result = docassemble.webapp.worker.background_action.delay(record.filename, user_info, record.uid, None, 'http://localhost', 'http://localhost', dict(action='incoming_email', arguments=dict(id=email_record.id)), extra=None)
-    #result = docassemble.webapp.worker.process_incoming_email.delay(new_record.id, record.id)
 
 def save_attachment(uid, yaml_filename, filename, email_id, index, content_type, extension, content):
     att_file_number = get_new_file_number(uid, filename, yaml_file_name=yaml_filename)
