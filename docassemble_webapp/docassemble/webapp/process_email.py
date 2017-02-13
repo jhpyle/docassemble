@@ -90,7 +90,7 @@ def main():
         headers.append([item[0], item[1]])
     #fp.write("headers:\n" + json.dumps(headers) + "\n")
     
-    email_record = Email(short=short_code, all_addr=json.dumps(recipients), to_addr=json.dumps(to_recipients), cc_addr=json.dumps(cc_recipients), from_addr=json.dumps(addr_from), reply_to_addr=json.dumps(addr_reply_to), return_path_addr=json.dumps(addr_return_path), subject=subject, datetime_message=msg_date, datetime_received=msg_current_time)
+    email_record = Email(short=short_code, to_addr=json.dumps(to_recipients), cc_addr=json.dumps(cc_recipients), from_addr=json.dumps(addr_from), reply_to_addr=json.dumps(addr_reply_to), return_path_addr=json.dumps(addr_return_path), subject=subject, datetime_message=msg_date, datetime_received=msg_current_time)
     db.session.add(email_record)
     db.session.commit()
 

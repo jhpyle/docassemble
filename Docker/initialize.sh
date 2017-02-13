@@ -441,12 +441,18 @@ if [[ $CONTAINERROLE =~ .*:(all|mail):.* ]]; then
     if [ -f /etc/ssl/docassemble/exim4.crt ] && [ -f /etc/ssl/docassemble/exim4.key ]; then
 	cp /etc/ssl/docassemble/exim4.crt /etc/exim4/exim4.crt
 	cp /etc/ssl/docassemble/exim4.key /etc/exim4/exim4.key
+	chown root.Debian-exim /etc/exim4/exim.crt
+	chown root.Debian-exim /etc/exim4/exim.key
+	chmod 640 /etc/exim4/exim.crt
+	chmod 640 /etc/exim4/exim.key
 	echo 'MAIN_TLS_ENABLE = yes' >> /etc/exim4/pginfo
     elif [[ $CONTAINERROLE =~ .*:all:.* ]] && [ "${USELETSENCRYPT:-false}" == "true" ] && [ -f /etc/letsencrypt/live/${DAHOSTNAME}/cert.pem ] && [ -f /etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem ]; then
-  	rm -f /etc/exim4/exim.crt
-	rm -f /etc/exim4/exim.key
-	ln -s /etc/letsencrypt/live/${DAHOSTNAME}/cert.pem /etc/exim4/exim.crt
-	ln -s /etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem /etc/exim4/exim.key
+	cp /etc/letsencrypt/live/${DAHOSTNAME}/fullchain.pem /etc/exim4/exim.crt
+	cp /etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem /etc/exim4/exim.key
+	chown root.Debian-exim /etc/exim4/exim.crt
+	chown root.Debian-exim /etc/exim4/exim.key
+	chmod 640 /etc/exim4/exim.crt
+	chmod 640 /etc/exim4/exim.key
 	echo 'MAIN_TLS_ENABLE = yes' >> /etc/exim4/pginfo
     else
 	echo 'MAIN_TLS_ENABLE = no' >> /etc/exim4/pginfo

@@ -139,6 +139,8 @@ email|return_path_addr|text||
 email|subject|text||
 email|datetime_message|timestamp without time zone||
 email|datetime_received|timestamp without time zone||
+email|all_addr|text||
+email|cc_addr|text||
 emailattachment|id|integer||nextval('emailattachment_id_seq'::regclass)
 emailattachment|email_id|integer||
 emailattachment|index|integer||

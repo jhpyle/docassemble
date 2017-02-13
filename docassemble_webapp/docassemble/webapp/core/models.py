@@ -71,7 +71,9 @@ class Email(db.Model):
     __tablename__ = dbtableprefix + "email"
     id = db.Column(db.Integer(), primary_key=True)
     short = db.Column(db.String(250), db.ForeignKey(dbtableprefix + 'shortener.short', ondelete='CASCADE'))
+    all_addr = db.Column(db.Text())
     to_addr = db.Column(db.Text())
+    cc_addr = db.Column(db.Text())
     from_addr = db.Column(db.Text())
     reply_to_addr = db.Column(db.Text())
     return_path_addr = db.Column(db.Text())

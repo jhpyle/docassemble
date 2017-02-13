@@ -33,6 +33,16 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 		    fi
 		    s3cmd -q sync /etc/apache2/sites-available/ 's3://'${S3BUCKET}/apache/
 		fi
+		if [[ $CONTAINERROLE =~ .*:all:.* ]]; then
+		    cp /etc/letsencrypt/live/${DAHOSTNAME}/fullchain.pem /etc/exim4/exim.crt
+		    cp /etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem /etc/exim4/exim.key
+		    chown root.Debian-exim /etc/exim4/exim.crt
+		    chown root.Debian-exim /etc/exim4/exim.key
+		    chmod 640 /etc/exim4/exim.crt
+		    chmod 640 /etc/exim4/exim.key
+		    supervisorctl --serverurl http://localhost:9001 stop exim4
+		    supervisorctl --serverurl http://localhost:9001 start exim4
+		fi
 	    fi
 	fi
     fi
