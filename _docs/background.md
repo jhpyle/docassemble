@@ -851,17 +851,8 @@ Here is how it works:
 {% include side-by-side.html demo="email-to-case-simple" %}
 
 In order for this feature to work, your server must be configured to
-receive e-mails.  The [Docker] image includes an e-mail server that
-is configured to work with **docassemble**.  Configuring the e-mail
-receiving feature also involves:
-
-* Setting the MX record for your domain (e.g., `help.example.com`) so
-  that e-mails sent to addresses ending with `@help.example.com` will
-  be directed to the **docassemble** server.
-* Setting the [`incoming mail domain`] directive in the
-  [configuration] to this domain (e.g. `help.example.com`).
-* Editing the firewall rules protecting the **docassemble** server so
-  that incoming port 25 ([SMTP]) is open.
+receive e-mails.  See the [e-mail setup] section of the [installation]
+instructions for information about configuring the e-mail server.
 
 ## Running code in the background when an e-mail arrives
 
@@ -977,6 +968,7 @@ privileges and user identity of the [cron user].
 [events]: {{ site.baseurl }}/docs/fields.html#event
 [functions]: {{ site.baseurl }}/docs/functions.html
 [installed]: {{ site.baseurl }}/docs/installation.html
+[installation]: {{ site.baseurl }}/docs/installation.html
 [interview deletion]: #deleting
 [interview logic]: {{ site.baseurl }}/docs/logic.html
 [multi-user interview]: {{ site.baseurl }}/docs/roles.html
@@ -1005,3 +997,4 @@ privileges and user identity of the [cron user].
 [`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [Markdown]: https://daringfireball.net/projects/markdown/
 [e-mail messages]: #email
+[e-mail setup]: {{ site.baseurl }}/docs/installation.html#setup_email

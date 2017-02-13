@@ -210,7 +210,7 @@ Then, you can pass these environment variables to the container using
 the [`docker run`] command:
 
 {% highlight bash %}
-docker run --env-file=env.list -d -p 80:80 -p 443:443 jhpyle/docassemble
+docker run --env-file=env.list -d -p 80:80 -p 443:443 -p 25:25 jhpyle/docassemble
 {% endhighlight %}
 
 These configuration options will cause the [Apache] configuration file
@@ -494,7 +494,7 @@ updated, run the image as follows:
 {% highlight bash %}
 docker run --env-file=env.list \
 -v dabackup:/usr/share/docassemble/backup \
--d -p 80:80 -p 443:443 jhpyle/docassemble
+-d -p 80:80 -p 443:443 -p 25:25 jhpyle/docassemble
 {% endhighlight %}
 
 where `--env-file=env.list` is an optional parameter that refers to a
@@ -634,7 +634,7 @@ jhpyle/docassemble
 docker run \
 -e CONTAINERROLE=web:celery \
 ...
--d -p 80:80 -p 443:443 -p 9001:9001 \
+-d -p 80:80 -p 443:443 -p 25:25 -p 9001:9001 \
 jhpyle/docassemble
 {% endhighlight %}
 
@@ -686,7 +686,7 @@ docker run \
 -e S3BUCKET=docassemble-example-com \
 -e S3ACCESSKEY=FWIEJFIJIDGISEJFWOEF \
 -e S3SECRETACCESSKEY=RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG \
--d -p 80:80 -p 443:443 -p 9001:9001 \
+-d -p 80:80 -p 443:443 -p 25:25 -p 9001:9001 \
 jhpyle/docassemble
 {% endhighlight %}
 
@@ -915,7 +915,7 @@ docker build -t yourdockerhubusername/mydocassemble .
 You can then run your image:
 
 {% highlight bash %}
-docker run -d -p 80:80 -p 443:443 -p 9001:9001 yourdockerhubusername/mydocassemble
+docker run -d -p 80:80 -p 443:443 -p 25:25 -p 9001:9001 yourdockerhubusername/mydocassemble
 {% endhighlight %}
 
 Or push it to [Docker Hub]:

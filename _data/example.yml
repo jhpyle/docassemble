@@ -986,9 +986,10 @@
   \ intro_seen\n---\nneed: intro_seen\nmandatory: true\nquestion: |\n  E-mails sent\
   \ to case\nsubquestion: |\n  Send an e-mail to\n  ${ interview_email() }\n  and\
   \ click Refresh.\n  \n  Be patient, though.  It takes a\n  few seconds for e-mails\
-  \ to travel\n  and be processed.\n  \n  % for item in get_emails():\n  Subject lines\
-  \ of all e-mails sent\n  to ${ item.address }:\n  \n    % for mail_item in item.emails:\n\
-  \  * ${ mail_item.subject }\n    % endfor\n  % endfor\nbuttons:\n  - Refresh: refresh"
+  \ to travel\n  and be processed.\n  \n  % for item in get_emails():\n    % if len(item.emails):\n\
+  \  Subject lines of all e-mails sent\n  to ${ item.address }:\n  \n      % for mail_item\
+  \ in item.emails:\n  * ${ mail_item.subject }\n      % endfor\n    % endif\n  %\
+  \ endfor\nbuttons:\n  - Refresh: refresh"
 "embed": |-
   question: |
     Fill in the blanks.
@@ -2205,6 +2206,13 @@
   code: |
     fears.extend(['spiders', 'snakes', 'fish'])
     fears.gathered = True
+  ---
+  mandatory: True
+  question: |
+    Your fears
+  subquestion: |
+    You are afraid of
+    ${ comma_and_list(fears) }.
 "live_chat": |-
   modules:
     - docassemble.base.util

@@ -89,8 +89,9 @@ the same server or on a central server on the same local area network:
 
 * A SQL server;
 * A [Redis] server (port 6379) (multiple databases of which are used);
-* A [RabbitMQ] server (port 5672); and
-* A [Celery] background process.
+* A [RabbitMQ] server (port 5672);
+* A [Celery] background process; and
+* An [SMTP] server for receiving e-mails (port 25).
 
 In addition, if you want to be able to view consolidated log files
 when you use a [multi-server arrangement], a central log server needs
@@ -120,7 +121,8 @@ The authentication keys for these services can be set up in the
 most cloud providers block outgoing [SMTP] connections, so you may
 have to use a special service to send e-mail.  For example, on
 [Amazon Web Services], you can use [Amazon SES], and on
-[Microsoft Azure], you can use [SendGrid].
+[Microsoft Azure], you can use [SendGrid].  To set up e-mail sending,
+see the [`mail`] directive in the [configuration].
 
 # Installing underlying packages
 
@@ -148,7 +150,7 @@ sudo apt-get install apt-utils tzdata python python-dev wget unzip \
   libcurl4-openssl-dev libssl-dev redis-server rabbitmq-server \
   libreoffice libtool libtool-bin pacpl syslog-ng rsync s3cmd \
   curl mktemp dnsutils tesseract-ocr-eng tesseract-ocr-spa \
-  tesseract-ocr build-essentials nodejs npm
+  tesseract-ocr build-essentials nodejs npm exim4-daemon-heavy
 {% endhighlight %}
 
 **docassemble** depends on version 5.0.1 or later of the
@@ -348,6 +350,8 @@ sudo cp ./docassemble/Docker/cron/docassemble-cron-hourly.sh /etc/cron.hourly/do
 sudo cp ./docassemble/Docker/docassemble.conf /etc/apache2/conf-available/docassemble.conf
 sudo cp ./docassemble/Docker/config/docassemble-http.conf.dist /etc/apache2/sites-available/docassemble.conf
 sudo cp ./docassemble/Docker/docassemble-supervisor.conf /etc/supervisor/conf.d/docassemble.conf
+sudo cp ./docassemble/Docker/ssl/* /usr/share/docassemble/certs/
+sudo cp ./docassemble/Docker/rabbitmq.config /etc/rabbitmq/
 {% endhighlight %}
 
 The `/etc/apache2/conf-available/docassemble.conf` file contains
@@ -487,7 +491,7 @@ than `/usr/share/docassemble/config/config.yml`, you can run
 `docassemble.webapp.create_tables` by passing the the configuration
 file path as the first parameter on the command line.)
 
-# Setting up the log server
+# <a name="setup_log"></a>Setting up the log server
 
 If you are only running **docassemble** on a single machine, you do
 not need to worry about operating a central log server, and you can
@@ -520,6 +524,42 @@ example:
 destination d_net { tcp("log.example.local" port(514) log_fifo_size(1000)); };
 {% endhighlight %}
 
+# <a name="setup_email"></a>Setting up the e-mail server
+
+If you want to use the [e-mail receiving] feature, you need to set up
+the e-mail server so that connects with **docassemble**.  Do the
+following as `root`:
+
+{% highlight bash %}
+cp ./docassemble/Docker/config/exim4-router /etc/exim4/conf.d/router/101_docassemble
+cp ./docassemble/Docker/config/exim4-filter /etc/exim4/docassemble-filter
+cp ./docassemble/Docker/config/exim4-main /etc/exim4/conf.d/main/01_docassemble
+cp ./docassemble/Docker/config/exim4-acl /etc/exim4/conf.d/acl/29_docassemble
+cp ./docassemble/Docker/config/exim4-update /etc/exim4/update-exim4.conf.conf
+update-exim4.conf
+{% endhighlight %}
+
+This causes incoming e-mails to be filtered through
+`/usr/share/docassemble/webapp/process-email.sh`, which saves the
+e-mail to a temporary file and then runs the
+`docassemble.webapp.process_email` module on the temporary file.
+
+Configuring the e-mail receiving feature also involves:
+
+* Setting the MX record for your domain (e.g. `help.example.com`) so
+  that e-mails sent to addresses ending with `@help.example.com` will
+  be directed to the **docassemble** server.
+* Setting the [`incoming mail domain`] directive in the
+  [configuration] to this domain (`help.example.com`).
+* Editing the firewall rules protecting the **docassemble** server so
+  that incoming port 25 ([SMTP]) is open.
+* Ensuring that no other application on the server is using port 25.
+
+Note that sending e-mail and receiving e-mail usually require separate
+[SMTP] servers.  To set up e-mail sending, see the [`mail`] directive
+in the [configuration].  (Most cloud hosting services allow servers to
+receive e-mail, but restrict servers' ability to send e-mail.)
+
 # Connecting to other external services
 
 To obtain the full benefit of **docassemble**, you will need to obtain
@@ -539,8 +579,18 @@ mail server.
 
 # Start the server and background processes
 
-Before starting **docassemble**, make sure that [Redis] and [RabbitMQ]
-are already running.
+First, make sure that your system is not running services that should
+be stopped and started by [supervisor]:
+
+{% highlight bash %}
+sudo systemctl stop apache2.service
+sudo systemctl disable apache2.service
+sudo systemctl stop exim4.service
+sudo systemctl disable exim4.service
+{% endhighlight %}
+
+Make sure that [Redis] and [RabbitMQ] are already running.  They
+should have started running after installation.
 
 To check [Redis], do:
 
@@ -559,18 +609,11 @@ sudo rabbitmqctl status
 If it responds with "Error: unable to connect to node . . ." then
 there is a problem with [RabbitMQ].
 
-Finally, restart [Apache] and [supervisor]:
+Then, restart the [supervisor] service:
 
 {% highlight bash %}
-sudo /etc/init.d/apache2 restart
-sudo /etc/init.d/supervisor restart
-{% endhighlight %}
-
-or, if you use systemd:
-
-{% highlight bash %}
-sudo systemctl restart apache2.service
-sudo systemctl restart supervisor.service
+sudo systemctl stop supervisor.service
+sudo systemctl start supervisor.service
 {% endhighlight %}
 
 You will find **docassemble** running at http://example.com/da.
@@ -585,7 +628,15 @@ every time)
 * `/var/log/apache2/error.log`
 * `/usr/share/docassemble/log/docassemble.log`
 * `/tmp/flask.log`
+
+If you are debugging [background processes], check:
+
+* `/usr/share/docassemble/log/worker.log`
+
+If you are debugging [e-mail receiving], check:
+
 * `/tmp/mail.log`
+* `/var/log/exim4/mainlog`
 
 If you get an error in the browser that looks like a standard [Apache]
 error message, look in `/var/log/apache2/error.log`.  If you get an
@@ -779,11 +830,11 @@ sudo -H -u www-data bash -c "source /usr/share/docassemble/local/bin/activate &&
 rm -rf /usr/share/docassemble/files/0*
 {% endhighlight %}
 
-Then, restart [Apache] and [supervisor].
+Then, restart [supervisor].
 
 {% highlight bash %}
-sudo systemctl restart apache2.service
-sudo systemctl restart supervisor.service
+sudo systemctl stop supervisor.service
+sudo systemctl start supervisor.service
 {% endhighlight %}
 
 Other times, a **docassemble** upgrade involves changes to the
@@ -805,6 +856,7 @@ files.  In this case, you will need to manually reinstall
 [`db`]: {{ site.baseurl }}/docs/config.html#db
 [`redis`]: {{ site.baseurl }}/docs/config.html#redis
 [`rabbitmq`]: {{ site.baseurl }}/docs/config.html#rabbitmq
+[`mail`]: {{ site.baseurl }}/docs/config.html#mail
 [Perl Audio Converter]: http://vorzox.wix.com/pacpl
 [pacpl]: http://vorzox.wix.com/pacpl
 [ffmpeg]: https://www.ffmpeg.org/
@@ -875,3 +927,6 @@ files.  In this case, you will need to manually reinstall
 [Microsoft Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
 [Microsoft Azure]: https://azure.microsoft.com/en-us/
 [SendGrid]: https://sendgrid.com/
+[Exim]: https://en.wikipedia.org/wiki/Exim
+[e-mail receiving]: {{ site.baseurl }}/docs/background.html#email
+[`incoming mail domain`]: {{ site.baseurl }}/docs/config.html#incoming mail domain

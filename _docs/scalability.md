@@ -223,10 +223,25 @@ the keyword "ecs-optimized" and pick the most recent [AMI] that comes
 up.  The [AMI]s will not be listed in any useful order, so you have to
 look carefully at the names, which contain the dates the [AMI]s were
 created.  As of this writing, the most recent ECS-optimzed [AMI] is
-"amzn-ami-2016.09.b-amazon-ecs-optimized."  Set the "IAM role" of the
+"amzn-ami-2016.09.f-amazon-ecs-optimized."
+
+In the "Configure details" section, set the "IAM role" of the
 [Launch Configuration] to `docassembleInstanceRole`, the [IAM] role
-you created earlier.  Set the security group to `docassembleSg`, the
-[Security Group] you created earlier.
+you created earlier.  open the "Advanced Details" and add the
+following as "User data":
+
+{% highlight bash %}
+#!/bin/bash
+sudo chkconfig sendmail off
+sudo service sendmail stop
+{% endhighlight %}
+
+This is necessary in order to enable the [e-mail receiving] feature.
+If [sendmail] is running on the EC2 host, then a [Docker] container
+running on the host will not be able to bind to the [SMTP] port.
+
+In the "Configure Security Group" section, set the security group to
+`docassembleSg`, the [Security Group] you created earlier.
 
 Then go to the "Auto Scaling Groups" section of the [EC2 Console] and
 create a new [Auto Scaling Group] called `docassembleAsg`.  Connect it
@@ -871,6 +886,11 @@ for your domain:
 v=spf1 mx include:amazonses.com ~all
 {% endhighlight %}
 
+Initially, [Amazon SES] puts your account in a "sandbox" that allows
+you to send e-mails only to addresses you manually verify.  To get out
+of this "sandbox," you need to [submit a support request] describing
+your use case.
+
 # Using S3 without passing access keys in the configuration
 
 If you are running **docassemble** on an [EC2] instance, or on a
@@ -1048,4 +1068,5 @@ number of PostgreSQL connections will be 12.
 [`db`]: {{ site.baseurl }}/docs/config.html#db
 [`host`]: {{ site.baseurl }}/docs/config.html#db host
 [SMTP]: https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol
-
+[e-mail receiving]: {{ site.baseurl }}/docs/background.html#email
+[submit a support request]: http://docs.aws.amazon.com/ses/latest/DeveloperGuide/request-production-access.html
