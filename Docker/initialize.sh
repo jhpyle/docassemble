@@ -347,18 +347,25 @@ if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ "$APACHERUNNING" = false ]; 
     rm -f /etc/apache2/ports.conf
 fi
 
+if [ ! -f /usr/share/docassemble/certs/apache.key ] && [ -f /usr/share/docassemble/certs/apache.key.orig ]; then
+    mv /usr/share/docassemble/certs/apache.key.orig /usr/share/docassemble/certs/apache.key
+fi
+if [ ! -f /usr/share/docassemble/certs/apache.crt ] && [ -f /usr/share/docassemble/certs/apache.crt.orig ]; then
+    mv /usr/share/docassemble/certs/apache.crt.orig /usr/share/docassemble/certs/apache.crt
+fi
+if [ ! -f /usr/share/docassemble/certs/apache.ca.pem ] && [ -f /usr/share/docassemble/certs/apache.ca.pem.orig ]; then
+    mv /usr/share/docassemble/certs/apache.ca.pem.orig /usr/share/docassemble/certs/apache.ca.pem
+fi
+if [ ! -f /usr/share/docassemble/certs/exim.key ] && [ -f /usr/share/docassemble/certs/exim.key.orig ]; then
+    mv /usr/share/docassemble/certs/exim.key.orig /usr/share/docassemble/certs/exim.key
+fi
+if [ ! -f /usr/share/docassemble/certs/exim.crt ] && [ -f /usr/share/docassemble/certs/exim.crt.orig ]; then
+    mv /usr/share/docassemble/certs/exim.crt.orig /usr/share/docassemble/certs/exim.crt
+fi
+python -m docassemble.webapp.install_certs $DA_CONFIG_FILE || exit 1
+
 if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
     echo "Listen 80" >> /etc/apache2/ports.conf
-    if [ ! -f /usr/share/docassemble/certs/docassemble.key ] && [ -f /usr/share/docassemble/certs/docassemble.key.orig ]; then
-	mv /usr/share/docassemble/certs/docassemble.key.orig /usr/share/docassemble/certs/docassemble.key
-    fi
-    if [ ! -f /usr/share/docassemble/certs/docassemble.crt ] && [ -f /usr/share/docassemble/certs/docassemble.crt.orig ]; then
-	mv /usr/share/docassemble/certs/docassemble.crt.orig /usr/share/docassemble/certs/docassemble.crt
-    fi
-    if [ ! -f /usr/share/docassemble/certs/docassemble.ca.pem ] && [ -f /usr/share/docassemble/certs/docassemble.ca.pem.orig ]; then
-	mv /usr/share/docassemble/certs/docassemble.ca.pem.orig /usr/share/docassemble/certs/docassemble.ca.pem
-    fi
-    python -m docassemble.webapp.install_certs $DA_CONFIG_FILE || exit 1
     if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
 	echo "Listen 8081" >> /etc/apache2/ports.conf
 	a2ensite docassemble-redirect
@@ -438,15 +445,15 @@ fi
 if [[ $CONTAINERROLE =~ .*:(all|mail):.* ]]; then
     echo 'hide pgsql_servers = '${DBHOST}'::'${DBPORT}'/'${DBNAME}'/'${DBUSER}'/'${DBPASSWORD} > /etc/exim4/pginfo
     echo 'DAQUERY = select short from '${DBTABLEPREFIX}"shortener where short='\${quote_pgsql:\$local_part}'" >> /etc/exim4/pginfo
-    if [ -f /etc/ssl/docassemble/exim4.crt ] && [ -f /etc/ssl/docassemble/exim4.key ]; then
-	cp /etc/ssl/docassemble/exim4.crt /etc/exim4/exim4.crt
-	cp /etc/ssl/docassemble/exim4.key /etc/exim4/exim4.key
+    if [ -f /etc/ssl/docassemble/exim.crt ] && [ -f /etc/ssl/docassemble/exim.key ]; then
+	cp /etc/ssl/docassemble/exim.crt /etc/exim4/exim.crt
+	cp /etc/ssl/docassemble/exim.key /etc/exim4/exim.key
 	chown root.Debian-exim /etc/exim4/exim.crt
 	chown root.Debian-exim /etc/exim4/exim.key
 	chmod 640 /etc/exim4/exim.crt
 	chmod 640 /etc/exim4/exim.key
 	echo 'MAIN_TLS_ENABLE = yes' >> /etc/exim4/pginfo
-    elif [[ $CONTAINERROLE =~ .*:all:.* ]] && [ "${USELETSENCRYPT:-false}" == "true" ] && [ -f /etc/letsencrypt/live/${DAHOSTNAME}/cert.pem ] && [ -f /etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem ]; then
+    elif [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "${USELETSENCRYPT:-false}" == "true" ] && [ -f /etc/letsencrypt/live/${DAHOSTNAME}/cert.pem ] && [ -f /etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem ]; then
 	cp /etc/letsencrypt/live/${DAHOSTNAME}/fullchain.pem /etc/exim4/exim.crt
 	cp /etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem /etc/exim4/exim.key
 	chown root.Debian-exim /etc/exim4/exim.crt

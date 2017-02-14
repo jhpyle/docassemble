@@ -3,9 +3,9 @@
         ServerAdmin webmaster@localhost
         #ServerName {{DAHOSTNAME}}
         SSLEngine on
-        SSLCertificateFile /etc/ssl/docassemble/docassemble.crt
-        SSLCertificateKeyFile /etc/ssl/docassemble/docassemble.key 
-        SSLCertificateChainFile /etc/ssl/docassemble/docassemble.ca.pem
+        SSLCertificateFile /etc/ssl/docassemble/apache.crt
+        SSLCertificateKeyFile /etc/ssl/docassemble/apache.key 
+        SSLCertificateChainFile /etc/ssl/docassemble/apache.ca.pem
         XSendFile on
         XSendFilePath /usr
         XSendFilePath /tmp

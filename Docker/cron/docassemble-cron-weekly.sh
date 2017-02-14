@@ -33,7 +33,7 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 		    fi
 		    s3cmd -q sync /etc/apache2/sites-available/ 's3://'${S3BUCKET}/apache/
 		fi
-		if [[ $CONTAINERROLE =~ .*:all:.* ]]; then
+		if [ ! -f /etc/ssl/docassemble/exim.crt ] && [ ! -f /etc/ssl/docassemble/exim.key ]; then
 		    cp /etc/letsencrypt/live/${DAHOSTNAME}/fullchain.pem /etc/exim4/exim.crt
 		    cp /etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem /etc/exim4/exim.key
 		    chown root.Debian-exim /etc/exim4/exim.crt
