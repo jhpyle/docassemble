@@ -837,7 +837,7 @@ If you installed the web servers before installing the SQL server,
 note that the [`create_tables`] module will need to be run in order to
 create the database tables that **docassemble** expects.
 
-# Mail server
+# E-mail sending
 
 If you are launching **docassemble** within [EC2], note that Amazon does
 not allow e-mail to be sent from [SMTP] servers operating within an [EC2]

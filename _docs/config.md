@@ -296,9 +296,9 @@ certs: /netmount/files/docassemble/certs
 By default, the [Apache] HTTPS configuration contains:
 
 {% highlight text %}
-SSLCertificateFile /etc/ssl/docassemble/docassemble.crt
-SSLCertificateKeyFile /etc/ssl/docassemble/docassemble.key 
-SSLCertificateChainFile /etc/ssl/docassemble/docassemble.ca.pem
+SSLCertificateFile /etc/ssl/docassemble/apache.crt
+SSLCertificateKeyFile /etc/ssl/docassemble/apache.key 
+SSLCertificateChainFile /etc/ssl/docassemble/apache.ca.pem
 {% endhighlight %}
 
 When using a [multi-server arrangement] or [Docker], the [supervisor]
@@ -329,9 +329,9 @@ apt-get install s3cmd
 Then do:
 
 {% highlight bash %}
-s3cmd --access_key=YOURACCESSKEY --secret_key=YOURSECRETKEY put yourserver.crt s3://yourbucket/certs/docassemble.crt
-s3cmd --access_key=YOURACCESSKEY --secret_key=YOURSECRETKEY put yourserver.key s3://yourbucket/certs/docassemble.key
-s3cmd --access_key=YOURACCESSKEY --secret_key=YOURSECRETKEY put yourserver.ca.pem s3://yourbucket/certs/docassemble.ca.pem
+s3cmd --access_key=YOURACCESSKEY --secret_key=YOURSECRETKEY put yourserver.crt s3://yourbucket/certs/apache.crt
+s3cmd --access_key=YOURACCESSKEY --secret_key=YOURSECRETKEY put yourserver.key s3://yourbucket/certs/apache.key
+s3cmd --access_key=YOURACCESSKEY --secret_key=YOURSECRETKEY put yourserver.ca.pem s3://yourbucket/certs/apache.ca.pem
 {% endhighlight %}
 
 If your [`s3`] configuration has `bucket: yourbucket`, then you do not

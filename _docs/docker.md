@@ -238,7 +238,7 @@ You can set the following configuration options:
   * `redis`: The [Docker] container will run the central [Redis] service.
   * `rabbitmq`: The [Docker] container will run the central [RabbitMQ] service.
   * `log`: The [Docker] container will run the central log aggregation service.
-  * `mail`: The [Docker] container will accept [e-mails].
+  * `mail`: The [Docker] container will run [Exim] in order to accept [e-mails].
 * <a name="SERVERHOSTNAME"></a>`SERVERHOSTNAME`: In a
   [multi-server arrangement], all **docassemble** application servers
   need to be able to communicate with each other using port 9001 (the
@@ -592,6 +592,9 @@ less powerful machines.
 
 Since the SQL, [Redis], and [RabbitMQ] services are standard services,
 they do not have to be run from **docassemble** [Docker] containers.
+For example, if you are already running a SQL server, a [Redis]
+server, and a [RabbitMQ] server, you could just point **docassemble**
+to those resources.
 
 To change the SQL server that **docassemble** uses, edit the
 [`DBHOST`], [`DBNAME`], [`DBUSER`], [`DBPASSWORD`], [`DBPREFIX`],
@@ -634,7 +637,7 @@ jhpyle/docassemble
 docker run \
 -e CONTAINERROLE=web:celery \
 ...
--d -p 80:80 -p 443:443 -p 25:25 -p 9001:9001 \
+-d -p 80:80 -p 443:443 -p 9001:9001 \
 jhpyle/docassemble
 {% endhighlight %}
 
@@ -686,11 +689,13 @@ docker run \
 -e S3BUCKET=docassemble-example-com \
 -e S3ACCESSKEY=FWIEJFIJIDGISEJFWOEF \
 -e S3SECRETACCESSKEY=RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG \
--d -p 80:80 -p 443:443 -p 25:25 -p 9001:9001 \
+-d -p 80:80 -p 443:443 -p 9001:9001 \
 jhpyle/docassemble
 {% endhighlight %}
 
-# <a name="https"></a>Using HTTPS
+# <a name="Encryption"></a>Encrypting communications
+
+## <a name="https"></a>Using HTTPS
 
 If you are running **docassemble** on [EC2], the easiest way to enable
 HTTPS support is to set up an [Application Load Balancer] that accepts
@@ -701,13 +706,16 @@ and hosting the necessary SSL certificates.
 If you are not using a [load balancer], you can use HTTPS either by
 setting up [Let's Encrypt] or by providing your own certificates.
 
-## <a name="letsencrypt"></a>With Let's Encrypt
+### <a name="letsencrypt"></a>With Let's Encrypt
 
-Note: using [Let's Encrypt] to enable [HTTPS] only works in a
-[single-server arrangement].
+If you are running **docassemble** in a [single-server arrangement],
+or in a [multi-server arrangement] with only one web server, you can
+use [Let's Encrypt] to enable [HTTPS].  If you have more than one web
+server, you can enable encryption [without Let's Encrypt] by
+installing your own certificates.
 
-In your task definition or `env.list` file, set the following
-environment variables:
+To use [Let's Encrypt], set the following environment variables in
+your task definition or `env.list` file:
 
 * `USELETSENCRYPT`: set this to `True`.
 * `LETSENCRYPTEMAIL`: [Let's Encrypt] requires an e-mail address, which
@@ -734,41 +742,47 @@ appropriate SSL certificates.  When the server is later restarted,
 the `letsencrypt renew` command will be run, which will refresh the
 certificates if they are within 30 days of expiring.
 
-In addition, a script will run on a weekly basis to attempt to renew
+In addition, a [script] will run on a weekly basis to attempt to renew
 the certificates.
 
-## Without Let's Encrypt
+If you are using a [multi-server arrangement] with a single web
+server, you need to run the `cron` role on the same server that runs
+the `web` role.  If you use the [e-mail receiving] feature with
+[TLS encryption], the `mail` role also has to share the server with
+the `web` and `cron` roles.
+
+### <a name="without letsencrypt"></a>Without Let's Encrypt
 
 Using your own SSL certificates with [Docker] requires that your SSL
 certificates reside within each container.  There are several ways to
 accomplish this:
 
 * Use [S3] and upload the certificates to your bucket.
+* [Build your own private image] in which your SSL certificates are
+  placed in `Docker/apache.key`, `Docker/apache.crt`, and
+  `Docker/apache.ca.pem`.  During the build process, these files
+  will be copied into `/usr/share/docassemble/certs`.
 * Use [persistent volumes] and copy the SSL certificate files
-  (`docassemble.key`, `docassemble.crt`, and `docassemble.ca.pem`)
+  (`apache.key`, `apache.crt`, and `apache.ca.pem`)
   into the volume for `/usr/share/docassemble/certs` before starting
   the container.
-* [Build your own private image] in which your SSL certificates are
-  placed in `Docker/docassemble.key`, `Docker/docassemble.crt`, and
-  `Docker/docassemble.ca.pem`.  During the build process, these files
-  will be copied into `/usr/share/docassemble/certs`.
 
 The default Apache configuration file expects SSL certificates to be
 located in the following files:
 
 {% highlight text %}
-SSLCertificateFile /etc/ssl/docassemble/docassemble.crt
-SSLCertificateKeyFile /etc/ssl/docassemble/docassemble.key 
-SSLCertificateChainFile /etc/ssl/docassemble/docassemble.ca.pem
+SSLCertificateFile /etc/ssl/docassemble/apache.crt
+SSLCertificateKeyFile /etc/ssl/docassemble/apache.key 
+SSLCertificateChainFile /etc/ssl/docassemble/apache.ca.pem
 {% endhighlight %}
 
 The meaning of these files is as follows:
 
-* `docassemble.crt`: this file is generated by your certificate
+* `apache.crt`: this file is generated by your certificate
   authority when you submit a certificate signing request.
-* `docassemble.key`: this file is generated at the time you create
+* `apache.key`: this file is generated at the time you create
   your certificate signing request.
-* `docassemble.ca.pem`: this file is generated by your certificate
+* `apache.ca.pem`: this file is generated by your certificate
   authority.  It is variously known as the "chain file"
   or the "root bundle."
 
@@ -800,8 +814,8 @@ inspect certs` to get the directory on the [Docker] host corresponding
 to this directory, and you can copy the SSL certificate files into
 that directory before starting the container.
 
-Note that the files need to be called `docassemble.crt`,
-`docassemble.key`, and `docassemble.ca.pem`, because this is what the
+Note that the files need to be called `apache.crt`,
+`apacke.key`, and `apache.ca.pem`, because this is what the
 standard web server configuration expects.
 
 If you want to use different filesystem or S3 locations, the
@@ -809,9 +823,44 @@ If you want to use different filesystem or S3 locations, the
 locations.  See the [configuration] variables [`certs`] and
 [`cert install directory`].
 
+## <a name="tls"></a>Using TLS for incoming e-mail
+
+If you use the [e-mail receiving] feature, you can use [TLS] to
+encrypt incoming e-mail communications.  By default, **docassemble**
+will install self-signed certificates into the [Exim] configuration,
+but for best results you should use certificates that match your
+[`incoming mail domain`].
+
+If you are using [Let's Encrypt] to obtain your [HTTPS] certificates
+in a [single-server arrangement], then **docassemble** will use your
+[Let's Encrypt] certificates for [Exim].
+
+However, if you are running your `mail` server as part of a dedicated
+backend server that does not include `web`, you will need to create
+and install your own certificates.  In addition, if your
+[`incoming mail domain`] is different from your [`external hostname`]
+([`DAHOSTNAME`]), then you will also need to install your own
+certificates.
+
+The process of installing your own [Exim] certificates is very similar to
+the process of installing [HTTPS] certificates.
+
+If you are using [S3], copy your certificate and private key to the
+`certs` folder of your [S3] bucket, using the filenames `exim.crt` and
+`exim.key`, respectively.
+
+If you are not using [S3], save these files as:
+
+* `/usr/share/docassemble/certs/exim.crt` (certificate)
+* `/usr/share/docassemble/certs/exim.key` (private key)
+
+On startup, `docassemble.webapp.install_certs` will copy these files
+into the appropriate location (`/etc/exim4`) with the appropriate
+ownership and permissions.
+
 # <a name="build"></a>Creating your own Docker image
 
-To create your own [Docker] image, first make sure git is installed:
+To create your own [Docker] image, first make sure [git] is installed:
 
 {% highlight bash %}
 sudo apt-get -y install git
@@ -833,26 +882,26 @@ To make changes to the configuration of the **docassemble**
 application that will be installed in the image, edit the following
 files:
 
-* <span></span>[`docassemble/Dockerfile`]: you may want to change the locale and the
-  Debian mirror; the standard "httpredir" mirror can lead to random
-  packages not being downloaded, depending on which mirrors it chooses
-  to use.
-* <span></span>[`docassemble/Docker/config/config.yml.dist`]: you probably do not need to change
-  this; it is a template that is updated based on the contents of the
-  `--env-file` passed to [`docker run`].  Once your server is up and
-  running you can change the rest of the configuration in the web
-  application.
+* <span></span>[`docassemble/Dockerfile`]: you may want to change the
+  locale and the Debian mirror; the standard "httpredir" mirror can
+  lead to random packages not being downloaded, depending on which
+  mirrors it chooses to use.
+* <span></span>[`docassemble/Docker/config/config.yml.dist`]: you
+  probably do not need to change this; it is a template that is
+  updated based on the contents of the environment variables passed to
+  [`docker run`].  Once your server is up and running you can change
+  the rest of the configuration in the web application.
 * <span></span>[`docassemble/Docker/initialize.sh`]: this script
   updates `config.yml` based on the environment variables; retrieves a
   new version of `config.yml` from [S3], if available; if
-  [`CONTAINERROLE`] is not set to `webserver`, starts the [PostgreSQL]
+  [`CONTAINERROLE`] is not set to `web`, starts the [PostgreSQL]
   server and initializes the database if it does not exist; creates
   the tables in the database if they do not already exist; copies SSL
   certificates from [S3] or `/usr/share/docassemble/certs` if [S3] is
   not enabled; enables the [Apache] `mod_ssl` if `USEHTTPS` is `True`
   and otherwise disables it; runs the [Let's Encrypt] utility if
   `USELETSENCRYPT` is `True` and the utility has not been run yet; and
-  starts [Apache].
+  starts [Apache] and other background tasks.
 * <span></span>[`docassemble/Docker/config/docassemble-http.conf.dist`]:
   [Apache] configuration file for handling HTTP requests.
   Note that if `mod_ssl` is enabled, HTTP will merely redirect to
@@ -862,9 +911,11 @@ files:
 * <span></span>[`docassemble/Docker/config/docassemble-log.conf.dist`]:
   [Apache] configuration file for handling requests on port 8080.
   This is enabled if the [`CONTAINERROLE`] includes `log`.
-* <span></span>[`docassemble/Docker/ssl/docassemble.crt`]: SSL certificate for HTTPS.
-* <span></span>[`docassemble/Docker/ssl/docassemble.key`]: SSL certificate for HTTPS.
-* <span></span>[`docassemble/Docker/ssl/docassemble.ca.pem`]: SSL certificate for HTTPS.
+* <span></span>[`docassemble/Docker/ssl/apache.crt.orig`]: default SSL certificate for [Apache].
+* <span></span>[`docassemble/Docker/ssl/apache.key.orig`]: default SSL certificate for [Apache].
+* <span></span>[`docassemble/Docker/ssl/apache.ca.pem.orig`]: default SSL certificate for [Apache].
+* <span></span>[`docassemble/Docker/ssl/exim.crt.orig`]: default SSL certificate for [Exim].
+* <span></span>[`docassemble/Docker/ssl/exim.key.orig`]: default SSL certificate for [Exim].
 * <span></span>[`docassemble/Docker/docassemble.conf`]: [Apache] configuration file
   that causes [Apache] to use the [Python virtualenv].
 * <span></span>[`docassemble/Docker/docassemble-supervisor.conf`]: [supervisor]
@@ -1089,3 +1140,11 @@ delete all of the data on the server unless you are using a
 [scheduled tasks]: {{ site.baseurl }}/docs/background.html#scheduled
 [WebSocket]: https://en.wikipedia.org/wiki/WebSocket
 [e-mails]: {{ site.baseurl }}/docs/background.html#email
+[e-mail receiving]: {{ site.baseurl }}/docs/background.html#email
+[Exim]: https://en.wikipedia.org/wiki/Exim
+[TLS]: https://en.wikipedia.org/wiki/Transport_Layer_Security
+[`incoming mail domain`]: {{ site.baseurl }}/docs/config.html#incoming mail domain
+[git]: https://en.wikipedia.org/wiki/Git
+[without Let's Encrypt]: #without letsencrypt
+[script]: {{ site.github.repository_url }}/blob/master/Docker/cron/docassemble-cron-weekly.sh
+[TLS encryption]: #tls

@@ -117,9 +117,9 @@ services:
 * [VoiceRSS] for converting text to an audio file.
 
 The authentication keys for these services can be set up in the
-[configuration].  Note that while it is easy to run an [SMTP] server,
-most cloud providers block outgoing [SMTP] connections, so you may
-have to use a special service to send e-mail.  For example, on
+[configuration].  Note that while it is easy to deploy an [SMTP]
+server, most cloud providers block outgoing [SMTP] connections, so you
+may have to use a special service to send e-mail.  For example, on
 [Amazon Web Services], you can use [Amazon SES], and on
 [Microsoft Azure], you can use [SendGrid].  To set up e-mail sending,
 see the [`mail`] directive in the [configuration].
@@ -249,7 +249,8 @@ sudo mkdir -p \
   /usr/share/docassemble/config \
   /usr/share/docassemble/webapp \
   /usr/share/docassemble/files \
-  /usr/share/docassemble/log
+  /usr/share/docassemble/log \
+  /etc/ssl/docassemble
 sudo chown -R www-data.www-data /var/www /usr/share/docassemble
 {% endhighlight %}
 
@@ -348,7 +349,8 @@ sudo cp ./docassemble/Docker/cron/docassemble-cron-weekly.sh /etc/cron.weekly/do
 sudo cp ./docassemble/Docker/cron/docassemble-cron-daily.sh /etc/cron.daily/docassemble
 sudo cp ./docassemble/Docker/cron/docassemble-cron-hourly.sh /etc/cron.hourly/docassemble
 sudo cp ./docassemble/Docker/docassemble.conf /etc/apache2/conf-available/docassemble.conf
-sudo cp ./docassemble/Docker/config/docassemble-http.conf.dist /etc/apache2/sites-available/docassemble.conf
+sudo cp ./docassemble/Docker/config/docassemble-http.conf.dist /etc/apache2/sites-available/docassemble-http.conf
+sudo cp ./docassemble/Docker/config/docassemble-ssl.conf.dist /etc/apache2/sites-available/docassemble-ssl.conf
 sudo cp ./docassemble/Docker/docassemble-supervisor.conf /etc/supervisor/conf.d/docassemble.conf
 sudo cp ./docassemble/Docker/ssl/* /usr/share/docassemble/certs/
 sudo cp ./docassemble/Docker/rabbitmq.config /etc/rabbitmq/
@@ -427,23 +429,13 @@ change `threads=5` to `processes=5 threads=1`.  This will cause
 than the multi-thread configuration.  See [`update_locale()`] for more
 information about **docassemble** and thread safety.
 
-Note that the HTTPS part of the configuration refers to SSL
-certificates located in `/etc/ssl/docassemble/`.  If you do not have
-certificates yet, you can put some self-signed certificates there,
-just so [Apache] doesn't fail to start for the reason that these files
-are non-existent:
-
-{% highlight bash %}
-sudo mkdir -p /etc/ssl/docassemble/
-sudo cp ./docassemble/Docker/ssl/* /etc/ssl/docassemble/
-{% endhighlight %}
-
 Finally, enable the [Apache] configuration files that you installed
 earlier.
 
 {% highlight bash %}
 sudo a2enconf docassemble
-sudo a2ensite docassemble
+sudo a2ensite docassemble-http
+sudo a2ensite docassemble-ssl
 {% endhighlight %}
 
 If you did not change the [`root`] directive in the [configuration],
@@ -463,7 +455,19 @@ solely on HTTP otherwise.  Therefore, if you wish to use HTTPS, run
 sudo a2enmod ssl
 {% endhighlight %}
 
-and if you wish to use plain HTTP, run
+The [Apache] configuration file looks for SSL certificates in
+`/etc/ssl/docassemble`.  The best practice is not to edit these file
+locations.  Instead, copy your SSL certificates to the following
+locations:
+
+* `/usr/share/docassemble/certs/apache.crt` (certificate)
+* `/usr/share/docassemble/certs/apache.key` (private key)
+* `/usr/share/docassemble/certs/apache.ca.pem` (chain file)
+
+On startup, the [initialization script] will copy these files into
+`/etc/ssl/docassemble` with the appropriate ownership and permissions.
+
+If you wish to use plain HTTP, run
 
 {% highlight text %}
 sudo a2dismod ssl
@@ -559,6 +563,23 @@ Note that sending e-mail and receiving e-mail usually require separate
 [SMTP] servers.  To set up e-mail sending, see the [`mail`] directive
 in the [configuration].  (Most cloud hosting services allow servers to
 receive e-mail, but restrict servers' ability to send e-mail.)
+
+For security, you should use [TLS] to encrypt e-mail communications.
+By default, **docassemble** will install self-signed certificates into
+the [Exim] configuration.  You should use your own certificates that
+match your [`incoming mail domain`].  To use your own certificates,
+create them and copy them to:
+
+* `/usr/share/docassemble/certs/exim.crt` (certificate)
+* `/usr/share/docassemble/certs/exim.key` (private key)
+
+On startup, the [initialization script] will copy these files into the
+appropriate location (`/etc/exim4`) with the appropriate ownership and
+permissions.
+
+(Note that if you use the [Docker] single-server configuration,
+**docassemble** will use [Let's Encrypt] to obtain certificates and
+deploy them both for the web server and for [Exim].
 
 # Connecting to other external services
 
@@ -930,3 +951,5 @@ files.  In this case, you will need to manually reinstall
 [Exim]: https://en.wikipedia.org/wiki/Exim
 [e-mail receiving]: {{ site.baseurl }}/docs/background.html#email
 [`incoming mail domain`]: {{ site.baseurl }}/docs/config.html#incoming mail domain
+[initialization script]: {{ site.github.repository_url }}/blob/master/Docker/initialize.sh
+[TLS]: https://en.wikipedia.org/wiki/Transport_Layer_Security
