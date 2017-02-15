@@ -492,10 +492,6 @@ user to resume the interview so that he or she can prepare the
 appropriate legal document.
 
 {% highlight yaml %}
----
-modules:
-  - docassemble.base.util
----
 mandatory: True
 code: |
   use_cron = True
@@ -503,7 +499,7 @@ code: |
 ---
 initial: True
 code: |
-  process_actions()
+  process_action()
 ---
 question: |
   When was the document filed?
@@ -539,22 +535,12 @@ code: |
 
 Let's go through this example step-by-step.
 
-First, we use [`modules`] to load [`docassemble.base.util`], which
-provides a lot of the special [functions] we need.
-
-{% highlight yaml %}
----
-modules:
-  - docassemble.base.util
----
-{% endhighlight %}
-
-Second, we set [`use_cron`] to `True`, which allows scheduled tasks to
+First, we set [`use_cron`] to `True`, which allows scheduled tasks to
 run, and we set [`multi_user`] to `True`, which disables
 [server-side encryption].  (We need to disable this feature so that
 the computer can access the interview when the user is not logged in.
-The user's data is still secure; it just does not have a layer of
-special additional security.)
+The user's data is still secure; it just does not have the layer of
+additional security provided by server-side encryption.)
 
 {% highlight yaml %}
 ---
@@ -565,26 +551,12 @@ code: |
 ---
 {% endhighlight %}
 
-Then, we set up some [`initial`]<span></span> [`code`] so that the
-[`process_action()`] function runs every time the [interview logic] is
-processed.  This causes the [`code`] within [events] to be run, such
-as the `cron_daily` [`event`], which appears later on in the
-interview.
-
-{% highlight yaml %}
----
-initial: True
-code: |
-  process_actions()
----
-{% endhighlight %}
-
 Next, there are three standard [`question`]s that gather the
 `filing_date` and `email_address` variables and present a "final"
 screen to the user.  Note that on the final screen, there is no
 [`exit`] button, only a [`leave`] button.  If the user clicked an
 [`exit`] button, the interview session would be erased from the
-server.  By contrast, clicking [`leave`] retains the interview session
+server.  By contrast, clicking [`leave`] keeps the interview session
 on the server.  This is important because we want the interview to
 persist on the server.  We need the interview to exist twenty days
 after the `filing_date` so that it can send the reminder e-mail.
@@ -624,8 +596,9 @@ content: |
 ---
 {% endhighlight %}
 
-Finally, we get to the "scheduled task."  The [`event`] uses the
-[special variable]<span></span> [`cron_daily`].  This code will run once per day.
+Finally, we get to the "scheduled task."  The [`event`] line
+designates the [special variable]<span></span> [`cron_daily`].  This
+code will run once per day.
 
 {% highlight yaml %}
 ---
@@ -639,8 +612,8 @@ code: |
 The first thing the code does (wisely) is question whether the e-mail
 reminder has already been sent.  If the e-mail has already been sent,
 it would be annoying to send the same e-mail again, every single day,
-so we prevent that from happening.  The [`task_not_yet_performed()`]
-function is part of **docassemble**'s [task system].
+so we prevent that from happening.  (The [`task_not_yet_performed()`]
+function is part of **docassemble**'s [task system].)
 
 Next, the code evaluates whether the 20 day period has passed, using
 the [`date_difference()`] function.  If at least 20 days have passed,
@@ -649,8 +622,23 @@ the e-mail is sent.  The [`send_email()`] function marks the "task" as
 
 ## <a name="enabling"></a>Enabling scheduled tasks
 
-Scheduled tasks need to be triggered by some external source.  On
-Linux, the trigger can be a script installed as part of the [cron]
+Scheduled tasks need to be triggered by some external source.
+
+<a name="cron_hourly"></a><a name="cron_daily"></a><a
+name="cron_weekly"></a><a name="cron_monthly"></a>If you run
+**docassemble** on [Docker], you do not have to worry about how the
+scheduled tasks are triggered; the tasks operate automatically.  The
+tasks enabled in the [Docker] setup are:
+
+* `cron_hourly`
+* `cron_daily`
+* `cron_weekly`
+* `cron_monthly`
+
+If you are not using [Docker], you will have to set up a system of
+running the [`docassemble.webapp.cron`] module at regular intervals.
+
+On Linux, the trigger can be a script installed as part of the [cron]
 system.  For example, a script in `/etc/cron.daily` could run:
 
 {% highlight bash %}
@@ -671,28 +659,19 @@ should run under the same user as the web server, and if you have
 installed Python using a [virtualenv], you need to invoke [Python]
 appropriately.
 
-<a name="cron_hourly"></a><a name="cron_daily"></a><a
-name="cron_weekly"></a><a name="cron_monthly"></a>If you run
-**docassemble** on [Docker], you do not have to worry about any of
-these implementation details; the cron tasks operate automatically.
-The tasks enabled in the [Docker] setup are:
-
-* `cron_hourly`
-* `cron_daily`
-* `cron_weekly`
-* `cron_monthly`
-
 Note that you can use any variable name you want in the `-type`
 argument to the [`docassemble.webapp.cron`] module.  The variable name
-passed to the interview exactly as though it were the name of an
+is passed to the interview exactly as though it were the name of an
 [action] given by [`url_action()`].
 
 ## What the "cron" module does
 
-The [`docassemble.webapp.cron`] module does two things: it cleans out
-inactive interviews and runs scheduled tasks in interviews.
+The [`docassemble.webapp.cron`] module does two things:
 
-## <a name="deleting"></a>Deleting interviews after a period of inactivity
+1. It cleans out inactive interviews if `-type` is `cron_daily`.
+2. It runs scheduled tasks in interviews, invoking them as [actions].
+
+### <a name="deleting"></a>Deleting interviews after a period of inactivity
 
 If the type of scheduled task is `cron_daily`, the
 [`docassemble.webapp.cron`] module will delete interviews that have
@@ -705,29 +684,31 @@ Note that interviews can be deleted from the system two other ways:
 
 1. When the user clicks an [`exit`] button; and
 2. If the user goes to the Interviews page and clicks a "Delete"
-   button next to a listed interview.
+   button next to a listed interview, or clicks "Delete all."
 
-## Running scheduled tasks
+### Running scheduled tasks
 
 The [`docassemble.webapp.cron`] looks at every interview in the system
-for which [server-side encryption] has been turned off.  (This is done
-by setting [`multi_user`] to `True`).  The module then inspects the
+for which [server-side encryption] has been turned off.  (Disabling
+[server-side encryption] is performed by setting the [`multi_user`]
+variable in the interview to `True`).  The module then inspects the
 interview data to see if [`use_cron`] is set to `True`.  If is, it
 will see if the interview uses the variable given with the `-type`
 argument.  For example, if the type is [`cron_weekly`], the module
 will check if the interview has a block that offers to define the
 variable [`cron_weekly`].  If there is such a block, the module will
 run the interview with the [action] `cron_weekly` (and no [action]
-arguments).
+arguments).  Any changes made to the interview variables will be
+saved.
 
-Note that interviews containing scheduled tasks will run regularly,
-and the answers will be updated regularly.  Even if there is no
-activity from the original user, there is activity in the interview.
-This means that the [interview deletion] feature will never delete
-such interviews.  Usually, it is a good thing that the
-[interview deletion] feature does not automatically delete interviews
-with scheduled tasks; you might have an interview that does something
-after a period of several months have passed.
+Interviews containing scheduled tasks will run regularly, and the
+interview variables will be updated.  This means that even if there is
+no activity from the original user, there will appear to be regular
+activity in the interview, which means that the [interview deletion]
+feature will never delete such interviews.  Usually, it is a good
+thing that the [interview deletion] feature does not automatically
+delete interviews with scheduled tasks; you might have an interview
+that does something after a period of several months have passed.
 
 However, you might not want your interviews to run scheduled tasks
 indefinitely.  For example, in the example interview above, the
@@ -748,10 +729,11 @@ code: |
 ---
 {% endhighlight %}
 
-This will run on a monthly basis, and will check whether interview has
-been accessed by a real user (that is, a user other than the
-[cron user]) in the past year.  If it has not, the interview will
-[`exit`], meaning that the interview will be deleted from the server.
+This will run on a monthly basis, and will use the
+[`last_access_days()`] function to check whether interview has been
+accessed by a real user (that is, a user other than the [cron user])
+in the past year.  If it has not, the interview will [`exit`], meaning
+that the interview will be deleted from the server.
 
 ## <a name="cron user"></a>The cron user
 
@@ -759,8 +741,8 @@ Scheduled tasks do not run as the user who started the interview; they
 always run using the special "cron user."  Therefore, if you want your
 scheduled task to send an e-mail to "the user," make sure you collect
 the real user's e-mail address into a variable beforehand.  During the
-scheduled task, a call to [`user_info()`] will retrieve information
-about the "cron user," which is not what you want.
+operation of a scheduled task, a call to [`user_info()`] will retrieve
+information about the "cron user," which is not what you want.
 
 If your interview is a [multi-user interview], make sure that the
 "cron user" is not inadvertently kicked out of your interview before
@@ -787,7 +769,7 @@ code: |
 ---
 initial: True:
 code: |
-  process_actions()
+  process_action()
 ---
 event: cron_daily
 code: |
@@ -800,14 +782,14 @@ run the `cron_daily` action, because it will immediately be presented
 with the `say_goodbye_to_user` screen.
 
 One way to get around this problem is to move the [`initial`]
-<span></span> [`code`] block that runs  `process_actions()` so that it
+<span></span> [`code`] block that runs [`process_action()`] so that it
 appears before the block that runs `say_goodbye_to_user`:
 
 {% highlight yaml %}
 ---
 initial: True:
 code: |
-  process_actions()
+  process_action()
 ---
 initial: True
 code: |
@@ -816,7 +798,7 @@ code: |
 ---
 {% endhighlight %}
 
-This opens up the possibility that someone in the role of
+However, this opens up the possibility that someone in the role of
 `second_person` could run [actions] without being screened.  If this
 is a problem, you could alternatively do:
 
@@ -832,6 +814,44 @@ code: |
 The "cron user" is the only user on the system with the [privilege] of
 `cron`, so you can use the [`user_has_privilege()`] function to detect
 whether the user is the "cron user."
+
+## <a name="cron long"></a>Long-running scheduled tasks
+
+If your scheduled tasks take more than a couple of seconds to run (for
+example if they download information from the internet), then they
+should run the long-running code as a [background task].  While the
+scheduled task is running, the task holds the interview variables in
+memory and writes them to the SQL server when it finishes.  If a user
+accesses the interview through the web interface at the same time as
+the schedule task is running, the user's changes to the interview
+could be wiped out.  (The web interface will wait for four seconds if
+it sees that the interview variables are in use, but after four
+seconds have elapsed, it will assume the task that was using the
+interview variables has failed, and it will start using the interview
+variables.)
+
+To run [`code`] in the background from within a scheduled task, just
+combine what you have learned in the [scheduled tasks] section with
+what you learned in the [background tasks] section.
+
+{% highlight yaml %}
+event: cron_daily
+code: |
+  background_action('long_task', None)
+  response()
+---
+event: long_task
+code: |
+  result = do_something_time_consuming()
+  background_response_action('finalize_long_task', result=result)
+---
+event: finalize_long_task
+code: |
+  the_status = action_argument('result')
+  response()
+{% endhighlight %}
+
+
 
 # <a name="email"></a>E-mailing the interview
 
@@ -909,6 +929,7 @@ privileges and user identity of the [cron user].
 [`DAEmail`]: {{ site.baseurl }}/docs/objects.html#DAEmail
 [`incoming_email`]: {{ site.baseurl }}/docs/special.html#incoming_email
 [background task]: #background
+[background tasks]: #background
 [background action]: #background
 [SMTP]: https://en.wikipedia.org/wiki/SMTP
 [`incoming mail domain`]: {{ site.baseurl }}/docs/config.html#incoming mail domain
@@ -998,3 +1019,4 @@ privileges and user identity of the [cron user].
 [Markdown]: https://daringfireball.net/projects/markdown/
 [e-mail messages]: #email
 [e-mail setup]: {{ site.baseurl }}/docs/installation.html#setup_email
+[`last_access_days()`]: {{ site.baseurl }}/docs/functions.html#last_access_days

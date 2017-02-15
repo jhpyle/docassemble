@@ -3749,6 +3749,55 @@
     ${ action_argument('favorite_food').upper() }?
     % endif
   target: feedback
+"template": |-
+  template: disclaimer
+  content: |
+    The opinions expressed herein do not
+    *necessarily* reflect the views
+    of ${ company }.
+  ---
+  field: intro_screen
+  question: Welcome to the interview!
+  subquestion: |
+    Greetings.  We hope you learn something
+    from this guided interview.
+
+    ${ disclaimer }
+
+    To get started, press **Continue**.
+"template-file": |-
+  template: disclaimer
+  content file: disclaimer.md
+  ---
+  field: intro_screen
+  question: Welcome to the interview!
+  subquestion: |
+    Greetings.  We hope you learn something
+    from this guided interview.
+
+    ${ disclaimer }
+
+    To get started, press **Continue**.
+"template-subject": |-
+  template: disclaimer
+  subject: |
+    Please be advised
+  content: |
+    The opinions expressed herein do not
+    *necessarily* reflect the views
+    of ${ company }.
+  ---
+  field: intro_screen
+  question: Welcome to the interview!
+  subquestion: |
+    Greetings.  We hope you learn something
+    from this guided interview.
+
+    To get started, press **Continue**.
+  under: |
+    ### ${ disclaimer.subject }
+
+    ${ disclaimer.content }
 "terminal-screen": |-
   question: |
     Congratulations!
