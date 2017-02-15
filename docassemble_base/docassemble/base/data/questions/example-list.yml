@@ -22,6 +22,10 @@
     - pdf-fill
     - pdf-fill-signature
     - allow-emailing-false
+- Document templates:
+    - template
+    - template-subject
+    - template-file
 - Fields:
     - text-field
     - text-box-field

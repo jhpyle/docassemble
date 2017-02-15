@@ -155,7 +155,13 @@ def word_to_markdown(in_file, in_format):
     subprocess_arguments = [PANDOC_PATH, '--smart', '--from=%s' % str(in_format_to_use), '--to=markdown', str(in_file_to_use), '-o', str(temp_file.name)]
     result = subprocess.call(subprocess_arguments)
     if result == 0:
-        return temp_file
+        final_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md")
+        with open(temp_file.name) as the_file:
+            file_contents = the_file.read()
+        file_contents = re.sub(r'\\([\$\[\]])', lambda x: x.group(1), file_contents)
+        with open(final_file.name, "wb") as the_file:
+            the_file.write(file_contents.encode('UTF-8'))
+        return final_file
     else:
         return None
     
