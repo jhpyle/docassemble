@@ -1165,6 +1165,101 @@
         - Peaches
         - Pears
     - "What is your favorite fruit overall?": favorite_fruit
+"fields-checkboxes-default-0": |-
+  question: |
+    Please tell me what you think.
+  fields:
+    - "Select the fruits you like": likes_fruit
+      datatype: checkboxes
+      choices:
+        - Apples
+        - Peaches
+        - Pears
+      default: Pears
+    - "What is your favorite fruit overall?": favorite_fruit
+"fields-checkboxes-default-1": |-
+  question: |
+    Please tell me what you think.
+  fields:
+    - "Select the fruits you like": likes_fruit
+      datatype: checkboxes
+      choices:
+        - Apples
+        - Peaches
+        - Pears
+      default:
+        - Pears
+        - Apples
+    - "What is your favorite fruit overall?": favorite_fruit
+"fields-checkboxes-default-2": |-
+  question: |
+    Please tell me what you think.
+  fields:
+    - "Select the fruits you like": likes_fruit
+      datatype: checkboxes
+      choices:
+        - Apples
+        - Peaches
+        - Pears
+      default:
+        Pears: True
+        Apples: True
+        Peaches: False
+    - "What is your favorite fruit overall?": favorite_fruit
+"fields-checkboxes-default-3": |-
+  question: |
+    Please tell me what you think.
+  fields:
+    - "Select the fruits you like": likes_fruit
+      datatype: checkboxes
+      choices:
+        - Apples
+        - Peaches
+        - Pears
+      default:
+        code: |
+          ['Pears', 'Apples']
+    - "What is your favorite fruit overall?": favorite_fruit
+"fields-checkboxes-default-4": |-
+  question: |
+    Please tell me what you think.
+  fields:
+    - "Select the fruits you like": likes_fruit
+      datatype: checkboxes
+      choices:
+        - Apples
+        - Peaches
+        - Pears
+      default:
+        code: |
+          dict(Pears=False, Peaches=False, Apples=True)
+    - "What is your favorite fruit overall?": favorite_fruit
+"fields-checkboxes-default-5": |-
+  question: |
+    Please tell me what you think.
+  fields:
+    - "Select the fruits you like": likes_fruit
+      datatype: checkboxes
+      code: |
+        [
+          {'apple': 'Apples', 'default': True},
+          {'peach': 'Peaches'},
+          {'pear': 'Pears'}
+        ]
+    - "What is your favorite fruit overall?": favorite_fruit
+"fields-checkboxes-default-6": |-
+  question: |
+    Please tell me what you think.
+  fields:
+    - "Select the fruits you like": likes_fruit
+      datatype: checkboxes
+      code: |
+        [
+          ['apple', 'Apples', True],
+          ['peach', 'Peaches'],
+          ['pear', 'Pears']
+        ]
+    - "What is your favorite fruit overall?": favorite_fruit
 "fields-choices": |-
   question: |
     What is your favorite fruit?
@@ -1179,6 +1274,7 @@
     What is your favorite fruit?
   fields:
     - Fruit: favorite_fruit
+      datatype: radio
       code: |
         myoptions
   ---
@@ -1187,6 +1283,7 @@
     fruit?
   fields:
     - Fruit: favorite_fruit_of_brother
+      datatype: radio
       code: |
         myoptions
   ---
@@ -1196,11 +1293,29 @@
                   {'orange': "Oranges"},
                   {'pear': "Pears"}
                 ]
+"fields-mc-2": |-
+  code: |
+    myoptions = {
+                  'apple': "Apples",
+                  'orange': "Oranges",
+                  'pear': "Pears"
+                }
+"fields-mc-3": |-
+  code: |
+    myoptions = ["Apples", "Oranges", "Pears"]
+"fields-mc-4": |-
+  code: |
+    myoptions = [
+                  ['apple', 'Apples'],
+                  ['orange', 'Oranges'],
+                  ['pear', 'Pears']
+                ]
 "fields-mc-exclude": |-
   question: |
     What is your favorite fruit?
   fields:
     - Fruit: favorite_fruit
+      datatype: radio
       code: |
         myoptions
   ---
@@ -1210,6 +1325,7 @@
     ${ favorite_fruit }?
   fields:
     - Fruit: favorite_fruit_of_brother
+      datatype: radio
       code: |
         myoptions
       exclude: |

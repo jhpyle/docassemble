@@ -1033,9 +1033,11 @@ delete all of the data on the server unless you are using a
 [`docassemble/Docker/config/docassemble-http.conf.dist`]: {{ site.github.repository_url }}/blob/master/Docker/config/docassemble-http.conf.dist
 [`docassemble/Docker/config/docassemble-ssl.conf.dist`]: {{ site.github.repository_url }}/blob/master/Docker/config/docassemble-ssl.conf.dist
 [`docassemble/Docker/config/docassemble-log.conf.dist`]: {{ site.github.repository_url }}/blob/master/Docker/config/docassemble-log.conf.dist
-[`docassemble/Docker/ssl/docassemble.crt`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/docassemble.crt
-[`docassemble/Docker/ssl/docassemble.key`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/docassemble.key
-[`docassemble/Docker/ssl/docassemble.ca.pem`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/docassemble.ca.pem
+[`docassemble/Docker/ssl/apache.crt.orig`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/apache.crt.orig
+[`docassemble/Docker/ssl/apache.key.orig`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/apache.key.orig
+[`docassemble/Docker/ssl/apache.ca.pem.orig`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/apache.ca.pem.orig
+[`docassemble/Docker/ssl/exim.crt.orig`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/exim.crt.orig
+[`docassemble/Docker/ssl/exim.key.orig`]: {{ site.github.repository_url }}/blob/master/Docker/ssl/exim.key.orig
 [`docassemble/Docker/docassemble.conf`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble.conf
 [`docassemble/Docker/docassemble-supervisor.conf`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble-supervisor.conf
 [`docassemble/Docker/docassemble-syslog-ng.conf`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble-syslog-ng.conf

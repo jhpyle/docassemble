@@ -314,7 +314,7 @@ templates.
 ### <a name="default"></a>`default`
 
 You can provide a default value to a field using `default`.  You can
-use [Mako] templates.
+also use [Mako] templates.
 
 {% include side-by-side.html demo="text-default" %}
 
@@ -350,6 +350,25 @@ possible options for a multiple choice field.
 The [Python] code runs at the time the question is asked.  Therefore,
 you can use the `code` feature to create multiple-choice questions
 that have dynamically-created lists of choices.
+
+The [Python] code needs to be a single expression.  The result of the
+expression can take several forms.
+
+It can be a [list] of single-item [dictionaries], as in the example above.
+
+It can be a [dictionary] (in which case you cannot control the order
+of items):
+
+{% include side-by-side.html demo="fields-mc-2" %}
+
+It can be a [list] of text items (in which case the values and labels will be
+the same):
+
+{% include side-by-side.html demo="fields-mc-3" %}
+
+It can be a [list] of two-element [list]s:
+
+{% include side-by-side.html demo="fields-mc-4" %}
 
 ### <a name="exclude"></a>`exclude`
 
@@ -575,16 +594,49 @@ buttons offering choices "Yes," "No," and "I don't know."
 ### <a name="fields checkboxes"></a>Multiple-choice fields
 
 `datatype: checkboxes` will show the [`choices`](#choices) list as
-checkboxes.  The variable will be a dictionary with items set to true
-or false depending on whether the option was checked.  No validation
-is done to see if the user selected at least one, regardless of the
-value of `required`.
+checkboxes.  The variable will be a [dictionary] with items set to
+`True` or `False` depending on whether the option was checked.  No
+validation is done to see if the user selected at least one,
+regardless of the value of `required`.
 
 {% include side-by-side.html demo="fields-checkboxes" %}
 
-<a name="radio"></a>`datatype: radio` shows a [`choices`](#choices) list as a list of
-radio buttons instead of as a dropdown [select] tag (which is the
-default).  The variable will be set to the value of the choice.
+To set default values in a checkbox list, you have a few options.
+
+If you want to select just one option:
+
+{% include side-by-side.html demo="fields-checkboxes-default-0" %}
+
+If you want to select multiple options:
+
+{% include side-by-side.html demo="fields-checkboxes-default-1" %}
+
+You can also indicate your defaults in the form of a [YAML] dictionary:
+
+{% include side-by-side.html demo="fields-checkboxes-default-2" %}
+
+You can also use [Python] code to generate these results:
+
+{% include side-by-side.html demo="fields-checkboxes-default-3" %}
+
+The code can also return a [dictionary]:
+
+{% include side-by-side.html demo="fields-checkboxes-default-4" %}
+
+If you generate the checkbox options with `code`, you can include
+defaults directly within your code when you use a [list] of
+[dictionaries]<span></span>:
+
+{% include side-by-side.html demo="fields-checkboxes-default-5" %}
+
+This also works if you use a [list] of [list]s:
+
+{% include side-by-side.html demo="fields-checkboxes-default-6" %}
+
+<a name="radio"></a>`datatype: radio` shows a [`choices`](#choices)
+list as a list of radio buttons instead of as a dropdown [select] tag
+(which is the default).  The variable will be set to the value of the
+choice.
 
 {% include side-by-side.html demo="radio-list" %}
 
@@ -911,3 +963,6 @@ why this needs to be done manually as opposed to automatically:
 [`css`]: {{ site.baseurl }}/docs/modifiers.html#css
 [`script`]: {{ site.baseurl }}/docs/modifiers.html#script
 [tooltip]: http://www.w3schools.com/tags/att_title.asp
+[list]: https://docs.python.org/2/tutorial/datastructures.html
+[dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[dictionaries]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries

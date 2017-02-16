@@ -400,17 +400,17 @@ editing `/etc/hosts`.
 If no [interview] is specified in the URL when the web browser first
 connects to the **docassemble** server, the interview indicated by
 `default interview` will be used.  The interview needs to be specified
-in package name:relative file path format.  For example:
+in "package name:relative file path" format.  For example:
 
 {% highlight yaml %}
 default interview: docassemble.base:data/questions/examples/attachment.yml
 {% endhighlight %}
 
 If this directive is not set, **docassemble** will redirect to a page
-showing a [list of available interviews].  However, if the
-[`dispatch`] directive is not defined, then the list of available
-interviews would be empty, so instead the demo interview,
-`docassemble.demo:data/questions/questions.yml` will be used.
+showing a [list of available interviews] determined by the
+[`dispatch`] directive.  However, if the [`dispatch`] directive is not
+defined, users will be directed to the demonstration interview,
+`docassemble.demo:data/questions/questions.yml`.
 
 ## <a name="flask log"></a><a name="celery flask log"></a>Flask log file location
 
