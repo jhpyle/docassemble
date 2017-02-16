@@ -482,7 +482,7 @@ and the variable name using the `field` key.
 There are many possible `datatype` values, which affect what the user
 sees and how the input is stored in a variable.
 
-### Text fields
+## Text fields
 
 <a name="text"></a>A `datatype: text` provides a single-line text input box.  This is the
 default, so you never need to specify it unless you want to.
@@ -508,7 +508,7 @@ suitable for passwords.
 
 {% include side-by-side.html demo="password-field" %}
 
-### Numeric fields
+## Numeric fields
 
 <a name="integer"></a>`datatype: integer` indicates that the input
 should be a valid whole number.
@@ -531,7 +531,7 @@ provided, the default of which is 1.
 
 {% include side-by-side.html demo="range" %}
 
-### <a name="file"></a><a name="files"></a>File uploads
+## <a name="file"></a><a name="files"></a>File uploads
 
 Using the `file` or `files` datatypes within a `fields` list, you can
 allow users to upload one or more files.
@@ -558,7 +558,7 @@ except for recording a video.
 <a name="microphone"></a>`datatype: microphone` is just like `camera`,
 except for recording an audio clip.
 
-### <a name="fields yesno"></a><a name="fields noyes"></a>Yes/no fields
+## <a name="fields yesno"></a><a name="fields noyes"></a>Yes/no fields
 
 `datatype: yesno` will show a checkbox with a label, aligned with
 labeled fields.  `datatype: noyes` is like `datatype: yesno`, except
@@ -591,7 +591,9 @@ buttons offering choices "Yes," "No," and "I don't know."
 
 {% include side-by-side.html demo="fields-noyesmaybe" %}
 
-### <a name="fields checkboxes"></a>Multiple-choice fields
+## Multiple-choice fields
+
+### <a name="fields checkboxes"></a>Checkboxes
 
 `datatype: checkboxes` will show the [`choices`](#choices) list as
 checkboxes.  The variable will be a [dictionary] with items set to
@@ -601,13 +603,16 @@ regardless of the value of `required`.
 
 {% include side-by-side.html demo="fields-checkboxes" %}
 
+#### <a name="fields checkboxes defaults"></a>Default values for checkboxes
+
 To set default values in a checkbox list, you have a few options.
 
-If you want to select just one option:
+If you want to select just one option, just indicate the name of the
+option:
 
 {% include side-by-side.html demo="fields-checkboxes-default-0" %}
 
-If you want to select multiple options:
+If you want to select multiple options, indicate a [YAML] list:
 
 {% include side-by-side.html demo="fields-checkboxes-default-1" %}
 
@@ -615,11 +620,11 @@ You can also indicate your defaults in the form of a [YAML] dictionary:
 
 {% include side-by-side.html demo="fields-checkboxes-default-2" %}
 
-You can also use [Python] code to generate these results:
+You can also use [Python] code to generate the defaults:
 
 {% include side-by-side.html demo="fields-checkboxes-default-3" %}
 
-The code can also return a [dictionary]:
+Your [Python] code can also return a [dictionary]:
 
 {% include side-by-side.html demo="fields-checkboxes-default-4" %}
 
@@ -633,14 +638,17 @@ This also works if you use a [list] of [list]s:
 
 {% include side-by-side.html demo="fields-checkboxes-default-6" %}
 
-<a name="radio"></a>`datatype: radio` shows a [`choices`](#choices)
-list as a list of radio buttons instead of as a dropdown [select] tag
-(which is the default).  The variable will be set to the value of the
-choice.
+### <a name="radio"></a>Radio buttons
+
+`datatype: radio` shows a [`choices`](#choices) list as a list of
+radio buttons instead of as a dropdown [select] tag (which is the
+default).  The variable will be set to the value of the choice.
 
 {% include side-by-side.html demo="radio-list" %}
 
-<a name="object"></a>`datatype: object` is used when you would like to use a variable to
+### <a name="object"></a>Multiple-choice with objects
+
+`datatype: object` is used when you would like to use a variable to
 refer to an existing object.  You need to include `choices`, which can
 be a list of objects.
 
