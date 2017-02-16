@@ -1141,8 +1141,16 @@ class Question:
                             elif key == 'default' or key == 'hint' or key == 'help':
                                 if type(field[key]) is not dict and type(field[key]) is not list:
                                     field_info[key] = TextObject(definitions + unicode(field[key]), names_used=self.mako_names)
-                                if key == 'default' and 'datatype' not in field and 'code' not in field and 'choices' not in field:
-                                    auto_determine_type(field_info, the_value=field[key])
+                                if key == 'default':
+                                    if type(field[key]) is dict and 'code' in field[key]:
+                                        if 'extras' not in field_info:
+                                            field_info['extras'] = dict()
+                                        field_info['extras']['default'] = {'compute': compile(field[key]['code'], '', 'eval'), 'sourcecode': field[key]['code']}
+                                    else:
+                                        if type(field[key]) in (dict, list):
+                                            field_info[key] = field[key]
+                                        if 'datatype' not in field and 'code' not in field and 'choices' not in field:
+                                            auto_determine_type(field_info, the_value=field[key])
                             elif key == 'disable others':
                                 field_info['disable others'] = True
                                 field_info['required'] = False
@@ -1681,7 +1689,12 @@ class Question:
                         #defined[field.number] = True
                     except:
                         if hasattr(field, 'default'):
-                            defaults[field.number] = field.default.text(user_dict)
+                            if isinstance(field.default, TextObject):
+                                defaults[field.number] = field.default.text(user_dict)
+                            else:
+                                defaults[field.number] = field.default
+                        elif hasattr(field, 'extras') and 'default' in field.extras:
+                            defaults[field.number] = eval(field.extras['default']['compute'], user_dict)
                     if hasattr(field, 'helptext'):
                         helptexts[field.number] = field.helptext.text(user_dict)
                     if hasattr(field, 'hint'):
@@ -2829,18 +2842,23 @@ def process_selections(data, manual=False, exclude=None):
         for entry in data:
             if type(entry) is dict:
                 for key in entry:
-                    if key == 'default':
+                    if key == 'default' and len(entry) > 1:
                         continue
-                    if 'default' in entry:
+                    if 'default' in entry and len(entry) > 1:
                         if key not in to_exclude:
                             result.append([key, entry[key], entry['default']])
                     else:
                         if key not in to_exclude:
                             result.append([key, entry[key]])
-            if type(entry) is list:
+            if type(entry) is list and len(entry) > 0:
                 if entry[0] not in to_exclude:
-                    result.append([entry[0], entry[1]])
-            elif type(entry) is str or type(entry) is unicode:
+                    if len(entry) == 3:
+                        result.append([entry[0], entry[1], entry[2]])
+                    elif len(entry) == 1:
+                        result.append([entry[0], entry[0]])
+                    else:
+                        result.append([entry[0], entry[1]])
+            elif type(entry) in (str, unicode, bool, int, float):
                 if entry not in to_exclude:
                     result.append([entry, entry])
     elif type(data) is dict:

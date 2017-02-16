@@ -12,6 +12,9 @@ fields:
       - Apples
       - Peaches
       - Pears
+    default:
+      code: |
+        dict(Pears=False, Peaches=False, Apples=True)
   - "What is your favorite fruit overall?": favorite_fruit
 ---
 question: |

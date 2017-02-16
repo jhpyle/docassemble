@@ -12,6 +12,7 @@ fields:
       - Apples
       - Peaches
       - Pears
+    default: Pears
   - "What is your favorite fruit overall?": favorite_fruit
 ---
 question: |

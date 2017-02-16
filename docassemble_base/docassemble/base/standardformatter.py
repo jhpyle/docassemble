@@ -1227,8 +1227,11 @@ def add_validation(extra_scripts, validation_rules):
 
 def input_for(status, field, wide=False, embedded=False):
     output = ""
-    if field.number in status.defaults and type(status.defaults[field.number]) in [str, unicode, int, float]:
-        defaultvalue = unicode(status.defaults[field.number])
+    if field.number in status.defaults:
+        if type(status.defaults[field.number]) in [str, unicode, int, float]:
+            defaultvalue = unicode(status.defaults[field.number])
+        else:
+            defaultvalue = status.defaults[field.number]
     else:
         defaultvalue = None
     if field.number in status.hints:
@@ -1269,7 +1272,15 @@ def input_for(status, field, wide=False, embedded=False):
                     inner_field = safeid(from_safeid(saveas_string) + "[" + myb64quote(pair[0]) + "]")
                     #sys.stderr.write("I've got a " + repr(pair[1]) + "\n")
                     formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
-                    if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue)):
+                    if len(pair) > 2 and pair[2]:
+                        ischecked = ' checked'
+                    elif defaultvalue is None:
+                        ischecked = ''
+                    elif type(defaultvalue) in (list, set) and unicode(pair[0]) in defaultvalue:
+                        ischecked = ' checked'
+                    elif type(defaultvalue) is dict and unicode(pair[0]) in defaultvalue and defaultvalue[unicode(pair[0])]:
+                        ischecked = ' checked'
+                    elif unicode(pair[0]) == unicode(defaultvalue):
                         ischecked = ' checked'
                     else:
                         ischecked = ''
@@ -1441,6 +1452,9 @@ def input_for(status, field, wide=False, embedded=False):
                 output += '/>'
     return output
 
+def get_ischecked(pair, defaultvalue):
+    return ischecked
+                
 def myb64doublequote(text):
     return '"' + codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '') + '"'
 

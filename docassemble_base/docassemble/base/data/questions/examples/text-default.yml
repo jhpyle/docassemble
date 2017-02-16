@@ -1,5 +1,6 @@
 metadata:
-  title: Default value
+  title: Default value with Mako
+  short title: Default
   documentation: "http://docassemble.org/docs/fields.html#default"
   example start: 1
   example end: 2

@@ -12,6 +12,9 @@ fields:
       - Apples
       - Peaches
       - Pears
+    default:
+      code: |
+        ['Pears', 'Apples']
   - "What is your favorite fruit overall?": favorite_fruit
 ---
 question: |

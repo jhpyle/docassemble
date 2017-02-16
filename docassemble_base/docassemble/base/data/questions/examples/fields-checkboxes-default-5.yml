@@ -8,10 +8,12 @@ question: |
 fields:
   - "Select the fruits you like": likes_fruit
     datatype: checkboxes
-    choices:
-      - Apples
-      - Peaches
-      - Pears
+    code: |
+      [
+        {'apple': 'Apples', 'default': True},
+        {'peach': 'Peaches'},
+        {'pear': 'Pears'}
+      ]
   - "What is your favorite fruit overall?": favorite_fruit
 ---
 question: |
