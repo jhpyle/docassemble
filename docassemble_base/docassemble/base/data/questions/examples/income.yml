@@ -1,0 +1,26 @@
+metadata:
+  title: List of periods
+  short title: Periods
+  example start: 3
+  example end: 3
+  documentation: "http://docassemble.org/docs/functions.html#period_list"
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  Your income
+subquestion: |
+  You earn ${ currency(user_income_amount * user_income_period) }
+  per year.
+mandatory: True
+---
+question: |
+  What is your income?
+fields:
+  - Income: user_income_amount
+    datatype: currency
+  - Period: user_income_period
+    datatype: number
+    code: |
+      period_list()

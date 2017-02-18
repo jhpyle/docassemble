@@ -1237,20 +1237,20 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
     return(navbar)
 
 def delete_session():
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages']:
         if key in session:
             del session[key]
     return
 
 def backup_session():
     backup = dict()
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages']:
         if key in session:
             backup[key] = session[key]
     return backup
 
 def restore_session(backup):
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages']:
         if key in backup:
             session[key] = backup[key]
 
@@ -6910,16 +6910,25 @@ def playground_files():
         b_file = os.path.splitext(a_file)[0] + '.md'
         if b_file not in editable_files and ((mimetype and mimetype in convertible_mimetypes) or (extension and extension in convertible_extensions)):
             convertible_files.append(a_file)
+    if the_file and not is_new and the_file not in editable_files:
+        the_file = ''
     if request.method == 'GET' and not the_file and not is_new:
-        if len(editable_files):
-            the_file = editable_files[0]
+        if 'playground' + section in session and session['playground' + section] in editable_files:
+            the_file = session['playground' + section]
         else:
-            if section == 'modules':
-                the_file = 'test.py'
-            elif section == 'sources':
-                the_file = 'test.json'
+            if 'playground' + section in session:
+                del session['playground' + section]
+            if len(editable_files):
+                the_file = editable_files[0]
             else:
-                the_file = 'test.md'
+                if section == 'modules':
+                    the_file = 'test.py'
+                elif section == 'sources':
+                    the_file = 'test.json'
+                else:
+                    the_file = 'test.md'
+    if request.method == 'GET' and the_file in editable_files:
+        session['playground' + section] = the_file
     if the_file != '':
         extension, mimetype = get_ext_and_mimetype(the_file)
         if (mimetype and mimetype in ok_mimetypes):
@@ -7249,10 +7258,17 @@ def playground_packages():
     for a_file in files:
         editable_files.append(a_file)
     if request.method == 'GET' and not the_file and not is_new:
-        if len(editable_files):
-            the_file = editable_files[0]
+        if 'playgroundpackages' in session and session['playgroundpackages'] in editable_files:
+            the_file = session['playgroundpackages']
         else:
-            the_file = ''
+            if 'playgroundpackages' in session:
+                del session['playgroundpackages']
+            if len(editable_files):
+                the_file = editable_files[0]
+            else:
+                the_file = ''
+    if request.method == 'GET' and the_file in editable_files:
+        session['playgroundpackages'] = the_file
     form.original_file_name.data = the_file
     form.file_name.data = the_file
     if the_file != '' and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):
@@ -7350,14 +7366,23 @@ def playground_page():
     the_file = re.sub(r'[^A-Za-z0-9\_\-\.]', '', the_file)
     files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f))])
     content = ''
+    if the_file and not is_new and the_file not in files:
+        the_file = ''
     is_default = False
     if request.method == 'GET' and not the_file and not is_new:
-        if len(files):
-            the_file = files[0]
+        if 'playgroundfile' in session and session['playgroundfile'] in files:
+            the_file = session['playgroundfile']
         else:
-            the_file = 'test.yml'
-            is_default = True
-            content = default_playground_yaml
+            if 'playgroundfile' in session:
+                del session['playgroundfile']
+            if len(files):
+                the_file = files[0]
+            else:
+                the_file = 'test.yml'
+                is_default = True
+                content = default_playground_yaml
+    if the_file in files:
+        session['playgroundfile'] = the_file
     active_file = the_file
     if 'variablefile' in session:
         if session['variablefile'] in files:

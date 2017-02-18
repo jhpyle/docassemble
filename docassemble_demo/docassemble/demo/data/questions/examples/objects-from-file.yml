@@ -1,0 +1,22 @@
+metadata:
+  title: Objects from file
+  short title: Import
+  documentation: "http://docassemble.org/docs/functions.html#objects_from_file"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+code: |
+  people = objects_from_file("contacts.yml")
+---
+mandatory: true
+question: |
+  How to contact us
+subquestion: |
+  % for person in people:
+  You can e-mail ${ person } at
+  ${ person.email }.
+  
+  % endfor

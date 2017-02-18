@@ -78,6 +78,15 @@ class DAObject(object):
         else:
             logmessage("Not resetting name of " + self.instanceName)
         return
+    def set_instance_name_recursively(self, thename):
+        """Sets the instanceName attribute, if it is not already set, and that of subobjects."""
+        if not self.has_nonrandom_instance_name:
+            self.instanceName = thename
+            self.has_nonrandom_instance_name = True
+        for aname in self.__dict__:
+            if isinstance(getattr(self, aname), DAObject):
+                getattr(self, aname).set_instance_name_recursively(thename + '.' + aname)
+        return
     def _map_info(self):
         return None
     def __getattr__(self, thename):
@@ -175,6 +184,13 @@ class DAList(DAObject):
         return
     def clear(self):
         self.elements = list()
+    def set_instance_name_recursively(self, thename):
+        indexno = 0
+        for item in self.elements:
+            if isinstance(item, DAObject):
+                item.set_instance_name_recursively(thename + '[' + str(indexno) + ']')
+            indexno += 1
+        return super(DAList, self).set_instance_name_recursively(thename)
     def appendObject(self, *pargs, **kwargs):
         """Creates a new object and adds it to the list.
         Takes an optional argument, which is the type of object
@@ -463,6 +479,11 @@ class DADict(DAObject):
         return
     def clear(self):
         self.elements = list()
+    def set_instance_name_recursively(self, thename):
+        for key, value in self.elements.iteritems():
+            if isinstance(value, DAObject):
+                value.set_instance_name_recursively(thename + '[' + str(key) + ']')
+        return super(DADict, self).set_instance_name_recursively(thename)
     def initializeObject(self, *pargs, **kwargs):
         """Creates a new object and creates an entry in the dictionary for it.
         The first argument is the name of the dictionary key to set.

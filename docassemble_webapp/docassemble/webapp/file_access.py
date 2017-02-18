@@ -38,12 +38,17 @@ def get_info_from_file_reference(file_reference, **kwargs):
         #logmessage(str(file_reference) + " is not a URL")
         result = dict()
         question = kwargs.get('question', None)
+        folder = kwargs.get('folder', None)
         the_package = None
         parts = file_reference.split(':')
         if len(parts) == 1:
             the_package = None
             if question is not None:
                 the_package = question.from_source.package
+            if the_package is None:
+                the_package = docassemble.base.functions.get_current_package()
+            if folder is not None and not re.search(r'/', file_reference):
+                file_reference = 'data/' + str(folder) + '/' + file_reference
             if the_package is not None:
                 file_reference = the_package + ':' + file_reference
             else:

@@ -1,0 +1,17 @@
+object: DAObject
+items:
+  - id: 563
+    title: Storage unit
+    inventory:
+      object: InventoryItem
+      items:
+        - nuts
+        - bolts
+  - id: 868
+    title: Supply closet
+    inventory:
+      object: InventoryItem
+      items:
+        - paper
+        - staplers
+        - toner

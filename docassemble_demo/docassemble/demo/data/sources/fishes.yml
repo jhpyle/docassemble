@@ -1,0 +1,19 @@
+object: Halibut
+module: .fish
+items:
+  - name: Fred Halibut
+    scales: 500
+    food:
+      object: Food
+      module: .fish
+      items:
+        - name: plankton
+          calories: 5
+  - name: Larry Halibut
+    scales: 600
+    food:
+      object: Food
+      module: .fish
+      items:
+        - name: seaweed
+          calories: 2

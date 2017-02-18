@@ -1,0 +1,24 @@
+metadata:
+  title: Objects from file
+  short title: Import
+  documentation: "http://docassemble.org/docs/functions.html#objects_from_file"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+code: |
+  raw_data = objects_from_file("raw_data.yml", recursive=False)
+---
+mandatory: true
+question: |
+  The imported data
+subquestion: |
+  % for item in raw_data:
+  The `inventory` of
+  "${ item.title }" is:
+  
+  > `${ item.inventory }`
+  
+  % endfor

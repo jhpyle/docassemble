@@ -1,0 +1,40 @@
+metadata:
+  title: Actions
+  example start: 1
+  example end: 3
+  documentation: "http://docassemble.org/docs/functions.html#actions"
+---
+field: lucky_information_confirmed
+question: |
+  Please confirm the following information.
+subquestion: |
+  Your lucky number is ${ lucky_number }.
+  [Increase](${ url_action('set_number_event', increment=1) })
+  [Decrease](${ url_action('set_number_event', increment=-1) })
+
+  Also, your lucky color is ${ lucky_color }.
+  [Edit](${ url_action('lucky_color') })
+---
+event: set_number_event
+code: |
+  lucky_number += action_argument('increment')
+---
+code: |
+  lucky_number = 2
+---
+question: What is your lucky color?
+fields:
+  - Color: lucky_color
+---
+mandatory: True
+code: |
+  if lucky_information_confirmed:
+    need(final_screen)
+---
+event: final_screen
+question: Thank you
+subquestion: |
+  You have confirmed that your lucky color is ${ lucky_color }
+  and your lucky number is ${ lucky_number }.
+buttons:
+  - Restart: restart

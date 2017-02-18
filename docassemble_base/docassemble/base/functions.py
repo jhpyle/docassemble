@@ -115,6 +115,11 @@ def get_uid():
     except:
         return None
 
+def get_current_package():
+    if this_thread.current_package is not None:
+        return this_thread.current_package
+    return None
+
 def user_logged_in():
     """Returns True if the user is logged in, False otherwise."""
     if this_thread.current_info['user']['is_authenticated']:
@@ -224,7 +229,18 @@ def user_has_privilege(*pargs):
     return False
 
 class TheUser:
-    pass
+    def name(self):
+        if self.first_name and self.last_name:
+            return self.first_name + " " + self.last_name
+        if self.last_name:
+            return self.last_name
+        if self.first_name:
+            return self.first_name
+        return word("Unnamed User")
+    def __str__(self):
+        return self.name()
+    def __unicode__(self):
+        return unicode(self.__str__())
 
 def user_info():
     """Returns an object with information from the user profile.  Keys 
@@ -710,6 +726,7 @@ class ThreadVariables(threading.local):
     initialized = False
     redis = None
     uid = None
+    current_package = None
     gathering_mode = dict()
     current_variable = list()
     def __init__(self, **kw):

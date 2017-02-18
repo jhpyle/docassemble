@@ -692,9 +692,12 @@ class Question:
             if type(data['modules']) is str:
                 data['modules'] = [data['modules']]
             if type(data['modules']) is list:
-                self.question_type = 'modules'
                 if 'docassemble.base.util' in data['modules'] or 'docassemble.base.legal' in data['modules']:
+                    # logmessage("setting imports_util to true")
                     self.interview.imports_util = True
+                # else:
+                #     logmessage("not setting imports_util to true")                    
+                self.question_type = 'modules'
                 self.module_list = data['modules']
             else:
                 raise DAError("A modules section must be organized as a list." + self.idebug(data))
@@ -952,7 +955,7 @@ class Question:
         if 'under' in data:
             self.undertext = TextObject(definitions + unicode(data['under']), names_used=self.mako_names)
         if 'check in' in data:
-            self.interview.uses_util = True
+            self.interview.uses_action = True
             if type(data['check in']) in (dict, list, set):
                 raise DAError("A check in event must be text or a list." + self.idebug(data))
             self.checkin = str(data['check in'])
@@ -981,7 +984,7 @@ class Question:
             else:
                 raise DAError("A sets phrase must be text or a list." + self.idebug(data))
         if 'event' in data:
-            self.interview.uses_util = True
+            self.interview.uses_action = True
             if type(data['event']) is str:
                 self.fields_used.add(data['event'])
             elif type(data['event']) is list:
@@ -1041,7 +1044,7 @@ class Question:
                 logmessage("Compile error in need code:\n" + str(data['need']) + "\n" + str(sys.exc_info()[0]))
                 raise
         if 'target' in data:
-            self.interview.uses_util = True
+            self.interview.uses_action = True
             if type(data['target']) in [list, dict, set, bool, int, float]:
                 raise DAError("The target of a template must be plain text." + self.idebug(data))
             if 'template' not in data:
@@ -1081,7 +1084,7 @@ class Question:
                 self.question_type = 'event_code'
             else:
                 self.question_type = 'code'
-            if type(data['code']) == str:
+            if type(data['code']) in (str, unicode):
                 if not self.interview.calls_process_action and match_process_action.search(data['code']):
                     self.interview.calls_process_action = True
                 try:
@@ -2002,6 +2005,7 @@ class Interview:
         self.attachment_options = dict()
         self.external_files = dict()
         self.calls_process_action = False
+        self.uses_action = False
         self.imports_util = False
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
@@ -2090,6 +2094,7 @@ class Interview:
         docassemble.base.functions.reset_local_variables()
         interview_status.current_info.update({'default_role': self.default_role})
         #user_dict['_current_info'] = interview_status.current_info
+        docassemble.base.functions.this_thread.current_package = self.source.package
         docassemble.base.functions.this_thread.current_info = interview_status.current_info
         docassemble.base.functions.this_thread.internal = user_dict['_internal']
         #docassemble.base.functions.this_thread.user_dict = user_dict
@@ -2138,10 +2143,12 @@ class Interview:
             try:
                 if 'sms_variable' in interview_status.current_info and interview_status.current_info['sms_variable'] is not None:
                     raise ForcedNameError("name '" + str(interview_status.current_info['sms_variable']) + "' is not defined")
-                if not self.calls_process_action:
+                if (self.uses_action or 'action' in interview_status.current_info) and not self.calls_process_action:
                     if self.imports_util:
+                        #logmessage("util was imported")
                         exec(run_process_action, user_dict)
                     else:
+                        #logmessage("util was not imported")
                         exec(import_and_run_process_action, user_dict)
                 for question in self.questions_list:
                     if question.question_type == 'code' and question.is_initial:

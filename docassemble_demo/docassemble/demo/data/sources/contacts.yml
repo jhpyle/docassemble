@@ -1,0 +1,23 @@
+object: Individual
+module: docassemble.base.util
+items:
+  - name:
+      object: IndividualName
+      module: docassemble.base.util
+      item:
+        first: Fred
+        last: Smith
+    email: fred@example.com
+    allergies:
+      - peanuts
+      - subway tokens
+  - name:
+      object: IndividualName
+      module: docassemble.base.util
+      item:
+        first: Larry
+        last: Jones
+    email: larry@example.com
+    skills:
+      - stapling
+      - making coffee

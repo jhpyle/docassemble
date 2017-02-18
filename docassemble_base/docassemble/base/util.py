@@ -2,6 +2,7 @@
 import datetime
 import pytz
 import yaml
+import inspect
 from PIL import Image, ImageEnhance
 from twilio.rest import TwilioRestClient
 import pyocr
@@ -441,8 +442,10 @@ class IndividualName(Name):
 class Address(DAObject):
     """A geographic address."""
     def init(self, *pargs, **kwargs):
-        self.location = LatitudeLongitude()
-        self.geolocated = False
+        if 'location' not in kwargs:
+            self.location = LatitudeLongitude()
+        if 'geolocated' not in kwargs:
+            self.geolocated = False
         return super(Address, self).init(*pargs, **kwargs)
     def __str__(self):
         return(self.block())
@@ -513,14 +516,17 @@ class Address(DAObject):
 class Person(DAObject):
     """Represents a legal or natural person."""
     def init(self, *pargs, **kwargs):
-        if not hasattr(self, 'name'):
+        if not hasattr(self, 'name') and 'name' not in kwargs:
             self.name = Name()
-        self.address = Address()
-        self.location = LatitudeLongitude()
-        if 'name' in kwargs:
+        if 'address' not in kwargs:
+            self.address = Address()
+        if 'location' not in kwargs:
+            self.location = LatitudeLongitude()
+        if 'name' in kwargs and type(kwargs['name']) in (str, unicode):
             self.name.text = kwargs['name']
             del kwargs['name']
-        self.roles = set()
+        if 'roles' not in kwargs:
+            self.roles = set()
         return super(Person, self).init(*pargs, **kwargs)
     def _map_info(self):
         if not self.location.known:
@@ -654,11 +660,16 @@ class Person(DAObject):
 class Individual(Person):
     """Represents a natural person."""
     def init(self, *pargs, **kwargs):
-        self.name = IndividualName()
-        self.child = ChildList()
-        self.income = Income()
-        self.asset = Asset()
-        self.expense = Expense()
+        if 'name' not in kwargs:
+            self.name = IndividualName()
+        if 'child' not in kwargs:
+            self.child = ChildList()
+        if 'income' not in kwargs:
+            self.income = Income()
+        if 'asset' not in kwargs:
+            self.asset = Asset()
+        if 'expense' not in kwargs:
+            self.expense = Expense()
         return super(Individual, self).init(*pargs, **kwargs)
     def identified(self):
         """Returns True if the individual's name has been set.  Otherwise, returns False."""
@@ -1180,37 +1191,106 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
         shutil.rmtree(directory)
     return "\f".join(page_text)
 
-def objects_from_file(file_ref):
+def objects_from_file(file_ref, recursive=True):
     """A utility function for initializing a group of objects from a YAML file written in a certain format."""
-    file_info = server.file_finder(file_ref)
+    frame = inspect.stack()[1][0]
+    the_names = frame.f_code.co_names
+    if len(the_names) == 2:
+        thename = the_names[1]
+    else:
+        thename = None
+    file_info = server.file_finder(file_ref, folder='sources')
     if 'path' not in file_info:
         raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' not found')
-    objects = list()
+    if thename is None:
+        objects = DAList()
+    else:
+        objects = DAList(thename)
+    is_singular = True
     with open(file_info['fullpath'], 'r') as fp:
         for document in yaml.load_all(fp):
-            if type(document) is not dict:
-                raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained a document that was not a YAML dictionary')
-            if len(document):
-                if not ('object' in document and 'items' in document):
-                    raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained a document that did not contain an object and items declaration')
-                if type(document['items']) is not list:
-                    raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained a document the items declaration for which was not a dictionary')
-                constructor = None
-                if document['object'] in globals():
-                    contructor = globals()[document['object']]
-                elif document['object'] in locals():
-                    contructor = locals()[document['object']]
-                if not constructor:
-                    if 'module' in document:
-                        new_module = __import__(document['module'], globals(), locals(), [document['object']], -1)
-                        constructor = getattr(new_module, document['object'], None)
-                if not constructor:
-                    raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained a document for which the object declaration, ' + str(document['object']) + ' could not be found')
-                for item in document['items']:
-                    if type(item) is not dict:
-                        raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' contained an item, ' + str(item) + ' that was not expressed as a dictionary')
-                    objects.append(constructor(**item))
+            new_objects = recurse_obj(document, recursive=recursive)
+            if type(new_objects) is list:
+                is_singular = False
+                for obj in new_objects:
+                    objects.append(obj)
+            else:
+                objects.append(new_objects)
+    objects.gathered = True
+    if is_singular and len(objects.elements) == 1:
+        objects = objects.elements[0]
+    if thename is not None and isinstance(objects, DAObject):
+        objects.set_instance_name_recursively(thename)
     return objects
+
+def recurse_obj(the_object, recursive=True):
+    constructor = None
+    if type(the_object) in [str, unicode, bool, int, float]:
+        return the_object
+    if type(the_object) is list:
+        if recursive:
+            return [recurse_obj(x) for x in the_object]
+        else:
+            return the_object
+    if type(the_object) is set:
+        if recursive:
+            new_set = set()
+            for sub_object in the_object:
+                new_set.add(recurse_obj(sub_object, recursive=recursive))
+            return new_list
+        else:
+            return the_object
+    if type(the_object) is dict:
+        if 'object' in the_object and ('item' in the_object or 'items' in the_object):
+            if the_object['object'] in globals() and inspect.isclass(globals()[the_object['object']]):
+                constructor = globals()[the_object['object']]
+            elif the_object['object'] in locals() and inspect.isclass(locals()[the_object['object']]):
+                constructor = locals()[the_object['object']]
+            if not constructor:
+                if 'module' in the_object:
+                    if the_object['module'].startswith('.'):
+                        module_name = this_thread.current_package + the_object['module']
+                    else:
+                        module_name = the_object['module']
+                    new_module = __import__(module_name, globals(), locals(), [the_object['object']], -1)
+                    constructor = getattr(new_module, the_object['object'], None)
+            if not constructor:
+                raise SystemError('recurse_obj: found an object for which the object declaration, ' + str(the_object['object']) + ' could not be found')
+            if 'items' in the_object:
+                objects = list()
+                for item in the_object['items']:
+                    if type(item) is not dict:
+                        raise SystemError('recurse_obj: found an item, ' + str(item) + ' that was not expressed as a dictionary')
+                    if recursive:
+                        transformed_item = recurse_obj(item)
+                    else:
+                        transformed_item = item
+                    #new_obj = constructor(**transformed_item)
+                    #if isinstance(new_obj, DAList) or isinstance(new_obj, DADict) or isinstance(new_obj, DASet):
+                    #    new_obj.gathered = True
+                    objects.append(constructor(**transformed_item))
+                return objects
+            if 'item' in the_object:
+                item = the_object['item']
+                if type(item) is not dict:
+                    raise SystemError('recurse_obj: found an item, ' + str(item) + ' that was not expressed as a dictionary')
+                if recursive:
+                    transformed_item = recurse_obj(item)
+                else:
+                    transformed_item = item
+                #new_obj = constructor(**transformed_item)
+                #if isinstance(new_obj, DAList) or isinstance(new_obj, DADict) or isinstance(new_obj, DASet):
+                #    new_obj.gathered = True
+                return constructor(**transformed_item)
+        else:
+            if recursive:
+                new_dict = dict()
+                for key, value in the_object.iteritems():
+                    new_dict[key] = recurse_obj(value)
+                return new_dict
+            else:
+                return the_object
+    return the_object
 
 class DummyObject(object):
     def __init__(self, *pargs, **kwargs):

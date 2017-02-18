@@ -22,7 +22,9 @@ else{
     casper.options.viewportSize = {width: 1005, height: 650};
 }
 
-var url = "http://localhost?i=docassemble.base:data/questions/examples/" + interview
+var area = casper.cli.get(2)
+
+var url = "http://localhost?i=docassemble." + area +":data/questions/examples/" + interview
 
 casper.start();
 

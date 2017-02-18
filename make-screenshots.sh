@@ -1,8 +1,10 @@
 #! /bin/bash
 tempfile=`mktemp /tmp/XXXXXXX.png`
 shopt -s nullglob
-for path in docassemble_base/docassemble/base/data/questions/examples/*.yml
+for path in docassemble_base/docassemble/base/data/questions/examples/*.yml docassemble_demo/docassemble/demo/data/questions/examples/*.yml
 do
+    area=${path%/docassemble*}
+    area=${area##*_}
     file=${path##*/}
     file=${file%.*}
     if [ "$file" = "audio" -o "$file" = "video" -o "$file" = "vimeo" -o "$file" = "video-static" -o "$file" = "immediate-file" ]
@@ -13,7 +15,7 @@ do
     then
     	continue
     fi
-    casperjs screenshot.js $file.yml $tempfile
+    casperjs screenshot.js $file.yml $tempfile $area
     if [ "$file" = "signature" -o "$file" = "metadata" -o "$file" = "help" -o "$file" = "help-damages" -o "$file" = "help-damages-audio" -o "$file" = "progress" -o "$file" = "progress-features" -o "$file" = "response" -o "$file" = "response-hello" -o "$file" = "menu-item" -o "$file" = "ml-export" -o "$file" = "ml-export-yaml" -o "$file" = "live_chat" ]
     then
 	convert $tempfile -resize 650x9999 -trim docassemble_webapp/docassemble/webapp/static/examples/$file.png
@@ -30,6 +32,7 @@ done
 if [ -d ~/gh-pages-da ]
 then
     ./get_yaml_from_example.py docassemble_base/docassemble/base/data/questions/examples > ~/gh-pages-da/_data/example.yml
+    ./get_yaml_from_example.py docassemble_demo/docassemble/demo/data/questions/examples >> ~/gh-pages-da/_data/example.yml
     rsync -auv docassemble_webapp/docassemble/webapp/static/examples ~/gh-pages-da/img/
     psql -h localhost -T 'class="table table-striped"' -U docassemble -P footer=off -P border=0 -Hc "select table_name, column_name, data_type, character_maximum_length, column_default from information_schema.columns where table_schema='public'" docassemble > ~/gh-pages-da/_includes/db-schema.html
 fi
