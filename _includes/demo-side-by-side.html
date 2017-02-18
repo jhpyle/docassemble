@@ -1,0 +1,6 @@
+{% assign example = site.data.example[include.demo] %}
+<div class="row"><div class="col-md-5">
+{% highlight yaml %}
+{{ example }}
+{% endhighlight %}
+</div><div class="col-md-6"><a href="{{ site.demourl }}?i=docassemble.demo:data/questions/examples/{{ include.demo }}.yml" target="_blank"><img class="example" alt="{{ include.demo }}" title="Click to try this interview" src="{{ site.baseurl }}/img/{% if include.image %}{{ include.image }}{% else %}examples/{{ include.demo }}.png{% endif %}"></a></div></div>

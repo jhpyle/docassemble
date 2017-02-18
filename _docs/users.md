@@ -55,7 +55,7 @@ Login button by setting the [`show_login`] setting in the
 [configuration].
 
 When a user is logged in, the user's information is made available to
-**docassemble** interviews through the [`user_info()`] function
+**docassemble** interviews through the [`user_info()`] function.
 
 # User administration
 
@@ -111,6 +111,149 @@ with the [`appname`] directive.  If the [`appname`] is
 >
 > -- MyDocassemble 
 
+# Screening users
+
+Interviews can behave differently depending on whether the user is
+logged in, or the role of the logged-in user.
+
+There are three [functions] that facilitate this:
+
+* [`user_logged_in()`] - returns `True` or `False` depending on
+  whether the user is logged in.
+* [`user_info()`] - if the user is logged in, this returns information
+  from the user's profile
+* [`user_has_privilege()`] - returns `True` or `False` depending on
+  whether the user has given privileges.
+
+Here is an example of an interview that requires the user to be logged in:
+
+{% highlight yaml %}
+initial: true
+code: |
+  if not user_logged_in():
+    kick_out_user
+---
+event: kick_out_user
+question: |
+  I am sorry, but you need to log in if you want to use this interview.
+buttons:
+  - Log in: signin
+  - Exit: exit
+---
+mandatory: true
+question: |
+  Thanks for completing the interview!
+{% endhighlight %}
+
+Note that the use of the [`initial`] modifier is very important here.
+It ensures that the interview will check to make sure the user is
+logged in every time in the interview is processed.  If the code was
+only [`mandatory`], the user could log in, then log out, and still use
+the interview, because once a [`mandatory`]<span></span> [`code`]
+block runs to completion, it is thereafter ignored.
+
+Here is an example of [`code`] that directs users to different
+endpoints depending on their roles:
+
+{% highlight yaml %}
+initial: true
+code: |
+  if user_has_privilege('litigant'):
+    litigant_request_handled
+  elif user_has_privilege('judge'):
+    judge_request_handled
+  else:
+    login_screen
+{% endhighlight %}
+
+The following interview excerpt uses information about the logged-in
+user in an interview question:
+
+{% highlight yaml %}
+initial: true
+code: |
+  if user_logged_in():
+    intro_screen
+    final_screen
+  else:
+    login_screen
+---
+field: intro_screen
+question: |
+  Welcome, ${ user_info().first_name }!
+subquestion: |
+  Press Continue to start the interview.
+{% endhighlight %}
+
+This [`code`] screens out a user by e-mail address:
+
+{% highlight yaml %}
+initial: true
+code: |
+  if not user_logged_in():
+    login_screen
+  if user_info().email.endswith('.gov'):
+    kick_out_the_government
+---
+event: kick_out_the_government
+question: |
+  Go away, government spy!
+{% endhighlight %}
+
+# <a name="users and actions"></a>Interaction of user roles and actions
+
+If you use [actions] in your interview, **docassemble** will run those
+actions before it processes the [`initial`] and [`mandatory`]
+questions in your interview.  However, if you have a screening process
+in your interview, such as those illustrated in the previous section,
+you might not want these [actions] to be able to bypass that
+screening.
+
+This could be a problem if, for example, you use
+[`interview_url_action()`] to provide URLs to users in order to access
+an interview.  Anyone in possession of such a URL could access the
+interview with it, bypassing any screening process you established.
+
+To ensure that [actions] are only run _after_ the screening process,
+you can use the [`process_action()`] function.
+
+Consider the last example from the previous section.  To ensure that
+actions are only processed after the screening process is complete,
+you would change the first [`code`] block to:
+
+{% highlight yaml %}
+initial: true
+code: |
+  if not user_logged_in():
+    login_screen
+  if user_info().email.endswith('.gov'):
+    kick_out_the_government
+  process_action()
+{% endhighlight %}
+
+This explicitly indicates to **docassemble** the point in the
+interview processing when you want the [actions] to be processed.  If
+your screening process prevents [`process_action()`] from running, the
+[action] will be ignored.
+
+Note that [`process_action()`] is a function within the
+[`docassemble.base.util`] module, so you will need to include a
+[`modules` block] in order to call it.
+
+If you do not include a call to [`process_action()`] within a [`code`]
+block in your interview, **docassemble** will automatically import the
+[`docassemble.base.util`] module and run [`process_action()`]
+immediately.  (The [`process_action()`] function will run after
+[`imports`] and [`modules`], but before [`initial`] and
+[`mandatory`]<span></span>[`code`] blocks.)
+
+[`modules` block]: {{ site.baseurl }}/docs/initial.html#modules
+[`interview_url_action()`]: {{ site.baseurl }}/docs/functions.html#interview_url_action
+[`process_action()`]: {{ site.baseurl }}/docs/functions.html#process_action
+[actions]: {{ site.baseurl }}/docs/background.html#background
+[`code`]: {{ site.baseurl }}/docs/code.html
+[`initial`]: {{ site.baseurl }}/docs/logic.html#initial
+[`mandatory`]: {{ site.baseurl }}/docs/logic.html#mandatory
 [country code]: http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
 [special variables]: {{ site.baseurl }}/docs/special.html
 [configuration]: {{ site.baseurl }}/docs/config.html
@@ -128,3 +271,8 @@ with the [`appname`] directive.  If the [`appname`] is
 [`user_info()`]: {{ site.baseurl }}/docs/functions.html#user_info
 [`allow registration`]: {{ site.baseurl }}/docs/config.html#allow registration
 [`appname`]: {{ site.baseurl }}/docs/config.html#appname
+[`user_info()`]: {{ site.baseurl }}/docs/functions.html#user_info
+[`user_logged_in()`]: {{ site.baseurl }}/docs/functions.html#user_logged_in
+[`user_has_privilege()`]: {{ site.baseurl }}/docs/functions.html#user_logged_in
+[functions]: {{ site.baseurl }}/docs/functions.html
+[`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py

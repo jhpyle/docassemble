@@ -201,12 +201,12 @@ the [`role`] variable, which is the role of whichever user is currently
 in the interview.  This code runs every single time the page loads for
 any user.
 
-This code block also sets the [special variable]<span></span> [`multi_user`] to
-`True`, which tells **docassemble** that multiple users will be using
-this interview.  When `multi_user` is `True`, **docassemble** will not
-encrypt the answers on the server.  This reduces [security] somewhat,
-but is necessary in order for multiple users to participate in the
-same interview.
+This code block also sets the [special variable]<span></span>
+[`multi_user`] to `True`, which tells **docassemble** that multiple
+users will be using this interview.  When `multi_user` is `True`,
+**docassemble** will not encrypt the answers on the server.  This
+reduces [security] somewhat, but is necessary in order for multiple
+users to participate in the same interview.
 
 First, note that the [`role`] for all users will remain `organizer`
 until the organizer has seen the introductory page and the
@@ -216,8 +216,8 @@ Second, note that the flow of the interview is being controlled here.
 The references to `introduction_made` and `participants invited` mean
 that questions will be asked to define those variables if they are
 undefined.  This is the code that causes those questions to appear for
-the organizer.  After the role is set, the [`mandatory`]<span></span> [`code`] block
-controls the flow of the interview.
+the organizer.  After the role is set, the [`mandatory`]<span></span>
+[`code`] block controls the flow of the interview.
 
 Third, note that by requiring `participants invited` to be set before
 we consider whether the user's e-mail address is equal to
@@ -284,7 +284,6 @@ Consider the following example, which uses [generic objects]:
 {% highlight yaml %}
 ---
 modules:
-  - docassemble.base.core
   - docassemble.base.util
 ---
 objects:
@@ -356,7 +355,7 @@ The [`initial`] code block makes sure that the user is logged in, and
 sets the `user` variable to a [`DAObject`].
 
 A [`DAObject`] is the most basic type of **docassemble** object.  Its
-definition is in [`docassemble.base.core`].  The fact that the `user`
+definition is in [`docassemble.base.util`].  The fact that the `user`
 is a [`DAObject`] means that the `user` can have [attributes] and
 those [attributes] can be gathered with [generic object] questions.
 
@@ -452,9 +451,6 @@ cases.
 [`modules`]: {{ site.baseurl }}/docs/initial.html#modules
 [`initializeObject()`]: {{ site.baseurl }}/docs/objects.html#DAObject.initializeObject
 [`docassemble.base`]: {{ site.baseurl }}/docs/installation.html#docassemble.base
-[`docassemble.base.core`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/core.py
-[`docassemble.base.legal`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/legal.py
-[`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
 [`user_info()`]: {{ site.baseurl }}/docs/functions.html#user_info
 [`multi_user`]: {{ site.baseurl }}/docs/special.html#multi_user
 [`user_logged_in()`]: {{ site.baseurl }}/docs/functions.html#user_logged_in
