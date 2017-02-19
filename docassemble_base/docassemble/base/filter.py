@@ -727,7 +727,7 @@ def image_url_string(match, emoji=False, question=None, playground=False):
             width_string = "max-width:" + width
         if emoji:
             width_string += ';vertical-align: middle'
-        if file_info.get('extension', '') in ['png', 'jpg', 'gif', 'svg']:
+        if file_info.get('extension', '') in ['png', 'jpg', 'gif', 'svg', 'jpe', 'jpeg']:
             return('<img class="daicon" style="' + width_string + '" src="' + server.url_finder(file_reference, question=question) + '"/>')
         elif file_info['extension'] == 'pdf':
             output = '<a href="' + server.url_finder(file_reference, question=question) + '"><img class="daicon" style="' + width_string + '" src="' + server.url_finder(file_reference, size="screen", page=1, question=question) + '"/></a>'
@@ -781,7 +781,7 @@ def image_include_string(match, emoji=False, question=None):
             return '[reference to file type that cannot be displayed]'
     if 'path' in file_info:
         if 'extension' in file_info:
-            if file_info['extension'] in ['png', 'jpg', 'gif', 'pdf', 'eps']:
+            if file_info['extension'] in ['png', 'jpg', 'gif', 'pdf', 'eps', 'jpe', 'jpeg']:
                 if file_info['extension'] == 'pdf':
                     output = '\\includepdf[pages={-}]{' + file_info['path'] + '.pdf}'
                 else:
@@ -809,7 +809,7 @@ def image_include_docx(match, question=None):
             return '[reference to file type that cannot be displayed]'
     if 'path' in file_info:
         if 'extension' in file_info:
-            if file_info['extension'] in ['png', 'jpg', 'gif', 'pdf', 'eps']:
+            if file_info['extension'] in ['png', 'jpg', 'gif', 'pdf', 'eps', 'jpe', 'jpeg']:
                 output = '![](' + file_info['path'] + '){width=' + width + '}'
                 return(output)
     return('[invalid graphics reference]')

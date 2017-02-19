@@ -5,7 +5,9 @@ import os
 import codecs
 import redis
 import sys
+import shutil
 import inspect
+import mimetypes
 from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote
 import docassemble.base.functions
 
@@ -1044,6 +1046,13 @@ class DAFile(DAObject):
         else:
             self.ok = False
         return
+    def set_mimetype(self, mimetype):
+        """Sets the MIME type of the file"""
+        self.mimetype = mimetype
+        #if mimetype == 'image/jpeg':
+        #    self.extension = 'jpg'
+        #else:
+        self.extension = re.sub(r'^\.', '', mimetypes.guess_extension(mimetype))
     def __str__(self):
         return self.show()
     def __unicode__(self):
@@ -1052,7 +1061,10 @@ class DAFile(DAObject):
         """Creates the file on the system if it does not already exist, and ensures that the file is ready to be used."""
         #logmessage("initialize")
         if not hasattr(self, 'filename'):
-            self.filename = kwargs.get('filename', 'file.txt')
+            if hasattr(self, 'extension'):
+                self.filename = kwargs.get('filename', 'file.' + self.extension)
+            else:
+                self.filename = kwargs.get('filename', 'file.txt')
         if not hasattr(self, 'number'):
             yaml_filename = None
             uid = None
@@ -1069,6 +1081,8 @@ class DAFile(DAObject):
             self.file_info['savedfile'].save()
     def retrieve(self):
         """Ensures that the file is ready to be used."""
+        if not self.ok:
+            self.initialize()
         if not hasattr(self, 'number'):
             raise Exception("Cannot retrieve a file without a file number.")
         docassemble.base.functions.this_thread.open_files.add(self)
@@ -1084,7 +1098,7 @@ class DAFile(DAObject):
         if not os.path.isfile(the_path):
             raise Exception("File " + str(the_path) + " does not exist yet.")
         with open(the_path, 'rU') as f:
-            return(f.read())    
+            return(f.read())
     def readlines(self):
         """Returns the contents of the file."""
         self.retrieve()

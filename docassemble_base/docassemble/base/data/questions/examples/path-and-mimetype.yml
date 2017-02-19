@@ -1,0 +1,36 @@
+metadata:
+  title: File path and MIME type
+  short title: Path
+  documentation: "http://docassemble.org/docs/functions.html#path_and_mimetype"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+code: |
+  (filename_a, mimetype_a) = path_and_mimetype('data/static/hello.pdf')
+  (filename_b, mimetype_b) = path_and_mimetype('docassemble.demo:data/static/house.png')
+  (filename_c, mimetype_c) = path_and_mimetype('http://docassemble.org/img/docassemble-logo.jpg')
+---
+mandatory: True
+question: |
+  File locations and MIME types
+subquestion: |
+  #### `data/static/hello.pdf`
+
+  Path **${ filename_a }** has
+  MIME type **${ mimetype_a }**.
+
+  #### `docassemble.demo:data/static/house.png`
+
+  Path **${ filename_b }** has
+  MIME type **${ mimetype_b }**.
+
+  #### `http://docassemble.org/img/docassemble-logo.jpg`
+
+  Path **${ filename_c }** has
+  MIME type **${ mimetype_c }**.
+
+  
+  

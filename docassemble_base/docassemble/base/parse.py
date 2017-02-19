@@ -2801,9 +2801,15 @@ class myvisitnode(ast.NodeVisitor):
         for key, val in ast.iter_fields(node):
             if key == 'targets':
                 for subnode in val:
-                    crawler = myextract()
-                    crawler.visit(subnode)
-                    self.targets[".".join(reversed(crawler.stack))] = 1
+                    if type(subnode) is ast.Tuple:
+                        for subsubnode in subnode.elts:
+                            crawler = myextract()
+                            crawler.visit(subsubnode)
+                            self.targets[".".join(reversed(crawler.stack))] = 1
+                    else:
+                        crawler = myextract()
+                        crawler.visit(subnode)
+                        self.targets[".".join(reversed(crawler.stack))] = 1
         self.depth += 1
         #ast.NodeVisitor.generic_visit(self, node)
         self.generic_visit(node)

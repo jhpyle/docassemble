@@ -5,6 +5,7 @@ import os
 import pyPdf
 import tempfile
 import urllib
+import mimetypes
 from PIL import Image
 import xml.etree.ElementTree as ET
 import docassemble.base.functions
@@ -22,17 +23,24 @@ def get_info_from_file_reference(file_reference, **kwargs):
     has_info = False
     if re.match('[0-9]+', str(file_reference)):
         result = get_info_from_file_number(int(file_reference))
+        if 'fullpath' not in result:
+            result['fullpath'] = None
         has_info = True
     elif re.search(r'^https*://', str(file_reference)):
         #logmessage(str(file_reference) + " is a URL")
-        m = re.search('(\.[A-Za-z0-9]+)$', file_reference)
-        if m:
-            suffix = m.group(1)
-        else:
-            suffix = '.html'
-        result = dict(tempfile=tempfile.NamedTemporaryFile(suffix=suffix))
-        urllib.urlretrieve(file_reference, result['tempfile'].name)
-        result['fullpath'] = result['tempfile'].name
+        result = dict()
+        (local_filename, headers) = urllib.urlretrieve(file_reference)
+        result['fullpath'] = local_filename
+        try:
+            result['mimetype'] = headers.gettype()
+        except Exception as errmess:
+            logmessage("get_info_from_file_reference: could not get mimetype")
+            result['mimetype'] = 'text/html'
+        result['extension'] = re.sub(r'^\.', '', mimetypes.guess_extension(result['mimetype']))
+        result['filename'] = os.path.basename(result['fullpath'])
+        path_parts = os.path.splitext(result['fullpath'])
+        result['path'] = path_parts[0]
+        has_info = True
         #logmessage("Downloaded to " + result['tempfile'].name)
     else:
         #logmessage(str(file_reference) + " is not a URL")

@@ -354,6 +354,9 @@ import docassemble.base.functions
 import docassemble.base.util
 from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipient, DAFileList, DAFile
 
+mimetypes.add_type('application/x-yaml', '.yml')
+mimetypes.add_type('application/x-yaml', '.yaml')
+
 redis_host = daconfig.get('redis', None)
 if redis_host is None:
     redis_host = 'redis://localhost'

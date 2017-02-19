@@ -1,0 +1,39 @@
+metadata:
+  title: Save URL to file
+  short title: URL
+  documentation: "http://docassemble.org/docs/functions.html#path_and_mimetype"
+  example start: 2
+  example end: 5
+---
+modules:
+  - docassemble.base.util
+---
+objects:
+  - logo: DAFile
+---
+code: |
+  url = 'http://docassemble.org/img/docassemble-logo.jpg'
+  (filename, mimetype) = path_and_mimetype(url)
+  logo.set_mimetype(mimetype)
+  logo.copy_into(filename)
+---
+field: initial_screen
+question: |
+  Obtained file
+subquestion: |
+  The URL [${ url }](${ url })
+  has been saved to a file.
+
+  It has a MIME type of
+  ${ mimetype }.
+
+  Click "Continue" to see it.
+---
+mandatory: True
+need: initial_screen
+question: |
+  Here is the file.
+subquestion: |
+  ${ logo }
+  
+  
