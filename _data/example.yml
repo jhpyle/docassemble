@@ -3176,6 +3176,30 @@
   fields:
     - Present tense verb: the_verb
   sets: all_done
+"path-and-mimetype": |-
+  code: |
+    (filename_a, mimetype_a) = path_and_mimetype('data/static/hello.pdf')
+    (filename_b, mimetype_b) = path_and_mimetype('docassemble.demo:data/static/house.png')
+    (filename_c, mimetype_c) = path_and_mimetype('http://docassemble.org/img/docassemble-logo.jpg')
+  ---
+  mandatory: True
+  question: |
+    File locations and MIME types
+  subquestion: |
+    #### `data/static/hello.pdf`
+
+    Path **${ filename_a }** has
+    MIME type **${ mimetype_a }**.
+
+    #### `docassemble.demo:data/static/house.png`
+
+    Path **${ filename_b }** has
+    MIME type **${ mimetype_b }**.
+
+    #### `http://docassemble.org/img/docassemble-logo.jpg`
+
+    Path **${ filename_c }** has
+    MIME type **${ mimetype_c }**.
 "pdf-fill": |-
   question: |
     Here is your PDF form
@@ -3587,6 +3611,34 @@
   question: |
     The number after 3 is
     ${ plus_one(3) }.
+"save-url-to-file": |-
+  objects:
+    - logo: DAFile
+  ---
+  code: |
+    url = 'http://docassemble.org/img/docassemble-logo.jpg'
+    (filename, mimetype) = path_and_mimetype(url)
+    logo.set_mimetype(mimetype)
+    logo.copy_into(filename)
+  ---
+  field: initial_screen
+  question: |
+    Obtained file
+  subquestion: |
+    The URL [${ url }](${ url })
+    has been saved to a file.
+
+    It has a MIME type of
+    ${ mimetype }.
+
+    Click "Continue" to see it.
+  ---
+  mandatory: True
+  need: initial_screen
+  question: |
+    Here is the file.
+  subquestion: |
+    ${ logo }
 "script": |-
   question: |
     Do you want to build a snowman?

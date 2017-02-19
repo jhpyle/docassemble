@@ -823,6 +823,14 @@ for line in the_file.readlines():
     header_line = line
 {% endhighlight %}
 
+<a name="DAFile.set_mimetype"></a>The `.set_mimetype()` method sets
+the `.mimetype` and `.extension` attributes based on the given
+[MIME type].
+
+{% highlight python %}
+the_file.set_mimetype('image/jpeg')
+{% endhighlight %}
+
 <a name="DAFile.write"></a>The `.write()` method takes a variable as
 an argument and writes the contents of the variable to the file.
 
@@ -2155,3 +2163,4 @@ and not an instance of the `Attorney` class.
 [Return-path]: https://en.wikipedia.org/wiki/Bounce_address
 [Reply-to]: https://www.ietf.org/rfc/rfc2822.txt
 [JSON]: https://en.wikipedia.org/wiki/JSON
+[MIME type]: https://en.wikipedia.org/wiki/Media_type

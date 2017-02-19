@@ -2364,6 +2364,50 @@ ocr languages:
   ar: ara
 {% endhighlight %}
 
+## <a name="path_and_mimetype"></a>path_and_mimetype()
+
+The `path_and_mimetype()` function returns a [tuple] consisting of a
+file path and [MIME type] for a given reference to a file.
+
+The function works with a variety of file references, including:
+
+* A `DAFile` object;
+* A file number (see [`DAFile`]);
+* A reference to a file in the current package (e.g.,
+`data/sources/training-data.json`);
+* A reference to a file in a particular package (e.g.,
+`docassemble.demo:data/static/crown.png`); or
+* A URL to a file on the Internet.
+
+If the reference is to a file on the Internet, the file will be
+downloaded to a temporary file.
+
+{% include side-by-side.html demo="path-and-mimetype" %}
+
+Paths retrieved through `path_and_mimetype()` can be used by [Python]
+functions right away.
+
+Note, however, that paths obtained from [`DAFile`] objects, file
+numbers, and URLs, will not necessarily be stable from request to
+request.  If you save a path to a variable at one time, and expect to
+use it later in a subsequent question, you may find that the path does
+not exist.  This is because temporary files can be deleted, and
+subsequent user screens may be handled by different servers.
+
+If you want a file that persists from request to request, you should
+store its contents to a [`DAFile`] object.  When a [`DAFile`] object
+is assigned to an interview variable, you can reliably obtain the file
+path by calling the [`.path()`] method on the variable.
+
+The `path_and_mimetype()` function can be used along with the
+[`.set_mimetype()`] and [`.copy_into()`] methods of the [`DAFile`]
+class in order to save files to [`DAFile`] objects.
+
+The following interview retrieves an image from the Internet and saves
+it to a variable `logo`, which is a [`DAFile`] object.
+
+{% include side-by-side.html demo="save-url-to-file" %}
+
 # <a name="sms"></a>Functions for working with SMS messages
 
 ## <a name="send_sms"></a>send_sms()
@@ -2864,6 +2908,9 @@ $(document).on('daPageLoad', function(){
 [`DAFileCollection`]: {{ site.baseurl }}/docs/objects.html#DAFileCollection
 [`DAFileList`]: {{ site.baseurl }}/docs/objects.html#DAFileList
 [`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile
+[`.path()`]: {{ site.baseurl }}/docs/objects.html#DAFile.path
+[`.set_mimetype()`]: {{ site.baseurl }}/docs/objects.html#DAFile.set_mimetype
+[`.copy_into()`]: {{ site.baseurl }}/docs/objects.html#DAFile.copy_into
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
 [`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
 [`DATemplate`]: {{ site.baseurl }}/docs/objects.html#DATemplate
@@ -3068,3 +3115,5 @@ $(document).on('daPageLoad', function(){
 [`datetime.datetime`]: https://docs.python.org/2/library/datetime.html#datetime-objects
 [`__init__()`]: https://docs.python.org/2/reference/datamodel.html#object.__init__
 [document]: http://yaml.org/spec/1.2/spec.html#id2760395
+[MIME type]: https://en.wikipedia.org/wiki/Media_type
+[tuple]: https://en.wikibooks.org/wiki/Python_Programming/Tuples
