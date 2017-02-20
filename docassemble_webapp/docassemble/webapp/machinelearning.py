@@ -107,18 +107,22 @@ class MachineLearner(object):
         existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, id=the_id).first()
         if existing_entry is None:
             raise Exception("There was no entry in the database for id " + str(the_id))
-        return MachineLearningEntry(ml=self, id=existing_entry.id, independent=pickle.loads(codecs.decode(existing_entry.independent, 'base64')), create_time=existing_entry.create_time, key=existing_entry.key)
+        if existing_entry.dependent:
+            dependent = pickle.loads(codecs.decode(existing_entry.dependent, 'base64'))
+        else:
+            dependent = None
+        return MachineLearningEntry(ml=self, id=existing_entry.id, independent=pickle.loads(codecs.decode(existing_entry.independent, 'base64')), dependent=dependent, create_time=existing_entry.create_time, key=existing_entry.key)
     def one_unclassified_entry(self):
         self.initialize()
         entry = MachineLearning.query.filter_by(group_id=self.group_id, active=False).order_by(MachineLearning.id).first()
         if entry is None:
             return None
-        return MachineLearningEntry(ml=self, id=entry.id, independent=pickle.loads(codecs.decode(entry.independent, 'base64')), create_time=entry.create_time, key=entry.key)
+        return MachineLearningEntry(ml=self, id=entry.id, independent=pickle.loads(codecs.decode(entry.independent, 'base64')), dependent=None, create_time=entry.create_time, key=entry.key)
     def unclassified_entries(self):
         self.initialize()
         results = list()
         for entry in MachineLearning.query.filter_by(group_id=self.group_id, active=False).order_by(MachineLearning.id).all():
-            results.append(MachineLearningEntry(ml=self, id=entry.id, independent=pickle.loads(codecs.decode(entry.independent, 'base64')), create_time=entry.create_time, key=entry.key))
+            results.append(MachineLearningEntry(ml=self, id=entry.id, independent=pickle.loads(codecs.decode(entry.independent, 'base64')), dependent=None, create_time=entry.create_time, key=entry.key))
         return results
     def classified_entries(self):
         self.initialize()
