@@ -9,11 +9,12 @@ import os
 import yaml
 import json
 import sys
-from pattern.vector import count, KNN, stem, PORTER, words, Document
+from pattern.vector import count, KNN, SVM, stem, PORTER, words, Document
 from docassemble.base.logger import logmessage
 from docassemble.webapp.backend import get_info_from_file_reference
 
-knns = dict()
+learners = dict()
+svms = dict()
 lastmodtime = dict()
 
 class MachineLearningEntry(object):
@@ -150,8 +151,8 @@ class MachineLearner(object):
 class SimpleTextMachineLearner(MachineLearner):
     """A class used to interact with the machine learning system"""
     def initialize(self, *pargs, **kwargs):
-        if hasattr(self, 'group_id') and self.group_id not in knns:
-            knns[self.group_id] = KNN()
+        if hasattr(self, 'group_id') and self.group_id not in learners:
+            learners[self.group_id] = KNN()
         return super(SimpleTextMachineLearner, self).initialize(*pargs, **kwargs)
     def __init__(self, *pargs, **kwargs):
         if len(pargs) > 0:
@@ -161,17 +162,25 @@ class SimpleTextMachineLearner(MachineLearner):
             del kwargs['group_id']
         return super(SimpleTextMachineLearner, self).__init__(*pargs, **kwargs)
     def train(self, indep, depend, **kwargs):
+        if indep is None:
+            return
         the_text = re.sub(r'[\n\r]+', r'  ', indep).lower()
-        knns[self.group_id].train(Document(the_text, stemmer=PORTER), depend)
+        learners[self.group_id].train(Document(the_text, stemmer=PORTER), depend)
     def predict(self, indep, **kwargs):
         indep = re.sub(r'[\n\r]+', r'  ', indep).lower()
         self.train_from_db()
         probs = dict()
-        for key, value in knns[self.group_id].classify(Document(indep, stemmer=PORTER), discrete=False).iteritems():
+        for key, value in learners[self.group_id].classify(Document(indep, stemmer=PORTER), discrete=False).iteritems():
             probs[key] = value
         if not len(probs):
-            single_result = knns[self.group_id].classify(Document(indep, stemmer=PORTER))
+            single_result = learners[self.group_id].classify(Document(indep, stemmer=PORTER))
             if single_result is not None:
                 probs[single_result] = 1.0
         return sorted(probs.keys(), key=probs.get, reverse=True)
     
+class SVMMachineLearner(SimpleTextMachineLearner):
+    """A class used to interact with the machine learning system"""
+    def initialize(self, *pargs, **kwargs):
+        if hasattr(self, 'group_id') and self.group_id not in learners:
+            learners[self.group_id] = SVM()
+        return super(SimpleTextMachineLearner, self).initialize(*pargs, **kwargs)
