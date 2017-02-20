@@ -28,7 +28,7 @@ class MachineLearner(object):
     def initialize(self, *pargs, **kwargs):
         if hasattr(self, 'initial_file'):
             self.start_from_file(self.initial_file)
-        if hasattr(self, 'group_id') and self.group_id not in lastmodtime:
+        if hasattr(self, 'group_id') and (self.group_id not in lastmodtime or ('reset' in kwargs and kwargs['reset'])):
             lastmodtime[self.group_id] = datetime.datetime(year=1970, month=1, day=1)
     def export_training_set(self, output_format='json'):
         self.initialize()
@@ -47,6 +47,11 @@ class MachineLearner(object):
             if record.dependent is not None:
                 in_use.add(pickle.loads(codecs.decode(record.dependent, 'base64')))
         return sorted(in_use)
+    def is_empty(self):
+        existing_entry = MachineLearning.query.filter_by(group_id=self.group_id).first()
+        if existing_entry is not None:
+            return True
+        return False
     def start_from_file(self, fileref):
         #logmessage("Starting from file " + str(fileref))
         existing_entry = MachineLearning.query.filter_by(group_id=self.group_id).first()
@@ -64,8 +69,9 @@ class MachineLearner(object):
         if type(aref) is list:
             nowtime = datetime.datetime.utcnow()
             for entry in aref:
-                new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), dependent=codecs.encode(pickle.dumps(entry['dependent']), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=True)
-                db.session.add(new_entry)
+                if 'independent' in entry:
+                    new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(entry['independent']), 'base64').decode(), dependent=codecs.encode(pickle.dumps(entry.get('dependent', None)), 'base64').decode(), modtime=nowtime, create_time=nowtime, active=True, key=entry.get('key', None))
+                    db.session.add(new_entry)
             db.session.commit()
     def __init__(self, *pargs, **kwargs):
         if len(pargs) > 0:
@@ -75,20 +81,24 @@ class MachineLearner(object):
         if 'group_id' in kwargs:
             self.group_id = kwargs['group_id']
             del kwargs['group_id']
-    def add_to_training_set(self, independent, dependent):
+    def add_to_training_set(self, independent, dependent, key=None):
         self.initialize()
         nowtime = datetime.datetime.utcnow()
-        new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(independent), 'base64').decode(), dependent=codecs.encode(pickle.dumps(dependent), 'base64').decode(), create_time=nowtime, modtime=nowtime, active=True)
+        new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(independent), 'base64').decode(), dependent=codecs.encode(pickle.dumps(dependent), 'base64').decode(), create_time=nowtime, modtime=nowtime, active=True, key=key)
         db.session.add(new_entry)
         db.session.commit()
         return new_entry.id
     def save_for_classification(self, text, **kwargs):
+        key = kwargs.get('key', None)
         self.initialize()
-        existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, independent=codecs.encode(pickle.dumps(text), 'base64').decode()).first()
+        if key is None:
+            existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, independent=codecs.encode(pickle.dumps(text), 'base64').decode()).first()
+        else:
+            existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, key=key, independent=codecs.encode(pickle.dumps(text), 'base64').decode()).first()
         if existing_entry is not None:
             logmessage("entry is already there")
             return existing_entry.id
-        new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(text), 'base64').decode(), create_time=datetime.datetime.utcnow(), active=False)
+        new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(text), 'base64').decode(), create_time=datetime.datetime.utcnow(), active=False, key=key)
         db.session.add(new_entry)
         db.session.commit()
         return new_entry.id
@@ -97,24 +107,24 @@ class MachineLearner(object):
         existing_entry = MachineLearning.query.filter_by(group_id=self.group_id, id=the_id).first()
         if existing_entry is None:
             raise Exception("There was no entry in the database for id " + str(the_id))
-        return MachineLearningEntry(ml=self, id=existing_entry.id, independent=pickle.loads(codecs.decode(existing_entry.independent, 'base64')), create_time=existing_entry.create_time)
+        return MachineLearningEntry(ml=self, id=existing_entry.id, independent=pickle.loads(codecs.decode(existing_entry.independent, 'base64')), create_time=existing_entry.create_time, key=existing_entry.key)
     def one_unclassified_entry(self):
         self.initialize()
         entry = MachineLearning.query.filter_by(group_id=self.group_id, active=False).order_by(MachineLearning.id).first()
         if entry is None:
             return None
-        return MachineLearningEntry(ml=self, id=entry.id, independent=pickle.loads(codecs.decode(entry.independent, 'base64')), create_time=entry.create_time)
+        return MachineLearningEntry(ml=self, id=entry.id, independent=pickle.loads(codecs.decode(entry.independent, 'base64')), create_time=entry.create_time, key=entry.key)
     def unclassified_entries(self):
         self.initialize()
         results = list()
         for entry in MachineLearning.query.filter_by(group_id=self.group_id, active=False).order_by(MachineLearning.id).all():
-            results.append(MachineLearningEntry(ml=self, id=entry.id, independent=pickle.loads(codecs.decode(entry.independent, 'base64')), create_time=entry.create_time))
+            results.append(MachineLearningEntry(ml=self, id=entry.id, independent=pickle.loads(codecs.decode(entry.independent, 'base64')), create_time=entry.create_time, key=entry.key))
         return results
     def classified_entries(self):
         self.initialize()
         results = list()
         for entry in MachineLearning.query.filter_by(group_id=self.group_id, active=True).order_by(MachineLearning.id).all():
-            results.append(MachineLearningEntry(ml=self, id=entry.id, independent=pickle.loads(codecs.decode(entry.independent, 'base64')), dependent=pickle.loads(codecs.decode(entry.dependent, 'base64')), create_time=entry.create_time))
+            results.append(MachineLearningEntry(ml=self, id=entry.id, independent=pickle.loads(codecs.decode(entry.independent, 'base64')), dependent=pickle.loads(codecs.decode(entry.dependent, 'base64')), create_time=entry.create_time, key=entry.key))
         return results
     def set_dependent_by_id(self, the_id, the_dependent):
         self.initialize()
@@ -129,14 +139,18 @@ class MachineLearner(object):
         self.initialize()
         MachineLearning.query.filter_by(group_id=self.group_id, id=the_id).delete()
         db.session.commit()
+    def delete_by_key(self, key):
+        self.initialize()
+        MachineLearning.query.filter_by(group_id=self.group_id, key=key).delete()
+        db.session.commit()
     def save(self):
         db.session.commit()
     def train_from_db(self):
-        logmessage("Doing train_from_db")
+        #logmessage("Doing train_from_db")
         self.initialize()
         nowtime = datetime.datetime.utcnow()
         for record in MachineLearning.query.filter(and_(MachineLearning.group_id == self.group_id, MachineLearning.active == True, MachineLearning.modtime > lastmodtime[self.group_id])).all():
-            logmessage("Training...")
+            #logmessage("Training...")
             self.train(pickle.loads(codecs.decode(record.independent, 'base64')), pickle.loads(codecs.decode(record.dependent, 'base64')))
         lastmodtime[self.group_id] = nowtime
     def delete_training_set(self):
@@ -151,7 +165,7 @@ class MachineLearner(object):
 class SimpleTextMachineLearner(MachineLearner):
     """A class used to interact with the machine learning system"""
     def initialize(self, *pargs, **kwargs):
-        if hasattr(self, 'group_id') and self.group_id not in learners:
+        if hasattr(self, 'group_id') and (self.group_id not in learners or ('reset' in kwargs and kwargs['reset'])):
             learners[self.group_id] = KNN()
         return super(SimpleTextMachineLearner, self).initialize(*pargs, **kwargs)
     def __init__(self, *pargs, **kwargs):
@@ -181,6 +195,6 @@ class SimpleTextMachineLearner(MachineLearner):
 class SVMMachineLearner(SimpleTextMachineLearner):
     """A class used to interact with the machine learning system"""
     def initialize(self, *pargs, **kwargs):
-        if hasattr(self, 'group_id') and self.group_id not in learners:
+        if hasattr(self, 'group_id') and (self.group_id not in learners or 'reset' in kwargs and kwargs['reset']):
             learners[self.group_id] = SVM()
         return super(SimpleTextMachineLearner, self).initialize(*pargs, **kwargs)

@@ -91,6 +91,7 @@ machinelearning|dependent|text||
 machinelearning|create_time|timestamp without time zone||now()
 machinelearning|modtime|timestamp without time zone||now()
 machinelearning|active|boolean||false
+machinelearning|key|text||
 tempuser|id|integer||nextval('tempuser_id_seq'::regclass)
 user_invite|id|integer||nextval('user_invite_id_seq'::regclass)
 user_invite|role_id|integer||

@@ -49,6 +49,7 @@ class MachineLearning(db.Model):
     __tablename__ = dbtableprefix + "machinelearning"
     id = db.Column(db.Integer(), primary_key=True)
     group_id = db.Column(db.Text())
+    key = db.Column(db.Text())
     independent = db.Column(db.Text())
     dependent = db.Column(db.Text())
     create_time = db.Column(db.DateTime())
