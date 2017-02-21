@@ -23,9 +23,10 @@ code: |
   predictions = ml.predict(phrase)
 ---
 question: |
-  Please upload a file
+  Please upload or take a
+  picture of your legal document.
 fields:
-  - File: the_file
+  - no label: the_file
     datatype: file
 ---
 code: |
@@ -47,12 +48,10 @@ question: |
 ---
 mandatory: True
 question: |
-  The prediction
+  Your document
 subquestion: |
   % if len(predictions):
-  The prediction was:
-
-  > ${ predictions[0] }
+  Your document is a ${ predictions[0] }.
   % else:
   There is not enough training data
   to make a prediction yet.
