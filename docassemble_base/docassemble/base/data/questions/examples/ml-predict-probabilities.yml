@@ -1,0 +1,39 @@
+metadata:
+  title: Prediction with probabilities
+  short title: Predict
+  example start: 4
+  example end: 4
+  documentation: "http://docassemble.org/docs/ml.html#SimpleTextMachineLearner.predict"
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  Enter some text.
+fields:
+  - no label: phrase
+---
+mandatory: True
+code: |
+  ml = SimpleTextMachineLearner('demo')
+  predictions = ml.predict(phrase)
+---
+mandatory: True
+question: |
+  The prediction
+subquestion: |
+  The text provided was:
+  > ${ phrase }
+  
+  % if len(predictions):
+  The prediction was:
+
+  % for prediction in predictions:
+  * ${ '%s (%f)' % prediction }
+  % endfor
+  % else:
+  There is not enough training data
+  to make a prediction yet.
+  % endif
+buttons:
+  - Restart: restart
