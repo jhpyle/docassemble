@@ -276,7 +276,7 @@ class SimpleTextMachineLearner(MachineLearner):
         if probabilities:
             return [(x, probs[x]) for x in sorted(probs.keys(), key=probs.get, reverse=True)]
         else:
-            return sorted(probs.keys(), key=probs.get, split=True)
+            return sorted(probs.keys(), key=probs.get, reverse=True)
     def confusion_matrix(self, key=None, output_format=None, split=False):
         """Returns a confusion matrix for the model based on splitting the data set randomly into two pieces, training on one and testing on the other"""
         if split:
