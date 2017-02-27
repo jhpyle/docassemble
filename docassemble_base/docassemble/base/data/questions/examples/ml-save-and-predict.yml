@@ -2,7 +2,7 @@ metadata:
   title: Save for classification
   short title: Predict and save
   example start: 3
-  example end: 3
+  example end: 5
   documentation: "http://docassemble.org/docs/ml.html#save"
 ---
 modules:
@@ -13,9 +13,10 @@ question: |
 fields:
   - no label: phrase
 ---
-mandatory: True
 code: |
   ml = SimpleTextMachineLearner('demo')
+---
+code: |
   ml.save_for_classification(phrase)
   predictions = ml.predict(phrase)
 ---

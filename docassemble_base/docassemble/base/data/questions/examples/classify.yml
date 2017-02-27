@@ -1,0 +1,54 @@
+metadata:
+  title: Classifier
+  example start: 4
+  example end: 6
+  documentation: "http://docassemble.org/docs/ml.html#SimpleTextMachineLearner.one_unclassified_entry"
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+code: |
+  menu_items = [ action_menu_item('Confusion Matrix', 'confusion') ]
+---
+code: |
+  ml = SVMMachineLearner('demo')
+---
+code: |
+  entry = ml.one_unclassified_entry()
+---
+mandatory: true
+code: |
+  while True:
+    if entry is None:
+      del entry
+      no_entries
+    else:
+      entry.classify()
+      del entry
+---
+question: |
+  How do you classify this?
+subquestion: |
+  ${ quote_paragraphs(entry.independent) }
+fields:
+  - no label: entry.dependent
+    datatype: radio
+    choices:
+      - Happy
+      - Unhappy
+      - Angry
+      - Sad
+---
+event: no_entries
+question: |
+  There are no entries to classify.
+buttons:
+  - Check again: refresh
+---
+event: confusion
+question: Confusion matrix
+subquestion: |
+  ${ ml.confusion_matrix(output_format='html', split=True) }
+buttons:
+  - Continue: continue

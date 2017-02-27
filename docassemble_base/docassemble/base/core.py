@@ -66,12 +66,28 @@ class DAObject(object):
         self.instanceName = str(thename)
         self.attrList = list()
         self.init(*pargs, **kwargs)
+    def _set_instance_name_for_method(self):
+        method_name = inspect.stack()[1][3]
+        #sys.stderr.write("_set_instance_name_for_method: method_name is " + str(method_name) + "\n");
+        level = 1
+        while level < 10:
+            frame = inspect.stack()[level][0]
+            the_names = frame.f_code.co_names
+            #sys.stderr.write("_set_instance_name_for_method: level " + str(level) + "; co_name is " + str(frame.f_code.co_names) + "\n")
+            if len(the_names) == 3 and the_names[1] == method_name:
+                self.instanceName = the_names[2]
+                self.has_nonrandom_instance_name = True
+                return self
+            level += 1
+        self.instanceName = get_unique_name()
+        self.has_nonrandom_instance_name = False
+        return self
     def fix_instance_name(self, old_instance_name, new_instance_name):
         self.instanceName = re.sub(r'^' + old_instance_name, new_instance_name, self.instanceName)
         for aname in self.__dict__:
             if isinstance(getattr(self, aname), DAObject):
                 getattr(self, aname).fix_instance_name(old_instance_name, new_instance_name)
-        self.has_has_nonrandom_instance_name = True
+        self.has_nonrandom_instance_name = True
     def set_instance_name(self, thename):
         """Sets the instanceName attribute, if it is not already set."""
         if not self.has_nonrandom_instance_name:
@@ -80,6 +96,10 @@ class DAObject(object):
         else:
             logmessage("Not resetting name of " + self.instanceName)
         return
+    def set_random_instance_name(self):
+        """Sets the instanceName attribute to a random value."""
+        self.instanceName = str(get_unique_name())
+        self.has_nonrandom_instance_name = False
     def set_instance_name_recursively(self, thename):
         """Sets the instanceName attribute, if it is not already set, and that of subobjects."""
         if not self.has_nonrandom_instance_name:

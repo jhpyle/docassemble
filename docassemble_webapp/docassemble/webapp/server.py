@@ -953,6 +953,12 @@ def do_redirect(url, is_ajax):
     else:
         return redirect(url)
 
+def do_refresh(is_ajax):
+    if is_ajax:
+        return jsonify(action='refresh', csrf_token=generate_csrf())
+    else:
+        return redirect(url_for('index'))
+
 def standard_scripts():
     return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/signature.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>\n'
     
@@ -2971,7 +2977,7 @@ def index():
     will_save = True
     if interview_status.question.question_type == "refresh":
         release_lock(user_code, yaml_filename)
-        return do_redirect(url_for('index'), is_ajax)
+        return do_refresh(is_ajax)
     if interview_status.question.question_type == "signin":
         release_lock(user_code, yaml_filename)
         return do_redirect(url_for('user.login'), is_ajax)
@@ -3656,6 +3662,9 @@ def index():
         }
         else if (data.action == 'redirect'){
           window.location = data.url;
+        }
+        else if (data.action == 'refresh'){
+          daRefreshSubmit();
         }
         else if (data.action == 'resubmit'){
           if (daSubmitter != null){
@@ -9319,6 +9328,7 @@ def define_examples():
 import docassemble.webapp.machinelearning
 docassemble.base.util.set_knn_machine_learner(docassemble.webapp.machinelearning.SimpleTextMachineLearner)
 docassemble.base.util.set_svm_machine_learner(docassemble.webapp.machinelearning.SVMMachineLearner)
+docassemble.base.util.set_machine_learning_entry(docassemble.webapp.machinelearning.MachineLearningEntry)
 
 from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, UserDictKeys, TempUser, ChatLog
 with app.app_context():
