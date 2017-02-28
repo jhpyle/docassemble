@@ -28,11 +28,13 @@
 
     {{ render_field(form.organization, tabindex=300) }}
     
-    {{ render_field(form.timezone, tabindex=310) }}
+    {{ render_field(form.language, tabindex=310) }}
+    
+    {{ render_field(form.timezone, tabindex=320) }}
 
     <br>
     <div class="form-actions">
-      {{ render_submit_field(form.submit, tabindex=320) }}
+      {{ render_submit_field(form.submit, tabindex=330) }}
     </div>
 </form>
 

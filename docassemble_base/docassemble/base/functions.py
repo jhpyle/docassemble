@@ -394,6 +394,7 @@ word_collection = {
         'Continue': 'Continuar',
         'Help': 'Ayuda',
         'Sign in': 'Registrarse',
+        'Sign in or sign up to save answers': 'Inicie sesión o regístrese para guardar las respuestas',
         'Question': 'Interrogación',
         'save_as_multiple': 'The document is available in the following formats:',
         'save_as_singular': 'The document is available in the following format:',
@@ -402,7 +403,9 @@ word_collection = {
         'docx_message': 'for editing; requires Microsoft Word or compatible application',
         'tex_message': 'for debugging PDF output',
         'attachment_message_plural': 'The following documents have been created for you.',
-        'attachment_message_singular': 'The following document has been created for you.'
+        'attachment_message_singular': 'The following document has been created for you.',
+        'Yes': 'Sí',
+        'No': 'No'
         },
     'en': {
         'and': "and",
@@ -446,7 +449,7 @@ word_collection = {
 
 ordinal_numbers = {
     'en': {
-        '0': 'zeroeth',
+        '0': 'zeroth',
         '1': 'first',
         '2': 'second',
         '3': 'third',
@@ -457,6 +460,19 @@ ordinal_numbers = {
         '8': 'eighth',
         '9': 'ninth',
         '10': 'tenth'
+    },
+    'es': {
+        '0': 'zeroth',
+        '1': 'primero',
+        '2': 'segundo',
+        '3': 'tercero',
+        '4': 'cuarto',
+        '5': 'quinto',
+        '6': 'sexto',
+        '7': 'séptimo',
+        '8': 'octavo',
+        '9': 'noveno',
+        '10': 'décimo'
     }
 }
 
@@ -473,6 +489,19 @@ nice_numbers = {
         '8': 'eight',
         '9': 'nine',
         '10': 'ten'
+    },
+    'es': {
+        '0': 'cero',
+        '1': 'uno',
+        '2': 'dos',
+        '3': 'tres',
+        '4': 'cuatro',
+        '5': 'cinco',
+        '6': 'seis',
+        '7': 'siete',
+        '8': 'ocho',
+        '9': 'nueve',
+        '10': 'diez'
     }
 }
 
@@ -818,7 +847,8 @@ def ordinal_function_en(i):
         return num + 'th'
 
 ordinal_functions = {
-    'en': ordinal_function_en
+    'en': ordinal_function_en,
+    '*': ordinal_function_en
 }
 
 def words():
@@ -1062,12 +1092,21 @@ def ordinal_number_default(i):
     ordinal_number(1) returns "first."  For a function that can be used
     on index numbers that start with zero, see ordinal()."""
     num = unicode(i)
-    if this_thread.language in ordinal_numbers and num in ordinal_numbers[this_thread.language]:
-        return ordinal_numbers[this_thread.language][num]
-    if this_thread.language in ordinal_functions:
-        return ordinal_functions[this_thread.language](i)
+    if this_thread.language in ordinal_numbers:
+        language_to_use = this_thread.language
+    elif '*' in ordinal_numbers:
+        language_to_use = '*'
     else:
-        return default_ordinal_function(i)
+        language_to_use = 'en'
+    if num in ordinal_numbers[language_to_use]:
+        return ordinal_numbers[language_to_use][num]
+    if this_thread.language in ordinal_functions:
+        language_to_use = this_thread.language
+    elif '*' in ordinal_functions:
+        language_to_use = '*'
+    else:
+        language_to_use = 'en'
+    return ordinal_functions[language_to_use](i)
 
 def ordinal_default(j):
     """Returns the "first," "second," "third," etc. for a given number, which is expected to
@@ -1077,8 +1116,14 @@ def ordinal_default(j):
 
 def nice_number_default(num):
     """Returns the number as a word in the current language."""
-    if this_thread.language in nice_numbers and unicode(num) in nice_numbers[this_thread.language]:
-        return nice_numbers[this_thread.language][unicode(num)]
+    if this_thread.language in nice_numbers:
+        language_to_use = this_thread.language
+    elif '*' in nice_numbers:
+        language_to_use = '*'
+    else:
+        language_to_use = 'en'
+    if unicode(num) in nice_numbers[language_to_use]:
+        return nice_numbers[language_to_use][unicode(num)]
     return unicode(num)
 
 def quantity_noun_default(num, noun, as_integer=True):

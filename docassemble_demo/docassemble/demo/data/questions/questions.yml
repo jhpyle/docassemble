@@ -188,10 +188,7 @@ code: |
   if role == 'advocate' and not defined('client.name.first'):
     welcome_advocate
   # track_location = user.location.status()
-  if not defined('user_saw_initial_screen'):
-    set_language(user.language)
-  else:
-    set_language('en')
+  set_language(user.language)
 ---
 role: advocate
 event: welcome_advocate

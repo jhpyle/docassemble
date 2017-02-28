@@ -350,7 +350,6 @@ from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
 from docassemble.base.generate_key import random_string, random_lower_string, random_alphanumeric
 import docassemble.webapp.backend
-import docassemble.base.functions
 import docassemble.base.util
 from docassemble.base.util import DAEmail, DAEmailRecipientList, DAEmailRecipient, DAFileList, DAFile
 
@@ -2955,6 +2954,9 @@ def index():
     #     interview_status.populate(interview.questions_by_name[post_data['_question_name']].ask(user_dict, 'None', 'None'))
     # else:
     interview.assemble(user_dict, interview_status)
+    current_language = docassemble.base.functions.get_language()
+    if current_language != DEFAULT_LANGUAGE:
+        session['language'] = current_language
     if not interview_status.can_go_back:
         user_dict['_internal']['steps_offset'] = steps
     if len(interview_status.attachments) > 0:
@@ -4528,12 +4530,18 @@ def index():
     #sys.stderr.write("11\n")
     return response
 
+@app.template_filter('word')
+def word_filter(text):
+    return docassemble.base.functions.word(text)
+
 @app.context_processor
 def utility_processor():
     def word(text):
         return docassemble.base.functions.word(text)
     def random_social():
         return 'local$' + random_alphanumeric(32)
+    if 'language' in session:
+        docassemble.base.functions.set_language(session['language'])
     return dict(random_social=random_social, word=word)
 
 @app.route('/speakfile', methods=['GET'])
@@ -8312,6 +8320,8 @@ def login_or_register(sender, user, **extra):
             db.session.commit()
         del session['tempuser']
     session['user_id'] = user.id
+    if user.language and user.language != DEFAULT_LANGUAGE:
+        session['language'] = user.language
 
 @user_logged_in.connect_via(app)
 def _on_user_login(sender, user, **extra):

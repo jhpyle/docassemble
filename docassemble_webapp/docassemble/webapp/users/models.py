@@ -17,6 +17,7 @@ class UserModel(db.Model, UserMixin):
     subdivisionthird = db.Column(db.String(50))
     organization = db.Column(db.String(64))
     timezone = db.Column(db.String(64))
+    language = db.Column(db.String(64))
     user_auth = db.relationship('UserAuthModel', uselist=False, primaryjoin="UserAuthModel.user_id==UserModel.id")
     roles = db.relationship('Role', secondary='user_roles', backref=db.backref('user', lazy='dynamic'))
     password = db.Column(db.String(255), nullable=False, server_default='') # work around a bug

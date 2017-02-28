@@ -3,10 +3,10 @@
 {% block content %}
 {% from "base_templates/form_macros.html" import render_field, render_checkbox_field, render_submit_field, myrender_hidden_field %}
 
-<h1>{%trans%}Register{%endtrans%}</h1>
+<h1>{{ word("Register") }}</h1>
 
 {% if user_manager.enable_register %}
-    <p>{%trans%}Already registered?{%endtrans%} <a href="{{ url_for('user.login', next=url_for('index')) }}" tabindex='290'>{%trans%}Sign in.{%endtrans%}</a></p>
+    <p>{{ word("Already registered?") }} <a href="{{ url_for('user.login', next=url_for('index')) }}" tabindex='290'>{{ word("Sign in.") }}</a></p>
 {% endif %}
 
 <form action="" method="POST" novalidate formnovalidate class="form" role="form">

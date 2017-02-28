@@ -1,7 +1,7 @@
 {% extends 'flask_user/public_base.html' %}
 
 {% block content %}
-<h1>{%trans%}Sign in{%endtrans%}</h1>
+<h1>{{ word("Sign in") }}</h1>
 
 {% if config['USE_GOOGLE_LOGIN'] %}
 <div class="g-signin2" data-width="250" data-longtitle="true" data-onsuccess="onSignIn"></div>

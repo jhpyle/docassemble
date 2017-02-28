@@ -31,9 +31,10 @@ class UserProfileForm(FlaskForm):
         DataRequired(word('Last name is required'))])
     country = StringField(word('Country code'), [validators.Length(min=0, max=2)])
     subdivisionfirst = StringField(word('First subdivision'), [validators.Length(min=0, max=3)])
-    subdivisionsecond = StringField(word('Second subdivision'))
-    subdivisionthird = StringField(word('Third subdivision'))
-    organization = StringField(word('Organization'))
+    subdivisionsecond = StringField(word('Second subdivision'), [validators.Length(min=0, max=50)])
+    subdivisionthird = StringField(word('Third subdivision'), [validators.Length(min=0, max=50)])
+    organization = StringField(word('Organization'), [validators.Length(min=0, max=64)])
+    language = StringField(word('Language'), [validators.Length(min=0, max=64)])
     timezone = SelectField(word('Time Zone'))
     submit = SubmitField(word('Save'))
 

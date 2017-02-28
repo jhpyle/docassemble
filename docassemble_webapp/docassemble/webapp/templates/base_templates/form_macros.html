@@ -1,7 +1,7 @@
 {% macro render_file_field(field, label=None, label_visible=True, right_url=None, right_label=None, right_message=None, multiple=False) -%}
 <div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
   {%- if label_visible %}
-  {% if not label %}{% set label=field.label.text %}{% endif %}
+  {% if not label %}{% set label=field.label.text|word %}{% endif %}
   <label for="{{ field.id }}" class="control-label">{{ label|safe }}</label>
   {% endif %}
   <input alt="{{ word('You can upload a file here') }}" type="file" class="file" data-show-upload="false" data-preview-file-type="text" name="{{ field.id }}" id="{{ field.id }}"{% if multiple %} multiple{% endif %}/>
@@ -13,7 +13,7 @@
 {%- endmacro %}
 {% macro render_file_field_simple(field, label=None, label_visible=True, right_url=None, right_label=None, right_message=None, multiple=False) -%}
 <div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
-  {% if not label %}{% set label=field.label.text %}{% endif %}
+  {% if not label %}{% set label=field.label.text|word %}{% endif %}
   <label for="{{ field.id }}" class="control-label">{{ label|safe }}</label>
   <div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-default btn-file"><span class="fileinput-new">{{ word("Select file") }}</span><span class="fileinput-exists">{{ word("Change") }}</span><input type="file" name="{{ field.id }}" id="{{ field.id }}"{% if multiple %} multiple{% endif %}></span><a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">{{ word("Remove") }}</a></div>
   {% for e in field.errors %}
@@ -24,7 +24,7 @@
 {% macro render_field(field, label=None, label_visible=True, right_url=None, right_label=None, right_message=None) %}
 <div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
   {%- if field.type != 'HiddenField' and label_visible %}
-  {%- if not label %}{% set label=field.label.text %}{% endif %}
+  {%- if not label %}{% set label=field.label.text|word %}{% endif %}
   <label for="{{ field.id }}" class="control-label">{{ label|safe }}</label>
   {%- endif %}
   {{ field(class_='form-control', **kwargs) }}
@@ -43,7 +43,7 @@
 {%- if not extra_class %}{% set extra_class='' %}{% endif %}
 <div class="input-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}{{ extra_class }}">
   {%- if field.type != 'HiddenField' and label_visible %}
-  {%- if not label %}{% set label=field.label.text %}{% endif %}
+  {%- if not label %}{% set label=field.label.text|word %}{% endif %}
   <span class="input-group-addon">{{ label|safe }}</span>
   {%- endif %}
   {{ field(class_='form-control', **kwargs) }}
@@ -62,7 +62,7 @@
 {%- endmacro %}
 
 {% macro render_checkbox_field(field, label=None) %}
-    {%- if not label %}{% set label=field.label.text %}{% endif %}
+    {%- if not label %}{% set label=field.label.text|word %}{% endif %}
     <div class="checkbox">
         <label>
             {{ field(type='checkbox', **kwargs) }} {{ label }}
@@ -116,13 +116,13 @@
 {%- endmacro %}
 
 {% macro render_submit_field(field, label=None, id=None, tabindex=None, class="btn btn-primary btn-lg") %}
-    {%- if not label %}{% set label=field.label.text %}{% endif %}<button type="submit" name="{{ field.id }}" {% if id %}id="{{ id }}" {% endif %}class="{{ class }}" value="{{ label }}"{% if tabindex %} tabindex="{{ tabindex }}"{% endif %}>{{label}}</button>
+    {%- if not label %}{% set label=field.label.text|word %}{% endif %}<button type="submit" name="{{ field.id }}" {% if id %}id="{{ id }}" {% endif %}class="{{ class }}" value="{{ label }}"{% if tabindex %} tabindex="{{ tabindex }}"{% endif %}>{{label}}</button>
 {%- endmacro %}
 
 {% macro myrender_field(field, label=None, label_visible=True, right_url=None, right_label=None) %}
     <div class="control-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
         {%- if field.type != 'HiddenField' and label_visible %}
-            {% if not label %}{% set label=field.label.text %}{% endif %}
+            {% if not label %}{% set label=field.label.text|word %}{% endif %}
             <label for="{{ field.id }}" class="control-label">{{ label|safe }}</label>
         {%- endif %}
 	<div class="controls">    
@@ -137,7 +137,7 @@
 {%- endmacro %}
 
 {% macro myrender_submit_field(field, label=None, tabindex=None, id=None) %}
-    {%- if not label %}{% set label=field.label.text %}{% endif %}
+    {%- if not label %}{% set label=field.label.text|word %}{% endif %}
     <button type="submit" {% if id %}id="{{ id }}" {% endif %}class="btn btn-primary btn-lg"{% if tabindex %} tabindex="{{ tabindex }}"{% endif %}>{{ label }}</button>
 {%- endmacro %}
 

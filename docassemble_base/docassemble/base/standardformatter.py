@@ -772,7 +772,7 @@ def as_html(status, url_for, debug, root, validation_rules):
                         random.shuffle(pairlist)
                     for pair in pairlist:
                         formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
-                        if defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue):
+                        if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue):
                             ischecked = ' checked="checked"'
                         else:
                             ischecked = ''
@@ -795,7 +795,7 @@ def as_html(status, url_for, debug, root, validation_rules):
                             if key == 'image':
                                 continue
                             formatted_key = markdown_to_html(key, status=status, trim=True, escape=True)
-                            if defaultvalue is not None and unicode(choice[key]) == unicode(defaultvalue):
+                            if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(choice[key]) == unicode(defaultvalue):
                                 ischecked = ' checked="checked"'
                             else:
                                 ischecked = ''
@@ -1280,7 +1280,9 @@ def input_for(status, field, wide=False, embedded=False):
                         ischecked = ' checked'
                     elif type(defaultvalue) is dict and unicode(pair[0]) in defaultvalue and defaultvalue[unicode(pair[0])]:
                         ischecked = ' checked'
-                    elif unicode(pair[0]) == unicode(defaultvalue):
+                    elif pair[0] is defaultvalue:
+                        ischecked = ' checked'
+                    elif type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue):
                         ischecked = ' checked'
                     else:
                         ischecked = ''
@@ -1300,7 +1302,7 @@ def input_for(status, field, wide=False, embedded=False):
                 if pair[0] is not None:
                     #sys.stderr.write(str(saveas_string) + "\n")
                     formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
-                    if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue)):
+                    if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
@@ -1324,7 +1326,7 @@ def input_for(status, field, wide=False, embedded=False):
                 if pair[0] is not None:
                     formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, do_terms=False)
                     output += '<option value="' + unicode(pair[0]) + '"'
-                    if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue)):
+                    if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
                         output += ' selected="selected"'
                     output += '>' + formatted_item + '</option>'
             output += '</select> '
@@ -1338,7 +1340,7 @@ def input_for(status, field, wide=False, embedded=False):
                 if field.sign > 0:
                     for pair in [['True', status.question.yes()], ['False', status.question.no()]]:
                         formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
-                        if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue)):
+                        if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
                             ischecked = ' checked="checked"'
                         else:
                             ischecked = ''
@@ -1347,7 +1349,7 @@ def input_for(status, field, wide=False, embedded=False):
                 else:
                     for pair in [['False', status.question.yes()], ['True', status.question.no()]]:
                         formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
-                        if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue)):
+                        if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
                             ischecked = ' checked="checked"'
                         else:
                             ischecked = ''
@@ -1369,7 +1371,7 @@ def input_for(status, field, wide=False, embedded=False):
             if field.sign > 0:
                 for pair in [['True', status.question.yes()], ['False', status.question.no()], ['None', status.question.maybe()]]:
                     formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
-                    if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue)):
+                    if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
@@ -1378,7 +1380,7 @@ def input_for(status, field, wide=False, embedded=False):
             else:
                 for pair in [['False', status.question.yes()], ['True', status.question.no()], ['None', status.question.maybe()]]:
                     formatted_item = markdown_to_html(unicode(pair[1]), status=status, trim=True, escape=True)
-                    if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and unicode(pair[0]) == unicode(defaultvalue)):
+                    if (len(pair) > 2 and pair[2]) or (defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float] and unicode(pair[0]) == unicode(defaultvalue)):
                         ischecked = ' checked="checked"'
                     else:
                         ischecked = ''
@@ -1409,7 +1411,7 @@ def input_for(status, field, wide=False, embedded=False):
                 if not (hasattr(field, 'extras') and key in field.extras and key in status.extras and field.number in status.extras[key]):
                     ok = False
             if ok:
-                if defaultvalue is not None:
+                if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float]:
                     the_default = ' data-slider-value="' + str(defaultvalue) + '"'
                 else:
                     the_default = ''
@@ -1426,11 +1428,11 @@ def input_for(status, field, wide=False, embedded=False):
                 status.extra_scripts.append('<script>$("#' + escape_for_jquery(saveas_string) + '").slider({tooltip: "always"});</script>\n')
         elif field.datatype == 'area':
             output += '<textarea alt="' + word("Input box") + '" class="form-control' + extra_class + '"' + title_text + ' rows="4" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + placeholdertext + '>'
-            if defaultvalue is not None:
+            if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float]:
                 output += defaultvalue
             output += '</textarea>'
         else:
-            if defaultvalue is not None:
+            if defaultvalue is not None and type(defaultvalue) in [str, unicode, int, bool, float]:
                 defaultstring = ' value="' + defaultvalue + '"'
             else:
                 defaultstring = ''

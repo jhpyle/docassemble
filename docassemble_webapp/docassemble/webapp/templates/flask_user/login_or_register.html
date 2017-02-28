@@ -6,7 +6,7 @@
 <div class="row">
 <div class="col-sm-6">
 
-<h1>{%trans%}Sign in{%endtrans%}</h1>
+<h1>{{ word("Sign in") }}</h1>
 
 {# ** Login form ** #}
 <form action="{{ url_for('user.login') }}" method="POST" class="form" role="form">
@@ -31,14 +31,14 @@
         <p>
             <br/>
             <a href="{{ url_for('user.forgot_password') }}" tabindex='190'>
-            {%trans%}Forgot your Password?{%endtrans%}</a>
+            {{ word("Forgot your Password?") }}</a>
         </p>
     {% endif %}
 
 </div>
 <div class="col-sm-6">
 
-<h1>{%trans%}Register{%endtrans%}</h1>
+<h1>{{ word("Register") }}</h1>
 
 {# ** Register form ** #}
 <form action="{{ url_for('user.register') }}" method="POST" novalidate formnovalidate class="form" role="form">
