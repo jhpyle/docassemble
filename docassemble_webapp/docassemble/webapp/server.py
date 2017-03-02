@@ -8203,16 +8203,16 @@ def utilities():
                     continue
                 if use_google_translate:
                     try:
-                        result = service.translations().list(
+                        resp = service.translations().list(
                             source='en',
                             target=language,
                             q=[the_word]
                         ).execute()
                     except Exception as errstr:
                         logmessage("Translation failed: " + str(errstr))
-                        result = None
-                    if type(result) is dict and 'translations' in result and type(result['translations']) is list and len(result['translations']) and result['translations'][0] is dict and 'translatedText' in result['translations'][0]:
-                        result[language][the_word] = result['translations'][0]['translatedText']
+                        resp = None
+                    if type(resp) is dict and 'translations' in resp and type(resp['translations']) is list and len(resp['translations']) and resp['translations'][0] is dict and 'translatedText' in resp['translations'][0]:
+                        result[language][the_word] = resp['translations'][0]['translatedText']
                     else:
                         result[language][the_word] = 'XYZNULLXYZ'
                 else:
