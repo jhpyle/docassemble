@@ -8212,7 +8212,7 @@ def utilities():
                         logmessage("Translation failed: " + str(errstr))
                         resp = None
                     if type(resp) is dict and u'translations' in resp and type(resp[u'translations']) is list and len(resp[u'translations']) and type(resp[u'translations'][0]) is dict and 'translatedText' in resp[u'translations'][0]:
-                        result[language][the_word] = resp['translations'][0]['translatedText']
+                        result[language][the_word] = re.sub(r'&#39;', r"'", resp['translations'][0]['translatedText'])
                     else:
                         result[language][the_word] = 'XYZNULLXYZ'
                 else:
