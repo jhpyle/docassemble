@@ -8211,14 +8211,16 @@ def utilities():
                     except Exception as errstr:
                         logmessage("Translation failed: " + str(errstr))
                         resp = None
-                    if type(resp) is dict and 'translations' in resp and type(resp['translations']) is list and len(resp['translations']) and resp['translations'][0] is dict and 'translatedText' in resp['translations'][0]:
+                    if type(resp) is dict and u'translations' in resp and type(resp[u'translations']) is list and len(resp[u'translations']) and type(resp[u'translations'][0]) is dict and 'translatedText' in resp[u'translations'][0]:
+                        {u'translations': [{u'translatedText': u'YAML de configuraci\xf
+3n'}]}
                         result[language][the_word] = resp['translations'][0]['translatedText']
                     else:
                         result[language][the_word] = 'XYZNULLXYZ'
                 else:
                     result[language][the_word] = 'XYZNULLXYZ'
                     uses_null = True
-            word_box = ruamel.yaml.safe_dump(result, default_flow_style=False, default_style = '"')
+            word_box = ruamel.yaml.safe_dump(result, default_flow_style=False, default_style = '"', allow_unicode=True, width=1000).decode('utf8')
             word_box = re.sub(r'"XYZNULLXYZ"', r'Null', word_box)
         if 'pdffile' in request.files and request.files['pdffile'].filename:
             pdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".pdf", delete=True)
