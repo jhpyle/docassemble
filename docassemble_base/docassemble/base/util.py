@@ -470,7 +470,11 @@ class Address(DAObject):
         the_address = self.address_on_one_line()
         logmessage("geolocate: trying to geolocate " + str(the_address))
         from geopy.geocoders import GoogleV3
-        my_geocoder = GoogleV3()
+        
+        if 'google' in server.daconfig and 'api key' in server.daconfig['google'] and server.daconfig['google']['api key']:
+            my_geocoder = GoogleV3(api_key=server.daconfig['google']['api key'])
+        else:
+            my_geocoder = GoogleV3()
         results = my_geocoder.geocode(the_address)
         self.geolocated = True
         if results:
@@ -1130,7 +1134,7 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
         ocr_resolution = '300'
     tools = pyocr.get_available_tools()
     if len(tools) == 0:
-        return word('(OCR engine not available')
+        return word('(OCR engine not available)')
     tool = tools[0]
     langs = tool.get_available_languages()
     if language is None:

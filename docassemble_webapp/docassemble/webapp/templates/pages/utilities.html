@@ -11,6 +11,20 @@
 </pre>
 
 {% endif %}
+
+{% if word_box %}
+<h3 class="page-header">{{ word('Draft translation of system phrases') }}</h3>
+<p>{{ word("Here is the start of a YAML file you can import with a 'words' directive.") }} </p>
+<p>{{ word("Copy from here and paste into a YAML file, e.g., in the Sources folder of the Playground.") }}</p>
+{% if uses_null %}
+<p>{{ word("Replace each instance of Null with a quoted translation.") }}</p>
+{% endif %}
+<textarea class="form-control translation-box">
+{{ word_box }}
+</textarea>
+
+{% endif %}
+
 <h3 class="page-header">{{ word('Get list of fields from fillable PDF') }}</h3>
 
 <form action="{{ url_for('utilities') }}" method="POST" class="form" role="form" enctype="multipart/form-data">
@@ -22,4 +36,17 @@
     {{ render_submit_field(form.scan, tabindex=100) }}
   </div>
 </form>
+
+<h3 class="page-header">{{ word('Translate system phrases into another language') }}</h3>
+
+<form action="{{ url_for('utilities') }}" method="POST" class="form" role="form">
+  {{ form.hidden_tag() }}
+  <div class="form-group">
+    {{ render_field(form.language, tabindex=110) }}
+  </div>
+  <div class="form-actions">
+    {{ render_submit_field(form.language_submit, tabindex=120) }}
+  </div>
+</form>
+
 {% endblock %}

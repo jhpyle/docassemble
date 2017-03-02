@@ -964,3 +964,8 @@ input.file-embedded {
 div.slider-embedded {
 
 }
+
+textarea.translation-box {
+    height: 20em;
+    font-family: monospace;
+}

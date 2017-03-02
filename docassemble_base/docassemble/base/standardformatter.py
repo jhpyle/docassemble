@@ -349,7 +349,7 @@ def as_sms(status, links=None, menu_items=None):
                 menu_items.append((menu_item['url'], menu_item['label']))
     if len(links):
         indexno = 1
-        qoutput_add = "\n" + word("== Links ==")
+        qoutput_add = "\n" + "== " + word("Links") + " =="
         seen = dict()
         for (href, label) in links:
             if label in seen and href in seen[label]:
@@ -387,14 +387,14 @@ def as_sms(status, links=None, menu_items=None):
         if len(terms):
             if houtput != '':
                 houtput += "\n"
-            houtput += word("== Terms used: ==")
+            houtput += "== " + word("Terms used:") + " =="
             for term, definition in terms.iteritems():
                 houtput += "\n" + term + ': ' + definition
         if len(menu_items):
             indexno = 1
             if houtput != '':
                 houtput += "\n"
-            houtput += word("== Menu: ==")
+            houtput += "== " + word("Menu:") + " =="
             for (href, label) in menu_items:
                 if re.search(r'action=', href):
                     houtput += "\n* " + label + ": [" + word('menu') + str(indexno) + ']'

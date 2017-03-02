@@ -899,7 +899,8 @@ def update_word_collection(lang, defs):
     if lang not in word_collection:
         word_collection[lang] = dict()
     for word, translation in defs.iteritems():
-        word_collection[lang][word] = translation
+        if translation is not None:
+            word_collection[lang][word] = translation
     return
 
 # def set_da_config(config):

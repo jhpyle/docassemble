@@ -54,6 +54,8 @@ class LogForm(FlaskForm):
 class Utilities(FlaskForm):
     pdffile = FileField(word('PDF File'))
     scan = SubmitField(word('Scan'))
+    language = StringField(word('Language'))
+    language_submit = SubmitField(word('Translate'))
     
 class PlaygroundFilesForm(FlaskForm):
     section = StringField(word('Section'))

@@ -535,6 +535,15 @@ def user_id_dict():
     output[-1] = anon
     return output
 
+def get_base_words():
+    documentation = get_info_from_file_reference('docassemble.base:data/sources/base-words.yml')
+    if 'fullpath' in documentation and documentation['fullpath'] is not None:
+        with open(documentation['fullpath'], 'rU') as fp:
+            content = fp.read().decode('utf8')
+            content = fix_tabs.sub('  ', content)
+            return(ruamel.yaml.safe_load(content))
+    return(None)
+
 def get_documentation_dict():
     documentation = get_info_from_file_reference('docassemble.base:data/questions/documentation.yml')
     if 'fullpath' in documentation and documentation['fullpath'] is not None:
@@ -1550,8 +1559,8 @@ def search_button(var, field_origins, name_origins, interview_source, all_source
 
 search_key = """
                   <tr><td><h4>""" + word("Note") + """</h4></td></tr>
-                  <tr><td><a class="dasearchicon dasearchthis"><i class="glyphicon glyphicon-search"></i></a> """ + word(" means the name is located in this file") + """</td></tr>
-                  <tr><td><a class="dasearchicon dasearchother"><i class="glyphicon glyphicon-search"></i></a> """ + word(" means the name may be located in a file included by reference, such as:") + """</td></tr>"""
+                  <tr><td><a class="dasearchicon dasearchthis"><i class="glyphicon glyphicon-search"></i></a> """ + word("means the name is located in this file") + """</td></tr>
+                  <tr><td><a class="dasearchicon dasearchother"><i class="glyphicon glyphicon-search"></i></a> """ + word("means the name may be located in a file included by reference, such as:") + """</td></tr>"""
 
 def get_vars_in_use(interview, interview_status, debug_mode=False):
     user_dict = fresh_dictionary()
@@ -4532,7 +4541,7 @@ def index():
 
 @app.template_filter('word')
 def word_filter(text):
-    return docassemble.base.functions.word(text)
+    return docassemble.base.functions.word(unicode(text))
 
 @app.context_processor
 def utility_processor():
@@ -6910,7 +6919,7 @@ def playground_files():
                     fp.write(formtwo.file_content.data.encode('utf8'))
                 the_time = formatted_current_time()
                 area.finalize()
-                flash(str(the_file) + word(' was saved at') + ' ' + the_time + '.', 'success')
+                flash(str(the_file) + ' ' + word('was saved at') + ' ' + the_time + '.', 'success')
                 if section == 'modules':
                     #restart_all()
                     return redirect(url_for('restart_page', next=url_for('playground_files', section=section, file=the_file)))
@@ -8169,7 +8178,48 @@ def request_developer():
 def utilities():
     form = Utilities(request.form)
     fields_output = None
+    word_box = None
+    uses_null = False
     if request.method == 'POST':
+        if 'language' in request.form:
+            language = request.form['language']
+            result = dict()
+            result[language] = dict()
+            existing = docassemble.base.functions.word_collection.get(language, dict())
+            if 'google' in daconfig and 'api key' in daconfig['google'] and daconfig['google']['api key']:
+                from googleapiclient.discovery import build
+                try:
+                    service = build('translate', 'v2',
+                                    developerKey=daconfig['google']['api key'])
+                    use_google_translate = True
+                except:
+                    logmessage("Attempt to call Google Translate failed")
+                    use_google_translate = False
+            else:
+                use_google_translate = False
+            for the_word in base_words:
+                if the_word in existing and existing[the_word] is not None:
+                    result[language][the_word] = existing[the_word]
+                    continue
+                if use_google_translate:
+                    try:
+                        result = service.translations().list(
+                            source='en',
+                            target=language,
+                            q=[the_word]
+                        ).execute()
+                    except Exception as errstr:
+                        logmessage("Translation failed: " + str(errstr))
+                        result = None
+                    if type(result) is dict and 'translations' in result and type(result['translations']) is list and len(result['translations']) and result['translations'][0] is dict and 'translatedText' in result['translations'][0]:
+                        result[language][the_word] = result['translations'][0]['translatedText']
+                    else:
+                        result[language][the_word] = 'XYZNULLXYZ'
+                else:
+                    result[language][the_word] = 'XYZNULLXYZ'
+                    uses_null = True
+            word_box = ruamel.yaml.safe_dump(result, default_flow_style=False, default_style = '"')
+            word_box = re.sub(r'"XYZNULLXYZ"', r'Null', word_box)
         if 'pdffile' in request.files and request.files['pdffile'].filename:
             pdf_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".pdf", delete=True)
             the_file = request.files['pdffile']
@@ -8178,11 +8228,11 @@ def utilities():
             if fields is None:
                 fields_output = word("Error: no fields could be found in the file")
             else:
-                fields_output = "---\nquestion: " + word("something") + "\nsets: " + word('some_variable') + "\nattachment:" + "\n  - name: " + os.path.splitext(the_file.filename)[0] + "\n    filename: " + os.path.splitext(the_file.filename)[0] + "\n    pdf template file: " + the_file.filename + "\n    fields:\n"
+                fields_output = "---\nquestion: " + word("something") + "\nsets: " + 'some_variable' + "\nattachment:" + "\n  - name: " + os.path.splitext(the_file.filename)[0] + "\n    filename: " + os.path.splitext(the_file.filename)[0] + "\n    pdf template file: " + the_file.filename + "\n    fields:\n"
                 for field, default, pageno, rect, field_type in fields:
                     fields_output += '      "' + field + '": ' + default + "\n"
                 fields_output += "---"
-    return render_template('pages/utilities.html', tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output)
+    return render_template('pages/utilities.html', tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output, word_box=word_box, uses_null=uses_null)
 
 # @app.route('/save', methods=['GET', 'POST'])
 # def save_for_later():
@@ -9274,6 +9324,7 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
 #APPLICATION_NAME = 'docassemble'
 
 
+base_words = get_base_words()
 title_documentation = get_title_documentation()
 documentation_dict = get_documentation_dict()
 base_name_info = get_name_info()
