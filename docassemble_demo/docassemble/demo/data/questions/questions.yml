@@ -891,36 +891,6 @@ terms:
   cliente: |
     El cliente es la persona que está llenando este formulario
 ---
-sets: markdown_demo
-question: Markdown demonstration
-subquestion: |
-  This is *italic text*.
-  This is **bold text**.
-  This is __also bold text__.
-
-  > This is some block-quoted
-  > text.
-
-  ### This is a heading
-
-  This is an image from the internet:
-
-  ![Bass logo](https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Bass_logo.svg/199px-Bass_logo.svg.png)
-
-  Here is a bullet list:
-
-  * Apple
-  * Peach
-  * Pear
-
-  Here is a numbered list:
-
-  1. Nutmeg
-  2. Celery
-  3. Oregano
-
-  Here is a [link to a web site](http://google.com).
----
 question: |
   What is the village idiot's name?
 fields:

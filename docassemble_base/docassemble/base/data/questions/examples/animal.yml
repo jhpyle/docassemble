@@ -1,0 +1,22 @@
+metadata:
+  title: Animals and vegetables
+  short title: Test
+  documentation: "http://docassemble.org/docs/interviews.html#simple interview"
+  example start: 1
+  example end: 3
+---
+question: What is your favorite animal?
+fields:
+  - Animal: favorite_animal
+---
+question: What is your favorite vegetable?
+fields:
+  - Animal: favorite_vegetable
+---
+mandatory: True
+question: What a coincidence!
+subquestion: |
+  My favorite animal is the ${ favorite_animal }, too!
+buttons:
+  - Exit: exit
+---

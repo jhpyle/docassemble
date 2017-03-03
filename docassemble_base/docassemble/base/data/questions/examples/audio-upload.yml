@@ -1,0 +1,19 @@
+metadata:
+  title: Audio upload
+  documentation: "http://docassemble.org/docs/markup.html#audio and video"
+  example start: 1
+  example end: 2
+---
+question: Upload an audio file.
+fields:
+  - no label: my_file
+    datatype: microphone
+---
+mandatory: True
+question: Listen to this!
+subquestion: |
+  Best song ever:
+
+  ${ my_file }
+
+  Don't you think so?

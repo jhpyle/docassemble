@@ -1,0 +1,31 @@
+metadata:
+  title: Inline emoji
+  documentation: "http://docassemble.org/docs/markup.html#emoji"
+  example start: 2
+  example end: 3
+---
+modules:
+  - docassemble.base.util
+---
+image sets:
+  freepik:
+    attribution: |
+      Icon made by [Freepik](http://www.flaticon.com/authors/freepik)
+    images:
+      male: male244.svg
+      female: female243.svg
+---
+question: |
+  What is your gender?
+field: user.gender
+choices:
+  - "Male :male:": male
+  - "Female :female:": female
+  - "Other": other
+---
+objects:
+  - user: Individual
+---
+mandatory: True
+question: |
+  Your gender is ${ user.gender }.
