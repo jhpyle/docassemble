@@ -123,6 +123,21 @@
         A document with a classic message
       content: |
         Hello, world!
+"animal": |-
+  question: What is your favorite animal?
+  fields:
+    - Animal: favorite_animal
+  ---
+  question: What is your favorite vegetable?
+  fields:
+    - Animal: favorite_vegetable
+  ---
+  mandatory: True
+  question: What a coincidence!
+  subquestion: |
+    My favorite animal is the ${ favorite_animal }, too!
+  buttons:
+    - Exit: exit
 "as-datetime": "question: |\n  The Delorean will go back in time to \n  ${ as_datetime('11/5/1955').year\
   \ }.\nmandatory: True"
 "attachment": |-
@@ -213,6 +228,20 @@
     Listen to some Schumann, and then
     proceed.
   field: user_is_relaxed
+"audio-upload": |-
+  question: Upload an audio file.
+  fields:
+    - no label: my_file
+      datatype: microphone
+  ---
+  mandatory: True
+  question: Listen to this!
+  subquestion: |
+    Best song ever:
+
+    ${ my_file }
+
+    Don't you think so?
 "background_action": |-
   mandatory: True
   code: |
@@ -517,6 +546,32 @@
     - Sandals
     - Clogs
     - Other
+"classify": |-
+  code: |
+    entry = ml.one_unclassified_entry()
+  ---
+  mandatory: true
+  code: |
+    while True:
+      if entry is None:
+        del entry
+        no_entries
+      else:
+        entry.classify()
+        del entry
+  ---
+  question: |
+    How do you classify this?
+  subquestion: |
+    ${ quote_paragraphs(entry.independent) }
+  fields:
+    - no label: entry.dependent
+      datatype: radio
+      choices:
+        - Happy
+        - Unhappy
+        - Angry
+        - Sad
 "code": |-
   code: |
     fruits = peaches + pears
@@ -1006,6 +1061,22 @@
         - storm drain
         - gutter
         - mineshaft
+"emoji-inline": |-
+  image sets:
+    freepik:
+      attribution: |
+        Icon made by [Freepik](http://www.flaticon.com/authors/freepik)
+      images:
+        male: male244.svg
+        female: female243.svg
+  ---
+  question: |
+    What is your gender?
+  field: user.gender
+  choices:
+    - "Male :male:": male
+    - "Female :female:": female
+    - "Other": other
 "event-example": |-
   question: |
     This is a special screen.
@@ -2540,6 +2611,37 @@
   \ numbered list:\n\n  1. Buy groceries.\n  2. Get the car inspected.\n  3. Take\
   \ over the world!\n  \n  You can [Google](http://google.com)\n  \"markdown\" to\
   \ learn more.\nmandatory: True"
+"markdown-demo": |-
+  question: Markdown demonstration
+  subquestion: |
+    This is *italic text*.
+    This is **bold text**.
+    This is __also bold text__.
+
+    > This is some block-quoted
+    > text
+
+    ### This is a heading
+
+    This is an image from the internet:
+
+    ![Bass logo](https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Bass_logo.svg/199px-Bass_logo.svg.png)
+
+    Here is a bullet list:
+
+    * Apple
+    * Peach
+    * Pear
+
+    Here is a numbered list:
+
+    1. Nutmeg
+    2. Celery
+    3. Oregano
+
+    Here is a
+    [link to a web site](http://google.com).
+  mandatory: true
 "menu-item": "mandatory: True\ncode: |\n  menu_items = [ action_menu_item('Visit Cow',\
   \ 'see_cow') ]\n---\nevent: see_cow\nquestion: |\n  Moo!\nsubquestion: |\n  [FILE\
   \ cow.jpg]\n  \n  Cow illustration designed by\n  [Freepik](http://www.freepik.com/free-photos-vectors/animal)\n\
@@ -2656,12 +2758,17 @@
   \ The prediction was:\n\n  > ${ predictions[0] }\n  % else:\n  There is not enough\
   \ training data\n  to make a prediction yet.\n  % endif\nbuttons:\n  - Restart:\
   \ restart"
-"ml-save-and-predict": |-
-  mandatory: True
-  code: |
-    ml = SimpleTextMachineLearner('demo')
-    ml.save_for_classification(phrase)
-    predictions = ml.predict(phrase)
+"ml-predict-probabilities": "mandatory: True\nquestion: |\n  The prediction\nsubquestion:\
+  \ |\n  The text provided was:\n  > ${ phrase }\n  \n  % if len(predictions):\n \
+  \ The prediction was:\n\n  % for prediction in predictions:\n  * ${ '%s (%f)' %\
+  \ prediction }\n  % endfor\n  % else:\n  There is not enough training data\n  to\
+  \ make a prediction yet.\n  % endif\nbuttons:\n  - Restart: restart"
+"ml-save-and-predict": "code: |\n  ml = SimpleTextMachineLearner('demo')\n---\ncode:\
+  \ |\n  ml.save_for_classification(phrase)\n  predictions = ml.predict(phrase)\n\
+  ---\nmandatory: True\nquestion: |\n  The prediction\nsubquestion: |\n  The text\
+  \ provided was:\n  > ${ phrase }\n  \n  % if len(predictions):\n  The prediction\
+  \ was:\n\n  > ${ predictions[0] }\n  % else:\n  There is not enough training data\n\
+  \  to make a prediction yet.\n  % endif\nbuttons:\n  - Restart: restart"
 "modules": |-
   modules:
     - json
@@ -3099,9 +3206,10 @@
     predictions = ml.predict(phrase)
   ---
   question: |
-    Please upload a file
+    Please upload or take a
+    picture of your legal document.
   fields:
-    - File: the_file
+    - no label: the_file
       datatype: file
   ---
   code: |
@@ -3352,6 +3460,10 @@
 
     ${ qr_code('http://wsj.com') }
   sets: all_done
+"qr-code-demo": "mandatory: True\nquestion: Here is a URL for you in a QR code\nsubquestion:\
+  \ |\n  [QR http://news.google.com, 200px]\nattachment:\n  name: Your QR code\n \
+  \ filename: your_code\n  content: |\n    Use the QR reader on your smartphone to\
+  \ take a picture of this:\n    \n    [QR http://news.google.com]"
 "quantity-noun": |-
   mandatory: True
   question: |
@@ -3611,6 +3723,9 @@
   question: |
     The number after 3 is
     ${ plus_one(3) }.
+"save-and-predict": |-
+  code: |
+    entry = ml.new_entry()
 "save-url-to-file": |-
   objects:
     - logo: DAFile
@@ -4161,6 +4276,18 @@
   question: |
     Look at all those adorable photos!
   audio: ${ user_pictures }
+  mandatory: True
+"upload-show": |-
+  question: |
+    You're so adorable!
+  subquestion: |
+    ${ user_picture.show() }
+  mandatory: True
+"upload-show-width": |-
+  question: |
+    You're so adorable!
+  subquestion: |
+    ${ user_picture.show(width='250px') }
   mandatory: True
 "upload_audio": |-
   question: Please upload an MP3

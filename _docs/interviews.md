@@ -17,7 +17,7 @@ or into the text of [documents].
 The interview can ask different questions of the user depending on
 what the answers to earlier questions were.
 
-# The contents of an interview file
+# <a name="simple interview"></a>The contents of an interview file
 
 The interview file is a series of possible questions that could
 potentially be asked, arranged in no particular order.  Which
@@ -62,26 +62,9 @@ the user is under 65, **docassemble** will ask questions to determine
 whether the household is low income.
 
 A [YAML] interview file is simply a text file consisting of "blocks"
-separated by `---`.  For example, this interview has four blocks:
+separated by `---`.  For example, this interview has three blocks:
 
-{% highlight yaml %}
----
-question: What is your favorite animal?
-fields:
-  - Animal: favorite_animal
----
-question: What is your favorite vegetable?
-fields:
-  - Animal: favorite_vegetable
----
-mandatory: True
-question: What a coincidence!
-subquestion: |
-  My favorite animal is the ${ favorite_animal }, too!
-buttons:
-  - Exit: exit
----
-{% endhighlight %}
+{% include side-by-side.html demo="animal" %}
 
 The first block is a "question" that defines the variable `favorite_animal`.
 
@@ -112,10 +95,6 @@ would do the same thing regardless of the order of the blocks.
 
 Note that the second block, containing the question about the user's
 favorite vegetable, was never used because it was never needed.
-
-You can
-[try out this interview]({{ site.demourl }}?i=docassemble.demo:data/questions/animal.yml){:target="_blank"}
-to see how it looks from the user's perspective.
 
 This is a very simple interview; there are more types of blocks that
 you can write.  These blocks are explained in the following sections:

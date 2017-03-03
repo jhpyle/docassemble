@@ -17,16 +17,17 @@ By default, the active language and locale are determined by the
 [configuration].
 
 The value of [`language`] must be a two-character lowercase
-[ISO-639-1] code.  For example, Spanish is `es`, French is `fr`, and
-Arabic is `ar`.
+[ISO-639-1] code.  For example, English is 'en', Spanish is `es`,
+French is `fr`, and Arabic is `ar`.
 
 The value of [`locale`] must be a locale name without the language
 prefix, such as `US.utf8` or `DE.utf8`.  Any locale you use must be
-available on your system.
+installed on your system.  (See the [`other os locales`] configuration
+directive.)
 
-The functions [`set_language()`] and [`set_locale()`] from
-[`docassemble.base.util`] will change the active language, dialect,
-and locale.  (The dialect is relevant only for the text-to-speech
+Within interviews, the functions [`set_language()`] and [`set_locale()`] from
+[`docassemble.base.util`] will change the active language, locale, and
+dialect.  (The dialect is relevant only for the text-to-speech
 feature, which is controlled by the [special variable `speak_text`].)
 
 If you write functions that need to know the current language or
@@ -37,14 +38,18 @@ function [`get_dialect()`] for retrieving the dialect.
 The [`language`] and [`locale`] settings have the following effects:
 
 * When **docassemble** looks for a [`question`] or [`code`] block that
-  defines a variable, it first tries [`question`]s and [`code`] blocks for
-  which the [`language` modifier] is set to the active language
+  defines a variable, it first tries [`question`]s and [`code`] blocks
+  for which the [`language` modifier] is set to the active language
   (either explicitly or by operation of the [`default language`]
   [initial block]).  If **docassemble** does not find any such
   [`question`]s or [`code`] blocks, it looks for ones that do not have
-  [`language` modifier] set.
+  [`language` modifier] set.  This means that if your interview only
+  uses one language, you do not need to worry about setting the
+  [`language` modifier].  If you want the interview to be available in
+  two languages, then you simply need to make sure that each question
+  is in your interview two times, in the two different languages.
 * Built-in words like "Continue" for a continue button, or "Login" for
-  the login link, can be translated into the active language.
+  the login link, will be translated into the active language.
   Whenever **docassemble** prints such a word or phrase, it calls the
   [`word()`] function from the [`docassemble.base.util`] module.  Calling
   `word('Login')` will look up the word `Login` in a translation
@@ -53,7 +58,7 @@ The [`language`] and [`locale`] settings have the following effects:
   the translated value.  If it does not find a translation, it will
   return `Login`.  For more information about how [`word()`] works, see
   [functions].  For information on how to define translations for a
-  server, see [configuration].
+  server, see the [`words`] directive in the [configuration].
 * Some functions have language-specific responses, such as [`today()`]
   in the [`docassemble.base.util`] module, which returns today's date in
   a readable format such as "October 31, 2015" (for language `en`) or
@@ -76,7 +81,7 @@ The [`language`] and [`locale`] settings have the following effects:
 If your interview only works in one language, do not set the
 [`language` modifier] for any blocks, do not use [`default language`],
 and do not call [`set_language()`] or [`set_locale()`].  Instead,
-simply make sure that the default language and locale in the
+simply make sure that the default [`language`] and [`locale`] in the
 [configuration] are set to the correct values.
 
 # Best practices for multi-language interviews
@@ -219,11 +224,12 @@ The [documents] feature, which allows RTF and PDF documents to be
 created from [Markdown] text with [Mako] templating, supports
 languages other than English to the extent that RTF, [Pandoc], and
 [LaTeX] do.  [LaTeX] has support for internationalization, and the
-default [LaTeX] template will load [polyglossia] or [babel], depending
-on what is available.  The language used by [LaTeX] can be set using
-the `metadata` entries `lang` and `mainlang` in the `attachment`
-specification.  For some languages, you may need to write your own
-templates in order to enable fonts that support your language.
+default [LaTeX] template will load either the [polyglossia] package or
+the [babel] package, depending on what is available.  The language
+used by [LaTeX] can be set using the `metadata` entries `lang` and
+`mainlang` in the `attachment` specification.  For some languages, you
+may need to write your own templates in order to enable fonts that
+support your language.
 
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [initial block]: {{ site.baseurl }}/docs/initial.html
@@ -261,3 +267,5 @@ templates in order to enable fonts that support your language.
 [`interview help`]: {{ site.baseurl }}/docs/initial.html#interview help
 [`docassemble.base.util`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/util.py
 [special variable `speak_text`]: {{ site.baseurl }}/docs/special.html#speak_text
+[`other os locales`]: {{ site.baseurl }}/docs/config.html#other os locales
+[`words`]: {{ site.baseurl }}/docs/config.html#words

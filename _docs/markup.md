@@ -9,7 +9,7 @@ use [Mako] to make your documents "smart."  These [mark up] methods
 are available for use in [`question`] text, field labels, [`interview
 help`] text, the content of [documents], and other text elements.
 
-# Markdown
+# <a name="markdown"></a>Markdown
 
 The syntax of [Markdown] is explained well
 [elsewhere](https://daringfireball.net/projects/markdown/).
@@ -17,48 +17,13 @@ The syntax of [Markdown] is explained well
 When generating [documents], **docassemble** uses [Pandoc] to convert
 your [Markdown] to PDF, RTF, and HTML.
 
-Here are some examples of things you can do with Markdown:
+Here are some examples of things you can do with Markdown.
 
-{% highlight yaml %}
----
-question: Markdown demonstration
-subquestion: |
-  This is *italic text*.
-  This is **bold text**.
-  This is __also bold text__.
+{% include side-by-side.html demo="markdown-demo" %}
 
-  > This is some block-quoted
-  > text
-
-  ### This is a heading
-
-  This is an image:
-
-  ![Bass logo](https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Bass_logo.svg/199px-Bass_logo.svg.png)
-
-  Here is a bullet list:
-
-  * Apple
-  * Peach
-  * Pear
-
-  Here is a numbered list:
-
-  1. Nutmeg
-  2. Celery
-  3. Oregano
-
-  Here is a [link to a web site](http://google.com).
----
-{% endhighlight %}
-
-In the web application, this comes out looking like this:
-
-![Markdown demo screenshot]({{ site.baseurl }}/img/markdown-demo.png)
-
-All of these methods will format text in questions as well as PDF and
-RTF documents, with the exception of the `!` image insertion command,
-which does not work within PDF and RTF documents.
+All of these types of markup will format text in questions as well as
+text in assembled (with the exception of the `!` image insertion
+command, which does not work within PDF and RTF documents).
 
 # <a name="mako"></a>Using Mako for logic and generated text
 
@@ -208,48 +173,18 @@ or:
     [FILE docassemble.crimesolver:mugshot.jpg, 150px]
 
 <a name="inserting uploaded images"></a>To insert an image that has
-been uploaded, simply refer to the file variable using [Mako].  For
-example:
+been uploaded, or created using a [signature field], simply refer to
+the variable using [Mako].  For example:
 
-{% highlight yaml %}
----
-question: |
-  Do you look cute in this picture?
-subquestion: |
-  ${ user_picture }
-yesno: user_is_cute
----
-question: |
-  Please upload a picture of yourself.
-fields:
-  - Your Picture: user_picture
-    datatype: file
----
-{% endhighlight %}
+{% include side-by-side.html demo="upload" %}
 
 Alternatively, you can call the [`show()`] method on the file object:
 
-{% highlight yaml %}
----
-question: |
-  Do you look cute in this picture?
-subquestion: |
-  ${ user_picture.show() }
-yesno: user_is_cute
----
-{% endhighlight %}
+{% include side-by-side.html demo="upload-show" %}
 
 The [`show()`] method takes an optional argument, `width`:
 
-{% highlight yaml %}
----
-question: |
-  Do you look cute in this picture?
-subquestion: |
-  ${ user_picture.show(width='250px') }
-yesno: user_is_cute
----
-{% endhighlight %}
+{% include side-by-side.html demo="upload-show-width" %}
 
 In the above example, the picture will be shrunk or expanded so that
 its width is 250 pixels.
@@ -262,42 +197,16 @@ the same size as the text) by referencing them "emoji-style," putting
 colons around the decoration name.  This works not only in `question`
 and [`subquestion`] areas, but also in question choices.
 
-{% highlight yaml %}
----
-generic object: Individual
-question: |
-  What is ${ x.possessive('gender') }?
-field: x.gender
-choices:
-  - "Male :male:": male
-  - "Female :female:": female
-  - "Other": other
----
-{% endhighlight %}
-
 This works within PDF and RTF documents as well as within questions.
-  
+
+{% include side-by-side.html demo="emoji-inline" %}
+
 # <a name="audio and video"></a>Inserting audio and video
 
 In addition to using the [`audio`] and [`video`]<span></span> [modifiers], you can
 insert audio and video into your [Mako] text in questions.
 
-{% highlight yaml %}
----
-question: Listen to this!
-subquestion: |
-  Best song ever:
-
-  ${ my_file }
-
-  Don't you think so?
----
-question: Upload an audio file.
-fields:
-  - no label: my_file
-    datatype: file
----
-{% endhighlight %}
+{% include side-by-side.html demo="audio-upload" %}
 
 Or, if you have a file in `data/static`, you can write:
 
@@ -323,8 +232,9 @@ subquestion: |
 ---
 {% endhighlight %}
 
-You can also embed [YouTube] and [Vimeo] videos.  For example, if you
-want to embed a [YouTube] video for which the URL is
+You can also embed [YouTube] and [Vimeo] videos (which is far
+preferable to working with video files, which are enormous).  For
+example, if you want to embed a [YouTube] video for which the URL is
 `https://www.youtube.com/watch?v=RpgYyuLt7Dx` or
 `https://youtu.be/RpgYyuLt7Dx`, you would write this:
 
@@ -341,7 +251,7 @@ video: |
 
 See [modifiers] for more information about including audio and video.
 
-# Inserting QR codes
+# <a name="qr"></a>Inserting QR codes
 
 You can also display or insert QR codes using `[QR ...]`, where `...`
 is the text you want to encode.  This works like `[FILE ...]` in that
@@ -353,23 +263,7 @@ This works within PDF and RTF documents as well as within questions.
 For example, this interview provides a QR code that directs the user to
 [Google News](http://news.google.com):
 
-{% highlight yaml %}
----
-mandatory: True
-question: Here is a URL for you in a QR code
-subquestion: |
-  [QR http://news.google.com, 200px]
-attachment:
-  name: Your QR code
-  filename: your_code
-  content: |
-    Use the QR reader on your smartphone to take a picture of this:
-    
-    [QR http://news.google.com]
----
-{% endhighlight %}
-
-([Try it out here]({{ site.demourl }}?i=docassemble.demo:data/questions/testqr.yml){:target="_blank"}.)
+{% include side-by-side.html demo="qr-code-demo" %}
 
 See also the [`qr_code()`] function, which allows you to insert the
 `[QR ...]` markup using [Python].

@@ -30,7 +30,7 @@ that is an "instance" of the "class" known as [`Individual`].
 
 Using objects in **docassemble** requires a little bit of setup using
 [initial blocks].  [`Individual`] is defined in the
-[`docassemble.base.legal`]<span></span> [Python module], so it was necessary to
+[`docassemble.base.util`]<span></span> [Python module], so it was necessary to
 bring that module into the interview with a [`modules`] block.  It was
 also necessary to use an [`objects`] block to declare that `user` is
 an instance of the class [`Individual`].
@@ -550,7 +550,7 @@ return `the latch of the front gate in the park`.
 The `DAObject` is the most basic object, and all other **docassemble**
 objects inherit from it.  These objects will have different methods
 and behaviors.  For example, if `friend` is an [`Individual`] (from
-[`docassemble.base.legal`]), calling `${ friend }` in a [Mako] template
+[`docassemble.base.util`]), calling `${ friend }` in a [Mako] template
 will not return `friend.object_name()`; rather, it will return
 `friend.full_name()`, which may require asking the user for the
 `friend`'s name.
@@ -1478,7 +1478,7 @@ can do:
 {% highlight yaml %}
 ---
 modules:
-  - docassemble.base.legal
+  - docassemble.base.util
 ---
 objects:
   - user: Individual
@@ -1805,7 +1805,7 @@ Here is an example that demonstrates its use:
 {% highlight yaml %}
 ---
 modules:
-  - docassemble.base.legal
+  - docassemble.base.util
 ---
 objects:
   - client: Individual
@@ -1995,7 +1995,7 @@ could create/edit the file
 `docassemble/missouri_family_law/objects.py` and add the following:
 
 {% highlight python %}
-from docassemble.base.legal import Individual
+from docassemble.base.util import Individual
 
 class Attorney(Individual):
     def can_practice_in(self, state):
@@ -2017,11 +2017,11 @@ This allows you to write an interview like the following:
 
 Note that the `lawyer` object works just like an [`Individual`] object.
 The `is_are_you()` method, which is defined in
-[`docassemble.base.legal`], works on the `Attorney` object, despite the
+[`docassemble.base.util`], works on the `Attorney` object, despite the
 fact that the interview does not explicitly refer to
-[`docassemble.base.legal`] anywhere.  (The module
+[`docassemble.base.util`] anywhere.  (The module
 `docassemble.missouri_family_law.objects` imports
-[`docassemble.base.legal`].)
+[`docassemble.base.util`].)
 
 Note that the `can_practice_in()` method is only available for
 `Attorney` objects.  If you added the following to the above

@@ -240,6 +240,9 @@ yesno: user_signature_verified
 ---
 {% endhighlight %}
 
+Signatures can be inserted into assembled [documents] as well as
+[PDF fill-in forms].
+
 # <a name="fields"></a>Setting multiple variables with one screen
 
 ## Creating a list of fields
@@ -974,3 +977,5 @@ why this needs to be done manually as opposed to automatically:
 [list]: https://docs.python.org/2/tutorial/datastructures.html
 [dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [dictionaries]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
+[PDF fill-in forms]: {{ site.baseurl }}/docs/documents.html#signature
+[documents]: {{ site.baseurl }}/docs/markup.html#inserting uploaded images

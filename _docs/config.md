@@ -181,7 +181,7 @@ db:
   password: abc123
   host: localhost
   port: 5432
-  table prefix: none
+  table prefix: Null
   schema file: /usr/share/docassemble/config/db-schema.txt
 {% endhighlight %}
 
@@ -725,6 +725,14 @@ then if the interview calls `set_language('es')` (Spanish) and
 **docassemble** code subsequently calls `word('Help')`, the result
 will be `¡Ayuda!`.
 
+When you are logged in as a developer or administrator, you can go to
+the "Utilities" page from the main menu, where you will find a utility
+for generating a draft [YAML] file for translating all of the words
+and phrases that **docassemble** uses and that might be presented to
+the user.  If you have set up a [Google API key](#google), it will use
+the [Google Cloud Translation API] to prepare "first draft"
+translations for any [ISO-639-1] language you designate.
+
 For more information about how **docassemble** handles different
 languages, see the [language and locale settings] section and the
 [functions] section (specifically the functions [`set_language()`] and
@@ -763,13 +771,16 @@ server is not certain.
 
 ## <a name="google"></a>Google API key
 
-If you have a Google API key, for example for using the [Google
-Maps Geocoding API], you can include it as follows:
+If you have a Google API key, you can include it as follows:
 
 {% highlight yaml %}
 google:
   api key: UIJGeyD-23aSdgSE34gEGRg3GDRGdrge9z-YUia
 {% endhighlight %}
+
+This will enable you to use the [Google Maps Geocoding API] without
+limits (see the [`.geolocate()`] method), and will also enable the
+[Google Cloud Translation API].
 
 ## <a name="voicerss"></a>VoiceRSS API key
 
@@ -1300,3 +1311,5 @@ and Facebook API keys.
 [`external hostname`]: #external hostname
 [`dispatch`]: #dispatch
 [list of available interviews]: #dispatch
+[Google Cloud Translation API]: https://cloud.google.com/translate/
+[`.geolocate()`]: {{ site.baseurl }}/docs/objects.html#Address.geolocate

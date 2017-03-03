@@ -150,7 +150,8 @@ sudo apt-get install apt-utils tzdata python python-dev wget unzip \
   libcurl4-openssl-dev libssl-dev redis-server rabbitmq-server \
   libreoffice libtool libtool-bin pacpl syslog-ng rsync s3cmd \
   curl mktemp dnsutils tesseract-ocr-eng tesseract-ocr-spa \
-  tesseract-ocr build-essentials nodejs npm exim4-daemon-heavy
+  tesseract-ocr build-essentials nodejs npm exim4-daemon-heavy \
+  libsvm3 libsvm-dev liblinear3 liblinear-dev
 {% endhighlight %}
 
 **docassemble** depends on version 5.0.1 or later of the
