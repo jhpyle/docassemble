@@ -786,6 +786,10 @@ class FinancialList(DADict):
             if self[item].exists:
                 result += Decimal(self[item].value)
         return(result)
+    def existing_items(self):
+        """Returns a list of types of amounts that exist within the financial list."""
+        self.trigger_gather()
+        return [key for key in self.elements if self[key].exists]
     def _new_item_init_callback(self):
         self.elements[self.new_item_name].exists = True
         if hasattr(self, 'new_item_value'):
@@ -1196,6 +1200,7 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
     return "\f".join(page_text)
 
 def path_and_mimetype(file_ref):
+    """Returns a path and the MIME type of a file"""
     if isinstance(file_ref, DAFile):
         if hasattr(file_ref, 'mimetype'):
             mime_type = file_ref.mimetype

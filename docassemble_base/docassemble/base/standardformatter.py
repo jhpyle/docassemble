@@ -16,6 +16,8 @@ def tracker_tag(status):
     output += '                <input type="hidden" name="csrf_token" value="' + server.generate_csrf() + '"/>\n'
     if status.question.name:
         output += '                <input type="hidden" name="_question_name" value="' + status.question.name + '"/>\n'
+    if 'orig_action' in status.current_info:
+        output += '                <input type="hidden" name="_action_context" value=' + myb64doublequote(json.dumps(dict(action=status.current_info['orig_action'], arguments=status.current_info['orig_arguments']))) + '/>\n'
     output += '                <input type="hidden" name="_tracker" value="' + str(status.tracker) + '"/>\n'
     if 'track_location' in status.extras and status.extras['track_location']:
         output += '                <input type="hidden" id="_track_location" name="_track_location" value=""/>\n'

@@ -1882,6 +1882,8 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
     return_val = {'session': session.get('uid', None), 'secret': secret, 'yaml_filename': yaml, 'interface': interface, 'url': url, 'url_root': url_root, 'encrypted': session.get('encrypted', True), 'user': {'is_anonymous': current_user.is_anonymous, 'is_authenticated': current_user.is_authenticated}, 'headers': headers}
     if action is not None:
         return_val.update(action)
+        # return_val['orig_action'] = action['action']
+        # return_val['orig_arguments'] = action['arguments']
     if location is not None:
         ext['location'] = location
     else:
@@ -2709,6 +2711,8 @@ def index():
             except:
                 logmessage("index: bad key was " + str(key))
     interview = docassemble.base.interview_cache.get_interview(yaml_filename)
+    # if should_assemble and '_action_context' in post_data:
+    #     action = json.loads(myb64unquote(post_data['_action_context']))
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action, location=the_location), tracker=user_dict['_internal']['tracker'])
     if should_assemble:
         interview.assemble(user_dict, interview_status)
@@ -3059,6 +3063,9 @@ def index():
     user_dict['_internal']['answers'] = dict()
     if interview_status.question.name and interview_status.question.name in user_dict['_internal']['answers']:
         del user_dict['_internal']['answers'][interview_status.question.name]
+    if action and not changed:
+        changed = True
+        steps += 1
     if changed and interview_status.question.interview.use_progress_bar:
         advance_progress(user_dict)
     save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted)
