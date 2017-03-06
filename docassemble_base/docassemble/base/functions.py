@@ -11,6 +11,7 @@ import titlecase
 from docassemble.base.logger import logmessage
 from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError
 import locale
+import decimal
 import urllib
 import codecs
 import copy
@@ -2010,6 +2011,8 @@ def safe_json(the_object):
     if isinstance(the_object, datetime.datetime):
         serial = the_object.isoformat()
         return serial
+    if isinstance(the_object, decimal.Decimal):
+        return float(the_object)
     from docassemble.base.core import DAObject
     if isinstance(the_object, DAObject):
         new_dict = dict()

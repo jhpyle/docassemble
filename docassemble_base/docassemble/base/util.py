@@ -1067,15 +1067,25 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
             attachment_list.append(attachment)
         elif type(attachment) is DAFileList:
             attachment_list.extend(attachment.elements)
+        elif type(attachment) in (str, unicode):
+            file_info = server.file_finder(attachment)
+            if 'fullpath' in file_info:
+                failed = True
+                with open(file_info['fullpath'], 'rb') as fp:
+                    msg.attach(the_attachment.filename, file_info['mimetype'], fp.read())
+                    failed = False
+                if failed:
+                    success = False
+            continue
         else:
             success = False
         if success:
             for the_attachment in attachment_list:
                 if the_attachment.ok:
                     file_info = server.file_finder(str(the_attachment.number))
-                    if ('path' in file_info):
+                    if 'fullpath' in file_info:
                         failed = True
-                        with open(file_info['path'], 'rb') as fp:
+                        with open(file_info['fullpath'], 'rb') as fp:
                             msg.attach(the_attachment.filename, file_info['mimetype'], fp.read())
                             failed = False
                         if failed:
