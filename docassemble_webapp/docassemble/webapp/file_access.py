@@ -28,16 +28,29 @@ def get_info_from_file_reference(file_reference, **kwargs):
         has_info = True
     elif re.search(r'^https*://', str(file_reference)):
         #logmessage(str(file_reference) + " is a URL")
+        possible_filename = re.sub(r'.*/', '', file_reference)
+        if possible_filename == '':
+            possible_filename = 'index.html'
+        if re.search(r'\.', possible_filename):
+            (possible_ext, possible_mimetype) = get_ext_and_mimetype(possible_filename)
+        else:
+            possible_ext = 'txt'
+            possible_mimetype = 'text/plain'
         result = dict()
         (local_filename, headers) = urllib.urlretrieve(file_reference)
         result['fullpath'] = local_filename
         try:
             result['mimetype'] = headers.gettype()
         except Exception as errmess:
-            logmessage("get_info_from_file_reference: could not get mimetype")
-            result['mimetype'] = 'text/html'
-        result['extension'] = re.sub(r'^\.', '', mimetypes.guess_extension(result['mimetype']))
-        result['filename'] = os.path.basename(result['fullpath'])
+            logmessage("get_info_from_file_reference: could not get mimetype from headers")
+            result['mimetype'] = possible_mimetype
+            result['extension'] = possible_ext
+        if 'extension' not in result:
+            result['extension'] = re.sub(r'^\.', '', mimetypes.guess_extension(result['mimetype']))
+        if re.search(r'\.', possible_filename):
+            result['filename'] = possible_filename
+        else:
+            result['filename'] = possible_filename + '.' + result['extension']
         path_parts = os.path.splitext(result['fullpath'])
         result['path'] = path_parts[0]
         has_info = True

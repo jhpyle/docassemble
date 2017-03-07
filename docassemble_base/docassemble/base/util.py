@@ -1050,6 +1050,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
     if body is None and html is None:
         body = ""
     msg = Message(subject, sender=email_stringer(sender, first=True), recipients=email_stringer(to), cc=email_stringer(cc), bcc=email_stringer(bcc), body=body, html=html)
+    filenames_used = set()
     success = True
     for attachment in attachments:
         attachment_list = list()
@@ -1072,10 +1073,12 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
             if 'fullpath' in file_info:
                 failed = True
                 with open(file_info['fullpath'], 'rb') as fp:
-                    msg.attach(the_attachment.filename, file_info['mimetype'], fp.read())
+                    msg.attach(attachment_name(file_info['filename'], filenames_used), file_info['mimetype'], fp.read())
                     failed = False
                 if failed:
                     success = False
+            else:
+                success = False    
             continue
         else:
             success = False
@@ -1086,7 +1089,7 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
                     if 'fullpath' in file_info:
                         failed = True
                         with open(file_info['fullpath'], 'rb') as fp:
-                            msg.attach(the_attachment.filename, file_info['mimetype'], fp.read())
+                            msg.attach(attachment_name(the_attachment.filename, filenames_used), file_info['mimetype'], fp.read())
                             failed = False
                         if failed:
                             success = False
@@ -1103,6 +1106,19 @@ def send_email(to=None, sender=None, cc=None, bcc=None, body=None, html=None, su
     if success and task is not None:
         mark_task_as_performed(task)
     return(success)
+
+def attachment_name(filename, filenames):
+    if filename not in filenames:
+        filenames.add(filename)
+        return filename
+    indexno = 1
+    parts = os.path.splitext(argument)
+    while True:
+        new_filename = '%s_%03d%s' % (parts[0], indexno, parts[1])
+        if new_filename not in filenames:
+            filenames.add(new_filename)
+            return new_filename
+        indexno += 1
 
 def map_of(*pargs, **kwargs):
     """Inserts into markup a Google Map representing the objects passed as arguments."""
