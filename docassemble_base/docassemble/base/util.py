@@ -449,9 +449,12 @@ class Address(DAObject):
         return super(Address, self).init(*pargs, **kwargs)
     def __str__(self):
         return(self.block())
-    def address_on_one_line(self):
+    def address_on_one_line(self, include_unit=False):
         """Returns a one-line address.  Primarily used internally for geolocation."""
-        output = str(self.address) + ", " + str(self.city) + ", " + str(self.state)
+        output = str(self.address)
+        if include_unit and hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
+            output += ", " + str(self.unit)
+        output += ", " + str(self.city) + ", " + str(self.state)
         if hasattr(self, 'zip'):
             output += " " + str(self.zip)
         return output
@@ -500,7 +503,7 @@ class Address(DAObject):
     def block(self):
         """Returns the address formatted as a block, as in a mailing."""
         output = str(self.address) + " [NEWLINE] "
-        if hasattr(self, 'unit') and self.unit:
+        if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
             output += str(self.unit) + " [NEWLINE] "
         output += str(self.city) + ", " + str(self.state) + " " + str(self.zip)
         return(output)
@@ -508,7 +511,7 @@ class Address(DAObject):
         """Returns the first line of the address, including the unit 
         number if there is one."""
         output = str(self.address)
-        if hasattr(self, 'unit') and self.unit:
+        if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
             output += ", " + str(self.unit)
         return(output)
     def line_two(self):

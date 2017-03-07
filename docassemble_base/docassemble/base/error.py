@@ -4,6 +4,10 @@ class DAError(Exception):
     def __str__(self):
         return str(self.value)
 
+class CodeExecute(Exception):
+    def __init__(self, compute):
+        self.compute = compute
+    
 class ForcedNameError(NameError):
     pass
 

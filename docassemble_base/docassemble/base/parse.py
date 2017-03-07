@@ -15,7 +15,7 @@ import copy
 #sys.stderr.write("loading filter\n")
 import docassemble.base.filter
 import docassemble.base.pdftk
-from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError
+from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute
 import docassemble.base.functions
 from docassemble.base.functions import pickleable_objects, word, get_language, server
 from docassemble.base.logger import logmessage
@@ -1646,6 +1646,8 @@ class Question:
                                 selections.extend(process_selections(eval(value, user_dict)))
                             else:
                                 selections.append([value, key])
+                    #if len(selections) == 0 && self.question_type in ('multiple_choice'):
+                    #    raise CodeExecute()
                     selectcompute[field.number] = selections
                 if hasattr(field, 'choicetype') and field.choicetype == 'compute':
                     if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio', 'object_checkboxes']:
@@ -2333,6 +2335,10 @@ class Interview:
                 raise DAError('Got error ' + str(errMess))
             except MandatoryQuestion:
                 break
+            except CodeExecute as code_error:
+                #if debug:
+                #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
+                exec(code_error.compute, user_dict)
             else:
                 raise DAErrorNoEndpoint('Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any).  It is a best practice to end your interview with a question that says goodbye and offers an Exit button.')
         if docassemble.base.functions.get_info('prevent_going_back'):
@@ -2759,6 +2765,18 @@ class Interview:
                     # will this be a problem?
                     the_question = new_question.follow_multiple_choice(user_dict)
                     return(the_question.ask(user_dict, 'None', 'None'))
+                except CodeExecute as code_error:
+                    #if debug:
+                    #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
+                    exec(code_error.compute, user_dict)
+                    try:
+                        eval(missing_var, user_dict)
+                        code_error.question.mark_as_answered(user_dict)
+                        #logmessage("returning from running code")
+                        docassemble.base.functions.pop_current_variable()
+                        return({'type': 'continue'})
+                    except:
+                        continue
                 # except SendFileError as qError:
                 #     #logmessage("Trapped SendFileError2")
                 #     question_data = dict(extras=dict())
@@ -2861,7 +2879,11 @@ def process_selections(data, manual=False, exclude=None):
                         if key not in to_exclude:
                             result.append([key, entry[key], entry['default']])
                     else:
-                        if key not in to_exclude:
+                        is_not_boolean = False
+                        for val in entry.values():
+                            if val not in (True, False):
+                                is_not_boolean = True
+                        if key not in to_exclude and (is_not_boolean or entry[key] is True):
                             result.append([key, entry[key]])
             if type(entry) is list and len(entry) > 0:
                 if entry[0] not in to_exclude:
