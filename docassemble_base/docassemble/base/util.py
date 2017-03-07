@@ -1112,7 +1112,7 @@ def attachment_name(filename, filenames):
         filenames.add(filename)
         return filename
     indexno = 1
-    parts = os.path.splitext(argument)
+    parts = os.path.splitext(filename)
     while True:
         new_filename = '%s_%03d%s' % (parts[0], indexno, parts[1])
         if new_filename not in filenames:
