@@ -1076,19 +1076,19 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
 
 def process_bracket_expression(match):
     try:
-        inner = codecs.decode(match.group(1), 'base64').decode('utf-8')
+        inner = codecs.decode(match.group(1), 'base64').decode('utf8')
     except:
         inner = match.group(1)
     return("[" + repr(inner) + "]")
 
 def myb64unquote(the_string):
-    return(codecs.decode(the_string, 'base64').decode('utf-8'))
+    return(codecs.decode(the_string, 'base64').decode('utf8'))
 
 def safeid(text):
-    return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
+    return codecs.encode(text.encode('utf8'), 'base64').decode().replace('\n', '')
 
 def from_safeid(text):
-    return(codecs.decode(text, 'base64').decode('utf-8'))
+    return(codecs.decode(text, 'base64').decode('utf8'))
 
 def progress_bar(progress):
     if progress == 0:
@@ -2220,7 +2220,7 @@ def checkin():
             if form_parameters is not None:
                 form_parameters = json.loads(form_parameters)
                 for param in form_parameters:
-                    if param['name'] in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
+                    if param['name'] in ['_checkboxes', '_empties', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
                         continue
                     try:
                         parameters[from_safeid(param['name'])] = param['value']
@@ -2692,6 +2692,13 @@ def index():
         for checkbox_field in checkbox_fields:
             if checkbox_field not in post_data:
                 post_data.add(checkbox_field, 'False')
+    if '_empties' in post_data:
+        empty_fields = json.loads(myb64unquote(post_data['_empties']))
+        for empty_field in empty_fields:
+            if empty_field not in post_data:
+                post_data.add(empty_field, 'None')
+    else:
+        empty_fields = dict()
     something_changed = False
     if '_tracker' in post_data and user_dict['_internal']['tracker'] != int(post_data['_tracker']):
         logmessage("index: something changed.")
@@ -2818,7 +2825,7 @@ def index():
         known_varnames = json.loads(myb64unquote(post_data['_varnames']))
     known_variables = dict()
     for orig_key in copy.deepcopy(post_data):
-        if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
+        if orig_key in ['_checkboxes', '_empties', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
             continue
         try:
             key = myb64unquote(orig_key)
@@ -2827,7 +2834,7 @@ def index():
         if key.startswith('_field_') and orig_key in known_varnames:
             post_data[known_varnames[orig_key]] = post_data[orig_key]
     for orig_key in post_data:
-        if orig_key in ['_checkboxes', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
+        if orig_key in ['_checkboxes', '_empties', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
             continue
         #logmessage("Got a key: " + key)
         data = post_data[orig_key]
@@ -2838,6 +2845,12 @@ def index():
         if key.startswith('_field_'):
             continue
         bracket_expression = None
+        if orig_key in empty_fields:
+            #logmessage("orig_key " + str(orig_key) + " is set to empty: " + str(empty_fields[orig_key]))
+            set_to_empty = empty_fields[orig_key]
+        else:
+            #logmessage("orig_key " + str(orig_key) + " is not set to empty")
+            set_to_empty = False
         if match_brackets.search(key):
             #logmessage("Searching key " + str(key))
             match = match_inside_and_outside_brackets.search(key)
@@ -2902,11 +2915,11 @@ def index():
                     data = 0
                 data = "float(" + repr(data) + ")"
             elif known_datatypes[real_key] in ['object', 'object_radio']:
-                if data == '':
+                if data == '' or set_to_empty:
                     continue
                 data = "_internal['objselections'][" + repr(key) + "][" + repr(data) + "]"
             elif known_datatypes[real_key] in ['object_checkboxes'] and bracket_expression is not None:
-                if data not in ['True', 'False', 'None']:
+                if data not in ['True', 'False', 'None'] or set_to_empty:
                     continue
                 do_append = True
                 if data == 'False':
@@ -2933,7 +2946,12 @@ def index():
             #else:
                 #continue
                 #error_messages.append(("error", "Error: multiple choice values were supplied, but docassemble was not waiting for an answer to a multiple choice question."))
-        if do_append:
+        if set_to_empty:
+            if set_to_empty == 'checkboxes':
+                data = 'dict()'
+            else:
+                data = 'None'
+        if do_append and not set_to_empty:
             key_to_use = from_safeid(real_key)
             if do_opposite:
                 the_string = 'if ' + data + ' in ' + key_to_use + '.elements:\n    ' + key_to_use + '.remove(' + data + ')'
@@ -4399,7 +4417,7 @@ def index():
                     readability_report += '          </table>' + "\n"
         if interview_status.using_screen_reader:
             for question_type in ['question', 'help']:
-                #phrase = codecs.encode(to_text(interview_status.screen_reader_text[question_type]).encode('utf-8'), 'base64').decode().replace('\n', '')
+                #phrase = codecs.encode(to_text(interview_status.screen_reader_text[question_type]).encode('utf8'), 'base64').decode().replace('\n', '')
                 if question_type not in interview_status.screen_reader_text:
                     continue
                 phrase = to_text(interview_status.screen_reader_text[question_type]).encode('utf8')

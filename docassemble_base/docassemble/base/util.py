@@ -1151,7 +1151,7 @@ def map_of(*pargs, **kwargs):
     if 'center' not in the_map and len(the_map['markers']):
         the_map['center'] = the_map['markers'][0]
     if len(the_map['markers']) or 'center' in the_map:
-        return '[MAP ' + codecs.encode(json.dumps(the_map).encode('utf-8'), 'base64').decode().replace('\n', '') + ']'
+        return '[MAP ' + codecs.encode(json.dumps(the_map).encode('utf8'), 'base64').decode().replace('\n', '') + ']'
     return word('(Unable to display map)')
     
 def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W=None, H=None):
@@ -1255,7 +1255,7 @@ def objects_from_file(file_ref, recursive=True):
     else:
         objects = DAList(thename)
     is_singular = True
-    with open(file_info['fullpath'], 'r') as fp:
+    with open(file_info['fullpath'], 'rU') as fp:
         for document in yaml.load_all(fp):
             new_objects = recurse_obj(document, recursive=recursive)
             if type(new_objects) is list:

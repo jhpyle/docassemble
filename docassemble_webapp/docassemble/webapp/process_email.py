@@ -20,7 +20,7 @@ def main():
     fp = open("/tmp/mail.log", "a")
     #fp.write("The file is " + sys.argv[1] + "\n")
     try:
-        with open(sys.argv[1]) as email_fp:
+        with open(sys.argv[1], 'rU') as email_fp:
             msg = email.message_from_file(email_fp)
     except Exception as errMess:
         fp.write("Failed to read e-mail message: " + str(errMess) + "\n")

@@ -45,8 +45,8 @@ def load(**kwargs):
         raw_daconfig = yaml.load(stream)
     if raw_daconfig is None:
         sys.stderr.write("Could not open configuration file from " + str(filename) + "\n")
-        with open(filename, 'r') as fp:
-            sys.stderr.write(fp.read() + "\n")
+        with open(filename, 'rU') as fp:
+            sys.stderr.write(fp.read().decode('utf8') + "\n")
         sys.exit(1)
     daconfig = dict()
     for key, val in raw_daconfig.iteritems():

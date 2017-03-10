@@ -237,8 +237,8 @@ def install_package(package):
     #logmessage("install_package: running pip " + " ".join(commands))
     logfilecontents += "pip " + " ".join(commands) + "\n"
     returnval = pip.main(commands)
-    with open(pip_log.name) as x:
-        logfilecontents += x.read()
+    with open(pip_log.name, 'rU') as x:
+        logfilecontents += x.read().decode('utf8')
     logmessage(logfilecontents)
     logmessage('install_package: done')
     return returnval, logfilecontents
@@ -256,8 +256,8 @@ def uninstall_package(package):
     logfilecontents += "pip " + " ".join(commands) + "\n"
     returnval = pip.main(commands)
     #logmessage('Finished running pip')
-    with open(pip_log.name) as x:
-        logfilecontents += x.read()
+    with open(pip_log.name, 'rU') as x:
+        logfilecontents += x.read().decode('utf8')
     logmessage(logfilecontents)
     logmessage('uninstall_package: done')
     return returnval, logfilecontents

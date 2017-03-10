@@ -80,7 +80,7 @@ def main():
         existing_columns[col[0]][col[1]] = {'type': col[2], 'size': col[3], 'default': col[4]}
 
     desired_columns = dict()
-    with open(schema_file) as f:
+    with open(schema_file, 'rU') as f:
         for line in f:
             read_in(line.rstrip(), desired_columns)
 

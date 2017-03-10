@@ -84,7 +84,7 @@ class MyPandoc(object):
             self.input_content = docassemble.base.filter.pdf_filter(self.input_content, metadata=metadata_as_dict, question=question)
             #logmessage("After: " + repr(self.input_content))
         temp_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md", delete=False)
-        temp_file.write(self.input_content.encode('UTF-8'))
+        temp_file.write(self.input_content.encode('utf8'))
         temp_file.close()
         temp_outfile = tempfile.NamedTemporaryFile(mode="wb", suffix="." + str(self.output_format), delete=False)
         temp_outfile.close()
@@ -132,7 +132,7 @@ class MyPandoc(object):
             )
             self.output_filename = None
             
-            self.output_content = p.communicate(self.input_content.encode('utf-8'))[0]
+            self.output_content = p.communicate(self.input_content.encode('utf8'))[0]
         return
 
 def word_to_markdown(in_file, in_format):
@@ -156,11 +156,11 @@ def word_to_markdown(in_file, in_format):
     result = subprocess.call(subprocess_arguments)
     if result == 0:
         final_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md")
-        with open(temp_file.name) as the_file:
-            file_contents = the_file.read()
+        with open(temp_file.name, 'rU') as the_file:
+            file_contents = the_file.read().decode('utf8')
         file_contents = re.sub(r'\\([\$\[\]])', lambda x: x.group(1), file_contents)
-        with open(final_file.name, "wb") as the_file:
-            the_file.write(file_contents.encode('UTF-8'))
+        with open(final_file.name, "w") as the_file:
+            the_file.write(file_contents.encode('utf8'))
         return final_file
     else:
         return None

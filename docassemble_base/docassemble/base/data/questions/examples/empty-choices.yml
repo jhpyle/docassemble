@@ -1,0 +1,30 @@
+metadata:
+  title: Empty choices list
+  short title: Choices
+  example start: 1
+  example end: 3
+  documentation: "http://docassemble.org/docs/fields.html#field with buttons"
+---
+code: |
+  import random
+  if random.random() < 0.5:
+    the_choices = []
+  else:
+    the_choices = ["Door Number 1", "Door Number 2"]
+---
+question: |
+  Which door do you choose?
+field: door
+choices:
+  - code: the_choices
+---
+mandatory: true
+question: |
+  % if door is None:
+  There were no choices available.
+  % else:
+  You chose ${ door }.
+  % endif
+buttons:
+  - Restart: restart
+  

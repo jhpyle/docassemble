@@ -442,6 +442,22 @@ def embed_input(status, variable):
             return input_for(status, field, embedded=True)
     return 'ERROR: field not found'
 
+def is_empty_mc(status, field):
+    if hasattr(field, 'choicetype'):
+        if field.choicetype == 'compute':
+            if field.number not in status.selectcompute:
+                #logmessage("selectcompute had nothing for field " + str(field.number))
+                return False
+            #logmessage("Using selectcompute")
+            pairlist = list(status.selectcompute[field.number])
+        else:
+            #logmessage("Using field selections")
+            pairlist = list(field.selections)
+        #logmessage("Pairlist was " + str(pairlist))
+        if len(pairlist) == 0:
+            return True
+    return False
+
 def as_html(status, url_for, debug, root, validation_rules):
     decorations = list()
     uses_audio_video = False
@@ -591,11 +607,21 @@ def as_html(status, url_for, debug, root, validation_rules):
         fieldlist = list()
         checkboxes = list()
         files = list()
+        hiddens = dict()
         checkbox_validation = False
         if status.subquestionText:
             sub_question_text = markdown_to_html(status.subquestionText, status=status, indent=18, embedder=embed_input)
-        
         for field in status.question.fields:
+            if is_empty_mc(status, field):
+                if hasattr(field, 'datatype'):
+                    hiddens[field.saveas] = field.datatype
+                else:
+                    hiddens[field.saveas] = True
+                if hasattr(field, 'datatype'):
+                    datatypes[field.saveas] = field.datatype
+                    if field.datatype == 'object_checkboxes':
+                        datatypes[safeid(from_safeid(field.saveas) + ".gathered")] = 'boolean'
+                continue
             if not status.extras['ok'][field.number]:
                 continue
             if status.extras['required'][field.number]:
@@ -711,6 +737,8 @@ def as_html(status, url_for, debug, root, validation_rules):
         #output += '</div>\n'
         if len(checkboxes):
             output += '                <input type="hidden" name="_checkboxes" value=' + myb64doublequote(json.dumps(checkboxes)) + '/>\n'
+        if len(hiddens):
+            output += '                <input type="hidden" name="_empties" value=' + myb64doublequote(json.dumps(hiddens)) + '/>\n'
         if len(files):
             output += '                <input type="hidden" name="_files" value=' + myb64doublequote(json.dumps(files)) + '/>\n'
             init_string = '<script>'
@@ -1266,6 +1294,8 @@ def input_for(status, field, wide=False, embedded=False):
         if hasattr(field, 'shuffle') and field.shuffle:
             random.shuffle(pairlist)
         if field.datatype in ['checkboxes', 'object_checkboxes']:
+            #if len(pairlist) == 0:
+            #    return '<input type="hidden" name="' + safeid(from_safeid(saveas_string))+ '" value="None"/>'
             inner_fieldlist = list()
             id_index = 0
             output += '<p class="sr-only">' + word('Checkboxes:') + '</p>'
@@ -1460,10 +1490,10 @@ def get_ischecked(pair, defaultvalue):
     return ischecked
                 
 def myb64doublequote(text):
-    return '"' + codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '') + '"'
+    return '"' + codecs.encode(text.encode('utf8'), 'base64').decode().replace('\n', '') + '"'
 
 def myb64quote(text):
-    return "'" + codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '') + "'"
+    return "'" + codecs.encode(text.encode('utf8'), 'base64').decode().replace('\n', '') + "'"
 
 def indent_by(text, num):
     if not text:
@@ -1471,10 +1501,10 @@ def indent_by(text, num):
     return (" " * num) + re.sub(r'\n', "\n" + (" " * num), text).rstrip() + "\n"
 
 def safeid(text):
-    return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
+    return codecs.encode(text.encode('utf8'), 'base64').decode().replace('\n', '')
 
 def from_safeid(text):
-    return(codecs.decode(text, 'base64').decode('utf-8'))
+    return(codecs.decode(text, 'base64').decode('utf8'))
 
 def escape_id(text):
     return str(text)
@@ -1487,7 +1517,7 @@ def escape_for_jquery(text):
     return re.sub(r'(:|\.|\[|\]|,|=)', r'\\\\\1', text)
 
 def myb64unquote(the_string):
-    return(codecs.decode(the_string, 'base64').decode('utf-8'))
+    return(codecs.decode(the_string, 'base64').decode('utf8'))
 
 def strip_quote(the_string):
     return re.sub(r'"', r'', the_string)

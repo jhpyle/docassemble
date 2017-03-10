@@ -203,7 +203,7 @@ class InterviewSourceFile(InterviewSource):
         #logmessage("Update: " + str(self.filepath))
         try:
             with open(self.filepath, 'rU') as the_file:
-                self.set_content(the_file.read())
+                self.set_content(the_file.read().decode('utf8'))
                 #sys.stderr.write("Returning true\n")
                 return True
         except Exception as errmess:
@@ -324,10 +324,10 @@ class TextObject(object):
 
 
 def safeid(text):
-    return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
+    return codecs.encode(text.encode('utf8'), 'base64').decode().replace('\n', '')
 
 def from_safeid(text):
-    return(codecs.decode(text, 'base64').decode('utf-8'))
+    return(codecs.decode(text, 'base64').decode('utf8'))
 
 class Field:
     def __init__(self, data):
@@ -1060,7 +1060,7 @@ class Question:
                 file_to_read = docassemble.base.functions.package_template_filename(content_file, package=self.package)
                 if file_to_read is not None and os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
                     with open(file_to_read, 'rU') as the_file:
-                        data['content'] += the_file.read()
+                        data['content'] += the_file.read().decode('utf8')
                 else:
                     raise DAError('Unable to read content file ' + str(target['content file']) + ' after trying to find it at ' + str(file_to_read) + self.idebug(data))
         if 'template' in data and 'content' in data:
@@ -1486,7 +1486,7 @@ class Question:
                     file_to_read = docassemble.base.functions.package_template_filename(content_file, package=self.package)
                     if file_to_read is not None and os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
                         with open(file_to_read, 'rU') as the_file:
-                            target['content'] += the_file.read()
+                            target['content'] += the_file.read().decode('utf8')
                     else:
                         raise DAError('Unable to read content file ' + str(content_file) + ' after trying to find it at ' + str(file_to_read) + self.idebug(target))
             if 'fields' in target:
@@ -1646,8 +1646,19 @@ class Question:
                                 selections.extend(process_selections(eval(value, user_dict)))
                             else:
                                 selections.append([value, key])
-                    #if len(selections) == 0 && self.question_type in ('multiple_choice'):
-                    #    raise CodeExecute()
+                    if len(selections) == 0:
+                        if hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']:
+                            if len(self.fields) == 1:
+                                #logmessage("1")
+                                raise CodeExecute(from_safeid(field.saveas) + ' = dict()', self)
+                            #logmessage("2")
+                        else:
+                            if len(self.fields) == 1:
+                                #logmessage("3")
+                                raise CodeExecute(from_safeid(field.saveas) + ' = None', self)
+                            # else:
+                            #     logmessage("4")
+                    #logmessage("5")
                     selectcompute[field.number] = selections
                 if hasattr(field, 'choicetype') and field.choicetype == 'compute':
                     if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio', 'object_checkboxes']:
@@ -1659,6 +1670,21 @@ class Question:
                         selectcompute[field.number] = process_selections(eval(field.selections['compute'], user_dict), exclude=eval(field.selections['exclude'], user_dict))
                     else:
                         selectcompute[field.number] = process_selections(eval(field.selections['compute'], user_dict))
+                    if len(selectcompute[field.number]) == 0:
+                        #logmessage("6")
+                        if hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']:
+                            #logmessage("7")
+                            if len(self.fields) == 1:
+                                #logmessage("8")
+                                raise CodeExecute(from_safeid(field.saveas) + ' = dict()', self)
+                        else:
+                            #logmessage("9")
+                            if len(self.fields) == 1:
+                                #logmessage("10")
+                                raise CodeExecute(from_safeid(field.saveas) + ' = None', self)
+                            # else:
+                            #     logmessage("11")
+                    #logmessage("12")
                 if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio', 'object_checkboxes']:
                     if field.number not in selectcompute:
                         raise DAError("datatype was set to object but no code or selections was provided")
@@ -1669,7 +1695,7 @@ class Question:
                         for selection in selectcompute[field.number]:
                             key = selection[0]
                             #logmessage("key is " + str(key))
-                            real_key = codecs.decode(key, 'base64').decode('utf-8')
+                            real_key = codecs.decode(key, 'base64').decode('utf8')
                             string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "][" + repr(key) + "] = " + real_key
                             #logmessage("Doing " + string)
                             exec(string, user_dict)
@@ -2338,6 +2364,7 @@ class Interview:
             except CodeExecute as code_error:
                 #if debug:
                 #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
+                raise DAError("I am going to execute " + str(code_error.compute))
                 exec(code_error.compute, user_dict)
             else:
                 raise DAErrorNoEndpoint('Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any).  It is a best practice to end your interview with a question that says goodbye and offers an Exit button.')
@@ -2768,14 +2795,19 @@ class Interview:
                 except CodeExecute as code_error:
                     #if debug:
                     #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
+                    #logmessage("Going to execute " + str(code_error.compute) + " where missing_var is " + str(missing_var))
                     exec(code_error.compute, user_dict)
                     try:
                         eval(missing_var, user_dict)
+                        #logmessage(str(missing_var) + " was defined")
                         code_error.question.mark_as_answered(user_dict)
+                        #logmessage("Got here 1")
                         #logmessage("returning from running code")
                         docassemble.base.functions.pop_current_variable()
+                        #logmessage("Got here 2")
                         return({'type': 'continue'})
                     except:
+                        #raise DAError("Problem setting that variable")
                         continue
                 # except SendFileError as qError:
                 #     #logmessage("Trapped SendFileError2")

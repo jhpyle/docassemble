@@ -5,8 +5,9 @@ class DAError(Exception):
         return str(self.value)
 
 class CodeExecute(Exception):
-    def __init__(self, compute):
+    def __init__(self, compute, question):
         self.compute = compute
+        self.question = question
     
 class ForcedNameError(NameError):
     pass

@@ -868,7 +868,7 @@ def word(the_word, **kwargs):
     elif the_word is None:
         the_word = "I don't know"
     try:
-        return word_collection[this_thread.language][the_word].decode('utf-8')
+        return word_collection[this_thread.language][the_word].decode('utf8')
     except:
         return unicode(the_word)
 
@@ -1679,7 +1679,7 @@ def url_action(action, **kwargs):
     return '?action=' + urllib.quote(myb64quote(json.dumps({'action': action, 'arguments': kwargs})))
 
 def myb64quote(text):
-    return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
+    return codecs.encode(text.encode('utf8'), 'base64').decode().replace('\n', '')
 
 # def set_debug_status(new_value):
 #     global debug

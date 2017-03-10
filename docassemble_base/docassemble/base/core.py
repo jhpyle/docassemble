@@ -1305,7 +1305,7 @@ def selections(*pargs, **kwargs):
     return output
 
 def myb64quote(text):
-    return codecs.encode(text.encode('utf-8'), 'base64').decode().replace('\n', '')
+    return codecs.encode(text.encode('utf8'), 'base64').decode().replace('\n', '')
 
 def setify(item, output=set()):
     if isinstance(item, DAObject) and hasattr(item, 'elements'):

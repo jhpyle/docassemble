@@ -31,7 +31,7 @@ class Case(DAObject):
         """Given a person object, it looks through the parties to the 
         case and returns the name of the party to which the person belongs.
         Returns "third party" if the person is not found among the parties."""
-        for partyname in dir(self):
+        for partyname in self.__dict__:
             if not isinstance(getattr(self, partyname), PartyList):
                 continue
             getattr(self, partyname).trigger_gather()
@@ -44,7 +44,7 @@ class Case(DAObject):
         children's children, etc.  Does not force the gathering of the
         parties."""
         output_list = list()
-        for partyname in dir(self):
+        for partyname in self.__dict__:
             if not isinstance(getattr(self, partyname), PartyList):
                 continue
             for party in getattr(self, partyname).elements:
@@ -54,7 +54,7 @@ class Case(DAObject):
         """Returns a list of all parties.  Gathers the parties if
         they have not been gathered yet."""
         output_list = list()
-        for partyname in dir(self):
+        for partyname in self.__dict__:
             if not isinstance(getattr(self, partyname), PartyList):
                 continue
             getattr(self, partyname).trigger_gather()

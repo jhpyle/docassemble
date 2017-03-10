@@ -500,7 +500,7 @@ def map_string(encoded_text, status):
     if status is None:
         return ''
     map_number = len(status.maps)
-    status.maps.append(codecs.decode(encoded_text, 'base64').decode('utf-8'))
+    status.maps.append(codecs.decode(encoded_text, 'base64').decode('utf8'))
     return '<div id="map' + str(map_number) + '" class="googleMap"></div>'
 
 def target_html(match):
@@ -902,7 +902,7 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
         #logmessage("input was:\n" + repr(a))
         converter.input_content = a
         converter.convert(question)
-        result = converter.output_content.decode('utf-8')
+        result = converter.output_content.decode('utf8')
         result = re.sub(r'<table>', r'<table class="datable">', result)
     else:
         result = markdown.markdown(a, extensions=[SmartypantsExt(configs=dict())], output_format='html5')
