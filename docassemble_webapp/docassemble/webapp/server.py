@@ -2967,6 +2967,16 @@ def index():
         except Exception as errMess:
             error_messages.append(("error", "Error: " + str(errMess)))
             # logmessage("Error: " + str(errMess))
+    for orig_key in empty_fields:
+        key = myb64unquote(orig_key)
+        if empty_fields[orig_key] == 'object_checkboxes':
+            exec(key + '.clear()' , user_dict)
+            exec(key + '.gathered = True' , user_dict)
+        elif empty_fields[orig_key] in ['object', 'object_radio']:
+            try:
+                eval(key, user_dict)
+            except:
+                exec(key + ' = None' , user_dict)
     if 'informed' in request.form:
         user_dict['_internal']['informed'][the_user_id] = dict()
         for key in request.form['informed'].split(','):

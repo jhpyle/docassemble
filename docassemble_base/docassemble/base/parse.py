@@ -1649,12 +1649,12 @@ class Question:
                     if len(selections) == 0:
                         if hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']:
                             if len(self.fields) == 1:
-                                #logmessage("1")
+                                # logmessage("1")
                                 raise CodeExecute(from_safeid(field.saveas) + ' = dict()', self)
-                            #logmessage("2")
+                            # logmessage("2")
                         else:
                             if len(self.fields) == 1:
-                                #logmessage("3")
+                                # logmessage("3")
                                 raise CodeExecute(from_safeid(field.saveas) + ' = None', self)
                             # else:
                             #     logmessage("4")
@@ -1671,33 +1671,43 @@ class Question:
                     else:
                         selectcompute[field.number] = process_selections(eval(field.selections['compute'], user_dict))
                     if len(selectcompute[field.number]) == 0:
-                        #logmessage("6")
+                        # logmessage("6")
                         if hasattr(field, 'datatype') and field.datatype in ['checkboxes', 'object_checkboxes']:
-                            #logmessage("7")
+                            # logmessage("7")
                             if len(self.fields) == 1:
-                                #logmessage("8")
-                                raise CodeExecute(from_safeid(field.saveas) + ' = dict()', self)
+                                # logmessage("8")
+                                if field.datatype == 'object_checkboxes':
+                                    raise CodeExecute(from_safeid(field.saveas) + '.gathered = True', self)
+                                else:
+                                    raise CodeExecute(from_safeid(field.saveas) + ' = dict()', self)
                         else:
-                            #logmessage("9")
+                            # logmessage("9")
                             if len(self.fields) == 1:
-                                #logmessage("10")
+                                # logmessage("10")
                                 raise CodeExecute(from_safeid(field.saveas) + ' = None', self)
                             # else:
                             #     logmessage("11")
-                    #logmessage("12")
+                    # logmessage("12")
                 if hasattr(field, 'datatype') and field.datatype in ['object', 'object_radio', 'object_checkboxes']:
                     if field.number not in selectcompute:
                         raise DAError("datatype was set to object but no code or selections was provided")
                     string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "] = dict()"
-                    #logmessage("Doing " + string)
+                    # logmessage("Doing " + string)
+                    if len(self.fields) == 1 and len(selectcompute[field.number]) == 0:
+                        if field.datatype == 'object_checkboxes':
+                            # logmessage("object checkboxes setting gathered to true")
+                            raise CodeExecute(from_safeid(field.saveas) + '.gathered = True', self)
+                        else:
+                            # logmessage("object selection setting object to None")
+                            raise CodeExecute(from_safeid(field.saveas) + ' = None', self)
                     try:
                         exec(string, user_dict)
                         for selection in selectcompute[field.number]:
                             key = selection[0]
-                            #logmessage("key is " + str(key))
+                            # logmessage("key is " + str(key))
                             real_key = codecs.decode(key, 'base64').decode('utf8')
                             string = "_internal['objselections'][" + repr(from_safeid(field.saveas)) + "][" + repr(key) + "] = " + real_key
-                            #logmessage("Doing " + string)
+                            # logmessage("Doing " + string)
                             exec(string, user_dict)
                     except:
                         raise DAError("Failure while processing field with datatype of object")
@@ -1717,7 +1727,6 @@ class Question:
                 if hasattr(field, 'saveas'):
                     try:
                         defaults[field.number] = eval(from_safeid(field.saveas), user_dict)
-                        #defined[field.number] = True
                     except:
                         if hasattr(field, 'default'):
                             if isinstance(field.default, TextObject):
@@ -1741,11 +1750,11 @@ class Question:
             current_role = user_dict['role']
             if len(self.role) > 0:
                 if current_role not in self.role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave', 'refresh', 'signin']:
-                    #logmessage("Calling role_event with " + ", ".join(self.fields_used))
+                    # logmessage("Calling role_event with " + ", ".join(self.fields_used))
                     user_dict['role_needed'] = self.role
                     raise NameError("name 'role_event' is not defined")
             elif self.interview.default_role is not None and current_role not in self.interview.default_role and 'role_event' not in self.fields_used and self.question_type not in ['exit', 'continue', 'restart', 'leave', 'refresh', 'signin']:
-                #logmessage("Calling role_event with " + ", ".join(self.fields_used))
+                # logmessage("Calling role_event with " + ", ".join(self.fields_used))
                 user_dict['role_needed'] = self.interview.default_role
                 raise NameError("name 'role_event' is not defined")
         return({'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'under_text': undertext, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'attachments': attachment_text, 'question': self, 'variable_x': the_x, 'variable_i': the_i, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels}) #'defined': defined, 
@@ -1768,8 +1777,15 @@ class Question:
     def parse_fields(self, the_list, register_target, uses_field):
         result_list = list()
         has_code = False
+        if type(the_list) is dict:
+            new_list = list()
+            for key, value in the_list.iteritems():
+                new_item = dict()
+                new_item[key] = value
+                new_list.append(new_item)
+            the_list = new_list
         if type(the_list) is not list:
-            raise DAError("Multiple choices need to be provided in list form, not dictionary form.  " + self.idebug(the_list))
+            raise DAError("Multiple choices need to be provided in list form.  " + self.idebug(the_list))
         for the_dict in the_list:
             if type(the_dict) not in [dict, list]:
                 the_dict = {str(the_dict): the_dict}
@@ -1805,7 +1821,7 @@ class Question:
         return(has_code, result_list)
     def mark_as_answered(self, user_dict):
         user_dict['_internal']['answered'].add(self.name)
-        #logmessage("Question " + str(self.name) + " marked as answered")
+        # logmessage("Question " + str(self.name) + " marked as answered")
         return
     def follow_multiple_choice(self, user_dict):
         # logmessage("follow_multiple_choice")
@@ -1816,22 +1832,22 @@ class Question:
         # logmessage("question type is " + str(self.question_type))
         if self.name and self.name in user_dict['_internal']['answers']:
             self.mark_as_answered(user_dict)
-            #logmessage("question in answers")
-            #user_dict['_internal']['answered'].add(self.name)
-            #logmessage("2 Question name was " + self.name)
+            # logmessage("question in answers")
+            # user_dict['_internal']['answered'].add(self.name)
+            # logmessage("2 Question name was " + self.name)
             the_choice = self.fields[0].choices[user_dict['_internal']['answers'][self.name]]
             for key in the_choice:
                 if key in ('image', 'compute'):
                     continue
-                #logmessage("Setting target")
+                # logmessage("Setting target")
                 target = the_choice[key]
                 break
             if target:
-                #logmessage("Target defined")
+                # logmessage("Target defined")
                 if type(target) is str:
                     pass
                 elif isinstance(target, Question):
-                    #logmessage("Reassigning question")
+                    # logmessage("Reassigning question")
                     # self.mark_as_answered(user_dict)
                     return(target.follow_multiple_choice(user_dict))
         return(self)
@@ -1877,7 +1893,7 @@ class Question:
             string = "import docassemble.base.core"
             exec(string, user_dict)                        
             string = attachment['variable_name'] + " = docassemble.base.core.DAFileCollection('" + attachment['variable_name'] + "')"
-            #logmessage("Executing " + string + "\n")
+            # logmessage("Executing " + string + "\n")
             exec(string, user_dict)
             user_dict['_attachment_info'] = dict(name=attachment['name'].text(user_dict), filename=attachment['filename'].text(user_dict), description=attachment['description'].text(user_dict), attachment=dict(name=attachment['question_name'], number=attachment['indexno']))
             exec(attachment['variable_name'] + '.info = _attachment_info', user_dict)
@@ -2223,7 +2239,10 @@ class Interview:
                             interview_status.populate(question.follow_multiple_choice(user_dict).ask(user_dict, 'None', 'None'))
                         else:
                             interview_status.populate(question.ask(user_dict, 'None', 'None'))
-                        raise MandatoryQuestion()
+                        if interview_status.question.question_type == 'continue':
+                            user_dict['_internal']['answered'].add(question.name)
+                        else:
+                            raise MandatoryQuestion()
             except NameError as errMess:
                 if isinstance(errMess, ForcedNameError):
                     #logmessage("forced nameerror")
@@ -2364,7 +2383,7 @@ class Interview:
             except CodeExecute as code_error:
                 #if debug:
                 #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
-                raise DAError("I am going to execute " + str(code_error.compute))
+                logmessage("I am going to execute " + str(code_error.compute))
                 exec(code_error.compute, user_dict)
             else:
                 raise DAErrorNoEndpoint('Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any).  It is a best practice to end your interview with a question that says goodbye and offers an Exit button.')
@@ -2795,16 +2814,16 @@ class Interview:
                 except CodeExecute as code_error:
                     #if debug:
                     #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
-                    #logmessage("Going to execute " + str(code_error.compute) + " where missing_var is " + str(missing_var))
+                    logmessage("Going to execute " + str(code_error.compute) + " where missing_var is " + str(missing_var))
                     exec(code_error.compute, user_dict)
                     try:
                         eval(missing_var, user_dict)
-                        #logmessage(str(missing_var) + " was defined")
+                        logmessage(str(missing_var) + " was defined")
                         code_error.question.mark_as_answered(user_dict)
-                        #logmessage("Got here 1")
-                        #logmessage("returning from running code")
+                        logmessage("Got here 1")
+                        logmessage("returning from running code")
                         docassemble.base.functions.pop_current_variable()
-                        #logmessage("Got here 2")
+                        logmessage("Got here 2")
                         return({'type': 'continue'})
                     except:
                         #raise DAError("Problem setting that variable")

@@ -1,6 +1,6 @@
 metadata:
-  title: Set variable to list of objects
-  short title: Object
+  title: Empty object checkboxes
+  short title: Empty
   documentation: "http://docassemble.org/docs/fields.html#object_checkboxes"
   example start: 2
   example end: 4
@@ -13,6 +13,13 @@ objects:
   antagonist: Individual
   villain: PartyList
 ---
+code: |
+  import random
+  if random.random() < 0.5:
+    the_choices = []
+  else:
+    the_choices = [protagonist, antagonist]
+---
 mandatory: True
 code: |
   protagonist.name.first = "Harry"
@@ -23,11 +30,10 @@ code: |
 ---
 question: Who are the villains, if any?
 fields:
-  no label: villain
-  datatype: object_checkboxes
-  choices:
-    - protagonist
-    - antagonist
+  - no label: villain
+    datatype: object_checkboxes
+    choices: the_choices
+  - Favorite food: favorite_food
 ---
 question: |
   % if villain.number() == 0:
@@ -36,5 +42,9 @@ question: |
   The ${ villain.as_noun() }
   ${ villain.does_verb("include") }
   ${ villain }.
+  % endif
+  % if len(the_choices) == 0:
+  In fact, no villains ever existed.
+
   % endif
 mandatory: True

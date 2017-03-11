@@ -1,0 +1,33 @@
+metadata:
+  title: Series of Continue screens
+  short title: Continue
+  example start: 1
+  example end: 1
+---
+mandatory: true
+question: |
+  This is the first screen
+buttons:
+  Continue: continue
+---
+mandatory: true
+question: |
+  This is the second screen
+buttons:
+  Continue: continue
+---
+mandatory: true
+question: |
+  This is the third screen
+buttons:
+  Continue: continue
+---
+mandatory: true
+question: |
+  This is the fourth screen
+buttons:
+  Continue: continue
+---
+mandatory: true
+question: |
+  This is the last screen
