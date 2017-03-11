@@ -659,6 +659,12 @@
   subquestion: |
     Your participation means a lot to us.
   field: user_saw_intro
+"continue-serial": |-
+  mandatory: true
+  question: |
+    This is the first screen
+  buttons:
+    Continue: continue
 "continue-special": |-
   modules:
     - docassemble.base.util
@@ -1077,6 +1083,124 @@
     - "Male :male:": male
     - "Female :female:": female
     - "Other": other
+"empty-choices": |-
+  code: |
+    import random
+    if random.random() < 0.5:
+      the_choices = []
+    else:
+      the_choices = ["Door Number 1", "Door Number 2"]
+  ---
+  question: |
+    Which door do you choose?
+  field: door
+  choices:
+    - code: the_choices
+  ---
+  mandatory: true
+  question: |
+    % if door is None:
+    There were no choices available.
+    % else:
+    You chose ${ door }.
+    % endif
+  buttons:
+    - Restart: restart
+"empty-choices-checkboxes": |-
+  code: |
+    import random
+    if random.random() < 0.5:
+      the_choices = []
+    else:
+      the_choices = ["Door Number 1", "Door Number 2"]
+  ---
+  question: |
+    Which doors do you choose?
+  fields:
+    - Favorite fruit: favorite_fruit
+    - no label: doors
+      datatype: checkboxes
+      code: the_choices
+  ---
+  mandatory: true
+  question: |
+    % if len(doors):
+    % for door in [x for x in doors if doors[x]]:
+    You chose ${ door }.
+    % endfor
+    % else:
+    No doors could be chosen.
+    % endif
+  buttons:
+    - Restart: restart
+"empty-choices-fields": |-
+  code: |
+    import random
+    if random.random() < 0.5:
+      the_choices = []
+    else:
+      the_choices = ["Door Number 1", "Door Number 2"]
+  ---
+  question: |
+    Which door do you choose?
+  fields:
+    - Fruit: favorite_fruit
+    - no label: door
+      datatype: radio
+      code: the_choices
+  ---
+  mandatory: true
+  question: |
+    % if door is None:
+    There were no choices available.
+    % else:
+    You chose ${ door }.
+    % endif
+  buttons:
+    - Restart: restart
+"empty-choices-object-checkboxes": |-
+  objects:
+    protagonist: Individual
+    antagonist: Individual
+    villain: PartyList
+  ---
+  code: |
+    import random
+    if random.random() < 0.5:
+      the_choices = []
+    else:
+      the_choices = [protagonist, antagonist]
+  ---
+  mandatory: True
+  code: |
+    protagonist.name.first = "Harry"
+    protagonist.name.last = "Potter"
+    antagonist.name.first = "Tom"
+    antagonist.name.last = "Riddle"
+    villain.auto_gather = False
+  ---
+  question: Who are the villains, if any?
+  fields:
+    - no label: villain
+      datatype: object_checkboxes
+      choices: the_choices
+  #  - Favorite food: favorite_food
+  ---
+  mandatory: True
+  question: |
+    % if villain.number() == 0:
+    There are no villains here.
+    % else:
+    The ${ villain.as_noun() }
+    ${ villain.does_verb("include") }
+    ${ villain }.
+    % endif
+    % if len(the_choices) == 0:
+    In fact, no villains ever existed.
+
+    % endif
+  buttons:
+    - Restart: restart
 "event-example": |-
   question: |
     This is a special screen.

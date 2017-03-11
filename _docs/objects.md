@@ -862,14 +862,29 @@ the_file.commit()
 ## <a name="DAFileCollection"></a>DAFileCollection
 
 `DAFileCollection` objects are created internally by **docassemble**
-in order to refer to a document assembled using the `attachments`
-[modifier] in combination with a `variable name`.  It has attributes
-for each file type generated (e.g., `pdf` or `rtf`), where the
-attributes are objects of type [`DAFile`].
+in order to refer to a document assembled by an
+[`attachment`]/[`attachments`] block.  When such a block features a
+`variable name`, then a variable by that name will be defined as a
+`DAFileCollection` object.  The object is called a "collection"
+because an [`attachment`] can have multiple formats: PDF, RTF, etc.
+
+A `DAFileCollection` object has attributes for each file type
+generated (e.g., `pdf` or `rtf`), where the attributes are objects of
+type [`DAFile`].
 
 For example, if the variable `my_file` is a `DAFileCollection`,
 `my_file.pdf` will be a [`DAFile`] containing the PDF version, and
 `my_file.rtf` will be a [`DAFile`] containing the RTF version.
+
+In addition, each `DAFileCollection` object also has an attribute
+`.info` containing information about the attachment, such as the name,
+the filename (before an extension is added), and a description.  The
+`.info` attribute is a dictionary containing the following keys:
+
+* `name` is the printable name of the document
+* `filename` is the base name used to generate the filename.  If
+  `filename` is `custody_complaint`, the PDF file will be `custody_complaint.pdf`.
+* `description` is the description of the attachment.
 
 ## <a name="DAFileList"></a>DAFileList
 
@@ -2086,6 +2101,7 @@ and not an instance of the `Attorney` class.
 [`Person`]: #Person
 [`Value`]: #Value
 [`age_in_years()`]: #Individual.age_in_years
+[`attachment`]: {{ site.baseurl }}/docs/documents.html#attachments
 [`attachments`]: {{ site.baseurl }}/docs/documents.html#attachments
 [`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
 [`code`]: {{ site.baseurl }}/docs/code.html

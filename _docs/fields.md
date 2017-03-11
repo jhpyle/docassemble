@@ -373,6 +373,15 @@ It can be a [list] of two-element [list]s:
 
 {% include side-by-side.html demo="fields-mc-4" %}
 
+### When code returns an empty list
+
+If your code returns an empty list, **docassemble** will try to deal
+with the situation gracefully.  If there is only a single field listed
+under `fields`, then the variable that will be set by the user's
+selection will be set to `None`, and the question will be skipped.  If
+the `datatype` is `checkboxes`, the variable will be set to an empty
+dictionary.
+
 ### <a name="exclude"></a>`exclude`
 
 If you build the list of choices with `code`, you can exclude items
