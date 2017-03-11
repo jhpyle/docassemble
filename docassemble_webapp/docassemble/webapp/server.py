@@ -2846,10 +2846,10 @@ def index():
             continue
         bracket_expression = None
         if orig_key in empty_fields:
-            #logmessage("orig_key " + str(orig_key) + " is set to empty: " + str(empty_fields[orig_key]))
+            logmessage("orig_key " + str(orig_key) + " is set to empty: " + str(empty_fields[orig_key]))
             set_to_empty = empty_fields[orig_key]
         else:
-            #logmessage("orig_key " + str(orig_key) + " is not set to empty")
+            logmessage("orig_key " + str(orig_key) + " is not set to empty")
             set_to_empty = False
         if match_brackets.search(key):
             #logmessage("Searching key " + str(key))
@@ -2925,6 +2925,8 @@ def index():
                 if data == 'False':
                     do_opposite = True
                 data = "_internal['objselections'][" + repr(from_safeid(real_key)) + "][" + repr(bracket_expression) + "]"
+            elif set_to_empty == 'object_checkboxes':
+                continue    
             else:
                 if type(data) in [str, unicode]:
                     data = data.strip()
@@ -2969,6 +2971,7 @@ def index():
             # logmessage("Error: " + str(errMess))
     for orig_key in empty_fields:
         key = myb64unquote(orig_key)
+        logmessage("Doing key " + str(key))
         if empty_fields[orig_key] == 'object_checkboxes':
             exec(key + '.clear()' , user_dict)
             exec(key + '.gathered = True' , user_dict)

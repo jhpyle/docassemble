@@ -23,8 +23,12 @@ fields:
   - Last Name: witness[i].name.last
 ---
 question: |
-  Are there any other witnesses?
+  Were there any other witnesses?
 yesno: witness.there_is_another
+# ---
+# question: |
+#   Were there any witnesses?
+# yesno: witness.there_are_any
 ---
 mandatory: True
 question: |

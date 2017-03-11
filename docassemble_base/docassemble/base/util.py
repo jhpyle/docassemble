@@ -530,6 +530,8 @@ class Person(DAObject):
         if 'location' not in kwargs:
             self.location = LatitudeLongitude()
         if 'name' in kwargs and type(kwargs['name']) in (str, unicode):
+            if not hasattr(self, 'name'):
+                self.name = Name()
             self.name.text = kwargs['name']
             del kwargs['name']
         if 'roles' not in kwargs:
@@ -864,7 +866,7 @@ class OfficeList(DAList):
 class Organization(Person):
     """Represents a company or organization."""
     def init(self, *pargs, **kwargs):
-        self.office = OfficeList()
+        self.initializeAttribute('office', OfficeList)
         if 'offices' in kwargs:
             if type(kwargs['offices']) is list:
                 for office in kwargs['offices']:

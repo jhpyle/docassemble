@@ -3,7 +3,7 @@ metadata:
   short title: Empty
   documentation: "http://docassemble.org/docs/fields.html#object_checkboxes"
   example start: 2
-  example end: 4
+  example end: 6
 ---
 modules:
   - docassemble.base.legal
@@ -33,8 +33,9 @@ fields:
   - no label: villain
     datatype: object_checkboxes
     choices: the_choices
-  - Favorite food: favorite_food
+#  - Favorite food: favorite_food
 ---
+mandatory: True
 question: |
   % if villain.number() == 0:
   There are no villains here.
@@ -47,4 +48,5 @@ question: |
   In fact, no villains ever existed.
 
   % endif
-mandatory: True
+buttons:
+  - Restart: restart
