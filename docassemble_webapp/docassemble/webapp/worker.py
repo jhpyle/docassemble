@@ -1,7 +1,7 @@
 import docassemble.base.config
 if not docassemble.base.config.loaded:
     docassemble.base.config.load(in_celery=True)
-from docassemble.base.config import daconfig
+from docassemble.base.config import daconfig, hostname
 from celery import Celery
 from celery.result import result_from_tuple, AsyncResult
 import sys
@@ -31,7 +31,7 @@ worker_controller = None
 def initialize_db():
     global worker_controller
     worker_controller = WorkerController()
-    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, release_lock, get_attachment_info, Message, reset_user_dict, da_send_mail, get_info_from_file_number, retrieve_email
+    from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, release_lock, get_attachment_info, Message, reset_user_dict, da_send_mail, get_info_from_file_number, retrieve_email, trigger_update
     from docassemble.webapp.server import app as flaskapp
     import docassemble.base.functions
     import docassemble.base.interview_cache
@@ -51,10 +51,24 @@ def initialize_db():
     worker_controller.parse = docassemble.base.parse
     worker_controller.retrieve_email = retrieve_email
     worker_controller.get_info_from_file_number = get_info_from_file_number
+    worker_controller.trigger_update = trigger_update
 
 def convert(obj):
     return result_from_tuple(obj.as_tuple(), app=workerapp)
 
+@workerapp.task
+def update_packages():
+    if worker_controller is None:
+        initialize_db()
+    import docassemble.webapp.update
+    try:
+        with worker_controller.flaskapp.app_context():
+            ok, logmessages, results = docassemble.webapp.update.check_for_updates()
+            worker_controller.trigger_update(except_for=hostname)
+        return worker_controller.functions.ReturnValue(ok=ok, logmessages=logmessages, results=results)
+    except Exception as the_error:
+        return worker_controller.functions.ReturnValue(ok=False, error_message=str(the_error))
+    
 @workerapp.task
 def email_attachments(yaml_filename, user_info, user_code, secret, url, url_root, email_address, question_number, include_editable):
     success = False

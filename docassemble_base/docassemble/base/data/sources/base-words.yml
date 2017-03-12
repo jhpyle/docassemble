@@ -106,7 +106,6 @@
 "I do not understand what you mean by": Null
 "I don't know": Null
 "Input box": Null
-"install failed": Null
 "Install": Null
 "Interview files": Null
 "Interviews": Null
@@ -268,8 +267,6 @@
 "Stop Controlling": Null
 "Stop Observing": Null
 "Submit": Null
-"successfully installed": Null
-"successfully uninstalled": Null
 "System": Null
 "Telephone assistance": Null
 "Template files": Null
@@ -286,6 +283,7 @@
 "The privilege was added.": Null
 "There are unsaved changes.  Are you sure you wish to leave this page?": Null
 "There is already a username and password on this system with the e-mail address": Null
+"There was an error updating the packages.": Null
 "The role could not be deleted.": Null
 "Third subdivision": Null
 "This field is required.": Null
@@ -329,7 +327,6 @@
 "Unable to send e-mail to": Null
 "unavailable": Null
 "Unblock": Null
-"uninstall failed": Null
 "Unnamed User": Null
 "Untitled": Null
 "Update": Null

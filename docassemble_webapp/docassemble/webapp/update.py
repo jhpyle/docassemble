@@ -19,9 +19,7 @@ from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
 from docassemble.webapp.packages.models import Package, Install, PackageAuth
 from docassemble.webapp.core.models import Supervisors
-from docassemble.base.logger import logmessage
 from docassemble.webapp.files import SavedFile
-from docassemble.base.functions import word
 
 supervisor_url = os.environ.get('SUPERVISOR_SERVER_URL', None)
 if supervisor_url:
@@ -46,7 +44,7 @@ def remove_inactive_hosts():
             Supervisors.query.filter_by(id=id_to_delete).delete()
 
 def check_for_updates():
-    logmessage("check_for_updates: starting")
+    sys.stderr.write("check_for_updates: starting\n")
     from docassemble.base.config import hostname
     ok = True
     here_already = dict()
@@ -82,7 +80,7 @@ def check_for_updates():
         package_owner[auth.package_id] = auth.user_id
     for package in packages.itervalues():
         if package.id not in installs and package.name in here_already:
-            logmessage("check_for_updates: package " + package.name + " here already")
+            sys.stderr.write("check_for_updates: package " + package.name + " here already\n")
             install = Install(hostname=hostname, packageversion=here_already[package.name], version=package.version, package_id=package.id)
             db.session.add(install)
             installs[package.id] = install
@@ -90,51 +88,51 @@ def check_for_updates():
     if changed:
         db.session.commit()
     for package in packages.itervalues():
-        #logmessage("check_for_updates: processing package id " + str(package.id))
-        #logmessage("1: " + str(installs[package.id].packageversion) + " 2: " + str(package.packageversion))
+        #sys.stderr.write("check_for_updates: processing package id " + str(package.id) + "\n")
+        #sys.stderr.write("1: " + str(installs[package.id].packageversion) + " 2: " + str(package.packageversion) + "\n")
         if (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is None) or (package.packageversion is not None and package.id in installs and installs[package.id].packageversion is not None and LooseVersion(package.packageversion) > LooseVersion(installs[package.id].packageversion)):
             new_version_needed = True
         else:
             new_version_needed = False
-        #logmessage("got here and new version is " + str(new_version_needed))
+        #sys.stderr.write("got here and new version is " + str(new_version_needed) + "\n")
         if package.id not in installs or package.version > installs[package.id].version or new_version_needed:
             to_install.append(package)
-    #logmessage("done with that")
+    #sys.stderr.write("done with that" + "\n")
     for package in to_uninstall:
-        #logmessage("Going to uninstall a package: " + package.name)
+        #sys.stderr.write("Going to uninstall a package: " + package.name + "\n")
         if package.name in uninstall_done:
-            logmessage("check_for_updates: skipping uninstallation of " + str(package.name) + " because already uninstalled")
+            sys.stderr.write("check_for_updates: skipping uninstallation of " + str(package.name) + " because already uninstalled" + "\n")
             continue
         returnval, newlog = uninstall_package(package)
         uninstall_done[package.name] = 1
         logmessages += newlog
         if returnval == 0:
             Install.query.filter_by(hostname=hostname, package_id=package.id).delete()
-            results[package.name] = word('successfully uninstalled')
+            results[package.name] = 'successfully uninstalled'
         else:
-            results[package.name] = word('uninstall failed')
+            results[package.name] = 'uninstall failed'
             ok = False
     packages_to_delete = list()
     for package in to_install:
-        logmessage("check_for_updates: going to install a package: " + package.name)
+        sys.stderr.write("check_for_updates: going to install a package: " + package.name + "\n")
         returnval, newlog = install_package(package)
         logmessages += newlog
-        logmessage("check_for_updates: return value was " + str(returnval))
+        sys.stderr.write("check_for_updates: return value was " + str(returnval) + "\n")
         if returnval != 0:
-            logmessage("Return value was not good")
+            sys.stderr.write("Return value was not good" + "\n")
             ok = False
         pip._vendor.pkg_resources._initialize_master_working_set()
         real_name = get_real_name(package.name)
-        logmessage("check_for_updates: real name of package " + str(package.name) + " is " + str(real_name))
+        sys.stderr.write("check_for_updates: real name of package " + str(package.name) + " is " + str(real_name) + "\n")
         if real_name is None:
-            results[package.name] = word('install failed')
+            results[package.name] = 'install failed'
             if package.name not in here_already:
-                logmessage("check_for_updates: removing package entry for " + package.name)
+                sys.stderr.write("check_for_updates: removing package entry for " + package.name + "\n")
                 packages_to_delete.append(package)
         else:
-            results[package.name] = word('successfully installed')
+            results[package.name] = 'successfully installed'
             if real_name != package.name:
-                logmessage("check_for_updates: changing name")
+                sys.stderr.write("check_for_updates: changing name" + "\n")
                 package.name = real_name
             if package.id in installs:
                 install = installs[package.id]
@@ -149,11 +147,11 @@ def check_for_updates():
     for package in packages_to_delete:
         package.active = False
     db.session.commit()
-    logmessage("check_for_updates: finished uninstalling and installing")
+    sys.stderr.write("check_for_updates: finished uninstalling and installing" + "\n")
     return ok, logmessages, results
 
 def update_versions():
-    logmessage("update_versions: starting")
+    sys.stderr.write("update_versions: starting" + "\n")
     install_by_id = dict()
     from docassemble.base.config import hostname
     for install in Install.query.filter_by(hostname=hostname).all():
@@ -175,7 +173,7 @@ def update_versions():
     return
 
 def add_dependencies(user_id):
-    #logmessage('add_dependencies: user_id is ' + str(user_id))
+    #sys.stderr.write('add_dependencies: user_id is ' + str(user_id) + "\n")
     from docassemble.base.config import hostname, daconfig
     docassemble_git_url = daconfig.get('docassemble git url', 'https://github.com/jhpyle/docassemble')
     package_by_name = dict()
@@ -209,12 +207,12 @@ def fix_names():
                 package.name = actual_name
                 db.session.commit()
             else:
-                logmessage("fix_names: package " + package.name + " does not appear to be installed")
+                sys.stderr.write("fix_names: package " + package.name + " does not appear to be installed" + "\n")
 
 def install_package(package):
     if package.type == 'zip' and package.upload is None:
         return 0, ''
-    logmessage('install_package: ' + package.name)
+    sys.stderr.write('install_package: ' + package.name + "\n")
     from docassemble.base.config import daconfig
     PACKAGE_DIRECTORY = daconfig.get('packages', '/usr/share/docassemble/local')
     logfilecontents = ''
@@ -234,17 +232,17 @@ def install_package(package):
         commands = ['install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, package.name + limit]
     else:
         return 1, 'Unable to recognize package type: ' + package.name
-    #logmessage("install_package: running pip " + " ".join(commands))
+    #sys.stderr.write("install_package: running pip " + " ".join(commands) + "\n")
     logfilecontents += "pip " + " ".join(commands) + "\n"
     returnval = pip.main(commands)
     with open(pip_log.name, 'rU') as x:
         logfilecontents += x.read().decode('utf8')
-    logmessage(logfilecontents)
-    logmessage('install_package: done')
+    sys.stderr.write(logfilecontents + "\n")
+    sys.stderr.write('install_package: done' + "\n")
     return returnval, logfilecontents
 
 def uninstall_package(package):
-    logmessage('uninstall_package: ' + package.name)
+    sys.stderr.write('uninstall_package: ' + package.name + "\n")
     logfilecontents = ''
     #sys.stderr.write("uninstall_package: uninstalling " + package.name + "\n")
     #return 0
@@ -252,14 +250,14 @@ def uninstall_package(package):
     pip.utils.logging._log_state.indentation = 0
     pip_log = tempfile.NamedTemporaryFile()
     commands = ['uninstall', '-y', '--log-file=' + pip_log.name, package.name]
-    #logmessage("Running pip " + " ".join(commands))
+    #sys.stderr.write("Running pip " + " ".join(commands) + "\n")
     logfilecontents += "pip " + " ".join(commands) + "\n"
     returnval = pip.main(commands)
-    #logmessage('Finished running pip')
+    #sys.stderr.write('Finished running pip' + "\n")
     with open(pip_log.name, 'rU') as x:
         logfilecontents += x.read().decode('utf8')
-    logmessage(logfilecontents)
-    logmessage('uninstall_package: done')
+    sys.stderr.write(logfilecontents + "\n")
+    sys.stderr.write('uninstall_package: done' + "\n")
     return returnval, logfilecontents
 
 class Object(object):
@@ -302,7 +300,7 @@ if __name__ == "__main__":
         check_for_updates()
         remove_inactive_hosts()
         from docassemble.base.config import daconfig
-        logmessage("update: touched wsgi file")
+        sys.stderr.write("update: touched wsgi file" + "\n")
         wsgi_file = daconfig.get('webapp', '/usr/share/docassemble/webapp/docassemble.wsgi')
         if os.path.isfile(wsgi_file):
             with open(wsgi_file, 'a'):

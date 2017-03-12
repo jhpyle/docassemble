@@ -1254,20 +1254,20 @@ def make_navbar(status, page_title, page_short_title, steps, show_login, chat_in
     return(navbar)
 
 def delete_session():
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'update']:
         if key in session:
             del session[key]
     return
 
 def backup_session():
     backup = dict()
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'update']:
         if key in session:
             backup[key] = session[key]
     return backup
 
 def restore_session(backup):
-    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages']:
+    for key in ['i', 'uid', 'key_logged', 'action', 'tempuser', 'user_id', 'encrypted', 'google_id', 'google_email', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'update']:
         if key in backup:
             session[key] = backup[key]
 
@@ -1316,15 +1316,15 @@ def uninstall_package(packagename):
     for package in Package.query.filter_by(name=packagename, active=True).all():
         package.active = False
     db.session.commit()
-    ok, logmessages, results = docassemble.webapp.update.check_for_updates()
-    if ok:
-        if the_package_type == 'zip' and the_upload_number is not None:
-            SavedFile(the_upload_number).delete()
-        trigger_update(except_for=hostname)
-        restart_this()
-        flash(summarize_results(results, logmessages), 'info')
-    else:
-        flash(summarize_results(results, logmessages), 'error')
+    # ok, logmessages, results = docassemble.webapp.update.check_for_updates()
+    # if ok:
+    #     if the_package_type == 'zip' and the_upload_number is not None:
+    #         SavedFile(the_upload_number).delete()
+    #     trigger_update(except_for=hostname)
+    #     restart_this()
+    #     flash(summarize_results(results, logmessages), 'info')
+    # else:
+    #     flash(summarize_results(results, logmessages), 'error')
     #logmessage("server uninstall_package: done")
     return
 
@@ -1355,13 +1355,13 @@ def install_zip_package(packagename, file_number):
         existing_package.type = 'zip'
         existing_package.version += 1
     db.session.commit()
-    ok, logmessages, results = docassemble.webapp.update.check_for_updates()
-    if ok:
-        trigger_update(except_for=hostname)
-        restart_this()
-        flash(summarize_results(results, logmessages), 'info')
-    else:
-        flash(summarize_results(results, logmessages), 'error')
+    # ok, logmessages, results = docassemble.webapp.update.check_for_updates()
+    # if ok:
+    #     trigger_update(except_for=hostname)
+    #     restart_this()
+    #     flash(summarize_results(results, logmessages), 'info')
+    # else:
+    #     flash(summarize_results(results, logmessages), 'error')
     return
 
 def install_git_package(packagename, giturl):
@@ -1383,13 +1383,13 @@ def install_git_package(packagename, giturl):
             package_entry.limitation = None
             package_entry.type = 'git'
             db.session.commit()
-    ok, logmessages, results = docassemble.webapp.update.check_for_updates()
-    if ok:
-        trigger_update(except_for=hostname)
-        restart_this()
-        flash(summarize_results(results, logmessages), 'info')
-    else:
-        flash(summarize_results(results, logmessages), 'error')
+    # ok, logmessages, results = docassemble.webapp.update.check_for_updates()
+    # if ok:
+    #     trigger_update(except_for=hostname)
+    #     restart_this()
+    #     flash(summarize_results(results, logmessages), 'info')
+    # else:
+    #     flash(summarize_results(results, logmessages), 'error')
     return
 
 def install_pip_package(packagename, limitation):
@@ -1409,13 +1409,13 @@ def install_pip_package(packagename, limitation):
         existing_package.giturl = None
         existing_package.upload = None
         db.session.commit()
-    ok, logmessages, results = docassemble.webapp.update.check_for_updates()
-    if ok:
-        trigger_update(except_for=hostname)
-        restart_this()
-        flash(summarize_results(results, logmessages), 'info')
-    else:
-        flash(summarize_results(results, logmessages), 'error')
+    # ok, logmessages, results = docassemble.webapp.update.check_for_updates()
+    # if ok:
+    #     trigger_update(except_for=hostname)
+    #     restart_this()
+    #     flash(summarize_results(results, logmessages), 'info')
+    # else:
+    #     flash(summarize_results(results, logmessages), 'error')
     return
 
 def get_package_info():
@@ -6273,10 +6273,90 @@ def monitor():
 </script>"""
     return render_template('pages/monitor.html', extra_js=Markup(script), tab_title=word('Monitor'), page_title=word('Monitor')), 200
 
+@app.route('/updatingpackages', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def update_package_wait():
+    script = """<script>
+      var checkinInterval = null;
+      function daUpdateCallback(data){
+        if (data.success){
+          if (data.status == 'finished'){
+            if (data.ok){
+              $("#notification").html('""" + word("The package update was successful.  The logs are below.") + """');
+              $("#notification").removeClass("alert-info");
+              $("#notification").addClass("alert-success");
+            }
+            else{
+              $("#notification").html('""" + word("The package update was not fully successful.  The logs are below.") + """');
+              $("#notification").removeClass("alert-info");
+              $("#notification").addClass("alert-danger");
+            }
+            $("#resultsContainer").show();
+            $("#resultsArea").html(data.summary);
+            if (checkinInterval != null){
+              clearInterval(checkinInterval);
+            }
+          }
+          else if (data.status == 'failed'){
+            $("#notification").html('""" + word("There was an error updating the packages.") + """');
+            $("#notification").removeClass("alert-info");
+            $("#notification").addClass("alert-danger");
+            $("#resultsContainer").show();
+            $("#resultsArea").html(data.error_message);
+            if (checkinInterval != null){
+              clearInterval(checkinInterval);
+            }
+          }
+        }
+      }
+      function daUpdate(){
+        $.ajax({
+          type: 'POST',
+          url: """ + repr(str(url_for('update_package_ajax'))) + """,
+          data: 'csrf_token=""" + generate_csrf() + """&action=restart',
+          success: daUpdateCallback,
+          dataType: 'json'
+        });
+        return true;
+      }
+      $( document ).ready(function() {
+        //console.log("page loaded");
+        checkinInterval = setInterval(daUpdate, 2000);
+      });
+    </script>
+"""
+    return render_template('pages/update_package_wait.html', extra_js=Markup(script), tab_title=word('Updating'), page_title=word('Updating'), next_page=url_for('update_package'))
+
+@app.route('/update_package_ajax', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def update_package_ajax():
+    if 'update' not in session:
+        return jsonify(success=False)
+    result = docassemble.webapp.worker.workerapp.AsyncResult(id=session['update'])
+    if result.ready():
+        del session['update']
+        if type(result.result) == ReturnValue:
+            if result.result.ok:
+                restart_this()
+            elif hasattr(result.result, 'error_message'):
+                logmessage("update_package_ajax: failed return value is " + str(result.result.error_message))
+                return jsonify(success=True, status='failed', error_message=str(result.result.error_message))
+            return jsonify(success=True, status='finished', ok=result.result.ok, summary=summarize_results(result.result.results, result.result.logmessages))
+        else:
+            logmessage("update_package_ajax: failed return value is " + str(result.result))
+            return jsonify(success=True, status='failed', error_message=str(result.result))
+    else:
+        the_status = 'waiting'
+    return jsonify(success=True, status=the_status)
+
 @app.route('/updatepackage', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin', 'developer'])
 def update_package():
+    if 'update' in session:
+        del session['update']
     pip.utils.logging._log_state = threading.local()
     pip.utils.logging._log_state.indentation = 0
     form = UpdatePackageForm(request.form)
@@ -6299,7 +6379,9 @@ def update_package():
                         install_git_package(target, existing_package.giturl)
                     elif existing_package.type == 'pip':
                         install_pip_package(existing_package.name, existing_package.limitation)
-        return redirect(url_for('update_package'))
+        result = docassemble.webapp.worker.update_packages.delay()
+        session['update'] = result.id
+        return redirect(url_for('update_package_wait'))
     if request.method == 'POST' and form.validate_on_submit():
         if 'zipfile' in request.files and request.files['zipfile'].filename:
             try:
@@ -6317,6 +6399,9 @@ def update_package():
                     #zippath += '.zip'
                     #commands = ['install', zippath, '--egg', '--no-index', '--src=' + tempfile.mkdtemp(), '--log-file=' + pip_log.name, '--upgrade', "--install-option=--user"]
                     install_zip_package(pkgname, file_number)
+                    result = docassemble.webapp.worker.update_packages.delay()
+                    session['update'] = result.id
+                    return redirect(url_for('update_package_wait'))
                 else:
                     flash(word("You do not have permission to install this package."), 'error')
             except Exception as errMess:

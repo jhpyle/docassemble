@@ -47,9 +47,12 @@ newlines = re.compile(r'[\r\n]+')
 single_newline = re.compile(r'[\r\n]')
 
 class ReturnValue(object):
-    def __init__(self, value=None, extra=None):
-        self.extra = extra
-        self.value = value
+    def __init__(self, **kwargs):
+        self.extra = kwargs.get('extra', None)
+        self.value = kwargs.get('value', None)
+        for key, value in kwargs.iteritems():
+            if key not in ['extra', 'value']:
+                setattr(self, key, value)
 
 def get_current_variable():
     if len(this_thread.current_variable):
