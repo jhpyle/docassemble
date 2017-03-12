@@ -959,6 +959,7 @@ class Question:
             if type(data['check in']) in (dict, list, set):
                 raise DAError("A check in event must be text or a list." + self.idebug(data))
             self.checkin = str(data['check in'])
+            self.names_used.add(str(data['check in']))
         if 'yesno' in data:
             self.fields.append(Field({'saveas': data['yesno'], 'boolean': 1}))
             self.fields_used.add(data['yesno'])

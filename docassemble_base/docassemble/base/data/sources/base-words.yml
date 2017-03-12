@@ -279,6 +279,8 @@
 "The information was saved.": Null
 "The operator is no longer controlling your screen.": Null
 "The package information was saved.": Null
+"The package update was not fully successful.  The logs are below.": Null
+"The package update was successful.  The logs are below.": Null
 "The privilege could not be added because it already exists.": Null
 "The privilege was added.": Null
 "There are unsaved changes.  Are you sure you wish to leave this page?": Null
@@ -331,6 +333,7 @@
 "Untitled": Null
 "Update": Null
 "Update Package": Null
+"Updating": Null
 "Upload a source file": Null
 "Upload a static file": Null
 "Upload a template file": Null

@@ -1562,6 +1562,25 @@ search_key = """
                   <tr><td><a class="dasearchicon dasearchthis"><i class="glyphicon glyphicon-search"></i></a> """ + word("means the name is located in this file") + """</td></tr>
                   <tr><td><a class="dasearchicon dasearchother"><i class="glyphicon glyphicon-search"></i></a> """ + word("means the name may be located in a file included by reference, such as:") + """</td></tr>"""
 
+def find_needed_names(interview, needed_names, the_name=None, the_question=None):
+    if the_name is not None:
+        needed_names.add(the_name)
+        if the_name in interview.questions:
+            for lang in interview.questions[the_name]:
+                for question in interview.questions[the_name][lang]:
+                    find_needed_names(interview, needed_names, the_question=question)
+    elif the_question is not None:
+        for the_set in (the_question.mako_names, the_question.names_used):
+            for name in the_set:
+                if name in needed_names:
+                    continue
+                find_needed_names(interview, needed_names, the_name=name)
+    else:
+        for question in interview.questions_list:
+            if not (question.is_mandatory or question.is_initial or question.question_type == "objects"):
+                continue
+            find_needed_names(interview, needed_names, the_question=question)
+
 def get_vars_in_use(interview, interview_status, debug_mode=False):
     user_dict = fresh_dictionary()
     has_no_endpoint = False
@@ -1616,6 +1635,8 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
         for lang in interview.questions[val]:
             for q in interview.questions[val][lang]:
                 field_origins[val].add(q.from_source)
+    needed_names = set()
+    find_needed_names(interview, needed_names)
     functions = set()
     modules = set()
     classes = set()
@@ -1708,6 +1729,9 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
             if var in documentation_dict or var in base_name_info:
                 class_type = 'info'
                 title = 'title="' + word("Special variable") + '" '
+            elif var not in needed_names:
+                class_type = 'warning'
+                title = 'title="' + word("Possibly not used") + '" '
             else:
                 class_type = 'primary'
                 title = ''
@@ -7307,7 +7331,11 @@ def playground_files():
     else:
         kbOpt = ''
         kbLoad = ''
-    return render_template('pages/playgroundfiles.html', tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>' + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new)), 200
+    if len(editable_files):
+        any_files = True
+    else:
+        any_files = False
+    return render_template('pages/playgroundfiles.html', tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>' + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files), 200
 
 @app.route('/playgroundpackages', methods=['GET', 'POST'])
 @login_required
@@ -7315,6 +7343,10 @@ def playground_files():
 def playground_packages():
     form = PlaygroundPackagesForm(request.form)
     the_file = request.args.get('file', '')
+    if the_file == '':
+        no_file_specified = True
+    else:
+        no_file_specified = False
     scroll = False
     package_list, package_auth = get_package_info()
     package_names = sorted([package.package.name for package in package_list])
@@ -7353,9 +7385,26 @@ def playground_packages():
         validated = True
     the_file = re.sub(r'[^A-Za-z0-9\-\_\.]+', '-', the_file)
     the_file = re.sub(r'^docassemble-', r'', the_file)
-    if not user_can_edit_package(pkgname='docassemble.' + the_file):
+    files = sorted([f for f in os.listdir(area['playgroundpackages'].directory) if os.path.isfile(os.path.join(area['playgroundpackages'].directory, f))])
+    editable_files = list()
+    mode = "yaml"
+    for a_file in files:
+        editable_files.append(a_file)
+    if request.method == 'GET' and not the_file and not is_new:
+        if 'playgroundpackages' in session and session['playgroundpackages'] in editable_files:
+            the_file = session['playgroundpackages']
+        else:
+            if 'playgroundpackages' in session:
+                del session['playgroundpackages']
+            if len(editable_files):
+                the_file = editable_files[0]
+            else:
+                the_file = ''
+    if the_file != '' and not user_can_edit_package(pkgname='docassemble.' + the_file):
         flash(word('Sorry, that package name,') + the_file + word(', is already in use by someone else'), 'error')
         the_file = ''
+    if request.method == 'GET' and the_file in editable_files:
+        session['playgroundpackages'] = the_file
     if the_file == '' and len(file_list['playgroundpackages']) and not is_new:
         the_file = file_list['playgroundpackages'][0]
     old_info = dict()
@@ -7404,23 +7453,6 @@ def playground_packages():
                     return redirect(url_for('create_playground_package', package=the_file, install=True))
                 the_time = formatted_current_time()
                 flash(word('The package information was saved.'), 'success')
-    files = sorted([f for f in os.listdir(area['playgroundpackages'].directory) if os.path.isfile(os.path.join(area['playgroundpackages'].directory, f))])
-    editable_files = list()
-    mode = "yaml"
-    for a_file in files:
-        editable_files.append(a_file)
-    if request.method == 'GET' and not the_file and not is_new:
-        if 'playgroundpackages' in session and session['playgroundpackages'] in editable_files:
-            the_file = session['playgroundpackages']
-        else:
-            if 'playgroundpackages' in session:
-                del session['playgroundpackages']
-            if len(editable_files):
-                the_file = editable_files[0]
-            else:
-                the_file = ''
-    if request.method == 'GET' and the_file in editable_files:
-        session['playgroundpackages'] = the_file
     form.original_file_name.data = the_file
     form.file_name.data = the_file
     if the_file != '' and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):
@@ -7442,7 +7474,11 @@ def playground_packages():
     else:
         kbOpt = ''
         kbLoad = ''
-    return render_template('pages/playgroundpackages.html', tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    ' + kbLoad + '<script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this package?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("readme");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names), 200
+    if len(editable_files):
+        any_files = True
+    else:
+        any_files = False
+    return render_template('pages/playgroundpackages.html', tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    ' + kbLoad + '<script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this package?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("readme");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
 
 @app.route('/playground_redirect', methods=['GET', 'POST'])
 @login_required
