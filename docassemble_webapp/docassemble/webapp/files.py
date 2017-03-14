@@ -9,11 +9,10 @@ import zipfile
 import datetime
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
-from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED
+from docassemble.base.config import daconfig
+import docassemble.webapp.cloud
 
-if S3_ENABLED:
-    import docassemble.webapp.amazon
-    s3 = docassemble.webapp.amazon.s3object(s3_config)
+cloud = docassemble.webapp.cloud.get_cloud()
 
 UPLOAD_DIRECTORY = daconfig.get('uploads', '/usr/share/docassemble/files')
 
@@ -24,7 +23,7 @@ class SavedFile(object):
         self.fixed = False
         self.section = section
         self.filename = filename
-        if not S3_ENABLED:
+        if cloud is not None:
             if self.section == 'files':
                 parts = re.sub(r'(...)', r'\1/', '{0:012x}'.format(int(file_number))).split('/')
                 self.directory = os.path.join(UPLOAD_DIRECTORY, *parts)
@@ -36,19 +35,19 @@ class SavedFile(object):
     def fix(self):
         if self.fixed:
             return
-        if S3_ENABLED:
+        if cloud is not None:
             self.modtimes = dict()
             self.keydict = dict()
             self.directory = tempfile.mkdtemp()
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
             #logmessage("fix: prefix is " + prefix)
-            for key in s3.bucket.list(prefix=prefix, delimiter='/'):
+            for key in cloud.list_keys(prefix):
                 filename = re.sub(r'.*/', '', key.name)
                 fullpath = os.path.join(self.directory, filename)
                 #logmessage("fix: saving to " + fullpath)
                 key.get_contents_to_filename(fullpath)
                 self.modtimes[filename] = os.path.getmtime(fullpath)
-                #logmessage("S3 modtime for file " + filename + " is " + str(key.last_modified))
+                #logmessage("cloud modtime for file " + filename + " is " + str(key.last_modified))
                 self.keydict[filename] = key
             self.path = os.path.join(self.directory, self.filename)
         else:
@@ -56,9 +55,9 @@ class SavedFile(object):
                 os.makedirs(self.directory)        
         self.fixed = True
     def delete(self):
-        if S3_ENABLED:
+        if cloud is not None:
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
-            for key in s3.bucket.list(prefix=prefix, delimiter='/'):
+            for key in cloud.list_keys(prefix):
                 key.delete()
         else:
             if os.path.isdir(self.directory):
@@ -114,8 +113,8 @@ class SavedFile(object):
         return
     def size_in_bytes(self, **kwargs):
         filename = kwargs.get('filename', self.filename)
-        if S3_ENABLED and not self.fixed:
-            key = s3.search_key(str(self.section) + '/' + str(self.file_number) + '/' + str(filename))
+        if cloud is not None and not self.fixed:
+            key = cloud.search_key(str(self.section) + '/' + str(self.file_number) + '/' + str(filename))
             return key.size
         else:
             return os.path.getsize(os.path.join(self.directory, filename))
@@ -129,9 +128,9 @@ class SavedFile(object):
     def get_modtime(self, **kwargs):
         filename = kwargs.get('filename', self.filename)
         #logmessage("Get modtime called with filename " + str(filename))
-        if S3_ENABLED:
+        if cloud is not None:
             key_name = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
-            key = s3.search_key(key_name)
+            key = cloud.search_key(key_name)
             #logmessage("Modtime for key " + key_name + " is now " + str(key.last_modified))
             return key.last_modified
         else:
@@ -152,7 +151,7 @@ class SavedFile(object):
         else:
             extn = None
         filename = kwargs.get('filename', self.filename)
-        if S3_ENABLED:
+        if cloud is not None:
             keyname = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
             page = kwargs.get('page', None)
             if page:
@@ -164,7 +163,7 @@ class SavedFile(object):
                     keyname += 'page-' + str(page) + '.png'
             elif extn:
                 keyname += '.' + extn
-            key = s3.get_key(keyname)
+            key = cloud.get_key(keyname)
             if key.exists():
                 return(key.generate_url(3600))
             else:
@@ -190,7 +189,7 @@ class SavedFile(object):
                 url = 'about:blank'
             return(url)
     def finalize(self):
-        if not S3_ENABLED:
+        if cloud is None:
             return
         if not self.fixed:
             raise DAError("SavedFile: finalize called before fix")
@@ -206,8 +205,7 @@ class SavedFile(object):
                     if self.modtimes[filename] == os.path.getmtime(fullpath):
                         save = False
                 else:
-                    key = s3.new_key()
-                    key.key = str(self.section) + '/' + str(self.file_number) + '/' + str(filename)
+                    key = cloud.get_key(str(self.section) + '/' + str(self.file_number) + '/' + str(filename))
                     if filename == self.filename:
                         extension, mimetype = get_ext_and_mimetype(filename + '.' + self.extension)
                         key.content_type = mimetype
@@ -215,7 +213,7 @@ class SavedFile(object):
                     key.set_contents_from_filename(fullpath)
         for filename, key in self.keydict.iteritems():
             if filename not in existing_files:
-                logmessage("Deleting filename " + str(filename) + " from S3")
+                logmessage("Deleting filename " + str(filename) + " from cloud")
                 key.delete()
         return
         

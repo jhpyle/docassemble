@@ -12,6 +12,8 @@ s3_config = dict()
 S3_ENABLED = False
 gc_config = dict()
 GC_ENABLED = False
+azure_config = dict()
+AZURE_ENABLED = False
 hostname = None
 loaded = False
 in_celery = False
@@ -22,6 +24,8 @@ def load(**kwargs):
     global S3_ENABLED
     global gc_config
     global GC_ENABLED
+    global azure_config
+    global AZURE_ENABLED
     global dbtableprefix
     global hostname
     global loaded
@@ -73,6 +77,11 @@ def load(**kwargs):
         GC_ENABLED = False
     else:
         GC_ENABLED = True
+    azure_config = daconfig.get('azure', None)
+    if type(azure_config) is not dict or ('enable' in azure_config and not azure_config['enable']) or 'account name' not in azure_config or azure_config['account name'] is None or 'account key' not in azure_config or azure_config['account key'] is None:
+        AZURE_ENABLED = False
+    else:
+        AZURE_ENABLED = True
     if 'db' not in daconfig:
         daconfig['db'] = dict(name="docassemble", user="docassemble", password="abc123")
     dbtableprefix = daconfig['db'].get('table prefix', None)
@@ -90,9 +99,15 @@ def load(**kwargs):
         hostname = os.getenv('SERVERHOSTNAME', socket.gethostname())
     if S3_ENABLED:
         import docassemble.webapp.amazon
-        s3 = docassemble.webapp.amazon.s3object(s3_config)
+        cloud = docassemble.webapp.amazon.s3object(s3_config)
+    elif AZURE_ENABLED:
+        import docassemble.webapp.microsoft
+        cloud = docassemble.webapp.microsoft.azureobject(azure_config)
+    else:
+        cloud = None
+    if cloud is not None:
         if 'host' not in daconfig['db'] or daconfig['db']['host'] is None:
-            key = s3.get_key('hostname-sql')
+            key = cloud.get_key('hostname-sql')
             if key.exists():
                 the_host = key.get_contents_as_string()
                 if the_host == hostname:
@@ -100,7 +115,7 @@ def load(**kwargs):
                 else:
                     daconfig['db']['host'] = the_host
         if 'log server' not in daconfig or daconfig['log server'] is None:
-            key = s3.get_key('hostname-log')
+            key = cloud.get_key('hostname-log')
             if key.exists():
                 the_host = key.get_contents_as_string()
                 if the_host == hostname:
@@ -108,14 +123,14 @@ def load(**kwargs):
                 else:
                     daconfig['log server'] = the_host
         if 'redis' not in daconfig or daconfig['redis'] is None:
-            key = s3.get_key('hostname-redis')
+            key = cloud.get_key('hostname-redis')
             if key.exists():
                 the_host = key.get_contents_as_string()
                 if the_host == hostname:
                     the_host = 'localhost'
                 daconfig['redis'] = 'redis://' + the_host
         if 'rabbitmq' not in daconfig or daconfig['rabbitmq'] is None:
-            key = s3.get_key('hostname-rabbitmq')
+            key = cloud.get_key('hostname-rabbitmq')
             if key.exists():
                 the_host = key.get_contents_as_string()
                 daconfig['rabbitmq'] = 'pyamqp://guest@' + str(the_host) + '//'

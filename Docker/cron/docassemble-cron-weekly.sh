@@ -11,6 +11,10 @@ if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "
     export AWS_SECRET_ACCESS_KEY=$S3SECRETACCESSKEY
 fi
 
+if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "null" ] && [ "${AZURECONTAINER:-null}" != "null" ]; then
+    export AZUREENABLE=true
+fi
+
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
     /usr/share/docassemble/webapp/run-cron.sh cron_weekly
 fi
@@ -32,6 +36,18 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 			s3cmd -q put /tmp/letsencrypt.tar.gz 's3://'${S3BUCKET}/letsencrypt.tar.gz
 		    fi
 		    s3cmd -q sync /etc/apache2/sites-available/ 's3://'${S3BUCKET}/apache/
+		fi
+		if [ "${AZUREENABLE:-false}" == "true" ]; then
+		    blob-cmd add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
+		    cd /
+		    if [ "${USELETSENCRYPT:-none}" != "none" ]; then
+			rm -f /tmp/letsencrypt.tar.gz
+			tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
+			blob-cmd -f cp /tmp/letsencrypt.tar.gz 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}'/letsencrypt.tar.gz'
+		    fi
+		    for the_file in $( find /etc/apache2/sites-available/ -type f ); do
+			blob-cmd -f cp "$the_file" 'blob://'${AZUREACCOUNTNAME}'/'${AZURECONTAINER}'/apache/'
+		    done
 		fi
 		if [ ! -f /etc/ssl/docassemble/exim.crt ] && [ ! -f /etc/ssl/docassemble/exim.key ]; then
 		    cp /etc/letsencrypt/live/${DAHOSTNAME}/fullchain.pem /etc/exim4/exim.crt

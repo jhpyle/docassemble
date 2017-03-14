@@ -1,6 +1,6 @@
 from docassemble.webapp.app_object import app
 from docassemble.webapp.db_object import db
-from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, dbtableprefix, hostname, in_celery
+from docassemble.base.config import daconfig, hostname, in_celery
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from docassemble.base.logger import logmessage
 from docassemble.webapp.users.models import UserModel, ChatLog, UserDict, UserDictKeys
@@ -163,11 +163,8 @@ docassemble.base.functions.update_locale()
 if 'currency symbol' in daconfig:
     docassemble.base.functions.update_language_function('*', 'currency_symbol', lambda: daconfig['currency symbol'])
 
-if S3_ENABLED:
-    import docassemble.webapp.amazon
-    s3 = docassemble.webapp.amazon.s3object(s3_config)
-else:
-    s3 = None
+import docassemble.webapp.cloud
+cloud = docassemble.webapp.cloud.get_cloud()
 
 initial_dict = dict(_internal=dict(progress=0, tracker=0, steps_offset=0, secret=None, informed=dict(), livehelp=dict(availability='unavailable', mode='help', roles=list(), partner_roles=list()), answered=set(), answers=dict(), objselections=dict(), starttime=None, modtime=None, accesstime=dict(), tasks=dict(), gather=list()), url_args=dict())
 #else:

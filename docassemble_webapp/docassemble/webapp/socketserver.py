@@ -1,7 +1,7 @@
 import sys
 import docassemble.base.config
 docassemble.base.config.load(arguments=sys.argv)
-from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, dbtableprefix, hostname, in_celery
+from docassemble.base.config import daconfig
 
 from flask_socketio import join_room, disconnect
 from docassemble.webapp.app_socket import app, db, socketio
@@ -18,7 +18,7 @@ import cPickle as pickle
 import re
 import time
 import random
-from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_new_file_number, nice_utc_date, nice_date_from_utc, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase
+from docassemble.webapp.backend import initial_dict, can_access_file_number, get_info_from_file_number, get_info_from_file_reference, get_new_file_number, nice_utc_date, nice_date_from_utc, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase
 from docassemble.webapp.users.models import UserModel, ChatLog
 from docassemble.base.functions import get_default_timezone, word
 from flask import render_template, session, request

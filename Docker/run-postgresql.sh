@@ -20,10 +20,18 @@ if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "
     export AWS_SECRET_ACCESS_KEY=$S3SECRETACCESSKEY
 fi
 
+if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "null" ] && [ "${AZUREACCOUNTKEY:-null}" != "null" ] && [ "${AZURECONTAINER:-null}" != "null" ]; then
+    export AZUREENABLE=true
+fi
+
+if [ "${AZUREENABLE:-false}" == "true" ]; then
+    blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
+fi
+
 function stopfunc {
     sleep 1
     echo "backing up postgres" >&2
-    if [ "${S3ENABLE:-false}" == "true" ]; then
+    if [ "${S3ENABLE:-false}" == "true" ] || [ "${AZUREENABLE:-false}" == "true" ]; then
 	PGBACKUPDIR=`mktemp -d`
     else
 	PGBACKUPDIR=/usr/share/docassemble/backup/postgres
@@ -33,6 +41,11 @@ function stopfunc {
     su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
     if [ "${S3ENABLE:-false}" == "true" ]; then
 	s3cmd sync "$PGBACKUPDIR/" s3://${S3BUCKET}/postgres/
+    elif [ "${AZUREENABLE:-false}" == "true" ]; then
+	for the_file in $(find "$PGBACKUPDIR" -type f); do
+	    target_file=`basename $the_file`
+	    blob-cmd -f cp "$the_file" "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/postgres/${target_file}"
+	done
     fi
     echo "stopping postgres" >&2
     pg_ctlcluster --force $PGVERSION main stop

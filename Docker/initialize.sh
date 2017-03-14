@@ -1,5 +1,6 @@
 #! /bin/bash
 
+export HOME=/root
 export DA_ACTIVATE="${DA_PYTHON:-/usr/share/docassemble/local}/bin/activate"
 source $DA_ACTIVATE
 
@@ -75,11 +76,28 @@ if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "
     export AWS_SECRET_ACCESS_KEY=$S3SECRETACCESSKEY
 fi
 
+if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "null" ] && [ "${AZUREACCOUNTKEY:-null}" != "null" ] && [ "${AZURECONTAINER:-null}" != "null" ]; then
+    export AZUREENABLE=true
+fi
+
 if [ "${S3ENABLE:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(web):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/hostname-rabbitmq) ]] && [[ $(s3cmd ls s3://${S3BUCKET}/ip-rabbitmq) ]]; then
     TEMPKEYFILE=`mktemp`
     s3cmd -q -f get s3://${S3BUCKET}/hostname-rabbitmq $TEMPKEYFILE
     HOSTNAMERABBITMQ=$(<$TEMPKEYFILE)
     s3cmd -q -f get s3://${S3BUCKET}/ip-rabbitmq $TEMPKEYFILE
+    IPRABBITMQ=$(<$TEMPKEYFILE)
+    rm -f $TEMPKEYFILE
+    if [ -n "$(grep $HOSTNAMERABBITMQ /etc/hosts)" ]; then
+	sed -i "/$HOSTNAMERABBITMQ/d" /etc/hosts
+    fi
+    echo "$IPRABBITMQ $HOSTNAMERABBITMQ" >> /etc/hosts
+fi
+
+if [ "${AZUREENABLE:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(web):.* ]] && [[ $(python -m docassemble.webapp.list-cloud hostname-rabbitmq) ]] && [[ $(python -m docassemble.webapp.list-cloud hostname-rabbitmq ip-rabbitmq) ]]; then
+    TEMPKEYFILE=`mktemp`
+    blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/hostname-rabbitmq" $TEMPKEYFILE
+    HOSTNAMERABBITMQ=$(<$TEMPKEYFILE)
+    blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/ip-rabbitmq" $TEMPKEYFILE
     IPRABBITMQ=$(<$TEMPKEYFILE)
     rm -f $TEMPKEYFILE
     if [ -n "$(grep $HOSTNAMERABBITMQ /etc/hosts)" ]; then
@@ -101,7 +119,7 @@ if [ "${S3ENABLE:-false}" == "true" ]; then
     fi
     if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/log) ]]; then
 	s3cmd -q sync s3://${S3BUCKET}/log/ ${LOGDIRECTORY:-/usr/share/docassemble/log}/
-	chown -R www-data.www-data /usr/share/docassemble/log
+	chown -R www-data.www-data ${LOGDIRECTORY:-/usr/share/docassemble/log}
     fi
     if [[ $(s3cmd ls s3://${S3BUCKET}/config.yml) ]]; then
 	rm -f $DA_CONFIG_FILE
@@ -110,6 +128,36 @@ if [ "${S3ENABLE:-false}" == "true" ]; then
     fi
     if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/redis.rdb) ]] && [ "$REDISRUNNING" = false ]; then
 	s3cmd -q -f get s3://${S3BUCKET}/redis.rdb "/var/lib/redis/dump.rdb"
+	chown redis.redis "/var/lib/redis/dump.rdb"
+    fi
+elif [ "${AZUREENABLE:-false}" == "true" ]; then
+    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [[ $(python -m docassemble.webapp.list-cloud letsencrypt.tar.gz) ]]; then
+	rm -f /tmp/letsencrypt.tar.gz
+	blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz" "/tmp/letsencrypt.tar.gz"
+	cd /
+	tar -xf /tmp/letsencrypt.tar.gz
+	rm -f /tmp/letsencrypt.tar.gz
+    fi
+    if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [[ $(python -m docassemble.webapp.list-cloud apache) ]]; then
+	for the_file in $(python -m docassemble.webapp.list-cloud apache/); do
+	    target_file=`basename $the_file`
+	    blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/$the_file" "/etc/apache2/sites-available/${target_file}"
+	done
+    fi
+    if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [[ $(python -m docassemble.webapp.list-cloud log) ]]; then
+	for the_file in $(python -m docassemble.webapp.list-cloud log/); do
+	    target_file=`basename $the_file`
+	    blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/$the_file" "${LOGDIRECTORY:-/usr/share/docassemble/log}/${target_file}"
+	done
+	chown -R www-data.www-data ${LOGDIRECTORY:-/usr/share/docassemble/log}
+    fi
+    if [[ $(python -m docassemble.webapp.list-cloud config.yml) ]]; then
+	rm -f $DA_CONFIG_FILE
+	blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/config.yml" $DA_CONFIG_FILE
+	chown www-data.www-data $DA_CONFIG_FILE
+    fi
+    if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [[ $(python -m docassemble.webapp.list-cloud redis.rdb) ]] && [ "$REDISRUNNING" = false ]; then
+	blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/redis.rdb" "/var/lib/redis/dump.rdb"
 	chown redis.redis "/var/lib/redis/dump.rdb"
     fi
 else
@@ -157,6 +205,10 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 	-e 's/{{S3ACCESSKEY}}/'"${S3ACCESSKEY:-null}"'/' \
 	-e 's/{{S3SECRETACCESSKEY}}/'"${S3SECRETACCESSKEY:-null}"'/' \
 	-e 's/{{S3BUCKET}}/'"${S3BUCKET:-null}"'/' \
+	-e 's/{{AZUREENABLE}}/'"${AZUREENABLE:-false}"'/' \
+	-e 's/{{AZUREACCOUNTNAME}}/'"${AZUREACCOUNTNAME:-null}"'/' \
+	-e 's/{{AZUREACCOUNTKEY}}/'"${AZUREACCOUNTKEY:-null}"'/' \
+	-e 's/{{AZURECONTAINER}}/'"${AZURECONTAINER:-null}"'/' \
 	-e 's@{{REDIS}}@'"${REDIS:-null}"'@' \
 	-e 's#{{RABBITMQ}}#'"${RABBITMQ:-null}"'#' \
 	-e 's@{{TIMEZONE}}@'"${TIMEZONE:-null}"'@' \
@@ -178,6 +230,14 @@ source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.r
 
 if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(s3cmd ls s3://${S3BUCKET}/config.yml) ]]; then
     s3cmd -q put $DA_CONFIG_FILE s3://${S3BUCKET}/config.yml
+fi
+
+if [ "${AZUREENABLE:-false}" == "true" ]; then
+    blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
+fi
+
+if [ "${AZUREENABLE:-false}" == "true" ] && [[ ! $(python -m docassemble.webapp.list-cloud config.yml) ]]; then
+    blob-cmd -f cp $DA_CONFIG_FILE "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/config.yml"
 fi
 
 if [ "${EC2:-false}" == "true" ]; then
@@ -255,8 +315,8 @@ if [ "${TIMEZONE:-undefined}" != "undefined" ]; then
     dpkg-reconfigure -f noninteractive tzdata
 fi
 
-if [ "${S3ENABLE:-false}" == "true" ]; then
-    su -c "source $DA_ACTIVATE && python -m docassemble.webapp.s3register $DA_CONFIG_FILE" www-data
+if [ "${S3ENABLE:-false}" == "true" ] || [ "${AZUREENABLE:-false}" == "true" ]; then
+    su -c "source $DA_ACTIVATE && python -m docassemble.webapp.cloud_register $DA_CONFIG_FILE" www-data
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
@@ -270,6 +330,12 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
     if [ "${S3ENABLE:-false}" == "true" ] && [[ $(s3cmd ls s3://${S3BUCKET}/postgres) ]]; then
 	PGBACKUPDIR=`mktemp -d`
 	s3cmd -q sync s3://${S3BUCKET}/postgres/ "$PGBACKUPDIR/"
+    elif [ "${AZUREENABLE:-false}" == "true" ] && [[ $(python -m docassemble.webapp.list-cloud postgres) ]]; then
+	PGBACKUPDIR=`mktemp -d`
+	for the_file in $(python -m docassemble.webapp.list-cloud postgres/); do
+	    target_file=`basename $the_file`
+	    blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/$the_file" "$PGBACKUPDIR/${target_file}"
+	done
     else
 	PGBACKUPDIR=/usr/share/docassemble/backup/postgres
     fi
@@ -399,6 +465,17 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
 	    s3cmd -q put /tmp/letsencrypt.tar.gz 's3://'${S3BUCKET}/letsencrypt.tar.gz
 	fi
 	s3cmd -q sync /etc/apache2/sites-available/ 's3://'${S3BUCKET}/apache/
+    elif [ "${AZUREENABLE:-false}" == "true" ]; then
+	if [ "${USELETSENCRYPT:-none}" != "none" ]; then
+	    cd /
+	    rm -f /tmp/letsencrypt.tar.gz
+	    tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
+	    blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
+	fi
+	for the_file in $(find /etc/apache2/sites-available/ -type f); do
+	    target_file=`basename $the_file`
+	    blob-cmd -f cp $the_file "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/$target_file" 
+	done
     else
 	if [ "${USELETSENCRYPT:-none}" != "none" ]; then
 	    cd /
@@ -471,9 +548,17 @@ fi
 function deregister {
     su -c "source $DA_ACTIVATE && python -m docassemble.webapp.deregister $DA_CONFIG_FILE" www-data
     if [ "${S3ENABLE:-false}" == "true" ]; then
-	su -c "source $DA_ACTIVATE && python -m docassemble.webapp.s3deregister" www-data 
+	su -c "source $DA_ACTIVATE && python -m docassemble.webapp.cloud_deregister" www-data 
 	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
 	    s3cmd -q sync /usr/share/docassemble/log/ s3://${S3BUCKET}/log/
+	fi
+    elif [ "${AZUREENABLE:-false}" == "true" ]; then
+	su -c "source $DA_ACTIVATE && python -m docassemble.webapp.cloud_deregister" www-data 
+	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
+	    for the_file in $(find /usr/share/docassemble/log -type f); do
+		target_file=`basename $the_file`
+		blob-cmd -f cp $the_file "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/log/$target_file" 
+	    done
 	fi
     else
 	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then

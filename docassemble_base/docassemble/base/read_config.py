@@ -75,6 +75,17 @@ if __name__ == "__main__":
             print('export AWS_SECRET_ACCESS_KEY="' + str(daconfig['s3']['secret access key']) + '"')
         if 'bucket' in daconfig['s3'] and daconfig['s3']['bucket'] is not None:
             print('export S3BUCKET="' + str(daconfig['s3']['bucket']) + '"')
+    if 'azure' in daconfig:
+        if 'enable' in daconfig['azure'] and daconfig['azure']['enable']:
+            print('export AZUREENABLE=true')
+        else:
+            print('export AZUREENABLE=false')
+        if 'account name' in daconfig['azure'] and daconfig['azure']['account name'] is not None:
+            print('export AZUREACCOUNTNAME="' + str(daconfig['azure']['account name']) + '"')
+        if 'account key' in daconfig['azure'] and daconfig['azure']['account key'] is not None:
+            print('export AZUREACCOUNTKEY="' + str(daconfig['azure']['account key']) + '"')
+        if 'container' in daconfig['azure'] and daconfig['azure']['container'] is not None:
+            print('export AZURECONTAINER="' + str(daconfig['azure']['container']) + '"')
     if 'ec2' in daconfig and daconfig['ec2']:
         print('export EC2=true')
     if 'log server' in daconfig and daconfig['log server'] is not None:

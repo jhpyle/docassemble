@@ -8,7 +8,7 @@ import docassemble.base.config
 if not docassemble.base.config.loaded:
     docassemble.base.config.load()
 import docassemble.base.functions
-from docassemble.base.config import daconfig, s3_config, S3_ENABLED, gc_config, GC_ENABLED, hostname, in_celery
+from docassemble.base.config import daconfig, hostname, in_celery
 
 DEBUG = daconfig.get('debug', False)
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
@@ -344,7 +344,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import s3, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file, generate_csrf, get_info_from_file_reference
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file, generate_csrf, get_info_from_file_reference
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -4732,7 +4732,7 @@ def serve_uploaded_file_with_extension(number, extension):
     else:
         privileged = False
     number = re.sub(r'[^0-9]', '', str(number))
-    if S3_ENABLED:
+    if cloud is not None:
         if not can_access_file_number(number):
             abort(404)
         the_file = SavedFile(number)
@@ -6867,8 +6867,8 @@ def config_page():
                 flash(str(errMess), 'error')
                 logmessage('config_page: ' + str(errMess))
             if ok:
-                if S3_ENABLED:
-                    key = s3.get_key('config.yml')
+                if cloud is not None:
+                    key = cloud.get_key('config.yml')
                     key.set_contents_from_string(form.config_content.data)
                 with open(daconfig['config file'], 'w') as fp:
                     fp.write(form.config_content.data.encode('utf8'))
