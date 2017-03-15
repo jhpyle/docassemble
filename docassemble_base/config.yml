@@ -43,6 +43,11 @@ s3:
   access key id: FWIEJFIJIDGISEJFWOEF
   secret access key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
   bucket: yourbucketname
+azure:
+  enable: False
+  account name: example-com
+  account key: 1TGSCr2P2uSw9/CLoucfNIAEFcqakAC7kiVwJsKLX65X3yugWwnNFRgQRfRHtenGVcc5KujusYUNnXXGXruDCA==
+  container: yourcontainername
 ec2: False
 words:
   - docassemble.base:data/sources/us-words.yml

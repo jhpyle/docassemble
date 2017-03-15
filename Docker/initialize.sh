@@ -93,6 +93,10 @@ if [ "${S3ENABLE:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(web):.* ]] && 
     echo "$IPRABBITMQ $HOSTNAMERABBITMQ" >> /etc/hosts
 fi
 
+if [ "${AZUREENABLE:-false}" == "true" ]; then
+    blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
+fi
+
 if [ "${AZUREENABLE:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(web):.* ]] && [[ $(python -m docassemble.webapp.list-cloud hostname-rabbitmq) ]] && [[ $(python -m docassemble.webapp.list-cloud hostname-rabbitmq ip-rabbitmq) ]]; then
     TEMPKEYFILE=`mktemp`
     blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/hostname-rabbitmq" $TEMPKEYFILE
