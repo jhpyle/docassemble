@@ -45,6 +45,11 @@ s3:
   access key id: {{S3ACCESSKEY}}
   secret access key: {{S3SECRETACCESSKEY}}
   bucket: {{S3BUCKET}}
+azure:
+  enable: {{AZUREENABLE}}
+  account name: {{AZUREACCOUNTNAME}}
+  account key: {{AZUREACCOUNTKEY}}
+  container: {{AZURECONTAINER}}
 ec2: {{EC2}}
 log server: {{LOGSERVER}}
 use https: {{USEHTTPS}}

@@ -23,7 +23,7 @@ class SavedFile(object):
         self.fixed = False
         self.section = section
         self.filename = filename
-        if cloud is not None:
+        if cloud is None:
             if self.section == 'files':
                 parts = re.sub(r'(...)', r'\1/', '{0:012x}'.format(int(file_number))).split('/')
                 self.directory = os.path.join(UPLOAD_DIRECTORY, *parts)

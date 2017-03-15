@@ -207,7 +207,7 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 	-e 's/{{S3BUCKET}}/'"${S3BUCKET:-null}"'/' \
 	-e 's/{{AZUREENABLE}}/'"${AZUREENABLE:-false}"'/' \
 	-e 's/{{AZUREACCOUNTNAME}}/'"${AZUREACCOUNTNAME:-null}"'/' \
-	-e 's/{{AZUREACCOUNTKEY}}/'"${AZUREACCOUNTKEY:-null}"'/' \
+	-e 's@{{AZUREACCOUNTKEY}}@'"${AZUREACCOUNTKEY:-null}"'@' \
 	-e 's/{{AZURECONTAINER}}/'"${AZURECONTAINER:-null}"'/' \
 	-e 's@{{REDIS}}@'"${REDIS:-null}"'@' \
 	-e 's#{{RABBITMQ}}#'"${RABBITMQ:-null}"'#' \

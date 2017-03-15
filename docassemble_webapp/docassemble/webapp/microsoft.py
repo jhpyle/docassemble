@@ -1,4 +1,6 @@
 import datetime
+import os
+import time
 from azure.storage.blob import BlockBlobService
 from azure.storage.blob import BlobPermissions
 
@@ -37,8 +39,12 @@ class azurekey(object):
         self.azure_object.conn.delete_blob(self.azure_object.container, self.name)
     def get_contents_to_filename(self, filename):
         self.azure_object.conn.get_blob_to_path(self.azure_object.container, self.name, filename)
+        secs = time.mktime(self.last_modified.timetuple())
+        os.utime(filename, (secs, secs))
     def set_contents_from_filename(self, filename):
         self.azure_object.conn.create_blob_from_path(self.azure_object.container, self.name, filename)
+    def set_contents_from_string(self, text):
+        self.azure_object.conn.create_blob_from_text(self.azure_object.container, self.name, text)
     def generate_url(self, seconds):
-        sas_token = self.azure_object.conn.generate_blob_shared_access_signature(self.azure_object.container, self.name, permission=BlobPermissions.READ, expiry=datetime.utcnow() + datetime.timedelta(seconds=seconds))
+        sas_token = self.azure_object.conn.generate_blob_shared_access_signature(self.azure_object.container, self.name, permission=BlobPermissions.READ, expiry=datetime.datetime.utcnow() + datetime.timedelta(seconds=seconds))
         return self.azure_object.conn.make_blob_url(self.azure_object.container, self.name, sas_token=sas_token)
