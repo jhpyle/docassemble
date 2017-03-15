@@ -84,13 +84,13 @@ the [Auto Scaling Group] and set the desired number of instances to zero.
 
 You can then restart your **docassemble** system and it will pick up
 exactly where it left off.  This is because **docassemble** will back
-up SQL, [Redis], and other information to [S3] when the containers
-shut down, and restore from the backups when they start up again.  To
-restart, you would edit the [Auto Scaling Group] to set the desired
-number of instances to 3.  When they are up and running, you would
-then update the "backend" service and set the "desired count" to 1.
-Once that service is up and running, you would update the "app"
-service and set the "desired count" to 2.
+up SQL, [Redis], and other information to [S3]/[Azure blob storage]
+when the containers shut down, and restore from the backups when they
+start up again.  To restart, you would edit the [Auto Scaling Group]
+to set the desired number of instances to 3.  When they are up and
+running, you would then update the "backend" service and set the
+"desired count" to 1.  Once that service is up and running, you would
+update the "app" service and set the "desired count" to 2.
 
 ## Instructions
 
@@ -720,20 +720,22 @@ The following files make this possible:
 
 ## Auto-discovery of services
 
-If you use [S3], you can can use **docassemble** in a multi-server
-configuration without manually specifying the hostnames of central
-services in the [configuration] file.
+If you use [S3]/[Azure blob storage], you can can use **docassemble**
+in a multi-server configuration without manually specifying the
+hostnames of central services in the [configuration] file.
 
 If any of the following [configuration] directives are `null` or
-undefined, and [S3] is enabled, then a **docassemble** application
-server will try to "autodiscover" the hostname of the service.
+undefined, and [S3]/[Azure blob storage] is enabled, then a
+**docassemble** application server will try to "autodiscover" the
+hostname of the service.
 
 * [`host`] in the [`db`] section
 * [`redis`]
 * [`rabbitmq`]
 * [`log server`]
 
-**docassemble** will look for keys in the [S3 bucket] called:
+**docassemble** will look for keys in the [S3 bucket] or
+  [Azure blob storage] container called:
 
 * `hostname-sql`
 * `hostname-redis`
@@ -746,20 +748,22 @@ appropriately (e.g., by adding a `redis://` prefix to the [Redis]
 hostname).
 
 The [Docker] initialization script runs the
-[`docassemble.webapp.s3register`] module, which writes the hostname to
-the appropriate [S3] keys depending on the value of the environment
-variable `CONTAINERROLE`.
+[`docassemble.webapp.cloud_register`] module, which writes the
+hostname to the appropriate [S3] keys/[Azure blob storage] objects
+depending on the value of the environment variable `CONTAINERROLE`.
 
 ## File sharing
 
 Configuring a cluster of **docassemble** servers requires centralizing
-the location of uploaded files, either by using an [Amazon S3] bucket
-(the [`s3` configuration setting]) or by making the uploaded file
+the location of uploaded files, by using an [Amazon S3] bucket (the
+[`s3` configuration setting]), using an [Azure blob storage] container
+(the [`azure` configuration setting]), or by making the uploaded file
 directory a network drive mount (the [`uploads`] configuration
 setting).
 
-For more information about using [S3] for file sharing, see the
-[file sharing] and [data storage] sections of the [Docker] page.
+For more information about using [S3] and [Azure blob storage] for
+file sharing, see the [file sharing] and [data storage] sections of
+the [Docker] page.
 
 The default location of uploaded user files is defined by the
 `uploads` [configuration] setting:
@@ -1046,6 +1050,7 @@ number of PostgreSQL connections will be 12.
 [`packages`]: {{ site.baseurl }}/docs/config.html#packages
 [`uploads`]: {{ site.baseurl }}/docs/config.html#uploads
 [`s3` configuration setting]: {{ site.baseurl }}/docs/config.html#s3
+[`azure` configuration setting]: {{ site.baseurl }}/docs/config.html#azure
 [`Docker/config/docassemble-log.conf.dist`]: {{ site.github.repository_url }}/blob/master/Docker/config/docassemble-log.conf.dist
 [`Docker/docassemble-syslog-ng.conf`]: {{ site.github.repository_url }}/blob/master/Docker/docassemble-syslog-ng.conf
 [`Docker/syslog-ng.conf`]: {{ site.github.repository_url }}/blob/master/Docker/syslog-ng.conf
@@ -1062,7 +1067,7 @@ number of PostgreSQL connections will be 12.
 [`LETSENCRYPTEMAIL`]: {{ site.baseurl }}/docs/docker.html#LETSENCRYPTEMAIL
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
 [PostgreSQL]: http://www.postgresql.org/
-[`docassemble.webapp.s3register`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/s3register.py
+[`docassemble.webapp.cloud_register`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/cloud_register.py
 [S3 bucket]: http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html
 [`log server`]: {{ site.baseurl }}/docs/config.html#log server
 [`db`]: {{ site.baseurl }}/docs/config.html#db
@@ -1070,3 +1075,5 @@ number of PostgreSQL connections will be 12.
 [SMTP]: https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol
 [e-mail receiving]: {{ site.baseurl }}/docs/background.html#email
 [submit a support request]: http://docs.aws.amazon.com/ses/latest/DeveloperGuide/request-production-access.html
+[Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
+[sendmail]: https://en.wikipedia.org/wiki/Sendmail

@@ -791,11 +791,11 @@ path that you can use to read the file or write to the file.</a>
 
 <a name="DAFile.retrieve"></a>The `.retrieve()` command ensures that a
 stored file is ready for use on the system.  Calling `.retrieve` is
-necessary because if **docassemble** is configured to use [Amazon S3],
-documents are stored in the cloud, and the server accesses them by
-copying them from [S3] to the server and then copying them back to
-[S3].  If the file does not exist yet, calling `.retrieve()` will
-generate an error.
+necessary because if **docassemble** is configured to use [Amazon S3]
+or [Azure blob storage], documents are stored in the cloud, and the
+server accesses them by copying them from the cloud to the server and
+then copying them back to the cloud.  If the file does not exist yet,
+calling `.retrieve()` will generate an error.
 
 <a name="DAFile.initialize"></a>The `.initialize()` method brings a
 file into existence if it does not exist.  It also has the effect of
@@ -2171,7 +2171,6 @@ and not an instance of the `Attorney` class.
 [set]: https://docs.python.org/2/library/stdtypes.html#set
 [magic]: https://docs.python.org/2/library/inspect.html
 [Amazon S3]: https://aws.amazon.com/s3/
-[S3]: https://aws.amazon.com/s3/
 [Python Imaging Library]: https://en.wikipedia.org/wiki/Python_Imaging_Library
 [e-mail receiving]: {{ site.baseurl }}/docs/background.html#email
 [`interview_email()`]: {{ site.baseurl }}/docs/functions.html#interview_email
@@ -2180,3 +2179,4 @@ and not an instance of the `Attorney` class.
 [Reply-to]: https://www.ietf.org/rfc/rfc2822.txt
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [MIME type]: https://en.wikipedia.org/wiki/Media_type
+[Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/

@@ -8,8 +8,9 @@ short_title: Configuration
 
 **docassemble** reads its configuration directives from a [YAML] file,
 which by default is located in `/usr/share/docassemble/config.yml`.
-If you are using [Docker] and [S3], **docassemble** will attempt to
-copy the configuration file from your [S3] bucket before starting.
+If you are using [Docker] and [S3] or [Azure blob storage],
+**docassemble** will attempt to copy the configuration file from your
+[S3] bucket or [Azure blob storage] container before starting.
 
 # How to edit the configuration file
 
@@ -65,6 +66,11 @@ s3:
   access key id: FWIEJFIJIDGISEJFWOEF
   secret access key: RGERG34eeeg3agwetTR0+wewWAWEFererNRERERG
   bucket: yourbucketname
+azure:
+  enable: False
+  account name: example-com
+  account key: 1TGSCr2P2uSw9/CLoucfNIAEFcqakAC7kiVwJsKLX65X3yugWwnNFRgQRfRHtenGVcc5KujusYUNnXXGXruDCA==
+  container: yourcontainername
 ec2: False
 words:
   - docassemble.base:data/sources/us-words.yml
@@ -243,8 +249,8 @@ The `uploads` directive indicates the directory in which uploaded files are stor
 uploads: /netmount/files/docassemble/uploads
 {% endhighlight %}
 
-If you are using a [multi-server arrangement] and not using [S3], this
-needs to point to a central network drive.
+If you are using a [multi-server arrangement] and not using [S3] or
+[Azure blob storage], this needs to point to a central network drive.
 
 The default value is `/usr/share/docassemble/files`.
 
@@ -262,8 +268,8 @@ but **docassemble** changes it to the value of this directive, or
 packages: /netmount/files/docassemble/local
 {% endhighlight %}
 
-If you are using a [multi-server arrangement] and not using [S3], this
-needs to point to a central network drive.
+If you are using a [multi-server arrangement] and not using [S3] or
+[Azure blob storage], this needs to point to a central network drive.
 
 ## <a name="webapp"></a>Path to WSGI application
 
@@ -284,8 +290,8 @@ The default value is `/usr/share/docassemble/webapp/docassemble.wsgi`.
 
 The `certs` directive indicates a central location where SSL
 certificates for the web server can be found.  The location can be a
-file path or an [S3] path.  This is only relevant if you are using
-[HTTPS].
+file path, an [S3] path, or an [Azure blob storage] path.  This is
+only relevant if you are using [HTTPS].
 
 For example, you might keep your certificates on a network drive:
 
@@ -310,14 +316,21 @@ server.  This is a convenience feature.  Otherwise, you would have to
 manually install the SSL certificates on every new **docassemble** web
 server you create.
 
-The value of `certs` can be a file path or an [Amazon S3]<span></span> [URI] (e.g.,
-`s3://exampledotcom/certs`).  The contents of the directory are copied
-to `/etc/ssl/docassemble`.
+The value of `certs` can be a file path, an [Amazon S3]<span></span>
+[URI] (e.g., `s3://exampledotcom/certs`), or an
+[Azure blob storage]<span></span> [URI] (e.g.,
+`blob://youraccountname/yourcontainername/certs`).  The contents of
+the directory are copied to `/etc/ssl/docassemble`.
 
 If you leave the `certs` setting undefined (which is recommended),
 **docassemble** will look in `/usr/share/docassemble/certs` if the
-[`s3`] setting is not enabled.  If [`s3`] is defined, it will look for
-[S3] keys with the prefix `certs/` in the `bucket` defined in the [`s3`]
+[`s3`] and [`azure`] settings are not enabled.
+
+If [`s3`] is enabled, it will look for [S3] keys with the prefix
+`certs/` in the `bucket` defined in the [`s3`] configuration.
+
+If [`azure`] is enabled, it will look for [Azure blob storage] objects
+with the prefix `certs/` in the `container` defined in the [`azure`]
 configuration.
 
 Here is an example.  Install [`s3cmd`] if you have not done so already:
@@ -840,6 +853,22 @@ s3:
 You will need to create the bucket before using it; **docassemble**
 will not create it for you.
 
+### <a name="azure"></a>azure
+
+If you are using [Azure blob storage] to store shared files, enter
+your account name, account key, and container name as follows:
+
+{% highlight yaml %}
+azure:
+  enable: False
+  account name: example-com
+  account key: 1TGSCr2P2uSw9/CLoucfNIAEFcqakAC7kiVwJsKLX65X3yugWwnNFRgQRfRHtenGVcc5KujusYUNnXXGXruDCA==
+  container: yourcontainername
+{% endhighlight %}
+
+You will need to create the container before using it; **docassemble**
+will not create it for you.
+
 ### <a name="ec2"></a>ec2
 
 If you are running **docassemble** from within an [Amazon EC2]
@@ -1222,6 +1251,7 @@ and Facebook API keys.
 [list of language codes]: http://www.voicerss.org/api/documentation.aspx
 [supervisor]: http://supervisord.org/
 [S3]: https://aws.amazon.com/s3/
+[Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
 [Amazon S3]: https://aws.amazon.com/s3/
 [avconv]: https://libav.org/avconv.html
 [ffmpeg]: https://www.ffmpeg.org/
@@ -1288,6 +1318,7 @@ and Facebook API keys.
 [HTTPS]: {{ site.baseurl }}/docs/docker.html#https
 [startup process]: {{ site.github.repository_url }}/blob/master/Docker/initialize.sh
 [URI]: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier
+[`azure`]: #azure
 [`s3`]: #s3
 [`s3cmd`]: http://s3tools.org/s3cmd
 [Facebook or Google]: #oauth
@@ -1313,3 +1344,4 @@ and Facebook API keys.
 [list of available interviews]: #dispatch
 [Google Cloud Translation API]: https://cloud.google.com/translate/
 [`.geolocate()`]: {{ site.baseurl }}/docs/objects.html#Address.geolocate
+[`interview_email()`]: {{ site.baseurl }}/docs/functions.html#interview_email

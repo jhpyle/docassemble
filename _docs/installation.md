@@ -29,7 +29,8 @@ browser at http://localhost.
 Even if you want to put **docassemble** into production, it is
 recommended that you [install it using Docker] -- ideally on an [EC2]
 virtual machine hosted by [Amazon Web Services].  **docassemble**
-integrates nicely with [AWS] services such as [S3] for persistent
+integrates nicely with [AWS] services such as [S3] and
+[Microsoft Azure] services such as [Azure blob storage] for persistent
 storage.
 
 The primary reason you might want to install **docassemble** manually
@@ -151,7 +152,7 @@ sudo apt-get install apt-utils tzdata python python-dev wget unzip \
   libreoffice libtool libtool-bin pacpl syslog-ng rsync s3cmd \
   curl mktemp dnsutils tesseract-ocr-eng tesseract-ocr-spa \
   tesseract-ocr build-essentials nodejs npm exim4-daemon-heavy \
-  libsvm3 libsvm-dev liblinear3 liblinear-dev
+  libsvm3 libsvm-dev liblinear1 liblinear-dev
 {% endhighlight %}
 
 **docassemble** depends on version 5.0.1 or later of the
@@ -182,7 +183,7 @@ wget https://github.com/jgm/pandoc/releases/download/1.17.1/pandoc-1.17.1-2-amd6
 sudo dpkg -i pandoc-1.17.1-2-amd64.deb
 {% endhighlight %}
 
-To enable the use of [Microsoft Azure blob storage] as a means of
+To enable the use of [Azure blob storage] as a means of
 [data storage], you will need to run the following:
 
 {% highlight bash %}
@@ -946,7 +947,7 @@ files.  In this case, you will need to manually reinstall
 [Amazon Web Services]: https://aws.amazon.com
 [SMS]: {{ site.baseurl }}/docs/sms.html
 [data storage]: {{ site.baseurl }}/docs/docker.html#data storage
-[Microsoft Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
+[Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
 [Microsoft Azure]: https://azure.microsoft.com/en-us/
 [SendGrid]: https://sendgrid.com/
 [Exim]: https://en.wikipedia.org/wiki/Exim

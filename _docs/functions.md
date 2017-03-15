@@ -2017,6 +2017,8 @@ whether the server has particular features enabled.  The keys are:
   the [`voicerss`] configuration.
 * `s3` - whether [Amazon S3] is enabled.  See the [`s3`]
   configuration.
+* `azure` - whether [Azure blob storage] is enabled.  See the [`azure`]
+  configuration.
 
 ## <a name="static_image"></a>static_image()
 
@@ -2914,6 +2916,7 @@ $(document).on('daPageLoad', function(){
 [`DAList`]: {{ site.baseurl }}/docs/objects.html#DAList
 [`DAObject`]: {{ site.baseurl }}/docs/objects.html#DAObject
 [`DATemplate`]: {{ site.baseurl }}/docs/objects.html#DATemplate
+[`DAEmail`]: {{ site.baseurl }}/docs/objects.html#DAEmail
 [`Individual`]: {{ site.baseurl }}/docs/objects.html#Individual
 [`IndividualName`]: {{ site.baseurl }}/docs/objects.html#IndividualName
 [`LatitudeLongitude`]: {{ site.baseurl }}/docs/objects.html#LatitudeLongitude
@@ -3086,6 +3089,7 @@ $(document).on('daPageLoad', function(){
 [`ocr dpi`]: {{ site.baseurl }}/docs/config.html#ocr dpi
 [pdftoppm]: http://www.foolabs.com/xpdf/download.html
 [`s3`]: {{ site.baseurl }}/docs/config.html#s3
+[`azure`]: {{ site.baseurl }}/docs/config.html#azure
 [`voicerss`]: {{ site.baseurl }}/docs/config.html#voicerss
 [`oauth`]: {{ site.baseurl }}/docs/config.html#oauth
 [SMS interface]: {{ site.baseurl }}/docs/sms.html
@@ -3117,3 +3121,5 @@ $(document).on('daPageLoad', function(){
 [document]: http://yaml.org/spec/1.2/spec.html#id2760395
 [MIME type]: https://en.wikipedia.org/wiki/Media_type
 [tuple]: https://en.wikibooks.org/wiki/Python_Programming/Tuples
+[Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
+[`url_args`]: {{ site.baseurl }}/docs/special.html#url_args

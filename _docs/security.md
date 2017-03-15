@@ -18,9 +18,10 @@ User passwords and interview answers are stored in a SQL database in
 encrypted form.
 
 Uploaded and assembled documents are stored on the server (and on
-[Amazon S3], if [S3] is being used) without encryption.  These documents
-cannot be accessed from the internet without an appropriate security
-key in the cookie.
+[Amazon S3], if [S3] is being used, or [Microsoft Azure], if
+[Azure blob storage] is being used) without encryption.  These
+documents cannot be accessed from the internet without an appropriate
+security key in the cookie.
 
 When a user clicks an "Exit" button, **docassemble** will delete all of
 the information related to the interview from the server, including
@@ -72,3 +73,5 @@ for an interview belonging to a user who logs in with Google or Facebook.
 [exec]: https://docs.python.org/2/reference/simple_stmts.html#exec
 [Amazon S3]: https://aws.amazon.com/s3/
 [S3]: https://aws.amazon.com/s3/
+[Microsoft Azure]: https://azure.microsoft.com/
+[Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
