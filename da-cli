@@ -71,6 +71,7 @@ def fix_registered_instances():
             elb.register_targets(TargetGroupArn=target_groups_arns[targetGroupRedirect], Targets=[{'Id': server}])
 
 def start_up(the_count=1):
+    the_count = int(the_count)
     print "Creating EC2 instances"
     update_ec2_instances(the_count + 1)
     print "Updating backend count"
