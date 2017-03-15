@@ -7037,9 +7037,9 @@ def playground_files():
             if the_files:
                 for up_file in the_files:
                     try:
-                        #up_file = request.files['uploadfile']
                         filename = secure_filename(up_file.filename)
                         filename = re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', filename)
+                        the_file = filename
                         filename = os.path.join(area.directory, filename)
                         up_file.save(filename)
                         area.finalize()
@@ -7088,7 +7088,7 @@ def playground_files():
             convertible_files.append(a_file)
     if the_file and not is_new and the_file not in editable_files:
         the_file = ''
-    if request.method == 'GET' and not the_file and not is_new:
+    if not the_file and not is_new:
         if 'playground' + section in session and session['playground' + section] in editable_files:
             the_file = session['playground' + section]
         else:
@@ -7103,7 +7103,7 @@ def playground_files():
                     the_file = 'test.json'
                 else:
                     the_file = 'test.md'
-    if request.method == 'GET' and the_file in editable_files:
+    if the_file in editable_files:
         session['playground' + section] = the_file
     if the_file != '':
         extension, mimetype = get_ext_and_mimetype(the_file)

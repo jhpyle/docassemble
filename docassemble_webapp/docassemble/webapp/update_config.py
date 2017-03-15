@@ -1,5 +1,4 @@
 import sys
-import docassemble.webapp.cloud
 
 if __name__ == "__main__":
     import docassemble.base.config
@@ -7,6 +6,7 @@ if __name__ == "__main__":
 
 def check_for_config():
     from docassemble.base.config import daconfig
+    import docassemble.webapp.cloud
     cloud = docassemble.webapp.cloud.get_cloud()
     if cloud is not None:
         key = cloud.get_key('config.yml')
