@@ -545,19 +545,20 @@ select.playground-select {
     -webkit-appearance: none;
     -moz-appearance: none;
     border: 0;
-    max-width: 9em;
+    max-width: 8em;
     border-radius: 5px;
     background: url(option-vertical.svg) no-repeat right #aad7ee;
     background-size: 1em 1em;
-    padding-right: 20px;
+    padding: 2px 20px 2px 2px;
     outline: 0;
 }
 
 a.darunbutton {
     color: white;
+    font-size: 14px;
     display: inline-block;
-    line-height: normal;
-    vertical-align: text-bottom;
+    line-height: inherit;
+    vertical-align: text-top;
     text-shadow: 0 -1px 0 rgba(0,0,0,.2);
 }
 

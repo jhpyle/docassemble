@@ -32,7 +32,7 @@ class azurekey(object):
             self.last_modified = properties.last_modified
             self.content_type = properties.content_settings.content_type
     def get_contents_as_string(self):
-        return self.azure_object.conn.get_blob_to_text(self.azure_object.container, self.name)
+        return self.azure_object.conn.get_blob_to_text(self.azure_object.container, self.name).content
     def exists(self):
         return self.azure_object.conn.exists(self.azure_object.container, self.name)
     def delete(self):
