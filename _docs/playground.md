@@ -251,7 +251,11 @@ The area lists the following types of names (which are color-coded):
 * Variables: variables that are mentioned in your questions and code
   blocks, or that have been included in the Python namespace through a
   [`modules`] statement.  Variables in light blue are
-  **docassemble**'s [special variables].
+  **docassemble**'s [special variables].  Variables in orange are
+  variables that exist in the interview but may not be in use -- at
+  least, **docassemble**'s automatic process was not able to detect
+  that the variables were used.  This can be helpful for removing
+  obsolete questions from your interview.
 * Functions: functions that are available because they have been
   included in the Python namespace through a [`modules`] statement.
 * Classes: classes that are available because they have been
