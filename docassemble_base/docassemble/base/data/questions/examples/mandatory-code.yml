@@ -1,0 +1,22 @@
+metadata:
+  title: Mandatory code
+  short title: Mandatory
+  documentation: "http://docassemble.org/docs/logic.html#mandatory"
+  example start: 1
+  example end: 3
+---
+mandatory: |
+  favorite_food == "apples"
+question: |
+  You have good taste in food.
+buttons:
+  - Continue: continue
+---
+mandatory: True
+question: |
+  Thank you for your input.
+---
+question: |
+  What is your favorite food?
+fields:
+  - no label: favorite_food

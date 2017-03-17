@@ -1,0 +1,27 @@
+metadata:
+  title: Overriding a question
+  short title: Override
+  documentation: "http://docassemble.org/docs/logic.html#order"
+  example start: 1
+  example end: 5
+---
+include:
+  - question-library.yml
+---
+question: |
+  So, about that dance tonight . . .
+  wanna go?
+yesno: user_wants_to_go_to_dance
+---
+mandatory: True
+code: |
+  if user_agrees_it_is_a_nice_evening and user_wants_to_go_to_dance:
+    good_news
+---
+mandatory: True
+question: |
+  Say, I have to run.  Bye!
+---
+event: good_news
+question: |
+  That is splendid news!

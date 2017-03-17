@@ -1,0 +1,30 @@
+metadata:
+  title: Optional override of question
+  short title: Override
+  documentation: "http://docassemble.org/docs/logic.html#order"
+  example start: 1
+  example end: 6
+---
+include:
+  - question-library.yml
+---
+question: |
+  I forgot, did we already agree to go to the dance together?
+yesno: we_already_agreed_to_go
+---
+code: |
+  if we_already_agreed_to_go:
+    user_wants_to_go_to_dance = True
+---
+mandatory: True
+code: |
+  if user_agrees_it_is_a_nice_evening and user_wants_to_go_to_dance:
+    good_news
+---
+mandatory: True
+question: |
+  Say, I have to run.  Bye!
+---
+event: good_news
+question: |
+  That is splendid news!

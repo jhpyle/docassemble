@@ -297,6 +297,9 @@ if __name__ == "__main__":
     #import docassemble.webapp.database
     with app.app_context():
         #app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
+        any_package = Package.query.filter_by(active=True).first()
+        if any_package is None:
+            add_dependencies(1)
         check_for_updates()
         remove_inactive_hosts()
         from docassemble.base.config import daconfig

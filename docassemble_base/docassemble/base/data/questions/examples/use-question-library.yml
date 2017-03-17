@@ -1,0 +1,22 @@
+metadata:
+  title: Including a question library
+  short title: Library
+  documentation: "http://docassemble.org/docs/logic.html#order"
+  example start: 1
+  example end: 4
+---
+include:
+  - question-library.yml
+---
+mandatory: True
+code: |
+  if user_agrees_it_is_a_nice_evening and user_wants_to_go_to_dance:
+    good_news
+---
+mandatory: True
+question: |
+  Say, I have to run.  Bye!
+---
+event: good_news
+question: |
+  That is splendid news!

@@ -1,0 +1,7 @@
+question: |
+  Nice evening, isn't it?
+yesno: user_agrees_it_is_a_nice_evening
+---
+question: |
+  Interested in going to the dance tonight?
+yesno: user_wants_to_go_to_dance

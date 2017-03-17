@@ -1,0 +1,32 @@
+metadata:
+  title: Optional override of question
+  short title: Override
+  documentation: "http://docassemble.org/docs/logic.html#order"
+  example start: 1
+  example end: 5
+---
+include:
+  - question-library.yml
+---
+question: Which of these statements is true?
+choices:
+  - "I am old-fashioned":
+      question: |
+        My darling, would you do me the
+        honor of accompanying me to
+        the dance this fine evening?
+      yesno: user_wants_to_go_to_dance
+  - "I don't care for flowerly language": continue
+---
+mandatory: True
+code: |
+  if user_agrees_it_is_a_nice_evening and user_wants_to_go_to_dance:
+    good_news
+---
+mandatory: True
+question: |
+  Say, I have to run.  Bye!
+---
+event: good_news
+question: |
+  That is splendid news!

@@ -13,6 +13,15 @@ from docassemble.webapp.core.models import Uploads
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
 from flask import session, has_request_context
 
+def reference_exists(file_reference):
+    #logmessage("Got req for " + file_reference)
+    the_path = docassemble.base.functions.static_filename_path(file_reference)
+    if the_path is None or not os.path.isfile(the_path):
+        #logmessage("Returning false")
+        return False
+    #logmessage("Returning true because path is " + str(the_path))
+    return True
+
 def get_info_from_file_reference(file_reference, **kwargs):
     #sys.stderr.write('file reference is ' + str(file_reference) + "\n")
     #logmessage('file reference is ' + str(file_reference))

@@ -37,7 +37,7 @@ import docassemble.webapp.setup
 DEBUG = daconfig.get('debug', False)
 docassemble.base.parse.debug = DEBUG
 
-from docassemble.webapp.file_access import get_info_from_file_number, get_info_from_file_reference
+from docassemble.webapp.file_access import get_info_from_file_number, get_info_from_file_reference, reference_exists
 from docassemble.webapp.file_number import get_new_file_number
 
 def write_record(key, data):

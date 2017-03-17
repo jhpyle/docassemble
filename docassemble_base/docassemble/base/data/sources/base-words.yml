@@ -31,6 +31,7 @@
 "Change": Null
 "Checkboxes:": Null
 "Choices:": Null
+"Classes": Null
 "Clear": Null
 "Click here to get help over the phone.": Null
 "Configuration not updated.": Null
@@ -44,6 +45,7 @@
 "Created new Markdown file called ": Null
 "Create Package": Null
 "day": Null
+"Decorations": Null
 "Defined in": Null
 "definitions of words": Null
 "Deleted file: ": Null
@@ -92,6 +94,7 @@
 "First subdivision": Null
 "f": Null
 "from": Null
+"Functions": Null
 "Get help through live chat by clicking here.": Null
 "Get package": Null
 "Get template": Null
@@ -137,6 +140,8 @@
 "Menu:": Null
 "Menu": Null
 "Methods": Null
+"Modules available in Playground": Null
+"Modules defined": Null
 "Modules": Null
 "Monitor": Null
 "Must be a two-letter code": Null
@@ -290,6 +295,7 @@
 "The role could not be deleted.": Null
 "Third subdivision": Null
 "This field is required.": Null
+"This image file does not exist": Null
 "Time Zone": Null
 "t": Null
 "to proceed.": Null
@@ -311,6 +317,7 @@
 "Type a number.": Null
 "Type a number, or type skip.": Null
 "Type a value between": Null
+"Type Ctrl-space to autocomplete.": Null
 "Type ? for additional assistance.": Null
 "Type": Null
 "Type ok to continue.": Null
@@ -330,6 +337,7 @@
 "Unable to send e-mail to": Null
 "unavailable": Null
 "Unblock": Null
+"Undefined names": Null
 "Unnamed User": Null
 "Untitled": Null
 "Update": Null
@@ -350,6 +358,7 @@
 "Valid characters are: A-Z, a-z, 0-9": Null
 "Variables as JSON": Null
 "Variables defined": Null
+"Variables": Null
 "Version": Null
 "View documentation": Null
 "v.": Null

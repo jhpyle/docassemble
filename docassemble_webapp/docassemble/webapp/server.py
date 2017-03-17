@@ -344,7 +344,7 @@ from docassemble.webapp.screenreader import to_text
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable
 from docassemble.base.functions import pickleable_objects, word, comma_and_list, get_default_timezone, ReturnValue
 from docassemble.base.logger import logmessage
-from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file, generate_csrf, get_info_from_file_reference
+from docassemble.webapp.backend import cloud, initial_dict, can_access_file_number, get_info_from_file_number, da_send_mail, get_new_file_number, pad, unpad, encrypt_phrase, pack_phrase, decrypt_phrase, unpack_phrase, encrypt_dictionary, pack_dictionary, decrypt_dictionary, unpack_dictionary, nice_date_from_utc, fetch_user_dict, fetch_previous_user_dict, advance_progress, reset_user_dict, get_chat_log, savedfile_numbered_file, generate_csrf, get_info_from_file_reference, reference_exists
 from docassemble.webapp.core.models import Attachments, Uploads, SpeakList, Supervisors, Shortener, Email, EmailAttachment
 from docassemble.webapp.packages.models import Package, PackageAuth, Install
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
@@ -518,7 +518,10 @@ def get_url_from_file_reference(file_reference, **kwargs):
                 the_package = 'docassemble.base'
             parts = [the_package, file_reference]
         parts[1] = re.sub(r'^data/static/', '', parts[1])
-        url = fileroot + 'packagestatic/' + parts[0] + '/' + parts[1] + extn
+        if reference_exists(parts[0] + ':data/static/' + parts[1]):
+            url = fileroot + 'packagestatic/' + parts[0] + '/' + parts[1] + extn
+        else:
+            url = None
     return(url)
 
 def user_id_dict():
@@ -1717,11 +1720,11 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
         vocab_set.discard(var)
     names_used = names_used.difference( undefined_names )
     if len(undefined_names):
-        content += '\n                  <tr><td><h4>Undefined names' + infobutton('undefined') + '</h4></td></tr>'
+        content += '\n                  <tr><td><h4>' + word('Undefined names') + infobutton('undefined') + '</h4></td></tr>'
         for var in sorted(undefined_names):
             content += '\n                  <tr><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-danger playground-variable">' + var + '</a></td></tr>'
     if len(names_used):
-        content += '\n                  <tr><td><h4>Variables' + infobutton('variables') + '</h4></td></tr>'
+        content += '\n                  <tr><td><h4>' + word('Variables') + infobutton('variables') + '</h4></td></tr>'
         for var in sorted(names_used):
             if var in base_name_info:
                 if not base_name_info[var]['show']:
@@ -1750,14 +1753,14 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
             content += '\n                  </ul>'
             content += '\n                </td></tr>'
     if len(functions):
-        content += '\n                  <tr><td><h4>Functions' + infobutton('functions') + '</h4></td></tr>'
+        content += '\n                  <tr><td><h4>' + word('Functions') + infobutton('functions') + '</h4></td></tr>'
         for var in sorted(functions):
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-warning playground-variable">' + name_info[var]['tag'] + '</a>'
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
                 content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + var + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
             content += '</td></tr>'
     if len(classes):
-        content += '\n                  <tr><td><h4>Classes' + infobutton('classes') + '</h4></td></tr>'
+        content += '\n                  <tr><td><h4>' + word('Classes') + infobutton('classes') + '</h4></td></tr>'
         for var in sorted(classes):
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-info playground-variable">' + name_info[var]['name'] + '</a>'
             if name_info[var]['bases']:
@@ -1775,38 +1778,43 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
                 content += '</tbody></table></div>'
             content += '</td></tr>'
     if len(modules):
-        content += '\n                  <tr><td><h4>Modules defined' + infobutton('modules') + '</h4></td></tr>'
+        content += '\n                  <tr><td><h4>' + word('Modules defined') + infobutton('modules') + '</h4></td></tr>'
         for var in sorted(modules):
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="label label-success playground-variable">' + name_info[var]['name'] + '</a>'
             if name_info[var]['doc']:
                 content += '&nbsp;<a class="dainfosign" role="button" data-container="body" data-toggle="popover" data-placement="auto" data-content="' + name_info[var]['doc'] + '" title="' + word_documentation + '" data-selector="true" data-title="' + noquote(var) + '"><i class="glyphicon glyphicon-info-sign"></i></a>'
             content += '</td></tr>'
     if len(avail_modules):
-        content += '\n                  <tr><td><h4>Modules available in Playground' + infobutton('playground_modules') + '</h4></td></tr>'
+        content += '\n                  <tr><td><h4>' + word('Modules available in Playground') + infobutton('playground_modules') + '</h4></td></tr>'
         for var in avail_modules:
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert=".' + noquote(var) + '" class="label label-success playground-variable">.' + noquote(var) + '</a>'
             content += '</td></tr>'
     if len(templates):
-        content += '\n                  <tr><td><h4>Templates' + infobutton('templates') + '</h4></td></tr>'
+        content += '\n                  <tr><td><h4>' + word('Templates') + infobutton('templates') + '</h4></td></tr>'
         for var in templates:
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-default playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
     if len(static):
-        content += '\n                  <tr><td><h4>Static files' + infobutton('static') + '</h4></td></tr>'
+        content += '\n                  <tr><td><h4>' + word('Static files') + infobutton('static') + '</h4></td></tr>'
         for var in static:
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-default playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
     if len(sources):
-        content += '\n                  <tr><td><h4>Source files' + infobutton('sources') + '</h4></td></tr>'
+        content += '\n                  <tr><td><h4>' + word('Source files') + infobutton('sources') + '</h4></td></tr>'
         for var in sources:
             content += '\n                  <tr><td><a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-default playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
     if len(interview.images):
-        content += '\n                  <tr><td><h4>Decorations' + infobutton('decorations') + '</h4></td></tr>'
+        content += '\n                  <tr><td><h4>' + word('Decorations') + infobutton('decorations') + '</h4></td></tr>'
         for var in sorted(interview.images):
-            content += '\n                  <tr><td><img class="daimageicon" src="' + get_url_from_file_reference(interview.images[var].get_reference()) + '">&nbsp;<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + noquote(var) + '</a>'
+            content += '\n                  <tr><td>'
+            the_ref = get_url_from_file_reference(interview.images[var].get_reference())
+            if the_ref is None:
+                content += '<a title="' + word("This image file does not exist") + '" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-danger playground-variable">' + noquote(var) + '</a>'
+            else:
+                content += '<img class="daimageicon" src="' + get_url_from_file_reference(interview.images[var].get_reference()) + '">&nbsp;<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-primary playground-variable">' + noquote(var) + '</a>'
             content += '</td></tr>'
-    content += "\n                  <tr><td><br><em>Type Ctrl-space to autocomplete.</em></td><tr>"
+    content += "\n                  <tr><td><br><em>" + word("Type Ctrl-space to autocomplete.") + "</em></td><tr>"
     return content, sorted(vocab_set)
 
 def make_image_files(path):

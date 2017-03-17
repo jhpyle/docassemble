@@ -488,10 +488,22 @@ class Question:
             if 'review' not in data:
                 raise DAError("You cannot set a resume button label if the type of question is not review." + self.idebug(data))
             self.continuelabel = TextObject(definitions + unicode(data['resume button label']), names_used=self.mako_names)
-        if 'mandatory' in data and data['mandatory'] is True:
-            self.is_mandatory = True
+        if 'mandatory' in data:
+            if data['mandatory'] is True:
+                self.is_mandatory = True
+                self.mandatory_code = None
+            elif data['mandatory'] in (False, None):
+                self.is_mandatory = False
+                self.mandatory_code = None
+            else:
+                self.is_mandatory = False
+                if type(data['mandatory']) in (str, unicode):
+                    self.mandatory_code = compile(data['mandatory'], '', 'eval')
+                else:
+                    self.mandatory_code = None
         else:
             self.is_mandatory = False
+            self.mandatory_code = None
         if 'attachment options' in data:
             should_append = False
             if type(data['attachment options']) is not list:
@@ -2221,7 +2233,7 @@ class Interview:
                                     #logmessage("Running " + command)
                                     exec(command, user_dict)
                         question.mark_as_answered(user_dict)
-                    if question.question_type == 'code' and question.is_mandatory:
+                    if question.question_type == 'code' and (question.is_mandatory or (question.mandatory_code is not None and eval(question.mandatory_code, user_dict))):
                         if debug:
                             interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
                         #logmessage("Running some code:\n\n" + question.sourcecode)
@@ -2231,7 +2243,7 @@ class Interview:
                         if question.name:
                             user_dict['_internal']['answered'].add(question.name)
                             #logmessage("Question " + str(question.name) + " marked as answered")
-                    if question.is_mandatory and hasattr(question, 'content') and question.name:
+                    if (question.is_mandatory or (question.mandatory_code is not None and eval(question.mandatory_code, user_dict))) and hasattr(question, 'content') and question.name:
                         if debug:
                             interview_status.seeking.append({'question': question, 'reason': 'mandatory question'})
                         if question.name and question.name in user_dict['_internal']['answers']:
