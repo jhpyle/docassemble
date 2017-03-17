@@ -67,8 +67,16 @@ sets: user_will_not_sit_down
 ---
 {% endhighlight %}
 
-Here, the `mandatory` block of [`code`] contains simple Python code that
+Here, the `mandatory` block of [`code`] contains simple [Python] code that
 contains the entire logic of the interview.
+
+If a `mandatory` directive is not present, it is treated as `False`.
+
+The value of `mandatory` can be a [Python] expression.  If it is a
+[Python] expression, the [`question`] or [`code`] block will be
+treated as mandatory if the expression evaluates to a true value.
+
+{% include side-by-side.html demo="mandatory-code" %}
 
 ## <a name="initial"></a>`initial`
 
@@ -179,144 +187,116 @@ specifying which variables should be reconsidered.  Whether you use
 the [`reset` initial block] or the `reconsider` modifier is a question
 of what you consider to be more convenient and/or readable.
 
-# The logical order of an interview
+# <a name="order"></a>The logical order of an interview
 
 [`mandatory`] and [`initial`] blocks are evaluated in the order they
 appear in the question file.  Therefore, the location in the interview
 of [`mandatory`] and [`initial`] blocks, relative to each other, is
-important.  Ordinary questions can appear anywhere in any order.
+important.
 
-**docassemble** goes through the interview file from top to bottom,
-looking for [`mandatory`] and [`initial`] blocks.  When it encounters an
-[`include`] statement, it immediately goes through the included file
-from top to bottom, and then picks up where it left off.
+The order in which non-[`mandatory`] and non-[`initial`] questions
+appear is usually not important.  If **docassemble** needs a
+definition of a variable, it will go looking for a block that defines
+the variable.
 
-The order in which questions appear will also matter if you have
-multiple [`question`], [`code`], or `template` blocks that each offer to
-define the same variables.  In that case, the order of these blocks
+However, the order of these blocks is important if you have multiple
+[`question`], [`code`], and/or [`template`] blocks that each offer to
+define the same variable.  In that case, the order of these blocks
 relative to each other is important.  **docassemble** will use
-later-defined blocks first.  Later definitions "supersede" the ones
-that came before.
+later-defined blocks first.  Later blocks "supersede" the blocks that
+came before.
 
-This allows you to `import` question files that other authors have
-written and then "override" particular questions you would like to ask
-differently.  You do not have to edit those other files (unless they
-contain [`mandatory`] or [`initial`] blocks, which could affect your
-interview in unwanted ways).
+So, to summarize: when **docassemble** considers what blocks it _must_
+process, it goes from top to bottom through your interview [YAML]
+file, looking for [`mandatory`] and [`initial`] blocks; if a block is
+later in the file, it is processed later in time.  However, when
+**docassemble** considers what question it should ask to define a
+particular variable, it goes from bottom to top; if a block is later
+in the file, it is considered to "supersede" blocks that are earlier
+in the file.
 
-For example, suppose that `question_library.yml` consists of:
+As explained in the [initial blocks] section, the effect of an
+[`include`] block is basically equivalent to copying and pasting the
+contents of the included file into the original file.
+
+This means that at the top of your interview file, you can [`include`]
+question files that other authors have written and then later in the
+interview file, you can "override" particular questions you would like
+to ask differently.  You do not have to edit those other files in
+order to tweak them.  This is a big advantage because it allows you to
+use another person's work without taking on the responsibility of
+maintaining that person's work over time; you can just incorporate by
+reference that person's file.
+
+For example, suppose that there is a [YAML] file called
+`question-library.yml`, which someone else wrote, which consists of
+the following questions:
 
 {% highlight yaml %}
----
-question: It's a nice evening, isn't it?
+question: |
+  Nice evening, isn't it?
 yesno: user_agrees_it_is_a_nice_evening
 ---
-question: Do you want to go to the dance with me?
-yesno: user_wants_to_go_to_dance
----
-{% endhighlight %}
-
-You could write your own interview file that looks like this:
-
-{% highlight yaml %}
----
-include:
-  - question_library.yml
----
-mandatory: True
-code: |
-  if user_agrees_it_is_a_nice_evening and user_wants_to_go_to_dance:
-    life_is_good
----
 question: |
-  My darling, would you do me the honor of accompanying me to
-  the dance this fine evening?
+  Interested in going to the dance tonight?
 yesno: user_wants_to_go_to_dance
----
-question: That is splendid news!
-sets: life_is_good
----
 {% endhighlight %}
+
+You can write an interview that uses this question library:
+
+{% include side-by-side.html demo="use-question-library" %}
+
+When **docassemble** needs to know the definitions of
+`user_agrees_it_is_a_nice_evening` and `user_wants_to_go_to_dance`, it
+will find blocks in `question-library.yml` that offer to define these
+variables.
+
+Suppose, however, that you thought of a better way to ask the
+`user_wants_to_go_to_dance` question, but you didn't want to get rid
+of `question-library.yml` entirely.  You could override the
+`user_wants_to_go_to_dance` question in `question-library.yml` by
+doing the following:
+
+{% include side-by-side.html demo="override" %}
 
 This interview file loads the two questions defined in
-`question_library.yml`, but then, later in the list of questions,
+`question-library.yml`, but then, later in the list of questions,
 provides a different way to get the value of
 `user_wants_to_go_to_dance`.  When **docassemble** goes looking for a
 question to provide a definition of `user_wants_to_go_to_dance`, it
-starts with the questions that were defined last.
+starts with the questions that were defined last, and it will
+prioritize your question over the question in `question-library.yml`.
 
 This is similar to the way law works: old laws do not disappear from
-the law books, but they can get superseded by newer laws.  "The law"
-is "old" law has not yet been superseded.
+the law books, but they can get superseded by newer laws.  "Current
+law" is simply "old law" that has not yet been superseded.
 
-If a more recently-defined question does not, for whatever reason,
-actually define the variable, **docassemble** will fall back on the
-"older" question.
+If a more recently-defined [`question`] or [`code`] block does not,
+for whatever reason, actually define the variable, **docassemble**
+will fall back to the "older" question.  For example:
 
-For example:
+{% include side-by-side.html demo="fallback" %}
 
-{% highlight yaml %}
----
-include:
-  - question_library.yml
----
-mandatory: True
-code: |
-  if user_agrees_it_is_a_nice_evening and user_wants_to_go_to_dance:
-    life_is_good
----
-question: Which of these statements is true?
-choices:
-  - "I am old-fashioned":
-      question: |
-        My darling, would you do me the honor of accompanying me to
-        the dance this fine evening?
-      yesno: user_wants_to_go_to_dance
-  - "I don't care for flowerly language": continue
----
-question: That is splendid news!
-sets: life_is_good
----
-{% endhighlight %}
+In this case, the special [`continue`] choice causes **docassemble**
+to "fall back" on the earlier-mentioned question.
 
-In this case, the special `continue` function (see [Setting Variables]
-for details) will cause **docassemble** to "fall back" on
-the earlier-mentioned question.
+Such fall-backs can also happen with [Python] code that could
+potentially define a variable, but for whatever reason does not
+actually do so.  For example:
 
-Such fall-backs can also happen with Python code.  For example:
-
-{% highlight yaml %}
----
-include:
-  - question_library.yml
----
-mandatory: True
-code: |
-  if user_agrees_it_is_a_nice_evening and user_wants_to_go_to_dance:
-    life_is_good
----
-question: I forgot, did we already agree to go to the dance together?
-yesno: we_already_agreed_to_go
----
-code: |
-  if we_already_agreed_to_go:
-    user_wants_to_go_to_dance = True
----
-question: That is splendid news!
-sets: life_is_good
----
-{% endhighlight %}
+{% include side-by-side.html demo="fallback2" %}
 
 In this case, when **docassemble** tries to get a definition of
 `user_wants_to_go_to_dance`, it will first try running the [`code`]
-block, and then it will seek a definition for
-`we_already_agreed_to_go`.  If the value of `we_already_agreed_to_go`
-turns out to be false, the [`code`] block will complete without setting
-a value for `user_wants_to_got_to_dance`.  Not giving up,
-**docassemble** will then seek an answer to
-`user_wants_to_got_to_dance` by asking the "Do you want to go to the
-dance with me?" question, which was defined earlier in
-`question_library.yml`.
+block, and then it will encounter `we_already_agreed_to_go` and seek
+its definition.  If the value of `we_already_agreed_to_go` turns out
+to be false, the [`code`] block will run its course without setting a
+value for `user_wants_to_got_to_dance`.  Not giving up,
+**docassemble** will keep going backwards through the blocks, looking
+for one that offers to define `user_wants_to_got_to_dance`.  It will
+find such a question among the questions included by reference from
+`question_library.yml`, namely the question "Interested in going to
+the dance tonight?"
 
 # <a name="howitworks"></a>How **docassemble** runs your code
 
@@ -440,7 +420,7 @@ came back from asking whether the user has a car.
   make up for the loss of autonomy.
 
 [roles]: {{ site.baseurl }}/docs/roles.html
-[Setting Variables]: {{ site.baseurl }}/docs/fields.html
+[`continue`]: {{ site.baseurl }}/docs/questions.html#continue
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [initial blocks]: {{ site.baseurl }}/docs/initial.html
 [`question`]: {{ site.baseurl }}/docs/questions.html#question
@@ -459,3 +439,4 @@ came back from asking whether the user has a car.
 [`menu_items`]: {{ site.baseurl }}/docs/special.html#menu_items
 [`review`]: {{ site.baseurl }}/docs/fields.html#menu_items
 [`reset` initial block]: {{ site.baseurl }}/docs/initial.html#reset
+[Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29

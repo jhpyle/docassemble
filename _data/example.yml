@@ -1316,6 +1316,56 @@
     A test of Javascript and CSS
   subquestion: |
     <span class="groovy"></span>
+"fallback": |-
+  include:
+    - question-library.yml
+  ---
+  question: Which of these statements is true?
+  choices:
+    - "I am old-fashioned":
+        question: |
+          My darling, would you do me the
+          honor of accompanying me to
+          the dance this fine evening?
+        yesno: user_wants_to_go_to_dance
+    - "I don't care for flowerly language": continue
+  ---
+  mandatory: True
+  code: |
+    if user_agrees_it_is_a_nice_evening and user_wants_to_go_to_dance:
+      good_news
+  ---
+  mandatory: True
+  question: |
+    Say, I have to run.  Bye!
+  ---
+  event: good_news
+  question: |
+    That is splendid news!
+"fallback2": |-
+  include:
+    - question-library.yml
+  ---
+  question: |
+    I forgot, did we already agree to go to the dance together?
+  yesno: we_already_agreed_to_go
+  ---
+  code: |
+    if we_already_agreed_to_go:
+      user_wants_to_go_to_dance = True
+  ---
+  mandatory: True
+  code: |
+    if user_agrees_it_is_a_nice_evening and user_wants_to_go_to_dance:
+      good_news
+  ---
+  mandatory: True
+  question: |
+    Say, I have to run.  Bye!
+  ---
+  event: good_news
+  question: |
+    That is splendid news!
 "field-note": |-
   question: |
     Tell me more about you.
@@ -1737,8 +1787,12 @@
     - Last Name: witness[i].name.last
   ---
   question: |
-    Are there any other witnesses?
+    Were there any other witnesses?
   yesno: witness.there_is_another
+  # ---
+  # question: |
+  #   Were there any witnesses?
+  # yesno: witness.there_are_any
   ---
   mandatory: True
   question: |
@@ -2726,6 +2780,22 @@
   code: |
     fruits = peaches + pears
     all_done
+"mandatory-code": |-
+  mandatory: |
+    favorite_food == "apples"
+  question: |
+    You have good taste in food.
+  buttons:
+    - Continue: continue
+  ---
+  mandatory: True
+  question: |
+    Thank you for your input.
+  ---
+  question: |
+    What is your favorite food?
+  fields:
+    - no label: favorite_food
 "markdown": "question: |\n  Introduction to Markdown\nsubquestion: |\n  Markdown allows\
   \ you to express\n  formatting in plain text.\n  \n  # I am a heading\n\n  Write\
   \ in *italic text* or even\n  **bold text**.\n\n  ## I am a subheading\n\n  ###\
@@ -3379,6 +3449,27 @@
       show if:
         variable: car_make
         is: Other
+"override": |-
+  include:
+    - question-library.yml
+  ---
+  question: |
+    So, about that dance tonight . . .
+    wanna go?
+  yesno: user_wants_to_go_to_dance
+  ---
+  mandatory: True
+  code: |
+    if user_agrees_it_is_a_nice_evening and user_wants_to_go_to_dance:
+      good_news
+  ---
+  mandatory: True
+  question: |
+    Say, I have to run.  Bye!
+  ---
+  event: good_news
+  question: |
+    That is splendid news!
 "page-numbers": |-
   question: Here is your document.
   subquestion: It has page numbers.
@@ -3597,6 +3688,10 @@
     What is the airspeed velocity of an unladen swallow?
   fields:
     - Velocity: swallow_velocity
+"question-library": |-
+  question: |
+    Interested in going to the dance tonight?
+  yesno: user_wants_to_go_to_dance
 "question-markup": |-
   question: |
     What is the *airspeed* velocity of an unladen ${ african_or_european }
@@ -4442,6 +4537,22 @@
     about this interview before
     proceeding.
   field: ready_to_proceed
+"use-question-library": |-
+  include:
+    - question-library.yml
+  ---
+  mandatory: True
+  code: |
+    if user_agrees_it_is_a_nice_evening and user_wants_to_go_to_dance:
+      good_news
+  ---
+  mandatory: True
+  question: |
+    Say, I have to run.  Bye!
+  ---
+  event: good_news
+  question: |
+    That is splendid news!
 "user-is-trustee": |-
   mandatory: True
   question: |
