@@ -559,10 +559,11 @@ value.
 ## <a name="password secretkey"></a>Secret key for passwords
 
 The `password secretkey` is used in the process of encrypting
-interview answers for users who log in using [Facebook or Google].  It
-defaults to the same value as `secretkey`.  If this value changes,
-users who log in through Facebook or Google will not be able to resume
-stored interviews.
+interview answers for users who log in using
+[Facebook, Google, or Azure].  It defaults to the same value as
+`secretkey`.  If this value changes, users who log in through
+Facebook, Google or Azure will not be able to resume stored
+interviews.
 
 ## <a name="png resolution"></a><a name="png screen resolution"></a>Image conversion resolution
 
@@ -1064,10 +1065,10 @@ zone will be set to the time zone of the server.
 timezone: America/Los_Angeles
 {% endhighlight %}
 
-## <a name="oauth"></a>Facebook and Google login
+## <a name="oauth"></a>Facebook, Google, and Azure login
 
-If you want to enable logging in with Facebook or with Google, you
-will need to tell **docassemble** your oauth keys:
+If you want to enable logging in with Facebook, Google, or Microsoft
+Azure, you will need to tell **docassemble** your oauth keys:
 
 {% highlight yaml %}
 oauth:
@@ -1079,9 +1080,14 @@ oauth:
     enable: True
     id: 23123018240-32239fj28fj4fuhf394h3984eurhfurh.apps.googleusercontent.com
     secret: DGE34gdgerg3GDG545tgdfRf
+  azure:
+    enable: True
+    id: e378beb1-0bfb-45bc-9b4b-604dcf640c87
+    secret: UwHEze20pzSO+lvywJOjcos3v7Kd6Y7tsaCYTG7Panc=
 {% endhighlight %}
 
-You can disable these login methods by setting `enable` to false.
+You can disable these login methods by setting `enable` to `False` or
+by removing the configuration entirely.
 
 ## <a name="twilio"></a>Twilio configuration
 
@@ -1321,7 +1327,7 @@ and Facebook API keys.
 [`azure`]: #azure
 [`s3`]: #s3
 [`s3cmd`]: http://s3tools.org/s3cmd
-[Facebook or Google]: #oauth
+[Facebook, Google, or Azure]: #oauth
 [`certs`]: #certs
 [`log`]: #log
 [locale]: https://docs.python.org/2/library/locale.html

@@ -199,34 +199,64 @@ appear is usually not important.  If **docassemble** needs a
 definition of a variable, it will go looking for a block that defines
 the variable.
 
-However, the order of these blocks is important if you have multiple
-[`question`], [`code`], and/or [`template`] blocks that each offer to
-define the same variable.  In that case, the order of these blocks
-relative to each other is important.  **docassemble** will use
-later-defined blocks first.  Later blocks "supersede" the blocks that
-came before.
+Consider the following example:
 
-So, to summarize: when **docassemble** considers what blocks it _must_
-process, it goes from top to bottom through your interview [YAML]
-file, looking for [`mandatory`] and [`initial`] blocks; if a block is
-later in the file, it is processed later in time.  However, when
-**docassemble** considers what question it should ask to define a
-particular variable, it goes from bottom to top; if a block is later
-in the file, it is considered to "supersede" blocks that are earlier
-in the file.
+{% include side-by-side.html demo="order-of-blocks" %}
+
+The order of the questions is:
+
+#. Hello!
+#. What is your name?
+#. What is your favorite food?
+#. Do you like penguins?
+
+The first two questions are asked because the corresponding
+[`question`] blocks are marked as [`mandatory`].  They are asked in
+the order in which they are asked because of the way the [`question`]
+blocks are ordered in the [YAML] file.
+
+The next two questions are asked implicitly.  The third and final
+[`mandatory`] block makes reference to two variables: `favorite_food`
+and `user_likes_penguins`.  Since the [`question`]s that define these
+variables are not `mandatory`, they can appear anywhere in the [YAML]
+file, in any order you want.  In this case, the `favorite_food`
+[`question`] block is at the end of the [YAML] file, and the
+`user_likes_penguins` [`question`] block is at the start of the [YAML]
+file.
+
+The order in which these two questions are asked is determined by the
+order of the variables in the text of the final [`mandatory`]
+question.  Since `favorite_food` is referenced first, and
+`user_likes_penguins` is referenced afterwards, the user is asked
+about food and then asked about penguins.
+
+Note that there is also an extraneous question in the interview that
+defines `user_likes_elephants`; the presence of this [`question`]
+block in the [YAML] file has no effect on the interview.
+
+Generally, you can order non-[`mandatory`] blocks in your [YAML] file
+any way you want.  You may want to group them by subject matter into
+separate [YAML] files that you [`include`] in your main [YAML] file.
+When your interviews get complicated, there is no natural order to
+questions.  In some situations, a question may be asked early, and in
+other situations, a question may be asked later.
+
+## Overriding one question with another
+
+The order in which non-[`mandatory`] blocks appear in the [YAML] file
+is only important if you have multiple blocks that each offer to
+define the same variable.  In that case, the order of these blocks
+relative to each other is important.  When looking for blocks that
+offer to define a variable, **docassemble** will use later-defined
+blocks first.  Later blocks "supersede" the blocks that came before.
+
+This allows you to [`include`] "libraries" of questions in your
+interview while retaining the ability to customize how any particular
+question is asked.
 
 As explained in the [initial blocks] section, the effect of an
 [`include`] block is basically equivalent to copying and pasting the
 contents of the included file into the original file.
-
-This means that at the top of your interview file, you can [`include`]
-question files that other authors have written and then later in the
-interview file, you can "override" particular questions you would like
-to ask differently.  You do not have to edit those other files in
-order to tweak them.  This is a big advantage because it allows you to
-use another person's work without taking on the responsibility of
-maintaining that person's work over time; you can just incorporate by
-reference that person's file.
 
 For example, suppose that there is a [YAML] file called
 `question-library.yml`, which someone else wrote, which consists of
@@ -246,14 +276,14 @@ You can write an interview that uses this question library:
 
 {% include side-by-side.html demo="use-question-library" %}
 
-When **docassemble** needs to know the definitions of
-`user_agrees_it_is_a_nice_evening` and `user_wants_to_go_to_dance`, it
-will find blocks in `question-library.yml` that offer to define these
-variables.
+When **docassemble** needs to know the definition of
+`user_agrees_it_is_a_nice_evening` or `user_wants_to_go_to_dance`, it
+will be able to find a block in `question-library.yml` that offers to
+define the variable.
 
 Suppose, however, that you thought of a better way to ask the
-`user_wants_to_go_to_dance` question, but you didn't want to get rid
-of `question-library.yml` entirely.  You could override the
+`user_wants_to_go_to_dance` question, but you don't want to get rid of
+`question-library.yml` entirely.  You could override the
 `user_wants_to_go_to_dance` question in `question-library.yml` by
 doing the following:
 
@@ -266,19 +296,45 @@ provides a different way to get the value of
 question to provide a definition of `user_wants_to_go_to_dance`, it
 starts with the questions that were defined last, and it will
 prioritize your question over the question in `question-library.yml`.
+Your [`question`] block takes priority because it is located _later_ in
+the [YAML] file.
 
 This is similar to the way law works: old laws do not disappear from
 the law books, but they can get superseded by newer laws.  "Current
 law" is simply "old law" that has not yet been superseded.
 
+A big advantage of this feature is that you can include "libraries"
+written by other people without having to edit those other files in
+order to tweak them.  You can use another person's work without taking
+on the responsibility of maintaining that person's work over time; you
+can just incorporate by reference that person's file, which they
+continue to maintain.
+
+For example, if someone else has developed interview questions that
+determine a user's eligibility for food stamps, you can incorporate by
+reference that author's [YAML] file into an interview that assesses
+whether a user is maximizing his or her public benefits.  When the law
+about food stamps changes, that author will be responsible for
+updating his or her [YAML] file; your interview will not need to
+change.  This allows for a division of labor.  All you will need to do
+is make sure that the **docassemble** [package] containing the food
+stamp [YAML] file gets updated on the server when the law changes.
+
+## Fallback questions
+
 If a more recently-defined [`question`] or [`code`] block does not,
 for whatever reason, actually define the variable, **docassemble**
-will fall back to the "older" question.  For example:
+will fall back to a block that is located earlier in the [YAML] file.
+For example:
 
 {% include side-by-side.html demo="fallback" %}
 
 In this case, the special [`continue`] choice causes **docassemble**
-to "fall back" on the earlier-mentioned question.
+to skip the [`question`] block and look elsewhere for a definition of
+`user_wants_to_go_to_dance`.  **docassemble** will "fall back" to the
+version of the question that exists within `question-library.yml`.
+When looking for a block that offers to define a variable,
+**docassemble** starts at the bottom and works its way up.
 
 Such fall-backs can also happen with [Python] code that could
 potentially define a variable, but for whatever reason does not
@@ -292,11 +348,20 @@ block, and then it will encounter `we_already_agreed_to_go` and seek
 its definition.  If the value of `we_already_agreed_to_go` turns out
 to be false, the [`code`] block will run its course without setting a
 value for `user_wants_to_got_to_dance`.  Not giving up,
-**docassemble** will keep going backwards through the blocks, looking
-for one that offers to define `user_wants_to_got_to_dance`.  It will
-find such a question among the questions included by reference from
-`question_library.yml`, namely the question "Interested in going to
-the dance tonight?"
+**docassemble** will keep going backwards through the blocks in the
+[YAML] file, looking for one that offers to define
+`user_wants_to_got_to_dance`.  It will find such a question among the
+questions included by reference from `question_library.yml`, namely
+the question "Interested in going to the dance tonight?"
+
+So, to summarize: when **docassemble** considers what blocks it _must_
+process, it goes from top to bottom through your interview [YAML]
+file, looking for [`mandatory`] and [`initial`] blocks; if a block is
+later in the file, it is processed later in time.  However, when
+**docassemble** considers what question it should ask to define a
+particular variable, it goes from bottom to top; if a block is later
+in the file, it is considered to "supersede" blocks that are earlier
+in the file.
 
 # <a name="howitworks"></a>How **docassemble** runs your code
 
@@ -440,3 +505,4 @@ came back from asking whether the user has a car.
 [`review`]: {{ site.baseurl }}/docs/fields.html#menu_items
 [`reset` initial block]: {{ site.baseurl }}/docs/initial.html#reset
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
+[package]: {{ site.baseurl }}/docs/packages.html

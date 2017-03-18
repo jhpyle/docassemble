@@ -587,18 +587,94 @@ deploy them both for the web server and for [Exim].
 
 To obtain the full benefit of **docassemble**, you will need to obtain
 IDs and secrets for the web services that **docassemble** uses, which
-you supply to **docassemble** by editing the
-[configuration] file.  In order
-for the "Sign in with Google" and "Sign in with Facebook" buttons to
-work, you will need to register your site on
-[Google Developers Console](https://console.developers.google.com/)
-and on [Facebook Developers](https://developers.facebook.com/).
+you supply to **docassemble** by editing the [configuration] file.  In
+order for the "Sign in with Google," "Sign in with Facebook," and
+"Sign in with Azure" buttons to work, you will need to register your
+site on [Google Developers Console], [Facebook Developers], and/or
+[Azure Portal].
+
 You may also wish to obtain developer keys for the
 [Google Maps Geocoding API] and for [VoiceRSS] text-to-speech
 conversion.
 
 The [configuration] file also contains settings for connecting to a
 mail server.
+
+## Setting up Google logins
+
+To enable users to log in with their Google accounts, you need to
+obtain an `id` and `secret` for use with Google's [OAuth2] interface.
+
+* Log in to the [Google Developers Console]
+* Create an OAuth 2.0 client ID.
+* Note the "Client ID."  You need to set this value as the `id` in the
+  [`oauth`] configuration, under `google`.
+* Note also the "Client secret."  You need to set this as the `secret`
+  in the [`oauth`] configuration.
+* Under Authorized JavaScript origins, add the URL for your
+  **docassemble** site.  (E.g. `https://docassemble.example.com`)
+* Under Authorized redirect URIs, add the URL
+  `https://docassemble.example.com/callback/google`.
+
+## Setting up Facebook logins
+
+To enable users to log in with their Facebook accounts, you need to
+obtain an `id` and `secret` for use with Facebook's [OAuth2] interface.
+
+* Log in to [Facebook Developers]
+* Add an app.
+* Give the app a name.  Users will see this name when they are asked
+  to consent to sharing of information between Facebook and your site,
+  so be sure to pick a name that your users will recognize.
+* Note the App ID that you are assigned.  You need to set
+  this value as the `id` in the [`oauth`] configuration, under
+  `facebook`.
+* Note also the "App Secret."  You need to set this as the `secret` in
+  the [`oauth`] configuration.
+* Under App Domains, put in the domain of your site.  E.g.,
+  `docassemble.example.com`.
+
+## Setting up Microsoft Azure logins
+
+* Log into the [Azure Portal].
+* Go to the Azure Active Directory resource.
+* Go to App Registrations.
+* Click Add.
+* Set the Name to the name you want to use for your application.  This
+  is the name that your users will see when they are prompted by Azure
+  to give their consent to logging in with Azure.
+* Set the Sign-on URL to the URL for your site's login page.  If your
+  hostname is `docassemble.example.com`, then the URL will be
+  `https://docassemble.example.com/user/sign-in` (unless you have set
+  a non-standard [`root`]).
+* Create the Registered App and then open it.
+* Find the Application ID.  You need to set this value as the `id` in
+  the [`oauth`] configuration, under `azure`.
+* Go into Reply URLs and add an additional Reply URL for
+  `http://docassemble.example.com/callback/azure`, or whatever the URL
+  for `/callback/azure` is on your site.
+* Go into Keys and create a new key.  The "Key description" can be
+  `docassemble` or some other name of your choosing.  The duration can
+  be anything you want, but note that if the duration expires, you
+  will need to edit this configuration if you want users to still be
+  able to log in with Azure.
+* Press save.  Then copy the value of the key you just created.  You
+  need to set this value as the `secret` in the [`oauth`] configuration,
+  under `azure`.
+* Go into Required permissions and click Add.
+* Add "Microsoft Graph" as one of the APIs.
+* Under "delegated permissions," select the following:
+    * Sign users in
+    * Access user's data anytime
+    * View users' email address
+    * View users' basic profile
+* Press Save.
+* You may also want to edit the Properties of the "registered app" in
+  order to upload a logo.
+* Edit your **docassemble** [configuration] and update the values
+  under the `azure` part of the [`oauth`] directive so that it
+  includes the `id` and the `secret` you obtained in the steps above.
+  Make sure that `enable` is not set to `False`.
 
 # Start the server and background processes
 
@@ -955,3 +1031,8 @@ files.  In this case, you will need to manually reinstall
 [`incoming mail domain`]: {{ site.baseurl }}/docs/config.html#incoming mail domain
 [initialization script]: {{ site.github.repository_url }}/blob/master/Docker/initialize.sh
 [TLS]: https://en.wikipedia.org/wiki/Transport_Layer_Security
+[Azure Portal]: https://portal.azure.com
+[Google Developers Console]: https://console.developers.google.com/
+[Facebook Developers]: https://developers.facebook.com/
+[OAuth2]: https://oauth.net/2/
+[`oauth`]: {{ site.baseurl }}/docs/config.html#oauth
