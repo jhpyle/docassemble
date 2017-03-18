@@ -17,6 +17,10 @@ oauth:
     enable: False
     id: 23123018240-32239fj28fj4fuhf394h3984eurhfurh.apps.googleusercontent.com
     secret: DGE34gdgerg3GDG545tgdfRf
+  azure:
+    enable: False
+    id: e378beb1-0bfb-45bc-9b4b-604dcf640c87
+    secret: UwHEze20pzSO+lvywJOjcos3v7Kd6Y7tsaCYTG7Panc=
 secretkey: 28asflwjeifwlfjsd2fejfiefw3g4o87
 default title: docassemble
 default short title: doc

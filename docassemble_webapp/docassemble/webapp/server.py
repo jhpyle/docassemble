@@ -370,12 +370,15 @@ app.debug = False
 app.handle_url_build_error = my_default_url
 app.config['USE_GOOGLE_LOGIN'] = False
 app.config['USE_FACEBOOK_LOGIN'] = False
+app.config['USE_AZURE_LOGIN'] = False
 if 'oauth' in daconfig:
     app.config['OAUTH_CREDENTIALS'] = daconfig['oauth']
     if 'google' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['google'] and daconfig['oauth']['google']['enable'] is False):
         app.config['USE_GOOGLE_LOGIN'] = True
     if 'facebook' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enable'] is False):
         app.config['USE_FACEBOOK_LOGIN'] = True
+    if 'azure' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['azure'] and daconfig['oauth']['azure']['enable'] is False):
+        app.config['USE_AZURE_LOGIN'] = True
 
 def get_sms_session(phone_number, config='default'):
     sess_info = None
@@ -2079,6 +2082,42 @@ class FacebookSignIn(OAuthSignIn):
             'facebook$' + me['id'],
             me.get('email').split('@')[0],
             me.get('email')
+        )
+
+class AzureSignIn(OAuthSignIn):
+    def __init__(self):
+        super(AzureSignIn, self).__init__('azure')
+        self.service = OAuth2Service(
+            name='azure',
+            client_id=self.consumer_id,
+            client_secret=self.consumer_secret,
+            authorize_url='https://login.microsoftonline.com/common/oauth2/authorize',
+            access_token_url='https://login.microsoftonline.com/common/oauth2/token',
+            base_url='https://graph.microsoft.com/v1.0/'
+        )
+    def authorize(self):
+        return redirect(self.service.get_authorize_url(
+            response_type='code',
+            client_id=self.consumer_id,
+            redirect_uri=self.get_callback_url())
+        )
+    def callback(self):
+        if 'code' not in request.args:
+            return None, None, None
+        oauth_session = self.service.get_auth_session(
+            decoder=json.loads(),
+            data={'code': request.args['code'],
+                  'client_id': self.consumer_id,
+                  'client_secret': self.consumer_secret,
+                  'resource': 'https://graph.microsoft.com/',
+                  'grant_type': 'authorization_code',
+                  'redirect_uri': self.get_callback_url()}
+        )
+        me = oauth_session.get('me').json()
+        return (
+            'azure$' + me['id'],
+            me.get('mail').split('@')[0],
+            me.get('mail')
         )
 
 # class TwitterSignIn(OAuthSignIn):

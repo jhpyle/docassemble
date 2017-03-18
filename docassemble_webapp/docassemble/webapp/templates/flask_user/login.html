@@ -74,6 +74,9 @@
 {% if config['USE_FACEBOOK_LOGIN'] %}
 <a class="nohover" href="{{ url_for('oauth_authorize', provider='facebook') }}"><div class="daiconbox"><table style="height:100%"><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/facebook-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Facebook') }}</td></tr></table></div></a>
 {% endif %}
+{% if config['USE_AZURE_LOGIN'] %}
+<a class="nohover" href="{{ url_for('oauth_authorize', provider='azure') }}"><div class="daiconbox"><table style="height:100%"><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/azure-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Azure') }}</td></tr></table></div></a>
+{% endif %}
 {% if False and config['USE_GOOGLE_LOGIN'] %}
 <script>
 function myOnLoadCallback() {

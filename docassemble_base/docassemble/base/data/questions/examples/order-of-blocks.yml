@@ -1,0 +1,43 @@
+metadata:
+  title: Order of blocks
+  short title: Order
+  documentation: "http://docassemble.org/docs/logic.html#order"
+  example start: 1
+  example end: 6
+---
+question: |
+  Do you like penguins?
+yesno: user_likes_penguins
+---
+question: |
+  Do you like elephants?
+yesno: user_likes_elephants
+---
+mandatory: true
+question: |
+  Hello!
+buttons:
+  - Hello to you: continue
+---
+mandatory: true
+question: |
+  What is your name?
+fields:
+  - Name: user_name
+---
+mandatory: true
+question: |
+  Your favorite food is
+  ${ favorite_food }.
+
+  % if user_likes_penguins:
+  You are a fan of penguins.
+  % else:
+  You detest penguins, for some
+  strange reason.
+  % endif
+---
+question: |
+  What is your favorite food?
+fields:
+  - Favorite food: favorite_food
