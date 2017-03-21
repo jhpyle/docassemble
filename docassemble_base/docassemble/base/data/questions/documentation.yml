@@ -179,7 +179,7 @@ IndividualName.defined: "http://docassemble.org/docs/objects.html#IndividualName
 Address: "http://docassemble.org/docs/objects.html#Address"
 Address.block: "http://docassemble.org/docs/objects.html#Address.block"
 Address.geolocate: "http://docassemble.org/docs/objects.html#Address.geolocate"
-Address.address_on_one_line: "http://docassemble.org/docs/objects.html#Address.address_on_one_line"
+Address.on_one_line: "http://docassemble.org/docs/objects.html#Address.on_one_line"
 Address.line_one: "http://docassemble.org/docs/objects.html#Address.line_one"
 Address.line_two: "http://docassemble.org/docs/objects.html#Address.line_two"
 LatitudeLongitude: "http://docassemble.org/docs/objects.html#LatitudeLongitude"

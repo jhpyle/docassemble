@@ -51,22 +51,6 @@ install|hostname|text||
 install|version|integer||
 install|packageversion|text||
 install|package_id|integer||
-user|id|integer||nextval('user_id_seq'::regclass)
-user|social_id|character varying|64|
-user|nickname|character varying|64|
-user|email|character varying|64|
-user|confirmed_at|timestamp without time zone||
-user|active|boolean||false
-user|first_name|character varying|50|''::character varying
-user|last_name|character varying|50|''::character varying
-user|country|character varying|2|
-user|subdivisionfirst|character varying|3|
-user|subdivisionsecond|character varying|50|
-user|subdivisionthird|character varying|50|
-user|organization|character varying|64|
-user|timezone|character varying|64|
-user|password|character varying|255|'x'::character varying
-user|language|character varying|64|
 package_auth|id|integer||nextval('package_auth_id_seq'::regclass)
 package_auth|package_id|integer||
 package_auth|user_id|integer||
@@ -85,6 +69,22 @@ userdictkeys|indexno|integer||nextval('userdictkeys_indexno_seq'::regclass)
 userdictkeys|filename|text||
 userdictkeys|key|character varying|250|
 userdictkeys|user_id|integer||
+user|id|integer||nextval('user_id_seq'::regclass)
+user|social_id|character varying|255|
+user|nickname|character varying|255|
+user|email|character varying|255|
+user|confirmed_at|timestamp without time zone||
+user|active|boolean||false
+user|first_name|character varying|255|''::character varying
+user|last_name|character varying|255|''::character varying
+user|country|character varying|2|
+user|subdivisionfirst|character varying|3|
+user|subdivisionsecond|character varying|255|
+user|subdivisionthird|character varying|255|
+user|organization|character varying|255|
+user|timezone|character varying|64|
+user|password|character varying|255|'x'::character varying
+user|language|character varying|64|
 machinelearning|id|integer||nextval('machinelearning_id_seq'::regclass)
 machinelearning|group_id|text||
 machinelearning|independent|text||

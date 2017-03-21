@@ -3,13 +3,13 @@
 {%- from "base_templates/form_macros.html" import render_addon_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
 <ul class="nav nav-pills">
   <li>
-    <a title="{{ word('Create new interview') }}" href="?new=1"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Add') }}</a>
+    <a tabindex="1" title="{{ word('Create new interview') }}" href="?new=1"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Add') }}</a>
   </li>
   <li>
-    <a title="{{ word('Create interview with wizard') }}" href="{{ url_for('index', i='docassemble.webapp:data/questions/wizard-template.yml') }}"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Wizard') }}</a>
+    <a tabindex="2" title="{{ word('Create interview with wizard') }}" href="{{ url_for('index', i='docassemble.webapp:data/questions/wizard-template.yml') }}"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Wizard') }}</a>
   </li>
   <li role="presentation" class="dropdown">
-    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Items in the Playground other than interviews') }}">
+    <a tabindex="3" class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Items in the Playground other than interviews') }}">
       <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>&nbsp;&nbsp;{{ word('Folders') }}<span class="caret"></span>
     </a>
     <ul class="dropdown-menu">
@@ -21,7 +21,7 @@
     </ul>
   </li>
   <li role="presentation" class="dropdown">
-    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another interview')}}">
+    <a tabindex="4" class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another interview')}}">
       <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}<span class="caret"></span>
     </a>
     <ul class="dropdown-menu">
@@ -43,7 +43,7 @@
     </ul>
   </li>
   <li role="presentation">
-    <a id="uploadlink" style="cursor: pointer" title="{{ word('Upload a YAML file to the Playground') }}">
+    <a tabindex="5" id="uploadlink" style="cursor: pointer" title="{{ word('Upload a YAML file to the Playground') }}">
       <form action="" method="POST" class="form" role="form" id="fileform" enctype="multipart/form-data">
         {{ fileform.hidden_tag() }}
         <label id="uploadlabel" for="uploadfile" style="position: inline; font-weight: normal; cursor: pointer; margin: 0">
@@ -59,7 +59,7 @@
   </li>
   {% if current_file != '' %}
   <li role="presentation">
-    <a href="{{ url_for('playground_download', userid=userid, filename=current_file) }}" title="{{ word('Download the current file') }}">
+    <a tabindex="6" href="{{ url_for('playground_download', userid=userid, filename=current_file) }}" title="{{ word('Download the current file') }}">
       <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
       {{ word("Download") }}
     </a>
@@ -75,7 +75,7 @@
       {{ render_addon_field(form.playground_name, tabindex=20) }}
     </div>
     <div class="col-lg-6">
-      {{ render_addon_field(form.search_term, tabindex=30, extra='<a class="input-group-addon no-outline pointer" id="daSearchPrevious"><i class="glyphicon glyphicon-chevron-left"></i></a><a class="input-group-addon no-outline pointer" id="daSearchNext"><i class="glyphicon glyphicon-chevron-right"></i></a>', extra_class='pull-right') }}
+      {{ render_addon_field(form.search_term, tabindex=80, extra='<a class="input-group-addon no-outline pointer" id="daSearchPrevious"><i class="glyphicon glyphicon-chevron-left"></i></a><a class="input-group-addon no-outline pointer" id="daSearchNext"><i class="glyphicon glyphicon-chevron-right"></i></a>', extra_class='pull-right') }}
     </div>
   </div>
   <div class="daspacer"></div>
@@ -88,12 +88,12 @@
   </div>
   <div class="form-actions">
     {# <a id="daSave" href="#" class="btn btn-primary btn-lg">Save</a> #}
-    {{ render_submit_field(form.submit, class="btn btn-primary btn-lg") }}
+    {{ render_submit_field(form.submit, class="btn btn-primary btn-lg", tabindex="90") }}
     {# {{ render_submit_field(form.run, id='daRun', class="btn btn-warning btn-lg") }} #}
-    {% if is_new == 'False' %}<a id="daRun" target="_blank" href="{{ url_for('playground_redirect') }}" class="btn btn-warning btn-lg">{{ word("Save and Run") }}</a>
-    {{ render_submit_field(form.delete, id='daDelete', class="btn btn-default btn-lg") }}
+    {% if is_new == 'False' %}<a tabindex="100" id="daRun" target="_blank" href="{{ url_for('playground_redirect') }}" class="btn btn-warning btn-lg">{{ word("Save and Run") }}</a>
+    {{ render_submit_field(form.delete, id='daDelete', class="btn btn-default btn-lg", tabindex="110") }}
     {% if interview_path %}
-    <a title="Right-click to copy link" class="label label-default example-share" target="_blank" href="{{ url_for('index', i=interview_path) }}"><i class="glyphicon glyphicon-link"></i> {{ word('Share') }}</a>
+    <a tabindex="120" title="Right-click to copy link" class="label label-default example-share" target="_blank" href="{{ url_for('index', i=interview_path) }}"><i class="glyphicon glyphicon-link"></i> {{ word('Share') }}</a>
     {% endif %}
     {% endif %}
   </div>
@@ -102,7 +102,7 @@
 {% block rightside %}
             <div id="playgroundbox" class="panel panel-info playgroundbox">
               <div class="panel-heading">
-                <h3 class="panel-title">{{ word('Variables, etc. from') }}&nbsp;<span class="select-wrapper"><select id="daVariables" class="playground-select">{% for file in pulldown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="label label-primary darunbutton" target="_blank" id="daRunButton">{{ word('Run') }}</a></h3>
+                <h3 class="panel-title">{{ word('Variables, etc. from') }}&nbsp;<span class="select-wrapper"><select tabindex="130" id="daVariables" class="playground-select">{% for file in pulldown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="label label-primary darunbutton" target="_blank" id="daRunButton">{{ word('Run') }}</a></h3>
               </div>
               <div class="panel-body" id="daplaygroundpanel">
                 <table id="daplaygroundtable" class="daplaygroundtable">{{ variables_html }}

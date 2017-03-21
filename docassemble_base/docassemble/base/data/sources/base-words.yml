@@ -26,6 +26,7 @@
 "blank message": Null
 "Block": Null
 "Cancel": Null
+"Case No. _______________": Null
 "Case No.": Null
 "Changed name of interview": Null
 "Change": Null
@@ -61,6 +62,7 @@
 "docx_message": Null
 "Done": Null
 "Download": Null
+"Edit module files": Null
 "Edit source files": Null
 "Edit text files": Null
 "Edit User Profile": Null
@@ -113,7 +115,6 @@
 "Interview files": Null
 "Interviews": Null
 "in the": Null
-"In the": Null
 "Invalid E-mail": Null
 "Invitation has been sent.": Null
 "Invite": Null
@@ -343,6 +344,7 @@
 "Update": Null
 "Update Package": Null
 "Updating": Null
+"Upload a Python module": Null
 "Upload a source file": Null
 "Upload a static file": Null
 "Upload a template file": Null

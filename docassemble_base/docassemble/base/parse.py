@@ -2176,20 +2176,24 @@ class Interview:
                 for var in question.reset_list:
                     if complications.search(var):
                         try:
+                            #logmessage("Reset " + str(var))
                             exec('del ' + str(var), user_dict)
                         except:
                             pass
                     elif var in user_dict:
                         #logmessage("doing non-exec del")
+                        #logmessage("Del " + str(var))
                         del user_dict[var]
         for var in self.reconsider:
             if complications.search(var):
                 try:
+                    #logmessage("Delling " + str(var))
                     exec('del ' + str(var), user_dict)
                 except:
                     pass
             elif var in user_dict:
                 #logmessage("doing non-exec del")
+                #logmessage("Dell " + str(var))
                 del user_dict[var]
         # if 'action_manual' in interview_status.current_info and interview_status.current_info['action_manual']:
         #     exec('import docassemble.base.util')
@@ -2681,6 +2685,7 @@ class Interview:
                             #logmessage("Deleting " + str(missing_var))
                             try:
                                 exec("__oldvariable__ = " + str(missing_var), user_dict)
+                                #logmessage("deleting the missing var " + str(missing_var))
                                 exec("del " + str(missing_var), user_dict)
                                 was_defined = True
                             except:
@@ -2897,7 +2902,8 @@ class myvisitnode(ast.NodeVisitor):
         self.generic_visit(node)
         self.depth -= 1
     def visit_For(self, node):
-        self.targets[node.target.id] = 1
+        if hasattr(node.target, 'id'):
+            self.targets[node.target.id] = 1
         self.generic_visit(node)
     def visit_Name(self, node):
         self.names[node.id] = 1

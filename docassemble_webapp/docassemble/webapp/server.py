@@ -2917,10 +2917,10 @@ def index():
             continue
         bracket_expression = None
         if orig_key in empty_fields:
-            logmessage("orig_key " + str(orig_key) + " is set to empty: " + str(empty_fields[orig_key]))
+            #logmessage("orig_key " + str(orig_key) + " is set to empty: " + str(empty_fields[orig_key]))
             set_to_empty = empty_fields[orig_key]
         else:
-            logmessage("orig_key " + str(orig_key) + " is not set to empty")
+            #logmessage("orig_key " + str(orig_key) + " is not set to empty")
             set_to_empty = False
         if match_brackets.search(key):
             #logmessage("Searching key " + str(key))
@@ -7090,6 +7090,8 @@ def playground_files():
                         filename = os.path.join(area.directory, filename)
                         up_file.save(filename)
                         area.finalize()
+                        if section == 'modules':
+                            return redirect(url_for('restart_page', next=url_for('playground_files', section=section, file=the_file)))
                     except Exception as errMess:
                         flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
         if formtwo.delete.data:
@@ -7192,8 +7194,8 @@ def playground_files():
         after_text = None
     elif (section == "modules"):
         header = word("Modules")
-        upload_header = None
-        edit_header = None
+        upload_header = word("Upload a Python module")
+        edit_header = word('Edit module files')
         description = Markup("""To use this in an interview, write a <code>modules</code> block that refers to this module using Python's syntax for specifying a "relative import" of a module (i.e., prefix the module name with a period).""" + highlight('---\nmodules:\n  - .' + re.sub(r'\.py$', '', the_file) + '\n---', YamlLexer(), HtmlFormatter()))
         after_text = None
     if scroll:
@@ -7249,6 +7251,11 @@ def playground_files():
           $(this).removeClass("search-error");
           return;
         }
+        if(event.keyCode == 13) {
+          $("#daSearchNext").click();
+          event.preventDefault();
+          return false;
+        }
         var sc = daCodeMirror.getSearchCursor(query, origPosition);
         show_matches(query);
         var found = sc.findNext();
@@ -7277,7 +7284,7 @@ def playground_files():
       }
       $( document ).ready(function() {
         daTextArea = document.getElementById("file_content");
-        daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: """ + repr(str(mode)) + """, """ + kbOpt + """tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});
+        daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: """ + repr(str(mode)) + """, """ + kbOpt + """tabSize: 2, tabindex: 580, autofocus: false, lineNumbers: true, matchBrackets: true});
         $(window).bind("beforeunload", function(){
           daCodeMirror.save();
           $("#formtwo").trigger("checkform.areYouSure");
@@ -7909,6 +7916,11 @@ function update_search(event){
     daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
     $(this).removeClass("search-error");
     return;
+  }
+  if(event.keyCode == 13) {
+    $("#daSearchNext").click();
+    event.preventDefault();
+    return false;
   }
   var sc = daCodeMirror.getSearchCursor(query, origPosition);
   show_matches(query);

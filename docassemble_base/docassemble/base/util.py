@@ -9,7 +9,7 @@ import pyocr
 import pyocr.builders
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
-from docassemble.base.functions import comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic
+from docassemble.base.functions import comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type
 from docassemble.base.core import DAObject, DAList, DADict, DASet, DAFile, DAFileCollection, DAFileList, DAEmail, DAEmailRecipient, DAEmailRecipientList, DATemplate, selections
 from decimal import Decimal
 import sys
@@ -33,7 +33,7 @@ import shutil
 from subprocess import call
 from bs4 import BeautifulSoup
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'format_date', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'DARedis', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'force_gather', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'LatitudeLongitude', 'RoleChangeTracker', 'Name', 'IndividualName', 'Address', 'City', 'Person', 'Individual', 'ChildList', 'FinancialList', 'PeriodicFinancialList', 'Income', 'Asset', 'Expense', 'Value', 'PeriodicValue', 'OfficeList', 'Organization', 'objects_from_file', 'send_email', 'send_sms', 'map_of', 'selections', 'DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'last_access_time', 'last_access_delta', 'last_access_days', 'last_access_hours', 'last_access_minutes', 'action_arguments', 'action_argument', 'timezone_list', 'as_datetime', 'current_datetime', 'date_difference', 'date_interval', 'year_of', 'month_of', 'day_of', 'format_date', 'format_time', 'today', 'get_default_timezone', 'user_logged_in', 'interface', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'DARedis', 'MachineLearningEntry', 'SimpleTextMachineLearner', 'SVMMachineLearner', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'ocr_file', 'get_sms_session', 'initiate_sms_session', 'terminate_sms_session', 'language_from_browser', 'device', 'interview_email', 'get_emails', 'plain', 'bold', 'italic', 'path_and_mimetype', 'states_list', 'state_name', 'subdivision_type']
 
 #knn_machine_learner = DummyObject
 
@@ -346,7 +346,7 @@ class RoleChangeTracker(DAObject):
     """Used within an interview to facilitate changes in the active role
     required for filling in interview information.  Ensures that participants
     do not receive multiple e-mails needlessly."""
-    def init(self):
+    def init(self, *pargs, **kwargs):
         self.last_role = None
         return
     # def should_send_email(self):
@@ -409,12 +409,20 @@ class Name(DAObject):
 
 class IndividualName(Name):
     """The name of an Individual."""
+    def init(self, *pargs, **kwargs):
+        if 'uses_parts' not in kwargs:
+            self.uses_parts = True
+        return super(IndividualName, self).init(*pargs, **kwargs)
     def defined(self):
         """Returns True if the name has been defined.  Otherwise, returns False."""
+        if not self.uses_parts:
+            return super(IndividualName, self).defined()
         return hasattr(self, 'first')
     def full(self, middle='initial', use_suffix=True):
         """Returns the full name.  Has optional keyword arguments middle 
         and use_suffix."""
+        if not self.uses_parts:
+            return super(IndividualName, self).full()
         names = [self.first]
         if hasattr(self, 'middle') and len(self.middle):
             if middle is False or middle is None:
@@ -430,13 +438,20 @@ class IndividualName(Name):
         return(" ".join(names))
     def firstlast(self):
         """Returns the first name followed by the last name."""
+        if not self.uses_parts:
+            return super(IndividualName, self).firstlast()
         return(self.first + " " + self.last)
     def lastfirst(self):
         """Returns the last name followed by a comma, followed by the 
         last name, followed by the suffix (if a suffix exists)."""
-        output = self.last + ", " + self.first
-        if hasattr(self, 'suffix'):
+        if not self.uses_parts:
+            return super(IndividualName, self).lastfirst()
+        output = self.last
+        if hasattr(self, 'suffix') and self.suffix:
             output += " " + self.suffix
+        output += ", " + self.first
+        if hasattr(self, 'middle') and self.middle:
+            output += " " + self.middle[0] + '.'
         return output
 
 class Address(DAObject):
@@ -446,17 +461,25 @@ class Address(DAObject):
             self.location = LatitudeLongitude()
         if 'geolocated' not in kwargs:
             self.geolocated = False
+        if not hasattr(self, 'city_only'):
+            self.city_only = False
         return super(Address, self).init(*pargs, **kwargs)
     def __str__(self):
         return(self.block())
-    def address_on_one_line(self, include_unit=False):
+    def on_one_line(self, include_unit=False, omit_default_country=True):
         """Returns a one-line address.  Primarily used internally for geolocation."""
-        output = str(self.address)
-        if include_unit and hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
-            output += ", " + str(self.unit)
-        output += ", " + str(self.city) + ", " + str(self.state)
-        if hasattr(self, 'zip'):
+        output = ""
+        if self.city_only is False:
+            output += str(self.address)
+            if include_unit and hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
+                output += ", " + str(self.unit)
+            output += ", "
+        output += str(self.city) + ", " + str(self.state)
+        if hasattr(self, 'zip') and self.zip:
             output += " " + str(self.zip)
+        if hasattr(self, 'country') and self.country:
+            if (not omit_default_country) or get_country() != self.country:
+                output += ", " + country_name(self.country)
         return output
     def _map_info(self):
         if (self.location.gathered and self.location.known) or self.address.geolocate():
@@ -470,10 +493,9 @@ class Address(DAObject):
         """Determines the latitude and longitude of the location."""
         if self.geolocated:
             return self.geolocate_success    
-        the_address = self.address_on_one_line()
-        logmessage("geolocate: trying to geolocate " + str(the_address))
-        from geopy.geocoders import GoogleV3
-        
+        the_address = self.on_one_line(omit_default_country=False)
+        #logmessage("geolocate: trying to geolocate " + str(the_address))
+        from geopy.geocoders import GoogleV3        
         if 'google' in server.daconfig and 'api key' in server.daconfig['google'] and server.daconfig['google']['api key']:
             my_geocoder = GoogleV3(api_key=server.daconfig['google']['api key'])
         else:
@@ -493,23 +515,30 @@ class Address(DAObject):
                 for component in results.raw['address_components']:
                     if 'types' in component and 'long_name' in component:
                         for geo_type, addr_type in geo_types.iteritems():
-                            if geo_type in component['types'] and not hasattr(self, addr_type):
+                            if geo_type in component['types'] and ((not hasattr(self, addr_type)) or getattr(self, addr_type) == '' or getattr(self, addr_type) is None):
                                 #logmessage("Setting " + str(addr_type) + " to " + str(getattr(results[0], geo_type)) + " from " + str(geo_type))
                                 setattr(self, addr_type, component['long_name'])
         else:
             logmessage("geolocate: Valid not ok.  Result count was " + str(len(results)))
             self.geolocate_success = False
+        #logmessage(str(self.__dict__))
         return self.geolocate_success
     def block(self):
         """Returns the address formatted as a block, as in a mailing."""
-        output = str(self.address) + " [NEWLINE] "
-        if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
-            output += str(self.unit) + " [NEWLINE] "
-        output += str(self.city) + ", " + str(self.state) + " " + str(self.zip)
+        output = ""
+        if self.city_only is False:
+            output += str(self.address) + " [NEWLINE] "
+            if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
+                output += str(self.unit) + " [NEWLINE] "
+        output += str(self.city) + ", " + str(self.state)
+        if hasattr(self, 'zip'):
+            output += " " + str(self.zip)
         return(output)
     def line_one(self):
         """Returns the first line of the address, including the unit 
         number if there is one."""
+        if self.city_only:
+            return ''
         output = str(self.address)
         if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
             output += ", " + str(self.unit)
@@ -519,6 +548,12 @@ class Address(DAObject):
         state and zip code."""
         output = str(self.city) + ", " + str(self.state) + " " + str(self.zip)
         return(output)
+
+class City(Address):
+    """A geographic address specific only to a city."""
+    def init(self, *pargs, **kwargs):
+        self.city_only = True
+        return super(City, self).init(*pargs, **kwargs)
 
 class Person(DAObject):
     """Represents a legal or natural person."""
@@ -647,6 +682,22 @@ class Person(DAObject):
             return(did_you(the_verb, **kwargs))
         else:
             return(did_a_b(self.name, the_verb, **kwargs))
+    def were_question(self, the_target, **kwargs):
+        """Given a target like "married", returns "were you married" or "was
+        John Smith married," depending on whether the person is the
+        user."""
+        if self == this_thread.user:
+            return(were_you(the_target, **kwargs))
+        else:
+            return(was_a_b(self.name, the_target, **kwargs))
+    def have_question(self, the_target, **kwargs):
+        """Given a target like "", returns "have you married" or "has
+        John Smith married," depending on whether the person is the
+        user."""
+        if self == this_thread.user:
+            return(have_you(the_target, **kwargs))
+        else:
+            return(has_a_b(self.name, the_target, **kwargs))
     def does_verb(self, the_verb, **kwargs):
         """Given a verb like "eat," returns "eat" or "eats"
         depending on whether the person is the user."""
@@ -665,6 +716,17 @@ class Person(DAObject):
         else:
             tense = '3sg'
         return verb_past(the_verb, tense)
+    def subject(self, **kwargs):
+        """Returns "you" or the person's name, depending on whether the 
+        person is the user."""
+        if self == this_thread.user:
+            output = 'you'
+        else:
+            output = str(self)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return(capitalize(output))
+        else:
+            return(output)
 
 class Individual(Person):
     """Represents a natural person."""

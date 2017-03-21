@@ -72,15 +72,15 @@ objects:
   - spouse: Individual
   - advocate: Individual
   - pleading: LegalFiling
-  - jurisdiction: Jurisdiction
   - court: Court
 comment: |
   An "objects" section defines variables that are docassemble objects.
   The object types here are defined in the docassemble.base.core and
   docassemble.base.legal modules.
 ---
+mandatory: true
 code: |
-  court.jurisdiction = jurisdiction
+  #court.jurisdiction = ['US', 'state', 'PA', 'trial', 'Philadelphia County']
   case.court = court
   pleading.case = case
 comment: |
@@ -578,4 +578,22 @@ fields:
     datatype: yesnowide
   - Stocks and Bonds: x.asset['stocks and bonds'].exists
     datatype: yesnowide
+---
+generic object: Individual
+question: |
+  Where ${ x.do_question('live') } in ${ case.state }?
+fields:
+  - Address: x.address.address
+  - Unit: x.address.unit
+    required: False
+    help: The apartment, suite, or unit number of the residence.
+  - City: x.address.city
+  - State: x.address.state
+    default: 
+      code: |
+        case.state
+    code: |
+      us.states.mapping('abbr', 'name')
+  - Zip: x.address.zip
+    required: False
 ...

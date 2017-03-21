@@ -1,7 +1,7 @@
 {%- extends 'base_templates/page_base_half.html' %}
 {%- from "base_templates/form_macros.html" import render_addon_field, render_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
 {%- block top %}
-<div class="container"><p><a href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></p></div>
+<div class="container"><p><a tabindex="10" href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></p></div>
 {%- endblock %}
 {%- block content %}
 <div class="page-header">
@@ -22,8 +22,8 @@
   <tbody>
   {%- for file in files %}
     <tr>
-      <td><a target="_blank" href="{{ url_for('playground_' + section, userid=userid, filename=file) }}">{{ file }}</a></td>
-      <td style="text-align:right;">{% if file in editable_files %}<a class="label label-success" href="?section={{ section }}&file={{ file }}">{{ word('Edit') }}</a> {% endif %}{% if file in convertible_files %}<a class="label label-info" href="?section={{ section }}&convert={{ file }}">{{ word('Convert to .md') }}</a> {% endif %}<a class="label label-warning" href="?section={{ section }}&delete={{ file }}">{{ word('Delete') }}</a></td>
+      <td><a tabindex="20" target="_blank" href="{{ url_for('playground_' + section, userid=userid, filename=file) }}">{{ file }}</a></td>
+      <td style="text-align:right;">{% if file in editable_files %}<a tabindex="20" class="label label-success" href="?section={{ section }}&file={{ file }}">{{ word('Edit') }}</a> {% endif %}{% if file in convertible_files %}<a tabindex="20" class="label label-info" href="?section={{ section }}&convert={{ file }}">{{ word('Convert to .md') }}</a> {% endif %}<a tabindex="20" class="label label-warning" href="?section={{ section }}&delete={{ file }}">{{ word('Delete') }}</a></td>
     </tr>
   {% endfor %}
   </tbody>
@@ -39,9 +39,9 @@
 <form action="" method="POST" class="form" role="form" enctype="multipart/form-data">
   {{ form.hidden_tag() }}
   {{ myrender_hidden_field(form.section, value=section) }}
-  {{ render_file_field(form.uploadfile, tabindex=80, multiple=True) }}
+  {{ render_file_field(form.uploadfile, tabindex=60, multiple=True) }}
   <div class="form-actions">
-    {{ render_submit_field(form.submit, tabindex=100) }}
+    {{ render_submit_field(form.submit, tabindex=565) }}
   </div>
 </form>
 {%- endif %}
@@ -52,10 +52,10 @@
 {%- endif %}
 <ul class="nav nav-pills">
   <li>
-    <a title="{{ word('Create a new file') }}" href="?section={{ section }}&new=1"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span> {{ word('Add') }}</a>
+    <a tabindex="571" title="{{ word('Create a new file') }}" href="?section={{ section }}&new=1"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span> {{ word('Add') }}</a>
   </li>
   <li role="presentation" class="dropdown">
-    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another file')}}">
+    <a tabindex="572" class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another file')}}">
       <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}<span class="caret"></span>
     </a>
     <ul class="dropdown-menu">
@@ -88,22 +88,21 @@
   {{ myrender_hidden_field(formtwo.section, value=section) }}
   {{ myrender_hidden_field(formtwo.original_file_name, value=current_file) }}
   <div class="daspacer"></div>
-  {# {{ render_addon_field(formtwo.file_name, tabindex=20) }} #}
   <div class="row">
     <div class="col-lg-6">
-      {{ render_addon_field(formtwo.file_name, tabindex=20) }}
+      {{ render_addon_field(formtwo.file_name, tabindex=579) }}
     </div>
     <div class="col-lg-6">
-      {{ render_addon_field(formtwo.search_term, tabindex=30, extra='<a class="input-group-addon no-outline pointer" id="daSearchPrevious"><i class="glyphicon glyphicon-chevron-left"></i></a><a class="input-group-addon no-outline pointer" id="daSearchNext"><i class="glyphicon glyphicon-chevron-right"></i></a>', extra_class='pull-right') }}
+      {{ render_addon_field(formtwo.search_term, tabindex=590, extra='<a class="input-group-addon no-outline pointer" id="daSearchPrevious"><i class="glyphicon glyphicon-chevron-left"></i></a><a class="input-group-addon no-outline pointer" id="daSearchNext"><i class="glyphicon glyphicon-chevron-right"></i></a>', extra_class='pull-right') }}
     </div>
   </div>
   <div class="daspacer"></div>
   <div class="form-group">
-    <textarea rows="24" cols="80" id="file_content" name="file_content" tabindex="70">{{ content }}</textarea>
+    <textarea rows="24" cols="80" id="file_content" name="file_content" tabindex="580">{{ content }}</textarea>
   </div>
   <div class="form-actions">
-    {{ render_submit_field(formtwo.submit, tabindex=100, class="btn btn-primary btn-lg") }}
-    {% if section == 'modules' and is_new == 'False' %}{{ render_submit_field(formtwo.delete, tabindex=120, class="btn btn-default btn-lg") }}{% endif %}
+    {{ render_submit_field(formtwo.submit, tabindex=600, class="btn btn-primary btn-lg") }}
+    {% if section == 'modules' and is_new == 'False' %}{{ render_submit_field(formtwo.delete, tabindex=610, class="btn btn-default btn-lg") }}{% endif %}
   </div>
 </form>
 {%- if after_text %}
@@ -113,5 +112,5 @@
 {%- endblock %}
 {%- block bottom %}
 <div class="daspacer-large"></div>
-<div class="container"><p><a href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></p></div>
+<div class="container"><p><a tabindex="620" href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></p></div>
 {%- endblock %}

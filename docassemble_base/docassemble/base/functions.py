@@ -2,6 +2,7 @@
 import types
 import pattern.en
 import re
+#import operator
 import os
 import inspect
 import mimetypes
@@ -29,7 +30,7 @@ from user_agents import parse as ua_parse
 import phonenumbers
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic']
+__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type']
 
 # debug = False
 # default_dialect = 'us'
@@ -195,9 +196,51 @@ def country_name(country_code):
     """Given a two-digit country code, returns the country name."""
     return pycountry.countries.get(alpha_2=country_code).name
 
+def state_name(state_code, country_code=None):
+    """Given a two-digit U.S. state abbreviation or the abbreviation of a
+    subdivision of another country, returns the state/subdivision
+    name."""
+    if country_code is None:
+        country_code = 'US'
+    for subdivision in pycountry.subdivisions.get(country_code=country_code):
+        m = re.search(r'-([A-Z]+)$', subdivision.code)
+        if m and m.group(1) == state_code:
+            return subdivision.name
+    #return us.states.lookup(state_code).name
+
+def subdivision_type(country_code):
+    """Returns the name of the most common country subdivision type for
+    the given country code."""
+    counts = dict()
+    for subdivision in pycountry.subdivisions.get(country_code=country_code):
+        if subdivision.parent_code is not None:
+            continue
+        if subdivision.name not in counts:
+            counts[subdivision.type] = 1
+        else:
+            counts[subdivision.type] += 1
+    counts_ordered = sorted(counts.keys(), key=lambda x: counts[x], reverse=True)
+    if len(counts_ordered) > 1:
+        return counts_ordered[0] + '/' + counts_ordered[1]
+    else:
+        return counts_ordered[0]
 def countries_list():
     """Returns a list of countries, suitable for use in a multiple choice field."""
     return [{country.alpha_2: country.name} for country in sorted(pycountry.countries, key=lambda x: x.name)]
+
+def states_list(country_code=None):
+    """Returns a list of U.S. states or subdivisions of another country,
+    suitable for use in a multiple choice field."""
+    if country_code is None:
+        country_code = 'US'
+    mapping = dict()
+    for subdivision in pycountry.subdivisions.get(country_code=country_code):
+        if subdivision.parent_code is not None:
+            continue
+        m = re.search(r'-([A-Z0-9]+)$', subdivision.code)
+        if m:
+            mapping[m.group(1)] = subdivision.name
+    return mapping
 
 def interface():
     """Returns web, sms, cron, or worker, depending on how the interview is being accessed."""
@@ -1289,6 +1332,18 @@ language_functions = {
     'did_you': {
         'en': prefix_constructor('did you ')
     },
+    'were_you': {
+        'en': prefix_constructor('were you ')
+    },
+    'was_a_b': {
+        'en': prefix_constructor_two_arguments('was ')
+    },
+    'have_you': {
+        'en': prefix_constructor('have you ')
+    },
+    'has_a_b': {
+        'en': prefix_constructor_two_arguments('has ')
+    },
     'verb_past': {
         'en': lambda *pargs, **kwargs: verb_past_en(*pargs, **kwargs)
     },
@@ -1378,6 +1433,10 @@ do_you = language_function_constructor('do_you')
 did_you = language_function_constructor('did_you')
 does_a_b = language_function_constructor('does_a_b')
 did_a_b = language_function_constructor('did_a_b')
+were_you = language_function_constructor('were_you')
+was_a_b = language_function_constructor('was_a_b')
+have_you = language_function_constructor('have_you')
+has_a_b = language_function_constructor('has_a_b')
 verb_past = language_function_constructor('verb_past')
 verb_present = language_function_constructor('verb_present')
 noun_plural = language_function_constructor('noun_plural')

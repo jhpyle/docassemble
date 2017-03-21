@@ -634,15 +634,18 @@ def as_html(status, url_for, debug, root, validation_rules):
                 # if 'css' in field.extras and 'css' in status.extras:
                 #     status.extra_css.append(status.extras['css'][field.number])
                 #fieldlist.append("<div>datatype is " + str(field.datatype) + "</div>")
-                if 'show_if_var' in field.extras and 'show_if_val' in status.extras and hasattr(field, 'saveas'):
-                    fieldlist.append('                <div class="showif" data-saveas="' + escape_id(field.saveas) + '" data-showif-sign="' + escape_id(field.extras['show_if_sign']) + '" data-showif-var="' + escape_id(field.extras['show_if_var']) + '" data-showif-val=' + noquote(unicode(status.extras['show_if_val'][field.number])) + '>\n')
+                if 'show_if_var' in field.extras and 'show_if_val' in status.extras:
+                    if hasattr(field, 'saveas'):
+                        fieldlist.append('                <div class="showif" data-saveas="' + escape_id(field.saveas) + '" data-showif-sign="' + escape_id(field.extras['show_if_sign']) + '" data-showif-var="' + escape_id(field.extras['show_if_var']) + '" data-showif-val=' + noquote(unicode(status.extras['show_if_val'][field.number])) + '>\n')
+                    else:
+                        fieldlist.append('                <div class="showif" data-showif-sign="' + escape_id(field.extras['show_if_sign']) + '" data-showif-var="' + escape_id(field.extras['show_if_var']) + '" data-showif-val=' + noquote(unicode(status.extras['show_if_val'][field.number])) + '>\n')
             if hasattr(field, 'datatype'):
                 if field.datatype == 'html':
                     fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-md-12"><note>' + status.extras['html'][field.number].rstrip() + '</note></div></div>\n')
-                    continue
+                    #continue
                 elif field.datatype == 'note':
                     fieldlist.append('                <div class="row"><div class="col-md-12">' + markdown_to_html(status.extras['note'][field.number], status=status, strip_newlines=True) + '</div></div>\n')
-                    continue
+                    #continue
                 # elif field.datatype in ['script', 'css']:
                 #     continue
                 else:
@@ -719,7 +722,7 @@ def as_html(status, url_for, debug, root, validation_rules):
                     fieldlist.append('                <div class="form-group' + req_tag +'"><div class="col-sm-offset-4 col-sm-8">' + input_for(status, field) + '</div></div>\n')
                 else:
                     fieldlist.append('                <div class="form-group' + req_tag + '"><label for="' + escape_id(field.saveas) + '" class="control-label col-sm-4">' + helptext_start + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_end + '</label><div class="col-sm-8 fieldpart">' + input_for(status, field) + '</div></div>\n')
-            if hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras and hasattr(field, 'saveas'):
+            if hasattr(field, 'extras') and 'show_if_var' in field.extras and 'show_if_val' in status.extras:
                 fieldlist.append('                </div>\n')
         output += indent_by(audio_text, 12) + '            <form action="' + root + '" id="daform" class="form-horizontal" method="POST"' + enctype_string + '>\n              <fieldset>\n'
         output += '                <div class="page-header"><h3>' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '<div class="daclear"></div></h3></div>\n'
@@ -779,6 +782,7 @@ def as_html(status, url_for, debug, root, validation_rules):
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
         if status.question.fields[0].number in status.defaults and type(status.defaults[status.question.fields[0].number]) in [str, unicode, int, float]:
             defaultvalue = unicode(status.defaults[status.question.fields[0].number])
+            logmessage("Default value is " + str(defaultvalue))
         else:
             defaultvalue = None
         if hasattr(status.question.fields[0], 'datatype'):
