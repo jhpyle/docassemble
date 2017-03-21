@@ -358,7 +358,7 @@ progress: 50
 ---
 question: |
   I understand that you live in ${ client.address.city }.
-  Were you injured in ${ jurisdiction.state }?
+  Were you injured in ${ jurisdiction_state }?
 yesno: injury_in_jurisdiction
 ---
 question: When did your injury take place?
@@ -408,20 +408,20 @@ question: Would you like to enter your address yet again?
 yesno: retry_address
 ---
 code: |
-  jurisdiction.state = "Pennsylvania"
-  jurisdiction.county = "Philadelphia"
+  jurisdiction_state = "Pennsylvania"
+  jurisdiction_county = "Philadelphia"
 ---
 code: |
-  if jurisdiction.state == "Pennsylvania":
+  if jurisdiction_state == "Pennsylvania":
       statute_of_limitations_years = 5
   else:
       statute_of_limitations_years = 2
 ---
 code: |
-  if jurisdiction.state == "Pennsylvania":
+  if jurisdiction_state == "Pennsylvania":
       if law_category == "custody" or law_category == "support":
           court.name = "Court of Common Pleas of " + \
-          jurisdiction.county + " County"
+          jurisdiction_county + " County"
 ---
 code: |
   import datetime
