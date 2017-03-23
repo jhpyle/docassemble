@@ -2,11 +2,24 @@ metadata:
   title: Tables
   short title: tables
 ---
+question: |
+  Here is an attachment
+attachment: |
+  This is a table.
+
+  Fruit|Seeds
+  ------|----:
+  Apple|4
+  Orange|3
+  Pear|6
+
+  Is that any good?
+---
 mandatory: True
 question: |
   A table
 subquestion: |
-  This is a table.
+  This is an HTML table.
 
   <table class="table table-striped">
     <thead>
@@ -20,4 +33,11 @@ subquestion: |
       <tr><td>5</td><td>$8.50</td></tr>
     </tbody>
   </table>
-      
+
+  This is a Markdown table.
+  
+  Fruit|Seeds
+  ------|----:
+  Apple|4
+  Orange|3
+  Pear|6

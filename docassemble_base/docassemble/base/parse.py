@@ -1071,6 +1071,30 @@ class Question:
             if 'template' not in data:
                 raise DAError("A target directive can only be used with a template." + self.idebug(data))
             self.target = data['target']
+        if 'table' in data or 'header' in data or 'row' in data or 'column' in data:
+            if 'table' not in data or 'row' not in data or 'column' not in data:
+                raise DAError("A table definition must have definitions for table, row, and column." + self.idebug(data))
+            if type(data['row']) in [list, dict, set, bool, int, float]:
+                raise DAError("The row part of a table definition must be plain Python code." + self.idebug(data))
+            if type(data['column']) is not list:
+                raise DAError("The column part of a table definition must be a list." + self.idebug(data))
+            if 'header' in data:
+                if type(data['header']) not in [list]:
+                    raise DAError("The header part of a table definition must be a list." + self.idebug(data))
+                if len(data['header']) != len(data['column']):
+                    raise DAError("The header part of a table definition must be the same length as the column part." + self.idebug(data))
+                header = list(map(lambda x: TextObject(definitions + unicode(x), names_used=self.mako_names), data['header']))
+            else:
+                header = list(map(lambda x: TextObject(''), data['column']))
+            row = compile(data['row'], '', 'eval')
+            column = list(map(lambda x: compile(x, '', 'eval'), data['column']))
+            self.fields_used.add(data['table'])
+            field_data = {'saveas': data['table'], 'extras': dict(header=header, row=row, column=column)}
+            self.fields.append(Field(field_data))
+            self.content = TextObject('')
+            self.subcontent = TextObject('')
+            self.question_type = 'table'
+            self.reset_list = self.fields_used
         if 'template' in data and 'content file' in data:
             if type(data['content file']) is not list:
                 data['content file'] = [data['content file']]
@@ -2665,6 +2689,21 @@ class Interview:
                             #logmessage("Doing " + string)
                             exec(string, user_dict)
                             #question.mark_as_answered(user_dict)
+                            docassemble.base.functions.pop_current_variable()
+                            return({'type': 'continue'})
+                        if question.question_type == "table":
+                            string = "import docassemble.base.core"
+                            exec(string, user_dict)
+                            table_content = ''
+                            header = question.fields[0].extras['header']
+                            row = question.fields[0].extras['row']
+                            column = question.fields[0].extras['column']
+                            table_content += "|".join([table_safe(x.text(user_dict)) for x in header])
+                            table_content += "|".join(['-' for x in header])
+                            # for item in blah
+                            # do eval
+                            string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATable(' + "'" + from_safeid(question.fields[0].saveas) + "', content='" + table_content + "')"
+                            exec(string, user_dict)
                             docassemble.base.functions.pop_current_variable()
                             return({'type': 'continue'})
                         if question.question_type == 'attachments':

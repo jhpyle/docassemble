@@ -20,6 +20,7 @@ import PIL
 
 DEFAULT_PAGE_WIDTH = '6.5in'
 
+smartyext = SmartypantsExt(configs=dict())
 term_start = re.compile(r'\[\[')
 term_match = re.compile(r'\[\[([^\]]*)\]\]')
 noquote_match = re.compile(r'"')
@@ -903,9 +904,10 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
         converter.input_content = a
         converter.convert(question)
         result = converter.output_content.decode('utf8')
-        result = re.sub(r'<table>', r'<table class="datable">', result)
     else:
-        result = markdown.markdown(a, extensions=[SmartypantsExt(configs=dict())], output_format='html5')
+        result = markdown.markdown(a, extensions=[smartyext, 'markdown.extensions.sane_lists', 'markdown.extensions.tables'], output_format='html5')
+    result = re.sub(r'<table>', r'<table class="table table-striped">', result)
+    #result = re.sub(r'<table>', r'<table class="datable">', result)
     result = re.sub('<a href="(?!\?)', '<a target="_blank" href="', result)
     if do_terms and question is not None and question.language in question.interview.terms and len(question.interview.terms[question.language]) > 0 is not None and term_start.search(result):
         #logmessage("Found a term\n")

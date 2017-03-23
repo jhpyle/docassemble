@@ -2128,7 +2128,7 @@ class AzureSignIn(OAuthSignIn):
         if 'code' not in request.args:
             return None, None, None
         oauth_session = self.service.get_auth_session(
-            decoder=json.loads(),
+            decoder=json.loads,
             data={'code': request.args['code'],
                   'client_id': self.consumer_id,
                   'client_secret': self.consumer_secret,
