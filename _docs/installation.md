@@ -651,7 +651,7 @@ obtain an `id` and `secret` for use with Facebook's [OAuth2] interface.
 * Find the Application ID.  You need to set this value as the `id` in
   the [`oauth`] configuration, under `azure`.
 * Go into Reply URLs and add an additional Reply URL for
-  `http://docassemble.example.com/callback/azure`, or whatever the URL
+  `https://docassemble.example.com/callback/azure`, or whatever the URL
   for `/callback/azure` is on your site.
 * Go into Keys and create a new key.  The "Key description" can be
   `docassemble` or some other name of your choosing.  The duration can
