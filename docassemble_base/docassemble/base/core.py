@@ -1,4 +1,4 @@
-from docassemble.base.logger import logmessage
+#from docassemble.base.logger import logmessage
 from docassemble.base.generate_key import random_string
 import re
 import os
@@ -8,7 +8,7 @@ import sys
 import shutil
 import inspect
 import mimetypes
-from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote
+from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, this, these, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote, some, indefinite_article
 import docassemble.base.functions
 
 __all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate']
@@ -93,8 +93,8 @@ class DAObject(object):
         if not self.has_nonrandom_instance_name:
             self.instanceName = thename
             self.has_nonrandom_instance_name = True
-        else:
-            logmessage("Not resetting name of " + self.instanceName)
+        #else:
+        #    logmessage("Not resetting name of " + self.instanceName)
         return
     def set_random_instance_name(self):
         """Sets the instanceName attribute to a random value."""
@@ -297,19 +297,31 @@ class DAList(DAObject):
         "children," as appropriate.  If an argument is supplied, the argument is used
         instead of the instanceName."""
         the_noun = self.instanceName
+        the_noun = re.sub(r'.*\.', '', the_noun)
+        the_noun = re.sub(r'_', ' ', the_noun)
         if len(pargs) > 0:
             the_noun = pargs[0]
-        the_noun = re.sub(r'.*\.', '', the_noun)
         if (self.number() > 1 or self.number() == 0 or ('plural' in kwargs and kwargs['plural'])) and not ('singular' in kwargs and kwargs['singular']):
+            output = noun_plural(the_noun)
+            if 'article' in kwargs and kwargs['article']:
+                if 'some' in kwargs and kwargs['some']:
+                    output = some(output)
+            elif 'this' in kwargs and kwargs['this']:
+                output = these(output)
             if 'capitalize' in kwargs and kwargs['capitalize']:
-                return capitalize(noun_plural(the_noun))
+                return capitalize(output)
             else:
-                return noun_plural(the_noun)
+                return output
         else:
+            output = the_noun
+            if 'article' in kwargs and kwargs['article']:
+                output = indefinite_article(output)
+            elif 'this' in kwargs and kwargs['this']:
+                output = this(output)
             if 'capitalize' in kwargs and kwargs['capitalize']:
-                return capitalize(the_noun)
+                return capitalize(output)
             else:
-                return the_noun
+                return output
     def number(self):
         """Returns the number of elements in the list.  Forces the gathering of the
         elements if necessary."""
@@ -573,7 +585,7 @@ class DADict(DAObject):
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
         return the_noun        
-    def as_noun(self, *pargs):
+    def as_noun(self, *pargs, **kwargs):
         """Returns a human-readable expression of the object based on its
         instanceName, using singular or plural depending on whether
         the dictionary has one key or more than one key.  E.g.,
@@ -581,13 +593,31 @@ class DADict(DAObject):
         appropriate.  If an argument is supplied, the argument is used
         as the noun instead of the instanceName."""
         the_noun = self.instanceName
+        the_noun = re.sub(r'.*\.', '', the_noun)
+        the_noun = re.sub(r'_', ' ', the_noun)
         if len(pargs) > 0:
             the_noun = pargs[0]
-        the_noun = re.sub(r'.*\.', '', the_noun)
-        if self.number() > 1 or self.number() == 0:
-            return noun_plural(the_noun)
+        if (self.number() > 1 or self.number() == 0 or ('plural' in kwargs and kwargs['plural'])) and not ('singular' in kwargs and kwargs['singular']):
+            output = noun_plural(the_noun)
+            if 'article' in kwargs and kwargs['article']:
+                if 'some' in kwargs and kwargs['some']:
+                    output = some(output)
+            elif 'this' in kwargs and kwargs['this']:
+                output = these(output)
+            if 'capitalize' in kwargs and kwargs['capitalize']:
+                return capitalize(output)
+            else:
+                return output
         else:
-            return the_noun
+            output = the_noun
+            if 'article' in kwargs and kwargs['article']:
+                output = indefinite_article(output)
+            elif 'this' in kwargs and kwargs['this']:
+                output = this(output)
+            if 'capitalize' in kwargs and kwargs['capitalize']:
+                return capitalize(output)
+            else:
+                return output
     def number(self):
         """Returns the number of keys in the dictionary.  Forces the gathering of the
         dictionary items if necessary."""
@@ -775,6 +805,9 @@ class DADict(DAObject):
         else:
             return(output)            
     def pronoun(self, **kwargs):
+        if self.number() == 1:
+            self.trigger_gather()
+            return list(self.elements.values())[0].pronoun(**kwargs)
         output = word('them', **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))
@@ -867,7 +900,7 @@ class DASet(DAObject):
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
         return the_noun        
-    def as_noun(self, *pargs):
+    def as_noun(self, *pargs, **kwargs):
         """Returns a human-readable expression of the object based on its
         instanceName, using singular or plural depending on whether
         the set has one item in it or multiple items.  E.g.,
@@ -877,13 +910,31 @@ class DASet(DAObject):
 
         """
         the_noun = self.instanceName
+        the_noun = re.sub(r'.*\.', '', the_noun)
+        the_noun = re.sub(r'_', ' ', the_noun)
         if len(pargs) > 0:
             the_noun = pargs[0]
-        the_noun = re.sub(r'.*\.', '', the_noun)
-        if self.number() > 1 or self.number() == 0:
-            return noun_plural(the_noun)
+        if (self.number() > 1 or self.number() == 0 or ('plural' in kwargs and kwargs['plural'])) and not ('singular' in kwargs and kwargs['singular']):
+            output = noun_plural(the_noun)
+            if 'article' in kwargs and kwargs['article']:
+                if 'some' in kwargs and kwargs['some']:
+                    output = some(output)
+            elif 'this' in kwargs and kwargs['this']:
+                output = these(output)
+            if 'capitalize' in kwargs and kwargs['capitalize']:
+                return capitalize(output)
+            else:
+                return output
         else:
-            return the_noun
+            output = the_noun
+            if 'article' in kwargs and kwargs['article']:
+                output = indefinite_article(output)
+            elif 'this' in kwargs and kwargs['this']:
+                output = this(output)
+            if 'capitalize' in kwargs and kwargs['capitalize']:
+                return capitalize(output)
+            else:
+                return output
     def number(self):
         """Returns the number of items in the set.  Forces the gathering of
         the items if necessary.
@@ -1035,6 +1086,9 @@ class DASet(DAObject):
         else:
             return(output)            
     def pronoun(self, **kwargs):
+        if self.number() == 1:
+            self.trigger_gather()
+            return list(self.elements)[0].pronoun(**kwargs)
         output = word('them', **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return(capitalize(output))

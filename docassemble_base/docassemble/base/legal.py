@@ -186,6 +186,10 @@ class Document(DAObject):
     def init(self, *pargs, **kwargs):
         self.title = None
         return super(Document, self).init(*pargs, **kwargs)
+    def __str__(self):
+        if hasattr(self, 'title') and self.title is not None:
+            return str(self.title)
+        return super(Document, self).__str__()
 
 class LegalFiling(Document):
     """Represents a document filed in court."""

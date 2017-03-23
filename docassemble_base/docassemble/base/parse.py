@@ -199,6 +199,12 @@ class InterviewSourceFile(InterviewSource):
         else:
             self.set_directory(os.path.dirname(self.filepath))
         return
+    def reset_modtime(self):
+        try:
+            with open(self.filepath, 'a'):
+                os.utime(self.filepath, None)
+        except:
+            logmessage("Could not reset modification time on interview")
     def update(self):
         #logmessage("Update: " + str(self.filepath))
         try:
@@ -1040,6 +1046,8 @@ class Question:
             self.fields.append(Field(field_data))
             self.question_type = 'multiple_choice'
         elif 'field' in data:
+            if type(data['field']) not in [str, unicode]:
+                raise DAError("A field must be plain text." + self.idebug(data))
             self.fields_used.add(data['field'])
             field_data = {'saveas': data['field']}
             self.fields.append(Field(field_data))

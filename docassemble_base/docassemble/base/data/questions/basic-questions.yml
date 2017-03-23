@@ -596,4 +596,32 @@ fields:
       us.states.mapping('abbr', 'name')
   - Zip: x.address.zip
     required: False
+---
+generic object: Address
+question: |
+  In which county is
+  ${ x.on_one_line() }
+  located?
+fields:
+  - County: x.county
+---
+generic object: City
+question: |
+  In which county in
+  ${ x.state }
+  is
+  ${ x.city }
+  located?
+fields:
+  - County: x.county
+---
+generic object: Address
+sets: x.county
+code: |
+  x.geolocate()
+---
+generic object: City
+sets: x.county
+code: |
+  x.geolocate()
 ...

@@ -478,6 +478,16 @@ span.daparenthetical {
     font-size: 16px;
 }
 
+.dashowattributes {
+    color: rgb(160, 160, 160);
+    vertical-align: middle;
+    cursor: pointer;
+    text-decoration: none !important;
+    line-height: normal;
+    float: right;
+    margin-right: 3px;
+}
+    
 .dainfosign {
     color: rgb(49, 112, 143);
     vertical-align: middle;

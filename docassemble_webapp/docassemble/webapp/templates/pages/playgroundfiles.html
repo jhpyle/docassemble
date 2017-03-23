@@ -45,12 +45,12 @@
   </div>
 </form>
 {%- endif %}
-{%- endblock %}
-{%- block below %}
 {%- if edit_header %}
 <h3>{{ edit_header }}</h3>
 {%- endif %}
-<ul class="nav nav-pills">
+{%- endblock %}
+{%- block below %}
+<ul id="editnav" class="nav nav-pills">
   <li>
     <a tabindex="571" title="{{ word('Create a new file') }}" href="?section={{ section }}&new=1"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span> {{ word('Add') }}</a>
   </li>
@@ -83,11 +83,11 @@
   </li>
 </ul>
 
+<div class="daspacer"></div>
 <form action="{{ url_for('playground_files') }}" method="POST" class="form" role="form" id="formtwo">
   {{ formtwo.hidden_tag() }}
   {{ myrender_hidden_field(formtwo.section, value=section) }}
   {{ myrender_hidden_field(formtwo.original_file_name, value=current_file) }}
-  <div class="daspacer"></div>
   <div class="row">
     <div class="col-lg-6">
       {{ render_addon_field(formtwo.file_name, tabindex=579) }}
@@ -109,6 +109,19 @@
 <p>{{ after_text }}</p>
 {%- endif %}
 
+{%- endblock %}
+{% block rightside %}
+{%- if active_file %}
+            <div id="playgroundbox" class="panel panel-info playgroundbox">
+              <div class="panel-heading">
+                <h3 class="panel-title">{{ word('Variables, etc. from') }}&nbsp;<span class="select-wrapper"><select tabindex="130" id="daVariables" class="playground-select">{% for file in pulldown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="label label-primary darunbutton" target="_blank" id="daRunButton">{{ word('Run') }}</a></h3>
+              </div>
+              <div class="panel-body" id="daplaygroundpanel">
+                <table id="daplaygroundtable" class="daplaygroundtable">
+                </table>
+              </div>
+            </div>
+{%- endif %}
 {%- endblock %}
 {%- block bottom %}
 <div class="daspacer-large"></div>

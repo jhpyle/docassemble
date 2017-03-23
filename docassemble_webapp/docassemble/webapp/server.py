@@ -375,10 +375,18 @@ if 'oauth' in daconfig:
     app.config['OAUTH_CREDENTIALS'] = daconfig['oauth']
     if 'google' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['google'] and daconfig['oauth']['google']['enable'] is False):
         app.config['USE_GOOGLE_LOGIN'] = True
+    else:
+        app.config['USE_GOOGLE_LOGIN'] = False
     if 'facebook' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enable'] is False):
         app.config['USE_FACEBOOK_LOGIN'] = True
+    else:
+        app.config['USE_FACEBOOK_LOGIN'] = False
     if 'azure' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['azure'] and daconfig['oauth']['azure']['enable'] is False):
         app.config['USE_AZURE_LOGIN'] = True
+    else:
+        app.config['USE_AZURE_LOGIN'] = False
+else:
+    app.config['OAUTH_CREDENTIALS'] = dict()
 
 def get_sms_session(phone_number, config='default'):
     sess_info = None
@@ -1686,6 +1694,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
         names_used.discard(var)
     view_doc_text = word("View documentation")
     word_documentation = word("Documentation")
+    attr_documentation = word("Show attributes")
     for var in documentation_dict:
         if var not in name_info:
             name_info[var] = dict()
@@ -1728,7 +1737,19 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
             content += '\n                  <tr><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="label label-danger playground-variable">' + var + '</a></td></tr>'
     if len(names_used):
         content += '\n                  <tr><td><h4>' + word('Variables') + infobutton('variables') + '</h4></td></tr>'
+        has_parent = dict()
+        has_children = set()
+        for var in names_used:
+            parent = re.sub(r'\..*', '', var)
+            if parent != var:
+                has_parent[var] = parent
+                has_children.add(parent)
+        in_nest = False
         for var in sorted(names_used):
+            if var in has_parent:
+                hide_it = ' style="display: none" data-parent="' + noquote(has_parent[var]) + '"'
+            else:
+                hide_it = ''
             if var in base_name_info:
                 if not base_name_info[var]['show']:
                     continue
@@ -1741,7 +1762,9 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
             else:
                 class_type = 'primary'
                 title = ''
-            content += '\n                  <tr><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" ' + title + 'class="label label-' + class_type + ' playground-variable">' + var + '</a>'
+            content += '\n                  <tr' + hide_it + '><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" ' + title + 'class="label label-' + class_type + ' playground-variable">' + var + '</a>'
+            if var in has_children:
+                content += '&nbsp;<a class="dashowattributes" role="button" data-name="' + noquote(var) + '" title="' + attr_documentation + '"><i class="glyphicon glyphicon-option-horizontal"></i></a>'
             if var in name_info and 'type' in name_info[var] and name_info[var]['type']:
                 content +='&nbsp;<span data-ref="' + noquote(name_info[var]['type']) + '" class="daparenthetical">(' + name_info[var]['type'] + ')</span>'
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
@@ -1990,9 +2013,9 @@ class OAuthSignIn(object):
 
     def __init__(self, provider_name):
         self.provider_name = provider_name
-        credentials = current_app.config['OAUTH_CREDENTIALS'][provider_name]
-        self.consumer_id = credentials['id']
-        self.consumer_secret = credentials['secret']
+        credentials = current_app.config['OAUTH_CREDENTIALS'].get(provider_name, dict())
+        self.consumer_id = credentials.get('id', None)
+        self.consumer_secret = credentials.get('secret', None)
 
     def authorize(self):
         pass
@@ -2565,6 +2588,7 @@ def index():
             secret = request.cookies['visitor_secret']
     else:
         secret = request.cookies.get('secret', None)
+    use_cache = int(request.args.get('cache', 1))
     encrypted = session.get('encrypted', True)
     if secret is None:
         secret = random_string(16)
@@ -2682,12 +2706,14 @@ def index():
             release_lock(user_code, yaml_filename)
             return response
         for argname in request.args:
-            if argname in ['filename', 'question', 'format', 'index', 'i', 'action', 'from_list', 'session']:
+            if argname in ['filename', 'question', 'format', 'index', 'i', 'action', 'from_list', 'session', 'cache']:
                 continue
             if re.match('[A-Za-z_]+', argname):
                 exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)
             need_to_reset = True
     if need_to_reset:
+        if use_cache == 0:
+            docassemble.base.parse.interview_source_from_string(yaml_filename).reset_modtime()
         save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
         response = do_redirect(url_for('index'), is_ajax)
         if set_cookie:
@@ -7040,6 +7066,21 @@ def playground_files():
             the_file = re.sub(r'[^A-Za-z0-9\-\_\.]+', '_', the_file)
     if section not in ["template", "static", "sources", "modules", "packages"]:
         section = "template"
+    pgarea = SavedFile(current_user.id, fix=True, section='playground')
+    pulldown_files = sorted([f for f in os.listdir(pgarea.directory) if os.path.isfile(os.path.join(pgarea.directory, f))])
+    if 'variablefile' in session:
+        if session['variablefile'] in pulldown_files:
+            active_file = session['variablefile']
+        else:
+            del session['variablefile']
+            active_file = None
+    else:
+        active_file = None
+    if active_file is None:
+        if 'playgroundfile' in session and session['playgroundfile'] in pulldown_files:
+            active_file = session['playgroundfile']
+        elif len(pulldown_files):
+            active_file = pulldown_files[0]
     area = SavedFile(current_user.id, fix=True, section='playground' + section)
     if request.args.get('delete', False):
         argument = re.sub(r'[^A-Za-z0-9\-\_\.]', '', request.args.get('delete'))
@@ -7160,6 +7201,8 @@ def playground_files():
             mode = ok_mimetypes[mimetype]
         elif (extension and extension in ok_extensions):
             mode = ok_extensions[extension]
+    if mode != 'markdown':
+        active_file = None
     formtwo.original_file_name.data = the_file
     formtwo.file_name.data = the_file
     if the_file != '' and os.path.isfile(os.path.join(area.directory, the_file)):
@@ -7217,70 +7260,18 @@ def playground_files():
         kbLoad = ''
     extra_js = """
     <script>
-      var origPosition = null;
-      var searchMatches = null;
       var daCodeMirror;
       var daTextArea;
-      function show_matches(query){
-        clear_matches();
-        if (query.length == 0){
-          daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
-          $("#formtwo input[name='search_term']").removeClass("search-error");
-          return;
-        }
-        searchMatches = daCodeMirror.showMatchesOnScrollbar(query);
-      }
-      function clear_matches(){
-        if (searchMatches != null){
-          try{
-            searchMatches.clear();
-          }
-          catch(err){}
-        }
-      }
-      function scroll_to_selection(){
-        daCodeMirror.scrollIntoView(daCodeMirror.getCursor('from'))
-        var t = daCodeMirror.charCoords(daCodeMirror.getCursor('from'), "local").top;
-        daCodeMirror.scrollTo(null, t);
-      }
-      function update_search(event){
-        var query = $(this).val();
-        if (query.length == 0){
-          clear_matches();
-          daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
-          $(this).removeClass("search-error");
-          return;
-        }
-        if(event.keyCode == 13) {
-          $("#daSearchNext").click();
-          event.preventDefault();
-          return false;
-        }
-        var sc = daCodeMirror.getSearchCursor(query, origPosition);
-        show_matches(query);
-        var found = sc.findNext();
-        if (found){
-          daCodeMirror.setSelection(sc.from(), sc.to());
-          scroll_to_selection();
-          $(this).removeClass("search-error");
-        }
-        else{
-          origPosition = { line: 0, ch: 0, xRel: 1 }
-          sc = daCodeMirror.getSearchCursor(query, origPosition);
-          show_matches(query);
-          var found = sc.findNext();
-          if (found){
-            daCodeMirror.setSelection(sc.from(), sc.to());
-            scroll_to_selection();
-            $(this).removeClass("search-error");
-          }
-          else{
-            $(this).addClass("search-error");
-          }
-        }
-      }
+      var vocab = [];
+
+""" + variables_js(form='formtwo') + """
+
+""" + search_js(form='formtwo') + """
+
       function scrollBottom(){
-        $("html, body").animate({ scrollTop: $(document).height() }, "slow");
+        $("html, body").animate({
+          scrollTop: $("#editnav").offset().top - 53
+        }, "slow");
       }
       $( document ).ready(function() {
         daTextArea = document.getElementById("file_content");
@@ -7302,82 +7293,11 @@ def playground_files():
         });
         daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});
         $("#uploadfile").fileinput();
-        $("#formtwo input[name='search_term']").on("focus", function(event){
-          origPosition = daCodeMirror.getCursor('from');
-        });
-        $("#formtwo input[name='search_term']").change(update_search);
-        $("#formtwo input[name='search_term']").on("keyup", update_search);
-        $("#daSearchPrevious").click(function(event){
-          var query = $("#formtwo input[name='search_term']").val();
-          if (query.length == 0){
-            clear_matches();
-            daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
-            $("#formtwo input[name='search_term']").removeClass("search-error");
-            return;
-          }
-          origPosition = daCodeMirror.getCursor('from');
-          var sc = daCodeMirror.getSearchCursor(query, origPosition);
-          show_matches(query);
-          var found = sc.findPrevious();
-          if (found){
-            daCodeMirror.setSelection(sc.from(), sc.to());
-            scroll_to_selection();
-            $("#formtwo input[name='search_term']").removeClass("search-error");
-          }
-          else{
-            var lastLine = daCodeMirror.lastLine()
-            var lastChar = daCodeMirror.lineInfo(lastLine).text.length
-            origPosition = { line: lastLine, ch: lastChar, xRel: 1 }
-            sc = daCodeMirror.getSearchCursor(query, origPosition);
-            show_matches(query);
-            var found = sc.findPrevious();
-            if (found){
-              daCodeMirror.setSelection(sc.from(), sc.to());
-              scroll_to_selection();
-              $("#formtwo input[name='search_term']").removeClass("search-error");
-            }
-            else{
-              $("#formtwo input[name='search_term']").addClass("search-error");
-            }
-          }
-          event.preventDefault();
-          return false;
-        });
-        $("#daSearchNext").click(function(event){
-          var query = $("#formtwo input[name='search_term']").val();
-          if (query.length == 0){
-            clear_matches();
-            daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
-            $("#formtwo input[name='search_term']").removeClass("search-error");
-            return;
-          }
-          origPosition = daCodeMirror.getCursor('to');
-          var sc = daCodeMirror.getSearchCursor(query, origPosition);
-          show_matches(query);
-          var found = sc.findNext();
-          if (found){
-            daCodeMirror.setSelection(sc.from(), sc.to());
-            scroll_to_selection();
-            $("#formtwo input[name='search_term']").removeClass("search-error");
-          }
-          else{
-            origPosition = { line: 0, ch: 0, xRel: 1 }
-            sc = daCodeMirror.getSearchCursor(query, origPosition);
-            show_matches(query);
-            var found = sc.findNext();
-            if (found){
-              daCodeMirror.setSelection(sc.from(), sc.to());
-              scroll_to_selection();
-              $("#formtwo input[name='search_term']").removeClass("search-error");
-            }
-            else{
-              $("#formtwo input[name='search_term']").addClass("search-error");
-            }
-          }
-          event.preventDefault();
-          return false;
-        });""" + extra_command + """
+        searchReady();
+        variablesReady();
+        fetchVars(false);""" + extra_command + """
       });
+      searchReady();
     </script>"""
     if keymap:
         kbOpt = 'keyMap: "' + keymap + '", cursorBlinkRate: 0, '
@@ -7389,7 +7309,7 @@ def playground_files():
         any_files = True
     else:
         any_files = False
-    return render_template('pages/playgroundfiles.html', tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>' + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files), 200
+    return render_template('pages/playgroundfiles.html', tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    ' + kbLoad + '<script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/" + mode + "/" + mode + ".js") + '"></script>' + extra_js), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, section=section, userid=current_user.id, editable_files=editable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=pulldown_files, active_file=active_file), 200
 
 @app.route('/playgroundpackages', methods=['GET', 'POST'])
 @login_required
@@ -7549,6 +7469,300 @@ def playground_redirect():
         time.sleep(1)
         counter += 1
     abort(404)
+
+def search_js(form=None):
+    if form is None:
+        form = 'form'
+    return """
+var origPosition = null;
+var searchMatches = null;
+
+function searchReady(){
+  $("#""" + form + """ input[name='search_term']").on("focus", function(event){
+    origPosition = daCodeMirror.getCursor('from');
+  });
+  $("#""" + form + """ input[name='search_term']").change(update_search);
+  $("#""" + form + """ input[name='search_term']").on("keyup", update_search);
+  $("#daSearchPrevious").click(function(event){
+    var query = $("#""" + form + """ input[name='search_term']").val();
+    if (query.length == 0){
+      clear_matches();
+      daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
+      $("#""" + form + """ input[name='search_term']").removeClass("search-error");
+      return;
+    }
+    origPosition = daCodeMirror.getCursor('from');
+    var sc = daCodeMirror.getSearchCursor(query, origPosition);
+    show_matches(query);
+    var found = sc.findPrevious();
+    if (found){
+      daCodeMirror.setSelection(sc.from(), sc.to());
+      scroll_to_selection();
+      $("#""" + form + """ input[name='search_term']").removeClass("search-error");
+    }
+    else{
+      var lastLine = daCodeMirror.lastLine()
+      var lastChar = daCodeMirror.lineInfo(lastLine).text.length
+      origPosition = { line: lastLine, ch: lastChar, xRel: 1 }
+      sc = daCodeMirror.getSearchCursor(query, origPosition);
+      show_matches(query);
+      var found = sc.findPrevious();
+      if (found){
+        daCodeMirror.setSelection(sc.from(), sc.to());
+        scroll_to_selection();
+        $("#""" + form + """ input[name='search_term']").removeClass("search-error");
+      }
+      else{
+        $("#""" + form + """ input[name='search_term']").addClass("search-error");
+      }
+    }
+    event.preventDefault();
+    return false;
+  });
+  $("#daSearchNext").click(function(event){
+    var query = $("#""" + form + """ input[name='search_term']").val();
+    if (query.length == 0){
+      clear_matches();
+      daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
+      $("#""" + form + """ input[name='search_term']").removeClass("search-error");
+      return;
+    }
+    origPosition = daCodeMirror.getCursor('to');
+    var sc = daCodeMirror.getSearchCursor(query, origPosition);
+    show_matches(query);
+    var found = sc.findNext();
+    if (found){
+      daCodeMirror.setSelection(sc.from(), sc.to());
+      scroll_to_selection();
+      $("#""" + form + """ input[name='search_term']").removeClass("search-error");
+    }
+    else{
+      origPosition = { line: 0, ch: 0, xRel: 1 }
+      sc = daCodeMirror.getSearchCursor(query, origPosition);
+      show_matches(query);
+      var found = sc.findNext();
+      if (found){
+        daCodeMirror.setSelection(sc.from(), sc.to());
+        scroll_to_selection();
+        $("#""" + form + """ input[name='search_term']").removeClass("search-error");
+      }
+      else{
+        $("#""" + form + """ input[name='search_term']").addClass("search-error");
+      }
+    }
+    event.preventDefault();
+    return false;
+  });
+}
+
+function show_matches(query){
+  clear_matches();
+  if (query.length == 0){
+    daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
+    $("#""" + form + """ input[name='search_term']").removeClass("search-error");
+    return;
+  }
+  searchMatches = daCodeMirror.showMatchesOnScrollbar(query);
+}
+
+function clear_matches(){
+  if (searchMatches != null){
+    try{
+      searchMatches.clear();
+    }
+    catch(err){}
+  }
+}
+
+function scroll_to_selection(){
+  daCodeMirror.scrollIntoView(daCodeMirror.getCursor('from'))
+  var t = daCodeMirror.charCoords(daCodeMirror.getCursor('from'), "local").top;
+  daCodeMirror.scrollTo(null, t);
+}
+
+function update_search(event){
+  var query = $(this).val();
+  if (query.length == 0){
+    clear_matches();
+    daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
+    $(this).removeClass("search-error");
+    return;
+  }
+  if(event.keyCode == 13) {
+    $("#daSearchNext").click();
+    event.preventDefault();
+    return false;
+  }
+  var sc = daCodeMirror.getSearchCursor(query, origPosition);
+  show_matches(query);
+
+  var found = sc.findNext();
+  if (found){
+    daCodeMirror.setSelection(sc.from(), sc.to());
+    scroll_to_selection();
+    $(this).removeClass("search-error");
+  }
+  else{
+    origPosition = { line: 0, ch: 0, xRel: 1 }
+    sc = daCodeMirror.getSearchCursor(query, origPosition);
+    show_matches(query);
+    var found = sc.findNext();
+    if (found){
+      daCodeMirror.setSelection(sc.from(), sc.to());
+      scroll_to_selection();
+      $(this).removeClass("search-error");
+    }
+    else{
+      $(this).addClass("search-error");
+    }
+  }
+}
+
+"""
+    
+def variables_js(form=None):
+    if form is None:
+        form = 'form'
+    return """
+function activateVariables(){
+  $(".playground-variable").on("click", function(event){
+    daCodeMirror.replaceSelection($(this).data("insert"), "around");
+    daCodeMirror.focus();
+  });
+
+  $(".daparenthetical").on("click", function(event){
+    var reference = $(this).data("ref");
+    //console.log("reference is " + reference);
+    var target = $('[data-name="' + reference + '"]').first();
+    if (target != null){
+      //console.log("scrolltop is now " + $('#daplaygroundpanel').scrollTop());
+      //console.log("Scrolling to " + target.position().top);
+      $('#daplaygroundpanel').animate({
+          scrollTop: target.position().top
+      }, 1000);
+    }
+    event.preventDefault();
+  });
+
+  $(".dashowmethods").on("click", function(event){
+    var target_id = $(this).data("showhide");
+    $("#" + target_id).slideToggle();
+  });
+
+  $(".dashowattributes").on("click", function(event){
+    var basename = $(this).data('name');
+    $('tr[data-parent="' + basename + '"]').each(function(){
+      $(this).toggle();
+    });
+  });
+  $(".dasearchicon").on("click", function(event){
+    var query = $(this).data('name');
+    if (query == null || query.length == 0){
+      clear_matches();
+      daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
+      return;
+    }
+    origPosition = daCodeMirror.getCursor('to');
+    $("#""" + form + """ input[name='search_term']").val(query);
+    var sc = daCodeMirror.getSearchCursor(query, origPosition);
+    show_matches(query);
+    var found = sc.findNext();
+    if (found){
+      daCodeMirror.setSelection(sc.from(), sc.to());
+      scroll_to_selection();
+      $("#form input[name='search_term']").removeClass('search-error');
+    }
+    else{
+      origPosition = { line: 0, ch: 0, xRel: 1 }
+      sc = daCodeMirror.getSearchCursor(query, origPosition);
+      show_matches(query);
+      var found = sc.findNext();
+      if (found){
+        daCodeMirror.setSelection(sc.from(), sc.to());
+        scroll_to_selection();
+        $("#""" + form + """ input[name='search_term']").removeClass('search-error');
+      }
+      else{
+        $("#""" + form + """ input[name='search_term']").addClass('search-error');
+      }
+    }
+    event.preventDefault();
+    return false;
+  });
+}
+
+var interviewBaseUrl = '""" + url_for('index', cache='0', i='docassemble.playground' + str(current_user.id) + ':.yml') + """';
+
+function updateRunLink(){
+  $("#daRunButton").attr("href", interviewBaseUrl.replace('.yml', $("#daVariables").val()));
+}
+
+function fetchVars(changed){
+  daCodeMirror.save();
+  updateRunLink();
+  $.ajax({
+    type: "POST",
+    url: """ + '"' + url_for('playground_variables') + '"' + """,
+    data: 'csrf_token=' + $("#""" + form + """ input[name='csrf_token']").val() + '&variablefile=' + $("#daVariables").val() + '&changed=' + (changed ? 1 : 0),
+    success: function(data){
+      if (data.vocab_list != null){
+        vocab = data.vocab_list;
+      }
+      if (data.variables_html != null){
+        $("#daplaygroundtable").html(data.variables_html);
+        $(function () {
+          $('[data-toggle="popover"]').popover({trigger: 'click', html: true})
+        });
+        activateVariables();
+      }
+    },
+    dataType: 'json'
+  });
+  $("#daVariables").blur();
+}
+
+function variablesReady(){
+  $("#daVariables").change(function(event){
+    fetchVars(true);
+  });
+}
+
+function activatePopovers(){
+  $(function () {
+    $('[data-toggle="popover"]').popover({trigger: 'click', html: true})
+  });
+}
+
+"""
+
+@app.route('/playgroundvariables', methods=['POST'])
+@login_required
+@roles_required(['developer', 'admin'])
+def playground_variables():
+    playground = SavedFile(current_user.id, fix=True, section='playground')
+    files = sorted([f for f in os.listdir(playground.directory) if os.path.isfile(os.path.join(playground.directory, f))])
+    if len(files) == 0:
+        return jsonify(success=False, reason=1)
+    post_data = request.form.copy()
+    if request.method == 'POST' and 'variablefile' in post_data:
+        active_file = post_data['variablefile']
+        if post_data['variablefile'] in files:
+            if 'changed' in post_data and int(post_data['changed']):
+                session['variablefile'] = active_file
+            interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + active_file)
+            interview_source.set_testing(True)
+        else:
+            if active_file == '':
+                active_file = 'test.yml'
+            content = ''
+            if form.playground_content.data:
+                content = form.playground_content.data
+            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
+        interview = interview_source.get_interview()
+        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
+        variables_html, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=False)
+        return jsonify(success=True, variables_html=variables_html, vocab_list=vocab_list)
+    return jsonify(success=False, reason=2)
     
 @app.route('/playground', methods=['GET', 'POST'])
 @login_required
@@ -7638,24 +7852,24 @@ def playground_page():
                 fp.write(content.encode('utf8'))
             playground.finalize()
     post_data = request.form.copy()
-    if request.method == 'POST' and 'variablefile' in post_data:
-        active_file = post_data['variablefile']
-        if post_data['variablefile'] in files:
-            session['variablefile'] = active_file
-            interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + active_file)
-            interview_source.set_testing(True)
-        else:
-            if active_file == '':
-                active_file = 'test.yml'
-            content = ''
-            if form.playground_content.data:
-                content = form.playground_content.data
-            interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
-        interview = interview_source.get_interview()
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
-        variables_html, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
-        if is_ajax:
-            return jsonify(variables_html=variables_html, vocab_list=vocab_list)
+    # if request.method == 'POST' and 'variablefile' in post_data:
+    #     active_file = post_data['variablefile']
+    #     if post_data['variablefile'] in files:
+    #         session['variablefile'] = active_file
+    #         interview_source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(current_user.id) + ':' + active_file)
+    #         interview_source.set_testing(True)
+    #     else:
+    #         if active_file == '':
+    #             active_file = 'test.yml'
+    #         content = ''
+    #         if form.playground_content.data:
+    #             content = form.playground_content.data
+    #         interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=playground.directory, path="docassemble.playground" + str(current_user.id) + ":" + active_file, testing=True)
+    #     interview = interview_source.get_interview()
+    #     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml='docassemble.playground' + str(current_user.id) + ':' + active_file, req=request, action=None))
+    #     variables_html, vocab_list = get_vars_in_use(interview, interview_status, debug_mode=debug_mode)
+    #     if is_ajax:
+    #         return jsonify(variables_html=variables_html, vocab_list=vocab_list)
     if request.method == 'POST' and the_file != '' and form.validate():
         if form.delete.data:
             if os.path.isfile(filename):
@@ -7749,9 +7963,11 @@ def playground_page():
 var exampleData;
 var originalFileName = """ + repr(str(the_file)) + """;
 var isNew = """ + repr(str(is_new)) + """;
-var origPosition = null;
-var searchMatches = null;
 var vocab = """ + json.dumps(vocab_list) + """;
+
+""" + variables_js() + """
+
+""" + search_js() + """
 
 function activateExample(id, scroll){
   var info = exampleData[id];
@@ -7798,73 +8014,6 @@ function activateExample(id, scroll){
   $("#example-source-after").addClass("invisible");
 }
 
-interviewBaseUrl = '""" + url_for('index', i='docassemble.playground' + str(current_user.id) + ':.yml') + """';
-
-function updateRunLink(){
-  $("#daRunButton").attr("href", interviewBaseUrl.replace('.yml', $("#daVariables").val()));
-}
-
-function activateVariables(){
-  $(".playground-variable").on("click", function(event){
-    daCodeMirror.replaceSelection($(this).data("insert"), "around");
-    daCodeMirror.focus();
-  });
-
-  $(".daparenthetical").on("click", function(event){
-    var reference = $(this).data("ref");
-    //console.log("reference is " + reference);
-    var target = $('[data-name="' + reference + '"]').first();
-    if (target != null){
-      //console.log("scrolltop is now " + $('#daplaygroundpanel').scrollTop());
-      //console.log("Scrolling to " + target.position().top);
-      $('#daplaygroundpanel').animate({
-          scrollTop: target.position().top
-      }, 1000);
-    }
-    event.preventDefault();
-  });
-
-  $(".dashowmethods").on("click", function(event){
-    var target_id = $(this).data("showhide");
-    $("#" + target_id).slideToggle();
-  });
-
-  $(".dasearchicon").on("click", function(event){
-    var query = $(this).data('name');
-    if (query == null || query.length == 0){
-      clear_matches();
-      daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
-      return;
-    }
-    origPosition = daCodeMirror.getCursor('to');
-    $("#form input[name='search_term']").val(query);
-    var sc = daCodeMirror.getSearchCursor(query, origPosition);
-    show_matches(query);
-    var found = sc.findNext();
-    if (found){
-      daCodeMirror.setSelection(sc.from(), sc.to());
-      scroll_to_selection();
-      $("#form input[name='search_term']").removeClass('search-error');
-    }
-    else{
-      origPosition = { line: 0, ch: 0, xRel: 1 }
-      sc = daCodeMirror.getSearchCursor(query, origPosition);
-      show_matches(query);
-      var found = sc.findNext();
-      if (found){
-        daCodeMirror.setSelection(sc.from(), sc.to());
-        scroll_to_selection();
-        $("#form input[name='search_term']").removeClass('search-error');
-      }
-      else{
-        $("#form input[name='search_term']").addClass('search-error');
-      }
-    }
-    event.preventDefault();
-    return false;
-  });
-}
-
 function saveCallback(data){
   if ($("#flash").length){
     $("#flash").html(data.flash_message);
@@ -7885,170 +8034,11 @@ function saveCallback(data){
   }
 }
 
-function show_matches(query){
-  clear_matches();
-  if (query.length == 0){
-    daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
-    $("#form input[name='search_term']").removeClass("search-error");
-    return;
-  }
-  searchMatches = daCodeMirror.showMatchesOnScrollbar(query);
-}
-
-function clear_matches(){
-  if (searchMatches != null){
-    try{
-      searchMatches.clear();
-    }
-    catch(err){}
-  }
-}
-
-function scroll_to_selection(){
-  var t = daCodeMirror.charCoords(daCodeMirror.getCursor('from'), "local").top;
-  daCodeMirror.scrollTo(null, t);
-}
-
-function update_search(event){
-  var query = $(this).val();
-  if (query.length == 0){
-    clear_matches();
-    daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
-    $(this).removeClass("search-error");
-    return;
-  }
-  if(event.keyCode == 13) {
-    $("#daSearchNext").click();
-    event.preventDefault();
-    return false;
-  }
-  var sc = daCodeMirror.getSearchCursor(query, origPosition);
-  show_matches(query);
-
-  var found = sc.findNext();
-  if (found){
-    daCodeMirror.setSelection(sc.from(), sc.to());
-    scroll_to_selection();
-    $(this).removeClass("search-error");
-  }
-  else{
-    origPosition = { line: 0, ch: 0, xRel: 1 }
-    sc = daCodeMirror.getSearchCursor(query, origPosition);
-    show_matches(query);
-    var found = sc.findNext();
-    if (found){
-      daCodeMirror.setSelection(sc.from(), sc.to());
-      scroll_to_selection();
-      $(this).removeClass("search-error");
-    }
-    else{
-      $(this).addClass("search-error");
-    }
-  }
-}
-
 $( document ).ready(function() {
-  $("#daVariables").change(function(event){
-    daCodeMirror.save();
-    updateRunLink();
-    $.ajax({
-      type: "POST",
-      url: """ + '"' + url_for('playground_page') + '"' + """,
-      data: $("#form").serialize() + '&variablefile=' + $(this).val() + '&ajax=1',
-      success: function(data){
-        if (data.vocab_list != null){
-          vocab = data.vocab_list;
-        }
-        if (data.variables_html != null){
-          $("#daplaygroundtable").html(data.variables_html);
-          $(function () {
-            $('[data-toggle="popover"]').popover({trigger: 'click', html: true})
-          });
-          activateVariables();
-        }
-      },
-      dataType: 'json'
-    });
-    $(this).blur();
-  });
-  $("#form input[name='search_term']").on("focus", function(event){
-    origPosition = daCodeMirror.getCursor('from');
-  });
-  $("#form input[name='search_term']").change(update_search);
-  $("#form input[name='search_term']").on("keyup", update_search);
-  $("#daSearchPrevious").click(function(event){
-    var query = $("#form input[name='search_term']").val();
-    if (query.length == 0){
-      clear_matches();
-      daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
-      $("#form input[name='search_term']").removeClass("search-error");
-      return;
-    }
-    origPosition = daCodeMirror.getCursor('from');
-    var sc = daCodeMirror.getSearchCursor(query, origPosition);
-    show_matches(query);
-    var found = sc.findPrevious();
-    if (found){
-      daCodeMirror.setSelection(sc.from(), sc.to());
-      scroll_to_selection();
-      $("#form input[name='search_term']").removeClass("search-error");
-    }
-    else{
-      var lastLine = daCodeMirror.lastLine()
-      var lastChar = daCodeMirror.lineInfo(lastLine).text.length
-      origPosition = { line: lastLine, ch: lastChar, xRel: 1 }
-      sc = daCodeMirror.getSearchCursor(query, origPosition);
-      show_matches(query);
-      var found = sc.findPrevious();
-      if (found){
-        daCodeMirror.setSelection(sc.from(), sc.to());
-        scroll_to_selection();
-        $("#form input[name='search_term']").removeClass("search-error");
-      }
-      else{
-        $("#form input[name='search_term']").addClass("search-error");
-      }
-    }
-    event.preventDefault();
-    return false;
-  });
-  $("#daSearchNext").click(function(event){
-    var query = $("#form input[name='search_term']").val();
-    if (query.length == 0){
-      clear_matches();
-      daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
-      $("#form input[name='search_term']").removeClass("search-error");
-      return;
-    }
-    origPosition = daCodeMirror.getCursor('to');
-    var sc = daCodeMirror.getSearchCursor(query, origPosition);
-    show_matches(query);
-    var found = sc.findNext();
-    if (found){
-      daCodeMirror.setSelection(sc.from(), sc.to());
-      scroll_to_selection();
-      $("#form input[name='search_term']").removeClass("search-error");
-    }
-    else{
-      origPosition = { line: 0, ch: 0, xRel: 1 }
-      sc = daCodeMirror.getSearchCursor(query, origPosition);
-      show_matches(query);
-      var found = sc.findNext();
-      if (found){
-        daCodeMirror.setSelection(sc.from(), sc.to());
-        scroll_to_selection();
-        $("#form input[name='search_term']").removeClass("search-error");
-      }
-      else{
-        $("#form input[name='search_term']").addClass("search-error");
-      }
-    }
-    event.preventDefault();
-    return false;
-  });
+  variablesReady();
+  searchReady();
   $("#daRun").click(function(event){
     if (originalFileName != $("#playground_name").val()){
-      //console.log("Click daSave");
       $("#form button[name='submit']").click();
       event.preventDefault();
       return false;
@@ -8138,9 +8128,7 @@ $( document ).ready(function() {
     }
   });
 
-  $(function () {
-    $('[data-toggle="popover"]').popover({trigger: 'click', html: true})
-  });
+  activatePopovers();
 
   $("#show-full-example").on("click", function(){
     var id = $(".example-active").data("example");

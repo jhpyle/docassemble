@@ -1286,6 +1286,9 @@ def noun_singular_en(*pargs, **kwargs):
         return pargs[0]
     return pattern.en.singularize(pargs[0])
 
+def indefinite_article_en(*pargs, **kwargs):
+    return pattern.en.article(*pargs, **kwargs) + " " + unicode(pargs[0])
+
 language_functions = {
     'in_the': {
         'en': prefix_constructor('in the ')
@@ -1314,11 +1317,20 @@ language_functions = {
     'your': {
         'en': prefix_constructor('your ')
     },
+    'some': {
+        'en': prefix_constructor('some ')
+    },
     'its': {
         'en': prefix_constructor('its ')
     },
     'the': {
         'en': prefix_constructor('the ')
+    },
+    'these': {
+        'en': prefix_constructor('these ')
+    },
+    'this': {
+        'en': prefix_constructor('this ')
     },
     'does_a_b': {
         'en': prefix_constructor_two_arguments('does ')
@@ -1357,7 +1369,7 @@ language_functions = {
         'en': lambda *pargs, **kwargs: noun_singular_en(*pargs, **kwargs)
     },
     'indefinite_article': {
-        'en': lambda *pargs, **kwargs: pattern.en.article(*pargs, **kwargs) + " " + unicode(pargs[0])
+        'en': indefinite_article_en
     },
     'currency_symbol': {
         '*': currency_symbol_default
@@ -1429,6 +1441,8 @@ your = language_function_constructor('your')
 its = language_function_constructor('its')
 of_the = language_function_constructor('of_the')
 the = language_function_constructor('the')
+this = language_function_constructor('this')
+these = language_function_constructor('these')
 do_you = language_function_constructor('do_you')
 did_you = language_function_constructor('did_you')
 does_a_b = language_function_constructor('does_a_b')
@@ -1441,6 +1455,7 @@ verb_past = language_function_constructor('verb_past')
 verb_present = language_function_constructor('verb_present')
 noun_plural = language_function_constructor('noun_plural')
 noun_singular = language_function_constructor('noun_singular')
+some = language_function_constructor('some')
 indefinite_article = language_function_constructor('indefinite_article')
 period_list = language_function_constructor('period_list')
 name_suffix = language_function_constructor('name_suffix')
