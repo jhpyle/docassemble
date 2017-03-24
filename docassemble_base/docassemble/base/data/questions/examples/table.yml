@@ -2,20 +2,42 @@ metadata:
   title: Tables
   short title: tables
 ---
+code: |
+  fruit = dict(apples=2, pears=4, peaches=3, strawberries=9)
+---
+table: mytable
+row: fruit
+header:
+  - "Fruit ${ 'Name' }"
+  - "Number of Fruits"
+column:
+  - |
+    row_item + ' are so awesome it is just unbelievable and I do not know how I will survive without them to be honest you know.'
+  - |
+    fruit[row_item]
+---
+question: |
+  Here is a table
+subquestion: |
+  ${ mytable }
+---
+mandatory: true
 question: |
   Here is an attachment
-attachment: |
-  This is a table.
+attachment:
+  valid formats:
+    - rtf
+    - pdf
+    - html
+  metadata:
+    SingleSpacing: True
+  content: |
+    This is a table.
 
-  Fruit|Seeds
-  ------|----:
-  Apple|4
-  Orange|3
-  Pear|6
+    ${ mytable }
 
-  Is that any good?
+    Is that any good?
 ---
-mandatory: True
 question: |
   A table
 subquestion: |

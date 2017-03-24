@@ -11,7 +11,7 @@ import mimetypes
 from docassemble.base.functions import possessify, possessify_long, a_preposition_b, a_in_the_b, its, their, the, this, these, underscore_to_space, nice_number, verb_past, verb_present, noun_plural, comma_and_list, ordinal, word, need, capitalize, server, nodoublequote, some, indefinite_article
 import docassemble.base.functions
 
-__all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate', 'DATable']
+__all__ = ['DAObject', 'DAList', 'DADict', 'DASet', 'DAFile', 'DAFileCollection', 'DAFileList', 'DAEmail', 'DAEmailRecipient', 'DAEmailRecipientList', 'DATemplate']
 
 unique_names = set()
 
@@ -1329,13 +1329,13 @@ class DATemplate(DAObject):
     def __unicode__(self):
         return unicode(self.__str__())
 
-class DATable(DAObject):
-    """The class used for tables.  A table block saves to
-    an object of this type."""
-    def render(self):
-        return 'TABLE'
-    def __str__(self):
-        return(self.render())
+# class DATable(DAObject):
+#     """The class used for tables.  A table block saves to
+#     an object of this type."""
+#     def render(self):
+#         return(self.content)
+#     def __str__(self):
+#         return(self.render())
 
 def selections(*pargs, **kwargs):
     """Packs a list of objects in the appropriate format for including

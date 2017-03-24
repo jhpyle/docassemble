@@ -12,6 +12,7 @@ import operator
 import pprint
 import codecs
 import copy
+import random
 #sys.stderr.write("loading filter\n")
 import docassemble.base.filter
 import docassemble.base.pdftk
@@ -43,6 +44,13 @@ def process_audio_video_list(the_list, user_dict):
     for the_item in the_list:
         output.append({'text': the_item['text'].text(user_dict), 'package': the_item['package'], 'type': the_item['type']})
     return output
+
+def table_safe(text):
+    text = unicode(text)
+    text = re.sub(r'[\n\r\|]', ' ', text)
+    if re.match(r'[\-:]+', text):
+        text = '  ' + text + '  '
+    return text
 
 def textify(data, user_dict):
     return list(map((lambda x: x.text(user_dict)), data))
@@ -327,7 +335,6 @@ class TextObject(object):
             return(self.template.render(**user_dict))
         else:
             return(self.original_text)
-
 
 def safeid(text):
     return codecs.encode(text.encode('utf8'), 'base64').decode().replace('\n', '')
@@ -2204,7 +2211,7 @@ class Interview:
                         exec('from ' + str(self.source.package) + module_name + ' import *', user_dict)
                     else:
                         exec('from ' + module_name + ' import *', user_dict)
-            if question.question_type == 'reset' or question.question_type == 'template':
+            if question.question_type in ['reset', 'template', 'table']:
                 for var in question.reset_list:
                     if complications.search(var):
                         try:
@@ -2698,11 +2705,55 @@ class Interview:
                             header = question.fields[0].extras['header']
                             row = question.fields[0].extras['row']
                             column = question.fields[0].extras['column']
-                            table_content += "|".join([table_safe(x.text(user_dict)) for x in header])
-                            table_content += "|".join(['-' for x in header])
-                            # for item in blah
-                            # do eval
-                            string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATable(' + "'" + from_safeid(question.fields[0].saveas) + "', content='" + table_content + "')"
+                            header_output = [table_safe(x.text(user_dict)) for x in header]
+                            the_iterable = eval(row, user_dict)
+                            if not hasattr(the_iterable, '__iter__'):
+                                raise DAError("Error in processing table " + from_safeid(question.fields[0].saveas) + ": row value is not iterable")
+                            indexno = 0
+                            contents = list()
+                            for item in the_iterable:
+                                user_dict['row_item'] = item
+                                user_dict['row_index'] = indexno
+                                contents.append([table_safe(eval(x, user_dict)) for x in column])
+                                indexno += 1
+                            user_dict.pop('row_item', None)
+                            user_dict.pop('row_index', None)
+                            max_chars = [0 for x in header_output]
+                            max_word = [0 for x in header_output]
+                            for indexno in range(len(header_output)):
+                                words = re.split(r'[ \n]', header_output[indexno])
+                                if len(header_output[indexno]) > max_chars[indexno]:
+                                    max_chars[indexno] = len(header_output[indexno])
+                                for content_line in contents:
+                                    words += re.split(r'[ \n]', content_line[indexno])
+                                    if len(content_line[indexno]) > max_chars[indexno]:
+                                        max_chars[indexno] = len(content_line[indexno])
+                                for text in words:
+                                    if len(text) > max_word[indexno]:
+                                        max_word[indexno] = len(text)
+                            max_chars_to_use = [min(x, 72) for x in max_chars]
+                            override_mode = False
+                            while True:
+                                new_sum = sum(max_chars_to_use)
+                                old_sum = new_sum
+                                if new_sum < 72:
+                                    break
+                                r = random.uniform(0, new_sum)
+                                upto = 0
+                                for indexno in range(len(max_chars_to_use)):
+                                    if upto + max_chars_to_use[indexno] >= r:
+                                        if max_chars_to_use[indexno] > max_word[indexno] or override_mode:
+                                            max_chars_to_use[indexno] -= 1
+                                            break
+                                    upto += max_chars_to_use[indexno]
+                                new_sum = sum(max_chars_to_use)
+                                if new_sum == old_sum:
+                                    override_mode = True
+                            table_content += "|".join(header_output) + "\n"
+                            table_content += "|".join(['-' * x for x in max_chars_to_use]) + "\n"
+                            for content_line in contents:
+                                table_content += "|".join(content_line) + "\n"
+                            string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + "'" + from_safeid(question.fields[0].saveas) + "', content=" + repr(table_content) + ")"
                             exec(string, user_dict)
                             docassemble.base.functions.pop_current_variable()
                             return({'type': 'continue'})

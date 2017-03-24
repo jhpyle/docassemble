@@ -914,7 +914,8 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
         result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.terms[question.language])), result)
     #logmessage("Trim is " + str(trim) + " for " + str(result))
     if trim:
-        result = result[3:-4]
+        if result.startswith('<p>') and result.endswith('</p>'):
+            result = result[3:-4]
     elif pclass:
         result = re.sub('<p>', '<p class="' + pclass + '">', result)
     if escape:
