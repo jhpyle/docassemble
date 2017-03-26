@@ -1,0 +1,21 @@
+metadata:
+  title: State selection
+  example start: 2
+  example end: 3
+  documentation: "http://docassemble.org/docs/functions.html#states_list"
+---
+modules:
+  - docassemble.base.util
+---
+question: |
+  Where do you live?
+fields:
+  - State: user_state
+    code: states_list()
+---
+mandatory: True
+question: |
+  You live in
+  ${ state_name(user_state) },
+  which is abbreviated
+  ${ user_state }.

@@ -884,6 +884,7 @@ def emoji_insert(text, status=None, images=None):
         return(":" + str(text) + ":")
 
 def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use_pandoc=False, escape=False, do_terms=True, indent=None, strip_newlines=None, divclass=None, embedder=None):
+    a = unicode(a)
     if question is None and status is not None:
         question = status.question
     if question is not None:

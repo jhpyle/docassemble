@@ -1,5 +1,9 @@
 metadata:
   title: SMS interface
+  short title: SMS
+  documentation: "http://docassemble.org/docs/sms.html"
+  example start: 1
+  example end: 3
 ---
 question: |
   Hello, world!

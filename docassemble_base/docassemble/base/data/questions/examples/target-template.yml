@@ -1,6 +1,6 @@
 metadata:
   title: Check in and return template
-  documentation: "http://docassemble.org/docs/background.html#check in"
+  documentation: "http://docassemble.org/docs/background.html#target"
   example start: 1
   example end: 2
 ---

@@ -1,0 +1,19 @@
+metadata:
+  title: Subdivision type
+  example start: 2
+  example end: 2
+  documentation: "http://docassemble.org/docs/functions.html#subdivision_type"
+---
+modules:
+  - docassemble.base.util
+---
+mandatory: True
+question: |
+  Geography lesson
+subquestion: |
+  % for country in ['BG', 'SE', 'TN', 'VN', 'LV', 'US']:
+  In ${ country_name(country) },
+  you live in a
+  ${ subdivision_type(country) }.
+  
+  % endfor

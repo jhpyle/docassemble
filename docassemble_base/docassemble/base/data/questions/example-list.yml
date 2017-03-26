@@ -26,6 +26,10 @@
     - template
     - template-subject
     - template-file
+- Tables:
+    - table-markdown
+    - table
+    - table-mako
 - Fields:
     - text-field
     - text-box-field
@@ -93,6 +97,7 @@
     - periodic-value
     - dafile
 - Question settings:
+    - under
     - help
     - prevent-going-back
     - language
@@ -133,6 +138,7 @@
     - image-sets
     - images
     - decoration
+    - emoji-inline
     - static_image
 - Exit questions:
     - dead-end
@@ -164,6 +170,8 @@
     - url-of
     - set-language
     - country
+    - state
+    - subdivision-type
     - chat-partners-available
     - device
     - interface
@@ -172,6 +180,7 @@
     - language_from_browser_restricted
     - ocr
     - ocr-background
+    - save-url-to-file
 - Code:
     - imports
     - modules
@@ -222,6 +231,8 @@
     - background_action_with_response_action
     - background_response_action_flash
     - background_action_refresh
+    - check-in
+    - target-template
 - Scheduled tasks:
     - cron
 - Machine Learning:

@@ -79,24 +79,18 @@ def close_files():
         file_object.commit()
 
 def set_gathering_mode(mode, instanceName):
-    #logmessage("set_gathering_mode: " + str(mode) + " " + str(instanceName))
     if mode:
         if instanceName not in this_thread.gathering_mode:
-            #logmessage("set_gathering_mode: setting to " + str(get_current_variable()))
             this_thread.gathering_mode[instanceName] = get_current_variable()
     else:
         del this_thread.gathering_mode[instanceName]
 
 def get_gathering_mode(instanceName):
-    #logmessage("get_gathering_mode: " + str(instanceName))
     if instanceName not in this_thread.gathering_mode:
-        #logmessage("get_gathering_mode: returning False")
         return False
-    #logmessage("get_gathering_mode: returning True")
     return True
 
 def reset_gathering_mode(*pargs):
-    #logmessage("reset_gathering_mode: " + str(pargs))
     if len(pargs) == 0:
         this_thread.gathering_mode = dict()
         return
@@ -106,7 +100,6 @@ def reset_gathering_mode(*pargs):
         if curVar == var:
             todel.append(instanceName)
     for item in todel:
-        #logmessage("reset_gathering_mode: deleting " + str(item))
         del this_thread.gathering_mode[item]
 
 def set_uid(uid):
@@ -220,10 +213,13 @@ def subdivision_type(country_code):
         else:
             counts[subdivision.type] += 1
     counts_ordered = sorted(counts.keys(), key=lambda x: counts[x], reverse=True)
-    if len(counts_ordered) > 1:
+    if len(counts_ordered) > 1 and counts[counts_ordered[1]] > 1:
         return counts_ordered[0] + '/' + counts_ordered[1]
-    else:
+    elif len(counts_ordered) > 0:
         return counts_ordered[0]
+    else:
+        return None
+    
 def countries_list():
     """Returns a list of countries, suitable for use in a multiple choice field."""
     return [{country.alpha_2: country.name} for country in sorted(pycountry.countries, key=lambda x: x.name)]
@@ -1263,7 +1259,7 @@ def a_preposition_b_default(a, b, **kwargs):
 def verb_present_en(*pargs, **kwargs):
     new_args = list()
     for arg in pargs:
-        new_args.append(arg)
+        new_args.append(unicode(arg))
     if len(new_args) < 2:
         new_args.append('3sg')
     return pattern.en.conjugate(*new_args, **kwargs)
@@ -1278,13 +1274,13 @@ def verb_past_en(*pargs, **kwargs):
 
 def noun_plural_en(*pargs, **kwargs):
     if len(pargs) >= 2 and pargs[1] == 1:
-        return pargs[0]
-    return pattern.en.pluralize(pargs[0])
+        return unicode(pargs[0])
+    return pattern.en.pluralize(unicode(pargs[0]))
 
 def noun_singular_en(*pargs, **kwargs):
     if len(pargs) >= 2 and pargs[1] != 1:
         return pargs[0]
-    return pattern.en.singularize(pargs[0])
+    return pattern.en.singularize(unicode(pargs[0]))
 
 def indefinite_article_en(*pargs, **kwargs):
     return pattern.en.article(*pargs, **kwargs) + " " + unicode(pargs[0])

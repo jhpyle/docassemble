@@ -83,6 +83,7 @@ class DAObject(object):
         self.has_nonrandom_instance_name = False
         return self
     def fix_instance_name(self, old_instance_name, new_instance_name):
+        """Substitutes a different instance name for the object and its subobjects."""
         self.instanceName = re.sub(r'^' + old_instance_name, new_instance_name, self.instanceName)
         for aname in self.__dict__:
             if isinstance(getattr(self, aname), DAObject):
@@ -166,6 +167,7 @@ class DAObject(object):
         else:
             return(output)            
     def pronoun(self, **kwargs):
+        """Returns it."""
         return word('it', **kwargs)
     def pronoun_objective(self, **kwargs):
         """Same as pronoun()."""
@@ -197,7 +199,8 @@ class DAList(DAObject):
         if not hasattr(self, 'object_type'):
             self.object_type = None
         return super(DAList, self).init(*pargs, **kwargs)
-    def trigger_gather(self):
+    def _trigger_gather(self):
+        """Triggers the gathering process."""
         if docassemble.base.functions.get_gathering_mode(self.instanceName) is False:
             if self.auto_gather:
                 self.gather()
@@ -205,8 +208,10 @@ class DAList(DAObject):
                 self.gathered
         return
     def clear(self):
+        """Removes all the items from the list."""
         self.elements = list()
     def set_instance_name_recursively(self, thename):
+        """Sets the instanceName attribute, if it is not already set, and that of subobjects."""
         indexno = 0
         for item in self.elements:
             if isinstance(item, DAObject):
@@ -249,11 +254,11 @@ class DAList(DAObject):
         self.elements.extend(the_list)
     def first(self):
         """Returns the first element of the list"""
-        self.trigger_gather()
+        self._trigger_gather()
         return self.__getitem__(0)
     def last(self):
         """Returns the last element of the list"""
-        self.trigger_gather()
+        self._trigger_gather()
         if len(self.elements) == 0:
             return self.__getitem__(0)
         return self.__getitem__(len(self.elements)-1)
@@ -289,6 +294,12 @@ class DAList(DAObject):
         the_noun = re.sub(r'.*\.', '', the_noun)
         return the_noun
     def possessive(self, target):
+        """If the variable name is "plaintiff" and the target is "fish,"
+        returns "plaintiff's fish" if there is one item in the list,
+        and "plaintiffs' fish" if there is more than one item in the
+        list.
+
+        """
         return possessify(self.as_noun(), target, plural=(self.number() > 1))
     def as_noun(self, *pargs, **kwargs):
         """Returns a human-readable expression of the object based on its instanceName,
@@ -327,7 +338,7 @@ class DAList(DAObject):
         elements if necessary."""
         if self.ask_number:
             return self._target_or_actual()
-        self.trigger_gather()
+        self._trigger_gather()
         return len(self.elements)
     def number_as_word(self):
         """Returns the number of elements in the list, spelling out the number if ten 
@@ -376,13 +387,13 @@ class DAList(DAObject):
     def comma_and_list(self, **kwargs):
         """Returns the elements of the list, separated by commas, with 
         "and" before the last element."""
-        self.trigger_gather()
+        self._trigger_gather()
         return comma_and_list(self.elements, **kwargs)
     def __contains__(self, item):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__contains__(item)
     def __iter__(self):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__iter__()
     def _target_or_actual(self):
         if hasattr(self, 'gathered') and self.gathered:
@@ -391,12 +402,12 @@ class DAList(DAObject):
     def __len__(self):
         if self.ask_number:
             return self._target_or_actual()
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__len__()
     def __delitem__(self, index):
         return self.elements.__delitem__(index)
     def __reversed__(self):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__reversed__()
     def _fill_up_to(self, index):
         if index < 0 and len(self.elements) + index < 0:
@@ -430,33 +441,58 @@ class DAList(DAObject):
                 self._fill_up_to(index)
             return self.elements[index]
     def __str__(self):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.comma_and_list()
     def __unicode__(self):
-        self.trigger_gather()
+        self._trigger_gather()
         return unicode(self.__str__())
     def union(self, other_set):
-        self.trigger_gather()
+        """Returns a Python set consisting of the elements of current list,
+        considered as a set, combined with the elements of the other_set.
+
+        """
+        self._trigger_gather()
         return DASet(elements=set(self.elements).union(setify(other_set)))
     def intersection(self, other_set):
-        self.trigger_gather()
+        """Returns a Python set consisting of the elements of the current list,
+        considered as a set, that also exist in the other_set.
+
+        """
+        self._trigger_gather()
         return DASet(elements=set(self.elements).intersection(setify(other_set)))
     def difference(self, other_set):
-        self.trigger_gather()
+        """Returns a Python set consisting of the elements of the current list,
+        considered as a set, that do not exist in the other_set.
+
+        """
+        self._trigger_gather()
         return DASet(elements=set(self.elements).difference(setify(other_set)))
     def isdisjoint(self, other_set):
-        self.trigger_gather()
+        """Returns True if no elements overlap between the current list,
+        considered as a set, and the other_set.  Otherwise, returns
+        False.
+
+        """
+        self._trigger_gather()
         return set(self.elements).isdisjoint(setify(other_set))
     def issubset(self, other_set):
-        self.trigger_gather()
+        """Returns True if the current list, considered as a set, is a subset
+        of the other_set.  Otherwise, returns False.
+
+        """
+        self._trigger_gather()
         return set(self.elements).issubset(setify(other_set))
     def issuperset(self, other_set):
-        self.trigger_gather()
+        """Returns True if the other_set is a subset of the current list,
+        considered as a set.  Otherwise, returns False.
+
+        """
+        self._trigger_gather()
         return set(self.elements).issuperset(setify(other_set))
     def pronoun_possessive(self, target, **kwargs):
         """Given a word like "fish," returns "her fish," "his fish," or "their fish," as appropriate."""
         if self.number() == 1:
-            self.trigger_gather()
+            self._trigger_gather()
             return self.elements[0].pronoun_possessive(target, **kwargs)
         output = their(target, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -466,7 +502,7 @@ class DAList(DAObject):
     def pronoun(self, **kwargs):
         """Returns a pronoun like "you," "her," or "him," "it", or "them," as appropriate."""
         if self.number() == 1:
-            self.trigger_gather()
+            self._trigger_gather()
             return self.elements[0].pronoun(**kwargs)
         output = word('them', **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -479,7 +515,7 @@ class DAList(DAObject):
     def pronoun_subjective(self, **kwargs):
         """Returns a pronoun like "you," "she," "he," or "they" as appropriate."""
         if self.number() == 1:
-            self.trigger_gather()
+            self._trigger_gather()
             return self.elements[0].pronoun_subjective(**kwargs)
         output = word('they', **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -504,16 +540,16 @@ class DADict(DAObject):
         if not hasattr(self, 'object_type'):
             self.object_type = None
         return super(DADict, self).init(*pargs, **kwargs)
-    def trigger_gather(self):
+    def _trigger_gather(self):
+        """Triggers the gathering process."""
         if docassemble.base.functions.get_gathering_mode(self.instanceName) is False:
             if self.auto_gather:
                 self.gather()
             else:
                 self.gathered
         return
-    def clear(self):
-        self.elements = list()
     def set_instance_name_recursively(self, thename):
+        """Sets the instanceName attribute, if it is not already set, and that of subobjects."""
         for key, value in self.elements.iteritems():
             if isinstance(value, DAObject):
                 value.set_instance_name_recursively(thename + '[' + str(key) + ']')
@@ -522,9 +558,11 @@ class DADict(DAObject):
         """Creates a new object and creates an entry in the dictionary for it.
         The first argument is the name of the dictionary key to set.
         Takes an optional second argument, which is the type of object
-        the new object should be.  If no object type is provided,
-        the object type given by .objectFunction is used, and if 
-        that is not set, DAObject is used."""
+        the new object should be.  If no object type is provided, the
+        object type given by .object_type is used, and if that is not
+        set, DAObject is used.
+
+        """
         objectFunction = None
         pargs = [x for x in pargs]
         entry = pargs.pop(0)
@@ -618,12 +656,20 @@ class DADict(DAObject):
                 return capitalize(output)
             else:
                 return output
+    def possessive(self, target):
+        """If the variable name is "plaintiff" and the target is "fish,"
+        returns "plaintiff's fish" if there is one item in the dictionary,
+        and "plaintiffs' fish" if there is more than one item in the
+        list.
+
+        """
+        return possessify(self.as_noun(), target, plural=(self.number() > 1))
     def number(self):
         """Returns the number of keys in the dictionary.  Forces the gathering of the
         dictionary items if necessary."""
         if self.ask_number:
             return self._target_or_actual()
-        self.trigger_gather()
+        self._trigger_gather()
         return len(self.elements)
     def number_as_word(self):
         """Returns the number of keys in the dictionary, spelling out the number if ten 
@@ -682,7 +728,7 @@ class DADict(DAObject):
     def comma_and_list(self, **kwargs):
         """Returns the keys of the list, separated by commas, with 
         "and" before the last key."""
-        self.trigger_gather()
+        self._trigger_gather()
         return comma_and_list(sorted(self.elements.keys()), **kwargs)
     def __getitem__(self, index):
         if index not in self.elements:
@@ -697,15 +743,15 @@ class DADict(DAObject):
         self.elements[key] = value
         return
     def __contains__(self, item):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__contains__(item)
     def keys(self):
         """Returns the keys of the dictionary as a Python list."""
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.keys()
     def values(self):
         """Returns the values of the dictionary as a Python list."""
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.values()
     def update(*pargs, **kwargs):
         """Updates the dictionary with the keys and values of another dictionary"""
@@ -737,22 +783,22 @@ class DADict(DAObject):
         return self.elements.has_key(key)
     def items(self):
         """Returns a copy of the items of the dictionary."""
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.items()
     def iteritems(self):
         """Iterates through the keys and values of the dictionary."""
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.iteritems()
     def iterkeys(self):
         """Iterates through the keys of the dictionary."""
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.iterkeys()
     def itervalues(self):
         """Iterates through the values of the dictionary."""
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.itervalues()
     def __iter__(self):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__iter__()
     def _target_or_actual(self):
         if hasattr(self, 'gathered') and self.gathered:
@@ -761,41 +807,66 @@ class DADict(DAObject):
     def __len__(self):
         if self.ask_number:
             return self._target_or_actual()
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__len__()
     def __reversed__(self):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__reversed__()
     def __delitem__(self, key):
         return self.elements.__delitem__(key)
     def __missing__(self, key):
         return self.elements.__missing__(key)
     def __hash__(self, the_object):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__hash__(the_object)
     def __str__(self):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.comma_and_list()
     def __unicode__(self):
-        self.trigger_gather()
+        self._trigger_gather()
         return unicode(self.__str__())
     def union(self, other_set):
-        self.trigger_gather()
+        """Returns a Python set consisting of the keys of the current dict,
+        considered as a set, combined with the elements of the other_set.
+
+        """
+        self._trigger_gather()
         return DASet(elements=set(self.elements.values()).union(setify(other_set)))
     def intersection(self, other_set):
-        self.trigger_gather()
+        """Returns a Python set consisting of the keys of the current dict,
+        considered as a set, that also exist in the other_set.
+
+        """
+        self._trigger_gather()
         return DASet(elements=set(self.elements.values()).intersection(setify(other_set)))
     def difference(self, other_set):
-        self.trigger_gather()
+        """Returns a Python set consisting of the keys of the current dict,
+        considered as a set, that do not exist in the other_set.
+
+        """
+        self._trigger_gather()
         return DASet(elements=set(self.elements.values()).difference(setify(other_set)))
     def isdisjoint(self, other_set):
-        self.trigger_gather()
+        """Returns True if no elements overlap between the keys of the current
+        dict, considered as a set, and the other_set.  Otherwise,
+        returns False.
+
+        """
+        self._trigger_gather()
         return set(self.elements.values()).isdisjoint(setify(other_set))
     def issubset(self, other_set):
-        self.trigger_gather()
+        """Returns True if the keys of the current dict, considered as a set,
+        is a subset of the other_set.  Otherwise, returns False.
+
+        """
+        self._trigger_gather()
         return set(self.elements.values()).issubset(setify(other_set))
     def issuperset(self, other_set):
-        self.trigger_gather()
+        """Returns True if the other_set is a subset of the keys of the
+        current dict, considered as a set.  Otherwise, returns False.
+
+        """
+        self._trigger_gather()
         return set(self.elements.values()).issuperset(setify(other_set))
     def pronoun_possessive(self, target, **kwargs):
         """Returns "their <target>." """
@@ -805,8 +876,9 @@ class DADict(DAObject):
         else:
             return(output)            
     def pronoun(self, **kwargs):
+        """Returns them, or the pronoun for the only element."""
         if self.number() == 1:
-            self.trigger_gather()
+            self._trigger_gather()
             return list(self.elements.values())[0].pronoun(**kwargs)
         output = word('them', **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -832,7 +904,8 @@ class DASet(DAObject):
             self.gathered = True
             del kwargs['elements']
         return super(DASet, self).init(*pargs, **kwargs)
-    def trigger_gather(self):
+    def _trigger_gather(self):
+        """Triggers the gathering process."""
         if docassemble.base.functions.get_gathering_mode(self.instanceName) is False:
             if self.auto_gather:
                 self.gather()
@@ -942,7 +1015,7 @@ class DASet(DAObject):
         """
         if self.ask_number:
             return self._target_or_actual()
-        self.trigger_gather()
+        self._trigger_gather()
         return len(self.elements)
     def number_as_word(self):
         """Returns the number of items in the set, spelling out the number if
@@ -985,13 +1058,13 @@ class DASet(DAObject):
     def comma_and_list(self, **kwargs):
         """Returns the items in the set, separated by commas, with 
         "and" before the last item."""
-        self.trigger_gather()
+        self._trigger_gather()
         return comma_and_list(sorted(map(str, self.elements)), **kwargs)
     def __contains__(self, item):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__contains__(item)
     def __iter__(self):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__iter__()
     def _target_or_actual(self):
         if hasattr(self, 'gathered') and self.gathered:
@@ -1000,83 +1073,83 @@ class DASet(DAObject):
     def __len__(self):
         if self.ask_number:
             return self._target_or_actual()
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__len__()
     def __reversed__(self):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__reversed__()
     def __and__(self, operand):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__and__(operand)
     def __or__(self, operand):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__or__(operand)
     def __iand__(self, operand):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__iand__(operand)
     def __ior__(self, operand):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__ior__(operand)
     def __isub__(self, operand):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__isub__(operand)
     def __ixor__(self, operand):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__ixor__(operand)
     def __rand__(self, operand):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__rand__(operand)
     def __ror__(self, operand):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__ror__(operand)
     def __hash__(self, the_object):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.__hash__(the_object)
     def __str__(self):
-        self.trigger_gather()
+        self._trigger_gather()
         return self.comma_and_list()
     def __unicode__(self):
-        self.trigger_gather()
+        self._trigger_gather()
         return unicode(self.__str__())
     def union(self, other_set):
         """Returns a Python set consisting of the elements of current set
         combined with the elements of the other_set.
 
         """
-        self.trigger_gather()
+        self._trigger_gather()
         return DASet(elements=self.elements.union(setify(other_set)))
     def intersection(self, other_set):
         """Returns a Python set consisting of the elements of the current set
         that also exist in the other_set.
 
         """
-        self.trigger_gather()
+        self._trigger_gather()
         return DASet(elements=self.elements.intersection(setify(other_set)))
     def difference(self, other_set):
         """Returns a Python set consisting of the elements of the current set
         that do not exist in the other_set.
 
         """
-        self.trigger_gather()
+        self._trigger_gather()
         return DASet(elements=self.elements.difference(setify(other_set)))
     def isdisjoint(self, other_set):
         """Returns True if no elements overlap between the current set and the
         other_set.  Otherwise, returns False."""
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.isdisjoint(setify(other_set))
     def issubset(self, other_set):
         """Returns True if the current set is a subset of the other_set.
         Otherwise, returns False.
 
         """
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.issubset(setify(other_set))
     def issuperset(self, other_set):
         """Returns True if the other_set is a subset of the current set.
         Otherwise, returns False.
 
         """
-        self.trigger_gather()
+        self._trigger_gather()
         return self.elements.issuperset(setify(other_set))
     def pronoun_possessive(self, target, **kwargs):
         """Returns "their <target>." """
@@ -1086,8 +1159,9 @@ class DASet(DAObject):
         else:
             return(output)            
     def pronoun(self, **kwargs):
+        """Returns them, or the pronoun for the one element."""
         if self.number() == 1:
-            self.trigger_gather()
+            self._trigger_gather()
             return list(self.elements)[0].pronoun(**kwargs)
         output = word('them', **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -1350,7 +1424,7 @@ def selections(*pargs, **kwargs):
     seen = set()
     for arg in pargs:
         if isinstance(arg, DAList):
-            arg.trigger_gather()
+            arg._trigger_gather()
             the_list = arg.elements
         elif type(arg) is list:
             the_list = arg

@@ -80,7 +80,6 @@ comment: |
 ---
 mandatory: true
 code: |
-  #court.jurisdiction = ['US', 'state', 'PA', 'trial', 'Philadelphia County']
   case.court = court
   pleading.case = case
 comment: |

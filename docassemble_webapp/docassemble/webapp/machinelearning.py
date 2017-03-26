@@ -28,7 +28,8 @@ class MachineLearningEntry(DAObject):
         self.ml.set_dependent_by_id(self.id, self.dependent)
         return self
     def save(self):
-        """Saves the entry to the data set"""
+        """Saves the entry to the data set.  The independent variable must be
+        defined in order to save."""
         args = dict(independent=self.independent)
         if hasattr(self, 'dependent'):
             args['dependent'] = self.dependent

@@ -1,5 +1,9 @@
 metadata:
   title: Question sequence
+  short title: Sequence
+  example start: 1
+  example end: 8
+  documentation: "http://docassemble.org/docs/logic.html#mandatory"
 ---
 mandatory: True
 question: |

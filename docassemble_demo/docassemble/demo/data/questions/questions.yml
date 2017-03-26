@@ -408,6 +408,7 @@ question: Would you like to enter your address yet again?
 yesno: retry_address
 ---
 code: |
+  court.jurisdiction = ['US', 'state', 'PA', 'trial', 'Philadelphia County']
   jurisdiction_state = "Pennsylvania"
   jurisdiction_county = "Philadelphia"
 ---
@@ -421,7 +422,7 @@ code: |
   if jurisdiction_state == "Pennsylvania":
       if law_category == "custody" or law_category == "support":
           court.name = "Court of Common Pleas of " + \
-          jurisdiction_county + " County"
+          jurisdiction_county + " County, " + jurisdiction_state
 ---
 code: |
   import datetime
@@ -907,9 +908,4 @@ fields:
   - Suffix: village_idiot.name.suffix
     required: False
     code: name_suffix()
----
-question: Take something!
-fields:
-  - no label: my_av_file
-    datatype: camera
 ...

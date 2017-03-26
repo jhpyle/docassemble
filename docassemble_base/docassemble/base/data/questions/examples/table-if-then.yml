@@ -2,8 +2,8 @@ metadata:
   title: Table block
   short title: Table
   documentation: "http://docassemble.org/docs/template.html#table"
-  example start: 2
-  example end: 5
+  example start: 4
+  example end: 4
 ---
 modules:
   - docassemble.base.util
@@ -14,6 +14,15 @@ objects:
 mandatory: true
 code: |
   fruit.object_type = Thing
+  fruit.there_are_any = True
+---
+table: fruit_table
+rows: fruit
+columns:
+  - Fruit Name: |
+      noun_plural(row_item.name)
+  - Number of Seeds: |
+      "too many" if row_item.seeds > 20 else row_item.seeds
 ---
 mandatory: True
 question: |
@@ -22,15 +31,6 @@ subquestion: |
   Here is a fruity summary.
 
   ${ fruit_table }
----
-table: fruit_table
-rows: fruit
-columns:
-  - Fruit Name: row_item.name
-  - Number of Seeds: row_item.seeds
----
-code: |
-  fruit.there_are_any = True
 ---
 question: |
   What fruit should be added to the list?

@@ -1,0 +1,17 @@
+metadata:
+  title: Tables in Markdown
+  short title: tables
+  documentation: "http://docassemble.org/docs/markup.html#tables"
+---
+mandatory: true
+question: |
+  Your fruit inventory
+attachment: |
+  This describes your fruit
+  collection.
+  
+  Fruit  | How many
+  -------|---------
+  Apple  | 4
+  Orange | 3
+  Pear   | 6

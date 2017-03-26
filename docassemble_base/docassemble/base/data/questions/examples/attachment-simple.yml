@@ -1,0 +1,13 @@
+metadata:
+  title: Attachment
+  documentation: "http://docassemble.org/docs/documents.html#attachment"
+---
+mandatory: True
+question: Your document is ready.
+attachment:
+  - name: A hello world document
+    filename: Hello_World
+    description: |
+      A document with a classic message
+    content: |
+      Hello, world!

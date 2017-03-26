@@ -975,11 +975,11 @@ def do_redirect(url, is_ajax):
     else:
         return redirect(url)
 
-def do_refresh(is_ajax):
+def do_refresh(is_ajax, yaml_filename):
     if is_ajax:
         return jsonify(action='refresh', csrf_token=generate_csrf())
     else:
-        return redirect(url_for('index'))
+        return redirect(url_for('index', i=yaml_filename))
 
 def standard_scripts():
     return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/signature.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>\n'
@@ -2607,35 +2607,36 @@ def index():
             yaml_filename = final_default_yaml_filename
     session_parameter = request.args.get('session', None)
     if yaml_parameter is not None:
-        show_flash = False
         yaml_filename = yaml_parameter
         old_yaml_filename = session.get('i', None)
-        if old_yaml_filename is not None:
-            if old_yaml_filename != yaml_filename:
-                session['i'] = yaml_filename
-                if request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base"):
-                    show_flash = True
-        if session_parameter is None:
+        if old_yaml_filename != yaml_filename:
+            show_flash = False
+            session['i'] = yaml_filename
+            if old_yaml_filename is not None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base"):
+                show_flash = True
+            if session_parameter is None:
+                if show_flash:
+                    if current_user.is_authenticated:
+                        message = "Starting a new interview.  To go back to your previous interview, go to My Interviews on the menu."
+                    else:
+                        message = "Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews."
+                user_code, user_dict = reset_session(yaml_filename, secret)
+                release_lock(user_code, yaml_filename)
+                session_id = session.get('uid', None)
+                if 'key_logged' in session:
+                    del session['key_logged']
+                need_to_reset = True
+            else:
+                #logmessage("Both i and session provided")
+                if show_flash:
+                    if current_user.is_authenticated:
+                        message = "Entering a different interview.  To go back to your previous interview, go to My Interviews on the menu."
+                    else:
+                        message = "Entering a different interview.  To go back to your previous interview, log in to see a list of your interviews."
             if show_flash:
-                if current_user.is_authenticated:
-                    message = "Starting a new interview.  To go back to your previous interview, go to My Interviews on the menu."
-                else:
-                    message = "Starting a new interview.  To go back to your previous interview, log in to see a list of your interviews."
-            user_code, user_dict = reset_session(yaml_filename, secret)
-            release_lock(user_code, yaml_filename)
-            session_id = session.get('uid', None)
-            if 'key_logged' in session:
-                del session['key_logged']
-            need_to_reset = True
-        else:
-            #logmessage("Both i and session provided")
-            if show_flash:
-                if current_user.is_authenticated:
-                    message = "Entering a different interview.  To go back to your previous interview, go to My Interviews on the menu."
-                else:
-                    message = "Entering a different interview.  To go back to your previous interview, log in to see a list of your interviews."
-        if show_flash:
-            flash(word(message), 'info')
+                flash(word(message), 'info')
+    elif not is_ajax:
+        need_to_reset = True
     if session_parameter is not None:
         #logmessage("session parameter is " + str(session_parameter))
         session_id = session_parameter
@@ -2698,7 +2699,7 @@ def index():
     if len(request.args):
         if 'action' in request.args:
             session['action'] = request.args['action']
-            response = do_redirect(url_for('index'), is_ajax)
+            response = do_redirect(url_for('index', i=yaml_filename), is_ajax)
             if set_cookie:
                 response.set_cookie('secret', secret)
             if expire_visitor_secret:
@@ -2715,7 +2716,7 @@ def index():
         if use_cache == 0:
             docassemble.base.parse.interview_source_from_string(yaml_filename).reset_modtime()
         save_user_dict(user_code, user_dict, yaml_filename, secret=secret, encrypt=encrypted)
-        response = do_redirect(url_for('index'), is_ajax)
+        response = do_redirect(url_for('index', i=yaml_filename), is_ajax)
         if set_cookie:
             response.set_cookie('secret', secret)
         if expire_visitor_secret:
@@ -2763,10 +2764,10 @@ def index():
             encrypted = is_encrypted
             session['encrypted'] = encrypted
     elif 'filename' in request.args:
-        the_user_dict, attachment_encrypted = get_attachment_info(user_code, request.args.get('question'), request.args.get('filename'), secret)
+        the_user_dict, attachment_encrypted = get_attachment_info(user_code, request.args.get('question'), request.args.get('i'), secret)
         if the_user_dict is not None:
-            interview = docassemble.base.interview_cache.get_interview(request.args.get('filename'))
-            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=yaml_filename, req=request, action=action))
+            interview = docassemble.base.interview_cache.get_interview(request.args.get('i'))
+            interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=request.args.get('i'), req=request, action=action))
             interview.assemble(the_user_dict, interview_status)
             if len(interview_status.attachments) > 0:
                 the_attachment = interview_status.attachments[int(request.args.get('index'))]
@@ -3120,7 +3121,7 @@ def index():
     will_save = True
     if interview_status.question.question_type == "refresh":
         release_lock(user_code, yaml_filename)
-        return do_refresh(is_ajax)
+        return do_refresh(is_ajax, yaml_filename)
     if interview_status.question.question_type == "signin":
         release_lock(user_code, yaml_filename)
         return do_redirect(url_for('user.login'), is_ajax)
@@ -4469,7 +4470,7 @@ def index():
         if not is_ajax:
             #output = '<!doctype html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0" />\n    <title>' + interview_status.question.interview.get_title().get('full', default_title) + '</title>\n    <link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet">\n  </head>\n  <body class="dasignature">\n'
             start_output = standard_header_start + '\n    <title>' + browser_title + '</title>\n  </head>\n  <body class="dasignature">\n'
-        output = signature_html(interview_status, DEBUG, ROOT, validation_rules)
+        output = signature_html(interview_status, DEBUG, url_for('index', i=yaml_filename), validation_rules)
         if not is_ajax:
             end_output = scripts + "\n    " + "\n    ".join(interview_status.extra_scripts) + """\n  </body>\n</html>"""
     else:
@@ -4500,7 +4501,7 @@ def index():
                     interview_status.screen_reader_links[question_type].append([url_for('speak_file', question=interview_status.question.number, digest='XXXTHEXXX' + question_type + 'XXXHASHXXX', type=question_type, format=audio_format, language=the_language, dialect=the_dialect), audio_mimetype_table[audio_format]])
         # else:
         #     logmessage("speak_text was not here")
-        content = as_html(interview_status, url_for, DEBUG, ROOT, validation_rules)
+        content = as_html(interview_status, url_for, DEBUG, url_for('index', i=yaml_filename), validation_rules)
         #sms_content = as_sms(interview_status)
         if DEBUG:
             readability = dict()
@@ -4900,7 +4901,7 @@ def visit_interview():
     session['key_logged'] = True
     if 'tempuser' in session:
         del session['tempuser']
-    response = redirect(url_for('index'))
+    response = redirect(url_for('index', i=i))
     response.set_cookie('visitor_secret', obj['secret'])
     return response
 
@@ -8375,7 +8376,7 @@ def request_developer():
                 flash(word('Your request was submitted.'), 'success')
             except:
                 flash(word('We were unable to submit your request.'), 'error')
-        return redirect(url_for('index'))
+        return redirect(url_for('interview_list'))
     return render_template('users/request_developer.html', tab_title=word("Developer Access"), page_title=word("Developer Access"), form=form)
 
 @app.route('/utilities', methods=['GET', 'POST'])

@@ -1,6 +1,9 @@
 metadata:
-  title: If/then/else in code
-  documentation: "http://docassemble.org/docs/code.html#python"
+  title: If/then/else
+  short title: If
+  documentation: "http://docassemble.org/docs/code.html#if"
+  example start: 1
+  example end: 2
 ---
 code: |
   a = 4

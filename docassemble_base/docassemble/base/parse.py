@@ -1078,25 +1078,45 @@ class Question:
             if 'template' not in data:
                 raise DAError("A target directive can only be used with a template." + self.idebug(data))
             self.target = data['target']
-        if 'table' in data or 'header' in data or 'row' in data or 'column' in data:
-            if 'table' not in data or 'row' not in data or 'column' not in data:
+        if 'table' in data or 'rows' in data or 'columns' in data:
+            if 'table' not in data or 'rows' not in data or 'columns' not in data:
                 raise DAError("A table definition must have definitions for table, row, and column." + self.idebug(data))
-            if type(data['row']) in [list, dict, set, bool, int, float]:
+            if type(data['rows']) in [list, dict, set, bool, int, float]:
                 raise DAError("The row part of a table definition must be plain Python code." + self.idebug(data))
-            if type(data['column']) is not list:
+            if type(data['columns']) is not list:
                 raise DAError("The column part of a table definition must be a list." + self.idebug(data))
-            if 'header' in data:
-                if type(data['header']) not in [list]:
-                    raise DAError("The header part of a table definition must be a list." + self.idebug(data))
-                if len(data['header']) != len(data['column']):
-                    raise DAError("The header part of a table definition must be the same length as the column part." + self.idebug(data))
-                header = list(map(lambda x: TextObject(definitions + unicode(x), names_used=self.mako_names), data['header']))
-            else:
-                header = list(map(lambda x: TextObject(''), data['column']))
-            row = compile(data['row'], '', 'eval')
-            column = list(map(lambda x: compile(x, '', 'eval'), data['column']))
+            # if 'header' in data:
+            #     if type(data['header']) not in [list]:
+            #         raise DAError("The header part of a table definition must be a list." + self.idebug(data))
+            #     if len(data['header']) != len(data['column']):
+            #         raise DAError("The header part of a table definition must be the same length as the column part." + self.idebug(data))
+            #     header = list(map(lambda x: TextObject(definitions + unicode(x), names_used=self.mako_names), data['header']))
+            # else:
+            #     header = list(map(lambda x: TextObject('&nbsp;'), data['column']))
+            row = compile(data['rows'], '', 'eval')
+            header = list()
+            column = list()
+            for col in data['columns']:
+                if type(col) is not dict:
+                    raise DAError("The column items in a table definition must be dictionaries." + self.idebug(data))
+                if len(col) == 0:
+                    raise DAError("A column item in a table definition cannot be empty." + self.idebug(data))
+                if 'header' in col and 'cell' in col:
+                    header_text = col['header']
+                    cell_text = col['cell']
+                else:
+                    for key, val in col.iteritems():
+                        header_text = key
+                        cell_text = val
+                        break
+                if header_text == '':
+                    header.append(TextObject('&nbsp;'))
+                else:
+                    header.append(TextObject(definitions + unicode(header_text), names_used=self.mako_names))
+                column.append(compile(cell_text, '', 'eval'))
+            #column = list(map(lambda x: compile(x, '', 'eval'), data['column']))
             self.fields_used.add(data['table'])
-            field_data = {'saveas': data['table'], 'extras': dict(header=header, row=row, column=column)}
+            field_data = {'saveas': data['table'], 'extras': dict(header=header, row=row, column=column, show_if_empty=data.get('show if empty', False))}
             self.fields.append(Field(field_data))
             self.content = TextObject('')
             self.subcontent = TextObject('')
@@ -2189,24 +2209,18 @@ class Interview:
         interview_status.set_tracker(user_dict['_internal']['tracker'])
         docassemble.base.functions.reset_local_variables()
         interview_status.current_info.update({'default_role': self.default_role})
-        #user_dict['_current_info'] = interview_status.current_info
         docassemble.base.functions.this_thread.current_package = self.source.package
         docassemble.base.functions.this_thread.current_info = interview_status.current_info
         docassemble.base.functions.this_thread.internal = user_dict['_internal']
-        #docassemble.base.functions.this_thread.user_dict = user_dict
         for question in self.questions_list:
             if question.question_type == 'imports':
-                #logmessage("Found imports")
                 for module_name in question.module_list:
-                    #logmessage("Imported a module " + module_name)
                     if module_name.startswith('.'):
-                        #logmessage("Importing " + str(self.source.package) + module_name + " where sys.path is " + str(sys.path))
                         exec('import ' + str(self.source.package) + module_name, user_dict)
                     else:
                         exec('import ' + module_name, user_dict)
             if question.question_type == 'modules':
                 for module_name in question.module_list:
-                    #logmessage("Imported from module " + module_name)
                     if module_name.startswith('.'):
                         exec('from ' + str(self.source.package) + module_name + ' import *', user_dict)
                     else:
@@ -2215,30 +2229,20 @@ class Interview:
                 for var in question.reset_list:
                     if complications.search(var):
                         try:
-                            #logmessage("Reset " + str(var))
                             exec('del ' + str(var), user_dict)
                         except:
                             pass
                     elif var in user_dict:
-                        #logmessage("doing non-exec del")
-                        #logmessage("Del " + str(var))
                         del user_dict[var]
         for var in self.reconsider:
             if complications.search(var):
                 try:
-                    #logmessage("Delling " + str(var))
                     exec('del ' + str(var), user_dict)
                 except:
                     pass
             elif var in user_dict:
-                #logmessage("doing non-exec del")
-                #logmessage("Dell " + str(var))
                 del user_dict[var]
-        # if 'action_manual' in interview_status.current_info and interview_status.current_info['action_manual']:
-        #     exec('import docassemble.base.util')
-        #     exec('docassemble.base.util.process_action()')
         while True:
-            #logmessage("Trying to reset gathering mode")
             docassemble.base.functions.reset_gathering_mode()
             try:
                 if 'sms_variable' in interview_status.current_info and interview_status.current_info['sms_variable'] is not None:
@@ -2753,6 +2757,8 @@ class Interview:
                             table_content += "|".join(['-' * x for x in max_chars_to_use]) + "\n"
                             for content_line in contents:
                                 table_content += "|".join(content_line) + "\n"
+                            if len(contents) == 0 and not question.fields[0].extras['show_if_empty']:
+                                table_content = ''
                             string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + "'" + from_safeid(question.fields[0].saveas) + "', content=" + repr(table_content) + ")"
                             exec(string, user_dict)
                             docassemble.base.functions.pop_current_variable()
