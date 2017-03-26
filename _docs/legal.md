@@ -46,6 +46,14 @@ A `Court` has one attribute:
 
 If you refer to an address in a template, it returns `.name`.
 
+The `Court` class has the following methods:
+
+* <a name="Court.in_the_court"></a>`in_the_court()`: returns the top
+  line of the first page of a pleading filed in this court.  It takes
+  two optional keyword arguments: `legalfiling` and `case`,
+  representing the relevant [`LegalFiling`] and the [`Case`] that
+  might be relevant for determining the content of the "In the Court" line.
+
 ## <a name="Case"></a>Case
 
 If you create an object of type `Case` by doing:
@@ -110,6 +118,15 @@ The `Case` class has the following methods:
   attribute name of the `PartyList` in which `party` was found (e.g.,
   `plaintiff`, `defendant`, etc.), or `third party` if `party` was not
   found in any of the lists.
+* <a name="Case.set_action_type"></a>`set_action_type(action_type)`:
+  Possibilities are `'solo petition'`, `'in re'`, `'petition'`, and
+  `'plaintiff defendant'`.  The default is `'plaintiff defendant'`.
+  This will determine the types of `PartyList` attributes.
+* <a name="Case.case_id_in_caption"></a>`case_id_in_caption()`:
+  returns the [Markdown] text for the case ID that will appear in the
+  case caption.
+* <a name="Case.determine_court"></a>`determine_court()`: runs code,
+  if any exists, to determine what court has jurisdiction over the case.
 
 ## <a name="Jurisdiction"></a>Jurisdiction
 

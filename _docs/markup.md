@@ -268,6 +268,53 @@ For example, this interview provides a QR code that directs the user to
 See also the [`qr_code()`] function, which allows you to insert the
 `[QR ...]` markup using [Python].
 
+# <a name="tables"></a>Inserting tables
+
+Tables can be inserted in the format known as [PHP Markdown Extra].
+
+{% include side-by-side.html demo="table-markdown" %}
+
+If you want to construct a table based on information in a list, the
+best practice is to collect the list information into an [object] and
+then use the [`table` block] to create a template for the table.  See
+the documentation of that block in the [documents] section for more
+information.
+
+If you want to write tables in [Markdown] manually, note that the
+alignment characters do not have do be perfectly aligned from row to
+row.
+
+{% include side-by-side.html demo="table-markdown-unaligned" %}
+
+Under the [Markdown] rules, the text for each row needs to be all on
+the same line in your [Markdown] text.  If you want to include a line
+break within a cell, use the `[BR]` tag, which is documented in the
+[document markup] section.
+
+Exactly how your text is converted from [Markdown] into an actual
+table depends on the output format.  If you are including a table that
+is viewed on the screen, see [tables in HTML] for the details.  If you
+are including a table that is inserted into an attachment, see
+[tables in attachments].
+
+If you want to have fine-grained control over the formatting of
+tables, [Markdown] will disappoint you.
+
+For example, the [PHP Markdown Extra] format _requires_ that you
+include a header in your table, even if you do not want one.  You can
+try to make the header row blank with the following trick.
+
+{% include side-by-side.html demo="table-markdown-noheader" %}
+
+If you want a very specific type of table, you can use [raw HTML] for
+a table that displays in a question or [raw LaTeX] for a table that
+displays in a PDF-only [`attachment`].
+
+If you want a simple two-column table that fills the width of the
+page, note that there are special [document markup] tags for this
+special case: you can write `[BEGIN_TWOCOL]` (text of first column)
+`[BREAK]` (text of second column) `[END_TWOCOL]`.
+
 # <a name="field"></a>Embedding fields
 
 In a [`fields`] block, you can use the markup syntax `[FIELD ...]` to
@@ -282,9 +329,17 @@ an invisible area where text can be placed by [`code`].  For more
 information about this feature, see the section on
 [Processing interim user input].
 
+[document markup]: {{ site.baseurl }}/docs/documents.html#markup
+[`table` block]: {{ site.baseurl }}/docs/template.html#table
+[raw LaTeX]: https://en.wikibooks.org/wiki/LaTeX/Tables
+[raw HTML]: https://www.w3schools.com/html/html_tables.asp
+[PHP Markdown Extra]: https://michelf.ca/projects/php-markdown/extra/#table
+[tables in attachments]: http://pandoc.org/MANUAL.html#extension-pipe_tables
+[tables in HTML]: https://pythonhosted.org/Markdown/extensions/tables.html
 [`code`]: {{ site.baseurl }}/docs/code.html
 [Processing interim user input]: {{ site.baseurl }}/docs/background.html#target
 [Embedding fields within a paragraph]: {{ site.baseurl }}/docs/fields.html#embed
+[`attachment`]: {{ site.baseurl }}/docs/documents.html#attachment
 [documents]: {{ site.baseurl }}/docs/documents.html
 [modifiers]: {{ site.baseurl }}/docs/modifiers.html
 [Mako]: http://www.makotemplates.org/
@@ -308,6 +363,7 @@ information about this feature, see the section on
 [code block]: https://daringfireball.net/projects/markdown/syntax#precode
 [Python's `if` statement]: https://docs.python.org/2.7/tutorial/controlflow.html#if-statements
 [Python's `for` statement]: https://docs.python.org/2.7/tutorial/controlflow.html#for-statements
+[object]: {{ site.baseurl }}/docs/objects.html
 [objects]: {{ site.baseurl }}/docs/objects.html
 [groups]: {{ site.baseurl }}/docs/groups.html
 [`loop`]: http://docs.makotemplates.org/en/latest/runtime.html#loop-context

@@ -12,7 +12,7 @@ e-mail the documents.
 
 ## Creating PDF and Word files from Markdown
 
-{% include side-by-side.html demo="allow-emailing-true" %}
+{% include side-by-side.html demo="attachment-simple" %}
 
 The `name`, `filename`, and `description` items can contain [Mako]
 templates.  The `name` and `description` filenames can also contain

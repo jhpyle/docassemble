@@ -599,6 +599,21 @@ code: |
     prediction_screen
 {% endhighlight %}
 
+## <a name="SimpleTextMachineLearner.new_entry"></a>.new_entry()
+
+The [`.new_entry()`] method returns a single [`MachineLearningEntry`]
+object.
+
+The following interview uses [`.new_entry()`] to create a
+[`MachineLearningEntry`] object.  It calls [`.save()`] on the new
+entry.  This triggers the asking of a question to get the
+`.independent` variable.  The entry goes into the data set as an
+unclassified entry.  A prediction is made and presented to the user.
+If the user presses "Try again," the slate is cleaned and the process
+repeats.
+
+{% include side-by-side.html demo="save-and-predict" %}
+
 ## <a name="SimpleTextMachineLearner.one_unclassified_entry"></a>.one_unclassified_entry()
 
 The [`.one_unclassified_entry()`] method is useful for interactively
@@ -684,7 +699,7 @@ subquestion: |
   % endfor
 {% endhighlight %}
 
-# <a name="SVNMachineLearner.unclassified_entries"></a>SVNMachineLearner
+# <a name="SVNMachineLearner"></a>SVNMachineLearner
 
 The `SVNMachineLearner` works just like `SimpleTextMachineLearner`
 except that is uses the Support Vector Machines algorithm from the
@@ -840,6 +855,7 @@ object.)
 [`.save_for_classification()`]: #SimpleTextMachineLearner.save_for_classification
 [`.add_to_training_set()`]: #SimpleTextMachineLearner.add_to_training_set
 [`.is_empty()`]: #SimpleTextMachineLearner.is_empty
+[`.new_entry()`]: #SimpleTextMachineLearner.new_entry
 [`.dependent_in_use()`]: #SimpleTextMachineLearner.dependent_in_use
 [`.export_training_set()`]: #SimpleTextMachineLearner.export_training_set
 [`.confusion_matrix()`]: #SimpleTextMachineLearner.confusion_matrix
@@ -854,3 +870,4 @@ object.)
 [Python dictionary]: https://docs.python.org/2/library/stdtypes.html#dict
 [confusion matrix]: https://en.wikipedia.org/wiki/Confusion_matrix
 [confusion matrices]: https://en.wikipedia.org/wiki/Confusion_matrix
+[`DAFile`]: {{ site.baseurl }}/docs/objects.html#DAFile

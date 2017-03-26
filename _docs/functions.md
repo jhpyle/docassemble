@@ -984,6 +984,65 @@ See [`track_location`] and [`LatitudeLongitude`] for more information
 about how **docassemble** collects information about the user's
 location.
 
+## <a name="countries_list"></a><a name="country_name"></a>countries_list() and country_name()
+
+The `countries_list()` function returns a list of dictionaries, where
+each dictionary contains a single key-value pair mapping a two-letter,
+capitalized country abbreviation to the name of the country (in
+English).  This function is primarily useful when asking a user to
+specify his or her country.
+
+The `country_name()` function returns the name of a country (in
+English) based on the two-letter, capitalized country abbreviation.
+
+{% include side-by-side.html demo="country" %}
+
+When working with countries, it is a good idea to store country names
+in this two-letter, capitalized format.  The country code is used by
+the [`send_sms()`] function to determine the appropriate universal
+formatting of phone numbers.
+
+The data come from the [`pycountry` package].
+
+## <a name="states_list"></a><a name="state_name"></a>states_list() and state_name()
+
+The `states_list()` function returns a list of dictionaries, where
+each dictionary contains a single key-value pair mapping a state
+abbreviation to the name of a state.  This function is primarily
+useful when asking a user to specify his or her state.
+
+The function takes an optional keyword argument `country`, which is
+expected to be a country abbreviation (e.g., `'SE'` for Sweden).  If
+the `country` is not provided, it is assumed to be the default country
+(the value returned by [`get_country()`]).  For countries other than
+the United States, the geographic areas returned are the first-level
+subdivisions within the country.  The name of these subdivisions
+varies.  The [`subdivision_type()`] function can be used to find the
+name of the major subdivision, and also to find if the
+country has any subdivisions at all.
+
+The `state_name()` function returns the name of a state based on the
+state abbreviation provided.
+
+{% include side-by-side.html demo="state" %}
+
+When working with states, it is a good idea to store state names in
+this abbreviated format.
+
+The data come from the [`pycountry` package].
+
+## <a name="subdivision_type"></a>subdivision_type()
+
+Given a country code, `subdivision_type()` returns the name of the
+primary subdivision within that country.
+
+{% include side-by-side.html demo="subdivision-type" %}
+
+Note that some countries have no subdivisions at all.  In that case,
+this function will return `None`.
+
+The data come from the [`pycountry` package].
+
 # Functions for managing global variables
 
 If you try writing your own functions, you will learn that functions
@@ -1343,26 +1402,6 @@ code: |
   docassemble.base.util.update_locale()
 ---
 {% endhighlight %}
-
-## <a name="countries_list"></a><a name="country_name"></a>countries_list() and country_name()
-
-The `countries_list()` function returns a list of dictionaries, where
-each dictionary contains a single key-value pair mapping a two-letter,
-capitalized country abbreviation to the name of the country (in
-English).  This function is primarily useful when asking a user to
-specify his or her country.
-
-The `country_name()` function returns the name of a country (in
-English) based on the two-letter, capitalized country abbreviation.
-
-{% include side-by-side.html demo="country" %}
-
-The data come from the [`pycountry` package].
-
-When working with countries, it is a good idea to store country names
-in this two-letter, capitalized format.  The country code is used by
-the [`send_sms()`] function to determine the appropriate universal
-formatting of phone numbers.
 
 # Access time functions
 
@@ -2056,6 +2095,8 @@ user to go back and do the process again would create confusion.
 You can call `prevent_going_back()` to instruct the web application to
 prevent the user from going back past that point.  See also the
 [modifier] of the same name.
+
+{% include side-by-side.html demo="prevent-back" %}
 
 ## <a name="selections"></a>selections()
 
@@ -3105,6 +3146,7 @@ $(document).on('daPageLoad', function(){
 [e-mail to interview]: {{ site.baseurl }}/docs/background.html#email
 [`interview_email()`]: #interview_email
 [`get_emails()`]: #get_emails
+[`subdivision_type()`]: #subdivision_type
 [`incoming mail domain`]: {{ site.baseurl }}/docs/config.html#incoming mail domain
 [interaction of user roles and actions]: {{ site.baseurl }}/docs/users.html#users and actions
 [`contacts.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/sources/contacts.yml

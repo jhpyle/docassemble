@@ -188,6 +188,16 @@
     variable name: doc_three
     content: |
       Hello, world number three!
+"attachment-simple": |-
+  mandatory: True
+  question: Your document is ready.
+  attachment:
+    - name: A hello world document
+      filename: Hello_World
+      description: |
+        A document with a classic message
+      content: |
+        Hello, world!
 "attorney": |-
   modules:
     - docassemble.demo.attorney
@@ -615,6 +625,10 @@
     else:
       answer = 40 + b
     b = 0
+  ---
+  question: |
+    The answer is ${ answer }.
+  mandatory: True
 "code-example-08": |-
   code: |
     a = 4
@@ -3428,6 +3442,43 @@
     - Vegetable: target_variable
       required: False
     - Fruit: other_target_variable
+"order-of-blocks": |-
+  question: |
+    Do you like penguins?
+  yesno: user_likes_penguins
+  ---
+  question: |
+    Do you like elephants?
+  yesno: user_likes_elephants
+  ---
+  mandatory: true
+  question: |
+    Hello!
+  buttons:
+    - Hello to you: continue
+  ---
+  mandatory: true
+  question: |
+    What is your name?
+  fields:
+    - Name: user_name
+  ---
+  mandatory: true
+  question: |
+    Your favorite food is
+    ${ favorite_food }.
+
+    % if user_likes_penguins:
+    You are a fan of penguins.
+    % else:
+    You detest penguins, for some
+    strange reason.
+    % endif
+  ---
+  question: |
+    What is your favorite food?
+  fields:
+    - Favorite food: favorite_food
 "ordinal-number": |-
   question: |
     The ${ ordinal_number(toads) }
@@ -3706,6 +3757,40 @@
     - "Are apples good?": question_one_a
       datatype: yesno
     - "Your favorite variety": question_one_b
+  ---
+  mandatory: True
+  question: |
+    Are peaches good?
+  yesno: question_two
+  ---
+  mandatory: True
+  question: |
+    Are turnips good?
+  yesno: question_three
+  ---
+  mandatory: True
+  question: |
+    Is linoleum good?
+  yesno: question_four
+  ---
+  mandatory: True
+  question: |
+    Are automobiles good?
+  yesno: question_five
+  ---
+  mandatory: True
+  question: |
+    Is furniture good?
+  yesno: question_six
+  ---
+  mandatory: True
+  question: |
+    Was this interview good?
+  yesno: question_seven
+  ---
+  mandatory: True
+  question: |
+    Thanks for answering my questions!
 "quote_paragraphs": |-
   mandatory: True
   question: |
@@ -4154,6 +4239,18 @@
   subquestion: |
     Are you doing well?
   yesno: doing_well
+  ---
+  terms:
+    world: |
+      A planet.
+  ---
+  mandatory: True
+  question: |
+    % if doing_well:
+    Glad to hear that!
+    % else:
+    Sorry to hear that!
+    % endif
 "space-underscore": |-
   question: |
     Removing spaces
@@ -4162,6 +4259,19 @@
     without underscores, it is
     ${ space_to_underscore(book) }.
   sets: all_done
+"state": |-
+  question: |
+    Where do you live?
+  fields:
+    - State: user_state
+      code: states_list()
+  ---
+  mandatory: True
+  question: |
+    You live in
+    ${ state_name(user_state) },
+    which is abbreviated
+    ${ user_state }.
 "static_image": |-
   code: |
     image_name = 'court'
@@ -4173,6 +4283,9 @@
     This is the "${ image_name }" image.
 
     ${ static_image(image_name + '.svg') }
+"subdivision-type": "mandatory: True\nquestion: |\n  Geography lesson\nsubquestion:\
+  \ |\n  % for country in ['BG', 'SE', 'TN', 'VN', 'LV', 'US']:\n  In ${ country_name(country)\
+  \ },\n  you live in a\n  ${ subdivision_type(country) }.\n  \n  % endfor"
 "subquestion": |-
   question: |
     What is the airspeed velocity of an unladen swallow?
@@ -4180,24 +4293,105 @@
   fields:
     - Velocity: swallow_velocity
 "table": |-
+  objects:
+    - fruit: DAList
+  ---
+  mandatory: true
+  code: |
+    fruit.object_type = Thing
+  ---
   mandatory: True
   question: |
-    A table
+    Information about fruit
   subquestion: |
-    This is a table.
+    Here is a fruity summary.
 
-    <table class="table table-striped">
-      <thead>
-        <tr><th>Header 1</th><th>Header 2</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>1</td><td>$4.50</td></tr>
-        <tr><td>2</td><td>$5.50</td></tr>
-        <tr><td>3</td><td>$6.50</td></tr>
-        <tr><td>4</td><td>$7.50</td></tr>
-        <tr><td>5</td><td>$8.50</td></tr>
-      </tbody>
-    </table>
+    ${ fruit_table }
+  ---
+  table: fruit_table
+  rows: fruit
+  columns:
+    - Fruit Name: row_item.name
+    - Number of Seeds: row_item.seeds
+"table-alt": |-
+  code: |
+    thing = "Fruit"
+  ---
+  table: fruit_table
+  rows: fruit
+  columns:
+    - header: |
+        ${ thing } Name
+      cell: |
+        row_item.name
+    - header: |
+        Number of Seeds
+      cell: |
+        row_item.seeds
+"table-empty": |-
+  table: fruit_table
+  rows: fruit
+  columns:
+    - Fruit Name: row_item.name
+    - Number of Seeds: row_item.seeds
+  show if empty: True
+"table-if-then": |-
+  table: fruit_table
+  rows: fruit
+  columns:
+    - Fruit Name: |
+        noun_plural(row_item.name)
+    - Number of Seeds: |
+        "too many" if row_item.seeds > 20 else row_item.seeds
+"table-mako": |-
+  mandatory: True
+  question: |
+    Information about fruit
+  subquestion: |
+    Here is a fruity summary.
+
+    Fruit Name     |Number of Seeds
+    ---------------|----------------
+    % for item in fruit:
+    ${ item.name } | ${ item.seeds }
+    % endfor
+"table-markdown": "mandatory: true\nquestion: |\n  Your fruit inventory\nattachment:\
+  \ |\n  This describes your fruit\n  collection.\n  \n  Fruit  | How many\n  -------|---------\n\
+  \  Apple  | 4\n  Orange | 3\n  Pear   | 6"
+"table-markdown-noheader": |-
+  mandatory: true
+  question: |
+    Your vegetable inventory
+  subquestion: |
+    This describes your vegetable
+    collection.
+
+    |&nbsp;   |&nbsp;|
+    |---------|------|
+    |Potato   |4     |
+    |Brocolli |3     |
+    |Beet     |6     |
+"table-markdown-unaligned": |-
+  mandatory: true
+  question: |
+    Your vegetable inventory
+  subquestion: |
+    This describes your vegetable
+    collection.
+
+    Vegetable|How many
+    ------|----
+    Potato|4
+    Brocolli|3
+    Beet|6
+"table-python": |-
+  table: fruit_table
+  rows: fruit
+  columns:
+    - Fruit Name: |
+        noun_plural(row_item.name)
+    - Number of Seeds: |
+        row_item.seeds * 2
 "target-code": |-
   question: |
     What is your favorite food?

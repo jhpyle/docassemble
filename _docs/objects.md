@@ -628,11 +628,13 @@ take precedence, so you would need to place the second [`generic
 object`] question somewhere after the first [`generic object`] question
 in order for it to be chosen.
 
-Other methods available on a DAList are:
+Other methods available on a `DAList` are:
 
 * <a name="DAList.append"></a>`append(item_to_append)` - adds
   `item_to_append` to the end of the list.  Just like the
   [Python list] method of the same name.
+* <a name="DAList.clear"></a><a name="DADict.clear"></a><a
+  name="DASet.clear"></a>`clear()` - makes the list empty.
 * <a name="DAList.extend"></a>`extend(extension_list)` - adds the
   items in the `extension_list` to the end of the list.  Just like the
   [Python list] method of the same name.
@@ -640,32 +642,90 @@ Other methods available on a DAList are:
   the list; error triggered if list is empty
 * <a name="DAList.last"></a>`last()` - returns the last element of the
   list; error triggered if list is empty
-* <a name="DAList.does_verb"></a>`does_verb(verb)` - like the
+* <a name="DAList.does_verb"></a><a name="DADict.does_verb"></a><a
+  name="DASet.does_verb"></a>`does_verb(verb)` - like the
   `verb_present()` function from [`docassemble.base.util`], except
   that it uses the singular or plural form depending on whether the
   list has more than one element or not.
-* <a name="DAList.did_verb"></a>`did_verb(verb)` - like the
-  `verb_past()` function from [`docassemble.base.util`], except that
-  it uses the singular or plural form depending on whether the list
-  has more than one element or not.
-* <a name="DAList.as_singular_noun"></a>`as_singular_noun()` - if the
+* <a name="DAList.did_verb"></a><a name="DADict.did_verb"></a><a
+  name="DASet.did_verb"></a>`did_verb(verb)` - like the `verb_past()`
+  function from [`docassemble.base.util`], except that it uses the
+  singular or plural form depending on whether the list has more than
+  one element or not.
+* <a name="DAList.as_singular_noun"></a><a
+  name="DADict.as_singular_noun"></a><a
+  name="DASet.as_singular_noun"></a>`as_singular_noun()` - if the
   variable name is `case.plaintiff`, returns `plaintiff`; if the
   variable name is `applicant`, returns `applicant`.
-* <a name="DAList.as_noun"></a>`as_noun()` - if the variable name is
+* <a name="DAList.as_noun"></a><a name="DADict.as_noun"></a><a
+  name="DASet.as_noun"></a>`as_noun()` - if the variable name is
   `case.plaintiff`, returns `plaintiffs` or `plaintiff` depending on
   the number of elements in the list; if the variable name is
   `applicant`, returns `applicants` or `applicant` depending on the
   number of elements in the list.
-* <a name="DAList.number"></a>`number()` - returns the total number of
-  elements in the list.  If necessary it will trigger questions that ask
-  for all of the elements of the list to be populated.
-* <a name="DAList.number_as_word"></a>`number_as_word()` - same as
+* <a name="DAList.number"></a><a name="DADict.number"></a><a
+  name="DASet.number"></a>`number()` - returns the total number of
+  elements in the list.  If necessary it will trigger questions that
+  ask for all of the elements of the list to be populated.
+* <a name="DAList.number_as_word"></a><a
+  name="DADict.number_as_word"></a><a
+  name="DASet.number_as_word"></a>`number_as_word()` - same as
   `number()`, except that the [`nice_number()`] function is applied to
   the result.
-* <a name="DAList.remove"></a>`remove()` - removes the given elements
-  from the list, if they are in the list.
-* <a name="DAList.comma_and_list"></a>`comma_and_list()` - returns the
+* <a name="DAList.remove"></a>`remove()` -
+  removes the given elements from the list, if they are in the list.
+* <a name="DAList.comma_and_list"></a><a
+  name="DADict.comma_and_list"></a><a
+  name="DASet.comma_and_list"></a>`comma_and_list()` - returns the
   elements of the list run through the [`comma_and_list()`] function.
+* <a name="DAList.possessive"></a>`possessive()` - if the variable
+  name is `plaintiff` and the target is `"fish"`, returns "plaintiff's
+  fish" if there is one item in the list, and "plaintiffs' fish" if
+  there is more than one item in the list.
+* <a name="DAList.pronoun"></a><a name="DADict.pronoun"></a><a
+  name="DASet.pronoun"></a>`pronoun()` - returns a pronoun like "you,"
+  "her," or "him," "it", or "them," as appropriate, depending on the
+  number of items in the list.
+* <a name="DAList.pronoun_objective"></a><a
+  name="DADict.pronoun_objective"></a><a
+  name="DASet.pronoun_objective"></a>`pronoun_objective()` - for a
+  `DAList`, this is the same as `pronoun()`.
+* <a name="DAList.pronoun_possessive"></a><a
+  name="DADict.pronoun_possessive"></a><a
+  name="DASet.pronoun_possessive"></a>`pronoun_possessive()` - given a
+  word like "fish," returns "her fish," "his fish," or "their fish,"
+  as appropriate, depending on the number of items in the list.
+* <a name="DAList.pronoun_subjective"></a><a
+  name="DADict.pronoun_subjective"></a><a
+  name="DASet.pronoun_subjective"></a>`pronoun_subjective()` - returns
+  a pronoun like "you," "she," "he," or "they" as appropriate,
+  depending on the number of items in the list.
+* <a name="DAList.union"></a><a name="DADict.union"></a>`union()` -
+  returns a [Python set] consisting of the elements of current list,
+  considered as a set, combined with the elements of the other_set.
+* <a name="DAList.intersection"></a><a
+  name="DADict.intersection"></a>`intersection()` - returns a
+  [Python set] consisting of the elements of the current list,
+  considered as a set, that also exist in the other_set.
+* <a name="DAList.difference"></a><a
+  name="DADict.difference"></a>`difference()` - returns a [Python set]
+  consisting of the elements of the current list, considered as a set,
+  that do not exist in the other_set.
+* <a name="DAList.isdisjoint"></a><a
+  name="DADict.isdisjoint"></a>`isdisjoint()` - returns `True` if no
+  elements overlap between the current list, considered as a set, and
+  the other_set.  Otherwise, returns `False`.
+* <a name="DAList.issubset"></a><a
+  name="DADict.issubset"></a></a>`issubset()` - returns `True` if the
+  current list, considered as a set, is a subset of the other_set.
+  Otherwise, returns `False`.
+* <a name="DAList.issuperset"></a><a
+  name="DADict.issuperset"></a>`issuperset()` - returns `True` if the
+  other_set is a subset of the current list, considered as a set.
+  Otherwise, returns `False`.
+* <a name="DAList.gather"></a><a name="DADict.gather"></a><a
+  name="DASet.gather"></a>`gather()` - causes the elements of the list
+  to be gathered and named.  Returns `True`.
 
 If you refer to a list in a [Mako] template (e.g., `The applicants
 include: ${ applicant }`) or convert it to text with the
@@ -679,41 +739,73 @@ The `DAList` uses the following attributes:
   type, such as `DAObject` or `Individual`, then new items will be
   created as objects of this type.
 * `gathered`: a boolean value, initially undefined.  It is set to
-`True` when then all of the elements of the list are defined.
+  `True` when then all of the elements of the list are defined.
 * `elements`: a [Python list] containing the elements of the list.
 * `are_there_any`: a boolean value, initially undefined, indicating
   whether any values should be gathered.  The expectation is that the
   interview will define a [question] or [code block] that defines this
   attribute.
 * `is_there_another`: a boolean value, initially undefined, indicating
-whether there are any additional values that should be gathered.
+  whether there are any additional values that should be gathered.
 * `auto_gather`: a boolean value, initially `True`, indicating whether
   the interview should attempt to 
 
 For more information about using [`DAList`] objects, see the section
 on [groups].
 
-## <a name="DADict"></a><a name="DADict.initializeObject"></a>DADict
+## <a name="DADict"></a><a name="DADict.initializeObject"></a><a name="DADict.new"></a>DADict
 
 A `DADict` acts like a [Python dictionary] except that dictionary keys
-and values can be defined through **docassemble** questions.  To add a
-value that is a new **docassemble** object, you need to call the
-`initializeObject()` method.
+and values can be defined through **docassemble** questions.
+
+To add a value that is a new **docassemble** object, you need to call
+the `initializeObject()` method.
 
 For example:
 
 {% include side-by-side.html demo="dadict" %}
 
-`DADict`s uses the same attributes that [`DAList`] uses, and also
-uses:
+The `DADict` also uses a similar method called `.new()`.  This method
+initializes a new object and makes it an entry in the dictionary.  For
+example, if the dictionary is called `positions`, calling
+`positions.new('file clerk', 'supervisor')` will result in the
+creation of the object `positions['file clerk']` and the object
+`positions['supervisor']`.  The type of object is given by the
+`object_type` attribute, or `DAObject` if `object_type` is not set.
+You can also pass a [list] and it will unpack the list, initializing
+dictionary entries for each value.
+
+`DADict`s use the same attributes that [`DAList`]s use.  It also uses:
 
 * `new_item_name`: a text value, initially undefined, indicating the
 key of a new item being gathered into the dictionary.
-* `new_item_value`: a value, initially undefined, indicating the
-value of a new item being gathered into the dictionary.  This is only
-used when the `.object_type` of the [`DADict`] is not set.
+* `new_item_value`: a value, initially undefined, indicating the value
+of a new item being gathered into the dictionary.  This is only used
+when the `.object_type` of the [`DADict`] is not set.
 
-Your code can treat a `DADict` object just like a [Python dictionary].
+`DADict`s use the same methods that [`DAList`]s use, except for
+`.appendObject()`, `.append()`, `.remove()`, `.discard()`,
+`.extend()`, `.first()`, and `.last()`.
+
+It also uses the following methods, which correspond with the same
+methods of the [Python dict].
+
+* <a name="DADict.keys"></a>`keys()`
+* <a name="DADict.values"></a>`values()`
+* <a name="DADict.update"></a>`update()`
+* <a name="DADict.pop"></a>`pop()`
+* <a name="DADict.popitem"></a>`popitem()`
+* <a name="DADict.setdefault"></a>`setdefault()`
+* <a name="DADict.get"></a>`get()`
+* <a name="DADict.copy"></a>`copy()`
+* <a name="DADict.has_key"></a>`has_key()`
+* <a name="DADict.items"></a>`items()`
+* <a name="DADict.iteritems"></a>`iteritems()`
+* <a name="DADict.iterkeys"></a>`iterkeys()`
+* <a name="DADict.itervalues"></a>`itervalues()`
+
+For most purposes, your code can treat a `DADict` object just like a
+[Python dictionary].
 
 {% highlight yaml %}
 ---
@@ -761,6 +853,23 @@ code: |
     issues.add('application')
 ---
 {% endhighlight %}
+
+`DASet`s use the same methods that [`DAList`]s use, except for
+`.appendObject()`, `.append()`, `.extend()`, `.first()`, and
+`.last()`.  It also uses the following methods, which correspond with
+the methods of the [Python set].
+
+* <a name="DASet.add"></a>`add()`
+* <a name="DASet.copy"></a>`copy()`
+* <a name="DASet.discard"></a>`discard()`
+* <a name="DASet.difference"></a>`difference()`
+* <a name="DASet.intersection"></a>`intersection()`
+* <a name="DASet.isdisjoint"></a>`isdisjoint()`
+* <a name="DASet.issubset">`issubset()`
+* <a name="DASet.issuperset"></a>`issuperset()`
+* <a name="DASet.pop"></a>`pop()`
+* <a name="DASet.remove"></a>`remove()`
+* <a name="DASet.union"></a>`union()`
 
 For more information about using [`DASet`] objects, see the section
 on [groups].
@@ -1000,7 +1109,17 @@ the `content` and option `subject` sets defines these attributes as
 the resulting text.  Note that the text may have [Markdown]<span></span> [markup]
 in it.
 
-# <a name="person classes"></a>Classes for information about persons
+# <a name="person classes"></a>Classes for information about people and things
+
+## <a name="Thing"></a>Thing
+
+If `pet_rock` is a `Thing`, it will be an object with one attribute:
+
+* `pet_rock.name` (object of class [`Name`])
+
+If you include `${ pet_rock }` in text, the name of the `Thing` will
+be inserted.  **docassemble** will look for a definition of
+`pet_rock.name.text`.
 
 ## <a name="Person"></a>Person
 
@@ -1089,6 +1208,18 @@ Calling `defendant.did_question('testify')` returns "did you testify" if
 the defendant is the user, or otherwise it uses the defendant's name,
 as in "did ABC Corporation testify."
 
+### <a name="Person.were_question"></a>`.were_question()`
+
+Calling `defendant.were_question('guilty')` returns "were you guilty" if
+the defendant is the user, or otherwise it uses the defendant's name,
+as in "was ABC Corporation guilty."
+
+### <a name="Person.have_question"></a>`.have_question()`
+
+Calling `defendant.have_question('lied')` returns "have you lied" if
+the defendant is the user, or otherwise it uses the defendant's name,
+as in "has ABC Corporation lied."
+
 ### <a name="Person.does_verb"></a>`.does_verb()`
 
 Calling `defendant.does_verb('testify')` returns "testify" if the
@@ -1102,6 +1233,11 @@ expected to be set to `True` or `False`.  For example,
 The `.did_verb()` method is like the
 [`.does_verb()`](#Person.does_verb) method, except that it conjugates
 the verb into the past tense.
+
+### <a name="Person.subject"></a>`.subject()`
+
+The `.subject()` method returns "you" if the person is the user, but
+otherwise returns the person's name.
 
 ### <a name="Person.email_address"></a>`.email_address()`
 
@@ -1394,7 +1530,7 @@ be text:
 * `suffix`
 
 In the context of a [Mako] template, a reference to an `IndividualName` on
-its own will return `.full()`
+its own will return `.full()`.
 
 The `full()` method attempts to form a full name from these
 components.  Only `first` is required, however.  This means that if
@@ -1410,6 +1546,13 @@ Here is how `full()` and other methods of the `IndividualName` work:
 * `applicant.full(middle="full")`: "John Quincy Adams"
 * <a name="IndividualName.firstlast"></a>`applicant.firstlast()`: "John Adams"
 * <a name="IndividualName.lastfirst"></a>`applicant.lastfirst()`: "Adams, John"
+* <a name="IndividualName.defined"></a>`applicant.defined()`: Returns
+  `True` if the `.first` attribute has been defined yet. 
+
+The `IndividualName` also uses the attribute `.uses_parts`, which is
+`True` by default.  If `.uses_parts` is set to `False`, then the
+methods of the object fall back on the methods of [`Name`], and the
+individual's name is stored in the attribute `.text`.
 
 ## <a name="Address"></a>Address
 
@@ -1420,9 +1563,12 @@ An `Address` has the following text attributes:
 * `city`: e.g., "Springfield"
 * `state`: e.g., "MA"
 * `zip`: e.g. "01199"
+* `country`: e.g., 'US'
 
 It also has an attribute `location`, which is a [`LatitudeLongitude`]
 object representing the GPS coordinates of the address.
+
+You can use the function 
 
 If you refer to an address in a [Mako] template, it returns `.block()`.
 
@@ -1652,6 +1798,9 @@ The `FinancialList` has three methods:
   is `True`.  It requires `.gathered` to be `True`, which means that a
   reference to `.total()` will cause **docassemble** to ask the
   questions necessary to gather the full list of items.
+* <a name="FinancialList.existing_items"></a>`.existing_items()`:
+  returns a list of types of amounts that exist within the financial
+  list.
 
 In the context of a [Mako] template, a `FinancialList` returns the result of
 `.total()`.
@@ -1740,8 +1889,9 @@ to `True` when you have finished gathering all of the elements.
 
 The `PeriodicFinancialList` has three methods:
 
-* `.new(item_name)`: gives the `PeriodicFinancialList` a new attribute with
-  the name `item_name` and the object type `PeriodicValue`.
+* <a name="PeriodicFinancialList.new"></a>`.new(item_name)`: gives the
+  `PeriodicFinancialList` a new attribute with the name `item_name`
+  and the object type `PeriodicValue`.
 * <a name="PeriodicFinancialList.total"></a>`.total()`: tallies up the total annual value of all `PeriodicValue`s in the list
   for which the `exists` attribute is `True`.
 
@@ -2067,6 +2217,7 @@ and not an instance of the `Attorney` class.
 [HTML]: https://en.wikipedia.org/wiki/HTML
 [Mako]: http://www.makotemplates.org/
 [Markdown]: https://daringfireball.net/projects/markdown/
+[Python dict]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [Python dictionary]: https://docs.python.org/2/tutorial/datastructures.html#dictionaries
 [Python list]: https://docs.python.org/2/tutorial/datastructures.html
 [Python module]: https://docs.python.org/2/tutorial/modules.html
