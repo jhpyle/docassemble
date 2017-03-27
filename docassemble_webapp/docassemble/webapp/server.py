@@ -831,7 +831,7 @@ def proc_example_list(example_list, examples):
             continue
         result = dict()
         result['id'] = example
-        result['interview'] = url_for('index', i="docassemble.base:data/questions/examples/" + example + ".yml")
+        result['interview'] = url_for('index', reset=1, i="docassemble.base:data/questions/examples/" + example + ".yml")
         example_file = 'docassemble.base:data/questions/examples/' + example + '.yml'
         result['image'] = url_for('static', filename='examples/' + example + ".png")
         file_info = get_info_from_file_reference(example_file)
@@ -2589,6 +2589,7 @@ def index():
     else:
         secret = request.cookies.get('secret', None)
     use_cache = int(request.args.get('cache', 1))
+    reset_interview = int(request.args.get('reset', 0))
     encrypted = session.get('encrypted', True)
     if secret is None:
         secret = random_string(16)
@@ -2609,7 +2610,7 @@ def index():
     if yaml_parameter is not None:
         yaml_filename = yaml_parameter
         old_yaml_filename = session.get('i', None)
-        if old_yaml_filename != yaml_filename:
+        if old_yaml_filename != yaml_filename or reset_interview:
             show_flash = False
             session['i'] = yaml_filename
             if old_yaml_filename is not None and request.args.get('from_list', None) is None and not yaml_filename.startswith("docassemble.playground") and not yaml_filename.startswith("docassemble.base"):
@@ -2707,7 +2708,7 @@ def index():
             release_lock(user_code, yaml_filename)
             return response
         for argname in request.args:
-            if argname in ['filename', 'question', 'format', 'index', 'i', 'action', 'from_list', 'session', 'cache']:
+            if argname in ['filename', 'question', 'format', 'index', 'i', 'action', 'from_list', 'session', 'cache', 'reset']:
                 continue
             if re.match('[A-Za-z_]+', argname):
                 exec("url_args['" + argname + "'] = " + repr(request.args.get(argname).encode('unicode_escape')), user_dict)
@@ -4760,7 +4761,7 @@ def speak_file():
 def interview_start():
     interview_info = list()
     if len(daconfig['dispatch']) == 0:
-        return redirect(url_for('index', i=final_default_yaml_filename))
+        return redirect(url_for('index', reset=1, i=final_default_yaml_filename))
     for key, yaml_filename in sorted(daconfig['dispatch'].iteritems()):
         try:
             interview = docassemble.base.interview_cache.get_interview(yaml_filename)
@@ -4901,7 +4902,7 @@ def visit_interview():
     session['key_logged'] = True
     if 'tempuser' in session:
         del session['tempuser']
-    response = redirect(url_for('index', i=i))
+    response = redirect(url_for('index', reset=1, i=i))
     response.set_cookie('visitor_secret', obj['secret'])
     return response
 
@@ -7276,7 +7277,7 @@ def playground_files():
       }
       $( document ).ready(function() {
         daTextArea = document.getElementById("file_content");
-        daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: """ + repr(str(mode)) + """, """ + kbOpt + """tabSize: 2, tabindex: 580, autofocus: false, lineNumbers: true, matchBrackets: true});
+        daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: """ + ('{name: "markdown", underscoresBreakWords: false}' if mode == 'markdown' else repr(str(mode))) + """, """ + kbOpt + """tabSize: 2, tabindex: 580, autofocus: false, lineNumbers: true, matchBrackets: true});
         $(window).bind("beforeunload", function(){
           daCodeMirror.save();
           $("#formtwo").trigger("checkform.areYouSure");
@@ -7483,6 +7484,7 @@ function searchReady(){
     origPosition = daCodeMirror.getCursor('from');
   });
   $("#""" + form + """ input[name='search_term']").change(update_search);
+  $("#""" + form + """ input[name='search_term']").on("keydown", enter_search);
   $("#""" + form + """ input[name='search_term']").on("keyup", update_search);
   $("#daSearchPrevious").click(function(event){
     var query = $("#""" + form + """ input[name='search_term']").val();
@@ -7581,6 +7583,14 @@ function scroll_to_selection(){
   daCodeMirror.scrollTo(null, t);
 }
 
+function enter_search(event){
+  if(event.keyCode == 13) {
+    event.preventDefault();
+    $("#daSearchNext").click();
+    return false;
+  }
+}
+
 function update_search(event){
   var query = $(this).val();
   if (query.length == 0){
@@ -7590,7 +7600,6 @@ function update_search(event){
     return;
   }
   if(event.keyCode == 13) {
-    $("#daSearchNext").click();
     event.preventDefault();
     return false;
   }
@@ -7692,7 +7701,7 @@ function activateVariables(){
   });
 }
 
-var interviewBaseUrl = '""" + url_for('index', cache='0', i='docassemble.playground' + str(current_user.id) + ':.yml') + """';
+var interviewBaseUrl = '""" + url_for('index', reset='1', cache='0', i='docassemble.playground' + str(current_user.id) + ':.yml') + """';
 
 function updateRunLink(){
   $("#daRunButton").attr("href", interviewBaseUrl.replace('.yml', $("#daVariables").val()));
@@ -7901,7 +7910,7 @@ def playground_page():
                         os.utime(a_filename, None)
             playground.finalize()
             if not form.submit.data:
-                the_url = url_for('index', i='docassemble.playground' + str(current_user.id) + ':' + the_file)
+                the_url = url_for('index', reset=1, i='docassemble.playground' + str(current_user.id) + ':' + the_file)
                 key = 'da:runplayground:' + str(current_user.id)
                 #logmessage("Setting key " + str(key) + " to " + str(the_url))
                 pipe = r.pipeline()

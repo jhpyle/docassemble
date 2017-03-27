@@ -153,7 +153,7 @@ class DAObject(object):
         return None
     def __str__(self):
         if hasattr(self, 'name'):
-            return self.name
+            return unicode(self.name)
         return self.object_name()
     def __unicode__(self):
         return unicode(self.__str__())

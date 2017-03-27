@@ -180,6 +180,9 @@ def rtf_filter(text, metadata=dict(), styles=dict(), question=None):
     text = re.sub(r'\[ENDASH\]', r'{\\endash}', text)
     text = re.sub(r'\[EMDASH\]', r'{\\emdash}', text)
     text = re.sub(r'\[HYPHEN\]', r'-', text)
+    text = re.sub(r'\[CHECKBOX\]', r'____', text)
+    text = re.sub(r'\[BLANK\]', r'________________', text)
+    text = re.sub(r'\[BLANKFILL\]', r'________________', text)
     text = re.sub(r'\[PAGEBREAK\] *', r'\\page ', text)
     text = re.sub(r'\[PAGENUM\]', r'{\\chpgn}', text)
     text = re.sub(r'\[TOTALPAGES\]', r'{\\nofpages3}', text)
@@ -315,6 +318,9 @@ def docx_filter(text, metadata=dict(), question=None):
     text = re.sub(r'\[ENDASH\]', '--', text)
     text = re.sub(r'\[EMDASH\]', '---', text)
     text = re.sub(r'\[HYPHEN\]', '-', text)
+    text = re.sub(r'\[CHECKBOX\]', '____', text)
+    text = re.sub(r'\[BLANK\]', r'__________________', text)
+    text = re.sub(r'\[BLANKFILL\]', r'__________________', text)
     text = re.sub(r'\[PAGEBREAK\] *', '', text)
     text = re.sub(r'\[PAGENUM\] *', '', text)
     text = re.sub(r'\[TOTALPAGES\] *', '', text)
@@ -376,6 +382,9 @@ def pdf_filter(text, metadata=dict(), question=None):
     text = re.sub(r'\[ENDASH\]', r'\\myshow{\\myendash}', text)
     text = re.sub(r'\[EMDASH\]', r'\\myshow{\\myemdash}', text)
     text = re.sub(r'\[HYPHEN\]', r'\\myshow{\\myhyphen}', text)
+    text = re.sub(r'\[CHECKBOX\]', r'\\rule{0.3in}{0.4pt} ', text)
+    text = re.sub(r'\[BLANK\]', r'\\rule{2in}{0.4pt} ', text)
+    text = re.sub(r'\[BLANKFILL\]', r'\\hrulefill ', text)
     text = re.sub(r'\[PAGEBREAK\]\s*', r'\\clearpage ', text)
     text = re.sub(r'\[PAGENUM\]', r'\myshow{\\thepage}', text)
     text = re.sub(r'\[TOTALPAGES\]', '\\myshow{\\pageref{LastPage}} ', text)
@@ -421,8 +430,8 @@ def html_filter(text, status=None, question=None, embedder=None):
         text = map_match.sub((lambda x: map_string(x.group(1), status)), text)
     text = re.sub(r'\[YOUTUBE ([^\]]+)\]', r'<iframe width="420" height="315" src="https://www.youtube.com/embed/\1" frameborder="0" allowfullscreen></iframe>', text)
     text = re.sub(r'\[VIMEO ([^\]]+)\]', r'<iframe src="https://player.vimeo.com/video/\1?byline=0&portrait=0" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>', text)
-    text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', r'<table style="width: 100%"><tr><td style="width: 50%; border-style: solid; border-right-width: 1px; padding-right: 1em; border-left-width: 0px; border-top-width: 0px; border-bottom-width: 0px">\1</td><td style="padding-left: 1em; width: 50%;">\2</td></tr></table>', text)
-    text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', r'<table style="width: 100%"><tr><td style="width: 50%; vertical-align: top; border-style: none; padding-right: 1em;">\1</td><td style="padding-left: 1em; vertical-align: top; width: 50%;">\2</td></tr></table>', text, flags=re.DOTALL)
+    text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', html_caption, text)
+    text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', html_two_col, text, flags=re.DOTALL)
     text = re.sub(r'\[SINGLESPACING\] *', r'', text)
     text = re.sub(r'\[DOUBLESPACING\] *', r'', text)
     text = re.sub(r'\[ONEANDAHALFSPACING\] *', '', text)
@@ -433,6 +442,9 @@ def html_filter(text, status=None, question=None, embedder=None):
     text = re.sub(r'\[ENDASH\]', r'&ndash;', text)
     text = re.sub(r'\[EMDASH\]', r'&mdash;', text)
     text = re.sub(r'\[HYPHEN\]', r'-', text)
+    text = re.sub(r'\[CHECKBOX\]', r'<span style="text-decoration: underline">&nbsp;&nbsp;&nbsp;&nbsp;</span>', text)
+    text = re.sub(r'\[BLANK\]', r'<span style="text-decoration: underline">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>', text)
+    text = re.sub(r'\[BLANKFILL\]', r'<span style="text-decoration: underline">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>', text)
     text = re.sub(r'\[PAGEBREAK\] *', r'', text)
     text = re.sub(r'\[PAGENUM\] *', r'', text)
     text = re.sub(r'\[SECTIONNUM\] *', r'', text)
@@ -493,7 +505,7 @@ def clean_markdown_to_latex(string):
     string = re.sub(r'\n{2,}', '[NEWLINE]', string)
     string = re.sub(r'\*\*([^\*]+?)\*\*', r'\\textbf{\1}', string)
     string = re.sub(r'\*([^\*]+?)\*', r'\\emph{\1}', string)
-    string = re.sub(r'(?<!\\)_([^_]+?)_', r'\\textbf{\1}', string)
+    string = re.sub(r'(?<!\\)_([^_]+?)_', r'\\emph{\1}', string)
     string = re.sub(r'\[([^\]]+?)\]\(([^\)]+?)\)', r'\\href{\2}{\1}', string)
     return string;
 
@@ -516,6 +528,16 @@ def pdf_two_col(match, add_line=False):
         return '\\noindent\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\mynoindent\\begin{tabular}{@{}m{0.49\\textwidth}|@{\\hspace{1em}}m{0.49\\textwidth}@{}}{' + firstcol + '} & {' + secondcol + '} \\\\ \\end{tabular}\\endgroup\\myskipline'
     else:
         return '\\noindent\\begingroup\\singlespacing\\setlength{\\parskip}{0pt}\\mynoindent\\begin{tabular}{@{}p{0.49\\textwidth}@{\\hspace{1em}}p{0.49\\textwidth}@{}}{' + firstcol + '} & {' + secondcol + '} \\\\ \\end{tabular}\\endgroup\\myskipline'
+
+def html_caption(match):
+    firstcol = match.group(1)
+    secondcol = match.group(2)
+    return '<table style="width: 100%"><tr><td style="width: 50%; border-style: solid; border-right-width: 1px; padding-right: 1em; border-left-width: 0px; border-top-width: 0px; border-bottom-width: 0px">' + firstcol + '</td><td style="padding-left: 1em; width: 50%;">' + secondcol + '</td></tr></table>'
+
+def html_two_col(match):
+    firstcol = markdown_to_html(match.group(1))
+    secondcol = markdown_to_html(match.group(2))
+    return '<table style="width: 100%"><tr><td style="width: 50%; vertical-align: top; border-style: none; padding-right: 1em;">' + firstcol + '</td><td style="padding-left: 1em; vertical-align: top; width: 50%;">' + secondcol + '</td></tr></table>'
 
 def pdf_caption(match):
     return pdf_two_col(match, add_line=True)

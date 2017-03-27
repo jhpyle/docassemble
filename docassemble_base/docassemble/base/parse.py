@@ -1116,7 +1116,7 @@ class Question:
                 column.append(compile(cell_text, '', 'eval'))
             #column = list(map(lambda x: compile(x, '', 'eval'), data['column']))
             self.fields_used.add(data['table'])
-            field_data = {'saveas': data['table'], 'extras': dict(header=header, row=row, column=column, show_if_empty=data.get('show if empty', False))}
+            field_data = {'saveas': data['table'], 'extras': dict(header=header, row=row, column=column, show_if_empty=data.get('show if empty', True), indent=data.get('indent', False))}
             self.fields.append(Field(field_data))
             self.content = TextObject('')
             self.subcontent = TextObject('')
@@ -2458,7 +2458,7 @@ class Interview:
         seeking = kwargs.get('seeking', list())
         if debug:
             seeking.append({'variable': missingVariable})
-        #logmessage("I don't have " + str(missingVariable) + " for language " + str(language))
+        logmessage("I don't have " + str(missingVariable) + " for language " + str(language))
         origMissingVariable = missingVariable
         docassemble.base.functions.set_current_variable(origMissingVariable)
         if missingVariable in variable_stack:
@@ -2705,10 +2705,11 @@ class Interview:
                         if question.question_type == "table":
                             string = "import docassemble.base.core"
                             exec(string, user_dict)
-                            table_content = ''
+                            table_content = "\n"
                             header = question.fields[0].extras['header']
                             row = question.fields[0].extras['row']
                             column = question.fields[0].extras['column']
+                            indent = " " * (4 * int(question.fields[0].extras['indent']))
                             header_output = [table_safe(x.text(user_dict)) for x in header]
                             the_iterable = eval(row, user_dict)
                             if not hasattr(the_iterable, '__iter__'):
@@ -2753,12 +2754,13 @@ class Interview:
                                 new_sum = sum(max_chars_to_use)
                                 if new_sum == old_sum:
                                     override_mode = True
-                            table_content += "|".join(header_output) + "\n"
-                            table_content += "|".join(['-' * x for x in max_chars_to_use]) + "\n"
+                            table_content += indent + "|".join(header_output) + "\n"
+                            table_content += indent + "|".join(['-' * x for x in max_chars_to_use]) + "\n"
                             for content_line in contents:
-                                table_content += "|".join(content_line) + "\n"
+                                table_content += indent + "|".join(content_line) + "\n"
                             if len(contents) == 0 and not question.fields[0].extras['show_if_empty']:
-                                table_content = ''
+                                table_content = "\n"
+                            table_content += "\n"
                             string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + "'" + from_safeid(question.fields[0].saveas) + "', content=" + repr(table_content) + ")"
                             exec(string, user_dict)
                             docassemble.base.functions.pop_current_variable()
