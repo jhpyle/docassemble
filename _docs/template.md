@@ -204,14 +204,19 @@ Note that the `table` block acts like a `template` block in that the
 variable it sets will be a [`DATemplate`] object.  The `.content`
 attribute will be set to the text of the table in [Markdown] format.
 
-If the variable indicated by `rows` is empty, the table will not
-display at all.  (The `.content` will be the empty string, `""`.)
-
-However, if you would like the table to display with headers only when
-the number of rows is zero, you can add `show if empty: True` to the
-`table` block.
+If the variable indicated by `rows` is empty, the table will display
+with only the headers.  To suppress this, you can add `show if empty:
+False` to the `table` block.  The `.content` will be the empty
+string, `""`.
 
 {% include side-by-side.html demo="table-empty" %}
+
+If you would like a message to display in place of the table in the
+event that there are no `rows` to display, you can set `show if empty`
+to this message.  [Mako] and [Markdown] can be used.  The message will
+become the `.content` of the resulting [`DATemplate`].
+
+{% include side-by-side.html demo="table-empty-message" %}
 
 [expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields

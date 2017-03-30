@@ -100,12 +100,16 @@ are stored in the "Templates" folder.  For more information about the
 different types of template files that can be provided as options to
 the [`attachments`] directive, see [documents].
 
-For example, you can write Markdown text in a separate text file
+For example, you can write [Markdown] text in a separate text file
 called `small_claims_complaint.md` in the Templates folder and then
 incorporate that text by reference by including the line `content
 file: small_claims_complaint.md` within an [`attachments`] directive.
 
 {% include scroll-image.html image="playground-templates-page-clipped.png" %}
+
+When you edit a [Markdown] file in the Templates folder, the
+"Variables, etc." sidebar is shown, so that you can have access to the
+list of variables in any of your interview files.
 
 In the Templates folder, you can upload files.  Markdown and YAML
 files can be edited.  From the Templates screen, you can convert
