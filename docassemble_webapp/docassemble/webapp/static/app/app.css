@@ -32,6 +32,7 @@ body.dacontrolled > .navbar-inverse {
 }
 
 .daiconbox {
+    display: inline-block;
     font-size: 13px;
     font-family:Roboto,arial,sans-serif;
     font-weight:700;
@@ -46,6 +47,10 @@ body.dacontrolled > .navbar-inverse {
     height:36px;
     width:250px;
     margin-top: 5px;
+}
+
+.daiconbox > table {
+    height: 100%;
 }
 
 a.nohover:hover {

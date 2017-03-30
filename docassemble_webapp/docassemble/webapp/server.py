@@ -7048,6 +7048,10 @@ def playground_download(userid, filename):
 def playground_files():
     form = PlaygroundFilesForm(request.form)
     formtwo = PlaygroundFilesEditForm(request.form)
+    if 'ajax' in request.form:
+        is_ajax = True
+    else:
+        is_ajax = False
     section = request.args.get('section', 'template')
     the_file = request.args.get('file', '')
     scroll = False
@@ -7158,11 +7162,14 @@ def playground_files():
                     fp.write(formtwo.file_content.data.encode('utf8'))
                 the_time = formatted_current_time()
                 area.finalize()
-                flash(str(the_file) + ' ' + word('was saved at') + ' ' + the_time + '.', 'success')
+                flash_message = flash_as_html(str(the_file) + ' ' + word('was saved at') + ' ' + the_time + '.', message_type='success', is_ajax=is_ajax)
                 if section == 'modules':
                     #restart_all()
                     return redirect(url_for('restart_page', next=url_for('playground_files', section=section, file=the_file)))
-                return redirect(url_for('playground_files', section=section, file=the_file))
+                if is_ajax:
+                    return jsonify(success=True, flash_message=flash_message)
+                else:
+                    return redirect(url_for('playground_files', section=section, file=the_file))
             else:
                 flash(word('You need to type in a name for the file'), 'error')                
     files = sorted([f for f in os.listdir(area.directory) if os.path.isfile(os.path.join(area.directory, f))])
@@ -7265,10 +7272,22 @@ def playground_files():
       var daCodeMirror;
       var daTextArea;
       var vocab = [];
+      var daIsNew = """ + ('true' if is_new else 'false') + """;
+      var daSection = """ + '"' + section + '";' + """
 
 """ + variables_js(form='formtwo') + """
 
 """ + search_js(form='formtwo') + """
+
+      function saveCallback(data){
+        fetchVars(true);
+        if ($("#flash").length){
+          $("#flash").html(data.flash_message);
+        }
+        else{
+          $("#main").prepend('<div class="topcenter col-centered col-sm-7 col-md-6 col-lg-5" id="flash">' + data.flash_message + '</div>');
+        }
+      }
 
       function scrollBottom(){
         $("html, body").animate({
@@ -7288,9 +7307,27 @@ def playground_files():
           }
         });
         $("#formtwo").areYouSure(""" + repr(str(json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}))) + """);
-        $("#formtwo").bind("submit", function(){
+        $("#formtwo").bind("submit", function(e){
           daCodeMirror.save();
           $("#formtwo").trigger("reinitialize.areYouSure");
+          if (daSection != 'modules' && !daIsNew){
+            $.ajax({
+              type: "POST",
+              url: """ + '"' + url_for('playground_files') + '"' + """,
+              data: $("#formtwo").serialize() + '&submit=Save&ajax=1',
+              success: function(data){
+                saveCallback(data);
+                setTimeout(function(){
+                  $("#flash .alert-success").hide(300, function(){
+                    $(self).remove();
+                  });
+                }, 3000);
+              },
+              dataType: 'json'
+            });
+            e.preventDefault();
+            return false;
+          }
           return true;
         });
         daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});

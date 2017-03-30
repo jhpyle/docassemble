@@ -503,7 +503,8 @@ class Address(DAObject):
             my_geocoder = GoogleV3()
         try_number = 0
         success = False
-        while not success and try_number < 4:
+        results = None
+        while not success and try_number < 2:
             try:
                 results = my_geocoder.geocode(the_address)
                 success = True
@@ -528,7 +529,7 @@ class Address(DAObject):
                                 #logmessage("Setting " + str(addr_type) + " to " + str(getattr(results[0], geo_type)) + " from " + str(geo_type))
                                 setattr(self, addr_type, component['long_name'])
         else:
-            logmessage("geolocate: Valid not ok.  Result count was " + str(len(results)))
+            logmessage("geolocate: Valid not ok.")
             self.geolocate_success = False
         #logmessage(str(self.__dict__))
         return self.geolocate_success
@@ -745,9 +746,10 @@ class Person(DAObject):
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except uses the past tense of the verb."""
         if self == this_thread.user:
-            tense = '1sg'
+            tense = "2sgp"
         else:
-            tense = '3sg'
+            tense = "3sgp"
+        logmessage(the_verb + " " + tense)
         return verb_past(the_verb, tense)
     def subject(self, **kwargs):
         """Returns "you" or the person's name, depending on whether the 

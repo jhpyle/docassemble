@@ -607,12 +607,14 @@ fields:
 generic object: City
 question: |
   In which county in
-  ${ x.state }
+  ${ state_name(x.state) }
   is
   ${ x.city }
   located?
 fields:
   - County: x.county
+    hint: |
+      e.g., Springfield County
 ---
 generic object: Address
 sets: x.county

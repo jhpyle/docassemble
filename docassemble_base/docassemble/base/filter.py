@@ -13,6 +13,7 @@ from docassemble.base.functions import server, word
 from docassemble.base.pandoc import MyPandoc
 from mdx_smartypants import SmartypantsExt
 from bs4 import BeautifulSoup
+import ruamel.yaml
 
 from docassemble.base.logger import logmessage
 from rtfng.object.picture import Image
@@ -128,7 +129,11 @@ def rtf_prefilter(text, metadata=dict()):
     text = re.sub(r'^######### ', '[HEADING9] ', text, flags=re.MULTILINE)
     return(text)
 
-def rtf_filter(text, metadata=dict(), styles=dict(), question=None):
+def rtf_filter(text, metadata=None, styles=None, question=None):
+    if metadata is None:
+        metadata = dict()
+    if styles is None:
+        styles = dict()
     #sys.stderr.write(text + "\n")
     if 'fontsize' in metadata:
         text = re.sub(r'{\\pard', r'\\fs' + str(convert_length(metadata['fontsize'], 'hp')) + r' {\\pard', text, count=1)
@@ -292,7 +297,9 @@ def rtf_filter(text, metadata=dict(), styles=dict(), question=None):
     #text = re.sub(r'{\\pard \\sl[0-9]+\\slmult[0-9]+ \\ql \\f[0-9]+ \\sa[0-9]+ \\li[0-9]+ \\fi-?[0-9]*\s*\[FLUSHLEFT\]}', r'', text)
     return(text)
 
-def docx_filter(text, metadata=dict(), question=None):
+def docx_filter(text, metadata=None, question=None):
+    if metadata is None:
+        metadata = dict()
     text = text + "\n\n"
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_docx(x, question=question), text)
@@ -355,7 +362,11 @@ def metadata_filter(text, doc_format):
         text = re.sub(r'\_([^\_]+?)\_*', r'\\begingroup\\itshape \1\\endgroup {}', text, flags=re.MULTILINE | re.DOTALL)
     return text
 
-def pdf_filter(text, metadata=dict(), question=None):
+def pdf_filter(text, metadata=None, question=None):
+    if metadata is None:
+        metadata = dict()
+    #if len(metadata):
+    #    text = ruamel.yaml.dump(metadata) + "\n---\n" + text
     text = text + "\n\n"
     text = re.sub(r'\[\[([^\]]*)\]\]', r'\1', text)
     text = re.sub(r'\[EMOJI ([^,\]]+), *([0-9A-Za-z.%]+)\]', lambda x: image_include_string(x, emoji=True, question=question), text)
@@ -374,21 +385,21 @@ def pdf_filter(text, metadata=dict(), question=None):
     text = re.sub(r'\[NOINDENTATION\]', r'\\setlength{\\parindent}{0in}\\setlength{\\RaggedRightParindent}{\\parindent}', text)    
     text = re.sub(r'\[BEGIN_CAPTION\](.+?)\[VERTICAL_LINE\](.+?)\[END_CAPTION\]', pdf_caption, text, flags=re.DOTALL)
     text = re.sub(r'\[BEGIN_TWOCOL\](.+?)\[BREAK\](.+?)\[END_TWOCOL\]', pdf_two_col, text, flags=re.DOTALL)
-    text = re.sub(r'\[SINGLESPACING\]\s*', r'\\singlespacing\\setlength{\\parskip}{\\myfontsize} ', text)
-    text = re.sub(r'\[DOUBLESPACING\]\s*', r'\\doublespacing\\setlength{\\parindent}{0.5in}\\setlength{\\RaggedRightParindent}{\\parindent} ', text)
+    text = re.sub(r'\[SINGLESPACING\]\s*', r'\\singlespacing\\setlength{\\parskip}{\\myfontsize}', text)
+    text = re.sub(r'\[DOUBLESPACING\]\s*', r'\\doublespacing\\setlength{\\parindent}{0.5in}\\setlength{\\RaggedRightParindent}{\\parindent}', text)
     text = re.sub(r'\[ONEANDAHALFSPACING\]\s*', '\\onehalfspacing', text)
     text = re.sub(r'\[TRIPLESPACING\]\s*', '', text)
     text = re.sub(r'\[NBSP\]', r'\\myshow{\\nonbreakingspace}', text)
     text = re.sub(r'\[ENDASH\]', r'\\myshow{\\myendash}', text)
     text = re.sub(r'\[EMDASH\]', r'\\myshow{\\myemdash}', text)
     text = re.sub(r'\[HYPHEN\]', r'\\myshow{\\myhyphen}', text)
-    text = re.sub(r'\[CHECKBOX\]', r'\\rule{0.3in}{0.4pt} ', text)
-    text = re.sub(r'\[BLANK\]', r'\\rule{2in}{0.4pt} ', text)
-    text = re.sub(r'\[BLANKFILL\]', r'\\hrulefill ', text)
+    text = re.sub(r'\[CHECKBOX\]', r'{\\rule{0.3in}{0.4pt}}', text)
+    text = re.sub(r'\[BLANK\]', r'\\leavevmode{\\xrfill[-2pt]{0.4pt}}', text)
+    text = re.sub(r'\[BLANKFILL\]', r'\\leavevmode{\\xrfill[-2pt]{0.4pt}}', text)
     text = re.sub(r'\[PAGEBREAK\]\s*', r'\\clearpage ', text)
     text = re.sub(r'\[PAGENUM\]', r'\myshow{\\thepage}', text)
-    text = re.sub(r'\[TOTALPAGES\]', '\\myshow{\\pageref{LastPage}} ', text)
-    text = re.sub(r'\[SECTIONNUM\]', r'\\myshow{\\thesection} ', text)
+    text = re.sub(r'\[TOTALPAGES\]', '\\myshow{\\pageref{LastPage}}', text)
+    text = re.sub(r'\[SECTIONNUM\]', r'\\myshow{\\thesection}', text)
     text = re.sub(r'\[SKIPLINE\] *', r'\\par\\myskipline ', text)
     text = re.sub(r'\[VERTICALSPACE\] *', r'\\rule[-24pt]{0pt}{0pt}', text)
     text = re.sub(r'\[NEWLINE\] *', r'\\newline ', text)
@@ -913,8 +924,13 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
         if do_terms:
             if question.language in question.interview.terms and len(question.interview.terms[question.language]) > 0:
                 for term in question.interview.terms[question.language]:
-                    #logmessage("Searching for term " + term + "\n")
+                    #logmessage("Searching for term " + term + " in " + a + "\n")
                     a = question.interview.terms[question.language][term]['re'].sub(r'[[\1]]', a)
+                    #logmessage("string is now " + str(a) + "\n")
+            if question.language in question.interview.autoterms and len(question.interview.autoterms[question.language]) > 0:
+                for term in question.interview.autoterms[question.language]:
+                    #logmessage("Searching for term " + term + " in " + a + "\n")
+                    a = question.interview.autoterms[question.language][term]['re'].sub(r'[[\1]]', a)
                     #logmessage("string is now " + str(a) + "\n")
     if status is not None and len(question.interview.images) > 0:
         a = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status)), a)

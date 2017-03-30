@@ -20,7 +20,9 @@ rows: fruit
 columns:
   - Fruit Name: row_item.name
   - Number of Seeds: row_item.seeds
-show if empty: False
+show if empty: |
+  I'm very sorry, but there are no fruits
+  to display today.
 ---
 mandatory: True
 question: |

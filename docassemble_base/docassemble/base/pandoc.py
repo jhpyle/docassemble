@@ -82,7 +82,7 @@ class MyPandoc(object):
                     yaml_to_use.append(yaml_file)
             #logmessage("Before: " + repr(self.input_content))
             self.input_content = docassemble.base.filter.pdf_filter(self.input_content, metadata=metadata_as_dict, question=question)
-            #logmessage("After: " + repr(self.input_content))
+            logmessage("After: " + repr(self.input_content))
         temp_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md", delete=False)
         temp_file.write(self.input_content.encode('utf8'))
         temp_file.close()
@@ -105,7 +105,7 @@ class MyPandoc(object):
         fin.close()
         if msg:
             self.pandoc_message = msg
-        os.remove(temp_file.name)
+        #os.remove(temp_file.name)
         if os.path.exists(temp_outfile.name):
             if self.output_format == 'rtf':
                 with open(temp_outfile.name) as the_file: file_contents = the_file.read()

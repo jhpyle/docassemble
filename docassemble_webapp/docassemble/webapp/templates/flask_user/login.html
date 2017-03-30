@@ -69,7 +69,7 @@
 <p style="padding:15px;"><strong>or</strong></p>
 {% endif %}
 {% if config['USE_GOOGLE_LOGIN'] %}
-<a class="nohover" href="{{ url_for('google_page') }}"><div class="daiconbox"><table style="height:100%"><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/google-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Google') }}</td></tr></table></div></a>
+<a class="nohover" href="{{ url_for('google_page') }}"><div class="daiconbox"><table><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/google-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Google') }}</td></tr></table></div></a>
 {% endif %}
 {% if config['USE_FACEBOOK_LOGIN'] %}
 <a class="nohover" href="{{ url_for('oauth_authorize', provider='facebook') }}"><div class="daiconbox"><table style="height:100%"><tr><td style="padding-left:4px;vertical-align:middle;"><img src="{{ url_for('static', filename='app/facebook-logo.png') }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Facebook') }}</td></tr></table></div></a>

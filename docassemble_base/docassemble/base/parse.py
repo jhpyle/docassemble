@@ -22,6 +22,7 @@ from docassemble.base.functions import pickleable_objects, word, get_language, s
 from docassemble.base.logger import logmessage
 from docassemble.base.pandoc import MyPandoc
 from docassemble.base.mako.template import Template as MakoTemplate
+from docassemble.base.mako.exceptions import SyntaxException
 from types import CodeType, NoneType
 
 debug = False
@@ -707,6 +708,9 @@ class Question:
         else:
             self.is_generic = False
         if 'metadata' in data:
+            for key in data:
+                if key not in ['metadata', 'comment']:
+                    raise DAError("A metadata directive cannot be mixed with other directives." + self.idebug(data))
             should_append = False
             if type(data['metadata']) == dict:
                 data['metadata']['origin_path'] = self.from_source.path
@@ -752,13 +756,31 @@ class Question:
                     if type(termitem) is dict:
                         for term in termitem:
                             lower_term = term.lower()
-                            self.interview.terms[self.language][lower_term] = {'definition': termitem[term], 're': re.compile(r"(?i)\b(%s)\b" % lower_term, re.IGNORECASE)}
+                            self.interview.terms[self.language][lower_term] = {'definition': termitem[term], 're': re.compile(r"{(?i)(%s)}" % (lower_term,), re.IGNORECASE)}
                     else:
                         raise DAError("A terms section organized as a list must be a list of dictionary items." + self.idebug(data))
             elif type(data['terms']) is dict:
                 for term in data['terms']:
                     lower_term = term.lower()
-                    self.interview.terms[self.language][lower_term] = {'definition': data['terms'][term], 're': re.compile(r"(?i)\b(%s)\b" % lower_term, re.IGNORECASE)}
+                    self.interview.terms[self.language][lower_term] = {'definition': data['terms'][term], 're': re.compile(r"{(?i)(%s)}" % (lower_term,), re.IGNORECASE)}
+            else:
+                raise DAError("A terms section must be organized as a dictionary or a list." + self.idebug(data))
+        if 'auto terms' in data:
+            should_append = False
+            if self.language not in self.interview.autoterms:
+                self.interview.autoterms[self.language] = dict()
+            if type(data['auto terms']) is list:
+                for termitem in data['auto terms']:
+                    if type(termitem) is dict:
+                        for term in termitem:
+                            lower_term = term.lower()
+                            self.interview.autoterms[self.language][lower_term] = {'definition': termitem[term], 're': re.compile(r"(?i)\b(%s)\b" % (lower_term,), re.IGNORECASE)}
+                    else:
+                        raise DAError("A terms section organized as a list must be a list of dictionary items." + self.idebug(data))
+            elif type(data['auto terms']) is dict:
+                for term in data['auto terms']:
+                    lower_term = term.lower()
+                    self.interview.autoterms[self.language][lower_term] = {'definition': data['terms'][term], 're': re.compile(r"(?i)\b(%s)\b" % (lower_term,), re.IGNORECASE)}
             else:
                 raise DAError("A terms section must be organized as a dictionary or a list." + self.idebug(data))
         if 'default role' in data:
@@ -1116,7 +1138,10 @@ class Question:
                 column.append(compile(cell_text, '', 'eval'))
             #column = list(map(lambda x: compile(x, '', 'eval'), data['column']))
             self.fields_used.add(data['table'])
-            field_data = {'saveas': data['table'], 'extras': dict(header=header, row=row, column=column, show_if_empty=data.get('show if empty', True), indent=data.get('indent', False))}
+            empty_message = data.get('show if empty', True)
+            if empty_message not in (True, False, None):
+                empty_message = TextObject(definitions + unicode(empty_message), names_used=self.mako_names)
+            field_data = {'saveas': data['table'], 'extras': dict(header=header, row=row, column=column, empty_message=empty_message, indent=data.get('indent', False))}
             self.fields.append(Field(field_data))
             self.content = TextObject('')
             self.subcontent = TextObject('')
@@ -1444,6 +1469,7 @@ class Question:
                 att['question_name'] = self.name
                 att['indexno'] = indexno
                 indexno += 1
+        self.data_for_debug = data
     def yes(self):
         return word("Yes")
     def no(self):
@@ -2111,6 +2137,7 @@ class Interview:
         self.helptext = dict()
         self.defs = dict()
         self.terms = dict()
+        self.autoterms = dict()
         self.includes = set()
         self.reconsider = set()
         self.question_index = 0
@@ -2180,8 +2207,11 @@ class Interview:
                 except Exception as errMess:
                     raise DAError('Error reading YAML file ' + str(source.path) + '\n\nDocument source code was:\n\n---\n' + str(source_code) + '---\n\nError was:\n\n' + str(errMess))
                 if document is not None:
-                    question = Question(document, self, source=source, package=source_package, source_code=source_code)
-                    self.names_used.update(question.fields_used)
+                    try:
+                        question = Question(document, self, source=source, package=source_package, source_code=source_code)
+                        self.names_used.update(question.fields_used)
+                    except SyntaxException as qError:
+                        raise Exception("SyntaxException: " + str(qError) + "\n\nIn file " + str(source.path) + " from package " + str(source_package) + ":\n" + source_code)
     def processed_helptext(self, user_dict, language):
         result = list()
         if language in self.helptext:
@@ -2445,6 +2475,15 @@ class Interview:
                 #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
                 logmessage("I am going to execute " + str(code_error.compute))
                 exec(code_error.compute, user_dict)
+            except SyntaxException as qError:
+                the_question = None
+                try:
+                    the_question = question
+                except:
+                    pass
+                if the_question is not None:
+                    raise DAError(str(qError) + "\n\n" + str(self.idebug(self.data_for_debug)))
+                raise DAError("no question available: " + str(qError))
             else:
                 raise DAErrorNoEndpoint('Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any).  It is a best practice to end your interview with a question that says goodbye and offers an Exit button.')
         if docassemble.base.functions.get_info('prevent_going_back'):
@@ -2758,8 +2797,11 @@ class Interview:
                             table_content += indent + "|".join(['-' * x for x in max_chars_to_use]) + "\n"
                             for content_line in contents:
                                 table_content += indent + "|".join(content_line) + "\n"
-                            if len(contents) == 0 and not question.fields[0].extras['show_if_empty']:
-                                table_content = "\n"
+                            if len(contents) == 0 and question.fields[0].extras['empty_message'] is not True:
+                                if question.fields[0].extras['empty_message'] in (False, None):
+                                    table_content = "\n"
+                                else:
+                                    table_content = question.fields[0].extras['empty_message'].text(user_dict) + "\n"
                             table_content += "\n"
                             string = from_safeid(question.fields[0].saveas) + ' = docassemble.base.core.DATemplate(' + "'" + from_safeid(question.fields[0].saveas) + "', content=" + repr(table_content) + ")"
                             exec(string, user_dict)
@@ -2952,6 +2994,15 @@ class Interview:
                     except:
                         #raise DAError("Problem setting that variable")
                         continue
+                except SyntaxException as qError:
+                    the_question = None
+                    try:
+                        the_question = question
+                    except:
+                        pass
+                    if the_question is not None:
+                        raise DAError(str(qError) + "\n\n" + str(self.idebug(self.data_for_debug)))
+                    raise DAError("no question available in askfo: " + str(qError))
                 # except SendFileError as qError:
                 #     #logmessage("Trapped SendFileError2")
                 #     question_data = dict(extras=dict())
