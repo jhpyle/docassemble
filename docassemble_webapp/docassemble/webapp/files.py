@@ -244,7 +244,7 @@ except ImportError:
 """
     licensetext = info['license']
     if re.search(r'MIT License', licensetext):
-        licensetext += '\n\nCopyright (c) ' + str(datetime.datetime.now().year) + ' ' + unicode(author_info['first name']) + " " + unicode(author_info['first name']) + """
+        licensetext += '\n\nCopyright (c) ' + str(datetime.datetime.now().year) + ' ' + unicode(author_info['first name']) + " " + unicode(author_info['last name']) + """
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -324,9 +324,9 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
       license=""" + repr(info['license']) + """,
       url=""" + repr(info['url']) + """,
       packages=find_packages(),
-      namespace_packages = ['docassemble'],
-      install_requires = [""" + dependencies + """],
-      zip_safe = False,
+      namespace_packages=['docassemble'],
+      install_requires=[""" + dependencies + """],
+      zip_safe=False,
       package_data=find_package_data(where='docassemble/""" + str(pkgname) + """/', package='docassemble.""" + str(pkgname) + """'),
      )
 

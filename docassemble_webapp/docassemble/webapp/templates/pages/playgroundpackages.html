@@ -17,7 +17,7 @@
   </li>
   <li role="presentation" class="dropdown">
     <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another package')}}">
-      <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}<span class="caret"></span>
+      <span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}<span class="caret"></span>
     </a>
     <ul class="dropdown-menu">
       {%- if any_files %}
@@ -41,6 +41,20 @@
       </li>
       {%- endif %}
     </ul>
+  </li>
+  <li role="presentation">
+    <a tabindex="5" id="uploadlink" style="cursor: pointer" title="{{ word('Upload a package to the Playground') }}">
+      <form action="" method="POST" class="form" role="form" id="fileform" enctype="multipart/form-data">
+        {{ fileform.hidden_tag() }}
+        <label id="uploadlabel" for="uploadfile" style="position: inline; font-weight: normal; cursor: pointer; margin: 0">
+          <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
+          {{ word("Upload") }}
+        </label>
+        <div style="width: 0px; height: 0px; overflow: hidden">
+          <input type="file" name="uploadfile" id="uploadfile"/>
+        </div>
+      </form>
+    </a>
   </li>
 </ul>
 

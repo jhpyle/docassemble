@@ -7355,6 +7355,7 @@ def playground_files():
 @roles_required(['developer', 'admin'])
 def playground_packages():
     form = PlaygroundPackagesForm(request.form)
+    fileform = PlaygroundUploadForm(request.form)
     the_file = request.args.get('file', '')
     if the_file == '':
         no_file_specified = True
@@ -7438,12 +7439,79 @@ def playground_packages():
                             form[field].data = old_info[field]
         else:
             filename = None
+    if request.method == 'POST' and 'uploadfile' in request.files:
+        the_files = request.files.getlist('uploadfile')
+        if the_files:
+            for up_file in the_files:
+                #try:
+                    zip_filename = secure_filename(up_file.filename)
+                    zippath = tempfile.NamedTemporaryFile(mode="wb", suffix=".zip", delete=True)
+                    up_file.save(zippath.name)
+                    area_sec = dict(templates='playgroundtemplate', static='playgroundstatic', sources='playgroundsources', questions='playground')
+                    with zipfile.ZipFile(zippath.name, mode='r') as zf:
+                        readme_text = ''
+                        setup_py = ''
+                        extracted = dict()
+                        data_files = dict(templates=list(), static=list(), sources=list(), interviews=list(), modules=list(), questions=list())
+                        for zinfo in zf.infolist():
+                            #logmessage("Found a " + zinfo.filename)
+                            if zinfo.filename.endswith('/'):
+                                continue
+                            (directory, filename) = os.path.split(zinfo.filename)
+                            if filename.startswith('#') or filename.endswith('~'):
+                                continue
+                            dirparts = splitall(directory)
+                            if '.git' in dirparts:
+                                continue
+                            levels = re.findall(r'/', directory)
+                            for sec in ['templates', 'static', 'sources', 'questions']:
+                                if directory.endswith('data/' + sec) and filename != 'README.md':
+                                    data_files[sec].append(filename)
+                                    with zf.open(zinfo) as source_fp, open(os.path.join(area[area_sec[sec]].directory, filename), 'wb') as target_fp:
+                                        shutil.copyfileobj(source_fp, target_fp)
+                            if filename == 'README.md' and len(levels) == 0:
+                                readme_text = zf.read(zinfo)
+                            if filename == 'setup.py' and len(levels) == 0:
+                                setup_py = zf.read(zinfo)
+                            elif len(levels) >= 2 and filename.endswith('.py') and filename != '__init__.py':
+                                data_files['modules'].append(filename)
+                                with zf.open(zinfo) as source_fp, open(os.path.join(area['playgroundmodules'].directory, filename), 'wb') as target_fp:
+                                    shutil.copyfileobj(source_fp, target_fp)
+                        setup_py = re.sub(r'.*setup\(', '', setup_py, flags=re.DOTALL)
+                        for line in setup_py.splitlines():
+                            m = re.search(r"^ *([a-z_]+) *= *\(?u?'(.*)'", line)
+                            if m:
+                                extracted[m.group(1)] = m.group(2)
+                            m = re.search(r'^ *([a-z_]+) *= *\(?u?"(.*)"', line)
+                            if m:
+                                extracted[m.group(1)] = m.group(2)
+                            m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
+                            if m:
+                                the_list = list()
+                                for item in re.split(r', *', m.group(2)):
+                                    inner_item = re.sub(r"'$", '', item)
+                                    inner_item = re.sub(r"^u?'", '', inner_item)
+                                    inner_item = re.sub(r'"+$', '', item)
+                                    inner_item = re.sub(r'^u?"+', '', inner_item)
+                                    the_list.append(inner_item)
+                                extracted[m.group(1)] = the_list
+                        info_dict = dict(readme=readme_text, interview_files=data_files['questions'], sources_files=data_files['sources'], static_files=data_files['static'], module_files=data_files['modules'], template_files=data_files['templates'], dependencies=extracted.get('install_requires', list()), description=extracted.get('description', ''), license=extracted.get('license', ''), url=extracted.get('url', ''), version=extracted.get('version', ''))
+                        package_name = re.sub(r'^docassemble\.', '', extracted.get('name', 'unknown'))
+                        with open(os.path.join(area['playgroundpackages'].directory, package_name), 'w') as fp:
+                            the_yaml = yaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
+                            fp.write(the_yaml.encode('utf8'))
+                        for sec in area:
+                            area[sec].finalize()
+                        the_file = package_name
+                #except Exception as errMess:
+                    #flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
+        return redirect(url_for('playground_packages'))
+    if request.method == 'POST' and form.delete.data and the_file != '' and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):
+        os.remove(os.path.join(area['playgroundpackages'].directory, the_file))
+        area['playgroundpackages'].finalize()
+        flash(word("Deleted package"), "success")
+        return redirect(url_for('playground_packages'))
     if request.method == 'POST' and validated:
-        if form.delete.data and the_file != '' and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):
-            os.remove(os.path.join(area['playgroundpackages'].directory, the_file))
-            area['playgroundpackages'].finalize()
-            flash(word("Deleted package"), "success")
-            return redirect(url_for('playground_packages'))
         new_info = dict()
         for field in ['license', 'description', 'version', 'url', 'readme', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files']:
             new_info[field] = form[field].data
@@ -7481,6 +7549,7 @@ def playground_packages():
         extra_command = "      scrollBottom();\n"
     else:
         extra_command = ""
+    extra_command += upload_js() + "\n";
     if keymap:
         kbOpt = 'keyMap: "' + keymap + '", cursorBlinkRate: 0, '
         kbLoad = '<script src="' + url_for('static', filename="codemirror/keymap/" + keymap + ".js") + '"></script>\n    '
@@ -7491,7 +7560,22 @@ def playground_packages():
         any_files = True
     else:
         any_files = False
-    return render_template('pages/playgroundpackages.html', tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    ' + kbLoad + '<script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this package?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("readme");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
+    return render_template('pages/playgroundpackages.html', tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="areyousure/jquery.are-you-sure.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js") + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/markdown/markdown.js") + '"></script>\n    ' + kbLoad + '<script>\n      $("#daDelete").click(function(event){if(!confirm("' + word("Are you sure that you want to delete this package?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("readme");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }});\n      function scrollBottom(){$("html, body").animate({ scrollTop: $(document).height() }, "slow");}\n' + extra_command + '    </script>'), header=header, upload_header=upload_header, edit_header=edit_header, description=description, form=form, fileform=fileform, files=files, file_list=file_list, userid=current_user.id, editable_files=editable_files, current_file=the_file, after_text=after_text, section_name=section_name, section_sec=section_sec, section_field=section_field, package_names=package_names, any_files=any_files), 200
+
+def splitall(path):
+    allparts = []
+    while 1:
+        parts = os.path.split(path)
+        if parts[0] == path:
+            allparts.insert(0, parts[0])
+            break
+        elif parts[1] == path:
+            allparts.insert(0, parts[1])
+            break
+        else:
+            path = parts[0]
+            allparts.insert(0, parts[1])
+    return allparts
 
 @app.route('/playground_redirect', methods=['GET', 'POST'])
 @login_required
@@ -7509,6 +7593,26 @@ def playground_redirect():
         counter += 1
     abort(404)
 
+def upload_js():
+    return """
+      $("#uploadlink").on('click', function(event){
+        $("#uploadlabel").click();
+        event.preventDefault();
+        return false;
+      });
+      $("#uploadlabel").on('click', function(event){
+        event.stopPropagation();
+        event.preventDefault();
+        $("#uploadfile").click();
+        return false;
+      });
+      $("#uploadfile").on('click', function(event){
+        event.stopPropagation();
+      });
+      $("#uploadfile").on('change', function(event){
+        $("#fileform").submit();
+      });"""
+    
 def search_js(form=None):
     if form is None:
         form = 'form'
@@ -8227,24 +8331,7 @@ $( document ).ready(function() {
           }
         }
         return {list: list, from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end)};
-      });
-      $("#uploadlink").on('click', function(event){
-        $("#uploadlabel").click();
-        event.preventDefault();
-        return false;
-      });
-      $("#uploadlabel").on('click', function(event){
-        event.stopPropagation();
-        event.preventDefault();
-        $("#uploadfile").click();
-        return false;
-      });
-      $("#uploadfile").on('click', function(event){
-        event.stopPropagation();
-      });
-      $("#uploadfile").on('change', function(event){
-        $("#fileform").submit();
-      });
+      });""" + upload_js() + """
     </script>"""
     if keymap:
         kbOpt = 'keyMap: "' + keymap + '", cursorBlinkRate: 0, '

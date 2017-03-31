@@ -2497,7 +2497,7 @@ class Interview:
         seeking = kwargs.get('seeking', list())
         if debug:
             seeking.append({'variable': missingVariable})
-        logmessage("I don't have " + str(missingVariable) + " for language " + str(language))
+        #logmessage("I don't have " + str(missingVariable) + " for language " + str(language))
         origMissingVariable = missingVariable
         docassemble.base.functions.set_current_variable(origMissingVariable)
         if missingVariable in variable_stack:
