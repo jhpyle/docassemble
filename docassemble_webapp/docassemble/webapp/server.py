@@ -3297,6 +3297,7 @@ def index():
       var daCheckinCode = null;
       var daCheckingIn = 0;
       var daShowingHelp = 0;
+      var daSteps = """ + str(steps) + """;
       var daIsUser = """ + is_user + """;
       var daChatStatus = """ + repr(str(chat_status)) + """;
       var daChatAvailable = """ + repr(str(chat_available)) + """;
@@ -3778,6 +3779,8 @@ def index():
           daChatMode = data.livehelp.mode;
           daChatRoles = data.livehelp.roles;
           daChatPartnerRoles = data.livehelp.partner_roles;
+          daSteps = data.steps;
+          history.pushState({steps: daSteps}, data.browser_title + " - page " + daSteps, "#page" + daSteps);
           daInitialize();
           var tempDiv = document.createElement('div');
           tempDiv.innerHTML = data.extra_scripts;
@@ -4201,11 +4204,11 @@ def index():
           daSubmitter = this;
           return true;
         });
-        $('#emailform button[type="submit"]').click(function(){
+        $('#daform input[type="submit"]').click(function(){
           daSubmitter = this;
           return true;
         });
-        $('#daform input[type="submit"]').click(function(){
+        $('#emailform button[type="submit"]').click(function(){
           daSubmitter = this;
           return true;
         });
@@ -4363,13 +4366,21 @@ def index():
       }
       $(document).ready(function(){
         daInitialize();
+        history.replaceState({steps: daSteps}, "", "#page" + daSteps);
         var daReloadAfter = """ + str(int(reload_after)) + """;
         if (daReloadAfter > 0){
           daReloader = setTimeout(function(){daRefreshSubmit();}, daReloadAfter);
         }
         // setTimeout(daCheckin, 100);
         // checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
-        $( window ).bind('unload', function() {
+          window.onpopstate = function(event) {
+            //console.log("location: " + document.location + ", state: " + JSON.stringify(event.state));
+            if (event.state.steps < daSteps){
+              $("#backbutton").submit();
+            }
+            console.log("steps are " + event.state.steps);
+          };
+          $( window ).bind('unload', function() {
           daStopCheckingIn();
           if (socket != null && socket.connected){
             //console.log('Terminating interview socket because window unloaded');
@@ -4662,7 +4673,7 @@ def index():
             do_action = interview_status.question.checkin
         else:
             do_action = None
-        response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action)
+        response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, steps=steps)
     else:
         output = start_output + output + end_output
         response = make_response(output.encode('utf8'), '200 OK')
