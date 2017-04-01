@@ -24,7 +24,7 @@
     <a tabindex="4" class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another interview')}}">
       <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}<span class="caret"></span>
     </a>
-    <ul class="dropdown-menu">
+    <ul class="dropdown-menu heightlim">
       {% if any_files %}
       {% for file in files %}{% if file == current_file %}<li class="active">
         <a href="#"><span class="glyphicon glyphicon-file" aria-hidden="true"></span> {{ file }}

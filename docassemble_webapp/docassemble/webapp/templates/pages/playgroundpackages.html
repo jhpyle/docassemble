@@ -1,12 +1,12 @@
-{%- extends 'base_templates/page_base_half.html' %}
+{%- extends 'base_templates/page_base_half_wider.html' %}
 {%- from "base_templates/form_macros.html" import render_addon_field, render_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
 {%- block top %}
-<div class="container"><p><a href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></p></div>
+{# <div class="container"><p><a href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></p></div> #}
 {%- endblock %}
 {%- block content %}
-<div class="page-header">
+{# <div class="page-header">
   <h1>{{ header }}</h1>
-</div>
+</div> #}
 {%- if description %}
 <p>{{ description }}</p>
 {%- endif %}
@@ -56,6 +56,12 @@
       </form>
     </a>
   </li>
+  <li role="presentation">
+    <a tabindex="6" href="{{ url_for('create_playground_package', package=current_file) }}" title="{{ word('Download the current package') }}">
+      <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+      {{ word("Download") }}
+    </a>
+  </li>
 </ul>
 
 <form action="{{ url_for('playground_packages') }}" method="POST" class="form" role="form" id="form">
@@ -87,6 +93,8 @@
     </select>
   </div>
   {%- endfor %}
+{%- endblock %}
+{%- block below %}
   <h2>{{ form.readme.label }}</h2>
   <div class="form-group">
     <label for="{{ form.readme.id }}">{{ word("The README.md file for the package") }}</label>
@@ -94,14 +102,14 @@
   </div>
   <div class="form-actions">
     {{ render_submit_field(form.submit, class="btn btn-primary btn-lg") }}
-    {{ render_submit_field(form.download, class="btn btn-warning btn-lg") }}
+    {# {{ render_submit_field(form.download, class="btn btn-warning btn-lg") }} #}
+    {%- if current_file != '' %}
     {{ render_submit_field(form.install, class="btn btn-success btn-lg") }}
     {{ render_submit_field(form.delete, id="daDelete", class="btn btn-default btn-lg") }}
+    {%- endif %}
   </div>
 </form>
 
-{%- endblock %}
-{%- block below %}
 {%- if after_text %}
 <p>{{ after_text }}</p>
 {%- endif %}

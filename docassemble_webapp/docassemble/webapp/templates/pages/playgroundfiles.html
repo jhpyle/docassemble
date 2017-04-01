@@ -1,14 +1,18 @@
 {%- extends 'base_templates/page_base_half.html' %}
 {%- from "base_templates/form_macros.html" import render_addon_field, render_field, render_submit_field, myrender_hidden_field, render_file_field with context %}
 {%- block top %}
-<div class="container"><p><a tabindex="10" href="{{ url_for('playground_page') }}" class="btn btn-info btn-md"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></p></div>
+{# <div class="container"><p><a tabindex="10" href="{{ url_for('playground_page') }}" class="btn btn-info btn-sm"><i class="glyphicon glyphicon-arrow-left"></i> {{ word("Back to playground") }}</a></p></div> #}
 {%- endblock %}
 {%- block content %}
-<div class="page-header">
+{# <div class="page-header">
   <h1>{{ header }}</h1>
-</div>
+</div> #}
 {%- if description %}
-<p>{{ description }}</p>
+<div class="panel panel-default">
+  <div class="panel-body">
+    {{ description }}
+  </div>
+</div>
 {%- endif %}
 {%- if upload_header %}
 {%- if files %}
@@ -32,7 +36,7 @@
 <p><em>{{ word("No files have been uploaded yet.") }}</em></p>
 {%- endif %}
 
-<div class="page-header">
+<div>
   <h3>{{ upload_header }}</h3>
 </div>
 
@@ -48,6 +52,13 @@
 {%- if edit_header %}
 <h3>{{ edit_header }}</h3>
 {%- endif %}
+{%- if lowerdescription %}
+<div class="panel panel-default">
+  <div class="panel-body">
+    {{ lowerdescription }}
+  </div>
+</div>
+{%- endif %}
 {%- endblock %}
 {%- block below %}
 <ul id="editnav" class="nav nav-pills">
@@ -58,7 +69,7 @@
     <a tabindex="572" class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Edit another file')}}">
       <span class="glyphicon glyphicon-file" aria-hidden="true"></span>&nbsp;&nbsp;{% if current_file == '' %}{{ word("(New file)") }}{% else %}{{ current_file }}{% endif %}<span class="caret"></span>
     </a>
-    <ul class="dropdown-menu">
+    <ul class="dropdown-menu heightlim">
       {%- if any_files %}
       {%- for file in editable_files %}
       {%- if file == current_file %}
@@ -102,7 +113,8 @@
   </div>
   <div class="form-actions">
     {{ render_submit_field(formtwo.submit, tabindex=600, class="btn btn-primary btn-lg") }}
-    {% if section == 'modules' and is_new == 'False' %}{{ render_submit_field(formtwo.delete, tabindex=610, class="btn btn-default btn-lg") }}{% endif %}
+    {% if is_new == 'False' %}<a tabindex="610" class="btn btn-default btn-lg" href="?section={{ section }}&delete={{ current_file }}">{{ word('Delete') }}</a>{% endif %}
+    {# {{ render_submit_field(formtwo.delete, tabindex=610, id="daDelete", class="btn btn-default btn-lg") }} #}
   </div>
 </form>
 {%- if after_text %}
