@@ -3232,6 +3232,10 @@ def index():
         reload_after = 1000 * int(interview_status.extras['reload_after'])
     else:
         reload_after = 0
+    if interview_status.question.can_go_back and (steps - user_dict['_internal']['steps_offset']) > 1:
+        allow_going_back = True
+    else:
+        allow_going_back = False
     if not is_ajax:
         scripts = standard_scripts()
         if interview_status.question.checkin is not None:
@@ -3297,6 +3301,7 @@ def index():
       var daCheckinCode = null;
       var daCheckingIn = 0;
       var daShowingHelp = 0;
+      var daAllowGoingBack = """ + ('true' if allow_going_back else 'false') + """;
       var daSteps = """ + str(steps) + """;
       var daIsUser = """ + is_user + """;
       var daChatStatus = """ + repr(str(chat_status)) + """;
@@ -3780,6 +3785,7 @@ def index():
           daChatRoles = data.livehelp.roles;
           daChatPartnerRoles = data.livehelp.partner_roles;
           daSteps = data.steps;
+          daAllowGoingBack = data.allow_going_back;
           history.pushState({steps: daSteps}, data.browser_title + " - page " + daSteps, "#page" + daSteps);
           daInitialize();
           var tempDiv = document.createElement('div');
@@ -4373,14 +4379,12 @@ def index():
         }
         // setTimeout(daCheckin, 100);
         // checkinInterval = setInterval(daCheckin, """ + str(CHECKIN_INTERVAL) + """);
-          window.onpopstate = function(event) {
-            //console.log("location: " + document.location + ", state: " + JSON.stringify(event.state));
-            if (event.state.steps < daSteps){
-              $("#backbutton").submit();
-            }
-            console.log("steps are " + event.state.steps);
-          };
-          $( window ).bind('unload', function() {
+        window.onpopstate = function(event) {
+          if (event.state.steps < daSteps && daAllowGoingBack){
+            $("#backbutton").submit();
+          }
+        };
+        $( window ).bind('unload', function() {
           daStopCheckingIn();
           if (socket != null && socket.connected){
             //console.log('Terminating interview socket because window unloaded');
@@ -4673,7 +4677,7 @@ def index():
             do_action = interview_status.question.checkin
         else:
             do_action = None
-        response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, steps=steps)
+        response = jsonify(action='body', body=output, extra_scripts=interview_status.extra_scripts, extra_css=interview_status.extra_css, browser_title=browser_title, lang=interview_language, bodyclass=bodyclass, reload_after=reload_after, livehelp=user_dict['_internal']['livehelp'], csrf_token=generate_csrf(), do_action=do_action, steps=steps, allow_going_back=allow_going_back)
     else:
         output = start_output + output + end_output
         response = make_response(output.encode('utf8'), '200 OK')

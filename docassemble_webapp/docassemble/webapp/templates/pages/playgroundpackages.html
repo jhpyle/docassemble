@@ -8,7 +8,11 @@
   <h1>{{ header }}</h1>
 </div> #}
 {%- if description %}
-<p>{{ description }}</p>
+<div class="panel panel-default">
+  <div class="panel-body">
+    {{ description }}
+  </div>
+</div>
 {%- endif %}
 
 <ul class="nav nav-pills">
@@ -56,12 +60,14 @@
       </form>
     </a>
   </li>
+  {%- if current_file != '' %}
   <li role="presentation">
     <a tabindex="6" href="{{ url_for('create_playground_package', package=current_file) }}" title="{{ word('Download the current package') }}">
       <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
       {{ word("Download") }}
     </a>
   </li>
+  {% endif %}
 </ul>
 
 <form action="{{ url_for('playground_packages') }}" method="POST" class="form" role="form" id="form">
@@ -102,10 +108,11 @@
   </div>
   <div class="form-actions">
     {{ render_submit_field(form.submit, class="btn btn-primary btn-lg") }}
-    {# {{ render_submit_field(form.download, class="btn btn-warning btn-lg") }} #}
     {%- if current_file != '' %}
     {{ render_submit_field(form.install, class="btn btn-success btn-lg") }}
     {{ render_submit_field(form.delete, id="daDelete", class="btn btn-default btn-lg") }}
+    {%- else %}
+    <a class="btn btn-default btn-lg" href="{{ url_for('playground_packages') }}">{{ word('Cancel') }}</a>
     {%- endif %}
   </div>
 </form>
