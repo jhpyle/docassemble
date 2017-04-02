@@ -985,7 +985,7 @@ def standard_scripts():
     return '\n    <script src="' + url_for('static', filename='app/jquery.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jquery.validate.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap/js/bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/jasny-bootstrap.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-slider/dist/bootstrap-slider.min.js') + '"></script>\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/fileinput.min.js') + '"></script>\n    <script src="' + url_for('static', filename='app/signature.js') + '"></script>\n    <script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>\n    <script src="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.js') + '"></script>\n'
     
 def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False):
-    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet">'
+    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <link rel="shortcut icon" href="' + url_for('favicon') + '">\n    <link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon') + '">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_md') + '" sizes="32x32">\n    <link rel="icon" type="image/png" href="' + url_for('favicon_sm') + '" sizes="16x16">\n    <link rel="manifest" href="' + url_for('favicon_manifest_json') + '">\n    <link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab') + '" color="' + daconfig.get('favicon mask color', '#698aa7') + '">\n    <meta name="theme-color" content="' + daconfig.get('favicon theme color', '#83b3dd') + '">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/jasny-bootstrap.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-fileinput/css/fileinput.min.css') + '" media="all" rel="stylesheet" type="text/css" />\n    <link href="' + url_for('static', filename='jquery-labelauty/source/jquery-labelauty.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='bootstrap-slider/dist/css/bootstrap-slider.min.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/app.css') + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/signature.css') + '" rel="stylesheet">'
     if debug:
         output += '\n    <link href="' + url_for('static', filename='app/pygments.css') + '" rel="stylesheet">'
     return output
@@ -5364,6 +5364,20 @@ def monitor():
         //     }
         // });
     }
+    function faviconRegular(){
+      var link = document.querySelector("link[rel*='shortcut icon'") || document.createElement('link');
+      link.type = 'image/x-icon';
+      link.rel = 'shortcut icon';
+      link.href = '""" + url_for('favicon', nocache="1") + """';
+      document.getElementsByTagName('head')[0].appendChild(link);
+    }
+    function faviconAlert(){
+      var link = document.querySelector("link[rel*='shortcut icon'") || document.createElement('link');
+      link.type = 'image/x-icon';
+      link.rel = 'shortcut icon';
+      link.href = '""" + url_for('static', filename='app/chat.ico') + """?nocache=1';
+      document.getElementsByTagName('head')[0].appendChild(link);
+    }
     function topMessage(message){
         var newDiv = document.createElement('div');
         $(newDiv).addClass("top-alert col-xs-10 col-sm-7 col-md-6 col-lg-5 col-centered");
@@ -5647,6 +5661,7 @@ def monitor():
           $("#listelement" + skey).addClass("new-message");
           if (daBrowserTitle == document.title){
             document.title = '* ' + daBrowserTitle;
+            faviconAlert();
           }
         }
         markAsUpdated(key);
@@ -5662,6 +5677,7 @@ def monitor():
         $("#listelement" + skey).removeClass("new-message");
         if (document.title != daBrowserTitle){
             document.title = daBrowserTitle;
+            faviconRegular();
         }
     }
     function undraw_session(key){
@@ -5816,6 +5832,7 @@ def monitor():
                 $(theListElement).removeClass("new-message");
                 if (document.title != daBrowserTitle){
                     document.title = daBrowserTitle;
+                    faviconRegular();
                 }
             });
             $(theChatArea).appendTo($(theListElement));
@@ -6060,6 +6077,7 @@ def monitor():
     function onScrollResize(){
         if (document.title != daBrowserTitle){
             document.title = daBrowserTitle;
+            faviconRegular();
         }
         if (!daShowingNotif){
             return true;
@@ -6198,6 +6216,7 @@ def monitor():
                     $("#listelement" + skey).removeClass("new-message");
                     if (document.title != daBrowserTitle){
                       document.title = daBrowserTitle;
+                      faviconRegular();
                     }
                   }
                   else{
@@ -6205,6 +6224,7 @@ def monitor():
                       $("#listelement" + skey).addClass("new-message");
                       if (daBrowserTitle == document.title){
                         document.title = '* ' + daBrowserTitle;
+                        faviconAlert();
                       }
                     }
                     if (data.data.hasOwnProperty('temp_user_id')){
@@ -8917,6 +8937,57 @@ def sms_body(phone_number, body='question', config='default'):
         return None
     #return 'snooobar'
     return resp.verbs[0].verbs[0].body
+
+def favicon_file(filename):
+    the_dir = docassemble.base.functions.package_data_filename(daconfig.get('favicon directory', 'docassemble.webapp:data/static/favicon'))
+    if the_dir is None or not os.path.isdir(the_dir):
+        logmessage("Could not find favicon directory")
+        abort(404)
+    the_file = os.path.join(the_dir, filename)
+    if not os.path.isfile(the_file):
+        abort(404)
+    extension, mimetype = get_ext_and_mimetype(the_file)
+    response = send_file(the_file, mimetype=mimetype)
+    return(response)
+
+@app.route("/favicon.ico", methods=['GET'])
+def favicon():
+    return(favicon_file('favicon.ico'))
+@app.route("/apple-touch-icon.png", methods=['GET'])
+def apple_touch_icon():
+    return(favicon_file('apple-touch-icon.png'))
+@app.route("/favicon-32x32.png", methods=['GET'])
+def favicon_md():
+    return(favicon_file('favicon-32x32.png'))
+@app.route("/favicon-16x16.png", methods=['GET'])
+def favicon_sm():
+    return(favicon_file('favicon-16x16.png'))
+@app.route("/manifest.json", methods=['GET'])
+def favicon_manifest_json():
+    return(favicon_file('manifest.json'))
+@app.route("/safari-pinned-tab.svg", methods=['GET'])
+def favicon_safari_pinned_tab():
+    return(favicon_file('safari-pinned-tab.svg'))
+@app.route("/android-chrome-192x192.png", methods=['GET'])
+def favicon_android_md():
+    return(favicon_file('android-chrome-192x192.png'))
+@app.route("/android-chrome-512x512.png", methods=['GET'])
+def favicon_android_lg():
+    return(favicon_file('android-chrome-512x512.png'))
+@app.route("/mstile-150x150.png", methods=['GET'])
+def favicon_mstile():
+    return(favicon_file('mstile-150x150.png'))
+@app.route("/browserconfig.xml", methods=['GET'])
+def favicon_browserconfig():
+    return(favicon_file('browserconfig.xml'))
+
+@app.route("/robots.txt", methods=['GET'])
+def robots():
+    the_file = docassemble.base.functions.package_data_filename(daconfig.get('robots', 'docassemble.webapp:data/static/robots.txt'))
+    if the_file is None:
+        abort(404)
+    response = send_file(the_file, mimetype='text/plain')
+    return(response)
 
 @app.route("/sms", methods=['POST'])
 @csrf.exempt

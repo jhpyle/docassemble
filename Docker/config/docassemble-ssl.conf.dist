@@ -23,8 +23,6 @@
             AllowOverride none
             Require all granted
         </Directory>
-        Alias /robots.txt /var/www/html/robots.txt
-        Alias /favicon.ico /var/www/html/favicon.ico
         ErrorLog /var/log/apache2/error.log
         CustomLog /var/log/apache2/access.log combined
     </VirtualHost>

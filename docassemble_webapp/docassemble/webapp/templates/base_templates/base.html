@@ -13,6 +13,13 @@
     <link href="{{ url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='app/jasny-bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='app/app.css') }}" rel="stylesheet">{{ extra_css }}
+    <link rel="shortcut icon" href="{{ url_for('favicon') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('apple_touch_icon') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('favicon_md') }}" sizes="32x32">
+    <link rel="icon" type="image/png" href="{{ url_for('favicon_sm') }}" sizes="16x16">
+    <link rel="manifest" href="{{ url_for('favicon_manifest_json') }}">
+    <link rel="mask-icon" href="{{ url_for('favicon_safari_pinned_tab') }}" color="{{ config['FAVICON_MASK_COLOR'] }}">
+    <meta name="theme-color" content="{{ config['FAVICON_THEME_COLOR'] }}">
   </head>
   <body class="dabody">
     <div class="navbar navbar-inverse navbar-fixed-top">
