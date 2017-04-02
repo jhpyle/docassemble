@@ -36,8 +36,21 @@
         msgFilePreviewError: 'Pri branju datoteke "{name}" je prišlo do napake.',
         msgInvalidFileType: 'Napačen tip datoteke "{name}". Samo "{types}" datoteke so podprte.',
         msgInvalidFileExtension: 'Napačna končnica datoteke "{name}". Samo "{extensions}" datoteke so podprte.',
+        msgFileTypes: {
+            'image': 'image',
+            'html': 'HTML',
+            'text': 'text',
+            'video': 'video',
+            'audio': 'audio',
+            'flash': 'flash',
+            'pdf': 'PDF',
+            'object': 'object'
+        },
         msgUploadAborted: 'Nalaganje datoteke je bilo preklicano',
         msgUploadThreshold: 'Procesiram...',
+        msgUploadBegin: 'Initializing...',
+        msgUploadEnd: 'Done',
+        msgUploadEmpty: 'No valid data available for upload.',
         msgValidationError: 'Napaki pri validiranju',
         msgLoading: 'Nalaganje datoteke {index} od {files} &hellip;',
         msgProgress: 'Nalaganje datoteke {index} od {files} - {name} - {percent}% dokončano.',
@@ -49,6 +62,14 @@
         msgImageHeightLarge: 'Višina slike "{name}" ne sme preseči {size} px.',
         msgImageResizeError: 'Nisem mogel pridobiti dimenzij slike za spreminjanje velikosti.',
         msgImageResizeException: 'Napaka pri spreminjanju velikosti slike.<pre>{errors}</pre>',
+        msgAjaxError: 'Something went wrong with the {operation} operation. Please try again later!',
+        msgAjaxProgressError: '{operation} failed',
+        ajaxOperations: {
+            deleteThumb: 'file delete',
+            uploadThumb: 'file upload',
+            uploadBatch: 'batch file upload',
+            uploadExtra: 'form data upload'
+        },
         dropZoneTitle: 'Povlecite in spustite datoteke sem &hellip;',
         dropZoneClickTitle: '<br>(ali kliknite sem za izbiro {files})',
         fileActionSettings: {

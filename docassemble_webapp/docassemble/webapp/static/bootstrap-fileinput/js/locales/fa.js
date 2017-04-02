@@ -38,8 +38,21 @@
         msgInvalidFileName: 'Invalid or unsupported characters in file name "{name}".',
         msgInvalidFileType: 'نوع فایل "{name}" معتبر نیست. فقط "{types}" پشیبانی می‌شود.',
         msgInvalidFileExtension: 'پسوند فایل "{name}" معتبر نیست. فقط "{extensions}" پشتیبانی می‌شود.',
+        msgFileTypes: {
+            'image': 'image',
+            'html': 'HTML',
+            'text': 'text',
+            'video': 'video',
+            'audio': 'audio',
+            'flash': 'flash',
+            'pdf': 'PDF',
+            'object': 'object'
+        },
         msgUploadAborted: 'The file upload was aborted',
         msgUploadThreshold: 'Processing...',
+        msgUploadBegin: 'Initializing...',
+        msgUploadEnd: 'Done',
+        msgUploadEmpty: 'No valid data available for upload.',
         msgValidationError: 'خطای اعتبار سنجی',
         msgLoading: 'بارگیری فایل {index} از {files} &hellip;',
         msgProgress: 'بارگیری فایل {index} از {files} - {name} - {percent}% تمام شد.',
@@ -51,6 +64,14 @@
         msgImageHeightLarge: 'ارتفاع فایل تصویر "{name}" نمی‌تواند از {size} پیکسل بیشتر باشد.',
         msgImageResizeError: 'یافت نشد ابعاد تصویر را برای تغییر اندازه.',
         msgImageResizeException: 'خطا در هنگام تغییر اندازه تصویر.<pre>{errors}</pre>',
+        msgAjaxError: 'Something went wrong with the {operation} operation. Please try again later!',
+        msgAjaxProgressError: '{operation} failed',
+        ajaxOperations: {
+            deleteThumb: 'file delete',
+            uploadThumb: 'file upload',
+            uploadBatch: 'batch file upload',
+            uploadExtra: 'form data upload'
+        },
         dropZoneTitle: 'فایل‌ها را بکشید و در اینجا رها کنید &hellip;',
         dropZoneClickTitle: '<br>(or click to select {files})',
         fileActionSettings: {

@@ -39,8 +39,21 @@
         msgInvalidFileName: 'Invalid or unsupported characters in file name "{name}".',
         msgInvalidFileType: 'Tipo non valido per il file "{name}". Sono ammessi solo file di tipo "{types}".',
         msgInvalidFileExtension: 'Estensione non valida per il file "{name}". Sono ammessi solo file con estensione "{extensions}".',
+        msgFileTypes: {
+            'image': 'image',
+            'html': 'HTML',
+            'text': 'text',
+            'video': 'video',
+            'audio': 'audio',
+            'flash': 'flash',
+            'pdf': 'PDF',
+            'object': 'object'
+        },
         msgUploadAborted: 'Il caricamento del file è stata interrotta',
         msgUploadThreshold: 'Processing...',
+        msgUploadBegin: 'Initializing...',
+        msgUploadEnd: 'Done',
+        msgUploadEmpty: 'No valid data available for upload.',
         msgValidationError: 'Errore di convalida',
         msgLoading: 'Caricamento file {index} di {files}&hellip;',
         msgProgress: 'Caricamento file {index} di {files} - {name} - {percent}% completato.',
@@ -52,6 +65,14 @@
         msgImageHeightLarge: 'Altezza di file immagine "{name}" non può superare {size} px.',
         msgImageResizeError: "Impossibile ottenere le dimensioni dell'immagine per ridimensionare.",
         msgImageResizeException: "Errore durante il ridimensionamento dell'immagine.<pre>{errors}</pre>",
+        msgAjaxError: 'Something went wrong with the {operation} operation. Please try again later!',
+        msgAjaxProgressError: '{operation} failed',
+        ajaxOperations: {
+            deleteThumb: 'file delete',
+            uploadThumb: 'file upload',
+            uploadBatch: 'batch file upload',
+            uploadExtra: 'form data upload'
+        },
         dropZoneTitle: 'Trascina i file qui&hellip;',
         dropZoneClickTitle: '<br>(or click to select {files})',
         fileActionSettings: {

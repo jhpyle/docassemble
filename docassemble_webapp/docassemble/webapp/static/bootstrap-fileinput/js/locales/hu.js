@@ -37,8 +37,21 @@
         msgInvalidFileName: 'Hibás vagy nem támogatott karakterek a fájl nevében "{name}".',
         msgInvalidFileType: 'Nem megengedett fájl "{name}". Csak a "{types}" fájl típusok támogatottak.',
         msgInvalidFileExtension: 'Nem megengedett kiterjesztés / fájltípus "{name}". Csak a "{extensions}" kiterjesztés(ek) / fájltípus(ok) támogatottak.',
+        msgFileTypes: {
+            'image': 'image',
+            'html': 'HTML',
+            'text': 'text',
+            'video': 'video',
+            'audio': 'audio',
+            'flash': 'flash',
+            'pdf': 'PDF',
+            'object': 'object'
+        },
         msgUploadAborted: 'A fájl feltöltés megszakítva',
         msgUploadThreshold: 'Folyamatban...',
+        msgUploadBegin: 'Initializing...',
+        msgUploadEnd: 'Done',
+        msgUploadEmpty: 'No valid data available for upload.',
         msgValidationError: 'Érvényesítés hiba',
         msgLoading: '{index} / {files} töltése &hellip;',
         msgProgress: 'Feltöltés: {index} / {files} - {name} - {percent}% kész.',
@@ -50,6 +63,14 @@
         msgImageHeightLarge: 'A kép magassága "{name}" nem haladhatja meg a {size} pixelt.',
         msgImageResizeError: 'Nem lehet megállapítani a kép méreteit az átméretezéshez.',
         msgImageResizeException: 'Hiba történt a méretezés közben.<pre>{errors}</pre>',
+        msgAjaxError: 'Something went wrong with the {operation} operation. Please try again later!',
+        msgAjaxProgressError: '{operation} failed',
+        ajaxOperations: {
+            deleteThumb: 'file delete',
+            uploadThumb: 'file upload',
+            uploadBatch: 'batch file upload',
+            uploadExtra: 'form data upload'
+        },
         dropZoneTitle: 'Fájlok húzása ide &hellip;',
         dropZoneClickTitle: '<br>(vagy kattintson ide a {files} tallózásához...)',
         fileActionSettings: {

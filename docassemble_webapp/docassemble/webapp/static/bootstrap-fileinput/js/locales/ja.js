@@ -44,8 +44,21 @@
         msgInvalidFileName: 'Invalid or unsupported characters in file name "{name}".',
         msgInvalidFileType: '"{name}"は無効なファイル形式です。"{types}"形式のファイルのみサポートしています',
         msgInvalidFileExtension: '"{name}"は無効なファイル拡張子です。拡張子が"{extensions}"のファイルのみサポートしています',
+        msgFileTypes: {
+            'image': 'image',
+            'html': 'HTML',
+            'text': 'text',
+            'video': 'video',
+            'audio': 'audio',
+            'flash': 'flash',
+            'pdf': 'PDF',
+            'object': 'object'
+        },
         msgUploadAborted: 'ファイルのアップロードが中止されました',
         msgUploadThreshold: 'Processing...',
+        msgUploadBegin: 'Initializing...',
+        msgUploadEnd: 'Done',
+        msgUploadEmpty: 'No valid data available for upload.',
         msgValidationError: '検証エラー',
         msgLoading: '{files}個中{index}個目のファイルを読み込み中&hellip;',
         msgProgress: '{files}個中{index}個のファイルを読み込み中 - {name} - {percent}% 完了',
@@ -57,6 +70,14 @@
         msgImageHeightLarge: '画像ファイル"{name}"の高さがアップロード可能な画像サイズ({size}px)を超えています',
         msgImageResizeError: 'リサイズ時に画像サイズが取得できませんでした',
         msgImageResizeException: '画像のリサイズ時にエラーが発生しました。<pre>{errors}</pre>',
+        msgAjaxError: 'Something went wrong with the {operation} operation. Please try again later!',
+        msgAjaxProgressError: '{operation} failed',
+        ajaxOperations: {
+            deleteThumb: 'file delete',
+            uploadThumb: 'file upload',
+            uploadBatch: 'batch file upload',
+            uploadExtra: 'form data upload'
+        },
         dropZoneTitle: 'ファイルをドラッグ&ドロップ&hellip;',
         dropZoneClickTitle: '<br>(または クリックして{files}を選択 )',
         slugCallback: function(text) {

@@ -37,8 +37,21 @@
         msgInvalidFileName: 'Invalid or unsupported characters in file name "{name}".',
         msgInvalidFileType: 'Geen geldig bestand "{name}". Alleen "{types}" zijn toegestaan.',
         msgInvalidFileExtension: 'Geen geldige extensie "{name}". Alleen "{extensions}" zijn toegestaan.',
+        msgFileTypes: {
+            'image': 'image',
+            'html': 'HTML',
+            'text': 'text',
+            'video': 'video',
+            'audio': 'audio',
+            'flash': 'flash',
+            'pdf': 'PDF',
+            'object': 'object'
+        },
         msgUploadAborted: 'Het uploaden van bestanden is afgebroken',
         msgUploadThreshold: 'Processing...',
+        msgUploadBegin: 'Initializing...',
+        msgUploadEnd: 'Done',
+        msgUploadEmpty: 'No valid data available for upload.',
         msgValidationError: 'Bevestiging fout',
         msgLoading: 'Bestanden laden {index} van de {files} &hellip;',
         msgProgress: 'Bestanden laden {index} van de {files} - {name} - {percent}% compleet.',
@@ -50,6 +63,14 @@
         msgImageHeightLarge: 'Hoogte van het foto bestand "{name}" kan niet hoger zijn dan {size} px.',
         msgImageResizeError: 'Kon de foto afmetingen niet lezen om te verkleinen.',
         msgImageResizeException: 'Fout bij het verkleinen van de foto.<pre>{errors}</pre>',
+        msgAjaxError: 'Something went wrong with the {operation} operation. Please try again later!',
+        msgAjaxProgressError: '{operation} failed',
+        ajaxOperations: {
+            deleteThumb: 'file delete',
+            uploadThumb: 'file upload',
+            uploadBatch: 'batch file upload',
+            uploadExtra: 'form data upload'
+        },
         dropZoneTitle: 'Drag & drop bestanden hier &hellip;',
         dropZoneClickTitle: '<br>(or click to select {files})',
         fileActionSettings: {

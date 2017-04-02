@@ -1,3 +1,53 @@
+9.7.2 / 2017-02-10
+==================
+* **Bug Fix** Resolves accesibility issue in range sliders. [See here for further details](https://github.com/seiyria/bootstrap-slider/issues/687). Thanks to [Jerry (jerrylow)](https://github.com/jerrylow).
+
+Tooling Update / 2017-02-02
+==================
+* Adds in [CodeClimate](https://codeclimate.com/) integration. Thanks to [Scott Larkin](https://github.com/larkinscott).
+
+Tooling Update / 2017-02-01
+==================
+* Examples Page: Fixes code snippet for Example 6. Thanks to [Sergey Mezentsev](https://github.com/TheBits).
+
+9.7.1 / 2017-01-29
+==================
+* **Bug Fix** Resolves "'slider' of undefined" error. [See here for further details](https://github.com/seiyria/bootstrap-slider/issues/587). Thanks to [Guto Sanches](https://github.com/gutosanches).
+
+Tooling Update / 2017-01-06
+==================
+* Examples Page: Adds syntax highlighting to code snippets on Examples page
+* Examples Page: Adds anchor tags to each example. For example, navigating to http://seiyria.com/bootstrap-slider/#example-10 will now load the page at Example #10.
+* Examples Page: Fixed code snippet in Example #14 based on feedback from [this comment](https://github.com/seiyria/bootstrap-slider/issues/645#issuecomment-270751793).
+
+9.7.0 / 2017-01-05
+==================
+* **Performance Enhancement** Use passive event listeners for touch-enabled devices. [See here for further details](https://github.com/seiyria/bootstrap-slider/pull/680). Thanks to [Chris Hallberg](https://github.com/crhallberg).
+
+Tooling Update / 2017-01-05
+==================
+* Add an explicit `grunt lint` command to run Lint check on all source files and execute it in the NPM `pretest` script.
+
+9.6.2 / 2017-01-04
+==================
+* Updating current year references in license from 2016 -> 2017.
+
+Tooling Update / 2017-01-04
+==================
+* Adds in linting for SASS and LESS files in order to catch common syntax errors at CI step versus compile time.
+
+9.6.1 / 2017-01-04
+==================
+* **Bug Fix:** Resolve issue with SASS file compilation. [See here for further details](https://github.com/seiyria/bootstrap-slider/issues/683). Thanks to [Schepotin](https://github.com/Schepotin) for reporting.
+
+9.6.0 / 2017-01-03
+==================
+* **New Feature:** Adds ability to set direction (using HTML5 `dir` attribute). [See here for further details](https://github.com/seiyria/bootstrap-slider/pull/679). Thanks to [Denis Chenu](https://github.com/Shnoulle).
+
+9.5.4 / 2016-12-18
+==================
+* **Bug Fix:** Fixes issue where dragging slider handle outside of modal and releasing cursor would close the modal. [See original issue for further details](https://github.com/seiyria/bootstrap-slider/issues/339). Thanks to [ZeVS777](https://github.com/ZeVS777).
+
 9.5.3 / 2016-12-01
 ==================
 * **Bug Fix:** Fixes typo from previous update to SCSS rules. Thanks to [Julien Bachmann](https://github.com/julienbachmann).
@@ -95,7 +145,7 @@
 6.1.0 / 2016-02-28
 ==================
 * **New Feature:** Auto-registering/intializing slider via `data-provide="slider"` attribute. Thanks to [MaZderMind](https://github.com/MaZderMind)
-* Adding Github Templates for Issues, Pull Requeusts, and Contributions
+* Adding Github Templates for Issues, Pull Requests, and Contributions
 
 6.0.16 / 2016-02-04
 ==================

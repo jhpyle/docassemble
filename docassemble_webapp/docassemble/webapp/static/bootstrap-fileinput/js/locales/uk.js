@@ -38,8 +38,21 @@
         msgInvalidFileName: 'Invalid or unsupported characters in file name "{name}".',
         msgInvalidFileType: 'Заборонений тип файла для "{name}". Тільки "{types}" дозволені.',
         msgInvalidFileExtension: 'Заборонене розширення для файла "{name}". Тільки "{extensions}" дозволені.',
+        msgFileTypes: {
+            'image': 'image',
+            'html': 'HTML',
+            'text': 'text',
+            'video': 'video',
+            'audio': 'audio',
+            'flash': 'flash',
+            'pdf': 'PDF',
+            'object': 'object'
+        },
         msgUploadAborted: 'Вивантаження файлу перервана',
         msgUploadThreshold: 'Processing...',
+        msgUploadBegin: 'Initializing...',
+        msgUploadEnd: 'Done',
+        msgUploadEmpty: 'No valid data available for upload.',
         msgValidationError: 'Помилка перевірки',
         msgLoading: 'Загрузка файла {index} із {files} &hellip;',
         msgProgress: 'Загрузка файла {index} із {files} - {name} - {percent}% завершено.',
@@ -51,6 +64,14 @@
         msgImageHeightLarge: 'Висота зображення "{name}" не може перевищувати {size} px.',
         msgImageResizeError: 'Не вдалося розміри зображення, щоб змінити розмір.',
         msgImageResizeException: 'Помилка при зміні розміру зображення.<pre>{errors}</pre>',
+        msgAjaxError: 'Something went wrong with the {operation} operation. Please try again later!',
+        msgAjaxProgressError: '{operation} failed',
+        ajaxOperations: {
+            deleteThumb: 'file delete',
+            uploadThumb: 'file upload',
+            uploadBatch: 'batch file upload',
+            uploadExtra: 'form data upload'
+        },
         dropZoneTitle: 'Перетягніть файли сюди &hellip;',
         dropZoneClickTitle: '<br>(or click to select {files})',
         fileActionSettings: {

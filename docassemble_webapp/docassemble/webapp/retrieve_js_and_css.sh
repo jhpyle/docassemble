@@ -16,11 +16,11 @@ wget https://cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-boot
 rm -f jasny-bootstrap.min.js
 wget https://cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/js/jasny-bootstrap.min.js
 rm -f jquery.validate.min.js
-wget https://ajax.aspnetcdn.com/ajax/jquery.validate/1.15.0/jquery.validate.min.js
+wget https://ajax.aspnetcdn.com/ajax/jquery.validate/1.16.0/jquery.validate.min.js
 rm -f jquery.min.js
-wget https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js
+wget https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js
 rm -f socket.io.*
-wget https://cdn.socket.io/socket.io-1.4.5.js
+wget https://cdn.socket.io/socket.io-1.7.3.js
 mv socket.io-*.js socket.io.min.js
 pygmentize -S default -f html > pygments.css
 cd ..
@@ -45,5 +45,5 @@ unzip codemirror.zip
 rm -f codemirror.zip
 mv codemirror-* codemirror
 # need to use old version of jquery-labelauty
-#rm -rf jquery-labelauty
-#git clone https://github.com/fntneves/jquery-labelauty
+# rm -rf jquery-labelauty
+# git clone https://github.com/fntneves/jquery-labelauty

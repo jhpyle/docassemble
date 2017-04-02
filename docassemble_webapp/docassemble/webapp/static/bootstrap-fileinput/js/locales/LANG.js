@@ -37,8 +37,21 @@
         msgInvalidFileName: 'Invalid or unsupported characters in file name "{name}".',
         msgInvalidFileType: 'Invalid type for file "{name}". Only "{types}" files are supported.',
         msgInvalidFileExtension: 'Invalid extension for file "{name}". Only "{extensions}" files are supported.',
+        msgFileTypes: {
+            'image': 'image',
+            'html': 'HTML',
+            'text': 'text',
+            'video': 'video',
+            'audio': 'audio',
+            'flash': 'flash',
+            'pdf': 'PDF',
+            'object': 'object'
+        },
         msgUploadAborted: 'The file upload was aborted',
         msgUploadThreshold: 'Processing...',
+        msgUploadBegin: 'Initializing...',
+        msgUploadEnd: 'Done',
+        msgUploadEmpty: 'No valid data available for upload.',
         msgValidationError: 'Validation Error',
         msgLoading: 'Loading file {index} of {files} &hellip;',
         msgProgress: 'Loading file {index} of {files} - {name} - {percent}% completed.',
@@ -50,6 +63,14 @@
         msgImageHeightLarge: 'Height of image file "{name}" cannot exceed {size} px.',
         msgImageResizeError: 'Could not get the image dimensions to resize.',
         msgImageResizeException: 'Error while resizing the image.<pre>{errors}</pre>',
+        msgAjaxError: 'Something went wrong with the {operation} operation. Please try again later!',
+        msgAjaxProgressError: '{operation} failed',
+        ajaxOperations: {
+            deleteThumb: 'file delete',
+            uploadThumb: 'file upload',
+            uploadBatch: 'batch file upload',
+            uploadExtra: 'form data upload'
+        },
         dropZoneTitle: 'Drag & drop files here &hellip;',
         dropZoneClickTitle: '<br>(or click to select {files})',
         fileActionSettings: {

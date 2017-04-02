@@ -30,7 +30,7 @@ from user_agents import parse as ua_parse
 import phonenumbers
 locale.setlocale(locale.LC_ALL, '')
 
-__all__ = ['ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'task_performed', 'task_not_yet_performed', 'mark_task_as_performed', 'times_task_performed', 'set_task_counter', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent']
 
 # debug = False
 # default_dialect = 'us'
@@ -893,6 +893,68 @@ ordinal_functions = {
     'en': ordinal_function_en,
     '*': ordinal_function_en
 }
+
+def item_label(num, level=None, punctuation=True):
+    """Given an index and an outline level, returns I., II., A., etc."""
+    if level is None:
+        level = 0
+    level = int(level) % 7
+    if level == 0:
+        string = roman(num)
+    elif level == 1:
+        string = alpha(num)
+    elif level == 2:
+        string = str(num + 1)
+    elif level == 3:
+        string = alpha(num, case='lower')
+    elif level == 4:
+        string = str(num + 1)
+    elif level == 5:
+        string = alpha(num, case='lower')
+    elif level == 6:
+        string = roman(num, case='lower')
+    if not punctuation:
+        return string
+    if level < 3:
+        return string + '.'
+    elif level == 3 or level == 6:
+        return string + ')'
+    else:
+        return '(' + string + ')'
+
+def alpha(num, case=None):
+    """Given an index, returns A, B, C ... Z, AA, AB, etc."""
+    if case is None:
+        case = 'upper'
+    div = num + 1
+    string = ""
+    while div > 0:
+        modulus = (div - 1) % 26
+        string = chr(65 + modulus) + string
+        div = int((div - modulus)/26)
+    if case == 'lower':
+        return string.lower()
+    return string
+
+def roman(num, case=None):
+    """Given an index between 0 and 3999, returns a roman numeral between 1 and 4000."""
+    if case is None:
+        case = 'upper'
+    num = num + 1
+    if type(num) != type(1):
+        raise TypeError, "expected integer, got %s" % type(num)
+    if not 0 < num < 4000:
+        raise ValueError, "Argument must be between 1 and 3999"   
+    ints = (1000, 900, 500,  400, 100,  90, 50,  40, 10,  9,   5,   4,  1)
+    nums = ('M',  'CM', 'D', 'CD', 'C','XC','L','XL','X','IX','V','IV','I')
+    result = ""
+    for i in range(len(ints)):
+        count = int(num / ints[i])
+        result += nums[i] * count
+        num -= ints[i] * count
+    if case == 'lower':
+        return result.lower()
+    return result
 
 def words():
     return word_collection[this_thread.language]

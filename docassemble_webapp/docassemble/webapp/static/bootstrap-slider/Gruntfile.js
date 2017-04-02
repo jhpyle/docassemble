@@ -109,6 +109,15 @@ module.exports = function(grunt) {
         }
       }
     },
+    sasslint: {
+      options: {
+        configFile: './.sass-lint.yml',
+      },
+      target: ['./src/sass/**/*.scss']
+    },
+    lesslint: {
+      src: ['./src/less/bootstrap-slider.less']
+    },
     jasmine : {
       src : '<%= pkg.gruntConfig.temp.js %>',
       options : {
@@ -123,11 +132,13 @@ module.exports = function(grunt) {
         options : {
           data : {
             js : {
+              highlightjs: '<%= pkg.gruntConfig.js.highlightjs %>',
               modernizr : '<%= pkg.gruntConfig.js.modernizr %>',
               jquery : '<%= pkg.gruntConfig.js.jquery %>',
               slider : '<%= pkg.gruntConfig.temp.js %>'
             },
             css : {
+              highlightjs: '<%= pkg.gruntConfig.css.highlightjs %>',
               bootstrap : '<%= pkg.gruntConfig.css.bootstrap %>',
               slider : '<%= pkg.gruntConfig.temp.css %>'
             }
@@ -141,11 +152,13 @@ module.exports = function(grunt) {
         options : {
           data : {
             js : {
+              highlightjs: '<%= pkg.gruntConfig.js.highlightjs %>',
               modernizr : '<%= pkg.gruntConfig.js.modernizr %>',
               jquery : '<%= pkg.gruntConfig.js.jquery %>',
               slider : 'js/bootstrap-slider.js'
             },
             css : {
+              highlightjs: '<%= pkg.gruntConfig.css.highlightjs %>',
               bootstrap : '<%= pkg.gruntConfig.css.bootstrap %>',
               slider : 'css/bootstrap-slider.css'
             }
@@ -253,11 +266,17 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-header');
   grunt.loadNpmTasks('grunt-bump');
   grunt.loadNpmTasks('grunt-babel');
+  grunt.loadNpmTasks('grunt-sass-lint');
+  grunt.loadNpmTasks('grunt-lesslint');
 
   // Create custom tasks
   grunt.registerTask('append-header', ['header', 'clean:temp']);
-  grunt.registerTask('test', [
+  grunt.registerTask('lint', [
     'jshint',
+    'lesslint',
+    'sasslint'
+  ]);
+  grunt.registerTask('test', [
     'babel',
     'less:development',
     'jasmine',

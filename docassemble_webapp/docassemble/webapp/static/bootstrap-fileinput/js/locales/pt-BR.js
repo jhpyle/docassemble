@@ -37,8 +37,21 @@
         msgInvalidFileName: 'Invalid or unsupported characters in file name "{name}".',
         msgInvalidFileType: 'Tipo inválido para o arquivo "{name}". Apenas arquivos "{types}" são permitidos.',
         msgInvalidFileExtension: 'Extensão inválida para o arquivo "{name}". Apenas arquivos "{extensions}" são permitidos.',
+        msgFileTypes: {
+            'image': 'image',
+            'html': 'HTML',
+            'text': 'text',
+            'video': 'video',
+            'audio': 'audio',
+            'flash': 'flash',
+            'pdf': 'PDF',
+            'object': 'object'
+        },
         msgUploadAborted: 'O envio do arquivo foi abortado',
         msgUploadThreshold: 'Processando...',
+        msgUploadBegin: 'Initializing...',
+        msgUploadEnd: 'Done',
+        msgUploadEmpty: 'No valid data available for upload.',
         msgValidationError: 'Erro de validação',
         msgLoading: 'Enviando arquivo {index} de {files}&hellip;',
         msgProgress: 'Enviando arquivo {index} de {files} - {name} - {percent}% completo.',
@@ -50,6 +63,14 @@
         msgImageHeightLarge: 'Altura do arquivo de imagem "{name}" não pode exceder {size} px.',
         msgImageResizeError: 'Não foi possível obter as dimensões da imagem para redimensionar.',
         msgImageResizeException: 'Erro ao redimensionar a imagem.<pre>{errors}</pre>',
+        msgAjaxError: 'Something went wrong with the {operation} operation. Please try again later!',
+        msgAjaxProgressError: '{operation} failed',
+        ajaxOperations: {
+            deleteThumb: 'file delete',
+            uploadThumb: 'file upload',
+            uploadBatch: 'batch file upload',
+            uploadExtra: 'form data upload'
+        },
         dropZoneTitle: 'Arraste e solte os arquivos aqui&hellip;',
         dropZoneClickTitle: '<br>(ou clique para selecionar o(s) arquivo(s))',
         fileActionSettings: {

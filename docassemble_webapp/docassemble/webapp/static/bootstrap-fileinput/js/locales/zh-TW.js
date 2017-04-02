@@ -39,8 +39,21 @@
         msgInvalidFileName: 'Invalid or unsupported characters in file name "{name}".',
         msgInvalidFileType: '檔案類型錯誤 "{name}". 只能使用 "{types}" 類型的檔案.',
         msgInvalidFileExtension: '附檔名錯誤 "{name}". 只能使用 "{extensions}" 的檔案.',
+        msgFileTypes: {
+            'image': 'image',
+            'html': 'HTML',
+            'text': 'text',
+            'video': 'video',
+            'audio': 'audio',
+            'flash': 'flash',
+            'pdf': 'PDF',
+            'object': 'object'
+        },
         msgUploadAborted: '該文件上傳被中止',
         msgUploadThreshold: 'Processing...',
+        msgUploadBegin: 'Initializing...',
+        msgUploadEnd: 'Done',
+        msgUploadEmpty: 'No valid data available for upload.',
         msgValidationError: '驗證錯誤',
         msgLoading: '載入第 {index} 個檔案，共 {files} &hellip;',
         msgProgress: '載入第 {index} 個檔案，共 {files} - {name} - {percent}% 成功.',
@@ -52,6 +65,14 @@
         msgImageHeightLarge: '圖檔高度"{name}"不能超過{size}像素(px).',
         msgImageResizeError: '無法獲取的圖像尺寸調整。',
         msgImageResizeException: '錯誤而調整圖像大小。<pre>{errors}</pre>',
+        msgAjaxError: 'Something went wrong with the {operation} operation. Please try again later!',
+        msgAjaxProgressError: '{operation} failed',
+        ajaxOperations: {
+            deleteThumb: 'file delete',
+            uploadThumb: 'file upload',
+            uploadBatch: 'batch file upload',
+            uploadExtra: 'form data upload'
+        },
         dropZoneTitle: '拖曳檔案至此 &hellip;',
         dropZoneClickTitle: '<br>(or click to select {files})',
         fileActionSettings: {

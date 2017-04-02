@@ -38,8 +38,21 @@
         msgInvalidFileName: 'Invalid or unsupported characters in file name "{name}".',
         msgInvalidFileType: 'Tập tin "{name}" không hợp lệ. Chỉ hỗ trợ loại tập tin "{types}".',
         msgInvalidFileExtension: 'Phần mở rộng của tập tin "{name}" không hợp lệ. Chỉ hỗ trợ phần mở rộng "{extensions}".',
+        msgFileTypes: {
+            'image': 'image',
+            'html': 'HTML',
+            'text': 'text',
+            'video': 'video',
+            'audio': 'audio',
+            'flash': 'flash',
+            'pdf': 'PDF',
+            'object': 'object'
+        },
         msgUploadAborted: 'Đã dừng upload',
         msgUploadThreshold: 'Đang xử lý...',
+        msgUploadBegin: 'Initializing...',
+        msgUploadEnd: 'Done',
+        msgUploadEmpty: 'No valid data available for upload.',
         msgValidationError: 'Lỗi xác nhận',
         msgLoading: 'Đang nạp {index} tập tin trong số {files} &hellip;',
         msgProgress: 'Đang nạp {index} tập tin trong số {files} - {name} - {percent}% hoàn thành.',
@@ -51,6 +64,14 @@
         msgImageHeightLarge: 'Chiều cao của hình ảnh "{name}" không được quá {size} px.',
         msgImageResizeError: 'Không lấy được kích thước của hình ảnh để resize.',
         msgImageResizeException: 'Resize hình ảnh bị lỗi.<pre>{errors}</pre>',
+        msgAjaxError: 'Something went wrong with the {operation} operation. Please try again later!',
+        msgAjaxProgressError: '{operation} failed',
+        ajaxOperations: {
+            deleteThumb: 'file delete',
+            uploadThumb: 'file upload',
+            uploadBatch: 'batch file upload',
+            uploadExtra: 'form data upload'
+        },
         dropZoneTitle: 'Kéo thả tập tin vào đây &hellip;',
         dropZoneClickTitle: '<br>(hoặc click để chọn {files})',
         fileActionSettings: {

@@ -37,8 +37,21 @@
         msgInvalidFileName: 'Invalid or unsupported characters in file name "{name}".',
         msgInvalidFileType: 'Невалиден тип на файла "{name}". Разрешени са само "{types}".',
         msgInvalidFileExtension: 'Невалидно разрешение на "{name}". Разрешени са само "{extensions}".',
+        msgFileTypes: {
+            'image': 'image',
+            'html': 'HTML',
+            'text': 'text',
+            'video': 'video',
+            'audio': 'audio',
+            'flash': 'flash',
+            'pdf': 'PDF',
+            'object': 'object'
+        },
         msgUploadAborted: 'Качите файла, бе прекратена',
         msgUploadThreshold: 'Processing...',
+        msgUploadBegin: 'Initializing...',
+        msgUploadEnd: 'Done',
+        msgUploadEmpty: 'No valid data available for upload.',
         msgValidationError: 'утвърждаване грешка',
         msgLoading: 'Зареждане на файл {index} от общо {files} &hellip;',
         msgProgress: 'Зареждане на файл {index} от общо {files} - {name} - {percent}% завършени.',
@@ -50,6 +63,14 @@
         msgImageHeightLarge: 'Височината на изображението "{name}" нее може да е по-голяма от {size} px.',
         msgImageResizeError: 'Не може да размерите на изображението, за да промените размера.',
         msgImageResizeException: 'Грешка при промяна на размера на изображението.<pre>{errors}</pre>',
+        msgAjaxError: 'Something went wrong with the {operation} operation. Please try again later!',
+        msgAjaxProgressError: '{operation} failed',
+        ajaxOperations: {
+            deleteThumb: 'file delete',
+            uploadThumb: 'file upload',
+            uploadBatch: 'batch file upload',
+            uploadExtra: 'form data upload'
+        },
         dropZoneTitle: 'Пуснете файловете тук &hellip;',
         dropZoneClickTitle: '<br>(or click to select {files})',
         fileActionSettings: {

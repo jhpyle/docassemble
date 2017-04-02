@@ -37,8 +37,21 @@
         msgInvalidFileName: 'Invalid or unsupported characters in file name "{name}".',
         msgInvalidFileType: 'Tipus de fitxer no vàlid per a "{name}". Només arxius "{types}" són permesos.',
         msgInvalidFileExtension: 'Extensió de fitxer no vàlid per a "{name}". Només arxius "{extensions}" són permesos.',
+        msgFileTypes: {
+            'image': 'image',
+            'html': 'HTML',
+            'text': 'text',
+            'video': 'video',
+            'audio': 'audio',
+            'flash': 'flash',
+            'pdf': 'PDF',
+            'object': 'object'
+        },
         msgUploadAborted: 'La càrrega d\'arxius s\'ha cancel·lat',
         msgUploadThreshold: 'Processing...',
+        msgUploadBegin: 'Initializing...',
+        msgUploadEnd: 'Done',
+        msgUploadEmpty: 'No valid data available for upload.',
         msgValidationError: 'Error de validació',
         msgLoading: 'Pujant fitxer {index} de {files} &hellip;',
         msgProgress: 'Pujant fitxer {index} de {files} - {name} - {percent}% completat.',
@@ -50,6 +63,14 @@
         msgImageHeightLarge: 'L\'alçada de la imatge "{name}" no pot excedir de {size} px.',
         msgImageResizeError: 'No s\'ha pogut obtenir les dimensions d\'imatge per canviar la mida.',
         msgImageResizeException: 'Error en canviar la mida de la imatge.<pre>{errors}</pre>',
+        msgAjaxError: 'Something went wrong with the {operation} operation. Please try again later!',
+        msgAjaxProgressError: '{operation} failed',
+        ajaxOperations: {
+            deleteThumb: 'file delete',
+            uploadThumb: 'file upload',
+            uploadBatch: 'batch file upload',
+            uploadExtra: 'form data upload'
+        },
         dropZoneTitle: 'Arrossegueu i deixeu anar aquí els arxius &hellip;',
         dropZoneClickTitle: '<br>(or click to select {files})',
         fileActionSettings: {

@@ -782,7 +782,7 @@ def as_html(status, url_for, debug, root, validation_rules):
         #varnames[safeid('_field_' + str(status.question.fields[0].number))] = status.question.fields[0].saveas
         if status.question.fields[0].number in status.defaults and type(status.defaults[status.question.fields[0].number]) in [str, unicode, int, float]:
             defaultvalue = unicode(status.defaults[status.question.fields[0].number])
-            logmessage("Default value is " + str(defaultvalue))
+            #logmessage("Default value is " + str(defaultvalue))
         else:
             defaultvalue = None
         if hasattr(status.question.fields[0], 'datatype'):

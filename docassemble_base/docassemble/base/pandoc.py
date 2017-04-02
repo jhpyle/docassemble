@@ -105,7 +105,7 @@ class MyPandoc(object):
         fin.close()
         if msg:
             self.pandoc_message = msg
-        #os.remove(temp_file.name)
+        os.remove(temp_file.name)
         if os.path.exists(temp_outfile.name):
             if self.output_format == 'rtf':
                 with open(temp_outfile.name) as the_file: file_contents = the_file.read()

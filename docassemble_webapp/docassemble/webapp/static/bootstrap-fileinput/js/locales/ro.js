@@ -38,8 +38,21 @@
         msgInvalidFileName: 'Invalid or unsupported characters in file name "{name}".',
         msgInvalidFileType: 'Tip de fișier incorect pentru "{name}". Sunt suportate doar fișiere de tipurile "{types}".',
         msgInvalidFileExtension: 'Extensie incorectă pentru "{name}". Sunt suportate doar extensiile "{extensions}".',
+        msgFileTypes: {
+            'image': 'image',
+            'html': 'HTML',
+            'text': 'text',
+            'video': 'video',
+            'audio': 'audio',
+            'flash': 'flash',
+            'pdf': 'PDF',
+            'object': 'object'
+        },
         msgUploadAborted: 'Fișierul Încărcarea a fost întrerupt',
         msgUploadThreshold: 'Processing...',
+        msgUploadBegin: 'Initializing...',
+        msgUploadEnd: 'Done',
+        msgUploadEmpty: 'No valid data available for upload.',
         msgValidationError: 'Eroare de validare',
         msgLoading: 'Se încarcă fișierul {index} din {files} &hellip;',
         msgProgress: 'Se încarcă fișierul {index} din {files} - {name} - {percent}% încărcat.',
@@ -51,6 +64,14 @@
         msgImageHeightLarge: 'Înălțimea fișier imagine "{name}" nu poate depăși {size} px.',
         msgImageResizeError: 'Nu a putut obține dimensiunile imaginii pentru a redimensiona.',
         msgImageResizeException: 'Eroare la redimensionarea imaginii.<pre>{errors}</pre>',
+        msgAjaxError: 'Something went wrong with the {operation} operation. Please try again later!',
+        msgAjaxProgressError: '{operation} failed',
+        ajaxOperations: {
+            deleteThumb: 'file delete',
+            uploadThumb: 'file upload',
+            uploadBatch: 'batch file upload',
+            uploadExtra: 'form data upload'
+        },
         dropZoneTitle: 'Trage fișierele aici &hellip;',
         dropZoneClickTitle: '<br>(or click to select {files})',
         fileActionSettings: {

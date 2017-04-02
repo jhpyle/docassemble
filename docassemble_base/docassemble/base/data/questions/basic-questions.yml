@@ -625,4 +625,18 @@ generic object: City
 sets: x.county
 code: |
   x.geolocate()
+---
+generic object: Document
+question: |
+  Are you able to attach or take a picture of ${ x.title }?
+yesno: x.able_to_attach
+---
+generic object: Document
+question: |
+  Please attach or take a picture of ${ x.title }.
+fields:
+  - label: |
+      ${ capitalize(x.title) }
+    field: x.file
+    datatype: file
 ...

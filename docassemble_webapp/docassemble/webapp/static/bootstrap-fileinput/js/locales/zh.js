@@ -38,8 +38,21 @@
         msgInvalidFileName: 'Invalid or unsupported characters in file name "{name}".',
         msgInvalidFileType: '不正确的类型 "{name}". 只支持 "{types}" 类型的文件.',
         msgInvalidFileExtension: '不正确的文件扩展名 "{name}". 只支持 "{extensions}" 的文件扩展名.',
+        msgFileTypes: {
+            'image': 'image',
+            'html': 'HTML',
+            'text': 'text',
+            'video': 'video',
+            'audio': 'audio',
+            'flash': 'flash',
+            'pdf': 'PDF',
+            'object': 'object'
+        },
         msgUploadAborted: '该文件上传被中止',
         msgUploadThreshold: 'Processing...',
+        msgUploadBegin: 'Initializing...',
+        msgUploadEnd: 'Done',
+        msgUploadEmpty: 'No valid data available for upload.',
         msgValidationError: '验证错误',
         msgLoading: '加载第 {index} 文件 共 {files} &hellip;',
         msgProgress: '加载第 {index} 文件 共 {files} - {name} - {percent}% 完成.',
@@ -51,6 +64,14 @@
         msgImageHeightLarge: '图像文件"{name}"的高度不能超过{size}像素.',
         msgImageResizeError: '无法获取的图像尺寸调整。',
         msgImageResizeException: '错误而调整图像大小。<pre>{errors}</pre>',
+        msgAjaxError: 'Something went wrong with the {operation} operation. Please try again later!',
+        msgAjaxProgressError: '{operation} failed',
+        ajaxOperations: {
+            deleteThumb: 'file delete',
+            uploadThumb: 'file upload',
+            uploadBatch: 'batch file upload',
+            uploadExtra: 'form data upload'
+        },
         dropZoneTitle: '拖拽文件到这里 &hellip;<br>支持多文件同时上传',
         dropZoneClickTitle: '<br>(或点击{files}按钮选择文件)',
         fileActionSettings: {

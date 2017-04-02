@@ -1,12 +1,14 @@
 {
   "name": "bootstrap-slider",
-  "version": "9.5.3",
+  "version": "9.7.2",
   "description": "Slider view component for Twitter Bootstrap.",
   "main": "dist/bootstrap-slider.js",
   "style": "dist/css/bootstrap-slider.css",
   "scripts": {
+    "pretest": "grunt lint",
     "test": "grunt test",
-    "release": "sh ./scripts/release.sh"
+    "release": "sh ./scripts/release.sh",
+    "update-gh-pages": "sh ./scripts/update-gh-pages.sh"
   },
   "homepage": "http://github.com/seiyria/bootstrap-slider",
   "repository": {
@@ -54,12 +56,15 @@
     "grunt-contrib-uglify": "0.2.4",
     "grunt-contrib-watch": "0.5.3",
     "grunt-header": "1.0.0",
+    "grunt-lesslint": "^3.2.0",
     "grunt-open": "0.2.2",
+    "grunt-sass-lint": "^0.2.2",
     "grunt-template": "0.2.0"
   },
   "gruntConfig": {
     "devPort": 9000,
     "js": {
+      "highlightjs": "dependencies/js/highlight.min.js",
       "modernizr": "dependencies/js/modernizr.js",
       "jquery": "dependencies/js/jquery.min.js",
       "bindPolyfill": "test/phantom_bind_polyfill.js",
@@ -71,7 +76,8 @@
       "variables": "src/less/variables.less"
     },
     "css": {
-      "bootstrap": "dependencies/css/bootstrap.min.css"
+      "bootstrap": "dependencies/css/bootstrap.min.css",
+      "highlightjs": "dependencies/css/highlightjs-github-theme.css"
     },
     "tpl": {
       "SpecRunner": "tpl/SpecRunner.tpl",
