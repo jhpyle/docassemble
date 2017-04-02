@@ -3247,6 +3247,7 @@ def index():
                 scripts += '    <script src="' + get_url_from_file_reference(fileref, question=interview_status.question) + '"></script>\n';
         chat_available = user_dict['_internal']['livehelp']['availability']
         chat_mode = user_dict['_internal']['livehelp']['mode']
+        #logmessage("index: chat_available is " + str(chat_available))
         if chat_available == 'unavailable':
             chat_status = 'off'
             session['chatstatus'] = 'off'
@@ -3780,7 +3781,7 @@ def index():
           $("body").removeClass();
           $("body").addClass(data.bodyclass);
           daDoAction = data.do_action;
-          daChatAvailable = data.livehelp.available;
+          daChatAvailable = data.livehelp.availability;
           daChatMode = data.livehelp.mode;
           daChatRoles = data.livehelp.roles;
           daChatPartnerRoles = data.livehelp.partner_roles;
