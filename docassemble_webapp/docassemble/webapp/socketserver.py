@@ -128,6 +128,8 @@ def handle_message(message):
 @socketio.on('chat_log', namespace='/interview')
 def chat_log(message):
     user_dict = get_dict()
+    if user_dict is None:
+        return
     chat_mode = user_dict['_internal']['livehelp']['mode']
     yaml_filename = session.get('i', None)
     session_id = session.get('uid', None)

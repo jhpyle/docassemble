@@ -3307,6 +3307,7 @@ def index():
       var daIsUser = """ + is_user + """;
       var daChatStatus = """ + repr(str(chat_status)) + """;
       var daChatAvailable = """ + repr(str(chat_available)) + """;
+      var daChatPartnersAvailable = 0;
       var daPhoneAvailable = false;
       var daChatMode = """ + repr(str(chat_mode)) + """;
       var daSendChanges = """ + send_changes + """;
@@ -3875,7 +3876,14 @@ def index():
           $("#daChatOnButton").addClass("invisible");
         }
         else{
-          $("#daChatBox").removeClass("invisible");
+          if (daChatStatus == 'waiting'){
+            if (daChatPartnersAvailable > 0){
+              $("#daChatBox").removeClass("invisible");
+            }
+          }
+          else {
+            $("#daChatBox").removeClass("invisible");
+          }
         }
         if (daChatStatus == 'waiting'){
           //console.log("I see waiting")
@@ -4033,7 +4041,9 @@ def index():
               daInitializeSocket();
             }
           }
+          daChatPartnersAvailable = 0;
           if (daChatMode == 'peer' || daChatMode == 'peerhelp'){
+            daChatPartnersAvailable += data.num_peers;
             if (data.num_peers == 1){
               $("#peerMessage").html('<span class="badge btn-info">' + data.num_peers + ' """ + word("other user") + """</span>');
             }
@@ -5460,7 +5470,7 @@ def monitor():
         }
     }
     function notifyOperator(key, mode, message) {
-        console.log("notifyOperator: " + key + " " + mode + " " + message);
+        //console.log("notifyOperator: " + key + " " + mode + " " + message);
         var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
         if (mode == "chat"){
           playSound('newmessage');
