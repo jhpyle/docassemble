@@ -1355,7 +1355,7 @@ def input_for(status, field, wide=False, embedded=False):
                     emb_text += 'title="' + label_text + '" '
             else:
                 output += '<p class="sr-only">' + word('Select box') + '</p>'
-                emb_text = ''
+                emb_text = 'class="form-control" '
             output += '<select ' + emb_text + 'name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '" >'
             output += '<option value="">' + word('Select...') + '</option>'
             for pair in pairlist:
