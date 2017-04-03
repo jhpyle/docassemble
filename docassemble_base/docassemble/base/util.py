@@ -5,7 +5,7 @@ import pytz
 import yaml
 import inspect
 from PIL import Image, ImageEnhance
-from twilio.rest import TwilioRestClient
+from twilio.rest import Client as TwilioRestClient
 import pyocr
 import pyocr.builders
 from docassemble.base.logger import logmessage
