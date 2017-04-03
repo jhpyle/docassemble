@@ -276,8 +276,8 @@ lm = LoginManager()
 lm.init_app(app)
 lm.login_view = 'user.login'
 
-from twilio.util import TwilioCapability
-from twilio.rest import TwilioRestClient
+from twilio.util import Capability as TwilioCapability
+from twilio.rest import Client as TwilioRestClient
 import twilio.twiml
 from PIL import Image
 import socket
