@@ -276,7 +276,7 @@ lm = LoginManager()
 lm.init_app(app)
 lm.login_view = 'user.login'
 
-from twilio.util import Capability as TwilioCapability
+#from twilio.rest import Capability as TwilioCapability
 from twilio.rest import Client as TwilioRestClient
 import twilio.twiml
 from PIL import Image
@@ -8839,26 +8839,26 @@ def on_register_hook(sender, user, **extra):
 # def webrtc():
 #     return render_template('pages/webrtc.html', tab_title=word("WebRTC"), page_title=word("WebRTC"))
 
-@app.route('/webrtc_token', methods=['GET'])
-@csrf.exempt
-def webrtc_token():
-    if twilio_config is None:
-        logmessage("webrtc_token: could not get twilio configuration")
-        return
-    account_sid = twilio_config['name']['default'].get('account sid', None)
-    auth_token = twilio_config['name']['default'].get('auth token', None)
-    application_sid = twilio_config['name']['default'].get('app sid', None)
+# @app.route('/webrtc_token', methods=['GET'])
+# @csrf.exempt
+# def webrtc_token():
+#     if twilio_config is None:
+#         logmessage("webrtc_token: could not get twilio configuration")
+#         return
+#     account_sid = twilio_config['name']['default'].get('account sid', None)
+#     auth_token = twilio_config['name']['default'].get('auth token', None)
+#     application_sid = twilio_config['name']['default'].get('app sid', None)
 
-    logmessage("webrtc_token: account sid is " + str(account_sid) + "; auth_token is " + str(auth_token) + "; application_sid is " + str(application_sid))
+#     logmessage("webrtc_token: account sid is " + str(account_sid) + "; auth_token is " + str(auth_token) + "; application_sid is " + str(application_sid))
 
-    identity = 'testuser2'
+#     identity = 'testuser2'
 
-    capability = TwilioCapability(account_sid, auth_token)
-    capability.allow_client_outgoing(application_sid)
-    capability.allow_client_incoming(identity)
-    token = capability.generate()
+#     capability = TwilioCapability(account_sid, auth_token)
+#     capability.allow_client_outgoing(application_sid)
+#     capability.allow_client_incoming(identity)
+#     token = capability.generate()
 
-    return jsonify(identity=identity, token=token)
+#     return jsonify(identity=identity, token=token)
 
 @app.route("/voice", methods=['POST', 'GET'])
 @csrf.exempt
