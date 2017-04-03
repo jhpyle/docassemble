@@ -931,7 +931,7 @@ class Question:
                                 self.audiovideo = dict()
                             if 'help' not in self.audiovideo:
                                 self.audiovideo['help'] = list()
-                            self.audiovideo['help'].append({'text': TextObject(definitions + unicode(list_item), names_used=self.mako_names), 'package': self.package, 'type': 'audio'})
+                            self.audiovideo['help'].append({'text': TextObject(definitions + unicode(list_item.strip()), names_used=self.mako_names), 'package': self.package, 'type': 'audio'})
                     if key == 'video':
                         if type(value) is not list:
                             the_list = [value]
@@ -944,7 +944,7 @@ class Question:
                                 self.audiovideo = dict()
                             if 'help' not in self.audiovideo:
                                 self.audiovideo['help'] = list()
-                            self.audiovideo['help'].append({'text': TextObject(definitions + unicode(list_item), names_used=self.mako_names), 'package': self.package, 'type': 'video'})
+                            self.audiovideo['help'].append({'text': TextObject(definitions + unicode(list_item.strip()), names_used=self.mako_names), 'package': self.package, 'type': 'video'})
                     if key == 'content':
                         if type(value) in [dict, list, set]:
                             raise DAError("A content declaration in a help block can only contain text." + self.idebug(data))
@@ -963,7 +963,7 @@ class Question:
                     self.audiovideo = dict()    
                 if 'question' not in self.audiovideo:
                     self.audiovideo['question'] = list()
-                self.audiovideo['question'].append({'text': TextObject(definitions + unicode(list_item), names_used=self.mako_names), 'package': self.package, 'type': 'audio'})
+                self.audiovideo['question'].append({'text': TextObject(definitions + unicode(list_item.strip()), names_used=self.mako_names), 'package': self.package, 'type': 'audio'})
         if 'video' in data:
             if type(data['video']) is not list:
                 the_list = [data['video']]
@@ -976,7 +976,7 @@ class Question:
                     self.audiovideo = dict()    
                 if 'question' not in self.audiovideo:
                     self.audiovideo['question'] = list()
-                self.audiovideo['question'].append({'text': TextObject(definitions + unicode(list_item), names_used=self.mako_names), 'package': self.package, 'type': 'video'})
+                self.audiovideo['question'].append({'text': TextObject(definitions + unicode(list_item.strip()), names_used=self.mako_names), 'package': self.package, 'type': 'video'})
         if 'decoration' in data:
             if type(data['decoration']) is dict:
                 decoration_list = [data['decoration']]

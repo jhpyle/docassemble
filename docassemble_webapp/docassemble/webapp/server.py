@@ -8939,7 +8939,7 @@ def sms_body(phone_number, body='question', config='default'):
     return resp.verbs[0].verbs[0].body
 
 def favicon_file(filename):
-    the_dir = docassemble.base.functions.package_data_filename(daconfig.get('favicon directory', 'docassemble.webapp:data/static/favicon'))
+    the_dir = docassemble.base.functions.package_data_filename(daconfig.get('favicon', 'docassemble.webapp:data/static/favicon'))
     if the_dir is None or not os.path.isdir(the_dir):
         logmessage("Could not find favicon directory")
         abort(404)

@@ -91,7 +91,7 @@ comment: |
   This "objects" block creates the variable "village_idiot" and
   specifies that it is an object of type "Individual."
 ---
-terms:
+auto terms:
   rhododendron: |
      A genus of shrubs or small trees, often having handsome
      evergreen leaves, and remarkable for the beauty of their
