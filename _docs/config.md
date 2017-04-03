@@ -161,6 +161,86 @@ directive.
 start page title: Run an interview
 {% endhighlight %}
 
+## <a name="favicon"></a>Custom favicon in browser tab
+
+The icon in the browser tab is known as a [favicon].  This is the icon
+associated with the web application.  By default, **docassemble** uses
+the **docassemble** logo for this icon.
+
+If users "pin" your application to their device's main menu, this icon
+will be used to create the resulting icon.  Microsoft, Apple, and
+Google have their own conventions for doing this.
+
+In order to "brand" your application in a custom way, create a square
+logo and go to
+[http://realfavicongenerator.net](http://realfavicongenerator.net) in
+order to generate [favicon] files from it.  Upload a square image that
+is at least 512x512 in size.  In addition to uploading your file, you
+will need to make some choices about different colors that should be
+used in different circumstances.  At the end, you will download a Zip
+file containing a number of graphics files and other files.
+
+Put the contents of this Zip file in a folder in a **docassemble**
+package and then add a `favicon` directive to the configuration,
+pointing to this folder.  For example:
+
+{% highlight yaml %}
+favicon: docassemble.abcincorporated:data/static/favicon
+{% endhighlight %}
+
+In this example, `data/static/favicon` in the
+`docassemble.abcincorporated` package is a folder that is expected to
+contain the following files, which were contained in the Zip file:
+
+* `android-chrome-192x192.png`
+* `android-chrome-512x512.png`
+* `apple-touch-icon.png`
+* `browserconfig.xml`
+* `favicon-16x16.png`
+* `favicon-32x32.png`
+* `favicon.ico`
+* `manifest.json`
+* `mstile-150x150.png`
+* `safari-pinned-tab.svg`
+
+In addition to providing you with a Zip file containing the above
+files, the above web site will instruct you to place particular
+`<link>` and `<meta>` tags in the HTML of your site.  **docassemble**
+does this for you automatically, so you can ignore most of this.
+However, two of the lines are important.  The will look like this:
+
+{% highlight html %}
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#698aa7">
+<meta name="theme-color" content="#83b3dd">
+{% endhighlight %}
+
+Note the `color` in the first line and the `content` in the second
+line.  Then add the following two lines to your configuration,
+corresponding to the above two lines:
+
+{% highlight yaml %}
+favicon mask color: #698aa7
+favicon theme color: #83b3dd
+{% endhighlight %}
+
+If you do not specify `favicon mask color` or `favicon theme color`,
+your custom [favicon] will still work, but **docassemble** will choose
+colors for you.  (The colors above are the defaults.)
+
+If any of the above files is missing, your [favicon] will probably
+still work in most circumstances.  The most important file is
+`favicon.ico`, a special graphics file in Microsoft's [ICO] format.
+
+Note that if you have set the [`root`] directive (if your
+**docassemble** site at `https://example.com/something/` instead of
+`https://example.com/`), you will need to account for this when you
+generate the [favicon] files using the above web site.  This is
+important because the `manifest.json` and `browserconfig.xml` files
+contain URL references.  If your site is at `/something/`, then
+`manifest.json` will need to refer to
+`"/something/android-chrome-192x192.png"` instead of
+`"/android-chrome-192x192.png"`.
+
 ## <a name="exitpage"></a>Exit page
 
 The `exitpage` directive contains the default URL to which the user
@@ -1351,3 +1431,5 @@ and Facebook API keys.
 [Google Cloud Translation API]: https://cloud.google.com/translate/
 [`.geolocate()`]: {{ site.baseurl }}/docs/objects.html#Address.geolocate
 [`interview_email()`]: {{ site.baseurl }}/docs/functions.html#interview_email
+[favicon]: https://en.wikipedia.org/wiki/Favicon
+[ICO]: https://en.wikipedia.org/wiki/ICO_(file_format)

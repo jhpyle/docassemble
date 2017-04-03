@@ -1895,6 +1895,45 @@ This function can be customized with
 `ordinal(x)` returns `ordinal_number(x + 1)`.  This is useful when
 working with indexes that start at zero.
 
+## <a name="alpha"></a>alpha()
+
+`alpha(x)` returns `x + 1` as an alphabetical character.  This is
+intended to be used with indexes that start at zero.
+
+* `alpha(0)` returns `A`.
+* `alpha(25)` returns `Z`.
+* `alpha(26)` returns `AA`.
+* `alpha(26)` returns `AB`.
+* `alpha(0, case='lower')` returns `a`.
+
+## <a name="roman"></a>roman()
+
+`roman(x)` returns `x + 1` as a Roman numeral.  This is intended to be
+used with indexes that start at zero.
+
+* `roman(0)` returns `I`.
+* `roman(65)` returns `LXVI`.
+* `roman(65, case='lower')` returns `lxvi`.
+
+## <a name="item_label"></a>item_label()
+
+`item_label(x)` returns `x + 1` as a label for a list item.  This is
+intended to be used with indexes that start at zero.  It takes an
+optional second argument indicating a level between 0 and 6.  It takes
+an optional keyword argument `punctuation` indicating whether
+punctuation should be provided or not.
+
+* `item_label(0)` returns `I.`.
+* `item_label(1)` returns `II.`.
+* `item_label(0, 0)` returns `I.`.
+* `item_label(0, 1)` returns `A.`.
+* `item_label(0, 2)` returns `1.`.
+* `item_label(0, 3)` returns `a)`.
+* `item_label(0, 4)` returns `(1)`.
+* `item_label(0, 5)` returns `(a)`.
+* `item_label(0, 6)` returns `i)`.
+* `item_label(0, 6, punctuation=False)` returns `i`.
+
 ## <a name="period_list"></a>period_list()
 
 `period_list` returns a list within a list:

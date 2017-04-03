@@ -397,6 +397,8 @@ change analogous formatting in RTF files, you will need to create your
 own RTF document template (for more information on how to do that, see
 the next section).
 
+* `HangingIndent` - set this to `True` if you want text in lists to
+  using hanging indentation.
 * `fontfamily` - default is `mathptmx` (Times Roman).
 * `lang` and `mainlang` - not defined by default.  If defined,
   [polyglossia] (for XeTeX) or [babel] is loaded and the language is
