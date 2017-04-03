@@ -60,9 +60,9 @@ def convert(obj):
 def update_packages():
     if worker_controller is None:
         initialize_db()
-    import docassemble.webapp.update
     try:
         with worker_controller.flaskapp.app_context():
+            import docassemble.webapp.update
             ok, logmessages, results = docassemble.webapp.update.check_for_updates()
             worker_controller.trigger_update(except_for=hostname)
         return worker_controller.functions.ReturnValue(ok=ok, logmessages=logmessages, results=results)

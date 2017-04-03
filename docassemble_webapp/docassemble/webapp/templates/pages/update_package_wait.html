@@ -9,8 +9,12 @@
 <div id="resultsContainer" style="display: none">
   <pre id="resultsArea" class="wrappre">
   </pre>
+  <p>
+  <p>
+    {{ word("The server needs to be restarted.  Press Continue to restart.") }}
+  </p>
   <div class="form-actions vspace">
-    <a role="button" class="btn btn-lg btn-warning" href="{{ next_page }}">{{ word("Return") }}</a>
+    <a role="button" class="btn btn-lg btn-warning" href="{{ next_page }}">{{ word("Continue") }}</a>
   </div>
 </div>
 {% endblock %}

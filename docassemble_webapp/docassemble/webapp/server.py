@@ -1304,7 +1304,7 @@ def _endpoint_url(endpoint):
 
 def user_can_edit_package(pkgname=None, giturl=None):
     if pkgname is not None:
-        results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(Package.name == pkgname)
+        results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(Package.name == pkgname, active=True)
         if results.count() == 0:
             return(True)
         for d in results:
@@ -6454,6 +6454,12 @@ def update_package_wait():
             }
           }
         }
+        else{
+          console.log("No success.");
+          if (checkinInterval != null){
+            clearInterval(checkinInterval);
+          }
+        }
       }
       function daUpdate(){
         $.ajax({
@@ -6471,7 +6477,7 @@ def update_package_wait():
       });
     </script>
 """
-    return render_template('pages/update_package_wait.html', extra_js=Markup(script), tab_title=word('Updating'), page_title=word('Updating'), next_page=url_for('update_package'))
+    return render_template('pages/update_package_wait.html', extra_js=Markup(script), tab_title=word('Updating'), page_title=word('Updating'), next_page=url_for('restart_page'))
 
 @app.route('/update_package_ajax', methods=['GET', 'POST'])
 @login_required
@@ -6484,11 +6490,11 @@ def update_package_ajax():
         del session['update']
         if type(result.result) == ReturnValue:
             if result.result.ok:
-                restart_this()
+                logmessage("update_package_ajax: success")
+                return jsonify(success=True, status='finished', ok=result.result.ok, summary=summarize_results(result.result.results, result.result.logmessages))
             elif hasattr(result.result, 'error_message'):
                 logmessage("update_package_ajax: failed return value is " + str(result.result.error_message))
                 return jsonify(success=True, status='failed', error_message=str(result.result.error_message))
-            return jsonify(success=True, status='finished', ok=result.result.ok, summary=summarize_results(result.result.results, result.result.logmessages))
         else:
             logmessage("update_package_ajax: failed return value is " + str(result.result))
             return jsonify(success=True, status='failed', error_message=str(result.result))
@@ -7501,6 +7507,7 @@ def playground_packages():
             filename = None
     if request.method == 'POST' and 'uploadfile' in request.files:
         the_files = request.files.getlist('uploadfile')
+        need_to_restart = False
         if the_files:
             for up_file in the_files:
                 #try:
@@ -7534,6 +7541,7 @@ def playground_packages():
                             if filename == 'setup.py' and len(levels) == 0:
                                 setup_py = zf.read(zinfo)
                             elif len(levels) >= 2 and filename.endswith('.py') and filename != '__init__.py':
+                                need_to_restart = True
                                 data_files['modules'].append(filename)
                                 with zf.open(zinfo) as source_fp, open(os.path.join(area['playgroundmodules'].directory, filename), 'wb') as target_fp:
                                     shutil.copyfileobj(source_fp, target_fp)
@@ -7565,7 +7573,9 @@ def playground_packages():
                         the_file = package_name
                 #except Exception as errMess:
                     #flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
-        return redirect(url_for('playground_packages'))
+        if need_to_restart:
+            return redirect(url_for('restart_page', next=url_for('playground_packages', file=the_file)))
+        return redirect(url_for('playground_packages', file=the_file))
     if request.method == 'POST' and form.delete.data and the_file != '' and the_file == form.file_name.data and os.path.isfile(os.path.join(area['playgroundpackages'].directory, the_file)):
         os.remove(os.path.join(area['playgroundpackages'].directory, the_file))
         area['playgroundpackages'].finalize()
