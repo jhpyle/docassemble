@@ -951,6 +951,9 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
     if do_terms and question is not None and question.language in question.interview.terms and len(question.interview.terms[question.language]) > 0 is not None and term_start.search(result):
         #logmessage("Found a term\n")
         result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.terms[question.language])), result)
+    if do_terms and question is not None and question.language in question.interview.autoterms and len(question.interview.autoterms[question.language]) > 0 is not None and term_start.search(result):
+        #logmessage("Found a term\n")
+        result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.autoterms[question.language])), result)
     #logmessage("Trim is " + str(trim) + " for " + str(result))
     if trim:
         if result.startswith('<p>') and result.endswith('</p>'):
@@ -992,7 +995,7 @@ def add_terms(termname, terms):
         return('<a class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(terms[lower_termname]['definition']) + '>' + unicode(termname) + '</a>')
     else:
         #logmessage(lower_termname + " is not in terms dictionary\n")
-        return termname
+        return '[[' + termname + ']]'
 
 def audio_control(files, preload="metadata"):
     for d in files:
