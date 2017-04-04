@@ -252,6 +252,20 @@
     ${ my_file }
 
     Don't you think so?
+"auto-terms": |-
+  auto terms:
+    creeper: |
+      A tall green creature that explodes if
+      you get too close.
+    zombie pigman: |
+      A harmless creature who carries a gold
+      sword.
+  ---
+  question: Have you ever met a creeper?
+  subquestion: |
+    If you have met a zombie pigman, you
+    have almost certainly met a creeper.
+  yesno: met_a_creeper
 "background_action": |-
   mandatory: True
   code: |
@@ -4545,6 +4559,12 @@
     zombie pigman: |
       A harmless creature who carries a gold
       sword.
+  ---
+  question: Have you ever met a {creeper}?
+  subquestion: |
+    If you have met a {zombie pigman}, you
+    have almost certainly met a creeper.
+  yesno: met_a_creeper
 "testage2": |-
   modules:
     - docassemble.base.util

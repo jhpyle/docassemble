@@ -233,7 +233,7 @@ Effectively, this causes variables to act like functions.
 For information about how to cause **docassemble** to reset variables
 set by [`code` blocks], see the [`reconsider` modifier].
 
-# <a name="terms"></a>Vocabulary `terms`
+# <a name="terms"></a><a name="auto terms"></a>Vocabulary `terms` and `auto terms`
 
 {% highlight yaml %}
 ---
@@ -249,8 +249,16 @@ terms:
 Sometimes you will use vocabulary that the user may or may not know.
 Instead of interrupting the flow of your questions to define every
 term, you can define certain vocabulary words, and **docassemble**
-will turn them into hyperlinks wherever they appear.  When the user
-clicks on the hyperlink, a popup appears with the word's definition.
+will turn them into hyperlinks wherever they appear in curly brackets.
+When the user clicks on the hyperlink, a popup appears with the word's
+definition.
+
+{% include side-by-side.html demo="terms" %}
+
+If you want the terms to be highlighted every time they are used,
+whether in curly brackets or not, use `auto terms`.
+
+{% include side-by-side.html demo="auto-terms" %}
 
 # <a name="interview help"></a>Assisting users with `interview help`
 
