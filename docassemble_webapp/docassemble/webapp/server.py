@@ -1304,14 +1304,14 @@ def _endpoint_url(endpoint):
 
 def user_can_edit_package(pkgname=None, giturl=None):
     if pkgname is not None:
-        results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(Package.name == pkgname, active=True)
+        results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(Package.name == pkgname, Package.active == True)
         if results.count() == 0:
             return(True)
         for d in results:
             if d.user_id == current_user.id:
                 return True
     if giturl is not None:
-        results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(Package.giturl == giturl)
+        results = db.session.query(Package.id, PackageAuth.user_id, PackageAuth.authtype).outerjoin(PackageAuth, Package.id == PackageAuth.package_id).filter(Package.giturl == giturl, Package.active == True)
         if results.count() == 0:
             return(True)
         for d in results:
@@ -6477,7 +6477,7 @@ def update_package_wait():
       });
     </script>
 """
-    return render_template('pages/update_package_wait.html', extra_js=Markup(script), tab_title=word('Updating'), page_title=word('Updating'), next_page=url_for('restart_page'))
+    return render_template('pages/update_package_wait.html', extra_js=Markup(script), tab_title=word('Updating'), page_title=word('Updating'), next_page=url_for('restart_page', next=url_for('update_package')))
 
 @app.route('/update_package_ajax', methods=['GET', 'POST'])
 @login_required
@@ -6487,7 +6487,8 @@ def update_package_ajax():
         return jsonify(success=False)
     result = docassemble.webapp.worker.workerapp.AsyncResult(id=session['update'])
     if result.ready():
-        del session['update']
+        if 'update' in session:
+            del session['update']
         if type(result.result) == ReturnValue:
             if result.result.ok:
                 logmessage("update_package_ajax: success")
@@ -6495,12 +6496,13 @@ def update_package_ajax():
             elif hasattr(result.result, 'error_message'):
                 logmessage("update_package_ajax: failed return value is " + str(result.result.error_message))
                 return jsonify(success=True, status='failed', error_message=str(result.result.error_message))
+            else:
+                return jsonify(success=True, status='failed', error_message=str("No error message.  Result is " + str(result.result)))
         else:
             logmessage("update_package_ajax: failed return value is " + str(result.result))
             return jsonify(success=True, status='failed', error_message=str(result.result))
     else:
-        the_status = 'waiting'
-    return jsonify(success=True, status=the_status)
+        return jsonify(success=True, status='waiting')
 
 @app.route('/updatepackage', methods=['GET', 'POST'])
 @login_required
