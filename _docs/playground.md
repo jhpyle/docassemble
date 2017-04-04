@@ -175,8 +175,24 @@ The Packages area allows you to bundle the [interview files], [templates],
 [Python package] that can be downloaded as a ZIP file.
 
 You can keep track of one or more packages in the Packages folder.  Each
-package has its own tab.  To create a new package, click the <i
-class="glyphicon glyphicon-plus-sign" aria-hidden="true"></i> icon.
+package has its own tab.  To create a new package, click "<i
+class="glyphicon glyphicon-plus-sign" aria-hidden="true"></i> Add."
+
+To view a different package, select it from the pull-down menu.
+
+If you have an existing package that was created using
+**docassemble**, you can upload its contents into the Playground by
+clicking "<i class="glyphicon glyphicon-upload"
+aria-hidden="true"></i> Upload."  Note: this will work as expected if
+all of your modules are in the folder
+`docassemble-packagename/docassemble/packagename`, and templates are
+in the folder
+`docassemble-packagename/docassemble/packagename/data/templates`,
+etc.  If you created subfolders within these folders, **docassemble**
+will not know where to put your files.
+
+To download the current package as a Zip file, click "<i class="glyphicon glyphicon-download"
+aria-hidden="true"></i> Download."
 
 {% include scroll-image.html image="playground-packages-page-clipped.png" %}
 
@@ -220,8 +236,6 @@ Packages are defined with the following elements:
 At the bottom of the page, you can press one of the following buttons:
 
 * **Save**: Saves the package definition and does nothing more.
-* **Download**: Saves the package definition and provides the package
-  as a ZIP file for you to download.
 * **Install**: Saves the package definition, creates a ZIP file
   containing the package, and installs that ZIP file on the server.
 * **Delete**: Deletes the package definition.  If you installed the
