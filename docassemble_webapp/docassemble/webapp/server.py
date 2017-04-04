@@ -6424,9 +6424,15 @@ def monitor():
 def update_package_wait():
     script = """<script>
       var checkinInterval = null;
+      var resultsAreIn = false;
       function daUpdateCallback(data){
+        if (resultsAreIn){
+          console.log("daUpdateCallback: data came in late: " + data);
+          return;
+        }
         if (data.success){
           if (data.status == 'finished'){
+            resultsAreIn = true;
             if (data.ok){
               $("#notification").html('""" + word("The package update was successful.  The logs are below.") + """');
               $("#notification").removeClass("alert-info");
@@ -6444,6 +6450,7 @@ def update_package_wait():
             }
           }
           else if (data.status == 'failed'){
+            resultsAreIn = true;
             $("#notification").html('""" + word("There was an error updating the packages.") + """');
             $("#notification").removeClass("alert-info");
             $("#notification").addClass("alert-danger");
@@ -6455,13 +6462,19 @@ def update_package_wait():
           }
         }
         else{
-          console.log("No success.");
+          resultsAreIn = true;
+          $("#notification").html('""" + word("There was an error.") + """');
+          $("#notification").removeClass("alert-info");
+          $("#notification").addClass("alert-danger");
           if (checkinInterval != null){
             clearInterval(checkinInterval);
           }
         }
       }
       function daUpdate(){
+        if (resultsAreIn){
+          return;
+        }
         $.ajax({
           type: 'POST',
           url: """ + repr(str(url_for('update_package_ajax'))) + """,
