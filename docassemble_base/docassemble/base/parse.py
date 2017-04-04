@@ -774,13 +774,13 @@ class Question:
                     if type(termitem) is dict:
                         for term in termitem:
                             lower_term = term.lower()
-                            self.interview.autoterms[self.language][lower_term] = {'definition': termitem[term], 're': re.compile(r"(?i)\b(%s)\b" % (lower_term,), re.IGNORECASE)}
+                            self.interview.autoterms[self.language][lower_term] = {'definition': termitem[term], 're': re.compile(r"{?(?i)\b(%s)\b}?" % (lower_term,), re.IGNORECASE)}
                     else:
                         raise DAError("An auto terms section organized as a list must be a list of dictionary items." + self.idebug(data))
             elif type(data['auto terms']) is dict:
                 for term in data['auto terms']:
                     lower_term = term.lower()
-                    self.interview.autoterms[self.language][lower_term] = {'definition': data['auto terms'][term], 're': re.compile(r"(?i)\b(%s)\b" % (lower_term,), re.IGNORECASE)}
+                    self.interview.autoterms[self.language][lower_term] = {'definition': data['auto terms'][term], 're': re.compile(r"{?(?i)\b(%s)\b}?" % (lower_term,), re.IGNORECASE)}
             else:
                 raise DAError("An auto terms section must be organized as a dictionary or a list." + self.idebug(data))
         if 'default role' in data:

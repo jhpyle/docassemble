@@ -1,10 +1,10 @@
 metadata:
-  title: Vocabulary
-  documentation: "http://docassemble.org/docs/initial.html#terms"
+  title: Global terms
+  documentation: "http://docassemble.org/docs/initial.html#auto terms"
   example start: 1
   example end: 2
 ---
-terms:
+auto terms:
   creeper: |
     A tall green creature that explodes if
     you get too close.
@@ -12,9 +12,9 @@ terms:
     A harmless creature who carries a gold
     sword.
 ---
-question: Have you ever met a {creeper}?
+question: Have you ever met a creeper?
 subquestion: |
-  If you have met a {zombie pigman}, you
+  If you have met a zombie pigman, you
   have almost certainly met a creeper.
 yesno: met_a_creeper
 ---

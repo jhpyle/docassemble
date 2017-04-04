@@ -1,6 +1,7 @@
 - Formatting:
     - markdown
     - terms
+    - auto-terms
 - Templates:
     - mako-01
     - mako-02
