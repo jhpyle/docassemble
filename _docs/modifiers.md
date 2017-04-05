@@ -226,6 +226,32 @@ the same thing from [Python] code.  This may be more useful than the
 `prevent_going_back` modifier if the need to prevent the user from
 clicking the back button depends on the outcome of a process.
 
+# <a name="terms"></a><a name="auto terms"></a>Vocabulary `terms` and `auto terms`
+
+Using the modifiers `terms` or `auto terms`, you can specify the
+definitions of particular vocabulary terms, and **docassemble** will
+turn them into green hyperlinks.  When the user clicks on the
+hyperlink, a popup appears with the word's definition.
+
+You can define the vocabulary terms using `terms` and then put curly
+brackets around the instances of the words that you want to become
+hyperlinks.
+
+{% include side-by-side.html demo="question-terms" %}
+
+Alternatively, you can define the vocabulary terms using `auto terms`,
+in which case you do not need to use curly brackets, and the terms
+will be highlighted in green every time they appear in the question.
+
+If you want the terms to be highlighted every time they are used,
+whether in curly brackets or not, use `auto terms`.
+
+{% include side-by-side.html demo="question-autoterms" %}
+
+If you want vocabulary terms to be highlighted throughout the
+interview, not just for a specific question, you can use `terms` and
+`auto terms` as [initial blocks].
+
 # <a name="language"></a>The `language` of the question
 
 {% highlight yaml %}

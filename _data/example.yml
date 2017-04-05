@@ -3753,6 +3753,19 @@
     What is the airspeed velocity of an unladen swallow?
   fields:
     - Velocity: swallow_velocity
+"question-autoterms": |-
+  question: Have you ever met a creeper?
+  subquestion: |
+    If you have met a zombie pigman, you
+    have almost certainly met a creeper.
+  yesno: met_a_creeper
+  auto terms:
+    creeper: |
+      A tall ${ creeper_color } creature
+      that explodes if you get too close.
+    zombie pigman: |
+      A harmless creature who carries a gold
+      sword.
 "question-library": |-
   question: |
     Interested in going to the dance tonight?
@@ -3805,6 +3818,19 @@
   mandatory: True
   question: |
     Thanks for answering my questions!
+"question-terms": |-
+  question: Have you ever met a {creeper}?
+  subquestion: |
+    If you have met a {zombie pigman}, you
+    have almost certainly met a creeper.
+  yesno: met_a_creeper
+  terms:
+    creeper: |
+      A tall ${ creeper_color } creature
+      that explodes if you get too close.
+    zombie pigman: |
+      A harmless creature who carries a gold
+      sword.
 "quote_paragraphs": |-
   mandatory: True
   question: |

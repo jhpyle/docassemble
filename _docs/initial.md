@@ -260,6 +260,10 @@ whether in curly brackets or not, use `auto terms`.
 
 {% include side-by-side.html demo="auto-terms" %}
 
+You can also use `terms` and `auto terms` as [modifiers], in which
+case the terms will apply only to the question, not to the interview
+as a whole.
+
 # <a name="interview help"></a>Assisting users with `interview help`
 
 {% highlight yaml %}
