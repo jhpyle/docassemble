@@ -427,6 +427,8 @@ class Question:
         self.is_generic = False
         self.name = None
         self.role = list()
+        self.terms = dict()
+        self.autoterms = dict()
         self.need = None
         self.helptext = None
         self.subcontent = None
@@ -747,7 +749,29 @@ class Question:
                 self.module_list = data['imports']
             else:
                 raise DAError("An imports section must be organized as a list." + self.idebug(data))
-        if 'terms' in data:
+        if 'terms' in data and 'question' in data:
+            if type(data['terms']) not in (dict, list):
+                raise DAError("Terms must be organized as a dictionary or a list." + self.idebug(data))
+            if type(data['terms']) is dict:
+                data['terms'] = [data['terms']]
+            for termitem in data['terms']:
+                if type(termitem) is not dict:
+                    raise DAError("A terms section organized as a list must be a list of dictionary items." + self.idebug(data))
+                for term in termitem:
+                    lower_term = term.lower()
+                    self.terms[lower_term] = {'definition': TextObject(definitions + unicode(termitem[term]), names_used=self.mako_names), 're': re.compile(r"{(?i)(%s)}" % (lower_term,), re.IGNORECASE)}
+        if 'auto terms' in data and 'question' in data:
+            if type(data['auto terms']) not in (dict, list):
+                raise DAError("Terms must be organized as a dictionary or a list." + self.idebug(data))
+            if type(data['auto terms']) is dict:
+                data['auto terms'] = [data['auto terms']]
+            for termitem in data['auto terms']:
+                if type(termitem) is not dict:
+                    raise DAError("A terms section organized as a list must be a list of dictionary items." + self.idebug(data))
+                for term in termitem:
+                    lower_term = term.lower()
+                    self.autoterms[lower_term] = {'definition': TextObject(definitions + unicode(termitem[term]), names_used=self.mako_names), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (lower_term,), re.IGNORECASE)}
+        if 'terms' in data and 'question' not in data:
             should_append = False
             if self.language not in self.interview.terms:
                 self.interview.terms[self.language] = dict()
@@ -765,7 +789,7 @@ class Question:
                     self.interview.terms[self.language][lower_term] = {'definition': data['terms'][term], 're': re.compile(r"{(?i)(%s)}" % (lower_term,), re.IGNORECASE)}
             else:
                 raise DAError("A terms section must be organized as a dictionary or a list." + self.idebug(data))
-        if 'auto terms' in data:
+        if 'auto terms' in data and 'question' not in data:
             should_append = False
             if self.language not in self.interview.autoterms:
                 self.interview.autoterms[self.language] = dict()
@@ -1630,6 +1654,14 @@ class Question:
         else:
             undertext = None
         extras = dict()
+        if len(self.terms):
+            extras['terms'] = dict()
+            for termitem, definition in self.terms.iteritems():
+                extras['terms'][termitem] = dict(definition=definition['definition'].text(user_dict))
+        if len(self.autoterms):
+            extras['autoterms'] = dict()
+            for termitem, definition in self.autoterms.iteritems():
+                extras['autoterms'][termitem] = dict(definition=definition['definition'].text(user_dict))
         if self.css is not None:
             extras['css'] = self.css.text(user_dict)
         if self.script is not None:

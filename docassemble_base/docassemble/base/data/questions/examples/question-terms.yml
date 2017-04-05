@@ -2,21 +2,20 @@ metadata:
   title: Vocabulary
   documentation: "http://docassemble.org/docs/initial.html#terms"
   example start: 1
-  example end: 2
----
-terms:
-  creeper: |
-    A tall green creature that explodes if
-    you get too close.
-  zombie pigman: |
-    A harmless creature who carries a gold
-    sword.
+  example end: 1
 ---
 question: Have you ever met a {creeper}?
 subquestion: |
   If you have met a {zombie pigman}, you
   have almost certainly met a creeper.
 yesno: met_a_creeper
+terms:
+  creeper: |
+    A tall ${ creeper_color } creature
+    that explodes if you get too close.
+  zombie pigman: |
+    A harmless creature who carries a gold
+    sword.
 ---
 question: |
   Thank you for telling me about your
@@ -28,3 +27,6 @@ subquestion: |
   You clearly need to play more Minecraft.
   % endif
 mandatory: True
+---
+code: |
+  creeper_color = 'green'

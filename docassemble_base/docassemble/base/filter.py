@@ -922,6 +922,13 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
         question = status.question
     if question is not None:
         if do_terms:
+            if status is not None:
+                if len(question.terms):
+                    for term in question.terms:
+                        a = question.terms[term]['re'].sub(r'[[\1]]', a)
+                if len(question.autoterms):
+                    for term in question.autoterms:
+                        a = question.autoterms[term]['re'].sub(r'[[\1]]', a)
             if question.language in question.interview.terms and len(question.interview.terms[question.language]) > 0:
                 for term in question.interview.terms[question.language]:
                     #logmessage("Searching for term " + term + " in " + a + "\n")
@@ -948,13 +955,16 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
     result = re.sub(r'<table>', r'<table class="table table-striped">', result)
     #result = re.sub(r'<table>', r'<table class="datable">', result)
     result = re.sub('<a href="(?!\?)', '<a target="_blank" href="', result)
-    if do_terms and question is not None and question.language in question.interview.terms and len(question.interview.terms[question.language]) > 0 is not None and term_start.search(result):
-        #logmessage("Found a term\n")
-        result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.terms[question.language])), result)
-    if do_terms and question is not None and question.language in question.interview.autoterms and len(question.interview.autoterms[question.language]) > 0 is not None and term_start.search(result):
-        #logmessage("Found a term\n")
-        result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.autoterms[question.language])), result)
-    #logmessage("Trim is " + str(trim) + " for " + str(result))
+    if do_terms and question is not None and term_start.search(result):
+        if status is not None:
+            if len(question.terms):
+                result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['terms'])), result)
+            if len(question.autoterms):
+                result = term_match.sub((lambda x: add_terms(x.group(1), status.extras['autoterms'])), result)
+        if question.language in question.interview.terms and len(question.interview.terms[question.language]):
+            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.terms[question.language])), result)
+        if question.language in question.interview.autoterms and len(question.interview.autoterms[question.language]):
+            result = term_match.sub((lambda x: add_terms(x.group(1), question.interview.autoterms[question.language])), result)
     if trim:
         if result.startswith('<p>') and result.endswith('</p>'):
             result = result[3:-4]
@@ -988,10 +998,8 @@ def noquote(string):
     return '"' + string.replace('\n', ' ').replace('"', '&quot;').rstrip() + '"'
 
 def add_terms(termname, terms):
-    #logmessage("add terms with " + termname + "\n")
     lower_termname = termname.lower()
     if lower_termname in terms:
-        # title="' + noquote(termname) + '"
         return('<a class="daterm" data-toggle="popover" data-placement="bottom" data-content=' + noquote(terms[lower_termname]['definition']) + '>' + unicode(termname) + '</a>')
     else:
         #logmessage(lower_termname + " is not in terms dictionary\n")

@@ -6422,9 +6422,23 @@ def monitor():
 @login_required
 @roles_required(['admin', 'developer'])
 def update_package_wait():
+    my_csrf = generate_csrf()
     script = """<script>
       var checkinInterval = null;
       var resultsAreIn = false;
+      function daRestartCallback(data){
+        //console.log("Restart result: " + data.success);
+      }
+      function daRestart(){
+        $.ajax({
+          type: 'POST',
+          url: """ + repr(str(url_for('restart_ajax'))) + """,
+          data: 'csrf_token=""" + my_csrf + """&action=restart',
+          success: daRestartCallback,
+          dataType: 'json'
+        });
+        return true;
+      }
       function daUpdateCallback(data){
         if (resultsAreIn){
           console.log("daUpdateCallback: data came in late: " + data);
@@ -6448,6 +6462,7 @@ def update_package_wait():
             if (checkinInterval != null){
               clearInterval(checkinInterval);
             }
+            daRestart();
           }
           else if (data.status == 'failed'){
             resultsAreIn = true;
@@ -6478,7 +6493,7 @@ def update_package_wait():
         $.ajax({
           type: 'POST',
           url: """ + repr(str(url_for('update_package_ajax'))) + """,
-          data: 'csrf_token=""" + generate_csrf() + """&action=restart',
+          data: 'csrf_token=""" + my_csrf + """',
           success: daUpdateCallback,
           dataType: 'json'
         });
