@@ -6,7 +6,7 @@ metadata:
 mandatory: true
 question: |
   Your fruit inventory
-attachment: |
+subquestion: |
   This describes your fruit
   collection.
   

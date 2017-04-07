@@ -32,13 +32,18 @@ class SavedFile(object):
             self.path = os.path.join(self.directory, filename)
         if fix:
             self.fix()
+    # def __del__(self):
+    #     logmessage("Deleting a file")
+    #     if cloud is not None and hasattr(self, 'directory') and os.path.isdir(self.directory):
+    #         pass
+            #shutil.rmtree(self.directory)
     def fix(self):
         if self.fixed:
             return
         if cloud is not None:
             self.modtimes = dict()
             self.keydict = dict()
-            self.directory = tempfile.mkdtemp()
+            self.directory = tempfile.mkdtemp(prefix='SavedFile')
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
             #logmessage("fix: prefix is " + prefix)
             for key in cloud.list_keys(prefix):
@@ -59,9 +64,8 @@ class SavedFile(object):
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
             for key in cloud.list_keys(prefix):
                 key.delete()
-        else:
-            if os.path.isdir(self.directory):
-                shutil.rmtree(self.directory)
+        if os.path.isdir(self.directory):
+            shutil.rmtree(self.directory)
     def save(self, finalize=False):
         if not self.fixed:
             self.fix()
@@ -403,4 +407,5 @@ machine learning training files, and other source files.
             thefilename = os.path.join(root, file)
             zf.write(thefilename, thefilename[trimlength:])
     zf.close()
+    shutil.rmtree(directory)
     return temp_zip

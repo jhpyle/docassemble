@@ -37,6 +37,9 @@ subquestion: |
 ---
 question: |
   What fruit should be added to the list?
+subquestion: |
+  When entering fruit names, use the
+  singular rather than the plural.
 fields:
   - Fruit: fruit[i].name.text
   - Number of seeds: fruit[i].seeds

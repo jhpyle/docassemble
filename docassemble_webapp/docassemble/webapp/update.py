@@ -10,6 +10,7 @@ import xmlrpclib
 import re
 from cStringIO import StringIO
 import sys
+import shutil
 
 from distutils.version import LooseVersion
 if __name__ == "__main__":
@@ -219,17 +220,18 @@ def install_package(package):
     pip.utils.logging._log_state = threading.local()
     pip.utils.logging._log_state.indentation = 0
     pip_log = tempfile.NamedTemporaryFile()
+    temp_dir = tempfile.mkdtemp()
     if package.type == 'zip' and package.upload is not None:
         saved_file = SavedFile(package.upload, extension='zip', fix=True)
-        commands = ['install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + tempfile.mkdtemp(), '--log-file=' + pip_log.name, '--upgrade', saved_file.path + '.zip']
+        commands = ['install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--log-file=' + pip_log.name, '--upgrade', saved_file.path + '.zip']
     elif package.type == 'git' and package.giturl is not None:
-        commands = ['install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, 'git+' + package.giturl + '.git#egg=' + package.name]
+        commands = ['install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, 'git+' + package.giturl + '.git#egg=' + package.name]
     elif package.type == 'pip':
         if package.limitation is None:
             limit = ""
         else:
             limit = str(package.limitation)
-        commands = ['install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + tempfile.mkdtemp(), '--upgrade', '--log-file=' + pip_log.name, package.name + limit]
+        commands = ['install', '--quiet', '--prefix=' + PACKAGE_DIRECTORY, '--src=' + temp_dir, '--upgrade', '--log-file=' + pip_log.name, package.name + limit]
     else:
         return 1, 'Unable to recognize package type: ' + package.name
     #sys.stderr.write("install_package: running pip " + " ".join(commands) + "\n")
@@ -239,6 +241,7 @@ def install_package(package):
         logfilecontents += x.read().decode('utf8')
     sys.stderr.write(logfilecontents + "\n")
     sys.stderr.write('install_package: done' + "\n")
+    shutil.rmtree(temp_dir)
     return returnval, logfilecontents
 
 def uninstall_package(package):

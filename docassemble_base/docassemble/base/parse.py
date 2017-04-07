@@ -458,6 +458,10 @@ class Question:
             should_append = False
             if type(data['features']) is not dict:
                 raise DAError("A features section must be a dictionary." + self.idebug(data))
+            if 'table width' in data['features']:
+                if type(data['features']['table width']) is not int:
+                    raise DAError("Table width in features must be an integer." + self.idebug(data))
+                self.interview.table_width = data['features']['table width']
             if 'progress bar' in data['features'] and data['features']['progress bar']:
                 self.interview.use_progress_bar = True
             for key in ['javascript', 'css']:
@@ -2182,6 +2186,7 @@ class Interview:
         self.calls_process_action = False
         self.uses_action = False
         self.imports_util = False
+        self.table_width = 65
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
     def get_title(self):
@@ -2807,12 +2812,12 @@ class Interview:
                                 for text in words:
                                     if len(text) > max_word[indexno]:
                                         max_word[indexno] = len(text)
-                            max_chars_to_use = [min(x, 72) for x in max_chars]
+                            max_chars_to_use = [min(x, self.table_width) for x in max_chars]
                             override_mode = False
                             while True:
                                 new_sum = sum(max_chars_to_use)
                                 old_sum = new_sum
-                                if new_sum < 72:
+                                if new_sum < self.table_width:
                                     break
                                 r = random.uniform(0, new_sum)
                                 upto = 0

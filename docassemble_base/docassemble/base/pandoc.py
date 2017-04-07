@@ -152,8 +152,11 @@ def word_to_markdown(in_file, in_format):
     else:
         in_file_to_use = in_file
         in_format_to_use = in_format
+        tempdir = None
     subprocess_arguments = [PANDOC_PATH, '--smart', '--from=%s' % str(in_format_to_use), '--to=markdown', str(in_file_to_use), '-o', str(temp_file.name)]
     result = subprocess.call(subprocess_arguments)
+    if tempdir is not None:
+        shutil.rmtree(tempdir)
     if result == 0:
         final_file = tempfile.NamedTemporaryFile(mode="wb", suffix=".md")
         with open(temp_file.name, 'rU') as the_file:

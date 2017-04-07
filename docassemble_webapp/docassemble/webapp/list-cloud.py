@@ -27,7 +27,7 @@ def main():
 
 def recursive_list(cloud, prefix):
     for key in cloud.list_keys(prefix):
-        if key.name.endswith('/'):
+        if key.name != prefix and key.name.endswith('/'):
             recursive_list(cloud, key.name)
         else:
             print key.name

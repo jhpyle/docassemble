@@ -2,8 +2,8 @@ metadata:
   title: Table block
   short title: Table
   documentation: "http://docassemble.org/docs/template.html#table"
-  example start: 2
-  example end: 5
+  example start: 5
+  example end: 6
 ---
 modules:
   - docassemble.base.util
@@ -14,33 +14,24 @@ objects:
 mandatory: true
 code: |
   fruit.object_type = Thing
+  fruit.appendObject(name="Fruit with an extremely long name because this fruit needs to demonstrate what happens when a table is wide.", seeds=5)
+  fruit.appendObject(name="Grape", seeds=1)
+  fruit.gathered = True
 ---
 mandatory: True
 question: |
   Information about fruit
 subquestion: |
-  Here is a fruity summary.
-
+  Open the attachment to see a table with
+  information about fruit.
+attachment:
   ${ fruit_table }
+---
+features:
+  table width: 35
 ---
 table: fruit_table
 rows: fruit
 columns:
   - Fruit Name: row_item.name
   - Seeds: row_item.seeds
----
-code: |
-  fruit.there_are_any = True
----
-question: |
-  What fruit should be added to the list?
-fields:
-  - Fruit: fruit[i].name.text
-  - Number of seeds: fruit[i].seeds
-    datatype: integer
-    min: 0
----
-question: |
-  So far, the fruits include ${ fruit }.
-  Are there any others?
-yesno: fruit.there_is_another

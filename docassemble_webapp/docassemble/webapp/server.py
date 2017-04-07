@@ -1325,21 +1325,9 @@ def uninstall_package(packagename):
     if existing_package is None:
         flash(word("Package did not exist"), 'error')
         return
-    the_upload_number = existing_package.upload
-    the_package_type = existing_package.type
     for package in Package.query.filter_by(name=packagename, active=True).all():
         package.active = False
     db.session.commit()
-    # ok, logmessages, results = docassemble.webapp.update.check_for_updates()
-    # if ok:
-    #     if the_package_type == 'zip' and the_upload_number is not None:
-    #         SavedFile(the_upload_number).delete()
-    #     trigger_update(except_for=hostname)
-    #     restart_this()
-    #     flash(summarize_results(results, logmessages), 'info')
-    # else:
-    #     flash(summarize_results(results, logmessages), 'error')
-    #logmessage("server uninstall_package: done")
     return
 
 def summarize_results(results, logmessages):
@@ -1354,7 +1342,7 @@ def summarize_results(results, logmessages):
 
 def install_zip_package(packagename, file_number):
     #logmessage("install_zip_package: " + packagename + " " + str(file_number))
-    existing_package = Package.query.filter_by(name=packagename, active=True).order_by(Package.id.desc()).first()
+    existing_package = Package.query.filter_by(name=packagename).order_by(Package.id.desc()).first()
     if existing_package is None:
         package_auth = PackageAuth(user_id=current_user.id)
         package_entry = Package(name=packagename, package_auth=package_auth, upload=file_number, active=True, type='zip', version=1)
@@ -1363,73 +1351,65 @@ def install_zip_package(packagename, file_number):
     else:
         if existing_package.type == 'zip' and existing_package.upload is not None and existing_package.upload != file_number:
             SavedFile(existing_package.upload).delete()
+        existing_package.package_auth.user_id = current_user.id
+        existing_package.package_auth.authtype = 'owner'
         existing_package.upload = file_number
         existing_package.active = True
         existing_package.limitation = None
+        existing_package.giturl = None
         existing_package.type = 'zip'
         existing_package.version += 1
     db.session.commit()
-    # ok, logmessages, results = docassemble.webapp.update.check_for_updates()
-    # if ok:
-    #     trigger_update(except_for=hostname)
-    #     restart_this()
-    #     flash(summarize_results(results, logmessages), 'info')
-    # else:
-    #     flash(summarize_results(results, logmessages), 'error')
     return
 
 def install_git_package(packagename, giturl):
     #logmessage("install_git_package: " + packagename + " " + str(giturl))
-    if Package.query.filter_by(name=packagename, active=True).first() is None and Package.query.filter_by(giturl=giturl, active=True).first() is None:
+    if Package.query.filter_by(name=packagename).first() is None and Package.query.filter_by(giturl=giturl).first() is None:
         package_auth = PackageAuth(user_id=current_user.id)
         package_entry = Package(name=packagename, giturl=giturl, package_auth=package_auth, version=1, active=True, type='git')
         db.session.add(package_auth)
         db.session.add(package_entry)
         db.session.commit()
     else:
-        package_entry = Package.query.filter_by(name=packagename).order_by(Package.id.desc()).first()
-        if package_entry is not None:
-            if package_entry.type == 'zip' and package_entry.upload is not None:
-                SavedFile(package_entry.upload).delete()
-            package_entry.version += 1
-            package_entry.giturl = giturl
-            package_entry.upload = None
-            package_entry.limitation = None
-            package_entry.type = 'git'
+        existing_package = Package.query.filter_by(name=packagename).order_by(Package.id.desc()).first()
+        if existing_package is None:
+            existing_package = Package.query.filter_by(giturl=giturl).order_by(Package.id.desc()).first()
+        if existing_package is not None:
+            if existing_package.type == 'zip' and existing_package.upload is not None:
+                SavedFile(existing_package.upload).delete()
+            existing_package.package_auth.user_id = current_user.id
+            existing_package.package_auth.authtype = 'owner'
+            existing_package.name = packagename
+            existing_package.giturl = giturl
+            existing_package.upload = None
+            existing_package.version += 1
+            existing_package.limitation = None
+            existing_package.active = True
+            existing_package.type = 'git'
             db.session.commit()
-    # ok, logmessages, results = docassemble.webapp.update.check_for_updates()
-    # if ok:
-    #     trigger_update(except_for=hostname)
-    #     restart_this()
-    #     flash(summarize_results(results, logmessages), 'info')
-    # else:
-    #     flash(summarize_results(results, logmessages), 'error')
+        else:
+            logmessage("install_git_package: package " + str(giturl) + " appeared to exist but could not be found")
     return
 
 def install_pip_package(packagename, limitation):
-    existing_package = Package.query.filter_by(name=packagename, active=True).order_by(Package.id.desc()).first()
+    existing_package = Package.query.filter_by(name=packagename).order_by(Package.id.desc()).first()
     if existing_package is None:
         package_auth = PackageAuth(user_id=current_user.id)
-        package_entry = Package(name=packagename, package_auth=package_auth, limitation=limitation, type='pip')
+        package_entry = Package(name=packagename, package_auth=package_auth, limitation=limitation, version=1, active=True, type='pip')
         db.session.add(package_auth)
         db.session.add(package_entry)
         db.session.commit()
     else:
         if existing_package.type == 'zip' and existing_package.upload is not None:
             SavedFile(existing_package.upload).delete()
+        existing_package.package_auth.user_id = current_user.id
+        existing_package.package_auth.authtype = 'owner'
         existing_package.version += 1
         existing_package.type = 'pip'
         existing_package.limitation = limitation
         existing_package.giturl = None
         existing_package.upload = None
         db.session.commit()
-    # ok, logmessages, results = docassemble.webapp.update.check_for_updates()
-    # if ok:
-    #     trigger_update(except_for=hostname)
-    #     restart_this()
-    #     flash(summarize_results(results, logmessages), 'info')
-    # else:
-    #     flash(summarize_results(results, logmessages), 'error')
     return
 
 def get_package_info():
@@ -2853,6 +2833,12 @@ def index():
                 steps += 1
             except Exception as errMess:
                 error_messages.append(("error", "Error: " + str(errMess)))
+    known_datatypes = dict()
+    if '_datatypes' in post_data:
+        known_datatypes = json.loads(myb64unquote(post_data['_datatypes']))
+    known_varnames = dict()
+    if '_varnames' in post_data:
+        known_varnames = json.loads(myb64unquote(post_data['_varnames']))
     if '_files' in post_data:
         file_fields = json.loads(myb64unquote(post_data['_files'])) #post_data['_files'].split(",")
         has_invalid_fields = False
@@ -2877,7 +2863,15 @@ def index():
                 error_messages.append(("error", "Error: " + str(errMess)))
             if something_changed and should_assemble_now and not should_assemble:
                 interview.assemble(user_dict, interview_status)
-            for orig_file_field in file_fields:
+            for orig_file_field_raw in file_fields:
+                orig_file_field = orig_file_field_raw
+                var_to_store = orig_file_field_raw
+                if orig_file_field not in request.files and len(known_varnames):
+                    for key, val in known_varnames.iteritems():
+                        if val == orig_file_field_raw:
+                            orig_file_field = key
+                            var_to_store = val
+                            break
                 if orig_file_field in request.files:
                     the_files = request.files.getlist(orig_file_field)
                     if the_files:
@@ -2892,9 +2886,9 @@ def index():
                             process_file(saved_file, temp_file.name, mimetype, extension)
                             files_to_process.append((filename, file_number, mimetype, extension))
                         try:
-                            file_field = from_safeid(orig_file_field)
+                            file_field = from_safeid(var_to_store)
                         except:
-                            error_messages.append(("error", "Error: Invalid file_field: " + orig_file_field))
+                            error_messages.append(("error", "Error: Invalid file_field: " + var_to_store))
                             break
                         if match_invalid.search(file_field):
                             error_messages.append(("error", "Error: Invalid character in file_field: " + file_field))
@@ -2916,12 +2910,6 @@ def index():
                         except Exception as errMess:
                             sys.stderr.write("Error: " + str(errMess) + "\n")
                             error_messages.append(("error", "Error: " + str(errMess)))
-    known_datatypes = dict()
-    if '_datatypes' in post_data:
-        known_datatypes = json.loads(myb64unquote(post_data['_datatypes']))
-    known_varnames = dict()
-    if '_varnames' in post_data:
-        known_varnames = json.loads(myb64unquote(post_data['_varnames']))
     known_variables = dict()
     for orig_key in copy.deepcopy(post_data):
         if orig_key in ['_checkboxes', '_empties', '_back_one', '_files', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_tracker', '_track_location', '_varnames', 'ajax', 'informed', 'csrf_token']:
@@ -6505,7 +6493,7 @@ def update_package_wait():
       });
     </script>
 """
-    return render_template('pages/update_package_wait.html', extra_js=Markup(script), tab_title=word('Updating'), page_title=word('Updating'), next_page=url_for('restart_page', next=url_for('update_package')))
+    return render_template('pages/update_package_wait.html', extra_js=Markup(script), tab_title=word('Updating'), page_title=word('Updating'), next_page=url_for('update_package'))
 
 @app.route('/update_package_ajax', methods=['GET', 'POST'])
 @login_required
@@ -6961,6 +6949,7 @@ class Fruit(DAObject):
             zf.close()
             saved_file.save()
             saved_file.finalize()
+            shutil.rmtree(directory)
             existing_package = Package.query.filter_by(name='docassemble.' + pkgname, active=True).order_by(Package.id.desc()).first()
             if existing_package is None:
                 package_auth = PackageAuth(user_id=current_user.id)
