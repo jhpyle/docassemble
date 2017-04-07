@@ -99,7 +99,7 @@ class MyPandoc(object):
         subprocess_arguments.extend(['-s -o %s' % temp_outfile.name])
         subprocess_arguments.extend(self.arguments)
         cmd = " ".join(subprocess_arguments)
-        logmessage(cmd)
+        #logmessage(cmd)
         fin = os.popen(cmd)
         msg = fin.read()
         fin.close()

@@ -343,7 +343,7 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
 	for the_file in $(python -m docassemble.webapp.list-cloud postgres/); do
 	    if ! [[ $the_file =~ /$ ]]; then
   	        target_file=`basename $the_file`
-	        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/$the_file" "$PGBACKUPDIR/${target_file}"
+	        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/postgres/$the_file" "$PGBACKUPDIR/${target_file}"
 	    fi
 	done
     else

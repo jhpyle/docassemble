@@ -1860,10 +1860,10 @@ def restart_on(host):
     if re.search(r':(web|all):', host.role):
         args = [SUPERVISORCTL, '-s', the_url, 'start reset']
         result = call(args)
-        if result == 0:
-            logmessage("restart_on: sent reset to " + str(host.hostname))
-        else:
-            logmessage("restart_on: call to supervisorctl with reset on " + str(host.hostname) + " was not successful")
+        # if result == 0:
+        #     logmessage("restart_on: sent reset to " + str(host.hostname))
+        # else:
+        #     logmessage("restart_on: call to supervisorctl with reset on " + str(host.hostname) + " was not successful")
     return
 
 def restart_all():
@@ -1875,13 +1875,13 @@ def restart_this():
     if USING_SUPERVISOR:
         for host in Supervisors.query.all():
             if host.url:
-                logmessage("restart_this: considering " + str(host.hostname) + " against " + str(hostname))
+                #logmessage("restart_this: considering " + str(host.hostname) + " against " + str(hostname))
                 if host.hostname == hostname:
                     restart_on(host)
-            else:
-                logmessage("restart_this: unable to get host url")
+            #else:
+            #    logmessage("restart_this: unable to get host url")
     else:
-        logmessage("restart_this: touched wsgi file")
+        #logmessage("restart_this: touched wsgi file")
         wsgi_file = WEBAPP_PATH
         if os.path.isfile(wsgi_file):
             with open(wsgi_file, 'a'):
@@ -1889,14 +1889,14 @@ def restart_this():
     return
 
 def restart_others():
-    logmessage("restart_others: starting")
+    #logmessage("restart_others: starting")
     if USING_SUPERVISOR:
         for host in Supervisors.query.all():
             if host.url:
                 if host.hostname != hostname:
                     restart_on(host)
-            else:
-                logmessage("restart_others: unable to get host url")
+            #else:
+            #    logmessage("restart_others: unable to get host url")
     return
 
 def current_info(yaml=None, req=None, action=None, location=None, interface='web'):
@@ -2244,11 +2244,11 @@ def checkout():
 @login_required
 @roles_required(['admin', 'developer'])
 def restart_ajax():
-    logmessage("restart_ajax: action is " + str(request.form.get('action', None)))
-    if current_user.has_role('admin', 'developer'):
-        logmessage("restart_ajax: user has permission")
-    else:
-        logmessage("restart_ajax: user has no permission")
+    #logmessage("restart_ajax: action is " + str(request.form.get('action', None)))
+    #if current_user.has_role('admin', 'developer'):
+    #    logmessage("restart_ajax: user has permission")
+    #else:
+    #    logmessage("restart_ajax: user has no permission")
     if request.form.get('action', None) == 'restart' and current_user.has_role('admin', 'developer'):
         restart_all()
         return jsonify(success=True)
@@ -6507,7 +6507,7 @@ def update_package_ajax():
             del session['update']
         if type(result.result) == ReturnValue:
             if result.result.ok:
-                logmessage("update_package_ajax: success")
+                #logmessage("update_package_ajax: success")
                 return jsonify(success=True, status='finished', ok=result.result.ok, summary=summarize_results(result.result.results, result.result.logmessages))
             elif hasattr(result.result, 'error_message'):
                 logmessage("update_package_ajax: failed return value is " + str(result.result.error_message))
