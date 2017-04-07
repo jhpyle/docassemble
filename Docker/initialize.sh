@@ -146,7 +146,7 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
 	for the_file in $(python -m docassemble.webapp.list-cloud apache/); do
 	    if ! [[ $the_file =~ /$ ]]; then
   	        target_file=`basename $the_file`
-	        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/$the_file" "/etc/apache2/sites-available/${target_file}"
+	        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/$the_file" "/etc/apache2/sites-available/${target_file}"
 	    fi
 	done
     fi
@@ -154,7 +154,7 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
 	for the_file in $(python -m docassemble.webapp.list-cloud log/); do
 	    if ! [[ $the_file =~ /$ ]]; then
 	        target_file=`basename $the_file`
-	        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/$the_file" "${LOGDIRECTORY:-/usr/share/docassemble/log}/${target_file}"
+	        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/log/$the_file" "${LOGDIRECTORY:-/usr/share/docassemble/log}/${target_file}"
 	    fi
 	done
 	chown -R www-data.www-data ${LOGDIRECTORY:-/usr/share/docassemble/log}
