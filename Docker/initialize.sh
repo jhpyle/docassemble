@@ -144,14 +144,18 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
     fi
     if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [[ $(python -m docassemble.webapp.list-cloud apache) ]]; then
 	for the_file in $(python -m docassemble.webapp.list-cloud apache/); do
-	    target_file=`basename $the_file`
-	    blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/$the_file" "/etc/apache2/sites-available/${target_file}"
+	    if ! [[ $the_file =~ /$ ]]; then
+  	        target_file=`basename $the_file`
+	        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/$the_file" "/etc/apache2/sites-available/${target_file}"
+	    fi
 	done
     fi
     if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [[ $(python -m docassemble.webapp.list-cloud log) ]]; then
 	for the_file in $(python -m docassemble.webapp.list-cloud log/); do
-	    target_file=`basename $the_file`
-	    blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/$the_file" "${LOGDIRECTORY:-/usr/share/docassemble/log}/${target_file}"
+	    if ! [[ $the_file =~ /$ ]]; then
+	        target_file=`basename $the_file`
+	        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/$the_file" "${LOGDIRECTORY:-/usr/share/docassemble/log}/${target_file}"
+	    fi
 	done
 	chown -R www-data.www-data ${LOGDIRECTORY:-/usr/share/docassemble/log}
     fi
@@ -337,8 +341,10 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
     elif [ "${AZUREENABLE:-false}" == "true" ] && [[ $(python -m docassemble.webapp.list-cloud postgres) ]]; then
 	PGBACKUPDIR=`mktemp -d`
 	for the_file in $(python -m docassemble.webapp.list-cloud postgres/); do
-	    target_file=`basename $the_file`
-	    blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/$the_file" "$PGBACKUPDIR/${target_file}"
+	    if ! [[ $the_file =~ /$ ]]; then
+  	        target_file=`basename $the_file`
+	        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/$the_file" "$PGBACKUPDIR/${target_file}"
+	    fi
 	done
     else
 	PGBACKUPDIR=/usr/share/docassemble/backup/postgres
