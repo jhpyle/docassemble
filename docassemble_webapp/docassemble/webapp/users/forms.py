@@ -14,8 +14,7 @@ class MySignInForm(LoginForm):
     def validate(self):
         result = super(MySignInForm, self).validate()
         if result is False:
-            from flask import request
-            sys.stderr.write("[client " + request.remote_addr + "] Invalid password\n")
+            sys.stderr.write("Invalid password\n")
         return result
 
 class MyRegisterForm(RegisterForm):
