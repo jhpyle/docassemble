@@ -1,5 +1,4 @@
 import sys
-import redis
 from flask_user.forms import RegisterForm, LoginForm
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, validators
@@ -13,6 +12,7 @@ def fix_nickname(form, field):
 
 class MySignInForm(LoginForm):
     def validate(self):
+        import redis
         import docassemble.base.util
         from flask import request
         r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
