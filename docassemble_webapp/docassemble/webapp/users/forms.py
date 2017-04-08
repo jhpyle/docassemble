@@ -1,4 +1,5 @@
-from flask_user.forms import RegisterForm
+import sys
+from flask_user.forms import RegisterForm, LoginForm
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, validators
 from wtforms.validators import DataRequired, Email
@@ -8,6 +9,14 @@ from docassemble.base.functions import word
 def fix_nickname(form, field):
     field.data = form.first_name.data + ' ' + form.last_name.data
     return
+
+class MySignInForm(LoginForm):
+    def validate(self):
+        result = super(MySignInForm, self).validate()
+        if result is False:
+            from flask import request
+            sys.stderr.write("[client " + request.remote_addr + "] Invalid password\n")
+        return result
 
 class MyRegisterForm(RegisterForm):
     first_name = StringField(word('First name'))
@@ -54,3 +63,4 @@ class MyInviteForm(FlaskForm):
     role_id = SelectField(word('Role'))
     next = HiddenField()
     submit = SubmitField(word('Invite'))
+

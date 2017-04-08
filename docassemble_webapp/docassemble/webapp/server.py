@@ -264,13 +264,13 @@ def my_default_url(error, endpoint, values):
 import docassemble.webapp.setup
 from docassemble.webapp.app_object import app, csrf, flaskbabel
 from docassemble.webapp.db_object import db
-from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm
+from docassemble.webapp.users.forms import MyRegisterForm, MyInviteForm, MySignInForm
 from docassemble.webapp.users.models import UserModel, UserAuthModel, MyUserInvitation
 from flask_user import UserManager, SQLAlchemyAdapter
 db_adapter = SQLAlchemyAdapter(db, UserModel, UserAuthClass=UserAuthModel, UserInvitationClass=MyUserInvitation)
 from docassemble.webapp.users.views import user_profile_page
 user_manager = UserManager()
-user_manager.init_app(app, db_adapter=db_adapter, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated) #login_view_function=custom_login
+user_manager.init_app(app, db_adapter=db_adapter, login_form=MySignInForm, register_form=MyRegisterForm, user_profile_view_function=user_profile_page, logout_view_function=logout, unauthorized_view_function=unauthorized, unauthenticated_view_function=unauthenticated) #login_view_function=custom_login
 from flask_login import LoginManager
 lm = LoginManager()
 lm.init_app(app)
