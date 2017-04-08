@@ -118,6 +118,11 @@ def get_current_package():
         return this_thread.current_package
     return None
 
+def get_current_question():
+    if this_thread.current_question is not None:
+        return this_thread.current_question
+    return None
+
 def user_logged_in():
     """Returns True if the user is logged in, False otherwise."""
     if this_thread.current_info['user']['is_authenticated']:
@@ -670,6 +675,10 @@ def delete_record(key, id):
     return server.delete_record(key, id)
 def url_of(file_reference, **kwargs):
     """Returns a URL to a file within a docassemble package."""
+    if 'package' not in kwargs:
+        kwargs['package'] = get_current_package()
+    if 'question' not in kwargs:
+        kwargs['question'] = get_current_question()
     return server.url_finder(file_reference, **kwargs)
 
 def server_capabilities():
@@ -799,6 +808,7 @@ class ThreadVariables(threading.local):
     redis = None
     uid = None
     current_package = None
+    current_question = None
     gathering_mode = dict()
     current_variable = list()
     def __init__(self, **kw):

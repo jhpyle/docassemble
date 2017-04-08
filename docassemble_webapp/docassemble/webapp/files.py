@@ -64,7 +64,7 @@ class SavedFile(object):
             prefix = str(self.section) + '/' + str(self.file_number) + '/'
             for key in cloud.list_keys(prefix):
                 key.delete()
-        if os.path.isdir(self.directory):
+        if hasattr(self, 'directory') and os.path.isdir(self.directory):
             shutil.rmtree(self.directory)
     def save(self, finalize=False):
         if not self.fixed:

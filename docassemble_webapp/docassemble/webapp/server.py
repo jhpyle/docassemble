@@ -511,6 +511,7 @@ def get_url_from_file_reference(file_reference, **kwargs):
             url = 'about:blank'
     else:
         question = kwargs.get('question', None)
+        package_arg = kwargs.get('package', None)
         root = daconfig.get('root', '/')
         fileroot = daconfig.get('fileserver', root)
         if 'ext' in kwargs:
@@ -523,12 +524,14 @@ def get_url_from_file_reference(file_reference, **kwargs):
         if len(parts) < 2:
             file_reference = re.sub(r'^data/static/', '', file_reference)
             the_package = None
-            if question is not None:
+            if question is not None and question.from_source is not None and hasattr(question.from_source, 'package'):
                 the_package = question.from_source.package
+            if the_package is None and package_arg is not None:
+                the_package = package_arg
             if the_package is None:
                 the_package = 'docassemble.base'
             parts = [the_package, file_reference]
-        parts[1] = re.sub(r'^data/static/', '', parts[1])
+        parts[1] = re.sub(r'^data/[^/]+/', '', parts[1])
         if reference_exists(parts[0] + ':data/static/' + parts[1]):
             url = fileroot + 'packagestatic/' + parts[0] + '/' + parts[1] + extn
         else:
@@ -6428,10 +6431,6 @@ def update_package_wait():
         return true;
       }
       function daUpdateCallback(data){
-        if (resultsAreIn){
-          console.log("daUpdateCallback: data came in late: " + data);
-          return;
-        }
         if (data.success){
           if (data.status == 'finished'){
             resultsAreIn = true;
@@ -6452,7 +6451,7 @@ def update_package_wait():
             }
             daRestart();
           }
-          else if (data.status == 'failed'){
+          else if (data.status == 'failed' && !resultsAreIn){
             resultsAreIn = true;
             $("#notification").html('""" + word("There was an error updating the packages.") + """');
             $("#notification").removeClass("alert-info");
@@ -6464,8 +6463,7 @@ def update_package_wait():
             }
           }
         }
-        else{
-          resultsAreIn = true;
+        else if (!resultsAreIn){
           $("#notification").html('""" + word("There was an error.") + """');
           $("#notification").removeClass("alert-info");
           $("#notification").addClass("alert-danger");

@@ -1640,6 +1640,7 @@ class Question:
 
     def ask(self, user_dict, the_x, the_i):
         #logmessage("ask: " + str(the_x) + " " + str(the_i))
+        docassemble.base.functions.this_thread.current_question = self
         if the_x != 'None':
             exec("x = " + the_x, user_dict)
         if the_i != 'None':
@@ -2326,6 +2327,7 @@ class Interview:
                         #logmessage("Running some code:\n\n" + question.sourcecode)
                         if debug:
                             interview_status.seeking.append({'question': question, 'reason': 'initial'})
+                        docassemble.base.functions.this_thread.current_question = question
                         exec(question.compute, user_dict)
                     if question.name and question.name in user_dict['_internal']['answered']:
                         #logmessage("Skipping " + question.name + " because answered")
@@ -2352,6 +2354,7 @@ class Interview:
                             interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
                         #logmessage("Running some code:\n\n" + question.sourcecode)
                         #logmessage("Question name is " + question.name)
+                        docassemble.base.functions.this_thread.current_question = question
                         exec(question.compute, user_dict)
                         #logmessage("Code completed")
                         if question.name:

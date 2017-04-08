@@ -1,0 +1,4 @@
+sets: some_icon
+question: A file
+subquestion: |
+  [Click here](${ url_of('users6.svg') }) for an icon.

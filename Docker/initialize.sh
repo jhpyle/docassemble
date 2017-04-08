@@ -94,16 +94,16 @@ if [ "${S3ENABLE:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(web):.* ]] && 
 fi
 
 if [ "${AZUREENABLE:-false}" == "true" ]; then
-    echo "Initializing azure"
+    echo "Initializing azure" >&2
     blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
 fi
 
 if [ "${AZUREENABLE:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(web):.* ]] && [[ $(python -m docassemble.webapp.list-cloud hostname-rabbitmq) ]] && [[ $(python -m docassemble.webapp.list-cloud ip-rabbitmq) ]]; then
     TEMPKEYFILE=`mktemp`
-    echo "Copying hostname-rabbitmq"
+    echo "Copying hostname-rabbitmq" >&2
     blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/hostname-rabbitmq" $TEMPKEYFILE
     HOSTNAMERABBITMQ=$(<$TEMPKEYFILE)
-    echo "Copying ip-rabbitmq"
+    echo "Copying ip-rabbitmq" >&2
     blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/ip-rabbitmq" $TEMPKEYFILE
     IPRABBITMQ=$(<$TEMPKEYFILE)
     rm -f $TEMPKEYFILE
@@ -140,26 +140,30 @@ if [ "${S3ENABLE:-false}" == "true" ]; then
 elif [ "${AZUREENABLE:-false}" == "true" ]; then
     if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [[ $(python -m docassemble.webapp.list-cloud letsencrypt.tar.gz) ]]; then
 	rm -f /tmp/letsencrypt.tar.gz
-	echo "Copying let's encrypt"
+	echo "Copying let's encrypt" >&2
 	blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz" "/tmp/letsencrypt.tar.gz"
 	cd /
 	tar -xf /tmp/letsencrypt.tar.gz
 	rm -f /tmp/letsencrypt.tar.gz
     fi
     if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [[ $(python -m docassemble.webapp.list-cloud apache) ]]; then
+	echo "There are apache files on Azure" >&2
 	for the_file in $(python -m docassemble.webapp.list-cloud apache/); do
+	    echo "Found $the_file on Azure" >&2
 	    if ! [[ $the_file =~ /$ ]]; then
   	        target_file=`basename $the_file`
-  		echo "Copying apache"
+  		echo "Copying apache" >&2
 	        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/${the_file}" "/etc/apache2/sites-available/${target_file}"
 	    fi
 	done
     fi
     if [[ $CONTAINERROLE =~ .*:(all|log):.* ]] && [[ $(python -m docassemble.webapp.list-cloud log) ]]; then
+	echo "There are log files on Azure" >&2
 	for the_file in $(python -m docassemble.webapp.list-cloud log/); do
+	    echo "Found $the_file on Azure" >&2
 	    if ! [[ $the_file =~ /$ ]]; then
 	        target_file=`basename $the_file`
-  		echo "Copying log"
+  		echo "Copying log" >&2
 	        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/${the_file}" "${LOGDIRECTORY:-/usr/share/docassemble/log}/${target_file}"
 	    fi
 	done
@@ -167,12 +171,12 @@ elif [ "${AZUREENABLE:-false}" == "true" ]; then
     fi
     if [[ $(python -m docassemble.webapp.list-cloud config.yml) ]]; then
 	rm -f $DA_CONFIG_FILE
-  	echo "Copying config"
+  	echo "Copying config" >&2
 	blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/config.yml" $DA_CONFIG_FILE
 	chown www-data.www-data $DA_CONFIG_FILE
     fi
     if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [[ $(python -m docassemble.webapp.list-cloud redis.rdb) ]] && [ "$REDISRUNNING" = false ]; then
-	echo "Copying redis"
+	echo "Copying redis" >&2
 	blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/redis.rdb" "/var/lib/redis/dump.rdb"
 	chown redis.redis "/var/lib/redis/dump.rdb"
     fi
@@ -249,12 +253,12 @@ if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(s3cmd ls s3://${S3BUCKET}/config
 fi
 
 if [ "${AZUREENABLE:-false}" == "true" ]; then
-    echo "Initializing azure"
+    echo "Initializing azure" >&2
     blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
 fi
 
 if [ "${AZUREENABLE:-false}" == "true" ] && [[ ! $(python -m docassemble.webapp.list-cloud config.yml) ]]; then
-    echo "Saving config"
+    echo "Saving config" >&2
     blob-cmd -f cp $DA_CONFIG_FILE "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/config.yml"
 fi
 
@@ -349,11 +353,13 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
 	PGBACKUPDIR=`mktemp -d`
 	s3cmd -q sync s3://${S3BUCKET}/postgres/ "$PGBACKUPDIR/"
     elif [ "${AZUREENABLE:-false}" == "true" ] && [[ $(python -m docassemble.webapp.list-cloud postgres) ]]; then
+	echo "There are postgres files on Azure" >&2
 	PGBACKUPDIR=`mktemp -d`
 	for the_file in $(python -m docassemble.webapp.list-cloud postgres/); do
+	    echo "Found $the_file on Azure" >&2
 	    if ! [[ $the_file =~ /$ ]]; then
   	        target_file=`basename $the_file`
-		echo "Copying postgres"
+		echo "Copying postgres" >&2
 	        blob-cmd -f cp "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/${the_file}" "$PGBACKUPDIR/${target_file}"
 	    fi
 	done
@@ -361,9 +367,11 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
 	PGBACKUPDIR=/usr/share/docassemble/backup/postgres
     fi
     if [ -d $PGBACKUPDIR ]; then
+	echo "Postgres database backup directory is $PGBACKUPDIR" >&2
 	cd "$PGBACKUPDIR"
 	chown -R postgres.postgres "$PGBACKUPDIR"
 	for db in $( ls ); do
+	    echo "Restoring postgres database $db" >&2
 	    pg_restore -F c -C -c $db | su -c psql postgres
 	done
     fi
@@ -491,12 +499,12 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
 	    cd /
 	    rm -f /tmp/letsencrypt.tar.gz
 	    tar -zcf /tmp/letsencrypt.tar.gz etc/letsencrypt
-	    echo "Saving let's encrypt"
+	    echo "Saving let's encrypt" >&2
 	    blob-cmd -f cp /tmp/letsencrypt.tar.gz "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/letsencrypt.tar.gz"
 	fi
 	for the_file in $(find /etc/apache2/sites-available/ -type f); do
 	    target_file=`basename $the_file`
-	    echo "Saving apache"
+	    echo "Saving apache" >&2
 	    blob-cmd -f cp $the_file "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/apache/$target_file" 
 	done
     else
@@ -580,7 +588,7 @@ function deregister {
 	if [[ $CONTAINERROLE =~ .*:(all|log):.* ]]; then
 	    for the_file in $(find /usr/share/docassemble/log -type f); do
 		target_file=`basename $the_file`
-		echo "Saving log"
+		echo "Saving log" >&2
 		blob-cmd -f cp $the_file "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/log/$target_file" 
 	    done
 	fi
