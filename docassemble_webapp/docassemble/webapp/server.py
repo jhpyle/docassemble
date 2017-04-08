@@ -183,7 +183,7 @@ else:
 
 #connect_string = docassemble.webapp.database.connection_string()
 #alchemy_connect_string = docassemble.webapp.database.alchemy_connection_string()
-        
+
 def logout():
     secret = request.cookies.get('secret', None)
     if secret is None:
@@ -2166,6 +2166,11 @@ def get_locale():
 @lm.user_loader
 def load_user(id):
     return UserModel.query.get(int(id))
+
+@app.route('/headers', methods=['POST', 'GET'])
+@csrf.exempt
+def show_headers():
+    return jsonify(**request.headers)
 
 @app.route('/authorize/<provider>', methods=['POST', 'GET'])
 @csrf.exempt
