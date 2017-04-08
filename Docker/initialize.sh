@@ -277,6 +277,13 @@ fi
 if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
     rm -f /etc/apache2/sites-available/000-default.conf
     rm -f /etc/apache2/sites-available/default-ssl.conf
+    if [ "${BEHINDHTTPSLOADBALANCER:-false}" == "true" ]; then
+	a2enmod remoteip
+	a2enconf docassemble-behindlb
+    else
+	a2dismod remoteip
+	a2disconf docassemble-behindlb
+    fi
     a2dissite -q 000-default &> /dev/null
     a2dissite -q default-ssl &> /dev/null
     if [ "${DAHOSTNAME:-none}" != "none" ]; then
