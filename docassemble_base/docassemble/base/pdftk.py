@@ -33,11 +33,13 @@ def read_fields(pdffile):
     for page in PDFPage.create_pages(doc):
         id_to_page[page.pageid] = pageno
         pageno += 1
+    if 'AcroForm' not in doc.catalog:
+        return None
     fields = resolve1(doc.catalog['AcroForm'])['Fields']
     for i in fields:
         field = resolve1(i)
         name, value, rect, page, field_type = field.get('T'), field.get('V'), field.get('Rect'), field.get('P'), field.get('FT')
-        logmessage("name is " + str(name) + " and FT is |" + str(field_type) + "|")
+        #logmessage("name is " + str(name) + " and FT is |" + str(field_type) + "|")
         if page is not None:
             pageno = id_to_page[page.objid]
         else:

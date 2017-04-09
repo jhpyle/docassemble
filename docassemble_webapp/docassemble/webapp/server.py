@@ -2170,7 +2170,7 @@ def load_user(id):
 @app.route('/headers', methods=['POST', 'GET'])
 @csrf.exempt
 def show_headers():
-    return jsonify(**request.headers)
+    return jsonify(headers=dict(request.headers), ipaddress=request.remote_addr)
 
 @app.route('/authorize/<provider>', methods=['POST', 'GET'])
 @csrf.exempt

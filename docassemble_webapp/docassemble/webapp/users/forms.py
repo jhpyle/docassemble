@@ -24,6 +24,8 @@ class MySignInForm(LoginForm):
         if result is False:
             r.incr(key)
             r.expire(key, 86400)
+        elif failed_attempts is not None:
+            r.delete(key)
         return result
 
 class MyRegisterForm(RegisterForm):
