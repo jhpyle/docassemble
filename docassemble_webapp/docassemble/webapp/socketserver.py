@@ -3,6 +3,10 @@ import docassemble.base.config
 docassemble.base.config.load(arguments=sys.argv)
 from docassemble.base.config import daconfig
 
+import eventlet
+eventlet.sleep(seconds=1)
+eventlet.monkey_patch()
+
 from flask_socketio import join_room, disconnect
 from docassemble.webapp.app_socket import app, db, socketio
 
@@ -11,7 +15,6 @@ from simplekv.memory.redisstore import RedisStore
 import docassemble.base.util
 import redis
 import json
-import eventlet
 import datetime
 import pytz
 import cPickle as pickle
@@ -23,8 +26,6 @@ from docassemble.webapp.users.models import UserModel, ChatLog
 from docassemble.base.functions import get_default_timezone, word
 from flask import render_template, session, request
 from flask_kvsession import KVSessionExtension
-eventlet.sleep(seconds=1)
-eventlet.monkey_patch()
 
 redis_host = daconfig.get('redis', None)
 if redis_host is None:
