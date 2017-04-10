@@ -14,12 +14,12 @@ class MySignInForm(LoginForm):
     def validate(self):
         import redis
         import docassemble.base.util
-        from flask import request
+        from flask import request, abort
         r = redis.StrictRedis(host=docassemble.base.util.redis_server, db=0)
         key = 'da:failedlogin:ip:' + str(request.remote_addr)
         failed_attempts = r.get(key)
         if failed_attempts is not None and int(failed_attempts) > 10:
-            return False
+            abort(404)
         result = super(MySignInForm, self).validate()
         if result is False:
             r.incr(key)
