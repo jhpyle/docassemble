@@ -23,6 +23,7 @@ from docassemble.webapp.users.models import UserModel, ChatLog
 from docassemble.base.functions import get_default_timezone, word
 from flask import render_template, session, request
 from flask_kvsession import KVSessionExtension
+eventlet.sleep(seconds=1)
 eventlet.monkey_patch()
 
 redis_host = daconfig.get('redis', None)
