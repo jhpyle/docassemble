@@ -1292,19 +1292,19 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
                 directory = tempfile.mkdtemp()
                 temp_directory_list.append(directory)
                 prefix = os.path.join(directory, 'page')
-                args = [pdf_to_ppm, '-r', ocr_resolution]
+                args = [pdf_to_ppm, '-r', str(ocr_resolution)]
                 if f is not None:
-                    args.extend(['-f', f])
+                    args.extend(['-f', str(f)])
                 if l is not None:
-                    args.extend(['-l', l])
+                    args.extend(['-l', str(l)])
                 if x is not None:
-                    args.extend(['-x', x])
+                    args.extend(['-x', str(x)])
                 if y is not None:
-                    args.extend(['-y', y])
+                    args.extend(['-y', str(y)])
                 if W is not None:
-                    args.extend(['-W', W])
+                    args.extend(['-W', str(W)])
                 if H is not None:
-                    args.extend(['-H', H])
+                    args.extend(['-H', str(H)])
                 args.extend(['-png', path, prefix])
                 result = call(args)
                 if result > 0:

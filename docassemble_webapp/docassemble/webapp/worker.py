@@ -2,7 +2,7 @@ import docassemble.base.config
 if not docassemble.base.config.loaded:
     docassemble.base.config.load(in_celery=True)
 from docassemble.base.config import daconfig, hostname
-from celery import Celery
+from celery import Celery, chord
 from celery.result import result_from_tuple, AsyncResult
 import sys
 import socket
@@ -36,6 +36,7 @@ def initialize_db():
     import docassemble.base.functions
     import docassemble.base.interview_cache
     import docassemble.base.parse
+    import docassemble.base.ocr
     worker_controller.flaskapp = flaskapp
     worker_controller.set_request_active = set_request_active
     worker_controller.fetch_user_dict = fetch_user_dict
@@ -52,10 +53,28 @@ def initialize_db():
     worker_controller.retrieve_email = retrieve_email
     worker_controller.get_info_from_file_number = get_info_from_file_number
     worker_controller.trigger_update = trigger_update
+    worker_controller.ocr = docassemble.base.ocr
 
 def convert(obj):
     return result_from_tuple(obj.as_tuple(), app=workerapp)
 
+def async_ocr(*pargs, **kwargs):
+    if worker_controller is None:
+        initialize_db()
+    collector = PPP
+    todo = list()
+    for item in worker_controller.ocr.ocr_page_tasks(*pargs, **kwargs):
+        todo.append(ocr_page.s(**item))
+    the_chord = chord(todo)(collector)
+    return the_chord
+
+@workerapp.task
+def ocr_page(**kwargs):
+    if worker_controller is None:
+        initialize_db()
+    return worker_controller.ocr.ocr_page(**kwargs)
+
+        
 @workerapp.task
 def update_packages():
     if worker_controller is None:

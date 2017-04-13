@@ -2,6 +2,7 @@ import sys
 import docassemble.base.config
 docassemble.base.config.load(arguments=sys.argv)
 from docassemble.base.config import daconfig
+import docassemble.base.functions
 
 import eventlet
 eventlet.sleep(seconds=1)

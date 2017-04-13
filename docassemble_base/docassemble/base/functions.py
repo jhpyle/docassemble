@@ -129,14 +129,23 @@ def user_logged_in():
         return True
     return False
 
-def device():
-    """Returns an an object describing the device the user is using."""
-    if 'headers' not in this_thread.current_info:
-        return None
-    ua_string = this_thread.current_info['headers'].get('User-Agent', None)
-    if ua_string is None:
-        return None
-    return ua_parse(ua_string)
+def device(ip=False):
+    """Returns an object describing the device the user is using, or the
+    user's IP address if the optional keyword argument 'ip' is
+    True.
+
+    """
+    if ip:
+        return this_thread.current_info['clientip']
+    if 'headers' in this_thread.current_info:
+        ua_string = this_thread.current_info['headers'].get('User-Agent', None)
+        if ua_string is not None:
+            response = ua_parse(ua_string)
+        else:
+            response = None
+    else:
+        response = None
+    return response
 
 def language_from_browser(*pargs):
     """Attempts to determine the user's language based on information supplied by the user's web browser."""
