@@ -130,11 +130,11 @@ def add_info_about_file(filename, result):
     return
 
 def get_info_from_file_number(file_number, privileged=False, filename=None):
-    #logmessage("get_info_from_file_number")
     if has_request_context():
         uid = session['uid']
     else:
         uid = docassemble.base.functions.get_uid()
+    #logmessage("get_info_from_file_number: privileged is " + str(privileged) + " and uid is " + str(uid))
     result = dict()
     if privileged:
         upload = Uploads.query.filter_by(indexno=file_number).first()

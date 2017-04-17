@@ -5,7 +5,7 @@ from docassemble.base.config import daconfig
 import docassemble.base.functions
 
 import eventlet
-eventlet.sleep(seconds=1)
+eventlet.sleep()
 eventlet.monkey_patch()
 
 from flask_socketio import join_room, disconnect

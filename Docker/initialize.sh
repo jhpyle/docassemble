@@ -14,6 +14,8 @@ else
     PGRUNNING=false
 fi
 
+# echo "1"
+
 if [ -f /var/run/apache2/apache2.pid ]; then
     APACHE_PID=$(</var/run/apache2/apache2.pid)
     if kill -0 $APACHE_PID &> /dev/null; then
@@ -26,17 +28,23 @@ else
     APACHERUNNING=false
 fi
 
+# echo "2"
+
 if redis-cli ping &> /dev/null; then
     REDISRUNNING=true
 else
     REDISRUNNING=false
 fi
 
+# echo "3"
+
 if rabbitmqctl status &> /dev/null; then
     RABBITMQRUNNING=true
 else
     RABBITMQRUNNING=false
 fi
+
+# echo "4"
 
 if [ -f /var/run/crond.pid ]; then
     CRON_PID=$(</var/run/crond.pid)
@@ -50,11 +58,15 @@ else
     CRONRUNNING=false
 fi
 
+# echo "5"
+
 if [ "${USEHTTPS:-false}" == "false" ] && [ "${BEHINDHTTPSLOADBALANCER:-false}" == "false" ]; then
     URLROOT="http:\\/\\/"
 else
     URLROOT="https:\\/\\/"
 fi
+
+# echo "6"
 
 if [ "${DAHOSTNAME:-none}" != "none" ]; then
     URLROOT="${URLROOT}${DAHOSTNAME}"
@@ -66,19 +78,27 @@ else
     fi
     URLROOT="${URLROOT}${PUBLIC_HOSTNAME}"
 fi
-    
+
+# echo "7"
+
 if [ "${S3ENABLE:-null}" == "null" ] && [ "${S3BUCKET:-null}" != "null" ]; then
     export S3ENABLE=true
 fi
+
+# echo "8"
 
 if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "${S3ACCESSKEY:-null}" != "null" ] && [ "${S3SECRETACCESSKEY:-null}" != "null" ]; then
     export AWS_ACCESS_KEY_ID=$S3ACCESSKEY
     export AWS_SECRET_ACCESS_KEY=$S3SECRETACCESSKEY
 fi
 
+# echo "9"
+
 if [ "${AZUREENABLE:-null}" == "null" ] && [ "${AZUREACCOUNTNAME:-null}" != "null" ] && [ "${AZUREACCOUNTKEY:-null}" != "null" ] && [ "${AZURECONTAINER:-null}" != "null" ]; then
     export AZUREENABLE=true
 fi
+
+# echo "10"
 
 if [ "${S3ENABLE:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(web):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/hostname-rabbitmq) ]] && [[ $(s3cmd ls s3://${S3BUCKET}/ip-rabbitmq) ]]; then
     TEMPKEYFILE=`mktemp`
@@ -93,10 +113,14 @@ if [ "${S3ENABLE:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(web):.* ]] && 
     echo "$IPRABBITMQ $HOSTNAMERABBITMQ" >> /etc/hosts
 fi
 
+# echo "11"
+
 if [ "${AZUREENABLE:-false}" == "true" ]; then
     echo "Initializing azure" >&2
     blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
 fi
+
+# echo "12"
 
 if [ "${AZUREENABLE:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(web):.* ]] && [[ $(python -m docassemble.webapp.list-cloud hostname-rabbitmq) ]] && [[ $(python -m docassemble.webapp.list-cloud ip-rabbitmq) ]]; then
     TEMPKEYFILE=`mktemp`
@@ -112,6 +136,8 @@ if [ "${AZUREENABLE:-false}" == "true" ] && [[ $CONTAINERROLE =~ .*:(web):.* ]] 
     fi
     echo "$IPRABBITMQ $HOSTNAMERABBITMQ" >> /etc/hosts
 fi
+
+# echo "13"
 
 if [ "${S3ENABLE:-false}" == "true" ]; then
     if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [[ $(s3cmd ls s3://${S3BUCKET}/letsencrypt.tar.gz) ]]; then
@@ -211,7 +237,11 @@ else
     fi
 fi
 
+# echo "14"
+
 DEFAULT_SECRET=$(python -m docassemble.base.generate_key)
+
+# echo "15"
 
 if [ ! -f $DA_CONFIG_FILE ]; then
     sed -e 's@{{DBPREFIX}}@'"${DBPREFIX:-postgresql+psycopg2://}"'@' \
@@ -246,21 +276,31 @@ if [ ! -f $DA_CONFIG_FILE ]; then
 fi
 chown www-data.www-data $DA_CONFIG_FILE
 
+# echo "16"
+
 source /dev/stdin < <(su -c "source $DA_ACTIVATE && python -m docassemble.base.read_config $DA_CONFIG_FILE" www-data)
+
+# echo "17"
 
 if [ "${S3ENABLE:-false}" == "true" ] && [[ ! $(s3cmd ls s3://${S3BUCKET}/config.yml) ]]; then
     s3cmd -q put $DA_CONFIG_FILE s3://${S3BUCKET}/config.yml
 fi
+
+# echo "18"
 
 if [ "${AZUREENABLE:-false}" == "true" ]; then
     echo "Initializing azure" >&2
     blob-cmd -f -v add-account "${AZUREACCOUNTNAME}" "${AZUREACCOUNTKEY}"
 fi
 
+# echo "19"
+
 if [ "${AZUREENABLE:-false}" == "true" ] && [[ ! $(python -m docassemble.webapp.list-cloud config.yml) ]]; then
     echo "Saving config" >&2
     blob-cmd -f cp $DA_CONFIG_FILE "blob://${AZUREACCOUNTNAME}/${AZURECONTAINER}/config.yml"
 fi
+
+# echo "20"
 
 if [ "${EC2:-false}" == "true" ]; then
     export LOCAL_HOSTNAME=`curl -s http://169.254.169.254/latest/meta-data/local-hostname`
@@ -270,9 +310,13 @@ else
     export PUBLIC_HOSTNAME=$LOCAL_HOSTNAME
 fi
 
+# echo "21"
+
 if [ "${DAHOSTNAME:-none}" == "none" ]; then
     export DAHOSTNAME=$PUBLIC_HOSTNAME
 fi
+
+# echo "22"
 
 if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
     rm -f /etc/apache2/sites-available/000-default.conf
@@ -311,14 +355,20 @@ if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]]; then
     a2ensite docassemble-http
 fi
 
+# echo "23"
+
 if [ "${LOCALE:-undefined}" == "undefined" ]; then
     LOCALE="en_US.UTF-8 UTF-8"
 fi
+
+# echo "24"
 
 set -- $LOCALE
 DA_LANGUAGE=$1
 grep -q "^$LOCALE" /etc/locale.gen || { echo $LOCALE >> /etc/locale.gen && locale-gen ; }
 update-locale LANG=$DA_LANGUAGE
+
+# echo "25"
 
 if [ -n "$OTHERLOCALES" ]; then
     NEWLOCALE=false
@@ -330,6 +380,8 @@ if [ -n "$OTHERLOCALES" ]; then
     fi
 fi
 
+# echo "26"
+
 if [ -n "$PACKAGES" ]; then
     export DEBIAN_FRONTEND=noninteractive
     apt-get clean
@@ -339,14 +391,20 @@ if [ -n "$PACKAGES" ]; then
     done
 fi
 
+# echo "27"
+
 if [ "${TIMEZONE:-undefined}" != "undefined" ]; then
     echo $TIMEZONE > /etc/timezone
     dpkg-reconfigure -f noninteractive tzdata
 fi
 
+# echo "28"
+
 if [ "${S3ENABLE:-false}" == "true" ] || [ "${AZUREENABLE:-false}" == "true" ]; then
     su -c "source $DA_ACTIVATE && python -m docassemble.webapp.cloud_register $DA_CONFIG_FILE" www-data
 fi
+
+# echo "29"
 
 if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
     supervisorctl --serverurl http://localhost:9001 start postgres || exit 1
@@ -388,13 +446,19 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" = false ]; then
     fi
 fi
 
+# echo "30"
+
 if [[ $CONTAINERROLE =~ .*:(all|cron):.* ]]; then
     su -c "source $DA_ACTIVATE && python -m docassemble.webapp.fix_postgresql_tables $DA_CONFIG_FILE && python -m docassemble.webapp.create_tables $DA_CONFIG_FILE" www-data
 fi
 
+# echo "31"
+
 if [ -f /etc/syslog-ng/syslog-ng.conf ] && [ ! -f /usr/share/docassemble/webapp/syslog-ng-orig.conf ]; then
     cp /etc/syslog-ng/syslog-ng.conf /usr/share/docassemble/webapp/syslog-ng-orig.conf
 fi
+
+# echo "32"
 
 OTHERLOGSERVER=false
 
@@ -404,13 +468,19 @@ if [[ $CONTAINERROLE =~ .*:(web|celery):.* ]]; then
     fi
 fi
 
+# echo "33"
+
 if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "${LOGSERVER:-undefined}" == "null" ]; then
     OTHERLOGSERVER=false
 fi
 
+# echo "34"
+
 if [ "$OTHERLOGSERVER" = false ] && [ -f ${LOGDIRECTORY:-/usr/share/docassemble/log}/docassemble.log ]; then
     chown www-data.www-data ${LOGDIRECTORY:-/usr/share/docassemble/log}/docassemble.log
 fi
+
+# echo "35"
 
 if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "$OTHERLOGSERVER" = true ]; then
     if [ -d /etc/syslog-ng ]; then
@@ -425,15 +495,23 @@ if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "$OTHERLOGSERVER" = true ]; then
     fi
 fi
 
+# echo "36"
+
 if [[ $CONTAINERROLE =~ .*:(all|redis):.* ]] && [ "$REDISRUNNING" = false ]; then
     supervisorctl --serverurl http://localhost:9001 start redis
 fi
+
+# echo "37"
 
 if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]] && [ "$RABBITMQRUNNING" = false ]; then
     supervisorctl --serverurl http://localhost:9001 start rabbitmq
 fi
 
+# echo "38"
+
 su -c "source $DA_ACTIVATE && python -m docassemble.webapp.update $DA_CONFIG_FILE" www-data || exit 1
+
+# echo "39"
 
 if su -c "source $DA_ACTIVATE && celery -A docassemble.webapp.worker status" www-data 2>&1 | grep -q `hostname`; then
     CELERYRUNNING=true;
@@ -441,13 +519,19 @@ else
     CELERYRUNNING=false;
 fi
 
+# echo "40"
+
 if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" = false ]; then
     supervisorctl --serverurl http://localhost:9001 start celery
 fi
 
+# echo "41"
+
 if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ "$APACHERUNNING" = false ]; then
     rm -f /etc/apache2/ports.conf
 fi
+
+# echo "42"
 
 if [ ! -f /usr/share/docassemble/certs/apache.key ] && [ -f /usr/share/docassemble/certs/apache.key.orig ]; then
     mv /usr/share/docassemble/certs/apache.key.orig /usr/share/docassemble/certs/apache.key
@@ -465,6 +549,8 @@ if [ ! -f /usr/share/docassemble/certs/exim.crt ] && [ -f /usr/share/docassemble
     mv /usr/share/docassemble/certs/exim.crt.orig /usr/share/docassemble/certs/exim.crt
 fi
 python -m docassemble.webapp.install_certs $DA_CONFIG_FILE || exit 1
+
+# echo "43"
 
 if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
     echo "Listen 80" >> /etc/apache2/ports.conf
@@ -525,19 +611,27 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "$APACHERUNNING" = false ]; then
     fi
 fi
 
+# echo "44"
+
 if [[ $CONTAINERROLE =~ .*:(log):.* ]] && [ "$APACHERUNNING" = false ]; then
     echo "Listen 8080" >> /etc/apache2/ports.conf
     a2enmod cgid
     a2ensite docassemble-log
 fi
 
+# echo "45"
+
 if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
     supervisorctl --serverurl http://localhost:9001 start websockets
 fi
 
+# echo "46"
+
 if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ "$APACHERUNNING" = false ]; then
     supervisorctl --serverurl http://localhost:9001 start apache2
 fi
+
+# echo "47"
 
 if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
     if [ "${USEHTTPS:-false}" == "false" ]; then
@@ -551,11 +645,17 @@ if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
     fi
 fi
 
+# echo "48"
+
 su -c "source $DA_ACTIVATE && python -m docassemble.webapp.register $DA_CONFIG_FILE" www-data
+
+# echo "49"
 
 if [ "$CRONRUNNING" = false ]; then
    supervisorctl --serverurl http://localhost:9001 start cron
 fi
+
+# echo "50"
 
 if [[ $CONTAINERROLE =~ .*:(all|mail):.* ]]; then
     echo 'hide pgsql_servers = '${DBHOST}'::'${DBPORT}'/'${DBNAME}'/'${DBUSER}'/'${DBPASSWORD} > /etc/exim4/pginfo
@@ -582,6 +682,8 @@ if [[ $CONTAINERROLE =~ .*:(all|mail):.* ]]; then
     chmod og-rwx /etc/exim4/pginfo
     supervisorctl --serverurl http://localhost:9001 start exim4
 fi
+
+# echo "51"
 
 function deregister {
     su -c "source $DA_ACTIVATE && python -m docassemble.webapp.deregister $DA_CONFIG_FILE" www-data

@@ -632,11 +632,13 @@ def image_as_rtf(match, question=None):
             width = DEFAULT_PAGE_WIDTH
             output += '\\page '
         #logmessage("maxpage is " + str(int(file_info['pages'])) + "\n")
-        for page in range(1, 1 + int(file_info['pages'])):
+        max_pages = 1 + int(file_info['pages'])
+        formatter = '%0' + str(len(str(max_pages))) + 'd'
+        for page in range(1, max_pages):
             #logmessage("Doing page " + str(page) + "\n")
             page_file = dict()
             page_file['extension'] = 'png'
-            page_file['path'] = file_info['path'] + 'page-' + str(page)
+            page_file['path'] = file_info['path'] + 'page-' + formatter % page
             page_file['fullpath'] = page_file['path'] + '.png'
             im = PIL.Image.open(page_file['fullpath'])
             page_file['width'], page_file['height'] = im.size

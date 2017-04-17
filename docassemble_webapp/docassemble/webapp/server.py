@@ -1034,8 +1034,8 @@ def process_file(saved_file, orig_file, mimetype, extension, initial=True):
         result = call(call_array)
         call_array = [daconfig.get('pacpl', 'pacpl'), '-t', 'ogg', saved_file.path + '.' + extension]
         result = call(call_array)
-    if extension == "pdf":
-        make_image_files(saved_file.path)
+    #if extension == "pdf":
+    #    make_image_files(saved_file.path)
     saved_file.finalize()
     
 def save_user_dict_key(user_code, filename):
@@ -1826,17 +1826,40 @@ def get_vars_in_use(interview, interview_status, debug_mode=False):
     content += "\n                  <tr><td><br><em>" + word("Type Ctrl-space to autocomplete.") + "</em></td><tr>"
     return content, sorted(vocab_set)
 
-def make_image_files(path):
-    if PDFTOPPM_COMMAND is not None:
-        args = [PDFTOPPM_COMMAND, '-r', str(PNG_RESOLUTION), '-png', path, path + 'page']
-        result = call(args)
-        if result > 0:
-            raise DAError("Call to pdftoppm failed")
-        args = [PDFTOPPM_COMMAND, '-r', str(PNG_SCREEN_RESOLUTION), '-png', path, path + 'screen']
-        result = call(args)
-        if result > 0:
-            raise DAError("Call to pdftoppm failed")
-    return
+def make_png_for_pdf(doc, prefix):
+    if prefix == 'page':
+        resolution = PNG_RESOLUTION
+    else:
+        resolution = PNG_SCREEN_RESOLUTION
+    task = docassemble.webapp.worker.make_png_for_pdf.delay(doc, prefix, resolution, session['uid'], PDFTOPPM_COMMAND)
+    return task.id
+
+def wait_for_task(task_id):
+    logmessage("wait_for_task: starting")
+    try:
+        result = docassemble.webapp.worker.workerapp.AsyncResult(id=task_id)
+        if result.ready():
+            logmessage("wait_for_task: was ready")
+            return True
+        logmessage("wait_for_task: waiting for task to complete")
+        result.get(timeout=60)
+        logmessage("wait_for_task: returning true")
+        return True
+    except Exception as the_error:
+        logmessage("wait_for_task: got error: " + str(the_error))
+        return False
+
+# def make_image_files(path):
+#     if PDFTOPPM_COMMAND is not None:
+#         args = [PDFTOPPM_COMMAND, '-r', str(PNG_RESOLUTION), '-png', path, path + 'page']
+#         result = call(args)
+#         if result > 0:
+#             raise DAError("Call to pdftoppm failed")
+#         args = [PDFTOPPM_COMMAND, '-r', str(PNG_SCREEN_RESOLUTION), '-png', path, path + 'screen']
+#         result = call(args)
+#         if result > 0:
+#             raise DAError("Call to pdftoppm failed")
+#     return
 
 def trigger_update(except_for=None):
     logmessage("trigger_update: except_for is " + str(except_for))
@@ -2522,6 +2545,10 @@ def checkin():
             return jsonify(success=True, chat_status=chatstatus, phone=call_forwarding_message, observerControl=observer_control, commands=commands, checkin_code=checkin_code)
     return jsonify(success=False)
 
+@app.before_request
+def setup_celery():
+    docassemble.webapp.worker.workerapp.set_current()
+
 # @app.before_request
 # def before_request():
 #     g.request_start_time = time.time()
@@ -2834,7 +2861,7 @@ def index():
                 new_file = SavedFile(file_number, extension=extension, fix=True)
                 new_file.write_content(theImage)
                 new_file.finalize()
-                the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ", filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')"
+                the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ", filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', make_pngs=True, extension='" + str(extension) + "')"
             else:
                 the_string = file_field + " = docassemble.base.core.DAFile(" + repr(file_field) + ")"
             try:
@@ -2894,6 +2921,7 @@ def index():
                             temp_file = tempfile.NamedTemporaryFile(suffix='.' + extension, delete=False)
                             the_file.save(temp_file.name)
                             process_file(saved_file, temp_file.name, mimetype, extension)
+                            #sys.stderr.write("Upload was processed\n")
                             files_to_process.append((filename, file_number, mimetype, extension))
                         try:
                             file_field = from_safeid(var_to_store)
@@ -2907,7 +2935,7 @@ def index():
                             elements = list()
                             indexno = 0
                             for (filename, file_number, mimetype, extension) in files_to_process:
-                                elements.append("docassemble.base.core.DAFile('" + file_field + "[" + str(indexno) + "]', filename='" + str(filename) + "', number=" + str(file_number) + ", mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')")
+                                elements.append("docassemble.base.core.DAFile('" + file_field + "[" + str(indexno) + "]', filename='" + str(filename) + "', number=" + str(file_number) + ", make_pngs=True, mimetype='" + str(mimetype) + "', extension='" + str(extension) + "')")
                                 indexno += 1
                             the_string = file_field + " = docassemble.base.core.DAFileList('" + file_field + "', elements=[" + ", ".join(elements) + "])"
                         else:
@@ -4876,7 +4904,9 @@ def serve_uploaded_page(number, page):
     if 'path' not in file_info:
         abort(404)
     else:
-        filename = file_info['path'] + 'page-' + str(page) + '.png'
+        max_pages = 1 + int(file_info['pages'])
+        formatter = '%0' + str(len(str(max_pages))) + 'd'
+        filename = file_info['path'] + 'page-' + (formatter % int(page)) + '.png'
         if os.path.isfile(filename):
             response = send_file(filename, mimetype='image/png')
             return(response)
@@ -4896,7 +4926,9 @@ def serve_uploaded_pagescreen(number, page):
         logmessage('serve_uploaded_pagescreen: no access to file number ' + str(number))
         abort(404)
     else:
-        filename = file_info['path'] + 'screen-' + str(page) + '.png'
+        max_pages = 1 + int(file_info['pages'])
+        formatter = '%0' + str(len(str(max_pages))) + 'd'
+        filename = file_info['path'] + 'screen-' + (formatter % int(page)) + '.png'
         if os.path.isfile(filename):
             response = send_file(filename, mimetype='image/png')
             return(response)
@@ -9802,7 +9834,9 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          server_redis=r,
                                          user_id_dict=user_id_dict,
                                          retrieve_emails=retrieve_emails,
-                                         get_short_code=get_short_code)
+                                         get_short_code=get_short_code,
+                                         make_png_for_pdf=make_png_for_pdf,
+                                         wait_for_task=wait_for_task)
 #docassemble.base.util.set_user_id_function(user_id_dict)
 #docassemble.base.functions.set_generate_csrf(generate_csrf)
 #docassemble.base.parse.set_url_finder(get_url_from_file_reference)
@@ -9849,11 +9883,13 @@ def null_func(*pargs, **kwargs):
 
 if in_celery:
     docassemble.base.functions.update_server(bg_action=null_func,
+                                             async_ocr=null_func,
                                              worker_convert=null_func)
 else:
     import docassemble.webapp.worker
     #sys.stderr.write("calling set worker now\n")
     docassemble.base.functions.update_server(bg_action=docassemble.webapp.worker.background_action,
+                                             async_ocr=docassemble.webapp.worker.async_ocr,
                                              worker_convert=docassemble.webapp.worker.convert)
 
 pg_ex = dict()

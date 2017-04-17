@@ -55,6 +55,17 @@ class ReturnValue(object):
             if key not in ['extra', 'value']:
                 setattr(self, key, value)
 
+class OCRReturnValue(object):
+    def __init__(self, **kwargs):
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
+    def __str__(self):
+        if self.ok:
+            return self.content
+        return self.error_message
+    def __unicode__(self):
+        return unicode(self.__str__())
+    
 def get_current_variable():
     if len(this_thread.current_variable):
         return this_thread.current_variable[-1]
@@ -820,6 +831,8 @@ class ThreadVariables(threading.local):
     current_question = None
     gathering_mode = dict()
     current_variable = list()
+    open_files = set()
+    prevent_going_back = False
     def __init__(self, **kw):
         if self.initialized:
             raise SystemError('__init__ called too many times')

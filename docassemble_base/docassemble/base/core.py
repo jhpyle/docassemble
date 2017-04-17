@@ -1193,6 +1193,8 @@ class DAFile(DAObject):
             self.ok = True
         else:
             self.ok = False
+        if hasattr(self, 'extension') and self.extension == 'pdf' and 'make_pngs' in kwargs and kwargs['make_pngs']:
+            self._make_pngs_for_pdf()
         return
     def set_mimetype(self, mimetype):
         """Sets the MIME type of the file"""
@@ -1265,6 +1267,39 @@ class DAFile(DAObject):
         """Makes the contents of the file the same as those of the given filename."""
         self.retrieve()
         shutil.copyfile(filename, self.path())
+    def _make_pngs_for_pdf(self):
+        if not hasattr(self, '_taskscreen'):
+            setattr(self, '_taskscreen', server.make_png_for_pdf(self, 'screen'))
+        if not hasattr(self, '_taskpage'):
+            setattr(self, '_taskpage', server.make_png_for_pdf(self, 'page'))
+    def page_path(self, page, prefix, wait=True):
+        """Returns a path and filename at which a PDF page image can be accessed."""
+        if not hasattr(self, 'number'):
+            raise Exception("Cannot get path of file without a file number.")
+        if not hasattr(self, 'file_info'):
+            self.retrieve()
+        if 'fullpath' not in self.file_info:
+            raise Exception("fullpath not found.")
+        if 'pages' not in self.file_info:
+            raise Exception("number of pages not found.")
+        test_path = self.file_info['path'] + prefix + '-in-progress'
+        if os.path.isfile(test_path) and hasattr(self, '_task' + prefix):
+            if wait:
+                server.wait_for_task(getattr(self, '_task' + prefix))
+            else:
+                return None
+        max_pages = 1 + int(self.file_info['pages'])
+        formatter = '%0' + str(len(str(max_pages))) + 'd'
+        the_path = self.file_info['path'] + prefix + '-' + (formatter % int(page)) + '.png'
+        if os.path.isfile(the_path):
+            return the_path
+        if hasattr(self, '_task' + prefix):
+            if server.wait_for_task(getattr(self, '_task' + prefix)):
+                self.retrieve()
+                the_path = self.file_info['path'] + prefix + '-' + str(int(page)) + '.png'
+                if os.path.isfile(the_path):
+                    return the_path
+        return None
     def path(self):
         """Returns a path and filename at which the file can be accessed."""
         #logmessage("path")
@@ -1292,6 +1327,8 @@ class DAFile(DAObject):
         #logmessage("show")
         if not self.ok:
             return('')
+        if hasattr(self, 'number') and hasattr(self, 'extension') and self.extension == 'pdf':
+            self.page_path(1, 'page')
         if width is not None:
             return('[FILE ' + str(self.number) + ', ' + str(width) + ']')
         else:
