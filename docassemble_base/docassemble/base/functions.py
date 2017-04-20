@@ -54,15 +54,12 @@ class ReturnValue(object):
         for key, value in kwargs.iteritems():
             if key not in ['extra', 'value']:
                 setattr(self, key, value)
-
-class OCRReturnValue(object):
-    def __init__(self, **kwargs):
-        for key, value in kwargs.iteritems():
-            setattr(self, key, value)
     def __str__(self):
-        if self.ok:
+        if hasattr(self, 'ok') and self.ok and hasattr(self, 'content'):
             return self.content
-        return self.error_message
+        if hasattr(self, 'error_message'):
+            return self.error_message
+        return self.value
     def __unicode__(self):
         return unicode(self.__str__())
     
@@ -859,9 +856,14 @@ def background_response_action(*pargs, **kwargs):
     """Finishes a background task by running an action to save values."""
     raise BackgroundResponseActionError(*pargs, **kwargs)
 
-def background_action(action, ui_notification, **kwargs):
+def background_action(*pargs, **kwargs):
     """Runs an action in the background."""
     #sys.stderr.write("Got to background_action in functions\n")
+    action = pargs[0]
+    if len(pargs) > 1:
+        ui_notification = pargs[1]
+    else:
+        ui_notification = None
     return(server.bg_action(action, ui_notification, **kwargs))
 
 class MyAsyncResult(object):

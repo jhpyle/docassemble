@@ -8,6 +8,8 @@ from PIL import Image, ImageEnhance
 from twilio.rest import Client as TwilioRestClient
 import pyocr
 import pyocr.builders
+import docassemble.base.ocr
+from celery import chord
 from docassemble.base.logger import logmessage
 from docassemble.base.error import DAError
 from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, is_word, get_locale, set_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, task_performed, task_not_yet_performed, mark_task_as_performed, times_task_performed, set_task_counter, background_action, background_response, background_response_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent
@@ -1253,11 +1255,39 @@ def map_of(*pargs, **kwargs):
         return '[MAP ' + codecs.encode(json.dumps(the_map).encode('utf8'), 'base64').decode().replace('\n', '') + ']'
     return word('(Unable to display map)')
 
-def ocr_file_in_background(image_file, language=None, psm=6, x=None, y=None, W=None, H=None):
+def ocr_file_in_background(*pargs, **kwargs):
     """Starts optical character recognition on one or more image files or PDF
     files and returns an object representing the background task created."""
-    sys.stderr.write("ocr_file_in_background: started\n")
-    return server.async_ocr(image_file, language=language, psm=psm, x=x, y=y, W=W, H=H, user_code=this_thread.current_info.get('session', None))
+    language = kwargs.get('language', None)
+    psm = kwargs.get('psm', 6)
+    x = kwargs.get('x', None)
+    y = kwargs.get('y', None)
+    W = kwargs.get('W', None)
+    H = kwargs.get('H', None)
+    message = kwargs.get('message', None)
+    image_file = pargs[0]
+    if len(pargs) > 1:
+        ui_notification = pargs[1]
+    else:
+        ui_notification = None
+    args = dict(yaml_filename=this_thread.current_info['yaml_filename'], user=this_thread.current_info['user'], user_code=this_thread.current_info['session'], secret=this_thread.current_info['secret'], url=this_thread.current_info['url'], url_root=this_thread.current_info['url_root'], language=language, psm=psm, x=x, y=y, W=W, H=H, extra=ui_notification, message=message)
+    collector = server.ocr_finalize.s(**args)
+    todo = list()
+    for item in docassemble.base.ocr.ocr_page_tasks(image_file, **args):
+        todo.append(server.ocr_page.s(**item))
+    the_chord = chord(todo)(collector)
+    if ui_notification is not None:
+        worker_key = 'da:worker:uid:' + str(this_thread.current_info['session']) + ':i:' + str(this_thread.current_info['yaml_filename']) + ':userid:' + str(this_thread.current_info['user']['the_user_id'])
+        #sys.stderr.write("worker_caller: id is " + str(result.obj.id) + " and key is " + worker_key + "\n")
+        server.server_redis.rpush(worker_key, the_chord.id)
+    #sys.stderr.write("ocr_file_in_background finished\n")
+    return the_chord
+
+# def ocr_file_in_background(image_file, ui_notification=None, language=None, psm=6, x=None, y=None, W=None, H=None):
+#     """Starts optical character recognition on one or more image files or PDF
+#     files and returns an object representing the background task created."""
+#     sys.stderr.write("ocr_file_in_background: started\n")
+#     return server.async_ocr(image_file, ui_notification=ui_notification, language=language, psm=psm, x=x, y=y, W=W, H=H, user_code=this_thread.current_info.get('session', None))
 
 def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W=None, H=None):
     """Runs optical character recognition on one or more image files or PDF

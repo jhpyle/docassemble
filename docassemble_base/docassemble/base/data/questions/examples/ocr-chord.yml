@@ -3,28 +3,41 @@ metadata:
   short title: OCR
   documentation: "http://docassemble.org/docs/functions.html#ocr_file_in_background"
   example start: 2
-  example end: 3
+  example end: 6
 ---
 modules:
   - docassemble.base.util
 ---
+mandatory: true
+code: |
+  the_task
+  final_screen
+---
 code: |
   the_task = ocr_file_in_background(the_file)
 ---
-mandatory: True
 question: |
-  Here is the text of the file
-subquestion: |
-  % if the_task.ready():
-  Response is ${ the_task.get() }
-  % else:
-  Still waiting.
-  % endif
-buttons:
-  - Refresh: refresh
----
-question: |
-  Please upload a file
+  Please upload one or more files.
 fields:
   - File: the_file
     datatype: files
+---
+question: |
+  What is your nickname?
+fields:
+  - Nickname: nickname
+---
+event: final_screen
+question: |
+  Here is the text of the uploaded
+  file, ${ nickname }.
+subquestion: |
+  % if the_task.ready():
+  The text is: ${ the_task.get() }
+  % else:
+  Still processing.  Please press Refresh
+  after a few seconds to see if the task
+  is done.
+  % endif
+buttons:
+  - Refresh: refresh

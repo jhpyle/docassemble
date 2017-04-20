@@ -25,12 +25,12 @@ def ocr_finalize(*pargs, **kwargs):
                 output[int(parg.value['page'])] = parg.value['text']
         index += 1
     #sys.stderr.write("ocr_finalize: assembling output\n")
-    final_output = "\n".join([output[x] for x in sorted(output.keys())])
+    final_output = "\f".join([output[x] for x in sorted(output.keys())])
     #sys.stderr.write("ocr_finalize: final output has length " + str(len(final_output)) + "\n")
     return final_output
 
-def ocr_page_tasks(image_file, language=None, psm=6, x=None, y=None, W=None, H=None, user_code=None):
-    sys.stderr.write("ocr_page_tasks running\n")
+def ocr_page_tasks(image_file, language=None, psm=6, x=None, y=None, W=None, H=None, user_code=None, **kwargs):
+    #sys.stderr.write("ocr_page_tasks running\n")
     if not (isinstance(image_file, DAFile) or isinstance(image_file, DAFileList)):
         return word("(Not a DAFile or DAFileList object)")
     pdf_to_ppm = get_config("pdftoppm")
@@ -67,7 +67,7 @@ def ocr_page_tasks(image_file, language=None, psm=6, x=None, y=None, W=None, H=N
                     todo.append(dict(doc=doc, page=i+1, lang=lang, ocr_resolution=ocr_resolution, psm=psm, x=x, y=y, W=W, H=H, pdf_to_ppm=pdf_to_ppm, user_code=user_code))
             else:
                 todo.append(dict(doc=doc, page=None, lang=lang, ocr_resolution=ocr_resolution, psm=psm, x=x, y=y, W=W, H=H, pdf_to_ppm=pdf_to_ppm, user_code=user_code))
-    sys.stderr.write("ocr_page_tasks finished\n")
+    #sys.stderr.write("ocr_page_tasks finished\n")
     return todo
 
 def make_png_for_pdf(doc, prefix, resolution, pdf_to_ppm):
@@ -85,17 +85,16 @@ def make_png_for_pdf(doc, prefix, resolution, pdf_to_ppm):
 
 def ocr_page(doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resolution=300, psm=6, page=None, x=None, y=None, W=None, H=None, user_code=None):
     """Runs optical character recognition on an image or a page of a PDF file and returns the recognized text."""
-    sys.stderr.write("ocr_page running with page " + str(page) + "\n")
     if page is None:
         page = 1
-    sys.stderr.write("ocr_page running with page " + str(page) + "\n")
+    sys.stderr.write("ocr_page running on page " + str(page) + "\n")
     the_file = None
     if not hasattr(doc, 'extension'):
         return None
-    sys.stderr.write("ocr_page running with extension " + str(doc.extension) + "\n")
+    #sys.stderr.write("ocr_page running with extension " + str(doc.extension) + "\n")
     if doc.extension not in ['pdf', 'png', 'jpg', 'gif']:
         raise Exception("Not a readable image file")
-    sys.stderr.write("ocr_page calling doc.path()\n")
+    #sys.stderr.write("ocr_page calling doc.path()\n")
     path = doc.path()
     if doc.extension == 'pdf':
         the_file = None
@@ -131,6 +130,6 @@ def ocr_page(doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resolution=300, p
     contrast = ImageEnhance.Contrast(brightened)
     final_image = contrast.enhance(2.0)
     text = tool.image_to_string(final_image, lang=lang, builder=pyocr.builders.TextBuilder(tesseract_layout=psm))
-    sys.stderr.write("ocr_page: text is " + str(type(text)) + "\n")
+    sys.stderr.write("ocr_page finished with page " + str(page) + "\n")
     return dict(page=page, text=text)
 

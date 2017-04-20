@@ -23,14 +23,6 @@ importlib.import_module('docassemble.webapp.config_worker')
 workerapp.config_from_object('docassemble.webapp.config_worker')
 workerapp.set_current()
 
-# workerapp.conf.update(
-#     task_serializer='pickle',
-#     accept_content=['pickle'],
-#     result_serializer='pickle',
-#     timezone=daconfig.get('timezone', 'America/New_York'),
-#     enable_utc=True
-# )
-
 worker_controller = None
 
 def initialize_db():
@@ -59,28 +51,21 @@ def initialize_db():
     worker_controller.get_info_from_file_number = get_info_from_file_number
     worker_controller.trigger_update = trigger_update
     worker_controller.ocr = docassemble.base.ocr
-    # workerapp.conf.update(
-    #     task_serializer='pickle',
-    #     accept_content=['pickle'],
-    #     result_serializer='pickle',
-    #     timezone=daconfig.get('timezone', 'America/New_York'),
-    #     enable_utc=True
-    # )
 
 def convert(obj):
     return result_from_tuple(obj.as_tuple(), app=workerapp)
 
-def async_ocr(*pargs, **kwargs):
-    sys.stderr.write("async_ocr started in worker\n")
-    if worker_controller is None:
-        initialize_db()
-    collector = ocr_finalize.s()
-    todo = list()
-    for item in worker_controller.ocr.ocr_page_tasks(*pargs, **kwargs):
-        todo.append(ocr_page.s(**item))
-    the_chord = chord(todo)(collector)
-    sys.stderr.write("async_ocr finished in worker\n")
-    return the_chord
+# def async_ocr(*pargs, **kwargs):
+#     sys.stderr.write("async_ocr started in worker\n")
+#     if worker_controller is None:
+#         initialize_db()
+#     collector = ocr_finalize.s()
+#     todo = list()
+#     for item in worker_controller.ocr.ocr_page_tasks(*pargs, **kwargs):
+#         todo.append(ocr_page.s(**item))
+#     the_chord = chord(todo)(collector)
+#     sys.stderr.write("async_ocr finished in worker\n")
+#     return the_chord
 
 @workerapp.task
 def ocr_page(**kwargs):
@@ -97,15 +82,19 @@ def ocr_finalize(*pargs, **kwargs):
     if worker_controller is None:
         initialize_db()
     #worker_controller.functions.set_uid(kwargs['user_code'])
+    if 'message' in kwargs and kwargs['message']:
+        message = kwargs['message']
+    else:
+        message = worker_controller.functions.word("OCR succeeded")
     with worker_controller.flaskapp.app_context():
         try:
-            return worker_controller.functions.OCRReturnValue(ok=True, content=worker_controller.ocr.ocr_finalize(*pargs))
+            return worker_controller.functions.ReturnValue(ok=True, value=message, content=worker_controller.ocr.ocr_finalize(*pargs), extra=kwargs.get('extra', None))
         except Exception as the_error:
-            return worker_controller.functions.OCRReturnValue(ok=False, error_message=str(the_error))
+            return worker_controller.functions.ReturnValue(ok=False, value=str(the_error), extra=kwargs.get('extra', None))
 
 @workerapp.task
 def make_png_for_pdf(doc, prefix, resolution, user_code, pdf_to_png):
-    sys.stderr.write("make_png_for_pdf started in worker\n")
+    sys.stderr.write("make_png_for_pdf started in worker for size " + prefix + "\n")
     if worker_controller is None:
         initialize_db()
     worker_controller.functions.set_uid(user_code)

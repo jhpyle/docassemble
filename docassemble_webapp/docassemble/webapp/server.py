@@ -9883,13 +9883,17 @@ def null_func(*pargs, **kwargs):
 
 if in_celery:
     docassemble.base.functions.update_server(bg_action=null_func,
-                                             async_ocr=null_func,
+                                             #async_ocr=null_func,
+                                             ocr_page=null_func,
+                                             ocr_finalize=null_func,
                                              worker_convert=null_func)
 else:
     import docassemble.webapp.worker
     #sys.stderr.write("calling set worker now\n")
     docassemble.base.functions.update_server(bg_action=docassemble.webapp.worker.background_action,
-                                             async_ocr=docassemble.webapp.worker.async_ocr,
+                                             #async_ocr=docassemble.webapp.worker.async_ocr,
+                                             ocr_page=docassemble.webapp.worker.ocr_page,
+                                             ocr_finalize=docassemble.webapp.worker.ocr_finalize,
                                              worker_convert=docassemble.webapp.worker.convert)
 
 pg_ex = dict()
