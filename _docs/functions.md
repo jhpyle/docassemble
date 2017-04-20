@@ -522,6 +522,17 @@ appears as a quotation.
 
 {% include side-by-side.html demo="quote_paragraphs" %}
 
+## <a name="indent"></a>indent()
+
+The `indent()` function adds four spaces to the beginning of each line
+of the given [Markdown] to text.  This needs to be used if you are
+inserting a [table] or a paragraph of user text into the context of a
+[Markdown] bullet-point or itemized list, and you want the text to be
+part of an item.  If you do not indent the text, the text will be
+treated as a new paragraph that ends the list.
+
+{% include side-by-side.html demo="indent" %}
+
 # <a name="actions"></a>Functions for interacting with the interview using URLs
 
 ## <a name="url_action"></a><a name="process_action"></a>url_action() and process_action()
@@ -775,7 +786,7 @@ sets: qr_example
 ## <a name="url_of"></a>url_of()
 
 This function returns a URL to a file within a **docassemble**
-package.
+package's `static` folder.
 
 For example, you might have PDF files associated with your interview.
 You would keep these in the `data/static` directory of your package,
@@ -790,6 +801,23 @@ subquestion: |
   [this brochure](${ url_of('docassemble.mycompany:data/static/brochure.pdf') }).
 ---
 {% endhighlight %}
+
+You can also refer to files in the current package by leaving off the
+package part of the file name:
+
+{% highlight yaml %}
+---
+mandatory: True
+question: You are done.
+subquestion: |
+  To learn more about this topic, read
+  [this brochure](${ url_of('brochure.pdf') }).
+---
+{% endhighlight %}
+
+If you do not specify a package, **docassemble** will look for the
+file in the `static` folder of the package in which the current
+[`question`] or current [`code`] block resides.
 
 # E-mail functions
 
@@ -1269,6 +1297,15 @@ information about the user's browser, derived from the [User-Agent header].
 
 For more information about the properties of this object, see the
 documentation for the [user-agents] library.
+
+If **docassemble** cannot determine information about the user's
+browser, this function will return `None`.
+
+You can also use this function to obtain the user's IP address.  If
+you call the function using `device(ip=True)`, the IP address is
+returned:
+
+{% include side-by-side.html demo="device-ip" %}
 
 # Language and locale functions()
 
@@ -2399,31 +2436,97 @@ In addition, the following optional parameters, which are passed to
 * `H`: for cropping PDF pages.  Indicates the height of the crop area
   in pixels (default is 0).
 
-### Running OCR tasks in the background
+## <a name="ocr_file_in_background"></a>ocr_file_in_background()
 
-Note that the OCR process usually takes a long time.  Unless the
-document is only one page long, the user will have to wait, looking at
-a spinner, for far too long.
+Note that the OCR process usually takes a long time; it takes a lot of
+computational power to recognize characters from a graphical image.
+Unless the document is only one page long, the user will have to wait,
+looking at a spinner, for what may be an inconvenient period of time.
+The user may think that the application has crashed.
 
 The best practice is to run OCR tasks in the background, using the
-[`background_action()`] function discussed in the
-[background processes] section.
+[`ocr_file_in_background()`] function.  This function is a cross
+between [`ocr_file()`] and [`background_action()`].
 
-The following example demonstrates how this can be done.  First, the
-user is asked to upload a PDF file.  Then, the OCR task is started in
-the background.  Then, the user is asked to answer another question,
-which will take significant time.  Hopefully, by the time the user
-finishes answering that question, the OCR will be finished.  But just
-in case it hasn't finished, the user will be shown a screen telling
-the user to wait.  This screen reloads every five seconds, so that
-when then OCR process does finish, the user will be able to proceed to
-the rest of the interview.
+To control the details of the OCR process, you can set optional
+keyword parameters `language`, `psm`, `x`, `y`, `W`, and `H`.  (See
+[`ocr_file()`] for information about what these do.)
+
+Like [`background_action()`], it immediately returns an object
+representing a background task.  You can call `.ready()` on this
+object to see if the task is still running in the background, and you
+can call `.get()` to obtain the result of the OCR task.  (See
+[`background_action()`] for more information about these methods.)
+
+Here is an example of how [`ocr_file_in_background()`] can be used.
+
+{% include side-by-side.html demo="ocr-chord" %}
+
+This example demonstrates a technique for avoiding making the user
+wait.  First, the user uploads a document.  Then,
+[`ocr_file_in_background()`] is called on the uploaded file, which
+starts the OCR process in the background.  Then, the user is asked a
+question ("What is your nickname?").  Then is the user sent to a
+screen that displays the text obtained through OCR.  Hopefully, the
+question about the nickname took enough time that the results of the
+OCR are ready by the time this screen appears in the interview.  Just
+in case there wasn't enough time, the interview question calls
+`.ready()` to check to see if the task is done.  If it is not done,
+the user is asked to wait, and to press "Refresh."  If the process has
+completed by then, `.ready()` will be `True`, and the user can see the
+text obtained through OCR.
+
+It is safe to call `.get()` without first ensuring that `.ready()` is
+`True`.  The `.get()` method will cause the system to wait until the
+OCR text is available.  The user will see a spinner in the meantime.
+
+Other questions could be asked, in addition to the nickname question,
+in order to give the computer more time to finish the OCR process.
+
+If you do not want to stall for time by asking questions, but you want
+to give the user a user-friendly screen to look at while they wait and
+you don't want to make the user press a Refresh button, you can use
+the optional second argument to the [`ocr_file_in_background()`]
+function.  This second argument acts like the second argument to
+[`background_action()`].  In this example, we set it to `refresh`:
+
+{% include side-by-side.html demo="ocr-chord-refresh" %}
+
+Be careful about combining the use of `refresh` with the method of
+asking questions of the user to pass the time.  If any of the
+questions call for the user to type something in, the user will be
+very annoyed if the screen refreshes while they are typing; they will
+lose what they have typed.  However, if you are only asking questions
+that require buttons to be pressed, then the user will not notice if
+the screen refreshes.
+
+You can also use other notification methods, such as:
+
+* `ocr_file_in_background(the_file, 'javascript', message='all done')`
+* `ocr_file_in_background(the_file, 'flash', message='All done')`
+
+These notification methods show a Javascript alert or a message
+"flashed" at the top of the screen when the background task is
+complete.  The message is "OCR succeeded" unless you override the
+message using the optional keyword argument `message`.
+
+See the documentation of [`background_action()`] for more information
+about notification methods.
+
+Note that it is also possible to use [`ocr_file()`] within
+[`background_action()`]:
 
 {% include side-by-side.html demo="ocr-background" %}
 
-For more information about using [background processes], see the
-documentation for the [`background_action()`] function and its related
-functions.
+However, the advantage of [`ocr_file_in_background()`] is that it can
+be a lot faster if there is more than one page image.  The
+[`ocr_file()`] function OCRs one page at a time, using a single CPU
+core.  The [`ocr_file_in_background()`] function, by constrast, gives
+each page image to a separate background task.  If your
+**docassemble** installation has two application servers, each with
+four CPU cores, the system will process the OCR job eight pages at a
+time rather than one page at a time.  For a large document,
+[`ocr_file_in_background()`] will get the whole job done much faster.
 
 ### Running OCR with languages other than English
 
@@ -3204,3 +3307,5 @@ $(document).on('daPageLoad', function(){
 [tuple]: https://en.wikibooks.org/wiki/Python_Programming/Tuples
 [Azure blob storage]: https://azure.microsoft.com/en-us/services/storage/blobs/
 [`url_args`]: {{ site.baseurl }}/docs/special.html#url_args
+[`ocr_file()`]: #ocr_file
+[`ocr_file_in_background()`]: #ocr_file_in_background

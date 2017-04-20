@@ -241,6 +241,12 @@ contain URL references.  If your site is at `/something/`, then
 `"/something/android-chrome-192x192.png"` instead of
 `"/android-chrome-192x192.png"`.
 
+Note that most web browsers will store a cache of the [Favicon], so
+that when you make a change to your app's [Favicon], it may seem that
+your change is not working when it actually is.  If it seems that your
+[Favicon] has not taken effect, try accessing the app a web browser
+that you do not normally use.
+
 ## <a name="exitpage"></a>Exit page
 
 The `exitpage` directive contains the default URL to which the user

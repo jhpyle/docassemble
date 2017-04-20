@@ -135,7 +135,8 @@ list.)
 
 {% include side-by-side.html demo="table-alt" %}
 
-You can use [Python] to make changes to the values of cells.
+You can use [Python] to create cells with content that is computed
+from the items of a [group].
 
 {% include side-by-side.html demo="table-python" %}
 
@@ -144,7 +145,7 @@ inflates the number of seeds.
 
 Remember that the [Python] code here is an [expression], not a block
 of code.  If you want to use if/then/else logic in a cell, you will
-need to use the inline form of if/then/else:
+need to use [Python]'s one-line form of if/then/else:
 
 {% include side-by-side.html demo="table-if-then" %}
 
@@ -200,14 +201,14 @@ The advantages of using the `table` block are:
   (`----|---------`).  You might not know in advance what the relative
   sizes of the text will be in each column.
 
-Note that the `table` block acts like a `template` block in that the
-variable it sets will be a [`DATemplate`] object.  The `.content`
-attribute will be set to the text of the table in [Markdown] format.
+The `table` block acts like a `template` block in that the variable it
+sets will be a [`DATemplate`] object.  The `.content` attribute will
+be set to the text of the table in [Markdown] format.
 
 If the variable indicated by `rows` is empty, the table will display
 with only the headers.  To suppress this, you can add `show if empty:
-False` to the `table` block.  The `.content` will be the empty
-string, `""`.
+False` to the `table` block.  The resulting `.content` will be the
+empty string, `""`.
 
 {% include side-by-side.html demo="table-empty" %}
 
@@ -218,6 +219,25 @@ become the `.content` of the resulting [`DATemplate`].
 
 {% include side-by-side.html demo="table-empty-message" %}
 
+If you include a table in the content of an [`attachment`], you might
+find that the table is too wide, or not wide enough.  [Pandoc] breaks
+lines, determines the relative width of columns, and determines the
+final width of a table based on the characters in the divider row
+(`----|---------`).
+
+By default, **docassemble** will construct a divider row is no longer
+than 65 characters.  This should work for standard applications (12
+point font, letter size paper).
+
+You can change the number of characters from 65 to something else by
+setting value of [`table width`] in a [`features`] block.
+
+{% include side-by-side.html demo="table-width" %}
+
+[Pandoc]: http://johnmacfarlane.net/pandoc/
+[`table width`]: {{ site.baseurl }}/docs/initial.html#table width
+[`features`]: {{ site.baseurl }}/docs/initial.html#features
+[`attachment`]: {{ site.baseurl }}/docs/documents.html#attachment
 [expression]: http://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [`fields`]: {{ site.baseurl }}/docs/fields.html#fields
 [tables]: {{ site.baseurl }}/docs/markup.html#tables

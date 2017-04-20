@@ -968,6 +968,11 @@
     Your device is: ${ device() }.
     % endif
   mandatory: True
+"device-ip": |-
+  question: |
+    Your IP address is
+    ${ device(ip=True) }.
+  mandatory: True
 "dialog-box": |-
   mandatory: True
   code: |
@@ -2390,6 +2395,37 @@
     as opposed to
     ${ indefinite_article(vegetable) }?
   yesno: prefer_fruit
+"indent": |-
+  mandatory: True
+  question: |
+    Your allegations
+  subquestion: |
+    You allege that:
+
+    1.  The sky is blue.
+
+    2.  You have a house.
+
+        Your house has a roof.
+
+        Your roof is made up of many
+        shingles.
+
+    3.  You have a car.
+
+    ${ indent(car_allegations) }
+
+    4.  You have at least a high
+        school education.
+  ---
+  template: car_allegations
+  content: |
+    Your car is black.
+
+    Your car's gas tank is nearly empty.
+
+    Your car goes from 0 to 60 fast enough
+    not to be rear-ended on the highway.
 "initial": |-
   initial: True
   code: |
@@ -3391,6 +3427,68 @@
     The document states:
 
     ${ quote_paragraphs(text_of_the_file) }
+"ocr-chord": |-
+  mandatory: true
+  code: |
+    the_task
+    final_screen
+  ---
+  code: |
+    the_task = ocr_file_in_background(the_file)
+  ---
+  question: |
+    Please upload one or more files.
+  fields:
+    - File: the_file
+      datatype: files
+  ---
+  question: |
+    What is your nickname?
+  fields:
+    - Nickname: nickname
+  ---
+  event: final_screen
+  question: |
+    Here is the text of the uploaded
+    file, ${ nickname }.
+  subquestion: |
+    % if the_task.ready():
+    The text is: ${ the_task.get() }
+    % else:
+    Still processing.  Please press Refresh
+    after a few seconds to see if the task
+    is done.
+    % endif
+  buttons:
+    - Refresh: refresh
+"ocr-chord-refresh": |-
+  mandatory: true
+  code: |
+    if the_task.ready():
+      final_screen
+    else:
+      waiting_screen
+  ---
+  code: |
+    the_task = ocr_file_in_background(the_file, 'refresh')
+  ---
+  event: waiting_screen
+  question: |
+    Please wait.
+  subquestion: |
+    Your document is being processed.
+    This may take several minutes.
+
+    The text of your document will be
+    shown on the screen when the
+    processing is finished.
+  ---
+  event: final_screen
+  question: |
+    Here is the text of the uploaded
+    file.
+  subquestion: |
+    ${ the_task.get() }
 "ocr-classify": |-
   code: |
     ml = SimpleTextMachineLearner('ocr_ai')
@@ -4352,7 +4450,7 @@
   rows: fruit
   columns:
     - Fruit Name: row_item.name
-    - Number of Seeds: row_item.seeds
+    - Seeds: row_item.seeds
 "table-alt": |-
   code: |
     thing = "Fruit"
@@ -4404,7 +4502,7 @@
     % for item in fruit:
     ${ item.name } | ${ item.seeds }
     % endfor
-"table-markdown": "mandatory: true\nquestion: |\n  Your fruit inventory\nattachment:\
+"table-markdown": "mandatory: true\nquestion: |\n  Your fruit inventory\nsubquestion:\
   \ |\n  This describes your fruit\n  collection.\n  \n  Fruit  | How many\n  -------|---------\n\
   \  Apple  | 4\n  Orange | 3\n  Pear   | 6"
 "table-markdown-noheader": |-
@@ -4441,6 +4539,15 @@
         noun_plural(row_item.name)
     - Number of Seeds: |
         row_item.seeds * 2
+"table-width": |-
+  features:
+    table width: 35
+  ---
+  table: fruit_table
+  rows: fruit
+  columns:
+    - Fruit Name: row_item.name
+    - Seeds: row_item.seeds
 "target-code": |-
   question: |
     What is your favorite food?

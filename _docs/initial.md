@@ -484,6 +484,22 @@ If you want to include [CSS] or [Javascript] code in a specific
 question, rather than in all questions of your interview you can use
 the [`script`] and [`css`] modifiers.
 
+## <a name="table width"></a>Width of tables in attachments
+
+As explained more fully in the [tables] section, if you include a
+[table] in an [`attachment`] and the table is too wide, or not wide
+enough, you can change the default character width of tables from 65
+to some other value using the `table width` directive within the
+`features` block.
+
+{% highlight yaml %}
+features:
+  table width: 75
+{% endhighlight %}
+
+[`attachment`]: {{ site.baseurl }}/docs/documents.html#attachment
+[table]: {{ site.baseurl }}/docs/template.html#table
+[tables]: {{ site.baseurl }}/docs/template.html#table
 [`ready()`]: https://api.jquery.com/ready/
 [Ajax]: https://en.wikipedia.org/wiki/Ajax_(programming)
 [jQuery]: https://jquery.com/

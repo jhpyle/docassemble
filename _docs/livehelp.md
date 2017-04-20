@@ -97,7 +97,7 @@ First, operators can control whether they are available for chatting
 at all by toggling their "status" between "Not available for chat" and
 "Available for chat."
 
-![monitor-not-available-to-chat]({{ site.baseurl !}}/img/monitor-not-available-to-chat.png)
+![monitor-not-available-to-chat]({{ site.baseurl }}/img/monitor-not-available-to-chat.png)
 ![monitor-available-to-chat]({{ site.baseurl }}/img/monitor-available-to-chat.png) 
 
 Second, operators can select the "roles" for they wish to be
