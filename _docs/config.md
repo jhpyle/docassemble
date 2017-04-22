@@ -908,19 +908,34 @@ default dialects to be used with that language.
 
 ## <a name="ocr languages"></a>OCR language settings
 
-The [`ocr_file()`] function uses the [Tesseract] OCR application to
-extract text from PDF files.  One of the options for the OCR process
-is the language being recognized.  The abbreviations for language that
-[Tesseract] uses are different from those that **docassemble** uses
-([ISO-639-1] codes).  The `ocr languages` directive maps between
-[ISO-639-1] codes and the abbreviations that [Tesseract] uses.  The
-default values are:
+The [`ocr_file()`] function uses the [Tesseract]<span></span>
+[optical character recognition] (OCR) application to extract text from
+image files and PDF files.  One of the options for the OCR process is
+the language being recognized.  The codes for language that
+[Tesseract] uses are different from those that **docassemble** uses.
+In most cases, the code that [Tesseract] uses is the [ISO-639-3] code
+that corresponds to the [ISO-639-1] code that **docassemble** uses,
+and **docassemble** can make this conversion automatically.  However,
+in some cases this does not work, so there is an override, which is
+controlled by the `ocr languages` directive.  The default value maps
+Chinese to Traditional Chinese:
 
 {% highlight yaml %}
 ocr languages:
-  en: eng
-  es: spa
+  zh: chi-tra
 {% endhighlight %}
+
+If all of the Chinese documents that you want to OCR are written in
+Simplified Chinese, and all the Uzbek documents are written in
+Cyrillic, you could set the following:
+
+{% highlight yaml %}
+ocr languages:
+  zh: chi-sim
+  uz: uzb-cyrl
+{% endhighlight %}
+
+For more information, see the documentation of the [`ocr_file()`] function.
 
 ## <a name="aws"></a>Amazon Web Services directives
 
@@ -1337,6 +1352,7 @@ and Facebook API keys.
 [document]: {{ site.baseurl }}/docs/documents.html
 [functions]: {{ site.baseurl }}/docs/functions.html
 [ISO-639-1]: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+[ISO-639-3]: https://en.wikipedia.org/wiki/List_of_ISO_639-3_codes
 [GitHub]: https://github.com/
 [Perl Audio Converter]: http://vorzox.wix.com/pacpl
 [pip]: https://en.wikipedia.org/wiki/Pip_%28package_manager%29
@@ -1439,3 +1455,4 @@ and Facebook API keys.
 [`interview_email()`]: {{ site.baseurl }}/docs/functions.html#interview_email
 [favicon]: https://en.wikipedia.org/wiki/Favicon
 [ICO]: https://en.wikipedia.org/wiki/ICO_(file_format)
+[optical character recognition]: https://en.wikipedia.org/wiki/Optical_character_recognition

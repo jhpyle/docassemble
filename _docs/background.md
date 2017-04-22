@@ -158,7 +158,9 @@ called `the_task`.  This variable can be used in the following ways:
 
 * `the_task.ready()` returns `True` if the task has been completed
   yet, and `False` if not.
-* `the_task.get()` returns the result of the task, if available.
+* `the_task.get()` returns the result of the task.  If the task has
+  not been completed yet, the system will wait until the task is
+  completed and then return the result of the task.
 
 [Celery] will start trying to run the `bg_task` [action] as soon as
 possible after `background_action()` is called.  If a lot of other

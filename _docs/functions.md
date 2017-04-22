@@ -2403,7 +2403,8 @@ performed.
 
 * `language` indicates the language of the document.  If not
   specified, the language returned by `get_language()` is used.  The
-  language must be a two-character lowercase [ISO-639-1] code.
+  language must be either a two-character lowercase [ISO-639-1] code
+  or a language code that [Tesseract] uses.
 * `psm` indicates the [Tesseract] page segmentation mode.  The default
 is 6 ("assume a uniform block of text").  The choices are:
     * 0: Orientation and script detection (OSD) only.
@@ -2513,6 +2514,17 @@ message using the optional keyword argument `message`.
 See the documentation of [`background_action()`] for more information
 about notification methods.
 
+The value returned by `.get()` is an object, not a piece of text.  If
+the attribute `.ok` is `True`, the text can be found in the `.content`
+attribute of this object.  If the attribute `.ok` is `False`, then
+there was an error during the OCR process, and the error message can
+be found in the attribute `.error_message`.  When you put the output
+of `.get()` inside of a `${ ... }` [Mako] tag, the object is forced to
+be text, in which case either `.content` or `.error_message` is used,
+depending on the success of the OCR process.
+
+### Advantages of [`ocr_file_in_background()`] over [`ocr_file()`]
+
 Note that it is also possible to use [`ocr_file()`] within
 [`background_action()`]:
 
@@ -2521,8 +2533,9 @@ Note that it is also possible to use [`ocr_file()`] within
 However, the advantage of [`ocr_file_in_background()`] is that it can
 be a lot faster if there is more than one page image.  The
 [`ocr_file()`] function OCRs one page at a time, using a single CPU
-core.  The [`ocr_file_in_background()`] function, by constrast, gives
-each page image to a separate background task.  If your
+core.  The [`ocr_file_in_background()`] function, by constrast,
+assigns each page image to a separate background task, and these tasks
+are then distributed across all the CPU cores in your system.  If your
 **docassemble** installation has two application servers, each with
 four CPU cores, the system will process the OCR job eight pages at a
 time rather than one page at a time.  For a large document,
@@ -2530,23 +2543,102 @@ time rather than one page at a time.  For a large document,
 
 ### Running OCR with languages other than English
 
-If you need to OCR languages other than English, you may need to
-install extension packages on your system and edit the
-[`ocr languages`] configuration directive.
+[Tesseract] supports the following languages.
 
-For example, if your server needs to OCR Arabic, you will need the
-`tesseract-ocr-ara` package, which is not installed by default.
+|------------+---------------------|
+| Code       | Language            |
+|------------+---------------------|
+| `afr`      | Afrikaans           |
+| `ara`      | Arabic              |
+| `aze`      | Azerbaijani         |
+| `bel`      | Belarusian          |
+| `ben`      | Bengali             |
+| `bul`      | Bulgarian           |
+| `cat`      | Catalan             |
+| `ces`      | Czech               |
+| `chi-sim`  | Simplified Chinese  |
+| `chi-tra`  | Traditional Chinese |
+| `chr`      | Cherokee            |
+| `dan`      | Danish              |
+| `deu`      | German              |
+| `deu-frak` | German Fraktur      |
+| `ell`      | Greek               |
+| `eng`      | English             |
+| `enm`      | Middle English      |
+| `epo`      | Esperanto           |
+| `est`      | Estonian            |
+| `eus`      | Basque              |
+| `fin`      | Finnish             |
+| `fra`      | French              |
+| `frk`      | Frankish            |
+| `frm`      | Middle French       |
+| `glg`      | Galician            |
+| `grc`      | ancient Greek       |
+| `heb`      | Hebrew              |
+| `hin`      | Hindi               |
+| `hrv`      | Croatian            |
+| `hun`      | Hungarian           |
+| `ind`      | Indonesian          |
+| `isl`      | Icelandic           |
+| `ita`      | Italian             |
+| `ita-old`  | Old Italian         |
+| `jpn`      | Japanese            |
+| `kan`      | Kannada             |
+| `kor`      | Korean              |
+| `lav`      | Latvian             |
+| `lit`      | Lithuanian          |
+| `mal`      | Malayalam           |
+| `mkd`      | Macedonian          |
+| `mlt`      | Maltese             |
+| `msa`      | Malay               |
+| `nld`      | Dutch               |
+| `nor`      | Norwegian           |
+| `pol`      | Polish              |
+| `por`      | Portuguese          |
+| `ron`      | Romanain            |
+| `rus`      | Russian             |
+| `slk`      | Slovak              |
+| `slk-frak` | Slovak Fractur      |
+| `slv`      | Slovenian           |
+| `spa`      | Spanish             |
+| `spa-old`  | Old Spanish         |
+| `sqi`      | Albanian            |
+| `srp`      | Serbian             |
+| `swa`      | Swahili             |
+| `swe`      | Swedish             |
+| `tam`      | Tamil               |
+| `tel`      | Telugu              |
+| `tgl`      | Tagalog             |
+| `tha`      | Thai                |
+| `tur`      | Turkish             |
+| `ukr`      | Ukranian            |
+| `vie`      | Vietnamese          |
+|------------|---------------------|
 
-If using [Docker], you can ensure that the package is installed when
-the server starts by including `tesseract-ocr-ara` in the
-[`debian packages`] configuration directive.
+The `language` parameter is flexible; you can set it to a language
+code that [Tesseract] supports (e.g., `eng`, `chi-sim`, `chi-tra`,
+`slk-frak`), or you can give it a two-character [ISO-639-1] code, in
+which case **docassemble** will convert it to the corresponding
+[Tesseract] code.  If [Tesseract] does not support the language,
+English will be used.  If the `language` parameter is not supplied,
+**docassemble** will use the default language (the result of
+`get_language()`), which is always a two-character [ISO-639-1] code.
 
-You can associate the language code `ar` with the abbreviation used by
-[Tesseract] by including the following in the [configuration]<span></span>:
+For some languages, there is more than one variant.  For example, if
+you specify Chinese, `zh`, **docassemble** will use `chi-tra`
+(traditional Chinese).  If this is not what you want, you can specify
+an explicit `language` parameter, such as `chi-sim` (simplified
+Chinese).  Alternatively, you can override the mapping between
+[ISO-639-1] codes and [Tesseract] codes by editing the
+[`ocr languages`] directive in the [configuration].  For example, if
+you wanted all Chinese to be interpreted as Simplified Chinese, and
+all Uzbek to be interpreted as the Cyrillic form, you could set the
+following:
 
 {% highlight yaml %}
 ocr languages:
-  ar: ara
+  zh: chi-sim
+  uz: uzb-cyrl
 {% endhighlight %}
 
 ## <a name="path_and_mimetype"></a>path_and_mimetype()
@@ -3309,3 +3401,4 @@ $(document).on('daPageLoad', function(){
 [`url_args`]: {{ site.baseurl }}/docs/special.html#url_args
 [`ocr_file()`]: #ocr_file
 [`ocr_file_in_background()`]: #ocr_file_in_background
+[tesseract-ocr-all]: https://packages.debian.org/stretch/tesseract-ocr-all
