@@ -90,7 +90,7 @@ def ocr_finalize(*pargs, **kwargs):
         try:
             return worker_controller.functions.ReturnValue(ok=True, value=message, content=worker_controller.ocr.ocr_finalize(*pargs), extra=kwargs.get('extra', None))
         except Exception as the_error:
-            return worker_controller.functions.ReturnValue(ok=False, value=str(the_error), extra=kwargs.get('extra', None))
+            return worker_controller.functions.ReturnValue(ok=False, value=str(the_error), error_message=str(the_error), extra=kwargs.get('extra', None))
 
 @workerapp.task
 def make_png_for_pdf(doc, prefix, resolution, user_code, pdf_to_png):

@@ -6,6 +6,7 @@ import yaml
 import inspect
 from PIL import Image, ImageEnhance
 from twilio.rest import Client as TwilioRestClient
+import pycountry
 import pyocr
 import pyocr.builders
 import docassemble.base.ocr
@@ -1310,11 +1311,29 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
     ocr_langs = get_config("ocr languages")
     if ocr_langs is None:
         ocr_langs = dict()
-    if language in ocr_langs and ocr_langs[language] in langs:
-        lang = ocr_langs[language]
+    if language in langs:
+        lang = language
     else:
-        lang = langs[0]
-        logmessage("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang))
+        if language in ocr_langs and ocr_langs[language] in langs:
+            lang = ocr_langs[language]
+        else:
+            try:
+                pc_lang = pycountry.languages.get(alpha_2=language)
+                lang_three_letter = pc_lang.alpha_3
+                if lang_three_letter in langs:
+                    lang = lang_three_letter
+                else:
+                    if 'eng' in langs:
+                        lang = 'eng'
+                    else:
+                        lang = langs[0]
+                    logmessage("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang))
+            except:
+                if 'eng' in langs:
+                    lang = 'eng'
+                else:
+                    lang = langs[0]
+                logmessage("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang))
     if isinstance(image_file, DAFile):
         image_file = [image_file]
     temp_directory_list = list()

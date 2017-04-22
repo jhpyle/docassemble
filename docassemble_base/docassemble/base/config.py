@@ -146,10 +146,8 @@ def load(**kwargs):
         daconfig['db']['port'] = '5432'
     if 'ocr languages' not in daconfig or type(daconfig['ocr languages']) is not dict:
         daconfig['ocr languages'] = dict()
-    if 'en' not in daconfig['ocr languages']:
-        daconfig['ocr languages']['en'] = 'eng'
-    if 'es' not in daconfig['ocr languages']:
-        daconfig['ocr languages']['es'] = 'spa'
+    if 'zh' not in daconfig['ocr languages']:
+        daconfig['ocr languages']['zh'] = 'chi-tra'
     loaded = True
     return
 

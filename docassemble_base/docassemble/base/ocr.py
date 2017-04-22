@@ -46,14 +46,32 @@ def ocr_page_tasks(image_file, language=None, psm=6, x=None, y=None, W=None, H=N
     langs = tool.get_available_languages()
     if language is None:
         language = get_language()
-    ocr_langs = get_config("ocr languages")
-    if ocr_langs is None:
-        ocr_langs = dict()
-    if language in ocr_langs and ocr_langs[language] in langs:
-        lang = ocr_langs[language]
+    if language in langs:
+        lang = language
     else:
-        lang = langs[0]
-        logmessage("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang))
+        ocr_langs = get_config("ocr languages")
+        if ocr_langs is None:
+            ocr_langs = dict()
+        if language in ocr_langs and ocr_langs[language] in langs:
+            lang = ocr_langs[language]
+        else:
+            try:
+                pc_lang = pycountry.languages.get(alpha_2=language)
+                lang_three_letter = pc_lang.alpha_3
+                if lang_three_letter in langs:
+                    lang = lang_three_letter
+                else:
+                    if 'eng' in langs:
+                        lang = 'eng'
+                    else:
+                        lang = langs[0]
+                    logmessage("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang))
+            except:
+                if 'eng' in langs:
+                    lang = 'eng'
+                else:
+                    lang = langs[0]
+                logmessage("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang))
     if isinstance(image_file, DAFile):
         image_file = [image_file]
     todo = list()
