@@ -6,6 +6,8 @@ from PIL import Image, ImageEnhance
 from docassemble.base.functions import get_config, get_language, ReturnValue
 from docassemble.base.core import DAFile, DAFileList
 from pyPdf import PdfFileReader
+from docassemble.base.logger import logmessage
+import pycountry
 import sys
 import os
 
@@ -65,13 +67,13 @@ def ocr_page_tasks(image_file, language=None, psm=6, x=None, y=None, W=None, H=N
                         lang = 'eng'
                     else:
                         lang = langs[0]
-                    logmessage("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang))
-            except:
+                    sys.stderr.write("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang) + "\n")
+            except Exception as the_error:
                 if 'eng' in langs:
                     lang = 'eng'
                 else:
                     lang = langs[0]
-                logmessage("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang))
+                sys.stderr.write("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang) + "; error was " + str(the_error) + "\n")
     if isinstance(image_file, DAFile):
         image_file = [image_file]
     todo = list()

@@ -1328,12 +1328,12 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
                     else:
                         lang = langs[0]
                     logmessage("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang))
-            except:
+            except Exception as the_error:
                 if 'eng' in langs:
                     lang = 'eng'
                 else:
                     lang = langs[0]
-                logmessage("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang))
+                logmessage("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang) + "; error was " + str(the_error))
     if isinstance(image_file, DAFile):
         image_file = [image_file]
     temp_directory_list = list()
