@@ -10,10 +10,9 @@ import httplib2
 import datetime
 import operator
 import pprint
-import codecs
 import copy
+import codecs
 import random
-#sys.stderr.write("loading filter\n")
 import docassemble.base.filter
 import docassemble.base.pdftk
 from docassemble.base.error import DAError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute
